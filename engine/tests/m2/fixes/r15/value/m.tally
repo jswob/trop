@@ -1,0 +1,49 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R15 (#199), no-item 1: value(x, d) in PLN by px partial. A hole number of units and a known price: linear, the price the coefficient (vu); a known number of units and a hole price: linear (vp); both holes: plain (vb)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit etf "fund unit"
+kind funds: place etf min 0
+place fa: funds lives 2026-01-01..
+place fb: funds lives 2026-01-01..
+place fc: funds lives 2026-01-01..
+place market: outside lives 1900-01-01..
+input px: num PLN/etf
+input hpx: num PLN/etf
+input na: num etf
+input nk: num etf
+input day: date
+
+move buy_a: transfers
+  on day
+  leg cash from market to fa amount na
+
+move buy_b: transfers
+  on day
+  leg cash from market to fb amount nk
+
+move buy_c: transfers
+  on day
+  leg cash from market to fc amount na
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  px = 12 PLN/etf "s"
+  hpx = ?"price" "s"
+  na = ?"how many units" "s"
+  nk = 3 etf "s"
+  day = 2026-03-01 "s"
+  opening[fa] = 0 etf at 2026-01-01 start "s"
+  opening[fb] = 0 etf at 2026-01-01 start "s"
+  opening[fc] = 0 etf at 2026-01-01 start "s"
+
+ask vu: value(fa, 2026-06-30) in PLN by px partial
+ask vp: value(fb, 2026-06-30) in PLN by hpx partial
+ask vb: value(fc, 2026-06-30) in PLN by hpx partial

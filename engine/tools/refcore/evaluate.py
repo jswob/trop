@@ -971,7 +971,8 @@ class Engine:
                 from .joint import shown
                 from .moves import and_list
                 # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class (tally 2.1.8 S6)
-                wins = sorted(wins, key=lambda w: shown(w.sid or ''))
+                from .moves import id_order
+                wins = sorted(wins, key=lambda w: id_order(self.m, w.sid or ''))
                 q = '%s are one, but %s differs: %s' % (
                     and_list(shown(w.sid or '') for w in wins), shown(info.id),
                     and_list('%s (%s)' % (fmt_rowval(w), shown(w.sid or '')) for w in wins))
@@ -1025,17 +1026,19 @@ class Engine:
         return keep[0]
 
     def units_at_reading(self, keep, units):
-        """The units a place of unit any has readings in at the instant of keep's rows: the walk's gaps there, which
-        give a row that states no unit for every unit the place holds (walk.apply_reading); the stated units where the
-        read is inside a walk or no gap is recorded."""
+        """The units a place of unit any has readings in at the instant of keep's rows: the gaps there of the walk of the
+        read's own cut, which give a row that states no unit for every unit the place holds (walk.apply_reading), so
+        every reader at that cut gets the same units (tally 2.1.8 P46): the cut's walk up to the instant's day (prefix_walk),
+        whether or not the read is inside a walk. The stated units where no gap is recorded."""
         ctx = getattr(self, '_Kctx', None)
-        if ctx is None or ctx.walk is not None or ctx.wp is not None:
+        if ctx is None:
             return units
         r = keep[0]
         day = r.instant[0]
         if not isinstance(day, datetime.date):
             return units
-        w = self.main_walk(ctx)
+        # the walk of the cut up to the instant's day: what every reader at the cut sees there, and no plan after it
+        w = self.prefix_walk(ctx.but(walk=None, wp=None), day)
         gs = w.gaps.get((r.pattern[0][1].name, day), ())
         sids = set(c.sid for c in keep)
         at = set(g[0] for g in gs if g[2].sid in sids)
@@ -1130,8 +1133,10 @@ class Engine:
                 if ix.assumed is not None:
                     self.reg(('assumed', '%s: %s' % (ix.id, ix.assumed), ''))  # L §5.6: assumed: <index>: <reason>
         if isinstance(v, tuple) and v and v[0] == 'hole':
-            return Hole([(v[1], org)])
-        if isinstance(v, tuple) and v and v[0] == 'node':
+            # a hole row carried past the cut is listed like a value, in the hole's own form (L §8.2, R7, R9; tally
+            # 2.1.8 P54)
+            v = Hole([(v[1], org)])
+        elif isinstance(v, tuple) and v and v[0] == 'node':
             # a dist row gives the distribution by an expression (L §5.16)
             v = self.ev(v[1], {}, ctx)
         elif isinstance(v, tuple) and v and v[0] == 'sexpr':
@@ -1152,8 +1157,10 @@ class Engine:
             sp = r.span(ctx.cut)
             if not sp.always and sp.start is not None and sp.end is None and d > self.ask_K:
                 per = fmt(period) if period is not None else d.isoformat()
-                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt(v) if not isinstance(v, Hole) else '?',
+                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt_hole(v) if isinstance(v, Hole) else fmt(v),
                                                                   r.version.id, per)))
+        if isinstance(v, Hole):
+            return v
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
             v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))
@@ -1299,7 +1306,8 @@ class Engine:
         for k in seen:
             inf, ks, t = sr[k]
             out.append((inf, keys if k == skey else ks, t, k))
-        out.sort(key=lambda x: shown(x[2]))
+        from .moves import id_order
+        out.sort(key=lambda x: id_order(self.m, x[2]))
         return out
 
     def same_hole(self, day, sides):
@@ -3077,7 +3085,14 @@ class Engine:
         m = self.m
         dom = b._dom
         if dom[0] in ('event', 'obs'):
-            cands = [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            xs = [x for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            for x in xs:
+                e = self.s1_refusal(getattr(x, 'id', None), ctx)
+                if e is not None:
+                    # a movement the binding could meet on the day is refused (S1), and a refusal outranks the day's
+                    # hole (L §8; tally 2.1.8 R11, #180; P50, group 4's fix review G2)
+                    raise e
+            cands = [x.mv() for x in xs]
         elif dom[0] == 'kind':
             cands = [Thing(t.name) for t in m.things.values() if m.thing_seen(t, ctx.cut) and m.thing_in(t.name, dom[1])
                      and member_owns(m, b, t)]

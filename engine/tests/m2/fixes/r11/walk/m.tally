@@ -1,0 +1,82 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R11 (#195): a refused movement stops at the place's next reading, as a hole one does. groc[2026-02]'s amount is refused (RUN-DIV), hm[2026-02]'s a hole, mv[2026-02]'s refused; the statement anchors konto and k2 and pads k3 from k4 at 2026-03-10 end. Items #160 (c_ref), #191 Q2 (q2, q2_led); no-item 1 (pad), 3 (low_*), 4 (from_*), 5 (sum_ref, first_ok), and flows after the reading (fl_after)"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input g_amt: money PLN
+input dom: int
+input divisor[m in months]: num
+input hamt[m in months]: money PLN
+input d3: int
+place konto: accounts PLN lives 2019-05-01..
+place k2: accounts PLN lives 2019-05-01..
+place k3: accounts PLN lives 2019-05-01..
+place k4: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from k2 to world amount hamt[m]
+
+move mv[m in months]: transfers
+  on day_of(m, d3)
+  at start_of(m)
+  leg cash from k3 to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  dom = 5 "plan"
+  d3 = 3 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 0 "zero"
+  divisor[2026-03..2026-12] = 1 "ok"
+  hamt[2026-01] = 1.00 PLN "ok"
+  hamt[2026-02] = ?"how much in Feb" "hole"
+  hamt[2026-03..2026-12] = 1.00 PLN "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k3] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k4] = 1 000.00 PLN at 2026-01-01 start "w"
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  anchor konto
+  anchor k2
+  stated[konto] = 200.00 PLN at 2026-03-10 end "saldo"
+  stated[k2] = 200.00 PLN at 2026-03-10 end "saldo"
+
+version st3
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  pad k3 from k4
+  stated[k3] = 300.00 PLN at 2026-03-10 end "saldo"
+
+ask c_ref: count(t in transfers over 2026-02)
+ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), gap(konto, 2026-03-10), bal(konto, 2026-03-31) modelled
+ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
+ask q2_led: residuals konto 2026-03
+ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
+ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
+ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask from_after: bal(konto, 2026-03-31) from 2026-03-15
+ask from_before: bal(konto, 2026-03-31) from 2026-02-15
+ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
+ask first_ok: first(t in transfers over 2026-02-01 ..) ties by t.day
+ask fl_after: flows(konto, 2026-03-11..2026-03-31), flows(konto, 2026-02)

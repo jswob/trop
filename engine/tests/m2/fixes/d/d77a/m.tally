@@ -1,0 +1,50 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 §4 item 77 (#201), plan §14, from the planner i77a: the day of a leg against a lifespan (e1, refused today where three days answer), a place ending with positions inside the window (e3), two windows at one min 0 place (t1); each plain line HOLE-IMPRECISE naming the window, its windows each twin as today"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind accts: place PLN signed
+kind pots: place PLN min 0
+place jar: accts lives 2025-01-01..
+place tmp: accts lives 2025-01-01..2026-03-07
+place pot: pots lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input wd: date
+input wa: date
+input wb: date
+
+move empty: transfers
+  on wd
+  leg cash from tmp to jar amount amt
+
+move oa: transfers
+  on wa
+  leg cash from pot to world amount amt
+
+move ob: transfers
+  on wb
+  leg cash from world to pot amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  wa = window(2026-04-05, 2026-04-10) "s"
+  wb = window(2026-04-07, 2026-04-12) "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[tmp] = 100.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+
+ask e1: bal(jar, 2026-03-31)
+ask e2: bal(jar, 2026-03-31) windows each
+ask e3: bal(tmp, 2026-03-07)
+ask e4: bal(tmp, 2026-03-07) windows each
+ask t1: bal(pot, 2026-04-30)
+ask t2: bal(pot, 2026-04-30) windows each

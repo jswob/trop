@@ -45,5 +45,6 @@ version st
   known 2026-04-02
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 500.00 PLN) "r1"
   bank[r2] = (on: 2026-03-10, kind: shop, leg cash from world to konto amount 500.00 PLN) "r2"
-  same bank[r1] = pay[2026-03]
+  bank[r3] = (on: 2026-03-10, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: pay[2026-03]) "r3"
+  same bank[r1] = bank[r3]
   same bank[r2] = bank[r1]

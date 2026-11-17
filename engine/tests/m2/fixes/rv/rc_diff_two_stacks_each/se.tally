@@ -1,0 +1,10 @@
+scenario se over pw
+  tally 2
+  from 2026-01-01
+
+version se_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace amt2 = 6.00 PLN "s"
+  replace dj = 2026-03-03 "s"

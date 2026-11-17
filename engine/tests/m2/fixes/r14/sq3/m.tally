@@ -1,0 +1,32 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R14 (#198): item #173 SQ-3 (P25 reopened), replace stated[x] = a hole over a unit reading loads and is every unit's reading there (a: the hole, the hole)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  replace stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
+ask a17: bal(broker, EUR, 2026-02-18), bal(broker, PLN, 2026-02-18)

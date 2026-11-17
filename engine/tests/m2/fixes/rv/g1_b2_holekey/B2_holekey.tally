@@ -1,0 +1,24 @@
+model hk
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+index cs = [pl, de]
+input who: key cs
+input calk[c in cs]: calendar
+input d: date
+input nf: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 "a day"
+  nf = 2912292 "far"
+  calk[pl] = calendar(weekends [sat, sun]) "s"
+  calk[de] = calendar(weekends [sat, sun]) "s"
+
+ask k: add_business(d, nf, calk[who])
+ask kp: add_business(d, nf, calk[pl])

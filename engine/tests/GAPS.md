@@ -167,6 +167,8 @@ T's re-run of every stored output, first on refcore f843e443, then on the tag's 
 
 ### SR 7: `partial` makes a hole plain through `value` of a place valued whole (R15)
 
+**Mended** (the spec writer's eighth turn, b74543a6, "value of a place valued whole keeps its price linear", pick P43): `ASK-02` prints its stored bytes again on 61f8630b. SR 6 of this re-run (explain dropped the observed row `bank[o1]` that `fixes/g2/sumobs2`'s sum reads) is mended too (8bf0d761, the seventh turn): its row is released with the round's held rows.
+
 - **Smallest text:** `engine/tests/unit/probes/ask/ASK-02.tally`: `value(x, asked_on) in DUK` of `place car: assets DUK priced car_value`, the price a hole, inside `sum(owns[p, x] * (value(x, asked_on) in DUK) for x in places …) partial`. `(value(car, asked_on) in DUK) + (value(flat, asked_on) in DUK) partial` alone prints the plain hole too.
 - **Old bytes:** `q_net_worth (p = ola): 200 000 DUK + 1 × ?"What is Ola's car worth on 2025-06-30? Nobody has valued it." (car_value)`.
 - **New (75f27ca1):** `q_net_worth (p = ola): ?"…" (car_value)`, the plain hole.

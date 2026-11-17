@@ -1,0 +1,24 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 §4 item 51 (#161): an ask's with pin that no read takes isn't listed in the register (q: pinned: p only; q2: nothing pinned)"
+
+source s "s"
+unit PLN: currency minor 0.01
+input p: money PLN
+input other: money PLN
+
+def y: money PLN
+  rule base = p + p
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "s"
+  other = 1.00 PLN "s"
+
+ask q: y with p = 20.00 PLN, other = 2.00 PLN
+ask q2: y with other = 2.00 PLN

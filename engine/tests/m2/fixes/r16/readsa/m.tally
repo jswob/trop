@@ -1,0 +1,47 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R16 (#200): item #176, a decision whose amount reads bal(konto, d) modelled is refused at load, LOAD-READS <move> reaches bal(konto) modelled (the planner's p5a)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  pad konto from world
+  bank[o1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
+  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+
+
+kind tops: event certain
+  leg cash: PLN
+move top[m in months]: tops
+  on end_of(m) - 1 day
+  reads konto
+  leg cash from world to konto amount max(0 PLN, keep - bal(konto, start_of(m)) modelled)
+ask t: flows(top, 2026-04)

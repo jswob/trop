@@ -1,0 +1,47 @@
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input bank: observed
+input card: observed
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask b3: bal(konto, 2026-03-31)
+ask t2: tot[2026-02]
+ask t3: tot[2026-03]
+ask c3: count(p in pays over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
+  card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+
+version sm
+  cite s
+  known 2026-03-11
+  same bank[o1] = card[o1]
+ask fp: flows(pay, 2026-03)
+ask ob: observed(pay[2026-03])
+ask c2: count(p in pays over 2026-02)

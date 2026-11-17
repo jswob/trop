@@ -36,4 +36,3 @@ version v
 ask q1: bal(jar, 2026-06-30) partial
 ask q2: bal(jar, 2026-06-30) from 2026-03-15 partial
 ask q3: bal(jar, 2026-06-30)
-ask q4: bal(world, 2026-06-30) partial

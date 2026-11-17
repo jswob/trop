@@ -2085,7 +2085,7 @@ class Asker:
         if wl is not None:
             ents.extend(x for x in wl.ents if (since is None or x.key > since) and x.key <= key)
         rows = []
-        for x in sorted(ents, key=lambda x: x.key):
+        for x in sorted(ents, key=lambda x: self._listing_key(x.key)):
             t = self._entry_text(x, gtext)
             if t is not None:
                 rows.append((kday(x.key), t))
@@ -2139,7 +2139,7 @@ class Asker:
         if wl is not None:
             ents.extend(x for x in wl.ents if x.key <= K_end(end))
         rows = []
-        for x in sorted(ents, key=lambda x: x.key):
+        for x in sorted(ents, key=lambda x: self._listing_key(x.key)):
             tx = self._entry_text(x, gtext)
             if tx is not None:
                 rows.append((kday(x.key), tx))
@@ -2255,6 +2255,14 @@ class Asker:
         d = _dt.date.fromordinal(p[0])
         # a decision's entry text prints its terms joined by `|`, as written before SR-B4 (walk.DSEP)
         return '(%s, stratum %s, %s)' % (d, p[2], p[3].replace(DSEP, '|') if isinstance(p[3], str) else p[3])
+
+    def _listing_key(self, k):
+        """A walk entry's key for an explain's listing: an id at the key's fourth place in id order, its keys in index
+        order, never as text (E §4.1; tally 2.1.8 P50: save[k9] before save[k10])."""
+        if isinstance(k, tuple) and len(k) > 3 and isinstance(k[3], str):
+            from .moves import id_order
+            return k[:3] + (id_order(self.m, k[3]),) + k[4:]
+        return k
 
     def explain_lines(self, root, ctx):
         if isinstance(root, ExplainLines):

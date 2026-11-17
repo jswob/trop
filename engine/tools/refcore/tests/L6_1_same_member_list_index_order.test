@@ -1,0 +1,48 @@
+# tally 2.1.8 P50, L §2.5, §6.1 (F1 of group 4's fix review, n2_list): the member that stands for a same class is the
+# first in index order: a list index keeps its own order, so of same pay[aa] = pay[zz] on [zz, aa, mm] pay[zz] stands (c5dbc72f: pay[aa], the ids compared as text).
+=== m.tally
+model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = [zz, aa, mm]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+ask n: count(t in wages over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same pay[aa] = pay[zz]
+=== expect
+l (x = pay[zz]): 500.00 PLN
+  unfulfilled: pay[zz]
+  cut 2026-04-10
+l (x = pay[mm]): 500.00 PLN
+  unfulfilled: pay[mm]
+  cut 2026-04-10
+n: 2
+  unfulfilled: pay[mm]
+  unfulfilled: pay[zz]
+  cut 2026-04-10

@@ -43,7 +43,9 @@ KV.JOBS = 2  # at most two heavy jobs on the machine (the run's rule)
 LIST = os.path.join(HERE, 'vectors.tsv')
 STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = KV.COLUMNS + ['for']
-FOR = {'forms', 'explain', 'windows', 'records', 'ledger', 'sweep', 'forks', '-'}  # tmp/m2/build-plan.md's G1 to G7
+FOR = ({'forms', 'explain', 'windows', 'records', 'ledger', 'sweep', 'forks', '-'}  # tmp/m2/build-plan.md's G1 to G7
+       | {'R%d' % n for n in range(1, 17)} | {'S%d' % n for n in range(1, 10)}  # tally 2.1.8's rules and singletons
+       | {'D', 'CUT', 'I77'})  # its follow-up items, the cut (§13) and item 77's faces
 
 
 def rows():
@@ -54,7 +56,7 @@ def rows():
         out = list(r)
     for v in out:
         if v['for'] not in FOR:
-            sys.exit('vectors.tsv: %s is for %r, not a builder group or -' % (v['id'], v['for']))
+            sys.exit('vectors.tsv: %s is for %r, not a builder group, a rule R1..R16, S1..S9, D, CUT, I77 or -' % (v['id'], v['for']))
     return out
 
 

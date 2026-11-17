@@ -1,0 +1,43 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R11 (#195): item #180, a hole-day binding whose where refuses is refused with the where's code (c_where, s_where; c_hole, the twin whose where is known on every day, stays 0); no-item 7, a refused value in and, if with equal branches, a sum term of 0 and or stays refused (e_*), where the hole twins decide (h_*: false, 1, 0, true)"
+
+source s "s"
+kind persons
+index ks = [a, b, c]
+input dd: date
+input zero: num
+input hz: num
+input w[p in persons]: num
+input v[k in ks]: num
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ola] lives 1990-02-01..
+  persons + [jan] lives 1991-02-01..
+  dd = ?"which day" "s"
+  zero = 0 "s"
+  hz = ?"what is hz" "s"
+  w[ola] = 2 "s"
+  w[jan] = 3 "s"
+  v[a] = 1 "s"
+  v[b] = 2 "s"
+  v[c] = 3 "s"
+
+ask c_where: count(p in persons on dd where w[p] / zero > 1)
+ask s_where: sum(w[p] for p in persons on dd where w[p] / zero > 1)
+ask c_hole: count(p in persons on dd where w[p] > w[ola] + w[jan])
+ask c_known: count(p in persons on 2026-03-01 where w[p] / zero > 1)
+ask e_and: (1 / zero > 1) and false
+ask e_if: if 1 / zero > 1 then 1 else 1
+ask e_sum: sum(0 for k in ks where v[k] / zero > 1)
+ask e_or: (1 / zero > 1) or true
+ask h_and: (hz > 1) and false
+ask h_if: if hz > 1 then 1 else 1
+ask h_sum: sum(0 for k in ks where v[k] * hz > 1)
+ask h_or: (hz > 1) or true

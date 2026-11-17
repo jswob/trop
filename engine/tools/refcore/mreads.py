@@ -303,7 +303,14 @@ def m_mv_field(self, n, env, ctx):
             getattr(src, 'status', None) in ('past', 'plan'):
         # a leg the walk books is read with the axes the walk read to book it, so the read fans out over them (L §5.5
         # Fan-out; tally 2.1.8 R13, #169-k); a leg the walk refused is refused below (leg_refused)
-        w = self.ask_walk(ctx, src.day if isinstance(src.day, datetime.date) else None)
+        # building the walk to learn its axes reads other movements' days and amounts, none of them the value's
+        # (E §10; tally 2.1.8 P50: b2_reads c3 listed pay's v:dom under an explain of xs)
+        saved_tr = (self.trace_stack, self.tracing)
+        self.trace_stack, self.tracing = [], False
+        try:
+            w = self.ask_walk(ctx, src.day if isinstance(src.day, datetime.date) else None)
+        finally:
+            self.trace_stack, self.tracing = saved_tr
         for lg in (src.legs if w is not None else ()):
             if lg.name != name:
                 continue
@@ -351,8 +358,16 @@ def m_mv_field(self, n, env, ctx):
             if lg.name == name:
                 if isinstance(lg.amount, TallyError):
                     raise lg.amount
-                err = self.leg_refused(src.id, name, ctx, lg.day if isinstance(lg.day, datetime.date) else
-                                       src.day)
+                # whether the walk refused the leg is no read of its value: what building the walk reads (the plans'
+                # amounts and days) isn't listed under an explain of it (E §10; tally 2.1.8 P50, group 4's fix
+                # review: s6_reads_agree s4 listed d_p and amt)
+                saved_tr = (self.trace_stack, self.tracing)
+                self.trace_stack, self.tracing = [], False
+                try:
+                    err = self.leg_refused(src.id, name, ctx, lg.day if isinstance(lg.day, datetime.date) else
+                                           src.day)
+                finally:
+                    self.trace_stack, self.tracing = saved_tr
                 if isinstance(err, Hole):
                     return err
                 if err is not None:
@@ -393,7 +408,7 @@ def m_same_rows_hole(self, o, leg, ctx):
         return None
     idx = dict((x.id, x) for x in self.observations(ctx))
     others = [idx[y] for y in g if y != o.id and y in idx]
-    return same_obs_differ(o, others, leg) if others else None
+    return same_obs_differ(o, others, leg, m=self.m) if others else None
 
 
 def _body_hole(src):
@@ -630,8 +645,8 @@ def once_by_same(m, out, ctx, owner=None):
             parent[rb] = ra
     drop = set()
     kept = set()
-    from .joint import shown
-    for x in sorted(order, key=shown):
+    from .moves import id_order
+    for x in sorted(order, key=lambda y: id_order(m, y)):
         if x not in ids:
             continue
         r = find(x)
@@ -1700,6 +1715,37 @@ def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
                 totals[u] = totals.get(u, Fraction(0)) + s * a.q
 
 
+def _reask(h, what):
+    """A window's hole the walk worded for a balance, asked as the read's own question (§14: the printed question of
+    a hole is the read's), each question carrying the days the walk's did."""
+    from .evaluate import CARRY
+    tail = ' not precise enough for a balance'
+    qs = []
+    for q in h.qs:
+        t, nm = q
+        if isinstance(t, str) and t.startswith('date within ') and t.endswith(tail):
+            q2 = (t[:-len(tail)] + ' not precise enough for ' + what, nm)
+            if q in CARRY and q2 not in CARRY:
+                CARRY[q2] = CARRY[q]
+            qs.append(q2)
+        else:
+            qs.append(q)
+    return Hole(qs, h.lin)
+
+
+def _zero_flow(f):
+    """A window day's movement of a known amount 0 adds 0 to flows on whichever day it falls, so its value doesn't
+    depend on the day (L §4.4; tally 2.1.8 P50, group 4's fix review: m2_g3_fix2_r3 fa, m2_gate8_window_moves)."""
+    return f is not None and not isinstance(f, Hole) and getattr(f, 'q', None) == 0
+
+
+def _zero_at(mv, place):
+    """Whether every leg of mv at place is of a known amount 0 (_zero_flow)."""
+    legs = [lg for lg in getattr(mv, 'legs', None) or ()
+            if any(getattr(x, 'name', None) == place for x in (lg.frm, lg.to))]
+    return bool(legs) and all(_zero_flow(lg.amount) for lg in legs)
+
+
 def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
     """One walk's part of flows of a place: its entries in (lo, limit], added to totals and holes."""
     # what holds for the whole walk (a refused movement whose places aren't known, a decision refused, a movement
@@ -1747,7 +1793,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                 holes.extend(Hole(x.qs) for x in perms)
                 perms = []
             if e.key > limit:
-                if e.kind == 'delta' and e.wid is not None and e.wid in wins:
+                if e.kind == 'delta' and e.wid is not None and e.wid in wins and not _zero_flow(e.flow):
                     holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                         e.win.window_text(), place), e.mv.id)]), e.win))
                 continue
@@ -1760,7 +1806,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                 continue
             if e.kind in ('hole', 'perm'):
                 lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' and conv is None else None
-                holes.append(Hole(e.qs, lh if lh is not None else False))
+                holes.append(_reask(Hole(e.qs, lh if lh is not None else False), 'flows of %s' % place))
                 # its register too, as a balance takes it (Walk.cum): the joint model's own movement into a member's
                 # place, a hole there, is listed under every result that reads the place (L §6.1, round 17; §8.2
                 # left out:)
@@ -1775,8 +1821,9 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if e.kind == 'delta' and e.wid is not None:
                 win = e.win
                 if not (sp.contains(win.lo) and win.hi <= last):
-                    holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
-                        win.window_text(), place), e.mv.id)]), win))
+                    if not _zero_flow(f):
+                        holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                            win.window_text(), place), e.mv.id)]), win))
                     continue
             for r in e.reg:
                 self.reg(r)
@@ -1800,6 +1847,8 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             overlaps = win.lo <= last and (sp.start is None or win.hi >= sp.start) if isinstance(win, Iv) else False
             if wid not in closed and overlaps and not (sp.contains(win.lo) and win.hi <= last):
                 mv = next((e.mv for e in lg.ents if e.kind == 'imp_on' and e.wid == wid), None)
+                if _zero_at(mv, place):
+                    continue
                 holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                     win.window_text(), place), mv.id if mv is not None else place)]), win))
 
@@ -2003,8 +2052,9 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 # a window leg whose lifespan test some of its days pass (walk.window_lifespan): the flows read's hole
                 w = lg.day if isinstance(lg.day, Iv) else d
                 if not isinstance(w, Iv):
-                    # a leg of a fixed day the window's test reaches: the hole it gives (walk.imp_hole)
-                    holes.append(err)
+                    # a leg of a fixed day the window's test reaches: the hole it gives (walk.imp_hole), asking the
+                    # read's own question (tally 2.1.8 §14, P54: `for flows of ob`, not the walk's `for a balance`)
+                    holes.append(_reask(err, 'flows of %s' % mi.id))
                     continue
                 holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                     w.window_text(), mi.id), i.id)]), w))

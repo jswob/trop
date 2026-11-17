@@ -1,0 +1,71 @@
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R13 (#197): windows each takes the window its plain line's hole names, the first its reads met. c3n's text: two movements dated by windows around 2026-03-06, a third in May (t2: heads [w1, w2], never w3); an or that stops early (x2); a key read through a window (n1 plain, n2); no-item 1, solve per sub-window (sv); no-item 2, inputs-of per tuple and sub-window (io); #169-d, a binding over movements binds inside each run (sb); no-item 4 and #191 Q4, explain per derivation and beyond the pins (ex, exp); no-item 5's twin, one line per binding tuple where values are equal (fk)"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [ka, kb]
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w1: date
+input w2: date
+input w3: date
+input a: date
+input b[d in days]: date
+input y: money PLN
+input goal: money PLN
+input cutoff: date
+input wk[k in ks]: date
+input vv[k in ks]: int
+
+def early[k in ks]: bool
+  rule base = wk[k] < cutoff
+
+move m1: transfers
+  on w1
+  leg cash from world to konto amount amt
+
+move m2: transfers
+  on w2
+  leg cash from world to konto amount amt
+
+move m3: transfers
+  on w3
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  w1 = window(2026-03-05, 2026-03-07) "s"
+  w2 = window(2026-03-06, 2026-03-08) "s"
+  w3 = window(2026-05-01, 2026-05-03) "s"
+  a = window(2026-03-01, 2026-03-02) "s"
+  b[2026-03-01] = window(2026-04-01, 2026-04-02) "s"
+  b[2026-03-02] = 2026-05-01 "s"
+  y = 0.00 PLN "s"
+  goal = 250.00 PLN "s"
+  cutoff = 2026-03-06 "s"
+  wk[ka] = window(2026-03-05, 2026-03-07) "s"
+  wk[kb] = 2026-03-01 "s"
+  vv[ka] = 1 "s"
+  vv[kb] = 1 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask t1: bal(konto, 2026-03-06)
+ask t2: bal(konto, 2026-03-06) windows each
+ask x1: (w1 < 2026-03-06) or (w2 > 2026-03-07)
+ask x2: (w1 < 2026-03-06) or (w2 > 2026-03-07) windows each
+ask n1: b[a] > 2026-04-01
+ask n2: b[a] > 2026-04-01 windows each
+ask sv: solve bal(konto, 2026-03-06) + y == goal for y in [0 PLN, 1000 PLN] to 0.01 PLN windows each
+ask io: inputs-of early[k] for k in ks windows each
+ask sb: sum(t.cash.amount for t in transfers over 2026-03-05 .. 2026-03-07) windows each
+ask ex: explain bal(konto, 2026-03-06) windows each
+ask exp: explain bal(konto, 2026-03-31) with w1 = 2026-03-05 windows each
+ask fk: vv[k] for k in ks
