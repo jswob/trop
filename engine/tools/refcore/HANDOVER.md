@@ -76,6 +76,9 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   `leg_refused`'s walk.
 - **The eleventh turn** (the last review inputs; **1 549 tests**): `ask._listing_key` lists a balance's movements of a
   day by `id_order`; `mv_field` traces nothing of the walk it builds for R13's fan-out axes (`b2_reads` c3).
+- **The twelfth turn** (the final check, P54; **1 551 tests**): `mreads._reask` words a window's hole as the read's
+  question (`flows` of a move or a place); `row_value` lists a hole row as `held:` in its own form; `WARN-LEGS`
+  orders its pair by `id_order`.
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
