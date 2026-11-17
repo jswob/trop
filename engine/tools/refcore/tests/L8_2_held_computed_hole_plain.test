@@ -1,0 +1,46 @@
+# tally 2.1.8 P32 (stands), L §8.2 (the round's check, T's g1f_f2_edge_held): a held line prints once per row; a hole
+# row carried past the cut prints in its own form (7167d6b4), but a row whose value is computed (cq = bm.cr, a
+# scenario's expression row) and comes out a hole prints ?: held: cq = ? (sx_v). 40bd8257 printed the hole there.
+=== m.tally
+model bm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 "a day"
+  huge = 100000000000000000000 "10^20"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) "s"
+  cq = calendar(weekends [sat, sun]) "s"
+
+ask f: add_business(d, huge, cq) in sx
+=== b2_min_sc.tally
+scenario sx over bm
+  tally 2
+  from 2026-01-01
+
+version sx_v
+  cite plan
+  governs 2026-01-01..
+  known 2026-01-01
+  replace cq = bm.cr "s"
+=== expect
+f: refused: RUN-LIMIT a day passes 9999-12-31
+  world: sx
+  held: cq = ? (sx_v), read for 2027-01-01
+  cut 2026-12-31

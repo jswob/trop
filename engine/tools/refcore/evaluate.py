@@ -1132,10 +1132,12 @@ class Engine:
                 ix = self.m.indexes[b.dom[1]]
                 if ix.assumed is not None:
                     self.reg(('assumed', '%s: %s' % (ix.id, ix.assumed), ''))  # L §5.6: assumed: <index>: <reason>
+        row_hole = False
         if isinstance(v, tuple) and v and v[0] == 'hole':
             # a hole row carried past the cut is listed like a value, in the hole's own form (L §8.2, R7, R9; tally
             # 2.1.8 P54)
             v = Hole([(v[1], org)])
+            row_hole = True
         elif isinstance(v, tuple) and v and v[0] == 'node':
             # a dist row gives the distribution by an expression (L §5.16)
             v = self.ev(v[1], {}, ctx)
@@ -1157,9 +1159,10 @@ class Engine:
             sp = r.span(ctx.cut)
             if not sp.always and sp.start is not None and sp.end is None and d > self.ask_K:
                 per = fmt(period) if period is not None else d.isoformat()
-                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt_hole(v) if isinstance(v, Hole) else fmt(v),
+                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt_hole(v) if row_hole else '?' if isinstance(v, Hole) else fmt(v),
                                                                   r.version.id, per)))
         if isinstance(v, Hole):
+            # a computed value that comes out a hole names what its read met, never one value: `?` (P32)
             return v
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
