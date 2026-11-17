@@ -1,0 +1,56 @@
+# tally 2.1.8 (item 12 of the third turn, pick P33; group 2's fix, N7): pre falls on 2024-12-21, before S, so it
+# is left out; its amount is known from 2025-01-01. Every instance reads its amounts at its booking cut min(t, K)
+# (E §4.1 step 2; L §4.3, §4.5, §5.14.3), a left-out one too, and no later version answers a booking that books
+# nothing: q is the hole. ceca866c printed 40.00 DUK, the amount at K. inn, inside the run, is answered by late2
+# from 2025-02-01 (E §5 step 1): q2 is 30.00 DUK on either commit.
+=== m.tally
+model t
+  tally 2
+  on 2025-03-10
+  start 2025-01-01
+  end 2025-06-30
+
+source s "s"
+unit DUK: currency minor 0.01
+place bank: accounts DUK lives 2024-01-01..
+place out: outside lives 1900-01-01..
+input amt: money DUK
+input d: date
+input amt3: money DUK
+input d2: date
+
+move pre: transfers
+  on d
+  leg cash from bank to out amount amt
+
+move inn: transfers
+  on d2
+  leg cash from bank to out amount amt3
+
+version v
+  cite s
+  governs always
+  known 2024-11-01
+  d = 2024-12-21 "s"
+  d2 = 2025-01-05 "s"
+
+version late
+  cite s
+  governs always
+  known 2025-01-01
+  amt = 40.00 DUK "s"
+
+version late2
+  cite s
+  governs always
+  known 2025-02-01
+  amt3 = 30.00 DUK "s"
+
+ask q: m.cash.amount for m in transfers over 2024-12-01 .. 2024-12-31
+ask q2: m.cash.amount for m in transfers over 2025-01-01 .. 2025-01-31
+=== expect
+q (m = pre): ?"amt: no value" (amt)
+  cut 2025-03-10
+q2 (m = inn): 30.00 DUK
+  unfulfilled: inn
+  cut 2025-03-10

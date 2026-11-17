@@ -618,6 +618,11 @@ class Checker:
             t = self.tc(a.known, sc)
             if not self.is_date(t):
                 raise uerr('as known of ask %s is %s, not a date' % (a.id, T.show(t)), a.loc)
+            kv = getattr(a.known, 'v', None)
+            if isinstance(kv, datetime.date):
+                # a band patch under the ask's written cut (R5; #162's rest)
+                from .loader import patch_under_cut
+                patch_under_cut(self.m, kv)
         if a.random is not None and a.random[0] == 'quantile':
             scq = sc.child()
             scq.allow_lit = True   # the level of a quantile (L §7.1 An ask)
@@ -3167,6 +3172,13 @@ class Checker:
         if not (getattr(r, '_r', None) and r._r[0] == 'read' and r._r[1] == 'input'):
             raise LoadError('LOAD-PARSE', 'cannot parse: last(x[k], d) takes a read of an input', n.loc)
         self.tdate(n.d, sc, n)
+        if t is None and r._r[2] in ('stated', 'opening') and getattr(r, 'keys', None) and r.keys[0].k == 'name':
+            # a reading's value is in its place's unit (L §4.6, §5.10): a comparison in a when reads it so (spec/g4/
+            # nb3_at; 2.1.8's first refcore stopped on the untyped side)
+            th = self.m.things.get(r.keys[0].id)
+            cur = self.m.place_unit(th) if th is not None else None
+            if isinstance(cur, str) and cur in CURRENCIES:
+                t = T.money(cur)
         return t
 
     def t_star(self, n, sc, expect):
@@ -3495,6 +3507,19 @@ class Checker:
         self.lawdated = lawdated
 
         for a in m.asks:
+            if a.law is not None:
+                # the ask's law expression is itself read with no law date, so a def it reaches that takes its
+                # reader's is refused at load, where load sees it (R5; #162, m2/g1/n1_law; the message run gave)
+                seen, todo = set(), [x._r[2] for x in walk(a.law) if getattr(x, '_r', None) and x._r[0] == 'read'
+                                     and x._r[1] == 'def']
+                while todo:
+                    q = todo.pop()
+                    if q in seen or q not in m.defs:
+                        continue
+                    seen.add(q)
+                    if m.defs[q].at is not None and m.defs[q].at.k == 'law_reader':
+                        raise LoadError('LOAD-LAWDATE', 'ask reaches an at reader def (%s) without law' % q)
+                    todo.extend(t[1] for t in E.get(('def', q), {}) if t[0] == 'def')
             if a._has_law:
                 continue
             for t, rels in E.get(('ask', a.id), {}).items():

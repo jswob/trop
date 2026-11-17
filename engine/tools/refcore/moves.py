@@ -14,7 +14,6 @@ from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_no
 from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET, _SAMEMET, \
     same_seen, same_key
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
-from .evaluate import carry_hole, known_carry, CARRY_TEXT
 
 # the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
 # below every plan's 0 (E §4.1, tally 2.1.2; tally 2.1.1 wrote 9, which only text compare put after stratum 10)
@@ -792,6 +791,10 @@ def m_answer_booking(self, mi, i, tctx, upto=None):
     if not (isinstance(i.exists, Hole) or any(isinstance(lg.amount, Hole) for lg in i.legs)):
         return
     if not isinstance(i.day, datetime.date) or i.day >= tctx.cut:
+        return
+    if i.day < self.m.S or i.day > self.m.E or self.scen_early(i, i.day):
+        # a left-out instance books nothing, so no later version answers it: its amounts are read at its booking cut
+        # min(t, K), as every instance's are (E §4.1 step 2; L §4.3, §4.5, §5.14.3; item 12 of the third turn, P33)
         return
     for c, vids in self.known_dates():
         if not i.day < c <= tctx.cut:
@@ -1750,6 +1753,7 @@ def m_status(self, i, ctx):
     d = i.day
     lo, hi = day_lo(d), day_hi(d)
     i.class_q = None
+    i.class_member = False
     if i.exists is False:
         st = 'none'
     elif lo is not None and (hi < S or lo > E):
@@ -1769,6 +1773,7 @@ def m_status(self, i, ctx):
     elif self.window_class_depends(i, ctx, lo, hi):
         # booked on some of its window's days and not on the rest: the window's hole (E §4.1 step 2, L §4.4)
         st = 'hole'
+        i.class_member = self.window_class_depends(i, ctx, lo, hi) == 'covered'
         i.class_q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
         carry_hole(Hole(i.class_q), d)
     elif i.decision:
@@ -1832,7 +1837,7 @@ def m_window_class_depends(self, i, ctx, lo, hi):
         return False
     S, K = self.m.S, ctx.cut
     if lo < S <= hi:
-        return True
+        return 'start'
     if lo >= K:
         return False
     rs = []
@@ -1840,7 +1845,8 @@ def m_window_class_depends(self, i, ctx, lo, hi):
     while d <= hi:
         rs.append(d < K and self.touches_covered(i, ctx, d))
         d = d + datetime.timedelta(1)
-    return any(rs) and not all(rs)
+    # modelled past on some days: whether it is a binding's member depends on the day too (mreads)
+    return 'covered' if any(rs) and not all(rs) else False
 
 
 def m_touches_covered(self, i, ctx, day=None):
@@ -2292,3 +2298,8 @@ def settle_sign(lg, a, s):
     if f == at or t == af:
         return -1
     raise refuse('RUN-RECORD', 'settlement %s of %s touches neither place of its leg' % (s.id, a.id))
+
+
+# last, so that walk, which evaluate imports, finds this module whole when moves is imported first (a joint
+# model's member load reaches it through loader.check_part_rows; STOP-REPORT 1 of T's re-run, pick P37)
+from .evaluate import carry_hole, known_carry, CARRY_TEXT  # noqa: E402

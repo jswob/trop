@@ -169,7 +169,7 @@ def guarded(fn):
 def cross_stack_diff(aid, a, realities, chains, askers, mid):
     """A diff whose two worlds sit on two stacks of scenarios: each side answered by the reality holding its world,
     then printed as one diff (ask.Asker.diff_print), cell by cell over the axes either side reads (L §5.5)."""
-    from .ask import Asker, Coll
+    from .ask import Asker, Coll, is_load as is_load_err
     sw, bw = a.diff[2], a.diff[3]
     sides = {}
     asker0 = None
@@ -196,10 +196,43 @@ def cross_stack_diff(aid, a, realities, chains, askers, mid):
         finally:
             asker._diff_only = None
         side = asker._diff_side
-        if side is None:
+        if side is None or lines:
+            # a side kept for the caller prints nothing; one that prints is refused, or a hole, as the line: S7's
+            # limit on its seen and unseen choices refuses after the first choice kept its cells (L §7.6 item 6;
+            # item 16 of the fourth turn)
             return lines
         sides[w] = side
         asker0 = asker0 or asker
+    if sides[sw][0] == 'binds':
+        # an ask-level for: each tuple's two sides combined, under the head naming it (L §5.18; item 17 of the
+        # fourth turn: the tuple's own law date)
+        out = []
+        other = dict(sides[bw][1])
+        for txt, s in sides[sw][1]:
+            o = other.get(txt)
+            if s[0] == 'line':
+                out.extend(s[1])
+                continue
+            if o is None or o[0] == 'line':
+                out.extend(o[1] if o is not None else ['%s%s: refused: %s' % (aid, txt, NotYet(
+                    'a tuple of a diff over two stacks that one world binds and the other does not').text())])
+                continue
+            lines = cross_stack_cells(aid, a, {sw: s, bw: o}, sw, bw, asker0)
+            out.extend(aid + txt + ln[len(aid):] if ln.startswith(aid) else ln for ln in lines)
+        return out
+    return cross_stack_cells(aid, a, sides, sw, bw, asker0)
+
+
+def cross_stack_cells(aid, a, sides, sw, bw, asker0):
+    """The two sides' cells of a diff over two stacks, printed as one diff."""
+    from .ask import Coll, is_load as is_load_err
+    if len(sides[sw]) == 4:
+        try:
+            return cross_stack_each(a, sides, sw, bw, asker0)
+        except TallyError as e:
+            if is_load_err(e):
+                raise
+            return ['%s: refused: %s' % (aid, e.text())]
     axes = sorted(set(sides[sw][0]) | set(sides[bw][0]))
     ctx = sides[sw][2]
     cells = {}
@@ -212,6 +245,46 @@ def cross_stack_diff(aid, a, realities, chains, askers, mid):
             coll.merge(cell[w][1])
         cells[c] = ({sw: cell[sw][0][sw], bw: cell[bw][0][bw]}, coll, cell[sw][2], cell[sw][3])
     return asker0.diff_print(a, axes, cells, ctx)
+
+
+def cross_stack_each(a, sides, sw, bw, asker0):
+    """A diff over two stacks under windows each (L §4.4, §5.18; tally 2.1.8 R13.1, item 2): each side run once per
+    choice of its windows' days; the runs paired that take the same day of every window both meet, each pair a
+    cell; one block per run of sub-windows that agree, one unlabelled block where all agree. S7's limit holds over
+    the pairs (L §7.6 item 6, RUN-LIMIT)."""
+    from .ask import Coll, Result, DiffOut, EachRes, EACH_LIMIT, each_limit
+    axes = sorted(set(sides[sw][0]) | set(sides[bw][0]))
+    ctx = sides[sw][2]
+    combos = asker0.diff_combos(axes)
+    results = {}
+    for c in combos:
+        d = dict(c)
+        (ds, ss, ls), (db, sb, lb) = [sides[w][1][tuple((ax, d[ax]) for ax in sides[w][0])] for w in (sw, bw)]
+        labels = dict(ls)
+        for k, v in lb.items():
+            labels.setdefault(k, v)
+        done, seqs = [], []
+        for (asg_s, rs), qs in zip(ds, ss):
+            for (asg_b, rb), qb in zip(db, sb):
+                if any(asg_b[w] != dd for w, dd in asg_s.items() if w in asg_b):
+                    continue
+                sq = tuple(qs) + tuple(x for x in qb if x[0] not in asg_s)
+                cs, cb = rs.vals[0], rb.vals[0]
+                if not hasattr(cs, 'res') or not hasattr(cb, 'res'):
+                    # a run whose binding's where is a hole: that hole for the pair
+                    done.append((dict(sq), rs if not hasattr(cs, 'res') else rb))
+                    seqs.append(sq)
+                    continue
+                counted, body = asker0.diff_lines(a, {sw: cs.res[sw], bw: cb.res[bw]}, ctx, cs.t)
+                coll = Coll()
+                coll.merge(rs.coll)
+                coll.merge(rb.coll)
+                done.append((dict(sq), Result((DiffOut(counted, body, list(cs.vals) + list(cb.vals)),), coll)))
+                seqs.append(sq)
+                if len(done) > EACH_LIMIT:
+                    raise each_limit()
+        results[c] = EachRes(asker0.each_group(done, seqs, labels))
+    return asker0.diff_each_print(a, axes, combos, results, ctx)
 
 
 def cross_world_forks(realities):

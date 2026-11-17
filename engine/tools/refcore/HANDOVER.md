@@ -33,8 +33,32 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   `walk.own_obs` for a walk-bound trace and the adjustments measured with the trace off (#169-g); `check.assign`'s
   four-digit figure and `RUN-NONE` naming the row (#169-l); `gap` through `run_ends` (#159).
 - **The cut.** A version's `same` between an observed row and a planned instance of one model is `LOAD-SAME`.
-- **Left.** #162's three load-coded run sites T's texts reach and the ones no text reaches (`LoadAtRun`, `is_load`
-  stay); #169-e's `fixes/g3/h2` and `p6win`.
+- **The follow-up after the first build groups** (P26, P27, P29, P30; **1 509 tests**, 17 new, 1 changed): a refusal
+  met first stands before the edge's `RUN-LIMIT` (`add_business_at`); a reading compared in a `when` typed by its
+  place (`check.t_lastx`); `ask.answer_same_undecided` refuses past 20 000 choices and compares whole blocks;
+  `ask.diff_binds`; a def's computed window keeps its carry; `walk.dec_win_end` (#175's p6win); a refused line and a
+  count of none list their pin; `walk.words_differ`, `hole_flows`; a binding's member modelled on some days is its
+  hole; load checks for an ask's law expression, a running read in an ask's value, a band patch under an ask's cut
+  (`loader.patch_under_cut`) and `bal`/`low` at a written place of unit `any` (`check3.any_needs_unit`).
+- **The third turn** (P33, the review of group 2's fix; **1 517 tests**, 8 new, 4 of this round's moved):
+  `walk.imp_hole` reaches only the legs the refusal would refuse (a pending window leg tested with its batch through
+  `pend_at`); `walk.words_differ` compares the refusal's bytes; `moves.answer_booking` leaves a
+  left-out instance unanswered; a two-stack diff under `windows each` (`ask.diff_side_each`, `each_rows(runs=True)`,
+  `each_group`, `diff_each_print`, `cli.cross_stack_each`); `days_between(w, w)` is 0. The every-day pinned-twin
+  check is `tmp/spec-2.1.8/runs/twins.py` (untracked), over answer lines since P34.
+- **The fourth turn** (P34, the builder's last fix; **1 519 tests**): the third turn's register split taken back
+  (P34: the register is the line's read set, `windows each` cuts by the answer); a two-stack diff's side that
+  prints (S7's seen and unseen limit) is the line; a diff's law that reads its `for` is read per tuple
+  (`ask.law_reads_binds`, `diff_binds`), on two stacks per tuple (`cli.cross_stack_cells`); `evaluate.edge_first`
+  visits the rows a `same` row follows.
+- **The fifth turn** (P37 on T's re-run's STOP-REPORTs; **1 522 tests**): `moves.py` imports `evaluate` last, so a
+  joint model's `reprint` loads it whole; `evaluate.carry_hole` adds each window a question's text is given (a
+  shifted window prints as another); `walk.each_before_from` lists a window leg's `before from:` per day under
+  `windows each`, the day not taken; the spec's household values its wrappers' units `by etf_price[month_of(d)]`.
+- **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
+  against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
+  every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
+  `diff` (`REFCORE-NOT-YET`, as at 2.1.7).
 
 ## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
 

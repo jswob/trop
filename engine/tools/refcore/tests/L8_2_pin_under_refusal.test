@@ -1,0 +1,41 @@
+# tally 2.1.8 R7 (item 9 of the follow-up): a refused line rests on the reads that refused it, so the with pin it
+# took is listed under the refusal (p5: out on 2026-03-05 takes jar below 0), as the stored m1 vectors print. 2.1.8's
+# first refcore (c13e6c8c) dropped it. The plan's c5s p5.
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place jar: savings lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input wd: date
+input dd: date
+
+move out: transfers
+  on wd
+  leg cash from jar to world amount amt
+
+move inn: transfers
+  on dd
+  leg cash from world to jar amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  dd = 2026-03-07 "s"
+  opening[jar] = 50.00 PLN at 2026-01-01 start "s"
+
+ask p5: bal(jar, 2026-03-31) with wd = 2026-03-05
+=== expect
+p5: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
+  pinned: wd = 2026-03-05
+  cut 2026-01-01

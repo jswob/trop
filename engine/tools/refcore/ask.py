@@ -289,6 +289,16 @@ def lin_day(d):
     return day_lo(d)
 
 
+class DiffSide(DiffOut):
+    """One side's cell of a diff over two stacks, run under windows each: its lines ({world: [(key, value)]}) and
+    the expression's type; its values carry the unknown days (cli.cross_stack_diff pairs the two sides' runs)."""
+
+    def __init__(self, res, t):
+        DiffOut.__init__(self, '', (), [v for lines in res.values() for _k, v in lines])
+        self.res = res
+        self.t = t
+
+
 class EachRes:
     """One axis combination's windows-each lines, as a result the axis grouping compares (L §5.5)."""
 
@@ -477,7 +487,10 @@ class Asker:
             after_on(m, K)
         eng.ask_K = K
         law = None
-        if a.law is not None:
+        # a diff's law that reads its ask-level for is read per tuple (L §5.18: every clause stands on every form;
+        # item 17 of the fourth turn), in diff_binds
+        self._tuple_law = a.law if (a.law is not None and a.form == 'diff' and law_reads_binds(a)) else None
+        if a.law is not None and self._tuple_law is None:
             v = eng.ev(a.law, {}, Ctx(None, K))
             if isinstance(v, Hole):
                 return ['%s: %s' % (a.id, fmt_value(v))]
@@ -537,6 +550,11 @@ class Asker:
         if not met:
             return out
         vids = sorted(met)
+        if 2 ** len(vids) > EACH_LIMIT:
+            # L §7.6 limit 6 (tally 2.1.8, pick P27): a plain line takes at most 20 000 seen and unseen choices,
+            # refused before any rerun
+            from .evaluate import refuse
+            raise refuse('RUN-LIMIT', 'seen and unseen over more than 20 000 choices')
         picks = [()]
         for v in vids:
             picks = [p + ((v, s),) for p in picks for s in (True, False)]
@@ -582,7 +600,15 @@ class Asker:
             regs = [ln for ln in bss[0][-1][1:] if ln.startswith(('  cut', '  law date'))] if bss[0] else []
             return ['%s: %s' % (a.id, hole)] + regs[-1:]
         res = []
+        # a result is all the form prints (R13.1): a ledger, a diff, an explanation or a read set that differs in any
+        # line is the hole; a value's, a check's or a solve's register may differ (tally 2.1.8, item 5)
+        whole = a.form in ('diff', 'explain', 'inputs-of', 'readers-of', 'residuals')
         for i, b in enumerate(bss[0]):
+            if whole and any(bs[i] != b for bs in bss):
+                regs = [ln for ln in b[1:] if ln.startswith(('  cut', '  law date'))]
+                res.append('%s: %s' % (heads[0][i], hole))
+                res.extend(regs[-1:])
+                continue
             if all(bs[i][0] == b[0] for bs in bss) or not b[0].split(': ', 1)[1:]:
                 res.extend(b)
                 continue
@@ -711,8 +737,12 @@ class Asker:
         """diff(e [for binds]) in S against B, evaluated per combination of the axes it reads (L §5.5, tally 2.1.7
         R8): each combination a cell, `diff_worlds`; the cells' results printed by `diff_print`. On a stack that holds
         one of the two worlds (cli.cross_stack_diff) the cells of that side are kept for the caller instead."""
+        if a.binds and getattr(self, '_diff_env', None) is None:
+            return self.diff_binds(eng, a, ctx, pins_coll)
         if isinstance(ctx.windows, tuple) and ctx.windows and getattr(self, '_diff_only', None) is None:
             return self.diff_each(eng, a, ctx, pins_coll)
+        if isinstance(ctx.windows, tuple) and ctx.windows:
+            return self.diff_side_each(eng, a, ctx, pins_coll)
         axes = self.diff_axes(a, ctx)
         pinned = list(ctx.axes)
         cells = {}
@@ -723,6 +753,48 @@ class Asker:
             self._diff_side = (axes, cells, ctx)
             return []
         return self.diff_print(a, axes, cells, ctx)
+
+    def diff_binds(self, eng, a, ctx, pins_coll):
+        """A diff with an ask-level `for`: the body per binding tuple (L §5.18; tally 2.1.8 R13.1, item 3 of the
+        follow-up), each tuple's block under the head naming it, `h (k = b): diff in …`; a tuple whose where is a
+        hole prints its line as that hole."""
+        out = []
+        only = getattr(self, '_diff_only', None) is not None
+        tsides = []
+        for env, st in list(eng.members(a.binds, {}, ctx)):
+            if isinstance(st, tuple) and st[0] == 'domainhole':
+                out.append('%s: %s' % (a.id, fmt_value(st[1])))
+                tsides.append(('', ('line', out[-1:])))
+                continue
+            txt = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
+            if isinstance(st, Hole):
+                out.append('%s%s: %s' % (a.id, txt, fmt_value(st)))
+                tsides.append((txt, ('line', out[-1:])))
+                continue
+            tctx = ctx
+            if getattr(self, '_tuple_law', None) is not None:
+                # the tuple's law date (item 17 of the fourth turn): a hole makes its line that hole
+                v = eng.ev(self._tuple_law, env, Ctx(None, ctx.cut))
+                if isinstance(v, Hole):
+                    out.append('%s%s: %s' % (a.id, txt, fmt_value(v)))
+                    tsides.append((txt, ('line', out[-1:])))
+                    continue
+                tctx = ctx.but(law=eng.date_of(v, 'the law of an ask'))
+            self._diff_env = env
+            self._diff_side = None
+            try:
+                lines = self.answer_diff(eng, a, tctx, pins_coll)
+            finally:
+                self._diff_env = None
+            if only:
+                # one side of a diff over two stacks: each tuple's cells, for cli.cross_stack_diff
+                tsides.append((txt, self._diff_side if self._diff_side is not None else ('line', lines)))
+                continue
+            out.extend(a.id + txt + ln[len(a.id):] if ln.startswith(a.id) else ln for ln in lines)
+        if only:
+            self._diff_side = ('binds', tsides)
+            return []
+        return out
 
     def diff_each(self, eng, a, ctx, pins_coll):
         """diff under windows each: each combination's cell read again per sub-window (each_rows), one block per run
@@ -741,6 +813,28 @@ class Asker:
             cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
             results[c] = EachRes(self.each_rows(eng, a, None, cctx, evalf=evalf))
 
+        return self.diff_each_print(a, axes, combos, results, ctx)
+
+    def diff_side_each(self, eng, a, ctx, pins_coll):
+        """One side of a diff over two stacks under windows each (cli.cross_stack_diff): per combination of the
+        axes it reads, that side's runs, each once per choice of its windows' days (each_rows' runs), kept for the
+        caller, which pairs them (L §4.4, §5.18; tally 2.1.8 R13.1, item 2)."""
+        axes = self.diff_axes(a, ctx)
+        pinned = list(ctx.axes)
+
+        def evalf(xctx):
+            res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
+            return Result((DiffSide(res, t),), coll)
+        runs = {}
+        for c in self.diff_combos(axes):
+            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
+            runs[c] = self.each_rows(eng, a, None, cctx, evalf=evalf, runs=True)
+        self._diff_side = (axes, runs, ctx, 'each')
+        return []
+
+    def diff_each_print(self, a, axes, combos, results, ctx):
+        """A windows-each diff's blocks: per run of sub-windows (and axis options) that agree, its head, its lines
+        and its register."""
         def block(head, row, reading):
             d = row.vals[0]
             return ['%s: %s' % (head, d.counted)] + list(d.body) + ['  ' + r for r in self.register(row.coll, reading,
@@ -765,6 +859,7 @@ class Asker:
         coll.merge(pins_coll)
         res = {}
         only = getattr(self, '_diff_only', None)
+        base = getattr(self, '_diff_env', None) or {}
         for w in (sw, bw):
             if only is not None and w != only:
                 continue
@@ -776,7 +871,7 @@ class Asker:
                 eng.reg(('world', w))
                 lines = []
                 if bs:
-                    mem = list(eng.members(bs, {}, wctx))
+                    mem = list(eng.members(bs, dict(base), wctx))
                     for env, st in mem:
                         if isinstance(st, tuple) and st[0] == 'domainhole':
                             lines.append((_txt(e), st[1]))
@@ -788,7 +883,7 @@ class Asker:
                             continue
                         lines.append((key, self.one(eng, e, env, wctx)))
                 else:
-                    lines.append((_txt(e), self.one(eng, e, {}, wctx)))
+                    lines.append((_txt(e), self.one(eng, e, dict(base), wctx)))
             finally:
                 eng.stack.pop()
                 set_world(old)
@@ -1059,10 +1154,11 @@ class Asker:
             out.append((key, envs[key], (starts, full, labels)))
         return out
 
-    def each_rows(self, eng, a, env, ctx, bound=None, evalf=None):
+    def each_rows(self, eng, a, env, ctx, bound=None, evalf=None, runs=False):
         """The sub-window lines of windows each: [(window part, Line)].  With bound (each_binding's), the line's
         runs start from those its binding is read in, each with its own tuple; a run whose where is a hole is
-        that hole.  With evalf, a run is evalf(its context) (a diff's cell, answer_diff)."""
+        that hole.  With evalf, a run is evalf(its context) (a diff's cell, answer_diff).  With runs, the runs
+        themselves, (done, seqs, labels): one side of a diff over two stacks (cli.cross_stack_diff pairs them)."""
         pending = [()]
         done = []
         seqs = []
@@ -1113,8 +1209,15 @@ class Asker:
                 continue
             done.append((assigned, res))
             seqs.append(asg)
+        if runs:
+            return done, seqs, labels
+        return self.each_group(done, seqs, labels, starts is None or full)
+
+    def each_group(self, done, seqs, labels, full=True):
+        """windows each's runs, (assignment, Result) with their assignment sequences, as its printed blocks: one
+        plain line where all agree, else one per maximal sub-window (or nested combination) whose answer agrees."""
         keys = set(self.each_key(r) for asg, r in done)
-        if len(keys) == 1 and (starts is None or full):
+        if len(keys) == 1 and full:
             ln = Line(None, [], done[0][1].vals, done[0][1].coll, [], done[0][1].trace)
             for asg, r in done[1:]:
                 ln.coll.merge(r.coll)
@@ -1448,8 +1551,12 @@ class Asker:
         # per result, not per ask). tally 2.1.8 §4 (#161): an entry is listed exactly when a read in its set gives it,
         # so a with pin on a cell that no read of the line took, met or not, isn't listed either
         cells = getattr(self, 'pin_cells', {})
+        refused = bool(vals) and all(isinstance(v, TallyError) for v in vals)
         for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
-            coll.reg.discard(e)
+            # a refusal carries no read set of its own: what it rests on took the pin unless an inner claim met it
+            # (item 9 of the follow-up; the stored m1 vectors)
+            if not refused or ('pin met', e[1]) in ln.coll.reg:
+                coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
         if a.orient is not None:
@@ -2290,6 +2397,14 @@ def trace_key(tn):
     for ch in subs:
         out.append(trace_key(ch) if isinstance(ch, TraceNode) else repr(ch))
     return tuple(out)
+
+
+def law_reads_binds(a):
+    """Whether an ask's law expression reads one of its ask-level for's variables."""
+    from .node import walk
+    vs = set(b.var for b in (a.binds or ()))
+    return bool(vs) and any(getattr(x, '_r', None) is not None and x._r[0] == 'var' and x._r[1] in vs
+                            for x in walk(a.law))
 
 
 def each_next(met, assigned, answer, forced=()):

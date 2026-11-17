@@ -136,7 +136,8 @@ def m_leg_refused(self, iid, leg, ctx, day=None):
     needs a cell still being evaluated (m_guarded_walk; E §3.2 "Evaluation is demand-driven")."""
     w = ctx.walk if ctx.walk is not None else self.ask_walk(ctx, day)
     while w is not None:
-        err = w.bad_legs.get((iid, leg)) or getattr(w, 'hole_legs', {}).get((iid, leg))
+        err = w.bad_legs.get((iid, leg)) or getattr(w, 'hole_legs', {}).get((iid, leg)) or \
+            getattr(w, 'hole_flows', {}).get((iid, leg))
         if err is not None:
             return err
         w = w.base
@@ -514,6 +515,8 @@ def m_movements_of(self, dom, ctx, owner=None):
     key = ('mvs', dom, self.wkey(ctx), ctx.unc, id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner)
     hit = self.run_cache.get(key)
     if hit is not None:
+        for e in self.run_cache.get(('mvpins',) + key, ()):
+            self.reg(e)
         return hit
     out = []
     if dom[0] == 'obs':
@@ -525,16 +528,24 @@ def m_movements_of(self, dom, ctx, owner=None):
         self.run_cache[key] = out
         return out
     sub = m.kinds[dom[1]].subtree(m)
+    pins = set()
     for mi in self.plan_moves():
         if mi.kind not in sub:
             continue
         for i in self.move_instances(mi, ctx):
             st = self.status(i, ctx)
             if st in ('none', 'modelled'):
+                # the binding read its day to leave it out, so the pins that day took are the binding's reads too
+                # (R7; item 9 of the follow-up: a count that finds none lists its pin)
+                ic = getattr(i, 'coll', None)
+                pins |= {e for e in (ic.reg if ic is not None else ()) if e[0] == 'pinned'}
                 continue
             if st == 'uncertain' and not ctx.unc:
                 continue
             out.append(i)
+    self.run_cache[('mvpins',) + key] = pins
+    for e in sorted(pins, key=str):
+        self.reg(e)
     for o in self.observations(ctx):
         if o.kind in sub:
             out.append(o)
@@ -774,6 +785,13 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             continue
         if isinstance(x, Inst) and isinstance(x.exists, Hole):
             st = x.exists if st is True else merge(st, x.exists)
+        cq = getattr(x, 'class_member', False) if isinstance(x, Inst) else False
+        if cq:
+            # booked on some of its window's days, modelled or left out on the rest (moves.m_window_class_depends):
+            # whether it is a member is the window's hole (E §4.1 step 2; item 10 of the follow-up)
+            h = carry_hole(Hole([('date within %s not precise enough for a binding over %s' % (
+                d.window_text(), b._dom[1]), x.id)]), d)
+            st = h if st is True else merge(st, h)
         if isinstance(x, Inst) and x.err is not None:
             raise x.err
         if isinstance(x, ObsMv) and x.target is not None:
@@ -1937,6 +1955,10 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if isinstance(err, Hole):
                 # a window leg whose lifespan test some of its days pass (walk.window_lifespan): the flows read's hole
                 w = lg.day if isinstance(lg.day, Iv) else d
+                if not isinstance(w, Iv):
+                    # a leg of a fixed day the window's test reaches: the hole it gives (walk.imp_hole)
+                    holes.append(err)
+                    continue
                 holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                     w.window_text(), mi.id), i.id)]), w))
                 continue

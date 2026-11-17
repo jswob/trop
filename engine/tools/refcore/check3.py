@@ -559,10 +559,20 @@ def m_place_arg(self, r, sc, what):
     return t
 
 
+def m_any_needs_unit(self, n):
+    """bal(x, d) of a place written by name whose unit is any names no unit, which load sees (R5; item 76, #162's
+    sweep): LOAD-UNIT, in the words run gave it. low(x, a .. b) is refused so, as the bal(x, d) of its definition."""
+    th = self.literal_place(n.ref)
+    if th is not None and self.m.place_unit(self.m.things[th]) in (None, 'any'):
+        raise LoadError('LOAD-UNIT', 'bal(%s, d) of a place of unit any states its unit: bal(x, u, d)' % th, n.loc)
+
+
 def m_t_bal(self, n, sc, expect):
     m = self.m
     t = self.place_arg(n.ref, sc, 'bal')
     ut = self.place_type_unit(t, n.ref)
+    if len(n.args) == 1 and not n.modelled:
+        self.any_needs_unit(n)
     target = self.place_target(n.ref)
     args = n.args
     n._unit = None
@@ -701,6 +711,7 @@ def m_check_proj(self, n, sc, target):
 def m_t_low(self, n, sc, expect):
     t = self.place_arg(n.ref, sc, 'low')
     ut = self.place_type_unit(t, n.ref)
+    self.any_needs_unit(n)
     target = self.place_target(n.ref)
     self.span(n.span, sc)
     if n.span.a is None or n.span.b is None:
@@ -1562,6 +1573,22 @@ def m_check_moves_graph(self):
             raise LoadError('LOAD-READS', '%s holds bal(x) with no day: a running read outside a decision and its '
                             'defs' % item[1], self.balnow_items[item])
     m.from_decisions = from_decisions
+    # an ask's value that reaches such a read is outside a decision too, which load sees (R5; #162, m2/g2/wb2_p): in
+    # the words run gave it; explain, inputs-of and readers-of read a walk-bound def at its walk points
+    for a in m.asks:
+        if a.form in ('explain', 'inputs-of', 'readers-of'):
+            continue
+        seen, stack = set(), [('ask', a.id)]
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            if x in self.balnow_items:
+                tg = sorted((t for w, t in self.marks.get(x, ()) if w == 'balnow'), key=repr)
+                raise LoadError('LOAD-READS', 'bal(%s) with no day outside a decision' % (
+                    _tname(tg[0]) if tg else x[1]))
+            stack.extend(t for t in E.get(x, {}) if t[0] in ('def', 'fill'))
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
     # cut" (E §3.1 step 7, round 18 C3-8; L §5.14.1). A plan that reaches a mark is LOAD-READS (above).

@@ -1833,7 +1833,8 @@ class Engine:
         pins = ctx.pins if cone is None else tuple(q for q in ctx.pins if getattr(q, 'item', None) in cone)
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
               ctx.axes, ctx.windows, ctx.world, ctx.path)
-        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm)
+        # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
+        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm, carry=getattr(v, 'carry', None))
 
     def def_cone(self, qid):
         """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
@@ -4081,6 +4082,10 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'days_between')
         b = self.as_date_or_iv(b, 'days_between')
+        if isinstance(a, Iv) and isinstance(b, Iv) and a.name is not None and a.name == b.name:
+            # a window taken with its own name once (L §4.4, as iv_compare): one unknown day, 0 days from itself
+            # (the third turn's note, the review of group 2's fix)
+            return Int(0)
         return self.lift(lambda x, y: Int((y - x).days), a, b)
 
     def c_add_days(self, n, env, ctx):
@@ -4484,9 +4489,10 @@ class Engine:
         if k == 0:
             raise refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (d, _ntxt(n.args[2])))
         step = 1 if k > 0 else -1
-        # k business days move at least k days: past the day range that is refused whatever a hole on the way says,
-        # since a refusal the outcome meets outranks the hole (L §8, §8.1; tally 2.1.8 R11, #169-a)
-        add_days(d, k)
+        try:
+            add_days(d, k)
+        except TallyError as edge:
+            self.edge_first(n, d, step, env, ctx, edge)
 
         def count():
             left = abs(k)
@@ -4495,11 +4501,49 @@ class Engine:
                 cur = add_days(cur, step)
                 b = self.business(n.args[2], env, ctx, cur, seek=True)
                 if isinstance(b, Hole):
+                    # k business days move at least k days: past the day range that is refused whatever the hole on
+                    # the way says, since a refusal the outcome meets outranks the hole (L §8, §8.1; tally 2.1.8 R11,
+                    # #169-a); a refusal met first in day order stands before it (pick P26, g1_none)
+                    add_days(d, k)
                     return b
                 if b:
                     left -= 1
             return cur
         return self.over_added(n, count)
+
+    def edge_first(self, n, d, step, env, ctx, edge):
+        """add_business whose count passes the day range: the count can't end before the edge, so the outcome is the
+        first refusal or hole the walk meets in day order, else the edge's RUN-LIMIT (R11, pick P26). Both change only
+        where a calendar row's span starts or ends, so the walk visits those days: a refusal there stands; a hole, or
+        a row with a window or a hole among its added days, is met first, and the edge's refusal outranks it."""
+        r = getattr(n.args[2], '_r', None)
+        inf = self.m.inputs.get(r[2]) if r is not None and r[0] == 'read' and r[1] == 'input' else None
+        bounds = {d + datetime.timedelta(days=step)}
+        # and the rows of the inputs its rows are stated same as (L §6.1), which a read of it follows (item 18 of the
+        # fourth turn: the engine's 5ae84cca, N3); a day the walk visits more only reads the calendar there
+        ids = {inf.id} if inf is not None else set()
+        edges = getattr(self.m, 'same_row_edges', ())
+        grew = True
+        while grew:
+            grew = False
+            for ka, kb, _v in edges:
+                for x, y in ((ka, kb), (kb, ka)):
+                    if x[0] in ids and y[0] not in ids and y[0] in self.m.inputs:
+                        ids.add(y[0])
+                        grew = True
+        rows = [row for i in sorted(ids) for row in self.m.inputs[i].rows]
+        for row in rows:
+            sp = row.version.span_at(ctx.cut) if hasattr(row.version, 'span_at') else None
+            for x in ((sp.start, sp.end) if sp is not None else ()):
+                if x is not None:
+                    bounds |= {x, x - ONE_DAY}
+        days = sorted((x for x in bounds if (x > d if step > 0 else x < d)), reverse=step < 0)
+        for x in days:
+            b = self.business(n.args[2], env, ctx, x, seek=True)
+            cal = self.cal_at(n.args[2], env, ctx, x)
+            if isinstance(b, Hole) or any(a[0] in ('window', 'oneof', 'hole') for a in getattr(cal, 'added', ())):
+                raise edge
+        raise edge
 
     def c_last_business(self, n, env, ctx):
         """the n-th last business day of period p (L §4.2)"""
@@ -4695,8 +4739,10 @@ def carry_hole(h, *vals, ids=None):
     ws = tuple(ids) if ids is not None else carry_union(*vals)
     if ws:
         for q in h.qs:
-            if q not in CARRY:
-                CARRY[q] = ws
+            # one question's text may come from two windows (a shifted window prints as another: STOP-REPORT 4 of
+            # T's re-run, i2's qs), so it carries the days of each
+            old = CARRY.get(q, ())
+            CARRY[q] = old + tuple(w for w in ws if w[0] not in set(x[0] for x in old))
     return h
 
 
