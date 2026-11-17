@@ -29,6 +29,10 @@ line. It checks:
   LOAD-PRICE     `value(x, d) in CUR by p` on a place written literally whose
                  price has a home, its kind's or its own `priced` (§5.10;
                  tally 2.1.7, T's SR-4)
+  LOAD-KEY       a place's own `priced p` where p's key ranges over a period
+                 (day, month, quarter, year) or an index whose keys hold
+                 neither the place nor its unit (§5.10, §8.4; tally 2.1.8,
+                 item 52); a price keyed by a kind is refcore's to resolve
   LOAD-PARSE     what the scan itself needs: tabs, odd indentation, an
                  unterminated string, an id outside [a-z][a-z0-9_]* or longer
                  than 48, a key outside the key pattern, an unknown section, an
@@ -476,12 +480,35 @@ def check_prices(reality, everything):
             if len(t) > 1 and t[0] == 'place':
                 kind_unit[s.id] = t[1]
     priced = {}
+    price_dom, index_keys = {}, {}
+    for s in everything:
+        if s.kind in ('input', 'def'):
+            m = re.match(r'(?:input|def)\s+' + re.escape(s.id) + r'\[\s*[a-z][a-z0-9_]*\s+in\s+([a-z][a-z0-9_]*)',
+                         s.line.code or '')
+            if m:
+                price_dom[s.id] = m.group(1)
+        if s.kind == 'index':
+            m = re.match(r'index\s+' + re.escape(s.id) + r'\s*=\s*\[(.*)\]', s.line.code or '')
+            if m:
+                index_keys[s.id] = set(k.strip() for k in m.group(1).split(','))
     for s in everything:
         if s.kind == 'place':
             m = re.match(r'place\s+' + re.escape(s.id) + r'(\[[^\]]*\])?\s*:\s*(.*)', s.line.code or '')
             t = tokens(m.group(2)) if m else []
             if t and ('priced' in t or t[0] in kind_priced):
                 priced[s.id] = t[1] if len(t) > 1 and t[1] not in PLACE_CLAUSE_WORDS else kind_unit.get(t[0], 'unit')
+            if 'priced' in t and t.index('priced') + 1 < len(t):
+                # tally 2.1.8 item 52 (L §5.10, §8.4 Load refuses what load sees): the price's key gives the place or
+                # its unit; one over a period, or an index holding neither, can't be read there
+                pn = t[t.index('priced') + 1]
+                dom = price_dom.get(pn)
+                unit = priced[s.id] if s.id in priced else None
+                keyed = bool(m and m.group(1))
+                if dom in ('day', 'days', 'month', 'months', 'quarter', 'quarters', 'year', 'years') or (
+                        not keyed and dom in index_keys and s.id not in index_keys[dom] and
+                        unit not in index_keys[dom]):
+                    reality.refuse('LOAD-KEY', s.line, s.item, '%s is priced by %s, keyed by %s, which holds neither '
+                                   '%s nor its unit' % (s.id, pn, dom, s.id))
     for s in everything:
         for line in [s.line] + s.body:
             code = line.code or ''
@@ -747,6 +774,10 @@ input other_px: num PLN/piece
 ask qp: value(fund, 2026-06-30) in PLN by other_px
 
 ask qq: value(free, 2026-06-30) in PLN by other_px
+
+place mfund: holds priced mpx lives 2026-01-01..
+
+input mpx[m in month]: num PLN/piece
 ''',
 }
 SELFTEST_PARSE = ('model t2\n  tally 2\n  on 2026-10-18\n  start 2026-01-01\n  end 2026-12-31\n\nsource s "unterminated\n\n'
@@ -779,6 +810,7 @@ SELFTEST_EXPECTED = sorted([
     ('LOAD-RESERVED', 'a.tally:82'),   # record field if (kind, a FIELD keyword, is admitted)
     ('LOAD-DUP', 'b.tally:4'),         # source src1 in another file
     ('LOAD-PRICE', 'b.tally:20'),      # a by on fund, whose own section prices it (free, unpriced, passes)
+    ('LOAD-KEY', 'b.tally:24'),        # mfund priced by mpx, keyed by month (tally 2.1.8 item 52)
     ('LOAD-PARSE', 'c.tally:7'), ('LOAD-PARSE', 'c.tally:9'), ('LOAD-PARSE', 'c.tally:12'),
     ('LOAD-PARSE', 'c.tally:14'), ('LOAD-PARSE', 'c.tally:16'), ('LOAD-PARSE', 'c.tally:18'),
 ])
