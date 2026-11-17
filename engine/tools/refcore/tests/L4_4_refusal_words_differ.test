@@ -49,7 +49,7 @@ ask g4: bal(pot, 2026-04-30) windows each
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 === expect
-g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   cut 2026-01-01
 g2 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   cut 2026-01-01

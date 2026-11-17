@@ -1715,6 +1715,24 @@ def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
                 totals[u] = totals.get(u, Fraction(0)) + s * a.q
 
 
+def _reask(h, what):
+    """A window's hole the walk worded for a balance, asked as the read's own question (§14: the printed question of
+    a hole is the read's), each question carrying the days the walk's did."""
+    from .evaluate import CARRY
+    tail = ' not precise enough for a balance'
+    qs = []
+    for q in h.qs:
+        t, nm = q
+        if isinstance(t, str) and t.startswith('date within ') and t.endswith(tail):
+            q2 = (t[:-len(tail)] + ' not precise enough for ' + what, nm)
+            if q in CARRY and q2 not in CARRY:
+                CARRY[q2] = CARRY[q]
+            qs.append(q2)
+        else:
+            qs.append(q)
+    return Hole(qs, h.lin)
+
+
 def _zero_flow(f):
     """A window day's movement of a known amount 0 adds 0 to flows on whichever day it falls, so its value doesn't
     depend on the day (L §4.4; tally 2.1.8 P50, group 4's fix review: m2_g3_fix2_r3 fa, m2_gate8_window_moves)."""
@@ -1788,7 +1806,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                 continue
             if e.kind in ('hole', 'perm'):
                 lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' and conv is None else None
-                holes.append(Hole(e.qs, lh if lh is not None else False))
+                holes.append(_reask(Hole(e.qs, lh if lh is not None else False), 'flows of %s' % place))
                 # its register too, as a balance takes it (Walk.cum): the joint model's own movement into a member's
                 # place, a hole there, is listed under every result that reads the place (L §6.1, round 17; §8.2
                 # left out:)
@@ -2034,8 +2052,9 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 # a window leg whose lifespan test some of its days pass (walk.window_lifespan): the flows read's hole
                 w = lg.day if isinstance(lg.day, Iv) else d
                 if not isinstance(w, Iv):
-                    # a leg of a fixed day the window's test reaches: the hole it gives (walk.imp_hole)
-                    holes.append(err)
+                    # a leg of a fixed day the window's test reaches: the hole it gives (walk.imp_hole), asking the
+                    # read's own question (tally 2.1.8 §14, P54: `for flows of ob`, not the walk's `for a balance`)
+                    holes.append(_reask(err, 'flows of %s' % mi.id))
                     continue
                 holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                     w.window_text(), mi.id), i.id)]), w))
