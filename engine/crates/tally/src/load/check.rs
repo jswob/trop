@@ -1143,6 +1143,7 @@ impl Checker {
             AskBody::Exprs(exprs) => {
                 for e in exprs {
                     let typed = self.expr(m, scope, e, None, 0)?;
+                    open_key(m, scope, &typed)?;
                     self.unresolved_key(scope, &ask.id, &typed);
                 }
                 Ok(())
@@ -1153,6 +1154,7 @@ impl Checker {
             }
             AskBody::Explain(reference) | AskBody::InputsOf(reference) => {
                 let typed = self.expr(m, scope, reference, None, 0)?;
+                open_key(m, scope, &typed)?;
                 self.unresolved_key(scope, &ask.id, &typed);
                 let explain = matches!(ask.body, AskBody::Explain(_));
                 let plain = matches!(reference, Expr::Name(_) | Expr::Post(..));
@@ -1201,6 +1203,35 @@ impl Checker {
             }
         }
     }
+}
+
+/// A key literal an ask states with no position to name its index: `LOAD-KEY ambiguous key
+/// <k>` at load where no index, axis or thing holds it, or more than one does, whatever the
+/// asks read (refcore's `open_key`; tally 2.1.8 §4, #162: 2.1.7 met it at run). L §2.5,
+/// §8.4.
+fn open_key(m: &Reality, scope: &Scope, typed: &Ty) -> Result<(), Stop> {
+    let Ty::KeyLit(key) = typed else {
+        return Ok(());
+    };
+    let indexes = m
+        .indexes
+        .entries()
+        .filter(|(_, ix)| ix.by_text(key).is_some());
+    let axes = m
+        .axes
+        .entries()
+        .filter(|(_, axis)| axis.options.iter().any(|(option, _)| option == key));
+    let thing = m.things.get(key).into_iter();
+    let hits = indexes
+        .map(|_| ())
+        .chain(axes.map(|_| ()))
+        .chain(thing.map(|_| ()))
+        .take(2)
+        .count();
+    if hits == 1 {
+        return Ok(());
+    }
+    Err(scope.place(refused(Load::Key, format!("ambiguous key {key}"))))
 }
 
 /// The literal rule on a four-digit figure by its reading. L §2.1, §7.1.
