@@ -177,22 +177,21 @@ impl Engine {
         Ok(out)
     }
 
-    /// The sides of the `same` lines cut `cut` sees, in the order written, each once
-    /// (refcore's `once_by_same`, its `order`). L §6.1, §4.5.
+    /// The sides of the `same` lines cut `cut` sees, each once, in id order by code point:
+    /// section order changes nothing, and S6 names a class's rows in id order (refcore's
+    /// `once_by_same`, its `sorted(order, key=shown)`; pick P42, group 4's review N2). L §6.1,
+    /// §4.5.
     ///
     /// # Errors
     ///
     /// As [`Engine::same_line_seen`].
-    pub(crate) fn same_written(&mut self, m: &Reality, cut: Day) -> Result<Vec<String>, Stop> {
-        let mut out: Vec<String> = Vec::new();
+    pub(crate) fn same_sides(&mut self, m: &Reality, cut: Day) -> Result<Vec<String>, Stop> {
+        let mut out: BTreeSet<String> = BTreeSet::new();
         for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
-            for side in [left, right] {
-                if !out.contains(side) {
-                    out.push(side.clone());
-                }
-            }
+            out.insert(left.clone());
+            out.insert(right.clone());
         }
-        Ok(out)
+        Ok(out.into_iter().collect())
     }
 
     /// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
@@ -286,20 +285,18 @@ pub fn once_obs(groups: &BTreeMap<String, Vec<String>>, obs: &[Obs]) -> Vec<(usi
 }
 
 /// Which of the movements `ids` a binding keeps: of each group stated `same`, the member
-/// the same lines name first among them, in `written`, the lines' sides as written, so the
-/// group is bound once (refcore's `once_by_same`, its `order`); a group's own order is its
-/// members' ids, which names it (tally 2.1.8 S6), not which member stands for it. L §6.1,
-/// §5.19.
+/// first among them in `sides`, the same lines' sides in id order, so the group is bound
+/// once, by its first id (refcore's `once_by_same`; pick P42). L §6.1, §5.19.
 #[must_use]
 pub fn kept_once(
     groups: &BTreeMap<String, Vec<String>>,
-    written: &[String],
+    sides: &[String],
     ids: &[&str],
 ) -> Vec<bool> {
     let mut kept: Vec<&str> = Vec::new();
     // the groups met so far, each by its first member
     let mut met: BTreeSet<&str> = BTreeSet::new();
-    for side in written {
+    for side in sides {
         if !ids.contains(&side.as_str()) {
             continue;
         }
@@ -1350,13 +1347,13 @@ mod tests {
         assert_eq!(
             kept_once(&groups, &group, &["c", "b", "z"]),
             vec![false, true, true],
-            "the first member the same lines name is kept"
+            "the first side among the ids is kept"
         );
-        let written = vec!["c".to_owned(), "a".to_owned(), "b".to_owned()];
+        let sides = vec!["c".to_owned(), "a".to_owned(), "b".to_owned()];
         assert_eq!(
-            kept_once(&groups, &written, &["a", "b", "c"]),
+            kept_once(&groups, &sides, &["a", "b", "c"]),
             vec![false, false, true],
-            "the first written, not the first by id"
+            "the first in the sides' order, which the caller gives by id"
         );
         assert_eq!(
             kept_once(&groups, &group, &["c"]),

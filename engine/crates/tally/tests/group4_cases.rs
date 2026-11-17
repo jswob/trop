@@ -301,4 +301,80 @@ version v1
             "every line of the run"
         );
     }
+
+    /// N2 (`agent/s6_sec_a.tally`, `s6_sec_b.tally`): the member that stands for a `same`
+    /// class in a binding is its first in id order, whichever section states the class's
+    /// first line (L §6.1: section order changes nothing; pick P42).
+    #[test]
+    fn a_same_class_stands_in_a_binding_by_its_first_id() {
+        let jj = "version jj
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  same bank[c1] = bank[b1]
+";
+        let rest = r#"version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[c1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "c"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[b1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: pay[2026-03]) "a"
+
+version st_card
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers card
+  bank[a1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  same bank[a1] = bank[c1]
+
+ask l: x.cash.amount for x in transfers over 2026-03
+"#;
+        let head = r#"model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place card: accounts PLN lives 2026-01-01..
+input bank: observed
+input amt: money PLN
+input d_p: int
+
+move pay[m in months]: transfers
+  on day_of(m, d_p)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d_p = 10 "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  opening[card] = 0.00 PLN at 2026-03-01 start "s"
+
+"#;
+        let want = [
+            "l (x = bank[a1]): 100.00 PLN",
+            "  cut 2026-04-10",
+            "warning: WARN-UNREAD place card is read by nothing",
+        ];
+        let first = format!("{head}{jj}\n{rest}");
+        let last = format!("{head}{rest}\n{jj}");
+        assert_eq!(lines_of("s6_sec_a.tally", &first), want, "jj first");
+        assert_eq!(lines_of("s6_sec_b.tally", &last), want, "jj last");
+    }
 }

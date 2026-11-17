@@ -636,8 +636,8 @@ impl Engine {
         }
         out.extend(self.decided_members(m, &decided, ctx)?);
         let groups = self.same_groups(m, ctx.cut)?;
-        let written = self.same_written(m, ctx.cut)?;
-        in_order(once_by_same((&groups, &written), out))
+        let sides = self.same_sides(m, ctx.cut)?;
+        in_order(once_by_same((&groups, &sides), out))
     }
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
@@ -1273,16 +1273,16 @@ fn entry(word: &'static str, text: &str) -> Entry {
     }
 }
 
-/// The movements `movements`, a group of `groups` stated `same` bound once, by the member its
-/// same lines name first, `written` their sides as written (refcore's `once_by_same`).
-/// L §6.1, §5.19.
-fn once_by_same((groups, written): (&Groups, &[String]), movements: Vec<Moving>) -> Vec<Moving> {
+/// The movements `movements`, a group of `groups` stated `same` bound once, by its first
+/// member in id order among them, `sides` the same lines' sides in id order (refcore's
+/// `once_by_same`; pick P42). L §6.1, §5.19.
+fn once_by_same((groups, sides): (&Groups, &[String]), movements: Vec<Moving>) -> Vec<Moving> {
     if groups.is_empty() {
         return movements;
     }
     let keep = {
         let ids: Vec<&str> = movements.iter().map(Moving::id).collect();
-        kept_once(groups, written, &ids)
+        kept_once(groups, sides, &ids)
     };
     movements
         .into_iter()
