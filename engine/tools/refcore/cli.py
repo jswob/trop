@@ -196,7 +196,10 @@ def cross_stack_diff(aid, a, realities, chains, askers, mid):
         finally:
             asker._diff_only = None
         side = asker._diff_side
-        if side is None:
+        if side is None or lines:
+            # a side kept for the caller prints nothing; one that prints is refused, or a hole, as the line: S7's
+            # limit on its seen and unseen choices refuses after the first choice kept its cells (L §7.6 item 6;
+            # item 16 of the fourth turn)
             return lines
         sides[w] = side
         asker0 = asker0 or asker
