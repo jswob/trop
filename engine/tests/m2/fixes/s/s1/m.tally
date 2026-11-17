@@ -1,0 +1,55 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 S1 (#177): rows stated same that state different fulfils are refused, RUN-RECORD <r> and <r'> are stated same and fulfil <a> and <b> (f; before 2.1.8 nothing refuses it)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place unexplained: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d15: int
+
+move tip[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+move save[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d15 = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: tip[2026-03]) "b"
+
+version joined
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  same bank[a2] = bank[b1]
+
+ask f: flows(save, 2026-03), flows(tip, 2026-03)
+ask b: bal(sav, 2026-03-31)

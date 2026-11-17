@@ -1,0 +1,36 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8, finding 4 (P24): two places of unit any alive before S, each with a PLN leg on 2026-03-01. broker has an opening in EUR only: PLN, which it has no opening of, is the hole before S (\"has no balance before 2026-01-01\") before and after the leg, and EUR is its opening. broker2 has no opening at all: every read of it is \"no opening or stated reading\". Both engines print these (R14, read unit by unit)."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place broker2: wallets lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input day: date
+
+move buy: transfers
+  on day
+  leg cash from world to broker amount amt
+
+move buy2: transfers
+  on day
+  leg cash from world to broker2 amount amt
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 7.00 PLN "s"
+  day = 2026-03-01 "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+
+ask p: bal(broker, PLN, 2026-02-15), bal(broker, PLN, 2026-03-05), bal(broker, EUR, 2026-03-05)
+
+ask p2: bal(broker2, PLN, 2026-02-15), bal(broker2, PLN, 2026-03-05), bal(broker2, EUR, 2026-03-05)

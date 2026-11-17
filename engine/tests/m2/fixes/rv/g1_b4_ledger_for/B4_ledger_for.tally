@@ -1,0 +1,66 @@
+model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+place konto: accounts PLN lives 2026-01-01..
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dv[k in ks]: int
+input dk[k in ks]: date
+input dj: date
+input dd: int
+input d0: date
+input amt2: money PLN
+
+move one[k in ks]: transfers
+  on dk[k]
+  at d0
+  leg cash from world to jar[k] amount amt / dv[k]
+
+move two: transfers
+  on dj
+  at d0
+  leg cash from world to konto amount amt2
+
+move pay[m in months]: transfers
+  on day_of(m, dd)
+  at start_of(m)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dv[a] = 1 "s"
+  dv[b] = 0 "s"
+  dk[a] = window(2026-03-01, 2026-03-10) "s"
+  dk[b] = 2026-03-05 "s"
+  amt2 = 5.00 PLN "s"
+  dd = 10 "s"
+  d0 = 2026-01-01 "s"
+  dj = window(2026-03-02, 2026-03-04) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers konto, jar[a], jar[b]
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
+  bank[r2] = (on: 2026-03-03, kind: transfers, leg cash from world to konto amount 5.00 PLN) "r2"
+  bank[r3] = (on: 2026-03-06, kind: transfers, leg cash from world to jar[a] amount 10.00 PLN) "r3"
+  bank[r4] = (on: 2026-03-05, kind: transfers, leg cash from world to jar[b] amount 10.00 PLN) "r4"
+
+ask q: residuals jar[k] 2026-03 for k in ks
+ask qa: residuals jar[a] 2026-03
+ask qb: residuals jar[b] 2026-03

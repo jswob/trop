@@ -1,0 +1,8 @@
+scenario later over t
+  tally 2
+  from 2026-03-01
+
+version postpone
+  cite s
+  known 2026-04-05
+  moves v_rate to 2026-05..

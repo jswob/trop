@@ -1,0 +1,73 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R13 (#197), rest 2: check and explain under partial print a hole side or value in its linear form (p7: cp, ep; the engine prints the plain hole before 2.1.8). The other asks are R15's (p1 to p11)"
+
+source plan "plan"
+source bk "bank"
+unit PLN: currency minor 0.01
+input g_amt: money PLN
+input dom: int
+input divisor[m in months]: num
+input hamt[m in months]: money PLN
+place konto: accounts PLN lives 2019-05-01..
+place k2: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move groc[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount round(g_amt * divisor[m] / divisor[m], minor(PLN), half-even)
+
+move hm[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from k2 to world amount hamt[m]
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  g_amt = 500.00 PLN "plan"
+  dom = 5 "plan"
+  divisor[2026-01] = 1 "ok"
+  divisor[2026-02] = 0 "zero"
+  divisor[2026-03..2026-12] = 1 "ok"
+  hamt[2026-01] = 1.00 PLN "ok"
+  hamt[2026-02] = ?"how much in Feb" "hole"
+  hamt[2026-03..2026-12] = 1.00 PLN "ok"
+  opening[konto] = 10 000.00 PLN at 2026-01-01 start "w"
+  opening[k2] = 10 000.00 PLN at 2026-01-01 start "w"
+
+version st
+  cite bk
+  governs 2026-03
+  known 2026-04-02
+  anchor konto
+  anchor k2
+  stated[konto] = 200.00 PLN at 2026-03-10 end "saldo"
+  stated[k2] = 200.00 PLN at 2026-03-10 end "saldo"
+
+index ks = [a, b]
+input z[k in ks]: money PLN
+version zz
+  cite plan
+  governs always
+  known 2026-01-01
+  z[a] = 10.00 PLN "s"
+  z[b] = ?"z of b" "s"
+ask p1: bal(k2, 2026-02-28) partial
+ask p2: flows(k2, 2026-02) partial
+ask p3: flows(hm, 2026-02) partial
+ask p4: bal(k2, 2026-02-28) from 2026-01-15 partial
+ask p5: mean(z[k] for k in ks) partial
+ask p6: sum(z[k] for k in ks) partial
+ask p7: -bal(k2, 2026-02-28) partial
+ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
+ask p9: check bal(k2, 2026-02-28) == z[a] partial
+ask p10: bal(k2, 2026-02-28) + z[b] partial
+ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask cp: check bal(k2, 2026-02-28) == z[a] partial
+ask ep: explain bal(k2, 2026-02-28) partial

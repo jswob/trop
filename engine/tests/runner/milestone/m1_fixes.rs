@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m1::{SPEC, VECTORS};
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 28] = [
+    const GROUPS: [&str; 29] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -44,6 +44,7 @@ mod tests {
         "fixes-r8",
         "fixes-r9",
         "fixes-r10",
+        "fixes-r11",
         "fixes-b",
         "fixes-s",
     ];
@@ -580,6 +581,14 @@ mod tests {
     #[test]
     fn m1_fixes_tally_217_r10() {
         group_holds("fixes-r10", (0, 1));
+    }
+
+    /// tally 2.1.8's R11 (#195) on M1's forms (`m1/fixes/r11/bind/`, plan §1.2): a binding's
+    /// `where` that meets a hole day, and an expression that stays one. Expected bytes are
+    /// refcore's.
+    #[test]
+    fn m1_fixes_tally_218_r11() {
+        group_holds("fixes-r11", (0, 1));
     }
 
     /// tally 2.1.7's B1 to B7, refcore faults fixed at their shared cause (#150, #133, #151, #103, #98, #135): each item a vector named by its rule (`m1/fixes/b<n>/`, most from refcore's

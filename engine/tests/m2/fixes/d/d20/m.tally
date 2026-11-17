@@ -1,0 +1,48 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 §4 item 20 (#177): rows of two kinds stated same; the fulfils is the movement's, stated on one row, judged once on the rows that state it: no RUN-RECORD lacks its leg from a copy on the other row (f, b); a binding over either kind is HOLE-SAME (c)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind buys: transfers
+  attr cat: text
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input amt: money PLN
+input d15: int
+
+move save[m in months]: transfers
+  on day_of(m, d15)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d15 = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  same bank[a2] = bank[b1]
+  bank[b1] = (on: 2026-03-15, kind: buys, leg cash from konto to sav amount 950.00 PLN, cat: "x") "b"
+
+ask f: flows(save, 2026-03)
+ask b: bal(sav, 2026-03-31), bal(konto, 2026-03-31)
+ask c: count(t in buys over 2026-03)

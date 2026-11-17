@@ -1,0 +1,30 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 S8 (#181): explain references a cause met again once under each line that reads it, whatever order the cells were computed in: y is read twice by x and once by z (ex, ez)"
+
+source s "s"
+unit PLN: currency minor 0.01
+input p: money PLN
+input two: int
+
+def y: money PLN
+  rule base = p * two
+
+def x: money PLN
+  rule base = y + y
+
+def z: money PLN
+  rule base = x + y
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "s"
+  two = 2 "s"
+
+ask ex: explain x
+ask ez: explain z

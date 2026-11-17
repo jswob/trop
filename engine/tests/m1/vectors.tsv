@@ -2022,3 +2022,5 @@ fixes/gate8/m2_g8b_ot	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/
 fixes/gate8/m2_g8b_ot2	fixes-gate8		engine/tests/m2/fixes/gate8/g8b	engine/tests/m2/fixes/gate8/g8b/ot2.tally			-
 fixes/gate8/m2_g8c_b2	fixes-gate8		engine/tests/m2/fixes/gate8/g8c	engine/tests/m2/fixes/gate8/g8c/b2.tally			-
 fixes/gate8/m2_g8c_b1f	fixes-gate8		engine/tests/m2/fixes/gate8/g8c	engine/tests/m2/fixes/gate8/g8c/b1f.tally			-
+r11/where_hole_day	fixes-r11		engine/tests/m1/fixes/r11/bind	engine/tests/m1/fixes/r11/bind/m.tally	c_where s_where c_hole c_known		R11
+r11/expr_stays	fixes-r11		engine/tests/m1/fixes/r11/bind	engine/tests/m1/fixes/r11/bind/m.tally	e_and e_if e_sum e_or h_and h_if h_sum h_or		R11

@@ -1,0 +1,31 @@
+model halina
+  tally 2
+  on 2026-10-25
+  start 2024-01-01
+  end 2024-12-31
+  note "PTY-05, household D (Halina): the gift derived from her own records, a planned movement to Ania, whom D doesn't keep (an outside place)."
+
+source d_household "Household D's records: given 5 000.00 to Ania (made up)"
+
+unit DUK: currency minor 0.01
+
+place acc_halina: accounts DUK lives 2024-01-01..
+
+place ania: outside lives 2024-01-01..
+
+input gift_amount: money DUK
+
+input gift_day: date
+
+move gift: transfers
+  on gift_day
+  leg cash from acc_halina to ania amount gift_amount
+
+ask q_halina: flows(acc_halina, 2024)
+
+version d_records
+  cite d_household
+  governs always
+  known 2024-01-01
+  gift_amount = 5000.00 "D-G1: given to Ania"
+  gift_day = 2024-05-02 "D-G1"

@@ -1,0 +1,9 @@
+scenario sc over t
+  tally 2
+  from 2026-03-01
+
+version sc_same
+  cite s
+  governs 2026-03
+  known 2026-04-05
+  same bank[o1] = save[2026-03]

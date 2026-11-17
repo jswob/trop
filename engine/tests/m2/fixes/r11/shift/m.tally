@@ -1,0 +1,40 @@
+model shift_hole
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R11 (#195), item #169-a: a refusal met on the way outranks a hole. add_business back past 0001-01-01 through years cal_h doesn't cover is RUN-LIMIT (back, fwd); inside the covered year it answers (in5); xh / zero with xh a hole is RUN-DIV (div), and xh / one the hole (div_twin)"
+
+source plan "plan"
+input d: date
+input cal_h: calendar
+input nb: int
+input nf: int
+input n5: int
+input xh: num
+input zero: num
+input one: num
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01
+  nb = -800000
+  nf = 3000000
+  n5 = 5
+  xh = ?"how much"
+  zero = 0
+  one = 1
+
+version v2026
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun])
+
+ask back: add_business(d, nb, cal_h)
+ask fwd: add_business(d, nf, cal_h)
+ask in5: add_business(d, n5, cal_h)
+ask div: xh / zero
+ask div_twin: xh / one

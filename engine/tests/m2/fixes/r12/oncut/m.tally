@@ -1,0 +1,49 @@
+model t
+  tally 2
+  on 2026-04-12
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R12 (#196), item #182 (c4): an observation dated on K is seen but not applied, so its fulfils isn't either: pay[2026-04] stays booked (b: 2 000.00 PLN; f: 1 000.00 PLN); applied from K = 2026-04-11 (b11, f11). No-item 5: a reading dated on K pads and anchors nothing and last reads it (r_on); an opening at S start anchors under every K (r_open)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 1000.00 PLN "s"
+  dom = 10 "s"
+  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 5.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  bank[r1] = (on: 2026-04-10, kind: transfers, leg cash from world to konto amount 950.00 PLN, fulfils: pay[2026-04]) "r"
+
+version st_sav
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  pad sav from world
+  stated[sav] = 40.00 PLN at 2026-04-10 end "s"
+
+ask b: bal(konto, 2026-04-30), bal(konto, 2026-03-31) as known 2026-04-10
+ask f: flows(pay, 2026-04-01 .. 2026-04-30) as known 2026-04-10
+ask c: count(t in transfers over 2026-04) as known 2026-04-10
+ask b11: bal(konto, 2026-04-30) as known 2026-04-11
+ask f11: flows(pay, 2026-04-01 .. 2026-04-30) as known 2026-04-11
+ask r_on: bal(sav, 2026-04-30), last(stated[sav], 2026-04-10), gap(sav, 2026-04-10) as known 2026-04-10
+ask r_open: bal(sav, 2026-03-31) as known 2026-02-01
