@@ -1025,17 +1025,19 @@ class Engine:
         return keep[0]
 
     def units_at_reading(self, keep, units):
-        """The units a place of unit any has readings in at the instant of keep's rows: the walk's gaps there, which
-        give a row that states no unit for every unit the place holds (walk.apply_reading); the stated units where the
-        read is inside a walk or no gap is recorded."""
+        """The units a place of unit any has readings in at the instant of keep's rows: the gaps there of the walk of the
+        read's own cut, which give a row that states no unit for every unit the place holds (walk.apply_reading), so
+        every reader at that cut gets the same units (tally 2.1.8 P46): the cut's walk up to the instant's day (prefix_walk),
+        whether or not the read is inside a walk. The stated units where no gap is recorded."""
         ctx = getattr(self, '_Kctx', None)
-        if ctx is None or ctx.walk is not None or ctx.wp is not None:
+        if ctx is None:
             return units
         r = keep[0]
         day = r.instant[0]
         if not isinstance(day, datetime.date):
             return units
-        w = self.main_walk(ctx)
+        # the walk of the cut up to the instant's day: what every reader at the cut sees there, and no plan after it
+        w = self.prefix_walk(ctx.but(walk=None, wp=None), day)
         gs = w.gaps.get((r.pattern[0][1].name, day), ())
         sids = set(c.sid for c in keep)
         at = set(g[0] for g in gs if g[2].sid in sids)

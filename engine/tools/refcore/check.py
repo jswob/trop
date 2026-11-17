@@ -1955,6 +1955,12 @@ class Checker:
                                     'offset of the key arithmetic it protects)' % _txt(n.r), n.r.loc)
             sc2 = sc.child()
             sc2.allow_lit = True
+        if lt is None:
+            # a side load can't type (a reading at a place of unit any) takes the other side's type
+            rt = self.tc(n.r, sc2)
+            lt = self.tc(n.l, sc, expect=rt)
+            if lt is None:
+                lt = rt
         rt = self.tc(n.r, sc2, expect=lt if lt.k not in ('keylit', 'flex', 'year4') else None)
         if lt.k in ('keylit', 'flex', 'year4') and rt.k not in ('keylit',):
             lt = self.tc(n.l, sc, expect=rt)
@@ -3179,6 +3185,10 @@ class Checker:
             cur = self.m.place_unit(th) if th is not None else None
             if isinstance(cur, str) and cur in CURRENCIES:
                 t = T.money(cur)
+            elif cur == 'any' and expect is not None:
+                # at a place of unit any a reading's unit is its value's (L §5.10, R14): it is read in the unit of
+                # what it meets (group 3's fix review, p4_planlast)
+                t = expect
         return t
 
     def t_star(self, n, sc, expect):
