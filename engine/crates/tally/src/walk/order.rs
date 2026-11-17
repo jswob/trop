@@ -911,7 +911,7 @@ impl Engine {
 
 impl super::state::Walk {
     /// Records a run: its place in the list, by its instance's id. E §4.2.
-    fn record(&mut self, run: Run) {
+    pub(super) fn record(&mut self, run: Run) {
         let ix = self.runs.len();
         self.run_ids.insert(run.inst.id.clone(), ix);
         self.runs.push(run);

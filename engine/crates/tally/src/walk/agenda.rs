@@ -260,11 +260,16 @@ impl Engine {
             }
             schedule_plan(walk, inst)?;
         }
+        let mut before_start = Vec::new();
         for (rank, (move_id, stratum, insts)) in ranked3(decisions).into_iter().enumerate() {
             for inst in insts {
                 if left_out_of(walk, &move_id) {
                     count_left_out(walk, &inst)?;
                     continue;
+                }
+                if walk.proj.is_some() && matches!(inst.day, Some(Dated::Day(d)) if d < walk.start)
+                {
+                    before_start.push(inst.id.clone());
                 }
                 let places = hole_places.remove(&inst.id);
                 schedule_decision(m, walk, (&move_id, stratum, rank), (inst, places))?;
@@ -282,6 +287,53 @@ impl Engine {
         walk.endings = endings(m, walk);
         after_the_point(walk);
         walk.progress = Progress::Walking;
+        self.base_legs(id, &before_start)
+    }
+
+    /// A projection's walk `id`: each decision of `ids`, dated before its first day t, ran in
+    /// the walk it continues; that run's legs dated t on are put on their own days here, as
+    /// the projection counts every leg dated t through d by the leg's own day (refcore's
+    /// `base_legs`). E §4.3 step 2, L §5.14.1 (tally 2.1.8 R16, #183).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn base_legs(&mut self, id: usize, ids: &[String]) -> Result<(), Stop> {
+        let base = self.walk(id)?.proj.as_ref().map(|p| p.base);
+        for inst_id in ids {
+            let mut found = None;
+            let mut next = base;
+            while let (None, Some(b)) = (&found, next) {
+                let from = self.walk(b)?;
+                found = from
+                    .run_ids
+                    .get(inst_id)
+                    .and_then(|ix| from.runs.get(*ix))
+                    .cloned();
+                next = from.proj.as_ref().map(|p| p.base);
+            }
+            let Some(run) = found.filter(|r| matches!(r.inst.status, Status::Past | Status::Plan))
+            else {
+                continue;
+            };
+            let walk = self.walk_mut(id)?;
+            let rank = walk.plan_rank(&run.inst.order)?;
+            let legs = run.inst.legs.clone();
+            let ix = walk.runs.len();
+            walk.record(run);
+            for (li, lg) in legs.iter().enumerate() {
+                if let Dated::Day(d) = lg.day
+                    && d >= walk.start
+                    && d <= walk.end
+                {
+                    let at = At {
+                        rank,
+                        ..At::of(d, Step::Plans)
+                    };
+                    walk.at(at, Act::Leg(Mv::Run(ix), li));
+                }
+            }
+        }
         Ok(())
     }
 
@@ -714,19 +766,16 @@ fn schedule_decided(
     Ok(())
 }
 
-/// Whether a projection's walk leaves plan instance `inst` out: dated before the walk's first
-/// day t (E §4.3 step 2), or dated after the last day it plans and every leg of it too, each
-/// on a known day; a leg is booked on its own day (E §4.2 step 2), so one inside the window
-/// keeps the instance, as refcore's walk to the run's end books it (P §2.3; #183 asks which
-/// day a projection counts).
+/// Whether a projection's walk leaves plan instance `inst` out: dated after the last day it
+/// plans and every leg of it too, each on a known day. A projection counts every leg dated t
+/// through d by the leg's own day, whatever its movement's (E §4.3 step 2, E §4.2 step 2;
+/// tally 2.1.8 R16, #183): an instance dated before t keeps its legs from t on, and the
+/// legs before t, which the walk it continues booked, aren't put on its days.
 fn outside_window(walk: &Walk, inst: &Inst) -> bool {
     // a window's first day (refcore's `day_lo`)
     let Some(first) = inst.day.as_ref().and_then(Dated::lo) else {
         return false;
     };
-    if first < walk.start {
-        return true;
-    }
     let through = walk.plans_through();
     if first <= through {
         return false;
