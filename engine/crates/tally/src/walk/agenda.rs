@@ -288,9 +288,11 @@ impl Engine {
             }
         }
         walk.endings = endings(m, walk);
-        after_the_point(walk);
         walk.progress = Progress::Walking;
-        self.base_legs(id, &before_start)
+        // the legs of day t the start state already holds go with the point's filter
+        self.base_legs(id, &before_start)?;
+        after_the_point(self.walk_mut(id)?);
+        Ok(())
     }
 
     /// A projection's walk `id`: each decision of `ids`, dated before its first day t, ran in
