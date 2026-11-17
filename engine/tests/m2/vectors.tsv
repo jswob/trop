@@ -353,3 +353,12 @@ fixes/g3/ez06	fixes-windows		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/e
 fixes/g4/nb3_at	fixes-records		engine/tests/m2/fixes/g4	engine/tests/m2/fixes/g4/nb3_at.tally			records
 fixes/g4/nb3_atT	fixes-records		engine/tests/m2/fixes/g4	engine/tests/m2/fixes/g4/nb3_atT.tally			records
 fixes/g6/b4_q1	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b4.tally	q1		sweep
+fixes/rv/g3f_g1_unitless_hole	fixes-rv		engine/tests/m2/fixes/rv/g3f_g1_unitless_hole	engine/tests/m2/fixes/rv/g3f_g1_unitless_hole/p5_min.tally			R14
+fixes/rv/g3f_g1_unitless_hole_eur	fixes-rv		engine/tests/m2/fixes/rv/g3f_g1_unitless_hole_eur	engine/tests/m2/fixes/rv/g3f_g1_unitless_hole_eur/p5_plan.tally			R14
+fixes/rv/g4f_g1_removed_only	fixes-rv		engine/tests/m2/fixes/rv/g4f_g1_removed_only	engine/tests/m2/fixes/rv/g4f_g1_removed_only/b1_onlyq.tally			S1
+fixes/rv/g4f_f1_member_range_9	fixes-rv		engine/tests/m2/fixes/rv/g4f_f1_member_range_9	engine/tests/m2/fixes/rv/g4f_f1_member_range_9/n2_range_9.tally			S6
+fixes/rv/g4f_f1_member_range_10	fixes-rv		engine/tests/m2/fixes/rv/g4f_f1_member_range_10	engine/tests/m2/fixes/rv/g4f_f1_member_range_10/n2_range_10.tally			S6
+fixes/rv/g4f_f1_member_list	fixes-rv		engine/tests/m2/fixes/rv/g4f_f1_member_list	engine/tests/m2/fixes/rv/g4f_f1_member_list/n2_list.tally			S6
+fixes/rv/g4f_g2_count_hole_day	fixes-rv		engine/tests/m2/fixes/rv/g4f_g2_count_hole_day	engine/tests/m2/fixes/rv/g4f_g2_count_hole_day/b2_cut.tally			S1
+fixes/rv/g4f_zero_leg	fixes-rv		engine/tests/m2/fixes/rv/g4f_zero_leg	engine/tests/m2/fixes/rv/g4f_zero_leg/z1.tally			R13
+fixes/rv/g4f_zero_leg_life	fixes-rv		engine/tests/m2/fixes/rv/g4f_zero_leg_life	engine/tests/m2/fixes/rv/g4f_zero_leg_life/z2.tally			R13

@@ -119510,4 +119510,522 @@ ask q5: pm - 2026-01 law 2026-12-31
   law date 2026-12-31, cut 2026-01-01
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
+,29:fixes/rv/g3f_g1_unitless_hole,8:fixes-rv,16:run p5_min.tally,985:12:p5_min.tally,964:model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d_p: date
+input x1: money PLN
+input x2: money PLN
+input d_q: date
+def lb: money EUR = last(stated[broker], d_q)
+def amt: money PLN = if lb > 0 EUR then x1 else x2
+move pay: transfers
+  on d_p
+  leg cash from world to konto amount amt
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  d_p = 2026-03-05 "s"
+  x1 = 1.00 PLN "s"
+  x2 = 2.00 PLN "s"
+  d_q = 2026-02-16 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask k: bal(konto, 2026-03-31)
+,,1:0,148:k: ?"not read" (stated[broker])
+  unfulfilled: pay
+  held: stated[broker] = ?"not read" (stated[broker]) (v2), read for 2026-02-16
+  cut 2026-06-10
+,33:fixes/rv/g3f_g1_unitless_hole_eur,8:fixes-rv,17:run p5_plan.tally,1089:13:p5_plan.tally,1066:model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d_p: date
+input x1: money PLN
+input x2: money PLN
+input d_q: date
+def lb: money EUR = last(stated[broker], d_q)
+def amt: money PLN = if lb > 0 EUR then x1 else x2
+move pay: transfers
+  on d_p
+  leg cash from world to konto amount amt
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  d_p = 2026-03-05 "s"
+  x1 = 1.00 PLN "s"
+  x2 = 2.00 PLN "s"
+  d_q = 2026-02-16 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask k: bal(konto, 2026-03-31)
+,,1:0,106:k: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN
+  cut 2026-06-10
+,28:fixes/rv/g4f_g1_removed_only,8:fixes-rv,18:run b1_onlyq.tally,648:14:b1_onlyq.tally,625:model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input px[u in currencies]: num PLN/u reading
+input qx[u in currencies]: num PLN/u reading
+
+version r
+  cite s
+  known 2026-03-09
+  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
+
+version r2
+  cite s
+  known 2026-04-01
+  replace qx[EUR] = none at 2026-03-08
+
+version j
+  cite s
+  governs always
+  known 2026-01-01
+  same px[EUR] = qx[EUR]
+
+ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
+ask q: last(qx[EUR], 2026-03-10), since(qx[EUR], 2026-03-10)
+ask v: px[EUR] law 2026-03-08
+,,1:0,377:e: (?"px[EUR] has no reading on or before 2026-03-10" (px[EUR]), ?"px[EUR] has no reading on or before 2026-03-10" (px[EUR]))
+  cut 2026-12-31
+q: (?"qx[EUR] has no reading on or before 2026-03-10" (qx[EUR]), ?"qx[EUR] has no reading on or before 2026-03-10" (qx[EUR]))
+  cut 2026-12-31
+v: ?"px[EUR] has no reading at 2026-03-08" (px[EUR])
+  law date 2026-03-08, cut 2026-12-31
+,30:fixes/rv/g4f_f1_member_range_9,8:fixes-rv,20:run n2_range_9.tally,691:16:n2_range_9.tally,666:model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = 1..12
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+ask n: count(t in wages over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same pay[9] = pay[10]
+,,1:0,997:l (x = pay[1]): 500.00 PLN
+  unfulfilled: pay[1]
+  cut 2026-04-10
+l (x = pay[2]): 500.00 PLN
+  unfulfilled: pay[2]
+  cut 2026-04-10
+l (x = pay[3]): 500.00 PLN
+  unfulfilled: pay[3]
+  cut 2026-04-10
+l (x = pay[4]): 500.00 PLN
+  unfulfilled: pay[4]
+  cut 2026-04-10
+l (x = pay[5]): 500.00 PLN
+  unfulfilled: pay[5]
+  cut 2026-04-10
+l (x = pay[6]): 500.00 PLN
+  unfulfilled: pay[6]
+  cut 2026-04-10
+l (x = pay[7]): 500.00 PLN
+  unfulfilled: pay[7]
+  cut 2026-04-10
+l (x = pay[8]): 500.00 PLN
+  unfulfilled: pay[8]
+  cut 2026-04-10
+l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[9]
+  cut 2026-04-10
+l (x = pay[11]): 500.00 PLN
+  unfulfilled: pay[11]
+  cut 2026-04-10
+l (x = pay[12]): 500.00 PLN
+  unfulfilled: pay[12]
+  cut 2026-04-10
+n: 11
+  unfulfilled: pay[11]
+  unfulfilled: pay[12]
+  unfulfilled: pay[1]
+  unfulfilled: pay[2]
+  unfulfilled: pay[3]
+  unfulfilled: pay[4]
+  unfulfilled: pay[5]
+  unfulfilled: pay[6]
+  unfulfilled: pay[7]
+  unfulfilled: pay[8]
+  unfulfilled: pay[9]
+  cut 2026-04-10
+,31:fixes/rv/g4f_f1_member_range_10,8:fixes-rv,21:run n2_range_10.tally,692:17:n2_range_10.tally,666:model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = 1..12
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+ask n: count(t in wages over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same pay[10] = pay[9]
+,,1:0,997:l (x = pay[1]): 500.00 PLN
+  unfulfilled: pay[1]
+  cut 2026-04-10
+l (x = pay[2]): 500.00 PLN
+  unfulfilled: pay[2]
+  cut 2026-04-10
+l (x = pay[3]): 500.00 PLN
+  unfulfilled: pay[3]
+  cut 2026-04-10
+l (x = pay[4]): 500.00 PLN
+  unfulfilled: pay[4]
+  cut 2026-04-10
+l (x = pay[5]): 500.00 PLN
+  unfulfilled: pay[5]
+  cut 2026-04-10
+l (x = pay[6]): 500.00 PLN
+  unfulfilled: pay[6]
+  cut 2026-04-10
+l (x = pay[7]): 500.00 PLN
+  unfulfilled: pay[7]
+  cut 2026-04-10
+l (x = pay[8]): 500.00 PLN
+  unfulfilled: pay[8]
+  cut 2026-04-10
+l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[9]
+  cut 2026-04-10
+l (x = pay[11]): 500.00 PLN
+  unfulfilled: pay[11]
+  cut 2026-04-10
+l (x = pay[12]): 500.00 PLN
+  unfulfilled: pay[12]
+  cut 2026-04-10
+n: 11
+  unfulfilled: pay[11]
+  unfulfilled: pay[12]
+  unfulfilled: pay[1]
+  unfulfilled: pay[2]
+  unfulfilled: pay[3]
+  unfulfilled: pay[4]
+  unfulfilled: pay[5]
+  unfulfilled: pay[6]
+  unfulfilled: pay[7]
+  unfulfilled: pay[8]
+  unfulfilled: pay[9]
+  cut 2026-04-10
+,27:fixes/rv/g4f_f1_member_list,8:fixes-rv,17:run n2_list.tally,696:13:n2_list.tally,674:model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = [zz, aa, mm]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+ask n: count(t in wages over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same pay[aa] = pay[zz]
+,,1:0,204:l (x = pay[zz]): 500.00 PLN
+  unfulfilled: pay[zz]
+  cut 2026-04-10
+l (x = pay[mm]): 500.00 PLN
+  unfulfilled: pay[mm]
+  cut 2026-04-10
+n: 2
+  unfulfilled: pay[mm]
+  unfulfilled: pay[zz]
+  cut 2026-04-10
+,30:fixes/rv/g4f_g2_count_hole_day,8:fixes-rv,16:run b2_cut.tally,1595:12:b2_cut.tally,1573:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input dh: date
+input bank: observed
+input card: observed
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask b3: bal(konto, 2026-03-31)
+ask t2: tot[2026-02]
+ask t3: tot[2026-03]
+ask c3: count(p in pays over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
+  card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+
+version sm
+  cite s
+  known 2026-03-11
+  same bank[o1] = card[o1]
+ask fp: flows(pay, 2026-03)
+ask ob: observed(pay[2026-03])
+ask c2: count(p in pays over 2026-02)
+ask k1: count(p in pays over 2026-03) as known 2026-03-10
+ask k2: count(p in pays over 2026-03) as known 2026-03-11
+ask k3: tot[2026-02] as known 2026-03-10
+ask hd: count(p in pays on dh)
+ask hs: sum(p.cash.amount for p in pays on dh)
+ask ob1: count(x in bank over 2026-03)
+ask ob2: count(x in card over 2026-01..2026-06)
+ask ob3: count(x in bank over 2026-04)
+,,1:0,1603:b3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-06-30
+c2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+c3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+fp: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+hd: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+hs: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+k1: 2
+  cut 2026-03-10
+k2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-03-11
+k3: 0.00 PLN
+  cut 2026-03-10
+ob: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+ob1: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+ob2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+ob3: 0
+  cut 2026-06-30
+t2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+t3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+,21:fixes/rv/g4f_zero_leg,8:fixes-rv,12:run z1.tally,822:8:z1.tally,806:model z1
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input w_zer: date
+input zero: money PLN
+
+move zer: transfers
+  on w_zer
+  leg cash from world to konto amount zero
+
+ask fz: flows(konto, 2026-04-09 .. 2026-04-21)
+ask fm: flows(zer, 2026-04-09 .. 2026-04-21)
+ask nz: count(t in transfers over 2026-04-09 .. 2026-04-21)
+ask bz: bal(konto, 2026-04-20)
+ask xz: x.cash.amount for x in transfers over 2026-04-09 .. 2026-04-21
+ask fe: flows(konto, 2026-04-09 .. 2026-04-21) windows each
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w_zer = window(2026-04-15, 2026-04-25) "s"
+  zero = 0.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,529:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+  cut 2026-08-01
+fe: 0.00 PLN
+  cut 2026-08-01
+fm: ?"date within window(2026-04-15, 2026-04-25) not precise enough for flows of zer" (zer)
+  cut 2026-08-01
+fz: 0.00 PLN
+  cut 2026-08-01
+nz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+  unfulfilled: zer
+  cut 2026-08-01
+xz (x = zer): ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+,26:fixes/rv/g4f_zero_leg_life,8:fixes-rv,12:run z2.tally,878:8:z2.tally,862:model z2
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..2026-04-18
+place world: outside lives 1900-01-01..
+input w_zer: date
+input zero: money PLN
+
+move zer: transfers
+  on w_zer
+  leg cash from world to konto amount zero
+
+ask fz: flows(konto, 2026-04-09 .. 2026-04-21)
+ask fm: flows(zer, 2026-04-09 .. 2026-04-21)
+ask nz: count(t in transfers over 2026-04-09 .. 2026-04-21)
+ask bz: bal(konto, 2026-04-20)
+ask xz: x.cash.amount for x in transfers over 2026-04-09 .. 2026-04-21
+ask fe: flows(konto, 2026-04-09 .. 2026-04-21) windows each
+ask fw: flows(konto, 2026-04-01 .. 2026-04-17)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w_zer = window(2026-04-15, 2026-04-25) "s"
+  zero = 0.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+,,1:0,559:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+  cut 2026-08-01
+fe: 0.00 PLN
+  cut 2026-08-01
+fm: ?"date within window(2026-04-15, 2026-04-25) not precise enough for flows of zer" (zer)
+  cut 2026-08-01
+fw: 0.00 PLN
+  cut 2026-08-01
+fz: 0.00 PLN
+  cut 2026-08-01
+nz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+  unfulfilled: zer
+  cut 2026-08-01
+xz (x = zer): ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
 ,
