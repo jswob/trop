@@ -1700,6 +1700,19 @@ def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
                 totals[u] = totals.get(u, Fraction(0)) + s * a.q
 
 
+def _zero_flow(f):
+    """A window day's movement of a known amount 0 adds 0 to flows on whichever day it falls, so its value doesn't
+    depend on the day (L §4.4; tally 2.1.8 P50, group 4's fix review: m2_g3_fix2_r3 fa, m2_gate8_window_moves)."""
+    return f is not None and not isinstance(f, Hole) and getattr(f, 'q', None) == 0
+
+
+def _zero_at(mv, place):
+    """Whether every leg of mv at place is of a known amount 0 (_zero_flow)."""
+    legs = [lg for lg in getattr(mv, 'legs', None) or ()
+            if any(getattr(x, 'name', None) == place for x in (lg.frm, lg.to))]
+    return bool(legs) and all(_zero_flow(lg.amount) for lg in legs)
+
+
 def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
     """One walk's part of flows of a place: its entries in (lo, limit], added to totals and holes."""
     # what holds for the whole walk (a refused movement whose places aren't known, a decision refused, a movement
@@ -1747,7 +1760,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                 holes.extend(Hole(x.qs) for x in perms)
                 perms = []
             if e.key > limit:
-                if e.kind == 'delta' and e.wid is not None and e.wid in wins:
+                if e.kind == 'delta' and e.wid is not None and e.wid in wins and not _zero_flow(e.flow):
                     holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                         e.win.window_text(), place), e.mv.id)]), e.win))
                 continue
@@ -1775,8 +1788,9 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if e.kind == 'delta' and e.wid is not None:
                 win = e.win
                 if not (sp.contains(win.lo) and win.hi <= last):
-                    holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
-                        win.window_text(), place), e.mv.id)]), win))
+                    if not _zero_flow(f):
+                        holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
+                            win.window_text(), place), e.mv.id)]), win))
                     continue
             for r in e.reg:
                 self.reg(r)
@@ -1800,6 +1814,8 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             overlaps = win.lo <= last and (sp.start is None or win.hi >= sp.start) if isinstance(win, Iv) else False
             if wid not in closed and overlaps and not (sp.contains(win.lo) and win.hi <= last):
                 mv = next((e.mv for e in lg.ents if e.kind == 'imp_on' and e.wid == wid), None)
+                if _zero_at(mv, place):
+                    continue
                 holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
                     win.window_text(), place), mv.id if mv is not None else place)]), win))
 
