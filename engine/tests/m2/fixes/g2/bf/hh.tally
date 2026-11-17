@@ -24,9 +24,9 @@ move advh: transfers
   leg cash from konto to world amount amt
 
 move advl: transfers
-  on adv_day
+  on hd
   at adv_law
-  leg cash from konto to world amount amt on hd
+  leg cash from konto to world amount amt
 
 version base
   cite plan

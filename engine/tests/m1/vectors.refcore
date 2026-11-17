@@ -62719,7 +62719,7 @@ version readings_2026
 
 ask n_safe: value(safe, 2026-03-31) in USD by fxs
 ,,1:1,90:refused: LOAD-UNIT value by fxs: the price is num PLN/$u, not num USD/u (keyed_s.tally:4)
-,33:fixes/g9/r_act_legday_a_bal_early,8:fixes-g9,40:run r_act_legday.tally --ask a_bal_early,1382:18:r_act_legday.tally,1354:model p
+,33:fixes/g9/r_act_legday_a_bal_early,8:fixes-g9,40:run r_act_legday.tally --ask a_bal_early,1357:18:r_act_legday.tally,1329:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -62758,14 +62758,14 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 move holed: transfers
-  on hstart
+  on hday
   at hstart
-  leg cash from world to konto amount rent on hday
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -62792,7 +62792,7 @@ version v
   unfulfilled: salary[2026-01]
   unfulfilled: split[2026-01]
   cut 2026-04-15
-,32:fixes/g9/r_act_legday_a_bal_late,8:fixes-g9,39:run r_act_legday.tally --ask a_bal_late,1382:18:r_act_legday.tally,1354:model p
+,32:fixes/g9/r_act_legday_a_bal_late,8:fixes-g9,39:run r_act_legday.tally --ask a_bal_late,1357:18:r_act_legday.tally,1329:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -62831,14 +62831,14 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 move holed: transfers
-  on hstart
+  on hday
   at hstart
-  leg cash from world to konto amount rent on hday
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -62874,7 +62874,7 @@ version v
   unfulfilled: split[2026-03]
   unfulfilled: split[2026-04]
   cut 2026-04-15
-,33:fixes/g9/r_act_legday_a_low_early,8:fixes-g9,40:run r_act_legday.tally --ask a_low_early,1382:18:r_act_legday.tally,1354:model p
+,33:fixes/g9/r_act_legday_a_low_early,8:fixes-g9,40:run r_act_legday.tally --ask a_low_early,1357:18:r_act_legday.tally,1329:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -62913,14 +62913,14 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 move holed: transfers
-  on hstart
+  on hday
   at hstart
-  leg cash from world to konto amount rent on hday
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -62947,7 +62947,7 @@ version v
   unfulfilled: salary[2026-01]
   unfulfilled: split[2026-01]
   cut 2026-04-15
-,32:fixes/g9/r_act_legday_a_low_late,8:fixes-g9,39:run r_act_legday.tally --ask a_low_late,1382:18:r_act_legday.tally,1354:model p
+,32:fixes/g9/r_act_legday_a_low_late,8:fixes-g9,39:run r_act_legday.tally --ask a_low_late,1357:18:r_act_legday.tally,1329:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -62986,14 +62986,14 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 move holed: transfers
-  on hstart
+  on hday
   at hstart
-  leg cash from world to konto amount rent on hday
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -63029,7 +63029,7 @@ version v
   unfulfilled: split[2026-03]
   unfulfilled: split[2026-04]
   cut 2026-04-15
-,34:fixes/g9/r_act_legday_h_from_after,8:fixes-g9,41:run r_act_legday.tally --ask h_from_after,1382:18:r_act_legday.tally,1354:model p
+,34:fixes/g9/r_act_legday_h_from_after,8:fixes-g9,41:run r_act_legday.tally --ask h_from_after,1357:18:r_act_legday.tally,1329:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -63068,14 +63068,14 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 move holed: transfers
-  on hstart
+  on hday
   at hstart
-  leg cash from world to konto amount rent on hday
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -63111,7 +63111,7 @@ version v
   unfulfilled: split[2026-03]
   unfulfilled: split[2026-04]
   cut 2026-04-15
-,34:fixes/g9/r_act_legday2_a_bal_early,8:fixes-g9,41:run r_act_legday2.tally --ask a_bal_early,1285:19:r_act_legday2.tally,1256:model p
+,34:fixes/g9/r_act_legday2_a_bal_early,8:fixes-g9,41:run r_act_legday2.tally --ask a_bal_early,1270:19:r_act_legday2.tally,1241:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -63150,9 +63150,9 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -63181,7 +63181,7 @@ version v
   cut 2026-04-15
 warning: WARN-UNREAD input hday is read by nothing
 warning: WARN-UNREAD input hstart is read by nothing
-,33:fixes/g9/r_act_legday2_a_bal_late,8:fixes-g9,40:run r_act_legday2.tally --ask a_bal_late,1285:19:r_act_legday2.tally,1256:model p
+,33:fixes/g9/r_act_legday2_a_bal_late,8:fixes-g9,40:run r_act_legday2.tally --ask a_bal_late,1270:19:r_act_legday2.tally,1241:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -63220,9 +63220,9 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -63260,7 +63260,7 @@ version v
   cut 2026-04-15
 warning: WARN-UNREAD input hday is read by nothing
 warning: WARN-UNREAD input hstart is read by nothing
-,34:fixes/g9/r_act_legday2_a_low_early,8:fixes-g9,41:run r_act_legday2.tally --ask a_low_early,1285:19:r_act_legday2.tally,1256:model p
+,34:fixes/g9/r_act_legday2_a_low_early,8:fixes-g9,41:run r_act_legday2.tally --ask a_low_early,1270:19:r_act_legday2.tally,1241:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -63299,9 +63299,9 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -63330,7 +63330,7 @@ version v
   cut 2026-04-15
 warning: WARN-UNREAD input hday is read by nothing
 warning: WARN-UNREAD input hstart is read by nothing
-,33:fixes/g9/r_act_legday2_a_low_late,8:fixes-g9,40:run r_act_legday2.tally --ask a_low_late,1285:19:r_act_legday2.tally,1256:model p
+,33:fixes/g9/r_act_legday2_a_low_late,8:fixes-g9,40:run r_act_legday2.tally --ask a_low_late,1270:19:r_act_legday2.tally,1241:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -63369,9 +63369,9 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -63409,7 +63409,7 @@ version v
   cut 2026-04-15
 warning: WARN-UNREAD input hday is read by nothing
 warning: WARN-UNREAD input hstart is read by nothing
-,35:fixes/g9/r_act_legday2_h_from_after,8:fixes-g9,42:run r_act_legday2.tally --ask h_from_after,1285:19:r_act_legday2.tally,1256:model p
+,35:fixes/g9/r_act_legday2_h_from_after,8:fixes-g9,42:run r_act_legday2.tally --ask h_from_after,1270:19:r_act_legday2.tally,1241:model p
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -63448,9 +63448,9 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
@@ -82055,12 +82055,12 @@ version card_2026
   cut 2026-03-01
 q: (refused: RUN-FUTURE a decision on 2026-04-15 binds over savs through 2026-04-16, after its day, 350.00 PLN, 100.00 PLN, 150.00 PLN, 150.00 PLN, 15.00 PLN)
   cut 2026-03-01
-,15:fixes/g10/t_c10,9:fixes-g10,15:run t_c10.tally,2423:11:t_c10.tally,2402:model cyc
+,15:fixes/g10/t_c10,9:fixes-g10,15:run t_c10.tally,2178:11:t_c10.tally,2157:model cyc
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; a plan and a decision before the cut whose legs state their own days, one before the cut and one after"
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; a plan and a decision before the cut (tally 2.2: their legs no longer state their own days, and the asks e and ep that read them on those days are dropped)"
 
 source card "T's card (invented)"
 
@@ -82071,8 +82071,6 @@ input d1: date
 input dp: date
 
 input dl: date
-
-input dq: date
 
 input keep: money PLN
 
@@ -82105,21 +82103,19 @@ move z: transfers
   leg cash from world to a5 amount bal(a4)
 
 move pp: transfers
-  on dp
-  leg cash from world to a1 amount extra on dl
+  on dl
+  leg cash from world to a1 amount extra
 
 move dd: transfers
   on dp
   reads a1
-  leg cash from a1 to a6 amount bal(a1) - keep - keep on dq
+  leg cash from a1 to a6 amount bal(a1) - keep - keep
 
 move w: transfers
   on d1
   reads a6
   leg cash from world to a6 amount bal(a6) + one
 
-ask e: bal(a1, 2026-02-11), bal(a1, 2026-02-12), bal(a6, 2026-03-04), bal(a6, 2026-03-05), flows(pp, 2026-01-01..2026-12-31), flows(dd, 2026-01-01..2026-12-31)
-ask ep: bal(a6, 2026-06-30) from 2026-02-11, bal(a1, 2026-06-30) from 2026-02-11
 ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
 ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31)
 
@@ -82130,7 +82126,6 @@ version card_2026
   d1 = 2026-04-15 "the card"
   dp = 2026-02-10 "the card"
   dl = 2026-02-12 "the card"
-  dq = 2026-03-05 "the card"
   keep = 400.00 PLN "the card"
   extra = 50.00 PLN "the card"
   one = 1.00 PLN "the card"
@@ -82140,15 +82135,7 @@ version card_2026
   opening[a4] = 0 PLN at 2026-01-01 start "the card"
   opening[a5] = 0 PLN at 2026-01-01 start "the card"
   opening[a6] = 7.00 PLN at 2026-01-01 start "the card"
-,,1:0,399:e: (1 000.00 PLN, 1 050.00 PLN, 7.00 PLN, 207.00 PLN, 50.00 PLN, 200.00 PLN)
-  unfulfilled: dd
-  unfulfilled: pp
-  cut 2026-03-01
-ep: (415.00 PLN, 750.00 PLN)
-  unfulfilled: dd
-  unfulfilled: pp
-  cut 2026-03-01
-fl: (100.00 PLN, 150.00 PLN, 150.00 PLN)
+,,1:0,187:fl: (100.00 PLN, 150.00 PLN, 150.00 PLN)
   cut 2026-03-01
 q: (750.00 PLN, 350.00 PLN, 100.00 PLN, 150.00 PLN, 150.00 PLN, 415.00 PLN)
   unfulfilled: dd
@@ -214130,39 +214117,6 @@ q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EU
   unfulfilled: fx
   held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
-,24:fixes/gate8/k7_after_run,11:fixes-gate8,22:run k7_after_run.tally,733:18:k7_after_run.tally,706:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-03-15
-
-source plan "plan"
-unit PLN: currency minor 0.01
-input rent_amt: money PLN
-input rent_dom: int
-input ld: date
-place konto: accounts PLN lives 2019-05-01..
-place landlord: outside lives 1900-01-01..
-
-index mon = month 2025-12..2026-12
-
-move rent[m in mon]: transfers
-  on day_of(m, rent_dom)
-  at start_of(m)
-  leg cash from konto to landlord amount rent_amt on ld
-
-version plan_2026
-  cite plan
-  governs always
-  known 2025-01-01
-  rent_amt = 2 000.00 PLN "umowa najmu"
-  rent_dom = 1 "umowa najmu"
-  ld = 2026-04-01 "own"
-  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
-
-ask f: flows(konto, 2026-04-01 .. 2026-05-01)
-,,1:0,35:f: -18 000.00 PLN
-  cut 2026-10-20
 ,28:fixes/gate8/k4_changed_after,11:fixes-gate8,30:run household.tally late.tally,761:15:household.tally,563:model household
   tally 2
   on 2026-10-20
@@ -214606,39 +214560,6 @@ q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EU
   unfulfilled: fx
   held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
-,28:fixes/gate8/p47_k7_after_run,11:fixes-gate8,11:run m.tally,721:7:m.tally,706:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-03-15
-
-source plan "plan"
-unit PLN: currency minor 0.01
-input rent_amt: money PLN
-input rent_dom: int
-input ld: date
-place konto: accounts PLN lives 2019-05-01..
-place landlord: outside lives 1900-01-01..
-
-index mon = month 2025-12..2026-12
-
-move rent[m in mon]: transfers
-  on day_of(m, rent_dom)
-  at start_of(m)
-  leg cash from konto to landlord amount rent_amt on ld
-
-version plan_2026
-  cite plan
-  governs always
-  known 2025-01-01
-  rent_amt = 2 000.00 PLN "umowa najmu"
-  rent_dom = 1 "umowa najmu"
-  ld = 2026-04-01 "own"
-  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
-
-ask f: flows(konto, 2026-04-01 .. 2026-05-01)
-,,1:0,35:f: -18 000.00 PLN
-  cut 2026-10-20
 ,31:fixes/gate8/p47_k9_by_last_hole,11:fixes-gate8,11:run m.tally,1127:7:m.tally,1111:model t
   tally 2
   on 2026-06-30
@@ -221839,7 +221760,7 @@ version bank_a
 warning: WARN-UNREAD input fee is read by nothing
 warning: WARN-UNREAD input price is read by nothing
 warning: WARN-UNREAD input rate is read by nothing
-,20:fixes/gate8/m2_g2_bf,11:fixes-gate8,31:run h.tally hh.tally late.tally,2580:7:h.tally,1366:model household
+,20:fixes/gate8/m2_g2_bf,11:fixes-gate8,31:run h.tally hh.tally late.tally,2568:7:h.tally,1366:model household
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -221887,7 +221808,7 @@ ask p3: explain bal(konto, 2026-12-31) in late
 ask bl: bal(konto, 2026-12-31) in late windows each
 ask blw: bal(konto, 2026-12-24) in late windows each
 ask bl_plain: bal(konto, 2026-12-31) in late
-,8:hh.tally,1007:model household
+,8:hh.tally,996:model household
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -221913,9 +221834,9 @@ move advh: transfers
   leg cash from konto to world amount amt
 
 move advl: transfers
-  on adv_day
+  on hd
   at adv_law
-  leg cash from konto to world amount amt on hd
+  leg cash from konto to world amount amt
 
 version base
   cite plan
@@ -228813,30 +228734,6 @@ q_sav: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both ful
   cut 2026-04-10
 q_save: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
   cut 2026-04-10
-,40:fixes/gate8/m2_rt_l5_19_window_in_leg_on,11:fixes-gate8,32:run l5_19_window_in_leg_on.tally,658:28:l5_19_window_in_leg_on.tally,621:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-12-31
-
-source bank "bank"
-unit PLN: currency minor 0.01
-input bank_rows: observed
-place konto: accounts PLN lives 2019-05-01..
-place world: outside lives 1900-01-01..
-place unexplained: outside lives 1900-01-01..
-
-version stmt
-  cite bank
-  governs 2026-02
-  known 2026-03-02
-  covers konto
-  pad konto from unexplained
-  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
-  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN on window(2026-02-03, 2026-02-05)) "line 1"
-
-ask q: bal(konto, 2026-02-28)
-,,1:1,134:refused: LOAD-LEG the on of leg cash of bank_rows[r1] is a window; a window belongs in an attribute (l5_19_window_in_leg_on.tally:21)
 ,36:fixes/gate8/m2_rt_l5_19_window_in_on,11:fixes-gate8,28:run l5_19_window_in_on.tally,640:24:l5_19_window_in_on.tally,607:model hh
   tally 2
   on 2026-10-20
@@ -231919,36 +231816,6 @@ ask q: bal(sav, 2026-03-31), bal(konto, 2026-01-19), bal(konto, 2026-01-20), bal
 warning: WARN-UNREAD input db is read by nothing
 warning: WARN-UNREAD input dh is read by nothing
 warning: WARN-UNREAD input dm is read by nothing
-,34:fixes/gate8/m2_r437_outside_window,11:fixes-gate8,24:run outside_window.tally,931:20:outside_window.tally,902:model p
-  tally 2
-  on 2026-01-01
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 gate 8 run 43702332507 on 6a58624c: a projection to 04-30 of a movement dated 06-01 whose leg is on 04-30, the last day it plans (walk/agenda.rs outside_window)"
-source card "probe"
-unit DUK: currency minor 0.01
-place konto: accounts DUK lives 2026-01-01..
-place world: outside lives 2026-01-01..
-input amt: money DUK
-input d_mv: date
-input d_leg: date
-move early: transfers
-  on d_mv
-  leg cash from world to konto amount amt on d_leg
-ask a: bal(konto, 2026-04-30) from 2026-02-01 with uncertain, bal(konto, 2026-04-30) from 2026-02-01, bal(konto, 2026-04-30)
-ask b: low(konto, 2026-02-01 .. 2026-04-30) from 2026-02-01 with uncertain
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  amt = 100.00 DUK "c"
-  d_mv = 2026-06-01 "c"
-  d_leg = 2026-04-30 "c"
-  opening[konto] = 0.00 DUK at 2026-01-01 start "c"
-,,1:0,86:a: (100.00 DUK, 100.00 DUK, 100.00 DUK)
-  cut 2026-01-01
-b: 0.00 DUK
-  cut 2026-01-01
 ,31:fixes/gate8/m2_r437_one_day_low,11:fixes-gate8,21:run one_day_low.tally,1182:17:one_day_low.tally,1155:model pw
   tally 2
   on 2026-04-25
@@ -243727,7 +243594,7 @@ b_pair_rev: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick
   cut 2026-04-15
 b_pair_u: (refused: RUN-TIE pick: its ties by is a hole, refused: RUN-TIE pick: its ties by is a hole)
   cut 2026-04-15
-,25:fixes/gate8/m2_g7_p1_cuts,11:fixes-gate8,17:run p1_cuts.tally,3614:13:p1_cuts.tally,3591:model days
+,25:fixes/gate8/m2_g7_p1_cuts,11:fixes-gate8,17:run p1_cuts.tally,3003:13:p1_cuts.tally,2980:model days
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -243761,8 +243628,6 @@ input late: int
 
 input rent_off: int
 
-input sweep_off: int
-
 input reach: int
 
 def pay: money DUK at reader
@@ -243782,10 +243647,10 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move sweep[m in month]: transfers
-  on add_days(start_of(m), sweep_off)
+  on add_days(start_of(m), late)
   at start_of(m)
   reads konto
-  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
 ask d_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
 
@@ -243798,14 +243663,6 @@ ask d_axis: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-03-25 
 ask d_uncertain: min(bal(konto, d) from 2026-05-02 with uncertain for d in 2026-05-02 .. 2026-06-10 step 1 day)
 
 ask d_room: room[m] for m in [2026-02, 2026-03, 2026-07]
-
-ask k_early: min(bal(konto, d) from 2026-04-20 for d in 2026-04-20 .. 2026-06-10 step 1 day) as known 2026-02-15
-
-ask k_late: min(bal(konto, d) from 2026-04-20 for d in 2026-04-20 .. 2026-06-10 step 1 day) as known 2026-03-15
-
-ask k_two: min(bal(konto, d) from 2026-02-20 for d in 2026-02-20 .. 2026-05-20 step 1 day), min(bal(konto, d) from 2026-03-05 for d in 2026-03-05 .. 2026-05-20 step 1 day)
-
-ask k_mix: bal(konto, d) from 2026-02-20 for d in [2026-02-25, 2026-05-05, 2026-03-02, 2026-06-30, 2026-04-01, 2026-06-30, 2026-12-31]
 
 ask k_six: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 + bal(konto, d) from 2026-02-06 for d in 2026-02-06 .. 2026-04-25 step 1 day)
 
@@ -243826,7 +243683,6 @@ version v
   share = 0.5
   late = 25
   rent_off = 9
-  sweep_off = 17
   reach = 15
   opening[konto] = 500.00 at 2026-01-01 start
 
@@ -243835,7 +243691,7 @@ version later
   governs 2026-05-01..
   known 2026-03-01
   replace rent = 950.00 "the rent rose"
-,,1:0,19365:d_axis [pay_reading = low]: 450.00 DUK
+,,1:0,13800:d_axis [pay_reading = low]: 450.00 DUK
   reading: pay_reading = low
   unfulfilled: rent_pay[2026-01]
   unfulfilled: rent_pay[2026-02]
@@ -244031,22 +243887,6 @@ d_uncertain [pay_reading = high]: -78.12 DUK
   held: rent = 950.00 DUK (later), read for 2026-05-01
   held: rent = 950.00 DUK (later), read for 2026-06-01
   cut 2026-04-15
-k_early [pay_reading = low]: 306.25 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  cut 2026-02-15
-k_early [pay_reading = high]: 593.75 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  cut 2026-02-15
 k_hi: 571.88 DUK
   pinned: pay_reading = high
   unfulfilled: rent_pay[2026-01]
@@ -244057,138 +243897,6 @@ k_hi: 571.88 DUK
   unfulfilled: sweep[2026-02]
   held: rent = 950.00 DUK (later), read for 2026-05-01
   held: rent = 950.00 DUK (later), read for 2026-06-01
-  cut 2026-04-15
-k_late [pay_reading = low]: 281.25 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: rent_pay[2026-03]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: salary[2026-03]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  held: rent = 950.00 DUK (later), read for 2026-05-01
-  held: rent = 950.00 DUK (later), read for 2026-06-01
-  cut 2026-03-15
-k_late [pay_reading = high]: 571.88 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: rent_pay[2026-03]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: salary[2026-03]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  held: rent = 950.00 DUK (later), read for 2026-05-01
-  held: rent = 950.00 DUK (later), read for 2026-06-01
-  cut 2026-03-15
-k_mix (d = 2026-02-25) [pay_reading = low]: 500.00 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  cut 2026-04-15
-k_mix (d = 2026-02-25) [pay_reading = high]: 950.00 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  cut 2026-04-15
-k_mix (d = 2026-05-05) [pay_reading = low]: 1 312.50 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-05-05) [pay_reading = high]: 1 893.75 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-03-02) [pay_reading = low]: 1 350.00 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-03-02) [pay_reading = high]: 1 875.00 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-06-30) [pay_reading = low]: 303.13 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-06-30) [pay_reading = high]: 598.44 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-12-31) [pay_reading = low]: 300.05 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-12-31) [pay_reading = high]: 599.98 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-04-01) [pay_reading = low]: 1 325.00 DUK
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  cut 2026-04-15
-k_mix (d = 2026-04-01) [pay_reading = high]: 1 887.50 DUK
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
   cut 2026-04-15
 k_room (m = 2026-02) [pay_reading = low]: 500.00 DUK
   reading: pay_reading = low
@@ -244396,29 +244104,7 @@ k_six_back [pay_reading = *]: 0.00 DUK
   unfulfilled: salary[2026-02]
   unfulfilled: sweep[2026-01]
   cut 2026-04-15
-k_two [pay_reading = low]: (312.50 DUK, -175.00 DUK)
-  reading: pay_reading = low
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: salary[2026-03]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  held: rent = 950.00 DUK (later), read for 2026-05-01
-  cut 2026-04-15
-k_two [pay_reading = high]: (575.00 DUK, -62.50 DUK)
-  reading: pay_reading = high
-  unfulfilled: rent_pay[2026-01]
-  unfulfilled: rent_pay[2026-02]
-  unfulfilled: salary[2026-01]
-  unfulfilled: salary[2026-02]
-  unfulfilled: salary[2026-03]
-  unfulfilled: sweep[2026-01]
-  unfulfilled: sweep[2026-02]
-  held: rent = 950.00 DUK (later), read for 2026-05-01
-  cut 2026-04-15
-,20:fixes/gate8/m2_g7_p2,11:fixes-gate8,33:run p2_base.tally p2_richer.tally,2844:13:p2_base.tally,2312:model days
+,20:fixes/gate8/m2_g7_p2,11:fixes-gate8,33:run p2_base.tally p2_richer.tally,2769:13:p2_base.tally,2237:model days
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -244452,8 +244138,6 @@ input late: int
 
 input rent_off: int
 
-input sweep_off: int
-
 input reach: int
 
 def pay: money DUK at reader
@@ -244473,10 +244157,10 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move sweep[m in month]: transfers
-  on add_days(start_of(m), sweep_off)
+  on add_days(start_of(m), late)
   at start_of(m)
   reads konto
-  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
 ask d_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
 
@@ -244501,7 +244185,6 @@ version v
   share = 0.5
   late = 25
   rent_off = 9
-  sweep_off = 17
   reach = 15
   opening[konto] = 500.00 at 2026-01-01 start
 
@@ -247909,12 +247592,12 @@ t_to: sav
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place unexplained is read by nothing
-,21:fixes/gate8/m2_g8c_b2,11:fixes-gate8,12:run b2.tally,2188:8:b2.tally,2171:model b2
+,21:fixes/gate8/m2_g8c_b2,11:fixes-gate8,12:run b2.tally,2207:8:b2.tally,2190:model b2
   tally 2
   on 2026-04-15
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a sweep decision run on the 18th books its leg 33 days later, in the next month; a projection from January read day by day across the month's end, a kept walk continued past the day it walked to (walk/fork.rs booked_ahead, continue_with: the legs booked ahead carried)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a sweep decision run 33 days after its month starts, in the next month (tally 2.2: run on the 18th, its leg stated its own day 33 days later; a leg has no day of its own now);a projection from January read day by day across the month's end, a kept walk continued past the day it walked to (walk/fork.rs booked_ahead, continue_with: the legs booked ahead carried)"
 
 source card "invented for F6's twin"
 
@@ -247944,8 +247627,6 @@ input late: int
 
 input rent_off: int
 
-input sweep_off: int
-
 input reach: int
 
 def pay: money DUK at reader
@@ -247965,10 +247646,10 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move sweep[m in month]: transfers
-  on add_days(start_of(m), sweep_off)
+  on add_days(start_of(m), late)
   at start_of(m)
   reads konto
-  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
 ask b2_min: min(bal(konto, d) from 2026-01-10 for d in 2026-01-10 .. 2026-02-10 step 1 day)
 ask b2_all: bal(konto, d) from 2026-01-10 for d in 2026-01-28 .. 2026-02-06 step 1 day
@@ -247985,7 +247666,6 @@ version v
   share = 0.5
   late = 33
   rent_off = 9
-  sweep_off = 17
   reach = 15
   opening[konto] = 500.00 at 2026-01-01 start
 
@@ -248090,7 +247770,7 @@ b2_one [pay_reading = high]: 1 200.00 DUK
   reading: pay_reading = high
   unfulfilled: salary[2026-01]
   cut 2026-04-15
-,22:fixes/gate8/m2_g8c_b1f,11:fixes-gate8,13:run b1f.tally,2169:9:b1f.tally,2151:model b1f
+,22:fixes/gate8/m2_g8c_b1f,11:fixes-gate8,13:run b1f.tally,2094:9:b1f.tally,2076:model b1f
   tally 2
   on 2026-04-15
   start 2026-01-01
@@ -248125,8 +247805,6 @@ input late: int
 
 input rent_off: int
 
-input sweep_off: int
-
 input reach: int
 
 def pay: money DUK at reader
@@ -248146,10 +247824,10 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move sweep[m in month]: transfers
-  on add_days(start_of(m), sweep_off)
+  on add_days(start_of(m), late)
   at start_of(m)
   reads konto
-  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
 ask f_then: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 for d in 2026-02-20 .. 2026-03-10 step 1 day) + bal(konto, 2026-03-20) from 2026-02-01
 
@@ -248164,7 +247842,6 @@ version v
   share = 0.5
   late = 25
   rent_off = 9
-  sweep_off = 17
   reach = 15
   opening[konto] = 500.00 at 2026-01-01 start
 

@@ -115,7 +115,7 @@ LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	33	M0	codes/m0/basic/unit-
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
 LOAD-UNIT	L §8.3	M0	settlement <s> of <adjustment> is in <u>, not <u'>	3	M0	codes/m0/adjust/unit-settlement
 LOAD-UNIT	L §8.3	M0	axis <a> is used as a mode, but <o> is not a mode name	1	M0	codes/m0/basic/unit-mode
-LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	codes/m0/basic/flows-mode
+LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	codes/m0/basic/round-mode
 LOAD-UNIT	L §8.3	M0	lifespan of <x>: a movement has its day, not a lifespan	5	M1	m1/fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1
 LOAD-UNIT	L §8.3	M0	value(<x>) in <CUR>: <x> is priced in <u>, not <u'>	28	M1	m1/b3/l5_10_priced_per_key_unit_message
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	4	M0	codes/m0/basic/unit-currency
@@ -185,13 +185,13 @@ LOAD-GUARD	L §8.3	M0	<x>[k ± n] is a recurrence read with no condition on k or
 LOAD-TO	L §8.3	M0	*	2	M0	codes/m0/basic/to
 LOAD-TO	L §8.3	M0	<function> needs to u	2	M0	codes/m0/basic/to
 LOAD-TO	L §8.3	M0	continuous distribution <d> needs to u	1	M0	codes/m0/basic/to-dist
-LOAD-LEG	L §8.3	M0	*	8	M0	codes/m0/adjust/leg-uncertain
+LOAD-LEG	L §8.3	M0	*	7	M0	codes/m0/adjust/leg-uncertain
 LOAD-LEG	L §8.3	M0	<movement> lacks leg <l>	1	M0	codes/m0/basic/leg-lacks
 LOAD-LEG	L §8.3	M0	leg <l> is not a leg of <kind>	1	M0	codes/m0/basic/leg
 LOAD-LEG	L §8.3	M0	attribute <a> is missing or unknown	1	M0	codes/m0/basic/leg-attr
 LOAD-LEG	L §8.3	M0	leg <l> of observation <r> is in <u>, not its kind's unit	1	M0	codes/m0/adjust/leg-unit
 LOAD-LEG	L §8.3	M0	observation of uncertain kind <K>	1	M0	codes/m0/adjust/leg-uncertain
-LOAD-LEG	L §8.3	M0	the on of <r> is a window; a window belongs in an attribute	3	M0	codes/m0/adjust/leg-window
+LOAD-LEG	L §8.3	M0	the on of <r> is a window; a window belongs in an attribute	2	M0	codes/m0/adjust/leg-window
 LOAD-READS	L §8.3	M0	*	12	M0	codes/m0/basic/reads
 LOAD-READS	L §8.3	M0	<move> reaches a running read or projection of <x> without reads <x>	6	M0	codes/m0/basic/reads
 LOAD-READS	L §8.3	M0	<move> declares reads <x> and never reads it	1	M0	codes/m0/basic/reads-unread
@@ -340,8 +340,8 @@ RUN-PLACE	L §8.4	S	<claim> below 0	31	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	S	<holding> below 0 units	5	S	kernel/g9/sign
 RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	66	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	38	S	kernel/g9/reading_close
-RUN-LIFESPAN	L §8.4	S	*	52	S	kernel/g5/agenda
-RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	43	S	kernel/g6/refusal_keys
+RUN-LIFESPAN	L §8.4	S	*	51	S	kernel/g5/agenda
+RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	42	S	kernel/g6/refusal_keys
 RUN-LIFESPAN	L §8.4	S	<place> ends on <d> holding <positions>	10	S	kernel/g5/agenda
 RUN-LIFESPAN	L §8.4	S	<movement> labels a part of <place> to <party> outside its lifespan	0	-	-
 RUN-LIFESPAN	L §8.4	S	<party> ends on <d> holding parts of <place>	1	M5b	U:own/OWN-10/p24

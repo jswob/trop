@@ -5323,8 +5323,8 @@ m/m.tally	m0/format/joint/outside/m/m.tally
 ,1:0,63:numbers_of_any_size.tally	391	17b35c5ba5b8447b0a7a41960d1f17f5
 ,72:sha256 44127c5414455022f3e75ce5c67b5f22dee4462e11839ce97c713cf94b8015a4
 ,20:format/parens_forced,20:format/parens_forced,22:engine/tests/m0/format,27:reprint parens_forced.tally,50:parens_forced.tally	m0/format/parens_forced.tally
-,1:0,57:parens_forced.tally	394	12dad75ff9777de60c11646fc2f47517
-,72:sha256 97651c4bcd710c3f747a3b914bfb114cb1ee9d694dcb0b484932be4247f02b83
+,1:0,57:parens_forced.tally	352	0ff2fff24821a5b9157728d6d0715eb5
+,72:sha256 2234c3c9a6e4e70afb4dde02d927468c9c8f6abb83300c82fc7e3e747fb226ef
 ,23:format/parens_redundant,23:format/parens_redundant,22:engine/tests/m0/format,30:reprint parens_redundant.tally,56:parens_redundant.tally	m0/format/parens_redundant.tally
 ,1:0,60:parens_redundant.tally	303	088bb5265b905db80087465393133156
 ,72:sha256 79b4810562d2d2588bc5c79eb24fe21e14c64609e0f670c1c83172928f3bc99a
