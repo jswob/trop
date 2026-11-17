@@ -849,14 +849,21 @@ impl Engine {
         if w.lo >= cut {
             return Ok(None);
         }
-        // every day asked: coverage may change inside the window (E §4.1 step 2)
+        // every day asked: coverage may change inside the window (E §4.1 step 2). No day from
+        // K on is modelled, and the answer is known at the first two days that disagree, so
+        // the days asked stop there: at most the days from the window's first to K, however
+        // far the window reaches (to 9999-12-31)
         let (mut some, mut every) = (false, true);
         let mut d = w.lo;
         loop {
-            let modelled = d < cut && self.touches_covered(m, inst, (cut, Some(d)))?;
+            if d >= cut {
+                every = false;
+                break;
+            }
+            let modelled = self.touches_covered(m, inst, (cut, Some(d)))?;
             some = some || modelled;
             every = every && modelled;
-            if d >= w.hi {
+            if (some && !every) || d >= w.hi {
                 break;
             }
             d = d

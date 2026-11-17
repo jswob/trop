@@ -195,7 +195,15 @@ impl Engine {
             return Ok(Value::Hole(imprecise(m, w, name)?));
         }
         match name {
-            "days_between" => lifted(m, DateFn::Between, &[first, date_or_window(b, name)?]),
+            "days_between" => {
+                let second = date_or_window(b, name)?;
+                if super::windows::one_read(&first, &second) {
+                    // a window taken with its own name once: one unknown day, 0 days from
+                    // itself (L §4.4; refcore's `c_days_between`)
+                    return Ok(Value::int(0));
+                }
+                lifted(m, DateFn::Between, &[first, second])
+            }
             "add_days" => lifted(m, DateFn::AddDays(step_count(m, &b, 1)?), &[first]),
             "add_months" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "month")?), &[first]),
             "add_years" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "year")?), &[first]),

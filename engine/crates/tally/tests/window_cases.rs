@@ -566,7 +566,8 @@ e4 [wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN tmp ends on 2026-03-07
 
     /// A built-in over two windows (the review of group 2's N3): `days_between(a, b)` is the
     /// interval over every corner of the windows' ends, a value a comparison reads (`q6`) and
-    /// a print can't (L §4.4, "for a print"; tally 2.1.7 R3).
+    /// a print can't (L §4.4, "for a print"; tally 2.1.7 R3); `days_between(a, a)`, one read
+    /// taken twice, is one unknown day, 0 (the review of group 2's fix, N-f).
     const TWO_WINDOWS: &str = r#"model t
   tally 2
   on 2026-01-01
@@ -604,7 +605,7 @@ ask q7: n2
   cut 2026-01-01
 q6: true
   cut 2026-01-01
-q7: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a)
+q7: 0
   cut 2026-01-01"#;
 
     /// A pending leg no day refuses (the review of group 2's fix, G1): `oa` moves 10.00 from
@@ -828,5 +829,75 @@ warning: WARN-UNREAD place jar is read by nothing"#;
         // each, e4 six, j2 of PENDING_KEPT two, d1w, d2w and d3w of WORDS_SAME six each, cw
         // of LIFESPAN_MIDDLE seven
         assert_eq!(checked.len(), 87, "every day of each window: {checked:?}");
+    }
+
+    /// The covered face of a window that reaches 9999-12-31 (the review of group 2's fix,
+    /// N-d): the days asked stop at K, so the line answers at once. Refcore stops on this text
+    /// (`REFCORE-NOT-YET`, a date past its range), so the expected line is the engine's, the
+    /// hole of B4's covered face.
+    #[test]
+    fn a_covered_window_to_the_calendar_s_end_is_asked_up_to_the_cut() {
+        let text = r#"model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input wd: date
+input wa: date
+
+move pay: transfers
+  on wd
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-04, 9999-12-31) "s"
+  wa = window(2026-03-04, 2026-03-10) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version s1
+  cite s
+  governs 2026-03-01..2026-03-05
+  known 2026-03-08
+  covers konto
+
+version s2
+  cite s
+  governs 2026-03-09..2026-03-12
+  known 2026-03-08
+  covers konto
+
+def same_day: int
+  rule base = days_between(wa, wa)
+
+def two: int
+  rule base = days_between(wa, wd)
+
+ask c1: bal(konto, 2026-03-31)
+ask n1: same_day
+ask n2: two
+"#;
+        assert_eq!(
+            lines_of(text),
+            [
+                "c1: ?\"date within window(2026-03-04, 9999-12-31) not precise enough for a balance\" (pay)",
+                "  cut 2026-04-30",
+                "n1: 0",
+                "  cut 2026-04-30",
+                "n2: ?\"date within window(2026-03-04, 2026-03-10) not precise enough for a print\" (wa)",
+                "  cut 2026-04-30",
+            ],
+            "refcore's n1 and n2; c1 the covered face's hole"
+        );
     }
 }
