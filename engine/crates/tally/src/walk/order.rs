@@ -24,7 +24,7 @@ use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
 use crate::book::Obs;
-use crate::eval::{Ctx, Engine, Entry};
+use crate::eval::{Collected, Ctx, Engine, Entry};
 use crate::hole::spread;
 use crate::model::{KeyVal, MoveInfo, Reality, Target, Value};
 use crate::syntax::{Certainty, Stop};
@@ -144,7 +144,9 @@ impl Engine {
             let n32 = u32::try_from(n).map_err(|_| invariant("an instance's rank"))?;
             let key = At { n: n32, ..at };
             match item.refused {
-                Some(err) => self.refused_run(m, id, item.inst, key, err, item.changes)?,
+                Some(err) => {
+                    self.refused_run(m, id, item.inst, key, (err, item.changes, &item.met))?;
+                }
                 None => {
                     self.run_one(m, id, item.inst, key)?;
                 }
@@ -202,6 +204,13 @@ impl Engine {
         let (order, bad) = cycle_ranks(&members, &tied, &m.graph.written_order, day)?;
         let mut refused: Vec<(usize, Refusal)> = bad.into_iter().collect();
         refused.sort_by(|a, b| rank_cmp(&members, a.0, b.0));
+        // a refusal of the order rests on what every instance due read to be ordered, so the
+        // pins and assumptions those reads took are listed with it (L §8.2 One read set;
+        // tally 2.1.8 §4, #161; refcore's `run_group`, `ord_reads`)
+        let mut rests = Collected::default();
+        for member in &members {
+            rests.merge(&member.met);
+        }
         let mut items = Vec::with_capacity(members.len());
         for (x, err) in refused {
             let member = members
@@ -211,6 +220,7 @@ impl Engine {
                 inst: member.inst.clone(),
                 refused: Some(err),
                 changes: member.changes.clone(),
+                met: rests.clone(),
             });
         }
         for x in order {
@@ -221,6 +231,7 @@ impl Engine {
                 inst: member.inst.clone(),
                 refused: None,
                 changes: member.changes.clone(),
+                met: Collected::default(),
             });
         }
         Ok(items)
@@ -254,7 +265,9 @@ impl Engine {
         } else {
             Ok((false, BTreeSet::new()))
         };
-        self.pop_alone();
+        // what it read to be ordered, with what its instance read (refcore's `ord_reads`)
+        let mut met = inst.coll.clone();
+        met.merge(&self.pop_alone());
         let (changes, reads, moves) = read?;
         let (off, seen) = when?;
         Ok(CycleMember {
@@ -264,6 +277,7 @@ impl Engine {
             moves,
             off,
             seen,
+            met,
         })
     }
 
@@ -377,10 +391,14 @@ impl Engine {
         id: usize,
         mut inst: Inst,
         key: At,
-        err: Refusal,
-        changes: Option<BTreeSet<String>>,
+        (err, changes, met): (Refusal, Option<BTreeSet<String>>, &Collected),
     ) -> Result<(), Stop> {
         let walk = self.walk_mut(id)?;
+        let refused = || {
+            let mut ent = Ent::new(key, Change::Bad(err.clone()));
+            ent.coll = Some(met.clone());
+            ent
+        };
         match changes.filter(|c| !c.is_empty()) {
             Some(places) => {
                 for place in places {
@@ -389,10 +407,10 @@ impl Engine {
                         .get(&place)
                         .and_then(|t| m.place_unit(t))
                         .unwrap_or_else(|| ALL.to_owned());
-                    walk.add(m, &place, &unit, Ent::new(key, Change::Bad(err.clone())))?;
+                    walk.add(m, &place, &unit, refused())?;
                 }
             }
-            None => walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?,
+            None => walk.add(m, ALL, ALL, refused())?,
         }
         inst.legs = Vec::new();
         inst.attrs = Vec::new();
@@ -955,6 +973,9 @@ pub struct CycleItem {
     pub refused: Option<Refusal>,
     /// The places its legs give that day; none where one can't be read there.
     pub changes: Option<BTreeSet<String>>,
+    /// What its refusal rests on: what every instance due read to be ordered; empty for one
+    /// that runs.
+    pub met: Collected,
 }
 
 /// What orders one instance of a cycle (refcore's `run_group`, its `info`). L §5.14.2.
@@ -971,6 +992,8 @@ struct CycleMember {
     off: bool,
     /// The places its `when` read.
     seen: BTreeSet<String>,
+    /// What it and its instance read to be ordered (refcore's `ord_reads`).
+    met: Collected,
 }
 
 /// The places an instance's legs give, the places it declares it reads, each none where one
