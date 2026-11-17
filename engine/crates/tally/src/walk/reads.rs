@@ -21,7 +21,8 @@ use super::plan::{Amount, Dated, HoleSrc, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env};
+use crate::book::Stands;
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, Rows};
 use crate::hole::{Hole, Linear, spread};
 use crate::model::{KeyVal, Reality, Value};
 use crate::num::Num;
@@ -769,8 +770,10 @@ impl Engine {
     }
 
     /// `gap(x, d)`: the gap at the last `stated` reading of x on day d in the main walk at
-    /// the cut, with what it rests on; `HOLE-NOREADING` where no reading of x falls that day
-    /// (refcore's `m_c_gap`). L §5.19, E §6.1, L §8.1.
+    /// the cut, with what it rests on; `HOLE-NOREADING` where no reading of x falls that day;
+    /// at a reading outside [S, E], `HOLE-PRERUN` or `HOLE-POSTRUN`, since the booked balance
+    /// there is the run's hole (refcore's `m_c_gap`). L §5.19, E §6.1, L §8.1 (tally 2.1.8
+    /// item 1).
     ///
     /// # Errors
     ///
@@ -803,6 +806,13 @@ impl Engine {
         };
         let gaps = self.walk(id)?.gaps.get(&(place.clone(), d));
         let Some(last) = gaps.map(Vec::as_slice).and_then(latest_gap).cloned() else {
+            // a reading at an instant outside [S, E]: the booked balance it is less is the
+            // run's hole there, so the gap is too (L §5.19 gap, §8.1; tally 2.1.8 item 1)
+            if let Some(h) = outside_run(m, d, &place)
+                && self.stated_on(m, &place, d, ctx.cut)?
+            {
+                return Ok(Value::Hole(h));
+            }
             let text = format!("stated[{place}] has no reading at {}", d.text());
             return Ok(Value::Hole(Hole::asked(&text, &format!("stated[{place}]"))));
         };
@@ -823,6 +833,26 @@ impl Engine {
             Amount::Hole(h) => Ok(Value::Hole(h)),
             Amount::Refused(r) => Err(Stop::Refused(r)),
         }
+    }
+}
+
+impl Engine {
+    /// Whether cut `cut` sees a `stated` reading of place `place` at an instant on day `day`
+    /// (refcore's `m_c_gap`, its `readings`). L §5.19 gap, §4.6 Readings.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::seen_readings`].
+    fn stated_on(&mut self, m: &Reality, place: &str, day: Day, cut: Day) -> Result<bool, Stop> {
+        let world = self.timeline_world();
+        let after = self.after_days(m, cut)?;
+        let seen = self.seen_readings(m, (cut, world), (Rows::Unkept, &after))?;
+        Ok(seen.iter().any(|s| {
+            s.input == "stated"
+                && s.place == place
+                && s.day == day
+                && matches!(s.stands, Stands::Edge(_))
+        }))
     }
 }
 
