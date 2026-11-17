@@ -2473,7 +2473,8 @@ version card_2026
   spend_cap = 50.00 PLN "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,178:q_decide: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+,,1:0,226:q_decide: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+  assumed: the card names no holiday (holidays)
   cut 2026-03-01
 ,15:rules/no-anchor,11:HOLE-ANCHOR,5:rules,28:run base.tally --ask q_total,2314:10:base.tally,2294:model rules
   tally 2

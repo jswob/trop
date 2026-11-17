@@ -26,7 +26,7 @@ place konto: accounts PLN lives 2026-01-01..
 
 place fresh: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place box_h: accounts PLN lives 2026-01-01..
 

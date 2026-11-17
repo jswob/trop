@@ -18,7 +18,7 @@ kind gifts: event certain
 
 place konto[p in persons]: accounts PLN lives 2026-01-01..
 
-place fund: holdings etf_unit priced fund_price lives 2026-01-01..
+place fund: holdings etf_unit lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 

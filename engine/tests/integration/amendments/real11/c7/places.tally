@@ -35,7 +35,7 @@ place urzad_skarbowy: tax_offices lives 2026-01-01..
 
 place wcash[w in wrapper]: accounts PLN lives 2026-01-01..
 
-place wunits[w in wrapper]: holdings etf_unit priced etf_price lives 2026-01-01..
+place wunits[w in wrapper]: holdings etf_unit lives 2026-01-01..
 
 place wynajmujacy: outside lives 2026-01-01..
 

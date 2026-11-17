@@ -15,6 +15,7 @@ from fractions import Fraction
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))) + os.sep
 sys.path.insert(0, ROOT + 'engine/tools')
+from refcore import evaluate  # noqa: E402,F401  (first, in a run's order: tally 2.1.8's walk can't load before it)
 from refcore import walk as W  # noqa: E402
 from refcore.cli import main  # noqa: E402
 
