@@ -749,6 +749,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
     out = []
     fulfilled = set()
     for x in self.movements_of(b._dom, ctx, owner):
+        e1 = self.s1_refusal(getattr(x, 'id', None), ctx)
+        if e1 is not None and (sp.contains(x.day) if isinstance(x.day, datetime.date) else True):
+            # a binding over movements rests on each it takes (L §5.19 S1, P42): a count or a sum is refused
+            raise e1
         d = x.day
         st = True
         und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
@@ -1925,6 +1929,10 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             continue
         if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
             continue
+        e1 = self.s1_refusal(i.id, ctx)
+        if e1 is not None:
+            # an instance a class of rows stated same fulfils with another: what reads it is refused (S1, P42)
+            raise e1
         if st == 'modelled':
             # on a day a statement covers, the observations that fulfil the instance stand in for it (L §5.14.3)
             obs = getattr(i, 'obs', None) or self.obs_links_for(i.id, ctx)

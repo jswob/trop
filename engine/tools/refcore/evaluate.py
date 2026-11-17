@@ -3432,7 +3432,13 @@ class Engine:
             things.sort(key=lambda t: m.kind_order_key(t, dom[1], ctx.cut))
             return [Thing(t.name) for t in things]
         if dom[0] in ('event', 'obs'):
-            return [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            out = [x for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            for x in out:
+                e = self.s1_refusal(getattr(x, 'id', None), ctx)
+                if e is not None:
+                    # a binding over movements rests on each (L §5.19 S1, P42): a count or sum is refused
+                    raise e
+            return [x.mv() for x in out]
         return None
 
     def zero_of(self, t):

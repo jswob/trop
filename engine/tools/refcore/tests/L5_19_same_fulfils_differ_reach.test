@@ -1,0 +1,74 @@
+# tally 2.1.8 S1 with R11's reach, P42, L §5.19 (B2 of group 4's review, s1_two_b): rows stated same whose fulfils
+# name pay[2026-03] and pay[2026-02] are RUN-RECORD for every read whose answer rests on the class or on either
+# instance: bal and observed as before, and now a count and a sum over either month's events, and flows of the
+# move. c1, over January, rests on neither. c116799a gave c3 1, t3 10.00 PLN, fp 10.00 PLN.
+=== m.tally
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input bank: observed
+input card: observed
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask b3: bal(konto, 2026-03-31)
+ask t2: tot[2026-02]
+ask t3: tot[2026-03]
+ask c3: count(p in pays over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
+  card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+
+version sm
+  cite s
+  known 2026-03-11
+  same bank[o1] = card[o1]
+ask fp: flows(pay, 2026-03)
+ask ob: observed(pay[2026-03])
+ask c2: count(p in pays over 2026-02)
+ask c1: count(p in pays over 2026-01)
+=== expect
+b3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-06-30
+c1: 1
+  unfulfilled: pay[2026-01]
+  cut 2026-06-30
+c2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+c3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+fp: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+ob: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+t2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+t3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
