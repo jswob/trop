@@ -249,12 +249,81 @@ s4: 1
 s4w: 1
   cut 2025-12-01"#;
 
+    /// The covered-day face with a gap (the review of group 2's B4): `pay`, dated by
+    /// `window(03-04, 03-10)`, is modelled past on the days two statements cover (03-04 ..
+    /// 03-05, 03-09 .. 03-10) and booked on the days between, though its first day and its
+    /// last are both covered.
+    const COVER_GAP: &str = r#"model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input wd: date
+
+move pay: transfers
+  on wd
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-04, 2026-03-10) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+version s1
+  cite s
+  governs 2026-03-01..2026-03-05
+  known 2026-03-08
+  covers konto
+
+version s2
+  cite s
+  governs 2026-03-09..2026-03-12
+  known 2026-03-08
+  covers konto
+
+ask c1: bal(konto, 2026-03-31)
+ask c2: bal(konto, 2026-03-31) windows each
+ask c3: bal(konto, 2026-03-31) with wd = 2026-03-07
+ask c4: bal(konto, 2026-03-31) with wd = 2026-03-04
+"#;
+
+    const COVER_GAP_LINES: &str = r#"c1: ?"date within window(2026-03-04, 2026-03-10) not precise enough for a balance" (pay)
+  cut 2026-04-30
+c2 [wd = 2026-03-04 .. 2026-03-05]: 0.00 PLN
+  open: pay
+  cut 2026-04-30
+c2 [wd = 2026-03-06 .. 2026-03-08]: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-30
+c2 [wd = 2026-03-09 .. 2026-03-10]: 0.00 PLN
+  open: pay
+  cut 2026-04-30
+c3: 100.00 PLN
+  pinned: wd = 2026-03-07
+  unfulfilled: pay
+  cut 2026-04-30
+c4: 0.00 PLN
+  pinned: wd = 2026-03-04
+  open: pay
+  cut 2026-04-30"#;
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
             (COVER_REACH, COVER_REACH_LINES),
             (ANCHOR_AFTER, ANCHOR_AFTER_LINES),
             (RUN_START, RUN_START_LINES),
+            (COVER_GAP, COVER_GAP_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");
@@ -263,14 +332,14 @@ s4w: 1
 
     #[test]
     fn each_line_of_a_window_whose_days_take_two_classes_is_its_pinned_twin() {
-        let checked: Vec<String> = [COVER_REACH, ANCHOR_AFTER, RUN_START]
+        let checked: Vec<String> = [COVER_REACH, ANCHOR_AFTER, RUN_START, COVER_GAP]
             .iter()
             .flat_map(|text| pinned_twins(text))
             .collect();
         assert_eq!(
             checked.len(),
-            8,
-            "two sub-windows each in a4 and b5, two days each: {checked:?}"
+            14,
+            "two sub-windows each in a4 and b5, three in c2, two days each: {checked:?}"
         );
     }
 }

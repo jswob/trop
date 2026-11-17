@@ -825,12 +825,12 @@ impl Engine {
 
     /// Whether plan instance `inst`, dated by a window, takes its class one way on some of
     /// the window's days and another on the rest, at cut `cut`: inside the run or before its
-    /// start, and modelled past or booked, its first day and its last asked (refcore's
+    /// start, and modelled past or booked, each day of the window asked (refcore's
     /// `window_class_depends`). E §4.1 steps 2–3, L §4.4; tally 2.1.8 item 77.
     ///
     /// # Errors
     ///
-    /// As [`Engine::touches_covered`].
+    /// As [`Engine::touches_covered`]; `ENGINE-INVARIANT` for a day past the calendar.
     fn class_depends(
         &mut self,
         m: &Reality,
@@ -849,9 +849,21 @@ impl Engine {
         if w.lo >= cut {
             return Ok(None);
         }
-        let first = self.touches_covered(m, inst, (cut, Some(w.lo)))?;
-        let last = w.hi < cut && self.touches_covered(m, inst, (cut, Some(w.hi)))?;
-        Ok((first != last).then_some(Depends::Covered))
+        // every day asked: coverage may change inside the window (E §4.1 step 2)
+        let (mut some, mut every) = (false, true);
+        let mut d = w.lo;
+        loop {
+            let modelled = d < cut && self.touches_covered(m, inst, (cut, Some(d)))?;
+            some = some || modelled;
+            every = every && modelled;
+            if d >= w.hi {
+                break;
+            }
+            d = d
+                .next()
+                .ok_or_else(|| invariant("a window's day past the calendar"))?;
+        }
+        Ok((some && !every).then_some(Depends::Covered))
     }
 
     /// Whether one of the observations `obs` that fulfil an instance is applied at cut `cut`:
