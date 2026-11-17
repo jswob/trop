@@ -793,6 +793,10 @@ def m_answer_booking(self, mi, i, tctx, upto=None):
         return
     if not isinstance(i.day, datetime.date) or i.day >= tctx.cut:
         return
+    if i.day < self.m.S or i.day > self.m.E or self.scen_early(i, i.day):
+        # a left-out instance books nothing, so no later version answers it: its amounts are read at its booking cut
+        # min(t, K), as every instance's are (E §4.1 step 2; L §4.3, §4.5, §5.14.3; item 12 of the third turn, P33)
+        return
     for c, vids in self.known_dates():
         if not i.day < c <= tctx.cut:
             continue
