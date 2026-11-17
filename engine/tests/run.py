@@ -582,11 +582,11 @@ def self_test(checks):
         open(ph, 'w', encoding='utf-8').write(hb[:j] + chr(ord(hb[j]) ^ 1) + hb[j + 1:])
         _, r, _ = session([dict(hh, baseline=os.path.relpath(ph, ROOT))], checks, **kw)
         say(r['pypy'][0]['verdict'] == 'differ', 'a planted one-byte difference in a household ask\'s block is caught')
-        # a known fault: alone it reports `known`; with its run's asks it is `same`
+        # KF-01, retired 2026-11-13 (P36, known-faults.md): alone and with its run's asks, its baseline's bytes
         _, r, _ = session([by['I:D:d05_quarters~alone'], by['I:D:d05_quarters']], checks, **kw)
         v = {x['id']: x['verdict'] for x in r['pypy']}
-        say(v == {'I:D:d05_quarters~alone': 'known', 'I:D:d05_quarters': 'same'},
-            'known fault KF-01: alone `known`, in its run `same` (%s)' % v)
+        say(v == {'I:D:d05_quarters~alone': 'same', 'I:D:d05_quarters': 'same'},
+            'KF-01 retired: alone `same`, in its run `same` (%s)' % v)
         # 2. a second run is a cache hit
         _, r, _ = session([fast], checks, **kw)
         say(r['pypy'][0]['cached'] == 'cached' and r['pypy'][0]['verdict'] == 'same', 'a second run of a check is a cache hit')
@@ -710,6 +710,13 @@ def self_test(checks):
         for script, flag in (('m2/hindcast/gen.py', ['--check']), ('m2/hindcast/judge.py', [])):
             p = subprocess.run([sys.executable, '-I', '-B', T + script] + flag, capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8s. the `windows each` twins (tally 2.1.8, P34, P36): each sub-window's answer line is its plain line pinned
+        # to each of its days, and the plain line is the hole exactly where two days' answers differ (answer lines
+        # only, not registers); tools/twins.py's own self-test, then map/twins.tsv against refcore (its cache)
+        for flag in ('--self-test', '--check'):
+            p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/twins.py', flag], capture_output=True, text=True)
+            say(p.returncode == 0, 'twins.py %s: ' % flag + (p.stdout.strip().split('\n')[-1] if p.stdout.strip()
+                                                              else p.stderr[-200:]))
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))
