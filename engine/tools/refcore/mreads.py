@@ -1247,7 +1247,9 @@ def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
         # a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
         v = self.partial_bal(w, place, unit, K_end(d), v)
     self.proj_regs(w, t, regs_to or d)
-    if clauses[2] and not isinstance(v, Hole):
+    if clauses[2] and (not isinstance(v, Hole) or ctx.partial):
+        # with uncertain partial: the uncertain amounts join the known part of a hole's linear form (L §5.18, §5.14;
+        # tally 2.1.8 R15, B3 of group 3's review)
         v = self.proj_uncertain(w, place, unit, d, v, ctx)
     return v
 
@@ -1280,6 +1282,11 @@ def m_proj_uncertain(self, w, place, unit, d, v, ctx=None):
                         add += s * g.amount.q
     if hs and ctx is not None and ctx.partial and not isinstance(v, Hole):
         return lin_fold(qty(v.q + add, unit), hs)
+    if ctx is not None and ctx.partial and isinstance(v, Hole) and isinstance(v.lin, tuple) and v.lin[0] is not None:
+        # the start balance plus the counted legs, linear in its hole terms and the uncertain legs (R15)
+        k = v.lin[0]
+        known = qty(k.q + add, unit) if k.money or k.u else Num(k.q + add, k.u)
+        return lin_fold(known, [Hole(v.qs, (None, v.lin[1]))] + hs)
     if hs or isinstance(v, Hole):
         return merge(v, *hs)
     return qty(v.q + add, unit)
