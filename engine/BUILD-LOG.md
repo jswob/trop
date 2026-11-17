@@ -4094,3 +4094,30 @@ This turn fixes what the review of group 3's fix found (`tmp/spec-2.1.8-build/re
   - `check commit: red at tests, stopped after 10 of 23 steps (82s)`, on the ids above.
   - The 13 steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck.
   - `check fences: green, 1 step (27s)`; `check quick: green, 11 steps (86s)`.
+
+## 2026-11-17 tally 2.1.8, build group 4's last fix: the fix review's G1, F1 and `items/explain/from` (addendum to group 4's entries; round PR #202; issues #177, #164)
+
+Oracle: the snapshot `tmp/spec-2.1.8-build/refcore-last` (spec/2.1.8 at 00a00b22: the tenth turn, with aa343e62's index order). Rulings: pick P50 (F1: a class's member and every HOLE-SAME list go in index order; G2 stands as built), P37 (`items/explain/from`). The review: `tmp/spec-2.1.8-build/review-g4-fix.md`.
+
+- **G1, a31f8912** `eval/read.rs` `latest_in_class`: a side whose readings are all removed is the read's own `HOLE-NOREADING` (a price's none), so a class with no kept reading gives `last` the hole, as `since` does (`agent/b1_onlyq` q, `b1_both` e, q). Test: `a_class_whose_only_reading_is_removed_has_no_reading`.
+- **F1, 0f3a870c and b375d78f** `model/reality.rs` `id_order`, `key_place`; `book/same.rs` (`same_groups`, `same_sides`, `same_differ`, a place two members book); `eval/read.rs` `same_class`.
+  - An id sorts by its item's name, then each key by its place in its index: a list, range or built-in keeps its own order, while an open index's keys and things go by code point.
+  - So `pay[9]` stands on `1..12`, and `pay[zz]` on `[zz, aa, mm]`.
+  - b375d78f replaces the nested closures that `check commit`'s exceptions step reported (report-only, not in the lock).
+  - Test: `a_same_class_stands_by_its_first_id_in_index_order` (`n2_range_9`, `n2_list`). All 25 `m2_d512_*` texts are byte-equal to refcore-last.
+- **`items/explain/from`, abb21cf6** `walk/day.rs` `book_leg`, `window_days`; `eval/state.rs` `Collected.each`; `ask/windows.rs` `each_listed`.
+  - A window-dated leg whose day the line hasn't taken now books its `before from:` for each day of its window, into a register part (`Collected.each`) that every reader merges like the rest. Only a `windows each` block lists it.
+  - **The walk is keyed as before (cut, world, timeline), with no mode in its key and no second path.** The per-day entries ride on the leg's own walk entries, and the mode decides only what a block prints.
+  - The vector (bl, blw, fl) is byte-equal to refcore-last.
+  - Cost: `check fences: green, 1 step (30s)`; `perf counts P8-14`: def_misses 25 318, days_stepped 960, walks_shared 582 (exit 0), unchanged.
+- **Sweep** (385 sets, the fix review's two directories added) against refcore-last:
+  - Baseline at e516fa13: 2 591 of 2 647 blocks same. After G1 2 594, after F1 2 606, after the window fix 2 606.
+  - Every move was different → same.
+  - The 41 left are the earlier entries' known differences (`g1/a1/v1`, `v1d` and the rest group 3's entry lists, and `s6_reads_agree`/`nosame` s4, ruled the engine's right).
+- **Red gating ids (`check commit`: 6 of 1 072 tests red):**
+  - The tests' list: `spec/g4/a_cov`, `a_mp`, `a_none`, `b2_last`, `c_since`, `nb3_at`; `spec/g5/p3_any`, `p3_anyhole`, `p4_hole_e2`, `p4_adj_e2`; `spec/g2/sumobs2`; `spec/gate8/g6r_dec_same`, `at_window_mk2`; `spec/g3/h2`; `m2_counts_ahead`.
+  - N2's `fixes/gate8/m2_d512_both_cover_day` and `m2_d512_day_rows`. `m2_d512_plans_same` is green again with F1 (`pay` before `pay2`).
+  - `fixes/gate8/m2_g3_fix2_r3` and `m2_gate8_window_moves`: their stored bytes are refcore's older ones.
+  - `items/explain/from` is green.
+- **STOP-REPORTs:** none. **Exceptions:** +0 (6; report-only hits as the lock).
+- **Checks:** `check commit: red at tests, stopped after 10 of 23 steps (152s)` on the ids above; `check quick: green, 11 steps`.
