@@ -33,7 +33,7 @@ use crate::Days;
 use crate::base::Refusal;
 use crate::book::{Seen, Stands};
 use crate::eval::{Collected, Engine, Entry};
-use crate::hole::Hole;
+use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
 use crate::syntax::{Edge, Stop};
@@ -799,10 +799,17 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 }
                 return Ok(());
             }
-            let qs = match &inst.exists {
+            let mut qs = match &inst.exists {
                 Exists::Unknown(h) => Some(h.clone()),
                 Exists::Yes | Exists::No => None,
             };
+            if inst.depends.is_some()
+                && let Some(Dated::Window(w)) = &inst.day
+            {
+                // a window whose days take different classes (tally 2.1.8 item 77)
+                let class = super::plan::class_hole(&inst, w);
+                qs = spread(&[qs.as_ref(), Some(&class)]);
+            }
             for (leg, lg) in inst.legs.iter().enumerate() {
                 // a leg's own day, else its instance's, a window's first (refcore's
                 // `sched_leg_hole`)

@@ -147,6 +147,19 @@ impl Engine {
                         .map_or_else(|| invariant("an instance with no day"), Stop::Refused));
                 }
             };
+            if i.depends.is_some()
+                && let Some(Dated::Window(w)) = &i.day
+            {
+                // booked on some of its window's days, modelled or left out on the rest
+                // (E §4.1 step 2, L §4.4; tally 2.1.8 item 77)
+                let text = format!(
+                    "date within {} not precise enough for flows of {}",
+                    w.question, mv.id
+                );
+                acc.holes
+                    .push(Hole::asked(&text, &i.id).carrying(&w.value.carry));
+                continue;
+            }
             if let Some(k) = fk
                 && !for_period_of(i, k, acc)
             {

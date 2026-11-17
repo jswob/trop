@@ -475,6 +475,21 @@ pub struct Inst {
     /// For a hole booking a later version answered: the cut that version is known from and
     /// the step's versions, whose evaluation its existence and legs are (E §5 step 1, §10).
     pub answered: Option<(Day, Vec<String>)>,
+    /// Where its class depends on its window's day: a hole movement from the window's first
+    /// day, its day kept (refcore's `class_q`, `class_member`; tally 2.1.8 item 77).
+    pub depends: Option<Depends>,
+}
+
+/// Why a window-dated instance's class (E §4.1 step 3) is one on some of the window's days
+/// and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77; refcore's
+/// `window_class_depends`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Depends {
+    /// Inside the run on some days, before its start on the rest.
+    Start,
+    /// Modelled past on some days, booked on the rest: whether it is a binding's member
+    /// depends on the day too.
+    Covered,
 }
 
 impl Inst {
@@ -511,6 +526,7 @@ impl Inst {
                 keys: Vec::new(),
             },
             answered: None,
+            depends: None,
         }
     }
 }
@@ -763,6 +779,7 @@ impl Engine {
             Some(dated) => (dated.lo(), dated.hi()),
             None => (None, None),
         };
+        inst.depends = None;
         if inst.exists == Exists::No {
             return Ok(Status::None);
         }
@@ -770,16 +787,6 @@ impl Engine {
             && (hi < m.start || d > m.end)
         {
             return Ok(Status::LeftOut);
-        }
-        if let (Some(d), Some(hi)) = (day, last)
-            && d < m.start
-            && m.start <= hi
-            && inst.exists != Exists::No
-            && inst.err.is_none()
-        {
-            // inside the run on some of the window's days, before its start on the rest: the
-            // instance is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
-            return Ok(day_depends(inst));
         }
         if scenario_early(m, mv, inst) {
             return Ok(Status::LeftOut);
@@ -796,25 +803,55 @@ impl Engine {
         if matches!(inst.exists, Exists::Unknown(_)) {
             return Ok(Status::Hole);
         }
+        if !mv.decision
+            && let Some(face) = self.class_depends(m, inst, cut)?
+        {
+            // booked on some of its window's days and not on the rest: a hole movement from
+            // the window's first day, its day kept (E §4.1 step 2; tally 2.1.8 item 77)
+            inst.depends = Some(face);
+            return Ok(Status::Hole);
+        }
         if mv.decision {
             return Ok(Status::Decision);
         }
         if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && !applied {
             return Ok(Status::Uncertain);
         }
-        let modelled = d < cut && self.touches_covered(m, inst, (cut, None))?;
-        if let Some(hi) = last.filter(|hi| *hi != d) {
-            // modelled past on some of the window's days and booked on the rest: the
-            // instance is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
-            let last_modelled = hi < cut && self.touches_covered(m, inst, (cut, Some(hi)))?;
-            if modelled != last_modelled {
-                return Ok(day_depends(inst));
-            }
-        }
-        if modelled {
+        if d < cut && self.touches_covered(m, inst, (cut, None))? {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })
+    }
+
+    /// Whether plan instance `inst`, dated by a window, takes its class one way on some of
+    /// the window's days and another on the rest, at cut `cut`: inside the run or before its
+    /// start, and modelled past or booked, its first day and its last asked (refcore's
+    /// `window_class_depends`). E §4.1 steps 2–3, L §4.4; tally 2.1.8 item 77.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::touches_covered`].
+    fn class_depends(
+        &mut self,
+        m: &Reality,
+        inst: &Inst,
+        cut: Day,
+    ) -> Result<Option<Depends>, Stop> {
+        let Some(Dated::Window(w)) = &inst.day else {
+            return Ok(None);
+        };
+        if w.lo == w.hi {
+            return Ok(None);
+        }
+        if w.lo < m.start && m.start <= w.hi {
+            return Ok(Some(Depends::Start));
+        }
+        if w.lo >= cut {
+            return Ok(None);
+        }
+        let first = self.touches_covered(m, inst, (cut, Some(w.lo)))?;
+        let last = w.hi < cut && self.touches_covered(m, inst, (cut, Some(w.hi)))?;
+        Ok((first != last).then_some(Depends::Covered))
     }
 
     /// Whether one of the observations `obs` that fulfil an instance is applied at cut `cut`:
@@ -1766,19 +1803,16 @@ pub(crate) fn invariant(what: &str) -> Stop {
     Stop::Refused(Refusal::new(Code::EngineInvariant, what.to_owned()))
 }
 
-/// The status of instance `inst`, dated by a window, where its class depends on the
-/// window's day: a hole movement, its day the window's hole carrying the unknown day
-/// (E §4.1 step 2; L §4.4; tally 2.1.8 item 77).
-fn day_depends(inst: &mut Inst) -> Status {
-    if let Some(Dated::Window(w)) = &inst.day {
-        let text = format!(
-            "date within {} not precise enough for the day of {}",
-            w.question, inst.id
-        );
-        let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
-        inst.day = Some(Dated::Hole(h));
-    }
-    Status::Hole
+/// The hole a window-dated instance whose class depends on the window's day puts to a
+/// balance its legs reach: the window's, asked of the instance (refcore's `class_q`;
+/// L §4.4, E §4.1 step 2; tally 2.1.8 item 77).
+#[must_use]
+pub(crate) fn class_hole(inst: &Inst, w: &DayWindow) -> Hole {
+    let text = format!(
+        "date within {} not precise enough for a balance",
+        w.question
+    );
+    Hole::asked(&text, &inst.id).carrying(&w.value.carry)
 }
 
 #[cfg(test)]

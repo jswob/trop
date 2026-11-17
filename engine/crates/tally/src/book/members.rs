@@ -27,8 +27,8 @@ use crate::num::Num;
 use crate::syntax::{Bind, Call, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, DayWindow, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant,
-    qty_value,
+    Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Status, Term, WalkAt,
+    invariant, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -296,6 +296,18 @@ impl Engine {
             if let Moving::Plan(i) = &x {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
+                }
+                if i.depends == Some(Depends::Covered)
+                    && let Some(Dated::Window(w)) = &i.day
+                {
+                    // modelled past on some of its window's days, booked on the rest: whether
+                    // it is a member is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
+                    let text = format!(
+                        "date within {} not precise enough for a binding over {}",
+                        w.question, dom.1
+                    );
+                    let h = Hole::asked(&text, &i.id).carrying(&w.value.carry);
+                    st = spread(&[st.as_ref(), Some(&h)]);
                 }
                 if let Some(e) = &i.err {
                     return Err(Stop::Refused(e.clone()));
