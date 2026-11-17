@@ -9742,7 +9742,7 @@ version card_2026
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:1,75:refused: LOAD-DOMAIN index qn: by 0 is not a positive step (base.tally:14)
-,16:basic/flows-mode,9:LOAD-UNIT,5:basic,32:run base.tally --ask zz_m0_probe,1133:10:base.tally,1113:model basic
+,16:basic/round-mode,9:LOAD-UNIT,5:basic,32:run base.tally --ask zz_m0_probe,1087:10:base.tally,1067:model basic
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -9752,10 +9752,6 @@ version card_2026
 source card "T's fixture card (invented)"
 
 unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-input fx: num EUR/PLN
 
 index qs = [q1, q2]
 
@@ -9781,7 +9777,7 @@ move pay: transfers
 
 ask q: total, bal(konto, 2026-12-31)
 
-ask qf: flows(konto, 2026-01) in EUR at fx day
+ask qf: round(bal(konto, 2026-12-31), minor(PLN), day)
 
 version card_2026
   cite card
@@ -9792,7 +9788,7 @@ version card_2026
   rate[q1] = 0.1 "the card"
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,80:refused: LOAD-UNIT flows: the mode is date, not a rounding code (base.tally:40)
+,,1:1,80:refused: LOAD-UNIT round: the mode is date, not a rounding code (base.tally:36)
 ,21:basic/row-field-twice,10:LOAD-FIELD,5:basic,32:run base.tally --ask zz_m0_probe,1098:10:base.tally,1078:model basic
   tally 2
   on 2026-03-01

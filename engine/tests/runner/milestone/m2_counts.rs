@@ -43,8 +43,9 @@ mod tests {
         include_str!("../../m2/fixes/g7/b1_cons.tally"),
     )];
 
-    /// A decision's leg booked in the next month, a projection read across the month's end
-    /// (`m2/fixes/gate8/g8c/b2.tally`: `walk/fork.rs` `booked_ahead`).
+    /// A decision run in the next month, a projection read across the month's end
+    /// (`m2/fixes/gate8/g8c/b2.tally`; until tally 2.2 the decision ran on the 18th and its leg
+    /// stated its own day in the next month, `walk/fork.rs` `booked_ahead`).
     const AHEAD: [(&str, &str); 1] = [(
         "b2.tally",
         include_str!("../../m2/fixes/gate8/g8c/b2.tally"),
@@ -111,7 +112,9 @@ mod tests {
     }
 
     /// R1 (`r1`, `r1b`), R2 (`r2`), R3 (`r3` five, `r3f` four), R6 (`rm`, the room def the
-    /// sweep decision reads), at 2026-11-15 (fc79eff9).
+    /// sweep decision reads), at 2026-11-15 (fc79eff9); re-pinned at tally 2.2's G1 (T1,
+    /// 2026-11-18, the engine of 8ece2484): the sweep decision is dated on the day its leg stated
+    /// (a leg has no day of its own, S-6), so no walk carries a leg booked ahead (class S-6/a).
     #[test]
     fn m2_counts_days() {
         let got = table(&DAYS, &["r1", "r1b", "r2", "r3", "r3f", "rm"], false);
@@ -119,12 +122,12 @@ mod tests {
     }
 
     const DAYS_COUNTS: &str = concat!(
-        "r1: on days_stepped=116 nonempty_days=116 walks=6 walks_shared=48 legs_booked=88 def_hits=114 def_misses=38; off days_stepped=330 nonempty_days=330 walks=54 walks_shared=0 legs_booked=254 def_hits=114 def_misses=86\n",
-        "r1b: on days_stepped=116 nonempty_days=116 walks=6 walks_shared=48 legs_booked=88 def_hits=114 def_misses=38; off days_stepped=330 nonempty_days=330 walks=54 walks_shared=0 legs_booked=254 def_hits=114 def_misses=86\n",
-        "r2: on days_stepped=112 nonempty_days=110 walks=4 walks_shared=2 legs_booked=81 def_hits=136 def_misses=40; off days_stepped=130 nonempty_days=124 walks=8 walks_shared=0 legs_booked=91 def_hits=136 def_misses=44\n",
-        "r3: on days_stepped=906 nonempty_days=754 walks=192 walks_shared=0 legs_booked=540 def_hits=202 def_misses=232; off days_stepped=906 nonempty_days=754 walks=192 walks_shared=0 legs_booked=540 def_hits=202 def_misses=232\n",
-        "r3f: on days_stepped=176 nonempty_days=164 walks=18 walks_shared=136 legs_booked=124 def_hits=180 def_misses=56; off days_stepped=744 nonempty_days=630 walks=154 walks_shared=0 legs_booked=454 def_hits=180 def_misses=192\n",
-        "rm: on days_stepped=96 nonempty_days=96 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40; off days_stepped=96 nonempty_days=96 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40\n",
+        "r1: on days_stepped=88 nonempty_days=88 walks=6 walks_shared=32 legs_booked=88 def_hits=114 def_misses=38; off days_stepped=222 nonempty_days=222 walks=38 walks_shared=0 legs_booked=222 def_hits=114 def_misses=70\n",
+        "r1b: on days_stepped=88 nonempty_days=88 walks=6 walks_shared=32 legs_booked=88 def_hits=114 def_misses=38; off days_stepped=222 nonempty_days=222 walks=38 walks_shared=0 legs_booked=222 def_hits=114 def_misses=70\n",
+        "r2: on days_stepped=84 nonempty_days=82 walks=4 walks_shared=2 legs_booked=81 def_hits=136 def_misses=40; off days_stepped=94 nonempty_days=90 walks=6 walks_shared=0 legs_booked=89 def_hits=136 def_misses=42\n",
+        "r3: on days_stepped=572 nonempty_days=468 walks=132 walks_shared=0 legs_booked=468 def_hits=202 def_misses=172; off days_stepped=572 nonempty_days=468 walks=132 walks_shared=0 legs_booked=468 def_hits=202 def_misses=172\n",
+        "r3f: on days_stepped=136 nonempty_days=124 walks=18 walks_shared=88 legs_booked=124 def_hits=180 def_misses=56; off days_stepped=472 nonempty_days=394 walks=106 walks_shared=0 legs_booked=394 def_hits=180 def_misses=144\n",
+        "rm: on days_stepped=72 nonempty_days=72 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40; off days_stepped=72 nonempty_days=72 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40\n",
     );
 
     /// R4 (`r4`, `r4j`) and R7 (`r7`), at 2026-11-15 (fc79eff9).
@@ -167,6 +170,9 @@ mod tests {
 
     /// `b2`'s asks, at 2026-11-17 on tally 2.1.8's engine (91421810): the walks #183 forces
     /// (R16, #200) take walks 6 to 28 (4 to 26 for `b2_one`); at 2026-11-15 (fc79eff9) before.
+    /// Re-pinned at tally 2.2's G1 (T1, 2026-11-18, the engine of 8ece2484): the sweep decision
+    /// is dated on the day its leg stated (S-6), so the walks #183 forced are gone (4 with forks
+    /// on; class S-6/a, the plan's §4).
     #[test]
     fn m2_counts_ahead() {
         let got = table(&AHEAD, &["b2_min", "b2_all", "b2_one"], false);
@@ -177,8 +183,8 @@ mod tests {
     }
 
     const AHEAD_COUNTS: &str = concat!(
-        "b2_min: on days_stepped=148 nonempty_days=148 walks=28 walks_shared=318 legs_booked=122 def_hits=136 def_misses=38; off days_stepped=676 nonempty_days=676 walks=344 walks_shared=0 legs_booked=604 def_hits=136 def_misses=84\n",
-        "b2_all: on days_stepped=146 nonempty_days=146 walks=28 walks_shared=290 legs_booked=120 def_hits=136 def_misses=38; off days_stepped=602 nonempty_days=602 walks=316 walks_shared=0 legs_booked=558 def_hits=136 def_misses=56\n",
-        "b2_one: on days_stepped=146 nonempty_days=146 walks=26 walks_shared=272 legs_booked=120 def_hits=136 def_misses=38; off days_stepped=550 nonempty_days=550 walks=298 walks_shared=0 legs_booked=524 def_hits=136 def_misses=38\n",
+        "b2_min: on days_stepped=78 nonempty_days=78 walks=4 walks_shared=14 legs_booked=78 def_hits=136 def_misses=36; off days_stepped=120 nonempty_days=120 walks=18 walks_shared=0 legs_booked=120 def_hits=136 def_misses=50\n",
+        "b2_all: on days_stepped=76 nonempty_days=76 walks=4 walks_shared=6 legs_booked=76 def_hits=136 def_misses=36; off days_stepped=94 nonempty_days=94 walks=10 walks_shared=0 legs_booked=94 def_hits=136 def_misses=42\n",
+        "b2_one: on days_stepped=76 nonempty_days=76 walks=4 walks_shared=0 legs_booked=76 def_hits=136 def_misses=36; off days_stepped=76 nonempty_days=76 walks=4 walks_shared=0 legs_booked=76 def_hits=136 def_misses=36\n",
     );
 }

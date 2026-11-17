@@ -609,10 +609,11 @@ mod tests {
         group_holds(KERNEL_VECTORS, "g9", (0, 1), 5);
     }
 
-    /// `kernel/vectors.refcore`'s group `g6`, every vector.
+    /// `kernel/vectors.refcore`'s group `g6`, every vector (17 since tally 2.2 dropped
+    /// `g6/refusal_order_later_leg`: a leg has no day of its own, S-6).
     #[test]
     fn m2_forks_on_prints_off_on_kernel_g6() {
-        group_holds(KERNEL_VECTORS, "g6", (0, 1), 18);
+        group_holds(KERNEL_VECTORS, "g6", (0, 1), 17);
     }
 
     /// `kernel/vectors.refcore`'s group `g7`, every vector.
@@ -1521,10 +1522,11 @@ mod tests {
         group_holds(M2_VECTORS, "fixes-r15", (0, 1), 9);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-r16`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-r16`, every vector (18 since tally 2.2 dropped
+    /// `r16/projection_leg_day` and `r16/low_from_leg_day`: a leg has no day of its own, S-6).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r16() {
-        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 19);
+        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 18);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-s`, every vector.

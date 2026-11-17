@@ -102,7 +102,7 @@ A scenario's own load refusal refuses that scenario alone (`scenario <s>: refuse
 | `percent_units` | `%` and other units after the shortest decimal |
 | `expr_spacing` | one space around binary operators and after commas, none inside brackets |
 | `parens_redundant` | parentheses only where precedence needs them |
-| `parens_forced` | a `to u` operand and a converted `flows` in a comparison always parenthesised |
+| `parens_forced` | a `to u` operand and a converted `value` in a comparison always parenthesised (a converted `flows` until tally 2.2, S-7) |
 | `numbers_of_any_size` | numbers past 64 bits: a reduced `a/b` (numerator, denominator or both), a grouped decimal (the gate, G11's B4) |
 | `same_sides` | a `same` side of every `sref` form as written: three names deep, a field after its keys, keys after a field; each alone in its list (the gate, G11's B3; #88) |
 | `same_place_keys` | a `same` side keyed by a keyed place, as written, its items by their place keys (the gate, G12's N3; beside a row, #88) |

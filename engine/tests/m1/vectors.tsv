@@ -1543,7 +1543,6 @@ fixes/gate8/k2_may_touch	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m
 fixes/gate8/k2_may_touch_twin	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k2_may_touch_twin.tally			-
 fixes/gate8/k5_unbooked	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k5_unbooked.tally			-
 fixes/gate8/k6_by_form	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k6_by_form.tally			-
-fixes/gate8/k7_after_run	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k7_after_run.tally			-
 fixes/gate8/k4_changed_after	fixes-gate8		engine/tests/m1/fixes/gate8/k4_changed_after	engine/tests/m1/fixes/gate8/k4_changed_after/household.tally engine/tests/m1/fixes/gate8/k4_changed_after/late.tally			-
 fixes/gate8/k8_projected_days	fixes-gate8		engine/tests/m1/fixes/gate8	engine/tests/m1/fixes/gate8/k8_projected_days.tally	p_day p_from		-
 fixes/gate8/p47_k1_after_run_line	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k1_after_run_line	engine/tests/m1/fixes/gate8/p47_k1_after_run_line/m.tally			-
@@ -1551,7 +1550,6 @@ fixes/gate8/p47_k2_may_touch	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k2_may
 fixes/gate8/p47_k4_changed_after	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k4_changed_after	engine/tests/m1/fixes/gate8/p47_k4_changed_after/household.tally engine/tests/m1/fixes/gate8/p47_k4_changed_after/late.tally			-
 fixes/gate8/p47_k5_unbooked	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k5_unbooked	engine/tests/m1/fixes/gate8/p47_k5_unbooked/m.tally			-
 fixes/gate8/p47_k6_by_form	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k6_by_form	engine/tests/m1/fixes/gate8/p47_k6_by_form/m.tally			-
-fixes/gate8/p47_k7_after_run	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k7_after_run	engine/tests/m1/fixes/gate8/p47_k7_after_run/m.tally			-
 fixes/gate8/p47_k9_by_last_hole	fixes-gate8		engine/tests/m1/fixes/gate8/p47_k9_by_last_hole	engine/tests/m1/fixes/gate8/p47_k9_by_last_hole/m.tally			-
 fixes/gate8/m2_g1_bands	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/bands.tally			-
 fixes/gate8/m2_g1_law	fixes-gate8		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/law.tally			-
@@ -1732,7 +1730,6 @@ fixes/gate8/m2_rt_l5_19_same_rows_link_on_second	fixes-gate8		engine/tests/m2/fi
 fixes/gate8/m2_rt_l5_19_same_rows_one_fulfils_hole	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l5_19_same_rows_one_fulfils_hole.tally			-
 fixes/gate8/m2_rt_l5_19_uncertain_covered_not_open	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l5_19_uncertain_covered_not_open.tally			-
 fixes/gate8/m2_rt_l5_19_unjoined_rows_refused	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l5_19_unjoined_rows_refused.tally			-
-fixes/gate8/m2_rt_l5_19_window_in_leg_on	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l5_19_window_in_leg_on.tally			-
 fixes/gate8/m2_rt_l5_19_window_in_on	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l5_19_window_in_on.tally			-
 fixes/gate8/m2_rt_l6_1_same_decision_disagree	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l6_1_same_decision_disagree.tally			-
 fixes/gate8/m2_rt_l6_1_same_decision_waits	fixes-gate8		engine/tests/m2/fixes/g4/rt	engine/tests/m2/fixes/g4/rt/l6_1_same_decision_waits.tally			-
@@ -1784,7 +1781,6 @@ fixes/gate8/m2_d512_proj_twice	fixes-gate8		engine/tests/m2/fixes/gate8/d512	eng
 fixes/gate8/m2_d512_made_exist_again	fixes-gate8		engine/tests/m2/fixes/gate8/d512	engine/tests/m2/fixes/gate8/d512/made_exist_again.tally			-
 fixes/gate8/m2_r437_before_failure	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/before_failure.tally			-
 fixes/gate8/m2_r437_before_failure_cycle	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/before_failure_cycle.tally			-
-fixes/gate8/m2_r437_outside_window	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/outside_window.tally			-
 fixes/gate8/m2_r437_one_day_low	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/one_day_low.tally			-
 fixes/gate8/m2_r437_partial_plain	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/partial_plain.tally			-
 fixes/gate8/m2_r437_window_at_partial	fixes-gate8		engine/tests/m2/fixes/gate8/r437	engine/tests/m2/fixes/gate8/r437/window_at_partial.tally			-

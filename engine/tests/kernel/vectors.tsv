@@ -132,7 +132,6 @@ g14/empty_range	g14		engine/tests/kernel/	engine/tests/kernel/g14/empty_range.ta
 g14/list_past_64	g14		engine/tests/kernel/	engine/tests/kernel/g14/list_past_64.tally		
 g14/by_n_days	g14		engine/tests/kernel/	engine/tests/kernel/g14/by_n_days.tally		
 g14/day_range_end	g14		engine/tests/kernel/	engine/tests/kernel/g14/day_range_end.tally		
-g6/refusal_order_later_leg	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order_later_leg.tally	q	
 g6/refusal_order_three	g6		engine/tests/kernel/	engine/tests/kernel/g6/refusal_order_three.tally		
 g5/scen_decisions	g5		engine/tests/kernel/	engine/tests/kernel/g5/scen_decisions_base.tally engine/tests/kernel/g5/scen_decisions.tally	q_boost	
 g6/refused_place	g6		engine/tests/kernel/	engine/tests/kernel/g6/refused_place.tally	q_bal	

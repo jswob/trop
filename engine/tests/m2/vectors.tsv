@@ -145,8 +145,6 @@ fixes/p60/sum_days_win	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fi
 fixes/p60/mv_row_value	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/mv_row_value.tally			sweep
 fixes/g6/n1	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/n1.tally			sweep
 fixes/g6/n2	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/n2.tally			sweep
-fixes/g6/b1	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b1.tally			sweep
-fixes/g6/b1b	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b1b.tally			sweep
 fixes/g6/b3	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b3.tally	q		-
 fixes/g6/b4	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/b4.tally	q2 q3 q4		-
 fixes/g6/r4_d2	fixes-sweep		engine/tests/m2/fixes/g6	engine/tests/m2/fixes/g6/r4.tally	d2		-
@@ -280,11 +278,9 @@ r16/after_m_window_day	fixes-r16		engine/tests/m2/fixes/r16/win	engine/tests/m2/
 r16/after_m_before_start	fixes-r16		engine/tests/m2/fixes/r16/pre	engine/tests/m2/fixes/r16/pre/m.tally			R16
 r16/after_m_obs_before_start	fixes-r16		engine/tests/m2/fixes/r16/obspre	engine/tests/m2/fixes/r16/obspre/m.tally	b md sn		R16
 r16/quantile_keyed_range	fixes-r16		engine/tests/m2/fixes/r16/quant	engine/tests/m2/fixes/r16/quant/m.tally			R16
-r16/projection_leg_day	fixes-r16		engine/tests/m2/fixes/r16/proj	engine/tests/m2/fixes/r16/proj/m.tally	a		R16
 r16/explain_start_modelled	fixes-r16		engine/tests/m2/fixes/r16/after	engine/tests/m2/fixes/r16/after/m.tally	ex_st		R16
 r16/since_after_m	fixes-r16		engine/tests/m2/fixes/r16/after	engine/tests/m2/fixes/r16/after/m.tally	sn		R16
 r16/gap_after_decision	fixes-r16		engine/tests/m2/fixes/r16/after	engine/tests/m2/fixes/r16/after/m.tally	gp		R16
-r16/low_from_leg_day	fixes-r16		engine/tests/m2/fixes/r16/proj	engine/tests/m2/fixes/r16/proj/m.tally	b		R16
 r16/quantile_def_level	fixes-r16		engine/tests/m2/fixes/r16/quant	engine/tests/m2/fixes/r16/quant/m.tally	q_where		R16
 r16/after_m_late	fixes-r16		engine/tests/m2/fixes/r16/late	engine/tests/m2/fixes/r16/late/m.tally	md b		R16
 s1/same_fulfils_differ	fixes-s		engine/tests/m2/fixes/s/s1	engine/tests/m2/fixes/s/s1/m.tally	f b		S1
@@ -332,8 +328,6 @@ fixes/rv/g2_b3_both_break	fixes-rv		engine/tests/m2/fixes/rv/g2_b3_both_break	en
 fixes/rv/g2_b4_cover_gap	fixes-rv		engine/tests/m2/fixes/rv/g2_b4_cover_gap	engine/tests/m2/fixes/rv/g2_b4_cover_gap/b4_cover_gap.tally			I77
 fixes/rv/g2f_g1_pending	fixes-rv		engine/tests/m2/fixes/rv/g2f_g1_pending	engine/tests/m2/fixes/rv/g2f_g1_pending/g1_pending.tally			I77
 fixes/rv/g2f_g2_words	fixes-rv		engine/tests/m2/fixes/rv/g2f_g2_words	engine/tests/m2/fixes/rv/g2f_g2_words/g2_words_t.tally			I77
-fixes/rv/g3_b1_base_legs_once	fixes-rv		engine/tests/m2/fixes/rv/g3_b1_base_legs_once	engine/tests/m2/fixes/rv/g3_b1_base_legs_once/t13.tally			R16
-fixes/rv/g3_b2_earlier_same_day	fixes-rv		engine/tests/m2/fixes/rv/g3_b2_earlier_same_day	engine/tests/m2/fixes/rv/g3_b2_earlier_same_day/t17.tally			R16
 fixes/rv/g3_b3_uncertain_partial	fixes-rv		engine/tests/m2/fixes/rv/g3_b3_uncertain_partial	engine/tests/m2/fixes/rv/g3_b3_uncertain_partial/t8.tally			R15
 fixes/rv/g3_b4_unitless_row	fixes-rv		engine/tests/m2/fixes/rv/g3_b4_unitless_row	engine/tests/m2/fixes/rv/g3_b4_unitless_row/t1_la.tally			R14
 fixes/rv/g3_b5_flows_after_window	fixes-rv		engine/tests/m2/fixes/rv/g3_b5_flows_after_window	engine/tests/m2/fixes/rv/g3_b5_flows_after_window/t12.tally			R16
