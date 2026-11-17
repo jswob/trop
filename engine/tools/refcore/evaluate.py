@@ -971,7 +971,8 @@ class Engine:
                 from .joint import shown
                 from .moves import and_list
                 # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class (tally 2.1.8 S6)
-                wins = sorted(wins, key=lambda w: shown(w.sid or ''))
+                from .moves import id_order
+                wins = sorted(wins, key=lambda w: id_order(self.m, w.sid or ''))
                 q = '%s are one, but %s differs: %s' % (
                     and_list(shown(w.sid or '') for w in wins), shown(info.id),
                     and_list('%s (%s)' % (fmt_rowval(w), shown(w.sid or '')) for w in wins))
@@ -1301,7 +1302,8 @@ class Engine:
         for k in seen:
             inf, ks, t = sr[k]
             out.append((inf, keys if k == skey else ks, t, k))
-        out.sort(key=lambda x: shown(x[2]))
+        from .moves import id_order
+        out.sort(key=lambda x: id_order(self.m, x[2]))
         return out
 
     def same_hole(self, day, sides):

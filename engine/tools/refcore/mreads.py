@@ -393,7 +393,7 @@ def m_same_rows_hole(self, o, leg, ctx):
         return None
     idx = dict((x.id, x) for x in self.observations(ctx))
     others = [idx[y] for y in g if y != o.id and y in idx]
-    return same_obs_differ(o, others, leg) if others else None
+    return same_obs_differ(o, others, leg, m=self.m) if others else None
 
 
 def _body_hole(src):
@@ -630,8 +630,8 @@ def once_by_same(m, out, ctx, owner=None):
             parent[rb] = ra
     drop = set()
     kept = set()
-    from .joint import shown
-    for x in sorted(order, key=shown):
+    from .moves import id_order
+    for x in sorted(order, key=lambda y: id_order(m, y)):
         if x not in ids:
             continue
         r = find(x)
