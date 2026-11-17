@@ -445,6 +445,9 @@ impl Sums {
         // the movements dated by a window met by the span's end: each whose window crosses
         // the span is its hole, booked in the walk or past its end (L §4.4; refcore's `wins`)
         let mut windows: BTreeMap<&str, (&DayWindow, &str)> = BTreeMap::new();
+        // the holes of windows open before the span: one whose window ended there too is
+        // decided, its movement dated before the span (L §4.4, P29; B5 of group 3's review)
+        let mut open: Vec<Hole> = Vec::new();
         for e in walk.entries(place, unit) {
             // a zero leg's day can't change the sum: decided (L §4.4)
             if let (Change::ImpOn(_), Some((wid, w)), Some(mv)) = (&e.change, &e.window, &e.mv)
@@ -455,12 +458,12 @@ impl Sums {
             }
             if e.at <= lo {
                 match &e.change {
-                    Change::Perm(h) if e.at <= limit => self.holes.push(h.clone()),
+                    Change::Perm(h) if e.at <= limit => open.push(h.clone()),
+                    Change::Unperm(h) => open.retain(|o| o != h),
                     // a refused movement whose day is a hole or refused may fall in the span,
                     // as a hole day's (tally 2.1.8, R11)
                     Change::PermBad(r) if e.at <= limit => return Err(Stop::Refused(r.clone())),
                     Change::Perm(_)
-                    | Change::Unperm(_)
                     | Change::PermBad(_)
                     | Change::Bad(_)
                     | Change::Reset { .. }
@@ -471,6 +474,8 @@ impl Sums {
                 }
                 continue;
             }
+            // the log runs in point order: the holes met before the span come first
+            self.holes.append(&mut open);
             if e.at > limit {
                 continue;
             }
@@ -509,6 +514,7 @@ impl Sums {
                 Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
             }
         }
+        self.holes.extend(open);
         for (w, movement) in windows.into_values() {
             if crosses(w, self.span) {
                 self.holes.push(imprecise_flows(w, place, movement));
