@@ -556,4 +556,76 @@ ask v: px[EUR] law 2026-03-08
         ];
         assert_eq!(lines, want, "every line of the run");
     }
+
+    /// F1 of the fix's review (`n2_range_9.tally`, `n2_list.tally`): the member that stands
+    /// for a `same` class is its first in index order, a range or list keeping its own order:
+    /// `pay[9]` before `pay[10]` on `1..12`, `pay[zz]` on `[zz, aa, mm]` (L §2.5, pick P50).
+    #[test]
+    fn a_same_class_stands_by_its_first_id_in_index_order() {
+        let text = |index: &str, line: &str| {
+            format!(
+                r#"model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = {index}
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  {line}
+"#
+            )
+        };
+        let heads = |lines: Vec<String>| -> Vec<String> {
+            lines.into_iter().filter(|l| l.starts_with("l (")).collect()
+        };
+        let range = heads(lines_of(
+            "n2_range_9.tally",
+            &text("1..12", "same pay[9] = pay[10]"),
+        ));
+        assert!(
+            range.contains(&"l (x = pay[9]): 500.00 PLN".to_owned()),
+            "pay[9] stands: {range:?}"
+        );
+        assert!(
+            !range.iter().any(|l| l.starts_with("l (x = pay[10])")),
+            "pay[10] is bound with it: {range:?}"
+        );
+        let list = heads(lines_of(
+            "n2_list.tally",
+            &text("[zz, aa, mm]", "same pay[aa] = pay[zz]"),
+        ));
+        assert_eq!(
+            list,
+            [
+                "l (x = pay[zz]): 500.00 PLN".to_owned(),
+                "l (x = pay[mm]): 500.00 PLN".to_owned()
+            ],
+            "pay[zz] stands, in the list's order"
+        );
+    }
 }

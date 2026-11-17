@@ -292,7 +292,7 @@ impl Engine {
     }
 
     /// The rows stated `same` with input `id`'s at `keys`, that row among them, each as its
-    /// input and keys, in the order of their texts compared by code point; none where no
+    /// input and keys, in id order (a list or range index keeping its own, P50); none where no
     /// line the cut of `ctx` sees names it. `same` is an equivalence: lines that share a side
     /// make one class, each line seen as [`Engine::same_line_seen`] decides, and only the
     /// lines that reach the row are asked (refcore's `same_class`). L §6.1, §2.5, §4.5 (tally
@@ -333,7 +333,7 @@ impl Engine {
         if class.len() < 2 {
             return Ok(None);
         }
-        class.sort_by_cached_key(|(y, yk)| origin(y, yk));
+        class.sort_by_cached_key(|(y, yk)| m.id_order(&origin(y, yk)));
         Ok(Some(class))
     }
 

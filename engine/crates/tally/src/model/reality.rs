@@ -279,6 +279,51 @@ impl SamePair {
 }
 
 impl Reality {
+    /// An id as a sort key in id order: a row's version prefix (`v:`) first, then the item's
+    /// name by code point, then each key by its position in its index, a list, range or
+    /// built-in index keeping its own order (`pay[9]` before `pay[10]`; on `[zz, aa, mm]` zz
+    /// first); an open index's keys, things and what isn't an item's key go by code point
+    /// (refcore's `id_order`; pick P50). L §2.5, §6.1, §8.1 `HOLE-SAME`.
+    #[must_use]
+    pub fn id_order(&self, id: &str) -> Vec<(u8, usize, String)> {
+        let mut out = Vec::new();
+        let mut text = id;
+        if let Some((prefix, rest)) = id.split_once(':')
+            && !prefix.contains('[')
+        {
+            out.push((0, 0, prefix.to_owned()));
+            text = rest;
+        }
+        let Some((name, keys)) = text
+            .strip_suffix(']')
+            .and_then(|inner| inner.split_once('['))
+        else {
+            out.push((1, 0, text.to_owned()));
+            return out;
+        };
+        out.push((1, 0, name.to_owned()));
+        let binds = match (self.moves.get(name), self.inputs.get(name)) {
+            (Some(mv), _) => mv.binds.as_slice(),
+            (None, Some(input)) => input.binds.as_slice(),
+            (None, None) => &[],
+        };
+        for (i, key) in keys.split(',').map(str::trim).enumerate() {
+            let pos = binds.get(i).and_then(|bind| match &bind.domain {
+                Domain::Index(index) => self
+                    .indexes
+                    .get(index)
+                    .filter(|ix| ix.form != super::index::IndexForm::Open)
+                    .and_then(|ix| ix.keys().iter().position(|k| k.text() == key)),
+                Domain::Kind(_) | Domain::Axis(_) | Domain::List(_) | Domain::Range => None,
+            });
+            out.push(match pos {
+                Some(p) => (0, p, String::new()),
+                None => (1, 0, key.to_owned()),
+            });
+        }
+        out
+    }
+
     /// The id of the thing named `name`, which its table holds (the caller pushed or found
     /// it).
     ///

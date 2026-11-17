@@ -150,7 +150,7 @@ impl Engine {
     /// As [`Engine::same_line_seen`].
     pub(crate) fn same_groups(&mut self, m: &Reality, cut: Day) -> Result<Groups, Stop> {
         // a class joined by lines in two files has no written order: its members go by their
-        // ids, compared by code point (L §2.5; tally 2.1.8 S6)
+        // ids in id order (L §2.5; tally 2.1.8 S6, P50)
         let mut order: BTreeSet<&str> = BTreeSet::new();
         let mut parent: BTreeMap<String, String> = BTreeMap::new();
         for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
@@ -162,6 +162,9 @@ impl Engine {
             }
         }
         let mut by_root: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        // in id order, a list or range index keeping its own (pick P50)
+        let mut order: Vec<&str> = order.into_iter().collect();
+        order.sort_by_cached_key(|side| m.id_order(side));
         for side in &order {
             by_root
                 .entry(root(&parent, side))
@@ -177,10 +180,10 @@ impl Engine {
         Ok(out)
     }
 
-    /// The sides of the `same` lines cut `cut` sees, each once, in id order by code point:
-    /// section order changes nothing, and S6 names a class's rows in id order (refcore's
-    /// `once_by_same`, its `sorted(order, key=shown)`; pick P42, group 4's review N2). L §6.1,
-    /// §4.5.
+    /// The sides of the `same` lines cut `cut` sees, each once, in id order, a list or range
+    /// index keeping its own order: section order changes nothing, and S6 names a class's
+    /// rows in id order (refcore's `once_by_same`, `id_order`; picks P42 and P50, group 4's
+    /// review N2 and its fix's F1). L §6.1, §2.5, §4.5.
     ///
     /// # Errors
     ///
@@ -191,7 +194,9 @@ impl Engine {
             out.insert(left.clone());
             out.insert(right.clone());
         }
-        Ok(out.into_iter().collect())
+        let mut out: Vec<String> = out.into_iter().collect();
+        out.sort_by_cached_key(|side| m.id_order(side));
+        Ok(out)
     }
 
     /// Whether movement `id` is named by a `same` line cut `cut` sees. L §6.1, §4.5.
@@ -341,7 +346,8 @@ pub fn same_differ(
         if class.len() < 2 {
             continue;
         }
-        class.sort_by(|a, b| a.0.id.cmp(&b.0.id));
+        // the rows in id order (L §8.1 HOLE-SAME, §2.5; P50)
+        class.sort_by_cached_key(|(o, _)| m.id_order(&o.id));
         let (what, figures) = if let Some(figures) = amounts_differ(m, &class)? {
             (format!("the amount of {}", mine.name), figures)
         } else if let Some(figures) = days_differ(&class) {
@@ -1198,9 +1204,9 @@ impl Engine {
                 EndBook::Skip
             });
         }
-        // the members in the order of their ids, every one named (tally 2.1.8 S6)
+        // the members in the order of their ids, every one named (tally 2.1.8 S6, P50)
         let mut ordered = touch;
-        ordered.sort_by(|a, b| a.0.id().cmp(b.0.id()));
+        ordered.sort_by_cached_key(|(x, _, _)| m.id_order(x.id()));
         let ids: Vec<String> = ordered.iter().map(|(x, _, _)| x.id().to_owned()).collect();
         let days: BTreeSet<Day> = ordered.iter().filter_map(|(_, g, _)| g.day.day()).collect();
         let days: Vec<String> = days.into_iter().map(Day::text).collect();
