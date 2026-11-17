@@ -1504,7 +1504,9 @@ class Engine:
         if hit is None:
             return NONE
         latest, got, side = hit
-        v = self.same_value(latest, got)
+        # rows that govern always began on no day: they disagree on the day the read reads them for (L §8.1
+        # HOLE-SAME's `differs on <d>`, as a plain read at d prints; tally 2.1.8 P42, group 4's review N3)
+        v = self.same_value(d if latest == datetime.date.min else latest, got)
         if len(got) > 1 and isinstance(v, Hole):
             return v
         info, keys = side      # the held line names the row that states the value
@@ -3432,7 +3434,13 @@ class Engine:
             things.sort(key=lambda t: m.kind_order_key(t, dom[1], ctx.cut))
             return [Thing(t.name) for t in things]
         if dom[0] in ('event', 'obs'):
-            return [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            out = [x for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            for x in out:
+                e = self.s1_refusal(getattr(x, 'id', None), ctx)
+                if e is not None:
+                    # a binding over movements rests on each (L §5.19 S1, P42): a count or sum is refused
+                    raise e
+            return [x.mv() for x in out]
         return None
 
     def zero_of(self, t):
@@ -4665,6 +4673,27 @@ class Engine:
         raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % w)
 
     # -- tracing for explain ---------------------------------------------------------------------
+    def trace_obs_row(self, r, rec):
+        """An observed row read through a movement (E §10): its sid, the leg it states, its version, source, locator,
+        day and known."""
+        if not self.trace_stack:
+            return
+        tn = TraceNode('row', r.sid if ':' in r.sid else '%s:%s' % (r.version.id, r.sid))
+        src = self.m.sources.get(r.version.cite)
+        bits = ['version %s' % r.version.id, 'source %s' % r.version.cite]
+        if src is not None:
+            bits.append('"%s"' % src.title)
+        if r.locator:
+            bits.append('locator "%s"' % r.locator)
+        day = rec.get('day')
+        if isinstance(day, datetime.date):
+            bits.append('on %s' % day)
+        kn = r.known
+        bits.append('known %s' % (('window(%s, %s)' % kn) if isinstance(kn, tuple) else kn))
+        tn.lines.append(', '.join(bits))
+        tn.value = rec
+        self.trace_stack[-1].children.append(('node', tn))
+
     def trace_row(self, r, info, keys):
         if not self.trace_stack:
             return

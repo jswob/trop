@@ -1578,6 +1578,27 @@ def same_obs_differ(a, others, leg=None):
     return None
 
 
+def m_s1_refusal(self, mid, ctx):
+    """S1's refusal that a read of movement or instance mid rests on, or None (L §5.19 One movement on two statements,
+    S1 with R11's reach; tally 2.1.8 P42): every link is judged once, so a class's two instances and its rows are all
+    known before any read takes one."""
+    wk = self.wkey(ctx)
+    if ('s1done', wk) not in self.run_cache:
+        self.run_cache[('s1done', wk)] = True
+        groups = same_groups(self.m, ctx)
+        if groups:
+            # only the links a class's rows make can differ; what judging them reads is the refusal's, not the
+            # reader's register
+            c = self.push()
+            try:
+                for t2, os in list(self.link_targets(ctx).items()):
+                    if any(o.id in groups for o in os):
+                        self.obs_links_for(t2, ctx)
+            finally:
+                self.stack.pop()
+    return self.run_cache.get(('s1links', wk), {}).get(mid)
+
+
 def m_same_fulfils_differ(self, tid, res, ctx):
     """L §5.19 One movement on two statements (tally 2.1.8 S1, #177): rows stated same whose fulfils name different
     instances are refused, RUN-RECORD `<r> and <r'> are stated same and fulfil <a> and <b>`, the rows in id order, each
@@ -1609,6 +1630,10 @@ def m_same_fulfils_differ(self, tid, res, ctx):
             badl = self.run_cache.setdefault(('badlinks', self.wkey(ctx)), {})
             badl.setdefault(tid, e)
             badl.setdefault(t2, e)
+            # S1's reach (P42): every read whose answer rests on the class or on either instance (s1_refusal)
+            s1 = self.run_cache.setdefault(('s1links', self.wkey(ctx)), {})
+            for k in (tid, t2, a.id, b.id):
+                s1.setdefault(k, e)
     if not bad:
         return res
     return [o for o in res if id(o) not in bad]
