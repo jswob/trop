@@ -1,0 +1,72 @@
+# tally 2.1.8 P42, L §6.1 (group 4's review N2, agent/s6_sec_a and s6_sec_b): the member that stands for a same
+# class in a binding is the first in id order, as S6 names its rows, since section order changes nothing:
+# bank[a1], whichever section states the class's first line. 8bf0d761 took the first written, bank[c1].
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place card: accounts PLN lives 2026-01-01..
+input bank: observed
+input amt: money PLN
+input d_p: int
+
+move pay[m in months]: transfers
+  on day_of(m, d_p)
+  leg cash from konto to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d_p = 10 "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+  opening[card] = 0.00 PLN at 2026-03-01 start "s"
+
+version jj
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  same bank[c1] = bank[b1]
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[c1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "c"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[b1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN, fulfils: pay[2026-03]) "a"
+
+version st_card
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers card
+  bank[a1] = (on: 2026-03-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b"
+  same bank[a1] = bank[c1]
+
+
+
+
+
+
+
+ask l: x.cash.amount for x in transfers over 2026-03
+=== expect
+l (x = bank[a1]): 100.00 PLN
+  cut 2026-04-10
+warning: WARN-UNREAD place card is read by nothing

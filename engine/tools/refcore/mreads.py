@@ -612,7 +612,8 @@ def once_by_same(m, out, ctx, owner=None):
     if not sm:
         return out
     ids = set(getattr(x, 'id', None) for x in out)
-    # same is an equivalence (L §6.1, round 14): a group counts once, by its first member written
+    # same is an equivalence (L §6.1, round 14): a group counts once, by its first member in id order, as S6 names
+    # its rows (L §6.1: section order changes nothing; tally 2.1.8 P42, group 4's review N2)
     parent = {}
 
     def find(x):
@@ -629,7 +630,8 @@ def once_by_same(m, out, ctx, owner=None):
             parent[rb] = ra
     drop = set()
     kept = set()
-    for x in order:
+    from .joint import shown
+    for x in sorted(order, key=shown):
         if x not in ids:
             continue
         r = find(x)
