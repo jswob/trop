@@ -2946,12 +2946,10 @@ class Checker:
             return T.num(())
         return T.num(xu)
 
-    def mode_arg(self, mode, sc, n, fn=None):
-        """A rounding mode argument of the function fn (n's name where n is a call: round, prorata): an axis of
-        rounding codes, or an expression of type rounding (LOAD-UNIT `<function>: the mode is <type>, not a rounding
-        code` otherwise, L §8.3)."""
+    def mode_arg(self, mode, sc, n):
+        """A rounding mode argument of the call n (round, prorata): an axis of rounding codes, or an expression of
+        type rounding (LOAD-UNIT `<function>: the mode is <type>, not a rounding code` otherwise, L §8.3)."""
         m = self.m
-        fn = fn or n.name
         if mode.k == 'name' and mode.id not in sc.vars and mode.id in m.axes:
             ax = m.axes[mode.id]
             for o in ax.options:
@@ -2964,7 +2962,7 @@ class Checker:
             return
         t = self.tc(mode, sc, expect=T.code('rounding'))
         if not (t.k == 'code' and t.code == 'rounding'):
-            raise uerr('%s: the mode is %s, not a rounding code' % (fn, T.show(t)), n.loc)
+            raise uerr('%s: the mode is %s, not a rounding code' % (n.name, T.show(t)), n.loc)
 
     def c_minor(self, n, sc, expect):
         self.args(n, 1)
@@ -3697,10 +3695,7 @@ def _txt(n):
             s += ' from ' + _txt(n.proj['frm'])
         return s
     if k == 'flows':
-        s = 'flows(%s, %s%s)' % (_txt(n.ref), _txt(n.span), (', for ' + _txt(n.forkey)) if n.forkey is not None else '')
-        if n.conv is not None:
-            s += ' in %s at %s %s' % (n.conv[0], _txt(n.conv[1]), _txt(n.conv[2]))
-        return s
+        return 'flows(%s, %s%s)' % (_txt(n.ref), _txt(n.span), (', for ' + _txt(n.forkey)) if n.forkey is not None else '')
     if k == 'value':
         return 'value(%s, %s) in %s' % (_txt(n.ref), _txt(n.d), n.cur)
     if k == 'query':

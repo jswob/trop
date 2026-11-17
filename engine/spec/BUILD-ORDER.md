@@ -213,7 +213,7 @@ The constructs that tax and benefit law needs beyond X's: exceptions, branches, 
 **Builds**
 - `beats` chains and `given` beyond X's forms; Kleene `and` and `or`, the aggregates, `argmin` and `argmax` (L §5.11).
 - Every rounding mode and step, and the rounding axis (L §7.2).
-- Several currencies: rates as `num A/B`, `flows … in CUR at fx mode`, an exchange's two legs (L §3.2, §5.10, §5.14).
+- Several currencies: rates as `num A/B`, an exchange's two legs (L §3.2, §5.10, §5.14).
 - Calendars per country (L §4.2).
 - The household law parts that C and D run on (GEN, PIT, SOC, IGT, CC, CIV and the rest), each in full.
 

@@ -1,6 +1,5 @@
-# L §2.3 MODE, §8.3 LOAD-UNIT (tally 2.1.6, issue #79): a converted flows whose mode is day, a date, not a rounding
-# code, is refused LOAD-UNIT `flows: the mode is date, not a rounding code`, the engine's bytes. tally 2.1.5's
-# refcore built the message from the call's name, which a flows node lacks, and crashed (REFCORE-NOT-YET).
+# tally 2.2 (CHANGES.md 2.2-7), L §2.3 `flowsx`, §5.18: on an ask line, a currency code after `in` past the body is
+# no world's name (an ask's `in ID`) and no conversion of flows any more: refused by the grammar.
 === m.tally
 model m
   tally 2
@@ -29,7 +28,7 @@ move pay[m in months]: transfers
   at start_of(m)
   leg cash from world to konto amount eamt
 
-ask b: flows(konto, 2026-01) in PLN at fx day law 2026-01-01
+ask b: flows(konto, 2026-01) in PLN at fx half-up law 2026-01-01
 
 version v
   cite s
@@ -39,4 +38,4 @@ version v
   day = 2026-02-10
   eamt = 1.00 EUR
 === expect
-refused: LOAD-UNIT flows: the mode is date, not a rounding code (m.tally:28)
+refused: LOAD-PARSE cannot parse: expected end of line, got in (m.tally:28)

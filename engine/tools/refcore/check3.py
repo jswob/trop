@@ -832,31 +832,19 @@ def m_t_flows(self, n, sc, expect):
         t = self.place_arg(r, sc, 'flows')
         ut = self.place_type_unit(t, r)
         n._form = 'place'
-        if n.conv is None:
-            # L §5.14.3 (round 12): "a place of unit any ... is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
-            # otherwise), unless the flows converts"
-            th = self.literal_place(r)
-            pu = m.place_unit(m.things[th]) if th is not None else (
-                m.kind_unit(t.ix) if t.k == 'key' and t.ix in m.kinds else None)
-            if pu == 'any':
-                raise uerr('flows of %s, a place of unit any: it sums no one unit; convert it (in CUR at fx mode)'
-                           % _txt(r), n.loc)
+        # L §5.14.3 (round 12): "a place of unit any ... is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
+        # otherwise)"
+        th = self.literal_place(r)
+        pu = m.place_unit(m.things[th]) if th is not None else (
+            m.kind_unit(t.ix) if t.k == 'key' and t.ix in m.kinds else None)
+        if pu == 'any':
+            raise uerr('flows of %s, a place of unit any: it sums no one unit' % _txt(r), n.loc)
         self.mark(sc, 'flows', self.place_target(r))
         n._ctgt = ('flows', self.place_target(r))
         self.edge(sc, ('balances',), 'flows')
     self.span(n.span, sc)
     if n.forkey is not None:
         self.tc(n.forkey, sc)
-    if n.conv is not None:
-        cur, fx, mode = n.conv
-        if cur not in CURRENCIES:
-            raise uerr('money in an undeclared currency %s' % cur, n.loc)
-        ft = self.tc(fx, sc)
-        if ft.k != 'num' or not ft.u:
-            raise uerr('flows in %s at %s: the rate is %s' % (cur, _txt(fx), T.show(ft)), n.loc)
-        # a flows node has no name: its word names it (tally 2.1.6, issue #79: refcore 2.1.5 crashed here)
-        self.mode_arg(mode, sc, n, 'flows')
-        return T.money(cur)
     return ut
 
 
