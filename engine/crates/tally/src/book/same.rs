@@ -772,6 +772,62 @@ impl Engine {
         Ok(bad)
     }
 
+    /// Of rows `good`, which fulfil `tid`, those stated `same` as a row whose own `fulfils`
+    /// names another instance, each refused `RUN-RECORD` naming both rows in id order: a
+    /// movement on two statements fulfils what is stated on either row or on both alike, and
+    /// what reads either instance's realised movement rests on the refusal (refcore's
+    /// `same_fulfils_differ`). L §5.19 One movement on two statements, §8.4 (tally 2.1.8 S1).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::same_line_seen`], and the observations'.
+    pub(crate) fn fulfils_differ(
+        &mut self,
+        m: &Reality,
+        tid: &str,
+        good: &[Obs],
+        cut: Day,
+    ) -> Result<Vec<(String, Refusal)>, Stop> {
+        let mut bad: Vec<(String, Refusal)> = Vec::new();
+        let groups = self.same_groups(m, cut)?;
+        if !good.iter().any(|o| groups.contains_key(&o.id)) {
+            return Ok(bad);
+        }
+        let others: Vec<(String, String)> = self
+            .observations(m, cut)?
+            .iter()
+            .filter(|x| !x.shared)
+            .filter_map(|x| x.target_id().map(|t| (x.id.clone(), t)))
+            .filter(|(_, t)| t != tid)
+            .collect();
+        for o in good {
+            let Some(group) = groups.get(&o.id) else {
+                continue;
+            };
+            for (x, t2) in others.iter().filter(|(x, _)| group.contains(x)) {
+                let ((a, ta), (b, tb)) = if o.id <= *x {
+                    ((o.id.as_str(), tid), (x.as_str(), t2.as_str()))
+                } else {
+                    ((x.as_str(), t2.as_str()), (o.id.as_str(), tid))
+                };
+                let err = Refusal::new(
+                    Code::Run(Run::Record),
+                    format!("{a} and {b} are stated same and fulfil {ta} and {tb}"),
+                );
+                self.obs_errs
+                    .entry((cut, x.clone()))
+                    .or_insert_with(|| err.clone());
+                for t in [tid, t2.as_str()] {
+                    self.bad_links
+                        .entry((cut, t.to_owned()))
+                        .or_insert_with(|| err.clone());
+                }
+                refuse_once(&mut bad, o, &err);
+            }
+        }
+        Ok(bad)
+    }
+
     /// Whether rows `a` and `b` of different versions, not stated `same`, name the same two
     /// places, each version covering a different one of them: each would book one end and
     /// count the whole (refcore's `unjoined_refused`, its test). L §5.19.

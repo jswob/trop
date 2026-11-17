@@ -62,6 +62,9 @@ pub struct Obs {
     pub values: Vec<(String, Value)>,
     /// What it fulfils.
     pub fulfils: Option<Fulfils>,
+    /// Whether its `fulfils` is its class's, stated on a row it is stated `same` with: the
+    /// link is judged on the row that states it (L §5.19 One movement on two statements).
+    pub shared: bool,
     /// What reading it met: its row, and what judging its link read.
     pub coll: Collected,
     /// The hole of a row known in a window that holds the cut: seen and unseen, it is one
@@ -472,8 +475,14 @@ impl Engine {
             }
         }
         let mut good = Vec::new();
+        let mut shared = Vec::new();
         let mut errs = Vec::new();
         for o in naming {
+            // a `fulfils` stated on another row of its class is judged on that row (L §5.19)
+            if o.shared {
+                shared.push(o.id);
+                continue;
+            }
             let Some(Fulfils::Instance(move_id, keys)) = &o.fulfils else {
                 continue;
             };
@@ -523,20 +532,42 @@ impl Engine {
             }
             good.push(o);
         }
-        let unjoined = self.unjoined(m, tid, &good, cut)?;
+        let differ = self.fulfils_differ(m, tid, &good, cut)?;
+        let left: Vec<Obs> = good
+            .into_iter()
+            .filter(|o| !differ.iter().any(|(id, _)| *id == o.id))
+            .collect();
+        errs.extend(differ);
+        let unjoined = self.unjoined(m, tid, &left, cut)?;
         if let Some((_, err)) = unjoined.first() {
             self.bad_links
                 .entry((cut, tid.to_owned()))
                 .or_insert_with(|| err.clone());
         }
         let refused: BTreeSet<&str> = unjoined.iter().map(|(id, _)| id.as_str()).collect();
-        let good = good
+        let stands: Vec<String> = left
             .into_iter()
             .filter(|o| !refused.contains(o.id.as_str()))
             .map(|o| o.id)
             .collect();
         errs.extend(unjoined);
-        Ok((good, errs))
+        // a row with no `fulfils` of its own stands in where a row of its class does
+        let groups = self.same_groups(m, cut)?;
+        let standing: Vec<String> = shared
+            .into_iter()
+            .filter(|id| {
+                groups
+                    .get(id)
+                    .is_some_and(|g| g.iter().any(|y| stands.contains(y)))
+            })
+            .collect();
+        let seen = self.observations(m, cut)?;
+        let linked = seen
+            .iter()
+            .filter(|o| stands.contains(&o.id) || standing.contains(&o.id))
+            .map(|o| o.id.clone())
+            .collect();
+        Ok((linked, errs))
     }
 
     /// The observations that stand in for a modelled instance on a covered day: those whose
@@ -887,6 +918,7 @@ fn share_fulfils(groups: &BTreeMap<String, Vec<String>>, seen: &mut [Obs]) {
         };
         if let Some(f) = group.iter().find_map(|member| stated.get(member)) {
             o.fulfils = Some(f.clone());
+            o.shared = true;
         }
     }
 }
@@ -996,6 +1028,7 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
         legs,
         values: o.values.clone(),
         fulfils: o.fulfils.clone(),
+        shared: false,
         coll,
         undecided: None,
     })
