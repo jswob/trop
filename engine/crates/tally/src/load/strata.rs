@@ -701,18 +701,13 @@ fn after_keys(
         let (crate::syntax::Key::Expr(e), Domain::Index(ix)) = (key, &bind.domain) else {
             continue;
         };
-        // a period, a day, or a bare key of a list index that names no def (B6 of group 3's
-        // review: `kz` of `ks`)
+        // a period, a day, or a bare key of a list index, a def's name too: a reading's key is
+        // a literal (L §2.5 Keys; B6 of group 3's review, `kz` of `ks`; N-a of its fix's)
         let period = matches!(
             e,
             Expr::Lit(Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_))
         );
-        let bare = if let Expr::Name(name) = e {
-            m.defs.get(name).is_none()
-        } else {
-            false
-        };
-        if !period && !bare {
+        if !period && !matches!(e, Expr::Name(_)) {
             continue;
         }
         let Some(lit) = super::types::key_lit_of(e) else {

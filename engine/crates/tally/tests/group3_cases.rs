@@ -857,4 +857,136 @@ ask lbx: lb
             ],
         );
     }
+
+    /// N-a (`b6_def_key.tally`): a reading `after save[pick]`, `pick` a def's name and no key of `ks`: a reading's key is a literal (L §2.5).
+    #[test]
+    fn a_reading_after_a_key_that_names_a_def_is_load_key() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+def pick: key ks = ka
+input d_save: int
+input d_sday: date
+input d_rent: int
+input rentamt: money PLN
+
+index ks = [ka]
+move save[k in ks]: transfers
+  on d_sday
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move rent[m in months]: transfers
+  on day_of(m, d_rent)
+  leg cash from konto to world amount rentamt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  d_sday = 2026-03-15 "s"
+  d_rent = 13 "s"
+  rentamt = 30.00 PLN "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
+  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
+  stated[konto] = 550.00 PLN after save[pick] "saldo"
+
+ask b: bal(konto, 2026-03-31)
+ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
+ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
+"#;
+        holds(
+            &lines_of("b6_def_key.tally", text),
+            &[
+                "refused: LOAD-KEY stated[konto] after save[pick]: pick is not a key of ks (b6_def_key.tally:50)",
+            ],
+        );
+    }
+
+    /// N-a (`p9_defkey.tally`): the same with reads of the reading: load refuses it, no read meets `RUN-RECORD`.
+    #[test]
+    fn a_reading_after_a_def_named_key_refuses_at_load_not_at_its_reads() {
+        let text = r#"model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input keep: money PLN
+input d_save: int
+input d_sday: date
+input d_rent: int
+input rentamt: money PLN
+
+index ks = [ka]
+def pick: key ks = ka
+move save[k in ks]: transfers
+  on d_sday
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move rent[m in months]: transfers
+  on day_of(m, d_rent)
+  leg cash from konto to world amount rentamt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  d_sday = 2026-03-15 "s"
+  d_rent = 13 "s"
+  rentamt = 30.00 PLN "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
+  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
+  stated[konto] = 550.00 PLN after save[pick] "saldo"
+
+ask b: bal(konto, 2026-03-31)
+ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
+ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
+"#;
+        holds(
+            &lines_of("p9_defkey.tally", text),
+            &[
+                "refused: LOAD-KEY stated[konto] after save[pick]: pick is not a key of ks (p9_defkey.tally:50)",
+            ],
+        );
+    }
 }
