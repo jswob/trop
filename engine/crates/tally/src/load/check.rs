@@ -636,6 +636,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
     for (_, mv) in m.moves.entries() {
         facts.push(checker.check_move(m, mv, files.of_move(&mv.id)?)?);
     }
+    super::prices::any_priced(m, &files, &checker.leg_ends)?;
     for (id, _) in m.fills.entries() {
         checker.check_fill(m, id)?;
     }
