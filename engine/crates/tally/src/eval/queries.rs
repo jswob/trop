@@ -115,9 +115,18 @@ impl Engine {
             let text = "a value is none here: the level of quantile".to_owned();
             return Err(refuse(Run::None, text));
         }
-        let Value::Number(Number { q, .. }) = read else {
+        let Value::Number(Number { q, .. }) = &read else {
             return Err(not_typed());
         };
+        // type 1 over its terms has no smallest term for a level outside (0, 1] (L §5.11,
+        // §5.16; tally 2.1.8 R16, #171)
+        let above_zero = q.compare(&Num::zero()).map_err(num_stop)?;
+        let past_one = q.compare(&Num::int(1)).map_err(num_stop)?;
+        if above_zero != Ordering::Greater || past_one == Ordering::Greater {
+            let shown = read.text(m).map_err(num_stop)?;
+            let text = format!("quantile has no meaning for the level {shown}");
+            return Err(refuse(Run::Domain, text));
+        }
         let mut failed: Option<Stop> = None;
         terms.sort_by(|a, b| match compare(m, a, b, Test::Order) {
             Ok(order) => order,

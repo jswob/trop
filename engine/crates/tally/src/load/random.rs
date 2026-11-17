@@ -780,6 +780,7 @@ impl Checker {
             QueryFn::Mean => mean_type(m, &tt),
             QueryFn::Quantile => {
                 self.level(m, scope, q, LevelUnit::Any, depth)?;
+                level_in_range(m, q.level.as_ref())?;
                 Ok(tt)
             }
         }
@@ -1100,4 +1101,36 @@ fn read_target(m: &Reality, scope: &Scope, e: &Expr) -> Option<Node> {
         return Some(Node::new(NodeKind::Input, name));
     }
     (kind == NameKind::Def).then(|| Node::new(NodeKind::Def, name))
+}
+
+/// A keyed quantile's level written as a number, or minus one, outside (0, 1]: `LOAD-DOMAIN`,
+/// since the level's range is type 1's own and load sees the literal; a level only the run
+/// gives is the run's `RUN-DOMAIN` (L §5.11, §5.16; tally 2.1.8 R16, #171; refcore's
+/// `_level_literal`).
+fn level_in_range(m: &Reality, level: Option<&Expr>) -> Result<(), Stop> {
+    let written = if let Some(Expr::Lit(Lit::Num(n))) = level {
+        n.value.clone()
+    } else if let Some(Expr::Neg(inner)) = level
+        && let Expr::Lit(Lit::Num(n)) = &**inner
+    {
+        n.value.checked_neg().map_err(super::steps::num_stop)?
+    } else {
+        return Ok(());
+    };
+    let above_zero = written
+        .compare(&Num::zero())
+        .map_err(super::steps::num_stop)?;
+    let past_one = written
+        .compare(&Num::int(1))
+        .map_err(super::steps::num_stop)?;
+    if above_zero == core::cmp::Ordering::Greater && past_one != core::cmp::Ordering::Greater {
+        return Ok(());
+    }
+    let shown = crate::model::Value::Number(crate::model::Number::plain(written, Unit::one()))
+        .text(m)
+        .map_err(super::steps::num_stop)?;
+    Err(refused(
+        Load::Domain,
+        format!("quantile has no meaning for the level {shown}"),
+    ))
 }
