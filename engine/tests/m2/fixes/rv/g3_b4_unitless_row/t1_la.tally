@@ -1,0 +1,30 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind wallets: place any signed
+place broker: wallets lives 2025-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  anchor broker
+  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
+  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
+  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
+
+
+version v2
+  cite s
+  governs always
+  known 2026-03-01
+  anchor broker
+  stated[broker] = ?"not read" at 2026-02-15 end "s"
+
+ask la: last(stated[broker], 2026-02-16)

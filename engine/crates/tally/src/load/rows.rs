@@ -550,8 +550,15 @@ impl Loader {
     /// note of a row known in a window or standing `after m`, so a read of an input with
     /// neither sees every row at once. L §2.5, §4.5, §4.6 Readings.
     pub(super) fn finish_rows(&mut self) {
+        let mut unitless = Vec::new();
+        for (_, input) in self.m.inputs.entries() {
+            if input.reading && input.rows.iter().any(|row| unitless_any(&self.m, row)) {
+                unitless.push(input.id.clone());
+            }
+        }
         let versions = &self.m.versions;
         for (_, input) in self.m.inputs.entries_mut() {
+            input.holds.unitless = unitless.contains(&input.id);
             if !input.observed {
                 set_sids(&input.id, &mut input.rows);
             }
@@ -565,6 +572,23 @@ impl Loader {
             set_sids(&def.id, &mut def.givens);
         }
     }
+}
+
+/// Whether reading row `row` is at a place of unit `any` and states no unit (L §5.10; tally
+/// 2.1.8 R14).
+fn unitless_any(m: &crate::model::Reality, row: &Row) -> bool {
+    let Some(place) = crate::book::reading_place(row) else {
+        return false;
+    };
+    let any = m
+        .things
+        .get(place)
+        .and_then(|t| m.place_unit(t))
+        .is_some_and(|u| u == "any");
+    any && !matches!(
+        row.value,
+        crate::syntax::Value::Lit(crate::syntax::Lit::Num(_))
+    )
 }
 
 /// Whether row `row` is known in a window: its own `known` window, or, with no `known` of its

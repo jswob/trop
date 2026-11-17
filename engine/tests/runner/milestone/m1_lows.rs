@@ -211,7 +211,7 @@ mod tests {
     /// The fix vectors' groups of `m1/vectors.refcore`, one test each below, so that each runs
     /// well inside the mutants profile's time per test (pick P69: the whole store in one test
     /// passed 120 s on CI's runner).
-    const FIX_GROUPS: [&str; 28] = [
+    const FIX_GROUPS: [&str; 29] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g3",
@@ -238,6 +238,7 @@ mod tests {
         "fixes-r8",
         "fixes-r9",
         "fixes-r10",
+        "fixes-r11",
         "fixes-b",
         "fixes-s",
     ];
@@ -1266,6 +1267,12 @@ mod tests {
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_r10() {
         fixes_hold("fixes-r10", (0, 1), 5);
+    }
+
+    /// tally 2.1.8's rule R11 on M1's forms: its two vectors (`m1/fixes/r11/bind/`).
+    #[test]
+    fn m1_lows_the_tree_prints_the_walk_on_fixes_r11() {
+        fixes_hold("fixes-r11", (0, 1), 2);
     }
 
     /// tally 2.1.7's groups B1–B7: its items' vectors and its reach (`m1/fixes/b<n>/`).

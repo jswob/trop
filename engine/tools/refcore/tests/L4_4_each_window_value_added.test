@@ -1,0 +1,36 @@
+# L §4.4 (tally 2.1.8 R13, X1, X2; K1): a plain line may answer with a window (L §5.18: an imprecise date prints as
+# its window). A computed interval carries the names of the unknown days it was computed from, and windows each takes
+# them: the business day after Friday 2026-05-29 is 06-01 or 06-02 as the calendar's added entry falls (q). The
+# entry of the row governing December, which q never reads, is in no head. The same lines as 2.1.7's refcore.
+=== m.tally
+model k1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+input cal: calendar
+
+ask qp: add_business(2026-05-29, 1, cal)
+ask q: add_business(2026-05-29, 1, cal) windows each
+
+version c1
+  cite card
+  governs ..2026-11-30
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+
+version c2
+  cite card
+  governs 2026-12-01..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-12-01, 2026-12-02)]) "c"
+=== expect
+q [added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
+  cut 2026-03-01
+q [added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
+  cut 2026-03-01
+qp: window(2026-06-01, 2026-06-02)
+  cut 2026-03-01

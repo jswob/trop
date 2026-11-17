@@ -80,8 +80,10 @@ impl Engine {
             return Ok(Value::Hole(Hole::before_run(place)));
         }
         let uncertain = read.proj.uncertain || ctx.unc;
-        if let Some(v) =
-            self.common_case(m, (place, unit), (start, (day, day)), (uncertain, ctx))?
+        // a `partial` line reads the projection's own walk, whose legs give its linear form
+        if !ctx.partial
+            && let Some(v) =
+                self.common_case(m, (place, unit), (start, (day, day)), (uncertain, ctx))?
         {
             return Ok(v);
         }
@@ -107,11 +109,18 @@ impl Engine {
             self.note_read(at.walk, place, Sees::AtPoint)?;
         }
         self.walk_projection(m, id, day)?;
-        let value = self.read_state(m, id, place, unit, At::end(day))?;
+        let mut value = self.read_state(m, id, place, unit, At::end(day))?;
+        // a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
+        if ctx.partial
+            && let Value::Hole(h) = value
+        {
+            value = self.partial_bal(m, id, (place, unit), At::end(day), h)?;
+        }
         self.proj_regs(id, start, day)?;
-        // the read's own clause, else the ask line's, which no decision's context carries
-        if (read.proj.uncertain || ctx.unc) && !matches!(value, Value::Hole(_)) {
-            return self.proj_uncertain(m, id, (place, unit), day, &value);
+        // the read's own clause, else the ask line's, which no decision's context carries; a
+        // `partial` line's hole keeps the uncertain amounts in its known part (L §5.18, R15)
+        if (read.proj.uncertain || ctx.unc) && (ctx.partial || !matches!(value, Value::Hole(_))) {
+            return self.proj_uncertain(m, id, (place, unit), (day, &value), ctx);
         }
         Ok(value)
     }
@@ -270,7 +279,7 @@ impl Engine {
             }
             let v = self.read_state(m, id, place, unit, At::end(d))?;
             out.push(if uncertain && !matches!(v, Value::Hole(_)) {
-                self.proj_uncertain(m, id, (place, unit), d, &v)?
+                self.proj_uncertain(m, id, (place, unit), (d, &v), ctx)?
             } else {
                 v
             });
@@ -517,7 +526,11 @@ impl Engine {
             through,
             readers: 0,
         };
-        Ok(Walk::projection(c, (t, m.end), projected, first_reading))
+        // the window tests the walk it continues met still leave their holes open here
+        let open_tests = from.open_tests.clone();
+        let mut walk = Walk::projection(c, (t, m.end), projected, first_reading);
+        walk.open_tests = open_tests;
+        Ok(walk)
     }
 
     /// A projection's walk walked through day `d` (refcore's `run_to`). E §4.3.

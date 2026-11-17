@@ -1,4 +1,5 @@
 # session 7b: snap16-house/A-q10-11-05a.out with the blocks of a11, a11_known_part from refcore 900c6fe (tally 2.1), judged (tmp/session7b/diff.md)
+# tally 2.1.8 (T's re-run): the blocks of a11_known_part from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
 a10 [px_round = *]: (refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15, refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
   law date 2026-01-15, cut 2026-01-15
 a11 [pit6_health = *, px_round = *]: (?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate))
@@ -36,7 +37,6 @@ a11 [pit6_health = *, px_round = *]: (?"the Bank Lazur savings rate from 2025-07
   unfulfilled: laz_interest[2025-10]
   law date 2026-01-15, cut 2026-01-15
 a11_known_part [pit6_health = *, px_round = *]: (209 642.97 DUK, 130 205.73 DUK, 339 848.70 DUK)
-  pinned: laz_rate = 0 /year
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14

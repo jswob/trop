@@ -1,0 +1,157 @@
+# tally 2.1.8 (pick P27), L §7.6 limit 6 and §8.4 RUN-LIMIT: a plain line takes at most 20 000 seen and unseen
+# choices of the same lines known in windows holding the cut. As known 2026-04-07 the line meets j1 and j2: four
+# choices, answered (f, the hole). As known 2026-04-03 it meets j3 to j17, fifteen (j1, j2 unseen): 32 768 choices, refused before
+# any rerun (g). 2.1.8's first refcore had no bound.
+=== m.tally
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place unexplained: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  leg cash from konto to sav amount amt
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+
+version j1
+  cite s
+  governs 2026-03
+  known window(2026-04-05, 2026-04-09)
+  same bank[a2] = bank[b1]
+
+version j2
+  cite s
+  governs 2026-03
+  known window(2026-04-05, 2026-04-09)
+  same bank[a2] = bank[b1]
+
+version j3
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j4
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j5
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j6
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j7
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j8
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j9
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j10
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j11
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j12
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j13
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j14
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j15
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j16
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+version j17
+  cite s
+  governs 2026-03
+  known window(2026-04-01, 2026-04-04)
+  same bank[a2] = bank[b1]
+
+ask f: flows(save, 2026-03-01 .. 2026-03-31) as known 2026-04-07
+ask g: flows(save, 2026-03-01 .. 2026-03-31) as known 2026-04-03
+=== expect
+f: 950.00 PLN
+  cut 2026-04-07
+g: refused: RUN-LIMIT seen and unseen over more than 20 000 choices
+warning: WARN-UNREAD place unexplained is read by nothing

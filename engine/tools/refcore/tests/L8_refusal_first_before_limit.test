@@ -1,0 +1,55 @@
+# tally 2.1.8 R11 (pick P26, item 1 of the follow-up; g14/past_64_counts g1_none): add_business past the day range
+# meets the calendar's refusal first in day order, and that refusal stands (g_none forwards on cn, which has no
+# business day; g_back backwards into cq's 2025, which has none); a hole met first is outranked by the edge's
+# RUN-LIMIT (g_hole: cr's 2027). 2.1.8's first refcore refused RUN-LIMIT before reading the calendar.
+=== m.tally
+model a6
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "plan"
+input d: date
+input cr: calendar
+input cq: calendar
+input cn: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 "a day"
+  huge = 100000000000000000000 "10^20"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) "s"
+  cq = calendar(weekends [sat, sun]) "s"
+  cn = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) "none"
+
+version v28
+  cite plan
+  governs 2028..
+  known 2026-01-01
+  cr = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) "none"
+
+version v25
+  cite plan
+  governs ..2025
+  known 2026-01-01
+  cq = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) "none"
+
+ask g_none: add_business(d, huge, cn)
+ask g_back: add_business(d, -huge, cq)
+ask g_hole: add_business(d, huge, cr)
+=== expect
+g_back: refused: RUN-DOMAIN calendar cq has no business day
+  cut 2026-12-31
+g_hole: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+g_none: refused: RUN-DOMAIN calendar cn has no business day
+  cut 2026-12-31

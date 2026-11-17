@@ -9,7 +9,6 @@ e2c_02_jan_from_marta [release_money = not_money]: (2024-07-01, 40 000.00 DUK, 2
   reading: release_money = not_money
   law date 2026-09-30, cut 2026-09-30
 e2c_02_jan_from_marta_reported [release_money = money]: (2024-07-01, 40 000.00 DUK, 2026-09-17, 8 735.415 DUK, 48 735.415 DUK, false, none, false, 142.00 DUK)
-  pinned: jan_reported = true
   reading: release_money = money
   law date 2026-09-30, cut 2026-09-30
 e2c_02_jan_from_marta_reported [release_money = not_money]: (2024-07-01, 40 000.00 DUK, 2026-09-17, 8 735.415 DUK, 48 735.415 DUK, true, 2027-03-17, true, 0.00 DUK)
@@ -17,7 +16,6 @@ e2c_02_jan_from_marta_reported [release_money = not_money]: (2024-07-01, 40 000.
   reading: release_money = not_money
   law date 2026-09-30, cut 2026-09-30
 e2c_02_jan_from_marta_unreported [release_money = money]: (2024-07-01, 40 000.00 DUK, 2026-09-17, 8 735.415 DUK, 48 735.415 DUK, false, none, false, 142.00 DUK)
-  pinned: jan_reported = false
   reading: release_money = money
   law date 2026-09-30, cut 2026-09-30
 e2c_02_jan_from_marta_unreported [release_money = not_money]: (2024-07-01, 40 000.00 DUK, 2026-09-17, 8 735.415 DUK, 48 735.415 DUK, true, 2027-03-17, false, 142.00 DUK)

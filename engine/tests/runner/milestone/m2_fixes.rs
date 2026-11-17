@@ -18,24 +18,27 @@ mod tests {
     use tally_runner::m2::{SPEC, VECTORS};
 
     /// The held groups of `m2/vectors.refcore` this target tests, one `#[test]` each.
-    const GROUPS: [&str; 6] = [
+    const GROUPS: [&str; 16] = [
         "fixes-forms",
         "fixes-explain",
         "fixes-windows",
         "fixes-sweep",
         "fixes-records",
         "fixes-ledger",
+        "fixes-r11",
+        "fixes-r12",
+        "fixes-r13",
+        "fixes-r14",
+        "fixes-r15",
+        "fixes-r16",
+        "fixes-s",
+        "fixes-d",
+        "fixes-cut",
+        "fixes-rv",
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 6] = [
-        "spec-forms",
-        "spec-explain",
-        "spec-windows",
-        "spec-records",
-        "spec-ledger",
-        "spec-sweep",
-    ];
+    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
     /// to the stored run.
@@ -136,11 +139,76 @@ mod tests {
         group_holds(VECTORS, "fixes-ledger");
     }
 
-    /// The spec's answers for G5's held probes: a hole booking a later version answers (E §5
-    /// step 1, #169) and unit `any`'s ledgers (P22, #173).
+    /// tally 2.1.8's R11 (#195): a refused movement's refusal stops at a later reading of its
+    /// place, as a hole does, and a refusal met on the way to a hole wins (`m2/fixes/r11/`,
+    /// plan §2; each vector named by its case, refcore's bytes).
     #[test]
-    fn m2_fixes_spec_ledger() {
-        group_holds(SPEC, "spec-ledger");
+    fn m2_fixes_tally_218_r11() {
+        group_holds(VECTORS, "fixes-r11");
+    }
+
+    /// tally 2.1.8's R12 (#196): what a version states besides its rows (`covers`, gap-role,
+    /// `moves` and `same` lines, a removal, a link) has its version's cut and world
+    /// (`m2/fixes/r12/`).
+    #[test]
+    fn m2_fixes_tally_218_r12() {
+        group_holds(VECTORS, "fixes-r12");
+    }
+
+    /// tally 2.1.8's R13 (#197): the ask clauses (`for`, the axes, `windows each`, `in`, `as
+    /// known`, `partial`) reach every form; `windows each` splits only the windows the answer
+    /// reads (`m2/fixes/r13/`).
+    #[test]
+    fn m2_fixes_tally_218_r13() {
+        group_holds(VECTORS, "fixes-r13");
+    }
+
+    /// tally 2.1.8's R14 (#198): at a place of unit `any` a reading, its gap, pad and ledger
+    /// are the unit's (`m2/fixes/r14/`).
+    #[test]
+    fn m2_fixes_tally_218_r14() {
+        group_holds(VECTORS, "fixes-r14");
+    }
+
+    /// tally 2.1.8's R15 (#199): under `partial` a hole stays a linear form only through what
+    /// adds and scales (`m2/fixes/r15/`).
+    #[test]
+    fn m2_fixes_tally_218_r15() {
+        group_holds(VECTORS, "fixes-r15");
+    }
+
+    /// tally 2.1.8's R16 (#200): `modelled`, a reading `after m`, the keyed `quantile` and a
+    /// projection's legs as their definitions say (`m2/fixes/r16/`).
+    #[test]
+    fn m2_fixes_tally_218_r16() {
+        group_holds(VECTORS, "fixes-r16");
+    }
+
+    /// tally 2.1.8's S1 to S9, the singletons (`m2/fixes/s<n>/`): S1's reach over `count` and
+    /// `sum`, S7's seen and unseen limit among them.
+    #[test]
+    fn m2_fixes_tally_218_s() {
+        group_holds(VECTORS, "fixes-s");
+    }
+
+    /// tally 2.1.8's follow-up items (`m2/fixes/d<n>/`), item 77's faces among them.
+    #[test]
+    fn m2_fixes_tally_218_d() {
+        group_holds(VECTORS, "fixes-d");
+    }
+
+    /// tally 2.1.8's cut (plan §13): a version's `same` of a row and an instance is
+    /// `LOAD-SAME`, two rows or two instances still load (`m2/fixes/cut/`).
+    #[test]
+    fn m2_fixes_tally_218_cut() {
+        group_holds(VECTORS, "fixes-cut");
+    }
+
+    /// One vector per blocking finding of the round's reviews, from its input, and the rulings
+    /// no finding's input holds, from refcore's own test of the ruling (`m2/fixes/rv/`).
+    #[test]
+    fn m2_fixes_tally_218_reviews() {
+        group_holds(VECTORS, "fixes-rv");
     }
 
     /// The spec's answers for G4's held probes (P43) and the `nb3_*` texts refcore can't run:
@@ -155,19 +223,6 @@ mod tests {
     #[test]
     fn m2_fixes_spec_forms() {
         group_holds(SPEC, "spec-forms");
-    }
-
-    /// The spec's answers for G2's fixes (P21 B-3, NB-3; P24 F-2, SQ-1).
-    #[test]
-    fn m2_fixes_spec_explain() {
-        group_holds(SPEC, "spec-explain");
-    }
-
-    /// The spec's answers for G3's fixes (P11, P27 B1, B2, B4, B5, NB-6, NB-7, P30) and the
-    /// interim cap past 20 000 day combinations (P28, #174).
-    #[test]
-    fn m2_fixes_spec_windows() {
-        group_holds(SPEC, "spec-windows");
     }
 
     /// The spec's answers for G6's held probes (L §5.18 partial answers, L §8.4 an observed

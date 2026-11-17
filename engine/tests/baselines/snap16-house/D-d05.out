@@ -1,8 +1,9 @@
+# tally 2.1.8 (T's re-run): the blocks of d05_missing_fee from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
 d05_duplicate (o = bank[r20260209a]): (2026-02-09, 1 900.00 DUK, rent_in[2026-02])
   law date 2026-09-30, cut 2026-09-30
 d05_duplicate (o = bank[r20260209b]): (2026-02-09, 1 900.00 DUK, rent_in[2026-02])
   law date 2026-09-30, cut 2026-09-30
-d05_missing_fee (m = 2026-03): (2026-03-05, 468.00 DUK)
+d05_missing_fee (m = 2026-03) [hh_round = *]: (2026-03-05, 468.00 DUK)
   law date 2026-09-30, cut 2026-09-30
 d05_owed [hh_round = *]: 848.25 DUK
   assumed: quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)

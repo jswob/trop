@@ -1,0 +1,9 @@
+scenario gone over t
+  tally 2
+  from 2026-03-01
+
+version drop
+  cite s
+  governs 2026-03
+  known 2026-04-05
+  replace bank[a2] = none

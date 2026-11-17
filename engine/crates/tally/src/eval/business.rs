@@ -16,27 +16,29 @@
 //! refuses with the first read's refusal, else `RUN-LIMIT`, as refcore's walk day by day
 //! does; a hole on the way is left to that walk.
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use super::arith::whole_of;
 use super::builtin::read_parts;
-use super::context::Met;
 use super::dates::period_arg;
 use super::expr::hole_of;
-use super::memo::rows_class;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
 use super::windows::{imprecise, interval, one_day, single, window_days};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Code, KeyVal, Reality, Value, Window};
+use crate::model::{Code, KeyVal, Reality, SamePair, Value, Window};
 use crate::num::Num;
-use crate::read::{Asked, Found, read_input};
-use crate::syntax::{Call, Expr, Stop, Value as Written};
+use crate::read::{Asked, Found, read_input, row_span};
+use crate::syntax::{Call, Expr, Postfix, Stop, Value as Written};
 use crate::time::{Added, Day, Period};
 
-/// An added window of a calendar, by the calendar's input, the entry's place in its `added`
-/// and the window as written: two entries are two unknown days (tally 2.1.7 R3, F5).
-type WindowId = (String, usize, String);
+/// An added window of a calendar, by the calendar's input, the entry's place in its `added`,
+/// the window as written and the row that states it: two entries, or one entry of two rows,
+/// are two unknown days (tally 2.1.7 R3, F5; tally 2.1.8 R13, pick P32).
+type WindowId = (String, usize, String, String);
+
+/// The added windows the passes met, each with its days, in the order met.
+type MetWindows = Vec<(WindowId, Vec<Day>)>;
 
 /// One pass of a business-day function: the day each added window takes in it, and the
 /// windows it met that no choice names yet, with the days each can take (refcore's
@@ -45,8 +47,19 @@ type WindowId = (String, usize, String);
 pub(crate) struct CalendarPass {
     /// The day each window takes in this pass.
     chosen: BTreeMap<WindowId, Day>,
-    /// The windows met that no choice names, with their days in order.
-    met: BTreeMap<WindowId, Vec<Day>>,
+    /// The windows met that no choice names, in the order met, with their days in order.
+    met: MetWindows,
+}
+
+/// The unknown day of added window `id` that can take `days` (refcore's `added_carry`, the
+/// identity `windows each` names it by). L §4.4.
+fn added_unknown(id: &WindowId, days: &[Day]) -> crate::hole::Unknown {
+    let (name, entry, text, row) = id;
+    crate::hole::Unknown {
+        id: format!("calendar {name}#{entry} {row}"),
+        label: format!("added {text}"),
+        days: days.to_vec(),
+    }
 }
 
 /// A scheduled day's roll to a business day (L §4.2 `schedule`; ISDA 2006 section 4.12).
@@ -293,8 +306,9 @@ impl Engine {
 
     /// Business-day function `f` evaluated at each day the added windows of its calendar can
     /// take: one value when the passes agree; days that differ give their window; an
-    /// `is_business` that differs is `HOLE-IMPRECISE`, asked of the calendar (refcore's
-    /// `over_added`). L §4.2, §4.4.
+    /// `is_business` that differs is `HOLE-IMPRECISE`, asked of the calendar; either carries
+    /// the windows the passes met, in the order met (refcore's `over_added`). L §4.2, §4.4;
+    /// tally 2.1.8 R13.
     fn over_added(
         &mut self,
         m: &Reality,
@@ -308,7 +322,7 @@ impl Engine {
         };
         let found = self.passes(m, (cal, env, ctx), f, start);
         self.calendar_pass = outer;
-        let (out, first_met) = found?;
+        let (out, met) = found?;
         let holes: Vec<Option<&Hole>> = out.iter().map(Value::as_hole).collect();
         if let Some(h) = spread(&holes) {
             return Ok(Value::Hole(h));
@@ -319,11 +333,17 @@ impl Engine {
         if rest.iter().all(|v| v == first) {
             return Ok(first.clone());
         }
-        let (cal_id, _, written) = first_met.ok_or_else(|| invariant("passes with no window"))?;
+        let ((cal_id, _, written, _), _) = met
+            .first()
+            .ok_or_else(|| invariant("passes with no window"))?;
+        let carry: Vec<crate::hole::Unknown> = met
+            .iter()
+            .map(|(id, days)| added_unknown(id, days))
+            .collect();
         if let Value::Bool(_) = first {
             let call_text = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
             let text = format!("date within {written} not precise enough for {call_text}");
-            return Ok(Value::Hole(Hole::asked(&text, &cal_id)));
+            return Ok(Value::Hole(Hole::asked(&text, cal_id).carrying(&carry)));
         }
         let mut days = Vec::with_capacity(out.len());
         for v in &out {
@@ -342,34 +362,41 @@ impl Engine {
             src: None,
             figure: None,
             read: None,
+            carry,
         })))
     }
 
     /// The passes of `f`, from the choices `start` names: each pass that meets a window no
     /// choice names is run again once per day of the first such window; the values of the
-    /// others, in order, and the first window met (refcore's `over_added`, its loop).
-    /// L §4.2, §4.4.
+    /// others, in order, and the windows met, in the order the passes met them (refcore's
+    /// `over_added`, its loop, `met_order`). L §4.2, §4.4.
     fn passes(
         &mut self,
         m: &Reality,
         (cal, env, ctx): (&Expr, &Env, Ctx),
         f: &Business,
         start: BTreeMap<WindowId, Day>,
-    ) -> Result<(Vec<Value>, Option<WindowId>), Stop> {
+    ) -> Result<(Vec<Value>, MetWindows), Stop> {
         let mut todo = VecDeque::from([start]);
         let mut out = Vec::new();
-        let mut first_met: Option<WindowId> = None;
+        let mut order: MetWindows = Vec::new();
         while let Some(chosen) = todo.pop_front() {
             self.calendar_pass = Some(CalendarPass {
                 chosen: chosen.clone(),
-                met: BTreeMap::new(),
+                met: Vec::new(),
             });
             let v = self.pass(m, (cal, env, ctx), f)?;
-            let met = self.calendar_pass.take().map(|p| p.met);
-            if let Some((id, days)) = met.and_then(|met| met.into_iter().next()) {
-                if first_met.is_none() {
-                    first_met = Some(id.clone());
+            let met = self
+                .calendar_pass
+                .take()
+                .ok_or_else(|| invariant("a pass's windows taken while it ran"))?
+                .met;
+            for (id, days) in &met {
+                if !order.iter().any(|(k, _)| k == id) {
+                    order.push((id.clone(), days.clone()));
                 }
+            }
+            if let Some((id, days)) = met.into_iter().next() {
                 for d in days {
                     let mut next = chosen.clone();
                     next.insert(id.clone(), d);
@@ -379,7 +406,7 @@ impl Engine {
             }
             out.push(v);
         }
-        Ok((out, first_met))
+        Ok((out, order))
     }
 
     /// One pass of business-day function `f` (refcore's closures under `over_added`).
@@ -413,7 +440,7 @@ impl Engine {
         (from, step, count): (Day, i64, Option<u64>),
     ) -> Result<Value, Stop> {
         if passes_edge(from, step, count) {
-            self.past_edge(m, (cal, env, ctx), (from, step))?;
+            return Err(self.edge_first(m, (cal, env, ctx), (from, step))?);
         }
         let mut left = count;
         let mut current = from;
@@ -432,57 +459,48 @@ impl Engine {
         Ok(Value::Day(current))
     }
 
-    /// A shift that passes the calendar's edge from `from` by steps of `step`: its value is
-    /// computed from the reads the walk makes, in day order (L §8 head, R1), so the calendar
-    /// is read once per law-date class of its rows, the span over which the read can't change
-    /// (E §3.2), from the day after `from` to the edge; the first read's refusal stands, else
-    /// `RUN-LIMIT`. Returns, for the walk day by day, where the classes can't stand for the
-    /// days (a key that is a hole, a reading, a row that is an instant or an expression, a
-    /// key that is a thing with a lifespan) and at a hole on the way, which the walk meets
-    /// first as refcore does (L §8 head R2 reads it refused: the STOP-REPORT of 2026-11-14).
-    /// L §4.2, §7.6 item 1, §8.4.
+    /// A shift that passes the calendar's edge from `from` by steps of `step`: the count can't
+    /// end before the edge, so its outcome is the first refusal or hole the walk meets in day
+    /// order, else the edge's `RUN-LIMIT` (L §8 head R1; tally 2.1.8 R11, pick P26). Both
+    /// change only where a row's span starts or ends, so the walk reads the day after `from`
+    /// and those days, in day order: of the calendar's rows, of an input a row of it reads as
+    /// a whole, of a row stated `same` as one of it (L §6.1; [`inputs_followed`]). A refusal
+    /// there stands; a hole, read or added, is met first, and the edge's refusal outranks it
+    /// (refcore's `edge_first`). Returns the refusal that stands. L §4.2, §7.6 item 1, §8.4.
     ///
     /// # Errors
     ///
-    /// The first class's refusal, else `RUN-LIMIT`.
-    fn past_edge(
+    /// `ENGINE-INVARIANT` for an input load didn't build.
+    fn edge_first(
         &mut self,
         m: &Reality,
         (cal, env, ctx): (&Expr, &Env, Ctx),
         (from, step): (Day, i64),
-    ) -> Result<(), Stop> {
-        let Ok((name, keys)) = self.calendar_input(m, (cal, env, ctx))? else {
-            return Ok(());
+    ) -> Result<Stop, Stop> {
+        let Some(first) = from.add_days(step) else {
+            return Ok(past_days(step));
         };
-        let input = m
-            .inputs
-            .get(&name)
-            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
-        let by_rows = !input.reading
-            && input.prices.is_none()
-            && input
-                .rows
-                .iter()
-                .all(|r| r.instant.is_none() && !matches!(r.value, Written::Expr(_)))
-            && keys.iter().all(|k| !matches!(k, KeyVal::Thing(_)));
-        if !by_rows {
-            return Ok(());
-        }
-        let mut current = from.add_days(step).ok_or_else(|| past_days(step))?;
-        loop {
-            // the read's refusal stands; a hole, read or added, is met by the walk
-            let value = self.calendar_on(m, (&name, &keys), ctx, (current, true))?;
-            let unknown = if let Value::Calendar(c) = &value {
-                c.added().iter().any(|a| matches!(a, Added::Hole(_)))
-            } else {
-                true
-            };
-            if unknown {
-                return Ok(());
+        let mut edges = BTreeSet::from([first]);
+        if let Ok((name, _)) = self.calendar_input(m, (cal, env, ctx))? {
+            for input in inputs_followed(m, &name) {
+                row_edges(m, &input, ctx, &mut edges)?;
             }
-            let class = rows_class(m, &input.rows, ctx.cut, current)?;
-            current = class.beyond(step).ok_or_else(|| past_days(step))?;
         }
+        let mut ahead: Vec<Day> = edges
+            .into_iter()
+            .filter(|day| if step > 0 { *day > from } else { *day < from })
+            .collect();
+        if step < 0 {
+            ahead.reverse();
+        }
+        for day in ahead {
+            match self.business(m, (cal, env, ctx), (day, true)) {
+                Ok(read) if read.as_hole().is_some() => break,
+                Ok(_) => {}
+                Err(refused) => return Ok(refused),
+            }
+        }
+        Ok(past_days(step))
     }
 
     /// The `count`-th last business day of `period`, counting back from its last day, or the
@@ -677,8 +695,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row,
-    /// or a known window no `windows each` decides (the caller reads under one).
+    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row.
     fn calendar_row(
         &mut self,
         m: &Reality,
@@ -692,14 +709,15 @@ impl Engine {
         if let Some(row) = self.calendar_own_row(m, (name, keys), ctx)? {
             return Ok(row);
         }
-        let other = self
-            .same_row_of(m, (name, keys), ctx)?
-            .map_err(|h| invariant(&format!("a calendar's same line undecided: {}", h.text())))?;
-        let Some((other, other_keys)) = other else {
+        let Some(class) = self.same_class(m, (name, keys), ctx)? else {
             return Err(invariant("a calendar's added window read from no row"));
         };
-        self.calendar_own_row(m, (&other, &other_keys), ctx)?
-            .ok_or_else(|| invariant("a calendar's added window read from no row"))
+        for (other, other_keys) in class {
+            if let Some(row) = self.calendar_own_row(m, (&other, &other_keys), ctx)? {
+                return Ok(row);
+            }
+        }
+        Err(invariant("a calendar's added window read from no row"))
     }
 
     /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id, among the
@@ -745,9 +763,11 @@ impl Engine {
 
     /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: under a
     /// `windows each` in context `ctx`, the day the line's choice names (L §4.4: the clause
-    /// splits the line by "a day in a calendar's added list"); else this pass's choice for it,
-    /// or its first day where the pass meets it newly, which the pass records (refcore's
-    /// `business`, its `window_choice` and `cal_choice`). L §4.2, §4.4.
+    /// splits the line by "a day in a calendar's added list"); else, as the plain line reads
+    /// it, this pass's choice for it, or its first day where the pass meets it newly, which the
+    /// pass records (refcore's `business`, its `window_choice` and `cal_choice`). Each entry of
+    /// each row is a read of its own: two rows' entries are two unknowns, whatever their text
+    /// (L §4.4; pick P32; tally 2.1.8 R13). L §4.2, §4.4.
     fn window_takes(
         &mut self,
         m: &Reality,
@@ -755,38 +775,104 @@ impl Engine {
         added: &Added,
         (day, ctx): (Day, Ctx),
     ) -> Result<bool, Stop> {
+        let row = self.calendar_row(m, (name, keys), (day, ctx))?;
+        let id: WindowId = (name.to_owned(), entry, added.text(), row);
+        let days = added
+            .days()
+            .ok_or_else(|| invariant("a window's days past the calendar"))?;
         if self.chooses(ctx)? {
-            // each entry of each row a read of its own: two rows' entries are two unknowns,
-            // whatever their text (L §4.4; pick P32)
-            let row = self.calendar_row(m, (name, keys), (day, ctx))?;
-            let id = format!("calendar {name}#{entry} {row}");
-            if let Some(named) = self.named_day(ctx, &id)? {
+            let window = added_unknown(&id, &days);
+            if let Some(named) = self.named_day(ctx, &window.id)? {
                 return Ok(named == day);
             }
-            let window = Met {
-                id,
-                label: format!("added {}", added.text()),
-                days: added
-                    .days()
-                    .ok_or_else(|| invariant("a window's days past the calendar"))?,
-            };
-            return Ok(self.window_day(ctx, window)? == Some(day));
+            if let Some(taken) = self.window_day(ctx, window)? {
+                return Ok(taken == day);
+            }
         }
         let pass = self
             .calendar_pass
             .as_mut()
             .ok_or_else(|| invariant("a calendar's added window read outside a pass"))?;
-        let id = (name.to_owned(), entry, added.text());
         if let Some(chosen) = pass.chosen.get(&id) {
             return Ok(*chosen == day);
         }
-        let days = added
-            .days()
-            .ok_or_else(|| invariant("a window's days past the calendar"))?;
         let first = days.first().copied();
-        pass.met.entry(id).or_insert(days);
+        if !pass.met.iter().any(|(k, _)| *k == id) {
+            pass.met.push((id, days));
+        }
         Ok(first == Some(day))
     }
+}
+
+/// The days input `name`'s rows start and end, each with the day before, into `edges`, in the
+/// cut and world of `ctx` (refcore's `edge_first`, its bounds). L §4.6, §5.3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an input load didn't build.
+fn row_edges(m: &Reality, name: &str, ctx: Ctx, edges: &mut BTreeSet<Day>) -> Result<(), Stop> {
+    let input = m
+        .inputs
+        .get(name)
+        .ok_or_else(|| invariant("a calendar input load didn't build"))?;
+    for row in &input.rows {
+        let Some(span) = row_span(m, row, (ctx.cut, ctx.world))? else {
+            continue;
+        };
+        for day in [span.start(), span.end()].into_iter().flatten() {
+            edges.insert(day);
+            edges.extend(day.add_days(-1));
+        }
+    }
+    Ok(())
+}
+
+/// The other side of `same` line `pair` where it is a line of rows naming input `name`.
+fn same_partner(pair: &SamePair, name: &str) -> Option<String> {
+    match pair {
+        SamePair::Rows(a, _, b, _, _) if a == name => Some(b.clone()),
+        SamePair::Rows(a, _, b, _, _) if b == name => Some(a.clone()),
+        SamePair::Rows(..) | SamePair::Moves(..) => None,
+    }
+}
+
+/// How many inputs [`inputs_followed`] gathers, one read through the next.
+const FOLLOWED: usize = 16;
+
+/// Calendar input `name` and the inputs a read of it may follow, whose rows' spans are where
+/// its reads can change: an input a row of it reads as a whole (`cq = bm.cr`, L §6.4), the
+/// other side of a `same` line of rows that names it (L §6.1); each once, at most
+/// [`FOLLOWED`], in the order met.
+fn inputs_followed(m: &Reality, name: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    let mut pending = vec![name.to_owned()];
+    while let Some(next) = pending.pop() {
+        if out.contains(&next) || out.len() >= FOLLOWED {
+            continue;
+        }
+        if let Some(input) = m.inputs.get(&next) {
+            for row in &input.rows {
+                pending.extend(read_through(&row.value).map(str::to_owned));
+            }
+        }
+        pending.extend(m.sames.iter().filter_map(|pair| same_partner(pair, &next)));
+        out.push(next);
+    }
+    out
+}
+
+/// The input a row's value reads as a whole, where it is a plain read of one: `cr`, `cr[k]`
+/// or the base's `bm.cr` (L §6.4); none for any other value.
+fn read_through(value: &Written) -> Option<&str> {
+    let Written::Expr(e) = value else {
+        return None;
+    };
+    if let Expr::Post(base, posts) = e
+        && let (Expr::Name(_), [Postfix::Field(name)]) = (base.as_ref(), posts.as_slice())
+    {
+        return Some(name.as_str());
+    }
+    read_parts(e).map(|(name, _)| name)
 }
 
 /// Whether `count` business days by steps of `step` from `from` outnumber the days to the

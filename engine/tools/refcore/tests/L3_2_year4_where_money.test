@@ -1,0 +1,26 @@
+# tally 2.1.8 §4 (#169-l), L §3.2 Inline figures and L §7.1: a four-digit literal where money is expected is a
+# figure, not a year, so in a def it is LOAD-LITERAL. 2.1.7's refcore read it as a year (LOAD-UNIT year4). T's
+# fixes/g1/y4.
+=== m.tally
+model y4
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+band sc(x: money PLN): num PLN
+
+def z: num PLN = sc(1000) at reader
+
+ask a1: z law 2026-03-01
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  sc: [0, inf) = x
+=== expect
+refused: LOAD-LITERAL figure 1000 in a rule; make it a row (m.tally:12)

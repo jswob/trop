@@ -1,3 +1,4 @@
+# tally 2.1.8 (T's re-run): the blocks of d03_without_owed from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
 d03_arrears: (2025-12-05, 1 703.05 DUK)
   law date 2026-09-30, cut 2026-09-30
 d03_cap: (5 636.73 DUK, 5 342.88 DUK)
@@ -205,7 +206,6 @@ d03_without (m = 2026-09): (3 048.80 DUK, 3 048.80 DUK)
   pinned: v2_claim = none
   law date 2026-09-30, cut 2026-09-30
 d03_without_owed: 0.00 DUK
-  pinned: surv_claim = none
   pinned: v2_claim = none
   law date 2026-09-30, cut 2026-09-30
 d03_zb: (5 576.64 DUK, 2024-05-02, true, 2024-06-01)

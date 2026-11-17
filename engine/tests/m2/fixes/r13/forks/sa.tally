@@ -1,0 +1,9 @@
+scenario sa over fk
+  tally 2
+  from 2026-01-01
+
+version sa_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rule d.bz = 1 when z == z2

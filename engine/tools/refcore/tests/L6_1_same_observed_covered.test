@@ -8,6 +8,9 @@
 # covers acc in 2024-05: only stmt[r1] books acc, so flows(acc, 2024), bal(acc, 2024-12-31) and the explained balance
 # hold its 5 000.00 DUK (the row's amount). snap14 counted gift as booking acc, skipped the row and booked gift nowhere:
 # 0.00 DUK with open: gift. One movement observed is not open (as it is not unfulfilled, walk.same_observed).
+# tally 2.1.8 (the user's cut, plan §13; #187; L §6.1 Identities are written): inside one model a version's same between
+# an observed row and a move instance is refused at load, LOAD-SAME: the row states fulfils instead (§5.19). This test
+# is about that line, so it is kept as the refusal; a joint model's line between two members still books the pair once.
 === m.tally
 model one
   tally 2
@@ -54,13 +57,4 @@ ask q_bal: bal(acc, 2024-12-31)
 
 ask q_x: explain bal(acc, 2024-05-02)
 === expect
-q: 5 000.00 DUK
-  cut 2026-10-25
-q_bal: 5 000.00 DUK
-  cut 2026-10-25
-q_x: 5 000.00 DUK
-  balance of acc (DUK) at the end of 2024-05-02
-  from: 0 at the start of its lifespan, 2024-01-01
-  2024-05-02:
-    stmt[r1].cash (observed): +5 000.00 DUK
-  cut 2026-10-25
+refused: LOAD-SAME same stmt[r1] = gift: an observed row and a planned instance of one model; state fulfils on the row (m.tally:33)

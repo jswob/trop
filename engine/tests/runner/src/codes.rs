@@ -340,8 +340,8 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (9, 2),
-            "1 base, 4 answers, 4 fixtures of 2 codes"
+            (10, 2),
+            "1 base, 4 answers, 5 fixtures of 2 codes (records/reading-after released at 2.1.8)"
         );
     }
 

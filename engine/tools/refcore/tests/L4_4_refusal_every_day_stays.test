@@ -1,0 +1,67 @@
+# tally 2.1.8 item 77 (#201), E §4.1 step 2 and L §4.4, with pick P30 (item 7 of the follow-up): a test every
+# candidate fails stays the refusal where its words agree: put moves into late, alive from 03-20, on a day of
+# window(03-05, 03-10), outside its lifespan on every day, refused in one wording (l1, l2). take empties pot (min 0)
+# on 04-06 while give's 20.00 PLN may or may not have come (window(04-05, 04-10)): refused either way, but as
+# -30.00 PLN or -50.00 PLN, so the plain line is the window's hole and windows each prints each day's refusal (s1,
+# s2). 2.1.7's refcore didn't test pot while give was pending and refused it on 04-10 (-30.00 PLN).
+=== m.tally
+model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind accts: place PLN signed
+kind pots: place PLN min 0
+place jar: accts lives 2025-01-01..
+place late: accts lives 2026-03-20..
+place pot: pots lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input small: money PLN
+input wd: date
+input wi: date
+input wt: date
+
+move put: transfers
+  on wd
+  leg cash from jar to late amount amt
+
+move take: transfers
+  on wt
+  leg cash from pot to world amount amt
+
+move give: transfers
+  on wi
+  leg cash from world to pot amount small
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  small = 20.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  wi = window(2026-04-05, 2026-04-10) "s"
+  wt = 2026-04-06 "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[late] = 0.00 PLN at 2026-03-20 start "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+
+ask l1: bal(jar, 2026-03-31)
+ask l2: bal(jar, 2026-03-31) windows each
+ask s1: bal(pot, 2026-04-30)
+ask s2: bal(pot, 2026-04-30) windows each
+=== expect
+l1: refused: RUN-LIFESPAN put.cash moves into or out of late outside its lifespan
+  cut 2026-01-01
+l2: refused: RUN-LIFESPAN put.cash moves into or out of late outside its lifespan
+  cut 2026-01-01
+s1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (give)
+  cut 2026-01-01
+s2 [wi = 2026-04-05 .. 2026-04-06]: refused: RUN-PLACE pot is -30.00 PLN after the day's observations and plans of 2026-04-06
+  cut 2026-01-01
+s2 [wi = 2026-04-07 .. 2026-04-10]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
+  cut 2026-01-01

@@ -49,7 +49,9 @@ fn ask_body(p: &mut P<'_>) -> Result<AskBody, Stop> {
     }
     if p.accept("residuals")? {
         let place = p.reference()?;
-        let span = p.span()?;
+        // `in S` after the span names the world, as after every body (L §2.3 rule 4; tally
+        // 2.1.8 R13 rest 1)
+        let span = p.span_to(Ends::AtIn)?;
         let by = if p.accept("by")? {
             Some(p.ident("an id")?)
         } else {

@@ -1,0 +1,60 @@
+# tally 2.1.8 (R9, the gate's rest 3), L §5.18, §2.4: a partial line's money coefficient prints with its minor
+# unit's digits (10.00 PLN ×), as money times a whole number does; scaled by a num it is a num PLN (20 PLN ×), as a
+# known product prints.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place market: outside lives 2026-01-01..
+index ks = [a, b]
+input amt: money PLN
+input bday: date
+input pday: date
+input fx: num PLN/EUR
+input rate: num
+input r2: num
+input h: money PLN
+input k: money PLN
+input c[x in ks]: bool
+
+move pay: transfers
+  on pday
+  leg cash from market to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = ?"how much" "s"
+  bday = 2026-01-10 "s"
+  pday = 2026-02-05 "s"
+  fx = 4 PLN/EUR "s"
+  rate = 2 "s"
+  r2 = ?"what rate" "s"
+  h = ?"what is h" "s"
+  k = 10.00 PLN "s"
+  c[a] = true "s"
+  c[b] = ?"is b" "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+ask mc1: k * r2 partial
+ask mc2: r2 * k + k partial
+ask mc3: k * r2 * rate partial
+=== expect
+mc1: 10.00 PLN × ?"what rate" (r2)
+  cut 2026-06-10
+mc2: 10.00 PLN + 10.00 PLN × ?"what rate" (r2)
+  cut 2026-06-10
+mc3: 20 PLN × ?"what rate" (r2)
+  cut 2026-06-10
+warning: WARN-UNREAD input bday is read by nothing
+warning: WARN-UNREAD input c is read by nothing
+warning: WARN-UNREAD input fx is read by nothing
+warning: WARN-UNREAD input h is read by nothing

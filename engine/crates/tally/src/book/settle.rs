@@ -159,7 +159,7 @@ impl Engine {
             }
         }
         let observed = self.observations(m, cut)?.to_vec();
-        let groups = super::same_groups(m, cut)?;
+        let groups = self.same_groups(m, cut)?;
         for a in adjs.iter_mut() {
             for vid in a.vids.clone() {
                 link_observed(m, a, &vid, (&observed, &groups))?;
@@ -194,7 +194,8 @@ impl Engine {
         let made = self.make_instances(m, mv, cut, None);
         self.adj_restrict = before;
         self.plan_active.remove(&key);
-        made
+        // a settlement's hole booking is answered like any instance's (E §5 step 1)
+        self.answer_apart(m, mv, made?, cut)
     }
 }
 
@@ -317,7 +318,7 @@ fn link_observed(
             continue;
         }
         let others: Vec<&Obs> = rest.iter().filter_map(|&k| naming.get(k)).collect();
-        match same_differ(m, groups, o, &others, None)? {
+        match same_differ(m, o, &others, None)? {
             None => link(a, &o.id, Some(o.day), &o.legs)?,
             Some(hole) => {
                 let legs: Vec<LegVal> = o

@@ -3612,19 +3612,28 @@ version v1
                 )],
                 "loaded",
             ),
-            // move-row
+            // move-row: an instance and an observed row of one model (L §6.1, tally 2.1.8,
+            // the user's cut), the row named first
             (
                 &[(
                     "  same bank[r1] = card_bank[c1]",
                     "  same rent[a1] = card_bank[c1]",
                 )],
-                "loaded",
+                "LOAD-SAME same card_bank[c1] = rent[a1]: an observed row and a planned instance of one model; state fulfils on the row (a.tally:57)",
             ),
-            // move-obs
+            // obs-move: the other order
             (
                 &[(
                     "  same bank[r1] = card_bank[c1]",
-                    "  same rent[a1] = bank[r1]",
+                    "  same bank[r1] = rent[a1]",
+                )],
+                "LOAD-SAME same bank[r1] = rent[a1]: an observed row and a planned instance of one model; state fulfils on the row (a.tally:57)",
+            ),
+            // move-move: two instances still load
+            (
+                &[(
+                    "  same bank[r1] = card_bank[c1]",
+                    "  same rent[a1] = rent[a2]",
                 )],
                 "loaded",
             ),
@@ -3795,6 +3804,42 @@ version v1
             Some("q: 1".to_owned()),
             "an ask over a version's same lines answers at run, as refcore"
         );
+    }
+
+    #[test]
+    fn a_scenario_s_same_of_an_observed_row_and_an_instance_is_refused_and_two_rows_load() {
+        // L §6.1 (tally 2.1.8, the user's cut): a scenario's version is a version of the model
+        // it is over, so its line between an observed row and a move instance is refused at
+        // load, the base answering; its line between two observed rows loads (refcore's
+        // L6_1_same_row_instance_scenario_refused)
+        let model = edited(SAMES, &[("version v1", "ask q: count\n\nversion v1")]);
+        let scen = |line: &str| {
+            format!(
+                "scenario sc over home\n  tally 2\n  from 2026-01-01\n\nversion sv\n  cite card\n  governs 2026-01\n  known 2026-02-01\n  {line}\n"
+            )
+        };
+        let refused = [
+            ("a.tally", model.clone()),
+            ("sc.tally", scen("same rent[a2] = bank[r2]")),
+        ];
+        let first = |files: &[(&str, String)]| {
+            load_lines(files, "q")
+                .lines()
+                .find(|line| line.starts_with("scenario "))
+                .map(str::to_owned)
+        };
+        assert_eq!(
+            first(&refused).as_deref(),
+            Some(
+                "scenario sc: refused: LOAD-SAME same bank[r2] = rent[a2]: an observed row and a planned instance of one model; state fulfils on the row (sc.tally:9)"
+            ),
+            "a scenario's version alike"
+        );
+        let rows = [
+            ("a.tally", model),
+            ("sc.tally", scen("same bank[r2] = card_bank[c1]")),
+        ];
+        assert_eq!(first(&rows), None, "two observed rows load");
     }
 
     /// The load lines (a scenario's refusal, a refusal, a warning) of a run of `files` for
@@ -4941,5 +4986,36 @@ version v1
             let files = [("a.tally", model(n))];
             assert_eq!(load_lines(&files, "q"), expected, "{n} axes");
         }
+    }
+
+    /// `none` written for a place in an observed row's leg is named as written (refcore's
+    /// `place_ref`, its `ref.k`; the review of group 2's N4). L §5.10.
+    #[test]
+    fn none_for_a_leg_s_place_is_named_none() {
+        let text = r#"model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-04-02
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  bank[a1] = (on: 2026-03-31, kind: transfers, leg cash from konto to none amount 50.00 PLN) "a"
+
+ask q: bal(konto, 2026-04-30)
+"#;
+        assert_eq!(
+            refusal(text),
+            "LOAD-KIND a place is written by its id: none (a.tally:17)",
+            "refcore's message"
+        );
     }
 }

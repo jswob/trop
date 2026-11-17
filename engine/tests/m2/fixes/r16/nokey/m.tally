@@ -1,0 +1,46 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R16 (#200): item #175, a reading after m whose key isn't a key of m's index is LOAD-KEY at load (before 2.1.8 both drop it in silence) (the planner's p6nokey)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input keep: money PLN
+input d_save: date
+input go: bool
+
+move save: transfers
+  on d_save
+  reads konto
+  when go
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move mm[m in months]: transfers
+  on end_of(m) - 1 day
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 2026-03-18 "s"
+  go = true "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03..2026-05
+  known 2026-01-02
+  anchor konto
+  stated[konto] = 90.00 PLN after mm[2027-03] "saldo"
+
+ask b: bal(konto, 2026-03-10), bal(konto, 2026-03-20), bal(konto, 2026-04-20), bal(konto, 2026-05-31)
+ask g: last(stated[konto], 2026-05-31)

@@ -1,0 +1,55 @@
+# L §5.10 Sign rules, E §4.2 step 5 (tally 2.1.8 R11): "A balance that breaks the rule at one of these points is
+# refused from there to the place's next reading", whether a leg, a reading's pad or an anchor broke it. jar (min 0) is
+# stated -50.00 PLN on 2026-03-20 with a pad: refused from there (a), the pad's own reading doesn't end it; the next
+# reading, 70.00 PLN on 2026-04-20, does (b). jar2 is the anchor twin. 2.1.7's refcore kept both refused after the
+# second reading (T's c2).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place jar: savings lives 2026-01-01..
+place jar2: savings lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  opening[jar] = 100.00 PLN at 2026-03-01 start "s"
+  opening[jar2] = 100.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  pad jar from world
+  anchor jar2
+  stated[jar] = -50.00 PLN at 2026-03-20 end "s"
+  stated[jar2] = -50.00 PLN at 2026-03-20 end "s"
+
+version st2
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  pad jar from world
+  anchor jar2
+  stated[jar] = 70.00 PLN at 2026-04-20 end "s"
+  stated[jar2] = 70.00 PLN at 2026-04-20 end "s"
+
+ask a: bal(jar, 2026-03-21), bal(jar2, 2026-03-21)
+ask b: bal(jar, 2026-04-21), bal(jar2, 2026-04-21)
+=== expect
+a: (refused: RUN-PLACE pads:st:jar@2026-03-20 end takes jar below 0, refused: RUN-PLACE jar2 is -50.00 PLN after its reading at 2026-03-20 end)
+  anchor: jar2 2026-03-20 end, stated -50.00 PLN, difference -150.00 PLN
+  pad: jar 2026-03-20 end, pads:st:jar@2026-03-20 end of -150.00 PLN
+  cut 2026-06-10
+b: (70.00 PLN, 70.00 PLN)
+  anchor: jar2 2026-04-20 end, stated 70.00 PLN, difference refused: RUN-PLACE jar2 is -50.00 PLN after its reading at 2026-03-20 end
+  pad: jar 2026-04-20 end, pads:st2:jar@2026-04-20 end of refused: RUN-PLACE pads:st:jar@2026-03-20 end takes jar below 0
+  cut 2026-06-10

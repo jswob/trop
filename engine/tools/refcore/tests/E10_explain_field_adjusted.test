@@ -1,0 +1,47 @@
+# tally 2.1.8 §4 (#169-g), E §10 l.472 and R1 (L §8): explain of a field read of an adjusted instance prints the rows
+# its value reads, v1's; v2's row, known after the booking cut, is read by the adjustment's re-measurement only.
+# 2.1.7's refcore listed v2:amt[2026-02] too. T's fixes/g5/p4_adj_e2.
+=== m.tally
+model hh
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input amt[m in months]: money PLN question "Ile?"
+input dom: int
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt[m]
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 10 "s"
+  amt[2026-01..2026-02] = 100.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026..
+  known 2026-03-01
+  amt[2026-02] = 200.00 PLN "s"
+
+ask a1: pay[2026-02].cash.amount
+ask e2: explain pay[2026-02].cash.amount
+=== expect
+a1: 100.00 PLN
+  cut 2026-06-30
+e2: 100.00 PLN
+  [1] row v1:dom = 10
+      version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  [2] row v1:amt[2026-01..2026-02] = 100.00 PLN
+      version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
+  cut 2026-06-30

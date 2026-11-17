@@ -624,7 +624,7 @@ impl Engine {
             .built
             .get(&key)
             .ok_or_else(|| invariant("a tree just built"))?;
-        if !tree.common(t, counts, last) {
+        if !tree.common(t, counts, last) || self.base_leg_inside(base, place, (t, last))? {
             return Ok(None);
         }
         // the projection's own walk refuses a read once a number passes the cap at any place
@@ -655,6 +655,37 @@ impl Engine {
         self.chain_register(m, (base, point), (place, unit), &mut met)?;
         self.absorb(&met);
         qty_value(m, &low, unit).map(Some)
+    }
+
+    /// Whether a decision that walk `base`, or a walk it continues, ran before day `t` has a
+    /// leg at `place` dated `t` through `last`, which the projection's walk books on the leg's
+    /// own day: a read that counts one is the walk's (refcore's `base_legs`; tally 2.1.8 R16,
+    /// #183). E §4.3 step 2, L §5.14.1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn base_leg_inside(
+        &self,
+        base: usize,
+        place: &str,
+        (t, last): (Day, Day),
+    ) -> Result<bool, Stop> {
+        for wid in self.chain(base)? {
+            for run in &self.walk(wid)?.runs {
+                let before = matches!(run.inst.day, Some(Dated::Day(d)) if d < t);
+                if !before || !matches!(run.inst.status, Status::Past | Status::Plan) {
+                    continue;
+                }
+                let inside = run.inst.legs.iter().any(|lg| {
+                    matches!(lg.day, Dated::Day(d) if d >= t && d <= last) && at_place(lg, place)
+                });
+                if inside {
+                    return Ok(true);
+                }
+            }
+        }
+        Ok(false)
     }
 
     /// The widest balance, in bits, that a projection's walk continued from `base` at `point`

@@ -1,5 +1,7 @@
-# L §5.16 Closed forms: share of a normal fact is computed from its cdf, which "needs to" (table, L §7.3); with
-# no to on the query it is refused (LOAD-TO; the fact's family is known only from its row, so at run, L §8.3).
+# L §5.16 Closed forms: share of a normal fact is computed from its cdf, which "needs to" (table, L §7.3); with no
+# to on the query it is refused. The fact's family is known only from its row, so the check is the run's, made where
+# the value is read, in load's words: RUN-DOMAIN (L §8.4 Load refuses what load sees; tally 2.1.8 §4, #162). 2.1.7's
+# refcore printed LOAD-TO at run, refusing the reality.
 === m.tally
 model t
   tally 2
@@ -32,4 +34,10 @@ version v
 
 ask a: share(z <= lvl) law 2026-06-30
 === expect
-refused: LOAD-TO ...
+a: refused: RUN-DOMAIN share of normal needs to u (a cdf of normal needs to)
+  law date 2026-06-30, cut 2026-12-31
+warning: WARN-UNREAD input cnt is read by nothing
+warning: WARN-UNREAD input q25 is read by nothing
+warning: WARN-UNREAD input two is read by nothing
+warning: WARN-UNREAD input u01 is read by nothing
+warning: WARN-UNREAD input u4 is read by nothing

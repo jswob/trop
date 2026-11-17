@@ -238,6 +238,7 @@ fn days_value(days: &DaySet, ty: &Ty, target: &str) -> Result<Converted, Stop> {
                 src: Some(format!("window({}, {})", a.text(), b.text())),
                 figure: None,
                 read: None,
+                carry: Vec::new(),
             }
         }
         DaySet::OneOf(written) => one_of(written)?,
@@ -262,6 +263,7 @@ pub(super) fn one_of(written: &[Day]) -> Result<Window, Stop> {
         days: Some(days),
         figure: None,
         read: None,
+        carry: Vec::new(),
     })
 }
 

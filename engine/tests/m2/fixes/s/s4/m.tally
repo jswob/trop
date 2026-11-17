@@ -1,0 +1,60 @@
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 S4 (#179): explain of a hole booking that a later version answers prints answered at <cut> (version <V>): before its rows (ex); S9 (#179): a hole booking answered by a refusal stays refused, though a still later version gives a value (b9, ex9); §4 item 61 (#169-h): a hole booking a later version answers is that version's, under cuts from its known (b_k)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place k9: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input base: money PLN
+input dv[m in months]: num
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to konto amount amt[m]
+
+move pay9[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from world to k9 amount round(base / dv[m], minor(PLN), half-even)
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dom = 5 "s"
+  base = 100.00 PLN "s"
+  amt[2026-01] = 10.00 PLN "s"
+  amt[2026-02] = ?"how much in Feb" "s"
+  amt[2026-03..2026-06] = 10.00 PLN "s"
+  dv[2026-01] = 1 "s"
+  dv[2026-02] = ?"divisor in Feb" "s"
+  dv[2026-03..2026-06] = 1 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[k9] = 0.00 PLN at 2026-01-01 start "s"
+
+version v2
+  cite s
+  governs 2026-02
+  known 2026-03-10
+  replace amt[2026-02] = 12.00 PLN "s"
+  replace dv[2026-02] = 0 "s"
+
+version v3
+  cite s
+  governs 2026-02
+  known 2026-04-10
+  replace dv[2026-02] = 2 "s"
+
+ask ex: explain bal(konto, 2026-03-31)
+ask b_k: bal(konto, 2026-03-31) as known 2026-03-01
+ask b_k2: bal(konto, 2026-03-31) as known 2026-03-20
+ask b9: bal(k9, 2026-03-31), bal(k9, 2026-05-31)
+ask ex9: explain bal(k9, 2026-05-31)

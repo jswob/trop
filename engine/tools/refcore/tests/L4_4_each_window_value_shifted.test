@@ -1,0 +1,78 @@
+# L §4.4 (tally 2.1.8 R13, X1, X2; K1, the gate's m2_gate_w1 w10): a window shifted by a computation carries the
+# name it was computed from. add_business(wd, 1, cal) prints window(2026-03-30, 2026-04-06), nobody's name; it
+# carries wd, and windows each takes wd. The same lines as 2.1.7's refcore.
+=== m.tally
+model w_each
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+axis ax
+  lo "low"
+  hi "high"
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input cal: calendar
+input pd: date
+input wd: date
+input rate: money PLN
+input twice: int
+
+def bonus_amt: money PLN at wd
+  rule base = rate
+  rule hi beats base = rate * twice when ax == hi
+
+move bonus: transfers
+  on pd
+  at wd
+  leg cash from work to konto amount rate
+
+move gift: transfers
+  on wd
+  leg cash from work to konto amount bonus_amt
+
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+  pd = 2026-04-01 "c"
+  wd = window(2026-03-28, 2026-04-03) "c"
+  twice = 2 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version r1
+  cite card
+  governs ..2026-03-31
+  known 2026-01-01
+  rate = 10.00 PLN "c"
+
+version r2
+  cite card
+  governs 2026-04-01..
+  known 2026-01-01
+  rate = 12.00 PLN "c"
+ask w10p: add_business(wd, 1, cal)
+ask w10: add_business(wd, 1, cal) windows each
+=== expect
+w10 [wd = 2026-03-28 .. 2026-03-29]: 2026-03-30
+  cut 2026-03-01
+w10 [wd = 2026-03-30]: 2026-03-31
+  cut 2026-03-01
+w10 [wd = 2026-03-31]: 2026-04-01
+  cut 2026-03-01
+w10 [wd = 2026-04-01]: 2026-04-02
+  cut 2026-03-01
+w10 [wd = 2026-04-02]: 2026-04-03
+  cut 2026-03-01
+w10 [wd = 2026-04-03]: 2026-04-06
+  cut 2026-03-01
+w10p: window(2026-03-30, 2026-04-06)
+  cut 2026-03-01

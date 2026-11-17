@@ -3,7 +3,10 @@
 //! index), §5.8 (inputs and their values), §3.4 (a figure in Y prices), §8.1 (a read whose
 //! key is a hole carries the key's questions only), §8.2 (the register entries a read makes),
 //! §8.4 (`RUN-KEY`, `RUN-NONE`), `last(x, d)` and `since(x, d)` (§4.6 Past the last row,
-//! Readings; §5.3); §4.4 (a window read is that read's value, its holes asked of its row). A
+//! Readings; §5.3); §4.4 (a window read is that read's value, its holes asked of its row);
+//! §6.1 (a read of a `same` class takes the class's latest kept reading, a side whose
+//! readings are all removed none, tally 2.1.8 B1, G1); §4.6 (a reading `after m` read is
+//! `RUN-RECORD` where m doesn't exist or nothing books it by the cut, tally 2.1.8 R16). A
 //! read's keys made keys of their positions are `keys.rs`'s (§2.5); a row's value converted
 //! to its input's type is `convert.rs`'s; a scenario's expression row evaluated, `srows.rs`'s
 //! (§6.4).
@@ -12,26 +15,29 @@
 //! Invariants: a row's value has its input's declared type; a hole is built in the hole
 //! module.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use super::arith::{Op, arith, same_value};
 use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, known_hole, one_day};
+use super::windows::{as_read, imprecise, known_hole, one_day};
 use crate::base::{Load, Run};
-use crate::book::reading_place;
+use crate::book::{AfterDay, after_missing, and_list, reading_place};
 use crate::hole::{Hole, spread};
 use crate::model::{
     BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, RowInstant, TimePos,
-    Unit, Value,
+    Unit, Value, World,
 };
 use crate::read::{
     Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
-    read_input, read_last, standing_rows, time_point,
+    read_input, read_last, row_span, standing_rows, time_point,
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
+use crate::walk::Status;
 
 /// One side of two rows stated `same`: the value of the row its read takes with the row's
 /// id, or what the read finds where it takes none; and the read's day (L §6.1).
@@ -76,6 +82,24 @@ struct Latest {
     day: Day,
 }
 
+/// What one side of `last(x[k], d)` or `since(x[k], d)` takes (L §4.6, §6.1).
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Side {
+    /// The row it reads.
+    Row(Latest),
+    /// A known window's hole, which is the read's whatever the other sides hold (L §4.5).
+    Signal(Value),
+    /// No row: `none`, the gap rule's hole or `HOLE-NOREADING`, the read's own where no side
+    /// has a row.
+    Missing(Value),
+}
+
+/// Whether the row at position `at` of `input` is a removal, `replace … = none` (L §5.19,
+/// §4.6 Readings).
+fn removed_row(input: &InputInfo, at: usize) -> bool {
+    matches!(input.rows.get(at), Some(row) if row.value == Written::None)
+}
+
 /// The row at position `at` of `input`, which the read rule took (L §4.6).
 fn latest_of(input: &InputInfo, at: usize) -> Result<&Row, Stop> {
     input
@@ -116,13 +140,22 @@ fn after_at(row: &Row, place: Option<&str>) -> bool {
     matches!(row.instant, Some(RowInstant::After(_))) && reading_place(row) == place
 }
 
+/// A reading row's instant `after m` as text, `after save` (refcore's `instant_text`). L §4.6
+/// Readings.
+fn after_text(row: &Row) -> String {
+    match &row.instant {
+        Some(RowInstant::After(node)) => format!("after {}", crate::load::expr_text(node)),
+        Some(RowInstant::At(..)) | None => String::new(),
+    }
+}
+
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
 /// day, a state row past its span's end; a row that governs `always` is timeless (L §4.6
 /// Past the last row, Readings; §8.2 `held`; refcore's `last_value`).
 fn read_past(
     m: &Reality,
     row: &Row,
-    (day, cut): (Day, Day),
+    (day, seen): (Day, (Day, World)),
     after: Option<Day>,
 ) -> Result<bool, Stop> {
     match &row.instant {
@@ -130,7 +163,7 @@ fn read_past(
         // a reading after m stands on the day the walk applies it (L §4.6 Readings)
         Some(RowInstant::After(_)) => Ok(after.is_some_and(|at| day > at)),
         None => {
-            let Some(span) = crate::read::row_span(m, row, cut)? else {
+            let Some(span) = row_span(m, row, seen)? else {
                 return Ok(false);
             };
             Ok(!span.is_always() && span.end().is_some_and(|end| day >= end))
@@ -189,15 +222,10 @@ impl Engine {
             let value = pinned_at(pinned, &input.binds, keys)?;
             return self.pin_chosen(value, &origin(&input.id, keys), ctx);
         }
-        // two rows stated `same` are read together (L §6.1, §5.19)
-        if !input.reading {
-            match self.same_row_of(m, (&input.id, keys), ctx)? {
-                Err(h) => return Ok(Value::Hole(h)),
-                Ok(Some(other)) => {
-                    return self.read_same_rows(m, (input, keys), (&other.0, &other.1), ctx, asked);
-                }
-                Ok(None) => {}
-            }
+        // rows stated `same` are read together, the whole class, a reading's at its instant
+        // (L §6.1 l.1806, §5.19; tally 2.1.8 §4)
+        if let Some(class) = self.same_class(m, (&input.id, keys), ctx)? {
+            return self.read_same_rows(m, (input, keys), &class, ctx, asked);
         }
         let clocks = self.clocks(ctx, &input.id)?;
         #[cfg(feature = "counters")]
@@ -266,131 +294,142 @@ impl Engine {
         self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
     }
 
-    /// The row a `same` line the cut of `ctx` sees states one with input `id`'s at `keys`:
-    /// the other side's input and keys, the last such line's where several name it; the hole
-    /// where no `windows each` decides a line whose version is known in a window that holds
-    /// the cut (refcore's `same_rows`). L §6.1, §5.19, §4.5.
+    /// The rows stated `same` with input `id`'s at `keys`, that row among them, each as its
+    /// input and keys, in id order (a list or range index keeping its own, P50); none where no
+    /// line the cut of `ctx` sees names it. `same` is an equivalence: lines that share a side
+    /// make one class, each line seen as [`Engine::same_line_seen`] decides, and only the
+    /// lines that reach the row are asked (refcore's `same_class`). L §6.1, §2.5, §4.5 (tally
+    /// 2.1.8 R12, S6).
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_seen`].
-    pub(super) fn same_row_of(
+    /// As [`Engine::same_line_seen`].
+    pub(super) fn same_class(
         &mut self,
         m: &Reality,
         (id, keys): (&str, &[KeyVal]),
         ctx: Ctx,
-    ) -> Result<Result<Option<SameRow>, Hole>, Stop> {
-        let mut out = None;
-        for pair in &m.sames {
-            let Some((other, other_keys, version)) = pair.other_row(id, keys) else {
-                continue;
-            };
-            match self.same_seen(m, version, ctx)? {
-                Err(h) => return Ok(Err(h)),
-                Ok(true) => out = Some((other.to_owned(), other_keys.to_vec())),
-                Ok(false) => {}
+    ) -> Result<Option<Vec<SameRow>>, Stop> {
+        let start: SameRow = (id.to_owned(), keys.to_vec());
+        let mut class = vec![start.clone()];
+        let mut todo = vec![start];
+        while let Some((x, xk)) = todo.pop() {
+            for pair in &m.sames {
+                let Some((other, other_keys, version)) = pair.other_row(&x, &xk) else {
+                    continue;
+                };
+                if class
+                    .iter()
+                    .any(|(y, yk)| y == other && yk.as_slice() == other_keys)
+                {
+                    continue;
+                }
+                let sides = [origin(&x, &xk), origin(other, other_keys)];
+                let [ours, theirs] = &sides;
+                if self.same_line_seen(m, version, ctx, [ours, theirs])? {
+                    let next: SameRow = (other.to_owned(), other_keys.to_vec());
+                    class.push(next.clone());
+                    todo.push(next);
+                }
             }
         }
-        Ok(Ok(out))
+        if class.len() < 2 {
+            return Ok(None);
+        }
+        class.sort_by_cached_key(|(y, yk)| m.id_order(&origin(y, yk)));
+        Ok(Some(class))
     }
 
-    /// Whether the cut of `ctx` sees a `same` line of version `version`: one in a joint
-    /// model's header always; else its version's `known` is on or before the cut, a window
-    /// that holds it decided by the line's `windows each`, else `HOLE-IMPRECISE` (L §4.5:
-    /// a `known` holds for everything the version brings).
+    /// A read of input `input` at `keys`, whose row is stated `same` with the rows of
+    /// `class` (itself among them): every side read by the read rule, a price at its own
+    /// prices; where only one side has a row its value is the fact, a hole on any side is the
+    /// hole, values that agree are the value, and values that differ are `HOLE-SAME` naming
+    /// each row that has one, in id order; where no side has one, `input`'s read finds none
+    /// (refcore's `read_same_row`; a joint model's own row that settles them is M5c's).
+    /// L §6.1 What `same` does, §5.19, §8.1 (tally 2.1.8 S6, §4).
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT` for a version load didn't build; as [`Engine::known_seen`].
-    fn same_seen(
-        &mut self,
-        m: &Reality,
-        version: Option<&str>,
-        ctx: Ctx,
-    ) -> Result<Result<bool, Hole>, Stop> {
-        let Some(id) = version else {
-            return Ok(Ok(true));
-        };
-        let info = m
-            .versions
-            .get(id)
-            .ok_or_else(|| invariant("a same line's version load didn't build"))?;
-        let (lo, cut) = (info.known, ctx.cut);
-        // a window that ends on or before the cut is seen, one that starts after it unseen
-        let Some(hi) = info.window.filter(|hi| lo <= cut && cut < *hi) else {
-            return Ok(Ok(lo <= cut));
-        };
-        Ok(match self.known_seen(ctx, (lo, hi), &info.id)? {
-            Some(seen) => Ok(seen),
-            None => Err(known_hole((lo, hi), cut, &info.id)),
-        })
-    }
-
-    /// A read of input `input` at `keys`, whose row a `same` line states one with input
-    /// `other`'s at its keys: both sides read by the read rule; where only one side has a row
-    /// its value is the fact, a hole on either side is the hole, two values that agree are the
-    /// value, and two that differ are `HOLE-SAME` naming both rows; where neither side has
-    /// one, `input`'s read finds none (refcore's `read_same_row`; a joint model's own row that
-    /// settles them is M5c's). L §6.1 What `same` does, §5.19, §8.1.
-    ///
-    /// # Errors
-    ///
-    /// The refusals of either side's read rule and row value; `ENGINE-INVARIANT` for an input
+    /// The refusals of every side's read rule and row value; `ENGINE-INVARIANT` for an input
     /// load didn't build.
     fn read_same_rows(
         &mut self,
         m: &Reality,
         (input, keys): (&InputInfo, &[KeyVal]),
-        (other, other_keys): (&str, &[KeyVal]),
+        class: &[SameRow],
         ctx: Ctx,
         asked: Asked,
     ) -> Result<Value, Stop> {
-        let other = m
-            .inputs
-            .get(other)
-            .ok_or_else(|| invariant("a row stated same of an input load didn't build"))?;
-        let (a, day_a) = match self.same_side(m, (input, keys), ctx, asked)? {
-            Err(h) => return Ok(Value::Hole(h)),
-            Ok(side) => side,
-        };
-        let (b, day_b) = match self.same_side(m, (other, other_keys), ctx, asked)? {
-            Err(h) => return Ok(Value::Hole(h)),
-            Ok(side) => side,
-        };
-        let ((va, ra), (vb, rb)) = match (a, b) {
-            (Err(found), Err(_)) => {
-                return Ok(match found {
-                    Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
-                    Found::None | Found::Row(_) => Value::None,
-                });
+        // each side with a row: its text, its value and the row's id, in the class's order
+        let mut got: Vec<(String, Value, String)> = Vec::new();
+        let (mut own_found, mut own_day, mut first_day) = (Found::None, None, None);
+        for (id, ks) in class {
+            let info = m
+                .inputs
+                .get(id)
+                .ok_or_else(|| invariant("a row stated same of an input load didn't build"))?;
+            let (side, day) = match self.same_side(m, (info, ks), ctx, asked)? {
+                Err(h) => return Ok(Value::Hole(h)),
+                Ok(side) => side,
+            };
+            let own = *id == input.id && ks.as_slice() == keys;
+            if own {
+                own_day = day;
             }
-            (Err(_), Ok((v, _))) | (Ok((v, _)), Err(_)) => return Ok(v),
-            (Ok(a), Ok(b)) => (a, b),
-        };
-        match (&va, &vb) {
-            (Value::Hole(ha), Value::Hole(hb)) => {
-                let both = spread(&[Some(ha), Some(hb)])
-                    .ok_or_else(|| invariant("two holes spread to none"))?;
-                return Ok(Value::Hole(both));
+            first_day = first_day.or(day);
+            match side {
+                Ok((v, sid)) => got.push((origin(id, ks), v, sid)),
+                Err(found) if own => own_found = found,
+                Err(_) => {}
             }
-            (Value::Hole(_), _) => return Ok(va),
-            (_, Value::Hole(_)) => return Ok(vb),
-            _ => {}
         }
-        if same_value(m, &va, &vb)? {
-            return Ok(va);
+        let holes: Vec<&Hole> = got
+            .iter()
+            .filter_map(|(_, v, _)| {
+                if let Value::Hole(h) = v {
+                    Some(h)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        match holes.as_slice() {
+            [] => {}
+            [one] => return Ok(Value::Hole((*one).clone())),
+            many => {
+                let all: Vec<Option<&Hole>> = many.iter().copied().map(Some).collect();
+                let spread_out =
+                    spread(&all).ok_or_else(|| invariant("two holes spread to none"))?;
+                return Ok(Value::Hole(spread_out));
+            }
         }
-        let (ta, tb) = (origin(&input.id, keys), origin(&other.id, other_keys));
-        let day = match day_a.or(day_b) {
-            Some(d) => d.text(),
-            None => "every day".to_owned(),
+        let Some(((_, first, _), rest)) = got.split_first() else {
+            return Ok(match own_found {
+                Found::Hole(q) => Value::Hole(Hole::asked(&q.text, &q.origin)),
+                Found::None | Found::Row(_) => Value::None,
+            });
         };
+        let mut agree = true;
+        for (_, v, _) in rest {
+            agree = agree && same_value(m, first, v)?;
+        }
+        if agree {
+            return Ok(first.clone());
+        }
+        let day = own_day
+            .or(first_day)
+            .map_or_else(|| "every day".to_owned(), Day::text);
+        let names: Vec<String> = got.iter().map(|(t, _, _)| t.clone()).collect();
+        let mut parts = Vec::with_capacity(got.len());
+        for (_, v, sid) in &got {
+            parts.push(format!("{} ({sid})", v.text(m).map_err(num_stop)?));
+        }
         let text = format!(
-            "{ta} and {tb} are one, but the value differs on {day}: {} ({ra}) and {} ({rb})",
-            va.text(m).map_err(num_stop)?,
-            vb.text(m).map_err(num_stop)?,
+            "{} are one, but the value differs on {day}: {}",
+            and_list(&names),
+            and_list(&parts)
         );
-        Ok(Value::Hole(Hole::asked(&text, &format!("{ta}, {tb}"))))
+        Ok(Value::Hole(Hole::asked(&text, &names.join(", "))))
     }
 
     /// One side of two rows stated `same`: the value of the row the read rule takes for
@@ -439,6 +478,8 @@ impl Engine {
             sid: row.sid.clone(),
         });
         let value = self.row_value(m, input, row, keys, ctx)?;
+        // each side at its own prices (L §3.4, §6.1: every read of either, a price's included)
+        let value = self.priced(m, input, keys, ctx, value)?;
         // a window read through a `same` line is its row's read, as a plain read's (L §4.4)
         let value = self.row_window(value, (input, keys), row, ctx)?;
         Ok(Ok((Ok((value, row.sid.clone())), day)))
@@ -458,9 +499,14 @@ impl Engine {
         figure: &str,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        let Value::Window(w) = &value else {
+        let Value::Window(mut w) = value else {
             return Ok(value);
         };
+        // a pinned window's holes are asked of the item it pins, as a row's of its row
+        // (L §8.1, §5.11)
+        if w.figure.is_none() {
+            w.figure = Some(figure.to_owned());
+        }
         let (id, label) = match &w.read {
             Some(read) => {
                 let from = origin(&read.item, &read.keys);
@@ -468,7 +514,7 @@ impl Engine {
             }
             None => (format!("pin {figure}"), figure.to_owned()),
         };
-        self.chosen(value, (id, &label), ctx)
+        self.chosen(Value::Window(w), (id, &label), ctx)
     }
 
     /// Input `input` as a read at `keys` in `ctx` under `clocks` sees its rows, a read at its
@@ -490,7 +536,7 @@ impl Engine {
         (past, clocks): (Option<Day>, Clocks),
         ctx: Ctx,
     ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
-        if !input.holds.known_window && !input.holds.after {
+        if !input.holds.known_window && !input.holds.after && !input.holds.unitless {
             return Ok(Ok(None));
         }
         let test = match past {
@@ -520,54 +566,161 @@ impl Engine {
         };
         // only `stated` and `opening` hold readings `after m`
         let after = input.holds.after && input.rows.iter().any(|row| after_at(row, place));
-        if hidden.is_empty() && !after {
+        let held = match place {
+            Some(p) if input.holds.unitless => self.unitless_held(m, &input.rows, p, ctx)?,
+            Some(_) | None => BTreeMap::new(),
+        };
+        if hidden.is_empty() && !after && held.is_empty() {
             return Ok(Ok(None));
         }
         let mut rows = kept_rows(&input.rows, &hidden);
-        if after {
-            self.after_on_days(m, &mut rows, place, clocks.cut)?;
+        if after
+            && let Err(h) = self.after_on_days(m, (&input.id, &mut rows), (place, test), ctx)?
+        {
+            return Ok(Err(h));
         }
         Ok(Ok(Some(InputInfo {
             rows,
+            held,
             ..input.clone()
         })))
     }
 
-    /// Each reading `after m` of `place` among `rows` read on the day the walk at cut `cut`
-    /// applies it ([`Engine::reading_day`]), so `last`, `since` and a plain read find it
-    /// there; one whose m has no day keeps no instant a read finds; a reading of another
-    /// place is left as it is (L §4.6 Readings; E §4.2 step 3).
+    /// For each instant where a reading row of `place` among `rows` states no unit: the units
+    /// the walk of the read's cut up to the instant's day applied a reading in there, its gaps
+    /// at that instant, alike for every reader at that cut, inside a walk or not (L §5.10;
+    /// tally 2.1.8 R14, B4 of group 3's review, pick P46; refcore's `units_at_reading`).
+    fn unitless_held(
+        &mut self,
+        m: &Reality,
+        rows: &[Row],
+        place: &str,
+        ctx: Ctx,
+    ) -> Result<BTreeMap<String, BTreeSet<String>>, Stop> {
+        let mut out = BTreeMap::new();
+        let mut instants = Vec::new();
+        for row in rows {
+            if let Some(RowInstant::At(day, Some(edge))) = row.instant
+                && reading_place(row) == Some(place)
+                && m.reading_ty(place, &row.value).map_err(num_stop)?.is_none()
+            {
+                instants.push((day, crate::book::instant_text(day, edge)));
+            }
+        }
+        for (day, text) in instants {
+            // the cut's walk up to the day, which lists no plan after it; one being walked
+            // already holds its gaps of the days it passed (refcore's `prefix_walk`, its
+            // running walk); stated units alone where it is refused at run
+            let Some(id) = self.unitless_walk(m, ctx.cut, day)? else {
+                out.insert(text, BTreeSet::new());
+                continue;
+            };
+            let walk = self.walk(id)?;
+            let mut units = BTreeSet::new();
+            for g in walk
+                .gaps
+                .get(&(place.to_owned(), day))
+                .into_iter()
+                .flatten()
+            {
+                if g.instant == text {
+                    units.insert(g.unit.clone());
+                }
+            }
+            out.insert(text, units);
+        }
+        Ok(out)
+    }
+
+    /// The walk of cut `cut` up to day `day` whose gaps give a unitless row its units: one
+    /// kept to that day or a later one, if it is being walked, else the prefix walk; none
+    /// where it is refused at run (refcore's `prefix_walk`). L §5.10, E §3.2, §4.1.
+    fn unitless_walk(&mut self, m: &Reality, cut: Day, day: Day) -> Result<Option<usize>, Stop> {
+        let kept = self
+            .prefixes
+            .walks
+            .range((cut, day)..)
+            .next()
+            .filter(|((c, _), id)| *c == cut && self.walking.contains(id))
+            .map(|(_, id)| *id);
+        if kept.is_some() {
+            return Ok(kept);
+        }
+        self.prefix_walk(m, cut, Some(day))
+    }
+
+    /// Each reading `after m` of `place` among the rows of input `input` read on the day the
+    /// walk at the read's cut applies it ([`Engine::row_after_day`]), so `last`, `since` and a
+    /// plain read find it there: m's window's last day once the read's day `test` is past it,
+    /// none before its first, the window's hole inside it (or at an instant in it); a hole
+    /// where m's day or whether it exists is one; refused where m doesn't exist; one with no
+    /// day keeps no instant a read finds; a reading of another place is left as it is (L §4.6
+    /// Readings, §4.4; E §4.2 step 3; tally 2.1.8 R16, pick P29 on #175; refcore's
+    /// `rows_for`, its readings after m).
     fn after_on_days(
         &mut self,
         m: &Reality,
-        rows: &mut [Row],
-        place: Option<&str>,
-        cut: Day,
-    ) -> Result<(), Stop> {
+        (input, rows): (&str, &mut [Row]),
+        (place, test): (Option<&str>, Test),
+        ctx: Ctx,
+    ) -> Result<Result<(), Hole>, Stop> {
         for row in rows {
             if !after_at(row, place) {
                 continue;
             }
-            let (Some(RowInstant::After(node)), Some(at)) = (&row.instant, reading_place(row))
-            else {
-                continue;
+            let day = match self.row_after_day(m, input, row, ctx)? {
+                AfterDay::Day(day) => day,
+                AfterDay::Window(w) => {
+                    let (probe, exact) = match test {
+                        Test::Last(day) => (Some(day), false),
+                        Test::Instant(day) | Test::At(Some(day)) => (Some(day), true),
+                        Test::At(None) => (None, false),
+                    };
+                    let Some(probe) = probe.filter(|d| *d >= w.lo && !(exact && *d > w.hi)) else {
+                        continue;
+                    };
+                    if exact || probe < w.hi {
+                        let what = format!("the day of {}", after_text(row));
+                        return Ok(Err(imprecise(m, &w.value, &what)?));
+                    }
+                    w.hi
+                }
+                AfterDay::Hole(h) => return Ok(Err(h)),
+                AfterDay::Refused(r) => return Err(Stop::Refused(r)),
+                AfterDay::Unplaced => continue,
             };
-            let (node, at) = (node.clone(), at.to_owned());
-            if let Some(day) = self.reading_day(m, &node, &at, cut)? {
-                row.instant = Some(RowInstant::At(day, None));
-            }
+            row.instant = Some(RowInstant::At(day, None));
         }
-        Ok(())
+        Ok(Ok(()))
     }
 
-    /// The day a reading row `after m` stands on at cut `cut`, as the walk applies it; none
-    /// for any other row, or an m with no day (L §4.6 Readings; E §4.2 step 3).
-    fn row_after_day(&mut self, m: &Reality, row: &Row, cut: Day) -> Result<Option<Day>, Stop> {
+    /// What m gives the reading row `after m` of input `input` read in context `ctx`, as the
+    /// walk applies it ([`Engine::reading_day`]), and as m's run there judged it: `RUN-RECORD`
+    /// where m's `when` was false at its point, or m is modelled past and nothing fulfils it;
+    /// unplaced for any other row (L §4.6 Readings, §8.4; E §4.2 step 3; refcore's
+    /// `after_day`).
+    fn row_after_day(
+        &mut self,
+        m: &Reality,
+        input: &str,
+        row: &Row,
+        ctx: Ctx,
+    ) -> Result<AfterDay, Stop> {
         let (Some(RowInstant::After(node)), Some(place)) = (&row.instant, reading_place(row))
         else {
-            return Ok(None);
+            return Ok(AfterDay::Unplaced);
         };
-        self.reading_day(m, node, place, cut)
+        let judged = self.reading_day(m, node, (input, place), ctx.cut)?;
+        if !matches!(judged, AfterDay::Day(_)) {
+            return Ok(judged);
+        }
+        let mid = crate::load::expr_text(node);
+        let why = match self.run_status(m, &mid, ctx)? {
+            Some((Status::None, _)) => "doesn't exist",
+            Some((Status::Modelled, false)) => "is modelled past and nothing fulfils it",
+            Some(_) | None => return Ok(judged),
+        };
+        Ok(AfterDay::Refused(after_missing((input, place, &mid), why)))
     }
 
     /// The positions of the rows `inside`, each known in a window that holds the cut, that
@@ -587,7 +740,7 @@ impl Engine {
             match self.known_seen(ctx, row.window, &row.sid)? {
                 Some(true) => {}
                 Some(false) => out.push(row.at),
-                None => return Ok(Err(known_hole(row.window, ctx.cut, &row.sid))),
+                None => return Ok(Err(known_hole(row.window, ctx.cut, &row.sid)?)),
             }
         }
         Ok(Ok(out))
@@ -614,7 +767,7 @@ impl Engine {
         if matches!(input.time_pos, TimePos::At(_)) {
             return Ok(false);
         }
-        let class = rows_class(m, &input.rows, ctx.cut, day)?;
+        let class = rows_class(m, &input.rows, (ctx.cut, ctx.world), day)?;
         self.narrow(ctx.law, class);
         Ok(true)
     }
@@ -647,7 +800,7 @@ impl Engine {
             }
         }
         if is_held {
-            let shown = shown(m, &value)?;
+            let shown = held_text(m, row, &value)?;
             let read_for = match (&point.period, point.day) {
                 (Some(period), _) => Value::of_key(period).text(m).map_err(num_stop)?,
                 (None, Some(day)) => day.text(),
@@ -695,20 +848,26 @@ impl Engine {
             ..ctx
         };
         let value = self.row_converted(m, (input, row, &latest.keys), &figure, at)?;
-        let after = self.row_after_day(m, row, ctx.cut)?;
-        if read_past(m, row, (latest.day, ctx.cut), after)? {
+        // a reading `replace … = none` removed is no reading (L §5.19: "it removes the
+        // reading it replaces"; L §4.6 Readings, `HOLE-NOREADING`; refcore's `e_lastx`): nothing
+        // is read, so nothing is held (N1 of group 3's review)
+        if input.reading && value == Value::None {
+            return Ok(Value::Hole(no_reading(&figure, latest.day)));
+        }
+        // a window's reading stands from its last day (pick P29 on #175)
+        let after = match self.row_after_day(m, &input.id, row, ctx)? {
+            AfterDay::Day(day) => Some(day),
+            AfterDay::Window(w) => Some(w.hi),
+            AfterDay::Hole(_) | AfterDay::Refused(_) | AfterDay::Unplaced => None,
+        };
+        if read_past(m, row, (latest.day, (ctx.cut, ctx.world)), after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
-                shown(m, &value)?,
+                held_text(m, row, &value)?,
                 row.version,
                 latest.day.text()
             );
             self.note("held", text, String::new());
-        }
-        // a reading `replace … = none` removed is no reading (L §5.19: "it removes the
-        // reading it replaces"; L §4.6 Readings, `HOLE-NOREADING`; refcore's `e_lastx`)
-        if input.reading && value == Value::None {
-            return Ok(Value::Hole(no_reading(&figure, latest.day)));
         }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
         let value = as_read(value, (&input.id, &latest.keys), row_cell(row));
@@ -738,10 +897,20 @@ impl Engine {
         let row = latest_of(input, latest.at)?;
         let at = match &row.instant {
             Some(RowInstant::At(at, _)) => *at,
-            // a reading after m counts from the day the walk applies it (L §4.6 Readings)
-            Some(RowInstant::After(_)) => self
-                .row_after_day(m, row, ctx.cut)?
-                .ok_or_else(|| invariant("since took a reading after an m with no day"))?,
+            // a reading after m counts from the day the walk applies it; since reads the day
+            // itself, so a window's is imprecise (L §4.6 Readings, §4.4)
+            Some(RowInstant::After(_)) => match self.row_after_day(m, &input.id, row, ctx)? {
+                AfterDay::Day(on) => on,
+                AfterDay::Window(w) => {
+                    let what = format!("the day of {}", after_text(row));
+                    return Ok(Value::Hole(imprecise(m, &w.value, &what)?));
+                }
+                AfterDay::Hole(h) => return Ok(Value::Hole(h)),
+                AfterDay::Refused(r) => return Err(Stop::Refused(r)),
+                AfterDay::Unplaced => {
+                    return Err(invariant("since took a reading after an m with no day"));
+                }
+            },
             None => return Err(invariant("since read a reading with no day")),
         };
         let days = at
@@ -808,6 +977,185 @@ impl Engine {
                 ctx,
             )?));
         }
+        // rows stated `same` carry together, the whole class (L §6.1; tally 2.1.8 §4)
+        if let Some(class) = self.same_class(m, (&input.id, &keys), ctx)? {
+            return self.latest_in_class(m, (input, &keys), &class, (day, past), ctx);
+        }
+        Ok(match self.latest_side(m, (input, keys), day, past, ctx)? {
+            Side::Row(latest) => Ok(latest),
+            Side::Signal(value) | Side::Missing(value) => Err(value),
+        })
+    }
+
+    /// The row the class `class` of rows stated `same` with input `input`'s at `keys` carries
+    /// for `last` or `since` on day `day`: of the sides' latest rows, those that began latest,
+    /// the first side's; where two such disagree, `last`'s `HOLE-SAME` naming them on that day;
+    /// with no side's row, what the read of `input` itself finds; a hole a side's known window
+    /// gives is the read's (refcore's `carry_sides`, `carry_latest`, `last_value`). L §6.1
+    /// l.1806, §4.6, §8.1 (tally 2.1.8 §4, items 40 and 41).
+    fn latest_in_class(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, &[KeyVal]),
+        class: &[SameRow],
+        (day, past): (Day, Past),
+        ctx: Ctx,
+    ) -> Result<Result<Latest, Value>, Stop> {
+        let mut rows: Vec<(Option<Day>, Latest)> = Vec::new();
+        let mut own = None;
+        for (id, ks) in class {
+            let info = m
+                .inputs
+                .get(id)
+                .ok_or_else(|| invariant("a row stated same of an input load didn't build"))?;
+            let side = match self.latest_side(m, (info, ks.clone()), day, past, ctx)? {
+                // a side whose readings are all removed (`replace … = none`) is no row: the
+                // class's latest kept reading carries (L §6.1 l.1806, §4.6 Readings; refcore's
+                // `carry_latest`, B1 of group 4's review); with no kept reading on any side the
+                // read is its own `HOLE-NOREADING`, as the plain read and `since` (L §4.6
+                // l.730; G1 of the fix's review), a price none
+                Side::Row(latest) if info.reading && removed_row(info, latest.at) => {
+                    if past == Past::Price {
+                        Side::Missing(Value::None)
+                    } else {
+                        Side::Missing(Value::Hole(no_reading(&origin(id, ks), day)))
+                    }
+                }
+                side @ (Side::Row(_) | Side::Signal(_) | Side::Missing(_)) => side,
+            };
+            match side {
+                Side::Signal(value) => return Ok(Err(value)),
+                Side::Missing(value) => {
+                    if *id == input.id && ks.as_slice() == keys {
+                        own = Some(value);
+                    }
+                }
+                Side::Row(latest) => {
+                    let began = self.latest_began(m, info, &latest, ctx)?;
+                    rows.push((began, latest));
+                }
+            }
+        }
+        let Some(top) = rows.iter().map(|(began, _)| *began).max() else {
+            return own
+                .map(Err)
+                .ok_or_else(|| invariant("a class with no row and no read of its own"));
+        };
+        let latest: Vec<Latest> = rows
+            .into_iter()
+            .filter(|(began, _)| *began == top)
+            .map(|(_, l)| l)
+            .collect();
+        let Some(first) = latest.first() else {
+            return Err(invariant("the latest rows of a class are none"));
+        };
+        // rows that govern always began on no day: they disagree on the day the read reads
+        // them for, as a plain read there prints (L §8.1 HOLE-SAME's `differs on <d>`; refcore's
+        // `e_call_last`, P42, group 4's review N3)
+        if past != Past::Since
+            && let Some(hole) = self.carry_disagrees(m, &latest, top.unwrap_or(day), ctx)?
+        {
+            return Ok(Err(Value::Hole(hole)));
+        }
+        Ok(Ok(first.clone()))
+    }
+
+    /// The day row `latest` of `input` began: a reading's instant, or the day a reading after
+    /// m stands from (a window's last day); a state's first day, none for a span from the
+    /// start of time (refcore's `carry_began`, `reading_on`). L §4.6 Readings, Past the last
+    /// row.
+    fn latest_began(
+        &mut self,
+        m: &Reality,
+        input: &InputInfo,
+        latest: &Latest,
+        ctx: Ctx,
+    ) -> Result<Option<Day>, Stop> {
+        let row = latest_of(input, latest.at)?;
+        match &row.instant {
+            Some(RowInstant::At(at, _)) => Ok(Some(*at)),
+            Some(RowInstant::After(_)) => Ok(match self.row_after_day(m, &input.id, row, ctx)? {
+                AfterDay::Day(on) => Some(on),
+                AfterDay::Window(w) => Some(w.hi),
+                AfterDay::Hole(_) | AfterDay::Refused(_) | AfterDay::Unplaced => None,
+            }),
+            None => Ok(row_span(m, row, (ctx.cut, ctx.world))?.and_then(|span| span.start())),
+        }
+    }
+
+    /// Where the rows `latest` of a class, which began on one day `began`, give `last`
+    /// different values: their holes where any is one, else `HOLE-SAME` naming each with its
+    /// value on that day; none where they agree (refcore's `same_value`). L §6.1, §8.1.
+    fn carry_disagrees(
+        &mut self,
+        m: &Reality,
+        latest: &[Latest],
+        began: Day,
+        ctx: Ctx,
+    ) -> Result<Option<Hole>, Stop> {
+        let mut got: Vec<(String, Value, String)> = Vec::with_capacity(latest.len());
+        for l in latest {
+            let input = m
+                .inputs
+                .get(&l.input)
+                .ok_or_else(|| invariant("an input of last load didn't build"))?;
+            let row = latest_of(input, l.at)?;
+            let figure = origin(&l.input, &l.keys);
+            let at = Ctx {
+                law: Some(l.day),
+                ..ctx
+            };
+            let value = self.row_converted(m, (input, row, &l.keys), &figure, at)?;
+            got.push((figure, value, row.sid.clone()));
+        }
+        let [(_, first, _), rest @ ..] = got.as_slice() else {
+            return Ok(None);
+        };
+        let mut agree = true;
+        for (_, v, _) in rest {
+            agree = agree && same_value(m, first, v)?;
+        }
+        if agree {
+            return Ok(None);
+        }
+        let holes: Vec<Option<&Hole>> = got
+            .iter()
+            .map(|(_, v, _)| {
+                if let Value::Hole(h) = v {
+                    Some(h)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        if let Some(hole) = spread(&holes) {
+            return Ok(Some(hole));
+        }
+        let names: Vec<String> = got.iter().map(|(t, _, _)| t.clone()).collect();
+        let mut parts = Vec::with_capacity(got.len());
+        for (_, v, sid) in &got {
+            parts.push(format!("{} ({sid})", v.text(m).map_err(num_stop)?));
+        }
+        let day = began.text();
+        let text = format!(
+            "{} are one, but the value differs on {day}: {}",
+            and_list(&names),
+            and_list(&parts)
+        );
+        Ok(Some(Hole::asked(&text, &names.join(", "))))
+    }
+
+    /// One side's row for `last` or `since` of `input` at `keys` on day `day`, recorded as
+    /// read; or what it is instead: a known window's hole (`Signal`), or `none`, the gap
+    /// rule's hole, `HOLE-NOREADING` (`Missing`) (refcore's `last_of`). L §4.6, §4.5.
+    fn latest_side(
+        &mut self,
+        m: &Reality,
+        (input, keys): (&InputInfo, Vec<KeyVal>),
+        day: Day,
+        past: Past,
+        ctx: Ctx,
+    ) -> Result<Side, Stop> {
         self.read(Read::Input {
             id: input.id.clone(),
             keys: keys.clone(),
@@ -816,7 +1164,7 @@ impl Engine {
         // else the read is `HOLE-IMPRECISE` (L §4.5)
         let clocks = self.clocks(ctx, &input.id)?;
         let view = match self.input_view(m, input, &keys, (Some(day), clocks), ctx)? {
-            Err(h) => return Ok(Err(Value::Hole(h))),
+            Err(h) => return Ok(Side::Signal(Value::Hole(h))),
             Ok(view) => view,
         };
         let all = input;
@@ -837,7 +1185,7 @@ impl Engine {
                     );
                     let Some(at) = read else {
                         let figure = origin(&input.id, &keys);
-                        return Ok(Err(Value::Hole(no_reading(&figure, day))));
+                        return Ok(Side::Missing(Value::Hole(no_reading(&figure, day))));
                     };
                     Found::Row(at)
                 }
@@ -847,11 +1195,13 @@ impl Engine {
         };
         let at = match found {
             Found::Row(at) => at,
-            Found::None => return Ok(Err(Value::None)),
+            Found::None => return Ok(Side::Missing(Value::None)),
             // a price with no row on or before d: no price, which `value` names (refcore's
             // `last_of`)
-            Found::Hole(_) if past == Past::Price => return Ok(Err(Value::None)),
-            Found::Hole(q) => return Ok(Err(Value::Hole(Hole::asked(&q.text, &q.origin)))),
+            Found::Hole(_) if past == Past::Price => return Ok(Side::Missing(Value::None)),
+            Found::Hole(q) => {
+                return Ok(Side::Missing(Value::Hole(Hole::asked(&q.text, &q.origin))));
+            }
         };
         let row = latest_of(input, at)?;
         self.read(Read::Row {
@@ -864,7 +1214,7 @@ impl Engine {
             .iter()
             .position(|r| r.sid == row.sid)
             .ok_or_else(|| invariant("a row of a read past its input's rows"))?;
-        Ok(Ok(Latest {
+        Ok(Side::Row(Latest {
             input: input.id.clone(),
             keys,
             at: among,
@@ -1002,7 +1352,7 @@ impl Engine {
     /// E §3.2).
     fn unheld_class(&mut self, m: &Reality, row: &Row, ctx: Ctx, day: Day) -> Result<(), Stop> {
         if row.instant.is_none()
-            && let Some(span) = crate::read::row_span(m, row, ctx.cut)?
+            && let Some(span) = row_span(m, row, (ctx.cut, ctx.world))?
             && may_hold(&span)
         {
             let class = LawClass::all().by_ask_cut(day, self.ask_cut);
@@ -1126,6 +1476,18 @@ fn plain_unit(v: &Value) -> Unit {
         return n.unit();
     }
     Unit::one()
+}
+
+/// Row `row`'s value `v` as its `held:` entry shows it: a row that states a hole, that hole
+/// in its own form, `?"…" (x[k])`, as L §8.1 prints it (L §8.2: a hole lists them like a
+/// value; tally 2.1.8 R7, R9, #179); a row computed whose value comes out a hole, `?`, since
+/// that hole names the day read and the line prints once per row (L §8.2; pick P32).
+fn held_text(m: &Reality, row: &Row, v: &Value) -> Result<String, Stop> {
+    match (v, &row.value) {
+        (Value::Hole(_), Written::Expr(_)) => Ok("?".to_owned()),
+        (Value::Hole(h), _) => Ok(h.text()),
+        _ => v.text(m).map_err(num_stop),
+    }
 }
 
 /// A value as a register entry shows it: a hole as `?` (L §8.2).

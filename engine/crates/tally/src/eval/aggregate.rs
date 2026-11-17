@@ -24,6 +24,7 @@ use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
 use crate::syntax::{Agg, AggFn, Bind, Expr, Stop};
+use crate::time::Day;
 
 /// A binding tuple: its scope, the questions that make it an unknown member, and what its
 /// movements brought when it keeps them for its own line.
@@ -571,9 +572,40 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Decided, Stop> {
+        self.members_where(m, (bind, env), &LawAt::One(ctx))
+    }
+
+    /// One binding's members under a window `at` whose law dates don't all give the same
+    /// members, read at each law date in `days` (one for each class of law dates that give
+    /// the same): where the domain differs, `differ` is the domain's hole; else a value whose
+    /// `where` differs is a member whose hole is `differ`, and the others are as the first
+    /// law date gives them (refcore's `move_tuples`, its `lds`; tally 2.1.8 §4, #169-e).
+    /// L §4.3, §4.4, §5.14 Keys.
+    ///
+    /// # Errors
+    ///
+    /// As `binding_members`; no law date, `ENGINE-INVARIANT`.
+    pub(crate) fn binding_members_over(
+        &mut self,
+        m: &Reality,
+        (bind, env): (&Bind, &Env),
+        ctx: Ctx,
+        (days, differ): (Vec<Day>, Hole),
+    ) -> Result<Decided, Stop> {
+        self.members_where(m, (bind, env), &LawAt::Over(ctx, days, differ))
+    }
+
+    /// `binding_members` at one law date, or over a window's law dates.
+    fn members_where(
+        &mut self,
+        m: &Reality,
+        (bind, env): (&Bind, &Env),
+        at: &LawAt,
+    ) -> Result<Decided, Stop> {
+        let ctx = at.first()?;
         self.push();
         let values = self.bind_values(m, bind, env, ctx);
-        let domain = self.pop_alone();
+        let mut domain = self.pop_alone();
         let (values, brings) = match values? {
             Values::Unknown(h) => return Ok(Err((h, domain))),
             Values::Known(values) => (values, Vec::new()),
@@ -582,6 +614,16 @@ impl Engine {
                 (frame.values, frame.colls)
             }
         };
+        if let LawAt::Over(over, days, differ) = at {
+            for day in days.iter().skip(1) {
+                self.push();
+                let again = self.bind_values(m, bind, env, over.at_law(Some(*day)));
+                domain.merge(&self.pop_alone());
+                if !same_values(again?, &values) {
+                    return Ok(Err((differ.clone(), domain)));
+                }
+            }
+        }
         let mut out = Vec::with_capacity(values.len());
         let written = self.bind_text(&bind.text);
         for (i, (value, own)) in values.into_iter().enumerate() {
@@ -591,7 +633,7 @@ impl Engine {
             }
             let inner = env.with_bind((&bind.var, &written), value, bind_domain(m, bind));
             self.push();
-            let kept = self.where_keeps(m, bind, &inner, ctx);
+            let kept = self.where_at(m, bind, &inner, at);
             read.merge(&self.pop_alone());
             let (unknown, refused) = match kept {
                 Ok(Kept::Out) => continue,
@@ -626,6 +668,32 @@ impl Engine {
             Kept::Out => None,
             Kept::In(h) => Some((inner, joined(unknown, h))),
         })
+    }
+
+    /// A member's `where` at one law date, or over a window's: one that is no hole at the
+    /// first law date and gives another value at a later one is the window's hole (refcore's
+    /// `move_tuples`, its `where` over `lds`; tally 2.1.8 §4, #169-e). L §4.4, §5.14 Keys.
+    fn where_at(
+        &mut self,
+        m: &Reality,
+        bind: &Bind,
+        inner: &Env,
+        at: &LawAt,
+    ) -> Result<Kept, Stop> {
+        let (ctx, days, differ) = match at {
+            LawAt::One(ctx) => return self.where_keeps(m, bind, inner, *ctx),
+            LawAt::Over(ctx, days, differ) => (*ctx, days, differ),
+        };
+        let first = self.where_keeps(m, bind, inner, at.first()?)?;
+        if let Kept::In(Some(_)) = first {
+            return Ok(first);
+        }
+        for day in days.iter().skip(1) {
+            if self.where_keeps(m, bind, inner, ctx.at_law(Some(*day)))? != first {
+                return Ok(Kept::In(Some(differ.clone())));
+            }
+        }
+        Ok(first)
     }
 
     /// Whether binding `bind`'s `where` keeps the member bound in `inner`, and the hole it is
@@ -697,6 +765,42 @@ fn sum_terms(
         acc = arith(m, Op::Add, &acc, &t)?;
     }
     Ok(acc)
+}
+
+/// The law dates a binding's members are read at: one, or a window's, one for each class
+/// of law dates that give the same, with the window's hole (L §4.3, §4.4).
+#[derive(Debug, Clone)]
+enum LawAt {
+    /// The context's law date.
+    One(Ctx),
+    /// Each of the days, the first first, with the hole a difference between them is.
+    Over(Ctx, Vec<Day>, Hole),
+}
+
+impl LawAt {
+    /// The context of the first law date.
+    fn first(&self) -> Result<Ctx, Stop> {
+        match self {
+            LawAt::One(ctx) => Ok(*ctx),
+            LawAt::Over(ctx, days, _) => days
+                .first()
+                .map(|day| ctx.at_law(Some(*day)))
+                .ok_or_else(|| invariant("a window with no law date")),
+        }
+    }
+}
+
+/// Whether a binding's domain read again gives the values it gave, each with its own hole
+/// (refcore's `vkey`s of `bind_each`). L §4.3.
+fn same_values(again: Values, values: &[(Value, Option<Hole>)]) -> bool {
+    match again {
+        Values::Unknown(_) => false,
+        Values::Known(known) => known.as_slice() == values,
+        Values::Moves(moves) => moves
+            .iter()
+            .map(|mv| (&mv.value, &mv.unknown))
+            .eq(values.iter().map(|(v, h)| (v, h))),
+    }
 }
 
 /// Two unknown-member holes as one.

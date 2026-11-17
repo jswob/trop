@@ -26,7 +26,7 @@ use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
 use super::state::{Ctx, Engine, Env, invariant};
 use crate::base::Code;
-use crate::model::{KeyVal, Reality, Row, RowInstant, Value};
+use crate::model::{KeyVal, Reality, Row, RowInstant, Value, World};
 use crate::read::{origin, row_known, row_span};
 use crate::syntax::{Edge, Expr, Stop};
 use crate::time::Day;
@@ -310,6 +310,35 @@ impl Trace {
             when: None,
             value: None,
         }))
+    }
+
+    /// The unknown days the values it prints carry, in the order printed: each node's but a
+    /// row's, which prints what its row states, and those of the groups its rules read
+    /// (refcore's `TraceNode.carry_vals`; `outside the pins`' value included). L §4.4; tally
+    /// 2.1.8 R13, #191 Q4.
+    pub(crate) fn carried(&self) -> Vec<crate::hole::Unknown> {
+        let mut out = Vec::new();
+        let mut seen = std::collections::BTreeSet::new();
+        let mut todo = vec![ROOT];
+        while let Some(at) = todo.pop() {
+            let Some(node) = self.nodes.get(at).filter(|_| seen.insert(at)) else {
+                continue;
+            };
+            if let (false, Some(Item::Value(v))) =
+                (matches!(node.kind, Kind::Row | Kind::BandRow), &node.value)
+            {
+                v.carried_into(&mut out);
+            }
+            let rules = node
+                .rules
+                .values()
+                .flat_map(|r| [r.value, r.when])
+                .flatten();
+            let mut next: Vec<usize> = node.children.iter().copied().chain(rules).collect();
+            next.reverse();
+            todo.extend(next);
+        }
+        out
     }
 
     /// The trace of an ask's line explained under its `with` pins, this trace read inside
@@ -749,9 +778,9 @@ impl Engine {
     /// its version, source, locator, governs span or instant, and known date (refcore's
     /// `trace_row`). E §10.
     pub(super) fn trace_row(&mut self, m: &Reality, row: &Row) -> Option<usize> {
-        let ask_cut = self.ask_cut;
+        let seen = (self.ask_cut, self.timeline_world());
         let trace = self.traced()?;
-        match provenance(m, row, ask_cut) {
+        match provenance(m, row, seen) {
             Ok(line) => {
                 let mut node = Node::new(Kind::Row, row.sid.clone());
                 node.lines.push(line);
@@ -836,8 +865,56 @@ impl Engine {
         trace.added(Node::new(Kind::BandRow, label));
     }
 
-    /// Where the trace stands before a `min`, `max`, `argmin` or `argmax` reads its terms.
-    pub(super) fn trace_snap(&self) -> Option<Snap> {
+    /// Moves what the trace listed under the open node since `since` to the place `mark`
+    /// stood at among that node's children, after what earlier moves `done` (each mark with
+    /// how many it took there) put before it: the reads of a hole booking's answer, listed
+    /// where the instance's own reads end, as refcore answers each booking where it makes the
+    /// instance (its `answer_booking`). None moves where `mark` stood under another node.
+    /// E §10, §5 step 1.
+    pub(crate) fn trace_move_to(&mut self, since: Snap, mark: Snap, done: &mut Vec<(Snap, usize)>) {
+        let Some(trace) = self.trace.as_mut() else {
+            return;
+        };
+        if mark.parent != since.parent || mark.children > since.children {
+            return;
+        }
+        let node = match trace.node_mut(since.parent) {
+            Ok(node) => node,
+            Err(stop) => {
+                trace.keep(Err(stop));
+                return;
+            }
+        };
+        if since.children > node.children.len() {
+            return;
+        }
+        let mut to = mark.children;
+        for (d, count) in done.iter() {
+            if d.parent != mark.parent || d.children > mark.children {
+                continue;
+            }
+            let Some(after) = to.checked_add(*count) else {
+                return;
+            };
+            to = after;
+        }
+        if to > since.children {
+            return;
+        }
+        // the children before `to`, those listed since `since`, then the rest before `since`
+        let old = core::mem::take(&mut node.children);
+        let count = old.iter().skip(since.children).count();
+        let mut moved = Vec::with_capacity(old.len());
+        moved.extend(old.iter().take(to));
+        moved.extend(old.iter().skip(since.children));
+        moved.extend(old.iter().take(since.children).skip(to));
+        node.children = moved;
+        done.push((mark, count));
+    }
+
+    /// Where the trace stands before a `min`, `max`, `argmin` or `argmax` reads its terms, or
+    /// before a hole booking's answer is traced.
+    pub(crate) fn trace_snap(&self) -> Option<Snap> {
         if !self.tracing() {
             return None;
         }
@@ -946,7 +1023,7 @@ fn shifted(at: usize, offset: usize) -> Result<usize, Stop> {
 
 /// A row's provenance as `explain` prints it: `version v, source s, "title", locator "…",
 /// governs <span>` or `at <instant>`, `known <day>` (refcore's `trace_row`). L §3.7, E §10.
-fn provenance(m: &Reality, row: &Row, ask_cut: Day) -> Result<String, Stop> {
+fn provenance(m: &Reality, row: &Row, seen: (Day, World)) -> Result<String, Stop> {
     let version = m
         .versions
         .get(&row.version)
@@ -975,7 +1052,7 @@ fn provenance(m: &Reality, row: &Row, ask_cut: Day) -> Result<String, Stop> {
             bits.push(format!("after {}", crate::load::expr_text(node)));
         }
         None => {
-            let span = row_span(m, row, ask_cut)?.map_or_else(|| "?".to_owned(), |s| s.text());
+            let span = row_span(m, row, seen)?.map_or_else(|| "?".to_owned(), |s| s.text());
             bits.push(format!("governs {span}"));
         }
     }

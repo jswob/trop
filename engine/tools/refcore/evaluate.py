@@ -132,6 +132,7 @@ class EachMet(dict):
     def __init__(self, eng):
         dict.__init__(self)
         self.eng = eng
+        self.forced = []          # windows the answer rests on with no hole to carry them (model.same_seen)
 
     def setdefault(self, k, v):
         c = self.eng.cur
@@ -175,6 +176,17 @@ class TraceNode:
         self.children = []
         self.when_children = []
         self.line_no = None
+
+    def carry_vals(self):
+        """What the node prints, for the unknown days it carries (tally 2.1.8 R13)."""
+        # a row prints what it states: a window there is the row's, no unknown day of the answer
+        out = [None if self.kind == 'row' else self.value, getattr(self, 'carry_v', None)]
+        out += [ch for _k, ch in self.children]
+        out += [w for _k, w in self.when_children]
+        vc = getattr(self, 'value_children', None)
+        if vc is not None:
+            out.append(vc)
+        return out
 
 
 NOPIN = object()
@@ -259,16 +271,18 @@ class Engine:
             raise NotYet('evaluation of %s' % n.k, n.loc)
         try:
             v = f(n, env, ctx)
-            if ctx.partial and isinstance(v, Hole) and v.lin is not False and plain_node(n):
-                # a rounding, min, max, a band or a comparison meeting a hole makes a plain hole (L §5.18)
+            if ctx.partial and isinstance(v, Hole) and v.lin is not False and \
+                    (plain_node(n) or (v.lin is None and not lin_passes(n))):
+                # L §5.18 (tally 2.1.8 R15): a value is linear only through what adds, scales by a known number or
+                # passes one on unchanged; a hole met any other way makes the value a plain hole naming every hole
                 return Hole(v.qs, False)
             return v
         except HoleSignal as h:
             # one value needed from an undecided interval: the operation is the hole (L §4.4)
-            return h.hole
+            return Hole(h.hole.qs, False) if ctx.partial else h.hole
         except WindowUndecided as w:
             # something known in a window that holds the cut, with no windows clause: HOLE-IMPRECISE (L §4.5)
-            return w.hole()
+            return Hole(w.hole().qs, False) if ctx.partial else w.hole()
 
     def e_paren(self, n, env, ctx):
         return self.ev(n.e, env, ctx)
@@ -320,7 +334,7 @@ class Engine:
         if isinstance(v, Num):
             return Num(-v.q, v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_neg(v.enc))
         if isinstance(v, Iv):
-            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin)
+            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin, carry=iv_carry(v))
         raise refuse('LOAD-UNIT', 'unary minus on %s' % fmt(v))
 
     def neg1(self, x):
@@ -750,7 +764,8 @@ class Engine:
         info = self.m.inputs[iid] if kind == 'input' else self.m.defs[iid]
         keys, hole = self.key_values(info, keynodes, n._convs, env, ctx)
         if hole is not None:
-            return hole
+            # a key that is a hole: the value is no linear form of it (L §5.18; tally 2.1.8 R15)
+            return Hole(hole.qs, False) if ctx.partial else hole
         if getattr(n, '_sample', False):
             return self.sample_read(info, keys, ctx)
         bw = getattr(n, '_world', None)
@@ -915,17 +930,18 @@ class Engine:
     def row_visible(self, r, ctx):
         if not in_world(r.version):
             return False
-        return self.known_vis(r.known, row_known_sid(r), 'a row', ctx)
+        return self.known_vis(r.known, row_known_sid(r), 'a row', ctx, r.version.id)
 
-    def known_vis(self, known, sid, what, ctx):
+    def known_vis(self, known, sid, what, ctx, vid=None):
         """Whether something known on `known` is seen at the cut. A window that holds the cut "states a windows clause
         or is HOLE-IMPRECISE ... This holds for everything the version or row brings: its rows, band tables and rules"
-        (L §4.5)."""
+        (L §4.5). The hole names the row and its version (tally 2.1.8 R12, P70)."""
         vis = visible(known, ctx.cut, sid or what)
         if vis is None:
             lo, hi = known
-            raise HoleSignal(Hole([('date within window(%s, %s) not precise enough for the cut %s' % (
-                lo, hi, ctx.cut), sid)]))
+            q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
+            raise HoleSignal(carry_hole(Hole([(q, x) for x in (sid, vid) if x] or [(q, sid)]),
+                                        ids=[known_carry(sid or what, known)]))
         return vis
 
     def wording_ok(self, version, item, ctx, own=None):
@@ -953,11 +969,14 @@ class Engine:
                     return wins[0]
                 import copy
                 from .joint import shown
-                a, b = wins[0], wins[1]
-                q = '%s and %s are one, but %s differs: %s (%s) and %s (%s)' % (
-                    shown(a.sid or ''), shown(b.sid or ''), shown(info.id), fmt_rowval(a), shown(a.sid or ''),
-                    fmt_rowval(b), shown(b.sid or ''))
-                r = copy.copy(a)
+                from .moves import and_list
+                # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class (tally 2.1.8 S6)
+                from .moves import id_order
+                wins = sorted(wins, key=lambda w: id_order(self.m, w.sid or ''))
+                q = '%s are one, but %s differs: %s' % (
+                    and_list(shown(w.sid or '') for w in wins), shown(info.id),
+                    and_list('%s (%s)' % (fmt_rowval(w), shown(w.sid or '')) for w in wins))
+                r = copy.copy(wins[0])
                 r.val = ('hole', q)
                 return r
         from .loader import pattern_norm, row_layer
@@ -986,29 +1005,88 @@ class Engine:
             spans = [c for c in keep if c.instant is not None or not c.span(self._K).always]
             if spans:
                 keep = spans
+        if len(keep) > 1 and getattr(info, 'reading', False):
+            units = sorted(set(unit_of_row(c) for c in keep) - {None})
+            if units and len(units) < len(keep) and len(set(instant_key(c) for c in keep)) == 1:
+                # a row that states no unit beside a unit's reading at one instant: a row for every unit the place
+                # has a position in there, a unit's own reading the narrower claim (L §5.10; tally 2.1.8 R14, B4)
+                units = self.units_at_reading(keep, units)
+                if len(units) == 1:
+                    keep = [c for c in keep if unit_of_row(c) is not None]
+            if len(units) > 1 and len(set(instant_key(c) for c in keep)) == 1:
+                if what == 'since':
+                    # since reads only the instant (L §5.10; tally 2.1.8 R14)
+                    return next((c for c in keep if c.val is not NONE), keep[0])
+                # L §5.10 (tally 2.1.8 R14): at a place of unit any a reading is keyed by its unit; a read that names
+                # none takes the reading its instant gives, refused where two units' stand there
+                raise refuse('RUN-DOMAIN', units_at_instant('last' if what == 'last' else info.id,
+                                                            keep[0].pattern[0][1].name, keep[0], units))
         if len(keep) > 1:
             raise refuse('LOAD-OVERLAP', 'rows %s and %s of %s tie' % (keep[0].loc, keep[1].loc, info.id))
         return keep[0]
 
+    def units_at_reading(self, keep, units):
+        """The units a place of unit any has readings in at the instant of keep's rows: the gaps there of the walk of the
+        read's own cut, which give a row that states no unit for every unit the place holds (walk.apply_reading), so
+        every reader at that cut gets the same units (tally 2.1.8 P46): the cut's walk up to the instant's day (prefix_walk),
+        whether or not the read is inside a walk. The stated units where no gap is recorded."""
+        ctx = getattr(self, '_Kctx', None)
+        if ctx is None:
+            return units
+        r = keep[0]
+        day = r.instant[0]
+        if not isinstance(day, datetime.date):
+            return units
+        # the walk of the cut up to the instant's day: what every reader at the cut sees there, and no plan after it
+        w = self.prefix_walk(ctx.but(walk=None, wp=None), day)
+        gs = w.gaps.get((r.pattern[0][1].name, day), ())
+        sids = set(c.sid for c in keep)
+        at = set(g[0] for g in gs if g[2].sid in sids)
+        got = sorted(set(units) | set(g[4] for g in gs if g[0] in at))
+        return got
+
     def candidates(self, rows, keys, d, ctx, info, instant=None, last_before=None):
         out = []
+        undecided = []
         self._K = ctx.cut
+        self._Kctx = ctx
         for r in rows:
             if not self.row_matches(r, keys, info):
                 continue
             if not self.unstated_ok(r, keys, info):
                 continue
-            if not self.row_visible(r, ctx):
-                continue
+            try:
+                if not self.row_visible(r, ctx):
+                    continue
+                und = None
+            except HoleSignal as h:
+                # known in a window that holds the cut: a hole only where the row would be read (L §4.5, tally 2.1.8
+                # R12, #169-f), so its other tests are made first
+                und = h.hole
             own = r.own_span if r.own_span is not None else (r.instant[0] if r.instant is not None and
                                                                  isinstance(r.instant[0], datetime.date) else None)
             if not self.wording_ok(r.version, info.id, ctx, own):
                 continue
             if r.instant is not None:
-                if instant is not None and r.instant[0] != instant:
+                rd = r.instant[0]
+                if rd == 'after':
+                    # a reading after m stands on m's day as the walk books m (L §4.6; tally 2.1.8 R16): a hole where
+                    # that is one, a window's days imprecise inside it, refused where m doesn't exist
+                    rd = self.after_day(r, info.id, ctx)
+                    if isinstance(rd, Hole):
+                        undecided.append(rd)
+                        continue
+                    if isinstance(rd, Iv):
+                        probe = instant if instant is not None else last_before
+                        if probe is None or probe < rd.lo or (instant is not None and instant > rd.hi):
+                            continue
+                        if instant is not None or probe < rd.hi:
+                            undecided.append(self.imprecise(rd, 'the day of %s' % self.after_text(r)).hole)
+                            continue
+                        rd = rd.hi
+                if instant is not None and rd != instant:
                     continue
-                if last_before is not None and not (isinstance(r.instant[0], datetime.date)
-                                                     and r.instant[0] <= last_before):
+                if last_before is not None and not (isinstance(rd, datetime.date) and rd <= last_before):
                     continue
             else:
                 sp = r.span(ctx.cut)
@@ -1017,6 +1095,9 @@ class Engine:
                 if d is None and last_before is None:
                     if not sp.always:
                         raise NotYet(LAWGUARD % ('a read of %s' % info.id))
+                    if und is not None:
+                        undecided.append(und)
+                        continue
                     out.append(r)
                     continue
                 if last_before is not None:
@@ -1026,7 +1107,12 @@ class Engine:
                         continue
                 elif not sp.contains(d):
                     continue
+            if und is not None:
+                undecided.append(und)
+                continue
             out.append(r)
+        if undecided:
+            raise HoleSignal(merge(*undecided))
         return out
 
     def row_value(self, r, info, keys, ctx, d, period):
@@ -1046,9 +1132,13 @@ class Engine:
                 ix = self.m.indexes[b.dom[1]]
                 if ix.assumed is not None:
                     self.reg(('assumed', '%s: %s' % (ix.id, ix.assumed), ''))  # L §5.6: assumed: <index>: <reason>
+        row_hole = False
         if isinstance(v, tuple) and v and v[0] == 'hole':
-            return Hole([(v[1], org)])
-        if isinstance(v, tuple) and v and v[0] == 'node':
+            # a hole row carried past the cut is listed like a value, in the hole's own form (L §8.2, R7, R9; tally
+            # 2.1.8 P54)
+            v = Hole([(v[1], org)])
+            row_hole = True
+        elif isinstance(v, tuple) and v and v[0] == 'node':
             # a dist row gives the distribution by an expression (L §5.16)
             v = self.ev(v[1], {}, ctx)
         elif isinstance(v, tuple) and v and v[0] == 'sexpr':
@@ -1069,8 +1159,11 @@ class Engine:
             sp = r.span(ctx.cut)
             if not sp.always and sp.start is not None and sp.end is None and d > self.ask_K:
                 per = fmt(period) if period is not None else d.isoformat()
-                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt(v) if not isinstance(v, Hole) else '?',
+                self.reg(('held', '%s = %s (%s), read for %s' % (org, fmt_hole(v) if row_hole else '?' if isinstance(v, Hole) else fmt(v),
                                                                   r.version.id, per)))
+        if isinstance(v, Hole):
+            # a computed value that comes out a hole names what its read met, never one value: `?` (P32)
+            return v
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
             v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))
@@ -1095,9 +1188,11 @@ class Engine:
             for x, d in ws[1]:
                 if x == wid:
                     return d
+            # not yet taken: the read is the plain line's, a window (tally 2.1.8 R13: windows each is the plain line
+            # read again with the unknown day its answer carries)
             if self.each_met is not None:
                 self.each_met.setdefault(wid, (label, days))
-            return days[0]
+            return v
         return v
 
     def no_candidate(self, info, keys, ctx, d, period, calendar=False):
@@ -1149,15 +1244,19 @@ class Engine:
         self.index_assumed(info)
         pv = self.pin_value(info, keys, ctx)
         if pv is not NOPIN and not (isinstance(pv, tuple) and pv[0] == 'fields'):
+            if isinstance(pv, Iv) and pv.origin is None and isinstance(pv.lo, datetime.date):
+                # a pin whose value is a window written there: an unknown day named by the read it pins (L §4.4: a
+                # copy keeps the name), which windows each takes as the read's (tally 2.1.8 R13; P30)
+                org = self.origin(info, keys)
+                pv = self.window_choice(Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
+                                           name=('pin', info.id, tuple(_kv(k) for k in keys))), ctx)
             return pv
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
             return self.read_reading(info, keys, ctx, probe)
-        sr = getattr(self.m, 'same_rows', None)
-        if sr:
-            skey = (info.id, tuple(_kv(k) for k in keys))
-            if skey in sr:
-                return self.read_same_row(info, keys, ctx, skey, period)
+        cls = self.same_class(info, keys, ctx)
+        if cls is not None:
+            return self.read_same_row(info, keys, ctx, cls, period)
         self.need_law(d, info)
         try:
             cands = self.candidates(info.rows, keys, d, ctx, info)
@@ -1177,54 +1276,105 @@ class Engine:
         v = self.apply_field_pins(info, keys, ctx, v)
         return v
 
-    def read_same_row(self, info, keys, ctx, skey, period):
-        """Two rows stated same (L §6.1): read together.  A row of the joint model's own states their value; else
-        both sides are read; where only one states the fact, it is the fact; where they disagree, a hole naming both
-        rows (HOLE-SAME)."""
+    def same_class(self, info, keys, ctx):
+        """The rows stated same with x[k], x[k] among them, as [(input, keys, text)] in the order of their texts
+        compared by code point (L §2.5), or None where no same line seen at ctx names x[k].  same is an equivalence:
+        lines that share a side make one class (L §6.1 l.1805; tally 2.1.8 S6, #187).  A line is seen as its version's
+        rows are: the header's always, a version's when known by the cut and in the worlds its file is in (L §4.5,
+        tally 2.1.8 R12; undecided inside a known window: as seen); only the lines that reach x[k] are asked."""
+        sr = getattr(self.m, 'same_rows', None)
+        if not sr:
+            return None
+        skey = (info.id, tuple(_kv(k) for k in keys))
+        if skey not in sr:
+            return None
         from .joint import shown
+        from .model import same_seen
+        edges = self.m.same_row_edges
+        seen = {skey}
+        todo = [skey]
+        while todo:
+            x = todo.pop()
+            for a, b, v in edges:
+                if x not in (a, b):
+                    continue
+                y = b if x == a else a
+                if y in seen or not same_seen(v, ctx, (sr[a][2], sr[b][2])):
+                    continue
+                seen.add(y)
+                todo.append(y)
+        if len(seen) == 1:
+            return None
+        out = []
+        for k in seen:
+            inf, ks, t = sr[k]
+            out.append((inf, keys if k == skey else ks, t, k))
+        from .moves import id_order
+        out.sort(key=lambda x: id_order(self.m, x[2]))
+        return out
+
+    def same_hole(self, day, sides):
+        """L §8.1 HOLE-SAME over a class of rows stated same: `<p> and <q> are one, but the value differs on <d>: <a>
+        (<row>) and <b> (<row>)`, the rows in the order of their ids (L §2.5), each row and value of a larger class
+        named so (tally 2.1.8 S6, #177, #187).  sides: [(the row's text, the value, the row stating it)] in that
+        order; the head names the class's rows."""
+        from .joint import shown
+        names = [shown(t) for t, v, r in sides]
+        vals = ['%s (%s)' % (fmt(v), shown(r.sid or '')) for t, v, r in sides]
+
+        def join(xs):
+            return xs[0] if len(xs) == 1 else '%s and %s' % (', '.join(xs[:-1]), xs[-1])
+        q = '%s are one, but the value differs on %s: %s' % (join(names), day if day is not None else 'every day',
+                                                            join(vals))
+        return Hole([(q, ', '.join(names))])
+
+    def read_same_row(self, info, keys, ctx, cls, period):
+        """Rows stated same (L §6.1 What same does): read together, the whole class, a price included (tally 2.1.8
+        §4, #187).  A row of the joint model's own states their value; else every side is read; a fact only one
+        states is the fact; where they disagree, a hole naming the class's rows (HOLE-SAME, same_hole)."""
         m = self.m
-        pinf, pkeys, ta, tb = m.same_rows[skey]
-        pkey = (pinf.id, tuple(_kv(k) for k in pkeys))
-        own = list(m.same_settle.get(skey, [])) + list(m.same_settle.get(pkey, []))
 
         def side(inf, ks, rows):
             d, per = self.time_point(inf, ks, ctx)
             self.need_law(d, inf)
             cands = self.candidates(rows, ks, d, ctx, inf)
             return self.choose(cands, inf, 'input'), d, per
+        reads = []
         try:
+            own = [(r, inf, ks) for inf, ks, t, k in cls for r in m.same_settle.get(k, [])]
             if own:
                 d, per = self.time_point(info, keys, ctx)
                 cands = []
-                for r in own:
-                    ks = keys if r.target == info.id or getattr(r.target, 'id', None) == info.id else pkeys
-                    tinf = info if ks is keys else pinf
-                    cands += self.candidates([r], ks, d, ctx, tinf)
+                for r, inf, ks in own:
+                    cands += self.candidates([r], ks, d, ctx, inf)
                 r = self.choose(cands, info, 'input') if cands else None
                 if r is not None:
-                    return self.row_value(r, info, keys, ctx, d, per)
-            ra, da, pa = side(info, keys, info.rows)
-            rb, db, pb = side(pinf, pkeys, pinf.rows)
+                    v = self.row_value(r, info, keys, ctx, d, per)
+                    return self.prices(info, keys, ctx, v, d) if info.prices is not None else v
+            for inf, ks, t, k in cls:
+                r, d, per = side(inf, ks, inf.rows)
+                reads.append((inf, ks, t, r, d, per))
         except HoleSignal as h:
             return h.hole
-        if ra is None and rb is None:
-            return self.no_candidate(info, keys, ctx, da, pa)
-        va = self.row_value(ra, info, keys, ctx, da, pa) if ra is not None else None
-        vb = self.row_value(rb, pinf, pkeys, ctx, db, pb) if rb is not None else None
-        if va is None:
-            return vb
-        if vb is None:
-            return va
-        if isinstance(va, Hole) or isinstance(vb, Hole):
-            return merge(*[x for x in (va, vb) if isinstance(x, Hole)])
+        mine = next(x for x in reads if x[0] is info and x[1] is keys)
+        got = []
+        for inf, ks, t, r, d, per in reads:
+            if r is None:
+                continue
+            v = self.row_value(r, inf, ks, ctx, d, per)
+            if inf.prices is not None:
+                v = self.prices(inf, ks, ctx, v, d)
+            got.append((t, v, r))
+        if not got:
+            return self.no_candidate(info, keys, ctx, mine[4], mine[5])
+        holes = [v for t, v, r in got if isinstance(v, Hole)]
+        if holes:
+            return merge(*holes)
         from .values import vkey
-        if vkey(va) == vkey(vb):
-            return va
-        day = da if da is not None else db
-        q = '%s and %s are one, but the value differs on %s: %s (%s) and %s (%s)' % (
-            shown(ta), shown(tb), day if day is not None else 'every day', fmt(va), shown(ra.sid or ''), fmt(vb),
-            shown(rb.sid or ''))
-        return Hole([(q, '%s, %s' % (shown(ta), shown(tb)))])
+        if len(set(vkey(v) for t, v, r in got)) == 1:
+            return got[0][1]
+        day = mine[4] if mine[4] is not None else next((x[4] for x in reads if x[4] is not None), None)
+        return self.same_hole(day, got)
 
     def prices(self, info, keys, ctx, v, d):
         """A figure in Y prices (L §3.4)."""
@@ -1275,23 +1425,54 @@ class Engine:
         return Num(r.q, v.u, enc=r.enc)
 
     def read_reading(self, info, keys, ctx, probe=False):
-        """A plain read of a reading takes the reading at that instant (L §4.6 Readings)."""
+        """A plain read of a reading takes the reading at that instant (L §4.6 Readings); of a reading stated same,
+        the class's readings at that instant read together (L §6.1 l.1806, tally 2.1.8 §4: every read of either;
+        HOLE-SAME where they disagree)."""
         d = ctx.law
         self.need_law(d, info)
         try:
-            cands = self.candidates(info.rows, keys, d, ctx, info, instant=d)
+            got = []
+            for inf, ks, t, rows in self.class_sides(info, keys, ctx):
+                r = self.choose(self.candidates(rows, ks, d, ctx, inf, instant=d), inf, 'reading')
+                if t is None and rows is not inf.rows:
+                    if r is not None:     # the joint model's own row settles the class
+                        return self.row_value(r, inf, ks, ctx, None, None)
+                    continue
+                if r is not None:
+                    v = self.row_value(r, inf, ks, ctx, None, None)
+                    if v is not NONE:     # a reading replaced by none is removed (carry_latest; #169-c)
+                        got.append((t, v, r))
         except HoleSignal as h:
             return h.hole
-        r = self.choose(cands, info, 'reading')
         org = self.origin(info, keys)
-        if r is None:
+        if not got:
             if probe:
                 return ('missing',)
             return Hole([('%s has no reading at %s' % (org, d), org)])
-        v = self.row_value(r, info, keys, ctx, None, None)
+        v = self.same_value(d, got)
         if probe and isinstance(v, Hole):
             return ('missing',)
         return v
+
+    def same_value(self, day, got):
+        """The value of a class's sides that state a fact, [(the row's text, the value, the row)] in id order: one
+        side's, or theirs where they agree; their holes where any is one; else HOLE-SAME (same_hole)."""
+        from .values import vkey
+        if len(got) == 1 or len(set(vkey(v) for t, v, r in got)) == 1:
+            return got[0][1]
+        holes = [v for t, v, r in got if isinstance(v, Hole)]
+        return merge(*holes) if holes else self.same_hole(day, got)
+
+    def class_sides(self, info, keys, ctx):
+        """[(input, keys, text, the rows read)] of x[k]'s same class (same_class), or x[k]'s own: the joint model's
+        own rows that settle the class stand for every side, ahead of the sides' rows (L §6.1 What same does)."""
+        cls = self.same_class(info, keys, ctx)
+        if cls is None:
+            return [(info, keys, None, info.rows)]
+        own = [r for inf, ks, t, k in cls for r in self.m.same_settle.get(k, [])]
+        if own:
+            return [(info, keys, None, own)] + [(inf, ks, t, inf.rows) for inf, ks, t, k in cls]
+        return [(inf, ks, t, inf.rows) for inf, ks, t, k in cls]
 
     def e_lastx(self, n, env, ctx):
         """last(x[k], d): the written carry (L §4.6)."""
@@ -1322,30 +1503,76 @@ class Engine:
         if pv is not NOPIN and not isinstance(pv, tuple):
             return pv
         try:
-            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
+            sides = self.carry_sides(info, keys, d, ctx)
         except HoleSignal as h:
             return h.hole
-        if not cands:
+        if not any(cands for inf, ks, t, cands in sides):
             return NONE
 
-        def began(c):
-            sp = c.span(ctx.cut)
-            return datetime.date.min if sp.always or sp.start is None else sp.start
-        if info.reading:
-            latest = max(c.instant[0] for c in cands)
-            cands = [c for c in cands if c.instant[0] == latest]
-        else:
-            latest = max(began(c) for c in cands)
-            cands = [c for c in cands if began(c) == latest]
-        row = self.choose(cands, info, 'last')
-        v = self.row_value(row, info, keys, ctx, None, None)
+        # rows stated same carry together (L §6.1 l.1806, tally 2.1.8 §4, #187): the latest row of the class; where
+        # two sides' latest rows began that day and disagree, HOLE-SAME
+        hit = self.carry_latest(sides, ctx)
+        if hit is None:
+            return NONE
+        latest, got, side = hit
+        # rows that govern always began on no day: they disagree on the day the read reads them for (L §8.1
+        # HOLE-SAME's `differs on <d>`, as a plain read at d prints; tally 2.1.8 P42, group 4's review N3)
+        v = self.same_value(d if latest == datetime.date.min else latest, got)
+        if len(got) > 1 and isinstance(v, Hole):
+            return v
+        info, keys = side      # the held line names the row that states the value
+        row = got[0][2]
         sp = row.span(ctx.cut)
         # held where it is read past its row's span (L §4.6, §8.2; tally 2.1.7 R7, P31): a reading past its instant's
         # day, a state row past its span's end; a row that governs always is timeless
-        past = (d > row.instant[0]) if info.reading else (not sp.always and sp.end is not None and d >= sp.end)
+        past = (d > self.reading_on(row, info, ctx)) if info.reading else (
+            not sp.always and sp.end is not None and d >= sp.end)
         if past:
             self.reg(('held', '%s = %s (%s), read for %s' % (self.origin(info, keys), fmt(v), row.version.id, d)))
         return v
+
+    def carry_began(self, c, inf, ctx):
+        """The day a row carries from: a reading's instant (reading_on), a state row's span start."""
+        if inf.reading:
+            return self.reading_on(c, inf, ctx)
+        sp = c.span(ctx.cut)
+        return datetime.date.min if sp.always or sp.start is None else sp.start
+
+    def carry_latest(self, sides, ctx, what='last'):
+        """The latest day some side's rows began on, with each side's row there and its value, [(text, value, row)],
+        and the first such side (input, keys); None when none began.  A reading replaced by `none` is removed, so
+        the instant before it is the last (L §4.6 Readings, L §5.19 l.1728; tally 2.1.8 §4, #169-c, P24): last,
+        since and a plain read skip it."""
+        days = sorted(set(self.carry_began(c, inf, ctx) for inf, ks, t, cands in sides for c in cands), reverse=True)
+        for day in days:
+            got = []
+            side = None
+            for inf, ks, t, cands in sides:
+                cs = [c for c in cands if self.carry_began(c, inf, ctx) == day]
+                if not cs:
+                    continue
+                row = self.choose(cs, inf, what)
+                v = self.row_value(row, inf, ks, ctx, None, None)
+                if inf.reading and v is NONE:
+                    continue
+                got.append((t, v, row))
+                side = side or (inf, ks)
+            if got:
+                return day, got, side
+        return None
+
+    def carry_sides(self, info, keys, d, ctx):
+        """[(input, keys, text, the rows that began on or before d)] that last and since read: x[k]'s, or each row's
+        of its same class (L §6.1 l.1806: facts about rows stated same are read from both sides together, by every
+        read of either, a last and a since included; tally 2.1.8 §4, #187).  The joint model's own rows that settle
+        the class stand for every side."""
+        out = []
+        for inf, ks, t, rows in self.class_sides(info, keys, ctx):
+            cands = self.candidates(rows, ks, d, ctx, inf, last_before=d)
+            if t is None and out == [] and cands and rows is not inf.rows:
+                return [(inf, ks, t, cands)]      # the joint model's own row settles the class
+            out.append((inf, ks, t, cands))
+        return out
 
     def e_call_since(self, n, env, ctx):
         r = n.args[0]
@@ -1358,15 +1585,38 @@ class Engine:
             return dv
         d = self.date_of(dv, 'the day of since')
         try:
-            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
+            # the class of rows stated same reads together (L §6.1 l.1806; tally 2.1.8 §4): its latest reading
+            sides = self.carry_sides(info, keys, d, ctx)
         except HoleSignal as h:
             return h.hole
-        if not cands:
+        if not any(cands for inf, ks, t, cands in sides):
             # L §4.6 Readings / L §8.1 HOLE-NOREADING: "<x>[k] has no reading on or before <d>"
             org = self.origin(info, keys)
             return Hole([('%s has no reading on or before %s' % (org, d), org)])
-        latest = max(c.instant[0] for c in cands)
-        return Int((d - latest).days)
+        for inf, ks, t, cands in sides:
+            for c in cands:
+                rd = self.after_day(c, inf.id, ctx) if c.instant[0] == 'after' else None
+                if isinstance(rd, Iv):
+                    # since reads the day itself: a window's is imprecise (L §4.4)
+                    return self.imprecise(rd, 'the day of %s' % self.after_text(c)).hole
+        # the latest reading not removed by a replace to none (carry_latest; #169-c)
+        hit = self.carry_latest(sides, ctx, 'since')
+        if hit is None:
+            org = self.origin(info, keys)
+            return Hole([('%s has no reading on or before %s' % (org, d), org)])
+        return Int((d - hit[0]).days)
+
+    def after_text(self, r):
+        from .moves import instant_text
+        return instant_text(r)
+
+    def reading_on(self, r, info, ctx):
+        """A reading's day: its instant's, or for a reading after m the day m gives it (after_day; a window's last
+        day once the read is past it)."""
+        if r.instant[0] != 'after':
+            return r.instant[0]
+        rd = self.after_day(r, info.id, ctx)
+        return rd.hi if isinstance(rd, Iv) else rd
 
     # -- defs (L §5.11) ----------------------------------------------------------------
     def def_axes(self, qid):
@@ -1489,8 +1739,8 @@ class Engine:
         vals = []
         for dd in days:
             vals.append(self.def_cell(info, keys, env, ctx.but(law=dd)))
-        imprecise = Hole([('date within %s not precise enough for the law date of %s' % (w.window_text(), info.id),
-                           self.origin(info, keys))])
+        imprecise = carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (
+            w.window_text(), info.id), self.origin(info, keys))]), w)
 
         def same(a, b):
             if isinstance(a, Hole) or isinstance(b, Hole):
@@ -1624,7 +1874,8 @@ class Engine:
         pins = ctx.pins if cone is None else tuple(q for q in ctx.pins if getattr(q, 'item', None) in cone)
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
               ctx.axes, ctx.windows, ctx.world, ctx.path)
-        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm)
+        # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
+        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm, carry=getattr(v, 'carry', None))
 
     def def_cone(self, qid):
         """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
@@ -2145,6 +2396,10 @@ class Engine:
                     raise refuse('RUN-NONE', 'never in arithmetic')
                 if not isinstance(v, Hole):
                     self.no_none(v, 'arithmetic')
+            if op == '/' and isinstance(b, Num) and b.q == 0:
+                # x / 0 is refused whatever x is: the outcome is decided without the hole (L §8.1), and the refusal
+                # outranks it (L §8; tally 2.1.8 R11, #169-a)
+                raise refuse('RUN-DIV', 'division by zero')
             if ctx.partial:
                 return lin_bin(op, a, b, n)
             return merge(a, b)
@@ -2285,7 +2540,7 @@ class Engine:
             lo, hi = hi, lo
         org = a.origin if isinstance(a, Iv) else b.origin
         # a computed value: no name (tally 2.1.7 R3, L §4.4: only a copy is the same unknown)
-        return Iv(lo, hi, None, src, origin=org)
+        return Iv(lo, hi, None, src, origin=org, carry=carry_union(a, b))
 
     def binop_plain(self, n, a, b, ctx):
         da = getattr(n, '_datearith', None)
@@ -2296,8 +2551,8 @@ class Engine:
         return arith(n.op, a, b, n._t, n.l._t, n.r._t)
 
     def imprecise(self, v, use):
-        return HoleSignal(Hole([('date within %s not precise enough for %s' % (v.window_text(), use),
-                                 v.origin[1] if v.origin else '')]))
+        return HoleSignal(carry_hole(Hole([('date within %s not precise enough for %s' % (v.window_text(), use),
+                                            v.origin[1] if v.origin else '')]), v))
 
     def e_not(self, n, env, ctx):
         v = self.ev(n.e, env, ctx)
@@ -2498,8 +2753,8 @@ class Engine:
             if disjoint:
                 return op == '!='
         w = a if isinstance(a, Iv) else b
-        return Hole([('date within %s not precise enough for %s' % (w.window_text(), _ntxt(n) if n else 'a comparison'),
-                      w.origin[1] if w.origin else '')])
+        return carry_hole(Hole([('date within %s not precise enough for %s' % (
+            w.window_text(), _ntxt(n) if n else 'a comparison'), w.origin[1] if w.origin else '')]), w)
 
     def e_in(self, n, env, ctx):
         x = self.ev(n.l, env, ctx)
@@ -2833,7 +3088,14 @@ class Engine:
         m = self.m
         dom = b._dom
         if dom[0] in ('event', 'obs'):
-            cands = [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            xs = [x for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            for x in xs:
+                e = self.s1_refusal(getattr(x, 'id', None), ctx)
+                if e is not None:
+                    # a movement the binding could meet on the day is refused (S1), and a refusal outranks the day's
+                    # hole (L §8; tally 2.1.8 R11, #180; P50, group 4's fix review G2)
+                    raise e
+            cands = [x.mv() for x in xs]
         elif dom[0] == 'kind':
             cands = [Thing(t.name) for t in m.things.values() if m.thing_seen(t, ctx.cut) and m.thing_in(t.name, dom[1])
                      and member_owns(m, b, t)]
@@ -2846,9 +3108,9 @@ class Engine:
             e2[b.var] = v
             self.push()
             try:
+                # a where that refuses is read on the hole day too, so its refusal reaches the binding and outranks
+                # the day's hole (L §8 R1 and Refusals outrank holes; tally 2.1.8 R11, #180)
                 w = self.ev(b.where, e2, ctx)
-            except TallyError:
-                return True
             finally:
                 self.stack.pop()
             if w is not False:
@@ -3190,7 +3452,13 @@ class Engine:
             things.sort(key=lambda t: m.kind_order_key(t, dom[1], ctx.cut))
             return [Thing(t.name) for t in things]
         if dom[0] in ('event', 'obs'):
-            return [x.mv() for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            out = [x for x in self.movements_of(dom, ctx, getattr(b, '_owner', None)) if member_moves(m, b, x)]
+            for x in out:
+                e = self.s1_refusal(getattr(x, 'id', None), ctx)
+                if e is not None:
+                    # a binding over movements rests on each (L §5.19 S1, P42): a count or sum is refused
+                    raise e
+            return [x.mv() for x in out]
         return None
 
     def zero_of(self, t):
@@ -3228,6 +3496,7 @@ class Engine:
             return self.agg_anyall(n, mem, ctx)
         terms = []
         holes = []
+        picked = True       # every member picked by a known where (L §5.18; tally 2.1.8 R15)
         snap = self.trace_snap() if fn in ('min', 'max', 'argmin', 'argmax') and n.term is not None else None
         for e2, st in mem:
             if n.term is None:
@@ -3237,12 +3506,20 @@ class Engine:
             if isinstance(st, Hole):
                 if fn == 'sum' and isinstance(t, Num) and t.q == 0:
                     continue
+                picked = False
                 holes.append(st)
                 if isinstance(t, Hole):
                     holes.append(t)
                 continue
             if isinstance(t, Hole):
                 holes.append(t)
+                continue
+            if fn == 'sum' and isinstance(t, Iv) and isinstance(getattr(t, 'src', None), str):
+                # a term a window leaves open: the sum is decided only where every day agrees (L §4.4; tally 2.1.8
+                # §4, #169-e), so it is the window's hole, named by the day it comes from
+                w = t.src       # the text of the window the term comes from
+                holes.append(carry_hole(Hole([('date within %s not precise enough for a term of sum' % (
+                    w), t.origin[1] if t.origin else '')]), t))
                 continue
             if t is NONE:
                 raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
@@ -3251,23 +3528,24 @@ class Engine:
             if holes:
                 return merge(*holes)
             return Int(sum(1 for e2, t in terms if t is True))
+        if fn == 'sum' and holes and ctx.partial:
+            # L §5.18 (tally 2.1.8 R15): a sum is linear in its terms; a member's where that is a hole makes the plain
+            # hole
+            acc = self.zero_of(n._t)
+            for e2, t in terms:
+                acc = arith('+', acc, t, n._t, n._t, n.term._t)
+            lin = (acc, ())
+            ok = picked
+            for h in holes:
+                lh = lin_of(h)
+                if lh is None:
+                    ok = False
+                else:
+                    lin = lin_add(lin, lh)
+            qs = set().union(*[h.qs for h in holes])
+            return Hole(qs, lin if ok else False)
         if fn == 'sum':
             if holes:
-                if ctx.partial:
-                    acc = self.zero_of(n._t)
-                    for e2, t in terms:
-                        acc = arith('+', acc, t, n._t, n._t, n.term._t)
-                    out = Hole(set())
-                    lin = (acc, ())
-                    ok = True
-                    for h in holes:
-                        lh = lin_of(h)
-                        if lh is None:
-                            ok = False
-                        else:
-                            lin = lin_add(lin, lh)
-                    qs = set().union(*[h.qs for h in holes])
-                    return Hole(qs, lin if ok else False)
                 return merge(*holes)
             acc = self.zero_of(n._t)
             for e2, t in terms:
@@ -3339,7 +3617,7 @@ class Engine:
                 return lo
             # a computed interval has no name, but its questions name the read it came from (L §8.1; tally 2.1.7
             # R3, T's SR-5): the first window's
-            return Iv(lo, hi, None, first.src, origin=first.origin)
+            return Iv(lo, hi, None, first.src, origin=first.origin, carry=carry_union(*ts))
         return self.extreme(ts, fn, n)
 
     def extreme(self, ts, fn, n=None):
@@ -3646,6 +3924,26 @@ class Engine:
             if t is NONE:
                 raise refuse('RUN-NONE', 'a term of %s is none here' % n.fn)
             terms.append(t)
+        if holes and ctx.partial and n.fn == 'mean' and not any(isinstance(st, Hole) for e2, st in mem):
+            # L §5.18 (tally 2.1.8 R15): a mean over a known count is its sum scaled by the count, linear in its terms
+            lin = (None, ())
+            for t in terms:
+                lin = lin_add(lin, (t, ()))
+            for h in holes:
+                lh = lin_of(h)
+                if lh is None:
+                    return merge(*holes)
+                lin = lin_add(lin, lh)
+            return Hole(set().union(*[h.qs for h in holes]), lin_scale(lin, Num(len(mem), (), isint=True), div=True))
+        if holes and n.fn == 'quantile' and terms is not None:
+            # a level that is refused refuses before the hole terms: refusals outrank holes (L §8; tally 2.1.8 R16(c),
+            # #171; B7 of group 3's review)
+            q = self.ev(n.q, env, ctx)
+            if not isinstance(q, Hole) and (q.q <= 0 or q.q > 1):
+                from .values import fmt_q
+                raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
+            if isinstance(q, Hole):
+                holes.append(q)
         if holes:
             return merge(*holes)
         if not terms:
@@ -3662,6 +3960,10 @@ class Engine:
         q = self.ev(n.q, env, ctx)
         if isinstance(q, Hole):
             return q
+        if q.q <= 0 or q.q > 1:
+            # type 1 over its terms has no smallest term for such a level (L §5.11, §5.16; tally 2.1.8 R16, #171)
+            from .values import fmt_q
+            raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
         srt = sorted(terms, key=lambda t: t.q if isinstance(t, Num) else t)
         need = q.q * len(srt)
         for i, t in enumerate(srt, 1):
@@ -3724,9 +4026,9 @@ class Engine:
             if r is None or r is NONE:
                 raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
             outs.append(r)
-        return self.interval_of(outs, ivs[0])
+        return self.interval_of(outs, ivs[0], carry_union(*ivs))
 
-    def interval_of(self, outs, iv):
+    def interval_of(self, outs, iv, carry=None):
         """The values an operation takes over a window's days: one value when they agree, else their interval (a
         computed window, no name)."""
         a = b = outs[0]
@@ -3737,7 +4039,7 @@ class Engine:
                 b = r
         if self.cmp3(a, b, None) == 0:
             return a
-        return Iv(a, b, None, iv.src, origin=iv.origin)
+        return Iv(a, b, None, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
 
     def per_day(self, iv, fn, n):
         """An operation that isn't monotone in its window is evaluated for each day the window can take (L §4.4; tally
@@ -3843,6 +4145,10 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'days_between')
         b = self.as_date_or_iv(b, 'days_between')
+        if isinstance(a, Iv) and isinstance(b, Iv) and a.name is not None and a.name == b.name:
+            # a window taken with its own name once (L §4.4, as iv_compare): one unknown day, 0 days from itself
+            # (the third turn's note, the review of group 2's fix)
+            return Int(0)
         return self.lift(lambda x, y: Int((y - x).days), a, b)
 
     def c_add_days(self, n, env, ctx):
@@ -3916,13 +4222,13 @@ class Engine:
         d = self.as_date_or_iv(d, 'weekday')
         if isinstance(d, Iv):
             if d.days is None and (d.hi - d.lo).days >= 6:
-                return Iv(Int(1), Int(7), None, d.src, origin=d.origin)
+                return Iv(Int(1), Int(7), None, d.src, origin=d.origin, carry=iv_carry(d))
             days = sorted(d.days) if d.days else [d.lo + datetime.timedelta(days=i)
                                                   for i in range((d.hi - d.lo).days + 1)]
             ws = sorted(set(x.isoweekday() for x in days))
             if len(ws) == 1:
                 return Int(ws[0])
-            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin)
+            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin, carry=iv_carry(d))
         return Int(d.isoweekday())
 
     def c_pos(self, n, env, ctx):
@@ -4131,32 +4437,38 @@ class Engine:
                 # meets, so a result that depends on its day is HOLE-IMPRECISE unless the line states windows each"
                 if a[0] == 'window':
                     wt = 'window(%s, %s)' % (a[1], a[2])
-                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d' % (node._r[2], ai), 'added %s' % wt),
+                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
                             name=('added', node._r[2], ai))
                     days = [a[1] + datetime.timedelta(days=i) for i in range((a[2] - a[1]).days + 1)]
                 else:
                     wt = 'one_of([%s])' % ', '.join(str(x) for x in sorted(a[1]))
-                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d' % (node._r[2], ai), 'added %s' % wt),
+                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
                             name=('added', node._r[2], ai))
                     days = sorted(a[1])
                 if ctx.windows in ('earliest', 'latest') or (isinstance(ctx.windows, tuple) and ctx.windows and
                                                              ctx.windows[0] == 'each'):
-                    # L §4.4: windows each splits the line by it, "a day in a calendar's added list (§4.2)"
-                    if self.window_choice(iv, ctx) == day:
-                        return False
-                    continue
+                    # L §4.4: windows each splits the line by it, "a day in a calendar's added list (§4.2)"; an entry
+                    # not yet taken is read as the plain line reads it (tally 2.1.8 R13)
+                    ch = self.window_choice(iv, ctx)
+                    if not isinstance(ch, Iv):
+                        if ch == day:
+                            return False
+                        continue
+                    if ctx.windows in ('earliest', 'latest'):
+                        continue
                 if self.cal_choice is not None:
                     # evaluated at each day the window can take (over_added): this pass's day, or the first while
                     # the window is newly met (that pass is run again per day)
                     # each entry of the list is an unknown day of its own (tally 2.1.7 R3, F5)
-                    k = (node._r[2], wt, ai)
+                    k = (node._r[2] + cal_at_text(cal), wt, ai)
                     if k not in self.cal_choice:
                         self.cal_met.setdefault(k, days)
+                        self.cal_met_days[k] = days
                     if self.cal_choice.get(k, days[0]) == day:
                         return False
                     continue
-                unknown.append(Hole([('date within %s not precise enough for is_business(%s, %s)' % (
-                    wt, day, _ntxt(node)), node._r[2])]))
+                unknown.append(carry_hole(Hole([('date within %s not precise enough for is_business(%s, %s)' % (
+                    wt, day, _ntxt(node)), node._r[2])]), iv))
         if unknown:
             return merge(*unknown)
         return True
@@ -4173,6 +4485,7 @@ class Engine:
         todo = [dict(outer) if outer is not None else {}]
         out = []
         first_met = None
+        met_order = []
         try:
             while todo:
                 ch = todo.pop(0)
@@ -4184,6 +4497,9 @@ class Engine:
                     k = new[0]
                     if first_met is None:
                         first_met = k
+                    for k2 in new:
+                        if k2 not in met_order:
+                            met_order.append(k2)
                     for d in self.cal_met[k]:
                         c2 = dict(ch)
                         c2[k] = d
@@ -4198,10 +4514,14 @@ class Engine:
         v0 = out[0]
         if all(vkey(v) == vkey(v0) for v in out[1:]):
             return v0
+        # the entries met, in the order the passes met them: the unknown days the result carries (tally 2.1.8 R13)
+        carry = tuple(added_carry(k, self.cal_met_days.get(k, ())) for k in met_order)
         if isinstance(v0, bool):
-            cal_id, wt = first_met[0], first_met[1]
-            return Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)])
-        return Iv(min(out), max(out), None, None, origin=(first_met[0], first_met[0]) if first_met else None)
+            cal_id, wt = first_met[0].split(' @')[0], first_met[1]
+            return carry_hole(Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)]),
+                              ids=carry)
+        return Iv(min(out), max(out), None, None, origin=(first_met[0].split(' @')[0], first_met[0].split(' @')[0]) if first_met else None,
+                  carry=carry)
 
     def c_is_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
@@ -4232,6 +4552,10 @@ class Engine:
         if k == 0:
             raise refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (d, _ntxt(n.args[2])))
         step = 1 if k > 0 else -1
+        try:
+            add_days(d, k)
+        except TallyError as edge:
+            self.edge_first(n, d, step, env, ctx, edge)
 
         def count():
             left = abs(k)
@@ -4240,11 +4564,49 @@ class Engine:
                 cur = add_days(cur, step)
                 b = self.business(n.args[2], env, ctx, cur, seek=True)
                 if isinstance(b, Hole):
+                    # k business days move at least k days: past the day range that is refused whatever the hole on
+                    # the way says, since a refusal the outcome meets outranks the hole (L §8, §8.1; tally 2.1.8 R11,
+                    # #169-a); a refusal met first in day order stands before it (pick P26, g1_none)
+                    add_days(d, k)
                     return b
                 if b:
                     left -= 1
             return cur
         return self.over_added(n, count)
+
+    def edge_first(self, n, d, step, env, ctx, edge):
+        """add_business whose count passes the day range: the count can't end before the edge, so the outcome is the
+        first refusal or hole the walk meets in day order, else the edge's RUN-LIMIT (R11, pick P26). Both change only
+        where a calendar row's span starts or ends, so the walk visits those days: a refusal there stands; a hole, or
+        a row with a window or a hole among its added days, is met first, and the edge's refusal outranks it."""
+        r = getattr(n.args[2], '_r', None)
+        inf = self.m.inputs.get(r[2]) if r is not None and r[0] == 'read' and r[1] == 'input' else None
+        bounds = {d + datetime.timedelta(days=step)}
+        # and the rows of the inputs its rows are stated same as (L §6.1), which a read of it follows (item 18 of the
+        # fourth turn: the engine's 5ae84cca, N3); a day the walk visits more only reads the calendar there
+        ids = {inf.id} if inf is not None else set()
+        edges = getattr(self.m, 'same_row_edges', ())
+        grew = True
+        while grew:
+            grew = False
+            for ka, kb, _v in edges:
+                for x, y in ((ka, kb), (kb, ka)):
+                    if x[0] in ids and y[0] not in ids and y[0] in self.m.inputs:
+                        ids.add(y[0])
+                        grew = True
+        rows = [row for i in sorted(ids) for row in self.m.inputs[i].rows]
+        for row in rows:
+            sp = row.version.span_at(ctx.cut) if hasattr(row.version, 'span_at') else None
+            for x in ((sp.start, sp.end) if sp is not None else ()):
+                if x is not None:
+                    bounds |= {x, x - ONE_DAY}
+        days = sorted((x for x in bounds if (x > d if step > 0 else x < d)), reverse=step < 0)
+        for x in days:
+            b = self.business(n.args[2], env, ctx, x, seek=True)
+            cal = self.cal_at(n.args[2], env, ctx, x)
+            if isinstance(b, Hole) or any(a[0] in ('window', 'oneof', 'hole') for a in getattr(cal, 'added', ())):
+                raise edge
+        raise edge
 
     def c_last_business(self, n, env, ctx):
         """the n-th last business day of period p (L §4.2)"""
@@ -4329,6 +4691,27 @@ class Engine:
         raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % w)
 
     # -- tracing for explain ---------------------------------------------------------------------
+    def trace_obs_row(self, r, rec):
+        """An observed row read through a movement (E §10): its sid, the leg it states, its version, source, locator,
+        day and known."""
+        if not self.trace_stack:
+            return
+        tn = TraceNode('row', r.sid if ':' in r.sid else '%s:%s' % (r.version.id, r.sid))
+        src = self.m.sources.get(r.version.cite)
+        bits = ['version %s' % r.version.id, 'source %s' % r.version.cite]
+        if src is not None:
+            bits.append('"%s"' % src.title)
+        if r.locator:
+            bits.append('locator "%s"' % r.locator)
+        day = rec.get('day')
+        if isinstance(day, datetime.date):
+            bits.append('on %s' % day)
+        kn = r.known
+        bits.append('known %s' % (('window(%s, %s)' % kn) if isinstance(kn, tuple) else kn))
+        tn.lines.append(', '.join(bits))
+        tn.value = rec
+        self.trace_stack[-1].children.append(('node', tn))
+
     def trace_row(self, r, info, keys):
         if not self.trace_stack:
             return
@@ -4365,6 +4748,116 @@ def range_is_literal(d):
         return n.k in ('num', 'date', 'month', 'quarter', 'year', 'dur', 'duration') or (
             n.k == 'num' and not getattr(n, 'unit', None))
     return lit(d.a) and lit(d.b) and lit(getattr(d, 'step', None))
+
+# The unknown days a hole carries (tally 2.1.8 R13, L §4.4: "a hole made of either carries them too"): each question
+# of a HOLE-IMPRECISE, keyed as the hole holds it, to the windows it was made of, (id, label, days) in the order the
+# line's reads met them. A hole made of others keeps their questions, so it carries their windows.
+CARRY = {}
+CARRY_TEXT = {}   # a question known only by its text (a reading's row known in a window), to the same
+
+
+def unit_of_row(r):
+    """The unit a reading's value states, or None."""
+    v = getattr(r, 'val', None)
+    if isinstance(v, Num) and v.u and len(v.u) == 1 and v.u[0][1] == 1:
+        return v.u[0][0]
+    return None
+
+
+def instant_key(r):
+    return repr(getattr(r, 'instant', None))
+
+
+def units_at_instant(read, place, r, units):
+    """RUN-DOMAIN's `<read> of <x>: its readings at <instant> are in <u> and <u'>` (L §8.4; tally 2.1.8 R14)."""
+    from .moves import instant_text
+    return '%s of %s: its readings at %s are in %s' % (read, place, instant_text(r),
+                                                       ', '.join(units[:-1]) + ' and ' + units[-1])
+
+
+def known_carry(sid, known):
+    """The unknown day of a known window (model.known_window_id): (id, label, days)."""
+    from .model import known_window_id
+    lo, hi = known
+    wid, label = known_window_id(sid)
+    return (wid, label, [lo + datetime.timedelta(days=i) for i in range((hi - lo).days + 1)])
+
+
+def cal_at_text(cal):
+    """The row a calendar's entries belong to, for their identity (Cal.at)."""
+    at = getattr(cal, 'at', None)
+    return ' @%s' % at if at else ''
+
+
+def added_carry(k, days):
+    """The unknown day of a calendar's added entry k = (calendar, text, index), as window_id names it."""
+    cal, wt, ai = k
+    name, _sep, at = cal.partition(' @')
+    return (('row', 'calendar %s#%d%s' % (name, ai, (' @' + at) if at else ''), 'added %s' % wt), 'added %s' % wt,
+            list(days))
+
+
+def iv_carry(v):
+    """The unknown days a window value carries: a computed one's, or a read's own."""
+    if getattr(v, 'carry', None) is not None:
+        return v.carry
+    wi = window_id(v) if isinstance(v, Iv) else None
+    return (wi,) if wi is not None else ()
+
+
+def carry_union(*vals):
+    """The unknown days of several operands, in order, each once."""
+    out = []
+    seen = set()
+    for v in vals:
+        if isinstance(v, Iv):
+            for w in iv_carry(v):
+                if w[0] not in seen:
+                    seen.add(w[0])
+                    out.append(w)
+    return tuple(out)
+
+
+def carry_hole(h, *vals, ids=None):
+    """h, recorded as carrying the unknown days of vals (window values), or ids ((id, label, days) triples)."""
+    ws = tuple(ids) if ids is not None else carry_union(*vals)
+    if ws:
+        for q in h.qs:
+            # one question's text may come from two windows (a shifted window prints as another: STOP-REPORT 4 of
+            # T's re-run, i2's qs), so it carries the days of each
+            old = CARRY.get(q, ())
+            CARRY[q] = old + tuple(w for w in ws if w[0] not in set(x[0] for x in old))
+    return h
+
+
+def carried(v):
+    """The unknown days an answer carries: its holes' and its window values', each once (L §4.4)."""
+    out = []
+    seen = set()
+
+    def add(ws):
+        for w in ws:
+            if w[0] not in seen:
+                seen.add(w[0])
+                out.append(w)
+
+    def walk(x, depth=0):
+        if depth > 50:
+            return
+        if isinstance(x, Hole):
+            for q in sorted(x.qs, key=repr):
+                add(CARRY.get(q) or CARRY_TEXT.get(q[0], ()))
+        elif isinstance(x, Iv):
+            add(iv_carry(x))
+        elif isinstance(x, (tuple, list, frozenset, set)):
+            for y in x:
+                walk(y, depth + 1)
+        elif hasattr(x, 'carry_vals'):
+            for y in x.carry_vals():
+                walk(y, depth + 1)
+    walk(v)
+    return out
+
 
 def window_id(v):
     """A window's identity under windows each: its row (or its written text), its label and its days."""
@@ -4799,6 +5292,20 @@ _PLAIN_CALLS = frozenset(('round', 'min', 'max', 'abs', 'pow', 'marginal', 'band
 _PLAIN_AGGS = frozenset(('min', 'max', 'argmin', 'argmax', 'count', 'all', 'any'))
 
 
+def lin_passes(n):
+    """The forms that pass a value on unchanged (L §5.18; tally 2.1.8 R15): a read of a number (an input, a def, a
+    binding), a field, a taken branch, a carried read. Any other form returns its own linear form or none."""
+    k = n.k
+    if k in ('paren', 'if', 'lastx'):
+        return True
+    if k in ('name', 'index', 'field'):
+        # a number of a unit known only at run (`dyn`: a leg's amount, `t.cash.amount`) passes as one known at load
+        # (gate_a3 b8)
+        t = getattr(n, '_t', None)
+        return t is not None and t.k in ('money', 'num', 'int', 'flex', 'rate', 'dyn')
+    return False
+
+
 def plain_node(n):
     k = n.k
     if k in ('cmp', 'not', 'and', 'or', 'in'):
@@ -4856,10 +5363,15 @@ def lin_scale(l, s, div=False):
                 raise refuse('RUN-DIV', 'division by zero')
             return arith('/', x, s, None, None, None)
         return arith('*', x, s, None, None, None)
-    k2 = None if k is None else sc(k)
-    if k is not None and k.money and s.isint and not div:
-        k2 = Num(k2.q, k.u, money=True)
-    return (k2, tuple((atom, sc(c)) for atom, c in ts))
+    def money(x, y):
+        # money times a whole number stays money, printed with its minor unit's digits (L §2.4; tally 2.1.8 R9, the
+        # gate's rest 3): a known part and a coefficient alike
+        y2 = sc(x)
+        if not div and ((x.money and s.isint) or (x.isint and s.money)):
+            return Num(y2.q, y2.u, money=True)
+        return y2
+    k2 = None if k is None else money(k, s)
+    return (k2, tuple((atom, money(c, s)) for atom, c in ts))
 
 
 def lin_bin(op, a, b, n):
@@ -4867,6 +5379,9 @@ def lin_bin(op, a, b, n):
     for v in (a, b):
         if isinstance(v, Hole):
             qs |= v.qs
+    if any(not isinstance(v, (Hole, Num)) for v in (a, b)):
+        # a day, a period or a key is no coefficient's operand (L §5.18; tally 2.1.8 R15)
+        return Hole(qs, False)
     la, lb = lin_of(a), lin_of(b)
     if la is None or lb is None:
         return Hole(qs, False)

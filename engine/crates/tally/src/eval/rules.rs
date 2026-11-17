@@ -220,13 +220,16 @@ impl Engine {
             return Ok(first.clone());
         }
         let window = w.question_text(m).map_err(num_stop)?;
-        let imprecise = Value::Hole(Hole::asked(
-            &format!(
-                "date within {window} not precise enough for the law date of {}",
-                def.id
-            ),
-            &origin(&def.id, keys),
-        ));
+        let imprecise = Value::Hole(
+            Hole::asked(
+                &format!(
+                    "date within {window} not precise enough for the law date of {}",
+                    def.id
+                ),
+                &origin(&def.id, keys),
+            )
+            .carrying(&w.carry),
+        );
         let mut undated = Vec::with_capacity(vals.len());
         for v in &vals {
             let Value::Hole(h) = v else {
@@ -441,7 +444,7 @@ impl Engine {
             return Ok(Err(given));
         }
         if let Some(day) = ctx.law {
-            let class = rules_class(m, def, ctx.cut, day)?;
+            let class = rules_class(m, def, (ctx.cut, ctx.world), day)?;
             self.narrow(ctx.law, class);
         }
         let live = in_force(m, def, self.clocks(ctx, &def.id)?)?;
@@ -651,7 +654,7 @@ impl Engine {
             keys: keys.to_vec(),
         });
         if let Some(day) = ctx.law {
-            let class = rows_class(m, &def.givens, ctx.cut, day)?;
+            let class = rows_class(m, &def.givens, (ctx.cut, ctx.world), day)?;
             self.narrow(ctx.law, class);
         }
         let clocks = self.clocks(ctx, &def.id)?;
@@ -672,7 +675,7 @@ impl Engine {
         };
         let cands = candidates(m, givens, binds, Test::At(ctx.law), clocks)?;
         let cands = worded(m, givens, cands, clocks)?;
-        let Some(at) = choose(m, givens, &def.binds, &cands, ctx.cut, &def.id)? else {
+        let Some(at) = choose(m, givens, &def.binds, &cands, (ctx.cut, ctx.world), &def.id)? else {
             return Ok(None);
         };
         let row = givens

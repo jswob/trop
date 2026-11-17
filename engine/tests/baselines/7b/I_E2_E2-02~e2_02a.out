@@ -19,28 +19,16 @@ e2_02_zbigniew (h = jakub) [a.px_round = *, d.hh_round = *]: (0.1875, ?"On what 
   anchor: d.konto 2024-05-17 end, stated 46 761.80 DUK, difference 17 614.53 DUK
   law date 2026-09-30, cut 2026-09-30
 e2_02_reported (h = piotr) [a.px_round = *, d.hh_round = *]: 0.00 DUK
-  pinned: d.reported_on[anna] = 2025-05-05
-  pinned: d.reported_on[jakub] = 2025-05-05
-  pinned: d.reported_on[marta] = 2025-05-05
   pinned: d.reported_on[piotr] = 2025-05-05
   law date 2026-09-30, cut 2026-09-30
 e2_02_reported (h = anna) [a.px_round = *, d.hh_round = *]: 0.00 DUK
   pinned: d.reported_on[anna] = 2025-05-05
-  pinned: d.reported_on[jakub] = 2025-05-05
-  pinned: d.reported_on[marta] = 2025-05-05
-  pinned: d.reported_on[piotr] = 2025-05-05
   law date 2026-09-30, cut 2026-09-30
 e2_02_reported (h = marta) [a.px_round = *, d.hh_round = *]: 0.00 DUK
-  pinned: d.reported_on[anna] = 2025-05-05
-  pinned: d.reported_on[jakub] = 2025-05-05
   pinned: d.reported_on[marta] = 2025-05-05
-  pinned: d.reported_on[piotr] = 2025-05-05
   law date 2026-09-30, cut 2026-09-30
 e2_02_reported (h = jakub) [a.px_round = *, d.hh_round = *]: 0.00 DUK
-  pinned: d.reported_on[anna] = 2025-05-05
   pinned: d.reported_on[jakub] = 2025-05-05
-  pinned: d.reported_on[marta] = 2025-05-05
-  pinned: d.reported_on[piotr] = 2025-05-05
   law date 2026-09-30, cut 2026-09-30
 e2_02_anna_from_halina (g = cash2021) [a.px_round = *]: (15 000 DUK, 0.00 DUK)
   law date 2026-09-30, cut 2026-09-30

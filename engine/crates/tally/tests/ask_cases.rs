@@ -5,9 +5,12 @@
 //! hole; §8.4 `RUN-NONE` for `none` and `never`), §5.19 Bindings (movements by day, a hole
 //! day last), §8.2 (the register: `assumed`, `held`, `world`, the law date and the cut; a
 //! tuple's `unfulfilled:` on its own line), §8.4 (a run-time refusal stands as its value,
-//! with the register met before it; L §5.14.3 a refused `flows`, L §5.14 `with uncertain`).
+//! with the register met before it; L §5.14.3 a refused `flows`, L §5.14 `with uncertain`);
+//! tally 2.1.8 R13.1 (a diff's own `for`, one block per tuple, on one stack and on two), R11
+//! (L §4.2 `add_business` past the day range, a hole on the way read day by day).
 //! Twin: engine/tools/refcore/ask.py (`Asker`); the expected lines are refcore's run of the
-//! same text (`python3 -m refcore run`).
+//! same text (`python3 -m refcore run`), but where refcore stops or misses: there the lines
+//! are the spec's, and the case's comment says so.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
 
 #![forbid(unsafe_code)]
@@ -544,6 +547,824 @@ with_gifts: refused: RUN-DIV division by zero
                 "  law date 2026-05-01, cut 2026-03-01",
             ],
             "refcore's lines for `--ask nolaw later`"
+        );
+    }
+
+    /// The lines a run of the files `files`, each a path and its text, prints, every ask.
+    fn lines_of_files(files: &[(&str, &str)]) -> Vec<String> {
+        let given = files
+            .iter()
+            .map(|(path, text)| Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let request = Request {
+            asks: Asks::Every,
+            pin: Pin::Canonical,
+            days: Days::Events,
+        };
+        let answer = run(given, &request).expect("an answer");
+        answer.lines().to_vec()
+    }
+
+    /// A diff's own `for`: two keys, a scenario that moves one (`sd`) and one that moves the
+    /// other (`sc`), the two on two stacks (the review of group 1's B1).
+    const DIFF_FOR: &str = "model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+index ks = [a, b]
+input dk[k in ks]: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dk[a] = 2026-03-05 \"s\"
+  dk[b] = 2026-03-05 \"s\"
+
+ask h1: diff(dk[k]) in sd against pw for k in ks law 2026-03-01
+ask h2: diff(dk[j] for j in ks) in sd against pw for k in [b] law 2026-03-01
+ask h3: diff(dk[k]) in sd against sc for k in ks law 2026-03-01
+";
+
+    /// Scenario `sd`: dk[b] moves.
+    const DIFF_FOR_SD: &str = "scenario sd over pw
+  tally 2
+  from 2026-01-01
+
+version sd_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace dk[b] = 2026-03-07 \"s\"
+";
+
+    /// Scenario `sc`: dk[a] moves.
+    const DIFF_FOR_SC: &str = "scenario sc over pw
+  tally 2
+  from 2026-01-01
+
+version sc_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace dk[a] = 2026-03-06 \"s\"
+";
+
+    /// The spec's lines, not refcore's: refcore stops `REFCORE-NOT-YET (KeyError: 'k')` on h1
+    /// and h3 and prints h2 as one block with no binding part (L §5.18, tally 2.1.8 R13.1:
+    /// every clause stands on every form, one block per binding tuple).
+    const DIFF_FOR_LINES: &str =
+        "h1 (k = a): diff in sd against pw: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: pw
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h1 (k = b): diff in sd against pw: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed dk[k]: 2026-03-07 against 2026-03-05
+  world: pw
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h2 (k = b): diff in sd against pw: 1 changed, 0 added, 0 removed, 1 unchanged
+  changed (j = b): 2026-03-07 against 2026-03-05
+  world: pw
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h3 (k = a): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed dk[k]: 2026-03-05 against 2026-03-06
+  world: sc
+  world: sd
+  law date 2026-03-01, cut 2026-04-25
+h3 (k = b): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed dk[k]: 2026-03-07 against 2026-03-05
+  world: sc
+  world: sd
+  law date 2026-03-01, cut 2026-04-25";
+
+    #[test]
+    fn a_diff_reads_its_own_for_one_block_per_tuple_on_one_stack_and_two() {
+        let files = [
+            ("pw.tally", DIFF_FOR),
+            ("sc.tally", DIFF_FOR_SC),
+            ("sd.tally", DIFF_FOR_SD),
+        ];
+        let want: Vec<&str> = DIFF_FOR_LINES.lines().collect();
+        assert_eq!(lines_of_files(&files), want, "one block per tuple");
+    }
+
+    /// A diff over two stacks whose law date is its tuple's (the review of group 1's fix, F4:
+    /// `d3` h3), beside the same diff at one law date (h4): one block per tuple in both.
+    #[test]
+    fn a_two_stack_diff_with_its_law_date_per_tuple_prints_one_block_per_tuple() {
+        let (base, _) = DIFF_FOR.split_once("\nask ").expect("DIFF_FOR has asks");
+        let text = base
+            .replace("input dk[k in ks]: date\n", "input dk[k in ks]: date\ninput lk[k in ks]: date\n")
+            .replace(
+                "  dk[b] = 2026-03-05 \"s\"\n",
+                "  dk[b] = 2026-03-05 \"s\"\n  lk[a] = 2026-03-01 \"s\"\n  lk[b] = 2026-03-01 \"s\"\n",
+            )
+            + "\nask h3: diff(dk[k]) in sd against sc for k in ks law lk[k]\n\
+               ask h4: diff(dk[k]) in sd against sc for k in ks law 2026-03-01\n";
+        let lines = lines_of_files(&[
+            ("pw.tally", &text),
+            ("sc.tally", DIFF_FOR_SC),
+            ("sd.tally", DIFF_FOR_SD),
+        ]);
+        let block = |h: &str| {
+            [
+                format!(
+                    "{h} (k = a): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged"
+                ),
+                "  changed dk[k]: 2026-03-05 against 2026-03-06".to_owned(),
+                "  world: sc".to_owned(),
+                "  world: sd".to_owned(),
+                "  law date 2026-03-01, cut 2026-04-25".to_owned(),
+                format!(
+                    "{h} (k = b): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged"
+                ),
+                "  changed dk[k]: 2026-03-07 against 2026-03-05".to_owned(),
+                "  world: sc".to_owned(),
+                "  world: sd".to_owned(),
+                "  law date 2026-03-01, cut 2026-04-25".to_owned(),
+            ]
+        };
+        let want: Vec<String> = block("h3").into_iter().chain(block("h4")).collect();
+        assert_eq!(lines, want, "h3's law date per tuple prints as h4's");
+    }
+
+    /// `add_business` past the day range over a calendar read day by day: a key that is a
+    /// hole, and a scenario's expression row governing 2026 only, the base's row before 2026
+    /// a calendar with no business day (the review of group 1's B2).
+    const SHIFT_HOLE_KEY: &str = "model hk
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+index cs = [pl, de]
+input who: key cs
+input calk[c in cs]: calendar
+input d: date
+input nf: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  nf = 2912292 \"far\"
+  calk[pl] = calendar(weekends [sat, sun]) \"s\"
+  calk[de] = calendar(weekends [sat, sun]) \"s\"
+
+ask k: add_business(d, nf, calk[who])
+ask kp: add_business(d, nf, calk[pl])
+";
+
+    /// The base of the expression row's case.
+    const SHIFT_ROWS: &str = "model a6
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+input n3: int
+input n300: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  huge = 100000000000000000000 \"10^20\"
+  n3 = 3 \"three\"
+  n300 = 300 \"300\"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) \"s\"
+  cq = calendar(weekends [sat, sun]) \"s\"
+
+version v25
+  cite plan
+  governs ..2025
+  known 2026-01-01
+  cq = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) \"none\"
+
+ask q_fwd: add_business(d, huge, cq)
+ask x_fwd: add_business(d, huge, cq) in sx
+ask x_back: add_business(d, -huge, cq) in sx
+ask x_in: add_business(d, n300, cq) in sx
+ask x_3: add_business(d, n3, cq) in sx
+";
+
+    /// The scenario whose row is an expression.
+    const SHIFT_ROWS_SX: &str = "scenario sx over a6
+  tally 2
+  from 2026-01-01
+
+version sx_v
+  cite plan
+  governs 2026
+  known 2026-01-01
+  replace cq = a6.cr \"s\"
+";
+
+    /// refcore's lines but `x_back`'s: the ruled order (P27), the calendar's `RUN-DOMAIN` met
+    /// on the way back before the edge, where refcore refuses `RUN-LIMIT` before any read.
+    const SHIFT_ROWS_LINES: &str = "q_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  cut 2026-12-31
+x_3: 2026-06-04
+  world: sx
+  cut 2026-12-31
+x_back: refused: RUN-DOMAIN calendar cq has no business day
+  world: sx
+  cut 2026-12-31
+x_fwd: refused: RUN-LIMIT a day passes 9999-12-31
+  world: sx
+  cut 2026-12-31
+x_in: ?\"calendar cq doesn't cover 2027\" (cq)
+  world: sx
+  cut 2026-12-31";
+
+    #[test]
+    fn a_shift_past_the_day_range_passes_a_hole_read_day_by_day() {
+        assert_eq!(
+            lines_of_files(&[("hk.tally", SHIFT_HOLE_KEY)]),
+            [
+                "k: refused: RUN-LIMIT a day passes 9999-12-31",
+                "  cut 2026-12-31",
+                "kp: refused: RUN-LIMIT a day passes 9999-12-31",
+                "  cut 2026-12-31",
+            ],
+            "a key that is a hole reads no calendar"
+        );
+        let files = [("a6.tally", SHIFT_ROWS), ("sx.tally", SHIFT_ROWS_SX)];
+        let want: Vec<&str> = SHIFT_ROWS_LINES.lines().collect();
+        assert_eq!(lines_of_files(&files), want, "an expression row's days");
+    }
+
+    /// `n` pairs of observations of two covered places, each pair stated `same` by a version
+    /// of its own known in a window that holds the cut, and one line that counts them (the
+    /// review of group 1's B3).
+    fn same_links(n: usize) -> String {
+        let mut text = "model sev
+  tally 2
+  on 2026-05-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+input bank: observed
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start \"s\"
+  opening[sav] = 0.00 PLN at 2026-01-01 start \"s\"
+"
+        .to_owned();
+        let mut parts: Vec<String> = Vec::new();
+        for (side, place, known) in [("a", "konto", "02"), ("b", "sav", "03")] {
+            parts.push(format!(
+                "\nversion st_{place}\n  cite s\n  governs 2026-04\n  known 2026-04-{known}\n  covers {place}\n"
+            ));
+            for (i, day) in (1..=n).zip(2_usize..) {
+                parts.push(format!("  bank[{side}{i}] = (on: 2026-04-{day:02}, kind: transfers, leg cash from konto to sav amount {i}.00 PLN) \"{side}\"\n"));
+            }
+        }
+        for i in 1..=n {
+            parts.push(format!("\nversion link{i}\n  cite s\n  governs always\n  known window(2026-05-01, 2026-05-20)\n  same bank[a{i}] = bank[b{i}]\n"));
+        }
+        parts.push("\nask c: count(t in transfers over 2026-04) as known 2026-05-10\n".to_owned());
+        text.push_str(&parts.concat());
+        text
+    }
+
+    #[test]
+    fn a_lines_seen_and_unseen_choices_fall_under_its_limit() {
+        let seven = same_links(7);
+        let mut named: Vec<String> = Vec::new();
+        for side in ["a", "b"] {
+            named.extend((1..=7).map(|i| format!("bank[{side}{i}]")));
+        }
+        named.extend((1..=7).map(|i| format!("link{i}")));
+        let hole = format!(
+            "c: ?\"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10\" ({})",
+            named.join(", ")
+        );
+        assert_eq!(
+            lines_of_files(&[("sev.tally", &seven)]),
+            [hole.as_str(), "  cut 2026-05-10"],
+            "seven versions, 128 choices: refcore's hole"
+        );
+        // 2^15 choices pass S7's 20 000: refused before any is read (P27; the message is the
+        // builder's until the spec's commit gives its bytes)
+        let fifteen = same_links(15);
+        assert_eq!(
+            lines_of_files(&[("sev.tally", &fifteen)]),
+            ["c: refused: RUN-LIMIT seen and unseen over more than 20 000 choices"],
+            "fifteen versions"
+        );
+    }
+
+    /// A shift of 10^20 business days on a calendar a scenario computes from another that has
+    /// no row past 2026 (the review of group 1's fix, F2: `b2_min`).
+    const SHIFT_COMPUTED: &str = "model bm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  huge = 100000000000000000000 \"10^20\"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) \"s\"
+  cq = calendar(weekends [sat, sun]) \"s\"
+
+ask f: add_business(d, huge, cq) in sx
+";
+
+    const SHIFT_COMPUTED_SX: &str = "scenario sx over bm
+  tally 2
+  from 2026-01-01
+
+version sx_v
+  cite plan
+  governs 2026-01-01..
+  known 2026-01-01
+  replace cq = bm.cr \"s\"
+";
+
+    #[test]
+    fn a_shift_past_the_edge_reads_the_rows_edges_and_holds_a_computed_hole_as_a_mark() {
+        assert_eq!(
+            lines_of_files(&[
+                ("bm.tally", SHIFT_COMPUTED),
+                ("sx.tally", SHIFT_COMPUTED_SX)
+            ]),
+            [
+                "f: refused: RUN-LIMIT a day passes 9999-12-31",
+                "  world: sx",
+                "  held: cq = ? (sx_v), read for 2027-01-01",
+                "  cut 2026-12-31",
+            ],
+            "the first hole met is the edge's; one held line, a computed hole as ? (P32)"
+        );
+    }
+
+    /// A calendar stated `same` as another, whose row from 2028-03-01 has no business day,
+    /// a day the first calendar's own rows don't bound (the review of group 1's fix, N3).
+    const SHIFT_SAME_ROW: &str = "model n3
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  huge = 100000000000000000000 \"10^20\"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cq = calendar(weekends [sat, sun]) \"s\"
+
+version vr
+  cite plan
+  governs 2026-01-01..2028-02-29
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) \"s\"
+
+version vz
+  cite plan
+  governs 2028-03-01..
+  known 2026-01-01
+  cr = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) \"s\"
+
+version link
+  cite plan
+  governs always
+  known 2026-01-01
+  same cq = cr
+
+ask f: add_business(d, huge, cq)
+ask g: add_business(d, huge, cr)
+";
+
+    #[test]
+    fn a_shift_past_the_edge_reads_the_rows_a_same_row_follows() {
+        let held = "  held: cr = calendar(weekends [mon, tue, wed, thu, fri, sat, sun]) (vz), read for 2028-03-01";
+        assert_eq!(
+            lines_of_files(&[("n3.tally", SHIFT_SAME_ROW)]),
+            [
+                "f: refused: RUN-DOMAIN calendar cq has no business day",
+                held,
+                "  cut 2026-12-31",
+                "g: refused: RUN-DOMAIN calendar cr has no business day",
+                held,
+                "  cut 2026-12-31",
+            ],
+            "the refusal cq meets through its same row isn't hidden by the edge's RUN-LIMIT"
+        );
+    }
+
+    /// [`same_links`]'s fifteen versions with an input both scenarios state, and asks over
+    /// April, two days of it and March, one a diff over two stacks (the review of group 1's
+    /// fix, F1 and F3: `b3_15`).
+    fn same_links_asked(n: usize) -> String {
+        same_links(n).replace(
+            "input bank: observed\n",
+            "input bank: observed\ninput amt: money PLN\n",
+        ) + "ask d: diff(count(t in transfers over 2026-04)) in sc against sd as known 2026-05-10\n\
+               ask e: count(t in transfers over 2026-04-01 .. 2026-04-03) as known 2026-05-10\n\
+               ask z: count(t in transfers over 2026-03) as known 2026-05-10\n"
+    }
+
+    fn same_links_side(name: &str) -> String {
+        format!(
+            "scenario {name} over sev\n  tally 2\n  from 2026-01-01\n\nversion {name}_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-01\n  amt = 1.00 PLN \"s\"\n"
+        )
+    }
+
+    #[test]
+    fn a_two_stack_diff_past_the_choices_limit_is_its_asks_line() {
+        let text = same_links_asked(15);
+        let (sc, sd) = (same_links_side("sc"), same_links_side("sd"));
+        let lines = lines_of_files(&[("sev.tally", &text), ("sc.tally", &sc), ("sd.tally", &sd)]);
+        let heads: Vec<&str> = lines
+            .iter()
+            .filter(|l| !l.starts_with(' '))
+            .filter_map(|l| l.split_once(':').map(|(head, _)| head))
+            .collect();
+        assert_eq!(
+            heads,
+            ["c", "d", "e", "z", "warning"],
+            "every ask answers: {lines:?}"
+        );
+        assert!(
+            lines.contains(
+                &"d: refused: RUN-LIMIT seen and unseen over more than 20 000 choices".to_owned()
+            ),
+            "the diff's line, not the run's: {lines:?}"
+        );
+    }
+
+    /// Two observations of each of two transfers, one pair stated `same` in the model, the
+    /// other in the scenario, each by a version known in a window (the review of group 1's
+    /// `a1_diff`, N5).
+    const SAME_DIFF: &str = "model ls
+  tally 2
+  on 2026-05-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+input bank: observed
+input amt: money PLN
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place inv: accounts PLN lives 2026-01-01..
+
+version v1
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN \"s\"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start \"s\"
+  opening[sav] = 0.00 PLN at 2026-01-01 start \"s\"
+  opening[inv] = 0.00 PLN at 2026-01-01 start \"s\"
+
+version st_konto
+  cite s
+  governs 2026-04
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) \"a1\"
+  bank[c1] = (on: 2026-04-12, kind: transfers, leg cash from konto to inv amount 30.00 PLN) \"c1\"
+
+version st_sav
+  cite s
+  governs 2026-04
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 100.00 PLN) \"b1\"
+
+version st_inv
+  cite s
+  governs 2026-04
+  known 2026-04-03
+  covers inv
+  bank[d1] = (on: 2026-04-12, kind: transfers, leg cash from konto to inv amount 30.00 PLN) \"d1\"
+
+version link1
+  cite s
+  governs always
+  known window(2026-05-01, 2026-05-20)
+  same bank[a1] = bank[b1]
+ask d1: diff(count(t in transfers over 2026-04)) in sc against ls as known 2026-05-10
+ask d2: diff(count(t in transfers over 2026-04)) in sc against ls as known 2026-05-25
+";
+
+    const SAME_DIFF_SC: &str = "scenario sc over ls
+  tally 2
+  from 2026-01-01
+
+version sc_v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace amt = 200.00 PLN \"s\"
+
+version sc_link
+  cite s
+  governs always
+  known window(2026-05-08, 2026-05-15)
+  same bank[c1] = bank[d1]
+";
+
+    /// A diff's block that seen and unseen print differently is the hole and its cut alone,
+    /// not the seen account's lines (pick P27, on #196: compared by all a form prints).
+    #[test]
+    fn a_diff_that_seen_and_unseen_print_differently_is_the_hole_alone() {
+        let hole = "d1: ?\"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10\" (bank[a1], bank[b1], link1) ?\"date within window(2026-05-08, 2026-05-15) not precise enough for the cut 2026-05-10\" (bank[c1], bank[d1], sc_link)";
+        assert_eq!(
+            lines_of_files(&[("ls.tally", SAME_DIFF), ("sc.tally", SAME_DIFF_SC)]),
+            [
+                hole,
+                "  cut 2026-05-10",
+                "d2: diff in sc against ls: 1 changed, 0 added, 0 removed, 0 unchanged",
+                "  changed count(...): 2 against 3",
+                "  world: ls",
+                "  world: sc",
+                "  cut 2026-05-25",
+                "warning: WARN-UNREAD input amt is read by nothing",
+            ],
+            "d1's counts differ seen and unseen; d2's cut is past both windows"
+        );
+    }
+
+    /// A second stack over `ls` for [`SAME_DIFF`]'s asks to diff `sc` against (the review of
+    /// group 1's N3).
+    const SAME_DIFF_SD: &str = "scenario sd over ls
+  tally 2
+  from 2026-01-01
+
+version sd_v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  replace amt = 300.00 PLN \"s\"
+";
+
+    /// A diff over two stacks reads its `same` lines seen and unseen across both sides, the
+    /// choices joint (tally 2.1.8 R12), where it stopped `NotBuilt`.
+    #[test]
+    fn a_diff_over_two_stacks_reads_its_same_lines_seen_and_unseen() {
+        let base = SAME_DIFF.replace("in sc against ls", "in sc against sd");
+        let hole = "d1: ?\"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10\" (bank[a1], bank[b1], link1) ?\"date within window(2026-05-08, 2026-05-15) not precise enough for the cut 2026-05-10\" (bank[c1], bank[d1], sc_link)";
+        assert_eq!(
+            lines_of_files(&[
+                ("ls.tally", &base),
+                ("sc.tally", SAME_DIFF_SC),
+                ("sd.tally", SAME_DIFF_SD)
+            ]),
+            [
+                hole,
+                "  cut 2026-05-10",
+                "d2: diff in sc against sd: 1 changed, 0 added, 0 removed, 0 unchanged",
+                "  changed count(...): 2 against 3",
+                "  world: sc",
+                "  world: sd",
+                "  cut 2026-05-25",
+                "warning: WARN-UNREAD input amt is read by nothing",
+            ],
+            "d1's sides count differently seen and unseen; d2's cut is past both windows"
+        );
+    }
+
+    /// A window of one day read as a key, beside the plain day (the review of group 1's N6).
+    const ONE_DAY_KEY: &str = "model w
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+input d: date
+input e: date
+input x[m in months]: int
+input y[t in days]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = window(2026-03-05, 2026-03-05) \"s\"
+  e = 2026-03-05 \"s\"
+  x[2026-03] = 7 \"s\"
+  y[2026-03-05] = 9 \"s\"
+
+ask c: x[d]
+ask ce: x[e]
+ask f: y[d]
+ask fe: y[e]
+";
+
+    #[test]
+    fn a_window_of_one_day_as_a_key_is_that_day() {
+        assert_eq!(
+            lines_of_files(&[("w.tally", ONE_DAY_KEY)]),
+            [
+                "c: 7",
+                "  cut 2026-04-25",
+                "ce: 7",
+                "  cut 2026-04-25",
+                "f: 9",
+                "  cut 2026-04-25",
+                "fe: 9",
+                "  cut 2026-04-25",
+            ],
+            "L §4.4: a window of one day is that day, so not imprecise for a key"
+        );
+    }
+
+    /// Two stacks, each side's comparison undecided over a window of its own of 200 days:
+    /// 200 runs a side, 40 000 pairs (the review of group 1's N7).
+    const PAIRS_BASE: &str = "model m
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+input da: date
+input db: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  da = 2026-04-01 \"s\"
+  db = 2026-04-01 \"s\"
+
+ask p: diff(da < db) in sa against sb law 2026-03-01 windows each
+";
+
+    fn pairs_side(name: &str, input: &str) -> String {
+        format!(
+            "scenario {name} over m\n  tally 2\n  from 2026-01-01\n\nversion {name}_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-01\n  replace {input} = window(2026-01-01, 2026-07-19) \"s\"\n"
+        )
+    }
+
+    #[test]
+    fn a_diff_over_two_stacks_pairs_its_runs_under_s7s_limit() {
+        let (sa, sb) = (pairs_side("sa", "da"), pairs_side("sb", "db"));
+        assert_eq!(
+            lines_of_files(&[
+                ("m.tally", PAIRS_BASE),
+                ("sa.tally", &sa),
+                ("sb.tally", &sb)
+            ]),
+            ["p: refused: RUN-LIMIT windows each over more than 20 000 day combinations"],
+            "40 000 pairs pass 20 000 (L §7.6 item 6): the tuple's line, not the run's"
+        );
+    }
+
+    /// A ledger per binding tuple, per day of a window and per option of an axis, one of each
+    /// dividing by zero or reading a hole key (the review of group 1's B4 and N8).
+    const LEDGER_REFUSED: &str = "model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+axis ax
+  lo \"low\"
+  hi \"high\"
+
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input dv[k in ks]: int
+input dk[k in ks]: date
+input d0: date
+
+def kz: key ks at reader
+  rule base = a
+  rule hi beats base = b when ax == hi
+
+def kh: key ks at reader
+  rule base = a
+  rule hi beats base = ?\"which jar\" when ax == hi
+
+move one[k in ks]: transfers
+  on dk[k]
+  at d0
+  leg cash from world to jar[k] amount amt / dv[k]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN \"s\"
+  dv[a] = 1 \"s\"
+  dv[b] = 0 \"s\"
+  dk[a] = window(2026-03-01, 2026-03-02) \"s\"
+  dk[b] = 2026-03-05 \"s\"
+  d0 = 2026-01-01 \"s\"
+  opening[jar[a]] = 0.00 PLN at 2026-01-01 start \"s\"
+  opening[jar[b]] = 0.00 PLN at 2026-01-01 start \"s\"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-01
+  covers jar[a], jar[b]
+  bank[r3] = (on: 2026-03-06, kind: transfers, leg cash from world to jar[a] amount 10.00 PLN) \"r3\"
+
+ask q: residuals jar[k] 2026-03 for k in ks
+ask q2: residuals jar[k] 2026-03 for k in ks windows each
+ask r: residuals jar[kz] 2026-03 law 2026-03-01
+ask r2: residuals jar[kh] 2026-03 law 2026-03-01
+";
+
+    #[test]
+    fn a_refused_ledger_prints_alone_on_its_tuples_or_combinations_line() {
+        let lines = lines_of_files(&[("pw.tally", LEDGER_REFUSED)]);
+        let heads: Vec<&str> = lines
+            .iter()
+            .map(String::as_str)
+            .filter(|l| !l.starts_with(' '))
+            .collect();
+        assert_eq!(
+            heads,
+            [
+                "q (k = a): residuals jar[a] 2026-03",
+                "q (k = b): refused: RUN-DIV division by zero",
+                "q2 (k = a) [dk[a] = 2026-03-01]: residuals jar[a] 2026-03",
+                "q2 (k = a) [dk[a] = 2026-03-02]: residuals jar[a] 2026-03",
+                "q2 (k = b): refused: RUN-DIV division by zero",
+                "r [ax = lo]: residuals jar[a] 2026-03",
+                "r [ax = hi]: refused: RUN-DIV division by zero",
+                "r2 [ax = lo]: residuals jar[a] 2026-03",
+                "r2 [ax = hi]: ?\"which jar\" (kh)",
+            ],
+            "each tuple's and combination's line, the answers first"
+        );
+        // a refused or hole ledger's line has nothing under it: no register (refcore's `one`)
+        for (line, next) in lines.iter().zip(lines.iter().skip(1)) {
+            if line.contains("refused") || line.contains("?\"") {
+                assert!(!next.starts_with(' '), "{line} stands alone, not {next}");
+            }
+        }
+        assert!(
+            lines.last().is_some_and(|l| l.starts_with("r2 [ax = hi]")),
+            "the last line is the hole alone"
         );
     }
 }

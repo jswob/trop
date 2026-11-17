@@ -1,0 +1,41 @@
+# tally 2.1.8 §4 (#161), L §8.2 One read set (R7): an entry is listed exactly when a read in its set gives it, so an
+# ask's with pin that no read of the line takes isn't listed: a reads d, which never reads flag, and lists nothing; b
+# reads e, which takes the pin (10.00 PLN), and lists it; c lists it once for its two values. 2.1.7's refcore (and the
+# M2 engine) listed every written pin.
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input x: money PLN
+input flag: int
+
+def d: money PLN
+  rule base = x + x
+
+def e: money PLN
+  rule base = x * flag
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 10.00 PLN "s"
+  flag = 2 "s"
+
+ask a: d with flag = 1
+ask b: e with flag = 1
+ask c: d, e with flag = 3
+=== expect
+a: 20.00 PLN
+  cut 2026-03-01
+b: 10.00 PLN
+  pinned: flag = 1
+  cut 2026-03-01
+c: (20.00 PLN, 30.00 PLN)
+  pinned: flag = 3
+  cut 2026-03-01

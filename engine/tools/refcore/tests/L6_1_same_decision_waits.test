@@ -4,6 +4,9 @@
 # balance); the bank's row r1 is stated same as its March instance, so r1's ends wait for sweep's point: sweep reads
 # konto before r1 (300.00 PLN), both give 300.00 PLN on 2026-03-31, and the movement is booked once there. By L §5.10's
 # bal: konto 300.00 - 300.00 = 0.00 PLN, savings 0.00 + 300.00 = 300.00 PLN.
+# tally 2.1.8 (the user's cut, plan §13; #187; L §6.1 Identities are written): inside one model a version's same between
+# an observed row and a move instance is refused at load, LOAD-SAME: the row states fulfils instead (§5.19). This test
+# is about that line, so it is kept as the refusal; a joint model's line between two members still books the pair once.
 === m.tally
 model m
   tally 2
@@ -40,7 +43,4 @@ version stmt
 ask k: bal(konto, 2026-12-31)
 ask sv: bal(savings, 2026-12-31)
 === expect
-k: 0.00 PLN
-  cut 2026-10-20
-sv: 300.00 PLN
-  cut 2026-10-20
+refused: LOAD-SAME same bank[r1] = sweep: an observed row and a planned instance of one model; state fulfils on the row (m.tally:31)

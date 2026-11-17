@@ -71,7 +71,7 @@ MAX_JOBS = 4
 BUDGET = 90.0  # the hard budget per run (the user's rule, 4.5f; 60 s before)
 SLOW = 60.0  # the soft line: a check past it is slow
 SLOW_RUNS = 3  # slow in this many uncached runs in a row: a candidate for load or reduction
-TESTS_LINE = '1365 tests, 1365 passed, 0 failed'  # refcore for tally 2.1.7 (the spec round of 10 rules, after P40 and P41; 1356 after P36, 1345 before); 1251 on 2.1.6 (after T's re-run: P29-P31); 1243 at 2.1.6's first close; 1170 on 2.1.5 (issue #84); 1168 on 2.1.4 (issue #80); 1165 on 2.1.3 (issues #58, #59, #60); 1152 on 2.1.2 (the spec round); 1124 on 2.1.1 (issue #13); 1115 on 2.1 after 7c's fixes, 1105 at tally-2.1 (7b), 950 on 2.0
+TESTS_LINE = '1552 tests, 1552 passed, 0 failed'  # refcore for tally 2.1.8 at its final tag (51712a8f); 1551 at 21c79026; 1539 at its earlier tag (T's re-run); 1365 on 2.1.7 (the spec round of 10 rules, after P40 and P41; 1356 after P36, 1345 before); 1251 on 2.1.6 (after T's re-run: P29-P31); 1243 at 2.1.6's first close; 1170 on 2.1.5 (issue #84); 1168 on 2.1.4 (issue #80); 1165 on 2.1.3 (issues #58, #59, #60); 1152 on 2.1.2 (the spec round); 1124 on 2.1.1 (issue #13); 1115 on 2.1 after 7c's fixes, 1105 at tally-2.1 (7b), 950 on 2.0
 LAYERS = ('interpreter', 'unit', 'integration')
 LEFT_OUT = re.compile(r'^\s+left out: ')
 VERDICTS = ('same', 'differ', 'over', 'killed', 'error', 'known', 'fixed', 'ran')
@@ -582,11 +582,11 @@ def self_test(checks):
         open(ph, 'w', encoding='utf-8').write(hb[:j] + chr(ord(hb[j]) ^ 1) + hb[j + 1:])
         _, r, _ = session([dict(hh, baseline=os.path.relpath(ph, ROOT))], checks, **kw)
         say(r['pypy'][0]['verdict'] == 'differ', 'a planted one-byte difference in a household ask\'s block is caught')
-        # a known fault: alone it reports `known`; with its run's asks it is `same`
+        # KF-01, retired 2026-11-13 (P36, known-faults.md): alone and with its run's asks, its baseline's bytes
         _, r, _ = session([by['I:D:d05_quarters~alone'], by['I:D:d05_quarters']], checks, **kw)
         v = {x['id']: x['verdict'] for x in r['pypy']}
-        say(v == {'I:D:d05_quarters~alone': 'known', 'I:D:d05_quarters': 'same'},
-            'known fault KF-01: alone `known`, in its run `same` (%s)' % v)
+        say(v == {'I:D:d05_quarters~alone': 'same', 'I:D:d05_quarters': 'same'},
+            'KF-01 retired: alone `same`, in its run `same` (%s)' % v)
         # 2. a second run is a cache hit
         _, r, _ = session([fast], checks, **kw)
         say(r['pypy'][0]['cached'] == 'cached' and r['pypy'][0]['verdict'] == 'same', 'a second run of a check is a cache hit')
@@ -710,6 +710,13 @@ def self_test(checks):
         for script, flag in (('m2/hindcast/gen.py', ['--check']), ('m2/hindcast/judge.py', [])):
             p = subprocess.run([sys.executable, '-I', '-B', T + script] + flag, capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8s. the `windows each` twins (tally 2.1.8, P34, P36): each sub-window's answer line is its plain line pinned
+        # to each of its days, and the plain line is the hole exactly where two days' answers differ (answer lines
+        # only, not registers); tools/twins.py's own self-test, then map/twins.tsv against refcore (its cache)
+        for flag in ('--self-test', '--check'):
+            p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/twins.py', flag], capture_output=True, text=True)
+            say(p.returncode == 0, 'twins.py %s: ' % flag + (p.stdout.strip().split('\n')[-1] if p.stdout.strip()
+                                                              else p.stderr[-200:]))
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

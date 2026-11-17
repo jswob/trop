@@ -12,7 +12,7 @@ from fractions import Fraction
 from .errors import TallyError, Refusal, Unspecified, at_run
 from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
 from .dates import month_period
-from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups
+from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups, same_pairs
 from .walk import K_start, K_end, kday
 
 
@@ -110,7 +110,7 @@ def m_residual_units(self, place, span, ctx):
             if lg.unit is not None and self.touches([lg], place):
                 us.add(lg.unit)
     for iid, p, u, r in self.readings(octx):
-        if p == place and u not in (None, '*'):
+        if p == place and u not in (None, '*', 'any'):
             us.add(u)
     return sorted(us)
 
@@ -165,8 +165,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 continue
             touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place))
             d = i.day
-            if isinstance(d, Hole) or (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and
-                                       (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
+            # a refused instance whose day is refused may fall on any day, as a hole day's (tally 2.1.8 R11, #191 Q1)
+            if isinstance(d, Hole) or (st == 'refused' and day_lo(d) is None) or \
+                    (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and
+                     (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
                 # E §6.3 Grouping (round 12): "An instance that nothing fulfils whose day is a hole, or a window not
                 # inside one month, prints an expected-but-missing line in a group of its own named ?, first among
                 # the groups, with its day's questions; it counts in no month's totals" (writer 5's T-102)
@@ -207,9 +209,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # latest of them, and listed once; where they disagree each shows (E §6.1)
     also = {}
     hole_at = {}     # a row whose same group's rows both book x and disagree there: its observed at x, the HOLE-SAME
-    if getattr(w, 'same_pairs', None) is not None and w.same_pairs():
+    # the pairs as known on `on`, the observations' own cut (E §6.3; tally 2.1.8 R12: their same lines with them)
+    if same_pairs(m, octx):
         keep = []
-        pairs = w.same_pairs()
+        pairs = same_pairs(m, octx)
         ids_in = set(o.id for o in obs)
         kept_groups = set()
         for o in obs:
@@ -218,7 +221,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 for si, p in enumerate((lg.frm, lg.to)):
                     if isinstance(p, Thing) and p.name == place:
                         gd = lg.day if isinstance(lg.day, datetime.date) else o.day
-                        if o.id in pairs and isinstance(gd, datetime.date) and not w.obs_end_on(o, p, gd):
+                        if o.id in pairs and isinstance(gd, datetime.date) and not w.obs_end_on(o, p, gd, octx):
                             # E §6.3: "a pair of rows stated same is one movement: the ledger lists it once, on one
                             # line, and names both rows"; at x it is what x's statement books (L §5.19: "each end is
                             # booked once, from the statement that covers it"), not the other row's end
@@ -256,7 +259,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     lone = []
     # a pair stated same is one movement, "its fulfils ... stated on either row" (L §5.19): a row's link is its
     # partner's where it states none
-    groups = same_groups(m)
+    groups = same_groups(m, octx)
     all_obs = None
     for o in obs:
         f = o.fulfils
@@ -291,7 +294,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         for o in os:
             vals.add(obs_field(o, by))
         if len(vals) == 1 and None not in vals:
-            return vals.pop()
+            # a value group prints `<f> <value>`, as a move's prints `move <id>`, so it is never taken for balance,
+            # unexplained or a move (E §6.3; tally 2.1.8 S3, #178)
+            return '%s %s' % (by, vals.pop())
         return 'move %s' % mid
 
     for i in model:
@@ -307,6 +312,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             lines.append(RLine('expected but missing', dd, grp, mdl, None, diff,
                                'expected but missing %s on %s: model %s' % (i.id, dd, self.rtext(mdl, unit)),
                                i.order))
+            if isinstance(i.day, Iv):
+                # a window inside one month: the day it prints is an unknown day the ledger carries (tally 2.1.8
+                # R13, L §4.4)
+                lines[-1].carry_day = i.day
             continue
         ob = None
         for o in os:
@@ -384,6 +393,8 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         lines.append(RLine('expected but missing', None, (None, '?'), mdl, None, _sub(Fraction(0), mdl),
                            'expected but missing %s on %s: model %s' % (i.id, dtxt, self.rtext(mdl, unit)),
                            i.order))
+        # the day it prints is an unknown day the ledger carries (tally 2.1.8 R13, L §4.4)
+        lines[-1].carry_day = d
     for o in obs:
         if o.id in seen:
             continue
@@ -395,7 +406,8 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         # an observation that fulfils nothing, or whose instance or adjustment the model at K doesn't hold (E §6.3)
         ob = obs_flow(o)
         if by is not None:
-            g = obs_field(o, by) or 'unexplained'
+            v = obs_field(o, by)
+            g = '%s %s' % (by, v) if v is not None else 'unexplained'
         else:
             g = 'unexplained'
         ids = ', '.join(also.get(o.id) or [o.id])
@@ -420,16 +432,25 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             key = None
         if not in_span(d):
             continue
+        if key is None:
+            key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
+        else:
+            key = key[:4] + (key[4] - 1,)
+        if only:
+            # L §5.10 (tally 2.1.8 R14): at a place of unit any each ledger is its unit's; a row that states no unit
+            # stands for every unit the place has a position in at its instant but one with its own reading there
+            if u == 'any':
+                if unit in getattr(r, '_except', frozenset()) or unit not in w.units_held(place, key):
+                    continue
+            elif u != unit:
+                continue
+        u = unit if only else u
         val = r.val
         if isinstance(val, tuple) and val[0] == 'hole':
             stated = Hole([(val[1], 'stated[%s]' % place)])
         else:
             stated = val.q
-        if key is None:
-            key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
-        else:
-            key = key[:4] + (key[4] - 1,)
-        st = w.pstate(place, u, key, raw=True)
+        st =w.pstate(place, u, key, raw=True)
         bv = w.st_value(st, place, u)
         if isinstance(bv, TallyError):
             raise bv

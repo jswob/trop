@@ -1,0 +1,52 @@
+# L §5.18 (tally 2.1.8 R13, #185): residuals with a for prints one ledger per binding tuple, in binding order, each
+# under its head (r (k = a): residuals jar[a] 2026-03). 2.1.7's refcore crashed (answer_residuals never read the
+# binding); the engine refused at run.
+=== m.tally
+model rf
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+place jar[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt[k in ks]: money PLN
+input pd: date
+
+move pay[k in ks]: transfers
+  on pd
+  leg cash from world to jar[k] amount amt[k]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[a] = 10.00 PLN "s"
+  pd = 2026-03-10 "s"
+  amt[b] = 20.00 PLN "s"
+  opening[jar[a]] = 0.00 PLN at 2026-03-01 start "s"
+  opening[jar[b]] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers jar[a], jar[b]
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to jar[a] amount 12.00 PLN) "r1"
+
+ask r: residuals jar[k] 2026-03 for k in ks
+=== expect
+r (k = a): residuals jar[a] 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed 12.00 PLN, difference 12.00 PLN
+    unexplained bank[r1] on 2026-03-10: observed 12.00 PLN
+  2026-03 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing pay[a] on 2026-03-10: model 10.00 PLN
+  cut 2026-04-10
+r (k = b): residuals jar[b] 2026-03
+  2026-03 move pay: model 20.00 PLN, observed 0.00 PLN, difference -20.00 PLN
+    expected but missing pay[b] on 2026-03-10: model 20.00 PLN
+  cut 2026-04-10

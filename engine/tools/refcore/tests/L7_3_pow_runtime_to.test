@@ -1,4 +1,6 @@
-# L §7.3: pow(x, q) with a non-integer q needs to u (LOAD-TO, a load refusal: printed once, L §8.3).
+# L §7.3: pow(x, q) with a non-integer q needs to u. q is a row's value, so the check is the run's, made where the
+# value is read, in load's words: RUN-DOMAIN (L §8.4 Load refuses what load sees; tally 2.1.8 §4, #162). 2.1.7's
+# refcore printed LOAD-TO at run, refusing the reality.
 === m.tally
 model t
   tally 2
@@ -22,4 +24,5 @@ version v
 
 ask a: p law 2026-06-30
 === expect
-refused: LOAD-TO ...
+a: refused: RUN-DOMAIN pow needs to u
+  law date 2026-06-30, cut 2026-12-31

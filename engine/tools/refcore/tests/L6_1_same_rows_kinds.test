@@ -32,9 +32,9 @@ ask c: sum(t.cash.amount for t in rent over 2026-02)
 ask d: count(true for o in bank_rows over 2026-02)
 ask e: count(true for t in spending over 2026-02)
 === expect
-b: ?"bank_rows[r2] and bank_rows[r1] are one, but the kind differs on 2026-02-20: rent (bank_rows[r2]) and groceries (bank_rows[r1])" (bank_rows[r2], bank_rows[r1])
+b: ?"bank_rows[r1] and bank_rows[r2] are one, but the kind differs on 2026-02-20: groceries (bank_rows[r1]) and rent (bank_rows[r2])" (bank_rows[r1], bank_rows[r2])
   cut 2026-10-20
-c: ?"bank_rows[r2] and bank_rows[r1] are one, but the kind differs on 2026-02-20: rent (bank_rows[r2]) and groceries (bank_rows[r1])" (bank_rows[r2], bank_rows[r1])
+c: ?"bank_rows[r1] and bank_rows[r2] are one, but the kind differs on 2026-02-20: groceries (bank_rows[r1]) and rent (bank_rows[r2])" (bank_rows[r1], bank_rows[r2])
   cut 2026-10-20
 d: 3
   cut 2026-10-20

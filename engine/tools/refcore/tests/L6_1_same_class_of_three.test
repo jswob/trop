@@ -1,0 +1,63 @@
+# tally 2.1.8 S6 (#187), L §6.1 l.1805: same is an equivalence, lines that share a side make one class. x[a] = y[a]
+# (version one) and y[b] = y[a] (version two, known later) join x[a], y[a] and y[b]; they state 2, 3 and 4: every read
+# of the class is one HOLE-SAME naming each row and value, in id order (L §8.1). x[b] = y[c] and x[c] = y[c] join a
+# class that states 5 twice and x[b] nothing: 5. Before version two is known, y[b] is no side (4) and x[a] the pair's
+# hole. 2.1.7's refcore kept each row's last partner only (y[b] read y[a] alone, x[a] read x[a] and y[a]).
+=== m.tally
+model t
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+kind persons
+input x[p in persons]: int
+input y[p in persons]: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [a] lives 2026-01-01..
+  persons + [b] lives 2026-01-01..
+  persons + [c] lives 2026-01-01..
+  x[a] = 2 "s"
+  y[a] = 3 "s"
+  y[b] = 4 "s"
+  x[c] = 5 "s"
+  y[c] = 5 "s"
+
+version one
+  cite s
+  governs always
+  known 2026-01-02
+  same x[a] = y[a]
+  same x[c] = y[c]
+
+version two
+  cite s
+  governs always
+  known 2026-01-03
+  same y[b] = y[a]
+  same x[b] = y[c]
+
+ask xa: x[a]
+ask yb: y[b]
+ask xb: x[b]
+ask yc: y[c]
+ask yb2: y[b] as known 2026-01-02
+ask xa2: x[a] as known 2026-01-02
+=== expect
+xa: ?"x[a], y[a] and y[b] are one, but the value differs on every day: 2 (v:x[a]), 3 (v:y[a]) and 4 (v:y[b])" (x[a], y[a], y[b])
+  cut 2026-03-01
+xa2: ?"x[a] and y[a] are one, but the value differs on every day: 2 (v:x[a]) and 3 (v:y[a])" (x[a], y[a])
+  cut 2026-01-02
+xb: 5
+  cut 2026-03-01
+yb: ?"x[a], y[a] and y[b] are one, but the value differs on every day: 2 (v:x[a]), 3 (v:y[a]) and 4 (v:y[b])" (x[a], y[a], y[b])
+  cut 2026-03-01
+yb2: 4
+  cut 2026-01-02
+yc: 5
+  cut 2026-03-01

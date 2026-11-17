@@ -1,0 +1,38 @@
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.1.8 R13 (#197), #169-k: a leg read as a field under an axis the walk reads fans out per combination (lf: one line per option of ax; lf_lo pinned)"
+
+source s "s"
+unit PLN: currency minor 0.01
+axis ax
+  lo "low"
+  hi "high"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input p: money PLN
+input twice: int
+input dom: int
+
+def pay_amt: money PLN
+  rule base = p
+  rule hi beats base = p * twice when ax == hi
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  leg cash from world to konto amount pay_amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "s"
+  twice = 2 "s"
+  dom = 3 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask lf: sum(t.cash.amount for t in transfers over 2026-03)
+ask lf_lo: sum(t.cash.amount for t in transfers over 2026-03) with ax = lo
+ask lf_leg: pay[2026-03].cash.amount

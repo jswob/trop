@@ -1,0 +1,65 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, tally 2.1.8 R12 (#196): a scenario version's same line joins rows only in its world (item #187, q_sc, q_sc_rows); item #191 Q3, a base cell on a line that reaches the scenario is read in its own world (q_pair: 950.00 PLN, then refused RUN-RECORD; q_rev); no-item 3, replace bank[r] = none in a scenario (q_gone); no-item 4, a moves line in a scenario file (q_moved, t.tally's v_rate moved in later only)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place unexplained: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  leg cash from konto to sav amount amt
+
+ask q_base: flows(save, 2026-03-01 .. 2026-03-31)
+ask q_sc: flows(save, 2026-03-01 .. 2026-03-31) as if {scenario sc}
+ask q_pair: flows(save, 2026-03-01 .. 2026-03-31) as if {scenario sc}, flows(save, 2026-03-01 .. 2026-03-31)
+ask q_rev: flows(save, 2026-03-01 .. 2026-03-31), flows(save, 2026-03-01 .. 2026-03-31) as if {scenario sc}
+ask q_obs: observed(save[2026-03]).cash.amount as if {scenario sc}, observed(save[2026-03]).cash.amount
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 900.00 PLN "s"
+  d_save = 15 "s"
+  d20 = 20 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+ask q_sc_rows: count(o in bank over 2026-03) as if {scenario sc}, count(o in bank over 2026-03)
+ask q_gone: flows(konto, 2026-03) as if {scenario gone}, flows(konto, 2026-03)
+ask q_moved: flows(top, 2026-04) as if {scenario later}, flows(top, 2026-04)
+
+input rate: money PLN
+input d20: int
+move top[m in months]: transfers
+  on day_of(m, d20)
+  at start_of(m)
+  leg cash from unexplained to sav amount rate
+
+version v_rate
+  cite s
+  governs 2026-04..
+  known 2026-01-01
+  rate = 10.00 PLN "s"

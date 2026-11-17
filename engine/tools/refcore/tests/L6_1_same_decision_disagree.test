@@ -3,6 +3,9 @@
 # L §8.1 HOLE-SAME "<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)". As
 # L6_1_same_decision_waits, but the bank's row says 250.00 PLN where sweep, at its point, moves 300.00 PLN: both places
 # take the hole from 2026-03-31.
+# tally 2.1.8 (the user's cut, plan §13; #187; L §6.1 Identities are written): inside one model a version's same between
+# an observed row and a move instance is refused at load, LOAD-SAME: the row states fulfils instead (§5.19). This test
+# is about that line, so it is kept as the refusal; a joint model's line between two members still books the pair once.
 === m.tally
 model m
   tally 2
@@ -39,7 +42,4 @@ version stmt
 ask k: bal(konto, 2026-12-31)
 ask sv: bal(savings, 2026-12-31)
 === expect
-k: ?"bank[r1] and sweep are one, but the leg at konto differs on 2026-03-31: 250.00 PLN (bank[r1]) and 300.00 PLN (sweep)" (bank[r1], sweep)
-  cut 2026-10-20
-sv: ?"bank[r1] and sweep are one, but the leg at savings differs on 2026-03-31: 250.00 PLN (bank[r1]) and 300.00 PLN (sweep)" (bank[r1], sweep)
-  cut 2026-10-20
+refused: LOAD-SAME same bank[r1] = sweep: an observed row and a planned instance of one model; state fulfils on the row (m.tally:31)

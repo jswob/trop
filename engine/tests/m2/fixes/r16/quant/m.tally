@@ -1,0 +1,35 @@
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.1.8 R16 (#200), item #171: the keyed quantile is the paths' type 1, its range of q included: a level outside (0, 1] is LOAD-DOMAIN where load sees the literal (that file: quant_lit), else RUN-DOMAIN (q_def, at the key whose level is 0); 1 and 0.5 answer (q1, q5); no-item 5, q a def's value of 0 under a where (q_where)"
+
+source s "s"
+index ks = [a, b, c]
+input v[k in ks]: num
+input lv[k in ks]: num
+input zero: num
+input half: num
+
+def lvl: num
+  rule base = zero
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  v[a] = 1 "s"
+  v[b] = 2 "s"
+  v[c] = 3 "s"
+  lv[a] = 0 "s"
+  lv[b] = 0.5 "s"
+  lv[c] = 1 "s"
+  zero = 0 "s"
+  half = 0.5 "s"
+
+ask q1: quantile(v[k] for k in ks, 1)
+ask q5: quantile(v[k] for k in ks, half)
+ask q_def: quantile(v[k] for k in ks, lvl)
+ask q_key: quantile(v[j] for j in ks, lv[k]) for k in ks
+ask q_where: quantile(v[k] for k in ks where v[k] > zero, lvl)

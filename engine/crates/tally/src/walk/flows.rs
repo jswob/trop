@@ -7,7 +7,7 @@
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
 //! registers while it counts; a read of a projection's walk reads the walks it continues
 //! through the point each continues from.
-use super::plan::{Amount, Dated, DayWindow, Exists, Inst, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status, invariant, qty_value};
 use super::point::At;
 use super::reads::{Sees, expr_text, refuse};
 use super::state::{ALL, Change, Ent, Walk};
@@ -140,6 +140,7 @@ impl Engine {
             span: (start, last),
             totals: BTreeMap::new(),
             holes: Vec::new(),
+            legs: Vec::new(),
             met: Collected::default(),
             keep,
         };
@@ -164,6 +165,19 @@ impl Engine {
         }
         self.absorb(&sums.met);
         if let Some(h) = spread(&sums.holes.iter().map(Some).collect::<Vec<_>>()) {
+            // a sum of its movements: under `partial`, linear in each hole leg's amount where
+            // every hole is one, in one unit (L §5.18; tally 2.1.8 R15)
+            let one = match sums.totals.first_key_value() {
+                Some((u, q)) if sums.totals.len() == 1 => Some((u.clone(), q.clone())),
+                Some(_) => None,
+                None => Some((pu.clone(), Num::zero())),
+            };
+            if let Some((unit, q)) =
+                one.filter(|_| ctx.partial && pu != "any" && sums.legs.len() == sums.holes.len())
+                && let Some(parts) = self.legs_linear(m, &sums.legs)?
+            {
+                return crate::eval::lin_fold(m, &h, qty_value(m, &q, &unit)?, parts);
+            }
             return Ok(Value::Hole(h));
         }
         if pu == "any" {
@@ -330,7 +344,7 @@ fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
         "date within {} not precise enough for flows of {place}",
         w.question
     );
-    Hole::asked(&text, movement)
+    Hole::asked(&text, movement).carrying(&w.value.carry)
 }
 
 /// Whether a leg's amount is zero, so its day can't change a sum (L §4.4).
@@ -352,6 +366,9 @@ struct Sums {
     totals: BTreeMap<String, Num>,
     /// The holes met.
     holes: Vec<Hole>,
+    /// The holes of them that are a booked leg's amount, each with its direction at the place
+    /// and where it was read, which a `partial` line reads again (L §5.18; tally 2.1.8 R15).
+    legs: Vec<(Hole, bool, HoleSrc)>,
     /// The register met.
     met: Collected,
     /// Under `, for k`, the movements for period k by id; none counts every movement.
@@ -386,7 +403,7 @@ impl Sums {
                 continue;
             }
             match &e.change {
-                Change::Bad(r) if e.at >= lo || e.at == first => {
+                Change::Bad(r) | Change::PermBad(r) if e.at >= lo || e.at == first => {
                     return Err(Stop::Refused(r.clone()));
                 }
                 Change::Perm(h) | Change::Hole(h) => {
@@ -396,6 +413,8 @@ impl Sums {
                     }
                 }
                 Change::Bad(_)
+                | Change::PermBad(_)
+                | Change::Unperm(_)
                 | Change::Reset { .. }
                 | Change::Delta(_)
                 | Change::ImpOn(_)
@@ -426,6 +445,9 @@ impl Sums {
         // the movements dated by a window met by the span's end: each whose window crosses
         // the span is its hole, booked in the walk or past its end (L §4.4; refcore's `wins`)
         let mut windows: BTreeMap<&str, (&DayWindow, &str)> = BTreeMap::new();
+        // the holes of windows open before the span: one whose window ended there too is
+        // decided, its movement dated before the span (L §4.4, P29; B5 of group 3's review)
+        let mut open: Vec<Hole> = Vec::new();
         for e in walk.entries(place, unit) {
             // a zero leg's day can't change the sum: decided (L §4.4)
             if let (Change::ImpOn(_), Some((wid, w)), Some(mv)) = (&e.change, &e.window, &e.mv)
@@ -435,24 +457,41 @@ impl Sums {
                 windows.insert(wid, (w, mv));
             }
             if e.at <= lo {
-                if let Change::Perm(h) = &e.change
-                    && e.at <= limit
-                {
-                    self.holes.push(h.clone());
+                match &e.change {
+                    Change::Perm(h) if e.at <= limit => open.push(h.clone()),
+                    Change::Unperm(h) => open.retain(|o| o != h),
+                    // a refused movement whose day is a hole or refused may fall in the span,
+                    // as a hole day's (tally 2.1.8, R11)
+                    Change::PermBad(r) if e.at <= limit => return Err(Stop::Refused(r.clone())),
+                    Change::Perm(_)
+                    | Change::PermBad(_)
+                    | Change::Bad(_)
+                    | Change::Reset { .. }
+                    | Change::Delta(_)
+                    | Change::Hole(_)
+                    | Change::ImpOn(_)
+                    | Change::Mark => {}
                 }
                 continue;
             }
+            // the log runs in point order: the holes met before the span come first
+            self.holes.append(&mut open);
             if e.at > limit {
                 continue;
             }
-            if let Change::Bad(r) = &e.change {
+            if let Change::Bad(r) | Change::PermBad(r) = &e.change {
                 return Err(Stop::Refused(r.clone()));
             }
             if self.other_period(e) {
                 continue;
             }
+            if let (Change::Hole(h), Some(leg)) = (&e.change, &e.hole_leg)
+                && let Some(src) = &leg.src
+            {
+                self.legs.push((h.clone(), leg.into, HoleSrc::clone(src)));
+            }
             match &e.change {
-                Change::Bad(r) => return Err(Stop::Refused(r.clone())),
+                Change::Bad(r) | Change::PermBad(r) => return Err(Stop::Refused(r.clone())),
                 Change::Hole(h) | Change::Perm(h) => {
                     self.holes.push(h.clone());
                     self.met.entries.extend(e.reg.iter().cloned());
@@ -472,9 +511,10 @@ impl Sums {
                     Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
                     Some(Amount::Refused(_)) | None => {}
                 },
-                Change::ImpOn(_) | Change::Mark => {}
+                Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
             }
         }
+        self.holes.extend(open);
         for (w, movement) in windows.into_values() {
             if crosses(w, self.span) {
                 self.holes.push(imprecise_flows(w, place, movement));

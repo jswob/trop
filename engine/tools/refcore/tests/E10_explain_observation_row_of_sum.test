@@ -1,0 +1,98 @@
+# tally 2.1.8 P42, E §10 l.472 (group 4's review, spec/g2/sumobs2 e3; P24 F-2, #169): a sum that reads a leg
+# through an observation lists that observation's row, [3] row b:bank[o1], with its version, source, locator, day and
+# known; the traced value equals the stored one, so e3 prints it whatever other asks run. d1f4279b left it out.
+=== m.tally
+model sumdec
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-06-30
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+
+kind pays: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input amt[m in months]: money PLN
+input cap: money PLN
+input dom: int
+input big: money PLN
+input small: money PLN
+input bank: observed
+
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+def cnt[m in months]: int = count(p in pays over m)
+
+move pay[m in months]: pays
+  on start_of(m)
+  leg cash from work to konto amount amt[m]
+
+ask i3: inputs-of tot[2026-03]
+ask i2: inputs-of tot[2026-02]
+ask e1: explain tot[2026-02]
+ask e2: explain tot[2026-05]
+ask e3: explain tot[2026-03]
+ask v2: tot[2026-02]
+ask v5: tot[2026-05]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  cap = 12.00 PLN "cap"
+  dom = 20 "day"
+  big = 5.00 PLN "big"
+  small = 1.00 PLN "small"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  covers konto
+  anchor konto
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "paid"
+=== expect
+e1: 10.00 PLN
+  [1] tot[2026-02] = 10.00 PLN
+      rule base: won
+        [2] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+  unfulfilled: pay[2026-02]
+  cut 2026-03-15
+e2: 10.00 PLN
+  [1] tot[2026-05] = 10.00 PLN
+      rule base: won
+        [2] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+  cut 2026-03-15
+e3: 11.00 PLN
+  [1] tot[2026-03] = 11.00 PLN
+      rule base: won
+        [2] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "synthetic", locator "plan", governs always, known 2026-01-01
+        [3] row b:bank[o1] = (from: work, to: konto, amount: 11.00 PLN, day: 2026-03-01)
+            version b, source s, "synthetic", locator "paid", on 2026-03-01, known 2026-03-10
+  cut 2026-03-15
+i2:
+  v:amt[2026-01..2026-06] (source s "synthetic", locator "plan")
+  unfulfilled: pay[2026-02]
+  cut 2026-03-15
+i3:
+  bank[o1] (source s "synthetic", locator "paid")
+  cut 2026-03-15
+v2: 10.00 PLN
+  unfulfilled: pay[2026-02]
+  cut 2026-03-15
+v5: 10.00 PLN
+  cut 2026-03-15
+warning: WARN-UNREAD def cnt is read by nothing
+warning: WARN-UNREAD input big is read by nothing
+warning: WARN-UNREAD input cap is read by nothing
+warning: WARN-UNREAD input dom is read by nothing
+warning: WARN-UNREAD input small is read by nothing

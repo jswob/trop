@@ -140,18 +140,9 @@ pub(crate) struct LayerData {
 /// identity, in the order the windows were met (refcore's assignment `asg`). L §4.4.
 pub(crate) type Choice = Vec<(String, Day)>;
 
-/// A window a `windows each` run met that its choice names no day of: its identity (the read
-/// that gave it, a calendar's entry, a version's or row's `known`), the label a line's head
-/// names it by, and the days it can take (refcore's `each_met`). L §4.4.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Met {
-    /// Its identity.
-    pub(crate) id: String,
-    /// Its label: `wd`, `added window(…)`, `known of v`.
-    pub(crate) label: String,
-    /// The days it can take, in order.
-    pub(crate) days: Vec<Day>,
-}
+/// A window a `windows each` run met that its choice names no day of: an unknown day, its
+/// identity, label and days (refcore's `each_met`). L §4.4.
+pub(crate) type Met = crate::hole::Unknown;
 
 impl LayerData {
     /// Whether it pins nothing and sets no axis: the unpinned context.
@@ -702,10 +693,10 @@ impl Engine {
             .map(|(_, day)| *day))
     }
 
-    /// The day window `window` takes in context `ctx`, where a `windows each` holds: the day
-    /// its choice names, else its first, the window noted as met so the line runs again once
-    /// per day of it; none where no `windows each` holds, so the window stays one (refcore's
-    /// `window_choice`, `visible`). L §4.4.
+    /// The day window `window` takes in context `ctx`, where a `windows each` holds and its
+    /// choice names one; else none, so the window stays one, as the plain line reads it, noted
+    /// as met where a `windows each` holds, so the line runs again once per day of it if its
+    /// answer carries it (refcore's `window_choice`, `visible`). L §4.4; tally 2.1.8 R13.
     ///
     /// # Errors
     ///
@@ -720,17 +711,15 @@ impl Engine {
         if let Some((_, day)) = choice.iter().find(|(id, _)| *id == window.id) {
             return Ok(Some(*day));
         }
-        let first = window
-            .days
-            .first()
-            .copied()
-            .ok_or_else(|| invariant("a window with no day"))?;
+        if window.days.is_empty() {
+            return Err(invariant("a window with no day"));
+        }
         if let Some(met) = &mut self.each_met
             && !met.iter().any(|w| w.id == window.id)
         {
             met.push(window);
         }
-        Ok(Some(first))
+        Ok(None)
     }
 
     /// The items the walk's readers reach, once computed; the caller puts it back in
