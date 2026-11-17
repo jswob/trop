@@ -89,6 +89,10 @@ struct Side {
     world: String,
     /// The cells per binding tuple, once answered.
     cells: Option<SideCells>,
+    /// The binding part of the tuple answered now, ` (k = a)`, where the ask's law date, cut
+    /// or pins are formed per tuple and each tuple is answered as an ask of its own
+    /// (`tuple_asks`); empty otherwise.
+    part: String,
     /// The choice of seen and unseen this side is answered under; none for the first run,
     /// which sees every `same` line (L §4.5, tally 2.1.8 R12).
     pick: Option<BTreeMap<String, bool>>,
@@ -357,6 +361,7 @@ fn side_cells(
         gathered.seen.side = Some(Side {
             world: world.clone(),
             cells: None,
+            part: String::new(),
             pick: pick.cloned(),
             met: None,
         });
@@ -439,7 +444,9 @@ fn side_tuples(
     world: &str,
 ) -> Result<Result<SideCells, String>, Stop> {
     if ask.binds.is_empty() {
-        let cells = diff_cells(m, (ask, diff), engine, (&Env::empty(), ctx, pinned), world)?;
+        // the tuple's scope where it is answered as an ask of its own (`tuple_asks`)
+        let env = engine.ask_env.clone();
+        let cells = diff_cells(m, (ask, diff), engine, (&env, ctx, pinned), world)?;
         return Ok(Ok(vec![(String::new(), Ok(cells))]));
     }
     let tuples = match engine.tuples(m, &ask.binds, (&Env::empty(), ctx))? {
@@ -1082,8 +1089,13 @@ fn ask_body(
         // each cell's runs, kept for the turn that prints both (refcore's `_diff_only`,
         // `_diff_side`; tally 2.1.8 R13, #186)
         (AskBody::Diff(diff), Some(side)) => {
+            // a tuple answered as an ask of its own adds its cells to the side's
             match side_tuples(m, (ask, diff), engine, (ctx, &pinned), &side.world)? {
-                Ok(cells) => side.cells = Some(cells),
+                Ok(cells) => side.cells.get_or_insert_with(Vec::new).extend(
+                    cells
+                        .into_iter()
+                        .map(|(part, cell)| (format!("{}{part}", side.part), cell)),
+                ),
                 Err(line) => return Ok(vec![line]),
             }
             Ok(Vec::new())
@@ -1459,6 +1471,15 @@ fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec
     let mut out = Vec::new();
     for member in members {
         let head = env_text(m, &ask.binds, &member.env)?;
+        // one side of a diff over two stacks: each tuple's cells under its part (`cross_lines`)
+        if let Some(side) = seen.side.as_mut() {
+            side.part.clone_from(&head);
+            if let Some(hole) = &member.unknown {
+                let cells = side.cells.get_or_insert_with(Vec::new);
+                cells.push((head.clone(), Err(hole.text())));
+                continue;
+            }
+        }
         if let Some(hole) = member.unknown {
             out.push(format!("{}{head}: {}", ask.id, hole.text()));
             continue;

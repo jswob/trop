@@ -656,6 +656,46 @@ h3 (k = b): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged
         assert_eq!(lines_of_files(&files), want, "one block per tuple");
     }
 
+    /// A diff over two stacks whose law date is its tuple's (the review of group 1's fix, F4:
+    /// `d3` h3), beside the same diff at one law date (h4): one block per tuple in both.
+    #[test]
+    fn a_two_stack_diff_with_its_law_date_per_tuple_prints_one_block_per_tuple() {
+        let (base, _) = DIFF_FOR.split_once("\nask ").expect("DIFF_FOR has asks");
+        let text = base
+            .replace("input dk[k in ks]: date\n", "input dk[k in ks]: date\ninput lk[k in ks]: date\n")
+            .replace(
+                "  dk[b] = 2026-03-05 \"s\"\n",
+                "  dk[b] = 2026-03-05 \"s\"\n  lk[a] = 2026-03-01 \"s\"\n  lk[b] = 2026-03-01 \"s\"\n",
+            )
+            + "\nask h3: diff(dk[k]) in sd against sc for k in ks law lk[k]\n\
+               ask h4: diff(dk[k]) in sd against sc for k in ks law 2026-03-01\n";
+        let lines = lines_of_files(&[
+            ("pw.tally", &text),
+            ("sc.tally", DIFF_FOR_SC),
+            ("sd.tally", DIFF_FOR_SD),
+        ]);
+        let block = |h: &str| {
+            [
+                format!(
+                    "{h} (k = a): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged"
+                ),
+                "  changed dk[k]: 2026-03-05 against 2026-03-06".to_owned(),
+                "  world: sc".to_owned(),
+                "  world: sd".to_owned(),
+                "  law date 2026-03-01, cut 2026-04-25".to_owned(),
+                format!(
+                    "{h} (k = b): diff in sd against sc: 1 changed, 0 added, 0 removed, 0 unchanged"
+                ),
+                "  changed dk[k]: 2026-03-07 against 2026-03-05".to_owned(),
+                "  world: sc".to_owned(),
+                "  world: sd".to_owned(),
+                "  law date 2026-03-01, cut 2026-04-25".to_owned(),
+            ]
+        };
+        let want: Vec<String> = block("h3").into_iter().chain(block("h4")).collect();
+        assert_eq!(lines, want, "h3's law date per tuple prints as h4's");
+    }
+
     /// `add_business` past the day range over a calendar read day by day: a key that is a
     /// hole, and a scenario's expression row governing 2026 only, the base's row before 2026
     /// a calendar with no business day (the review of group 1's B2).
