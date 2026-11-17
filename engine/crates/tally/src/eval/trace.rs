@@ -865,8 +865,55 @@ impl Engine {
         trace.added(Node::new(Kind::BandRow, label));
     }
 
-    /// Where the trace stands before a `min`, `max`, `argmin` or `argmax` reads its terms.
-    pub(super) fn trace_snap(&self) -> Option<Snap> {
+    /// Moves what the trace listed under the open node since `since` to the place `mark`
+    /// stood at among that node's children, after what earlier moves `done` (each mark with
+    /// how many it took there) put before it: the reads of a hole booking's answer, listed
+    /// where the instance's own reads end, as refcore answers each booking where it makes the
+    /// instance (its `answer_booking`). None moves where `mark` stood under another node.
+    /// E §10, §5 step 1.
+    pub(crate) fn trace_move_to(&mut self, since: Snap, mark: Snap, done: &mut Vec<(Snap, usize)>) {
+        let Some(trace) = self.trace.as_mut() else {
+            return;
+        };
+        if mark.parent != since.parent || mark.children > since.children {
+            return;
+        }
+        let node = match trace.node_mut(since.parent) {
+            Ok(node) => node,
+            Err(stop) => {
+                trace.keep(Err(stop));
+                return;
+            }
+        };
+        if since.children > node.children.len() {
+            return;
+        }
+        let to = done
+            .iter()
+            .filter(|(d, _)| d.parent == mark.parent && d.children <= mark.children)
+            .try_fold(mark.children, |at, (_, count)| at.checked_add(*count));
+        let Some(to) = to else {
+            return;
+        };
+        if to > since.children {
+            return;
+        }
+        // the children before `to`, those listed since `since`, then the rest before `since`
+        let old = core::mem::take(&mut node.children);
+        let count = old.iter().skip(since.children).count();
+        node.children = old
+            .iter()
+            .take(to)
+            .chain(old.iter().skip(since.children))
+            .chain(old.iter().take(since.children).skip(to))
+            .copied()
+            .collect();
+        done.push((mark, count));
+    }
+
+    /// Where the trace stands before a `min`, `max`, `argmin` or `argmax` reads its terms, or
+    /// before a hole booking's answer is traced.
+    pub(crate) fn trace_snap(&self) -> Option<Snap> {
         if !self.tracing() {
             return None;
         }

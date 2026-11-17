@@ -15,7 +15,7 @@
 
 use super::tuples::{Law, Tuple, imprecise_law};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, LawClass, order_text, thing_seen};
+use crate::eval::{Collected, Ctx, Engine, Env, LawClass, Snap, order_text, thing_seen};
 use crate::hole::{Hole, spread};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
@@ -590,8 +590,9 @@ impl Engine {
             )));
         }
         self.plan_active.insert(key.clone());
+        let mut marks: Vec<(String, Snap)> = Vec::new();
         let made = if self.tracing() {
-            self.traced_instances(m, mv, cut)
+            self.traced_instances(m, mv, cut, &mut marks)
         } else {
             self.make_instances(m, mv, cut, None).map(|out| (out, None))
         };
@@ -623,14 +624,15 @@ impl Engine {
         }
         let answered = self.plans.get(&key).map_or(shared, Rc::clone);
         if back.is_some() {
-            self.trace_answers(m, mv, &answered, cut)?;
+            self.trace_answers(m, mv, (&answered, &marks), cut)?;
         }
         Ok(answered)
     }
 
     /// The answered instances of a list a read traces, each evaluated again at the cut of the
-    /// version that answered it, traced, so the read names the rows that give the answer
-    /// (E §10, §5 step 1; L §5.18).
+    /// version that answered it, traced, so the read names the rows that give the answer,
+    /// listed where `marks` says the instance's own reads ended (refcore answers each booking
+    /// where it makes the instance, `answer_booking`). E §10, §5 step 1; L §5.18.
     ///
     /// # Errors
     ///
@@ -639,16 +641,18 @@ impl Engine {
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        insts: &[Inst],
+        (insts, marks): (&[Inst], &[(String, Snap)]),
         cut: Day,
     ) -> Result<(), Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.trace_plan_open();
         let mut made = Ok(None);
+        let mut done = Vec::new();
         for inst in insts {
             let Some((at, _)) = &inst.answered else {
                 continue;
             };
+            let since = self.trace_snap();
             let seed = Seed {
                 env: inst.env.clone(),
                 keys: inst.keys.clone(),
@@ -659,6 +663,10 @@ impl Engine {
             made = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut));
             if made.is_err() {
                 break;
+            }
+            let mark = marks.iter().find(|(id, _)| *id == inst.id);
+            if let (Some(since), Some((_, mark))) = (since, mark) {
+                self.trace_move_to(since, *mark, &mut done);
             }
         }
         let closed = self.trace_plan_close();
@@ -693,10 +701,11 @@ impl Engine {
         m: &Reality,
         mv: &MoveInfo,
         cut: Day,
+        marks: &mut Vec<(String, Snap)>,
     ) -> Result<(Vec<Inst>, Option<crate::eval::Walked>), Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.trace_plan_open();
-        let made = self.make_instances_held(m, mv, cut, None);
+        let made = self.make_instances_held(m, mv, (cut, None), Some(marks));
         let back = self.trace_plan_close();
         self.holder = outer;
         Ok((made?, Some(back?)))
@@ -901,7 +910,7 @@ impl Engine {
     ) -> Result<Vec<Inst>, Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         let mark = self.reads_apart();
-        let made = self.make_instances_held(m, mv, cut, upto);
+        let made = self.make_instances_held(m, mv, (cut, upto), None);
         self.reads_back(mark);
         self.holder = outer;
         made
@@ -910,12 +919,14 @@ impl Engine {
     /// [`Engine::make_instances`] with the move holding the projections its `at`, its
     /// bindings' `where` and its body read, which are the move's own (L §5.14.1: "the item
     /// holding the read"); what it reads is the plan's, shared by every reader (E §3.2, §4.1).
+    /// While a read is traced, `marks` takes where each instance's own reads end, for its
+    /// answer's (E §10).
     fn make_instances_held(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        cut: Day,
-        upto: Option<Day>,
+        (cut, upto): (Day, Option<Day>),
+        mut marks: Option<&mut Vec<(String, Snap)>>,
     ) -> Result<Vec<Inst>, Stop> {
         let tctx = self.timeline_ctx(None, cut);
         let mut out = Vec::new();
@@ -947,6 +958,9 @@ impl Engine {
                     self.check_booked(mv, &inst, (booking, cut), upto)?;
                 }
                 inst.coll.merge(&tuple.coll);
+                if let (Some(marks), Some(mark)) = (marks.as_deref_mut(), self.trace_snap()) {
+                    marks.push((inst.id.clone(), mark));
+                }
                 out.push(inst);
             }
         }

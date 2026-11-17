@@ -763,4 +763,71 @@ ask r: since(stated[a], 2026-05-25)
             "no anchor line; the read of the reading refused"
         );
     }
+
+    /// The final check's `fixes/gate8/d512_hole_ans` (E §10, §5 step 1): an explanation lists
+    /// the row a later version answers a hole booking with right after that booking's hole,
+    /// as the instance is answered where it is made, before the next instance's rows.
+    #[test]
+    fn an_answer_row_is_listed_after_the_hole_it_answers() {
+        let text = r#"model t
+  tally 2
+  on 2026-08-31
+  start 2026-01-01
+  end 2026-08-31
+
+source src "s"
+unit PLN: currency minor 0.01
+input fee[m in months]: money PLN
+input dd: int
+place a: accounts PLN lives 2020-01-01..
+place out: outside lives 1900-01-01..
+
+move fee_out[m in months]: transfers
+  on day_of(m, dd)
+  at start_of(m)
+  leg cash from a to out amount fee[m]
+
+version base
+  cite src
+  governs 2026..
+  known 2026-01-01
+  dd = 3 "s"
+  fee[2026-01] = 10.00 PLN "s"
+  fee[2026-05..2026-08] = 10.00 PLN "s"
+  opening[a] = 500.00 PLN at 2026-01-01 start "s"
+
+version open_q
+  cite src
+  governs 2026-02..2026-04
+  known 2026-01-01
+  fee[2026-02] = ?"What was the February fee?"
+  fee[2026-03] = ?"What was the March fee?"
+  fee[2026-04] = ?"What was the April fee?"
+
+version later
+  cite src
+  governs 2026-03
+  known 2026-06-01
+  replace fee[2026-03] = 12.00 PLN "s"
+
+ask e: explain fee_out[2026-03].cash.amount
+"#;
+        let rows: Vec<String> = lines_of("d512_answer_order.tally", text)
+            .into_iter()
+            .filter(|l| l.starts_with("  ["))
+            .collect();
+        assert_eq!(
+            rows,
+            [
+                "  [1] row base:dd = 3",
+                "  [2] row base:fee[2026-01] = 10.00 PLN",
+                "  [3] row open_q:fee[2026-02] = ?\"What was the February fee?\" (fee[2026-02])",
+                "  [4] row open_q:fee[2026-03] = ?\"What was the March fee?\" (fee[2026-03])",
+                "  [5] row later:fee[2026-03] = 12.00 PLN",
+                "  [6] row open_q:fee[2026-04] = ?\"What was the April fee?\" (fee[2026-04])",
+                "  [7] row base:fee[2026-05..2026-08] = 10.00 PLN",
+            ],
+            "the answer's row right after the hole it answers"
+        );
+    }
 }
