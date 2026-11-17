@@ -677,10 +677,14 @@ impl Engine {
         Ok(())
     }
 
-    /// The window's hole of leg `lg` of `movement`, dated by a window whose first day and last
-    /// day sit on two sides of the lifespan of a place it moves into or out of; none where
-    /// both are inside or both outside, which are the lifespan's yes and no (E §4.1 step 2,
-    /// §4.2 step 5; L §4.4; tally 2.1.8 item 77).
+    /// The window's hole of leg `lg` of `movement`, dated by a window some of whose days are
+    /// inside the lifespan of every place it moves into or out of and some aren't, each day
+    /// of the window asked; none where every day is inside, or none is, which are the
+    /// lifespan's yes and no, or where a lifespan's end is a hole (refcore's
+    /// `window_lifespan`). The lifespans are intervals, so every day is inside where the
+    /// window's first and last are, and one is where their common first day from the window's
+    /// first lies in the window: no day is walked (E §4.1 step 2, §4.2 step 5; L §4.4; tally
+    /// 2.1.8 item 77).
     ///
     /// # Errors
     ///
@@ -695,23 +699,42 @@ impl Engine {
             return Ok(None);
         };
         let walk = self.walk(id)?;
+        let mut spans = Vec::new();
         for p in ends(lg) {
             let thing = m
                 .things
                 .get(p)
                 .ok_or_else(|| invariant("a leg's place load didn't build"))?;
+            // no lifespan: no day is inside, the plain refusal
             let Some(sp) = m.lifespan(thing, (walk.cut, walk.world)) else {
-                continue;
+                return Ok(None);
             };
-            if sp.end_question().is_none() && sp.contains(w.lo) != sp.contains(w.hi) {
-                let text = format!(
-                    "date within {} not precise enough for a balance",
-                    w.question
-                );
-                return Ok(Some(Hole::asked(&text, movement).carrying(&w.value.carry)));
+            if sp.end_question().is_some() {
+                return Ok(None);
             }
+            spans.push(sp);
         }
-        Ok(None)
+        if spans
+            .iter()
+            .all(|sp| sp.contains(w.lo) && sp.contains(w.hi))
+        {
+            return Ok(None);
+        }
+        // the first day from the window's first that every lifespan may hold: the latest of
+        // their first days, which holds a day of all of them where any does
+        let mut first = Some(w.lo);
+        for sp in &spans {
+            first = first.and_then(|d| sp.first_from(d));
+        }
+        let some = first.is_some_and(|d| d <= w.hi && spans.iter().all(|sp| sp.contains(d)));
+        if !some {
+            return Ok(None);
+        }
+        let text = format!(
+            "date within {} not precise enough for a balance",
+            w.question
+        );
+        Ok(Some(Hole::asked(&text, movement).carrying(&w.value.carry)))
     }
 
     /// The day's close: conservation, `WARN-NEGATIVE` at the accounts and cash it touched, and

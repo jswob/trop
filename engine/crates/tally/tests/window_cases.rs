@@ -736,6 +736,53 @@ d3: 10.00 PLN
 d3w: 10.00 PLN
   cut 2026-01-01";
 
+    /// The lifespan face in the window's middle (the review of group 2's fix, L1): `tmp` lives
+    /// 03-06 .. 03-08, and `pay` moves 100.00 into it on a day of `window(03-04, 03-10)`. The
+    /// window's two ends are outside the lifespan, its middle inside: the plain line is the
+    /// hole, `windows each` refused, 100.00, refused.
+    const LIFESPAN_MIDDLE: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place tmp: accounts PLN lives 2026-03-06..2026-03-08
+place jar: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input m1: money PLN
+input wd: date
+
+move pay: transfers
+  on wd
+  leg cash from world to tmp amount m1
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  m1 = 100.00 PLN "s"
+  wd = window(2026-03-04, 2026-03-10) "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+ask c: flows(pay, 2026-03)
+ask cw: flows(pay, 2026-03) windows each
+ask c7: flows(pay, 2026-03) with wd = 2026-03-07
+"#;
+
+    const LIFESPAN_MIDDLE_LINES: &str = r#"c: ?"date within window(2026-03-04, 2026-03-10) not precise enough for flows of pay" (pay)
+  cut 2026-01-01
+c7: 100.00 PLN
+  pinned: wd = 2026-03-07
+  cut 2026-01-01
+cw [wd = 2026-03-04 .. 2026-03-05]: refused: RUN-LIFESPAN pay.cash moves into or out of tmp outside its lifespan
+  cut 2026-01-01
+cw [wd = 2026-03-06 .. 2026-03-08]: 100.00 PLN
+  cut 2026-01-01
+cw [wd = 2026-03-09 .. 2026-03-10]: refused: RUN-LIFESPAN pay.cash moves into or out of tmp outside its lifespan
+  cut 2026-01-01
+warning: WARN-UNREAD place jar is read by nothing"#;
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
@@ -749,6 +796,7 @@ d3w: 10.00 PLN
             (TWO_WINDOWS, TWO_WINDOWS_LINES),
             (PENDING_KEPT, PENDING_KEPT_LINES),
             (WORDS_SAME, WORDS_SAME_LINES),
+            (LIFESPAN_MIDDLE, LIFESPAN_MIDDLE_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");
@@ -760,7 +808,7 @@ d3w: 10.00 PLN
         let one_of = ["2026-04-05".to_owned(), "2026-04-09".to_owned()];
         let start = days_from("2025-12-30", "2026-01-03");
         let window = days_from("2026-04-05", "2026-04-10");
-        let texts: [(&str, Unsplit<'_>); 9] = [
+        let texts: [(&str, Unsplit<'_>); 10] = [
             (COVER_REACH, None),
             (ANCHOR_AFTER, None),
             (RUN_START, Some(("ws", &start))),
@@ -770,13 +818,15 @@ d3w: 10.00 PLN
             (CLOSE_TWO, None),
             (PENDING_KEPT, Some(("wa", &one_of))),
             (WORDS_SAME, Some(("wa", &window))),
+            (LIFESPAN_MIDDLE, None),
         ];
         let checked: Vec<String> = texts
             .iter()
             .flat_map(|(text, unsplit)| pinned_twins(text, *unsplit))
             .collect();
         // a4 and b5 six days each, s4w five, c2 seven, f2, j2 and p2 six each, g2 and g4 six
-        // each, e4 six, j2 of PENDING_KEPT two, d1w, d2w and d3w of WORDS_SAME six each
-        assert_eq!(checked.len(), 80, "every day of each window: {checked:?}");
+        // each, e4 six, j2 of PENDING_KEPT two, d1w, d2w and d3w of WORDS_SAME six each, cw
+        // of LIFESPAN_MIDDLE seven
+        assert_eq!(checked.len(), 87, "every day of each window: {checked:?}");
     }
 }
