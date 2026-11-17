@@ -61,15 +61,27 @@ d1 [wd = 2026-03-28 .. 2026-03-31]: diff in sc against w_each: 0 changed, 0 adde
   world: sc
   world: w_each
   cut 2026-03-01
-d1 [wd = 2026-04-01 .. 2026-04-03]: diff in sc against w_each: 1 changed, 0 added, 0 removed, 0 unchanged
+d1 [wd = 2026-04-01]: diff in sc against w_each: 1 changed, 0 added, 0 removed, 0 unchanged
   changed bonus_amt: 30.00 PLN against 24.00 PLN
   pinned: ax = hi
   world: sc
   world: w_each
   held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
   held: rate = 15.00 PLN (vs), read for 2026-04-01
+  cut 2026-03-01
+d1 [wd = 2026-04-02]: diff in sc against w_each: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed bonus_amt: 30.00 PLN against 24.00 PLN
+  pinned: ax = hi
+  world: sc
+  world: w_each
+  held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 15.00 PLN (vs), read for 2026-04-02
+  cut 2026-03-01
+d1 [wd = 2026-04-03]: diff in sc against w_each: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed bonus_amt: 30.00 PLN against 24.00 PLN
+  pinned: ax = hi
+  world: sc
+  world: w_each
+  held: rate = 12.00 PLN (r2), read for 2026-04-03
   held: rate = 15.00 PLN (vs), read for 2026-04-03
   cut 2026-03-01

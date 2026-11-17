@@ -1,0 +1,82 @@
+# tally 2.1.8 R13.2 (the third turn's every-day pinned-twin check; the review's b1_anchor_after, f5_start): each
+# windows each block equals the plain line pinned to each day of its sub-window, register included. b2_w's anchor
+# difference is 500.00 PLN for wd up to 03-07 and 400.00 PLN after, so it splits there, as each pin prints; the
+# plain line b2_p keeps its value and prints the hole in the difference. 73f14104 printed one block whose
+# difference was the hole; f5_start: left out: lines likewise.
+=== m.tally
+model t
+  tally 2
+  on 2026-04-08
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input wd: date
+
+move pay: transfers
+  on wd
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  anchor konto
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  stated[konto] = 500.00 PLN at 2026-04-01 end "s"
+
+version st
+  cite s
+  governs 2026-03-01..2026-03-07
+  known 2026-03-08
+  covers konto
+
+ask a1_p: bal(konto, 2026-02-28)
+ask a1_w: bal(konto, 2026-02-28) windows each
+ask a1_d0: bal(konto, 2026-02-28) with wd = 2026-03-05
+ask a1_d1: bal(konto, 2026-02-28) with wd = 2026-03-06
+ask a1_d2: bal(konto, 2026-02-28) with wd = 2026-03-07
+ask a1_d3: bal(konto, 2026-02-28) with wd = 2026-03-08
+ask a1_d4: bal(konto, 2026-02-28) with wd = 2026-03-09
+ask a1_d5: bal(konto, 2026-02-28) with wd = 2026-03-10
+ask b1_p: bal(konto, 2026-03-20)
+ask b1_w: bal(konto, 2026-03-20) windows each
+ask b1_d0: bal(konto, 2026-03-20) with wd = 2026-03-05
+ask b1_d1: bal(konto, 2026-03-20) with wd = 2026-03-06
+ask b1_d2: bal(konto, 2026-03-20) with wd = 2026-03-07
+ask b1_d3: bal(konto, 2026-03-20) with wd = 2026-03-08
+ask b1_d4: bal(konto, 2026-03-20) with wd = 2026-03-09
+ask b1_d5: bal(konto, 2026-03-20) with wd = 2026-03-10
+ask b2_p: bal(konto, 2026-04-02)
+ask b2_w: bal(konto, 2026-04-02) windows each
+ask b2_d0: bal(konto, 2026-04-02) with wd = 2026-03-05
+ask b2_d1: bal(konto, 2026-04-02) with wd = 2026-03-06
+ask b2_d2: bal(konto, 2026-04-02) with wd = 2026-03-07
+ask b2_d3: bal(konto, 2026-04-02) with wd = 2026-03-08
+ask b2_d4: bal(konto, 2026-04-02) with wd = 2026-03-09
+ask b2_d5: bal(konto, 2026-04-02) with wd = 2026-03-10
+ask b4_p: flows(pay, 2026-03)
+ask b4_w: flows(pay, 2026-03) windows each
+ask b4_d0: flows(pay, 2026-03) with wd = 2026-03-05
+ask b4_d1: flows(pay, 2026-03) with wd = 2026-03-06
+ask b4_d2: flows(pay, 2026-03) with wd = 2026-03-07
+ask b4_d3: flows(pay, 2026-03) with wd = 2026-03-08
+ask b4_d4: flows(pay, 2026-03) with wd = 2026-03-09
+ask b4_d5: flows(pay, 2026-03) with wd = 2026-03-10
+=== expect b2_p b2_w
+b2_p: 500.00 PLN
+  anchor: konto 2026-04-01 end, stated 500.00 PLN, difference ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  cut 2026-04-08
+b2_w [wd = 2026-03-05 .. 2026-03-07]: 500.00 PLN
+  anchor: konto 2026-04-01 end, stated 500.00 PLN, difference 500.00 PLN
+  cut 2026-04-08
+b2_w [wd = 2026-03-08 .. 2026-03-10]: 500.00 PLN
+  anchor: konto 2026-04-01 end, stated 500.00 PLN, difference 400.00 PLN
+  cut 2026-04-08

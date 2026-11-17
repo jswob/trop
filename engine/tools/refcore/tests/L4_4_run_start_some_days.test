@@ -44,28 +44,53 @@ ask e2: bal(konto, 2026-06-30) windows each
 === expect
 e1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early) ?"date within window(2026-06-28, 2026-07-03) not precise enough for a balance" (late)
   cut 2025-12-01
-e2 [ws = 2025-12-30 .. 2025-12-31, we = 2026-06-28 .. 2026-06-30]: 100.00 PLN
+e2 [ws = 2025-12-30, we = 2026-06-28 .. 2026-06-30]: 100.00 PLN
   left out: early, 1 instances, first 2025-12-30
+  cut 2025-12-01
+e2 [ws = 2025-12-30, we = 2026-07-01]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-30
+  left out: late, 1 instances, first 2026-07-01
+  cut 2025-12-01
+e2 [ws = 2025-12-30, we = 2026-07-02]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-30
+  left out: late, 1 instances, first 2026-07-02
+  cut 2025-12-01
+e2 [ws = 2025-12-30, we = 2026-07-03]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-30
+  left out: late, 1 instances, first 2026-07-03
+  cut 2025-12-01
+e2 [ws = 2025-12-31, we = 2026-06-28 .. 2026-06-30]: 100.00 PLN
   left out: early, 1 instances, first 2025-12-31
   cut 2025-12-01
-e2 [ws = 2025-12-30 .. 2025-12-31, we = 2026-07-01 .. 2026-07-03]: 0.00 PLN
-  left out: early, 1 instances, first 2025-12-30
+e2 [ws = 2025-12-31, we = 2026-07-01]: 0.00 PLN
   left out: early, 1 instances, first 2025-12-31
   left out: late, 1 instances, first 2026-07-01
+  cut 2025-12-01
+e2 [ws = 2025-12-31, we = 2026-07-02]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-31
   left out: late, 1 instances, first 2026-07-02
+  cut 2025-12-01
+e2 [ws = 2025-12-31, we = 2026-07-03]: 0.00 PLN
+  left out: early, 1 instances, first 2025-12-31
   left out: late, 1 instances, first 2026-07-03
   cut 2025-12-01
 e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-06-28 .. 2026-06-30]: 200.00 PLN
   cut 2025-12-01
-e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-07-01 .. 2026-07-03]: 100.00 PLN
+e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-07-01]: 100.00 PLN
   left out: late, 1 instances, first 2026-07-01
+  cut 2025-12-01
+e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-07-02]: 100.00 PLN
   left out: late, 1 instances, first 2026-07-02
+  cut 2025-12-01
+e2 [ws = 2026-01-01 .. 2026-01-03, we = 2026-07-03]: 100.00 PLN
   left out: late, 1 instances, first 2026-07-03
   cut 2025-12-01
 s1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early)
   cut 2025-12-01
-s2 [ws = 2025-12-30 .. 2025-12-31]: 0.00 PLN
+s2 [ws = 2025-12-30]: 0.00 PLN
   left out: early, 1 instances, first 2025-12-30
+  cut 2025-12-01
+s2 [ws = 2025-12-31]: 0.00 PLN
   left out: early, 1 instances, first 2025-12-31
   cut 2025-12-01
 s2 [ws = 2026-01-01 .. 2026-01-03]: 100.00 PLN

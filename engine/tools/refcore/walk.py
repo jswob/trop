@@ -911,6 +911,20 @@ class Walk:
         self.close_day(d)
         self.parts_close(d)
 
+    @staticmethod
+    def each_force(h):
+        """Under windows each, a hole that only the register prints (an anchor's difference, the balance reset by
+        the reading) is an unknown day the line's answer rests on: the run takes it, so each block equals its pinned
+        twin (R13.2; the third turn's every-day check)."""
+        from .model import _EACH
+        from .evaluate import carried
+        met = _EACH[0]
+        if met is None or getattr(met, 'forced', None) is None:
+            return
+        for wid, label, days in carried(h):
+            met.setdefault(wid, (label, list(days)))
+            met.forced.append(wid)
+
     def check_batch(self, d, key):
         """L §5.10 The sign rule, point 1: after the day's first batch, taken together (its readings at the start,
         its observations but those booked at a decision's point, and its plans). A balance that breaks it is refused
@@ -1764,6 +1778,8 @@ class Walk:
         if role[0] == 'anchor':
             txt = 'anchor: %s %s, stated %s, difference %s' % (place, it, fmt(rv) if not isinstance(rv, Hole)
                                                                else fmt_hole(rv), gtext(gap))
+            if isinstance(gap, Hole):
+                self.each_force(gap)
             self.add(place, unit, Ent(key, 'reset', val=rv if not isinstance(rv, Hole) else qty(0, unit),
                                       qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c,
                                       reg=(('anchor', txt[len('anchor: '):]),), note='anchor', row=r))
