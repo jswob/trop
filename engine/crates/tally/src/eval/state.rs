@@ -373,6 +373,11 @@ pub struct Collected {
     /// lists: a row of a scenario's version, and a thing's entry a `lifespan` read met
     /// (refcore's `Coll.rows` and `lifeof` entries; L §8.2 `before from:`, tally 2.1.7 R7).
     pub listed: BTreeSet<(String, String)>,
+    /// The entries only a `windows each` line lists: a window-dated leg whose day the line
+    /// hasn't taken stands for each of its window's days, its `before from:` with each day,
+    /// the read set of those days; a plain line lists none (refcore's `each_before_from`;
+    /// pick P37, L §4.4, §8.2).
+    pub each: BTreeSet<Entry>,
     /// The rows read, by stable id, each with its version and locator: an input's, a given,
     /// a band row, a reading and an observed row, the walk's counted movements' included
     /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
@@ -416,6 +421,7 @@ impl Collected {
         self.versions.extend(other.versions.iter().cloned());
         self.scenario.extend(other.scenario.iter().cloned());
         self.listed.extend(other.listed.iter().cloned());
+        self.each.extend(other.each.iter().cloned());
         for (sid, seen) in &other.rows {
             self.rows.insert(sid.clone(), seen.clone());
         }

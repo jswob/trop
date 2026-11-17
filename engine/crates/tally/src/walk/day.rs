@@ -405,19 +405,42 @@ impl Engine {
             .day
             .day()
             .or_else(|| inst.day.as_ref().and_then(Dated::day));
+        // the window the leg is dated by, its own or its instance's
+        let window = if let Dated::Window(w) = &lg.day {
+            Some(w)
+        } else if let Some(Dated::Window(w)) = &inst.day {
+            Some(w)
+        } else {
+            None
+        };
+        let mut each = None;
         if let Some(day) = day {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
+        } else if let Some(w) = window {
+            // a window-dated leg whose day the line hasn't taken: its `before from:` with each
+            // of its window's days, which only a `windows each` line lists (refcore's
+            // `each_before_from`; pick P37)
+            let mut days_from = Vec::new();
+            for d in window_days(w)? {
+                days_from.extend(before_from(m, world, (&inst.move_id, d), &inst.coll));
+            }
+            if !days_from.is_empty() {
+                let mut coll = inst.coll.clone();
+                coll.each.extend(days_from);
+                each = Some(coll);
+            }
         }
+        let coll = each.as_ref().unwrap_or(&inst.coll);
         let mut mask = Ends::both();
         if self.stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
             let mover = self.mover_of(m, id, inst)?;
-            mask = self.same_mask(m, id, (&mover, lg), at, (&reg, &inst.coll), mask)?;
+            mask = self.same_mask(m, id, (&mover, lg), at, (&reg, coll), mask)?;
             if !mask.from && !mask.to {
                 return Ok(());
             }
         }
-        self.book_leg_ends(m, id, (&inst.id, lg), at, (&reg, &inst.coll), mask)
+        self.book_leg_ends(m, id, (&inst.id, lg), at, (&reg, coll), mask)
     }
 
     /// Books the ends of a leg `ends` names, as [`Engine::book_leg`] books both: an
@@ -1149,6 +1172,30 @@ fn before_from(
         text: format!("{move_id} on {} reads {}", day.text(), items.join(", ")),
         figure: String::new(),
     })
+}
+
+/// The days window `w` can take, in day order: a `one_of`'s, else every day from its first
+/// to its last (refcore's `each_before_from`, its `days`). L §4.4.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a window past the calendar.
+fn window_days(w: &DayWindow) -> Result<Vec<Day>, Stop> {
+    if let Some(days) = &w.value.days {
+        return Ok(days.clone());
+    }
+    let mut out = Vec::new();
+    let mut d = w.lo;
+    while d < w.hi {
+        out.push(d);
+        d = d
+            .next()
+            .ok_or_else(|| invariant("a window's day past the calendar"))?;
+    }
+    if w.lo <= w.hi {
+        out.push(w.hi);
+    }
+    Ok(out)
 }
 
 /// Whether `section` is of a scenario world `world` sees whose `from` is after `day` (refcore's

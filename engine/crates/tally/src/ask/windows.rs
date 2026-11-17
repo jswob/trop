@@ -176,6 +176,7 @@ fn fanned_lines(
                 figure: String::new(),
             });
         }
+        each_listed(&mut row.met);
         let register = match row.laws {
             Some(laws) => check_register_lines(&row.met, ctx, laws)?,
             None => register_lines(&row.met, ctx)?,
@@ -183,6 +184,14 @@ fn fanned_lines(
         out.extend(register.into_iter().map(|l| format!("  {l}")));
     }
     Ok(out)
+}
+
+/// A `windows each` block's register `met` with the entries only such a line lists: a
+/// window-dated leg whose day the block hasn't taken stands for each of its window's days, the
+/// read set of those days (refcore's `each_before_from`; pick P37, L §4.4, §8.2).
+fn each_listed(met: &mut Collected) {
+    let each = core::mem::take(&mut met.each);
+    met.entries.extend(each);
 }
 
 /// The lines of a diff whose worlds sit on two stacks, under `windows each`: each cell's runs
@@ -339,6 +348,7 @@ fn row_lines(
             figure: String::new(),
         });
     }
+    each_listed(&mut met);
     let register = match line.laws {
         Some(laws) => check_register_lines(&met, ctx, laws)?,
         None => register_lines(&met, ctx)?,
