@@ -79,6 +79,9 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
 - **The twelfth turn** (the final check, P54; **1 551 tests**): `mreads._reask` words a window's hole as the read's
   question (`flows` of a move or a place); `row_value` lists a hole row as `held:` in its own form; `WARN-LEGS`
   orders its pair by `id_order`.
+- **The thirteenth turn** (the round's check; **1 552 tests**): `row_value` prints `?` under `held:` for a computed
+  value that comes out a hole (P32). Left, budget: T's SR 8/9 (`nb3_after`: the link judged during the walk's prepare
+  caches `after_day`'s RUN-RECORD, where the spec row is RUN-CYCLE), SR 10 (`ml[1.5]`), SR 11 (P29's line order).
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
