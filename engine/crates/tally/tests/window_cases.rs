@@ -536,6 +536,49 @@ e4 [wd = 2026-03-05 .. 2026-03-07]: refused: RUN-LIFESPAN tmp ends on 2026-03-07
 e4 [wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding 50.00 PLN
   cut 2026-01-01"#;
 
+    /// A built-in over two windows (the review of group 2's N3): `days_between(a, b)` is the
+    /// interval over every corner of the windows' ends, a value a comparison reads (`q6`) and
+    /// a print can't (L §4.4, "for a print"; tally 2.1.7 R3).
+    const TWO_WINDOWS: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+input a: date
+input b: date
+input lim: int
+
+def n1: int
+  rule base = days_between(a, b)
+
+def small: bool
+  rule base = n1 < lim
+
+def n2: int
+  rule base = days_between(a, a)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  a = window(2026-03-01, 2026-03-03) "s"
+  b = window(2026-03-02, 2026-03-04) "s"
+  lim = 10 "s"
+
+ask q4: n1
+ask q6: small
+ask q7: n2
+"#;
+
+    const TWO_WINDOWS_LINES: &str = r#"q4: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a)
+  cut 2026-01-01
+q6: true
+  cut 2026-01-01
+q7: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a)
+  cut 2026-01-01"#;
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
@@ -546,6 +589,7 @@ e4 [wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN tmp ends on 2026-03-07
             (SIGN_ENDS, SIGN_ENDS_LINES),
             (BOTH_BREAK, BOTH_BREAK_LINES),
             (CLOSE_TWO, CLOSE_TWO_LINES),
+            (TWO_WINDOWS, TWO_WINDOWS_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");

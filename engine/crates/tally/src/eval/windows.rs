@@ -105,6 +105,30 @@ pub(super) fn interval(m: &Reality, (a, b): (Value, Value), from: &Window) -> Re
     })))
 }
 
+/// The values `outs` an operation takes over windows' days: one value where they agree,
+/// else their interval, with the text of window `from` and no read (refcore's
+/// `interval_of`). L §4.4.
+///
+/// # Errors
+///
+/// As `compare`; `ENGINE-INVARIANT` for no value.
+pub(super) fn interval_of(m: &Reality, outs: Vec<Value>, from: &Window) -> Result<Value, Stop> {
+    let mut rest = outs.into_iter();
+    let first = rest
+        .next()
+        .ok_or_else(|| invariant("an interval of no value"))?;
+    let (mut lo, mut hi) = (first.clone(), first);
+    for v in rest {
+        if compare(m, &v, &lo, Test::Order)? == Ordering::Less {
+            lo = v.clone();
+        }
+        if compare(m, &hi, &v, Test::Order)? == Ordering::Less {
+            hi = v;
+        }
+    }
+    interval(m, (lo, hi), from)
+}
+
 /// `a op b` where one side is a window: the op at the window's ends, in order, a window with
 /// its text and figure and no read, a value computed; on two windows `HOLE-IMPRECISE`
 /// (refcore's `iv_arith`). L §4.4.
