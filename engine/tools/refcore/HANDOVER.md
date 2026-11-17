@@ -40,8 +40,16 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   count of none list their pin; `walk.words_differ`, `hole_flows`; a binding's member modelled on some days is its
   hole; load checks for an ask's law expression, a running read in an ask's value, a band patch under an ask's cut
   (`loader.patch_under_cut`) and `bal`/`low` at a written place of unit `any` (`check3.any_needs_unit`).
-- **Left.** A two-stack `diff` under `windows each` (item 2 of the follow-up); about 125 run sites no text reaches
-  (`LoadAtRun`, `is_load` stay).
+- **The third turn** (P33, the review of group 2's fix; **1 517 tests**, 8 new, 4 of this round's moved):
+  `walk.imp_hole` reaches only the legs the refusal would refuse (a pending window leg tested with its batch through
+  `pend_at`); `walk.words_differ` compares the refusal's bytes; `ask.each_key` takes a run's register and
+  `walk.each_force` makes an anchor's register-only hole a day the run takes; `moves.answer_booking` leaves a
+  left-out instance unanswered; a two-stack diff under `windows each` (`ask.diff_side_each`, `each_rows(runs=True)`,
+  `each_group`, `diff_each_print`, `cli.cross_stack_each`); `days_between(w, w)` is 0. The every-day pinned-twin
+  check is `tmp/spec-2.1.8/runs/twins.py` (untracked).
+- **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
+  against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
+  every day of its window (`moves.m_window_class_depends`, a cost, no byte).
 
 ## tally 2.1.7 (the spec round after M1: 84 items, ten rules)
 
