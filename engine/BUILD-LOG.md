@@ -4061,3 +4061,36 @@ Oracle: the snapshot `tmp/spec-2.1.8-build/refcore-g4fix` (spec/2.1.8 at 61f8630
   - `check commit: red at tests, stopped after 10 of 23 steps (77s)` on the ids above.
   - `check quick: green, 11 steps`.
   - Usage 2.83 % of the week before this entry.
+
+## 2026-11-17 tally 2.1.8, build group 3's last fix: G1, N-a, N-b and N-f of its fix review (round PR #202; issues #175, #198, #200)
+
+This turn fixes what the review of group 3's fix found (`tmp/spec-2.1.8-build/review-g3-fix.md`). It runs on `build/2.1.8b` from 64adc664, after the merge of the tests branch and group 4's fix. The oracle: `tmp/spec-2.1.8-build/refcore-g3fix2`, a `git archive` of spec/2.1.8 at c5dbc72f, the spec writer's mends 9f155cc8 and 2a107428 among them. The lead's pick P46 rules G1. Each test is in `tests/group3_cases.rs`.
+
+- **G1 (86b8eb82, P46):** a unitless reading row at a place of unit `any` now stands for the same units wherever it is read from: the units the walk of the read's own cut, up to the instant's day, applied a reading in there. That walk is the prefix walk, which lists no plan after the day. If it is being walked, its gaps of the days it has passed are read. The read no longer depends on `ctx.at` or on whether the main walk is free, and no read steps the main walk to its end for it (the review's N-e). Files: `eval/read.rs` `unitless_held`, `unitless_walk`.
+  - Tests: `a_plan_reading_a_lone_unitless_hole_reads_it_alike_at_every_cut` (p5_min: the hole), `a_plan_reading_a_unitless_hole_beside_a_unit_is_run_domain_at_every_cut` (p5_plan), `reads_of_a_unitless_hole_inside_a_plans_leg_load_and_answer` (p4_planlast, every line).
+  - p5_min_on, p5_min_late and p5_plan_eur still answer, byte-equal.
+  - B4's t1_la and t1_pl stay `RUN-DOMAIN` for that ask, and the file loads.
+- **N-a (9bee1936):** a reading `after m[k]` whose bare key names a def is `LOAD-KEY … pick is not a key of ks`, as refcore (L §2.5 Keys: a reading's key is a literal). File: `load/strata.rs` `after_keys`. Tests: `a_reading_after_a_key_that_names_a_def_is_load_key` (b6_def_key), `a_reading_after_a_def_named_key_refuses_at_load_not_at_its_reads` (p9_defkey). The other five B6 texts were already byte-equal.
+- **N-b (1f821894, tests only):** `LOAD-KEY` comes before `LOAD-ORDER` for a reading after a plan at a key its index lacks (E §3.1). Tests: `a_reading_after_a_plan_at_a_key_of_another_index_is_load_key` (b6_wrongaxis), `a_reading_after_a_plan_at_a_month_outside_its_index_is_load_key` (b6_month_out).
+- **N-f (0b7224af), reproduced:** `g3/nf/k9k10.tally` has `ks = [k9, k10]` and two decisions `save[k]` whose windows end on 2026-03-25.
+  - `explain bal(konto, 2026-03-31)` listed the ends `save[k10]` then `save[k9]`, as text, in the engine (N4's 82830516) and in refcore alike.
+  - The end now takes its move's rank, and the plan's index order of its instances stands under the day's stable sort: k9 first (E §4.1: move id, then keys in index order, never as text). N4's helper `window_end_at` is gone.
+  - Test: `window_ends_at_one_point_apply_in_index_order`. Its lines are refcore's, every one, in the order the spec gives; the generator takes them only where they are refcore's lines in another order.
+  - **For the spec writer:** refcore still orders window ends by the instance id as text.
+  - Two readings `after` different instances at one place tie at load (`LOAD-OVERLAP`), so the order shows only in `explain`.
+- **Sweep against refcore-g3fix2** (`g3/sweep.py`, 487 sets: `tmp/spec-2.1.8/probes/`, every review's inputs, review-g4's and review-g3fix2's included, and the groups' probes):
+  - head 64adc664: 2 761 of 2 855 blocks the same;
+  - G1: 2 775 (p4_planlast's 7 blocks, p5_min, p5_plan and p5_plan's four variants turn same);
+  - N-a: 2 777 of 2 845 (b6_def_key and p9_defkey are one refusal now);
+  - N-b and N-f: 2 777, unchanged.
+  - No block turned from same to different at any step.
+- **Not fixed:** the review's N-c (a nested `from` counts day 03-01's legs again) and N-d (a `none` quantile level beside hole terms gives the holes). Both are older than this group's fix, and refcore gives the same for N-c and crashes on N-d. Neither was in this turn's list. N5 of group 3's review stands, as before.
+- **Red gating ids (`check commit`: 7 of 1 070 tests red; the 19 new tests green):**
+  - The tests', in `tmp/spec-2.1.8-build/red-after-merge.md`: `spec/g4/a_cov`, `a_mp`, `a_none`, `b2_last`, `c_since`, `nb3_at`, `spec/g5/p3_any`, `p3_anyhole`, `p4_adj_e2`, `p4_hole_e2`, `spec/g2/sumobs2`, `spec/g3/h2`, `spec/gate8/at_window_mk2`, `g6r_dec_same`, and `m2_counts_ahead`.
+  - Named by group 4's fix entry (64adc664): `fixes/gate8/m2_d512_both_cover_day`, `m2_d512_day_rows` and `m2_d512_plans_same` (its N2, T's to record again); `m2_g3_fix2_r3` and `m2_gate8_window_moves` (refcore's, P32); `items/explain/from` (the engine's, SR-5).
+  - No other id is red. `m2_g2_nb3` and `m2_g2_anynone`, which N1 turned at the last turn, are green.
+- **STOP-REPORTs:** none. **Exceptions:** +0 (6; report-only hits 9, as the lock).
+- **Checks:**
+  - `check commit: red at tests, stopped after 10 of 23 steps (82s)`, on the ids above.
+  - The 13 steps it then left out, each run alone with `check step`, are all green: milestone-report, doc, build, gungraun-build, doctest, fault-injection-probe, deny, deny-tally, tree-probe, ast-grep-test, special-casing, spec-loadcheck-selftest, spec-loadcheck.
+  - `check fences: green, 1 step (27s)`; `check quick: green, 11 steps (86s)`.
