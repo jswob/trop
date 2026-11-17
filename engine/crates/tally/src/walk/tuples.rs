@@ -108,8 +108,9 @@ impl Engine {
     }
 
     /// The members of binding `bind` in scope `env` at law date `law`: under a window `at`,
-    /// read at each law date the window can take, `HOLE-IMPRECISE` as the domain's hole where
-    /// they differ (refcore's `move_tuples`, its `lds`). L §4.3, §5.14 `at e`.
+    /// read at each law date the window can take; where they differ, `HOLE-IMPRECISE` is the
+    /// domain's hole where the domain differs, else the hole of each member whose `where`
+    /// differs (refcore's `move_tuples`, its `lds`; #169-e). L §4.3, §4.4, §5.14 `at e`.
     fn members_over_law(
         &mut self,
         m: &Reality,
@@ -127,21 +128,24 @@ impl Engine {
             return Ok(first);
         };
         let key = members_key(members);
+        let mut days = vec![day];
+        let mut differ = false;
         for at in law.rest() {
             if class.holds(*at) {
                 continue;
             }
             let (other, next) = self.members_at(m, (bind, env), (ctx, *at))?;
-            let same = other.as_ref().is_ok_and(|o| members_key(o) == key);
-            if !same {
-                return Ok(Err((
-                    imprecise_law((text, carry), &mv.id),
-                    Collected::default(),
-                )));
-            }
+            differ |= !other.as_ref().is_ok_and(|o| members_key(o) == key);
+            days.push(*at);
             class = next;
         }
-        Ok(first)
+        if !differ {
+            return Ok(first);
+        }
+        // the domain is compared whole, each member's `where` on its own: a member every law
+        // date keeps alike stays a member (refcore's `move_tuples`, its `lds`; #169-e)
+        let hole = imprecise_law((text, carry), &mv.id);
+        self.binding_members_over(m, (bind, env), ctx, (&days, &hole))
     }
 
     /// A binding's members at law date `day`, with the law dates that give the same
