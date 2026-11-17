@@ -1132,10 +1132,11 @@ class Walk:
             self.after_mv(i, key)
         elif kind == 'imp_on':
             i, lg, wid, q = obj
+            reg = self.each_before_from(i, lg)
             for p, s in ((lg.frm, -1), (lg.to, 1)):
                 if isinstance(p, Thing):
                     self.add(p.name, lg.unit or '*', Ent(key, 'imp_on', wid=wid, qs=q, mv=i, coll=i.coll, win=lg.day,
-                                                         sgn=s, leg=lg))
+                                                         sgn=s, leg=lg, reg=reg))
             self.imp_tests(key, i, lg)
         elif kind == 'legq':
             i, lg, qs = obj
@@ -1449,13 +1450,33 @@ class Walk:
             self.book_leg(mv, lg, key[:4] + (key[4] + 1,), reg=reg, coll=coll, ends=ends)
 
     # -- booking (E §4.2 step 5) -----------------------------------------------------------------------------------
-    def before_from(self, mv, lg, coll):
+    def each_before_from(self, i, lg):
+        """Under windows each, a window-dated leg whose day the line hasn't taken stands for each of its window's days
+        in the block that covers them all: its `before from:` entry with each day, the read set of those days (picks
+        P34, P36; STOP-REPORT 5 of T's re-run, P37, the stored bytes 2.1.7 printed). The plain line lists none."""
+        ws = getattr(self.K, 'windows', None)
+        if not (isinstance(ws, tuple) and ws and ws[0] == 'each'):
+            return ()
+        w = lg.day if isinstance(lg.day, Iv) else getattr(i, 'day', None)
+        if not isinstance(w, Iv) or not isinstance(w.lo, datetime.date):
+            return ()
+        days = sorted(w.days) if w.days is not None else [
+            w.lo + datetime.timedelta(days=n) for n in range((w.hi - w.lo).days + 1)]
+        out = []
+        for d in days:
+            bf = self.before_from(i, lg, i.coll, day=d)
+            if bf is not None:
+                out.append(('before from', bf))
+        return tuple(out)
+
+    def before_from(self, mv, lg, coll, day=None):
         """E §9 item 3, L §8.2 `before from:` (tally 2.1.7 R7, #121): a movement booked before a scenario's from that
         read that scenario's facts (its rows, a lifespan its entries change) is listed under each result whose reads
         reach it, in that branch and every branch over it; None for any other."""
         if coll is None or not getattr(self.m, 'scen_from', None):
             return None
-        day = lg.day if isinstance(lg.day, datetime.date) else getattr(mv, 'day', None)
+        if day is None:
+            day = lg.day if isinstance(lg.day, datetime.date) else getattr(mv, 'day', None)
         if not isinstance(day, datetime.date):
             return None
         froms = self.m.scen_from
@@ -1486,6 +1507,10 @@ class Walk:
         bf = self.before_from(mv, lg, coll)
         if bf is not None:
             reg = tuple(reg) + (('before from', bf),)
+        elif coll is not None:
+            # a window-dated leg booked at its window's end, under windows each with its day not taken: each day's
+            # entry, as its pending entry lists them (each_before_from)
+            reg = tuple(reg) + tuple(r for r in self.each_before_from(mv, lg) if r not in reg)
         cs = self.consol(mv, lg)
         if cs != (None, None):
             ends = list(ends)
