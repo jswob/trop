@@ -474,6 +474,32 @@ fn reached_marks(graph: &Graph, item: &Node) -> Vec<(Mark, Target)> {
         .collect()
 }
 
+/// The first, in refcore's order, of the `bal(x, d) modelled` reads move `id` reaches, its
+/// legs and its day, through the defs, fills and days they read (refcore's
+/// `reached_modelled`). L §5.19 (tally 2.1.8 R16, #176).
+fn reached_modelled(graph: &Graph, id: &str) -> Option<Target> {
+    let mut found: BTreeMap<String, Target> = BTreeMap::new();
+    let mut seen = BTreeSet::new();
+    let mut stack = vec![
+        Node::new(NodeKind::Move, id),
+        Node::new(NodeKind::MoveOn, id),
+    ];
+    while let Some(next) = stack.pop() {
+        if !seen.insert(next.clone()) {
+            continue;
+        }
+        for target in graph.modelled.get(&next).into_iter().flatten() {
+            found.insert(target_repr(target), target.clone());
+        }
+        for read in graph.reads(&next).into_iter().flat_map(BTreeMap::keys) {
+            if matches!(read.kind, NodeKind::Def | NodeKind::Fill | NodeKind::MoveOn) {
+                stack.push(read.clone());
+            }
+        }
+    }
+    found.into_values().next()
+}
+
 /// A target as Python's `repr` prints refcore's tuple for it, which orders refcore's sort.
 fn target_repr(target: &Target) -> String {
     match target {
@@ -566,6 +592,14 @@ fn running_reads(
 /// The `LOAD-READS` message for one move, where it needs one (refcore's
 /// `m_check_moves_graph`, its loop body). L §5.14.1.
 fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<String> {
+    // the model's account exists after the walk, so no movement reads it (L §5.19; tally
+    // 2.1.8 R16, #176)
+    if let Some(target) = reached_modelled(graph, id) {
+        return Some(format!(
+            "{id} reaches bal({}) modelled",
+            target_name(&target)
+        ));
+    }
     let reached = reached_marks(graph, &Node::new(NodeKind::Move, id));
     let without = |target: &Target| {
         let name = target_name(target);

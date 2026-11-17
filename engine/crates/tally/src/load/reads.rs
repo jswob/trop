@@ -203,6 +203,13 @@ impl Checker {
                 "cannot parse: bal(x) with no day takes no clause".to_owned(),
             ));
         }
+        if bal.modelled {
+            // the model's account: no movement may reach it (L §5.19; tally 2.1.8 R16, #176)
+            let reads = self.graph.modelled.entry(scope.item.clone()).or_default();
+            if !reads.contains(&target) {
+                reads.push(target.clone());
+            }
+        }
         if !bal.modelled {
             if bal.proj.from.is_some() {
                 if matches!(scope.item.kind, NodeKind::Move | NodeKind::MoveOn)
