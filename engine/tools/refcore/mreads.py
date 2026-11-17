@@ -1695,18 +1695,26 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             continue
         wins = {}
         closed = set()
+        # a perm before the span is a hole of the span unless its window ended before it (an unperm: the decision has
+        # fallen, walk.dec_win_end; B5 of group 3's review)
+        perms = []
         for e in lg.ents:
             if e.kind == 'delta' and e.wid is not None:
                 closed.add(e.wid)
             if e.key <= lo:
                 if e.kind == 'perm' and e.key <= limit:
-                    holes.append(Hole(e.qs))
+                    perms.append(e)
+                if e.kind == 'unperm':
+                    perms = [x for x in perms if x.mv is not e.mv]
                 if e.kind == 'pbad' and e.key <= limit:
                     # a refused movement whose day is a hole or refused may fall in the span, as perm's (R11)
                     raise e.err
                 if e.kind == 'imp_on':
                     wins[e.wid] = e.win
                 continue
+            if perms:
+                holes.extend(Hole(x.qs) for x in perms)
+                perms = []
             if e.key > limit:
                 if e.kind == 'delta' and e.wid is not None and e.wid in wins:
                     holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
@@ -1753,6 +1761,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                     continue
             uu = conv[0] if conv is not None else u
             totals[uu] = totals.get(uu, Fraction(0)) + f.q
+        holes.extend(Hole(x.qs) for x in perms)
         # a movement whose window opened by the span's end and closes after the walk's end books no delta in this walk:
         # whether it falls in the span is the window's hole, as for one that closes after the span (L §4.4; tally
         # 2.1.8 §4, #169-e: a window crossing the run's end)
