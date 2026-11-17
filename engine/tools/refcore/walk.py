@@ -594,10 +594,6 @@ class Walk:
                         if not self.proj and (d < m.S or d > m.E):
                             self.note_leftout(i)
                             self.note_post_e(i, d)
-                        if self.proj and d < S:
-                            # computed in the walk the projection continues; its legs dated in the window are counted
-                            # by their own day (L §5.14.1, E §4.3 step 2; tally 2.1.8 R16, #183)
-                            self.base_legs(i)
                         continue
                     k = (qid, d)
                     if k not in self.decday:
@@ -622,21 +618,6 @@ class Walk:
         if not self.proj:
             for a in eng.adjustments(ctx):
                 self.sched_adj(a)
-
-    def base_legs(self, i, after=None):
-        """A decision dated before a projection's start: the legs its run in the base walk booked on days from the
-        start on, scheduled here on their own days (#183). With after (a day), one that ran earlier on the
-        projection's day t, before its point: its legs dated after t (those of day t are in the start state)."""
-        run, ww = None, self.base
-        while ww is not None and run is None:
-            run = ww.decs.get(i.id)
-            ww = ww.base
-        if run is None or getattr(run, 'status', None) not in ('past', 'plan'):
-            return
-        for lg in run.legs:
-            if isinstance(lg.day, datetime.date) and self.start <= lg.day <= self.end and \
-                    (after is None or lg.day > after):
-                self.at((lg.day.toordinal(), 2, 0, plan_key(run), 0), 'leg', (run, lg))
 
     def dec_win_end(self, key, i, w, qs):
         """The end of the last day of a decision's window (L §4.6, §4.4; pick P29 on #175's p6win): the decision has
@@ -2323,10 +2304,6 @@ class Walk:
         # an instance stated same as an observation was observed: the group is one movement (L §6.1)
         reg = (('unfulfilled', run.id),) if (t < self.K and not run.obs and not self.same_observed(run)) else ()
         for lg in run.legs:
-            if isinstance(lg.day, datetime.date) and lg.day != t:
-                if lg.day > t:
-                    self.at((lg.day.toordinal(), 2, 0, plan_key(run), 0), 'leg', (run, lg))
-                    continue
             self.book_leg(run, lg, key, reg=reg, coll=run.coll)
         self.book_own_obs(run, key)
         self.same_release(run, key)
@@ -2572,12 +2549,6 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
                 # it counts (L §5.14.1)
                 acts = w.sched.get(t.toordinal(), [])
                 w.sched[t.toordinal()] = [a for a in acts if _act_after(a[0], point) and a[1] in ('decday',)]
-                # a decision that ran earlier on day t: the projection counts its legs dated t through d (L §5.14.1,
-                # E §4.3 step 2; tally 2.1.8 R16(d), pick P39 on B2 of group 3's review), those after t by their day
-                for a in acts:
-                    if a[1] == 'decday' and not _act_after(a[0], point):
-                        for i in w.decday.get((a[2][0].id, a[2][1]), ()):
-                            w.base_legs(i, after=t)
         except TallyError as e:
             w.failed = e
             raise

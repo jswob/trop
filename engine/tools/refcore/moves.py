@@ -460,7 +460,7 @@ def m_observations(self, ctx):
                     continue
             if o.removed:
                 continue
-            legs = [Leg(n, f, t, hq if hq is not None else a, u, d or o.day) for n, f, t, a, u, d in o.legs]
+            legs = [Leg(n, f, t, hq if hq is not None else a, u, o.day) for n, f, t, a, u in o.legs]
             ob = ObsMv(o, legs)
             # seen and unseen are two accounts of one movement (L §4.5, tally 2.1.8 R12): a binding meets it as one,
             # an unknown member where the two differ (m_span_members)
@@ -737,11 +737,11 @@ def m_upto_tag(self):
 
 def m_plan_list(self, mi, ctx):
     """A plan move's instances for the walk being built: all of them, or, for a walk up to a day, those dated on or
-    before it (the others' bodies unevaluated; a move whose legs state their own days is taken whole)."""
+    before it (the others' bodies unevaluated)."""
     upto = getattr(self, '_body_upto', None)
     tctx = self.tctx(ctx)
     full = self.run_cache.get(('inst', mi.id, self.wkey(tctx)))
-    if upto is None or full is not None or any(getattr(ln, 'on', None) is not None for ln, d in mi.legs):
+    if upto is None or full is not None:
         return self.move_instances(mi, ctx)
     key = ('inst-upto', mi.id, self.wkey(tctx), upto)
     hit = self.run_cache.get(key)
@@ -998,8 +998,8 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             elif tctx.windows is not None and getattr(mi.decl, '_scen', None) is not None and \
                     isinstance(day, datetime.date):
                 # a scenario's move dated by a window that the line's windows clause chose a day of: "an instance
-                # whose day, a window's first day, or a leg's own day falls before D is left out" (L §6.4) reads the
-                # window's first day, whichever day the clause takes
+                # whose day, or a window's first day, falls before D is left out" (L §6.4) reads the window's first
+                # day, whichever day the clause takes
                 c0 = _coll()
                 self.stack.append(c0)
                 try:
@@ -1181,13 +1181,6 @@ def m_eval_leg(self, inst, ln, d, env, ctx, day):
                                                                                     fmt(p)))
         if m.things[p.name].base in m.kinds['assets'].subtree(m):
             raise LoadError('LOAD-KIND', 'a leg to or from an asset (%s of %s)' % (ln.name, inst.id))
-    lday = day
-    if ln.on is not None:
-        lday = self.ev(ln.on, env, ctx)
-        if isinstance(lday, Iv):
-            lday = self.window_choice(lday, ctx)
-        if lday is NONE:
-            raise refuse('RUN-NONE', 'the day of leg %s of %s is none here' % (ln.name, inst.id))
     unit = None
     try:
         amt = self.ev(ln.amount, env, ctx)
@@ -1205,7 +1198,7 @@ def m_eval_leg(self, inst, ln, d, env, ctx, day):
         if load_now(e):
             raise
         amt = e
-    return Leg(ln.name, frm, to, amt, unit, lday, (ln.amount, env, ctx) if isinstance(amt, Hole) else None)
+    return Leg(ln.name, frm, to, amt, unit, day, (ln.amount, env, ctx) if isinstance(amt, Hole) else None)
 
 
 def m_leg_unit_static(self, d, frm, to):
@@ -1817,8 +1810,8 @@ def m_status(self, i, ctx):
     elif lo is not None and (hi < S or lo > E):
         st = 'leftout'
     elif self.scen_early(i, lo):
-        # L §6.4: "A move the scenario declares books nothing before D: an instance whose day, a window's first day,
-        # or a leg's own day falls before D is left out"
+        # L §6.4: "A move the scenario declares books nothing before D: an instance whose day, or a window's first
+        # day, falls before D is left out"
         st = 'leftout'
     elif i.err is not None:
         st = 'refused'
@@ -1850,23 +1843,12 @@ def m_status(self, i, ctx):
 
 
 def m_scen_early(self, i, lo):
-    """L §6.4: an instance of a move a scenario declares whose day, a window's first day, or a leg's own day falls
-    before the scenario's from."""
+    """L §6.4: an instance of a move a scenario declares whose day, or a window's first day, falls before the
+    scenario's from."""
     wlo = getattr(i, 'wlo', None)
     if wlo is not None and (lo is None or wlo < lo):
         lo = wlo
-    if lo is not None and self.before_scen_from(i, lo):
-        return True
-    mi = getattr(i, 'move', None)
-    sc = getattr(mi.decl, '_scen', None) if mi is not None and mi.decl is not None else None
-    frm = getattr(self.m, 'scen_from', {}).get(sc) if sc is not None else None
-    if frm is None:
-        return False
-    for lg in getattr(i, 'legs', None) or ():
-        ld = day_lo(getattr(lg, 'day', None))
-        if ld is not None and ld < frm:
-            return True
-    return False
+    return lo is not None and self.before_scen_from(i, lo)
 
 
 def m_before_scen_from(self, i, day):

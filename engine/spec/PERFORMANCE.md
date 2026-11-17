@@ -95,9 +95,8 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 | N-1 | the run's start, t = S | the header's `start` | opens every place from its `opening` readings; places alive before S without one stay `HOLE-ANCHOR` until their first anchor | E §4.2 (opening), step 0, l.189–190; L §5.10 l.1088 |
 | N-2 | a reading at `t start` the cut sees: an `opening` with t before K or t = S, a `stated` with t before K | a `reading` input's row, `at D start` | anchors or pads the place by its version's gap role (§6.1), parts included at a place that keeps them | E §4.2 step 0, l.190; E §6.1 l.294–298; L §4.6 l.728 |
 | N-3 | an observation dated t, with t before K | an `observed` input's row, `on: t` | books each end by E §6.1's rule in the day's first batch, or, if it fulfils a decision instance dated t, at that instance's point (N-5) | E §4.2 step 1, l.191; E §6.1 l.287–289; L §4.5 l.699 |
-| N-4 | a booked plan leg dated t: a plan instance's day, or a leg's own `on` | a plan move (no `reads`), status `past` or `plan` | books the leg in the day's first batch; at a place that keeps parts, its take and its arrival (with the arrival rule run at booking) | E §4.2 step 2, l.192; E §4.2 parts, l.205–206; L §5.14 l.1348 |
+| N-4 | a booked plan leg dated t, its instance's day | a plan move (no `reads`), status `past` or `plan` | books the leg in the day's first batch; at a place that keeps parts, its take and its arrival (with the arrival rule run at booking) | E §4.2 step 2, l.192; E §4.2 parts, l.205–206; L §5.14 l.1348 |
 | N-5 | a decision instance due on t, whatever its `when` turns out to be | a move with `reads` | runs it at its stratum and point, books its legs dated t at once, and its own observations dated t after it; on a covered day before K, or where an observation fulfils it, computes it as modelled past against the booked balances | E §4.2 step 3, l.193–196; L §5.14.1 l.1374 |
-| N-6 | a decision's leg with its own later `on`, dated t | a decision's leg `on d` | books the leg on t; this day enters the agenda only when the decision books, so the agenda takes insertions | E §4.2 step 3, l.195 |
 | N-7 | a reading `after m`, m a decision on t (or, where m is modelled past, on the day of the last observation that fulfils m) | a `reading` row, `after m` | pads or anchors right after m, or after those observations | E §4.2 step 3, l.197; L §4.6 l.728 |
 | N-8 | a reading at `t end` the cut sees, with t before K | a `reading` row, `at D end` | pads or anchors at the close | E §4.2 step 4, l.198 |
 | N-9 | the last day of a place's lifespan | an entry's `lives` span, a `place` section's | refuses the place from t on if a position isn't zero at the close (`RUN-LIFESPAN`) | E §4.2 step 5, l.201; L §5.7 l.942 |
@@ -110,7 +109,7 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 **What is not on the list, and why:**
 - **Movements outside [S, E], uncertain instances no observation fulfils, modelled-past plan instances, observations dated before S, and observations or readings dated on K or later** book nothing (E §4.1 step 3, l.179–182; E §4.2 steps 0–1; L §4.5 l.699). A projection or a `with uncertain` read counts the uncertain ones from the plan pass's lists, not from the walk (L §5.14 l.1356).
 - **An adjustment that is settled or waived** moves nothing on its day (E §5 step 4); its settlements are ordinary movements, on the list by N-3 or N-4.
-- **A lifespan's first day** puts no work in the walk: a place's balance is zero there (L §5.10 l.1088), and a leg into a thing before its lifespan is refused on the leg's own day (N-4, N-5). Putting it on the agenda changes nothing.
+- **A lifespan's first day** puts no work in the walk: a place's balance is zero there (L §5.10 l.1088), and a leg into a thing before its lifespan is refused on the movement's day (N-4, N-5). Putting it on the agenda changes nothing.
 - **A `known` date** is not a walk act. What it changes is what a projection read on a later day sees (the cut min(t, K) rises with t, E §4.3 l.230); the projection structure is updated before its next read (§2.3).
 - **The sign rule, `WARN-NEGATIVE` and the invariants** are checked at points that fall on listed days: the sign rule after each batch, decision and reading (L §5.10 l.1081–1084), and a stretch below zero starts on a day the balance changes (E §4.2 step 5, l.202). On a day with no act, no leg is booked (invariant 1 has nothing to sum), no position changes (invariant 6), and invariant 2 reduces to the revaluation equalling itself (E §9).
 
@@ -119,7 +118,7 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 **The oracle.** The engine keeps a step-every-day walk beside the event-driven one, built from the same step functions, that steps every day from S to E. It must print the same bytes; it steps more days. A property test runs both on every case and on T's generated realities, and compares the outputs byte for byte (R1 §3 Q3). A row missing from the list above shows as a difference there. The step-every-day walk is a test oracle, never the shipped path.
 
 **What the event walk costs:**
-- building the agenda: one sort of the acts, O(A log A) for A acts, plus an ordered insert for each N-6 leg;
+- building the agenda: one sort of the acts, O(A log A) for A acts;
 - per non-empty day: the acts of N-1..N-14, each O(1) or the parts work of §7; then one change point per place that moved;
 - per empty day: nothing.
 
@@ -165,7 +164,7 @@ $ python3 -I -c "import math; print(math.ceil(math.log2(12054)))"
 
 ### 2.4 Monthly checkpoints
 
-At the start of each month the walk keeps a **checkpoint**: every place's state (its balance, and its parts per (place, unit) where its kind keeps them), the legs booked ahead (N-6), and the projection structures of §2.3 (D1-4, D2-6).
+At the start of each month the walk keeps a **checkpoint**: every place's state (its balance, and its parts per (place, unit) where its kind keeps them) and the projection structures of §2.3 (D1-4, D2-6).
 - A checkpoint is a list of shared place states, copied on write: a place that didn't move since the last checkpoint costs one shared reference, a place that moved costs one copy (D2-6; BUILDER §3).
 - Pins and scenarios are small layers over the base's checkpoints, not copies (D2-6).
 - **Size for 33 years:** 396 checkpoints of P place states, most of them shared. The interval is a guess and an unknown (§10): it trades memory against the length of a walk restarted or forked from a checkpoint (R1 §6).
@@ -314,7 +313,7 @@ A cell that reads only the law tier skips verification when an amendment touches
 
 ### 4.2 The walk restart
 
-The walk is a fold, so a change on day d* changes the walk from d* on. The new walk starts at the last checkpoint before d*, the first day whose acts (§2.2) differ, and runs to E. It stops early at a month's checkpoint where every place state (balance and parts) and every leg booked ahead is equal to the old walk's; that is rare, since balances usually differ for good once money moves differently. A scenario's walk is the same restart from its first different day (§2.5).
+The walk is a fold, so a change on day d* changes the walk from d* on. The new walk starts at the last checkpoint before d*, the first day whose acts (§2.2) differ, and runs to E. It stops early at a month's checkpoint where every place state (balance and parts) is equal to the old walk's; that is rare, since balances usually differ for good once money moves differently. A scenario's walk is the same restart from its first different day (§2.5).
 
 ### 4.3 What one turn costs
 

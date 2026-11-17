@@ -987,10 +987,7 @@ class P:
         b = self.expr()
         self.expect('amount')
         q = self.expr()
-        on = None
-        if self.accept('on'):
-            on = self.expr()
-        return self.N('leg', name=name, frm=a, to=b, amount=q, on=on)
+        return self.N('leg', name=name, frm=a, to=b, amount=q)
 
     def builtin(self, s):
         i0 = self.i

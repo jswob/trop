@@ -561,10 +561,6 @@ def m_check_leg(self, mi, ln, d, sc):
     elif not (self.numcls(t) in ('money', 'num', 'int', 'flex') or t.k in ('dyn', 'hole')):
         raise uerr('the amount of leg %s of %s is %s' % (ln.name, mi.id, T.show(t)), ln.loc)
     ln._lt = lt
-    if ln.on is not None:
-        t = self.tc(ln.on, sc)
-        if not self.is_date(t):
-            raise uerr('on of leg %s of %s is %s, not a date' % (ln.name, mi.id, T.show(t)), ln.loc)
     return ends
 
 
@@ -2028,11 +2024,10 @@ def m_check_seen_day_limits(self):
 
 
 def m_check_scenario_moves(self):
-    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, a window's first day, or a
-    leg's own day falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6,
-    issue #75): a move a scenario's file declares, whose day or leg's own day load sees, folded at every key of its
-    bindings, before the scenario's from, is refused at load: the first such move by id, at its line or its leg's,
-    with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
+    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, or a window's first day,
+    falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6, issue #75): a move
+    a scenario's file declares, whose day load sees, folded at every key of its bindings, before the scenario's from,
+    is refused at load: the first such move by id, at its line, with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
     as the walk reached the instance (moves.m_before_scen_from), so an ask that didn't reach it answered."""
     m = self.m
     import itertools
@@ -2046,10 +2041,9 @@ def m_check_scenario_moves(self):
         frm = froms.get(sc) if sc is not None else None
         if frm is None:
             continue
-        days = [(mi.decl.on, mi.decl.loc)] + [(ln.on, ln.loc) for ln in mi.decl.legs if ln.on is not None]
-        days = [(e, loc) for e, loc in days if e is not None and self.seen_day(e, mi)]
+        on = mi.decl.on
         # P29 (SR-T1): load sees that an instance books before D only where it sees its existence too
-        if not days or not self.existence_seen(mi):
+        if on is None or not self.seen_day(on, mi) or not self.existence_seen(mi):
             continue
         doms = []
         for b in mi.binds:
@@ -2067,14 +2061,13 @@ def m_check_scenario_moves(self):
                     continue
             except TallyError:
                 continue
-            for e, loc in days:
-                try:
-                    first = day_lo(eng.ev(e, env, ctx))
-                except TallyError:
-                    continue
-                if first is not None and first < frm:
-                    raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mid, sc, first, frm),
-                                    loc)
+            try:
+                first = day_lo(eng.ev(on, env, ctx))
+            except TallyError:
+                continue
+            if first is not None and first < frm:
+                raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mid, sc, first, frm),
+                                mi.decl.loc)
 
 
 def m_check_literal_ranges(self):
