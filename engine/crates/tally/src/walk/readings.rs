@@ -165,10 +165,11 @@ impl Engine {
         for ((place, unit), legs) in group {
             let st = self.walk(id)?.pstate(m, place, unit, at);
             // legs dated by a window may still fall here: the test asked of each balance they
-            // allow (E §4.1 step 2; tally 2.1.8 item 77)
+            // allow, a refusal whose words differ by the day the window's hole (E §4.1 step 2;
+            // tally 2.1.8 item 77, pick P30)
             let nv = match st.known() {
                 Some(nv) => Some(nv.clone()),
-                None => match imp_breaks(m, place, &st, None)? {
+                None => match imp_breaks(m, place, &st, None, Words::Printed)? {
                     Three::Depends => {
                         depends.push((place.clone(), unit.clone(), legs.clone()));
                         None
@@ -321,8 +322,9 @@ impl Walk {
             let flow = super::day::signed(q, *sign)?;
             let Some(v) = st.known() else {
                 // legs dated by a window may still fall here: the test asked of each balance
-                // they allow (tally 2.1.8 item 77)
-                match imp_breaks(m, p, &st, Some(&flow))? {
+                // they allow; its refusal names no balance, so its words are every day's
+                // (tally 2.1.8 item 77)
+                match imp_breaks(m, p, &st, Some(&flow), Words::Same)? {
                     Three::Depends => return Ok(Alone::Depends(p.clone())),
                     Three::Every => {
                         return Ok(Alone::Refused(Refusal::new(
@@ -469,16 +471,26 @@ pub(super) enum Alone {
 pub(super) enum Three {
     /// No balance the pending legs allow breaks the rule.
     None,
-    /// Every one does.
+    /// Every one does, in the same words.
     Every,
-    /// Some do and some don't.
+    /// Some do and some don't, or all do in words that differ by the day.
     Depends,
+}
+
+/// Whether a refusal prints the balance it found, so its words differ where the balances do
+/// (pick P30: the answer is what prints).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Words {
+    /// It prints the balance.
+    Printed,
+    /// It doesn't.
+    Same,
 }
 
 /// The sign rule at `place` asked of each balance the window-dated legs pending in `st` allow,
 /// a leg's `flow` added where one is being booked: the least and the greatest, the rule being
 /// monotone in the balance; none where the balance isn't known but for them (refcore's
-/// `imp_three`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
+/// `imp_three`, `words_differ`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
 ///
 /// # Errors
 ///
@@ -488,6 +500,7 @@ pub(super) fn imp_breaks(
     place: &str,
     st: &St,
     flow: Option<&Num>,
+    words: Words,
 ) -> Result<Three, Stop> {
     let Some((mut lo, mut hi)) = st.imp_range()? else {
         return Ok(Three::None);
@@ -498,7 +511,7 @@ pub(super) fn imp_breaks(
     }
     Ok(match (breaks(m, place, &lo), breaks(m, place, &hi)) {
         (false, false) => Three::None,
-        (true, true) => Three::Every,
+        (true, true) if words == Words::Same || lo == hi => Three::Every,
         _ => Three::Depends,
     })
 }

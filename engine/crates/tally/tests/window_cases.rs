@@ -51,7 +51,7 @@ mod tests {
 
     /// Every line `windows each` splits by a window's days equals its ask's plain line
     /// pinned to its sub-window's first day and its last: the same answer and the same
-    /// register, the pin's own `pinned:` line aside (the lead's ruling on P30).
+    /// register, the pin's own `pinned:` line and the run's warnings aside (the lead's ruling on P30).
     fn pinned_twins(text: &str) -> Vec<String> {
         let mut checked = Vec::new();
         let asks: Vec<(String, String)> = text
@@ -84,7 +84,7 @@ mod tests {
                     want.extend(block[1..].iter().cloned());
                     let got: Vec<String> = got
                         .into_iter()
-                        .filter(|l| !l.starts_with("  pinned: "))
+                        .filter(|l| !l.starts_with("  pinned: ") && !l.starts_with("warning: "))
                         .collect();
                     assert_eq!(got, want, "{} pinned to {var} = {day}", block[0]);
                     checked.push(format!("{name} {var} = {day}"));
@@ -401,6 +401,141 @@ p2 [wa = 2026-04-06]: refused: RUN-PLACE pot is -50.00 PLN after the day's obser
 p2 [wa = 2026-04-07 .. 2026-04-10]: 50.00 PLN
   cut 2026-01-01"#;
 
+    /// Every day refuses, in words that differ by the day (the review of group 2's B3, pick
+    /// P30): `oa` takes 10.00 from `pot` (`min 0`, 50.00) on a day of `window(04-05,
+    /// 04-10)`, `ob` 200.00 on 04-07; `pot` is -160.00 where `oa` has fallen by 04-07,
+    /// -150.00 after. The plain line is the window's hole; `windows each` prints each day's
+    /// own refusal.
+    const BOTH_BREAK: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind savings: place PLN min 0
+place pot: savings lives 2025-01-01..
+place jar: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input wa: date
+input db: date
+input amt: money PLN
+input small: money PLN
+input amt2: money PLN
+
+move oa: transfers
+  on wa
+  leg cash from pot to jar amount small
+
+move ob: transfers
+  on db
+  leg cash from pot to world amount amt2
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  small = 10.00 PLN "s"
+  amt2 = 200.00 PLN "s"
+  wa = window(2026-04-05, 2026-04-10) "s"
+  db = 2026-04-07 "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+
+ask g1: flows(ob, 2026-04)
+ask g2: flows(ob, 2026-04) windows each
+ask g3: bal(pot, 2026-04-30)
+ask g4: bal(pot, 2026-04-30) windows each
+ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
+ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
+ask g7: flows(ob, 2026-04) with wa = 2026-04-05
+"#;
+
+    const BOTH_BREAK_LINES: &str = r#"g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  cut 2026-01-01
+g2 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  cut 2026-01-01
+g2 [wa = 2026-04-08 .. 2026-04-10]: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
+  cut 2026-01-01
+g3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  cut 2026-01-01
+g4 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  cut 2026-01-01
+g4 [wa = 2026-04-08 .. 2026-04-10]: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
+  cut 2026-01-01
+g5: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-09
+  cut 2026-01-01
+g6: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-05
+  cut 2026-01-01
+g7: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-05
+  cut 2026-01-01
+warning: WARN-UNREAD input amt is read by nothing"#;
+
+    /// The close test on two balances (i77a with `opening[tmp] = 50.00`; the review's N6):
+    /// `tmp` ends on 03-07 holding -50.00 where `empty` has fallen, 50.00 where it hasn't;
+    /// every day refuses, in words that differ, so the plain line is the hole.
+    const CLOSE_TWO: &str = r#"model t
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind accts: place PLN signed
+kind pots: place PLN min 0
+place jar: accts lives 2025-01-01..
+place tmp: accts lives 2025-01-01..2026-03-07
+place pot: pots lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input wd: date
+input wa: date
+input wb: date
+
+move empty: transfers
+  on wd
+  leg cash from tmp to jar amount amt
+
+move oa: transfers
+  on wa
+  leg cash from pot to world amount amt
+
+move ob: transfers
+  on wb
+  leg cash from world to pot amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  amt = 100.00 PLN "s"
+  wd = window(2026-03-05, 2026-03-10) "s"
+  wa = window(2026-04-05, 2026-04-10) "s"
+  wb = window(2026-04-07, 2026-04-12) "s"
+  opening[jar] = 0.00 PLN at 2026-01-01 start "s"
+  opening[tmp] = 50.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 50.00 PLN at 2026-01-01 start "s"
+
+ask e1: bal(jar, 2026-03-31)
+ask e3: bal(tmp, 2026-03-07)
+ask e4: bal(tmp, 2026-03-07) windows each
+"#;
+
+    const CLOSE_TWO_LINES: &str = r#"e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  cut 2026-01-01
+e3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  cut 2026-01-01
+e4 [wd = 2026-03-05 .. 2026-03-07]: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding -50.00 PLN
+  cut 2026-01-01
+e4 [wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding 50.00 PLN
+  cut 2026-01-01"#;
+
     #[test]
     fn a_window_whose_days_take_two_classes_keeps_its_window_and_the_reads_question() {
         for (text, want) in [
@@ -409,6 +544,8 @@ p2 [wa = 2026-04-07 .. 2026-04-10]: 50.00 PLN
             (RUN_START, RUN_START_LINES),
             (COVER_GAP, COVER_GAP_LINES),
             (SIGN_ENDS, SIGN_ENDS_LINES),
+            (BOTH_BREAK, BOTH_BREAK_LINES),
+            (CLOSE_TWO, CLOSE_TWO_LINES),
         ] {
             let want: Vec<&str> = want.lines().collect();
             assert_eq!(lines_of(text), want, "refcore's lines");
@@ -417,14 +554,22 @@ p2 [wa = 2026-04-07 .. 2026-04-10]: 50.00 PLN
 
     #[test]
     fn each_line_of_a_window_whose_days_take_two_classes_is_its_pinned_twin() {
-        let checked: Vec<String> = [COVER_REACH, ANCHOR_AFTER, RUN_START, COVER_GAP, SIGN_ENDS]
-            .iter()
-            .flat_map(|text| pinned_twins(text))
-            .collect();
+        let checked: Vec<String> = [
+            COVER_REACH,
+            ANCHOR_AFTER,
+            RUN_START,
+            COVER_GAP,
+            SIGN_ENDS,
+            BOTH_BREAK,
+            CLOSE_TWO,
+        ]
+        .iter()
+        .flat_map(|text| pinned_twins(text))
+        .collect();
         assert_eq!(
             checked.len(),
-            26,
-            "two sub-windows each in a4 and b5, three each in c2, f2, j2 and p2, one or two days each: \
+            38,
+            "two sub-windows each in a4 and b5, three each in c2, f2, j2 and p2, two each in g2, g4 and e4, one or two days each: \
              {checked:?}"
         );
     }

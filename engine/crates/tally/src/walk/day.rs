@@ -20,7 +20,7 @@ use super::agenda::{Act, Mv};
 use super::fork::Forks;
 use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
 use super::point::At;
-use super::readings::{Alone, Broke, Three, imp_breaks};
+use super::readings::{Alone, Broke, Three, Words, imp_breaks};
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::Member;
@@ -771,11 +771,11 @@ impl Engine {
             for unit in walk.units_of(&place) {
                 let st = walk.pstate(m, &place, &unit, at);
                 // legs dated by a window may still fall here: whether it holds nothing at its
-                // close is asked of the least and the greatest balance they allow; where they
-                // differ, the place is the windows' hole (E §4.1 step 2; tally 2.1.8 item 77)
+                // close is asked of each balance they allow, and its refusal prints the
+                // balance, so where they allow two the place is the windows' hole (E §4.1 step
+                // 2; tally 2.1.8 item 77, pick P30)
                 if let Some((lo, hi)) = st.imp_range()?
-                    && (lo.is_zero() || hi.is_zero() || lo.is_negative() != hi.is_negative())
-                    && !(lo.is_zero() && hi.is_zero())
+                    && lo != hi
                 {
                     walk.imp_hole(m, at, (&place, &unit), &[])?;
                     continue;
@@ -959,7 +959,7 @@ impl Walk {
             return Ok(());
         }
         let st = self.pstate(m, place, unit, at);
-        if imp_breaks(m, place, &st, None)? == Three::Depends {
+        if imp_breaks(m, place, &st, None, Words::Same)? == Three::Depends {
             self.imp_hole(m, at, (place, unit), &[])?;
         }
         Ok(())
