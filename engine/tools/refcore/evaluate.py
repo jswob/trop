@@ -3881,6 +3881,15 @@ class Engine:
                     return merge(*holes)
                 lin = lin_add(lin, lh)
             return Hole(set().union(*[h.qs for h in holes]), lin_scale(lin, Num(len(mem), (), isint=True), div=True))
+        if holes and n.fn == 'quantile' and terms is not None:
+            # a level that is refused refuses before the hole terms: refusals outrank holes (L §8; tally 2.1.8 R16(c),
+            # #171; B7 of group 3's review)
+            q = self.ev(n.q, env, ctx)
+            if not isinstance(q, Hole) and (q.q <= 0 or q.q > 1):
+                from .values import fmt_q
+                raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
+            if isinstance(q, Hole):
+                holes.append(q)
         if holes:
             return merge(*holes)
         if not terms:
