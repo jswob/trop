@@ -1,0 +1,84 @@
+# tally 2.1.8 P50, L §2.5, §6.1 (F1 of group 4's fix review, n2_range_9): the member that stands for a same class is the
+# first in index order: a range index keeps its own order, so of same pay[9] = pay[10] on 1..12 pay[9] stands (c5dbc72f: pay[10], the ids compared as text).
+=== m.tally
+model n2_list
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+index who = 1..12
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input dd: date
+input amt: money PLN
+kind wages: transfers
+
+move pay[w in who]: wages
+  on dd
+  leg cash from world to konto amount amt
+
+ask l: x.cash.amount for x in wages over 2026-03
+ask n: count(t in wages over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  dd = 2026-03-10 "s"
+  amt = 500.00 PLN "s"
+
+version sm
+  cite s
+  known 2026-01-02
+  same pay[9] = pay[10]
+=== expect
+l (x = pay[1]): 500.00 PLN
+  unfulfilled: pay[1]
+  cut 2026-04-10
+l (x = pay[2]): 500.00 PLN
+  unfulfilled: pay[2]
+  cut 2026-04-10
+l (x = pay[3]): 500.00 PLN
+  unfulfilled: pay[3]
+  cut 2026-04-10
+l (x = pay[4]): 500.00 PLN
+  unfulfilled: pay[4]
+  cut 2026-04-10
+l (x = pay[5]): 500.00 PLN
+  unfulfilled: pay[5]
+  cut 2026-04-10
+l (x = pay[6]): 500.00 PLN
+  unfulfilled: pay[6]
+  cut 2026-04-10
+l (x = pay[7]): 500.00 PLN
+  unfulfilled: pay[7]
+  cut 2026-04-10
+l (x = pay[8]): 500.00 PLN
+  unfulfilled: pay[8]
+  cut 2026-04-10
+l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[9]
+  cut 2026-04-10
+l (x = pay[11]): 500.00 PLN
+  unfulfilled: pay[11]
+  cut 2026-04-10
+l (x = pay[12]): 500.00 PLN
+  unfulfilled: pay[12]
+  cut 2026-04-10
+n: 11
+  unfulfilled: pay[11]
+  unfulfilled: pay[12]
+  unfulfilled: pay[1]
+  unfulfilled: pay[2]
+  unfulfilled: pay[3]
+  unfulfilled: pay[4]
+  unfulfilled: pay[5]
+  unfulfilled: pay[6]
+  unfulfilled: pay[7]
+  unfulfilled: pay[8]
+  unfulfilled: pay[9]
+  cut 2026-04-10

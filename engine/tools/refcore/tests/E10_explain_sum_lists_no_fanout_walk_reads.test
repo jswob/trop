@@ -1,0 +1,93 @@
+# tally 2.1.8 P50, E §10 (the last review input, b2_reads c3): explain xt[2026-01], a sum over xs, lists what its
+# value read, ox's day (xd) and amount (amt); learning the axes the walk read to book a leg builds the walk, which
+# reads pay's day (dom), and that isn't listed. f4a72d70 listed [4] row v:dom.
+=== m.tally
+model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind pays: event certain
+  leg cash: PLN
+kind xs: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+input amt[m in months]: money PLN
+input dom: int
+input xd: int
+input zero: money PLN
+input dh: date
+input bank: observed
+input card: observed
+def tot[m in months]: money PLN = sum(p.cash.amount for p in pays over m)
+def xt[m in months]: money PLN = sum(q.cash.amount for q in xs over m)
+
+move pay[m in months]: pays
+  on day_of(m, dom)
+  leg cash from work to konto amount amt[m]
+
+move ox[m in months]: xs
+  on day_of(m, xd)
+  leg cash from work to konto amount amt[m]
+
+ask c1: count(q in xs over 2026-01) with dom = 3
+ask c2: xt[2026-01] with dom = 3
+ask c3: explain xt[2026-01]
+ask c4: count(p in pays over 2026-01) with dom = 3
+ask c5: count(p in pays on dh where p.cash.amount < zero)
+ask c6: count(q in xs on dh)
+ask c7: count(p in pays over 2026-01) with xd = 3
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01..2026-06] = 10.00 PLN "plan"
+  dom = 1 "d"
+  xd = 2 "x"
+  zero = 0.00 PLN "z"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
+  card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+
+version sm
+  cite s
+  known 2026-03-11
+  same bank[o1] = card[o1]
+=== expect
+c1: 1
+  unfulfilled: ox[2026-01]
+  cut 2026-06-30
+c2: 10.00 PLN
+  unfulfilled: ox[2026-01]
+  cut 2026-06-30
+c3: 10.00 PLN
+  [1] xt[2026-01] = 10.00 PLN
+      rule base: won
+        [2] row v:xd = 2
+            version v, source s, "s", locator "x", governs always, known 2026-01-01
+        [3] row v:amt[2026-01..2026-06] = 10.00 PLN
+            version v, source s, "s", locator "plan", governs always, known 2026-01-01
+  unfulfilled: ox[2026-01]
+  cut 2026-06-30
+c4: 1
+  pinned: dom = 3
+  unfulfilled: pay[2026-01]
+  cut 2026-06-30
+c5: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+c6: ?"dh: no value" (dh)
+  cut 2026-06-30
+c7: 1
+  unfulfilled: pay[2026-01]
+  cut 2026-06-30
+warning: WARN-UNREAD def tot is read by nothing

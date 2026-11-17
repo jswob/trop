@@ -590,7 +590,7 @@ def same_hole_row(m, iid, place, it, rows):
     from .joint import shown
     J = m.joint
     names = sorted((shown(n) for (o, n, out) in J.groups.get(place, ())), key=str) or [shown(place)] * 2
-    rows = sorted(rows, key=lambda r: shown(r.sid or ''))
+    rows = sorted(rows, key=lambda r: id_order(m, r.sid or ''))
     vals = ['%s (%s)' % (fmt(r.val) if not isinstance(r.val, tuple) else '?', shown(r.sid or '')) for r in rows]
     q = '%s are one, but %s differs on %s: %s' % (and_list(names), iid, it, and_list(vals))
     r = copy.copy(rows[0])
@@ -1463,6 +1463,39 @@ def same_lines(m, ctx):
     return out
 
 
+def id_order(m, sid):
+    """An id as a sort key in id order (L §2.5; tally 2.1.8 P50): the item's name by code point, then each key by its
+    position in its index, a list or range keeping its own order (pay[9] before pay[10]; on [zz, aa, mm] zz first); an
+    open index's keys, things and what isn't an item's key go by code point. A row's version prefix (`v:`) goes
+    first."""
+    from .joint import shown
+    from .model import key_text as ktext
+    txt = shown(sid)
+    if ':' in txt and '[' not in txt.split(':', 1)[0]:
+        pre, rest = txt.split(':', 1)
+        return ((0, pre),) + id_order(m, rest)
+    if not txt.endswith(']') or '[' not in txt:
+        return ((1, txt),)
+    name, ks = txt[:-1].split('[', 1)
+    item = m.moves.get(name) or m.inputs.get(name)
+    binds = list(getattr(item, 'binds', None) or ())
+    parts = [k.strip() for k in ks.split(',')]
+    out = [(1, name)]
+    for i, kt in enumerate(parts):
+        dom = getattr(binds[i], 'dom', None) if i < len(binds) else None
+        pos = None
+        if isinstance(dom, tuple) and dom[0] == 'index' and dom[1] in m.indexes:
+            idx = m.indexes[dom[1]]
+            if idx.form in ('list', 'range', 'builtin'):
+                cache = m.__dict__.setdefault('_id_order_pos', {})
+                tab = cache.get(idx.id)
+                if tab is None:
+                    tab = cache[idx.id] = dict((ktext(k), j) for j, k in enumerate(idx.keys))
+                pos = tab.get(kt)
+        out.append((0, pos, '') if pos is not None else (1, 0, kt))
+    return tuple(out)
+
+
 def same_groups(m, ctx):
     """{movement id: its group, in the order of the members' ids compared by code point (L §2.5; tally 2.1.8 S6, #177:
     a class joined by lines in two files has no written order)} (L §6.1, round 14: "same is an equivalence: lines
@@ -1490,7 +1523,7 @@ def same_groups(m, ctx):
             parent[rb] = ra
     by = {}
     from .joint import shown
-    for y in sorted(order, key=shown):
+    for y in sorted(order, key=lambda y: id_order(m, y)):
         by.setdefault(find(y), []).append(y)
     groups = dict((y, g) for g in by.values() for y in g)
     cache[key] = groups
@@ -1524,7 +1557,7 @@ def same_pairs(m, ctx):
         lines.setdefault(b, (a, b))
     groups = {}
     from .joint import shown
-    for x in sorted(order, key=shown):
+    for x in sorted(order, key=lambda y: id_order(m, y)):
         groups.setdefault(find(x), []).append(x)
     sp = {}
     for g in groups.values():
@@ -1552,7 +1585,7 @@ def once_obs(m, obs, ctx):
     return out
 
 
-def same_obs_differ(a, others, leg=None):
+def same_obs_differ(a, others, leg=None, m=None):
     """Where rows stated same disagree on a leg's amount or day (L §5.19: "a read of the movement away from its places
     (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
     naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read."""
@@ -1563,7 +1596,7 @@ def same_obs_differ(a, others, leg=None):
         mem = [(a, g)] + [(b, h) for b in others for h in b.legs if h.name == g.name]
         if len(mem) < 2:
             continue
-        mem.sort(key=lambda t: shown(t[0].id))
+        mem.sort(key=lambda t: id_order(m, t[0].id) if m is not None else shown(t[0].id))
         for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
                                                                                 lambda h: h.day)):
             xs = [get(h) for o, h in mem]
@@ -2285,7 +2318,7 @@ def m_settle_links(self, adjs, ctx):
                         if by_id is None:
                             by_id = dict((x.id, x) for x in self.observations(ctx))
                         others = [by_id[y] for y in groups[o.id] if y != o.id and y in by_id]
-                        h = same_obs_differ(o, others)
+                        h = same_obs_differ(o, others, m=self.m)
                     links.append((a, o, [(settle_sign(lg, a, o), h if h is not None else lg.amount)
                                          for lg in o.legs]))
     return links

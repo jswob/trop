@@ -1367,7 +1367,8 @@ class Walk:
                 # L §8.1 HOLE-SAME: "<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)", the
                 # members in the order of their ids, each of a larger class named (tally 2.1.8 S6, #177)
                 from .moves import and_list
-                touch.sort(key=lambda t: shown(t[0].id))
+                from .moves import id_order
+                touch.sort(key=lambda t: id_order(self.m, t[0].id))
                 names = and_list(shown(t[0].id) for t in touch)
                 days = sorted(set(g.day for o, g, sj in touch if isinstance(g.day, datetime.date)))
                 parts = and_list('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
