@@ -843,6 +843,65 @@ version v1
         );
     }
 
+    /// A shift of 10^20 business days on a calendar a scenario computes from another that has
+    /// no row past 2026 (the review of group 1's fix, F2: `b2_min`).
+    const SHIFT_COMPUTED: &str = "model bm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source plan \"plan\"
+input d: date
+input cr: calendar
+input cq: calendar
+input huge: int
+
+version v
+  cite plan
+  governs always
+  known 2026-01-01
+  d = 2026-06-01 \"a day\"
+  huge = 100000000000000000000 \"10^20\"
+
+version v26
+  cite plan
+  governs 2026
+  known 2026-01-01
+  cr = calendar(weekends [sat, sun]) \"s\"
+  cq = calendar(weekends [sat, sun]) \"s\"
+
+ask f: add_business(d, huge, cq) in sx
+";
+
+    const SHIFT_COMPUTED_SX: &str = "scenario sx over bm
+  tally 2
+  from 2026-01-01
+
+version sx_v
+  cite plan
+  governs 2026-01-01..
+  known 2026-01-01
+  replace cq = bm.cr \"s\"
+";
+
+    #[test]
+    fn a_shift_past_the_edge_reads_the_rows_edges_and_holds_a_computed_hole_as_a_mark() {
+        assert_eq!(
+            lines_of_files(&[
+                ("bm.tally", SHIFT_COMPUTED),
+                ("sx.tally", SHIFT_COMPUTED_SX)
+            ]),
+            [
+                "f: refused: RUN-LIMIT a day passes 9999-12-31",
+                "  world: sx",
+                "  held: cq = ? (sx_v), read for 2027-01-01",
+                "  cut 2026-12-31",
+            ],
+            "the first hole met is the edge's; one held line, a computed hole as ? (P32)"
+        );
+    }
+
     /// [`same_links`]'s fifteen versions with an input both scenarios state, and asks over
     /// April, two days of it and March, one a diff over two stacks (the review of group 1's
     /// fix, F1 and F3: `b3_15`).

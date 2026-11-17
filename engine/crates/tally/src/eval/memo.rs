@@ -74,16 +74,6 @@ impl LawClass {
         }
     }
 
-    /// The first day past it in the direction of `step`: the day after its last, or for a
-    /// negative step the day before its first; none where it is open that way or the day
-    /// would pass the calendar's edge (E §3.2, L §7.6 item 1).
-    pub(super) fn beyond(self, step: i64) -> Option<Day> {
-        if step > 0 {
-            return self.until.filter(|d| !d.is_end());
-        }
-        self.from.and_then(Day::previous)
-    }
-
     /// Whether it holds law date `day`.
     pub(crate) fn holds(self, day: Day) -> bool {
         self.from.is_none_or(|f| f <= day) && self.until.is_none_or(|u| day < u)

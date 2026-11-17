@@ -612,7 +612,7 @@ impl Engine {
             }
         }
         if is_held {
-            let shown = held_text(m, &value)?;
+            let shown = held_text(m, row, &value)?;
             let read_for = match (&point.period, point.day) {
                 (Some(period), _) => Value::of_key(period).text(m).map_err(num_stop)?,
                 (None, Some(day)) => day.text(),
@@ -664,7 +664,7 @@ impl Engine {
         if read_past(m, row, (latest.day, (ctx.cut, ctx.world)), after)? {
             let text = format!(
                 "{figure} = {} ({}), read for {}",
-                held_text(m, &value)?,
+                held_text(m, row, &value)?,
                 row.version,
                 latest.day.text()
             );
@@ -1093,13 +1093,16 @@ fn plain_unit(v: &Value) -> Unit {
     Unit::one()
 }
 
-/// A row's value as its `held:` entry shows it: a hole in its own form, `?"…" (x[k])`, as
-/// L §8.1 prints it (L §8.2: a hole lists them like a value; tally 2.1.8 R7, R9, #179).
-fn held_text(m: &Reality, v: &Value) -> Result<String, Stop> {
-    if let Value::Hole(h) = v {
-        return Ok(h.text());
+/// Row `row`'s value `v` as its `held:` entry shows it: a row that states a hole, that hole
+/// in its own form, `?"…" (x[k])`, as L §8.1 prints it (L §8.2: a hole lists them like a
+/// value; tally 2.1.8 R7, R9, #179); a row computed whose value comes out a hole, `?`, since
+/// that hole names the day read and the line prints once per row (L §8.2; pick P32).
+fn held_text(m: &Reality, row: &Row, v: &Value) -> Result<String, Stop> {
+    match (v, &row.value) {
+        (Value::Hole(_), Written::Expr(_)) => Ok("?".to_owned()),
+        (Value::Hole(h), _) => Ok(h.text()),
+        _ => v.text(m).map_err(num_stop),
     }
-    v.text(m).map_err(num_stop)
 }
 
 /// A value as a register entry shows it: a hole as `?` (L §8.2).
