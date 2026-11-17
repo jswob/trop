@@ -378,9 +378,15 @@ fn side_cells(
         };
         got.push(cells);
         if let Some((met, cut)) = met {
-            all.get_or_insert_with(|| (SameMet::new(), cut))
-                .0
-                .extend(met);
+            // a version both sides met names both sides' rows (L §8.1)
+            let (joint, _) = all.get_or_insert_with(|| (SameMet::new(), cut));
+            for (version, (window, rows)) in met {
+                joint
+                    .entry(version)
+                    .or_insert_with(|| (window, BTreeSet::new()))
+                    .1
+                    .extend(rows);
+            }
         }
     }
     Ok(Ok((got, all)))
@@ -895,15 +901,17 @@ fn undecided_lines(
 }
 
 /// Whether seen and unseen compare ask `ask`'s blocks by every line: a ledger, a diff, an
-/// `explain` or an `inputs-of` prints its result in lines under its head; a value, `check`,
-/// `solve` or `readers-of` block by its first line, its register free to differ (pick P27,
-/// on #196). L §4.5 (tally 2.1.8 R12), §5.18.
+/// `explain`, an `inputs-of` or a `readers-of` prints its result in lines under its head; a
+/// value, `check` or `solve` block by its first line, its register free to differ (pick P27,
+/// on #196; refcore's `answer_same_undecided`, its `whole`). L §4.5 (tally 2.1.8 R12), §5.18.
 fn by_every_line(ask: &Ask) -> bool {
     match ask.body {
-        AskBody::Residuals(_) | AskBody::Diff(_) | AskBody::Explain(_) | AskBody::InputsOf(_) => {
-            true
-        }
-        AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) | AskBody::ReadersOf(_) => false,
+        AskBody::Residuals(_)
+        | AskBody::Diff(_)
+        | AskBody::Explain(_)
+        | AskBody::InputsOf(_)
+        | AskBody::ReadersOf(_) => true,
+        AskBody::Exprs(_) | AskBody::Check(..) | AskBody::Solve(_) => false,
     }
 }
 
