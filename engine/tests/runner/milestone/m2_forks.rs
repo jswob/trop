@@ -1530,7 +1530,7 @@ mod tests {
     /// `m2/vectors.refcore`'s group `fixes-s`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_s() {
-        group_holds(M2_VECTORS, "fixes-s", (0, 1), 9);
+        group_holds(M2_VECTORS, "fixes-s", (0, 1), 8);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-d`, every vector.

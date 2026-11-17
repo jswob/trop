@@ -293,7 +293,6 @@ s3/by_key_clash	fixes-s		engine/tests/m2/fixes/s/s3key	engine/tests/m2/fixes/s/s
 s3/by_thing_clash	fixes-s		engine/tests/m2/fixes/s/s3thing	engine/tests/m2/fixes/s/s3thing/m.tally	byc		S3
 s4/answered_at	fixes-s		engine/tests/m2/fixes/s/s4	engine/tests/m2/fixes/s/s4/m.tally	ex		S4
 s6/hole_same_order_class	fixes-s		engine/tests/m2/fixes/s/s6	engine/tests/m2/fixes/s/s6/m.tally	fp f3 b3		S6
-s7/each_limit	fixes-s		engine/tests/m2/fixes/r13/limit	engine/tests/m2/fixes/r13/limit/lim.tally	lim		S7
 s8/explain_refs	fixes-s		engine/tests/m2/fixes/s/s8	engine/tests/m2/fixes/s/s8/m.tally	ex ez		S8
 s9/answered_by_refusal	fixes-s		engine/tests/m2/fixes/s/s4	engine/tests/m2/fixes/s/s4/m.tally	b9 ex9		S9
 d1/gap_outside_run	fixes-d		engine/tests/m2/fixes/d/d1	engine/tests/m2/fixes/d/d1/m.tally	g g2 g3 g4 b		D

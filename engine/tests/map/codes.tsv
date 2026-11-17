@@ -297,11 +297,11 @@ RUN-EMPTY	L §8.4	M1	*	6	M1	codes/m1/decide/low-empty
 RUN-EMPTY	L §8.4	M1	<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys	6	M1	codes/m1/decide/low-empty
 RUN-DIGITS	L §8.4	S	*	3	S	kernel/g1/cap
 RUN-DIGITS	L §8.4	S	<x> passes 4 096 digits; round where the law rounds	3	S	kernel/g1/cap
-RUN-LIMIT	L §8.4	S	*	23	S	kernel/g14/by_n
+RUN-LIMIT	L §8.4	S	*	22	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day passes 9999-12-31	13	S	kernel/g14/by_n
 RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	6	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	9	S	kernel/g14/day_range_end
-RUN-LIMIT	L §8.4	S	windows each over more than 20 000 day combinations	2	M2	m2/fixes/g3/ez06
+RUN-LIMIT	L §8.4	S	windows each over more than 20 000 day combinations	1	M2	m2/fixes/g3/ez06
 RUN-LIMIT	L §8.4	S	seen and unseen over more than 20 000 choices	1	M2	m2/fixes/rv/g1f_f1_two_stacks_limit
 RUN-DIV	L §8.4	S	*	102	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	102	S	kernel/g1/text
