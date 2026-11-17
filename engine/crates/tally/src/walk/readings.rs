@@ -67,13 +67,17 @@ fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Ve
 /// window `w`, in its unit or every unit, so the balance after it would differ by m's day
 /// (pick P29 on #175; refcore's `dec_win_end`, its `others`). L §4.6, §4.4.
 fn touched_inside(walk: &Walk, r: &Reading, (mid, w): (&str, &DayWindow)) -> bool {
-    [r.unit.as_str(), ALL].into_iter().any(|unit| {
-        walk.entries(&r.place, unit).iter().any(|e| {
-            (w.lo..=w.hi).contains(&e.at.day)
+    for unit in [r.unit.as_str(), ALL] {
+        for e in walk.entries(&r.place, unit) {
+            if (w.lo..=w.hi).contains(&e.at.day)
                 && e.mv.as_deref() != Some(mid)
                 && !matches!(e.change, Change::Unperm(_))
-        })
-    })
+            {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
@@ -225,16 +229,15 @@ impl Engine {
                 r.input, r.place, r.instant
             ),
         );
-        let pad = m
-            .versions
-            .get(&r.version)
-            .and_then(|v| v.gap_roles.iter().find(|(p, _)| *p == r.place))
-            .and_then(|(_, role)| match role {
-                GapRole::Pad(other) => Some(other.clone()),
-                GapRole::Anchor => None,
-            });
+        let mut places = vec![r.place.clone()];
+        if let Some(version) = m.versions.get(&r.version)
+            && let Some((_, GapRole::Pad(other))) =
+                version.gap_roles.iter().find(|(p, _)| *p == r.place)
+        {
+            places.push(other.clone());
+        }
         let walk = self.walk_mut(id)?;
-        for place in std::iter::once(r.place.clone()).chain(pad) {
+        for place in places {
             walk.add(m, &place, &r.unit, Ent::new(at, Change::Bad(err.clone())))?;
         }
         Ok(())

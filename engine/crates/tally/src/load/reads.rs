@@ -205,7 +205,11 @@ impl Checker {
         }
         if bal.modelled {
             // the model's account: no movement may reach it (L §5.19; tally 2.1.8 R16, #176)
-            let reads = self.graph.modelled.entry(scope.item.clone()).or_default();
+            let reads = self
+                .graph
+                .modelled
+                .entry(scope.item.clone())
+                .or_insert_with(Vec::new);
             if !reads.contains(&target) {
                 reads.push(target.clone());
             }

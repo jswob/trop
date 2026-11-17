@@ -807,12 +807,12 @@ impl Engine {
             return Ok(Value::Hole(Hole::asked(&text, &format!("stated[{place}]"))));
         };
         // two units' readings at the instant gap reads: refused (L §5.10; tally 2.1.8 R14)
-        let units: BTreeSet<String> = gaps
-            .into_iter()
-            .flatten()
-            .filter(|g| g.instant == last.instant)
-            .map(|g| g.unit.clone())
-            .collect();
+        let mut units: BTreeSet<String> = BTreeSet::new();
+        for g in gaps.into_iter().flatten() {
+            if g.instant == last.instant {
+                units.insert(g.unit.clone());
+            }
+        }
         if units.len() > 1 {
             let units: Vec<String> = units.into_iter().collect();
             return Err(crate::read::two_units("gap", &place, &last.instant, &units));

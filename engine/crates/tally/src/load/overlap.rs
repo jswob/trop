@@ -114,11 +114,10 @@ fn group_rows(rows: &[Row], stated: Option<&[Stated]>) -> Vec<Group> {
 /// unit at a place of unit `any`, each unit's readings at their pattern (refcore's `wider`;
 /// L §5.10, tally 2.1.8 R14).
 fn wider(groups: &[Group], group: &Group, stated: Option<&[Stated]>) -> Vec<usize> {
-    let unstated = group
-        .rows
-        .first()
-        .and_then(|at| stated.and_then(|s| s.get(*at)))
-        .is_some_and(|s| *s == Stated::Unstated);
+    let unstated = matches!(
+        (group.rows.first(), stated),
+        (Some(at), Some(s)) if s.get(*at) == Some(&Stated::Unstated)
+    );
     if !unstated {
         return Vec::new();
     }
