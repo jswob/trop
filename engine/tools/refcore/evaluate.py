@@ -4519,7 +4519,20 @@ class Engine:
         r = getattr(n.args[2], '_r', None)
         inf = self.m.inputs.get(r[2]) if r is not None and r[0] == 'read' and r[1] == 'input' else None
         bounds = {d + datetime.timedelta(days=step)}
-        for row in (inf.rows if inf is not None else ()):
+        # and the rows of the inputs its rows are stated same as (L §6.1), which a read of it follows (item 18 of the
+        # fourth turn: the engine's 5ae84cca, N3); a day the walk visits more only reads the calendar there
+        ids = {inf.id} if inf is not None else set()
+        edges = getattr(self.m, 'same_row_edges', ())
+        grew = True
+        while grew:
+            grew = False
+            for ka, kb, _v in edges:
+                for x, y in ((ka, kb), (kb, ka)):
+                    if x[0] in ids and y[0] not in ids and y[0] in self.m.inputs:
+                        ids.add(y[0])
+                        grew = True
+        rows = [row for i in sorted(ids) for row in self.m.inputs[i].rows]
+        for row in rows:
             sp = row.version.span_at(ctx.cut) if hasattr(row.version, 'span_at') else None
             for x in ((sp.start, sp.end) if sp is not None else ()):
                 if x is not None:
