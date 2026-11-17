@@ -65,6 +65,8 @@ changed; `refcore_fast` byte-equal). One mechanism per rule:
   `at`; `moves.s1_refusal` names S1's refusal for both instances and rows, which bindings over movements and `flows`
   of a move raise; `evaluate.trace_obs_row` prints an observation a sum reads as its row; a class stands in a binding
   by its first id (`mreads`); `last` over always rows names its read's day in HOLE-SAME.
+- **The eighth turn** (T's STOP-REPORTs 6 and 7; **1 539 tests**): `mreads.m_e_value`'s whole-priced branch keeps
+  its price's hole linear under partial; STOP-REPORT 6 was the seventh turn's `trace_obs_row`.
 - **Left.** About 125 run sites no text reaches (`LoadAtRun`, `is_load` stay); explain's `windows each` block
   against its pinned twin's pins section, and `n9_start`'s plain `?` group (next round's); the covered face asks
   every day of its window (`moves.m_window_class_depends`, a cost, no byte); a law per tuple on forms other than
