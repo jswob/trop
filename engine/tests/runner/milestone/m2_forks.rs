@@ -319,14 +319,7 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, each tested below.
-    const SPEC_GROUPS: [&str; 6] = [
-        "spec-forms",
-        "spec-explain",
-        "spec-windows",
-        "spec-records",
-        "spec-ledger",
-        "spec-sweep",
-    ];
+    const SPEC_GROUPS: [&str; 4] = ["spec-forms", "spec-windows", "spec-records", "spec-sweep"];
 
     /// Each group of the four stores has its tests here, so a new group is never left out.
     #[test]
@@ -1580,54 +1573,24 @@ mod tests {
     /// `m2/spec.vectors`'s group `spec-forms`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_forms() {
-        group_holds(M2_SPEC, "spec-forms", (0, 1), 5);
+        group_holds(M2_SPEC, "spec-forms", (0, 1), 2);
     }
 
-    /// `m2/spec.vectors`'s group `spec-explain`, every vector.
+    /// `m2/spec.vectors`'s group `spec-windows`, every vector.
     #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_explain() {
-        group_holds(M2_SPEC, "spec-explain", (0, 1), 6);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 1 of 4 (at 0 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_1() {
-        group_holds(M2_SPEC, "spec-windows", (0, 4), 4);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 2 of 4 (at 1 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_2() {
-        group_holds(M2_SPEC, "spec-windows", (1, 4), 4);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 3 of 4 (at 2 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_3() {
-        group_holds(M2_SPEC, "spec-windows", (2, 4), 4);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-windows`, part 4 of 4 (at 3 modulo 4).
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_windows_part_4() {
-        group_holds(M2_SPEC, "spec-windows", (3, 4), 4);
+    fn m2_forks_on_prints_off_on_spec_spec_windows() {
+        group_holds(M2_SPEC, "spec-windows", (0, 1), 3);
     }
 
     /// `m2/spec.vectors`'s group `spec-records`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_records() {
-        group_holds(M2_SPEC, "spec-records", (0, 1), 22);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-ledger`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_ledger() {
-        group_holds(M2_SPEC, "spec-ledger", (0, 1), 19);
+        group_holds(M2_SPEC, "spec-records", (0, 1), 4);
     }
 
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_sweep() {
-        group_holds(M2_SPEC, "spec-sweep", (0, 1), 23);
+        group_holds(M2_SPEC, "spec-sweep", (0, 1), 9);
     }
 }

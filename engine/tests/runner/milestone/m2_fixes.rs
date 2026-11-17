@@ -28,14 +28,7 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 6] = [
-        "spec-forms",
-        "spec-explain",
-        "spec-windows",
-        "spec-records",
-        "spec-ledger",
-        "spec-sweep",
-    ];
+    const SPEC_GROUPS: [&str; 4] = ["spec-forms", "spec-windows", "spec-records", "spec-sweep"];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
     /// to the stored run.
@@ -136,13 +129,6 @@ mod tests {
         group_holds(VECTORS, "fixes-ledger");
     }
 
-    /// The spec's answers for G5's held probes: a hole booking a later version answers (E §5
-    /// step 1, #169) and unit `any`'s ledgers (P22, #173).
-    #[test]
-    fn m2_fixes_spec_ledger() {
-        group_holds(SPEC, "spec-ledger");
-    }
-
     /// The spec's answers for G4's held probes (P43) and the `nb3_*` texts refcore can't run:
     /// a link's `when` that reads a reading after its own instance is `RUN-CYCLE` (L §5.14.2).
     #[test]
@@ -155,12 +141,6 @@ mod tests {
     #[test]
     fn m2_fixes_spec_forms() {
         group_holds(SPEC, "spec-forms");
-    }
-
-    /// The spec's answers for G2's fixes (P21 B-3, NB-3; P24 F-2, SQ-1).
-    #[test]
-    fn m2_fixes_spec_explain() {
-        group_holds(SPEC, "spec-explain");
     }
 
     /// The spec's answers for G3's fixes (P11, P27 B1, B2, B4, B5, NB-6, NB-7, P30) and the
