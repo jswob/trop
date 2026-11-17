@@ -1079,7 +1079,8 @@ impl Engine {
 }
 
 /// An attribute of a movement: an instance's or an observation's, an adjustment's `adjusts`
-/// and `change` (refcore's `mv_field`, an attribute). L §5.14, §5.14.3.
+/// and `change`; one it lacks is `RUN-DOMAIN` (refcore's `mv_field`, an attribute). L §5.14,
+/// §5.14.3, §8.4.
 fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
     let found = match src {
         Moving::Plan(i) => i
@@ -1110,8 +1111,10 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
     if let Some(h) = body_hole(src) {
         return Ok(Value::Hole(h));
     }
+    // which movement lacks the attribute only the run knows: the value is refused, in load's
+    // words, and the reality isn't (L §8.4 Load refuses what load sees; tally 2.1.8 §4, #162)
     Err(Stop::Refused(Refusal::new(
-        Code::Load(Load::Field),
+        Code::Run(Run::Domain),
         format!("{name} is not a field of {}", src.id()),
     )))
 }
