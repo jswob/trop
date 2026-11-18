@@ -1115,19 +1115,19 @@ mod tests {
     /// G14's fix vectors, part 1 of 6 (at 0 modulo 6).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_1() {
-        fixes_hold("fixes-g14", (0, 6), 32);
+        fixes_hold("fixes-g14", (0, 6), 31);
     }
 
     /// G14's fix vectors, part 2 of 6 (at 1 modulo 6).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_2() {
-        fixes_hold("fixes-g14", (1, 6), 32);
+        fixes_hold("fixes-g14", (1, 6), 31);
     }
 
     /// G14's fix vectors, part 3 of 6 (at 2 modulo 6).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_3() {
-        fixes_hold("fixes-g14", (2, 6), 32);
+        fixes_hold("fixes-g14", (2, 6), 31);
     }
 
     /// G14's fix vectors, part 4 of 6 (at 3 modulo 6).
@@ -1169,15 +1169,16 @@ mod tests {
     /// 0 modulo 2).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_1() {
-        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 151);
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 143);
     }
 
     /// Gate 8's open survivors' texts (`m1/fixes/gate8/`) but `GATE8_ALONE`, part 2 of 2 (at
-    /// 1 modulo 2). (151 and 150 since tally 2.2 dropped gate 8's vectors of a place of unit
-    /// `any`, S-1; both 155 after its readings after m went, S-3; 160 before.)
+    /// 1 modulo 2). (Both 143 since tally 2.2 dropped gate 8's vectors of a `known` window and
+    /// of rows stated `same`, S-2, S-8; 151 and 150 after its places of unit `any` went, S-1;
+    /// both 155 after its readings after m went, S-3; 160 before.)
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_2() {
-        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 150);
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 143);
     }
 
     /// Gate 8's `fixes/gate8/m2_g7_p1_cuts` alone (cuts past four kept walks, a walk planned past the read freed; `GATE8_ALONE`).

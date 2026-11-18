@@ -14996,112 +14996,6 @@ lwf: 0.00 PLN
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
-,19:items/windows/known,13:items-windows,15:run known.tally,2189:11:known.tally,2168:model w_known
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 C2, G3 (P6): a known window at run, on a version (kv), a row (kr) and an observation's version (ko), read as known inside the window and past it, plain and windows each; a moves line at run (mv): the moved version read at a law date in its old span and its new, as known before and after the moves line"
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-place konto: accounts PLN lives 2026-01-01..
-place work: outside lives 1900-01-01..
-
-input bank: observed
-input a: money PLN
-input b: money PLN
-input c: money PLN
-input amt: money PLN
-
-move pay[m in months]: transfers
-  on start_of(m)
-  leg cash from work to konto amount amt
-
-ask kv_in: a law 2026-06-01 as known 2026-03-15
-ask kv_in_each: a law 2026-06-01 as known 2026-03-15 windows each
-ask kv_past: a law 2026-06-01 as known 2026-04-01
-ask kr_in_each: b law 2026-06-01 as known 2026-03-15 windows each
-ask kr_before: b law 2026-06-01 as known 2026-03-01
-ask ko_in_each: bal(konto, 2026-02-28) as known 2026-03-15 windows each
-ask ko_past: bal(konto, 2026-02-28) as known 2026-04-01
-ask mv_old_before: c law 2026-02-15 as known 2026-02-01
-ask mv_old_after: c law 2026-02-15 as known 2026-04-01
-ask mv_new_after: c law 2026-05-15 as known 2026-04-01
-ask mv_new_before: c law 2026-05-15 as known 2026-02-01
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  a = 1.00 PLN "c"
-  amt = 10.00 PLN "c"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-
-version va
-  cite card
-  governs always
-  known window(2026-03-10, 2026-03-20)
-  replace a = 2.00 PLN "c"
-
-version vb
-  cite card
-  governs always
-  known 2026-01-01
-  b = 3.00 PLN "c"
-  replace b = 4.00 PLN known window(2026-03-10, 2026-03-20) "c"
-
-version bank_feb
-  cite card
-  governs 2026-02
-  known window(2026-03-10, 2026-03-20)
-  covers konto
-  bank[r1] = (on: 2026-02-01, kind: transfers, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "r1"
-
-version vc
-  cite card
-  governs 2026-01..2026-03
-  known 2026-01-01
-  c = 5.00 PLN "c"
-
-version vmove
-  cite card
-  governs always
-  known 2026-03-01
-  moves vc to 2026-04..2026-06
-,,1:0,1270:ko_in_each [known of bank_feb = 2026-03-10 .. 2026-03-15]: 21.00 PLN
-  unfulfilled: pay[2026-01]
-  cut 2026-03-15
-ko_in_each [known of bank_feb = 2026-03-16 .. 2026-03-20]: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  cut 2026-03-15
-ko_past: 21.00 PLN
-  unfulfilled: pay[2026-01]
-  cut 2026-04-01
-kr_before: 3.00 PLN
-  law date 2026-06-01, cut 2026-03-01
-kr_in_each [known of vb:b = 2026-03-10 .. 2026-03-15]: 4.00 PLN
-  law date 2026-06-01, cut 2026-03-15
-kr_in_each [known of vb:b = 2026-03-16 .. 2026-03-20]: 3.00 PLN
-  law date 2026-06-01, cut 2026-03-15
-kv_in: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the cut 2026-03-15" (va)
-  law date 2026-06-01, cut 2026-03-15
-kv_in_each [known of va = 2026-03-10 .. 2026-03-15]: 2.00 PLN
-  law date 2026-06-01, cut 2026-03-15
-kv_in_each [known of va = 2026-03-16 .. 2026-03-20]: 1.00 PLN
-  law date 2026-06-01, cut 2026-03-15
-kv_past: 2.00 PLN
-  law date 2026-06-01, cut 2026-04-01
-mv_new_after: 5.00 PLN
-  law date 2026-05-15, cut 2026-04-01
-mv_new_before: ?"c: no value at 2026-05-15" (c)
-  law date 2026-05-15, cut 2026-02-01
-mv_old_after: ?"c: no value at 2026-02-15" (c)
-  law date 2026-02-15, cut 2026-04-01
-mv_old_before: 5.00 PLN
-  law date 2026-02-15, cut 2026-02-01
 ,14:fixes/g1/forks,11:fixes-forms,32:run base.tally sa.tally sb.tally,913:10:base.tally,562:model fk
   tally 2
   on 2026-06-30
@@ -16155,11 +16049,12 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
 ,,1:0,71:qw (m = g) [wd = 2026-04-01 .. 2026-04-02]: 10.00 PLN
   cut 2026-03-01
-,11:fixes/g3/j3,13:fixes-windows,20:run j3.tally --ask q,521:8:j3.tally,505:model pj
+,11:fixes/g3/j3,13:fixes-windows,20:run j3.tally --ask q,700:8:j3.tally,684:model pj
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2027-12-31
+  note "T; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day; the vector that read it as seen and unseen went with the form, and every other answer is as before"
 
 source card "invented"
 unit PLN: currency minor 0.01
@@ -16179,7 +16074,7 @@ version v
 version v2
   cite card
   governs 2027-01-01..
-  known window(2026-02-20, 2026-02-28)
+  known 2026-02-28
   replace rate = 12.00 PLN "c"
 ,,1:0,51:q: 10.00 PLN
   law date 2026-06-01, cut 2026-02-25
@@ -103746,12 +103641,12 @@ version st
   known 2026-04-02
   bank[r1] = (on: 2026-03-10, kind: cats, leg cash from konto to world amount 7.00 PLN, cat: "a" + "b") "r1"
 ,,1:1,83:refused: LOAD-UNIT a value of the wrong type for bank[r1] (obs_attr_expr.tally:75)
-,18:fixes/p60/led_each,11:fixes-sweep,18:run led_each.tally,1357:14:led_each.tally,1333:model pw
+,18:fixes/p60/led_each,11:fixes-sweep,18:run led_each.tally,1521:14:led_each.tally,1497:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:505, residuals with windows each over a statement known in a window; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:505, residuals with windows each over a statement known in a window; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -103788,7 +103683,7 @@ ask q: residuals konto 2026-03 as known 2026-04-10 windows each
 version st
   cite s
   governs 2026-03
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
 ,,1:0,481:q: residuals konto 2026-03
@@ -103799,202 +103694,6 @@ version st
   cut 2026-04-10
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,23:fixes/p60/obs_known_win,11:fixes-sweep,23:run obs_known_win.tally,1356:19:obs_known_win.tally,1327:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): book/observe.rs:216, an observation known in a window that holds the cut, no windows each; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,358:q: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,24:fixes/p60/read_known_win,11:fixes-sweep,24:run read_known_win.tally,1288:20:read_known_win.tally,1258:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:339, a reading known in a window that holds the cut; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-
-version rd
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  anchor konto
-  stated[konto] = 50.00 PLN at 2026-03-31 end "saldo"
-,,1:0,534:q: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  cut 2026-04-10
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,19:fixes/p60/same_rows,11:fixes-sweep,19:run same_rows.tally,1967:15:same_rows.tally,1942:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:348, input rows stated same, at run; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place wallet: mixed lives 2026-01-01..
-input y[k in ks]: int
-input px: money PLN reading
-input z[k in ks, j in ks]: int
-kind twos: event certain
-  leg cash: PLN
-  leg fee: PLN
-place konto: accounts PLN lives 2026-01-01..
-place jar[k in ks]: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input amt: money PLN
-input dom: int
-input fx: num PLN/EUR
-input x[k in ks]: int
-input pday: date
-input dk[k in ks]: date
-input bank: observed
-kind cats: transfers
-  attr cat: text
-input lo: money PLN
-input hi: money PLN
-input ids: text
-input plaw: date
-
-move pay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  for m
-  leg cash from world to konto amount amt
-
-move buy[m in months]: twos
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from konto to world amount amt
-  leg fee from konto to world amount amt
-
-move put[k in ks]: transfers
-  on pday
-  at plaw
-  leg cash from world to jar[k] amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  dom = 5 "s"
-  fx = 4.25 "s"
-  x[a] = 1 "s"
-  y[a] = 3 "s"
-  y[b] = 4 "s"
-  z = 1 "s"
-  pday = 2026-03-05 "s"
-  dk[a] = 2026-03-31 "s"
-  dk[b] = 2026-04-30 "s"
-  lo = 0.00 PLN "s"
-  hi = 0.02 PLN "s"
-  ids = "a" "s"
-  plaw = 2026-03-01 "s"
-  x[b] = 2 "s"
-  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
-  opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
-  opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: x[a] + y[a]
-
-version sm
-  cite s
-  known 2026-01-02
-  same x[a] = y[a]
-,,1:0,517:q: ?"x[a] and y[a] are one, but the value differs on every day: 1 (v:x[a]) and 3 (v:y[a])" (x[a], y[a])
-  cut 2026-06-30
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD input fx is read by nothing
-warning: WARN-UNREAD input hi is read by nothing
-warning: WARN-UNREAD input ids is read by nothing
-warning: WARN-UNREAD input lo is read by nothing
-warning: WARN-UNREAD input px is read by nothing
-warning: WARN-UNREAD input z is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
 ,20:fixes/p60/settle_lit,11:fixes-sweep,20:run settle_lit.tally,2391:16:settle_lit.tally,2365:model p
   tally 2
@@ -105472,191 +105171,6 @@ ask e2: explain pay[2026-02].cash.amount
   [2] row v1:amt[2026-01..2026-02] = 100.00 PLN
       version v1, source s, "s", locator "s", governs 2026-01-01.., known 2026-01-01
   cut 2026-06-30
-,12:fixes/g6b/b1,11:fixes-sweep,12:run b1.tally,635:8:b1.tally,619:model pi
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B1, a calendar stated same, only the other side has a row, windows each (L 6.1, 4.4)"
-
-source card "invented"
-input cal: calendar
-input cal2: calendar
-input d1: date
-
-ask q: add_business(d1, 1, cal) windows each
-ask q2: add_business(d1, 1, cal)
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  d1 = 2026-05-29 "c"
-  cal2 = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
-
-version sm
-  cite card
-  known 2026-01-02
-  same cal = cal2
-,,1:0,218:q [added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
-  cut 2026-03-01
-q [added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
-  cut 2026-03-01
-q2: window(2026-06-01, 2026-06-02)
-  cut 2026-03-01
-,12:fixes/g6b/b2,11:fixes-sweep,12:run b2.tally,471:8:b2.tally,455:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B2, a window read through a same row keeps its name (L 4.4)"
-
-source s "s"
-input a: date
-input b: date
-
-ask q1: a == a
-ask q2: a windows each
-ask q3: b == b
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  a = window(2026-03-01, 2026-03-03) "s"
-
-version sm
-  cite s
-  known 2026-01-02
-  same a = b
-,,1:0,199:q1: true
-  cut 2026-06-30
-q2 [a = 2026-03-01]: 2026-03-01
-  cut 2026-06-30
-q2 [a = 2026-03-02]: 2026-03-02
-  cut 2026-06-30
-q2 [a = 2026-03-03]: 2026-03-03
-  cut 2026-06-30
-q3: true
-  cut 2026-06-30
-,14:fixes/g6b/b3_q,11:fixes-sweep,20:run b3.tally --ask q,985:8:b3.tally,969:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B3, a removal known in a window that holds the cut (L 4.4, 4.5)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-01
-  covers konto
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-
-version fx
-  cite s
-  governs 2026-03
-  known window(2026-04-05, 2026-04-20)
-  replace bank[r1] = none "r1"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-ask q2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask q3: bal(konto, 2026-03-31) as known 2026-04-21
-ask q4: bal(konto, 2026-03-31) as known 2026-04-04
-,,1:0,123:q: ?"date within window(2026-04-05, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], fx)
-  cut 2026-04-10
-,17:fixes/g6b/b4_q1q3,11:fixes-sweep,24:run b4.tally --ask q1 q3,502:8:b4.tally,486:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B4, a version's same line read at a cut before the version is known (L 4.5)"
-
-source s "s"
-input x: int
-input y: int
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x = 3 "s"
-  y = 4 "s"
-
-ask q1: x as known 2026-01-01
-ask q2: x
-ask q3: y as known 2026-03-01
-
-version sm
-  cite s
-  governs always
-  known 2026-03-02
-  same x = y
-,,1:0,46:q1: 3
-  cut 2026-01-01
-q3: 4
-  cut 2026-03-01
-,16:fixes/g6b/sr2_q7,11:fixes-sweep,22:run sr2.tally --ask q7,1168:9:sr2.tally,1150:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): rows stated same that agree and that disagree, read by a key binding and by explain (review's sr2; q7 B4)"
-
-source s "s"
-unit PLN: currency minor 0.01
-index ks = [a, e]
-input x[k in ks]: int
-input y[k in ks]: int
-input r[m in months]: money PLN
-input t[m in months]: money PLN
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x[a] = 1 "s"
-  y[a] = 1 "s"
-  x[e] = 3 "s"
-  y[e] = 4 "s"
-  r[2026-03] = 10.00 PLN "s"
-  t[2026-03] = 12.00 PLN "s"
-  r[2026-04] = 7.00 PLN "s"
-  t[2026-04] = 7.00 PLN "s"
-
-ask q1: x[k] + 1 for k in ks
-ask q2: y[k] for k in ks
-ask q3: x[k] == y[k] for k in ks
-ask q4: explain x[a]
-ask q5: explain x[e]
-ask q6: explain y[e]
-ask q7: x[e] as known 2026-01-01
-ask q8: r[m] for m in months where m == 2026-03 or m == 2026-04
-ask q9: explain t[2026-03] law 2026-03-15
-ask q10: explain r[2026-04] law 2026-04-15
-ask q11: x[e] == y[e]
-
-version sm
-  cite s
-  known 2026-01-02
-  same x[a] = y[a]
-  same x[e] = y[e]
-  same r[2026-03] = t[2026-03]
-  same r[2026-04] = t[2026-04]
-,,1:0,23:q7: 3
-  cut 2026-01-01
 ,18:fixes/g6b/pd3_q2q6,11:fixes-sweep,25:run pd3.tally --ask q2 q6,735:9:pd3.tally,718:model pd
   tally 2
   on 2026-03-01
@@ -105762,12 +105276,12 @@ q5 (k = c) [ax = lo]: (true, 10.00 PLN)
 q5 (k = c) [ax = hi]: (true, 20.00 PLN)
   reading: ax = hi
   cut 2026-03-01
-,18:fixes/g6b/le1_each,11:fixes-sweep,24:run le1.tally --ask q q2,1564:9:le1.tally,1546:model pw
+,18:fixes/g6b/le1_each,11:fixes-sweep,24:run le1.tally --ask q q2,1728:9:le1.tally,1710:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -105810,7 +105324,7 @@ ask q3: residuals konto 2026-03 as known 2026-04-10
 version st
   cite s
   governs 2026-03
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
 ,,1:0,9892:q [dk[a] = 2026-03-01]: residuals konto 2026-03
@@ -105975,12 +105489,12 @@ q2 [dk[a] = 2026-03-10]: residuals konto 2026-03
   cut 2026-04-25
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,18:fixes/g6b/le5_each,11:fixes-sweep,27:run le5.tally --ask q q3 q4,1620:9:le5.tally,1602:model pw
+,18:fixes/g6b/le5_each,11:fixes-sweep,27:run le5.tally --ask q q3 q4,1784:9:le5.tally,1766:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -106025,7 +105539,7 @@ ask q5: residuals konto 2026-04
 version st
   cite s
   governs 2026-03..2026-04
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
 ,,1:0,2588:q [dk[a] = 2026-03-30 .. 2026-03-31]: residuals konto 2026-04
@@ -106916,52 +106430,6 @@ e2: 1 130.00 PLN
   unfulfilled: save[2026-01]
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-03-15
-,17:fixes/g8b/ob1_b31,11:fixes-sweep,23:run ob1.tally --ask b31,1466:9:ob1.tally,1448:model ob1
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-
-version v1
-  cite s
-  governs always
-  known 2026-03-01
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 10.00 PLN) "r1"
-
-version v2
-  cite s
-  governs 2026-03
-  known 2026-03-02
-  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm"
-
-version v3
-  cite s
-  governs 2026-03
-  known 2026-03-05
-  replace bank[r1] = (on: 2026-03-12, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1b"
-
-version v4
-  cite s
-  governs 2026-03
-  known 2026-03-06
-  replace bank[r1] = (on: 2026-03-13, kind: transfers, leg cash from world to konto amount 13.00 PLN) "r1c"
-
-ask b11: bal(konto, 2026-03-11) as known 2026-04-05
-ask b12: bal(konto, 2026-03-12) as known 2026-04-05
-ask b31: bal(konto, 2026-03-31) as known 2026-04-05
-ask led: residuals konto 2026-03 as known 2026-04-05
-ask late: bal(konto, 2026-03-31) as known 2026-04-11
-ask early: bal(konto, 2026-03-31) as known 2026-03-31
-,,1:0,125:b31: ?"date within window(2026-04-01, 2026-04-10) not precise enough for the cut 2026-04-05" (bank[r1], v2)
-  cut 2026-04-05
 ,17:fixes/g8b/aw_attr,11:fixes-sweep,23:run aw.tally --ask n_ma,1544:8:aw.tally,1527:model aw
   tally 2
   on 2026-08-01
@@ -108259,368 +107727,6 @@ q_base: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fu
 q_obs: (950.00 PLN, refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same)
   world: sc
   cut 2026-04-10
-,20:r12/same_line_by_cut,9:fixes-r12,52:run m.tally --ask k_before k_before_rows k_after led,1677:7:m.tally,1661:model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196), item #169-j: a same line of a version known after K isn't seen at K, so the rows read apart (k_before: refused RUN-RECORD, two unjoined rows fulfil save[2026-03]); seen from its known on (k_after); a backtest's ledger pairs the observations as known on on, their same line with them (led)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input d15: int
-
-move save[m in months]: transfers
-  on day_of(m, d15)
-  leg cash from konto to sav amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 900.00 PLN "s"
-  d15 = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-
-version joined
-  cite s
-  governs 2026-03
-  known 2026-04-20
-  same bank[a2] = bank[b1]
-
-ask k_before: flows(save, 2026-03) as known 2026-04-10
-ask k_before_rows: count(o in bank over 2026-03) as known 2026-04-10
-ask k_after: flows(save, 2026-03), bal(sav, 2026-03-31) as known 2026-04-25
-ask led: residuals sav 2026-03 as known 2026-04-25
-,,1:0,579:k_before: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
-  cut 2026-04-10
-k_before_rows: 2
-  cut 2026-04-10
-k_after: (950.00 PLN, 950.00 PLN)
-  cut 2026-04-25
-led: residuals sav 2026-03
-  2026-03 move save: model 900.00 PLN, observed 950.00 PLN, difference 50.00 PLN
-    matched save[2026-03] on 2026-03-15: model 900.00 PLN, observed 950.00 PLN, difference 50.00 PLN, timing +0 days
-  cut 2026-04-25
-warning: WARN-NEGATIVE konto is below zero from 2026-04-15
-warning: WARN-UNREAD place unexplained is read by nothing
-,26:r12/same_line_known_window,9:fixes-r12,34:run m.tally --ask fl fl_each agree,1707:7:m.tally,1691:model t
-  tally 2
-  on 2026-04-30
-  start 2026-03-01
-  end 2026-04-30
-  note "T, tally 2.1.8 R12 (#196), item #187's known-window comment (rest 13): a same line known in a window that holds the cut. Joined, save[2026-03] is 950.00; unjoined, two rows fulfil it (RUN-RECORD): the read is HOLE-IMPRECISE naming both rows and the version (fl), and windows each prints the refusal before the line is known, 950.00 after (fl_each); a read on which joined and unjoined agree answers (agree)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input d15: int
-
-move save[m in months]: transfers
-  on day_of(m, d15)
-  leg cash from konto to sav amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 900.00 PLN "s"
-  d15 = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-
-version joined
-  cite s
-  governs 2026-03
-  known window(2026-04-05, 2026-04-15)
-  same bank[a2] = bank[b1]
-
-ask fl: flows(save, 2026-03) as known 2026-04-10
-ask fl_each: flows(save, 2026-03) as known 2026-04-10 windows each
-ask agree: bal(konto, 2026-03-31) as known 2026-04-10
-,,1:0,657:fl: ?"date within window(2026-04-05, 2026-04-15) not precise enough for the cut 2026-04-10" (bank[a2], bank[b1], joined)
-  cut 2026-04-10
-fl_each [known of joined = 2026-04-05 .. 2026-04-10]: 950.00 PLN
-  cut 2026-04-10
-fl_each [known of joined = 2026-04-11 .. 2026-04-15]: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
-  cut 2026-04-10
-agree: ?"date within window(2026-04-05, 2026-04-15) not precise enough for the cut 2026-04-10" (bank[a2], bank[b1], joined)
-  cut 2026-04-10
-warning: WARN-NEGATIVE konto is below zero from 2026-04-15
-warning: WARN-UNREAD place unexplained is read by nothing
-,29:r12/known_window_one_movement,9:fixes-r12,43:run m.tally --ask b6_count b6_flows b6_next,1650:7:m.tally,1634:model t
-  tally 2
-  on 2026-05-10
-  start 2026-03-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196): a statement known window(2026-04-01, 2026-04-20), read as known 2026-04-10, holds bank[r1] fulfilling pay[2026-03]. Item B6: one movement either way (b6_count: 1), its amount the hole (b6_flows), next the hole and never RUN-TIE (b6_next); P70: the hole names (bank[r1], st) (p70); no-item 1, covered is the hole (cov, cov_each: true, then false); no-item 2, a count of the observed input's rows is the hole (rows)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-
-move pay[m in months]: transfers
-  on start_of(m)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from world to konto amount 7.00 PLN, fulfils: pay[2026-03]) "r"
-
-ask b6_count: count(t in transfers over 2026-03) as known 2026-04-10
-ask b6_flows: flows(pay, 2026-03) as known 2026-04-10
-ask b6_next: next(transfers, 2026-03-01) as known 2026-04-10
-ask p70: bal(konto, 2026-03-31) as known 2026-04-10
-ask cov: covered(konto, 2026-03) as known 2026-04-10
-ask cov_each: covered(konto, 2026-03) as known 2026-04-10 windows each
-ask rows: count(o in bank over 2026-03) as known 2026-04-10
-ask after: count(o in bank over 2026-03), covered(konto, 2026-03) as known 2026-04-25
-,,1:0,288:b6_count: 1
-  cut 2026-04-10
-b6_flows: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  cut 2026-04-10
-b6_next: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  cut 2026-04-10
-,21:r12/known_window_rows,9:fixes-r12,40:run m.tally --ask x_a x_b gone gone_each,1422:7:m.tally,1406:model t
-  tally 2
-  on 2026-05-10
-  start 2026-03-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196), item #169-f: a row, or a row's removal, known in a window that holds the cut makes a read a hole only where that row would be the one read (x_a answers, x_b the hole); a restatement before a removal known in a window stands with its legs that hole (gone)"
-
-source s "s"
-unit PLN: currency minor 0.01
-index ks = [a, b]
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input x[k in ks]: money PLN
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x[a] = 1.00 PLN "s"
-  x[b] = 2.00 PLN "s"
-  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from world to konto amount 7.00 PLN) "r1"
-  bank[r2] = (on: 2026-03-05, kind: transfers, leg cash from world to konto amount 9.00 PLN) "r2"
-
-version vw
-  cite s
-  governs always
-  known window(2026-04-01, 2026-04-20)
-  replace x[b] = 3.00 PLN "s"
-
-version rm
-  cite s
-  governs 2026-03
-  known window(2026-04-05, 2026-04-20)
-  replace bank[r2] = none
-
-ask x_a: x[a] as known 2026-04-10
-ask x_b: x[b] as known 2026-04-10
-ask gone: bal(konto, 2026-03-04), bal(konto, 2026-03-31) as known 2026-04-10
-ask gone_each: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-,,1:0,441:x_a: 1.00 PLN
-  cut 2026-04-10
-x_b: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (vw)
-  cut 2026-04-10
-gone: (7.00 PLN, ?"date within window(2026-04-05, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r2], rm))
-  cut 2026-04-10
-gone_each [known of rm = 2026-04-05 .. 2026-04-10]: 7.00 PLN
-  cut 2026-04-10
-gone_each [known of rm = 2026-04-11 .. 2026-04-20]: 16.00 PLN
-  cut 2026-04-10
-,22:r12/hole_names_version,9:fixes-r12,21:run m.tally --ask p70,1650:7:m.tally,1634:model t
-  tally 2
-  on 2026-05-10
-  start 2026-03-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196): a statement known window(2026-04-01, 2026-04-20), read as known 2026-04-10, holds bank[r1] fulfilling pay[2026-03]. Item B6: one movement either way (b6_count: 1), its amount the hole (b6_flows), next the hole and never RUN-TIE (b6_next); P70: the hole names (bank[r1], st) (p70); no-item 1, covered is the hole (cov, cov_each: true, then false); no-item 2, a count of the observed input's rows is the hole (rows)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-
-move pay[m in months]: transfers
-  on start_of(m)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from world to konto amount 7.00 PLN, fulfils: pay[2026-03]) "r"
-
-ask b6_count: count(t in transfers over 2026-03) as known 2026-04-10
-ask b6_flows: flows(pay, 2026-03) as known 2026-04-10
-ask b6_next: next(transfers, 2026-03-01) as known 2026-04-10
-ask p70: bal(konto, 2026-03-31) as known 2026-04-10
-ask cov: covered(konto, 2026-03) as known 2026-04-10
-ask cov_each: covered(konto, 2026-03) as known 2026-04-10 windows each
-ask rows: count(o in bank over 2026-03) as known 2026-04-10
-ask after: count(o in bank over 2026-03), covered(konto, 2026-03) as known 2026-04-25
-,,1:0,125:p70: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  cut 2026-04-10
-,21:r12/covered_undecided,9:fixes-r12,36:run m.tally --ask cov cov_each after,1650:7:m.tally,1634:model t
-  tally 2
-  on 2026-05-10
-  start 2026-03-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196): a statement known window(2026-04-01, 2026-04-20), read as known 2026-04-10, holds bank[r1] fulfilling pay[2026-03]. Item B6: one movement either way (b6_count: 1), its amount the hole (b6_flows), next the hole and never RUN-TIE (b6_next); P70: the hole names (bank[r1], st) (p70); no-item 1, covered is the hole (cov, cov_each: true, then false); no-item 2, a count of the observed input's rows is the hole (rows)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-
-move pay[m in months]: transfers
-  on start_of(m)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from world to konto amount 7.00 PLN, fulfils: pay[2026-03]) "r"
-
-ask b6_count: count(t in transfers over 2026-03) as known 2026-04-10
-ask b6_flows: flows(pay, 2026-03) as known 2026-04-10
-ask b6_next: next(transfers, 2026-03-01) as known 2026-04-10
-ask p70: bal(konto, 2026-03-31) as known 2026-04-10
-ask cov: covered(konto, 2026-03) as known 2026-04-10
-ask cov_each: covered(konto, 2026-03) as known 2026-04-10 windows each
-ask rows: count(o in bank over 2026-03) as known 2026-04-10
-ask after: count(o in bank over 2026-03), covered(konto, 2026-03) as known 2026-04-25
-,,1:0,296:cov: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (st)
-  cut 2026-04-10
-cov_each [known of st = 2026-04-01 .. 2026-04-10]: true
-  cut 2026-04-10
-cov_each [known of st = 2026-04-11 .. 2026-04-20]: false
-  cut 2026-04-10
-after: (1, true)
-  cut 2026-04-25
-,18:r12/rows_undecided,9:fixes-r12,22:run m.tally --ask rows,1650:7:m.tally,1634:model t
-  tally 2
-  on 2026-05-10
-  start 2026-03-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196): a statement known window(2026-04-01, 2026-04-20), read as known 2026-04-10, holds bank[r1] fulfilling pay[2026-03]. Item B6: one movement either way (b6_count: 1), its amount the hole (b6_flows), next the hole and never RUN-TIE (b6_next); P70: the hole names (bank[r1], st) (p70); no-item 1, covered is the hole (cov, cov_each: true, then false); no-item 2, a count of the observed input's rows is the hole (rows)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-
-move pay[m in months]: transfers
-  on start_of(m)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-03, kind: transfers, leg cash from world to konto amount 7.00 PLN, fulfils: pay[2026-03]) "r"
-
-ask b6_count: count(t in transfers over 2026-03) as known 2026-04-10
-ask b6_flows: flows(pay, 2026-03) as known 2026-04-10
-ask b6_next: next(transfers, 2026-03-01) as known 2026-04-10
-ask p70: bal(konto, 2026-03-31) as known 2026-04-10
-ask cov: covered(konto, 2026-03) as known 2026-04-10
-ask cov_each: covered(konto, 2026-03) as known 2026-04-10 windows each
-ask rows: count(o in bank over 2026-03) as known 2026-04-10
-ask after: count(o in bank over 2026-03), covered(konto, 2026-03) as known 2026-04-25
-,,1:0,126:rows: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  cut 2026-04-10
 ,19:r12/scenario_remove,9:fixes-r12,56:run gone.tally later.tally sc.tally t.tally --ask q_gone,2835:10:gone.tally,135:scenario gone over t
   tally 2
   from 2026-03-01
@@ -108862,40 +107968,6 @@ ask r_open: bal(sav, 2026-03-31) as known 2026-02-01
   cut 2026-04-10
 r_open: 5.00 PLN
   cut 2026-02-01
-,22:r12/entry_known_window,9:fixes-r12,43:run m.tally --ask c c_each c_before c_after,813:7:m.tally,798:model t
-  tally 2
-  on 2026-05-10
-  start 2026-01-01
-  end 2026-12-31
-  note "T, tally 2.1.8 R12 (#196), no-item 6: an entry K + [k] lives … known in a window that holds the cut: count(x in K on d) is the hole (c), windows each gives the two counts (c_each); before and after the window it answers (c_before, c_after)"
-
-source s "s"
-kind persons
-
-version v1
-  cite s
-  known 2026-01-01
-  persons + [ola] lives 1990-02-01..
-
-version v2
-  cite s
-  known window(2026-04-01, 2026-04-20)
-  persons + [jan] lives 1991-02-01..
-
-ask c: count(p in persons on 2026-03-01) as known 2026-04-10
-ask c_each: count(p in persons on 2026-03-01) as known 2026-04-10 windows each
-ask c_before: count(p in persons on 2026-03-01) as known 2026-03-31
-ask c_after: count(p in persons on 2026-03-01) as known 2026-04-21
-,,1:0,306:c: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (v2)
-  cut 2026-04-10
-c_each [known of v2 = 2026-04-01 .. 2026-04-10]: 2
-  cut 2026-04-10
-c_each [known of v2 = 2026-04-11 .. 2026-04-20]: 1
-  cut 2026-04-10
-c_before: 1
-  cut 2026-03-31
-c_after: 2
-  cut 2026-04-21
 ,17:r13/residuals_for,9:fixes-r13,32:run m.tally sc.tally --ask r_for,2245:7:m.tally,2071:model t
   tally 2
   on 2026-06-10
@@ -112276,12 +111348,12 @@ b: (950.00 PLN, 100.00 PLN)
 c: ?"bank[a2] and bank[b1] are one, but the kind differs on 2026-03-15: transfers (bank[a2]) and buys (bank[b1])" (bank[a2], bank[b1])
   cut 2026-06-10
 warning: WARN-NEGATIVE konto is below zero from 2026-04-15
-,20:d23/same_booked_once,7:fixes-d,21:run m.tally --ask led,1677:7:m.tally,1661:model t
+,20:d23/same_booked_once,7:fixes-d,21:run m.tally --ask led,1920:7:m.tally,1904:model t
   tally 2
   on 2026-06-10
   start 2026-03-01
   end 2026-06-30
-  note "T, tally 2.1.8 R12 (#196), item #169-j: a same line of a version known after K isn't seen at K, so the rows read apart (k_before: refused RUN-RECORD, two unjoined rows fulfil save[2026-03]); seen from its known on (k_after); a backtest's ledger pairs the observations as known on on, their same line with them (led)"
+  note "T, tally 2.1.8 R12 (#196), item #169-j: a same line of a version known after K isn't seen at K, so the rows read apart (k_before: refused RUN-RECORD, two unjoined rows fulfil save[2026-03]); seen from its known on (k_after); a backtest's ledger pairs the observations as known on on, their same line with them (led); tally 2.2 (S-5): a same line between two observed rows has no clock, so it sits in the version of its later row; the asks at a cut between the line's known and its rows' went (the clock was their subject), and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -112318,12 +111390,12 @@ version st_sav
   known 2026-04-03
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
 
 version joined
   cite s
   governs 2026-03
   known 2026-04-20
-  same bank[a2] = bank[b1]
 
 ask k_before: flows(save, 2026-03) as known 2026-04-10
 ask k_before_rows: count(o in bank over 2026-03) as known 2026-04-10
@@ -113190,12 +112262,12 @@ r: residuals konto 2026-03
   2026-03 move save: model -450.00 PLN, observed 0.00 PLN, difference 450.00 PLN
     expected but missing save[2026-03] on 2026-03-15: model -450.00 PLN
   cut 2026-06-10
-,12:cut/two_rows,9:fixes-cut,11:run m.tally,1535:7:m.tally,1519:model t
+,12:cut/two_rows,9:fixes-cut,11:run m.tally,1723:7:m.tally,1707:model t
   tally 2
   on 2026-06-10
   start 2026-03-01
   end 2026-06-30
-  note "T, tally 2.1.8, the cut (plan §13): a version's same between two observed rows of one model still loads (L §5.19 one movement on two statements): k_after reads them joined"
+  note "T, tally 2.1.8, the cut (plan §13): a version's same between two observed rows of one model still loads (L §5.19 one movement on two statements): k_after reads them joined; tally 2.2 (S-5): a same line between two observed rows has no clock, so it sits in the version of its later row; the asks at a cut between the line's known and its rows' went (the clock was their subject), and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -113232,21 +112304,18 @@ version st_sav
   known 2026-04-03
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
 
 version joined
   cite s
   governs 2026-03
   known 2026-04-20
-  same bank[a2] = bank[b1]
 
-ask k_before: flows(save, 2026-03) as known 2026-04-10
 ask k_before_rows: count(o in bank over 2026-03) as known 2026-04-10
 ask k_after: flows(save, 2026-03), bal(sav, 2026-03-31) as known 2026-04-25
 ask led: residuals sav 2026-03 as known 2026-04-25
-,,1:0,579:k_after: (950.00 PLN, 950.00 PLN)
+,,1:0,444:k_after: (950.00 PLN, 950.00 PLN)
   cut 2026-04-25
-k_before: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
-  cut 2026-04-10
 k_before_rows: 2
   cut 2026-04-10
 led: residuals sav 2026-03
@@ -113504,99 +112573,6 @@ ask kp: add_business(d, nf, calk[pl])
   cut 2026-12-31
 kp: refused: RUN-LIMIT a day passes 9999-12-31
   cut 2026-12-31
-,20:fixes/rv/g1_b3_seven,8:fixes-rv,18:run B3_seven.tally,2803:14:B3_seven.tally,2779:model sev
-  tally 2
-  on 2026-05-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-input bank: observed
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-
-version v1
-  cite s
-  governs 2026..
-  known 2026-01-01
-  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
-
-version st_konto
-  cite s
-  governs 2026-04
-  known 2026-04-02
-  covers konto
-  bank[a1] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 1.00 PLN) "a1"
-  bank[a2] = (on: 2026-04-03, kind: transfers, leg cash from konto to sav amount 2.00 PLN) "a2"
-  bank[a3] = (on: 2026-04-04, kind: transfers, leg cash from konto to sav amount 3.00 PLN) "a3"
-  bank[a4] = (on: 2026-04-05, kind: transfers, leg cash from konto to sav amount 4.00 PLN) "a4"
-  bank[a5] = (on: 2026-04-06, kind: transfers, leg cash from konto to sav amount 5.00 PLN) "a5"
-  bank[a6] = (on: 2026-04-07, kind: transfers, leg cash from konto to sav amount 6.00 PLN) "a6"
-  bank[a7] = (on: 2026-04-08, kind: transfers, leg cash from konto to sav amount 7.00 PLN) "a7"
-
-version st_sav
-  cite s
-  governs 2026-04
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 1.00 PLN) "b1"
-  bank[b2] = (on: 2026-04-03, kind: transfers, leg cash from konto to sav amount 2.00 PLN) "b2"
-  bank[b3] = (on: 2026-04-04, kind: transfers, leg cash from konto to sav amount 3.00 PLN) "b3"
-  bank[b4] = (on: 2026-04-05, kind: transfers, leg cash from konto to sav amount 4.00 PLN) "b4"
-  bank[b5] = (on: 2026-04-06, kind: transfers, leg cash from konto to sav amount 5.00 PLN) "b5"
-  bank[b6] = (on: 2026-04-07, kind: transfers, leg cash from konto to sav amount 6.00 PLN) "b6"
-  bank[b7] = (on: 2026-04-08, kind: transfers, leg cash from konto to sav amount 7.00 PLN) "b7"
-
-version link1
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a1] = bank[b1]
-
-version link2
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a2] = bank[b2]
-
-version link3
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a3] = bank[b3]
-
-version link4
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a4] = bank[b4]
-
-version link5
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a5] = bank[b5]
-
-version link6
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a6] = bank[b6]
-
-version link7
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a7] = bank[b7]
-
-ask c7: count(t in transfers over 2026-04) as known 2026-05-10
-ask c6: count(t in transfers over 2026-04-01 .. 2026-04-07) as known 2026-05-10
-,,1:0,598:c6: ?"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10" (bank[a1], bank[a2], bank[a3], bank[a4], bank[a5], bank[a6], bank[a7], bank[b1], bank[b2], bank[b3], bank[b4], bank[b5], bank[b6], bank[b7], link1, link2, link3, link4, link5, link6, link7)
-  cut 2026-05-10
-c7: ?"date within window(2026-05-01, 2026-05-20) not precise enough for the cut 2026-05-10" (bank[a1], bank[a2], bank[a3], bank[a4], bank[a5], bank[a6], bank[a7], bank[b1], bank[b2], bank[b3], bank[b4], bank[b5], bank[b6], bank[b7], link1, link2, link3, link4, link5, link6, link7)
-  cut 2026-05-10
 ,25:fixes/rv/g1_b4_ledger_for,8:fixes-rv,23:run B4_ledger_for.tally,1781:19:B4_ledger_for.tally,1752:model pw
   tally 2
   on 2026-04-25
@@ -113677,185 +112653,6 @@ qa: residuals jar[a] 2026-03
     unexplained bank[r3] on 2026-03-06: observed 10.00 PLN
   cut 2026-04-25
 qb: refused: RUN-DIV division by zero
-,32:fixes/rv/g1f_f1_two_stacks_limit,8:fixes-rv,39:run b3_15.tally b3_sc.tally b3_sd.tally,5722:11:b3_15.tally,5391:model sev
-  tally 2
-  on 2026-05-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-input bank: observed
-input amt: money PLN
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-
-version v1
-  cite s
-  governs 2026..
-  known 2026-01-01
-  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
-
-version st_konto
-  cite s
-  governs 2026-04
-  known 2026-04-02
-  covers konto
-  bank[a1] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 1.00 PLN) "a1"
-  bank[a2] = (on: 2026-04-03, kind: transfers, leg cash from konto to sav amount 2.00 PLN) "a2"
-  bank[a3] = (on: 2026-04-04, kind: transfers, leg cash from konto to sav amount 3.00 PLN) "a3"
-  bank[a4] = (on: 2026-04-05, kind: transfers, leg cash from konto to sav amount 4.00 PLN) "a4"
-  bank[a5] = (on: 2026-04-06, kind: transfers, leg cash from konto to sav amount 5.00 PLN) "a5"
-  bank[a6] = (on: 2026-04-07, kind: transfers, leg cash from konto to sav amount 6.00 PLN) "a6"
-  bank[a7] = (on: 2026-04-08, kind: transfers, leg cash from konto to sav amount 7.00 PLN) "a7"
-  bank[a8] = (on: 2026-04-09, kind: transfers, leg cash from konto to sav amount 8.00 PLN) "a8"
-  bank[a9] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 9.00 PLN) "a9"
-  bank[a10] = (on: 2026-04-11, kind: transfers, leg cash from konto to sav amount 10.00 PLN) "a10"
-  bank[a11] = (on: 2026-04-12, kind: transfers, leg cash from konto to sav amount 11.00 PLN) "a11"
-  bank[a12] = (on: 2026-04-13, kind: transfers, leg cash from konto to sav amount 12.00 PLN) "a12"
-  bank[a13] = (on: 2026-04-14, kind: transfers, leg cash from konto to sav amount 13.00 PLN) "a13"
-  bank[a14] = (on: 2026-04-15, kind: transfers, leg cash from konto to sav amount 14.00 PLN) "a14"
-  bank[a15] = (on: 2026-04-16, kind: transfers, leg cash from konto to sav amount 15.00 PLN) "a15"
-
-version st_sav
-  cite s
-  governs 2026-04
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 1.00 PLN) "b1"
-  bank[b2] = (on: 2026-04-03, kind: transfers, leg cash from konto to sav amount 2.00 PLN) "b2"
-  bank[b3] = (on: 2026-04-04, kind: transfers, leg cash from konto to sav amount 3.00 PLN) "b3"
-  bank[b4] = (on: 2026-04-05, kind: transfers, leg cash from konto to sav amount 4.00 PLN) "b4"
-  bank[b5] = (on: 2026-04-06, kind: transfers, leg cash from konto to sav amount 5.00 PLN) "b5"
-  bank[b6] = (on: 2026-04-07, kind: transfers, leg cash from konto to sav amount 6.00 PLN) "b6"
-  bank[b7] = (on: 2026-04-08, kind: transfers, leg cash from konto to sav amount 7.00 PLN) "b7"
-  bank[b8] = (on: 2026-04-09, kind: transfers, leg cash from konto to sav amount 8.00 PLN) "b8"
-  bank[b9] = (on: 2026-04-10, kind: transfers, leg cash from konto to sav amount 9.00 PLN) "b9"
-  bank[b10] = (on: 2026-04-11, kind: transfers, leg cash from konto to sav amount 10.00 PLN) "b10"
-  bank[b11] = (on: 2026-04-12, kind: transfers, leg cash from konto to sav amount 11.00 PLN) "b11"
-  bank[b12] = (on: 2026-04-13, kind: transfers, leg cash from konto to sav amount 12.00 PLN) "b12"
-  bank[b13] = (on: 2026-04-14, kind: transfers, leg cash from konto to sav amount 13.00 PLN) "b13"
-  bank[b14] = (on: 2026-04-15, kind: transfers, leg cash from konto to sav amount 14.00 PLN) "b14"
-  bank[b15] = (on: 2026-04-16, kind: transfers, leg cash from konto to sav amount 15.00 PLN) "b15"
-
-version link1
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a1] = bank[b1]
-
-version link2
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a2] = bank[b2]
-
-version link3
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a3] = bank[b3]
-
-version link4
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a4] = bank[b4]
-
-version link5
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a5] = bank[b5]
-
-version link6
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a6] = bank[b6]
-
-version link7
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a7] = bank[b7]
-
-version link8
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a8] = bank[b8]
-
-version link9
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a9] = bank[b9]
-
-version link10
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a10] = bank[b10]
-
-version link11
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a11] = bank[b11]
-
-version link12
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a12] = bank[b12]
-
-version link13
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a13] = bank[b13]
-
-version link14
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a14] = bank[b14]
-
-version link15
-  cite s
-  governs always
-  known window(2026-05-01, 2026-05-20)
-  same bank[a15] = bank[b15]
-
-ask c: count(t in transfers over 2026-04) as known 2026-05-10
-ask d: diff(count(t in transfers over 2026-04)) in sc against sd as known 2026-05-10
-ask e: count(t in transfers over 2026-04-01 .. 2026-04-03) as known 2026-05-10
-ask z: count(t in transfers over 2026-03) as known 2026-05-10
-,11:b3_sc.tally,135:scenario sc over sev
-  tally 2
-  from 2026-01-01
-
-version sc_v
-  cite s
-  governs 2026-01-01..
-  known 2026-01-01
-  amt = 1.00 PLN "s"
-,11:b3_sd.tally,135:scenario sd over sev
-  tally 2
-  from 2026-01-01
-
-version sd_v
-  cite s
-  governs 2026-01-01..
-  known 2026-01-01
-  amt = 1.00 PLN "s"
-,,1:0,322:c: refused: RUN-LIMIT seen and unseen over more than 20 000 choices
-d: refused: RUN-LIMIT seen and unseen over more than 20 000 choices
-e: refused: RUN-LIMIT seen and unseen over more than 20 000 choices
-z: refused: RUN-LIMIT seen and unseen over more than 20 000 choices
-warning: WARN-UNREAD input amt is read by nothing
 ,25:fixes/rv/g1f_f2_edge_held,8:fixes-rv,32:run b2_min.tally b2_min_sc.tally,649:12:b2_min.tally,463:model bm
   tally 2
   on 2026-12-31
@@ -114530,47 +113327,6 @@ b8: ?"how much in Feb" (hamt[2026-02]) ?"how much in Mar" (hamt[2026-03])
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input two is read by nothing
 warning: WARN-UNREAD input z is read by nothing
-,27:fixes/rv/g4_b1_same_removed,8:fixes-rv,22:run same_removed.tally,690:18:same_removed.tally,663:model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-
-input px[u in currencies]: num PLN/u reading
-input qx[u in currencies]: num PLN/u reading
-
-version r
-  cite s
-  known 2026-03-09
-  px[EUR] = 4.3 PLN/EUR at 2026-03-02
-  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
-
-version r2
-  cite s
-  known 2026-04-01
-  replace qx[EUR] = none at 2026-03-08
-
-version j
-  cite s
-  governs always
-  known 2026-01-01
-  same px[EUR] = qx[EUR]
-
-ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
-ask q: last(qx[EUR], 2026-03-10), since(qx[EUR], 2026-03-10)
-ask v: px[EUR] law 2026-03-08
-,,1:0,275:e: (4.3 PLN/EUR, 8)
-  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10
-  cut 2026-12-31
-q: (4.3 PLN/EUR, 8)
-  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10
-  cut 2026-12-31
-v: ?"px[EUR] has no reading at 2026-03-08" (px[EUR])
-  law date 2026-03-08, cut 2026-12-31
 ,23:fixes/rv/g4_b2_s1_reach,8:fixes-rv,18:run s1_two_b.tally,1221:14:s1_two_b.tally,1197:model p
   tally 2
   on 2026-06-30
@@ -114810,65 +113566,6 @@ e5 [dj = 2026-03-04]: diff in se against sc: 1 changed, 0 added, 0 removed, 0 un
   unfulfilled: pay[2026-02]
   unfulfilled: two
   cut 2026-04-25
-,28:fixes/rv/rc_account_any_line,8:fixes-rv,11:run m.tally,1240:7:m.tally,1224:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  leg cash from konto to sav amount amt
-
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 900.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-
-version joined
-  cite s
-  governs 2026-03
-  known window(2026-04-05, 2026-04-09)
-  same bank[a2] = bank[b1]
-
-ask x: explain bal(konto, 2026-03-31) as known 2026-04-07
-ask l: residuals konto 2026-03 as known 2026-04-07
-,,1:0,502:l: residuals konto 2026-03
-  2026-03 move save: model -900.00 PLN, observed -950.00 PLN, difference -50.00 PLN
-    matched save[2026-03] on 2026-03-15: model -900.00 PLN, observed -950.00 PLN, difference -50.00 PLN, timing +0 days
-  cut 2026-04-07
-x: ?"date within window(2026-04-05, 2026-04-09) not precise enough for the cut 2026-04-07" (bank[a2], bank[b1], joined)
-  cut 2026-04-07
-warning: WARN-NEGATIVE konto is below zero from 2026-04-15
-warning: WARN-UNREAD place unexplained is read by nothing
 ,32:fixes/rv/rc_refusal_words_differ,8:fixes-rv,11:run m.tally,1045:7:m.tally,1029:model t
   tally 2
   on 2026-01-01
@@ -115201,44 +113898,6 @@ ask q5: pm - 2026-01 law 2026-12-31
   law date 2026-12-31, cut 2026-01-01
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
-,28:fixes/rv/g4f_g1_removed_only,8:fixes-rv,18:run b1_onlyq.tally,648:14:b1_onlyq.tally,625:model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-
-input px[u in currencies]: num PLN/u reading
-input qx[u in currencies]: num PLN/u reading
-
-version r
-  cite s
-  known 2026-03-09
-  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
-
-version r2
-  cite s
-  known 2026-04-01
-  replace qx[EUR] = none at 2026-03-08
-
-version j
-  cite s
-  governs always
-  known 2026-01-01
-  same px[EUR] = qx[EUR]
-
-ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
-ask q: last(qx[EUR], 2026-03-10), since(qx[EUR], 2026-03-10)
-ask v: px[EUR] law 2026-03-08
-,,1:0,377:e: (?"px[EUR] has no reading on or before 2026-03-10" (px[EUR]), ?"px[EUR] has no reading on or before 2026-03-10" (px[EUR]))
-  cut 2026-12-31
-q: (?"qx[EUR] has no reading on or before 2026-03-10" (qx[EUR]), ?"qx[EUR] has no reading on or before 2026-03-10" (qx[EUR]))
-  cut 2026-12-31
-v: ?"px[EUR] has no reading at 2026-03-08" (px[EUR])
-  law date 2026-03-08, cut 2026-12-31
 ,30:fixes/rv/g4f_f1_member_range_9,8:fixes-rv,20:run n2_range_9.tally,691:16:n2_range_9.tally,666:model n2_list
   tally 2
   on 2026-04-10
@@ -115443,11 +114102,12 @@ n: 2
   unfulfilled: pay[mm]
   unfulfilled: pay[zz]
   cut 2026-04-10
-,30:fixes/rv/g4f_g2_count_hole_day,8:fixes-rv,16:run b2_cut.tally,1595:12:b2_cut.tally,1573:model p
+,30:fixes/rv/g4f_g2_count_hole_day,8:fixes-rv,16:run b2_cut.tally,1750:12:b2_cut.tally,1728:model p
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
+  note "T; tally 2.2 (S-5): a same line between two observed rows has no clock, so it sits in the version of its later row; the asks at a cut between the line's known and its rows' went (the clock was their subject), and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -115483,23 +114143,21 @@ version b
   known 2026-03-10
   bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
   card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+  same bank[o1] = card[o1]
 
 version sm
   cite s
   known 2026-03-11
-  same bank[o1] = card[o1]
 ask fp: flows(pay, 2026-03)
 ask ob: observed(pay[2026-03])
 ask c2: count(p in pays over 2026-02)
-ask k1: count(p in pays over 2026-03) as known 2026-03-10
 ask k2: count(p in pays over 2026-03) as known 2026-03-11
-ask k3: tot[2026-02] as known 2026-03-10
 ask hd: count(p in pays on dh)
 ask hs: sum(p.cash.amount for p in pays on dh)
 ask ob1: count(x in bank over 2026-03)
 ask ob2: count(x in card over 2026-01..2026-06)
 ask ob3: count(x in bank over 2026-04)
-,,1:0,1603:b3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+,,1:0,1550:b3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   unfulfilled: pay[2026-03]
@@ -115514,12 +114172,8 @@ hd: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[202
   cut 2026-06-30
 hs: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-06-30
-k1: 2
-  cut 2026-03-10
 k2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-03-11
-k3: 0.00 PLN
-  cut 2026-03-10
 ob: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-06-30
 ob1: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]

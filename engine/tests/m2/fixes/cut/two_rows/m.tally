@@ -3,7 +3,7 @@ model t
   on 2026-06-10
   start 2026-03-01
   end 2026-06-30
-  note "T, tally 2.1.8, the cut (plan §13): a version's same between two observed rows of one model still loads (L §5.19 one movement on two statements): k_after reads them joined"
+  note "T, tally 2.1.8, the cut (plan §13): a version's same between two observed rows of one model still loads (L §5.19 one movement on two statements): k_after reads them joined; tally 2.2 (S-5): a same line between two observed rows has no clock, so it sits in the version of its later row; the asks at a cut between the line's known and its rows' went (the clock was their subject), and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -40,14 +40,13 @@ version st_sav
   known 2026-04-03
   covers sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
+  same bank[a2] = bank[b1]
 
 version joined
   cite s
   governs 2026-03
   known 2026-04-20
-  same bank[a2] = bank[b1]
 
-ask k_before: flows(save, 2026-03) as known 2026-04-10
 ask k_before_rows: count(o in bank over 2026-03) as known 2026-04-10
 ask k_after: flows(save, 2026-03), bal(sav, 2026-03-31) as known 2026-04-25
 ask led: residuals sav 2026-03 as known 2026-04-25

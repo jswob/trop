@@ -1161,13 +1161,13 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g14`, part 1 of 2 (at 0 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g14_part_1() {
-        group_holds(M1_VECTORS, "fixes-g14", (0, 2), 96);
+        group_holds(M1_VECTORS, "fixes-g14", (0, 2), 93);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g14`, part 2 of 2 (at 1 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g14_part_2() {
-        group_holds(M1_VECTORS, "fixes-g14", (1, 2), 96);
+        group_holds(M1_VECTORS, "fixes-g14", (1, 2), 93);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-open`, every vector.
@@ -1179,67 +1179,67 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 1 of 11 (at 0 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_1() {
-        group_holds(M1_VECTORS, "fixes-gate8", (0, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (0, 11), 27);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 2 of 11 (at 1 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_2() {
-        group_holds(M1_VECTORS, "fixes-gate8", (1, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (1, 11), 27);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 3 of 11 (at 2 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_3() {
-        group_holds(M1_VECTORS, "fixes-gate8", (2, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (2, 11), 27);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 4 of 11 (at 3 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_4() {
-        group_holds(M1_VECTORS, "fixes-gate8", (3, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (3, 11), 27);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 5 of 11 (at 4 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_5() {
-        group_holds(M1_VECTORS, "fixes-gate8", (4, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (4, 11), 27);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 6 of 11 (at 5 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_6() {
-        group_holds(M1_VECTORS, "fixes-gate8", (5, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (5, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 7 of 11 (at 6 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_7() {
-        group_holds(M1_VECTORS, "fixes-gate8", (6, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (6, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 8 of 11 (at 7 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_8() {
-        group_holds(M1_VECTORS, "fixes-gate8", (7, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (7, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 9 of 11 (at 8 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_9() {
-        group_holds(M1_VECTORS, "fixes-gate8", (8, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (8, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 10 of 11 (at 9 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_10() {
-        group_holds(M1_VECTORS, "fixes-gate8", (9, 11), 27);
+        group_holds(M1_VECTORS, "fixes-gate8", (9, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 11 of 11 (at 10 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_11() {
-        group_holds(M1_VECTORS, "fixes-gate8", (10, 11), 27);
+        group_holds(M1_VECTORS, "fixes-gate8", (10, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-r1`, every vector.
@@ -1383,7 +1383,7 @@ mod tests {
     /// `m2/vectors.refcore`'s group `items-windows`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_items_windows() {
-        group_holds(M2_VECTORS, "items-windows", (0, 1), 2);
+        group_holds(M2_VECTORS, "items-windows", (0, 1), 1);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-forms`, every vector.
@@ -1395,7 +1395,7 @@ mod tests {
     /// `m2/vectors.refcore`'s group `fixes-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_sweep() {
-        group_holds(M2_VECTORS, "fixes-sweep", (0, 1), 45);
+        group_holds(M2_VECTORS, "fixes-sweep", (0, 1), 40);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-explain`, every vector (8 since tally 2.2 dropped
@@ -1505,7 +1505,7 @@ mod tests {
     /// `m2/vectors.refcore`'s group `fixes-r12`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r12() {
-        group_holds(M2_VECTORS, "fixes-r12", (0, 1), 12);
+        group_holds(M2_VECTORS, "fixes-r12", (0, 1), 6);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-r13`, every vector.
