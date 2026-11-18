@@ -3559,13 +3559,13 @@ version v1
         let probes: &[(Edits, &str)] = &[
             // base
             (&[], "loaded"),
-            // rows
+            // rows: a row of an input is no side (tally 2.2, S-8)
             (
                 &[(
                     "  same bank[r1] = card_bank[c1]",
                     "  same fee[a1] = fee_in[a1]",
                 )],
-                "loaded",
+                "LOAD-SAME same fee[a1] = fee_in[a1]: a row of an input and a row of an input (a.tally:57)",
             ),
             // move-row: an instance and an observed row of one model (L §6.1, tally 2.1.8,
             // the user's cut), the row named first
@@ -3598,12 +3598,12 @@ version v1
                     "  same bank[r1] = card_bank[c1]",
                     "  same fee[a1] = bank[r1]",
                 )],
-                "LOAD-SAME same fee[a1] = bank[r1]: a row and a movement (a.tally:57)",
+                "LOAD-SAME same fee[a1] = bank[r1]: a row of an input and a movement (a.tally:57)",
             ),
-            // types
+            // rows of two types: refused as rows, before their types
             (
                 &[("  same bank[r1] = card_bank[c1]", "  same fee[a1] = count")],
-                "LOAD-SAME same fee[a1] = count: rows of types money PLN and int (a.tally:57)",
+                "LOAD-SAME same fee[a1] = count: a row of an input and a row of an input (a.tally:57)",
             ),
             // place
             (
