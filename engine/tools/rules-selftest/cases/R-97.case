@@ -14,6 +14,18 @@ wall_s = 0.0000001
 --- run
 tools/perf row P8-10 --runs 1 --warmups 0 --bin /usr/bin/true
 
+# Pick P6 (issue #226, 2026-11-18): P8-1, a conversation turn, is `turn:`: its vectors run in
+# order, each a cold process, and each output is judged against its own vector's digest, so a
+# turn whose any process answers wrong fails. /usr/bin/true prints nothing: all three are wrong.
+
+case: turn-judges-each-process
+tool: run
+expect: 3 processes a run: changes/check/c7 changes/run/b7 changes/run/c7
+expect: changes/run/b7: WRONG
+expect: changes/run/c7: WRONG
+--- run
+tools/perf row P8-1 --runs 1 --warmups 0 --bin /usr/bin/true
+
 case: counted-run-without-stats
 tool: run
 expect: no `stats:` line

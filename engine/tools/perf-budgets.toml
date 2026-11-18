@@ -11,6 +11,9 @@
 #   id, group (I, C, L, M), what: PERFORMANCE §8's row, shortened
 #   recipe: how perf runs it
 #     "check:<id>"   one row of engine/tests/checks.tsv, run as run.py runs it
+#     "turn:<id> <id>…"  vectors of M3's stores (engine/tests/m3/check.vectors, runs.vectors)
+#                    run in order, each a cold process: wall the sum, footprint the largest
+#                    peak, each output against its own digest (P8-1; pick P6 on #226)
 #     "bench:<name>" a gungraun bench in engine/tools/gungraun/benches/ (Linux CI), and its
 #                    criterion twin in crates/tally/benches/ for the Mac's wall time, if any
 #     "test:<target> <name>…"  T's runner tests that hold the row's law (P8-9); they pass or
@@ -30,7 +33,11 @@
 id = "P8-1"
 group = "I"
 what = "a conversation turn: one check and two runs, cold, the reality without and with a change"
-recipe = "waits: T's generator (SO8-10) and M3, which builds check"
+# X's change 7 (pick P6 on #226, 2026-11-18): `check` of the changed reality, `run` of the
+# household before it and `run` of it after, with the change's asks (OPERATIONS §6.1, T's
+# stages b7 and c7); 1-2 s end to end, <= 1 GB (P §8.1). At X's own size until T's
+# generator (SO8-10) gives the generated one.
+recipe = "turn:changes/check/c7 changes/run/b7 changes/run/c7"
 wall_s = 2.0
 footprint_mb = 1024
 blocks = "tag"
