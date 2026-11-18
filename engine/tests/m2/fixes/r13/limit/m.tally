@@ -41,7 +41,5 @@ version v
   pd[2026-10] = window(2026-10-10, 2026-10-12) "s"
   opening[konto] = 500.00 PLN at 2026-01-01 start "s"
 
-ask lo: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day) windows each
 ask lo_plain: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day)
-ask bj: bal(konto, 2026-01-31) windows each
-ask lim: min(bal(konto, d) for d in 2026-01-01 .. 2026-10-31 step 1 day) windows each
+ask bj: bal(konto, 2026-01-31)

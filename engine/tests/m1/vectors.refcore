@@ -82242,7 +82242,7 @@ s3: 200.00 PLN
   world: early
   held: keep = 300.00 PLN (early_v), read for 2026-04-15
   cut 2026-03-01
-,40:fixes/g11/a13_A-13_with_a13_a13_jul_sale,9:fixes-g11,96:run a13_A-13.tally a13_a13_apr.tally a13_a13_calc.tally a13_a13_jul.tally a13_a13_jul_sale.tally,13577:14:a13_A-13.tally,5208:part asks_a13
+,40:fixes/g11/a13_A-13_with_a13_a13_jul_sale,9:fixes-g11,96:run a13_A-13.tally a13_a13_apr.tally a13_a13_calc.tally a13_a13_jul.tally a13_a13_jul_sale.tally,14166:14:a13_A-13.tally,5797:part asks_a13
   tally 2
   note "A-13 · Had Ania stopped working (questions.md): as of 2024-12-31, known as of 2025-04-30. (a) is the scenario a13_jul, (c) a13_apr, both over a13_calc, the control layer that computes Kalina's and the SIO's 2023 from the payroll; (b) is a13_jul_sale, over a13_jul, whose lots are asked in its own file. A result is the tax less the advances: positive is payable, negative a refund. differs by: the figure in the scenario less the actual one (the world lis)."
   note "why: the diff lines (payroll by payer and payment month, 2023) show what the stop changes, against the control a13_calc; the control lines (a13_calc less lis) show what computing the payer years from the payroll changes by itself, which is 0 where the payroll gives the yearly information's figures."
@@ -82289,7 +82289,13 @@ ask a13_b_tax: cg_tax[ania, 2023], cg_tax[ania, 2024] with scenario a13_jul_sale
 
 ask a13_b_differs_2023: cg_tax[ania, 2023] as if {scenario a13_jul_sale} - cg_tax[ania, 2023] law 2025-04-30 as known 2025-04-30
 
-ask a13_b_differs_2024: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] law 2025-04-30 as known 2025-04-30 windows each
+ask a13_b_differs_2024_d01: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] with held_from[kbank[k20230912_04]] = 2019-03-01 law 2025-04-30 as known 2025-04-30
+
+ask a13_b_differs_2024_d06: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] with held_from[kbank[k20230912_04]] = 2019-03-06 law 2025-04-30 as known 2025-04-30
+
+ask a13_b_differs_2024_d07: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] with held_from[kbank[k20230912_04]] = 2019-03-07 law 2025-04-30 as known 2025-04-30
+
+ask a13_b_differs_2024_d31: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] with held_from[kbank[k20230912_04]] = 2019-03-31 law 2025-04-30 as known 2025-04-30
 
 ask a13_b_differs_2024_plain: cg_tax[ania, 2024] as if {scenario a13_jul_sale} - cg_tax[ania, 2024] law 2025-04-30 as known 2025-04-30
 ,17:a13_a13_apr.tally,372:scenario a13_apr over a13_calc
@@ -204090,7 +204096,7 @@ e2: 3.00 EUR
 g1: ?"stated[broker] has no reading at 2026-02-15" (stated[broker])
   cut 2026-06-30
 warning: WARN-UNREAD place work is read by nothing
-,19:fixes/gate8/m2_g3_f,11:fixes-gate8,31:run f.tally --ask fc be bea few,901:7:f.tally,886:model pf
+,19:fixes/gate8/m2_g3_f,11:fixes-gate8,27:run f.tally --ask fc be bea,839:7:f.tally,824:model pf
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204119,8 +204125,6 @@ ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
 ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
 ask be: bal(konto, 2026-12-31)
 ask bea: bal(konto, 2027-01-31)
-ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
-
 version v
   cite card
   governs always
@@ -204129,18 +204133,14 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = window(2027-01-25, 2027-02-05) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,438:fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+,,1:0,311:fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
   cut 2026-03-01
 be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
   left out: h, 1 instances, first 2027-01-25
   cut 2026-03-01
 bea: ?"after the run's end" (konto)
   cut 2026-03-01
-few [wd = 2026-12-20 .. 2026-12-31]: 10.00 PLN
-  cut 2026-03-01
-few [wd = 2027-01-01 .. 2027-01-10]: 0.00 PLN
-  cut 2026-03-01
-,20:fixes/gate8/m2_g3_f2,11:fixes-gate8,32:run f2.tally --ask fc be bea few,882:8:f2.tally,866:model pf
+,20:fixes/gate8/m2_g3_f2,11:fixes-gate8,28:run f2.tally --ask fc be bea,820:8:f2.tally,804:model pf
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204169,8 +204169,6 @@ ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
 ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
 ask be: bal(konto, 2026-12-31)
 ask bea: bal(konto, 2027-01-31)
-ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
-
 version v
   cite card
   governs always
@@ -204179,18 +204177,14 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = 2027-03-01 "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,359:fc: 0.00 PLN
+,,1:0,232:fc: 0.00 PLN
   cut 2026-03-01
 be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
   left out: h, 1 instances, first 2027-03-01
   cut 2026-03-01
 bea: ?"after the run's end" (konto)
   cut 2026-03-01
-few [wd = 2026-12-20 .. 2026-12-31]: 10.00 PLN
-  cut 2026-03-01
-few [wd = 2027-01-01 .. 2027-01-10]: 0.00 PLN
-  cut 2026-03-01
-,19:fixes/gate8/m2_g3_g,11:fixes-gate8,11:run g.tally,732:7:g.tally,717:model pg
+,19:fixes/gate8/m2_g3_g,11:fixes-gate8,11:run g.tally,582:7:g.tally,567:model pg
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204210,9 +204204,6 @@ move g: transfers
   leg cash from work to konto amount amt
 
 ask q: sum(m.cash.amount for m in transfers over 2026-04-01 .. 2026-04-30)
-ask qw: sum(m.cash.amount for m in transfers over 2026-04-01 .. 2026-04-30) windows each
-ask fl: flows(konto, 2026-04-01 .. 2026-04-30) windows each
-
 version v
   cite card
   governs always
@@ -204220,17 +204211,9 @@ version v
   amt = 10.00 PLN "c"
   wd = window(2026-03-30, 2026-04-02) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,361:fl [wd = 2026-03-30 .. 2026-03-31]: 0.00 PLN
+,,1:0,118:q: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
   cut 2026-03-01
-fl [wd = 2026-04-01 .. 2026-04-02]: 10.00 PLN
-  cut 2026-03-01
-q: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
-  cut 2026-03-01
-qw [wd = 2026-03-30 .. 2026-03-31]: 0
-  cut 2026-03-01
-qw [wd = 2026-04-01 .. 2026-04-02]: 10.00 PLN
-  cut 2026-03-01
-,20:fixes/gate8/m2_g3_g2,11:fixes-gate8,23:run g2.tally --ask q fl,723:8:g2.tally,707:model pg
+,20:fixes/gate8/m2_g3_g2,11:fixes-gate8,20:run g2.tally --ask q,578:8:g2.tally,562:model pg
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204250,9 +204233,6 @@ move g: transfers
   leg cash from work to konto amount amt
 
 ask q: m.cash.amount for m in transfers over 2026-04-01 .. 2026-04-30
-ask qw: m.cash.amount for m in transfers over 2026-04-01 .. 2026-04-30 windows each
-ask fl: flows(konto, 2026-04-01 .. 2026-04-30) windows each
-
 version v
   cite card
   governs always
@@ -204260,12 +204240,8 @@ version v
   amt = 10.00 PLN "c"
   wd = window(2026-03-30, 2026-04-02) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,234:q (m = g): ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
-fl [wd = 2026-03-30 .. 2026-03-31]: 0.00 PLN
-  cut 2026-03-01
-fl [wd = 2026-04-01 .. 2026-04-02]: 10.00 PLN
-  cut 2026-03-01
-,19:fixes/gate8/m2_g3_h,11:fixes-gate8,11:run h.tally,379:7:h.tally,364:model ph
+,,1:0,109:q (m = g): ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
+,19:fixes/gate8/m2_g3_h,11:fixes-gate8,11:run h.tally,323:7:h.tally,308:model ph
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204278,214 +204254,15 @@ input a: date
 input b: date
 
 ask q: a < b
-ask qw: a < b windows each
-ask qe: a == b windows each
-
 version v
   cite card
   governs always
   known 2026-01-01
   a = window(2026-01-01, 2026-01-02) "c"
   b = window(2026-01-01, 2026-01-02) "c"
-,,1:0,500:q: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a)
+,,1:0,99:q: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a)
   cut 2026-03-01
-qe [a = 2026-01-01, b = 2026-01-01]: true
-  cut 2026-03-01
-qe [a = 2026-01-01, b = 2026-01-02]: false
-  cut 2026-03-01
-qe [a = 2026-01-02, b = 2026-01-01]: false
-  cut 2026-03-01
-qe [a = 2026-01-02, b = 2026-01-02]: true
-  cut 2026-03-01
-qw [a = 2026-01-01, b = 2026-01-01]: false
-  cut 2026-03-01
-qw [a = 2026-01-01, b = 2026-01-02]: true
-  cut 2026-03-01
-qw [a = 2026-01-02]: false
-  cut 2026-03-01
-,20:fixes/gate8/m2_g3_h2,11:fixes-gate8,24:run h2.tally --ask qw qe,469:8:h2.tally,453:model ph
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input a: date
-input b: date
-
-ask q: a < b with a = window(2026-01-01, 2026-01-02), b = window(2026-01-01, 2026-01-02) windows each
-ask qw: a < b windows each
-ask qe: a == b windows each
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  a = window(2026-01-01, 2026-01-02) "c"
-  b = window(2026-01-01, 2026-01-02) "c"
-,,1:0,401:qw [a = 2026-01-01, b = 2026-01-01]: false
-  cut 2026-03-01
-qw [a = 2026-01-01, b = 2026-01-02]: true
-  cut 2026-03-01
-qw [a = 2026-01-02]: false
-  cut 2026-03-01
-qe [a = 2026-01-01, b = 2026-01-01]: true
-  cut 2026-03-01
-qe [a = 2026-01-01, b = 2026-01-02]: false
-  cut 2026-03-01
-qe [a = 2026-01-02, b = 2026-01-01]: false
-  cut 2026-03-01
-qe [a = 2026-01-02, b = 2026-01-02]: true
-  cut 2026-03-01
-,19:fixes/gate8/m2_g3_i,11:fixes-gate8,11:run i.tally,882:7:i.tally,867:model pi
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input cal: calendar
-input d1: date
-input d2: date
-
-ask q: add_business(d1, 1, cal) windows each
-ask r: add_business(d2, 1, cal) law 2026-11-30 windows each
-ask qr: x1 < x2 windows each
-ask qd: x2 law 2026-05-01 windows each
-
-def x1: date at d1
-  rule base = add_business(d1, 1, cal)
-
-def x2: date at d2
-  rule base = add_business(d2, 1, cal)
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  d1 = 2026-05-29 "c"
-  d2 = 2026-11-30 "c"
-
-version c1
-  cite card
-  governs ..2026-06-30
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
-
-version c2
-  cite card
-  governs 2026-07-01..
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-12-01, 2026-12-02)]) "c"
-,,1:0,1170:q [added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
-  cut 2026-03-01
-q [added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
-  cut 2026-03-01
-qd [added window(2026-12-01, 2026-12-02) = 2026-12-01]: 2026-12-02
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  law date 2026-05-01, cut 2026-03-01
-qd [added window(2026-12-01, 2026-12-02) = 2026-12-02]: 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  law date 2026-05-01, cut 2026-03-01
-qr: true
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  cut 2026-03-01
-r [added window(2026-12-01, 2026-12-02) = 2026-12-01]: 2026-12-02
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  law date 2026-11-30, cut 2026-03-01
-r [added window(2026-12-01, 2026-12-02) = 2026-12-02]: 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  law date 2026-11-30, cut 2026-03-01
-,20:fixes/gate8/m2_g3_i2,11:fixes-gate8,31:run i2.tally --ask q r qr qs qd,991:8:i2.tally,975:model pi
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input cal: calendar
-input d1: date
-input d2: date
-input gap: int
-
-ask q: add_business(d1, 1, cal) windows each
-ask r: add_business(d2, 1, cal) law 2026-11-30 windows each
-ask qr: x1 < x2 windows each
-ask qs: x2 == add_days(x1, gap) windows each
-ask qp: x2 == add_days(x1, gap)
-ask qd: x2 law 2026-05-01 windows each
-
-def x1: date at d1
-  rule base = add_business(d1, 1, cal)
-
-def x2: date at d2
-  rule base = add_business(d2, 1, cal)
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  d1 = 2026-05-29 "c"
-  d2 = 2026-11-30 "c"
-  gap = 183 "c"
-
-version c1
-  cite card
-  governs ..2026-06-30
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
-
-version c2
-  cite card
-  governs 2026-07-01..
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-12-01, 2026-12-02)]) "c"
-,,1:0,2108:q [added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
-  cut 2026-03-01
-q [added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
-  cut 2026-03-01
-r [added window(2026-12-01, 2026-12-02) = 2026-12-01]: 2026-12-02
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  law date 2026-11-30, cut 2026-03-01
-r [added window(2026-12-01, 2026-12-02) = 2026-12-02]: 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  law date 2026-11-30, cut 2026-03-01
-qr: true
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  cut 2026-03-01
-qs [added window(2026-12-01, 2026-12-02) = 2026-12-01, added window(2026-06-01, 2026-06-02) = 2026-06-01]: true
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  cut 2026-03-01
-qs [added window(2026-12-01, 2026-12-02) = 2026-12-01, added window(2026-06-01, 2026-06-02) = 2026-06-02]: false
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  cut 2026-03-01
-qs [added window(2026-12-01, 2026-12-02) = 2026-12-02, added window(2026-06-01, 2026-06-02) = 2026-06-01]: false
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  cut 2026-03-01
-qs [added window(2026-12-01, 2026-12-02) = 2026-12-02, added window(2026-06-01, 2026-06-02) = 2026-06-02]: true
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  cut 2026-03-01
-qd [added window(2026-12-01, 2026-12-02) = 2026-12-01]: 2026-12-02
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-02
-  law date 2026-05-01, cut 2026-03-01
-qd [added window(2026-12-01, 2026-12-02) = 2026-12-02]: 2026-12-01
-  held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
-  law date 2026-05-01, cut 2026-03-01
-,19:fixes/gate8/m2_g3_j,11:fixes-gate8,11:run j.tally,635:7:j.tally,620:model pj
+,19:fixes/gate8/m2_g3_j,11:fixes-gate8,11:run j.tally,594:7:j.tally,579:model pj
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204498,7 +204275,6 @@ unit PLN: currency minor 0.01
 input rate: money PLN
 
 ask q: rate law 2026-06-01
-ask qw: rate law 2026-06-01 windows each
 ask q27: rate law 2027-06-01
 
 version v
@@ -204512,14 +204288,12 @@ version v2
   governs 2027-01-01..
   known 2026-02-28
   replace rate = 12.00 PLN "c"
-,,1:0,207:q: 10.00 PLN
+,,1:0,155:q: 10.00 PLN
   law date 2026-06-01, cut 2026-03-01
 q27: 12.00 PLN
   held: rate = 12.00 PLN (v2), read for 2027-06-01
   law date 2027-06-01, cut 2026-03-01
-qw: 10.00 PLN
-  law date 2026-06-01, cut 2026-03-01
-,20:fixes/gate8/m2_g3_j2,11:fixes-gate8,12:run j2.tally,636:8:j2.tally,620:model pj
+,20:fixes/gate8/m2_g3_j2,11:fixes-gate8,12:run j2.tally,595:8:j2.tally,579:model pj
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204532,7 +204306,6 @@ unit PLN: currency minor 0.01
 input rate: money PLN
 
 ask q: rate law 2026-06-01
-ask qw: rate law 2026-06-01 windows each
 ask q27: rate law 2027-06-01
 
 version v
@@ -204546,13 +204319,11 @@ version v2
   governs 2027-01-01..
   known 2026-03-01
   replace rate = 12.00 PLN "c"
-,,1:0,207:q: 10.00 PLN
+,,1:0,155:q: 10.00 PLN
   law date 2026-06-01, cut 2026-03-01
 q27: 12.00 PLN
   held: rate = 12.00 PLN (v2), read for 2027-06-01
   law date 2027-06-01, cut 2026-03-01
-qw: 10.00 PLN
-  law date 2026-06-01, cut 2026-03-01
 ,19:fixes/gate8/m2_g3_k,11:fixes-gate8,23:run k.tally --ask s u b,913:7:k.tally,898:model pk
   tally 2
   on 2026-03-01
@@ -204622,7 +204393,7 @@ b [ax = hi]: 40.00 PLN
   unfulfilled: pay[2026-02]
   cut 2026-03-01
 warning: WARN-UNREAD input pd is read by nothing
-,20:fixes/gate8/m2_g3_k2,11:fixes-gate8,26:run k2.tally --ask s u b p,973:8:k2.tally,957:model pk
+,20:fixes/gate8/m2_g3_k2,11:fixes-gate8,24:run k2.tally --ask s u b,913:8:k2.tally,897:model pk
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204654,8 +204425,6 @@ ask s: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28)
 ask t: x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28
 ask u: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28 where ax == hi)
 ask b: bal(konto, 2026-02-28)
-ask p: bal(konto, 2026-04-30) from 2026-03-01 windows each
-
 version v
   cite card
   governs always
@@ -204663,7 +204432,7 @@ version v
   amt = 10.00 PLN "c"
   pd = 2026-04-01 "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,905:s [ax = lo]: 20.00 PLN
+,,1:0,675:s [ax = lo]: 20.00 PLN
   reading: ax = lo
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
@@ -204687,16 +204456,6 @@ b [ax = lo]: 20.00 PLN
   unfulfilled: pay[2026-02]
   cut 2026-03-01
 b [ax = hi]: 40.00 PLN
-  reading: ax = hi
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  cut 2026-03-01
-p [ax = lo]: 40.00 PLN
-  reading: ax = lo
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  cut 2026-03-01
-p [ax = hi]: 80.00 PLN
   reading: ax = hi
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
@@ -204756,7 +204515,7 @@ t (x = pay[2026-02]): 10.00 PLN
   unfulfilled: pay[2026-02]
   cut 2026-03-01
 warning: WARN-UNREAD input pd is read by nothing
-,20:fixes/gate8/m2_g3_k4,11:fixes-gate8,24:run k4.tally --ask s b p,837:8:k4.tally,821:model pk
+,20:fixes/gate8/m2_g3_k4,11:fixes-gate8,22:run k4.tally --ask s b,777:8:k4.tally,761:model pk
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -204787,8 +204546,6 @@ move pay[m in months]: transfers
 ask s: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28)
 ask t: x.cash.amount for x in transfers over 2026-01-01 .. 2026-02-28
 ask b: bal(konto, 2026-02-28)
-ask p: bal(konto, 2026-04-30) from 2026-03-01 windows each
-
 version v
   cite card
   governs always
@@ -204796,7 +204553,7 @@ version v
   amt = 10.00 PLN "c"
   pd = 2026-04-01 "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,307:s: 20.00 PLN
+,,1:0,221:s: 20.00 PLN
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   cut 2026-03-01
@@ -204804,12 +204561,8 @@ b: 20.00 PLN
   unfulfilled: pay[2026-01]
   unfulfilled: pay[2026-02]
   cut 2026-03-01
-p: 40.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  cut 2026-03-01
 warning: WARN-UNREAD input pd is read by nothing
-,20:fixes/gate8/m2_g3_n6,11:fixes-gate8,28:run n6.tally --ask sww aw bw,774:8:n6.tally,758:model pn6
+,20:fixes/gate8/m2_g3_n6,11:fixes-gate8,24:run n6.tally --ask aw bw,744:8:n6.tally,728:model pn6
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -204834,7 +204587,6 @@ move mw: tagged
   leg cash from work to konto amount amt
 
 ask sw: mw.size
-ask sww: mw.size windows each
 ask aw: mw.cash.amount
 ask bw: bal(konto, 2026-04-30)
 
@@ -204852,16 +204604,12 @@ version v2
   governs always
   known 2026-03-15
   replace sz = 2 "c"
-,,1:0,192:sww [wd = 2026-03-10 .. 2026-03-14]: 1
-  cut 2026-06-30
-sww [wd = 2026-03-15 .. 2026-03-20]: 2
-  cut 2026-06-30
-aw: 10.00 PLN
+,,1:0,80:aw: 10.00 PLN
   cut 2026-06-30
 bw: 10.00 PLN
   unfulfilled: mw
   cut 2026-06-30
-,20:fixes/gate8/m2_g3_n7,11:fixes-gate8,25:run n7.tally --ask bww aw,718:8:n7.tally,702:model pn7
+,20:fixes/gate8/m2_g3_n7,11:fixes-gate8,21:run n7.tally --ask aw,673:8:n7.tally,657:model pn7
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -204883,7 +204631,6 @@ move mw[k in acct]: transfers
   leg cash from work to konto amount amt
 
 ask bw: bal(konto, 2026-04-30)
-ask bww: bal(konto, 2026-04-30) windows each
 ask aw: mw[a2].cash.amount
 
 version v
@@ -204899,418 +204646,8 @@ version v2
   governs always
   known 2026-03-15
   acct + [a2]
-,,1:0,1453:bww [wd = 2026-03-10]: ?"mw[a2] on 2026-03-10 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
+,,1:0,125:aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
   cut 2026-06-30
-bww [wd = 2026-03-11]: ?"mw[a2] on 2026-03-11 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-12]: ?"mw[a2] on 2026-03-12 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-13]: ?"mw[a2] on 2026-03-13 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-14]: ?"mw[a2] on 2026-03-14 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-15 .. 2026-03-20]: 20.00 PLN
-  unfulfilled: mw[a1]
-  unfulfilled: mw[a2]
-  cut 2026-06-30
-aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
-  cut 2026-06-30
-,22:fixes/gate8/m2_g3_ez06,11:fixes-gate8,22:run ez06.tally --ask d,458:10:ez06.tally,439:model pe
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input w1: date
-input w2: date
-
-def lt: bool
-  rule base = w1 < w2
-
-def d1: date
-  rule base = add_days(w1, 0)
-
-ask c: lt windows each
-ask d: add_days(w1, 1) windows each
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  w1 = window(2026-01-01, 2026-06-28) "c"
-  w2 = window(2026-01-15, 2026-06-15) "c"
-,,1:0,8818:d [w1 = 2026-01-01]: 2026-01-02
-  cut 2026-03-01
-d [w1 = 2026-01-02]: 2026-01-03
-  cut 2026-03-01
-d [w1 = 2026-01-03]: 2026-01-04
-  cut 2026-03-01
-d [w1 = 2026-01-04]: 2026-01-05
-  cut 2026-03-01
-d [w1 = 2026-01-05]: 2026-01-06
-  cut 2026-03-01
-d [w1 = 2026-01-06]: 2026-01-07
-  cut 2026-03-01
-d [w1 = 2026-01-07]: 2026-01-08
-  cut 2026-03-01
-d [w1 = 2026-01-08]: 2026-01-09
-  cut 2026-03-01
-d [w1 = 2026-01-09]: 2026-01-10
-  cut 2026-03-01
-d [w1 = 2026-01-10]: 2026-01-11
-  cut 2026-03-01
-d [w1 = 2026-01-11]: 2026-01-12
-  cut 2026-03-01
-d [w1 = 2026-01-12]: 2026-01-13
-  cut 2026-03-01
-d [w1 = 2026-01-13]: 2026-01-14
-  cut 2026-03-01
-d [w1 = 2026-01-14]: 2026-01-15
-  cut 2026-03-01
-d [w1 = 2026-01-15]: 2026-01-16
-  cut 2026-03-01
-d [w1 = 2026-01-16]: 2026-01-17
-  cut 2026-03-01
-d [w1 = 2026-01-17]: 2026-01-18
-  cut 2026-03-01
-d [w1 = 2026-01-18]: 2026-01-19
-  cut 2026-03-01
-d [w1 = 2026-01-19]: 2026-01-20
-  cut 2026-03-01
-d [w1 = 2026-01-20]: 2026-01-21
-  cut 2026-03-01
-d [w1 = 2026-01-21]: 2026-01-22
-  cut 2026-03-01
-d [w1 = 2026-01-22]: 2026-01-23
-  cut 2026-03-01
-d [w1 = 2026-01-23]: 2026-01-24
-  cut 2026-03-01
-d [w1 = 2026-01-24]: 2026-01-25
-  cut 2026-03-01
-d [w1 = 2026-01-25]: 2026-01-26
-  cut 2026-03-01
-d [w1 = 2026-01-26]: 2026-01-27
-  cut 2026-03-01
-d [w1 = 2026-01-27]: 2026-01-28
-  cut 2026-03-01
-d [w1 = 2026-01-28]: 2026-01-29
-  cut 2026-03-01
-d [w1 = 2026-01-29]: 2026-01-30
-  cut 2026-03-01
-d [w1 = 2026-01-30]: 2026-01-31
-  cut 2026-03-01
-d [w1 = 2026-01-31]: 2026-02-01
-  cut 2026-03-01
-d [w1 = 2026-02-01]: 2026-02-02
-  cut 2026-03-01
-d [w1 = 2026-02-02]: 2026-02-03
-  cut 2026-03-01
-d [w1 = 2026-02-03]: 2026-02-04
-  cut 2026-03-01
-d [w1 = 2026-02-04]: 2026-02-05
-  cut 2026-03-01
-d [w1 = 2026-02-05]: 2026-02-06
-  cut 2026-03-01
-d [w1 = 2026-02-06]: 2026-02-07
-  cut 2026-03-01
-d [w1 = 2026-02-07]: 2026-02-08
-  cut 2026-03-01
-d [w1 = 2026-02-08]: 2026-02-09
-  cut 2026-03-01
-d [w1 = 2026-02-09]: 2026-02-10
-  cut 2026-03-01
-d [w1 = 2026-02-10]: 2026-02-11
-  cut 2026-03-01
-d [w1 = 2026-02-11]: 2026-02-12
-  cut 2026-03-01
-d [w1 = 2026-02-12]: 2026-02-13
-  cut 2026-03-01
-d [w1 = 2026-02-13]: 2026-02-14
-  cut 2026-03-01
-d [w1 = 2026-02-14]: 2026-02-15
-  cut 2026-03-01
-d [w1 = 2026-02-15]: 2026-02-16
-  cut 2026-03-01
-d [w1 = 2026-02-16]: 2026-02-17
-  cut 2026-03-01
-d [w1 = 2026-02-17]: 2026-02-18
-  cut 2026-03-01
-d [w1 = 2026-02-18]: 2026-02-19
-  cut 2026-03-01
-d [w1 = 2026-02-19]: 2026-02-20
-  cut 2026-03-01
-d [w1 = 2026-02-20]: 2026-02-21
-  cut 2026-03-01
-d [w1 = 2026-02-21]: 2026-02-22
-  cut 2026-03-01
-d [w1 = 2026-02-22]: 2026-02-23
-  cut 2026-03-01
-d [w1 = 2026-02-23]: 2026-02-24
-  cut 2026-03-01
-d [w1 = 2026-02-24]: 2026-02-25
-  cut 2026-03-01
-d [w1 = 2026-02-25]: 2026-02-26
-  cut 2026-03-01
-d [w1 = 2026-02-26]: 2026-02-27
-  cut 2026-03-01
-d [w1 = 2026-02-27]: 2026-02-28
-  cut 2026-03-01
-d [w1 = 2026-02-28]: 2026-03-01
-  cut 2026-03-01
-d [w1 = 2026-03-01]: 2026-03-02
-  cut 2026-03-01
-d [w1 = 2026-03-02]: 2026-03-03
-  cut 2026-03-01
-d [w1 = 2026-03-03]: 2026-03-04
-  cut 2026-03-01
-d [w1 = 2026-03-04]: 2026-03-05
-  cut 2026-03-01
-d [w1 = 2026-03-05]: 2026-03-06
-  cut 2026-03-01
-d [w1 = 2026-03-06]: 2026-03-07
-  cut 2026-03-01
-d [w1 = 2026-03-07]: 2026-03-08
-  cut 2026-03-01
-d [w1 = 2026-03-08]: 2026-03-09
-  cut 2026-03-01
-d [w1 = 2026-03-09]: 2026-03-10
-  cut 2026-03-01
-d [w1 = 2026-03-10]: 2026-03-11
-  cut 2026-03-01
-d [w1 = 2026-03-11]: 2026-03-12
-  cut 2026-03-01
-d [w1 = 2026-03-12]: 2026-03-13
-  cut 2026-03-01
-d [w1 = 2026-03-13]: 2026-03-14
-  cut 2026-03-01
-d [w1 = 2026-03-14]: 2026-03-15
-  cut 2026-03-01
-d [w1 = 2026-03-15]: 2026-03-16
-  cut 2026-03-01
-d [w1 = 2026-03-16]: 2026-03-17
-  cut 2026-03-01
-d [w1 = 2026-03-17]: 2026-03-18
-  cut 2026-03-01
-d [w1 = 2026-03-18]: 2026-03-19
-  cut 2026-03-01
-d [w1 = 2026-03-19]: 2026-03-20
-  cut 2026-03-01
-d [w1 = 2026-03-20]: 2026-03-21
-  cut 2026-03-01
-d [w1 = 2026-03-21]: 2026-03-22
-  cut 2026-03-01
-d [w1 = 2026-03-22]: 2026-03-23
-  cut 2026-03-01
-d [w1 = 2026-03-23]: 2026-03-24
-  cut 2026-03-01
-d [w1 = 2026-03-24]: 2026-03-25
-  cut 2026-03-01
-d [w1 = 2026-03-25]: 2026-03-26
-  cut 2026-03-01
-d [w1 = 2026-03-26]: 2026-03-27
-  cut 2026-03-01
-d [w1 = 2026-03-27]: 2026-03-28
-  cut 2026-03-01
-d [w1 = 2026-03-28]: 2026-03-29
-  cut 2026-03-01
-d [w1 = 2026-03-29]: 2026-03-30
-  cut 2026-03-01
-d [w1 = 2026-03-30]: 2026-03-31
-  cut 2026-03-01
-d [w1 = 2026-03-31]: 2026-04-01
-  cut 2026-03-01
-d [w1 = 2026-04-01]: 2026-04-02
-  cut 2026-03-01
-d [w1 = 2026-04-02]: 2026-04-03
-  cut 2026-03-01
-d [w1 = 2026-04-03]: 2026-04-04
-  cut 2026-03-01
-d [w1 = 2026-04-04]: 2026-04-05
-  cut 2026-03-01
-d [w1 = 2026-04-05]: 2026-04-06
-  cut 2026-03-01
-d [w1 = 2026-04-06]: 2026-04-07
-  cut 2026-03-01
-d [w1 = 2026-04-07]: 2026-04-08
-  cut 2026-03-01
-d [w1 = 2026-04-08]: 2026-04-09
-  cut 2026-03-01
-d [w1 = 2026-04-09]: 2026-04-10
-  cut 2026-03-01
-d [w1 = 2026-04-10]: 2026-04-11
-  cut 2026-03-01
-d [w1 = 2026-04-11]: 2026-04-12
-  cut 2026-03-01
-d [w1 = 2026-04-12]: 2026-04-13
-  cut 2026-03-01
-d [w1 = 2026-04-13]: 2026-04-14
-  cut 2026-03-01
-d [w1 = 2026-04-14]: 2026-04-15
-  cut 2026-03-01
-d [w1 = 2026-04-15]: 2026-04-16
-  cut 2026-03-01
-d [w1 = 2026-04-16]: 2026-04-17
-  cut 2026-03-01
-d [w1 = 2026-04-17]: 2026-04-18
-  cut 2026-03-01
-d [w1 = 2026-04-18]: 2026-04-19
-  cut 2026-03-01
-d [w1 = 2026-04-19]: 2026-04-20
-  cut 2026-03-01
-d [w1 = 2026-04-20]: 2026-04-21
-  cut 2026-03-01
-d [w1 = 2026-04-21]: 2026-04-22
-  cut 2026-03-01
-d [w1 = 2026-04-22]: 2026-04-23
-  cut 2026-03-01
-d [w1 = 2026-04-23]: 2026-04-24
-  cut 2026-03-01
-d [w1 = 2026-04-24]: 2026-04-25
-  cut 2026-03-01
-d [w1 = 2026-04-25]: 2026-04-26
-  cut 2026-03-01
-d [w1 = 2026-04-26]: 2026-04-27
-  cut 2026-03-01
-d [w1 = 2026-04-27]: 2026-04-28
-  cut 2026-03-01
-d [w1 = 2026-04-28]: 2026-04-29
-  cut 2026-03-01
-d [w1 = 2026-04-29]: 2026-04-30
-  cut 2026-03-01
-d [w1 = 2026-04-30]: 2026-05-01
-  cut 2026-03-01
-d [w1 = 2026-05-01]: 2026-05-02
-  cut 2026-03-01
-d [w1 = 2026-05-02]: 2026-05-03
-  cut 2026-03-01
-d [w1 = 2026-05-03]: 2026-05-04
-  cut 2026-03-01
-d [w1 = 2026-05-04]: 2026-05-05
-  cut 2026-03-01
-d [w1 = 2026-05-05]: 2026-05-06
-  cut 2026-03-01
-d [w1 = 2026-05-06]: 2026-05-07
-  cut 2026-03-01
-d [w1 = 2026-05-07]: 2026-05-08
-  cut 2026-03-01
-d [w1 = 2026-05-08]: 2026-05-09
-  cut 2026-03-01
-d [w1 = 2026-05-09]: 2026-05-10
-  cut 2026-03-01
-d [w1 = 2026-05-10]: 2026-05-11
-  cut 2026-03-01
-d [w1 = 2026-05-11]: 2026-05-12
-  cut 2026-03-01
-d [w1 = 2026-05-12]: 2026-05-13
-  cut 2026-03-01
-d [w1 = 2026-05-13]: 2026-05-14
-  cut 2026-03-01
-d [w1 = 2026-05-14]: 2026-05-15
-  cut 2026-03-01
-d [w1 = 2026-05-15]: 2026-05-16
-  cut 2026-03-01
-d [w1 = 2026-05-16]: 2026-05-17
-  cut 2026-03-01
-d [w1 = 2026-05-17]: 2026-05-18
-  cut 2026-03-01
-d [w1 = 2026-05-18]: 2026-05-19
-  cut 2026-03-01
-d [w1 = 2026-05-19]: 2026-05-20
-  cut 2026-03-01
-d [w1 = 2026-05-20]: 2026-05-21
-  cut 2026-03-01
-d [w1 = 2026-05-21]: 2026-05-22
-  cut 2026-03-01
-d [w1 = 2026-05-22]: 2026-05-23
-  cut 2026-03-01
-d [w1 = 2026-05-23]: 2026-05-24
-  cut 2026-03-01
-d [w1 = 2026-05-24]: 2026-05-25
-  cut 2026-03-01
-d [w1 = 2026-05-25]: 2026-05-26
-  cut 2026-03-01
-d [w1 = 2026-05-26]: 2026-05-27
-  cut 2026-03-01
-d [w1 = 2026-05-27]: 2026-05-28
-  cut 2026-03-01
-d [w1 = 2026-05-28]: 2026-05-29
-  cut 2026-03-01
-d [w1 = 2026-05-29]: 2026-05-30
-  cut 2026-03-01
-d [w1 = 2026-05-30]: 2026-05-31
-  cut 2026-03-01
-d [w1 = 2026-05-31]: 2026-06-01
-  cut 2026-03-01
-d [w1 = 2026-06-01]: 2026-06-02
-  cut 2026-03-01
-d [w1 = 2026-06-02]: 2026-06-03
-  cut 2026-03-01
-d [w1 = 2026-06-03]: 2026-06-04
-  cut 2026-03-01
-d [w1 = 2026-06-04]: 2026-06-05
-  cut 2026-03-01
-d [w1 = 2026-06-05]: 2026-06-06
-  cut 2026-03-01
-d [w1 = 2026-06-06]: 2026-06-07
-  cut 2026-03-01
-d [w1 = 2026-06-07]: 2026-06-08
-  cut 2026-03-01
-d [w1 = 2026-06-08]: 2026-06-09
-  cut 2026-03-01
-d [w1 = 2026-06-09]: 2026-06-10
-  cut 2026-03-01
-d [w1 = 2026-06-10]: 2026-06-11
-  cut 2026-03-01
-d [w1 = 2026-06-11]: 2026-06-12
-  cut 2026-03-01
-d [w1 = 2026-06-12]: 2026-06-13
-  cut 2026-03-01
-d [w1 = 2026-06-13]: 2026-06-14
-  cut 2026-03-01
-d [w1 = 2026-06-14]: 2026-06-15
-  cut 2026-03-01
-d [w1 = 2026-06-15]: 2026-06-16
-  cut 2026-03-01
-d [w1 = 2026-06-16]: 2026-06-17
-  cut 2026-03-01
-d [w1 = 2026-06-17]: 2026-06-18
-  cut 2026-03-01
-d [w1 = 2026-06-18]: 2026-06-19
-  cut 2026-03-01
-d [w1 = 2026-06-19]: 2026-06-20
-  cut 2026-03-01
-d [w1 = 2026-06-20]: 2026-06-21
-  cut 2026-03-01
-d [w1 = 2026-06-21]: 2026-06-22
-  cut 2026-03-01
-d [w1 = 2026-06-22]: 2026-06-23
-  cut 2026-03-01
-d [w1 = 2026-06-23]: 2026-06-24
-  cut 2026-03-01
-d [w1 = 2026-06-24]: 2026-06-25
-  cut 2026-03-01
-d [w1 = 2026-06-25]: 2026-06-26
-  cut 2026-03-01
-d [w1 = 2026-06-26]: 2026-06-27
-  cut 2026-03-01
-d [w1 = 2026-06-27]: 2026-06-28
-  cut 2026-03-01
-d [w1 = 2026-06-28]: 2026-06-29
-  cut 2026-03-01
-warning: WARN-UNREAD def d1 is read by nothing
 ,22:fixes/gate8/m2_g1_band,11:fixes-gate8,14:run band.tally,1591:10:band.tally,1571:model bm
   tally 2
   on 2026-10-18
@@ -209515,7 +208852,7 @@ version bank_a
 warning: WARN-UNREAD input fee is read by nothing
 warning: WARN-UNREAD input price is read by nothing
 warning: WARN-UNREAD input rate is read by nothing
-,20:fixes/gate8/m2_g2_bf,11:fixes-gate8,31:run h.tally hh.tally late.tally,2568:7:h.tally,1366:model household
+,20:fixes/gate8/m2_g2_bf,11:fixes-gate8,31:run h.tally hh.tally late.tally,2529:7:h.tally,1327:model household
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -209556,12 +208893,12 @@ version dates
   adv_law = 2027-01-01 "own"
   wd = window(2026-12-20, 2026-12-28) "own"
 
-ask fl: flows(konto, 2026-12-01 .. 2027-01-31) in late windows each
+ask fl: flows(konto, 2026-12-01 .. 2027-01-31) in late
 ask p1: bal(konto, 2026-12-31) in late
 ask p2: flows(konto, 2026-12-01 .. 2027-01-31) in late
 ask p3: explain bal(konto, 2026-12-31) in late
-ask bl: bal(konto, 2026-12-31) in late windows each
-ask blw: bal(konto, 2026-12-24) in late windows each
+ask bl: bal(konto, 2026-12-31) in late
+ask blw: bal(konto, 2026-12-24) in late
 ask bl_plain: bal(konto, 2026-12-31) in late
 ,8:hh.tally,996:model household
   tally 2
@@ -210188,7 +209525,7 @@ e_sav: 270.00 PLN
   unfulfilled: sv[2026-02]
   unfulfilled: sv[2026-03]
   cut 2026-06-30
-,25:fixes/gate8/m2_g3_fix2_r1,11:fixes-gate8,17:run fix2_r1.tally,405:13:fix2_r1.tally,383:model px
+,25:fixes/gate8/m2_g3_fix2_r1,11:fixes-gate8,17:run fix2_r1.tally,355:13:fix2_r1.tally,333:model px
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -210200,7 +209537,6 @@ unit PLN: currency minor 0.01
 index kk = [a, b]
 input d[k in kk]: date
 
-ask q: d[k] < 2026-03-02 for k in kk windows each
 ask q0: d[k] < 2026-03-02 for k in kk
 
 version v
@@ -210209,13 +209545,7 @@ version v
   known 2026-01-01
   d[a] = window(2026-03-01, 2026-03-02) "c"
   d[b] = 2026-01-01 "c"
-,,1:0,297:q (k = a) [d[a] = 2026-03-01]: true
-  cut 2026-03-01
-q (k = a) [d[a] = 2026-03-02]: false
-  cut 2026-03-01
-q (k = b): true
-  cut 2026-03-01
-q0 (k = a): ?"date within window(2026-03-01, 2026-03-02) not precise enough for d[k] < 2026-03-02" (d[a])
+,,1:0,157:q0 (k = a): ?"date within window(2026-03-01, 2026-03-02) not precise enough for d[k] < 2026-03-02" (d[a])
   cut 2026-03-01
 q0 (k = b): true
   cut 2026-03-01
@@ -210249,7 +209579,7 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
 ,,1:0,30:fa: 0.00 PLN
   cut 2026-03-01
-,25:fixes/gate8/m2_g3_fix2_r2,11:fixes-gate8,26:run fix2_r2.tally --ask q0,362:13:fix2_r2.tally,340:model px
+,25:fixes/gate8/m2_g3_fix2_r2,11:fixes-gate8,26:run fix2_r2.tally --ask q0,324:13:fix2_r2.tally,302:model px
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -210261,7 +209591,6 @@ unit PLN: currency minor 0.01
 input x: date
 input y: date
 
-ask q: x == y with x = y windows each
 ask q0: x == y with x = y
 
 version v
@@ -210273,7 +209602,7 @@ version v
 ,,1:0,71:q0: true
   pinned: x = window(2026-01-01, 2026-01-02)
   cut 2026-03-01
-,25:fixes/gate8/m2_g3_fix2_c2,11:fixes-gate8,26:run fix2_c2.tally --ask qp,640:13:fix2_c2.tally,618:model pc
+,25:fixes/gate8/m2_g3_fix2_c2,11:fixes-gate8,26:run fix2_c2.tally --ask qp,594:13:fix2_c2.tally,572:model pc
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -210285,7 +209614,6 @@ unit PLN: currency minor 0.01
 input cal: calendar
 input d1: date
 
-ask qc: add_business(d1, 1, cal) windows each
 ask qp: add_business(d1, 1, cal)
 
 version v
@@ -210309,7 +209637,7 @@ version c2
   held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-07-01
   held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-07-02
   cut 2026-03-01
-,24:fixes/gate8/m2_g3_fix2_d,11:fixes-gate8,26:run fix2_d.tally --ask qd0,454:12:fix2_d.tally,433:model pd
+,24:fixes/gate8/m2_g3_fix2_d,11:fixes-gate8,26:run fix2_d.tally --ask qd0,356:12:fix2_d.tally,335:model pd
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -210324,8 +209652,6 @@ input y: date
 def dd: date
   rule base = x
 
-ask qd: dd == y with dd = y windows each
-ask ql: last(x, 2026-02-01) == y with x = y windows each
 ask qd0: dd == y with dd = y
 
 version v
@@ -219427,7 +218753,7 @@ warning: WARN-UNREAD def same is read by nothing
 warning: WARN-UNREAD input cal is read by nothing
 warning: WARN-UNREAD input u is read by nothing
 warning: WARN-UNREAD input wd is read by nothing
-,29:r3/l4_4_windows_added_entries,8:fixes-r3,11:run m.tally,403:7:m.tally,388:model f5
+,29:r3/l4_4_windows_added_entries,8:fixes-r3,11:run m.tally,346:7:m.tally,331:model f5
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -219438,22 +218764,12 @@ source card "invented"
 input cal: calendar
 
 ask one: add_business(2026-05-29, 1, cal)
-ask each: add_business(2026-05-29, 1, cal) windows each
-
 version v
   cite card
   governs always
   known 2026-01-01
   cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02), window(2026-06-01, 2026-06-02)]) "c"
-,,1:0,601:each [added window(2026-06-01, 2026-06-02) = 2026-06-01, added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
-  cut 2026-03-01
-each [added window(2026-06-01, 2026-06-02) = 2026-06-01, added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-03
-  cut 2026-03-01
-each [added window(2026-06-01, 2026-06-02) = 2026-06-02, added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-03
-  cut 2026-03-01
-each [added window(2026-06-01, 2026-06-02) = 2026-06-02, added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
-  cut 2026-03-01
-one: window(2026-06-01, 2026-06-03)
+,,1:0,53:one: window(2026-06-01, 2026-06-03)
   cut 2026-03-01
 ,29:r3/l4_4_windows_ties_by_order,8:fixes-r3,11:run m.tally,896:7:m.tally,881:model f3
   tally 2
@@ -228273,7 +227589,7 @@ warning: WARN-UNREAD input rr is read by nothing
 warning: WARN-UNREAD input t is read by nothing
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
-,22:fixes/gate8/m2_g6b_pd3,11:fixes-gate8,31:run pd3.tally --ask q1 q3 q4 q5,735:9:pd3.tally,718:model pd
+,22:fixes/gate8/m2_g6b_pd3,11:fixes-gate8,25:run pd3.tally --ask q4 q5,593:9:pd3.tally,576:model pd
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -228292,13 +227608,8 @@ def dd: date
 def ee: date
   rule base = dd
 
-ask q1: dd == ee windows each
-ask q2: x == dd with x = dd windows each
-ask q3: dd == y windows each
 ask q4: dd
 ask q5: dd == ee
-ask q6: x == ee with x = dd windows each
-
 version v
   cite card
   governs always
@@ -228306,28 +227617,14 @@ version v
   x = 2026-01-05 "c"
   y = window(2026-01-01, 2026-01-02) "c"
   given dd = window(2026-01-01, 2026-01-02) "g"
-,,1:0,689:q1: true
-  given: dd = window(2026-01-01, 2026-01-02) (v)
-  cut 2026-03-01
-q3 [dd = 2026-01-01, y = 2026-01-01]: true
-  given: dd = window(2026-01-01, 2026-01-02) (v)
-  cut 2026-03-01
-q3 [dd = 2026-01-01, y = 2026-01-02]: false
-  given: dd = window(2026-01-01, 2026-01-02) (v)
-  cut 2026-03-01
-q3 [dd = 2026-01-02, y = 2026-01-01]: false
-  given: dd = window(2026-01-01, 2026-01-02) (v)
-  cut 2026-03-01
-q3 [dd = 2026-01-02, y = 2026-01-02]: true
-  given: dd = window(2026-01-01, 2026-01-02) (v)
-  cut 2026-03-01
-q4: window(2026-01-01, 2026-01-02)
+,,1:0,224:q4: window(2026-01-01, 2026-01-02)
   given: dd = window(2026-01-01, 2026-01-02) (v)
   cut 2026-03-01
 q5: true
   given: dd = window(2026-01-01, 2026-01-02) (v)
   cut 2026-03-01
-,22:fixes/gate8/m2_g6b_w1b,11:fixes-gate8,25:run w1b.tally --ask q3 q4,1066:9:w1b.tally,1048:model px
+warning: WARN-UNREAD input x is read by nothing
+,22:fixes/gate8/m2_g6b_w1b,11:fixes-gate8,22:run w1b.tally --ask q4,795:9:w1b.tally,778:model px
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -228350,12 +227647,7 @@ def a2: money PLN
   rule base = amt
   rule hi beats base = amt + amt when ax == hi
 
-ask q1: e[k] < 2026-03-02 for k in kk where d[k] < 2026-03-02 windows each
-ask q2: a2 for k in kk where d[k] < 2026-03-02 windows each
-ask q3: e[k] < 2026-03-02, a2 for k in kk windows each
 ask q4: a2 for k in kk
-ask q5: e[k] < 2026-03-02, a2 for k in kk where d[k] < 2026-03-02 windows each
-
 version v
   cite card
   governs always
@@ -228367,31 +227659,7 @@ version v
   e[a] = 2026-01-01 "c"
   e[b] = window(2026-03-01, 2026-03-02) "c"
   e[c] = 2026-01-01 "c"
-,,1:0,1098:q3 (k = a) [ax = lo]: (true, 10.00 PLN)
-  reading: ax = lo
-  cut 2026-03-01
-q3 (k = a) [ax = hi]: (true, 20.00 PLN)
-  reading: ax = hi
-  cut 2026-03-01
-q3 (k = b) [e[b] = 2026-03-01] [ax = lo]: (true, 10.00 PLN)
-  reading: ax = lo
-  cut 2026-03-01
-q3 (k = b) [e[b] = 2026-03-02] [ax = lo]: (false, 10.00 PLN)
-  reading: ax = lo
-  cut 2026-03-01
-q3 (k = b) [e[b] = 2026-03-01] [ax = hi]: (true, 20.00 PLN)
-  reading: ax = hi
-  cut 2026-03-01
-q3 (k = b) [e[b] = 2026-03-02] [ax = hi]: (false, 20.00 PLN)
-  reading: ax = hi
-  cut 2026-03-01
-q3 (k = c) [ax = lo]: (true, 10.00 PLN)
-  reading: ax = lo
-  cut 2026-03-01
-q3 (k = c) [ax = hi]: (true, 20.00 PLN)
-  reading: ax = hi
-  cut 2026-03-01
-q4 (k = a) [ax = lo]: 10.00 PLN
+,,1:0,504:q4 (k = a) [ax = lo]: 10.00 PLN
   reading: ax = lo
   cut 2026-03-01
 q4 (k = a) [ax = hi]: 20.00 PLN
@@ -228409,7 +227677,9 @@ q4 (k = c) [ax = lo]: 10.00 PLN
 q4 (k = c) [ax = hi]: 20.00 PLN
   reading: ax = hi
   cut 2026-03-01
-,22:fixes/gate8/m2_g6b_le1,11:fixes-gate8,22:run le1.tally --ask q3,1728:9:le1.tally,1710:model pw
+warning: WARN-UNREAD input d is read by nothing
+warning: WARN-UNREAD input e is read by nothing
+,22:fixes/gate8/m2_g6b_le1,11:fixes-gate8,22:run le1.tally --ask q3,1619:9:le1.tally,1601:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
@@ -228450,8 +227720,6 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
   opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
 
-ask q: residuals konto 2026-03 as known 2026-04-10 windows each
-ask q2: residuals konto 2026-03 windows each
 ask q3: residuals konto 2026-03 as known 2026-04-10
 
 version st
@@ -228470,7 +227738,7 @@ version st
   cut 2026-04-10
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/gate8/m2_g6b_le5,11:fixes-gate8,25:run le5.tally --ask q2 q5,1784:9:le5.tally,1766:model pw
+,22:fixes/gate8/m2_g6b_le5,11:fixes-gate8,22:run le5.tally --ask q5,1585:9:le5.tally,1567:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
@@ -228511,10 +227779,6 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
   opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
 
-ask q: residuals konto 2026-04 windows each
-ask q2: residuals konto 2026-02 windows each
-ask q3: residuals konto 2026-03 windows each
-ask q4: residuals konto 2026-04 as known 2026-04-10 windows each
 ask q5: residuals konto 2026-04
 
 version st
@@ -228523,9 +227787,7 @@ version st
   known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,482:q2: residuals konto 2026-02
-  cut 2026-04-25
-q5: residuals konto 2026-04
+,,1:0,437:q5: residuals konto 2026-04
   ?: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
     expected but missing one on window(2026-03-30, 2026-04-01): model 10.00 PLN
   2026-04 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
@@ -230759,7 +230021,7 @@ on_sav: residuals sav 2026-03
     matched save[2026-03] on 2026-03-15: model 1 000.00 PLN, observed 950.00 PLN, difference -50.00 PLN, timing +0 days
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-06-15
-,22:fixes/gate8/m2_gate_b2,11:fixes-gate8,12:run b2.tally,847:8:b2.tally,831:model b2
+,22:fixes/gate8/m2_gate_b2,11:fixes-gate8,12:run b2.tally,744:8:b2.tally,728:model b2
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -230781,10 +230043,7 @@ def bonus_amt: money PLN at wd
   rule base = rate
   rule hi beats base = rate * twice when ax == hi
 
-ask each: inputs-of bonus_amt windows each
 ask plain: inputs-of bonus_amt
-ask each_hi: inputs-of bonus_amt with ax = hi windows each
-
 version v
   cite card
   governs always
@@ -230803,50 +230062,7 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,2439:each [wd = 2026-03-28 .. 2026-03-31] [ax = lo]:
-  r1:rate (source card "invented", locator "c")
-  v:wd (source card "invented", locator "c")
-  reading: ax = lo
-  cut 2026-03-01
-each [wd = 2026-04-01 .. 2026-04-03] [ax = lo]:
-  r2:rate (source card "invented", locator "c")
-  v:wd (source card "invented", locator "c")
-  reading: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-each [wd = 2026-03-28 .. 2026-03-31] [ax = hi]:
-  r1:rate (source card "invented", locator "c")
-  v:twice (source card "invented", locator "c")
-  v:wd (source card "invented", locator "c")
-  reading: ax = hi
-  cut 2026-03-01
-each [wd = 2026-04-01 .. 2026-04-03] [ax = hi]:
-  r2:rate (source card "invented", locator "c")
-  v:twice (source card "invented", locator "c")
-  v:wd (source card "invented", locator "c")
-  reading: ax = hi
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-each_hi [wd = 2026-03-28 .. 2026-03-31]:
-  r1:rate (source card "invented", locator "c")
-  v:twice (source card "invented", locator "c")
-  v:wd (source card "invented", locator "c")
-  pinned: ax = hi
-  cut 2026-03-01
-each_hi [wd = 2026-04-01 .. 2026-04-03]:
-  r2:rate (source card "invented", locator "c")
-  v:twice (source card "invented", locator "c")
-  v:wd (source card "invented", locator "c")
-  pinned: ax = hi
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-plain [ax = lo]:
+,,1:0,742:plain [ax = lo]:
   r1:rate (source card "invented", locator "c")
   r2:rate (source card "invented", locator "c")
   v:wd (source card "invented", locator "c")
@@ -231427,7 +230643,7 @@ e2: -690.00 PLN
   anchor: konto 2026-03-10 end, stated 210.00 PLN, difference -890.00 PLN
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-03-15
-,22:fixes/gate8/m2_gate_w1,11:fixes-gate8,106:run w1.tally --ask w01 w02 w03 w04 w05 w06 w07 w08 w09 w10 w11 w12 w13 w14 w15 w17 w18 w20 w21 w22 w23 w24,2842:8:w1.tally,2825:model w_each
+,22:fixes/gate8/m2_gate_w1,11:fixes-gate8,34:run w1.tally --ask w15 w21 w22 w23,1432:8:w1.tally,1415:model w_each
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -231463,31 +230679,10 @@ move gift: transfers
   on wd
   leg cash from work to konto amount bonus_amt
 
-ask w01: bal(konto, 2026-04-30) windows each partial
-ask w02: check bal(konto, 2026-04-30) == bal(konto, 2026-04-15) windows each
-ask w03: explain bal(konto, 2026-04-30) with ax = lo windows each
-ask w04: mean(bal(konto, d) for d in [2026-03-27, 2026-04-01, 2026-04-30]) with ax = lo windows each
-ask w05: flows(konto, 2026-03-01 .. 2026-03-31) windows each
-ask w06: flows(gift, 2026-03-01 .. 2026-04-30) windows each
-ask w07: sum(t.cash.amount for t in transfers over 2026-03) with ax = lo windows each
-ask w08: bal(konto, d) for d in [2026-03-31, 2026-04-30] with ax = lo windows each
-ask w09: bal(konto, 2026-03-31), bal(konto, 2026-04-30) with ax = lo windows each
-ask w10: add_business(wd, 1, cal) windows each
-ask w11: bal(konto, 2026-04-30) with ax = lo as known 2026-01-01 windows each
-ask w12: count(t in transfers over 2026-03) windows each
-ask w13: bal(konto, 2026-04-30) from 2026-03-01 with ax = lo windows each
-ask w14: bal(konto, 2026-03-30) from 2026-03-01 windows each, bal(konto, 2026-04-30) with ax = lo
 ask w15: bal(konto, 2026-04-30) with ax = lo, wd = 2026-03-30
-ask w16: bal(konto, 2026-04-30) with wd = window(2026-03-31, 2026-04-01) windows each
-ask w17: bal(konto, 2026-04-30) > rate + rate law 2026-04-30 windows each
-ask w18: bonus_amt windows each
-ask w19: explain bonus_amt with ax = hi windows each
-ask w20: flows(konto, 2026-03-28 .. 2026-03-31) with ax = lo windows each
 ask w21: bal(konto, 2026-03-31) with ax = lo
 ask w22: flows(konto, 2026-03-28 .. 2026-04-03) with ax = lo
 ask w23: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) with ax = lo
-ask w24: bal(konto, 2026-04-30) modelled with ax = lo windows each
-
 version v
   cite card
   governs always
@@ -231509,208 +230704,9 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,9191:w01 [wd = 2026-03-28 .. 2026-03-31] [ax = lo]: 20.00 PLN
-  reading: ax = lo
-  cut 2026-03-01
-w01 [wd = 2026-04-01 .. 2026-04-03] [ax = lo]: 24.00 PLN
-  reading: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w01 [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 30.00 PLN
-  reading: ax = hi
-  cut 2026-03-01
-w01 [wd = 2026-04-01 .. 2026-04-03] [ax = hi]: 36.00 PLN
-  reading: ax = hi
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w02 [ax = *]: ok
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w03 [wd = 2026-03-28 .. 2026-03-31]: 20.00 PLN
-  balance of konto (PLN) at the end of 2026-04-30
-  from: opening v:opening[konto] = 0.00 PLN, 2026-01-01 start (version v, source card, locator "own")
-  2026-03-28:
-    gift.cash (plan): +10.00 PLN
-  2026-04-01:
-    bonus.cash (plan): +10.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w03 [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
-  balance of konto (PLN) at the end of 2026-04-30
-  from: opening v:opening[konto] = 0.00 PLN, 2026-01-01 start (version v, source card, locator "own")
-  2026-04-01:
-    bonus.cash (plan): +12.00 PLN
-    gift.cash (plan): +12.00 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w04 [wd = 2026-03-28 .. 2026-03-31]: 40/3 (13.3333333333333) PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w04 [wd = 2026-04-01]: 16 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  cut 2026-03-01
-w04 [wd = 2026-04-02 .. 2026-04-03]: 12 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w05 [wd = 2026-03-28 .. 2026-03-31] [ax = lo]: 10.00 PLN
-  reading: ax = lo
-  cut 2026-03-01
-w05 [wd = 2026-04-01 .. 2026-04-03] [ax = lo]: 0.00 PLN
-  reading: ax = lo
-  cut 2026-03-01
-w05 [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 20.00 PLN
-  reading: ax = hi
-  cut 2026-03-01
-w05 [wd = 2026-04-01 .. 2026-04-03] [ax = hi]: 0.00 PLN
-  reading: ax = hi
-  cut 2026-03-01
-w06 [wd = 2026-03-28 .. 2026-03-31] [ax = lo]: 10.00 PLN
-  reading: ax = lo
-  cut 2026-03-01
-w06 [wd = 2026-04-01 .. 2026-04-03] [ax = lo]: 12.00 PLN
-  reading: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w06 [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 20.00 PLN
-  reading: ax = hi
-  cut 2026-03-01
-w06 [wd = 2026-04-01 .. 2026-04-03] [ax = hi]: 24.00 PLN
-  reading: ax = hi
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w07 [wd = 2026-03-28 .. 2026-03-31]: 10.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w07 [wd = 2026-04-01 .. 2026-04-03]: 0
-  pinned: ax = lo
-  cut 2026-03-01
-w08 (d = 2026-03-31) [wd = 2026-03-28 .. 2026-03-31]: 10.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w08 (d = 2026-03-31) [wd = 2026-04-01 .. 2026-04-03]: 0.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w08 (d = 2026-04-30) [wd = 2026-03-28 .. 2026-03-31]: 20.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w08 (d = 2026-04-30) [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w09 [wd = 2026-03-28 .. 2026-03-31]: (10.00 PLN, 20.00 PLN)
-  pinned: ax = lo
-  cut 2026-03-01
-w09 [wd = 2026-04-01 .. 2026-04-03]: (0.00 PLN, 24.00 PLN)
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w10 [wd = 2026-03-28 .. 2026-03-29]: 2026-03-30
-  cut 2026-03-01
-w10 [wd = 2026-03-30]: 2026-03-31
-  cut 2026-03-01
-w10 [wd = 2026-03-31]: 2026-04-01
-  cut 2026-03-01
-w10 [wd = 2026-04-01]: 2026-04-02
-  cut 2026-03-01
-w10 [wd = 2026-04-02]: 2026-04-03
-  cut 2026-03-01
-w10 [wd = 2026-04-03]: 2026-04-06
-  cut 2026-03-01
-w11 [wd = 2026-03-28 .. 2026-03-31]: 20.00 PLN
-  pinned: ax = lo
-  cut 2026-01-01
-w11 [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-01-01
-w12 [wd = 2026-03-28 .. 2026-03-31] [ax = *]: 1
-  cut 2026-03-01
-w12 [wd = 2026-04-01 .. 2026-04-03] [ax = *]: 0
-  cut 2026-03-01
-w13 [wd = 2026-03-28 .. 2026-03-31]: 20.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w13 [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w14 [wd = 2026-03-28 .. 2026-03-30]: (10.00 PLN, ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt))
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w14 [wd = 2026-03-31 .. 2026-04-03]: (0.00 PLN, ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt))
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w15: 20.00 PLN
+,,1:0,1396:w15: 20.00 PLN
   pinned: ax = lo
   pinned: wd = 2026-03-30
-  cut 2026-03-01
-w17 [ax = lo]: false
-  reading: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  held: rate = 12.00 PLN (r2), read for 2026-04-30
-  law date 2026-04-30, cut 2026-03-01
-w17 [ax = hi]: true
-  reading: ax = hi
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  held: rate = 12.00 PLN (r2), read for 2026-04-30
-  law date 2026-04-30, cut 2026-03-01
-w18 [wd = 2026-03-28 .. 2026-03-31] [ax = lo]: 10.00 PLN
-  reading: ax = lo
-  cut 2026-03-01
-w18 [wd = 2026-04-01 .. 2026-04-03] [ax = lo]: 12.00 PLN
-  reading: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w18 [wd = 2026-03-28 .. 2026-03-31] [ax = hi]: 20.00 PLN
-  reading: ax = hi
-  cut 2026-03-01
-w18 [wd = 2026-04-01 .. 2026-04-03] [ax = hi]: 24.00 PLN
-  reading: ax = hi
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
-w20 [wd = 2026-03-28 .. 2026-03-31]: 10.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w20 [wd = 2026-04-01 .. 2026-04-03]: 0.00 PLN
-  pinned: ax = lo
   cut 2026-03-01
 w21: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balance" (gift) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
@@ -231730,15 +230726,7 @@ w23: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balan
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
-w24 [wd = 2026-03-28 .. 2026-03-31]: 20.00 PLN
-  pinned: ax = lo
-  cut 2026-03-01
-w24 [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
-  pinned: ax = lo
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
-  cut 2026-03-01
+warning: WARN-UNREAD input cal is read by nothing
 ,23:fixes/gate8/m2_gate_b5p,11:fixes-gate8,13:run b5p.tally,1238:9:b5p.tally,1220:model t
   tally 2
   on 2026-06-10

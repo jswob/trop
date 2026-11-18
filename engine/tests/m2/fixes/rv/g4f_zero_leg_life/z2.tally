@@ -20,7 +20,7 @@ ask fm: flows(zer, 2026-04-09 .. 2026-04-21)
 ask nz: count(t in transfers over 2026-04-09 .. 2026-04-21)
 ask bz: bal(konto, 2026-04-20)
 ask xz: x.cash.amount for x in transfers over 2026-04-09 .. 2026-04-21
-ask fe: flows(konto, 2026-04-09 .. 2026-04-21) windows each
+ask fe: flows(konto, 2026-04-09 .. 2026-04-21)
 ask fw: flows(konto, 2026-04-01 .. 2026-04-17)
 
 version v

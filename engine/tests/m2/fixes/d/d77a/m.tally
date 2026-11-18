@@ -43,8 +43,30 @@ version v
   opening[pot] = 50.00 PLN at 2026-01-01 start "s"
 
 ask e1: bal(jar, 2026-03-31)
-ask e2: bal(jar, 2026-03-31) windows each
+ask e2_s1: bal(jar, 2026-03-31) with wd = 2026-03-05
+
+ask e2_s2: bal(jar, 2026-03-31) with wd = 2026-03-08
 ask e3: bal(tmp, 2026-03-07)
-ask e4: bal(tmp, 2026-03-07) windows each
+ask e4_s1: bal(tmp, 2026-03-07) with wd = 2026-03-05
+
+ask e4_s2: bal(tmp, 2026-03-07) with wd = 2026-03-08
 ask t1: bal(pot, 2026-04-30)
-ask t2: bal(pot, 2026-04-30) windows each
+ask t2_s1: bal(pot, 2026-04-30) with wa = 2026-04-05
+
+ask t2_s2: bal(pot, 2026-04-30) with wa = 2026-04-06
+
+ask t2_s3: bal(pot, 2026-04-30) with wa = 2026-04-07, wb = 2026-04-07
+
+ask t2_s4: bal(pot, 2026-04-30) with wa = 2026-04-07, wb = 2026-04-08
+
+ask t2_s5: bal(pot, 2026-04-30) with wa = 2026-04-08, wb = 2026-04-07
+
+ask t2_s6: bal(pot, 2026-04-30) with wa = 2026-04-08, wb = 2026-04-09
+
+ask t2_s7: bal(pot, 2026-04-30) with wa = 2026-04-09, wb = 2026-04-07
+
+ask t2_s8: bal(pot, 2026-04-30) with wa = 2026-04-09, wb = 2026-04-10
+
+ask t2_s9: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-07
+
+ask t2_s10: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-11

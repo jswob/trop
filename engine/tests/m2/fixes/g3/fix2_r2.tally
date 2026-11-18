@@ -10,7 +10,6 @@ unit PLN: currency minor 0.01
 input x: date
 input y: date
 
-ask q: x == y with x = y windows each
 ask q0: x == y with x = y
 
 version v

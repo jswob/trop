@@ -32,8 +32,16 @@ version v
   opening[jar] = 50.00 PLN at 2026-01-01 start "s"
 
 ask p1: bal(jar, 2026-03-31)
-ask p2: bal(jar, 2026-03-31) windows each
+ask p2_s1: bal(jar, 2026-03-31) with wd = 2026-03-05
+
+ask p2_s2: bal(jar, 2026-03-31) with wd = 2026-03-06
+
+ask p2_s3: bal(jar, 2026-03-31) with wd = 2026-03-07
 ask p3: bal(jar, 2026-03-06)
-ask p4: bal(jar, 2026-03-06) windows each
+ask p4_s1: bal(jar, 2026-03-06) with wd = 2026-03-05
+
+ask p4_s2: bal(jar, 2026-03-06) with wd = 2026-03-06
+
+ask p4_s3: bal(jar, 2026-03-06) with wd = 2026-03-07
 ask p5: bal(jar, 2026-03-31) with wd = 2026-03-05
 ask p6: bal(jar, 2026-03-31) with wd = 2026-03-08

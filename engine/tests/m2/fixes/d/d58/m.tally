@@ -25,5 +25,7 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
 
 ask fd: flows(konto, 2026-12-01 .. 2026-12-31)
-ask fd_each: flows(konto, 2026-12-01 .. 2026-12-31) windows each
+ask fd_each_s1: flows(konto, 2026-12-01 .. 2026-12-31) with wd = 2026-12-20
+
+ask fd_each_s2: flows(konto, 2026-12-01 .. 2026-12-31) with wd = 2027-01-01
 ask fin: flows(konto, 2026-12-01 .. 2027-01-31)

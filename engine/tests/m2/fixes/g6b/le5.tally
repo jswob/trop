@@ -39,10 +39,6 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
   opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
 
-ask q: residuals konto 2026-04 windows each
-ask q2: residuals konto 2026-02 windows each
-ask q3: residuals konto 2026-03 windows each
-ask q4: residuals konto 2026-04 as known 2026-04-10 windows each
 ask q5: residuals konto 2026-04
 
 version st

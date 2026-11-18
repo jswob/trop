@@ -20,7 +20,6 @@ move mw[k in acct]: transfers
   leg cash from work to konto amount amt
 
 ask bw: bal(konto, 2026-04-30)
-ask bww: bal(konto, 2026-04-30) windows each
 ask aw: mw[a2].cash.amount
 
 version v

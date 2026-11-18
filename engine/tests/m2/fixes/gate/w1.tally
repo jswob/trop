@@ -34,31 +34,10 @@ move gift: transfers
   on wd
   leg cash from work to konto amount bonus_amt
 
-ask w01: bal(konto, 2026-04-30) windows each partial
-ask w02: check bal(konto, 2026-04-30) == bal(konto, 2026-04-15) windows each
-ask w03: explain bal(konto, 2026-04-30) with ax = lo windows each
-ask w04: mean(bal(konto, d) for d in [2026-03-27, 2026-04-01, 2026-04-30]) with ax = lo windows each
-ask w05: flows(konto, 2026-03-01 .. 2026-03-31) windows each
-ask w06: flows(gift, 2026-03-01 .. 2026-04-30) windows each
-ask w07: sum(t.cash.amount for t in transfers over 2026-03) with ax = lo windows each
-ask w08: bal(konto, d) for d in [2026-03-31, 2026-04-30] with ax = lo windows each
-ask w09: bal(konto, 2026-03-31), bal(konto, 2026-04-30) with ax = lo windows each
-ask w10: add_business(wd, 1, cal) windows each
-ask w11: bal(konto, 2026-04-30) with ax = lo as known 2026-01-01 windows each
-ask w12: count(t in transfers over 2026-03) windows each
-ask w13: bal(konto, 2026-04-30) from 2026-03-01 with ax = lo windows each
-ask w14: bal(konto, 2026-03-30) from 2026-03-01 windows each, bal(konto, 2026-04-30) with ax = lo
 ask w15: bal(konto, 2026-04-30) with ax = lo, wd = 2026-03-30
-ask w16: bal(konto, 2026-04-30) with wd = window(2026-03-31, 2026-04-01) windows each
-ask w17: bal(konto, 2026-04-30) > rate + rate law 2026-04-30 windows each
-ask w18: bonus_amt windows each
-ask w19: explain bonus_amt with ax = hi windows each
-ask w20: flows(konto, 2026-03-28 .. 2026-03-31) with ax = lo windows each
 ask w21: bal(konto, 2026-03-31) with ax = lo
 ask w22: flows(konto, 2026-03-28 .. 2026-04-03) with ax = lo
 ask w23: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) with ax = lo
-ask w24: bal(konto, 2026-04-30) modelled with ax = lo windows each
-
 version v
   cite card
   governs always

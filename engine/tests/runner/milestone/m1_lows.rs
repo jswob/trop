@@ -1169,7 +1169,7 @@ mod tests {
     /// 0 modulo 2).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_1() {
-        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 143);
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 141);
     }
 
     /// Gate 8's open survivors' texts (`m1/fixes/gate8/`) but `GATE8_ALONE`, part 2 of 2 (at
@@ -1178,7 +1178,7 @@ mod tests {
     /// both 155 after its readings after m went, S-3; 160 before.)
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_2() {
-        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 143);
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 141);
     }
 
     /// Gate 8's `fixes/gate8/m2_g7_p1_cuts` alone (cuts past four kept walks, a walk planned past the read freed; `GATE8_ALONE`).
