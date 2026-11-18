@@ -1,0 +1,29 @@
+# OPERATIONS §2.3 (M3): `check` does everything load does and evaluates nothing; a reality that loads, every ask's
+# own checks passed, prints `ok` alone on the first line, and with no warning load decides, nothing else: exit 0.
+# The base of L6_4_ask_alone_with_scenarios_all, its ask q_low left out.
+=== options check exit=0
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "a model whose every item is read (invented)"
+
+source card "a card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== expect
+ok

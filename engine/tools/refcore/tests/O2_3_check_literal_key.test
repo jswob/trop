@@ -1,0 +1,25 @@
+# OPERATIONS §2.3 (M3): check does everything load does, its last check included: a literal key at a literal stepped
+# range, which load refuses wherever it is written, a def no ask reads included (L §2.5, §8.4; tally 2.1.7 R5, #106).
+# The text of L8_4_load_sees_literal_key: the base's one refusal line, as run prints it, exit 1.
+=== options check exit=1
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input r[d in 2026-01-01 .. 2026-12-31 step 7 days]: int
+
+def w: int = r[2026-01-09]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[*] = 0 "s"
+
+ask q: r[2026-01-15]
+=== expect
+refused: LOAD-KEY 2026-01-09 is not a value of 2026-01-01 .. 2026-12-31 step 7 day ...

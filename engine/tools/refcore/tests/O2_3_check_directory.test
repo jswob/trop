@@ -1,0 +1,41 @@
+# OPERATIONS §2 "For all three": a path is a file or a directory, every *.tally file under it. `check d` takes the
+# model and its scenario under d (the base and scenario of L6_4_ask_alone_with_scenarios_all, q_low left out): both
+# load, every ask's own checks passed: `ok`, exit 0. Run as the command line runs it.
+=== options disk check paths=d exit=0
+=== d/model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "a model and a scenario over it (invented)"
+
+source card "a card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== d/scen/scen.tally
+scenario raised over household
+  tally 2
+  from 2027-01-01
+
+version raise_2027
+  cite card
+  governs 2027..
+  known 2026-02-01
+  replace amt = 150.00 PLN "a raise from 2027"
+
+ask q_raised: doubled in raised law 2027-06-01
+=== expect
+ok

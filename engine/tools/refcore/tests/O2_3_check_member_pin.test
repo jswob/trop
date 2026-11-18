@@ -1,0 +1,30 @@
+# OPERATIONS §2.3 (M3) with §2 "For all three": a joint model's member is checked against its pin (LOAD-PIN, L §6.1,
+# E §3.1 step 1); m's text doesn't match, so the joint model doesn't load: run's one line, exit 1.
+=== options check exit=1
+=== j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m/m.tally" sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+
+source s "s"
+
+input y: int
+
+ask q: y
+=== m/m.tally
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: int
+
+ask q: x
+=== expect
+refused: LOAD-PIN m/m.tally doesn't match its sha256 in use m

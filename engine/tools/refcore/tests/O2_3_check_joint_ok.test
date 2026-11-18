@@ -1,0 +1,35 @@
+# OPERATIONS §2.3 (M3) on a joint model (L §6.1): the member m is found from j's use line and matches its pin, so
+# everything given loads: `ok`, then the joint model's own warnings load decides (own_spare and s read by nothing); the
+# member's unread spare isn't the joint model's to warn (each member warns alone, L §8.5), as in run. Exit 0.
+=== options check exit=0
+=== j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m/m.tally" sha256 "f76edd5d971df3215297a75df16c65e0210fbf0160b20fe11428c1c65ed4b933"
+
+source s "s"
+
+input y: int
+input own_spare: int
+
+ask q: y
+=== m/m.tally
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input x: int
+input spare: int
+
+ask q: x
+=== expect
+ok
+warning: WARN-UNREAD input own_spare is read by nothing
+warning: WARN-UNREAD source s is read by nothing

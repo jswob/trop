@@ -1,0 +1,23 @@
+# OPERATIONS §2.3 (M3): "each ask refused alone as `<q>: refused: …`, by id", a scenario file's own ask too: qm, in
+# good's file, names missing, whose file isn't given (LOAD-SCENARIO, L §6.4, §8.3, GD-18; §2.1 "An ask refused
+# alone"). good loads, so qm's is the one refusal line; exit 1. (Refcore's run, tally 2.2, prints nothing for qm, even
+# asked by name: a fault of run's, logged for the spec round after M3; check follows the spec's text.)
+=== options check exit=1
+=== m.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+source s "synthetic"
+unit DUK: currency minor 0.01
+ask q: minor(DUK)
+=== g.tally
+scenario good over f
+  tally 2
+  from 2025-01-01
+ask qg: minor(DUK) in good
+ask qm: minor(DUK) in missing
+=== expect
+qm: refused: LOAD-SCENARIO ask qm names missing, neither the model nor a loaded scenario (g.tally:5)
+warning: WARN-UNREAD source s is read by nothing
