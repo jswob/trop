@@ -4050,8 +4050,8 @@ E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
 ,1:0,70:integration/models/CH-06.tally	10605	14d1c9bb11716e6d1cd3cde02d53ac88
 ,72:sha256 180a5b50f27814e3fe930927987bf758d056a8a7907ce6727359cf62f5162ef9
 ,10:I:M:CMP-01,6:models,13:engine/tests/,39:reprint integration/models/CMP-01.tally,64:integration/models/CMP-01.tally	integration/models/CMP-01.tally
-,1:0,71:integration/models/CMP-01.tally	35580	03e487f85af3dbb516a5b80647c011a0
-,72:sha256 5b16e7239e66d06414b0f95f5de381b5ae1baa4537ff0e85c8ff144b552121dc
+,1:0,71:integration/models/CMP-01.tally	35786	0adaa2d42c97302210d46b24841eede6
+,72:sha256 d13e9d2653d45ed6af1bf7a331d04cb6ea45bc60e1cda6528ea3a3bf7532c0a4
 ,10:I:M:CMP-02,6:models,13:engine/tests/,39:reprint integration/models/CMP-02.tally,64:integration/models/CMP-02.tally	integration/models/CMP-02.tally
 ,1:0,71:integration/models/CMP-02.tally	12778	1aad19419463194218645263a18bfe53
 ,72:sha256 b21ef2f81784102074a24fe4f18e83162506e8be74e0e44ce2557bdbbbd6fc8f

@@ -33,8 +33,8 @@ HOLE-PART	L §8.1	M5b	*	3	M5b	I:S1:S1-01~s1
 HOLE-PART	L §8.1	M5b	<place>: <amount> may be <q>'s: <questions>	3	M5b	I:S1:S1-01~s1
 LOAD-PATH	L §8.3	M0	*	2	M0	codes/LOAD-PATH/alone
 LOAD-PATH	L §8.3	M0	<path> doesn't exist	2	M0	codes/LOAD-PATH/alone
-LOAD-PARSE	L §8.3	M0	*	38	M0	codes/LOAD-PATH/control
-LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	38	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	*	42	M0	codes/LOAD-PATH/control
+LOAD-PARSE	L §8.3	M0	cannot parse: <what was expected>	42	M0	codes/LOAD-PATH/control
 LOAD-HEADER	L §8.3	M0	*	31	M0	U:law/LAW-13/rate25
 LOAD-HEADER	L §8.3	M0	missing tally version	1	M0	codes/m0/basic/header-tally
 LOAD-HEADER	L §8.3	M0	missing on date	1	M0	codes/m0/basic/header-on
@@ -368,8 +368,8 @@ RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its t
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
 WARN-NEGATIVE	L §8.5	S	*	190	S	I:X:konto_balance@b_r1
 WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	190	S	I:X:konto_balance@b_r1
-WARN-UNREAD	L §8.5	S	*	571	S	kernel/I:M:RC-06
-WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	571	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	*	572	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	572	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	23	S	kernel/g10/observe
 WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	23	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4

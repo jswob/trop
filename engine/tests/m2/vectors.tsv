@@ -314,3 +314,13 @@ fixes/rv/g4f_f1_member_list	fixes-rv		engine/tests/m2/fixes/rv/g4f_f1_member_lis
 fixes/rv/g4f_g2_count_hole_day	fixes-rv		engine/tests/m2/fixes/rv/g4f_g2_count_hole_day	engine/tests/m2/fixes/rv/g4f_g2_count_hole_day/b2_cut.tally			S1
 fixes/rv/g4f_zero_leg	fixes-rv		engine/tests/m2/fixes/rv/g4f_zero_leg	engine/tests/m2/fixes/rv/g4f_zero_leg/z1.tally			R13
 fixes/rv/g4f_zero_leg_life	fixes-rv		engine/tests/m2/fixes/rv/g4f_zero_leg_life	engine/tests/m2/fixes/rv/g4f_zero_leg_life/z2.tally			R13
+fixes/t22/cut_leg_on_move	fixes-22		engine/tests/m2/fixes/t22/cut_leg_on_move	engine/tests/m2/fixes/t22/cut_leg_on_move/m.tally			S-6
+fixes/t22/cut_leg_on_move_twin	fixes-22		engine/tests/m2/fixes/t22/cut_leg_on_move_twin	engine/tests/m2/fixes/t22/cut_leg_on_move_twin/m.tally			-
+fixes/t22/cut_leg_on_row	fixes-22		engine/tests/m2/fixes/t22/cut_leg_on_row	engine/tests/m2/fixes/t22/cut_leg_on_row/m.tally			S-6
+fixes/t22/cut_leg_on_row_twin	fixes-22		engine/tests/m2/fixes/t22/cut_leg_on_row_twin	engine/tests/m2/fixes/t22/cut_leg_on_row_twin/m.tally			-
+fixes/t22/cut_flows_rule	fixes-22		engine/tests/m2/fixes/t22/cut_flows_rule	engine/tests/m2/fixes/t22/cut_flows_rule/m.tally			S-7
+fixes/t22/cut_flows_rule_twin	fixes-22		engine/tests/m2/fixes/t22/cut_flows_rule_twin	engine/tests/m2/fixes/t22/cut_flows_rule_twin/m.tally			-
+fixes/t22/cut_flows_ask	fixes-22		engine/tests/m2/fixes/t22/cut_flows_ask	engine/tests/m2/fixes/t22/cut_flows_ask/m.tally			S-7
+fixes/t22/fault_fx3	fixes-22		engine/tests/m2/fixes/t22/fault_fx3	engine/tests/m2/fixes/t22/fault_fx3/m.tally			F211
+fixes/t22/fault_paths	fixes-22		engine/tests/m2/fixes/t22/fault_paths	engine/tests/m2/fixes/t22/fault_paths/m.tally			F211
+fixes/t22/order_keyed_def	fixes-22		engine/tests/m2/fixes/t22/order_keyed_def	engine/tests/m2/fixes/t22/order_keyed_def/m.tally			F211

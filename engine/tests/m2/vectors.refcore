@@ -116761,4 +116761,474 @@ nz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a bindin
   unfulfilled: zer
   cut 2026-08-01
 xz (x = zer): ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+,25:fixes/t22/cut_leg_on_move,8:fixes-22,11:run m.tally,884:7:m.tally,869:model leg_on_move
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-6 (#211, plan §4): a leg has no day of its own, so a move's leg that states an on is refused by the grammar (LOAD-PARSE at the leg's line, choice C-1 (a)). Its twin leg_on_move_twin.tally writes the smaller form: a second move keyed by the first, dated from its day."
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input d0: date
+input lag: int
+
+move pay: transfers
+  on d0
+  leg cash from world to konto amount amt on add_days(d0, lag)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d0 = 2026-03-10 "s"
+  lag = 2 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(konto, 2026-03-10), bal(konto, 2026-03-12)
+,,1:1,76:refused: LOAD-PARSE cannot parse: expected end of line, got on (m.tally:18)
+,30:fixes/t22/cut_leg_on_move_twin,8:fixes-22,11:run m.tally,962:7:m.tally,947:model leg_on_move_twin
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-6 (#211, plan §4): leg_on_move.tally's stated twin, in the smaller form: the cash that lands two days after the order is a second move keyed by the first, dated from its day (0.00 PLN on the 10th, 100.00 PLN on the 12th)."
+
+source s "s"
+unit PLN: currency minor 0.01
+kind orders: event certain
+kind proceeds: event certain
+  leg cash: PLN
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input d0: date
+input lag: int
+
+move order: orders
+  on d0
+
+move paid[x in orders over ..]: proceeds
+  on add_days(x.day, lag)
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  d0 = 2026-03-10 "s"
+  lag = 2 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(konto, 2026-03-10), bal(konto, 2026-03-12)
+,,1:0,43:q: (0.00 PLN, 100.00 PLN)
+  cut 2026-01-01
+,24:fixes/t22/cut_leg_on_row,8:fixes-22,11:run m.tally,982:7:m.tally,967:model leg_on_row
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-6 (#211, plan §4): an observed row's leg has no day of its own either, so a row whose leg states an on (a date, not a window) is refused by the grammar (LOAD-PARSE at the row's line, before its closing parenthesis). On a statement the later cash is its own row; the twin cut_leg_on_row_twin is the same row on the cash's own day."
+
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
+  bank_rows[r1] = (on: 2026-02-03, kind: transfers, leg cash from konto to world amount 100.00 PLN on 2026-02-05) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+,,1:1,68:refused: LOAD-PARSE cannot parse: expected ")", got on (m.tally:22)
+,29:fixes/t22/cut_leg_on_row_twin,8:fixes-22,11:run m.tally,828:7:m.tally,813:model leg_on_row_twin
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-6 (#211, plan §4): cut_leg_on_row's stated twin: the row's cash is on its own day, the row's on, with no on of the leg (4 900.00 PLN at the month's end, as the cut form gave on 2.1.8)."
+
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+,,1:0,33:q: 4 900.00 PLN
+  cut 2026-10-20
+,24:fixes/t22/cut_flows_rule,8:fixes-22,11:run m.tally,1029:7:m.tally,1013:model flows_conv_rule
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-7 (#211, plan §5): a converted flows is cut; in a rule, flows(x, s) in PLN reads on as a membership test and the grammar stops at at (LOAD-PARSE, choice C-1 (a)). Its twin flows_conv_rule_twin.tally writes the sum over the movements of a def keyed by the movement that rounds each at its day."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt: money EUR
+input mo: month
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount amt
+
+def total: money PLN at reader
+  rule base = flows(wallet, mo) in PLN at fx half-up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt = 100.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask q: total law 2026-06-01
+,,1:1,76:refused: LOAD-PARSE cannot parse: expected end of line, got at (m.tally:23)
+,29:fixes/t22/cut_flows_rule_twin,8:fixes-22,11:run m.tally,1139:7:m.tally,1123:model flows_conv_rule_twin
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-7 (#211, plan §5): flows_conv_rule.tally's stated twin: a total converted movement by movement is a sum over the movements of a def keyed by the movement that states at t.day and rounds (400.00 PLN)."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt: money EUR
+input mo: month
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount amt
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def total: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet) - sum(in_pln[t] for t in transfers over mo where t.cash.from == wallet)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt = 100.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask q: total law 2026-06-01
+,,1:0,71:q: 400.00 PLN
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+,23:fixes/t22/cut_flows_ask,8:fixes-22,11:run m.tally,945:7:m.tally,930:model flows_conv_ask
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-7 (#211, plan §5): a converted flows on an ask line is cut; the grammar stops at in (LOAD-PARSE, choice C-1 (a); the plan foresaw LOAD-SCENARIO for the ask alone), so the whole file is refused and q_ok, a plain flows, answers nothing beside it."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt: money EUR
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt = 100.00 EUR "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask q: flows(wallet, 2026-03) in PLN at fx half-up law 2026-06-01
+ask q_ok: flows(wallet, 2026-03) law 2026-06-01
+,,1:1,76:refused: LOAD-PARSE cannot parse: expected end of line, got in (m.tally:30)
+,19:fixes/t22/fault_fx3,8:fixes-22,11:run m.tally,2027:7:m.tally,2011:model fx3
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 (#211, plan §3): a def keyed by a movement depends on the movement (E §3.2), so its cell keeps the axes and the pins the movement reads. in_pln[t] reads t.cash.amount, which reads pay, which reads amt[work]: by_helper and in_pln[t] split by work (400.00 PLN under yes, 1 200.00 PLN under no), as by_inline does, never one line under [work = *]; and a pin of amt[yes] reaches the def (hp: 400.00, 2 000.00, 2 000.00 PLN). i is the stated twin, written inline; h3 the movements' amounts."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask i: by_inline law 2026-06-01
+ask h: by_helper law 2026-06-01
+ask h2: in_pln[t] for t in transfers over 2026-03 law 2026-06-01
+ask h3: t.cash.amount for t in transfers over 2026-03 law 2026-06-01
+ask hp: by_helper, by_helper as if {amt[yes] = 500.00 EUR}, by_inline as if {amt[yes] = 500.00 EUR} with work = yes law 2026-06-01
+ask hw: by_helper, by_inline with amt[yes] = 500.00 EUR, work = yes law 2026-06-01
+,,1:0,1188:h [work = yes]: 400.00 PLN
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h [work = no]: 1 200.00 PLN
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h2 (t = in1) [work = yes]: 400.00 PLN
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h2 (t = in1) [work = no]: 1 200.00 PLN
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h3 (t = in1) [work = yes]: 100.00 EUR
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+h3 (t = in1) [work = no]: 300.00 EUR
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+hp: (400.00 PLN, 2 000.00 PLN, 2 000.00 PLN)
+  pinned: amt[yes] = 500.00 EUR
+  pinned: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+hw: (2 000.00 PLN, 2 000.00 PLN)
+  pinned: amt[yes] = 500.00 EUR
+  pinned: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+i [work = yes]: 400.00 PLN
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+i [work = no]: 1 200.00 PLN
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+,21:fixes/t22/fault_paths,8:fixes-22,11:run m.tally,1840:7:m.tally,1824:model fx3p
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 (#211, plan §3): fx3's def keyed by a movement under paths, the movement's amount random (a bonus of 0 or 1 times amt[work], binomial at one half): the paths' shared cell of in_pln[t] reads the same graph as the axes and the pins, so by_helper splits by work and by path as by_inline does. pm: the means over 40 paths, per work; p3: path 3 replayed."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+input p_bonus: num
+
+def bonus: dist = binomial(1, p_bonus) at reader
+
+def pay: money EUR at reader
+  rule base = round(amt[work] * (1 + bonus), minor(EUR), half-up)
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  p_bonus = 0.5 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask pm: mean(by_helper), mean(by_inline) law 2026-06-01 paths 40 seed 11
+ask p3: by_helper, by_inline law 2026-06-01 paths 40 seed 11 path 3
+ask pw: mean(by_helper), mean(by_inline) with work = yes law 2026-06-01 paths 40 seed 11
+,,1:0,1139:p3 [work = yes]: (800.00 PLN, 800.00 PLN)
+  sample: bonus = 1 (u = 0.79803752615219676134063024608433778439575689844787120819091796875 (0.798037526152197))
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+p3 [work = no]: (2 400.00 PLN, 2 400.00 PLN)
+  sample: bonus = 1 (u = 0.79803752615219676134063024608433778439575689844787120819091796875 (0.798037526152197))
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+pm [work = yes]: (620 PLN (standard error 31.8651; 40 paths; horizon 2026-03-05), 620 PLN (standard error 31.8651; 40 paths; horizon 2026-03-05))
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+pm [work = no]: (1 860 PLN (standard error 95.595301; 40 paths; horizon 2026-03-05), 1 860 PLN (standard error 95.595301; 40 paths; horizon 2026-03-05))
+  reading: work = no
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+pw: (620 PLN (standard error 31.8651; 40 paths; horizon 2026-03-05), 620 PLN (standard error 31.8651; 40 paths; horizon 2026-03-05))
+  pinned: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+,25:fixes/t22/order_keyed_def,8:fixes-22,11:run m.tally,1805:7:m.tally,1789:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 (#211, pick P11, G1's review): two decisions on one day read one place, and b reads a def keyed by a movement. With the fault's fix the def's key records its edge to the movements, so load orders a, then b, and both answer (2.1.8: RUN-ORDER decisions a and b read each other); readers-of a gains the def (classes S-7/d, S-7/e)."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+,,1:0,422:f [work = yes]: 100.00 EUR
+  reading: work = yes
+  unfulfilled: a
+  unfulfilled: b
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+f [work = no]: 300.00 EUR
+  reading: work = no
+  unfulfilled: a
+  unfulfilled: b
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+ra: by_helper, by_inline, in_pln, b
+warning: WARN-UNREAD def by_helper is read by nothing
+warning: WARN-UNREAD def by_inline is read by nothing
 ,

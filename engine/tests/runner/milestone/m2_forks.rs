@@ -292,7 +292,7 @@ mod tests {
     ];
 
     /// The groups of `m2/vectors.refcore`, each tested below.
-    const M2_GROUPS: [&str; 34] = [
+    const M2_GROUPS: [&str; 35] = [
         "checks-green",
         "checks-records",
         "checks-forms",
@@ -319,6 +319,7 @@ mod tests {
         "fixes-d",
         "fixes-cut",
         "fixes-rv",
+        "fixes-22",
         "hindcasts-h0",
         "hindcasts-h1",
         "hindcasts-h2",
@@ -1556,6 +1557,14 @@ mod tests {
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_rv() {
         group_holds(M2_VECTORS, "fixes-rv", (0, 1), 25);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-22`, every vector: tally 2.2's refusals of the cut
+    /// forms (refused alike, so not counted as answered) and their twins, and the fault of a
+    /// def keyed by a movement (#211).
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_22() {
+        group_holds(M2_VECTORS, "fixes-22", (0, 1), 5);
     }
 
     /// `m2/vectors.refcore`'s group `hindcasts-h0`, part 1 of 2 (at 0 modulo 2).

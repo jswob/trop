@@ -18,7 +18,7 @@ mod tests {
     use tally_runner::m2::{SPEC, VECTORS};
 
     /// The held groups of `m2/vectors.refcore` this target tests, one `#[test]` each.
-    const GROUPS: [&str; 16] = [
+    const GROUPS: [&str; 17] = [
         "fixes-forms",
         "fixes-explain",
         "fixes-windows",
@@ -35,6 +35,7 @@ mod tests {
         "fixes-d",
         "fixes-cut",
         "fixes-rv",
+        "fixes-22",
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
@@ -212,6 +213,16 @@ mod tests {
     #[test]
     fn m2_fixes_tally_218_reviews() {
         group_holds(VECTORS, "fixes-rv");
+    }
+
+    /// tally 2.2's G1 (#211, `m2/fixes/t22/`): a leg's own `on` (a move's, an observed row's)
+    /// and a converted `flows` (in a rule, on an ask line) are `LOAD-PARSE`, each beside its
+    /// stated twin; a def keyed by a movement keeps the axes, the pins and the paths the
+    /// movement reads (`fault_fx3`; `fault_paths`, held until M7 builds paths; plan §3), and
+    /// its key's edge orders two decisions of one day (`order_keyed_def`, pick P11).
+    #[test]
+    fn m2_fixes_tally_22() {
+        group_holds(VECTORS, "fixes-22");
     }
 
     /// The spec's answers for G1's forms: a quantile's `none` level (P17 B-1), `residuals`
