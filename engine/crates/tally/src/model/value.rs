@@ -177,7 +177,7 @@ impl Value {
         let mut todo: Vec<&Value> = vec![self];
         while let Some(v) = todo.pop() {
             match v {
-                Value::Hole(h) => crate::hole::carry_union(into, h.carried()),
+                Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
                 Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
                 Value::List(items) => todo.extend(items.iter().rev()),
                 Value::Window(_)

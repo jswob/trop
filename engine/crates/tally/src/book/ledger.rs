@@ -46,7 +46,7 @@ impl Fig {
     /// The unknown days the figure carries, a hole's, added to `into` in order. L §4.4, §8.2.
     pub fn hole_days_into(&self, into: &mut Vec<Unknown>) {
         if let Fig::Hole(h) = self {
-            carry_union(into, h.carried());
+            carry_union(into, &h.carried());
         }
     }
 
@@ -794,7 +794,7 @@ fn undated_line(
     // a hole as the hole, a window as a question names it (refcore's `window_text`); a day
     // that is a hole carries its unknown days, a window none (L §4.4, §8.2 `unknown day:`)
     let (day_text, carry) = match &inst.day {
-        Some(Dated::Hole(h)) => (h.text(), h.carried().to_vec()),
+        Some(Dated::Hole(h)) => (h.text(), h.carried()),
         Some(Dated::Window(w)) => (w.question.clone(), Vec::new()),
         Some(Dated::Day(_)) | None => {
             return Err(invariant("an undated instance whose day isn't a hole"));
