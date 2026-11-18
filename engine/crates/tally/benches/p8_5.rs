@@ -1,7 +1,7 @@
 //! P8-5, one look-ahead decision: fence F5's range minimum alone, its wall time on the
 //! reference Mac.
-//! Spec: P §8.1 (P8-5), §2.3 (the tree, about 14 steps); E §4.3 (a served
-//! `low(x, a .. b) from t`); L §5.14.1.
+//! Spec: P §8.1 (P8-5), §2.3 (the tree, about 14 steps); E §4.3 (the range minimum that
+//! answers `min(bal(x, d) from t for d in a .. b step 1 day)`); L §5.14.1.
 //! Twin: none, an instrument (R-91); P8-5's instruction limit is P8-M4's (P §8.1), so it has
 //! no gungraun twin.
 //! Invariants: the library is reached only through `tally::walk::RangeMinimum`, the fence's
@@ -12,9 +12,10 @@
 //!
 //! P8-5's size: a 33-year place, n = 12 054 days from 2025-01-01, one step each, in a unit
 //! whose minor unit is 0.01: 1.25 a day in, and every seventh day 9.00 out instead, so a
-//! window's running sum dips below zero and the read adds the dip. Each timed read is
-//! `low(x, d .. E) from d` for the next day d in turn, as G9's profile read them (`low_all`):
-//! three halvings over the days and two queries of the tree.
+//! window's running sum dips below zero and the read adds the dip. Each timed read is the
+//! range minimum of `min(bal(x, e) from d for e in d .. E step 1 day)` for the next day d in
+//! turn, as G9's profile read them (`low_all`): three halvings over the days and two queries
+//! of the tree.
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
@@ -54,7 +55,8 @@ fn ledger() -> Option<(Vec<Day>, Vec<i64>)> {
     Some((days, (0..DAYS).map(step).collect()))
 }
 
-/// Each read `low(x, d .. E) from d`'s lowest change, by a plain walk of the steps: the day's
+/// Each read's lowest change, the range minimum of
+/// `min(bal(x, e) from d for e in d .. E step 1 day)`, by a plain walk of the steps: the day's
 /// own step, then the least running sum of the days after it through E, if below zero.
 fn known(steps: &[i64]) -> Option<Vec<i64>> {
     let mut through = Vec::with_capacity(steps.len());
