@@ -1,7 +1,7 @@
-# L §6.1 (round 14): "The two sides are of one sort: ... two rows of one type, or two movements; any other pair is
-# refused (LOAD-SAME)"; L §8.3 LOAD-SAME "same <p> = <q>: <what p is> and <what q is>" (a row and a movement, rows of
-# types <T> and <T'>, a def, an index or another item). a.rate is a
-# num, b.share money PLN: LOAD-SAME. (Writer 6's U-22.)
+# tally 2.2 (CHANGES.md 2.2-8), L §6.1: "The two sides are of one sort: ... or two movements; any other pair is refused
+# (LOAD-SAME)"; L §8.3 LOAD-SAME "same <p> = <q>: <what p is> and <what q is>" (a row of an input on either side, ...).
+# A joint model's header line between two rows of an input, a.rate and b.share, is refused. (Was
+# L6_1_same_rows_two_types, writer 6's U-22: rows of types num and money PLN.)
 === options pin=bytes
 === joint.tally
 model family
@@ -67,4 +67,4 @@ version v
   share = 5.00 PLN "umowa"
   gday = 2026-03-01 "umowa"
 === expect
-refused: LOAD-SAME same a.rate = b.share: rows of types num and money PLN ...
+refused: LOAD-SAME same a.rate = b.share: a row of an input and a row of an input (joint.tally:1)

@@ -1662,28 +1662,25 @@ class Loader:
             earlier[b.var] = kv
         return kvs
 
-    # -- same lines of rows and movements (L §6.1, §5.19 SF-25) ---------------------------------------------------
+    # -- same lines of movements (L §6.1, §5.19 SF-25) -------------------------------------------------------------
     def joint_sames(self):
-        """`same p = q` naming two rows or two movements, in a joint model's header or in a version: two rows are
-        read together (HOLE-SAME where they disagree, a joint model's own row settles them), two movements count once
-        (the walk).  Things, places and kinds were joined before parsing (joint.py)."""
+        """`same p = q` naming two movements, in a joint model's header or in a version: they count once (the walk).
+        Things, places and kinds were joined before parsing (joint.py); a row of an input on either side is refused
+        (tally 2.2, S-8)."""
         from .joint import owner_deep, owner_of, shown
         m = self.m
         m.same_moves = []
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
         m.same_obs = []         # whether each line joins two observed rows, which no cut of its own reads (S-5)
-        m.same_rows = {}            # {a row's key: (its input, its keys, its text)} for every row a same line names
-        m.same_row_edges = []       # (one row's key, the other's, the version stating the line or None: the header)
-        m.same_settle = {}
         pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
         for l, r, loc, v in pairs:
             a = self.sref(l, loc)
             b = self.sref(r, loc)
-            # L §6.1 (round 14): "The two sides are of one sort: two kinds declared alike ..., two things of one base
-            # kind ..., two rows of one type, or two movements; any other pair is refused (LOAD-SAME)"; "A same in a
-            # version that names a kind or a thing is refused (LOAD-SAME): only the header joins them"
-            what = {'thing': 'a thing', 'row': 'a row', 'move': 'a movement'}
+            # L §6.1: "The two sides are of one sort: two kinds declared alike ..., two things of one base kind ..., or
+            # two movements; any other pair is refused (LOAD-SAME)"; "A same in a version that names a kind or a thing
+            # is refused (LOAD-SAME): only the header joins them"; a row of an input is no side (tally 2.2, S-8)
+            what = {'thing': 'a thing', 'row': 'a row of an input', 'move': 'a movement'}
             if v is not None and (a[0] == 'thing' or b[0] == 'thing'):
                 raise LoadError('LOAD-SAME', 'same %s = %s in a version names a kind or a thing' % (
                     shown(_txt_node(l)), shown(_txt_node(r))), loc)
@@ -1696,7 +1693,7 @@ class Loader:
                 raise LoadError('LOAD-SAME', 'same %s = %s: an observed row and a planned instance of one model; '
                                              'state fulfils on the row' % (shown(_txt_node(row)), shown(_txt_node(inst))),
                                 loc)
-            if a[0] == 'other' or b[0] == 'other' or a[0] != b[0]:
+            if a[0] in ('other', 'row') or b[0] in ('other', 'row') or a[0] != b[0]:
                 wa = what.get(a[0]) or ('a %s' % a[1])
                 wb = what.get(b[0]) or ('a %s' % b[1])
                 raise LoadError('LOAD-SAME', 'same %s = %s: %s and %s' % (shown(_txt_node(l)), shown(_txt_node(r)),
@@ -1708,49 +1705,23 @@ class Loader:
                 # that isn't a keyed place is no thing (L §6.1: "any other pair is refused (LOAD-SAME)")
                 raise LoadError('LOAD-SAME', 'same %s = %s: a thing written with keys that is not a keyed place' % (
                     shown(_txt_node(l)), shown(_txt_node(r))), loc)
-            if a[0] == 'row':
-                ia, ka, ta = a[1], a[2], a[3]
-                ib, kb, tb = b[1], b[2], b[3]
-                if repr(ia.type) != repr(ib.type):
-                    raise LoadError('LOAD-SAME', 'same %s = %s: rows of types %s and %s' % (
-                        shown(ta), shown(tb), T.show(ia.type), T.show(ib.type)), loc)
-                kka = (ia.id, tuple(_kv(k) for k in ka))
-                kkb = (ib.id, tuple(_kv(k) for k in kb))
-                # L §6.1 l.1805: same is an equivalence, lines that share a side make one class (tally 2.1.8 S6,
-                # #187): each line is an edge, read by its version's cut (evaluate.same_class)
-                m.same_rows.setdefault(kka, (ia, ka, ta))
-                m.same_rows.setdefault(kkb, (ib, kb, tb))
-                m.same_row_edges.append((kka, kkb, v))
-                continue
             m.same_moves.append((a[1], b[1], loc))
             m.same_owners.append(owner_of(v.id) if v is not None else '')
             m.same_versions.append(v)
             m.same_obs.append(a[2] == b[2] == 'row')
-        # a row of the joint model on a member's item states the value of two rows stated same ("the joint model
-        # settles it with a version row of its own"); on any other member's item it would change an imported one
+        # a row of the joint model on a member's input would change an imported one, and is refused (L §6.1 Writes
+        # into members: "of a member's item only at a thing or a movement stated same"; an observed row is a movement)
         if getattr(m, 'joint', None) is not None:
             for inf in list(m.inputs.values()):
                 if owner_of(inf.id) == '' or inf.observed:
                     continue
-                own = []
                 for r in inf.rows:
-                    if r.version is not None and owner_of(r.version.id) == '':
-                        if r.version.scenario is not None:
-                            # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the
-                            # members' rows too, named with their prefixes"
-                            continue
-                        key = (inf.id, tuple(_kv(x[1]) for x in r.pattern if x[0] == 'k'))
-                        if key not in m.same_rows or len(key[1]) != len(inf.binds):
-                            # L §6.1 (round 14) The joint model's own rows: "of a member's item only at a pair stated
-                            # same, which they settle; a row ... of any other member's item would change an imported
-                            # one, and is refused (LOAD-SAME)"
-                            raise LoadError('LOAD-SAME', 'the joint model states %s%s, an item of member %s that no '
-                                                         'same line joins' % (shown(inf.id), r.keys_text(),
-                                                                              owner_of(inf.id)), r.loc)
-                        m.same_settle.setdefault(key, []).append(r)
-                        own.append(r)
-                if own:
-                    inf.rows = [r for r in inf.rows if r not in own]
+                    if r.version is not None and owner_of(r.version.id) == '' and r.version.scenario is None:
+                        # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the members'
+                        # rows too, named with their prefixes"
+                        raise LoadError('LOAD-SAME', 'the joint model states %s%s, an item of member %s that no '
+                                                     'same line joins' % (shown(inf.id), r.keys_text(),
+                                                                          owner_of(inf.id)), r.loc)
 
     def joint_place_sames(self):
         """`same p = q` in a joint model's header where a side is a keyed place at its keys (L §6.1: "each side names

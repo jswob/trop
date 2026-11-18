@@ -3257,17 +3257,6 @@ class Checker:
                 read.add(t)
         # tally 2.1: a def an arrival rule or a takes clause reads is read (parts.chk_check_parts)
         read |= getattr(self, 'parts_reads', set())
-        # rows stated same are read together, by every read of either (L §6.1 l.1806; tally 2.1.8 §4, #187): a read of
-        # one side reads the other's input
-        edges = getattr(m, 'same_row_edges', [])
-        grew = True
-        while grew:
-            grew = False
-            for a, b, _v in edges:
-                for x, y in ((a, b), (b, a)):
-                    if ('input', x[0]) in read and ('input', y[0]) not in read:
-                        read.add(('input', y[0]))
-                        grew = True
         for qid, inf in m.inputs.items():
             if inf.builtin:
                 continue

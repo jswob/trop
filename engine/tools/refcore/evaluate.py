@@ -1174,9 +1174,6 @@ class Engine:
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
             return self.read_reading(info, keys, ctx, probe)
-        cls = self.same_class(info, keys, ctx)
-        if cls is not None:
-            return self.read_same_row(info, keys, ctx, cls, period)
         self.need_law(d, info)
         try:
             cands = self.candidates(info.rows, keys, d, ctx, info)
@@ -1195,106 +1192,6 @@ class Engine:
             v = self.prices(info, keys, ctx, v, d)
         v = self.apply_field_pins(info, keys, ctx, v)
         return v
-
-    def same_class(self, info, keys, ctx):
-        """The rows stated same with x[k], x[k] among them, as [(input, keys, text)] in the order of their texts
-        compared by code point (L §2.5), or None where no same line seen at ctx names x[k].  same is an equivalence:
-        lines that share a side make one class (L §6.1 l.1805; tally 2.1.8 S6, #187).  A line is seen as its version's
-        rows are: the header's always, a version's when known by the cut and in the worlds its file is in (L §4.5,
-        tally 2.1.8 R12); only the lines that reach x[k] are asked."""
-        sr = getattr(self.m, 'same_rows', None)
-        if not sr:
-            return None
-        skey = (info.id, tuple(_kv(k) for k in keys))
-        if skey not in sr:
-            return None
-        from .joint import shown
-        from .model import same_seen
-        edges = self.m.same_row_edges
-        seen = {skey}
-        todo = [skey]
-        while todo:
-            x = todo.pop()
-            for a, b, v in edges:
-                if x not in (a, b):
-                    continue
-                y = b if x == a else a
-                if y in seen or not same_seen(v, ctx):
-                    continue
-                seen.add(y)
-                todo.append(y)
-        if len(seen) == 1:
-            return None
-        out = []
-        for k in seen:
-            inf, ks, t = sr[k]
-            out.append((inf, keys if k == skey else ks, t, k))
-        from .moves import id_order
-        out.sort(key=lambda x: id_order(self.m, x[2]))
-        return out
-
-    def same_hole(self, day, sides):
-        """L §8.1 HOLE-SAME over a class of rows stated same: `<p> and <q> are one, but the value differs on <d>: <a>
-        (<row>) and <b> (<row>)`, the rows in the order of their ids (L §2.5), each row and value of a larger class
-        named so (tally 2.1.8 S6, #177, #187).  sides: [(the row's text, the value, the row stating it)] in that
-        order; the head names the class's rows."""
-        from .joint import shown
-        names = [shown(t) for t, v, r in sides]
-        vals = ['%s (%s)' % (fmt(v), shown(r.sid or '')) for t, v, r in sides]
-
-        def join(xs):
-            return xs[0] if len(xs) == 1 else '%s and %s' % (', '.join(xs[:-1]), xs[-1])
-        q = '%s are one, but the value differs on %s: %s' % (join(names), day if day is not None else 'every day',
-                                                            join(vals))
-        return Hole([(q, ', '.join(names))])
-
-    def read_same_row(self, info, keys, ctx, cls, period):
-        """Rows stated same (L §6.1 What same does): read together, the whole class, a price included (tally 2.1.8
-        §4, #187).  A row of the joint model's own states their value; else every side is read; a fact only one
-        states is the fact; where they disagree, a hole naming the class's rows (HOLE-SAME, same_hole)."""
-        m = self.m
-
-        def side(inf, ks, rows):
-            d, per = self.time_point(inf, ks, ctx)
-            self.need_law(d, inf)
-            cands = self.candidates(rows, ks, d, ctx, inf)
-            return self.choose(cands, inf, 'input'), d, per
-        reads = []
-        try:
-            own = [(r, inf, ks) for inf, ks, t, k in cls for r in m.same_settle.get(k, [])]
-            if own:
-                d, per = self.time_point(info, keys, ctx)
-                cands = []
-                for r, inf, ks in own:
-                    cands += self.candidates([r], ks, d, ctx, inf)
-                r = self.choose(cands, info, 'input') if cands else None
-                if r is not None:
-                    v = self.row_value(r, info, keys, ctx, d, per)
-                    return self.prices(info, keys, ctx, v, d) if info.prices is not None else v
-            for inf, ks, t, k in cls:
-                r, d, per = side(inf, ks, inf.rows)
-                reads.append((inf, ks, t, r, d, per))
-        except HoleSignal as h:
-            return h.hole
-        mine = next(x for x in reads if x[0] is info and x[1] is keys)
-        got = []
-        for inf, ks, t, r, d, per in reads:
-            if r is None:
-                continue
-            v = self.row_value(r, inf, ks, ctx, d, per)
-            if inf.prices is not None:
-                v = self.prices(inf, ks, ctx, v, d)
-            got.append((t, v, r))
-        if not got:
-            return self.no_candidate(info, keys, ctx, mine[4], mine[5])
-        holes = [v for t, v, r in got if isinstance(v, Hole)]
-        if holes:
-            return merge(*holes)
-        from .values import vkey
-        if len(set(vkey(v) for t, v, r in got)) == 1:
-            return got[0][1]
-        day = mine[4] if mine[4] is not None else next((x[4] for x in reads if x[4] is not None), None)
-        return self.same_hole(day, got)
 
     def prices(self, info, keys, ctx, v, d):
         """A figure in Y prices (L §3.4)."""
@@ -1345,54 +1242,23 @@ class Engine:
         return Num(r.q, v.u, enc=r.enc)
 
     def read_reading(self, info, keys, ctx, probe=False):
-        """A plain read of a reading takes the reading at that instant (L §4.6 Readings); of a reading stated same,
-        the class's readings at that instant read together (L §6.1 l.1806, tally 2.1.8 §4: every read of either;
-        HOLE-SAME where they disagree)."""
+        """A plain read of a reading takes the reading at that instant (L §4.6 Readings); a reading replaced by `none`
+        is removed (carry_latest; #169-c)."""
         d = ctx.law
         self.need_law(d, info)
         try:
-            got = []
-            for inf, ks, t, rows in self.class_sides(info, keys, ctx):
-                r = self.choose(self.candidates(rows, ks, d, ctx, inf, instant=d), inf, 'reading')
-                if t is None and rows is not inf.rows:
-                    if r is not None:     # the joint model's own row settles the class
-                        return self.row_value(r, inf, ks, ctx, None, None)
-                    continue
-                if r is not None:
-                    v = self.row_value(r, inf, ks, ctx, None, None)
-                    if v is not NONE:     # a reading replaced by none is removed (carry_latest; #169-c)
-                        got.append((t, v, r))
+            r = self.choose(self.candidates(info.rows, keys, d, ctx, info, instant=d), info, 'reading')
+            v = self.row_value(r, info, keys, ctx, None, None) if r is not None else NONE
         except HoleSignal as h:
             return h.hole
-        org = self.origin(info, keys)
-        if not got:
+        if v is NONE:
             if probe:
                 return ('missing',)
+            org = self.origin(info, keys)
             return Hole([('%s has no reading at %s' % (org, d), org)])
-        v = self.same_value(d, got)
         if probe and isinstance(v, Hole):
             return ('missing',)
         return v
-
-    def same_value(self, day, got):
-        """The value of a class's sides that state a fact, [(the row's text, the value, the row)] in id order: one
-        side's, or theirs where they agree; their holes where any is one; else HOLE-SAME (same_hole)."""
-        from .values import vkey
-        if len(got) == 1 or len(set(vkey(v) for t, v, r in got)) == 1:
-            return got[0][1]
-        holes = [v for t, v, r in got if isinstance(v, Hole)]
-        return merge(*holes) if holes else self.same_hole(day, got)
-
-    def class_sides(self, info, keys, ctx):
-        """[(input, keys, text, the rows read)] of x[k]'s same class (same_class), or x[k]'s own: the joint model's
-        own rows that settle the class stand for every side, ahead of the sides' rows (L §6.1 What same does)."""
-        cls = self.same_class(info, keys, ctx)
-        if cls is None:
-            return [(info, keys, None, info.rows)]
-        own = [r for inf, ks, t, k in cls for r in self.m.same_settle.get(k, [])]
-        if own:
-            return [(info, keys, None, own)] + [(inf, ks, t, inf.rows) for inf, ks, t, k in cls]
-        return [(inf, ks, t, inf.rows) for inf, ks, t, k in cls]
 
     def e_lastx(self, n, env, ctx):
         """last(x[k], d): the written carry (L §4.6)."""
@@ -1423,25 +1289,13 @@ class Engine:
         if pv is not NOPIN and not isinstance(pv, tuple):
             return pv
         try:
-            sides = self.carry_sides(info, keys, d, ctx)
+            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
         except HoleSignal as h:
             return h.hole
-        if not any(cands for inf, ks, t, cands in sides):
-            return NONE
-
-        # rows stated same carry together (L §6.1 l.1806, tally 2.1.8 §4, #187): the latest row of the class; where
-        # two sides' latest rows began that day and disagree, HOLE-SAME
-        hit = self.carry_latest(sides, ctx)
+        hit = self.carry_latest(info, keys, cands, ctx)
         if hit is None:
             return NONE
-        latest, got, side = hit
-        # rows that govern always began on no day: they disagree on the day the read reads them for (L §8.1
-        # HOLE-SAME's `differs on <d>`, as a plain read at d prints; tally 2.1.8 P42, group 4's review N3)
-        v = self.same_value(d if latest == datetime.date.min else latest, got)
-        if len(got) > 1 and isinstance(v, Hole):
-            return v
-        info, keys = side      # the held line names the row that states the value
-        row = got[0][2]
+        latest, v, row = hit
         sp = row.span(ctx.cut)
         # held where it is read past its row's span (L §4.6, §8.2; tally 2.1.7 R7, P31): a reading past its instant's
         # day, a state row past its span's end; a row that governs always is timeless
@@ -1458,41 +1312,18 @@ class Engine:
         sp = c.span(ctx.cut)
         return datetime.date.min if sp.always or sp.start is None else sp.start
 
-    def carry_latest(self, sides, ctx):
-        """The latest day some side's rows began on, with each side's row there and its value, [(text, value, row)],
-        and the first such side (input, keys); None when none began.  A reading replaced by `none` is removed, so
-        the instant before it is the last (L §4.6 Readings, L §5.19 l.1728; tally 2.1.8 §4, #169-c, P24): last,
-        since and a plain read skip it."""
-        days = sorted(set(self.carry_began(c, inf, ctx) for inf, ks, t, cands in sides for c in cands), reverse=True)
+    def carry_latest(self, info, keys, cands, ctx):
+        """The latest day a row of cands began on, with that row's value and the row; None when none began.  A
+        reading replaced by `none` is removed, so the instant before it is the last (L §4.6 Readings, L §5.19 l.1728;
+        tally 2.1.8 §4, #169-c, P24): last, since and a plain read skip it."""
+        days = sorted(set(self.carry_began(c, info, ctx) for c in cands), reverse=True)
         for day in days:
-            got = []
-            side = None
-            for inf, ks, t, cands in sides:
-                cs = [c for c in cands if self.carry_began(c, inf, ctx) == day]
-                if not cs:
-                    continue
-                row = self.choose(cs, inf, 'last')
-                v = self.row_value(row, inf, ks, ctx, None, None)
-                if inf.reading and v is NONE:
-                    continue
-                got.append((t, v, row))
-                side = side or (inf, ks)
-            if got:
-                return day, got, side
+            row = self.choose([c for c in cands if self.carry_began(c, info, ctx) == day], info, 'last')
+            v = self.row_value(row, info, keys, ctx, None, None)
+            if info.reading and v is NONE:
+                continue
+            return day, v, row
         return None
-
-    def carry_sides(self, info, keys, d, ctx):
-        """[(input, keys, text, the rows that began on or before d)] that last and since read: x[k]'s, or each row's
-        of its same class (L §6.1 l.1806: facts about rows stated same are read from both sides together, by every
-        read of either, a last and a since included; tally 2.1.8 §4, #187).  The joint model's own rows that settle
-        the class stand for every side."""
-        out = []
-        for inf, ks, t, rows in self.class_sides(info, keys, ctx):
-            cands = self.candidates(rows, ks, d, ctx, inf, last_before=d)
-            if t is None and out == [] and cands and rows is not inf.rows:
-                return [(inf, ks, t, cands)]      # the joint model's own row settles the class
-            out.append((inf, ks, t, cands))
-        return out
 
     def e_call_since(self, n, env, ctx):
         r = n.args[0]
@@ -1505,16 +1336,12 @@ class Engine:
             return dv
         d = self.date_of(dv, 'the day of since')
         try:
-            # the class of rows stated same reads together (L §6.1 l.1806; tally 2.1.8 §4): its latest reading
-            sides = self.carry_sides(info, keys, d, ctx)
+            cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
         except HoleSignal as h:
             return h.hole
-        if not any(cands for inf, ks, t, cands in sides):
-            # L §4.6 Readings / L §8.1 HOLE-NOREADING: "<x>[k] has no reading on or before <d>"
-            org = self.origin(info, keys)
-            return Hole([('%s has no reading on or before %s' % (org, d), org)])
-        # the latest reading not removed by a replace to none (carry_latest; #169-c)
-        hit = self.carry_latest(sides, ctx)
+        # the latest reading not removed by a replace to none (carry_latest; #169-c); with none, L §4.6 Readings /
+        # L §8.1 HOLE-NOREADING: "<x>[k] has no reading on or before <d>"
+        hit = self.carry_latest(info, keys, cands, ctx)
         if hit is None:
             org = self.origin(info, keys)
             return Hole([('%s has no reading on or before %s' % (org, d), org)])
@@ -4487,20 +4314,7 @@ class Engine:
         r = getattr(n.args[2], '_r', None)
         inf = self.m.inputs.get(r[2]) if r is not None and r[0] == 'read' and r[1] == 'input' else None
         bounds = {d + datetime.timedelta(days=step)}
-        # and the rows of the inputs its rows are stated same as (L §6.1), which a read of it follows (item 18 of the
-        # fourth turn: the engine's 5ae84cca, N3); a day the walk visits more only reads the calendar there
-        ids = {inf.id} if inf is not None else set()
-        edges = getattr(self.m, 'same_row_edges', ())
-        grew = True
-        while grew:
-            grew = False
-            for ka, kb, _v in edges:
-                for x, y in ((ka, kb), (kb, ka)):
-                    if x[0] in ids and y[0] not in ids and y[0] in self.m.inputs:
-                        ids.add(y[0])
-                        grew = True
-        rows = [row for i in sorted(ids) for row in self.m.inputs[i].rows]
-        for row in rows:
+        for row in (inf.rows if inf is not None else ()):
             sp = row.version.span_at(ctx.cut) if hasattr(row.version, 'span_at') else None
             for x in ((sp.start, sp.end) if sp is not None else ()):
                 if x is not None:

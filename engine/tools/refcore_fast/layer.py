@@ -75,7 +75,7 @@ def state(eng):
     if st is None:
         m = eng.m
         st = eng._fast = {'rows': {}, 'reads': {}, 'ok': {}, 'cands': 0,
-                          'model_ok': not getattr(m, 'same_rows', None) and getattr(m, 'joint', None) is None}
+                          'model_ok': getattr(m, 'joint', None) is None}
     return st
 
 

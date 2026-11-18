@@ -10,9 +10,9 @@ so a binding over a prelude kind ranges over every member's things and movements
 - before parsing, identities of things, places and kinds (a thing stated `same` as another is one thing, bound
   once; a member's outside place stated `same` as another member's place contributes only its legs to it, so its
   name is that place's; two places of which neither is outside must be of one kind, LOAD-SAME);
-- at load and in the walk, identities of rows and movements (loader.joint_sames, walk consolidation): two rows read
-  together (HOLE-SAME where they disagree), two movements counted once, an internal leg with no written link a hole
-  naming it (HOLE-SAME).
+- at load and in the walk, identities of movements (loader.joint_sames, walk consolidation): two movements counted
+  once, an internal leg with no written link a hole naming it (HOLE-SAME); a row of an input is no side (LOAD-SAME,
+  tally 2.2).
 
 A member is also loaded alone, so its asks are asked as `a.q` by the member alone (L §6.1: "joining changes no
 member's answer").
@@ -531,7 +531,7 @@ def joint_texts(texts, uses, options, pool=None, jfile=None, own=None):
     info.members = sorted(mlines)
     jmap, drop_secs, drop_keys = plan_joins(joins, decls, jdecls, info)
     info.own_alias = dict((x, r) for x, r in jmap.items() if owner_of(x) == '')
-    # a member that is a joint model: its place groups and its same lines of rows and movements, under its prefix
+    # a member that is a joint model: its place groups and its same lines of movements, under its prefix
     hoisted = []
     for a in sorted(sub):
         for rep, mems in sub[a].groups.items():
@@ -794,7 +794,7 @@ def same_joins(jf_lines, decls, jdecls):
         if ca in ('kind', 'place', 'thing') or cb in ('kind', 'place', 'thing'):
             if ca != cb:
                 # L §6.1 (round 14): "The two sides are of one sort: two kinds declared alike ..., two things of one
-                # base kind ..., two rows of one type, or two movements; any other pair is refused (LOAD-SAME)"
+                # base kind ... or two movements; any other pair is refused (LOAD-SAME)"
                 if ca in ('place', 'thing') and cb in ('place', 'thing'):
                     ka, kb = thing_kind(a[0].s, ca, da), thing_kind(b[0].s, cb, db)
                     raise LoadError('LOAD-SAME', 'same %s = %s: things of kinds %s and %s' % (
@@ -806,7 +806,7 @@ def same_joins(jf_lines, decls, jdecls):
     return joins, kept
 
 
-SORT_NAMES = {'kind': 'a kind', 'place': 'a place', 'thing': 'a thing', 'input': 'a row', 'obs': 'a movement',
+SORT_NAMES = {'kind': 'a kind', 'place': 'a place', 'thing': 'a thing', 'input': 'a row of an input', 'obs': 'a movement',
               'move': 'a movement', 'def': 'a def', 'index': 'an index'}
 
 
