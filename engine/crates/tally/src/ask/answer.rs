@@ -1012,19 +1012,14 @@ fn formed_per_tuple(ask: &Ask) -> bool {
 /// and the bookings the asks before it made taken from `seen` (refcore's `Asker`, its engine per
 /// ask). L §5.18.
 fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -> Engine {
-    let engine = Engine::new(cut)
+    let mut engine = Engine::new(cut)
         .with_days(days)
-        .with_how((seen.memo, seen.lows, seen.forks));
-    let engine = engine
+        .with_how((seen.memo, seen.lows, seen.forks))
         .for_ask(ask)
-        .in_tuple(env)
-        .with_booked(core::mem::take(&mut seen.booked));
+        .in_tuple(env);
+    engine.booked = core::mem::take(&mut seen.booked);
     #[cfg(feature = "fault-injection")]
-    let engine = {
-        let mut engine = engine;
-        engine.plant.clone_from(&seen.plant);
-        engine
-    };
+    engine.plant.clone_from(&seen.plant);
     engine
 }
 

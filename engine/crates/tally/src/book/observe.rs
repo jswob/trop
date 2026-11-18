@@ -6,10 +6,12 @@
 //! a record that lacks the instance's leg); E §4.1 step 3 (an instance an observation fulfils,
 //! or one on a covered day before K, is modelled past), §6.1 (each end of an observed leg booked
 //! from the observation of the version that covers its place that day; `WARN-LEGS`); L §6.4
-//! (the observations and coverage the timeline's world sees).
+//! (the observations and coverage the timeline's world sees); L §6.1, §5.19 (whether a cut
+//! sees one observed row as the observations do: a `same` line between two observed rows has
+//! no clock of its own and holds where both are seen; tally 2.2, S-5).
 //! Twin: engine/tools/refcore/moves.py (`ObsMv`, `coverage`, `covering`, `covered_on`,
 //! `observations`, `obs_links`, `link_targets`, `obs_links_for`, `link_tuple`, `link_places`,
-//! `touches_covered`) and walk.py (`obs_end_on`, `prepare`'s `WARN-LEGS`).
+//! `touches_covered`, `obs_row_seen`) and walk.py (`obs_end_on`, `prepare`'s `WARN-LEGS`).
 //! Invariants: observations and coverage are computed once per cut; a link is judged once per
 //! cut, and what judging it read goes with every observation that fulfils it; an observation's
 //! link is never inferred, only read from its row.

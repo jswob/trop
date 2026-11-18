@@ -4,12 +4,14 @@
 //! `observed`), §5.19 (One movement on two statements: a read of the movement away from its
 //! places is the disagreement's hole, `HOLE-SAME`, naming both rows), §8.1 (`HOLE-SAME`'s form
 //! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`), §4.5 (tally
-//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are).
+//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are, but a version's
+//! line between two observed rows, which has no clock of its own: it holds at every cut that
+//! sees both rows, in the worlds its file is in; tally 2.2, S-5).
 //! Twin: engine/tools/refcore/moves.py (`same_lines`, `same_groups`, `once_obs`,
-//! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`); refcore's
-//! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
-//! model's lines since load refuses the pair in one model (tally 2.1.8), and is built here from
-//! it when joint models run (M5c).
+//! `same_obs_differ`, `obs_row_seen`), model.py (`same_seen`) and mreads.py
+//! (`once_by_same`); refcore's walk.py `same_observed` (an instance stated `same` as an
+//! observed row) serves only a joint model's lines since load refuses the pair in one model
+//! (tally 2.1.8), and is built here from it when joint models run (M5c).
 //! Invariants: a group's members are in the order of their ids, an id by its item's name and
 //! then each key by its place in its index, an open index's by code point (tally 2.1.8 S6, pick
 //! P50); a group is counted by its first member a read meets, its other members beside it;

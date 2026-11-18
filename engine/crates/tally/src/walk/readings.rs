@@ -30,7 +30,7 @@ use crate::time::Day;
 
 /// The logs where decision instance `mid`'s window left a hole no reading answers, each with
 /// the units its hole a reading ends goes to: the log's own, or for a place-wide log the
-/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §4.6,
+/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §5.19 Holes,
 /// E §4.2 Holes in the walk.
 fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Vec<String>)> {
     let mut fallen = Vec::new();
@@ -89,8 +89,8 @@ impl Engine {
 
     /// The end of the last day of decision `mid`'s window, at point `at`: m has fallen, so the
     /// hole `h` it left its places becomes each unit's, which a reading ends, and stays up to
-    /// the place's next reading (refcore's `dec_win_end`; pick P29 on #175). L §4.6
-    /// Readings, §4.4, E §4.2 Holes in the walk.
+    /// the place's next reading (refcore's `dec_win_end`; pick P29 on #175). L §5.19
+    /// Holes, §4.4, E §4.2 Holes in the walk.
     pub(super) fn window_end(
         &mut self,
         m: &Reality,

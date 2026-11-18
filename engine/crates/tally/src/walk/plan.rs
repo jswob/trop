@@ -181,7 +181,10 @@ pub struct LegVal {
     pub amount: Amount,
     /// Its unit: a currency or a unit; none where a hole amount's unit can't be seen.
     pub unit: Option<String>,
-    /// Its day.
+    /// Its day: its instance's, a leg having no day of its own (tally 2.2, S-6), or the end of
+    /// time for a refused instance with no day (`refused_places`, L §7.6 item 1). Kept on the
+    /// leg because its readers (the day's acts, the ledger, `flows`, `same`, the members, fence
+    /// F5) take the leg without its instance.
     pub day: Dated,
     /// Where a hole amount was read: a `partial` ask line reads it again for the holes it is
     /// linear in (L §5.18 Partial answers; refcore's `Leg.src`).

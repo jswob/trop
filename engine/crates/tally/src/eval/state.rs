@@ -717,13 +717,6 @@ impl Engine {
         shared
     }
 
-    /// The engine holding the booked plan amounts a run's earlier asks met, so a later ask's
-    /// cut is checked against them (E §9 item 5).
-    #[must_use]
-    pub fn with_booked(self, booked: crate::walk::Bookings) -> Engine {
-        Engine { booked, ..self }
-    }
-
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     #[must_use]
