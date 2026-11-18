@@ -38,7 +38,8 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, one `#[test]` each.
-    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
+    /// `spec-records` (the `nb3_*` texts of a reading after m) went at tally 2.2, S-3.
+    const SPEC_GROUPS: [&str; 2] = ["spec-forms", "spec-sweep"];
 
     /// Runs every vector of `group` in `store` on the engine, less the held ones, and holds it
     /// to the stored run.
@@ -96,8 +97,9 @@ mod tests {
 
     /// G2's reviews: the walk-bound explain of a decision less its own earlier observation
     /// (P21 B-3), an observation in a sum of leg amounts (P24 F-2), readings removed by
-    /// `replace … = none` (P21 NB-3, P24 SQ-1), `last` of a reading `after m` (P11, G4's), all
-    /// held for #169; a unitless reading row at a place of unit `any` (P22), held for #173.
+    /// `replace … = none` (P21 NB-3, P24 SQ-1), all held for #169; a unitless reading row at a
+    /// place of unit `any` (P22), held for #173. (`last` of a reading `after m`, P11, went at
+    /// tally 2.2 with its form, S-3.)
     #[test]
     fn m2_fixes_explain() {
         group_holds(VECTORS, "fixes-explain");
@@ -122,9 +124,9 @@ mod tests {
         group_holds(VECTORS, "fixes-sweep");
     }
 
-    /// G4's review probes where refcore drops a reading after a modelled-past m (P43 B1, B2,
-    /// B4; `a_*`, `c_since`), held for #169: their asks both engines answer alike gate as
-    /// m1's `fixes/gate8/m2_g4_*`.
+    /// G4's review probes left at tally 2.2, which cut a reading after m (S-3): `bf_b1_more`
+    /// (its reading now at its day's end) and the `nb3_at*` pair. The probes of a reading after
+    /// a modelled-past m (P43 B1, B2, B4; `a_*`, `c_since`) went with the form.
     #[test]
     fn m2_fixes_records() {
         group_holds(VECTORS, "fixes-records");
@@ -177,8 +179,9 @@ mod tests {
         group_holds(VECTORS, "fixes-r15");
     }
 
-    /// tally 2.1.8's R16 (#200): `modelled`, a reading `after m`, the keyed `quantile` and a
-    /// projection's legs as their definitions say (`m2/fixes/r16/`).
+    /// tally 2.1.8's R16 (#200): `modelled`, the keyed `quantile` and a projection's legs as
+    /// their definitions say (`m2/fixes/r16/`); its readings `after m` went at tally 2.2 (S-3),
+    /// `readsa` and `readsb` restated at their day's end.
     #[test]
     fn m2_fixes_tally_218_r16() {
         group_holds(VECTORS, "fixes-r16");
@@ -209,13 +212,6 @@ mod tests {
     #[test]
     fn m2_fixes_tally_218_reviews() {
         group_holds(VECTORS, "fixes-rv");
-    }
-
-    /// The spec's answers for G4's held probes (P43) and the `nb3_*` texts refcore can't run:
-    /// a link's `when` that reads a reading after its own instance is `RUN-CYCLE` (L §5.14.2).
-    #[test]
-    fn m2_fixes_spec_records() {
-        group_holds(SPEC, "spec-records");
     }
 
     /// The spec's answers for G1's forms: a quantile's `none` level (P17 B-1), `residuals`

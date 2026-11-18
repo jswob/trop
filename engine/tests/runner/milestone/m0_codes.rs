@@ -318,7 +318,8 @@ mod tests {
         code_as_refcore("LOAD-NAME");
     }
 
-    /// `LOAD-ORDER`: `basic/order`, `basic/order-plan`, `basic/order-legs`.
+    /// `LOAD-ORDER`: `basic/order-plan`, `basic/order-legs`, `basic/order-each` (`basic/order`,
+    /// a reading `after` a plan, went at tally 2.2 with its form, S-3).
     #[test]
     fn m0_code_load_order() {
         code_as_refcore("LOAD-ORDER");

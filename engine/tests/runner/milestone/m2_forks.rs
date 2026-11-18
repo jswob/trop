@@ -330,7 +330,8 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, each tested below.
-    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
+    /// `spec-records` (the `nb3_*` texts of a reading after m) went at tally 2.2, S-3.
+    const SPEC_GROUPS: [&str; 2] = ["spec-forms", "spec-sweep"];
 
     /// Each group of the four stores has its tests here, so a new group is never left out.
     #[test]
@@ -1396,10 +1397,11 @@ mod tests {
         group_holds(M2_VECTORS, "fixes-sweep", (0, 1), 45);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-explain`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-explain`, every vector (8 since tally 2.2 dropped
+    /// `fixes/g2/after_m`: a reading after m is cut, S-3).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_explain() {
-        group_holds(M2_VECTORS, "fixes-explain", (0, 1), 9);
+        group_holds(M2_VECTORS, "fixes-explain", (0, 1), 8);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-windows`, every vector.
@@ -1480,10 +1482,11 @@ mod tests {
         group_holds(M2_VECTORS, "goldens-ledger", (1, 2), 1);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-records`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-records`, every vector (3 since tally 2.2 dropped
+    /// G4's vectors of a reading after m, S-3).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_records() {
-        group_holds(M2_VECTORS, "fixes-records", (0, 1), 14);
+        group_holds(M2_VECTORS, "fixes-records", (0, 1), 3);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-ledger`, every vector.
@@ -1524,10 +1527,11 @@ mod tests {
     }
 
     /// `m2/vectors.refcore`'s group `fixes-r16`, every vector (18 since tally 2.2 dropped
-    /// `r16/projection_leg_day` and `r16/low_from_leg_day`: a leg has no day of its own, S-6).
+    /// `r16/projection_leg_day` and `r16/low_from_leg_day`: a leg has no day of its own, S-6;
+    /// 4 since it dropped R16's vectors of a reading after m, S-3).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r16() {
-        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 18);
+        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 4);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-s`, every vector.
@@ -1654,12 +1658,6 @@ mod tests {
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_forms() {
         group_holds(M2_SPEC, "spec-forms", (0, 1), 2);
-    }
-
-    /// `m2/spec.vectors`'s group `spec-records`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_records() {
-        group_holds(M2_SPEC, "spec-records", (0, 1), 2);
     }
 
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
