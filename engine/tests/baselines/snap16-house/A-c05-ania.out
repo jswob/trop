@@ -1,5 +1,16 @@
-a05_ania [window(2019-03-01, 2019-03-31) = 2019-03-01 .. 2019-03-06] [px_round = *]: (106.00 DUK, 559.5 DUK, 1 437.00 DUK)
+a05_ania [px_round = *]: (?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)", ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)", ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)")
+  unknown day: window(2019-03-01, 2019-03-31)
   law date 2025-04-30, cut 2025-04-30
-a05_ania [window(2019-03-01, 2019-03-31) = 2019-03-07 .. 2019-03-31] [px_round = *]: (234.00 DUK, 1 230.9 DUK, 1 309.00 DUK)
+a05_ania_d01 [px_round = *]: (106.00 DUK, 559.5 DUK, 1 437.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-01
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_d06 [px_round = *]: (106.00 DUK, 559.5 DUK, 1 437.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-06
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_d07 [px_round = *]: (234.00 DUK, 1 230.9 DUK, 1 309.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-07
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_d31 [px_round = *]: (234.00 DUK, 1 230.9 DUK, 1 309.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-31
   law date 2025-04-30, cut 2025-04-30
 

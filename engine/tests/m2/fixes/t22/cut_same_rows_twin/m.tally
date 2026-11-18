@@ -1,0 +1,24 @@
+model same_rows_def
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-8): cut_same_rows_version's stated twin (MIGRATION's row): a def that reads both inputs, a stated hole where they disagree (12.00 PLN; fee_clash, its twin with 15.00, the hole)."
+
+source s "s"
+unit PLN: currency minor 0.01
+input fee_bank: money PLN
+input fee_broker: money PLN
+
+def fee: money PLN
+  rule agreed = fee_bank
+  rule clash beats agreed = ?"the bank and the broker state different fees" when fee_bank != fee_broker
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_bank = 12.00 PLN "s"
+  fee_broker = 12.00 PLN "s"
+
+ask q: fee

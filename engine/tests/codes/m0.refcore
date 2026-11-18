@@ -3514,7 +3514,7 @@ version card_2026
   rate[q1] = 0.1 "the card"
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 "the card"
-,,1:1,102:refused: LOAD-INSTANT balance reading opening at 2026-01-01 needs start, end or after (base.tally:44)
+,,1:1,95:refused: LOAD-INSTANT balance reading opening at 2026-01-01 needs start or end (base.tally:44)
 ,18:basic/instant-none,12:LOAD-INSTANT,5:basic,32:run base.tally --ask zz_m0_probe,1010:10:base.tally,991:model basic
   tally 2
   on 2026-03-01

@@ -1,0 +1,36 @@
+model kind_any
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1): a model's place kind of unit any that isn't outside; tally 2.2: LOAD-PLACEKIND place kind safes is of unit any and isn't outside. Twin cut_place_kind_any_twin."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind safes: place any signed
+place safe: safes lives 2026-01-01..
+place market: outside lives 1900-01-01..
+input amt_eur: money EUR
+input amt_pln: money PLN
+input fx: num PLN/EUR
+input d1: date
+
+move put_eur: transfers
+  on d1
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on d1
+  leg cash from market to safe amount amt_pln
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt_eur = 200.00 EUR "s"
+  amt_pln = 300.00 PLN "s"
+  fx = 4.25 PLN/EUR "s"
+  d1 = 2026-02-20 "s"
+
+ask q: value(safe, 2026-03-31) in PLN by fx

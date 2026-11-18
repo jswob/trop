@@ -1,7 +1,26 @@
 a05_ania_why (c = cost_basis) [px_round = *]: (cost_basis, 1 118.00 DUK)
   law date 2025-04-30, cut 2025-04-30
-a05_ania_why (c = holding_test) [window(2019-03-01, 2019-03-31) = 2019-03-01 .. 2019-03-06] [px_round = *]: (holding_test, 319.00 DUK)
+a05_ania_why (c = holding_test) [px_round = *]: (holding_test, ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)")
+  unknown day: window(2019-03-01, 2019-03-31)
   law date 2025-04-30, cut 2025-04-30
-a05_ania_why (c = holding_test) [window(2019-03-01, 2019-03-31) = 2019-03-07 .. 2019-03-31] [px_round = *]: (holding_test, 191.00 DUK)
+a05_ania_why_d01 (c = cost_basis) [px_round = *]: (cost_basis, 1 118.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d01 (c = holding_test) [px_round = *]: (holding_test, 319.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-01
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d06 (c = cost_basis) [px_round = *]: (cost_basis, 1 118.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d06 (c = holding_test) [px_round = *]: (holding_test, 319.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-06
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d07 (c = cost_basis) [px_round = *]: (cost_basis, 1 118.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d07 (c = holding_test) [px_round = *]: (holding_test, 191.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-07
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d31 (c = cost_basis) [px_round = *]: (cost_basis, 1 118.00 DUK)
+  law date 2025-04-30, cut 2025-04-30
+a05_ania_why_d31 (c = holding_test) [px_round = *]: (holding_test, 191.00 DUK)
+  pinned: held_from[kbank[k20230912_04]] = 2019-03-31
   law date 2025-04-30, cut 2025-04-30
 

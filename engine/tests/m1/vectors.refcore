@@ -8051,7 +8051,8 @@ version card
   lot_cost[l1] = 1000.00 "father's notes"
   proceeds[l1] = 1600.00 "story: sold for 1 600.00"
   sold[l1] = 2024-03-14 "story: sold on 14 March 2024"
-,,1:0,183:q_l1: (600.00 DUK, ?"date within window(2019-03-01, 2019-03-31) not precise enough for sold[l] > add_years(bought[l], hold_years)" (bought[l1]))
+,,1:0,209:q_l1: (600.00 DUK, ?"date within window(2019-03-01, 2019-03-31) not precise enough for sold[l] > add_years(bought[l], hold_years)" (bought[l1]))
+  unknown day: bought[l1]
   law date 2026-10-25, cut 2026-10-25
 ,14:U:time/TIME-02,9:checks-g2,34:run unit/probes/time/TIME-02.tally,1235:30:unit/probes/time/TIME-02.tally,1195:model time02
   tally 2
@@ -32249,7 +32250,8 @@ ask a8: wd == 2026-06-01
 ask a9: add_business(w, 1, cal)
 ask a10: end_of(w) > w
 ask a11: start_of(w) == w
-,,1:0,322:a1: ?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w)
+,,1:0,339:a1: ?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w)
+  unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
@@ -32301,7 +32303,8 @@ ask a8: wd == 2026-06-01
 ask a9: add_business(w, 1, cal)
 ask a10: end_of(w) > w
 ask a11: start_of(w) == w
-,,1:0,316:a2: ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w)
+,,1:0,333:a2: ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w)
+  unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
@@ -32353,7 +32356,8 @@ ask a8: wd == 2026-06-01
 ask a9: add_business(w, 1, cal)
 ask a10: end_of(w) > w
 ask a11: start_of(w) == w
-,,1:0,317:a3: ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w" (w)
+,,1:0,334:a3: ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w" (w)
+  unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
@@ -32405,7 +32409,8 @@ ask a8: wd == 2026-06-01
 ask a9: add_business(w, 1, cal)
 ask a10: end_of(w) > w
 ask a11: start_of(w) == w
-,,1:0,317:a10: ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w)
+,,1:0,334:a10: ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w)
+  unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
@@ -32453,7 +32458,8 @@ ask e5: add_business(2026-06-19, three, two_w), add_business(2026-06-26, three, 
 ask e6: last_business(2026-06, three, windowed), last_business(2026-06, 1, windowed)
 ask e7: is_business(2026-06-23, oo), add_business(2026-06-21, 1, oo), add_business(2026-06-22, 1, oo)
 ask e8: schedule(2026-06, three, following, windowed)
-,,1:0,191:e1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for later == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for later > w" (w))
+,,1:0,208:e1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for later == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for later > w" (w))
+  unknown day: w
   cut 2026-10-01
 ,14:fixes/g2/p3_e2,8:fixes-g2,21:run p3.tally --ask e2,1423:8:p3.tally,1406:model probes
   tally 2
@@ -32638,7 +32644,8 @@ ask p1: pow(zero, mone)
 ask p2: pow(zero, 0)
 ask p3: pow(zero, two)
 ask p4: pow(two, mone)
-,,1:0,127:s4: (true, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for sk[a] == sk[b]" (wk[a]))
+,,1:0,148:s4: (true, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for sk[a] == sk[b]" (wk[a]))
+  unknown day: wk[a]
   cut 2026-10-01
 ,14:fixes/g2/q1_b1,8:fixes-g2,21:run q1.tally --ask b1,968:8:q1.tally,952:model probes
   tally 2
@@ -32685,7 +32692,8 @@ ask p1: pow(zero, mone)
 ask p2: pow(zero, 0)
 ask p3: pow(zero, two)
 ask p4: pow(two, mone)
-,,1:0,117:b1: ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w)
+,,1:0,134:b1: ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w)
+  unknown day: w
   cut 2026-10-01
 ,14:fixes/g2/q1_p1,8:fixes-g2,21:run q1.tally --ask p1,968:8:q1.tally,952:model probes
   tally 2
@@ -32971,7 +32979,8 @@ version card_2026
 ask f1: weekday(wl)
 ask f2: is_business(last_day, endcal)
 ask f3: last_business(9999-12, 1, endcal)
-,,1:0,129:f2: ?"date within window(9999-12-29, 9999-12-31) not precise enough for is_business(last_day, endcal)" (endcal)
+,,1:0,181:f2: ?"date within window(9999-12-29, 9999-12-31) not precise enough for is_business(last_day, endcal)" (endcal)
+  unknown day: added window(9999-12-29, 9999-12-31)
   cut 2026-10-01
 ,14:fixes/g2/p4_f3,8:fixes-g2,21:run p4.tally --ask f3,521:8:p4.tally,505:model probes
   tally 2
@@ -33212,7 +33221,8 @@ version v1
   w[p18] = window(2025-01-04, 2025-01-19) "c"
   w[p19] = 2025-02-21 "c"
   w[p20] = 2025-02-05 "c"
-,,1:0,119:a: ?"date within window(2025-01-03, 2025-01-16) not precise enough for the ties by of first" (w[p12])
+,,1:0,141:a: ?"date within window(2025-01-03, 2025-01-16) not precise enough for the ties by of first" (w[p12])
+  unknown day: w[p12]
   cut 2025-04-01
 ,26:fixes/g3/p6_sort_windows_a,8:fixes-g3,33:run p6_sort_windows.tally --ask a,2358:21:p6_sort_windows.tally,2327:model p6
   tally 2
@@ -33296,7 +33306,8 @@ version v1
   w[k28] = window(2026-01-04, 2026-01-10) "c"
   v[k29] = 1 "c"
   w[k29] = window(2026-01-05, 2026-01-11) "c"
-,,1:0,119:a: ?"date within window(2026-01-02, 2026-01-11) not precise enough for the ties by of argmin" (w[k1])
+,,1:0,140:a: ?"date within window(2026-01-02, 2026-01-11) not precise enough for the ties by of argmin" (w[k1])
+  unknown day: w[k1]
   cut 2026-03-01
 ,26:fixes/g3/p6_sort_windows_b,8:fixes-g3,33:run p6_sort_windows.tally --ask b,2358:21:p6_sort_windows.tally,2327:model p6
   tally 2
@@ -33495,7 +33506,8 @@ version v1
   w[p27] = window(2025-01-03, 2025-01-17) "c"
   w[p28] = window(2025-01-04, 2025-01-11) "c"
   w[p29] = window(2025-01-05, 2025-01-18) "c"
-,,1:0,118:a: ?"date within window(2025-01-02, 2025-01-17) not precise enough for the ties by of first" (w[p1])
+,,1:0,139:a: ?"date within window(2025-01-02, 2025-01-17) not precise enough for the ties by of first" (w[p1])
+  unknown day: w[p1]
   cut 2025-04-01
 ,22:fixes/g3/p2b_ties_e1_a,8:fixes-g3,29:run p2b_ties_e1.tally --ask a,476:17:p2b_ties_e1.tally,450:model p2b
   tally 2
@@ -113383,7 +113395,7 @@ ask zx159: explain bal(fund2, 2026-03-31) from 2026-03-02
 
 ask zx160: explain bal(fund2, 2026-03-31) from 2026-03-15
 
-,,1:0,4868:q_rare_k6: 88.00 PLN
+,,1:0,4770:q_rare_k6: 88.00 PLN
   assumed: the rare payment runs this year (rare_ok)
   law date 2026-03-15, cut 2026-03-15
 q_rare_konto: 1 730.00 PLN
@@ -113419,7 +113431,7 @@ zx1: ?"before the run's start" (konto)
 zx3: 1 775.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-02-05
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 3 000.00 PLN at the start of 2026-01-01
   counted:
     2026-01-05:
@@ -113435,7 +113447,7 @@ zx3: 1 775.00 PLN
 zx18: 1 730.00 PLN
   projection of konto (PLN) from 2026-02-20 to the end of 2026-03-02
   holder: ask zx18 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1 730.00 PLN at the start of 2026-02-20
   counted:
     no movement
@@ -113452,7 +113464,7 @@ zx64: refused: RUN-RECORD observation bank[k2_buy] fulfils buy2[2026-01] and lac
 zx95: 88.00 PLN
   projection of k6 (PLN) from 2026-01-01 to the end of 2026-02-05
   holder: ask zx95 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 100.00 PLN at the start of 2026-01-01
   counted:
     2026-02-03:
@@ -113465,7 +113477,7 @@ zx116: ?"before the run's start" (fund)
 zx118: 2 etf_unit
   projection of fund (etf_unit) from 2026-01-01 to the end of 2026-02-05
   holder: ask zx118 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0 etf_unit at the start of 2026-01-01
   counted:
     2026-01-18:
@@ -113475,7 +113487,7 @@ zx118: 2 etf_unit
 zx125: 4 etf_unit
   projection of fund (etf_unit) from 2026-01-20 to the end of 2026-02-10
   holder: ask zx125 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 4 etf_unit at the start of 2026-01-20
   counted:
     no movement
@@ -113484,7 +113496,7 @@ zx125: 4 etf_unit
 zx133: 4 etf_unit
   projection of fund (etf_unit) from 2026-02-20 to the end of 2026-03-02
   holder: ask zx133 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 4 etf_unit at the start of 2026-02-20
   counted:
     no movement
@@ -113494,7 +113506,7 @@ zx133: 4 etf_unit
 zx156: 1 etf_unit
   projection of fund2 (etf_unit) from 2026-02-20 to the end of 2026-03-02
   holder: ask zx156 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1 etf_unit at the start of 2026-02-20
   counted:
     no movement
@@ -114038,7 +114050,7 @@ ask zx159: explain bal(oops_box, 2026-04-15) from 2026-03-20
 
 ask zx160: explain bal(oops_box, 2026-04-15) from 2026-03-31
 
-,,1:0,14413:q_room (m = 2026-01): 191.00 PLN
+,,1:0,14287:q_room (m = 2026-01): 191.00 PLN
   open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
@@ -114223,7 +114235,7 @@ zx1: ?"before the run's start" (konto)
 zx5: 1 643.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-02-15
   holder: ask zx5 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 3 000.00 PLN at the start of 2026-01-01
   counted:
     2026-01-01:
@@ -114245,7 +114257,7 @@ zx5: 1 643.00 PLN
 zx6: 1 641.00 PLN
   projection of konto (PLN) from 2026-01-02 to the end of 2026-02-15
   holder: ask zx6 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 2 995.00 PLN at the start of 2026-01-02
   counted:
     2026-01-05:
@@ -114266,7 +114278,7 @@ zx6: 1 641.00 PLN
 zx13: 1 695.00 PLN
   projection of konto (PLN) from 2026-02-02 to the end of 2026-02-28
   holder: ask zx13 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 2 350.00 PLN at the start of 2026-02-02
   counted:
     2026-02-05:
@@ -114285,7 +114297,7 @@ zx13: 1 695.00 PLN
 zx14: 2 497.00 PLN
   projection of konto (PLN) from 2026-02-10 to the end of 2026-02-28
   holder: ask zx14 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1 750.00 PLN at the start of 2026-02-10
   counted:
     2026-02-20:
@@ -114305,7 +114317,7 @@ zx14: 2 497.00 PLN
 zx22: ?"after the run's end" (konto)
   projection of konto (PLN) from 2026-03-31 to the end of 2026-04-15
   holder: ask zx22 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 2 604.00 PLN at the start of 2026-03-31
   counted:
     no movement
@@ -114316,7 +114328,7 @@ zx24: ?"before the run's start" (pocket)
 zx28: 50.00 PLN
   projection of pocket (PLN) from 2026-01-01 to the end of 2026-02-15
   holder: ask zx28 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 50.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -114325,7 +114337,7 @@ zx28: 50.00 PLN
 zx37: 45.00 PLN
   projection of pocket (PLN) from 2026-02-10 to the end of 2026-02-28
   holder: ask zx37 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 45.00 PLN at the start of 2026-02-10
   counted:
     no movement
@@ -114337,7 +114349,7 @@ zx88: refused: RUN-LIFESPAN tin ends on 2026-02-27 holding 10.00 PLN
 zx90: ?"after the run's end" (tin)
   projection of tin (PLN) from 2026-03-20 to the end of 2026-04-15
   holder: ask zx90 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: refused: RUN-LIFESPAN tin ends on 2026-02-27 holding 10.00 PLN at the start of 2026-03-20
   counted:
     no movement
@@ -114346,7 +114358,7 @@ zx90: ?"after the run's end" (tin)
 zx159: ?"after the run's end" (oops_box)
   projection of oops_box (PLN) from 2026-03-20 to the end of 2026-04-15
   holder: ask zx159 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: refused: RUN-DIV division by zero at the start of 2026-03-20
   counted:
     no movement
@@ -124214,7 +124226,7 @@ ask zx70: explain bal(savings, 2026-03-31) from 2026-02-20
 
 ask zx71: explain bal(savings, 2026-03-31) from 2026-03-20
 
-,,1:0,8713:q_lean (d = 2026-01-19): (0.00 PLN, 0.00 PLN)
+,,1:0,8629:q_lean (d = 2026-01-19): (0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by)
   unfulfilled: lean[first, 2026-01]
@@ -124299,7 +124311,7 @@ zx1: ?"before the run's start" (konto)
 zx3: 1 689.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-02-09
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 3 000.00 PLN at the start of 2026-01-01
   counted:
     2026-01-05:
@@ -124317,7 +124329,7 @@ zx3: 1 689.00 PLN
 zx9: 1 600.00 PLN
   projection of konto (PLN) from 2026-02-02 to the end of 2026-02-14
   holder: ask zx9 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 2 200.00 PLN at the start of 2026-02-02
   counted:
     2026-02-05:
@@ -124328,7 +124340,7 @@ zx9: 1 600.00 PLN
 zx12: 2 489.00 PLN
   projection of konto (PLN) from 2026-02-10 to the end of 2026-02-20
   holder: ask zx12 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1 600.00 PLN at the start of 2026-02-10
   counted:
     2026-02-15:
@@ -124347,7 +124359,7 @@ zx19: ?"before the run's start" (pocket)
 zx21: 50.00 PLN
   projection of pocket (PLN) from 2026-01-01 to the end of 2026-02-09
   holder: ask zx21 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 50.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -124356,7 +124368,7 @@ zx21: 50.00 PLN
 zx30: 45.00 PLN
   projection of pocket (PLN) from 2026-02-10 to the end of 2026-02-20
   holder: ask zx30 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 45.00 PLN at the start of 2026-02-10
   counted:
     no movement
@@ -124366,7 +124378,7 @@ zx30: 45.00 PLN
 zx44: 1.00 PLN
   projection of err_box (PLN) from 2026-01-31 to the end of 2026-02-14
   holder: ask zx44 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1.00 PLN at the start of 2026-01-31
   counted:
     no movement
@@ -125315,7 +125327,7 @@ ask zx22: explain bal(zo, 2026-12-31) from 2026-03-02
 
 ask zx23: explain bal(zo, 2026-12-31) from 2026-06-30
 
-,,1:0,5982:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
+,,1:0,5786:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
   cut 2026-06-30
 q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans of 2026-01-15, 5.00 PLN)
   pad: ys 2026-01-15 start, pads:statement_01:ys@2026-01-15 start of -25.00 PLN
@@ -125325,7 +125337,7 @@ q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observat
 zx1: 20.00 PLN
   projection of ys (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx1 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -125334,7 +125346,7 @@ zx1: 20.00 PLN
 zx10: 5.00 PLN
   projection of zs (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx10 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 5.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -125345,7 +125357,7 @@ zx10: 5.00 PLN
 zx11: 5.00 PLN
   projection of zs (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx11 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 5.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -125356,7 +125368,7 @@ zx11: 5.00 PLN
 zx13: -5.00 PLN
   projection of yo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx13 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -5.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -125373,7 +125385,7 @@ zx17: refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start
 zx19: 0.00 PLN
   projection of zo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx19 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -125382,7 +125394,7 @@ zx19: 0.00 PLN
 zx2: 20.00 PLN
   projection of ys (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx2 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -125391,7 +125403,7 @@ zx2: 20.00 PLN
 zx20: 0.00 PLN
   projection of zo (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx20 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -125400,7 +125412,7 @@ zx20: 0.00 PLN
 zx21: 0.00 PLN
   projection of zo (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx21 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -125409,7 +125421,7 @@ zx21: 0.00 PLN
 zx22: 0.00 PLN
   projection of zo (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx22 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -125418,7 +125430,7 @@ zx22: 0.00 PLN
 zx23: 0.00 PLN
   projection of zo (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx23 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -125427,7 +125439,7 @@ zx23: 0.00 PLN
 zx3: -5.00 PLN
   projection of ys (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -125443,7 +125455,7 @@ zx5: refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans o
 zx7: 30.00 PLN
   projection of zs (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     2026-01-15:
@@ -125453,7 +125465,7 @@ zx7: 30.00 PLN
 zx8: 30.00 PLN
   projection of zs (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     2026-01-15:
@@ -125463,7 +125475,7 @@ zx8: 30.00 PLN
 zx9: 5.00 PLN
   projection of zs (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx9 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     2026-01-15:
@@ -126356,7 +126368,7 @@ ask zx271: explain bal(box_d, 2026-03-31) from 2026-03-20
 
 ask zx272: explain bal(box_d, 2026-03-31) from 2026-03-25
 
-,,1:0,14300:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+,,1:0,14048:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
   anchor: lent4 2026-01-31 end, stated -5.00 PLN, difference -25.00 PLN
   unfulfilled: back[2026-01]
   law date 2026-03-25, cut 2026-03-25
@@ -126459,7 +126471,7 @@ zx1: ?"before the run's start" (konto)
 zx3: 1 000.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1 000.00 PLN at the start of 2026-01-01
   counted:
     2026-01-10:
@@ -126473,7 +126485,7 @@ zx3: 1 000.00 PLN
 zx5: 1 000.00 PLN
   projection of konto (PLN) from 2026-01-14 to the end of 2026-02-27
   holder: ask zx5 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 1 010.00 PLN at the start of 2026-01-14
   counted:
     2026-02-10:
@@ -126500,7 +126512,7 @@ zx22: ?"before the run's start" (wallet)
 zx24: 70.00 PLN
   projection of wallet (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx24 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 50.00 PLN at the start of 2026-01-01
   counted:
     2026-01-15:
@@ -126516,7 +126528,7 @@ zx24: 70.00 PLN
 zx28: 70.00 PLN
   projection of wallet (PLN) from 2026-01-20 to the end of 2026-02-28
   holder: ask zx28 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -30.00 PLN at the start of 2026-01-20
   counted:
     2026-01-25:
@@ -126533,7 +126545,7 @@ zx43: ?"before the run's start" (lent)
 zx45: 0.00 PLN
   projection of lent (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx45 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 100.00 PLN at the start of 2026-01-01
   counted:
     2026-01-10:
@@ -126545,7 +126557,7 @@ zx45: 0.00 PLN
 zx47: 0.00 PLN
   projection of lent (PLN) from 2026-01-14 to the end of 2026-02-27
   holder: ask zx47 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 50.00 PLN at the start of 2026-01-14
   counted:
     2026-02-10:
@@ -126559,7 +126571,7 @@ zx53: refused: RUN-PLACE lent is -30.00 PLN after the day's observations and pla
 zx66: 0.00 PLN
   projection of lent2 (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx66 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -126568,7 +126580,7 @@ zx66: 0.00 PLN
 zx74: 10.00 PLN
   projection of lent2 (PLN) from 2026-02-02 to the end of 2026-03-10
   holder: ask zx74 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-02-02
   counted:
     2026-03-10:
@@ -126579,7 +126591,7 @@ zx74: 10.00 PLN
 zx81: 10.00 PLN
   projection of lent2 (PLN) from 2026-03-15 to the end of 2026-03-25
   holder: ask zx81 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 10.00 PLN at the start of 2026-03-15
   counted:
     no movement
@@ -126593,7 +126605,7 @@ zx115: refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
 zx121: 0.00 PLN
   projection of lent4 (PLN) from 2026-03-02 to the end of 2026-03-20
   holder: ask zx121 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -126605,7 +126617,7 @@ zx127: ?"before the run's start" (owed)
 zx129: 0.00 PLN
   projection of owed (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx129 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -100.00 PLN at the start of 2026-01-01
   counted:
     2026-01-10:
@@ -126617,7 +126629,7 @@ zx129: 0.00 PLN
 zx131: 0.00 PLN
   projection of owed (PLN) from 2026-01-14 to the end of 2026-02-27
   holder: ask zx131 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -60.00 PLN at the start of 2026-01-14
   counted:
     2026-02-10:
@@ -126633,7 +126645,7 @@ zx148: ?"before the run's start" (fund)
 zx150: 0 etf_unit
   projection of fund (etf_unit) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx150 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 10 etf_unit at the start of 2026-01-01
   counted:
     2026-01-10:
@@ -126645,7 +126657,7 @@ zx150: 0 etf_unit
 zx152: 0 etf_unit
   projection of fund (etf_unit) from 2026-01-14 to the end of 2026-02-27
   holder: ask zx152 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 6 etf_unit at the start of 2026-01-14
   counted:
     2026-02-10:
@@ -126659,7 +126671,7 @@ zx158: refused: RUN-PLACE fund is -2 etf_unit after the day's observations and p
 zx201: 0.00 PLN
   projection of gone (PLN) from 2026-02-15 to the end of 2026-03-10
   holder: ask zx201 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-02-15
   counted:
     no movement
@@ -126670,7 +126682,7 @@ zx201: 0.00 PLN
 zx234: ?"How much came in?" (hole_amt)
   projection of box_h (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx234 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-01
   counted:
     2026-02-01:
@@ -126680,7 +126692,7 @@ zx234: ?"How much came in?" (hole_amt)
 zx242: ?"How much came in?" (hole_amt)
   projection of box_h (PLN) from 2026-02-02 to the end of 2026-03-10
   holder: ask zx242 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: ?"How much came in?" (hole_amt) at the start of 2026-02-02
   counted:
     no movement
@@ -126690,7 +126702,7 @@ zx242: ?"How much came in?" (hole_amt)
 zx255: ?"When does it come?" (hole_day)
   projection of box_d (PLN) from 2026-01-01 to the end of 2026-02-25
   holder: ask zx255 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: ?"When does it come?" (hole_day) at the start of 2026-01-01
   counted:
     2026-01-01:
@@ -127190,7 +127202,7 @@ ask zx118: explain bal(k5, 2026-03-31) from 2026-03-02 with uncertain
 
 ask zx119: explain bal(k5, 2026-03-31) from 2026-03-15 with uncertain
 
-,,1:0,11347:q_res: residuals konto 2026-01
+,,1:0,11249:q_res: residuals konto 2026-01
   2026-01 move promise: model 100.00 PLN, observed 60.00 PLN, difference -40.00 PLN
     partly fulfilled promise on 2026-01-22: model 100.00 PLN, observed 60.00 PLN, difference -40.00 PLN, remainder 40.00 PLN: when does the rest arrive, or is it written off?
   2026-01 balance: model 7 173.00 PLN, observed 7 208.00 PLN, difference 35.00 PLN
@@ -127320,7 +127332,7 @@ zx1: ?"before the run's start" (konto)
 zx3: 2 423.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-01-27
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 3 000.00 PLN at the start of 2026-01-01
   counted:
     2026-01-05:
@@ -127355,7 +127367,7 @@ zx3: 2 423.00 PLN
 zx6: 2 435.00 PLN
   projection of konto (PLN) from 2026-01-09 to the end of 2026-01-29
   holder: ask zx6 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 2 400.00 PLN at the start of 2026-01-09
   counted:
     2026-01-12:
@@ -127387,7 +127399,7 @@ zx6: 2 435.00 PLN
 zx7: 2 465.00 PLN
   projection of konto (PLN) from 2026-01-10 to the end of 2026-01-29
   holder: ask zx7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 2 430.00 PLN at the start of 2026-01-10
   counted:
     2026-01-12:
@@ -127411,7 +127423,7 @@ zx19: refused: RUN-RECORD observation bank[k_flag2] fulfils flagged2[2026-01], w
 zx27: 1 000.00 PLN
   projection of buffer (PLN) from 2026-01-01 to the end of 2026-01-27
   holder: ask zx27 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 1 000.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -127420,7 +127432,7 @@ zx27: 1 000.00 PLN
 zx64: 15.00 PLN
   projection of save (PLN) from 2026-01-29 to the end of 2026-02-20
   holder: ask zx64 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 15.00 PLN at the start of 2026-01-29
   counted:
     no movement
@@ -127430,7 +127442,7 @@ zx64: 15.00 PLN
 zx75: ?"When does nothing go out?" (odd0_day) ?"When does the odd payment go out?" (odd_day[a]) ?"When does the second odd payment go out?" (odd2_day)
   projection of k4 (PLN) from 2026-01-01 to the end of 2026-01-27
   holder: ask zx75 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: ?"When does nothing go out?" (odd0_day) ?"When does the second odd payment go out?" (odd2_day) at the start of 2026-01-01
   counted:
     2026-01-01:
@@ -127444,7 +127456,7 @@ zx75: ?"When does nothing go out?" (odd0_day) ?"When does the odd payment go out
 zx99: ?"Aa: how much is the first repair?" (hz_amt) ?"Zz: how much is the second repair?" (ha_amt)
   projection of k5 (PLN) from 2026-01-01 to the end of 2026-01-27
   holder: ask zx99 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 500.00 PLN at the start of 2026-01-01
   counted:
     2026-01-10:
@@ -128734,7 +128746,7 @@ ask zx22: explain bal(zo, 2026-12-31) from 2026-03-02 with uncertain
 
 ask zx23: explain bal(zo, 2026-12-31) from 2026-06-30 with uncertain
 
-,,1:0,5940:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
+,,1:0,5744:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
   cut 2026-06-30
 q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans of 2026-01-15, 5.00 PLN)
   pad: ys 2026-01-15 start, pads:statement_01:ys@2026-01-15 start of -25.00 PLN
@@ -128744,7 +128756,7 @@ q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observat
 zx1: 20.00 PLN
   projection of ys (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx1 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -128753,7 +128765,7 @@ zx1: 20.00 PLN
 zx10: 5.00 PLN
   projection of zs (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx10 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 5.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -128764,7 +128776,7 @@ zx10: 5.00 PLN
 zx11: 5.00 PLN
   projection of zs (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx11 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 5.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -128775,7 +128787,7 @@ zx11: 5.00 PLN
 zx13: -5.00 PLN
   projection of yo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx13 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: -5.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -128792,7 +128804,7 @@ zx17: refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start
 zx19: 0.00 PLN
   projection of zo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx19 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -128801,7 +128813,7 @@ zx19: 0.00 PLN
 zx2: 20.00 PLN
   projection of ys (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx2 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -128810,7 +128822,7 @@ zx2: 20.00 PLN
 zx20: 0.00 PLN
   projection of zo (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx20 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -128819,7 +128831,7 @@ zx20: 0.00 PLN
 zx21: 0.00 PLN
   projection of zo (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx21 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -128828,7 +128840,7 @@ zx21: 0.00 PLN
 zx22: 0.00 PLN
   projection of zo (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx22 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -128837,7 +128849,7 @@ zx22: 0.00 PLN
 zx23: 0.00 PLN
   projection of zo (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx23 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -128846,7 +128858,7 @@ zx23: 0.00 PLN
 zx3: -5.00 PLN
   projection of ys (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -128862,7 +128874,7 @@ zx5: refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans o
 zx7: 30.00 PLN
   projection of zs (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     2026-01-15:
@@ -128872,7 +128884,7 @@ zx7: 30.00 PLN
 zx8: 30.00 PLN
   projection of zs (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     2026-01-15:
@@ -128882,7 +128894,7 @@ zx8: 30.00 PLN
 zx9: 5.00 PLN
   projection of zs (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx9 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     2026-01-15:
@@ -131216,7 +131228,7 @@ version bank_feb
   bank[b0210] = (on: 2026-02-10, kind: transfers, leg cash from konto to jar amount 25.00 PLN) "a stash"
   stated[konto] = 400.00 PLN at 2026-02-20 end "a balance"
   stated[konto] = 390.00 PLN at 2026-02-28 end "the month's close"
-,,1:0,7632:e1: 435.00 PLN
+,,1:0,7618:e1: 435.00 PLN
   [1] head[2026-02] = 435.00 PLN
       rule base: won
         [2] bal(konto, 2026-02-01) = 475.00 PLN
@@ -131349,7 +131361,7 @@ e6: 340.00 PLN
 e7: 330.00 PLN
   projection of konto (PLN) from 2026-04-01 to the end of 2026-05-31
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 365.00 PLN at the start of 2026-04-01
   counted:
     2026-04-05:
@@ -131515,7 +131527,7 @@ version bank_feb
   bank[b0210] = (on: 2026-02-10, kind: transfers, leg cash from konto to jar amount 25.00 PLN) "a stash"
   stated[konto] = 400.00 PLN at 2026-02-20 end "a balance"
   stated[konto] = 390.00 PLN at 2026-02-28 end "the month's close"
-,,1:0,11438:e1: 435.00 PLN
+,,1:0,11396:e1: 435.00 PLN
   [1] head[2026-02] = 435.00 PLN
       rule base: won
         [2] bal(konto, 2026-02-01) = 475.00 PLN
@@ -131648,7 +131660,7 @@ e6: 340.00 PLN
 e7: 330.00 PLN
   projection of konto (PLN) from 2026-04-01 to the end of 2026-05-31
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 365.00 PLN at the start of 2026-04-01
   counted:
     2026-04-05:
@@ -131684,7 +131696,7 @@ w1: ?"before the run's start" (konto)
 w2: 315.00 PLN
   projection of konto (PLN) from 2026-04-01 to the end of 2026-05-10
   holder: ask w2 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 365.00 PLN at the start of 2026-04-01
   counted:
     2026-04-05:
@@ -131701,7 +131713,7 @@ w2: 315.00 PLN
 w3: 330.00 PLN
   projection of konto (PLN) from 2026-04-01 to the end of 2026-05-05
   holder: ask w3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 365.00 PLN at the start of 2026-04-01
   counted:
     2026-04-05:
@@ -132002,7 +132014,7 @@ ask y9: explain bal(konto, 2026-02-15)
 ask y10: explain feed[2026-03]
 
 ask y11: explain feed2[2026-03]
-,,1:0,9101:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,9087:q_bal (d = 2026-01-18): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-20): (2 300.00 PLN, 100.00 PLN, 0.00 PLN, 1.00 PLN)
   unfulfilled: save[2026-01]
@@ -132141,7 +132153,7 @@ y7: lean[second, 2026-01]
 y8: 45.00 PLN
   projection of pocket (PLN) from 2026-02-10 to the end of 2026-02-12
   holder: ask y8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 45.00 PLN at the start of 2026-02-10
   counted:
     no movement
@@ -132287,7 +132299,7 @@ version bank_feb
   stated[konto] = 400.00 PLN at 2026-02-20 start "a morning balance"
   stated[konto] = 395.00 PLN at 2026-02-20 end "an evening balance"
   stated[konto] = 390.00 PLN at 2026-02-28 end "the month's close"
-,,1:0,8939:e1: 435.00 PLN
+,,1:0,8925:e1: 435.00 PLN
   [1] head[2026-02] = 435.00 PLN
       rule base: won
         [2] bal(konto, 2026-02-01) = 475.00 PLN
@@ -132420,7 +132432,7 @@ e6: 340.00 PLN
 e7: 330.00 PLN
   projection of konto (PLN) from 2026-04-01 to the end of 2026-05-31
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 365.00 PLN at the start of 2026-04-01
   counted:
     2026-04-05:
@@ -136625,7 +136637,7 @@ ask zx22: explain bal(zo, 2026-12-31) from 2026-03-02
 
 ask zx23: explain bal(zo, 2026-12-31) from 2026-06-30
 
-,,1:0,5982:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
+,,1:0,5786:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
   cut 2026-06-30
 q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans of 2026-01-15, 5.00 PLN)
   pad: ys 2026-01-15 start, pads:statement_01:ys@2026-01-15 start of -25.00 PLN
@@ -136635,7 +136647,7 @@ q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observat
 zx1: 20.00 PLN
   projection of ys (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx1 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -136644,7 +136656,7 @@ zx1: 20.00 PLN
 zx10: 5.00 PLN
   projection of zs (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx10 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 5.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -136655,7 +136667,7 @@ zx10: 5.00 PLN
 zx11: 5.00 PLN
   projection of zs (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx11 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 5.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -136666,7 +136678,7 @@ zx11: 5.00 PLN
 zx13: -5.00 PLN
   projection of yo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx13 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -5.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -136683,7 +136695,7 @@ zx17: refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start
 zx19: 0.00 PLN
   projection of zo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx19 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -136692,7 +136704,7 @@ zx19: 0.00 PLN
 zx2: 20.00 PLN
   projection of ys (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx2 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -136701,7 +136713,7 @@ zx2: 20.00 PLN
 zx20: 0.00 PLN
   projection of zo (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx20 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -136710,7 +136722,7 @@ zx20: 0.00 PLN
 zx21: 0.00 PLN
   projection of zo (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx21 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -136719,7 +136731,7 @@ zx21: 0.00 PLN
 zx22: 0.00 PLN
   projection of zo (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx22 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -136728,7 +136740,7 @@ zx22: 0.00 PLN
 zx23: 0.00 PLN
   projection of zo (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx23 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 0.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -136737,7 +136749,7 @@ zx23: 0.00 PLN
 zx3: -5.00 PLN
   projection of ys (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -136753,7 +136765,7 @@ zx5: refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans o
 zx7: 30.00 PLN
   projection of zs (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     2026-01-15:
@@ -136763,7 +136775,7 @@ zx7: 30.00 PLN
 zx8: 30.00 PLN
   projection of zs (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     2026-01-15:
@@ -136773,7 +136785,7 @@ zx8: 30.00 PLN
 zx9: 5.00 PLN
   projection of zs (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx9 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     2026-01-15:
@@ -137958,7 +137970,7 @@ ask zx295: explain bal(old, 2026-03-31) from 2026-03-06 with uncertain
 
 ask zx296: explain bal(old, 2026-03-31) from 2026-03-10 with uncertain
 
-,,1:0,5099:q_from: (600.00 PLN, 600.00 PLN, ?"before the run's start" (konto), 400.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late), 50.00 PLN)
+,,1:0,5029:q_from: (600.00 PLN, 600.00 PLN, ?"before the run's start" (konto), 400.00 PLN, ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late), ?"late has no balance before 2026-02-12" (late), 50.00 PLN)
   anchor: late 2026-02-12 end, stated 50.00 PLN, difference ?"late has no balance before 2026-02-12" (late)
   unfulfilled: d1
   unfulfilled: rent
@@ -138018,7 +138030,7 @@ zx1: ?"before the run's start" (konto)
 zx5: 629.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-02-12
   holder: ask zx5 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 1 000.00 PLN at the start of 2026-01-01
   counted:
     2026-01-05:
@@ -138042,7 +138054,7 @@ zx5: 629.00 PLN
 zx7: 639.00 PLN
   projection of konto (PLN) from 2026-01-10 to the end of 2026-02-13
   holder: ask zx7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 900.00 PLN at the start of 2026-01-10
   counted:
     2026-01-20:
@@ -138068,7 +138080,7 @@ zx7: 639.00 PLN
 zx26: 400.00 PLN
   projection of konto (PLN) from 2026-03-10 to the end of 2026-03-31
   holder: ask zx26 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 400.00 PLN at the start of 2026-03-10
   counted:
     no movement
@@ -138079,7 +138091,7 @@ zx26: 400.00 PLN
 zx32: ?"late has no balance before 2026-02-12" (late)
   projection of late (PLN) from 2026-01-01 to the end of 2026-02-12
   holder: ask zx32 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: ?"late has no balance before 2026-02-12" (late) at the start of 2026-01-01
   counted:
     2026-02-11:
@@ -138089,7 +138101,7 @@ zx32: ?"late has no balance before 2026-02-12" (late)
 zx45: 50.00 PLN
   projection of late (PLN) from 2026-02-13 to the end of 2026-03-01
   holder: ask zx45 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 50.00 PLN at the start of 2026-02-13
   counted:
     no movement
@@ -138197,7 +138209,7 @@ ask zx22: explain bal(zo, 2026-12-31) from 2026-03-02 with uncertain
 
 ask zx23: explain bal(zo, 2026-12-31) from 2026-06-30 with uncertain
 
-,,1:0,5940:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
+,,1:0,5744:q_open: (-5.00 PLN, refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start, 0.00 PLN, 0.00 PLN)
   cut 2026-06-30
 q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans of 2026-01-15, 5.00 PLN)
   pad: ys 2026-01-15 start, pads:statement_01:ys@2026-01-15 start of -25.00 PLN
@@ -138207,7 +138219,7 @@ q_start: (20.00 PLN, refused: RUN-PLACE ys is -5.00 PLN after the day's observat
 zx1: 20.00 PLN
   projection of ys (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx1 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -138216,7 +138228,7 @@ zx1: 20.00 PLN
 zx10: 5.00 PLN
   projection of zs (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx10 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 5.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -138227,7 +138239,7 @@ zx10: 5.00 PLN
 zx11: 5.00 PLN
   projection of zs (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx11 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 5.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -138238,7 +138250,7 @@ zx11: 5.00 PLN
 zx13: -5.00 PLN
   projection of yo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx13 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: -5.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -138255,7 +138267,7 @@ zx17: refused: RUN-PLACE yo is -5.00 PLN after its reading at 2026-01-01 start
 zx19: 0.00 PLN
   projection of zo (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx19 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-01-01
   counted:
     no movement
@@ -138264,7 +138276,7 @@ zx19: 0.00 PLN
 zx2: 20.00 PLN
   projection of ys (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx2 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -138273,7 +138285,7 @@ zx2: 20.00 PLN
 zx20: 0.00 PLN
   projection of zo (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx20 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-01-14
   counted:
     no movement
@@ -138282,7 +138294,7 @@ zx20: 0.00 PLN
 zx21: 0.00 PLN
   projection of zo (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx21 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -138291,7 +138303,7 @@ zx21: 0.00 PLN
 zx22: 0.00 PLN
   projection of zo (PLN) from 2026-03-02 to the end of 2026-12-31
   holder: ask zx22 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-03-02
   counted:
     no movement
@@ -138300,7 +138312,7 @@ zx22: 0.00 PLN
 zx23: 0.00 PLN
   projection of zo (PLN) from 2026-06-30 to the end of 2026-12-31
   holder: ask zx23 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 0.00 PLN at the start of 2026-06-30
   counted:
     no movement
@@ -138309,7 +138321,7 @@ zx23: 0.00 PLN
 zx3: -5.00 PLN
   projection of ys (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     no movement
@@ -138325,7 +138337,7 @@ zx5: refused: RUN-PLACE ys is -5.00 PLN after the day's observations and plans o
 zx7: 30.00 PLN
   projection of zs (PLN) from 2026-01-01 to the end of 2026-03-02
   holder: ask zx7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-01
   counted:
     2026-01-15:
@@ -138335,7 +138347,7 @@ zx7: 30.00 PLN
 zx8: 30.00 PLN
   projection of zs (PLN) from 2026-01-14 to the end of 2026-06-30
   holder: ask zx8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 20.00 PLN at the start of 2026-01-14
   counted:
     2026-01-15:
@@ -138345,7 +138357,7 @@ zx8: 30.00 PLN
 zx9: 5.00 PLN
   projection of zs (PLN) from 2026-01-15 to the end of 2026-06-30
   holder: ask zx9 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: -5.00 PLN at the start of 2026-01-15
   counted:
     2026-01-15:
@@ -158635,10 +158647,10 @@ version bank_feb
   bank[b0210] = (on: 2026-02-10, kind: transfers, leg cash from konto to jar amount 25.00 PLN) "a stash"
   stated[konto] = 400.00 PLN at 2026-02-20 end "a balance"
   stated[konto] = 390.00 PLN at 2026-02-28 end "the month's close"
-,,1:0,655:l3: 355.00 PLN
+,,1:0,641:l3: 355.00 PLN
   projection of konto (PLN) from 2026-03-20 to the end of 2026-04-30
   holder: ask l3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 365.00 PLN at the start of 2026-03-20
   counted:
     2026-04-05:
@@ -159224,10 +159236,10 @@ version bank_feb
   bank[b0210] = (on: 2026-02-10, kind: transfers, leg cash from konto to jar amount 25.00 PLN) "a stash"
   stated[konto] = 400.00 PLN at 2026-02-20 end "a balance"
   stated[konto] = 390.00 PLN at 2026-02-28 end "the month's close"
-,,1:0,761:e7: 330.00 PLN
+,,1:0,747:e7: 330.00 PLN
   projection of konto (PLN) from 2026-04-01 to the end of 2026-05-31
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 365.00 PLN at the start of 2026-04-01
   counted:
     2026-04-05:
@@ -161980,10 +161992,10 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,383:e7: 420.00 PLN
+,,1:0,369:e7: 420.00 PLN
   projection of konto (PLN) from 2026-02-01 to the end of 2026-03-01
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 460.00 PLN at the start of 2026-02-01
   counted:
     2026-02-05:
@@ -163280,10 +163292,10 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,383:e7: 420.00 PLN
+,,1:0,369:e7: 420.00 PLN
   projection of konto (PLN) from 2026-02-01 to the end of 2026-03-01
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 460.00 PLN at the start of 2026-02-01
   counted:
     2026-02-05:
@@ -165411,10 +165423,10 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,383:e7: 420.00 PLN
+,,1:0,369:e7: 420.00 PLN
   projection of konto (PLN) from 2026-02-01 to the end of 2026-03-01
   holder: ask e7 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 460.00 PLN at the start of 2026-02-01
   counted:
     2026-02-05:
@@ -169548,7 +169560,8 @@ version card_2026
   tally 2
 
 ask a3: count(d in d1 .. w step 1 month)
-,,1:0,606:a3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,623:a3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  unknown day: w
   cut 2026-03-01
 base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
@@ -169963,7 +169976,8 @@ version card_2026
 
 
 ask b1: count(x in places on w)
-,,1:0,511:b1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for the day of a binding" (w)
+,,1:0,528:b1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for the day of a binding" (w)
+  unknown day: w
   cut 2026-03-01
 base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
@@ -170355,7 +170369,8 @@ version card_2026
 input t3[d in d1 .. w step 1 month]: num
 
 ask b9: t3[d1]
-,,1:0,606:b9: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,623:b9: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  unknown day: w
   cut 2026-03-01
 base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
@@ -170423,9 +170438,10 @@ version card_2026
 
 
 ask c2: round(age(w, d2), 1, down)
-,,1:0,551:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,568:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 c2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for round" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -170670,9 +170686,10 @@ version card_2026
 
 
 ask g4: count(d in d1 .. d2 step age(w, d2) * 1 month)
-,,1:0,558:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,575:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 g4: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -170737,9 +170754,10 @@ version card_2026
 
 
 ask g5: count(d in d1 .. d2 step (age(w, d2) + 1) * 1 month)
-,,1:0,558:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,575:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 g5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -177365,9 +177383,10 @@ version card_2026
   tally 2
 
 ask w02: t[age(w, d2) * 1 %/year]
-,,1:0,504:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,521:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w02: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -177430,9 +177449,10 @@ version card_2026
   tally 2
 
 ask w03: r2[age(w, d2), 1]
-,,1:0,503:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,520:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w03: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -177729,9 +177749,10 @@ version card_2026
   tally 2
 
 ask w10: count(d in d1 .. d2 step age(w, d2) * 1 month)
-,,1:0,559:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,576:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w10: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -177907,9 +177928,10 @@ version card_2026
   tally 2
 
 ask w15: round(age(w, d2) * 1.00 PLN, 0.01 PLN, down)
-,,1:0,552:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,569:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w15: ?"date within window(2026-03-03, 2026-03-20) not precise enough for round" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -177973,9 +177995,10 @@ version card_2026
   tally 2
 
 ask w16: count(x in places on wy)
-,,1:0,513:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,531:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w16: ?"date within window(2026-12-20, 2027-01-10) not precise enough for the day of a binding" (wy)
+  unknown day: wy
   cut 2026-03-01
 warning: WARN-UNREAD input d2 is read by nothing
 warning: WARN-UNREAD input kh is read by nothing
@@ -178038,9 +178061,10 @@ version card_2026
   tally 2
 
 ask w18: r2[1, age(w, d2)]
-,,1:0,503:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,520:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w18: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -178103,9 +178127,10 @@ version card_2026
   tally 2
 
 ask w19: t[w]
-,,1:0,553:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,570:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 w19: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input d2 is read by nothing
 warning: WARN-UNREAD input kh is read by nothing
@@ -178225,10 +178250,11 @@ version card_2026
   tally 2
 
 ask pn1: count(d in d1 .. d2 step 1 month) as if {d2 = window(2026-03-03, 2026-03-20)}
-,,1:0,605:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,623:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 pn1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (d2)
   pinned: d2 = window(2026-03-03, 2026-03-20)
+  unknown day: d2
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -178359,10 +178385,11 @@ version card_2026
   tally 2
 
 ask pn3: abs(age(d2, d1)) as if {d2 = window(2026-03-03, 2026-03-20)}
-,,1:0,639:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,657:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 pn3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a built-in that is none on part of the window" (d2)
   pinned: d2 = window(2026-03-03, 2026-03-20)
+  unknown day: d2
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -178426,10 +178453,11 @@ version card_2026
   tally 2
 
 ask pn4: count(x in places on d2) as if {d2 = window(2026-03-03, 2026-03-20)}
-,,1:0,510:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,528:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
 pn4: ?"date within window(2026-03-03, 2026-03-20) not precise enough for the day of a binding" (d2)
   pinned: d2 = window(2026-03-03, 2026-03-20)
+  unknown day: d2
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -203257,7 +203285,7 @@ ask xc: explain avail[2026-01]
 input hm: date
 ask xd: explain avail[month_of(hm)]
 ask xe: explain avail[2026-02] law cut
-,,1:0,11702:q_lean (d = 2026-01-19): (0.00 PLN, 0.00 PLN)
+,,1:0,11688:q_lean (d = 2026-01-19): (0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_lean (d = 2026-01-20): (refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by, refused: RUN-TIE lean has a tie at lean[first, 2026-01], lean[second, 2026-01] that changes the result, and no ties by)
   unfulfilled: lean[first, 2026-01]
@@ -203384,7 +203412,7 @@ y7: lean[second, 2026-01]
 y8: 45.00 PLN
   projection of pocket (PLN) from 2026-02-10 to the end of 2026-02-12
   holder: ask y8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 45.00 PLN at the start of 2026-02-10
   counted:
     no movement
@@ -204133,9 +204161,11 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = window(2027-01-25, 2027-02-05) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,311:fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+,,1:0,348:fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  unknown day: wd2
   cut 2026-03-01
 be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
+  unknown day: wd
   left out: h, 1 instances, first 2027-01-25
   cut 2026-03-01
 bea: ?"after the run's end" (konto)
@@ -204177,9 +204207,10 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = 2027-03-01 "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,232:fc: 0.00 PLN
+,,1:0,250:fc: 0.00 PLN
   cut 2026-03-01
 be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
+  unknown day: wd
   left out: h, 1 instances, first 2027-03-01
   cut 2026-03-01
 bea: ?"after the run's end" (konto)
@@ -204211,7 +204242,8 @@ version v
   amt = 10.00 PLN "c"
   wd = window(2026-03-30, 2026-04-02) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,118:q: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
+,,1:0,136:q: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
+  unknown day: wd
   cut 2026-03-01
 ,20:fixes/gate8/m2_g3_g2,11:fixes-gate8,20:run g2.tally --ask q,578:8:g2.tally,562:model pg
   tally 2
@@ -204260,7 +204292,8 @@ version v
   known 2026-01-01
   a = window(2026-01-01, 2026-01-02) "c"
   b = window(2026-01-01, 2026-01-02) "c"
-,,1:0,99:q: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a)
+,,1:0,116:q: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a)
+  unknown day: a
   cut 2026-03-01
 ,19:fixes/gate8/m2_g3_j,11:fixes-gate8,11:run j.tally,594:7:j.tally,579:model pj
   tally 2
@@ -204646,7 +204679,8 @@ version v2
   governs always
   known 2026-03-15
   acct + [a2]
-,,1:0,125:aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+,,1:0,143:aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+  unknown day: wd
   cut 2026-06-30
 ,22:fixes/gate8/m2_g1_band,11:fixes-gate8,14:run band.tally,1591:10:band.tally,1571:model bm
   tally 2
@@ -207307,9 +207341,11 @@ version v
   rank[q1] = 2 "c"
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
-,,1:0,846:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+,,1:0,880:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+  unknown day: w
   cut 2026-10-01
 a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
+  unknown day: w
   cut 2026-10-01
 a3: (true, true, true, true, true)
   pinned: law 2026-02-01
@@ -207363,9 +207399,11 @@ version v
   rank[q1] = 2 "c"
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
-,,1:0,794:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+,,1:0,828:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+  unknown day: w
   cut 2026-10-01
 a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
+  unknown day: w
   cut 2026-10-01
 a4: (true, true, true)
   pinned: law 2026-02-01
@@ -209040,11 +209078,14 @@ version r2
   x = ?"b" "s"
   y = ?"z: no value at 2026010106" "s"
   z = ?"z: no value at 2026-03-052" "s"
-,,1:0,342:ax: ?"date within window(2026-03-01, 2026-03-02) not precise enough for the law date of dx" (dx)
+,,1:0,396:ax: ?"date within window(2026-03-01, 2026-03-02) not precise enough for the law date of dx" (dx)
+  unknown day: wd
   cut 2026-06-30
 ay: ?"date within window(2026-03-01, 2026-03-02) not precise enough for the law date of dy" (dy)
+  unknown day: wd
   cut 2026-06-30
 az: ?"date within window(2026-03-01, 2026-03-02) not precise enough for the law date of dz" (dz)
+  unknown day: wd
   cut 2026-06-30
 ,33:fixes/gate8/m2_gate8_window_moves,11:fixes-gate8,22:run window_moves.tally,3186:18:window_moves.tally,3158:model window_moves
   tally 2
@@ -209145,11 +209186,12 @@ version v
   zero = 0.00 PLN "s"
   a1 = 1.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-,,1:0,1808:f_aft: 0.00 PLN
+,,1:0,1989:f_aft: 0.00 PLN
   cut 2026-08-01
 f_bef: 0.00 PLN
   cut 2026-08-01
 f_hist: ?"date within window(2026-03-25, 2026-04-01) not precise enough for flows of hist" (hist)
+  unknown day: w_hist
   cut 2026-08-01
 f_in1: 1.00 PLN
   unfulfilled: in1
@@ -209158,10 +209200,15 @@ f_in2: 1.00 PLN
   unfulfilled: in2
   cut 2026-08-01
 f_lastx: ?"date within window(2026-05-31, 2026-06-02) not precise enough for flows of lastx" (lastx)
+  unknown day: w_lastx
   cut 2026-08-01
 f_strad: ?"date within window(2026-03-25, 2026-04-05) not precise enough for flows of strad" (strad)
+  unknown day: w_strad
   cut 2026-08-01
 fk: ?"date within window(2026-03-25, 2026-04-01) not precise enough for flows of konto" (hist) ?"date within window(2026-03-25, 2026-04-05) not precise enough for flows of konto" (strad) ?"date within window(2026-05-31, 2026-06-02) not precise enough for flows of konto" (lastx)
+  unknown day: w_hist
+  unknown day: w_lastx
+  unknown day: w_strad
   unfulfilled: in1
   unfulfilled: in2
   cut 2026-08-01
@@ -209175,6 +209222,7 @@ n_aft: 0
 n_bef: 0
   cut 2026-08-01
 n_hist: ?"date within window(2026-03-25, 2026-04-01) not precise enough for a binding over k_hist" (hist)
+  unknown day: w_hist
   unfulfilled: hist
   cut 2026-08-01
 n_in1: 1
@@ -209184,6 +209232,7 @@ n_in2: 1
   unfulfilled: in2
   cut 2026-08-01
 n_strad: ?"date within window(2026-03-25, 2026-04-05) not precise enough for a binding over k_strad" (strad)
+  unknown day: w_strad
   unfulfilled: strad
   cut 2026-08-01
 r: residuals konto 2026-04 .. 2026-05
@@ -209545,7 +209594,8 @@ version v
   known 2026-01-01
   d[a] = window(2026-03-01, 2026-03-02) "c"
   d[b] = 2026-01-01 "c"
-,,1:0,157:q0 (k = a): ?"date within window(2026-03-01, 2026-03-02) not precise enough for d[k] < 2026-03-02" (d[a])
+,,1:0,177:q0 (k = a): ?"date within window(2026-03-01, 2026-03-02) not precise enough for d[k] < 2026-03-02" (d[a])
+  unknown day: d[a]
   cut 2026-03-01
 q0 (k = b): true
   cut 2026-03-01
@@ -213519,7 +213569,7 @@ version plan_2026
   dom = 5 "own"
   opening[konto] = 5 000.00 PLN at 2026-01-01 start "wyciąg"
   opening[savings] = 0 PLN at 2026-01-01 start "wyciąg"
-,,1:1,115:refused: LOAD-INSTANT balance reading stated at 2026-02-28 needs start, end or after (l5_19_load_instant.tally:24)
+,,1:1,108:refused: LOAD-INSTANT balance reading stated at 2026-02-28 needs start or end (l5_19_load_instant.tally:24)
 ,54:fixes/gate8/m2_rt_l5_19_modelled_decision_less_own_obs,11:fixes-gate8,46:run l5_19_modelled_decision_less_own_obs.tally,1082:42:l5_19_modelled_decision_less_own_obs.tally,1030:model hh
   tally 2
   on 2026-10-20
@@ -217882,14 +217932,16 @@ version new
 ask kw: flows(mw, 2026-04-01 .. 2026-04-30) partial
 ask kp: bal(konto, 2026-04-30) partial
 ask kd: flows(md, 2026-04-01 .. 2026-04-30) partial
-,,1:0,343:kd: 0.00 PLN + 1 × ?"amt" (a1)
+,,1:0,379:kd: 0.00 PLN + 1 × ?"amt" (a1)
   unfulfilled: md
   cut 2026-08-01
 kp: ?"amt" (a1) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   cut 2026-08-01
 kw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   cut 2026-08-01
 ,34:fixes/gate8/m2_r437_window_at_rest,11:fixes-gate8,49:run window_at_rest.tally --ask e5 e4 w k n kp mqf,1845:20:window_at_rest.tally,1815:model wa_for
   tally 2
@@ -217968,24 +218020,28 @@ version new
 ask kp: bal(konto, 2026-04-30) partial
 ask mqf: flows(mq, 2026-04-01 .. 2026-04-30)
 ask kpm: bal(konto, 2026-04-30) - bal(konto, 2026-03-01) partial
-,,1:0,742:e5: 1.00 PLN
+,,1:0,814:e5: 1.00 PLN
   unfulfilled: me
   cut 2026-08-01
 e4: 0.00 PLN
   cut 2026-08-01
 w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   cut 2026-08-01
 k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   unfulfilled: mq
   cut 2026-08-01
 n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   unfulfilled: mq
   cut 2026-08-01
 kp: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   unfulfilled: mq
@@ -218597,9 +218653,11 @@ version v
   rank[q1] = 2 "c"
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
-,,1:0,729:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+,,1:0,763:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+  unknown day: w
   cut 2026-10-01
 a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
+  unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD input cal is read by nothing
 warning: WARN-UNREAD input d is read by nothing
@@ -224113,11 +224171,12 @@ version v_card
   w_across = window(2026-12-20, 2027-01-10) "around the new year"
   d_after = 2026-07-15 "after the window"
   d_inside = 2026-06-15 "inside the window"
-,,1:0,190:m: true
+,,1:0,210:m: true
   cut 2026-03-01
 m_false: false
   cut 2026-03-01
 m_hole: ?"date within window(2026-06-01, 2026-06-30) not precise enough for max(w_in, d_inside) == d_inside" (w_in)
+  unknown day: w_in
   cut 2026-03-01
 ,17:r4/reach_scenario,8:fixes-r4,39:run m.tally s.tally --ask s_base s_wide,1316:7:m.tally,980:model r4_reach
   tally 2
@@ -226166,10 +226225,10 @@ version v
   dom = 15
   opening[konto] = 100.00 PLN at 2026-01-01 start
   opening[pocket] = 50.00 PLN at 2026-01-01 start
-,,1:0,452:p: 80.00 PLN
+,,1:0,438:p: 80.00 PLN
   projection of konto (PLN) from 2026-02-01 to the end of 2026-02-15
   holder: ask p (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 90.00 PLN at the start of 2026-02-01
   counted:
     2026-02-15:
@@ -226791,7 +226850,8 @@ version card_2026
   tally 2
 
 ask a14: count(d in w .. 2026-12-31 step 1 month)
-,,1:0,504:a14: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,521:a14: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input d2 is read by nothing
 warning: WARN-UNREAD input kh is read by nothing
@@ -227081,7 +227141,8 @@ version card_2026
   tally 2
 
 ask w08: count(n in 1 .. age(w, d2))
-,,1:0,455:w08: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,472:w08: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -227145,7 +227206,8 @@ version card_2026
   tally 2
 
 ask w09: count(n in age(w, d2) .. 5)
-,,1:0,455:w09: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,472:w09: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -227209,7 +227271,8 @@ version card_2026
   tally 2
 
 ask w17: sum(r2[1, f] for f in 0 .. age(w, d2) step 0.5)
-,,1:0,406:w17: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,423:w17: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -230062,10 +230125,11 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,742:plain [ax = lo]:
+,,1:0,778:plain [ax = lo]:
   r1:rate (source card "invented", locator "c")
   r2:rate (source card "invented", locator "c")
   v:wd (source card "invented", locator "c")
+  unknown day: wd
   reading: ax = lo
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
@@ -230076,6 +230140,7 @@ plain [ax = hi]:
   r2:rate (source card "invented", locator "c")
   v:twice (source card "invented", locator "c")
   v:wd (source card "invented", locator "c")
+  unknown day: wd
   reading: ax = hi
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
@@ -230704,24 +230769,27 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,1396:w15: 20.00 PLN
+,,1:0,1450:w15: 20.00 PLN
   pinned: ax = lo
   pinned: wd = 2026-03-30
   cut 2026-03-01
 w21: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balance" (gift) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
+  unknown day: wd
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
 w22: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
+  unknown day: wd
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
 w23: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balance" (gift) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
+  unknown day: wd
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
@@ -231562,7 +231630,7 @@ version new
   known 2026-01-01
   nv = 2 "s"
   on1 = 0 "s"
-,,1:0,539:n_mb: 7
+,,1:0,593:n_mb: 7
   cut 2026-08-01
 f_ma: 1.00 PLN
   unfulfilled: ma
@@ -231571,12 +231639,15 @@ f_mb: 1.00 PLN
   unfulfilled: mb
   cut 2026-08-01
 f_mw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   cut 2026-08-01
 c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: ma
   unfulfilled: mb
   cut 2026-08-01
 b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: ma
   unfulfilled: mb
   cut 2026-08-01

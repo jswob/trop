@@ -14828,7 +14828,7 @@ version late_amt
   governs 2027..
   known 2026-01-01
   replace amt = 20.00 PLN "own"
-,,1:0,1026:bl: 60.00 PLN
+,,1:0,1044:bl: 60.00 PLN
   world: late
   before from: adv on 2026-12-15 reads amt
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
@@ -14839,6 +14839,7 @@ bl_plain: 60.00 PLN
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
   cut 2026-10-20
 blw: ?"date within window(2026-12-20, 2026-12-28) not precise enough for a balance" (advw)
+  unknown day: wd
   world: late
   before from: adv on 2026-12-15 reads amt
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
@@ -14918,7 +14919,8 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,445:bw_plain [ax = *]: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+,,1:0,463:bw_plain [ax = *]: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+  unknown day: wd
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
@@ -15828,9 +15830,12 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = window(2027-01-25, 2027-02-05) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,306:fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+,,1:0,361:fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  unknown day: wd
   cut 2026-03-01
 fb: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g) ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  unknown day: wd
+  unknown day: wd2
   cut 2026-03-01
 ,11:fixes/g3/f2,13:fixes-windows,24:run f2.tally --ask fa fb,820:8:f2.tally,804:model pf
   tally 2
@@ -15869,9 +15874,11 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = 2027-03-01 "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,218:fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+,,1:0,254:fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  unknown day: wd
   cut 2026-03-01
 fb: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  unknown day: wd
   cut 2026-03-01
 ,11:fixes/g3/j3,13:fixes-windows,20:run j3.tally --ask q,639:8:j3.tally,623:model pj
   tally 2
@@ -16045,7 +16052,8 @@ version v2
   governs always
   known 2026-03-15
   replace sz = 2 "c"
-,,1:0,117:sw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw" (mw)
+,,1:0,135:sw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw" (mw)
+  unknown day: wd
   cut 2026-06-30
 ,11:fixes/g3/n7,13:fixes-windows,21:run n7.tally --ask bw,673:8:n7.tally,657:model pn7
   tally 2
@@ -16084,7 +16092,8 @@ version v2
   governs always
   known 2026-03-15
   acct + [a2]
-,,1:0,147:bw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+,,1:0,165:bw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+  unknown day: wd
   unfulfilled: mw[a1]
   cut 2026-06-30
 ,13:fixes/g1/legf,11:fixes-forms,24:run legf.tally --ask q_y,995:10:legf.tally,976:model pr
@@ -16432,7 +16441,8 @@ version new
   rank[q] = 2 "s"
   rank2[p] = 2 "s"
   rank2[q] = 1 "s"
-,,1:0,193:f_mk2: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mk2" (mk2)
+,,1:0,211:f_mk2: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mk2" (mk2)
+  unknown day: wl
   unfulfilled: mk2[p]
   cut 2026-08-01
 warning: WARN-UNREAD input rank2 is read by nothing
@@ -103019,10 +103029,12 @@ version new
   pq = 2026-04-10 "s"
   pf = 2026-04-15 "s"
   go = false "s"
-,,1:0,753:d3: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
+,,1:0,843:d3: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
+  unknown day: wl
   unfulfilled: md
   cut 2026-08-01
 d4: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
+  unknown day: wl
   unfulfilled: md
   cut 2026-08-01
 e4: 0.00 PLN
@@ -103031,14 +103043,17 @@ e5: 1.00 PLN
   unfulfilled: me
   cut 2026-08-01
 k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   cut 2026-08-01
 n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   cut 2026-08-01
 w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   cut 2026-08-01
 ,17:fixes/p60/pos_key,11:fixes-sweep,17:run pos_key.tally,1479:13:pos_key.tally,1456:model p
   tally 2
@@ -103478,7 +103493,8 @@ version v
   opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
 
 ask q: sum(days_between(d0, dk[k]) for k in ks)
-,,1:0,164:q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
+,,1:0,185:q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
+  unknown day: dk[a]
   cut 2026-04-25
 warning: WARN-UNREAD place wallet is read by nothing
 ,22:fixes/p60/mv_row_value,11:fixes-sweep,22:run mv_row_value.tally,2032:18:mv_row_value.tally,2004:model p
@@ -105580,7 +105596,8 @@ version new
   known 2026-01-01
   nv = 2 "s"
   on1 = 0 "s"
-,,1:0,116:n_ma: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (ma)
+,,1:0,134:n_ma: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (ma)
+  unknown day: wl
   cut 2026-08-01
 ,24:r11/count_refused_amount,9:fixes-r11,23:run m.tally --ask c_ref,3166:7:m.tally,3150:model hh
   tally 2
@@ -107576,7 +107593,8 @@ version v
 
 ask lo_plain: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day)
 ask bj: bal(konto, 2026-01-31)
-,,1:0,212:lo_plain: ?"date within window(2026-01-10, 2026-01-12) not precise enough for a balance" (inc[2026-01])
+,,1:0,239:lo_plain: ?"date within window(2026-01-10, 2026-01-12) not precise enough for a balance" (inc[2026-01])
+  unknown day: pd[2026-01]
   cut 2026-01-01
 bj: 410.00 PLN
   cut 2026-01-01
@@ -107644,7 +107662,9 @@ ask t1: bal(konto, 2026-03-06)
 ask x1: (w1 < 2026-03-06) or (w2 > 2026-03-07)
 ask n1: b[a] > 2026-04-01
 ask fk: vv[k] for k in ks
-,,1:0,338:t1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (m1) ?"date within window(2026-03-06, 2026-03-08) not precise enough for a balance" (m2)
+,,1:0,374:t1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (m1) ?"date within window(2026-03-06, 2026-03-08) not precise enough for a balance" (m2)
+  unknown day: w1
+  unknown day: w2
   cut 2026-01-01
 warning: WARN-UNREAD def early is read by nothing
 warning: WARN-UNREAD input goal is read by nothing
@@ -107712,7 +107732,8 @@ ask t1: bal(konto, 2026-03-06)
 ask x1: (w1 < 2026-03-06) or (w2 > 2026-03-07)
 ask n1: b[a] > 2026-04-01
 ask fk: vv[k] for k in ks
-,,1:0,249:n1: ?"date within window(2026-03-01, 2026-03-02) not precise enough for a key" (a)
+,,1:0,266:n1: ?"date within window(2026-03-01, 2026-03-02) not precise enough for a key" (a)
+  unknown day: a
   cut 2026-01-01
 warning: WARN-UNREAD def early is read by nothing
 warning: WARN-UNREAD input goal is read by nothing
@@ -107780,7 +107801,9 @@ ask t1: bal(konto, 2026-03-06)
 ask x1: (w1 < 2026-03-06) or (w2 > 2026-03-07)
 ask n1: b[a] > 2026-04-01
 ask fk: vv[k] for k in ks
-,,1:0,350:x1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for w1 < 2026-03-06" (w1) ?"date within window(2026-03-06, 2026-03-08) not precise enough for w2 > 2026-03-07" (w2)
+,,1:0,386:x1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for w1 < 2026-03-06" (w1) ?"date within window(2026-03-06, 2026-03-08) not precise enough for w2 > 2026-03-07" (w2)
+  unknown day: w1
+  unknown day: w2
   cut 2026-01-01
 warning: WARN-UNREAD def early is read by nothing
 warning: WARN-UNREAD input goal is read by nothing
@@ -109738,23 +109761,29 @@ ask b4: min(bal(konto, 2026-03-07), zero)
 ask f1: flows(konto, 2026-03)
 ask f2: flows(konto, 2026-03-01 .. 2026-03-07)
 ask h1: min(bal(konto, d) for d in 2026-03-11 .. 2026-04-30 step 1 day)
-,,1:0,737:b1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+,,1:0,845:b1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-01-01
 b2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-01-01
 b3: 100.00 PLN
   cut 2026-01-01
 b4: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-01-01
 f1: 100.00 PLN
   cut 2026-01-01
 f2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of konto" (pay)
+  unknown day: wd
   cut 2026-01-01
 h1: 100.00 PLN
   cut 2026-01-01
 l1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-01-01
 l2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-01-01
 ,18:d20/same_two_kinds,7:fixes-d,23:run m.tally --ask f b c,1402:7:m.tally,1386:model t
   tally 2
@@ -109998,7 +110027,8 @@ ask fd_each_s1: flows(konto, 2026-12-01 .. 2026-12-31) with wd = 2026-12-20
 
 ask fd_each_s2: flows(konto, 2026-12-01 .. 2026-12-31) with wd = 2027-01-01
 ask fin: flows(konto, 2026-12-01 .. 2027-01-31)
-,,1:0,244:fd: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+,,1:0,262:fd: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  unknown day: wd
   cut 2026-03-01
 fd_each_s1: 10.00 PLN
   pinned: wd = 2026-12-20
@@ -110250,7 +110280,8 @@ ask p4_s2: bal(jar, 2026-03-06) with wd = 2026-03-06
 ask p4_s3: bal(jar, 2026-03-06) with wd = 2026-03-07
 ask p5: bal(jar, 2026-03-31) with wd = 2026-03-05
 ask p6: bal(jar, 2026-03-31) with wd = 2026-03-08
-,,1:0,1060:p1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+,,1:0,1096:p1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unknown day: wd
   cut 2026-01-01
 p2_s1: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
   pinned: wd = 2026-03-05
@@ -110262,6 +110293,7 @@ p2_s3: 50.00 PLN
   pinned: wd = 2026-03-07
   cut 2026-01-01
 p3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unknown day: wd
   cut 2026-01-01
 p4_s1: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
   pinned: wd = 2026-03-05
@@ -110339,7 +110371,8 @@ ask f_put: flows(put, 2026-03)
 ask f_put_each_s1: flows(put, 2026-03) with wd = 2026-03-05
 
 ask f_put_each_s2: flows(put, 2026-03) with wd = 2026-03-08
-,,1:0,1878:b_box: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (put)
+,,1:0,1986:b_box: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (put)
+  unknown day: wd
   cut 2026-01-01
 b_box_each_s1: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
   pinned: wd = 2026-03-05
@@ -110348,6 +110381,8 @@ b_box_each_s2: 100.00 PLN
   pinned: wd = 2026-03-08
   cut 2026-01-01
 b_jar: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pin, put)
+  unknown day: wd
+  unknown day: wo
   cut 2026-01-01
 b_jar_each_s1: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
   pinned: wd = 2026-03-05
@@ -110374,10 +110409,13 @@ b_jar_each_s6: refused: RUN-LIFESPAN pin.cash moves into or out of old outside i
   pinned: wo = 2026-03-08
   cut 2026-01-01
 b_old: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pin, pout)
+  unknown day: wo
   cut 2026-01-01
 b_old_each: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pin, pout)
+  unknown day: wo
   cut 2026-01-01
 f_put: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of put" (put)
+  unknown day: wd
   cut 2026-01-01
 f_put_each_s1: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
   pinned: wd = 2026-03-05
@@ -110457,7 +110495,8 @@ ask t2_s8: bal(pot, 2026-04-30) with wa = 2026-04-09, wb = 2026-04-10
 ask t2_s9: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-07
 
 ask t2_s10: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-11
-,,1:0,1973:e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+,,1:0,2027:e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  unknown day: wd
   cut 2026-01-01
 e2_s1: 100.00 PLN
   pinned: wd = 2026-03-05
@@ -110466,6 +110505,7 @@ e2_s2: refused: RUN-LIFESPAN empty.cash moves into or out of tmp outside its lif
   pinned: wd = 2026-03-08
   cut 2026-01-01
 e3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  unknown day: wd
   cut 2026-01-01
 e4_s1: 0.00 PLN
   pinned: wd = 2026-03-05
@@ -110474,6 +110514,7 @@ e4_s2: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding 100.00 PLN
   pinned: wd = 2026-03-08
   cut 2026-01-01
 t1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 t2_s1: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
   pinned: wa = 2026-04-05
@@ -110552,7 +110593,8 @@ ask c3: flows(pay, 2026-03)
 ask c4: flows(pay, 2026-03)
 ask c5: bal(konto, 2026-03-31) as known 2026-03-07
 ask c6: bal(konto, 2026-03-31) as known 2026-03-07
-,,1:0,157:c1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+,,1:0,175:c1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-03-08
 c6: 100.00 PLN
   unfulfilled: pay
@@ -110601,11 +110643,14 @@ ask e2_s2: bal(konto, 2026-06-30) with ws = 2025-12-30, we = 2026-07-01
 ask e2_s3: bal(konto, 2026-06-30) with ws = 2026-01-01, we = 2026-06-28
 
 ask e2_s4: bal(konto, 2026-06-30) with ws = 2026-01-01, we = 2026-07-01
-,,1:0,761:s1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early)
+,,1:0,815:s1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early)
+  unknown day: ws
   cut 2025-12-01
 s4: 1
   cut 2025-12-01
 e1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early) ?"date within window(2026-06-28, 2026-07-03) not precise enough for a balance" (late)
+  unknown day: we
+  unknown day: ws
   cut 2025-12-01
 e2_s1: 100.00 PLN
   pinned: we = 2026-06-28
@@ -111289,11 +111334,12 @@ ask a4_s1: count(t in transfers over 2026-03-01 .. 2026-03-31) with wd = 2026-03
 
 ask a4_s2: count(t in transfers over 2026-03-01 .. 2026-03-31) with wd = 2026-03-08
 ask a5: flows(pay, 2026-02)
-,,1:0,315:a1: 0.00 PLN
+,,1:0,333:a1: 0.00 PLN
   cut 2026-03-08
 a2: 0.00 PLN
   cut 2026-03-08
 a3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a binding over transfers" (pay)
+  unknown day: wd
   cut 2026-03-08
 a4_s1: 0
   pinned: wd = 2026-03-05
@@ -111402,7 +111448,8 @@ ask p2_s2: bal(pot, 2026-04-30) with wa = 2026-04-06
 ask p2_s3: bal(pot, 2026-04-30) with wa = 2026-04-07
 ask j3: bal(jar, 2026-04-30) with wa = 2026-04-05
 ask f3: flows(oa, 2026-04) with wa = 2026-04-05
-,,1:0,1613:f1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of oa" (oa)
+,,1:0,1667:f1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of oa" (oa)
+  unknown day: wa
   cut 2026-01-01
 f2_s1: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
   pinned: wa = 2026-04-05
@@ -111417,6 +111464,7 @@ f3: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans 
   pinned: wa = 2026-04-05
   cut 2026-01-01
 j1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 j2_s1: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
   pinned: wa = 2026-04-05
@@ -111431,6 +111479,7 @@ j3: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans 
   pinned: wa = 2026-04-05
   cut 2026-01-01
 p1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 p2_s1: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
   pinned: wa = 2026-04-05
@@ -111490,7 +111539,8 @@ ask g4_s2: bal(pot, 2026-04-30) with wa = 2026-04-08
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g7: flows(ob, 2026-04) with wa = 2026-04-05
-,,1:0,1240:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+,,1:0,1276:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+  unknown day: wa
   cut 2026-01-01
 g2_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   pinned: wa = 2026-04-05
@@ -111499,6 +111549,7 @@ g2_s2: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and pl
   pinned: wa = 2026-04-08
   cut 2026-01-01
 g3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 g4_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   pinned: wa = 2026-04-05
@@ -111562,7 +111613,8 @@ ask c2_s2: bal(konto, 2026-03-31) with wd = 2026-03-06
 ask c2_s3: bal(konto, 2026-03-31) with wd = 2026-03-09
 ask c3: bal(konto, 2026-03-31) with wd = 2026-03-07
 ask c4: bal(konto, 2026-03-31) with wd = 2026-03-04
-,,1:0,473:c1: ?"date within window(2026-03-04, 2026-03-10) not precise enough for a balance" (pay)
+,,1:0,491:c1: ?"date within window(2026-03-04, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-04-30
 c2_s1: 0.00 PLN
   pinned: wd = 2026-03-04
@@ -111888,7 +111940,7 @@ ask b5: bal(k2, 2026-03-04) partial
 ask b6: bal(k2, 2026-03-31) from 2026-03-06 partial
 ask b7: bal(k2, 2026-03-04) from 2026-03-04 partial
 ask b8: explain bal(k2, 2026-03-31) from 2026-03-05
-,,1:0,1455:b3: 9 999.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02]) + -1 × ?"how much in Mar" (hamt[2026-03])
+,,1:0,1441:b3: 9 999.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02]) + -1 × ?"how much in Mar" (hamt[2026-03])
   unfulfilled: hm[2026-01]
   unfulfilled: hm[2026-02]
   cut 2026-10-20
@@ -111912,7 +111964,7 @@ b7: 9 999.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02])
 b8: ?"how much in Feb" (hamt[2026-02]) ?"how much in Mar" (hamt[2026-03])
   projection of k2 (PLN) from 2026-03-05 to the end of 2026-03-31
   holder: ask b8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: ?"how much in Feb" (hamt[2026-02]) at the start of 2026-03-05
   counted:
     2026-03-05:
@@ -112171,7 +112223,8 @@ ask g4_s1: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g4_s2: bal(pot, 2026-04-30) with wa = 2026-04-08
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
-,,1:0,1102:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+,,1:0,1138:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+  unknown day: wa
   cut 2026-01-01
 g2_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   pinned: wa = 2026-04-05
@@ -112180,6 +112233,7 @@ g2_s2: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and pl
   pinned: wa = 2026-04-08
   cut 2026-01-01
 g3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 g4_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
   pinned: wa = 2026-04-05
@@ -112752,15 +112806,18 @@ version v
   w_zer = window(2026-04-15, 2026-04-25) "s"
   zero = 0.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-,,1:0,529:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+,,1:0,592:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+  unknown day: w_zer
   cut 2026-08-01
 fe: 0.00 PLN
   cut 2026-08-01
 fm: ?"date within window(2026-04-15, 2026-04-25) not precise enough for flows of zer" (zer)
+  unknown day: w_zer
   cut 2026-08-01
 fz: 0.00 PLN
   cut 2026-08-01
 nz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+  unknown day: w_zer
   unfulfilled: zer
   cut 2026-08-01
 xz (x = zer): ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
@@ -112796,17 +112853,20 @@ version v
   w_zer = window(2026-04-15, 2026-04-25) "s"
   zero = 0.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-,,1:0,559:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+,,1:0,622:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+  unknown day: w_zer
   cut 2026-08-01
 fe: 0.00 PLN
   cut 2026-08-01
 fm: ?"date within window(2026-04-15, 2026-04-25) not precise enough for flows of zer" (zer)
+  unknown day: w_zer
   cut 2026-08-01
 fw: 0.00 PLN
   cut 2026-08-01
 fz: 0.00 PLN
   cut 2026-08-01
 nz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+  unknown day: w_zer
   unfulfilled: zer
   cut 2026-08-01
 xz (x = zer): ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
@@ -113205,12 +113265,12 @@ pw: (620 PLN (standard error 31.8651; 40 paths; horizon 2026-03-05), 620 PLN (st
   pinned: work = yes
   unfulfilled: in1
   law date 2026-06-01, cut 2026-06-10
-,25:fixes/t22/order_keyed_def,8:fixes-22,11:run m.tally,1805:7:m.tally,1789:model fxorder
+,25:fixes/t22/order_keyed_def,8:fixes-22,11:run m.tally,1739:7:m.tally,1723:model fxorder
   tally 2
   on 2026-06-10
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.2 G1 (#211, pick P11, G1's review): two decisions on one day read one place, and b reads a def keyed by a movement. With the fault's fix the def's key records its edge to the movements, so load orders a, then b, and both answer (2.1.8: RUN-ORDER decisions a and b read each other); readers-of a gains the def (classes S-7/d, S-7/e)."
+  note "T, tally 2.2 G1 (#211, pick P11, G1's review): two decisions on one day read one place, and b reads a def keyed by a movement. With the fault fixed as now (pick P14) the graph is tally 2.1.8's: RUN-ORDER decisions a and b read each other, and readers-of a doesn't list the def."
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -113265,19 +113325,1147 @@ version v
 
 ask f: bal(wallet, 2026-03-31) law 2026-06-01
 ask ra: readers-of a
-,,1:0,422:f [work = yes]: 100.00 EUR
-  reading: work = yes
-  unfulfilled: a
-  unfulfilled: b
+,,1:0,271:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
   unfulfilled: in1
   law date 2026-06-01, cut 2026-06-10
-f [work = no]: 300.00 EUR
-  reading: work = no
-  unfulfilled: a
-  unfulfilled: b
-  unfulfilled: in1
-  law date 2026-06-01, cut 2026-06-10
-ra: by_helper, by_inline, in_pln, b
+ra: by_helper, by_inline
 warning: WARN-UNREAD def by_helper is read by nothing
 warning: WARN-UNREAD def by_inline is read by nothing
+,28:fixes/t22/cut_place_kind_any,8:fixes-22,11:run m.tally,918:7:m.tally,903:model kind_any
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1): a model's place kind of unit any that isn't outside; tally 2.2: LOAD-PLACEKIND place kind safes is of unit any and isn't outside. Twin cut_place_kind_any_twin."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind safes: place any signed
+place safe: safes lives 2026-01-01..
+place market: outside lives 1900-01-01..
+input amt_eur: money EUR
+input amt_pln: money PLN
+input fx: num PLN/EUR
+input d1: date
+
+move put_eur: transfers
+  on d1
+  leg cash from market to safe amount amt_eur
+
+move put_pln: transfers
+  on d1
+  leg cash from market to safe amount amt_pln
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt_eur = 200.00 EUR "s"
+  amt_pln = 300.00 PLN "s"
+  fx = 4.25 PLN/EUR "s"
+  d1 = 2026-02-20 "s"
+
+ask q: value(safe, 2026-03-31) in PLN by fx
+,,1:1,87:refused: LOAD-PLACEKIND place kind safes is of unit any and isn't outside (m.tally:11)
+,33:fixes/t22/cut_place_kind_any_twin,8:fixes-22,11:run m.tally,1003:7:m.tally,988:model kind_one
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1): cut_place_kind_any's stated twin: one place per unit under a kind of unit one; the value is the sum over them (850.00 + 300.00 PLN)."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind safes: place one signed
+place safe_eur: safes EUR lives 2026-01-01..
+place safe_pln: safes PLN lives 2026-01-01..
+place market: outside lives 1900-01-01..
+input amt_eur: money EUR
+input amt_pln: money PLN
+input fx: num PLN/EUR
+input d1: date
+
+move put_eur: transfers
+  on d1
+  leg cash from market to safe_eur amount amt_eur
+
+move put_pln: transfers
+  on d1
+  leg cash from market to safe_pln amount amt_pln
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt_eur = 200.00 EUR "s"
+  amt_pln = 300.00 PLN "s"
+  fx = 4.25 PLN/EUR "s"
+  d1 = 2026-02-20 "s"
+
+ask q: (value(safe_eur, 2026-03-31) in PLN by fx) + (value(safe_pln, 2026-03-31) in PLN by fx)
+,,1:0,76:q: 1 150 PLN
+  unfulfilled: put_eur
+  unfulfilled: put_pln
+  cut 2026-06-30
+,29:fixes/t22/cut_outside_reading,8:fixes-22,11:run m.tally,654:7:m.tally,639:model outside_read
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1): a balance reading of an outside place of unit any; tally 2.2: LOAD-UNIT (a balance reading of a place of unit any). Twin outside_any_kept (no reading of it)."
+
+source s "s"
+unit PLN: currency minor 0.01
+kind outs: place any signed outside
+place out: outs lives 1900-01-01..
+place konto: accounts PLN lives 2026-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  anchor out
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  stated[out] = 5.00 PLN at 2026-03-31 end "s"
+
+ask q: bal(konto, 2026-03-31)
+,,1:1,90:refused: LOAD-UNIT stated[out]: a place of unit any takes no balance reading (m.tally:20)
+,26:fixes/t22/outside_any_kept,8:fixes-22,11:run m.tally,1263:7:m.tally,1247:model outside_any
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1, pick P12): an outside place of unit any keeps bal(x, u, d), value and its ledger per unit; only its balance reading is refused (cut_outside_reading). Today and at 2.2 alike."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind brokers_out: place any signed outside
+place broker: brokers_out lives 1900-01-01..
+place konto: accounts PLN lives 2026-01-01..
+place eur_acc: accounts EUR lives 2026-01-01..
+input fx: num PLN/EUR
+input d1: date
+input d2: date
+input a_pln: money PLN
+input a_eur: money EUR
+
+move pay_pln: transfers
+  on d1
+  leg cash from konto to broker amount a_pln
+
+move pay_eur: transfers
+  on d2
+  leg cash from eur_acc to broker amount a_eur
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fx = 4.25 PLN/EUR "s"
+  d1 = 2026-02-10 "s"
+  d2 = 2026-02-11 "s"
+  a_pln = 100.00 PLN "s"
+  a_eur = 20.00 EUR "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  opening[eur_acc] = 50.00 EUR at 2026-01-01 start "s"
+
+ask b_pln: bal(broker, PLN, 2026-03-31)
+ask b_eur: bal(broker, EUR, 2026-03-31)
+ask val: value(broker, 2026-03-31) in PLN by fx
+ask led: residuals broker 2026-02
+,,1:0,393:b_eur: ?"broker has no opening or stated reading" (broker)
+  unfulfilled: pay_eur
+  cut 2026-06-30
+b_pln: ?"broker has no opening or stated reading" (broker)
+  unfulfilled: pay_pln
+  cut 2026-06-30
+led: residuals broker 2026-02
+  ledger EUR:
+  ledger PLN:
+  cut 2026-06-30
+val: ?"broker has no opening or stated reading" (broker)
+  unfulfilled: pay_eur
+  unfulfilled: pay_pln
+  cut 2026-06-30
+,21:fixes/t22/cut_after_m,8:fixes-22,11:run m.tally,2385:7:m.tally,2369:model rec
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-12-31
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input keep: money PLN
+
+input amt: money PLN
+
+input d_save: int
+
+input d_top: int
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move top[m in months]: transfers
+  on day_of(m, d_top)
+  reads konto
+  leg cash from world to konto amount max(0 PLN, keep - bal(konto))
+
+ask q_konto: bal(konto, 2026-03-31)
+
+ask q_sav: bal(sav, 2026-03-31)
+
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  amt = 1000.00 PLN "s"
+  d_save = 15 "s"
+  d_top = 20 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
+  bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
+  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  anchor sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
+  same bank[a2] = bank[b1]
+,,1:1,79:refused: LOAD-PARSE cannot parse: expected end of line, got after (m.tally:70)
+,26:fixes/t22/cut_after_m_twin,8:fixes-22,11:run m.tally,2529:7:m.tally,2513:model rec
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-12-31
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
+
+source s "synthetic"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input keep: money PLN
+
+input amt: money PLN
+
+input d_save: int
+
+input d_top: int
+
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount amt
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+move top[m in months]: transfers
+  on day_of(m, d_top)
+  reads konto
+  leg cash from world to konto amount max(0 PLN, keep - bal(konto))
+
+ask q_konto: bal(konto, 2026-03-31)
+
+ask q_sav: bal(sav, 2026-03-31)
+
+ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
+
+ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  amt = 1000.00 PLN "s"
+  d_save = 15 "s"
+  d_top = 20 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  anchor konto
+  bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
+  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
+  bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  anchor sav
+  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
+  same bank[a2] = bank[b1]
+,,1:0,334:q_konto: 200.00 PLN
+  anchor: konto 2026-03-20 end, stated 200.00 PLN, difference 0.00 PLN
+  cut 2026-04-10
+q_moved: 2 000.00 PLN
+  cut 2026-04-10
+q_sav: 2 850.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: save[2026-01]
+  unfulfilled: save[2026-02]
+  cut 2026-04-10
+q_save: 950.00 PLN
+  cut 2026-04-10
+,26:fixes/t22/cut_known_window,8:fixes-22,11:run m.tally,736:7:m.tally,721:model known_window
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-2): a version known in a window; tally 2.2: LOAD-PARSE cannot parse: expected a day, got window. Twin cut_known_window_twin (the range's last day)."
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+input fee: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+
+version raise
+  cite s
+  governs always
+  known window(2026-04-01, 2026-04-15)
+  replace fee = 200.00 PLN "s"
+
+ask early: fee as known 2026-03-31
+ask mid: fee as known 2026-04-10
+ask late: fee as known 2026-05-01
+,,1:1,74:refused: LOAD-PARSE cannot parse: expected a day, got window (m.tally:23)
+,31:fixes/t22/cut_known_window_twin,8:fixes-22,11:run m.tally,699:7:m.tally,684:model known_day
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-2): cut_known_window's stated twin: a day known only to lie in a range is the range's last day (100.00 PLN before, 200.00 PLN after)."
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+input fee: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+
+version raise
+  cite s
+  governs always
+  known 2026-04-15
+  replace fee = 200.00 PLN "s"
+
+ask early: fee as known 2026-03-31
+ask mid: fee as known 2026-04-10
+ask late: fee as known 2026-05-01
+,,1:0,154:early: 100.00 PLN
+  cut 2026-03-31
+late: 200.00 PLN
+  cut 2026-05-01
+mid: 100.00 PLN
+  cut 2026-04-10
+warning: WARN-UNREAD place konto is read by nothing
+,31:fixes/t22/cut_same_rows_version,8:fixes-22,11:run m.tally,603:7:m.tally,588:model same_rows_version
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-8): a version's same between two rows of a state input; tally 2.2: LOAD-SAME same fee_bank = fee_broker: a row of an input on either side. Twin cut_same_rows_twin (two inputs and a def with a stated-hole rule)."
+
+source s "s"
+unit PLN: currency minor 0.01
+input fee_bank: money PLN
+input fee_broker: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_bank = 12.00 PLN "s"
+  fee_broker = 12.00 PLN "s"
+  same fee_bank = fee_broker
+
+ask q: fee_bank
+,,1:1,100:refused: LOAD-SAME same fee_bank = fee_broker: a row of an input and a row of an input (m.tally:19)
+,30:fixes/t22/cut_same_rows_header,8:fixes-22,11:run m.tally,617:7:m.tally,602:model same_rows_header
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  same fee[a1] = fee[a2]
+  note "T, tally 2.2 (#211, G3, S-8): a header's same between two rows of an input; tally 2.2: LOAD-SAME (a row of an input on either side). Twin cut_same_rows_twin; in a joint model the pin (with a.x[k] = b.y[j])."
+
+source s "s"
+unit PLN: currency minor 0.01
+kind flat
+input fee[f in flat]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flat + [a1] lives 2026-01-01..
+  flat + [a2] lives 2026-01-01..
+  fee[a1] = 12.00 PLN "s"
+  fee[a2] = 12.00 PLN "s"
+
+ask q: fee[a1]
+,,1:1,95:refused: LOAD-SAME same fee[a1] = fee[a2]: a row of an input and a row of an input (m.tally:1)
+,28:fixes/t22/cut_same_rows_twin,8:fixes-22,11:run m.tally,681:7:m.tally,666:model same_rows_def
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-8): cut_same_rows_version's stated twin (MIGRATION's row): a def that reads both inputs, a stated hole where they disagree (12.00 PLN; fee_clash, its twin with 15.00, the hole)."
+
+source s "s"
+unit PLN: currency minor 0.01
+input fee_bank: money PLN
+input fee_broker: money PLN
+
+def fee: money PLN
+  rule agreed = fee_bank
+  rule clash beats agreed = ?"the bank and the broker state different fees" when fee_bank != fee_broker
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_bank = 12.00 PLN "s"
+  fee_broker = 12.00 PLN "s"
+
+ask q: fee
+,,1:0,30:q: 12.00 PLN
+  cut 2026-06-30
+,25:fixes/t22/same_kept_clock,8:fixes-22,11:run m.tally,1017:7:m.tally,1001:model kept_clock
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-5, critic C-11): a same line with a planned instance on a side keeps its clock: two planned moves of 100.00 PLN on one day, stated same by a version known 2026-05-01: before 200.00 PLN (as known 2026-04-01), today 100.00 PLN. The same at 2.2."
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input amt: money PLN
+
+move rent_a: transfers
+  on d1
+  leg cash from konto to world amount amt
+
+move rent_b: transfers
+  on d1
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-10 "s"
+  amt = 100.00 PLN "s"
+
+version one_rent
+  cite s
+  governs always
+  known 2026-05-01
+  same rent_a = rent_b
+
+ask before: flows(konto, 2026-03) as known 2026-04-01
+ask today: flows(konto, 2026-03)
+,,1:0,139:before: -200.00 PLN
+  unfulfilled: rent_a
+  unfulfilled: rent_b
+  cut 2026-04-01
+today: -100.00 PLN
+  unfulfilled: rent_b
+  cut 2026-06-30
+,17:fixes/t22/cut_low,8:fixes-22,11:run m.tally,1050:7:m.tally,1034:model g5_low_form
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G5, S-9): the cut form low(x, a .. b) from t; cut_low_twin is its twin, the min it means."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay: money PLN
+
+input d_feb: date
+
+input d_mar: date
+
+input d_pay: date
+
+move rent_feb: transfers
+  on d_feb
+  leg cash from konto to world amount rent
+
+move rent_mar: transfers
+  on d_mar
+  leg cash from konto to world amount rent
+
+move pay_mar: transfers
+  on d_pay
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rent = 40.00 PLN "the card"
+  pay = 100.00 PLN "the card"
+  d_feb = 2026-02-05 "the card"
+  d_mar = 2026-03-05 "the card"
+  d_pay = 2026-03-20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: low(konto, 2026-02-01 .. 2026-04-30) from 2026-02-01
+,,1:1,68:refused: LOAD-PARSE cannot parse: expected ")", got .. (m.tally:49)
+,22:fixes/t22/cut_low_twin,8:fixes-22,11:run m.tally,1068:7:m.tally,1052:model g5_low_min
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G5, S-9): cut_low's twin: the min over days it means, the clause on the bal read."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay: money PLN
+
+input d_feb: date
+
+input d_mar: date
+
+input d_pay: date
+
+move rent_feb: transfers
+  on d_feb
+  leg cash from konto to world amount rent
+
+move rent_mar: transfers
+  on d_mar
+  leg cash from konto to world amount rent
+
+move pay_mar: transfers
+  on d_pay
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rent = 40.00 PLN "the card"
+  pay = 100.00 PLN "the card"
+  d_feb = 2026-02-05 "the card"
+  d_mar = 2026-03-05 "the card"
+  d_pay = 2026-03-20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-04-30 step 1 day)
+,,1:0,31:q: 420.00 PLN
+  cut 2026-03-01
+,18:fixes/t22/cut_next,8:fixes-22,11:run m.tally,1022:7:m.tally,1006:model g5_next_form
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G5, S-9): the cut form next(K, d); cut_next_twin is its twin, the first it means."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay: money PLN
+
+input d_feb: date
+
+input d_mar: date
+
+input d_pay: date
+
+move rent_feb: transfers
+  on d_feb
+  leg cash from konto to world amount rent
+
+move rent_mar: transfers
+  on d_mar
+  leg cash from konto to world amount rent
+
+move pay_mar: transfers
+  on d_pay
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rent = 40.00 PLN "the card"
+  pay = 100.00 PLN "the card"
+  d_feb = 2026-02-05 "the card"
+  d_mar = 2026-03-05 "the card"
+  d_pay = 2026-03-20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: next(transfers, 2026-02-10).day
+,,1:1,48:refused: LOAD-NAME unknown id next (m.tally:49)
+,23:fixes/t22/cut_next_twin,8:fixes-22,11:run m.tally,1066:7:m.tally,1050:model g5_next_first
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G5, S-9): cut_next's twin: the first movement of the kind on or after the day, ties by its day."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay: money PLN
+
+input d_feb: date
+
+input d_mar: date
+
+input d_pay: date
+
+move rent_feb: transfers
+  on d_feb
+  leg cash from konto to world amount rent
+
+move rent_mar: transfers
+  on d_mar
+  leg cash from konto to world amount rent
+
+move pay_mar: transfers
+  on d_pay
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rent = 40.00 PLN "the card"
+  pay = 100.00 PLN "the card"
+  d_feb = 2026-02-05 "the card"
+  d_mar = 2026-03-05 "the card"
+  d_pay = 2026-03-20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: (first(m in transfers over 2026-02-10 ..) ties by m.day).day
+,,1:0,31:q: 2026-03-05
+  cut 2026-03-01
+,25:fixes/t22/cut_explain_low,8:fixes-22,11:run m.tally,1046:7:m.tally,1030:model g5_explain_low
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G5, S-9): the cut form explain low(x, a .. b); cut_explain_low_twin is its twin, two asks."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay: money PLN
+
+input d_feb: date
+
+input d_mar: date
+
+input d_pay: date
+
+move rent_feb: transfers
+  on d_feb
+  leg cash from konto to world amount rent
+
+move rent_mar: transfers
+  on d_mar
+  leg cash from konto to world amount rent
+
+move pay_mar: transfers
+  on d_pay
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rent = 40.00 PLN "the card"
+  pay = 100.00 PLN "the card"
+  d_feb = 2026-02-05 "the card"
+  d_mar = 2026-03-05 "the card"
+  d_pay = 2026-03-20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask e: explain low(konto, 2026-02-01 .. 2026-04-30)
+,,1:1,75:refused: LOAD-PARSE cannot parse: expected end of line, got ( (m.tally:49)
+,30:fixes/t22/cut_explain_low_twin,8:fixes-22,11:run m.tally,1162:7:m.tally,1146:model g5_explain_two
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G5, S-9): cut_explain_low's twin, two asks: the day of the lowest balance by argmin, ties by the day, then explain bal on that day."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay: money PLN
+
+input d_feb: date
+
+input d_mar: date
+
+input d_pay: date
+
+move rent_feb: transfers
+  on d_feb
+  leg cash from konto to world amount rent
+
+move rent_mar: transfers
+  on d_mar
+  leg cash from konto to world amount rent
+
+move pay_mar: transfers
+  on d_pay
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rent = 40.00 PLN "the card"
+  pay = 100.00 PLN "the card"
+  d_feb = 2026-02-05 "the card"
+  d_mar = 2026-03-05 "the card"
+  d_pay = 2026-03-20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask e_day: argmin(bal(konto, d) for d in 2026-02-01 .. 2026-04-30 step 1 day) ties by d
+
+ask e: explain bal(konto, 2026-03-05)
+,,1:0,385:e: 420.00 PLN
+  balance of konto (PLN) at the end of 2026-03-05
+  from: opening v_card:opening[konto] = 500.00 PLN, 2026-01-01 start (version v_card, source card, locator "the card")
+  2026-02-05:
+    rent_feb.cash (past): -40.00 PLN
+  2026-03-05:
+    rent_mar.cash (plan): -40.00 PLN
+  unfulfilled: rent_feb
+  cut 2026-03-01
+e_day: 2026-03-05
+  unfulfilled: rent_feb
+  cut 2026-03-01
+,22:fixes/t22/cut_each_ask,8:fixes-22,11:run m.tally,763:7:m.tally,748:model g4_each_ask
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G4, S-4): the cut clause windows each on an ask line; cut_each_ask_twin is its twin, the plain line and the window's days pinned."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: bal(konto, 2026-03-06) windows each
+,,1:1,81:refused: LOAD-PARSE cannot parse: expected end of line, got windows (m.tally:32)
+,27:fixes/t22/cut_each_ask_twin,8:fixes-22,11:run m.tally,854:7:m.tally,839:model g4_each_ask_pinned
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G4, S-4): cut_each_ask's twin: the plain line (a hole naming w) and the window's days pinned, 2026-03-05 to 06 and 07."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: bal(konto, 2026-03-06)
+
+ask q_05: bal(konto, 2026-03-06) with w = 2026-03-05
+
+ask q_07: bal(konto, 2026-03-06) with w = 2026-03-07
+,,1:0,217:q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
+  unknown day: w
+  cut 2026-01-01
+q_05: 600.00 PLN
+  pinned: w = 2026-03-05
+  cut 2026-01-01
+q_07: 500.00 PLN
+  cut 2026-01-01
+,23:fixes/t22/cut_each_read,8:fixes-22,11:run m.tally,742:7:m.tally,727:model g4_each_read
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G4, S-4): the cut clause windows each on a projection read; cut_each_read_twin is its twin."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: bal(konto, 2026-03-06) from 2026-01-01 windows each
+,,1:1,81:refused: LOAD-PARSE cannot parse: expected end of line, got windows (m.tally:32)
+,28:fixes/t22/cut_each_read_twin,8:fixes-22,11:run m.tally,890:7:m.tally,875:model g4_each_read_pinned
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G4, S-4): cut_each_read's twin: the plain projection read (a hole naming w) and the window's days pinned."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+
+ask q: bal(konto, 2026-03-06) from 2026-01-01
+
+ask q_05: bal(konto, 2026-03-06) from 2026-01-01 with w = 2026-03-05
+
+ask q_07: bal(konto, 2026-03-06) from 2026-01-01 with w = 2026-03-07
+,,1:0,217:q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
+  unknown day: w
+  cut 2026-01-01
+q_05: 600.00 PLN
+  pinned: w = 2026-03-05
+  cut 2026-01-01
+q_07: 500.00 PLN
+  cut 2026-01-01
+,27:fixes/t22/unknown_day_names,8:fixes-22,11:run m.tally,1682:7:m.tally,1666:model g22_unknown_day_names
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (N/a, #211): a hole made from a day not yet known names it in its register, unknown day: <name>: the cell that holds it (n_cell, w), a calendar's entry (n_cal, added one_of([2026-06-22, 2026-06-24])), a window a rule builds, by its own text (n_rule); two at once, sorted by their text (n_two); a window value that is no hole names none (n_win)."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+input cal: calendar
+
+input d0: date
+
+input d1: date
+
+input from_day: date
+
+def wr: date = window(d0, d1)
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+move pay_cal: transfers
+  on add_business(from_day, 1, cal)
+  leg cash from world to sav amount pay
+
+move pay_r: transfers
+  on wr
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
+  d0 = 2026-05-04 "the card"
+  d1 = 2026-05-06 "the card"
+  from_day = 2026-06-19 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "the card"
+
+ask n_cell: bal(konto, 2026-03-06)
+
+ask n_cal: bal(sav, 2026-06-22)
+
+ask n_rule: bal(konto, 2026-05-05)
+
+ask n_two: bal(konto, 2026-03-06) + bal(konto, 2026-05-05)
+
+ask n_win: w
+,,1:0,770:n_cal: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_cal)
+  unknown day: added one_of([2026-06-22, 2026-06-24])
+  cut 2026-01-01
+n_cell: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
+  unknown day: w
+  cut 2026-01-01
+n_rule: ?"date within window(2026-05-04, 2026-05-06) not precise enough for a balance" (pay_r)
+  unknown day: window(2026-05-04, 2026-05-06)
+  cut 2026-01-01
+n_two: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for a balance" (pay_r)
+  unknown day: w
+  unknown day: window(2026-05-04, 2026-05-06)
+  cut 2026-01-01
+n_win: window(2026-03-05, 2026-03-07)
+  cut 2026-01-01
+,18:fixes/t22/fault_n4,8:fixes-22,11:run m.tally,954:7:m.tally,939:model n4
+  tally 2
+  on 2025-04-01
+  start 2025-01-01
+  end 2025-06-30
+  note "T, tally 2.2 G1 (#211, pick P14: the fault as now fixed; the lead's N-4 probe): a def keyed by an event kind and an ordered index, read at a shifted index with no guard by a def a transfer's amount reads."
+
+source s "s"
+unit DUK: currency minor 0.01
+index mon = month 2025-01..2025-06
+place konto: accounts DUK lives 2025-01-01..
+place world: outside lives 2025-01-01..
+input d0: date
+input f: money DUK
+input mk: month
+
+def d[t in transfers, m in mon]: money DUK = f
+def r[t in transfers, m in mon]: money DUK = d[t, m - 1]
+
+move m0: transfers
+  on d0
+  leg cash from world to konto amount f
+
+move m1: transfers
+  on d0
+  leg cash from world to konto amount r[m0, mk]
+
+ask q: bal(konto, 2025-06-30)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d0 = 2025-01-05 "s"
+  f = 1.00 "s"
+  mk = 2025-03 "s"
+  opening[konto] = 0.00 at 2025-01-01 start "s"
+,,1:0,65:q: 2.00 DUK
+  unfulfilled: m0
+  unfulfilled: m1
+  cut 2025-04-01
+,18:fixes/t22/fault_n3,8:fixes-22,11:run m.tally,884:7:m.tally,869:model n3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+  note "T, tally 2.2 G1 (#211, pick P14: the fault as now fixed; the lead's N-3 probe): a def keyed by an event kind whose at binds over the kind, with an observed input; an ask with no law reads it."
+
+source s "s"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2025-03-01..
+place world: outside lives 2025-03-01..
+input bank: observed
+input mo: month
+input d1: date
+input amt: money DUK
+input f: money DUK
+
+def fee[t in transfers]: money DUK = f at max(x.day for x in transfers over mo)
+
+move m1: transfers
+  on d1
+  leg cash from world to konto amount amt
+
+ask q: sum(fee[t] for t in transfers over mo)
+
+version v
+  cite s
+  governs always
+  known 2025-03-01
+  mo = 2025-03 "s"
+  d1 = 2025-03-05 "s"
+  amt = 10.00 "s"
+  f = 1.00 "s"
+  opening[konto] = 0.00 at 2025-03-01 start "s"
+,,1:1,133:refused: LOAD-LAWDATE ask q reaches fee, whose at reads law-dated facts at its reader's law date, without law (L §4.3) (m.tally:24)
 ,
