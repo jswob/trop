@@ -1,0 +1,37 @@
+# tally 2.2 (CHANGES.md 2.2-1), L §5.10: only a place of unit `any` is refused a balance reading; an `outside` kind of
+# a stated unit (household X's tax offices, FLOW-01's spending) keeps its ordinary one-unit reading: spending is
+# stated at 30.00 PLN on 2026-03-31 end, and its balance after 10.00 PLN more is 40.00 PLN.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+kind spending: place PLN signed outside
+place konto: accounts PLN lives 2025-01-01..
+place shop: spending lives 2025-01-01..
+input d1: date
+input amt: money PLN
+
+move pay: transfers
+  on d1
+  leg cash from konto to shop amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  anchor shop
+  d1 = 2026-04-02 "s"
+  amt = 10.00 PLN "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[shop] = 0.00 PLN at 2026-01-01 start "s"
+  stated[shop] = 30.00 PLN at 2026-03-31 end "s"
+
+ask q: bal(shop, 2026-04-30)
+=== expect
+q: 40.00 PLN
+...

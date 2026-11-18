@@ -550,13 +550,18 @@ class Loader:
             if k.spec != 'place':
                 continue
             unit = sign = None
+            outside = False
             x = k
-            while x is not None and (unit is None or sign is None):
+            while x is not None:
                 unit = x.unit if unit is None else unit
                 sign = x.sign if sign is None else sign
+                outside = outside or bool(x.outside)
                 x = K[x.parent] if x.parent is not None else None
             if unit is None or sign is None:
                 raise LoadError('LOAD-PLACEKIND', 'place kind %s has no unit or sign rule' % k.id, s.loc)
+            if unit == 'any' and not outside:
+                # L §5.7, §8.3 (tally 2.2, S-1): `any` is the unit of an outside kind only
+                raise LoadError('LOAD-PLACEKIND', "place kind %s is of unit any and isn't outside" % k.id, s.loc)
         for kid, k in K.items():
             if k.spec == 'event' and k.certainty is None:
                 x = k
@@ -2193,13 +2198,16 @@ class Loader:
         return one(n)
 
     def place_value(self, inf, r):
-        """A balance reading's value: a quantity in its place's unit; a place of unit any states one row per unit
-        (L §4.6 Readings)."""
+        """A balance reading's value: a quantity in its place's unit (L §4.6 Readings); a place of unit any takes no
+        balance reading (L §5.10, §8.3 LOAD-UNIT; tally 2.2, S-1)."""
         m = self.m
         if not r.pattern or r.pattern[0][0] != 'k':
             raise LoadError('LOAD-KEY', 'a row of %s states its place' % inf.id, r.loc)
         th = m.things[r.pattern[0][1].name]
         pu = m.place_unit(th)
+        if pu == 'any':
+            raise LoadError('LOAD-UNIT', '%s[%s]: a place of unit any takes no balance reading' % (inf.id, th.name),
+                            r.loc)
         node = r.value
         if node.k == 'hole':
             return ('hole', node.text)
@@ -2207,7 +2215,7 @@ class Loader:
             return NONE
         if node.k != 'num':
             raise LoadError('LOAD-UNIT', 'a value of the wrong type for %s[%s]' % (inf.id, th.name), r.loc)
-        if pu == 'any' or pu is None:
+        if pu is None:
             if node.unit is None:
                 raise LoadError('LOAD-UNIT', '%s[%s] holds any unit; its row states the unit' % (inf.id, th.name),
                                 r.loc)
@@ -2282,8 +2290,7 @@ class Loader:
             gk = pattern_norm(r.pattern)
             if isinstance(inf, InputInfo) and inf.builtin and isinstance(getattr(r, 'val', None), Num):
                 gk = gk + (r.val.u,)
-            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE and \
-                    not reading_of_any(m, r):
+            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE:
                 nones.append((gk, r))
                 continue
             groups.setdefault(gk, []).append(r)
@@ -2291,14 +2298,6 @@ class Loader:
             # a balance reading of none states no balance (L §5.19); it is of the unit of the readings it may replace
             units = [g for g in groups if g[:-1] == gk and len(g) == len(gk) + 1]
             groups.setdefault(units[0] if len(units) == 1 else gk, []).append(r)
-        # at a place of unit any a row that states no unit (a hole, none) is a row for every unit there: with
-        # replace it replaces every unit's reading at its instant (L §5.10; tally 2.1.8 R14, P25 reopened)
-        wider = {}
-        if isinstance(inf, InputInfo) and inf.builtin:
-            for gk, rs in groups.items():
-                if rs and reading_of_any(m, rs[0]) and not isinstance(getattr(rs[0], 'val', None), Num):
-                    wider[gk] = [o for g2, rs2 in groups.items() if g2[:-1] == gk and len(g2) == len(gk) + 1
-                                 for o in rs2]
         jo = getattr(m, 'joint', None) is not None
         if jo:
             from .joint import owner_of
@@ -2354,8 +2353,7 @@ class Loader:
                 # LOAD-REPLACE "in a scenario, no base row at those keys either")
                 if r.replace and not any((known_first(o.known) < known_first(r.known) or
                                           row_layer(m, o) < row_layer(m, r)) and ov(o, r) and not owners_differ(o, r)
-                                         for o in rs + wider.get(pat, [])
-                                         if o is not r and row_layer(m, o) <= row_layer(m, r)):
+                                         for o in rs if o is not r and row_layer(m, o) <= row_layer(m, r)):
                     raise LoadError('LOAD-REPLACE', 'replace %s%s: no earlier row to replace' % (inf.id, r.keys_text()),
                                     r.loc)
         # ties between rows of different patterns (L §4.6 step 4)
@@ -2624,15 +2622,6 @@ def narrower(m, inf, pa, pb):
         if r == 'in':
             strict = True
     return strict
-
-
-def reading_of_any(m, r):
-    """Whether a row is a balance reading of a place of unit any (L §5.10)."""
-    try:
-        place = r.pattern[0][1].name
-        return m.place_unit(m.things[place]) == 'any'
-    except (AttributeError, IndexError, KeyError, TypeError):
-        return False
 
 
 def row_layer(m, r):

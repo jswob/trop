@@ -1957,7 +1957,7 @@ class Checker:
             sc2 = sc.child()
             sc2.allow_lit = True
         if lt is None:
-            # a side load can't type (a reading at a place of unit any) takes the other side's type
+            # a side load can't type (a reading of a place whose unit load doesn't see) takes the other side's type
             rt = self.tc(n.r, sc2)
             lt = self.tc(n.l, sc, expect=rt)
             if lt is None:
@@ -3184,10 +3184,6 @@ class Checker:
             cur = self.m.place_unit(th) if th is not None else None
             if isinstance(cur, str) and cur in CURRENCIES:
                 t = T.money(cur)
-            elif cur == 'any' and expect is not None:
-                # at a place of unit any a reading's unit is its value's (L §5.10, R14): it is read in the unit of
-                # what it meets (group 3's fix review, p4_planlast)
-                t = expect
         return t
 
     def t_star(self, n, sc, expect):

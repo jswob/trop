@@ -1,3 +1,5 @@
+# tally 2.2 (CHANGES.md 2.2-1): a place kind of unit `any` is an `outside` kind only; restated on one place per
+# unit, as the spec's example now is.
 # GD-1 (round 19, writer 10): was L5_17_lots_two_sales. Its regime gains is unboxed (the items at top level, gains.x written x); the
 # figures are unchanged. The comment below is the old test's.
 # Round 18, C3-13 (follows, with two fixes beside it). L §5.17's lots example now orders `order b.day ties by (b.seq,
@@ -21,7 +23,7 @@ unit PLN: currency minor 0.01
 
 kind persons
 kind notes: unit
-kind brokerages: place any min 0
+kind brokerages: place one min 0
 kind ordinary: brokerages
 
 kind trades: event certain
@@ -41,7 +43,7 @@ place fisc: outside lives 1900-01-01..
 fill matched[x in ordinary over ..]
   supply b.units.amount for b in purchases over .. where b.units.to == x
   demand s.units.amount for s in sales over .. where s.units.from == x
-  arc b.day <= s.day and unit(b.units.amount) == unit(s.units.amount)
+  arc b.day <= s.day
   order b.day ties by (b.seq, s.day, s.seq)
 def cost[s in sales]: money PLN = round(sum(matched[s.units.from].taken[b, s] * b.cash.amount / b.units.amount for b in purchases over ..), minor(PLN), half-even) at s.day
 def gain[s in sales]: money PLN = s.cash.amount - s.fee.amount - cost[s] at s.day
@@ -103,7 +105,7 @@ version own
   known 2024-01-01
   persons + [ewa] lives 1980-01-01..
   notes + [fund_x] lives 2000-01-01..
-  ordinary + [mbank] lives 2010-01-01..
+  ordinary + [mbank] fund_x lives 2010-01-01..
   t_day[b1] = 2024-03-01
   t_day[b2] = 2024-03-01
   t_day[s1] = 2024-09-02

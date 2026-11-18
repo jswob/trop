@@ -2440,11 +2440,6 @@ def m_c_gap(self, n, env, ctx):
         return Hole([('stated[%s] has no reading at %s' % (p.name, d), 'stated[%s]' % p.name)])
     gs = sorted(gs, key=lambda x: x[0])
     key, gap, r, role, unit, bc = gs[-1]
-    units = sorted(set(g[4] for g in gs if g[0] == key))
-    if len(units) > 1:
-        # two units' readings at the instant gap reads (L §5.10; tally 2.1.8 R14)
-        from .evaluate import units_at_instant
-        raise refuse('RUN-DOMAIN', units_at_instant('gap', p.name, r, units))
     self.cur.merge(bc)
     self.cur.rows[r.sid] = r
     if isinstance(gap, TallyError):

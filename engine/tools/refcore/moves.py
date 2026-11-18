@@ -233,10 +233,8 @@ class AdjMv(Movement):
 class PadMv(Movement):
     """A pad (E §6.1): takes up a statement's gap."""
 
-    def __init__(self, vid, place, itext, amount, frm, to, day, unit, per_unit=False):
-        # at a place of unit any the id ends with the unit, so two units' pads at one instant are two movements
-        # (L §5.10, E §6.1; tally 2.1.8 R14, #175)
-        self.id = 'pads:%s:%s@%s' % (vid, place, itext) + (':%s' % unit if per_unit else '')
+    def __init__(self, vid, place, itext, amount, frm, to, day, unit):
+        self.id = 'pads:%s:%s@%s' % (vid, place, itext)
         self.kind = 'pads'
         self.day = day
         self.legs = [Leg('cash', frm, to, amount, unit, day)]
@@ -523,7 +521,6 @@ def m_readings(self, ctx):
             # their known dates; inside one layer the latest known restates
             if cur is None or (row_layer(m, r), known_first(r.known)) > (row_layer(m, cur), known_first(cur.known)):
                 keep[k] = r
-    keep = any_unitless(m, keep)
     # a place stated same in a joint model: its readings from the members are read together, a joint model's own
     # row settles them, and two that disagree are a hole naming both rows (L §6.1, HOLE-SAME)
     byk = {}
@@ -546,33 +543,6 @@ def m_readings(self, ctx):
         res.append((iid, place, u, same_hole_row(m, iid, place, it, [r for o, r in ors])))
     self.run_cache[key] = res
     return res
-
-
-def any_unitless(m, keep):
-    """L §5.10 (tally 2.1.8 R14): at a place of unit any a reading is keyed by the unit its value states, and a row
-    that states none (a hole, none) leaves it unstated: a row for every unit the place holds at its instant, a unit's
-    own reading there the narrower claim. With replace it replaces every unit's reading there (none: removes them).
-    The unitless row keeps the units it doesn't stand for (`_except`); the walk gives it the rest (Walk.apply_reading)."""
-    from .loader import row_layer
-    out = dict(keep)
-    for k, r in keep.items():
-        iid, place, it, u, o = k
-        if u != 'any':
-            continue
-        own = [(k2, r2) for k2, r2 in keep.items() if k2[:3] == k[:3] and k2[4] == o and k2[3] != 'any']
-        rank = (row_layer(m, r), known_first(r.known))
-        if r.replace:
-            for k2, r2 in own:
-                if (row_layer(m, r2), known_first(r2.known)) < rank:
-                    out.pop(k2, None)
-        if r.val is NONE:
-            out.pop(k, None)
-            continue
-        import copy
-        r = copy.copy(r)
-        r._except = frozenset(k2[3] for k2, r2 in own if k2 in out)
-        out[k] = r
-    return out
 
 
 def row_owner(m, r):

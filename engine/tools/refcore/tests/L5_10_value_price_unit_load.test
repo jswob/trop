@@ -2,6 +2,7 @@
 # last(px), px a num PLN/etf: the `by` must price EUR, and load sees both units, so the reality is refused at load
 # (LOAD-UNIT value(<x>) in <CUR>: <x> is priced in <u>, not <u'>), whatever the asks. 2.1.6's refcore multiplied
 # through (15 100 000 PLN). (T's G8 vector z2.)
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === z2.tally
 model v1
   tally 2
@@ -24,7 +25,7 @@ kind funds: place one min 0 priced unit_price
 
 kind boxes: holdings
 
-kind safes: place any signed
+kind safes: place any signed outside
 
 kind unit_buys: event certain
   leg units: etf

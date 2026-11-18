@@ -110,7 +110,7 @@ def m_residual_units(self, place, span, ctx):
             if lg.unit is not None and self.touches([lg], place):
                 us.add(lg.unit)
     for iid, p, u, r in self.readings(octx):
-        if p == place and u not in (None, '*', 'any'):
+        if p == place and u not in (None, '*'):
             us.add(u)
     return sorted(us)
 
@@ -436,21 +436,12 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
         else:
             key = key[:4] + (key[4] - 1,)
-        if only:
-            # L §5.10 (tally 2.1.8 R14): at a place of unit any each ledger is its unit's; a row that states no unit
-            # stands for every unit the place has a position in at its instant but one with its own reading there
-            if u == 'any':
-                if unit in getattr(r, '_except', frozenset()) or unit not in w.units_held(place, key):
-                    continue
-            elif u != unit:
-                continue
-        u = unit if only else u
         val = r.val
         if isinstance(val, tuple) and val[0] == 'hole':
             stated = Hole([(val[1], 'stated[%s]' % place)])
         else:
             stated = val.q
-        st =w.pstate(place, u, key, raw=True)
+        st = w.pstate(place, u, key, raw=True)
         bv = w.st_value(st, place, u)
         if isinstance(bv, TallyError):
             raise bv

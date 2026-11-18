@@ -256,7 +256,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 ### M5b. Parts and labels
 
 **Builds** (L §3.6, §5.7, §5.10, §5.12–§5.14.3, §5.19, §8.1; E §4.2, §6.3; the rows 2.1-2 to 2.1-23 of `CHANGES.md`)
-- Kinds that keep parts: `owned by D [ties by e]`, `batched`, `step u`, `takes … order … [prorata]` (L §5.7). A place's parts are walk state beside its balance, per unit a map from a label to an amount, paid only where a kind opts in: a place of any other kind keeps one number per unit and pays nothing (`engine/BUILD-NOTES.md`, the labels' cost; PERFORMANCE §7).
+- Kinds that keep parts: `owned by D [ties by e]`, `batched`, `step u`, `takes … order … [prorata]` (L §5.7). A place's parts are walk state beside its balance, a map from a label to an amount, paid only where a kind opts in: a place of any other kind keeps one number per unit and pays nothing (`engine/BUILD-NOTES.md`, the labels' cost; PERFORMANCE §7).
 - The **arrival rule**, a reader of start-of-day parts beside decisions, with its law at its movement's day (L §3.6, §5.14.1); the **split**, L §5.13's `rest largest` at the kind's step, the one function written at M1 (R-114), ties by `ties by`, else `RUN-TIE`.
 - The **leaving rule** (`takes`) as a fill over the place's parts, reusing M5a's fill (L §5.12, §5.14): ties, two outflows never sharing, the batch's arrivals as supplies, undecided takes; takes in the day's first batch in the order of their reads, and a cycle broken where L §5.14.2 says, else `RUN-CYCLE`.
 - **Relabels** and the leg read `m.leg.amount of q` (L §5.14).

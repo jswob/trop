@@ -2075,7 +2075,7 @@ class Asker:
             e = lg.ents[st.rst]
             lo = st.rst
             since = e.key
-            out.append('from: %s' % self._reading_text(w, place, e, gtext, unit))
+            out.append('from: %s' % self._reading_text(w, place, e, gtext))
         ents = []
         if modelled:
             ents.extend(m_ents)
@@ -2173,7 +2173,7 @@ class Asker:
                 out.append('lowest: %s at the end of %s' % (fmt(best[1]), best[0]))
         return out
 
-    def _reading_text(self, w, place, e, gtext, unit=None):
+    def _reading_text(self, w, place, e, gtext):
         from .moves import instant_text
         rows = list(e.coll.rows.values()) if e.coll is not None else []
         val = fmt_hole(Hole(e.qs)) if e.qs else fmt(e.val)
@@ -2189,8 +2189,7 @@ class Asker:
         if e.note in ('anchor', 'pad'):
             from .walk import kday
             for key, gap, r2, role, u, _bc in w.gaps.get((place, kday(e.key)), ()):
-                # at a place of unit any each unit's reading has its own gap (L §5.10; tally 2.1.8 R14)
-                if (r2 is r or getattr(r2, 'sid', None) == r.sid) and (unit is None or u == unit):
+                if r2 is r or getattr(r2, 'sid', None) == r.sid:
                     if role[0] == 'anchor':
                         s += ', gap role anchor, gap %s' % gtext(gap)
                     else:
