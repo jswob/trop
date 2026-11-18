@@ -29,7 +29,7 @@ These are the answer keys for DONE gate 3's second half: "each of the 7 changes 
    - **exact:** the printed value, to the cent.
    - **hole:** the cell prints `?`, with the questions listed.
    - **run-only:** the walk to 2059 is too long to work by hand. The key gives the direction against the base, and a bound where one was derived. An engine's figure is checked against that direction, not against a number.
-4. **The first day anything differs** (over movements and balances, `OPERATIONS.md` §7 step 6) and the sanity verdict.
+4. **The first day anything differs** (over movements and balances, and the sanity verdict: tally 1.0.1's `plan`, `OPERATIONS.md` §7 step 6 at the tag `tally-2.2`). No operation prints it now; two runs give it only through asks of each place's balance by day (`OPERATIONS.md` §3.3, CHG-11).
 5. **Warnings and holes** that the change adds or clears.
 6. **The register:** the entries the change adds or removes, as a delta. The full register text of each line is in the evaluators' files, under the readings named in the key.
 7. **Variants.** A change whose first-written diff had a defect keeps that version as a second variant, "as first written", because it tests how a hole spreads. Its diff is the 1.0 diff; the change file holds the fixed one.
@@ -37,4 +37,4 @@ These are the answer keys for DONE gate 3's second half: "each of the 7 changes 
 
 ## The premise for law versions
 
-Changes 2, 3 and 5 add law versions, and a law part is read only once it is `tested` (`OPERATIONS.md` §3). For these keys, the store holds every part under `law/pl/`, and change 5's `law/de/`, as `tested` against its hash (`amendments/README.md`, "Not gated law"). That is a fixture premise; the status lives outside the content (`OPERATIONS.md` §1). The gate itself is tested on its own fixture (`BUILD-ORDER.md`).
+Changes 2, 3 and 5 add law versions. A run reads every law part it is given; whether a part is `tested` is the store's (`OPERATIONS.md` §4), and the gate waits (§5 there). So these keys rest on no status (`amendments/README.md`, "Not gated law"). Their `WARN-BACKPAY` lines are tally 1.0.1's operation output, which no run prints: a run prints the `adjustment:` lines and `HOLE-CHANGED` holes in their place (`OPERATIONS.md` §3.3, CHG-3).

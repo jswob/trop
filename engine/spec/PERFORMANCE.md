@@ -5,7 +5,7 @@ This document covers, for **tally 2.1**:
 - the budgets it must meet (§8), and what caps what can grow (§9);
 - how a change costs only what it touches (§4, a seam for now).
 
-It plans the engine. It carries no language meaning: what a construct means is `LANGUAGE.md` (L) and how the engine computes it is `ENGINE.md` (E). Where this document and those differ, they win (G1 item 9). It names no technology: no library and no Rust API. Those live in `tmp/research_notes/engine-rust-strictness/BUILDER.md` and `RULEBOOK.md`, cited here by section and row (BUILDER §7, R-42).
+It plans the engine. It carries no language meaning: what a construct means is `LANGUAGE.md` (L) and how the engine computes it is `ENGINE.md` (E). Where this document and those differ, they win (G1 item 9). It names no technology: no library and no Rust API. Those live in `engine/BUILDER.md` and `engine/RULEBOOK.md`, cited here by section and row (BUILDER §7, R-42).
 
 **Estimates, not measurements.** Nothing here was built or run. The figures come from refcore, the reference interpreter, as session 8 measured it (`tmp/session8/shape.md`), and from the six research reports R1–R6 (`tmp/research_notes/engine-prep/`). Each estimate shows its arithmetic in a `python3 -c` block with its output, and is marked an estimate. Nothing on paper is "proven".
 
@@ -286,13 +286,13 @@ $ python3 -I -c "print(4.95e9/2.27e6); print(2.27e6*60/1e9, 2.27e6*300/1e9); pri
 
 **Built now:** read sets on every memo cell (E §3.2 l.154), the item graph's static cones, the checkpoints of §2.4 and the pin layers of §3.2. Adjustments (E §5 step 2), `explain`, `inputs-of` and `readers-of` need them anyway (D1-5).
 
-**Built only when measured:** verification across amendments, early cut-off and durability tiers, below. They are built when a measured conversation turn misses 1–2 s (P8-1), or a cold 33-year run misses 1 s at 10× (P8-2); then gate 12 requires every output byte-identical with and without them (D1-5; R1 §3 Q5). Until then, a turn is a cold run of the amended reality: results are cached by the reality's hash (E §1), and a scenario shares the base's memo within one run (L §6.4).
+**Built only when measured:** verification across amendments, early cut-off and durability tiers, below. They are built when a measured conversation turn misses 1–2 s (P8-1), or a cold 33-year run misses 1 s at 10× (P8-2); then gate 12 requires every output byte-identical with and without them (D1-5; R1 §3 Q5). Until then, a turn is a cold run of the amended reality: the engine keeps nothing between calls (`OPERATIONS.md` §5), and a scenario shares the base's memo within one run (L §6.4).
 
 The design the seam leaves room for is 1.0.1's §4, restated for 2.1:
 
 ### 4.1 Invalidation
 
-An amendment (`OPERATIONS.md` §1, stale) has a **direct set**: the rows it adds or restates (target, keys, spans, `known`), the rules it adds (def, label, `v`), the keys and entries it adds to indexes and kinds, the items it adds or revises.
+An amendment, the files a change adds (`OPERATIONS.md` §1), has a **direct set**: the rows it adds or restates (target, keys, spans, `known`), the rules it adds (def, label, `v`), the keys and entries it adds to indexes and kinds, the items it adds or revises.
 1. **The static cone:** the items reachable from the direct set on the item graph. Anything outside it is untouched by construction.
 2. **Verify downward, from what the asks need:** a cell in the cone is checked against its read set (E §3.2); if none of its reads has a new candidate row, a new rule or a new key, and none of its walk or movement reads falls on or after the day the walk restarts from (§4.2) or names a changed movement, it stays valid, at O(its read set) with no evaluation; otherwise it is recomputed.
 3. **Early cut-off:** a recomputed cell equal to its old result (value, holes, refusals, register) leaves its readers valid.
@@ -314,16 +314,16 @@ The walk is a fold, so a change on day d* changes the walk from d* on. The new w
 
 ### 4.3 What one turn costs
 
-A turn, "validate a patch, run reality and the scenario, compare, answer" (N-2001), rests on `OPERATIONS.md`, which stays stale; its steps are restated in 2.1's terms and wait for that rewrite.
+A turn, "validate a patch, run reality and the scenario, compare, answer" (N-2001), is one `check` and two `run`s, cold (`OPERATIONS.md` §2, §3.3): the reality without and with the change, its scenario asked in the second.
 
 | Step | Cost |
 |---|---|
 | Re-parse the changed files | O(their size); milliseconds |
 | Reload | the graph checks, O(items + edges) |
-| The law gate, if a law part changed | its `check` asks' cones (P8-7) |
+| The law part's `check` asks, if one changed | their cones, inside the reality's run (`OPERATIONS.md` §3.6) |
 | The reality run | memo hits outside the amendment's cone (with the seam), or a cold run (without it, P8-2) |
 | The scenario run | the cone of what it writes, and a walk from its first different day (§2.5) |
-| The difference (`plan`, `diff`) | O(M) over two timelines, plus the asks |
+| The difference (the caller's comparison, `diff`) | O(M) over two timelines, plus the asks |
 
 A change to next year's law re-walks from the first day whose acts differ: next year, or earlier where a projection from an earlier day reaches into it.
 
@@ -517,13 +517,13 @@ $ python3 -I -c "print(32/6)"
 
 | Id | What | Size | refcore's figure | Wall | Footprint | Count | Where and when | Blocks |
 |---|---|---|---|---|---|---|---|---|
-| P8-1 | **A conversation turn** (N-2001): validate a patch, run the reality and one scenario, compare, give the deterministic answer (§4.3) | the household's reality and one scenario, at T's generated size | — | **1–2 s** end to end | ≤ 1 GB | — | Mac, at the milestone tags from the one that builds amendments. **Rests on `OPERATIONS.md`, which stays stale**: the row's steps wait for its rewrite | the tag |
+| P8-1 | **A conversation turn** (N-2001): one `check` and two `run`s, cold, the reality without and with a change and one scenario asked in the second (§4.3; `OPERATIONS.md` §3.3) | the household's reality and one scenario, at T's generated size | — | **1–2 s** end to end | ≤ 1 GB | — | Mac, at the milestone tags from M3, which builds `check` | the tag |
 | P8-2 | **A deterministic run, cold** (N-2002) | 33 years daily, 10× the household's instances and observations (1.0.1: 181 440 movements, so ≤ 5.5 µs a movement all in) | — (1.0.1's prototype: 0.34 s at 1×) | **≤ 1 s** | ≤ 1 GB | days stepped ≤ the non-empty days (§2.2) | Mac: its 1× twin (the household's own size) reported at the tags from M1; judged at 10× at M9, once T's generator gives the size (SO8-10). A miss at 10× also decides the seam (§4, D1-5) | the tag |
 | P8-3 | **A deterministic run, warm** | as P8-2, memo kept from the cold run | — | **≤ 50 ms** | ≤ 1 GB | def misses 0 | Mac: reported at 1× from M1; judged at 10× at M9, as P8-2 | the tag |
 | P8-4 | **Monte Carlo** (N-2003): law on every path, after the deterministic answer or from the cache | 1 000 paths × 30 years daily, 6 workers | — (prototype: 0.45 s, no law; refcore LH-17-mc-light ≈ 0.2 s a path) | **≤ 1 s** | ≤ 1 GB | cells recomputed locally reported | Mac, at the tags from the Monte Carlo milestone | the tag |
 | P8-5 | **One look-ahead decision**, one read of the written projection's lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)`, in E §4.3's common case: one range minimum over F (§2.3, about 14 steps) | a 33-year place, n ≤ 12 054 | — (prototype: 0.1–0.3 µs, compiled) | **≤ 0.3 µs** | — | — | the range minimum's own bench at this size, from M1 (P56); the read inside a run is P8-M4 | a miss is reported at the gate, not re-budgeted (P56) |
 | P8-6 | **One path replayed** for an explanation (N-2004) | one path of P8-4's ask, shared layer cached | — (prototype ≈ 20 ms) | **≤ 20 ms** | ≤ 1 GB | — | Mac, at the tags from the Monte Carlo milestone | the tag |
-| P8-7 | **The gate on one law part** (N-2007): its `check` asks and the threshold table | about 9 checks, 61 planted errors | — (prototype ≈ 0.9 s) | **≤ 1 s** | ≤ 1 GB | — | Mac. **Rests on `OPERATIONS.md` §3, which stays stale**: the row waits for its rewrite | the tag |
+| P8-7 | **The gate on one law part** (N-2007): its `check` asks and the threshold table | about 9 checks, 61 planted errors | — (prototype ≈ 0.9 s) | **≤ 1 s** | ≤ 1 GB | — | Mac. **Waits with the gate** (`OPERATIONS.md` §5, LAW-2): no milestone measures it until the gate is planned | the tag |
 | P8-8 | **One fitting step** (N-2005): pin, replay, residuals (§4.4) | two years of history | — | **≤ 20 ms** | ≤ 1 GB | — | Mac, at the tags from M8, the milestone that builds the fitting loop | the tag |
 | P8-9 | **Determinism** (gate 6) | every case and T's generated realities | — | equal result hashes across runs, with W ∈ {1, 2, 3, 5, 6, 7} (§5.7), and on the Mac and Linux | — | — | Linux CI every PR; the Mac at each tag | every PR |
 
