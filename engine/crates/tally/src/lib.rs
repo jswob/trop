@@ -218,6 +218,7 @@ pub mod walk {
     mod agenda;
     mod body;
     mod day;
+    mod ends;
     mod flows;
     mod fork;
     mod instance;
