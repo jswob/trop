@@ -7,7 +7,7 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2 (the cuts round: nine forms removed; groups G1 to G3)
+## tally 2.2 (the cuts round: nine forms removed; groups G1 to G3 and G5)
 
 The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
 all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
@@ -56,6 +56,15 @@ refused by the grammar, `LOAD-PARSE`, with no message of its own.
   `last_value`, `e_call_since` (`carry_latest` reads one input's rows) and `read_reading`; `edge_first` and
   `check`'s unread warning follow no row line. Earlier sections' lines on rows stated `same` (item 40, 41, #187)
   describe what tally 2.2 removed; rows stated `same` that are observed rows are movements and stay.
+- **Group G5 (run before G4): 1 500 tests, all pass** (1 499, 2 dropped, 3 new, 24 respelled; `refcore_fast`
+  byte-equal).
+- **`low` and `next` (S-9, 2.2-9).** Gone: the parser's `low` (and both names from `BUILTINS`, so each reads as a
+  plain id), `mreads.m_e_low`, `m_c_next` with `first_by_day` and `notyet_hole`, `bal_at`'s and `proj_bal`'s
+  `regs_to`, `check3.t_low` and `c_next` (and the `next` edge), `check`'s print and explain test, `check2`'s read
+  set, and `ask`'s `explain low` (`explain_low_plain`, the projection's `lowest:` line). A lowest balance is the
+  aggregate `min` over `bal(x, d) [from t]` for each day; a lowest balance is explained by `argmin … ties by d` and
+  `explain bal(x, <day>) [from t]`. Earlier sections' lines on `low`, `next` and `explain low` describe what tally
+  2.2 removed.
 
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
