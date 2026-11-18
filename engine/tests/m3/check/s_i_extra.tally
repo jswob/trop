@@ -1,0 +1,7 @@
+scenario extra over plain
+  tally 2
+  from 2027-01-01
+
+input extra_amt: money PLN
+
+ask q_extra: extra_amt in extra law 2027-06-01

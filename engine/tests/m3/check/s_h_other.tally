@@ -1,0 +1,7 @@
+scenario other over plain
+  tally 2
+  from 2027-01-01
+
+ask q_other_far: doubled in nowhere_f law 2027-06-01
+
+ask qq: doubled in nowhere_g law 2027-06-01

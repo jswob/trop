@@ -1,0 +1,11 @@
+part unread
+  tally 2
+  note "four things nothing reads: a source, an input, a def, a place (L §8.5 WARN-UNREAD)"
+
+source spare_source "a source no version cites (invented)"
+
+input spare_input: num
+
+def spare_def: money PLN = amt + amt at reader
+
+place spare_place: accounts PLN lives 2026-01-01..

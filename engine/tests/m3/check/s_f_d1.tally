@@ -1,0 +1,3 @@
+scenario d1 over plain
+  tally 2
+  from 2027-01-01

@@ -1,0 +1,5 @@
+part dup
+  tally 2
+  note "amt declared a second time: the base refuses (LOAD-DUP)"
+
+input amt: num

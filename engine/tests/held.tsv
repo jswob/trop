@@ -1,2 +1,4 @@
 id	target	issue	why
 fixes/t22/fault_paths	m2_fixes	#211	tally 2.2 G1 (plan §3): the fault's def under paths, refcore's bytes after the fix; the engine stops on paths, "not implemented" there; built at M7, where it gates
+fixture/alone/scenario-file	m3_check	#228	M3 C1 (GAPS.md 2026-11-18): refcore's run prints nothing for an ask in a loaded scenario's file that names a world not loaded, where L §6.4 and §8.3 refuse it alone (LOAD-SCENARIO); the prediction, ok, is refcore's; C4 confirms or STOP-REPORTs
+fixture/alone/same-id	m3_check	#228	M3 C1: as fixture/alone/scenario-file, one id refused alone in two scenarios' files (P5's order)

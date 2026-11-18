@@ -1,0 +1,11 @@
+scenario zulu over plain
+  tally 2
+  from 2027-01-01
+
+version zulu_rows
+  cite card
+  governs 2027..
+  known 2026-02-01
+  nothing_here = 1 "a row of an input no file declares"
+
+ask q_zulu_own: doubled in zulu law 2027-06-01

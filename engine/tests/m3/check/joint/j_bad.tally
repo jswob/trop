@@ -1,0 +1,9 @@
+model family
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "b/b.tally" sha256 "23ca6ee7d003f60ffa026dbda68a226d32b2e82c139b8013290908e382896d28"
+  note "a member that doesn't load: refused as the member's (INTERFACE §2)"
+
+ask x: a.twice

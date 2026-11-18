@@ -1,0 +1,9 @@
+model family
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a/a.tally" sha256 "e845acc9deb7f5af97603ea574b5bc5e07a9452531b474ffb5655548964e777d"
+  note "T's joint model for M3's check fixtures (invented): one member, pinned by its canonical text"
+
+ask x: a.twice
