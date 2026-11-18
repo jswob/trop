@@ -52,7 +52,7 @@ This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The 
 **What a timeline holds.** For every place and every day from S to E: its movements and its end-of-day balance. Each movement is:
 
 ```
-{ id, kind, day, legs: [{ name, from, to, amount ≥ 0, unit, day }], for, attributes, fulfils, status }
+{ id, kind, day, legs: [{ name, from, to, amount ≥ 0, unit }], for, attributes, fulfils, status }
 ```
 - `id` is the movement's stable id (LANGUAGE §2.5): a move instance with its keys, an observation's row, an adjustment, a pad.
 - `kind` is its event kind; `for` the instance's period; its legs are on its day (LANGUAGE §5.14).
@@ -155,7 +155,7 @@ The **walk point** (day, stratum, movement, keys) is in the context only of a wa
 
 - **The context is trimmed** to what the item can depend on, which the item graph tells statically:
   - an item that no random fact reaches has no path in its context, so all paths share it;
-  - an item that reaches no axis has no axis options, and one that reaches no window, random fact or uncertain kind has no clauses;
+  - an item that reaches no axis has no axis options, and one that reaches no random fact or uncertain kind has no clauses;
   - an item that no pin reaches shares the unpinned cell. A pin set is keyed by the pins' **values**: a pin given by an expression (LANGUAGE §5.11) is evaluated first, without that `as if`, and its value enters the key, so two expressions with one value share their cells. The register of a pin's expression goes on the ask's `pinned:` entry, not on the cells (LANGUAGE §8.2);
   - an item that reads no scenario's versions shares the base's cell;
   - an item's cut class is the interval between the `known` dates of the versions and rows in its cone, so a version that the item's cone doesn't read doesn't divide its cells (`PERFORMANCE.md` §3).
@@ -189,7 +189,7 @@ The plan pass and the day walk run only if something the asks need reaches a pla
 
 For each plan move m, in the dependency order of the item graph:
 1. **Enumerate** its instances over its binding tuples. A binding over a kind gives the things alive on the bind's day or span, a binding over an event kind the movements dated in its span, observed and planned (LANGUAGE §5.7). Each binding's `where` is read for its tuple at the move's `at`, at the ask's cut K, as `on` is in step 2 (LANGUAGE §5.14).
-2. **For each instance,** evaluate `on` at the ask's cut K, giving its day t, then `when`, the legs' amounts, days and places, and the attributes at its booking cut min(t, K) (§5, LANGUAGE §5.14.3). A hole day or `when` makes a hole movement (LANGUAGE §5.14); a refused key's `where`, `when`, attribute or `for` makes a refused movement, whose day and legs' places are still read (LANGUAGE §8.4, tally 2.1.6). An instance whose `when` is true exists, whatever its amounts; an amount of 0 books nothing.
+2. **For each instance,** evaluate `on` at the ask's cut K, giving its day t, then `when`, the legs' amounts and places, and the attributes at its booking cut min(t, K) (§5, LANGUAGE §5.14.3). A hole day or `when` makes a hole movement (LANGUAGE §5.14); a refused key's `where`, `when`, attribute or `for` makes a refused movement, whose day and legs' places are still read (LANGUAGE §8.4, tally 2.1.6). An instance whose `when` is true exists, whatever its amounts; an amount of 0 books nothing.
    - **A day that is a window** (LANGUAGE §4.4) keeps its interval: the movement counts in `flows(x, span)` when the window lies inside the span, is `HOLE-IMPRECISE` when the window crosses an end of the span, and makes `bal(x, d)` a hole for d inside the window. Where its class (step 3) or a check of §4.2 step 5 comes out one way on some of its days and another on the rest, it is `HOLE-IMPRECISE` as far as the refusal or the other class would reach (LANGUAGE §4.4). When its law date falls to `on`, it is the window's first day when the window lies inside one law-date class; otherwise one law date per class, and one value or `HOLE-IMPRECISE`.
 3. **Classify** the instance:
    - dated outside [S, E]: kept for bindings, and after E for `flows` (`flows` over days before S is `HOLE-PRERUN`, §2), never booked, listed (`left out:`);
@@ -205,10 +205,10 @@ Plans read other plans through `flows(m[keys], span)`, their legs and attributes
 The walk is a fold over days, a read of day t reading its prefix through t (LANGUAGE §8, what a result reads). It starts at S from the opening readings (LANGUAGE §5.10); observed rows dated before S are bound by bindings and fills and booked by none (LANGUAGE §5.19). For each day t from S to E:
 0. **Readings at the start of the day.** Each `opening` reading at `t start` that the cut sees, with t before K or t = S, anchors its place, and each `stated` reading there, with t before K, pads or anchors it (LANGUAGE §5.10, §5.19; §6.1).
 1. **Observations.** Book the observations dated t, if t is before K, each end by the rule of §6.1, except one that fulfils a decision instance dated t: it is that instance's movement, booked at its point in step 3, so the decisions before it that day see the balance without it. Every other observation is booked here, on its own day, one dated before or after the instance it fulfils included (LANGUAGE §5.19).
-2. **Plans.** Book the plan pass's legs dated t. Each leg moves its unit from its `from` to its `to`.
+2. **Plans.** Book the legs of the plan pass's movements dated t. Each leg moves its unit from its `from` to its `to`.
 3. **Decisions.** Run the decision instances due on t, stratum by stratum (§3.1 step 8): inside a stratum, the instances due on t are ordered by the places their legs give on t (LANGUAGE §5.14.2): one that reads a place another changes runs after it, and two that read what each other changes run in the `before`/`after` order or the move's `ties by` (`RUN-ORDER`, `RUN-TIE` otherwise); the others are independent, and an instance whose `when` is false orders nothing. Each one:
    - evaluates its `when` and amounts with running reads at this point of the walk, its law and facts at cut min(t, K) and its projections as of day t (§4.3); its day must be precise, and it is `HOLE-IMPRECISE` otherwise (LANGUAGE §4.4); a walk-bound def it reads is evaluated afresh at this point (§3.2);
-   - books its legs dated t at once, so the next decision sees them;
+   - books its legs at once, so the next decision sees them;
    - on a covered day before K, or where an observation the cut applies fulfils it (LANGUAGE §5.19), is modelled past instead. It is computed against the booked balances, which come from the observations ("did we follow the rule?", N-1221), less its own observations (one dated before t was booked on its own day, step 1), and it isn't booked. Its own observations dated t are booked at this point, after it is computed (LANGUAGE §5.19).
 4. **Close the day.** The day's readings at `t end` that the cut sees, with t before K, pad or anchor their places (§6.1). Then each place's end-of-day balance is stored as a change point. Balances are step functions, so only days with movements or readings cost anything.
 5. **Check the places.**
@@ -305,7 +305,7 @@ The balance at S comes from `opening`, and from each `stated` reading on, by its
 - An observation whose `fulfils` names an instance that doesn't exist, or doesn't touch its places, is refused (`RUN-RECORD`).
 - An observation that fulfils an uncertain instance makes it count: the observation is booked, and the instance leaves `uncertain`.
 
-**Readings** (LANGUAGE §5.19). A `stated[x]` reading that the cut K sees, at an instant before K, is applied at its instant in the walk (§4.2): at the start of its day, right after the movement it names, or at the close. Its **gap** is the reading less the balance the walk reached at that instant. Its version's gap role says what follows:
+**Readings** (LANGUAGE §5.19). A `stated[x]` reading that the cut K sees, at an instant before K, is applied at its instant in the walk (§4.2): at the start of its day or at the close. Its **gap** is the reading less the balance the walk reached at that instant. Its version's gap role says what follows:
 - **`pad x from y`:** a movement of the prelude kind `pads`, with id `pads:<version>:<x>@<instant>`, of |gap| between y and x (into x when the gap is positive), is booked at the instant, status `pad`. `flows` and bindings count it, and the register of every figure that reads it flags it (`pad:`).
 - **`anchor x`:** x's balance is set to the reading. Nothing is booked, `flows` doesn't count it, and no other place changes. The gap is the reading's balance line in the residual ledger (§6.3) and an `anchor:` entry (LANGUAGE §8.2).
 

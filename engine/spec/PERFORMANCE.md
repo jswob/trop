@@ -96,7 +96,7 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 | N-2 | a reading at `t start` the cut sees: an `opening` with t before K or t = S, a `stated` with t before K | a `reading` input's row, `at D start` | anchors or pads the place by its version's gap role (§6.1), parts included at a place that keeps them | E §4.2 step 0, l.190; E §6.1 l.294–298; L §4.6 l.728 |
 | N-3 | an observation dated t, with t before K | an `observed` input's row, `on: t` | books each end by E §6.1's rule in the day's first batch, or, if it fulfils a decision instance dated t, at that instance's point (N-5) | E §4.2 step 1, l.191; E §6.1 l.287–289; L §4.5 l.699 |
 | N-4 | a booked plan leg dated t, its instance's day | a plan move (no `reads`), status `past` or `plan` | books the leg in the day's first batch; at a place that keeps parts, its take and its arrival (with the arrival rule run at booking) | E §4.2 step 2, l.192; E §4.2 parts, l.205–206; L §5.14 l.1348 |
-| N-5 | a decision instance due on t, whatever its `when` turns out to be | a move with `reads` | runs it at its stratum and point, books its legs dated t at once, and its own observations dated t after it; on a covered day before K, or where an observation fulfils it, computes it as modelled past against the booked balances | E §4.2 step 3, l.193–196; L §5.14.1 l.1374 |
+| N-5 | a decision instance due on t, whatever its `when` turns out to be | a move with `reads` | runs it at its stratum and point, books its legs at once, and its own observations dated t after it; on a covered day before K, or where an observation fulfils it, computes it as modelled past against the booked balances | E §4.2 step 3, l.193–196; L §5.14.1 l.1374 |
 | N-8 | a reading at `t end` the cut sees, with t before K | a `reading` row, `at D end` | pads or anchors at the close | E §4.2 step 4, l.198 |
 | N-9 | the last day of a place's lifespan | an entry's `lives` span, a `place` section's | refuses the place from t on if a position isn't zero at the close (`RUN-LIFESPAN`) | E §4.2 step 5, l.201; L §5.7 l.942 |
 | N-10 | the last day of a party's lifespan, where some place keeps parts labelled to that party | `parties` and a parts kind | checks, after the day's whole order, that the party holds no part at the close; refuses that part's place from t on otherwise | E §4.2 parts, l.208; L §5.7 l.943 |
@@ -128,7 +128,7 @@ $ python3 -I -c "print('A', 64*5477, round(64*5477*0.054), 'E2', 8*16070, round(
 A 350528 18929 E2 128560 8614 U 540 12
 ```
 
-So A steps about 18 900 days instead of 350 528, and E2-01a about 8 600 instead of 128 560. E1 is the exception: all 2 498 of its days hold a decision, so its floor is node speed (§10).
+So A's tally 2.1.8 ask stepped about 18 900 days instead of 350 528 (64 walks under the cut `windows each`; P8-10 is measured again, §8.2), and E2-01a about 8 600 instead of 128 560. E1 is the exception: all 2 498 of its days hold a decision, so its floor is node speed (§10).
 
 **Balance reads:**
 - `bal(x)` during the walk: O(1).
@@ -172,7 +172,7 @@ The checkpoints serve the forks (§2.5) and the walk restart (§4.2).
 
 Two timelines whose acts agree up to day d share the walk to d: the engine walks the shared prefix once, takes the last checkpoint before d, and walks each timeline on from it (D1-4, second step; R1 §3 Q3).
 - **Which timelines:** axis combinations the moves reach, rolling origins, the cuts of `as known`, scenario worlds, and a member's walk asked twice.
-- **The first different day** is the earliest of two days: that of the first plan act whose day, legs or amounts differ between the two, and that of the first act whose evaluation reads, through the item graph, a fact, an axis option, a pin, a window's day or a version that differs between them (tally 2.1.8). For a scenario those reads are E §9 invariant 3's (L §6.4), so the day is not its `from` alone. This is L §8's rule that a result reads only what its definition reads, said of walks.
+- **The first different day** is the earliest of two days: that of the first plan act whose day, legs or amounts differ between the two, and that of the first act whose evaluation reads, through the item graph, a fact, an axis option, a pin or a version that differs between them (tally 2.1.8). For a scenario those reads are E §9 invariant 3's (L §6.4), so the day is not its `from` alone. This is L §8's rule that a result reads only what its definition reads, said of walks.
 - **Built second,** after the event-driven walk matches refcore on every check. Its oracle is the unforked walk: the same bytes, fewer walks. The counter "walk shared" (§1.1) shows the saving.
 
 `shape.md`'s repetition is the target: 8–12 in E2 (members and asks), 20 in X (19 of them projections). How late those timelines diverge is unknown, so the fork's saving is an unknown until the engine runs (§10).
@@ -209,7 +209,7 @@ Each context dimension is a layer over the one below. A cell lives in the lowest
 | world (scenario) | a scenario's versions | the base and other worlds otherwise | the run ends | E §3.2 l.151; L §6.4 cost |
 | pin set | a pin, keyed by the pins' values | the unpinned layer otherwise | its `as if`, `solve` step or fitting step ends | E §3.2 l.150 |
 | axis options | an axis | every combination otherwise | the run ends | E §3.2 l.149 |
-| clauses | a window, a random fact or an uncertain kind under the line's clauses | every clause set otherwise | the run ends | E §3.2 l.149 |
+| clauses | a random fact or an uncertain kind under the line's clauses | every clause set otherwise | the run ends | E §3.2 l.149 |
 | member | a joint model's member (§2.6) | — | the joint run ends | D1-7; seam J |
 | path | a random fact | every path otherwise | its terms are kept (§5) | E §3.2 l.148; E §7 step 3 |
 | walk point | a running read (a walk-bound def) | nothing: one cell per reader's point | the decision books | E §3.2 l.145; L §5.14.1 l.1393 |

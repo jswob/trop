@@ -32953,7 +32953,8 @@ version card_2026
 ask f1: weekday(wl)
 ask f2: is_business(last_day, endcal)
 ask f3: last_business(9999-12, 1, endcal)
-,,1:0,103:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for a print" (wl)
+,,1:0,121:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for a print" (wl)
+  unknown day: wl
   cut 2026-10-01
 ,14:fixes/g2/p4_f2,8:fixes-g2,21:run p4.tally --ask f2,521:8:p4.tally,505:model probes
   tally 2
@@ -224122,9 +224123,10 @@ version v_card
   w_across = window(2026-12-20, 2027-01-10) "around the new year"
   d_after = 2026-07-15 "after the window"
   d_inside = 2026-06-15 "inside the window"
-,,1:0,138:y: 2026
+,,1:0,162:y: 2026
   cut 2026-03-01
 y_hole: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a print" (w_across)
+  unknown day: w_across
   cut 2026-03-01
 ,12:r3/reach_max,8:fixes-r3,34:run m.tally --ask m m_false m_hole,1290:7:m.tally,1274:model r3_reach
   tally 2

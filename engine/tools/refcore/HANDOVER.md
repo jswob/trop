@@ -7,7 +7,7 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2 (the cuts round: nine forms removed; groups G1 to G5)
+## tally 2.2 (the cuts round: nine forms removed; groups G1 to G5; closed 2026-11-18, 1 483 tests)
 
 The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
 all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
@@ -81,6 +81,14 @@ refused by the grammar, `LOAD-PARSE`, with no message of its own.
   each unknown day their questions carry (`evaluate.CARRY`, `carry_hole`), by `window_id`'s label; `register`
   prints `unknown day: <name>` after the pins, sorted. A window value that is no hole names none. Earlier
   sections' lines on `windows each` describe what tally 2.2 removed.
+- **A print's hole names its days (pick P25).** `hole_days` takes a value computed from a window that prints as the hole
+  `not precise enough for a print` (`fmt_value`) by its carried days (`iv_carry`); `L8_2_unknown_day_print_hole`.
+- **The name's three mends (pick P26).** `Engine.pinned_read` renames a window written in a pin to the pinned
+  cell's read for an input, a def and `last` alike; `evaluate.new_ask` clears `CARRY` at each ask (`Asker.run`,
+  `cli.run_worlds`), so an ask's names are its own reads'; `group` keeps every combination's values on the line
+  (`Line.each_vals`), whose names are their union (`L8_2_unknown_day_pinned_cell`, `_per_ask`, `_fanned_line`).
+- **The close: 1 483 tests (after P26), all pass; `refcore_fast` byte-equal; `VERSION` `tally-2.2`.** This interpreter is
+  tally 2.2's oracle, frozen with the spec at the tag `tally-2.2` (`spec/DONE.md` rule 1).
 
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
