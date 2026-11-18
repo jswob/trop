@@ -4462,3 +4462,64 @@ On `build/2.2` at 93ce6877 (the lead's merge of T's last unit-`any` texts; `chec
 - **Time:** about 25 minutes, about 8 of them checks: `check quick` 6 s (red, clippy-lib), 81 s (red, the six R14 tests), 14 s and 140 s; fences 33 s; the sweep about 1 minute.
 - **Usage:** 1.22 % of the week by `engine/tools/usage tmp/spec-2.2-build/g2-ids.txt` before this entry (stop at 3.2 %).
 - **Checks:** `check fences: green, 1 step (33s)` after 86f2745f; on its tree with this entry `check commit: green, 23 steps (124s)`.
+
+## 2026-11-18 tally 2.2, build group 3: S-2 and S-5 in, S-8 held (issue #211)
+
+On `build/2.2` at bf3b2bf0. G3's spec and refcore are the snapshot `tmp/spec-2.2-build/g3-new` (`git archive b9eb505c`). Plan `tmp/spec-2.2/plan.md` §8–§10. `check commit` at the start: `check commit: green, 23 steps (71s)`.
+
+- **ab8fe0ce: S-2, `known` is a day.** Out, by file:
+  - `syntax/tree.rs` `Known` (a version's and a row's `known` is a `Day`), `syntax/parse.rs` `known`, `syntax/item.rs`, `syntax/canon.rs`, `syntax/canon_order.rs` `known_day`.
+  - `model/decl.rs` `Row.own_window`, `Observation.own_window`, `RowsHold`, `InputInfo.holds`; `model/index.rs` `VersionInfo.window`, `Moved.window`.
+  - `load/spans.rs`, `load/rows.rs` (`known_in_window`), `load/observed.rs`: the window's checks.
+  - K `read/rows.rs` `KnownInside`, `known_inside`; `eval/read.rs` `input_view`, `hidden_rows`, `kept_rows`, `Side::Signal`; `eval/windows.rs` `known_seen`, `known_unknown`, `known_hole`, `known_question`; `eval/state.rs` `each_forced`, `same_picks`; `eval/rules.rs`, `eval/builtin.rs`, `eval/business.rs`.
+  - K `book/observe.rs`, a statement known in a window: `Obs.undecided`, `KnownAtCut`, `Windows`, `Coverage.undecided`, `known_sid`, `known_windows`, `covering_windows`. The coverage chain is infallible again, as before 738c0ad7: `coverage`, `covering`, `touches_covered`, `obs_end_on`, K `walk/order.rs` `end_booked`, K `book/same.rs` `books_ends_at`, `one_transfer`, `row_covers`.
+  - K `book/members.rs` `two_days`, `unseen_day`, `MvMember.two_days`; K `book/same.rs` `SameMet`, `SamePicks`; K `book/reading.rs` `seen_readings`.
+  - K `walk/agenda.rs` (P8-14) the cover holes, K `walk/day.rs` `Act::CoverHole`; K `walk/lows.rs` (F5), `plan.rs`, `projection.rs`, `reads.rs`, `move_flows.rs`, K `book/ledger.rs`: callers and comments.
+  - `ask/answer.rs`: the seen-and-unseen answer whole (an engine per choice, the merge, the hole naming statement and version, `seen and unseen over more than 20 000 choices`); `ask/windows.rs` `RunMet`, the `known of <v>` sub-windows (the clause still splits by days); `ask/diff.rs`.
+  - The refusal is the grammar's, refcore's at b9eb505c: `LOAD-PARSE cannot parse: expected a day, got window`, on the crate's case (`a.tally:49`, the version's `known` line) and on the review's k1, k4, k4b. k3 differs before and after: refcore refuses its `windows each` first (G4's ground).
+  - The crate's tests: `ask_cases.rs`'s seen-and-unseen texts (`same_links`, `SAME_DIFF`, `SAME_DIFF_SC`, `SAME_DIFF_SD`, five tests) dropped; `load_cases.rs`'s window forms are one `LOAD-PARSE` case.
+- **002cee8a, e9a54509: S-5, a `same` line between two observed rows has no clock.**
+  - `model/reality.rs` `SamePair::Moves` carries whether both sides are observed rows, which `load/same.rs` sets. K `book/same.rs` `rows_line_seen`, read by `moves_seen`: in the worlds its file is in, the line holds at every cut that sees both rows. K `book/observe.rs` `observed_row_seen`, refcore's `obs_row_seen` (the observations' own filter).
+  - e9a54509: the first form shared a helper with `seen_observations` whose borrowed keys named a lifetime, a report-only hit that `check commit` refused at `exceptions`. The row's own loop needs none, and `seen_observations` is as S-2 left it.
+  - The kept clock, `s5mm.tally`: `before: 200.00 PLN` (as known 2026-04-01) and `today: 100.00 PLN` (cut 2026-06-10), before and after, refcore's lines.
+  - The review's `s3`: `between` (as known 2026-04-03, sav's row not known yet) was `RUN-RECORD same bank[a2] = sbank[b1]: sbank[b1] doesn't exist`; it is now refcore's `(1 050.00 PLN, 950.00 PLN, 1, -950.00 PLN)`. The line in a third version known after both rows (`g3/s5/late.tally`) counts the transfer once when asked between, where the engine before counted 2; refcore the same.
+  - `tests/same_cases.rs`: those three texts, refcore's lines.
+- **6270a1b0: S-8, held by f846a48d** (STOP-REPORT below). For its re-application, what it does:
+  - `load/same.rs`: a row of an input is no side (`LOAD-SAME same <p> = <q>: a row of an input and a row of an input`), its keys resolved first as refcore's `sref` does; the rows-of-types check goes; every joint-own row of a member's input is refused.
+  - `eval/read.rs` the class read whole: `same_class`, `read_same_rows`, `same_side`, `latest_in_class`, `carry_disagrees`, `SameRow`, `SameSide`, the last/since `Side` enum, `removed_row`, `latest_began`. `eval/business.rs` a calendar's row through its class and `same_partner`. `load/strata.rs` `read_with_same`, the unread warning of rows read together. `model/reality.rs` `SamePair` is one struct of two movements. K `book/same.rs`, `lib.rs`: callers.
+  - Tests: `group4_cases.rs` B1 (2) and G1, `ask_cases.rs` group 1's fix N3 (`same cq = cr`), dropped; `load_cases.rs`'s two row cases restated.
+  - Its refusals equal refcore's at b9eb505c: `same fee[a1] = fee_in[a1]` and `same fee[a1] = count` (`a row of an input and a row of an input`), `same fee[a1] = bank[r1]` (`a row of an input and a movement`), `same fee = fee_in[a1]` and `same fee[a7] = fee_in[a1]` (`LOAD-KEY` first); the review's `s8`; the critic's `jsame` with its members re-pinned (`g3/s8/`).
+  - PTY-05's cards with it load as stored: ania, halina, joint and the set, each `refused: REQ-ASK no ask zz_m0_probe`.
+  - Listed and kept: K `book/members.rs`, K `book/settle.rs`, K `walk/move_flows.rs` hold movement classes only (observed rows), which stay. `load/overlap.rs` `owners_differ` stays: refcore keeps it.
+- **Beyond the plan's list (S-2):** `syntax/parse.rs`, `canon_order.rs`; `model/decl.rs`, `index.rs`; `load/spans.rs`, `observed.rs`; `eval/rules.rs`, `builtin.rs`, `business.rs`, `windows.rs`, `state.rs`; `ask/windows.rs`, `diff.rs`; K `book/reading.rs`, `ledger.rs`; the walk's callers above, and the coverage chain's `?`s.
+- **Listed and kept (S-2):** K `book/same.rs` `same_line_seen` and `moves_seen`: the plain `known` test of a line with a planned side (C-11) and of every line but S-5's. `load/kinds.rs`: no window code was there; the window's checks were `load/spans.rs`'s and `load/rows.rs`'s.
+- **Sweep** (`tmp/spec-2.2-build/g3/sweep.py`, 74 sets: `tmp/spec-2.2/probes/`, `inputs/review/probes/`, `critic-scratch-2.2/`, with j1, k2 and s8j's two read as sets; the engine against bf3b2bf0's and refcore at b9eb505c), before every commit after the first and on the head: no line turned same → different.
+  - The engine moved on k1, k3, k4, k4b (S-2), s3 (S-5) and s8 (S-8, back with the hold); each but k3 is now refcore's.
+  - At the head 57 of 74 equal refcore. The 17 others differ before and after alike: 8 `tally run: not implemented` (a2e, f1, CMP-01.inline, j1 and its joint, q1, r1, r1b), 5 `low`/`next` (OWN-02, RULE-02, RULE-05, low1, x), 3 `windows each` (k3, c_w, c_wall), and s8.
+- **Lines, `git diff --shortstat`, engine/crates/tally/src:**
+  - S-2 (ab8fe0ce): 36 files, 1 635 out, 272 in (plan: about 1 100 out). Over by the beyond list, the coverage chain's restored infallibility the largest part. Tests 2 files, 286 out, 20 in.
+  - S-5 (002cee8a, e9a54509): 4 files, 12 out, 79 in (plan: about 40 out, 15 in). The engine had no clock of its own for these lines to cut, only the version's `known` test, which stays for the rest; the rows' seen test is new. Tests 1 file, 178 in.
+  - S-8 (6270a1b0, held): 7 files, 568 out, 95 in (plan: about 300 out); the class read in `eval/read.rs` was 396 of it. Tests 3 files, 274 out, 10 in.
+  - Group at the head, bf3b2bf0..f846a48d: 38 files, 1 643 out, 347 in; tests 3 files, 286 out, 198 in.
+- **Kernel files touched at the head:** 14. book/ledger.rs, members.rs, observe.rs, reading.rs, same.rs; read/rows.rs; walk/agenda.rs (P8-14), day.rs, lows.rs (F5), move_flows.rs, order.rs, plan.rs, projection.rs, reads.rs. The plan named 4 for S-2 and 1 for S-5 (book/same.rs; book/observe.rs read, which S-5 now adds to).
+- **Gating vectors:** none moved at the head. With S-8, two: m0_code_load_key `kplace/base` (STOP-REPORT below) and m0_code_load_same `joint/same-what`, whose stored words `a row and a def` wait for the closing turn (refcore's `a row of an input and a def`).
+- **Exceptions:** +0 (`git diff bf3b2bf0..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **For the lead (`engine/ARCHITECTURE.md`, which the guard keeps from the build role):** l.256 "a version known in a window that holds the cut included" and l.402 "or across a known window" (S-2); with S-8, l.338 "`same` lines of rows and movements".
+- **Time:** about 60 minutes, about 18 of them checks: `check commit` 71 s, 2 s (red, exceptions), 85 s (red, the two m0 vectors), 236 s and the one on this entry's tree; `check quick` nine runs, 373 s (two red at tests, one at check-rules, one at headers), and a few `check step clippy-lib` runs; fences 31 s; the sweeps about 7 minutes.
+- **Usage:** 1.36 % of the week by `engine/tools/usage tmp/spec-2.2-build/g3-ids.txt` before this entry (stop at 3.2 %).
+- **Checks:** `check fences: green, 1 step (31s)` after ab8fe0ce (S-2 touched F5 and P8-14; nothing after it did). On f846a48d's tree: `check commit: green, 23 steps (236s)`; with this entry: `check commit: green, 23 steps (91s)`.
+
+## STOP-REPORT 2026-11-18: S-8 refuses T's gating base kplace, which states same between two rows
+
+- **Kind:** a test seems wrong (a stored text the round's restated vectors didn't reach).
+- **Where:** `engine/tests/codes/m0/kplace/base.tally` l.37, `same lim[konto[ana]] = lim[konto[ben]]` (rows of the input `lim`), stored in `engine/tests/codes/m0.refcore` as loading (`refused: REQ-ASK no ask zz_m0_probe`); its note says "two rows stated same at its keys; it loads clean". Also `joint/same-what`'s stored words.
+- **Rule or gate:** R-77 (never commit red); plan §10 (S-8: a `same` line between two rows of an input is `LOAD-SAME`).
+- **What happens:** on 6270a1b0's tree, `engine/tools/check commit` stops `red at tests … 2 of 1064 tests are red`:
+  - `m0_code_load_key`: `kplace/base: … refcore "refused: REQ-ASK no ask zz_m0_probe", the engine "refused: LOAD-SAME same lim[konto[ana]] = lim[konto[ben]]: a row of an input and a row of an input (base.tally:37)"`. By refcore's `sref` and `joint_sames` at b9eb505c the base refuses so too (both sides `row`); the guard keeps refcore off T's files, so that is read from the code, not run. The fixtures built on it (`same-place-unknown`, `same-key-index`) still get their `LOAD-KEY` first.
+  - `m0_code_load_same`: `joint/same-what`, stored `a row and a def`, the engine `a row of an input and a def` (refcore's words).
+- **What I tried:** nothing on the tests' side, which isn't mine. A same line of rows kept loading beside S-8's refusal would be the second way the brief forbids. As G1 held S-7, f846a48d puts S-8's ten files back as 002cee8a left them; S-2 and S-5 stay in.
+- **What I ask:**
+  - The tests session restates `kplace/base` without the rows' line (its `LOAD-KEY` fixtures need a `same` side keyed by the keyed place; a header line of two movements, or a def that reads both, as MIGRATION.md's row gives) and re-stores `joint/same-what` with refcore's words, each with `Logged-Red:` if it lands first.
+  - Then the builder's next turn re-applies 6270a1b0 unchanged.
+  - Or the lead rules the words: if `joint/same-what` keeps `a row and a def` to the closing turn, the re-applied S-8 prints `a row` (and `a row and a row` for two rows) until then.
+- **State:** last green commit f846a48d (`check commit: green, 23 steps (236s)`); this entry is the only change after it. S-2 and S-5 are in; S-8 is held.
