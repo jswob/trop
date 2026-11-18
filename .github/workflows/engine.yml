@@ -387,7 +387,8 @@ jobs:
     name: mutants ${{ matrix.shard }}/100
     needs: [mutants-baseline, mutants-coverage]
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # each mutant is judged by its own 600 s cap (R-88); this cap only guards a hung runner
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:

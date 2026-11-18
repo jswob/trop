@@ -1,0 +1,32 @@
+# OPERATIONS §2.3 (M3): `ok` on the first line, then the warnings load decides (WARN-UNREAD), in L §8.5's order:
+# sorted by code, then text, whatever the text's order (spare_b is declared first). Exit 0: the first line is `ok`.
+=== options check exit=0
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "a model two inputs of which are read by nothing (invented)"
+
+source card "a card (invented)"
+
+unit PLN: currency minor 0.01
+
+input spare_b: money PLN
+input amt: money PLN
+input spare_a: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== expect
+ok
+warning: WARN-UNREAD input spare_a is read by nothing
+warning: WARN-UNREAD input spare_b is read by nothing

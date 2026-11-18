@@ -1,0 +1,31 @@
+# OPERATIONS §2.3 (M3) with §2 "For all three" (a joint model's members found from its use lines, each checked
+# against its pin, L §6.1): the member m matches its pin but doesn't load (a figure in an ask, LOAD-LITERAL), so the
+# joint model doesn't: its one line, a member's as `refused: member <a>: …` (§2.1), and nothing more; exit 1.
+=== options check exit=1
+=== j.tally
+model j
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m/m.tally" sha256 "13dccd1ca35537f266e4065e13dc05bf1f6701038e040734ba20e43aac2c7c78"
+
+source s "s"
+
+input y: int
+
+ask q: y
+=== m/m.tally
+model mm
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+input spare: int
+
+ask q: 2
+=== expect
+refused: member m: LOAD-LITERAL figure 2 in an ask; make it a row (m/m.tally:11)

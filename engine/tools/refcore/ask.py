@@ -299,6 +299,12 @@ class Line:
         self.each_vals = None   # the values of every combination the line stands for (group), for its names
 
 
+def alone_line(a):
+    """An ask refused alone (L §6.4, §8.3, GD-18; OPERATIONS §2.1): `<q>: refused: LOAD-SCENARIO …`, the one line
+    run and check (§2.3) print for it."""
+    return '%s: refused: %s' % (a.id, a.refused_alone.text())
+
+
 def warning_lines(warnings):
     """L §8.5 (tally 2.1.1): a run's warnings [(code, text)] print sorted by code, then by their text (code point),
     whatever the order of the reality's files.  A joint model's member prefix prints as '.' (cli.joint), so the text
@@ -349,6 +355,16 @@ class Asker:
         except LoadAtRun as x:
             return ['refused: %s' % x.err.text()]
         return out + warning_lines(list(m.warnings) + list(self.walk_warnings))
+
+    def load_check(self):
+        """`check` (OPERATIONS §2.3) on a loaded reality with no scenario file: what run() does before its first ask is
+        answered, the load's last check (a literal key at a literal stepped range, L §2.5, §8.4) included, and no ask
+        evaluated. Each ask refused alone prints its line as run prints it (alone_line), by id; `ok` alone when there
+        is none; then the warnings load decides (WARN-UNREAD; L §8.5's order), never a walk's."""
+        m = self.m
+        Engine(m).check_range_lits()
+        out = [alone_line(a) for a in sorted(getattr(m, 'asks_alone', ()), key=lambda a: a.id)]
+        return (out or ['ok']) + warning_lines(list(m.warnings))
 
     def member_alone(self, qid, alias, aid, mm):
         """The member alone, all its files loaded (its scenarios included), answers its ask aid (L §6.1)."""
@@ -408,7 +424,7 @@ class Asker:
             CURRENCIES.update(cur)
         if getattr(a, 'refused_alone', None) is not None:
             # GD-18: this ask's LOAD-SCENARIO refuses it alone (L §6.4, §8)
-            return ['%s: refused: %s' % (a.id, a.refused_alone.text())]
+            return [alone_line(a)]
         try:
             return self._answer(a)
         except TallyError as e:

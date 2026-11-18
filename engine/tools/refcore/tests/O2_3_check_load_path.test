@@ -1,0 +1,16 @@
+# OPERATIONS §2.3 (M3) with §2 "For all three" and L §8.3: a path that names no file refuses the load as run refuses
+# it, `refused: LOAD-PATH <path> doesn't exist`, the path as given; one line, exit 1. Run as the command line runs
+# it, `check model.tally nope.tally`.
+=== options disk check missing=nope.tally exit=1
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+
+source card "a card (invented)"
+
+ask q: 1
+=== expect
+refused: LOAD-PATH nope.tally doesn't exist

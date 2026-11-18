@@ -1,0 +1,32 @@
+# OPERATIONS §2.3 (M3): each ask refused alone prints as `<q>: refused: …`, by id (today LOAD-SCENARIO: it names a
+# scenario whose file isn't given, L §6.4, §8.3, GD-18), and no `ok`: exit 1. A model with no scenario file; q_z is
+# written before q_a, so the lines are in id order, not the text's. q loads and prints nothing.
+=== options check exit=1
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "a model two asks of which name a scenario not given (invented)"
+
+source card "a card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+ask q_z: doubled in raised law 2026-03-01
+ask q_a: doubled in lowered law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== expect
+q_a: refused: LOAD-SCENARIO ask q_a names lowered, neither the model nor a loaded scenario (model.tally:18)
+q_z: refused: LOAD-SCENARIO ask q_z names raised, neither the model nor a loaded scenario (model.tally:17)

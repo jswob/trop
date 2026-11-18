@@ -1,0 +1,30 @@
+# OPERATIONS §2.3 (M3): the refused scenario files' lines print "in full-path order" (E §3.1 step 1), not by the
+# scenarios' ids: a.tally holds zeta and b.tally holds alpha, each refused for an id the base declares (LOAD-DUP),
+# so zeta's line comes first; then the warning load decides (s cited by nothing). (run prints the same two lines,
+# by id, before its results.) Exit 1.
+=== options check exit=1
+=== m.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+source s "synthetic"
+unit DUK: currency minor 0.01
+ask q: minor(DUK)
+=== b.tally
+scenario alpha over f
+  tally 2
+  from 2025-01-01
+def q: int = 1
+ask qa: q in alpha
+=== a.tally
+scenario zeta over f
+  tally 2
+  from 2025-01-01
+def q: int = 2
+ask qz: q in zeta
+=== expect
+scenario zeta: refused: LOAD-DUP q is declared twice (a.tally:4)
+scenario alpha: refused: LOAD-DUP q is declared twice (b.tally:4)
+warning: WARN-UNREAD source s is read by nothing

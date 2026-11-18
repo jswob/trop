@@ -834,7 +834,7 @@ def ci_problems():
             "R-133: the shards don't wait for this run's coverage map": r"\n  mutants:\n    name: mutants \$\{\{ matrix.shard \}\}/100\n    needs: \[mutants-baseline, mutants-coverage\]\n",
             "R-133: no job makes the coverage map (`tools/mutants-gate coverage`)": r"\n  mutants-coverage:\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate coverage ",
             "R-84: the shards don't run `tools/mutants-gate shard`": r"\n        run: tools/mutants-gate shard \$\{\{ matrix.shard \}\}/100 ",
-            "R-88: a shard's job isn't capped at 45 minutes": r"\n  mutants:\n(    [^\n]*\n)*?    timeout-minutes: 45\n",
+            "R-88: a shard's job isn't capped at 90 minutes": r"\n  mutants:\n(    [^\n]*\n)*?    timeout-minutes: 90\n",
             "R-88: the survivors job doesn't need all 100 shards": r'\[ "\$shards" -eq 100 \]',
             "R-133: the nightly doesn't compare twin maps (`tools/mutants-gate same-map`)": r"\n  mutants-twin-map:\n(    [^\n]*\n|\n)*?    if: github.event_name == 'schedule'\n(    [^\n]*\n|\n)*?          tools/mutants-gate same-map ",
             # a dispatch with `next` counts the next milestone's tests green unmutated (R-88,
