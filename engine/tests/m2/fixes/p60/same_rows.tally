@@ -3,13 +3,13 @@ model p
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:348, input rows stated same, at run"
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:348, input rows stated same, at run; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place wallet: mixed lives 2026-01-01..
 input y[k in ks]: int
 input px: money PLN reading

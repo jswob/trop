@@ -14770,39 +14770,6 @@ n2: 1
   cut 2026-06-30
 rk: n_pays, n2
 rk_sub: n_pays, n2
-,17:items/explain/any,13:items-explain,13:run any.tally,651:9:any.tally,634:model x_any
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 C2, G2 (#163): an opening row at a place of unit any, one row per unit (L §4.6), read by bal and explain"
-
-source s "synthetic"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-
-place broker: wallets lives 2026-01-01..
-
-ask b: bal(broker, EUR, 2026-03-01)
-ask b2: bal(broker, PLN, 2026-03-01)
-ask e: explain bal(broker, PLN, 2026-03-01)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
-  opening[broker] = 5.00 PLN at 2026-01-01 start "own"
-,,1:0,270:b: 0.00 EUR
-  cut 2026-06-30
-b2: 5.00 PLN
-  cut 2026-06-30
-e: 5.00 PLN
-  balance of broker (PLN) at the end of 2026-03-01
-  from: opening v:opening[broker] 2026-01-01 start = 5.00 PLN, 2026-01-01 start (version v, source s, locator "own")
-  no movement
-  cut 2026-06-30
 ,18:items/explain/from,13:items-explain,30:run household.tally late.tally,1424:15:household.tally,1225:model household
   tally 2
   on 2026-10-20
@@ -15998,98 +15965,6 @@ version r3
   held: stated[broker] = 2.00 EUR (r1), read for 2026-03-01
   cut 2026-06-30
 s1: 29
-  cut 2026-06-30
-warning: WARN-UNREAD place work is read by nothing
-,16:fixes/g2/anyhole,13:fixes-explain,29:run anyhole.tally --ask b1 e2,792:13:anyhole.tally,770:model anyhole
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-
-source s "synthetic"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-
-place broker: wallets lives 2026-01-01..
-place work: outside lives 1900-01-01..
-
-ask b1: bal(broker, EUR, 2026-03-01)
-ask l1: last(stated[broker], 2026-03-01)
-ask e2: explain bal(broker, EUR, 2026-03-01)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
-
-version r2
-  cite s
-  governs 2026-02
-  known 2026-02-16
-  anchor broker
-  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
-
-version r3
-  cite s
-  governs 2026-02
-  known 2026-02-20
-  anchor broker
-  stated[broker] = ?"not read yet" at 2026-02-18 end "pending"
-,,1:0,641:b1: ?"not read yet" (stated[broker])
-  anchor: broker 2026-02-18 end, stated ?"not read yet" (stated[broker]), difference ?"not read yet" (stated[broker])
-  cut 2026-06-30
-e2: ?"not read yet" (stated[broker])
-  balance of broker (EUR) at the end of 2026-03-01
-  from: anchor r3:stated[broker] = ?"not read yet" (stated[broker]), 2026-02-18 end (version r3, source s, locator "pending"), gap role anchor, gap ?"not read yet" (stated[broker])
-  no movement
-  anchor: broker 2026-02-18 end, stated ?"not read yet" (stated[broker]), difference ?"not read yet" (stated[broker])
-  cut 2026-06-30
-warning: WARN-UNREAD place work is read by nothing
-,16:fixes/g2/anynone,13:fixes-explain,29:run anynone.tally --ask b1 e2,791:13:anynone.tally,769:model anynone
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-
-source s "synthetic"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-
-place broker: wallets lives 2026-01-01..
-place work: outside lives 1900-01-01..
-
-ask b1: bal(broker, EUR, 2026-03-01)
-ask l1: last(stated[broker], 2026-03-01)
-ask e2: explain bal(broker, EUR, 2026-03-01)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  opening[broker] = 0.00 EUR at 2026-01-01 start "own"
-
-version r2
-  cite s
-  governs 2026-02
-  known 2026-02-16
-  anchor broker
-  stated[broker] = 4.00 EUR at 2026-02-15 end "saldo"
-
-version r3
-  cite s
-  governs 2026-02
-  known 2026-02-20
-  anchor broker
-  replace stated[broker] = none at 2026-02-15 end "withdrawn"
-,,1:0,276:b1: 0.00 EUR
-  cut 2026-06-30
-e2: 0.00 EUR
-  balance of broker (EUR) at the end of 2026-03-01
-  from: opening v:opening[broker] = 0.00 EUR, 2026-01-01 start (version v, source s, locator "own")
-  no movement
   cut 2026-06-30
 warning: WARN-UNREAD place work is read by nothing
 ,17:fixes/g3/low_each,13:fixes-windows,27:run low_each.tally --ask lw,1830:14:low_each.tally,1806:model w_each
@@ -102378,68 +102253,6 @@ ask c3: count(t in groceries over 2026-03 where t.cat == bank[r5].cat)
   cut 2026-10-20
 c2: 2
   cut 2026-10-20
-,18:fixes/g5/p3_any_bp,12:fixes-ledger,25:run p3_any.tally --ask bp,1781:12:p3_any.tally,1759:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-12-31
-
-source plan "plan"
-source wyciag "bank"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-unit USD: currency minor 0.01
-kind wallets: place any signed
-kind shopping: transfers
-  attr cat: text
-input bank: observed
-input pln_amt: money PLN
-input eur_amt: money EUR
-input dom: int
-place w: wallets lives 2019-05-01..
-place shop: outside lives 1900-01-01..
-place unexplained: outside lives 1900-01-01..
-
-move pay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from w to shop amount pln_amt
-
-move epay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from w to shop amount eur_amt
-
-version plan_2026
-  cite plan
-  governs 2026..
-  known 2026-01-01
-  pln_amt = 100.00 PLN "umowa"
-  eur_amt = 20.00 EUR "umowa"
-  dom = 5 "umowa"
-  opening[w] = 1 000.00 PLN at 2026-01-01 start "s"
-  opening[w] = 1 000.00 EUR at 2026-01-01 start "s"
-  opening[w] = 0.00 USD at 2026-01-01 start "s"
-
-version st
-  cite wyciag
-  governs 2026-02
-  known 2026-03-02
-  covers w
-  pad w from unexplained
-  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from w to shop amount 110.00 PLN, fulfils: pay[2026-02]) "l1"
-  bank[r2] = (on: 2026-02-06, kind: transfers, leg cash from w to shop amount 20.00 EUR, fulfils: epay[2026-02]) "l2"
-  bank[r3] = (on: 2026-02-07, kind: shopping, leg cash from w to shop amount 3.00 EUR, cat: "food") "l3"
-  bank[r4] = (on: 2026-02-08, kind: shopping, leg cash from w to shop amount 4.00 PLN, cat: "food") "l4"
-  stated[w] = 780.00 PLN at 2026-02-28 end "saldo"
-  stated[w] = 955.00 EUR at 2026-02-28 end "saldo"
-
-ask led: residuals w 2026-02
-ask byc: residuals w 2026-01..2026-02 by cat
-ask bp: bal(w, PLN, 2026-03-01)
-,,1:0,99:bp: 780.00 PLN
-  pad: w 2026-02-28 end, pads:st:w@2026-02-28 end:PLN of -6.00 PLN
-  cut 2026-10-20
 ,15:fixes/g5/p4_adj,12:fixes-ledger,43:run p4_adj.tally --ask b1 b2 f1 a1 n1 s1 e1,998:12:p4_adj.tally,977:model hh
   tally 2
   on 2026-06-30
@@ -103933,18 +103746,18 @@ version st
   known 2026-04-02
   bank[r1] = (on: 2026-03-10, kind: cats, leg cash from konto to world amount 7.00 PLN, cat: "a" + "b") "r1"
 ,,1:1,83:refused: LOAD-UNIT a value of the wrong type for bank[r1] (obs_attr_expr.tally:75)
-,18:fixes/p60/led_each,11:fixes-sweep,18:run led_each.tally,1210:14:led_each.tally,1186:model pw
+,18:fixes/p60/led_each,11:fixes-sweep,18:run led_each.tally,1357:14:led_each.tally,1333:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:505, residuals with windows each over a statement known in a window"
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:505, residuals with windows each over a statement known in a window; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -103987,18 +103800,18 @@ version st
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD input dk is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,23:fixes/p60/obs_known_win,11:fixes-sweep,23:run obs_known_win.tally,1209:19:obs_known_win.tally,1180:model pw
+,23:fixes/p60/obs_known_win,11:fixes-sweep,23:run obs_known_win.tally,1356:19:obs_known_win.tally,1327:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): book/observe.rs:216, an observation known in a window that holds the cut, no windows each"
+  note "T, M2 P60 (G6's census of run-time stops): book/observe.rs:216, an observation known in a window that holds the cut, no windows each; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -104040,18 +103853,18 @@ version st
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD input dk is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,24:fixes/p60/read_known_win,11:fixes-sweep,24:run read_known_win.tally,1141:20:read_known_win.tally,1111:model pw
+,24:fixes/p60/read_known_win,11:fixes-sweep,24:run read_known_win.tally,1288:20:read_known_win.tally,1258:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:339, a reading known in a window that holds the cut"
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:339, a reading known in a window that holds the cut; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -104091,18 +103904,18 @@ version rd
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD input dk is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,19:fixes/p60/same_rows,11:fixes-sweep,19:run same_rows.tally,1820:15:same_rows.tally,1795:model p
+,19:fixes/p60/same_rows,11:fixes-sweep,19:run same_rows.tally,1967:15:same_rows.tally,1942:model p
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:348, input rows stated same, at run"
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:348, input rows stated same, at run; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place wallet: mixed lives 2026-01-01..
 input y[k in ks]: int
 input px: money PLN reading
@@ -104183,18 +103996,18 @@ warning: WARN-UNREAD input lo is read by nothing
 warning: WARN-UNREAD input px is read by nothing
 warning: WARN-UNREAD input z is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,20:fixes/p60/settle_lit,11:fixes-sweep,20:run settle_lit.tally,2244:16:settle_lit.tally,2218:model p
+,20:fixes/p60/settle_lit,11:fixes-sweep,20:run settle_lit.tally,2391:16:settle_lit.tally,2365:model p
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): book/settle.rs:221, a move over adjustments whose fulfils is not its variable (refcore: RUN-CYCLE)"
+  note "T, M2 P60 (G6's census of run-time stops): book/settle.rs:221, a move over adjustments whose fulfils is not its variable (refcore: RUN-CYCLE); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place wallet: mixed lives 2026-01-01..
 input y[k in ks]: int
 input px: money PLN reading
@@ -104293,18 +104106,18 @@ warning: WARN-UNREAD input x is read by nothing
 warning: WARN-UNREAD input y is read by nothing
 warning: WARN-UNREAD input z is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/p60/sum_days_win,11:fixes-sweep,22:run sum_days_win.tally,1010:18:sum_days_win.tally,983:model pw
+,22:fixes/p60/sum_days_win,11:fixes-sweep,22:run sum_days_win.tally,1158:18:sum_days_win.tally,1130:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): eval/arith.rs:128, a sum over a window (days_between of a window; refcore: RUN-DOMAIN)"
+  note "T, M2 P60 (G6's census of run-time stops): eval/arith.rs:128, a sum over a window (days_between of a window; refcore: RUN-DOMAIN); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -104334,18 +104147,18 @@ ask q: sum(days_between(d0, dk[k]) for k in ks)
 ,,1:0,164:q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
   cut 2026-04-25
 warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/p60/mv_row_value,11:fixes-sweep,22:run mv_row_value.tally,1885:18:mv_row_value.tally,1857:model p
+,22:fixes/p60/mv_row_value,11:fixes-sweep,22:run mv_row_value.tally,2032:18:mv_row_value.tally,2004:model p
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): eval/convert.rs:403, a move named as an event-key row's value (refcore: LOAD-KEY)"
+  note "T, M2 P60 (G6's census of run-time stops): eval/convert.rs:403, a move named as an event-key row's value (refcore: LOAD-KEY); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place wallet: mixed lives 2026-01-01..
 input y[k in ks]: int
 input px: money PLN reading
@@ -105299,198 +105112,6 @@ c1: 0
 p1: 900.00 PLN
   unfulfilled: pay[2026-01]
   cut 2026-06-30
-,15:fixes/g5/p3_any,12:fixes-ledger,30:run p3_any.tally --ask led byc,1781:12:p3_any.tally,1759:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-12-31
-
-source plan "plan"
-source wyciag "bank"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-unit USD: currency minor 0.01
-kind wallets: place any signed
-kind shopping: transfers
-  attr cat: text
-input bank: observed
-input pln_amt: money PLN
-input eur_amt: money EUR
-input dom: int
-place w: wallets lives 2019-05-01..
-place shop: outside lives 1900-01-01..
-place unexplained: outside lives 1900-01-01..
-
-move pay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from w to shop amount pln_amt
-
-move epay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from w to shop amount eur_amt
-
-version plan_2026
-  cite plan
-  governs 2026..
-  known 2026-01-01
-  pln_amt = 100.00 PLN "umowa"
-  eur_amt = 20.00 EUR "umowa"
-  dom = 5 "umowa"
-  opening[w] = 1 000.00 PLN at 2026-01-01 start "s"
-  opening[w] = 1 000.00 EUR at 2026-01-01 start "s"
-  opening[w] = 0.00 USD at 2026-01-01 start "s"
-
-version st
-  cite wyciag
-  governs 2026-02
-  known 2026-03-02
-  covers w
-  pad w from unexplained
-  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from w to shop amount 110.00 PLN, fulfils: pay[2026-02]) "l1"
-  bank[r2] = (on: 2026-02-06, kind: transfers, leg cash from w to shop amount 20.00 EUR, fulfils: epay[2026-02]) "l2"
-  bank[r3] = (on: 2026-02-07, kind: shopping, leg cash from w to shop amount 3.00 EUR, cat: "food") "l3"
-  bank[r4] = (on: 2026-02-08, kind: shopping, leg cash from w to shop amount 4.00 PLN, cat: "food") "l4"
-  stated[w] = 780.00 PLN at 2026-02-28 end "saldo"
-  stated[w] = 955.00 EUR at 2026-02-28 end "saldo"
-
-ask led: residuals w 2026-02
-ask byc: residuals w 2026-01..2026-02 by cat
-ask bp: bal(w, PLN, 2026-03-01)
-,,1:0,2264:led: residuals w 2026-02
-  ledger EUR:
-    2026-02 unexplained: model 0.00 EUR, observed -3.00 EUR, difference -3.00 EUR
-      unexplained bank[r3] on 2026-02-07: observed -3.00 EUR
-    2026-02 balance: model 957.00 EUR, observed 955.00 EUR, difference -2.00 EUR
-      balance w 2026-02-28 end (padded): booked 957.00 EUR, stated 955.00 EUR, gap -2.00 EUR
-    2026-02 move epay: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR
-      matched epay[2026-02] on 2026-02-05: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR, timing +1 days
-  ledger PLN:
-    2026-02 move pay: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN
-      matched pay[2026-02] on 2026-02-05: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN, timing +0 days
-    2026-02 balance: model 786.00 PLN, observed 780.00 PLN, difference -6.00 PLN
-      balance w 2026-02-28 end (padded): booked 786.00 PLN, stated 780.00 PLN, gap -6.00 PLN
-    2026-02 unexplained: model 0.00 PLN, observed -4.00 PLN, difference -4.00 PLN
-      unexplained bank[r4] on 2026-02-08: observed -4.00 PLN
-  ledger USD:
-  cut 2026-10-20
-byc: residuals w 2026-01 .. 2026-02 by cat
-  ledger EUR:
-    2026-02 cat "food": model 0.00 EUR, observed -3.00 EUR, difference -3.00 EUR
-      unexplained bank[r3] on 2026-02-07: observed -3.00 EUR
-    2026-02 balance: model 957.00 EUR, observed 955.00 EUR, difference -2.00 EUR
-      balance w 2026-02-28 end (padded): booked 957.00 EUR, stated 955.00 EUR, gap -2.00 EUR
-    2026-02 move epay: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR
-      matched epay[2026-02] on 2026-02-05: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR, timing +1 days
-  ledger PLN:
-    2026-02 move pay: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN
-      matched pay[2026-02] on 2026-02-05: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN, timing +0 days
-    2026-02 balance: model 786.00 PLN, observed 780.00 PLN, difference -6.00 PLN
-      balance w 2026-02-28 end (padded): booked 786.00 PLN, stated 780.00 PLN, gap -6.00 PLN
-    2026-02 cat "food": model 0.00 PLN, observed -4.00 PLN, difference -4.00 PLN
-      unexplained bank[r4] on 2026-02-08: observed -4.00 PLN
-  ledger USD:
-  cut 2026-10-20
-,19:fixes/g5/p3_anyhole,12:fixes-ledger,37:run p3_anyhole.tally --ask led byc bp,1744:16:p3_anyhole.tally,1718:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-12-31
-
-source plan "plan"
-source wyciag "bank"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-unit USD: currency minor 0.01
-kind wallets: place any signed
-kind shopping: transfers
-  attr cat: text
-input bank: observed
-input pln_amt: money PLN
-input eur_amt: money EUR
-input dom: int
-place w: wallets lives 2019-05-01..
-place shop: outside lives 1900-01-01..
-place unexplained: outside lives 1900-01-01..
-
-move pay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from w to shop amount pln_amt
-
-move epay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from w to shop amount eur_amt
-
-version plan_2026
-  cite plan
-  governs 2026..
-  known 2026-01-01
-  pln_amt = 100.00 PLN "umowa"
-  eur_amt = 20.00 EUR "umowa"
-  dom = 5 "umowa"
-  opening[w] = 1 000.00 PLN at 2026-01-01 start "s"
-  opening[w] = 1 000.00 EUR at 2026-01-01 start "s"
-  opening[w] = 0.00 USD at 2026-01-01 start "s"
-
-version st
-  cite wyciag
-  governs 2026-02
-  known 2026-03-02
-  covers w
-  pad w from unexplained
-  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from w to shop amount 110.00 PLN, fulfils: pay[2026-02]) "l1"
-  bank[r2] = (on: 2026-02-06, kind: transfers, leg cash from w to shop amount 20.00 EUR, fulfils: epay[2026-02]) "l2"
-  bank[r3] = (on: 2026-02-07, kind: shopping, leg cash from w to shop amount 3.00 EUR, cat: "food") "l3"
-  bank[r4] = (on: 2026-02-08, kind: shopping, leg cash from w to shop amount 4.00 PLN, cat: "food") "l4"
-  stated[w] = ?"saldo nieczytelne" at 2026-02-28 end "saldo"
-
-ask led: residuals w 2026-02
-ask byc: residuals w 2026-01..2026-02 by cat
-ask bp: bal(w, PLN, 2026-03-01)
-,,1:0,3288:led: residuals w 2026-02
-  ledger EUR:
-    2026-02 balance: model 957.00 EUR, observed ?"saldo nieczytelne" (stated[w]), difference ?"saldo nieczytelne" (stated[w])
-      balance w 2026-02-28 end (padded): booked 957.00 EUR, stated ?"saldo nieczytelne" (stated[w]), gap ?"saldo nieczytelne" (stated[w])
-    2026-02 unexplained: model 0.00 EUR, observed -3.00 EUR, difference -3.00 EUR
-      unexplained bank[r3] on 2026-02-07: observed -3.00 EUR
-    2026-02 move epay: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR
-      matched epay[2026-02] on 2026-02-05: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR, timing +1 days
-  ledger PLN:
-    2026-02 balance: model 786.00 PLN, observed ?"saldo nieczytelne" (stated[w]), difference ?"saldo nieczytelne" (stated[w])
-      balance w 2026-02-28 end (padded): booked 786.00 PLN, stated ?"saldo nieczytelne" (stated[w]), gap ?"saldo nieczytelne" (stated[w])
-    2026-02 move pay: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN
-      matched pay[2026-02] on 2026-02-05: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN, timing +0 days
-    2026-02 unexplained: model 0.00 PLN, observed -4.00 PLN, difference -4.00 PLN
-      unexplained bank[r4] on 2026-02-08: observed -4.00 PLN
-  ledger USD:
-    2026-02 balance: model 0.00 USD, observed ?"saldo nieczytelne" (stated[w]), difference ?"saldo nieczytelne" (stated[w])
-      balance w 2026-02-28 end (padded): booked 0.00 USD, stated ?"saldo nieczytelne" (stated[w]), gap ?"saldo nieczytelne" (stated[w])
-  cut 2026-10-20
-byc: residuals w 2026-01 .. 2026-02 by cat
-  ledger EUR:
-    2026-02 balance: model 957.00 EUR, observed ?"saldo nieczytelne" (stated[w]), difference ?"saldo nieczytelne" (stated[w])
-      balance w 2026-02-28 end (padded): booked 957.00 EUR, stated ?"saldo nieczytelne" (stated[w]), gap ?"saldo nieczytelne" (stated[w])
-    2026-02 cat "food": model 0.00 EUR, observed -3.00 EUR, difference -3.00 EUR
-      unexplained bank[r3] on 2026-02-07: observed -3.00 EUR
-    2026-02 move epay: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR
-      matched epay[2026-02] on 2026-02-05: model -20.00 EUR, observed -20.00 EUR, difference 0.00 EUR, timing +1 days
-  ledger PLN:
-    2026-02 balance: model 786.00 PLN, observed ?"saldo nieczytelne" (stated[w]), difference ?"saldo nieczytelne" (stated[w])
-      balance w 2026-02-28 end (padded): booked 786.00 PLN, stated ?"saldo nieczytelne" (stated[w]), gap ?"saldo nieczytelne" (stated[w])
-    2026-02 move pay: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN
-      matched pay[2026-02] on 2026-02-05: model -100.00 PLN, observed -110.00 PLN, difference -10.00 PLN, timing +0 days
-    2026-02 cat "food": model 0.00 PLN, observed -4.00 PLN, difference -4.00 PLN
-      unexplained bank[r4] on 2026-02-08: observed -4.00 PLN
-  ledger USD:
-    2026-02 balance: model 0.00 USD, observed ?"saldo nieczytelne" (stated[w]), difference ?"saldo nieczytelne" (stated[w])
-      balance w 2026-02-28 end (padded): booked 0.00 USD, stated ?"saldo nieczytelne" (stated[w]), gap ?"saldo nieczytelne" (stated[w])
-  cut 2026-10-20
-bp: ?"saldo nieczytelne" (stated[w])
-  pad: w 2026-02-28 end, pads:st:w@2026-02-28 end:PLN of ?"saldo nieczytelne" (stated[w])
-  cut 2026-10-20
 ,16:fixes/g5/a1_one2,12:fixes-ledger,26:run a1_one2.tally --ask t1,1062:13:a1_one2.tally,1039:model b
   tally 2
   on 2027-06-30
@@ -106141,18 +105762,18 @@ q5 (k = c) [ax = lo]: (true, 10.00 PLN)
 q5 (k = c) [ax = hi]: (true, 20.00 PLN)
   reading: ax = hi
   cut 2026-03-01
-,18:fixes/g6b/le1_each,11:fixes-sweep,24:run le1.tally --ask q q2,1417:9:le1.tally,1399:model pw
+,18:fixes/g6b/le1_each,11:fixes-sweep,24:run le1.tally --ask q q2,1564:9:le1.tally,1546:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186)"
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -106354,18 +105975,18 @@ q2 [dk[a] = 2026-03-10]: residuals konto 2026-03
   cut 2026-04-25
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,18:fixes/g6b/le5_each,11:fixes-sweep,27:run le5.tally --ask q q3 q4,1473:9:le5.tally,1455:model pw
+,18:fixes/g6b/le5_each,11:fixes-sweep,27:run le5.tally --ask q q3 q4,1620:9:le5.tally,1602:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186)"
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -110621,566 +110242,6 @@ x2 [w1 = 2026-03-06 .. 2026-03-07, w2 = 2026-03-06 .. 2026-03-07]: false
   cut 2026-01-01
 x2 [w1 = 2026-03-06 .. 2026-03-07, w2 = 2026-03-08]: true
   cut 2026-01-01
-,16:r14/message_unit,9:fixes-r14,31:run m.tally --ask eur pln g_eur,870:7:m.tally,855:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #172, a message whose form names the place's unit names the unit of the read that met it; no-item 3, RUN-PLACE at a place any min 0 kind prints the balance of the unit whose reading broke the rule (eur: refused, -5.00 EUR; pln: 3.00 PLN)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind safes: place any min 0
-place box: safes lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor box
-  opening[box] = 1.00 EUR at 2026-01-01 start "s"
-  opening[box] = 2.00 PLN at 2026-01-01 start "s"
-  stated[box] = -5.00 EUR at 2026-02-15 end "s"
-  stated[box] = 3.00 PLN at 2026-02-15 end "s"
-
-ask eur: bal(box, EUR, 2026-02-20)
-ask pln: bal(box, PLN, 2026-02-20)
-ask g_eur: gap(box, 2026-02-14)
-,,1:0,343:eur: refused: RUN-PLACE box is -5.00 EUR after its reading at 2026-02-15 end
-  anchor: box 2026-02-15 end, stated -5.00 EUR, difference -6.00 EUR
-  cut 2026-06-10
-pln: 3.00 PLN
-  anchor: box 2026-02-15 end, stated 3.00 PLN, difference 1.00 PLN
-  cut 2026-06-10
-g_eur: ?"stated[box] has no reading at 2026-02-14" (stated[box])
-  cut 2026-06-10
-,29:r14/unitless_hole_own_instant,9:fixes-r14,23:run m.tally --ask a a17,904:7:m.tally,889:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #173, a unitless hole row at an instant of its own is a row for every unit the place has a position in (a17 before it; a: the hole for both)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-17 end "s"
-
-ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
-ask a17: bal(broker, EUR, 2026-02-18), bal(broker, PLN, 2026-02-18)
-,,1:0,384:a: (?"not read" (stated[broker]), ?"not read" (stated[broker]))
-  anchor: broker 2026-02-17 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  cut 2026-06-10
-a17: (?"not read" (stated[broker]), ?"not read" (stated[broker]))
-  anchor: broker 2026-02-17 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  cut 2026-06-10
-,28:r14/unitless_hole_units_held,9:fixes-r14,21:run m.tally --ask e u,1601:7:m.tally,1585:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198), item #173 SQ-2 and no-item 5: a unitless hole stands for the units the place has a position in at its instant, each up to that unit's next reading. At 2026-02-17 broker holds EUR (opening) and no USD: EUR takes the hole until its reading at 2026-02-25; USD, which arrives on 2026-03-01, starts from zero, not from the hole; no-item 4, a later EUR reading at the hole's instant, no replace, is the narrower claim (eur17)"
-
-source s "s"
-unit EUR: currency minor 0.01
-unit USD: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input usd_in: money USD
-input usd_day: date
-
-move buy: transfers
-  on usd_day
-  leg cash from world to broker amount usd_in
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  usd_in = 7.00 USD "s"
-  usd_day = 2026-03-01 "s"
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-17 end "s"
-  stated[broker] = 3.00 EUR at 2026-02-25 end "s"
-
-version v3
-  cite s
-  governs always
-  known 2026-04-01
-  anchor broker
-  stated[broker] = 5.00 EUR at 2026-02-17 end "s"
-
-ask e: bal(broker, EUR, 2026-02-16), bal(broker, EUR, 2026-02-20), bal(broker, EUR, 2026-02-26) as known 2026-03-15
-ask u: bal(broker, USD, 2026-02-20), bal(broker, USD, 2026-03-05) as known 2026-03-15
-ask eur17: bal(broker, EUR, 2026-02-20), bal(broker, USD, 2026-03-05)
-,,1:0,331:e: (1.00 EUR, ?"not read" (stated[broker]), 3.00 EUR)
-  anchor: broker 2026-02-17 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  anchor: broker 2026-02-25 end, stated 3.00 EUR, difference ?"not read" (stated[broker])
-  cut 2026-03-15
-u: (0.00 USD, 7.00 USD)
-  unfulfilled: buy
-  cut 2026-03-15
-,16:r14/replace_hole,9:fixes-r14,23:run m.tally --ask a a17,908:7:m.tally,893:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #173 SQ-3 (P25 reopened), replace stated[x] = a hole over a unit reading loads and is every unit's reading there (a: the hole, the hole)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  replace stated[broker] = ?"not read" at 2026-02-15 end "s"
-
-ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
-ask a17: bal(broker, EUR, 2026-02-18), bal(broker, PLN, 2026-02-18)
-,,1:0,384:a: (?"not read" (stated[broker]), ?"not read" (stated[broker]))
-  anchor: broker 2026-02-15 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  cut 2026-06-10
-a17: (?"not read" (stated[broker]), ?"not read" (stated[broker]))
-  anchor: broker 2026-02-15 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  cut 2026-06-10
-,16:r14/replace_none,9:fixes-r14,23:run m.tally --ask a a17,889:7:m.tally,874:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #173, replace stated[x] = none at a place of unit any withdraws every unit's reading at that instant (a: 1.00 EUR, 2.00 PLN)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  replace stated[broker] = none at 2026-02-15 end "s"
-
-ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
-ask a17: bal(broker, EUR, 2026-02-18), bal(broker, PLN, 2026-02-18)
-,,1:0,84:a: (1.00 EUR, 2.00 PLN)
-  cut 2026-06-10
-a17: (1.00 EUR, 2.00 PLN)
-  cut 2026-06-10
-,15:r14/pad_id_unit,9:fixes-r14,20:run m.tally --ask bp,1047:7:m.tally,1031:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #175, a pad's id ends with its unit, so two units padded at one instant are two movements (bp: pads:st:broker@2026-02-15 end:EUR and :PLN); no-item 1, count(p in pads over s) is 2 and explain of an EUR read lists EUR's pad only (cp, ex)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-place world: outside lives 1900-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-
-version st
-  cite s
-  governs 2026-02
-  known 2026-03-01
-  pad broker from world
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask bp: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
-ask cp: count(p in pads over 2026-02)
-ask ex: explain bal(broker, EUR, 2026-02-20)
-,,1:0,195:bp: (4.00 EUR, 10.00 PLN)
-  pad: broker 2026-02-15 end, pads:st:broker@2026-02-15 end:EUR of 3.00 EUR
-  pad: broker 2026-02-15 end, pads:st:broker@2026-02-15 end:PLN of 8.00 PLN
-  cut 2026-06-10
-,17:r14/since_instant,9:fixes-r14,20:run m.tally --ask sn,1179:7:m.tally,1163:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): EUR's and PLN's readings both at 2026-02-15 end. Item 74, gap and last there are RUN-DOMAIN, naming the two units (g, l); item 73, since reads the instant only (sn: 1); no-item 2, the register's anchor entry of an EUR read is EUR's (an); no-item 6, a law read of the reading refuses, the file loads (lw); item 76, low names no unit and is refused, its spelled-out definition answers (lo, lmin)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask g: gap(broker, 2026-02-15)
-ask sn: since(stated[broker], 2026-02-16)
-ask an: bal(broker, EUR, 2026-02-20)
-ask lo: low(broker, 2026-02-10 .. 2026-02-20)
-ask lmin: min(bal(broker, EUR, d) for d in 2026-02-10 .. 2026-02-20 step 1 day)
-,,1:1,100:refused: LOAD-UNIT bal(broker, d) of a place of unit any states its unit: bal(x, u, d) (m.tally:27)
-,22:r14/gap_last_two_units,9:fixes-r14,11:run m.tally,1179:7:m.tally,1163:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): EUR's and PLN's readings both at 2026-02-15 end. Item 74, gap and last there are RUN-DOMAIN, naming the two units (g, l); item 73, since reads the instant only (sn: 1); no-item 2, the register's anchor entry of an EUR read is EUR's (an); no-item 6, a law read of the reading refuses, the file loads (lw); item 76, low names no unit and is refused, its spelled-out definition answers (lo, lmin)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask g: gap(broker, 2026-02-15)
-ask sn: since(stated[broker], 2026-02-16)
-ask an: bal(broker, EUR, 2026-02-20)
-ask lo: low(broker, 2026-02-10 .. 2026-02-20)
-ask lmin: min(bal(broker, EUR, d) for d in 2026-02-10 .. 2026-02-20 step 1 day)
-,,1:1,100:refused: LOAD-UNIT bal(broker, d) of a place of unit any states its unit: bal(x, u, d) (m.tally:27)
-,24:r14/unitless_beside_unit,9:fixes-r14,23:run m.tally --ask a a17,935:7:m.tally,920:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item 75, a unitless hole row beside EUR's reading at one instant, no replace: it loads, EUR's own reading is the narrower claim, PLN takes the hole (a: 4.00 EUR, then the hole)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-15 end "s"
-
-ask a: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
-ask a17: bal(broker, EUR, 2026-02-18), bal(broker, PLN, 2026-02-18)
-,,1:0,484:a: (4.00 EUR, ?"not read" (stated[broker]))
-  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 3.00 EUR
-  anchor: broker 2026-02-15 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  cut 2026-06-10
-a17: (4.00 EUR, ?"not read" (stated[broker]))
-  anchor: broker 2026-02-15 end, stated 4.00 EUR, difference 3.00 EUR
-  anchor: broker 2026-02-15 end, stated ?"not read" (stated[broker]), difference ?"not read" (stated[broker])
-  cut 2026-06-10
-,16:r14/pads_counted,9:fixes-r14,23:run m.tally --ask cp ex,1047:7:m.tally,1031:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #175, a pad's id ends with its unit, so two units padded at one instant are two movements (bp: pads:st:broker@2026-02-15 end:EUR and :PLN); no-item 1, count(p in pads over s) is 2 and explain of an EUR read lists EUR's pad only (cp, ex)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-place world: outside lives 1900-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-
-version st
-  cite s
-  governs 2026-02
-  known 2026-03-01
-  pad broker from world
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask bp: bal(broker, EUR, 2026-02-20), bal(broker, PLN, 2026-02-20)
-ask cp: count(p in pads over 2026-02)
-ask ex: explain bal(broker, EUR, 2026-02-20)
-,,1:0,377:cp: 2
-  cut 2026-06-10
-ex: 4.00 EUR
-  balance of broker (EUR) at the end of 2026-02-20
-  from: pad st:stated[broker] 2026-02-15 end = 4.00 EUR, 2026-02-15 end (version st, source s, locator "s"), gap role pad from world, gap 3.00 EUR (pads:st:broker@2026-02-15 end:EUR)
-  no movement
-  pad: broker 2026-02-15 end, pads:st:broker@2026-02-15 end:EUR of 3.00 EUR
-  cut 2026-06-10
-,24:r14/register_anchor_unit,9:fixes-r14,20:run m.tally --ask an,1179:7:m.tally,1163:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): EUR's and PLN's readings both at 2026-02-15 end. Item 74, gap and last there are RUN-DOMAIN, naming the two units (g, l); item 73, since reads the instant only (sn: 1); no-item 2, the register's anchor entry of an EUR read is EUR's (an); no-item 6, a law read of the reading refuses, the file loads (lw); item 76, low names no unit and is refused, its spelled-out definition answers (lo, lmin)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask g: gap(broker, 2026-02-15)
-ask sn: since(stated[broker], 2026-02-16)
-ask an: bal(broker, EUR, 2026-02-20)
-ask lo: low(broker, 2026-02-10 .. 2026-02-20)
-ask lmin: min(bal(broker, EUR, d) for d in 2026-02-10 .. 2026-02-20 step 1 day)
-,,1:1,100:refused: LOAD-UNIT bal(broker, d) of a place of unit any states its unit: bal(x, u, d) (m.tally:27)
-,18:r14/sign_rule_unit,9:fixes-r14,21:run m.tally --ask eur,870:7:m.tally,855:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): item #172, a message whose form names the place's unit names the unit of the read that met it; no-item 3, RUN-PLACE at a place any min 0 kind prints the balance of the unit whose reading broke the rule (eur: refused, -5.00 EUR; pln: 3.00 PLN)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind safes: place any min 0
-place box: safes lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor box
-  opening[box] = 1.00 EUR at 2026-01-01 start "s"
-  opening[box] = 2.00 PLN at 2026-01-01 start "s"
-  stated[box] = -5.00 EUR at 2026-02-15 end "s"
-  stated[box] = 3.00 PLN at 2026-02-15 end "s"
-
-ask eur: bal(box, EUR, 2026-02-20)
-ask pln: bal(box, PLN, 2026-02-20)
-ask g_eur: gap(box, 2026-02-14)
-,,1:0,163:eur: refused: RUN-PLACE box is -5.00 EUR after its reading at 2026-02-15 end
-  anchor: box 2026-02-15 end, stated -5.00 EUR, difference -6.00 EUR
-  cut 2026-06-10
-,18:r14/narrower_later,9:fixes-r14,23:run m.tally --ask eur17,1601:7:m.tally,1585:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198), item #173 SQ-2 and no-item 5: a unitless hole stands for the units the place has a position in at its instant, each up to that unit's next reading. At 2026-02-17 broker holds EUR (opening) and no USD: EUR takes the hole until its reading at 2026-02-25; USD, which arrives on 2026-03-01, starts from zero, not from the hole; no-item 4, a later EUR reading at the hole's instant, no replace, is the narrower claim (eur17)"
-
-source s "s"
-unit EUR: currency minor 0.01
-unit USD: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input usd_in: money USD
-input usd_day: date
-
-move buy: transfers
-  on usd_day
-  leg cash from world to broker amount usd_in
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  usd_in = 7.00 USD "s"
-  usd_day = 2026-03-01 "s"
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-17 end "s"
-  stated[broker] = 3.00 EUR at 2026-02-25 end "s"
-
-version v3
-  cite s
-  governs always
-  known 2026-04-01
-  anchor broker
-  stated[broker] = 5.00 EUR at 2026-02-17 end "s"
-
-ask e: bal(broker, EUR, 2026-02-16), bal(broker, EUR, 2026-02-20), bal(broker, EUR, 2026-02-26) as known 2026-03-15
-ask u: bal(broker, USD, 2026-02-20), bal(broker, USD, 2026-03-05) as known 2026-03-15
-ask eur17: bal(broker, EUR, 2026-02-20), bal(broker, USD, 2026-03-05)
-,,1:0,134:eur17: (5.00 EUR, 7.00 USD)
-  anchor: broker 2026-02-17 end, stated 5.00 EUR, difference 4.00 EUR
-  unfulfilled: buy
-  cut 2026-06-10
-,20:r14/no_position_zero,9:fixes-r14,19:run m.tally --ask u,1601:7:m.tally,1585:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198), item #173 SQ-2 and no-item 5: a unitless hole stands for the units the place has a position in at its instant, each up to that unit's next reading. At 2026-02-17 broker holds EUR (opening) and no USD: EUR takes the hole until its reading at 2026-02-25; USD, which arrives on 2026-03-01, starts from zero, not from the hole; no-item 4, a later EUR reading at the hole's instant, no replace, is the narrower claim (eur17)"
-
-source s "s"
-unit EUR: currency minor 0.01
-unit USD: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input usd_in: money USD
-input usd_day: date
-
-move buy: transfers
-  on usd_day
-  leg cash from world to broker amount usd_in
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  usd_in = 7.00 USD "s"
-  usd_day = 2026-03-01 "s"
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-17 end "s"
-  stated[broker] = 3.00 EUR at 2026-02-25 end "s"
-
-version v3
-  cite s
-  governs always
-  known 2026-04-01
-  anchor broker
-  stated[broker] = 5.00 EUR at 2026-02-17 end "s"
-
-ask e: bal(broker, EUR, 2026-02-16), bal(broker, EUR, 2026-02-20), bal(broker, EUR, 2026-02-26) as known 2026-03-15
-ask u: bal(broker, USD, 2026-02-20), bal(broker, USD, 2026-03-05) as known 2026-03-15
-ask eur17: bal(broker, EUR, 2026-02-20), bal(broker, USD, 2026-03-05)
-,,1:0,60:u: (0.00 USD, 7.00 USD)
-  unfulfilled: buy
-  cut 2026-03-15
-,22:r14/law_read_two_units,9:fixes-r14,20:run m.tally --ask lw,868:7:m.tally,853:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): EUR's and PLN's readings both at 2026-02-15 end. Item 74, last there is RUN-DOMAIN at run, naming the two units (l; before 2.1.8 both refuse the file, LOAD-OVERLAP); no-item 6, a law read of the reading refuses at run and the file loads (lw)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask l: last(stated[broker], 2026-02-16)
-ask lw: stated[broker] law 2026-02-15
-,,1:0,130:lw: refused: RUN-DOMAIN stated of broker: its readings at 2026-02-15 end are in EUR and PLN
-  law date 2026-02-15, cut 2026-06-10
 ,15:r15/mean_linear,9:fixes-r15,20:run m.tally --ask m1,3955:7:m.tally,3939:model hh
   tally 2
   on 2026-10-20
@@ -113604,35 +112665,6 @@ ask n_money: kn * hn partial
 ,,1:0,105:n_money: 10.00 PLN × ?"how many" (hn)
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,16:d76/low_unit_any,7:fixes-d,25:run m.tally --ask lo lmin,1179:7:m.tally,1163:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8 R14 (#198): EUR's and PLN's readings both at 2026-02-15 end. Item 74, gap and last there are RUN-DOMAIN, naming the two units (g, l); item 73, since reads the instant only (sn: 1); no-item 2, the register's anchor entry of an EUR read is EUR's (an); no-item 6, a law read of the reading refuses, the file loads (lw); item 76, low names no unit and is refused, its spelled-out definition answers (lo, lmin)"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-  stated[broker] = 10.00 PLN at 2026-02-15 end "s"
-
-ask g: gap(broker, 2026-02-15)
-ask sn: since(stated[broker], 2026-02-16)
-ask an: bal(broker, EUR, 2026-02-20)
-ask lo: low(broker, 2026-02-10 .. 2026-02-20)
-ask lmin: min(bal(broker, EUR, d) for d in 2026-02-10 .. 2026-02-20 step 1 day)
-,,1:1,100:refused: LOAD-UNIT bal(broker, d) of a place of unit any states its unit: bal(x, u, d) (m.tally:27)
 ,8:d77/sign,7:fixes-d,11:run m.tally,1152:7:m.tally,1136:model t
   tally 2
   on 2026-01-01
@@ -114223,48 +113255,6 @@ led: residuals sav 2026-03
   cut 2026-04-25
 warning: WARN-NEGATIVE konto is below zero from 2026-04-15
 warning: WARN-UNREAD place unexplained is read by nothing
-,14:r14/no_opening,9:fixes-r14,22:run m.tally --ask p p2,1281:7:m.tally,1265:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-  note "T, tally 2.1.8, finding 4 (P24): two places of unit any alive before S, each with a PLN leg on 2026-03-01. broker has an opening in EUR only: PLN, which it has no opening of, is the hole before S (\"has no balance before 2026-01-01\") before and after the leg, and EUR is its opening. broker2 has no opening at all: every read of it is \"no opening or stated reading\". Both engines print these (R14, read unit by unit)."
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-place broker2: wallets lives 2025-01-01..
-place world: outside lives 1900-01-01..
-input amt: money PLN
-input day: date
-
-move buy: transfers
-  on day
-  leg cash from world to broker amount amt
-
-move buy2: transfers
-  on day
-  leg cash from world to broker2 amount amt
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 7.00 PLN "s"
-  day = 2026-03-01 "s"
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-
-ask p: bal(broker, PLN, 2026-02-15), bal(broker, PLN, 2026-03-05), bal(broker, EUR, 2026-03-05)
-
-ask p2: bal(broker2, PLN, 2026-02-15), bal(broker2, PLN, 2026-03-05), bal(broker2, EUR, 2026-03-05)
-,,1:0,363:p: (?"broker has no balance before 2026-01-01" (broker), ?"broker has no balance before 2026-01-01" (broker), 1.00 EUR)
-  unfulfilled: buy
-  cut 2026-06-10
-p2: (?"broker2 has no opening or stated reading" (broker2), ?"broker2 has no opening or stated reading" (broker2), ?"broker2 has no opening or stated reading" (broker2))
-  unfulfilled: buy2
-  cut 2026-06-10
 ,26:r11/negative_after_reading,9:fixes-r11,21:run m.tally --ask neg,1871:7:m.tally,1855:model hh
   tally 2
   on 2026-10-20
@@ -115391,38 +114381,6 @@ d: 1 030.00 PLN + 1 × ?"gift in march" (gift[2026-03])
   held: repay_dom = 1 (v), read for 2026-03-01
   held: repay_dom = 1 (v), read for 2026-04-01
   cut 2026-01-01
-,27:fixes/rv/g3_b4_unitless_row,8:fixes-rv,15:run t1_la.tally,634:11:t1_la.tally,614:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-15 end "s"
-
-ask la: last(stated[broker], 2026-02-16)
-,,1:0,107:la: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN
-  cut 2026-06-10
 ,29:fixes/rv/g3_b7_quantile_level,8:fixes-rv,12:run t7.tally,583:8:t7.tally,567:model hh
   tally 2
   on 2026-10-20
@@ -116243,103 +115201,6 @@ ask q5: pm - 2026-01 law 2026-12-31
   law date 2026-12-31, cut 2026-01-01
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
-,29:fixes/rv/g3f_g1_unitless_hole,8:fixes-rv,16:run p5_min.tally,985:12:p5_min.tally,964:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-place konto: accounts PLN lives 2025-01-01..
-place world: outside lives 1900-01-01..
-input d_p: date
-input x1: money PLN
-input x2: money PLN
-input d_q: date
-def lb: money EUR = last(stated[broker], d_q)
-def amt: money PLN = if lb > 0 EUR then x1 else x2
-move pay: transfers
-  on d_p
-  leg cash from world to konto amount amt
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  d_p = 2026-03-05 "s"
-  x1 = 1.00 PLN "s"
-  x2 = 2.00 PLN "s"
-  d_q = 2026-02-16 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-15 end "s"
-
-ask k: bal(konto, 2026-03-31)
-,,1:0,148:k: ?"not read" (stated[broker])
-  unfulfilled: pay
-  held: stated[broker] = ?"not read" (stated[broker]) (v2), read for 2026-02-16
-  cut 2026-06-10
-,33:fixes/rv/g3f_g1_unitless_hole_eur,8:fixes-rv,17:run p5_plan.tally,1089:13:p5_plan.tally,1066:model t
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-kind wallets: place any signed
-place broker: wallets lives 2025-01-01..
-place konto: accounts PLN lives 2025-01-01..
-place world: outside lives 1900-01-01..
-input d_p: date
-input x1: money PLN
-input x2: money PLN
-input d_q: date
-def lb: money EUR = last(stated[broker], d_q)
-def amt: money PLN = if lb > 0 EUR then x1 else x2
-move pay: transfers
-  on d_p
-  leg cash from world to konto amount amt
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  anchor broker
-  d_p = 2026-03-05 "s"
-  x1 = 1.00 PLN "s"
-  x2 = 2.00 PLN "s"
-  d_q = 2026-02-16 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[broker] = 1.00 EUR at 2026-01-01 start "s"
-  opening[broker] = 2.00 PLN at 2026-01-01 start "s"
-  stated[broker] = 4.00 EUR at 2026-02-15 end "s"
-
-
-version v2
-  cite s
-  governs always
-  known 2026-03-01
-  anchor broker
-  stated[broker] = ?"not read" at 2026-02-15 end "s"
-
-ask k: bal(konto, 2026-03-31)
-,,1:0,106:k: refused: RUN-DOMAIN last of broker: its readings at 2026-02-15 end are in EUR and PLN
-  cut 2026-06-10
 ,28:fixes/rv/g4f_g1_removed_only,8:fixes-rv,18:run b1_onlyq.tally,648:14:b1_onlyq.tally,625:model t
   tally 2
   on 2026-12-31

@@ -3,14 +3,14 @@ HOLE-STATED	L §8.1	M1	*	1	M1	codes/m1/rules/stated
 HOLE-UNGOVERNED	L §8.1	S	*	10	S	kernel/g3/band
 HOLE-UNGOVERNED	L §8.1	S	x at k: no value for <period>	8	S	kernel/g4/holes
 HOLE-UNGOVERNED	L §8.1	S	<b>: no row holds <x> at <law date>	2	S	kernel/g3/band
-HOLE-NOREADING	L §8.1	M2	*	46	M1	m1/fixes/g10/b_gapdec_m
-HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading at <instant>	22	M1	m1/fixes/g10/b_gapdec_m
-HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading on or before <d>	28	M1	m1/fixes/g3/last_q5
+HOLE-NOREADING	L §8.1	M2	*	39	M1	m1/fixes/g10/b_gapdec_m
+HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading at <instant>	21	M1	m1/fixes/g10/b_gapdec_m
+HOLE-NOREADING	L §8.1	M2	<x>[k] has no reading on or before <d>	22	M1	m1/fixes/g3/last_q5
 HOLE-NOTYET	L §8.1	M1	*	6	M1	codes/m1/rules/notyet
 HOLE-NOTYET	L §8.1	M1	<x>: no <event> yet, and its span reaches past the cut	6	M1	codes/m1/rules/notyet
-HOLE-ANCHOR	L §8.1	S	*	27	S	kernel/U:own/OWN-01
-HOLE-ANCHOR	L §8.1	S	<place> has no balance before <d>	26	S	kernel/U:own/OWN-01
-HOLE-ANCHOR	L §8.1	S	<place> has no opening or stated reading	2	M1	codes/m1/rules/no-anchor
+HOLE-ANCHOR	L §8.1	S	*	24	S	kernel/U:own/OWN-01
+HOLE-ANCHOR	L §8.1	S	<place> has no balance before <d>	23	S	kernel/U:own/OWN-01
+HOLE-ANCHOR	L §8.1	S	<place> has no opening or stated reading	1	M1	codes/m1/rules/no-anchor
 HOLE-LOTS	L §8.1	M5a	*	0	-	-
 HOLE-LOTS	L §8.1	M5a	<place>: the lots held before <S> sum to <a>, the opening reading states <b>	0	-	-
 HOLE-PRICE	L §8.1	M1	*	7	M1	codes/m1/prices/no-price
@@ -110,7 +110,7 @@ LOAD-DOMAIN	L §8.3	M0	day_of of a key of the anchored index <x> has no meaning	
 LOAD-DOMAIN	L §8.3	M0	schedule of a key of the anchored index <x> has no meaning	1	M0	codes/m0/basic/domain-anchored-schedule
 LOAD-DOMAIN	L §8.3	M0	discrete over a key list or a stepped range	1	M0	codes/m0/basic/domain-discrete
 LOAD-DOMAIN	L §8.3	M0	?	6	M0	codes/m0/lifepath/path-past-64
-LOAD-UNIT	L §8.3	M0	*	243	S	kernel/g14/nominal_row
+LOAD-UNIT	L §8.3	M0	*	236	S	kernel/g14/nominal_row
 LOAD-UNIT	L §8.3	M0	<a> and <b> have different units	33	M0	codes/m0/basic/unit-mixed
 LOAD-UNIT	L §8.3	M0	<operation> on things of kind <K> has no meaning: they have no order a rule can read	1	M0	codes/m0/basic/unit-orders
 LOAD-UNIT	L §8.3	M0	settlement <s> of <adjustment> is in <u>, not <u'>	3	M0	codes/m0/adjust/unit-settlement
@@ -119,7 +119,7 @@ LOAD-UNIT	L §8.3	M0	<function>: the mode is <type>, not a rounding code	1	M0	co
 LOAD-UNIT	L §8.3	M0	lifespan of <x>: a movement has its day, not a lifespan	5	M1	m1/fixes/g13/r_agent_w_model_with_r_agent_w_l1_l1
 LOAD-UNIT	L §8.3	M0	value(<x>) in <CUR>: <x> is priced in <u>, not <u'>	28	M1	m1/b3/l5_10_priced_per_key_unit_message
 LOAD-UNIT	L §8.3	M0	money in an undeclared currency	4	M0	codes/m0/basic/unit-currency
-LOAD-UNIT	L §8.3	M0	?	196	S	kernel/g14/nominal_row
+LOAD-UNIT	L §8.3	M0	?	189	S	kernel/g14/nominal_row
 LOAD-PRECISION	L §8.3	M0	*	60	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<literal> is finer than the minor unit	59	M0	codes/m0/basic/precision
 LOAD-PRECISION	L §8.3	M0	<a/b> terminates; write it as a decimal	1	M0	codes/m0/basic/precision-fraction
@@ -305,7 +305,7 @@ RUN-LIMIT	L §8.4	S	windows each over more than 20 000 day combinations	1	M2	m2/
 RUN-LIMIT	L §8.4	S	seen and unseen over more than 20 000 choices	1	M2	m2/fixes/rv/g1f_f1_two_stacks_limit
 RUN-DIV	L §8.4	S	*	102	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	102	S	kernel/g1/text
-RUN-DOMAIN	L §8.4	S	*	66	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	*	58	S	kernel/g1/rate_duration
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	a stepped range whose step <s> is not positive	5	M1	m1/fixes/g13/r_p_dz
@@ -314,7 +314,7 @@ RUN-DOMAIN	L §8.4	S	<a> and <b> are in different keys <u> and <u'> of <K>	2	M1	
 RUN-DOMAIN	L §8.4	S	<code> is not a <family> code	0	-	-
 RUN-DOMAIN	L §8.4	S	of <q> at <x>, which keeps no labels of its sort	0	-	-
 RUN-DOMAIN	L §8.4	S	calendar <c> has no business day	3	S	kernel/g14/calendar
-RUN-DOMAIN	L §8.4	S	<read> of <x>: its readings at <instant> are in <u> and <u'>	8	M1	m1/fixes/gate8/m2_g2_any_a
+RUN-DOMAIN	L §8.4	S	<read> of <x>: its readings at <instant> are in <u> and <u'>	0	-	-
 RUN-DOMAIN	L §8.4	S	known <d> is after the model's on <on>	1	M1	m1/r5/e11_cut_computed_after_on
 RUN-DOMAIN	L §8.4	S	?	44	S	kernel/g1/rate_duration
 RUN-UNDECIDED	L §8.4	M6	*	0	-	-
@@ -334,12 +334,12 @@ RUN-WEIGHTS	L §8.4	M1	prorata weights <w> are negative or sum to 0	1	M1	codes/m
 RUN-PRORATA	L §8.4	M1	*	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<total> isn't a whole number of <u>	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<amount> arriving at or taken from <place> isn't a whole number of its step <u>	0	-	-
-RUN-PLACE	L §8.4	S	*	81	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	*	79	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<movement> takes <debt> above 0	1	M1	codes/m1/rules/debt-above
 RUN-PLACE	L §8.4	S	<claim> below 0	30	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	S	<holding> below 0 units	5	S	kernel/g9/sign
 RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	66	S	kernel/U:ask/ASK-03
-RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	38	S	kernel/g9/reading_close
+RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	36	S	kernel/g9/reading_close
 RUN-LIFESPAN	L §8.4	S	*	51	S	kernel/g5/agenda
 RUN-LIFESPAN	L §8.4	S	<leg> moves into or out of <thing> outside its lifespan	42	S	kernel/g6/refusal_keys
 RUN-LIFESPAN	L §8.4	S	<place> ends on <d> holding <positions>	10	S	kernel/g5/agenda
@@ -368,8 +368,8 @@ RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its t
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
 WARN-NEGATIVE	L §8.5	S	*	190	S	I:X:konto_balance@b_r1
 WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	190	S	I:X:konto_balance@b_r1
-WARN-UNREAD	L §8.5	S	*	572	S	kernel/I:M:RC-06
-WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	572	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	*	566	S	kernel/I:M:RC-06
+WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	566	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	23	S	kernel/g10/observe
 WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	23	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
