@@ -54,7 +54,7 @@ const DATE_FNS: [&str; 21] = [
 /// A call naming no built-in with a typing arm: `LOAD-PARSE … is not called` for a name the
 /// model declares, else `LOAD-NAME unknown id` (refcore's `t_call` with no `c_<name>`). The
 /// names refcore's `parser.BUILTINS` holds with no arm are parsed as forms of their own (the
-/// aggregates, the queries, `prorata`, `flows`, `bal`, `value`, `low`, the distributions and
+/// aggregates, the queries, `prorata`, `flows`, `bal`, `value`, the distributions and
 /// their functions) and reach a call only as a scenario row's `household.sum(x)`, its base
 /// prefix dropped. L §2.3 Calls, §6.4, §8.3.
 fn no_builtin(m: &Reality, call: &Call) -> Stop {
@@ -200,7 +200,6 @@ impl Checker {
             )),
             "band_lo" | "band_hi" => self.band_edge(m, scope, call, depth),
             "marginal" => self.marginal(m, scope, call, depth),
-            "next" => self.next(m, scope, args, depth),
             "observed" => self.observed(m, scope, args, depth),
             "gap" => self.gap(m, scope, args, depth),
             "schedule" => self.schedule(m, scope, call, depth),

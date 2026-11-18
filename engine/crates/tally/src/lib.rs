@@ -80,11 +80,11 @@ pub mod syntax {
         Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
         Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs,
         Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
-        Item, ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Low, Move, MoveLines,
-        MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix,
-        Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule,
-        RuleValue, Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type,
-        TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        Item, ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Move, MoveLines, MulOp,
+        Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix, Price,
+        Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule, RuleValue,
+        Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit,
+        UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -236,7 +236,6 @@ pub mod walk {
     pub use day::Ends;
     #[cfg(feature = "fault-injection")]
     pub use day::Fault;
-    pub(crate) use flows::span_last;
     pub use fork::Forks;
     pub(crate) use fork::Parked;
     pub(crate) use lows::Trees;
@@ -249,7 +248,6 @@ pub mod walk {
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
-    pub(crate) use projection::own_unit;
     pub use readings::Broke;
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;

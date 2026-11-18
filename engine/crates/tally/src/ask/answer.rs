@@ -1189,7 +1189,6 @@ fn mentions(e: &Expr, var: &str) -> bool {
             x,
             Expr::Calendar(_)
                 | Expr::Query(_)
-                | Expr::Low(_)
                 | Expr::Crps(_)
                 | Expr::DistFn(_)
                 | Expr::Dist(_)
@@ -1247,7 +1246,6 @@ fn extra_parts(x: &Expr) -> Vec<&Expr> {
         Expr::Last(_)
         | Expr::Calendar(_)
         | Expr::Query(_)
-        | Expr::Low(_)
         | Expr::Crps(_)
         | Expr::DistFn(_)
         | Expr::Dist(_)

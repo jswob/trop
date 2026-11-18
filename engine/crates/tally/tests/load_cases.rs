@@ -648,15 +648,17 @@ version card_2026
                 "ask q: worth, flowed, pay.cash of konto",
                 "LOAD-FIELD of after pay.cash: a read of parts follows a leg's amount (m.leg.amount of q) (a.tally:61)",
             ),
+            // tally 2.2 cut `low` and `next` (S-9): a name before `(` that is no built-in is read
+            // as an item at its keys, and a span is no key (refcore's words at b9eb505c)
             (
                 ask,
                 "ask q: worth, flowed, low(konto, y)",
-                "LOAD-DOMAIN low over a span with an open end (a.tally:61)",
+                "LOAD-NAME unknown id low (a.tally:61)",
             ),
             (
                 ask,
                 "ask q: worth, flowed, low(konto, 2026-01-01..2026-12-31) + amt",
-                "loaded",
+                "LOAD-PARSE cannot parse: expected \")\", got .. (a.tally:61)",
             ),
             (
                 ask,
@@ -675,18 +677,13 @@ version card_2026
             ),
             (
                 ask,
-                "ask q: worth, flowed, next(konto, day)",
-                "LOAD-NAME next takes an event kind: konto (a.tally:61)",
-            ),
-            (
-                ask,
-                "ask q: worth, flowed, next(wages, amt)",
-                "LOAD-UNIT next(K, d): d is money PLN, not a date (a.tally:61)",
-            ),
-            (
-                ask,
                 "ask q: worth, flowed, next(wages, day) + amt",
-                "LOAD-UNIT key wages + money PLN (a.tally:61)",
+                "LOAD-NAME unknown id next (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: explain low(konto, 2026-01-01 .. 2026-12-31) from 2026-01-01",
+                "LOAD-PARSE cannot parse: expected end of line, got ( (a.tally:61)",
             ),
             (
                 ask,

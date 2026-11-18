@@ -52,7 +52,7 @@ ask cov_a: bal(konto, 2026-06-30) from 2026-02-01
 
 ask cov_b: bal(konto, 2026-06-30) from 2026-03-15
 
-ask cov_low: low(konto, 2026-02-01 .. 2026-06-30) from 2026-02-01, low(konto, 2026-03-15 .. 2026-06-30) from 2026-03-15
+ask cov_low: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-06-30 step 1 day), min(bal(konto, d) from 2026-03-15 for d in 2026-03-15 .. 2026-06-30 step 1 day)
 
 version v
   cite card

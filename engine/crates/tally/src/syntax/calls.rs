@@ -106,7 +106,6 @@ impl P<'_> {
             return self.dist(func);
         }
         match word {
-            "low" => self.low(),
             "crps" => self.crps(),
             "cdf" => self.dist_fn(DistFnKind::Cdf),
             "pdf" => self.dist_fn(DistFnKind::Pdf),

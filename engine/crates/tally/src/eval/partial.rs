@@ -86,7 +86,6 @@ fn keeps_linear(e: &Expr) -> bool {
         | Expr::Calendar(_)
         | Expr::Value(_)
         | Expr::Query(_)
-        | Expr::Low(_)
         | Expr::Crps(_)
         | Expr::DistFn(_)
         | Expr::Dist(_)

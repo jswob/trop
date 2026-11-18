@@ -1,18 +1,17 @@
-//! The reads with a production of their own: queries, `low`, `crps`, distributions and their
+//! The reads with a production of their own: queries, `crps`, distributions and their
 //! functions, `prorata`, a random choice, and a reading row's `of`.
-//! Spec: L §2.3 (`query`, `lowx`, `crps`, `distfn`, `dist`, `prorata`, `rchoice`, `ofrow`),
-//! §5.11 (queries over keys), §5.13 (`prorata`), §5.14.1 (`low`), §5.15 (`crps`), §5.16
-//! (distributions, random values' queries), §5.19 (a reading's parts).
-//! Twin: engine/tools/refcore/parser.py (`builtin`'s `low`, `crps`, `cdf`/`pdf`/`pmf`, `DISTS`
-//! and `discrete` arms; `query`, `prorata`, `rchoice`, `ofrow`).
+//! Spec: L §2.3 (`query`, `crps`, `distfn`, `dist`, `prorata`, `rchoice`, `ofrow`), §5.11
+//! (queries over keys), §5.13 (`prorata`), §5.15 (`crps`), §5.16 (distributions, random
+//! values' queries), §5.19 (a reading's parts).
+//! Twin: engine/tools/refcore/parser.py (`builtin`'s `crps`, `cdf`/`pdf`/`pmf`, `DISTS` and
+//! `discrete` arms; `query`, `prorata`, `rchoice`, `ofrow`).
 //! Invariants: each bracket is counted by `open` as refcore counts it (an `ofrow` pair's
 //! parentheses aren't, as in refcore); the error texts are refcore's word for word.
 
 use super::expr::Ends;
 use super::parse::{P, Stop};
 use super::tree::{
-    Crps, Dist, DistFn, DistFnKind, DistKind, Expr, Low, OfRow, Prorata, Query, QueryFn, RChoice,
-    Rest,
+    Crps, Dist, DistFn, DistFnKind, DistKind, Expr, OfRow, Prorata, Query, QueryFn, RChoice, Rest,
 };
 
 /// The query named `word`, if it is one (L §2.2).
@@ -69,20 +68,6 @@ impl P<'_> {
             filter,
             level,
         })))
-    }
-
-    /// `low(x, span)` and its projection's clauses (L §2.3 `lowx`).
-    pub(super) fn low(&mut self) -> Result<Expr, Stop> {
-        self.skip(1)?;
-        self.expect("(")?;
-        self.open()?;
-        let place = self.reference()?;
-        self.expect(",")?;
-        let span = self.span()?;
-        self.expect(")")?;
-        self.close()?;
-        let proj = self.proj()?;
-        Ok(Expr::Low(Box::new(Low { place, span, proj })))
     }
 
     /// `crps(e [weight w] for bind, y)` or `crps(e, y)` (L §2.3 `crps`).

@@ -11,8 +11,8 @@
 //! (`Checker.readers_of`).
 //! Invariants: an explanation prints from its trace in the order refcore prints it, each node
 //! numbered where it first prints and a cause met again referenced by its number, a row by
-//! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance, a
-//! projection and a `low` are `walked.rs`'s, a balance among the causes prints in their
+//! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance and a
+//! projection are `walked.rs`'s, a balance among the causes prints in their
 //! balance form (P63); a movement instance is `instance.rs`'s, by its move's name alone or
 //! at keys; a walk-bound def stops `NotBuilt`; rows print in
 //! the text order of their stable ids; readers by depth, each depth by id, an event kind's
@@ -23,7 +23,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::answer::unresolved_word;
 use super::check::Printed;
 use super::instance::instance_line;
-use super::walked::{Read, balance_line};
+use super::walked::balance_line;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
     Collected, Ctx, Engine, Env, Item, RuleLine, Trace, TraceKind, TracedBalance, UNSET_AXIS,
@@ -49,10 +49,7 @@ pub(super) fn explain_line(
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
     if let Expr::Bal(b) = reference {
-        return balance_line(m, (ask, Read::Bal(b), reference), engine, env, ctx);
-    }
-    if let Expr::Low(l) = reference {
-        return balance_line(m, (ask, Read::Low(l), reference), engine, env, ctx);
+        return balance_line(m, (ask, b, reference), engine, env, ctx);
     }
     match walk_form(m, reference) {
         Form::Instance => return instance_line(m, (ask, reference), engine, env, ctx),

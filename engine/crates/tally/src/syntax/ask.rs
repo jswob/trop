@@ -26,9 +26,8 @@ fn ask_expr(p: &mut P<'_>) -> Result<Expr, Stop> {
 /// What an ask asks, after `ask id:` (L §2.3 `askbody`).
 fn ask_body(p: &mut P<'_>) -> Result<AskBody, Stop> {
     if p.accept("explain")? {
-        let target = if p.at("bal", 0) || p.at("low", 0) {
-            let word = p.peek(0).map_or("", |tok| tok.text.as_str());
-            p.builtin(word)?
+        let target = if p.at("bal", 0) {
+            p.builtin("bal")?
         } else {
             p.reference()?
         };

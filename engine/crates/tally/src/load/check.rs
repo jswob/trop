@@ -1158,7 +1158,7 @@ impl Checker {
                 self.unresolved_key(scope, &ask.id, &typed);
                 let explain = matches!(ask.body, AskBody::Explain(_));
                 let plain = matches!(reference, Expr::Name(_) | Expr::Post(..));
-                let read = explain && matches!(reference, Expr::Bal(_) | Expr::Low(_));
+                let read = explain && matches!(reference, Expr::Bal(_));
                 if !plain && !read {
                     let word = if explain { "explain" } else { "inputs-of" };
                     let message = format!("cannot parse: {word} takes a reference");

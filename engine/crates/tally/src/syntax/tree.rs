@@ -270,8 +270,6 @@ pub enum Expr {
     Value(Box<Valuation>),
     /// A query: `mean`, `share` or `quantile` (L §5.11, §5.16).
     Query(Box<Query>),
-    /// `low(x, span)` with its projection's clauses (L §5.14.1).
-    Low(Box<Low>),
     /// `crps(…)`, a forecast's score (L §5.15).
     Crps(Box<Crps>),
     /// `cdf`, `pdf` or `pmf` of a random value at a point (L §5.16).
@@ -309,17 +307,6 @@ pub struct Query {
     pub filter: Option<Expr>,
     /// A quantile's level.
     pub level: Option<Expr>,
-}
-
-/// `low(x, span)` and its projection's clauses.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Low {
-    /// The place.
-    pub place: Expr,
-    /// The span.
-    pub span: Span,
-    /// The projection's clauses.
-    pub proj: Proj,
 }
 
 /// `crps(e [weight w] for bind, y)` or `crps(e, y)` (L §2.3 `crps`).
@@ -1405,7 +1392,7 @@ pub enum AskBody {
     Exprs(Vec<Expr>),
     /// `residuals x span [by id]`.
     Residuals(Box<Residuals>),
-    /// `explain ref`, `explain bal(…)`, `explain low(…)` (L §5.18).
+    /// `explain ref`, `explain bal(…)` (L §5.18).
     Explain(Expr),
     /// `inputs-of ref`.
     InputsOf(Expr),

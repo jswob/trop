@@ -56,7 +56,7 @@ enum KeysOf {
 }
 
 /// The built-in names, read as built-ins only directly before `(` (L §2.2).
-const BUILTINS: [&str; 75] = [
+const BUILTINS: [&str; 73] = [
     "sum",
     "count",
     "min",
@@ -74,8 +74,6 @@ const BUILTINS: [&str; 75] = [
     "flows",
     "bal",
     "value",
-    "low",
-    "next",
     "covered",
     "round",
     "pow",

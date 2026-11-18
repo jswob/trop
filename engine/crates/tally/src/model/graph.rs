@@ -144,8 +144,6 @@ pub enum Rel {
     Explicit,
     /// A calendar read at each day asked about.
     Calendar,
-    /// `next(K, d)`, over the moves of K.
-    Next,
     /// `observed(m[k])`, over the observed inputs.
     Observed,
     /// A pin's target, set by an ask or an `as if` (L §5.11, §5.18).
@@ -170,7 +168,6 @@ impl Rel {
             Rel::Bal => "bal".to_owned(),
             Rel::Explicit => "explicit".to_owned(),
             Rel::Calendar => "calendar".to_owned(),
-            Rel::Next => "next".to_owned(),
             Rel::Observed => "observed".to_owned(),
             Rel::Pin => "pin".to_owned(),
             Rel::LawPin => "lawpin".to_owned(),
@@ -275,7 +272,7 @@ pub struct Graph {
     pub from_decisions: BTreeSet<Node>,
     /// The walk-bound defs: they reach a mark and a decision reaches them (E §3.1 step 7).
     pub walk_bound: BTreeSet<String>,
-    /// Whether a read states `windows each` (a projection's, a `low`'s): every ask line runs
+    /// Whether a read states `windows each` (a projection's): every ask line runs
     /// once per sub-window combination such a read meets, the read taking the run's choice
     /// (L §4.4 "for that read"; refcore's `read_each`).
     pub read_each: bool,
