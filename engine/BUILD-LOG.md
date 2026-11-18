@@ -4286,3 +4286,96 @@ On `build/2.2` at 38a3cdff (master 8ece2484 and the tests session's first G1 chu
   - Then the builder's next turn re-applies 9af299a6 unchanged, with the refusal vectors' words.
   - For the lead: plan §13.2 step 2 can't remove S-7 green before T2 while CMP-01 writes the form. Either S-7's removal waits for T2 in every round like this, or CMP-01's checks are logged red on T2's commit.
 - **State:** last green commit fd126be1 (`check commit: green, 23 steps (188s)`), pushed with this entry; nothing uncommitted. S-6 and the fault are in; S-7 is held by a8ec49f7.
+
+## 2026-11-18 tally 2.2, build group 1's second turn: S-7 again, T's red ids, the review's list (issue #211)
+
+On `build/2.2` at d42bd950 (the STOP-REPORT on S-7 ruled P9; G1's spec and refcore pinned at f68ac8e2; T's re-run). Review `tmp/spec-2.2-build/review-g1.md`.
+
+- **Red at the start:** 1 test, `m2_fixes_tally_22`, on 2 of T's `Logged-Red:` ids: `fixes/t22/cut_flows_rule` and `cut_flows_ask`. `cut_leg_on_move`, `cut_leg_on_row`, `fault_fx3` and `order_keyed_def` were green on arrival, the fault's vector included. `fault_paths` is held until M7.
+- **S-7, 6012f936: 9af299a6 re-applied** (its 9 files, as the brief asked), with:
+  - N-1: `load/reads.rs` `place_flows`: `flows` of a place of unit `any` is `LOAD-UNIT flows of world, a place of unit any: it sums no one unit`. That is refcore's text (check3.py l.841), without the hint naming the cut form. `tests/load_cases.rs` l.739 expects it.
+  - N-12: `ask/answer.rs` `ask_engine`: the `mut` binding only under `fault-injection`.
+  - The refusals' words equal refcore's on all four of T's vectors:
+    - `cut_flows_rule`: `LOAD-PARSE cannot parse: expected end of line, got at (m.tally:23)`.
+    - `cut_flows_ask`: `… got in (m.tally:30)`.
+    - `cut_leg_on_move`: `… got on (m.tally:18)`.
+    - `cut_leg_on_row`: `… expected ")", got on (m.tally:22)`.
+- **L-1:** ruled P11 (the fix stays at the graph); nothing changed.
+- **The review's list:**
+  - bfeeceb8 `refactor(walk)`:
+    - N-6: `Mv` is one index, `Mv(pub usize)`, the plan instance's place in the walk's list.
+    - N-7: no fallback to a leg day of its own in `walk/modelled.rs` `modelled_legs` (with its doc), `ask/walked.rs` `uncertain_rows`, `book/same.rs` `touching` (l.1248) and `book_key` (l.1262), or `walk/order.rs` (observed legs, by their observation's day); `walk/day.rs` `book_leg`'s doc restated.
+    - N-9: `tests/group3_cases.rs`'s header no longer cites L §5.14.1 and E §4.3 step 2.
+    - N-10: `walk/lows.rs` l.889's comment restated (F5).
+  - 7a4c4cb6 `fix(load)`:
+    - N-3: `check_def` makes the key's edges before the `at`'s snapshot, as refcore's `check_def` (`def_key_edges` first), so `at_reads` holds only what the key doesn't read. The text that shows it is `tmp/spec-2.2-build/g1/n3.tally`: `def fee[t in transfers]: money DUK = f at max(x.day for x in transfers over mo)`, an observed input `bank`, and `ask q: sum(fee[t] for t in transfers over mo)` with no law.
+      - The engine before the change: `LOAD-LAWDATE ask q reaches fee, whose at reads law-dated facts at its reader's law date, without law (L §4.3)`.
+      - refcore at the pin: `q: 1.00 DUK`; the engine now: the same (test `load/defs.rs` `an_at_reads_only_what_its_defs_key_does_not`).
+      - Note for the spec writer: refcore at the tag tally-2.1.8 refuses this text with the same `LOAD-LAWDATE`. Its `at` does read the observed input's rows. The pin's answer comes from the key's edge hiding that read from the snapshot, not from a rule of L §4.3. I aligned as asked; whether the hiding is meant is the spec's call.
+    - N-5: one `Reality::moves_of(kind)` (`model/reality.rs`) for `key_movements` and `kind_movements`. A free function with a named lifetime was the first form, and `check commit` refused it at `exceptions` (`lifetime-review`); the method needs none.
+  - N-4: probed; STOP-REPORT below. `tmp/spec-2.2-build/g1/n4.tally` loads and answers on 2.1.8 and is `LOAD-GUARD` now, in the engine and in refcore at the pin alike.
+  - **Left, with why:**
+    - N-8 (`engine/ARCHITECTURE.md` l.531): the guard refuses the build role's edit of that file. The line is for the lead or the doc's owner.
+    - N-7's `book/same.rs` l.1112 (`same_wait_for`, `lg.day == Dated::Day(dday)`): not a fallback. With the leg's day its instance's, it tests that the instance is dated by one day, not a window. `Member::day()` gives a window's first day, so it isn't the same test.
+- **Lines at the head, `git diff --shortstat`, engine/crates/tally/src (code), against the plan's:**
+  - S-6 (eb8fcc43, bfeeceb8): 572 out, 197 in (plan: about 250 out, 250 to 350 by §13.5). Over, as the first entry says: N-6's mechanism and the observed side. Tests: 111 out, 10 in.
+  - S-7 (6012f936; 9af299a6 and a8ec49f7 cancel): 68 out, 27 in (plan: 60 to 100 out). Tests: 11 out, 1 in.
+  - The fault (fd126be1, 7a4c4cb6): code 66 in, 24 out (plan: about 40). Tests: 139 in.
+  - Group, 38a3cdff..HEAD over engine/crates: 36 files, 769 out, 419 in.
+- **Kernel files at the head:** 15 (plan: 7).
+  - walk/agenda.rs, day.rs, flows.rs, fork.rs (F6), legs.rs, lows.rs (F5), modelled.rs, move_flows.rs, order.rs, plan.rs, state.rs.
+  - book/members.rs, observe.rs, reading.rs, same.rs.
+  - This turn added walk/flows.rs (S-7's not-built arm) and walk/modelled.rs (N-7).
+- **Gating vectors:** green at the head, T's G2-first-half ones included as the engine is.
+- **Exceptions:** +0 (`git diff 38a3cdff..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Usage:** about 1.26 % of the week for the group by `engine/tools/usage tmp/spec-2.2-build/g1-ids.txt` (0.81 % the first turn, so about 0.45 % this one; budget about 0.5 %).
+- **Checks:** `check fences: green, 1 step (28s)` after bfeeceb8's edits to F5 and F6. On 7a4c4cb6's tree: `check commit: green, 23 steps (218s)`, exit 0.
+
+## STOP-REPORT 2026-11-18: the key's edge makes an unguarded shifted read of a keyed def LOAD-GUARD
+
+- **Kind:** the spec seems wrong (or silent): the brief's N-4 stop rule, a text that loads on tally 2.1.8 refused now.
+- **Where:** `load/strata.rs` `recurrences` l.392 (`graph.reaches(&read.target, &read.reader)`), reached through fd126be1's `key_movements` edge. refcore's `m_def_key_edges` (check3.py l.305) makes the same edge. The text is `tmp/spec-2.2-build/g1/n4.tally`:
+
+  ```
+  model n4
+    tally 2
+    on 2025-04-01
+    start 2025-01-01
+    end 2025-06-30
+  source s "s"
+  unit DUK: currency minor 0.01
+  index mon = month 2025-01..2025-06
+  place konto: accounts DUK lives 2025-01-01..
+  place world: outside lives 2025-01-01..
+  input d0: date
+  input f: money DUK
+  input mk: month
+  def d[t in transfers, m in mon]: money DUK = f
+  def r[t in transfers, m in mon]: money DUK = d[t, m - 1]
+  move m0: transfers
+    on d0
+    leg cash from world to konto amount f
+  move m1: transfers
+    on d0
+    leg cash from world to konto amount r[m0, mk]
+  ask q: bal(konto, 2025-06-30)
+  version v
+    cite s
+    governs always
+    known 2025-01-01
+    d0 = 2025-01-05 "s"
+    f = 1.00 "s"
+    mk = 2025-03 "s"
+    opening[konto] = 0.00 at 2025-01-01 start "s"
+  ```
+
+- **Rule or gate:** L §5.11 (a recurrence read needs a guard), §8.3 `LOAD-GUARD`; the fault's fix (plan §3, C-2 (a), L-1 ruled P11: at the graph).
+- **What happens:**
+  - refcore at tally-2.1.8 (`git archive tally-2.1.8 engine/tools/refcore`): `q: 2.00 DUK`.
+  - refcore at the pin and the engine at 7a4c4cb6: `refused: LOAD-GUARD d[m - 1] is a recurrence read with no condition on m or pos(m) guarding it (n4.tally:18)`.
+  - `r` reads `d` at `m - 1`. `d`'s key over `transfers` now reads every transfer, and `m1`'s amount reads `r`, so `d` reaches `r`: a recurrence by the graph.
+  - `d[m0, ·]` depends on `m0` alone, which reads nothing of `r`, so no value recurs. The edge is per kind, not per movement: the over-reach L-1 kept.
+  - With `r` guarded (`rule base = d[t, m - 1] when pos(m) > 1`, `rule first beats base = f when pos(m) == 1`; `tmp/spec-2.2-build/g1/n4g.tally`), refcore at the pin and the engine both answer `q: 2.00 DUK`.
+- **What I tried:** nothing in the code. Engine and refcore agree, and narrowing the edge to the movement a key names is what P11 ruled out.
+- **What I ask:** the spec writer's ruling. Either the refusal stands and the migration note says a def read at a shifted key needs its guard once its key ranges over a kind whose movements read the reader (the guarded form above loads), or `recurrences` leaves the key's edges out of `reaches`, in refcore and the spec first.
+- **State:** last green commit 7a4c4cb6 (`check commit: green, 23 steps (218s)`), pushed with this entry; nothing uncommitted.
