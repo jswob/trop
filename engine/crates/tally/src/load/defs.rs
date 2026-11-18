@@ -40,6 +40,13 @@ impl Checker {
     pub(super) fn check_def(&mut self, m: &Reality, def: &DefInfo, file: &str) -> Result<(), Stop> {
         let line = def.decl.line;
         let at_scope = self.def_scope(m, def, Stands::At, (file, line))?;
+        // a key over an event kind: the def reads the movements it is keyed by, before its
+        // `at`, whose reads are only those the key doesn't make (tally 2.2, #211; E §3.2, L §4.3)
+        for bind in &def.binds {
+            if let Domain::Kind(kind) = &bind.domain {
+                self.key_movements(m, &at_scope, kind);
+            }
+        }
         for bind in &def.binds {
             if let Some(filter) = &bind.node.filter {
                 let scope = self.def_scope(m, def, Stands::Rule, (file, line))?;
@@ -66,13 +73,6 @@ impl Checker {
         if def.at.is_some() {
             let made = new_reads(&before, self.graph.edges.get(&node));
             self.at_reads.insert(def.id.clone(), made);
-        }
-        // a key over an event kind: the def reads the movements it is keyed by (tally 2.2,
-        // #211; E §3.2)
-        for bind in &def.binds {
-            if let Domain::Kind(kind) = &bind.domain {
-                self.key_movements(m, &at_scope, kind);
-            }
         }
         let beats = labels(def, file)?;
         beats_cycle(&def.id, &beats, (file, line))?;
@@ -456,6 +456,58 @@ ask hp: by_helper, by_helper as if {amt[yes] = 500.00 EUR} with work = yes law 2
                 "hp: (400.00 PLN, 2 000.00 PLN)",
             ],
             "each option of the axis, and the pin, reach the def keyed by the movement"
+        );
+    }
+
+    /// A def keyed by `transfers` whose `at` binds over `transfers` too, with an observed input.
+    const AT_OVER_ITS_KEY: &str = r#"model n3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+source s "s"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2025-03-01..
+place world: outside lives 2025-03-01..
+input bank: observed
+input mo: month
+input d1: date
+input amt: money DUK
+input f: money DUK
+def fee[t in transfers]: money DUK = f at max(x.day for x in transfers over mo)
+move m1: transfers
+  on d1
+  leg cash from world to konto amount amt
+ask q: sum(fee[t] for t in transfers over mo)
+version v
+  cite s
+  governs always
+  known 2025-03-01
+  mo = 2025-03 "s"
+  d1 = 2025-03-05 "s"
+  amt = 10.00 "s"
+  f = 1.00 "s"
+  opening[konto] = 0.00 at 2025-03-01 start "s"
+"#;
+
+    #[test]
+    fn an_at_reads_only_what_its_defs_key_does_not() {
+        // tally 2.2, #211 (G1's review, N-3): the key's reads of the observed inputs are made
+        // before the `at`, so the `at` reads no law-dated fact and the ask needs no law
+        let given = vec![crate::api::Given {
+            path: "n3.tally".to_owned(),
+            bytes: Some(AT_OVER_ITS_KEY.as_bytes().to_vec()),
+        }];
+        let request = crate::api::Request {
+            asks: crate::api::Asks::Every,
+            pin: crate::api::Pin::Canonical,
+            days: crate::Days::Events,
+        };
+        let answer = crate::api::run(given, &request).expect("an answer");
+        assert_eq!(
+            answer.lines().first().map(String::as_str),
+            Some("q: 1.00 DUK"),
+            "refcore answers; the key's reads are not the at's"
         );
     }
 }

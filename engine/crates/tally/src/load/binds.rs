@@ -301,11 +301,8 @@ impl Checker {
             return;
         }
         self.bound_kind(scope, kind);
-        let sub = m.subtree(kind);
-        for (id, mv) in m.moves.entries() {
-            if sub.contains(&mv.kind) {
-                self.edge(&scope.item, Node::new(NodeKind::Move, id), Rel::Bind);
-            }
+        for mv in m.moves_of(kind) {
+            self.edge(&scope.item, Node::new(NodeKind::Move, &mv.id), Rel::Bind);
         }
         self.bound_observed(m, scope);
     }
@@ -334,21 +331,17 @@ impl Checker {
     /// `next(K, d)` reads them as the binding its definition holds does (L §5 A form defined
     /// by another, §5.14.1; tally 2.1.7 R6).
     pub(super) fn kind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str, rel: &Rel) {
-        let sub = m.subtree(kind);
-        for (id, mv) in m.moves.entries() {
-            if !sub.contains(&mv.kind) {
-                continue;
-            }
-            self.edge(&scope.item, Node::new(NodeKind::Move, id), rel.clone());
+        for mv in m.moves_of(kind) {
+            self.edge(&scope.item, Node::new(NodeKind::Move, &mv.id), rel.clone());
             if mv.decision {
                 self.mark(
                     &scope.item,
                     crate::model::Mark::Legs,
-                    crate::model::Target::Move(id.clone()),
+                    crate::model::Target::Move(mv.id.clone()),
                 );
             }
         }
-        if sub.contains("pads") {
+        if m.subtree(kind).contains("pads") {
             self.mark(
                 &scope.item,
                 crate::model::Mark::Legs,
