@@ -7,7 +7,8 @@
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
 //! registers while it counts; a read of a projection's walk reads the walks it continues
 //! through the point each continues from.
-use super::plan::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status, invariant, qty_value};
+use super::instance::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status};
+use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::reads::{Sees, expr_text, refuse};
 use super::state::{ALL, Change, Ent, Walk};

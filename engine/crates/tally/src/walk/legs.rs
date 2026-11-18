@@ -9,9 +9,8 @@
 //! refusal met at run refuses the run; a hole amount's unit is the kind's leg unit where it
 //! is one, else a place's.
 
-use super::plan::{
-    Amount, End, HoleSrc, Inst, LegVal, invariant, num_err, quantity, refuse, refuse_load, shown,
-};
+use super::instance::{Amount, End, HoleSrc, Inst, LegVal};
+use super::plan::{invariant, num_err, quantity, refuse, refuse_load, shown};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine};
 use crate::model::{KeyVal, Reality, Value};

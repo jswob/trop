@@ -216,9 +216,11 @@ pub mod eval {
 /// (gate 8); the module's code is its files under `walk/`.
 pub mod walk {
     mod agenda;
+    mod body;
     mod day;
     mod flows;
     mod fork;
+    mod instance;
     mod legs;
     mod lows;
     mod modelled;
@@ -239,14 +241,15 @@ pub mod walk {
     pub use day::Fault;
     pub use fork::Forks;
     pub(crate) use fork::Parked;
+    pub use instance::{
+        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, Depends, End, Exists, Inst, LegVal,
+        Order, Seed, Status, Term,
+    };
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
-    pub use plan::{
-        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, Depends, End, Exists, Inst, LegVal,
-        Order, Seed, Status, Term, kind_certainty, qty_value,
-    };
     pub(crate) use plan::{invariant, quantity};
+    pub use plan::{kind_certainty, qty_value};
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub(crate) use projection::lowest_shape;

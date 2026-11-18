@@ -17,7 +17,8 @@ use std::collections::BTreeSet;
 
 use super::agenda::Reading;
 use super::day::ends;
-use super::plan::{Amount, End, LegVal, invariant, qty_value};
+use super::instance::{Amount, End, LegVal};
+use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
 use crate::base::{Code, Refusal, Run};

@@ -22,7 +22,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
 use super::fork::Forks;
-use super::plan::{Amount, Dated, DayWindow, End, Inst, LegVal, Status, invariant, qty_value};
+use super::instance::{Amount, Dated, DayWindow, End, Inst, LegVal, Status};
+use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::readings::{Alone, Broke, Three, imp_breaks};
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
