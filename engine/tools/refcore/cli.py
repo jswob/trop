@@ -1,5 +1,6 @@
 """python -m refcore run <path ...> [--pin=bytes] [--ask id ...]   |   python -m refcore test [name ...]
-   python -m refcore reprint <path ...>   (each file's canonical text, L §2.4, and the reality's sha256, E §3.1)"""
+   python -m refcore reprint <path ...>   (each file's canonical text, L §2.4, and the reality's sha256, E §3.1)
+   python -m refcore check <path ...> [--pin=bytes]   (load without the run, OPERATIONS §2.3; no --ask)"""
 import os
 import sys
 import threading
@@ -30,6 +31,13 @@ def _run_texts(texts, ids=None, options=None):
     from .loader import scenario_header
     if (options or {}).get('reprint') is not None:
         return reprint_lines(texts)
+    # options {'check': …}: `check` (OPERATIONS §2.3) takes run's own path through load below, every shape of reality
+    # the same functions, and stops where run would answer its first ask (Asker.load_check, check_worlds); a joint
+    # model's members never see the flag (their options are run's)
+    options = dict(options or {})
+    check = options.pop('check', None) is not None
+    if check:
+        ids = None
     texts = by_path(texts)
     try:
         heads = [(f, src, scenario_header(f, src)) for f, src in texts]
@@ -40,10 +48,10 @@ def _run_texts(texts, ids=None, options=None):
     srcs = dict(texts)
     uses = header_uses(srcs[root]) if root is not None else []
     if uses or (root is not None and header_has_sames(srcs[root])):
-        return joint(texts, uses, ids, options)
+        return joint(texts, uses, ids, options, check)
     if any(h is not None for f, src, h in heads):
-        return run_worlds(heads, ids)
-    return run_one(texts, ids)
+        return run_worlds(heads, ids, check=check)
+    return run_one(texts, ids, check=check)
 
 
 def reprint_lines(texts, ordered=False, run_as=None):
@@ -93,12 +101,12 @@ def reprint_lines(texts, ordered=False, run_as=None):
     return out
 
 
-def joint(texts, uses, ids=None, options=None):
+def joint(texts, uses, ids=None, options=None, check=False):
     """A joint model (L §6.1): each member (a file or a directory tree of files) found relative to the joint model's
     file and checked against its pin (LOAD-PIN; the sha256 of its canonical text, E §3.1 step 1, canon.py, or of its
     bytes with options pin=bytes), loaded alone (its asks, a.q) and merged in under its prefix (joint.py), so the
     joint model reads its things, places and movements, and a binding over a prelude kind ranges over every
-    member's."""
+    member's.  check: OPERATIONS §2.3's lines in place of the answers (Asker.load_check, run_worlds)."""
     from .joint import joint_texts, MemberRefused, SEP
     from .loader import load_lines
     from .ask import Asker
@@ -130,7 +138,7 @@ def joint(texts, uses, ids=None, options=None):
         # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the members' rows too, named
         # with their prefixes": its files are the joint model's own, merged as they are, and run as worlds (§6.4)
         return shown(run_worlds(heads, ids, loader=lambda files, worlds, elsewhere=None: load_lines(
-            files, worlds, members=alone, joint=info, elsewhere=elsewhere), srcs=srcs))
+            files, worlds, members=alone, joint=info, elsewhere=elsewhere), srcs=srcs, check=check))
     try:
         m = load_lines(merged, members=alone, joint=info)
     except TallyError as e:
@@ -142,7 +150,7 @@ def joint(texts, uses, ids=None, options=None):
             raise
         return ['refused: REFCORE-NOT-YET an input this interpreter can\'t handle (%s: %s)' % (type(e).__name__, e)]
     try:
-        return shown(Asker(m).run(ids))
+        return shown(Asker(m).load_check() if check else Asker(m).run(ids))
     except TallyError as e:
         return shown(['refused: %s' % e.text()])
     except Exception as e:
@@ -267,13 +275,14 @@ def cross_world_forks(realities):
     return None
 
 
-def run_worlds(heads, ids=None, loader=None, srcs=None):
+def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
     """A reality with scenarios (L §6.4): the base loads alone, and each scenario with the base and the scenarios it
     stacks on, so a load refusal in a scenario file refuses only that scenario and those over it.  Each ask is
     answered in the deepest world it names (its file's scenario, its `in`, diff's worlds, its scenario pins); the
-    worlds below it are evaluated in the same reality with the higher layers hidden."""
+    worlds below it are evaluated in the same reality with the higher layers hidden.  check: the same load, then
+    OPERATIONS §2.3's lines (check_worlds) in place of the answers."""
     from .loader import load_texts
-    from .ask import Asker, LoadAtRun, warning_lines
+    from .ask import Asker, LoadAtRun, warning_lines, alone_line
     from .errors import LoadError, Unspecified
     base = [(f, src) for f, src, h in heads if h is None]
     scen = {}
@@ -343,6 +352,8 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     forks = cross_world_forks(realities)
     if forks is not None:
         return ['refused: %s' % forks.text()]
+    if check:
+        return check_worlds(scen, realities, errs)
     if ids:
         # E §11 (tally 2.1.3, issue #58): after load (the base's refusal has printed above; a scenario's refuses only
         # that scenario, L §8), the first id of the request that names no ask of any world, no member's ask (L §6.1)
@@ -397,7 +408,7 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
         aid = akey[0]
         a, sf = asks[akey]
         if getattr(a, 'refused_alone', None) is not None:
-            out.append('%s: refused: %s' % (aid, a.refused_alone.text()))
+            out.append(alone_line(a))
             continue
         need = set()
         if sf is not None:
@@ -454,6 +465,21 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             if x is None:
                 return ['refused: %s' % lx.err.text()]
             out.append('%s: refused: %s' % (aid, lx.err.text()))
+    warned = load_warned(realities)
+    seen = set(warned)
+    for x in [None] + sorted(k for k in askers if k is not None):
+        if x not in askers:
+            continue
+        for code, msg in askers[x].walk_warnings:
+            if (code, msg) not in seen:
+                seen.add((code, msg))
+                warned.append((code, msg))
+    return out + warning_lines(warned)
+
+
+def load_warned(realities):
+    """The warnings the load of a reality with scenarios decides (WARN-UNREAD, L §8.5), each once: the base's, then
+    each scenario's by id; run_worlds adds the walks' after them, check_worlds prints them alone."""
     seen = set()
 
     def unread_everywhere(msg):
@@ -480,14 +506,43 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
             if (code, msg) not in seen:
                 seen.add((code, msg))
                 warned.append((code, msg))
-    for x in [None] + sorted(k for k in askers if k is not None):
-        if x not in askers:
+    return warned
+
+
+def check_worlds(scen, realities, errs):
+    """`check` (OPERATIONS §2.3) on a reality with scenarios, once run_worlds has loaded the base (its refusal has
+    printed as run prints it) and each scenario: each refused scenario file's `scenario <s>: refused: …` line in the
+    order of the files' full paths (E §3.1 step 1), then each ask refused alone by id (alone_line), the base's and a
+    scenario file's own, then the warnings load decides (load_warned); `ok` alone first when nothing is refused.
+    Load's last check (a literal key at a literal stepped range, L §2.5, §8.4), which run makes when an ask is
+    answered, is made here on every reality: the base's refusal is the run's one line, a scenario's refuses that
+    scenario (L §6.4)."""
+    from .evaluate import Engine
+    from .ask import alone_line, warning_lines
+    realities = dict(realities)
+    errs = dict(errs)
+    m0 = realities[None]
+    _, err = guarded(lambda: Engine(m0).check_range_lits())
+    if err is not None:
+        return ['refused: %s' % err.text()]
+    for sid in sorted(k for k in realities if k is not None):
+        r = realities[sid]
+        _, err = guarded(lambda: Engine(r).check_range_lits())
+        if err is not None:
+            errs[sid] = err
+            del realities[sid]
+    out = ['scenario %s: refused: %s' % (sid, errs[sid].text()) for sid in sorted(errs, key=lambda s: (scen[s][0], s))]
+    alone = {}
+    for a in getattr(m0, 'asks_alone', ()):
+        alone[(a.id, '')] = a
+    for sid, r in realities.items():
+        if sid is None:
             continue
-        for code, msg in askers[x].walk_warnings:
-            if (code, msg) not in seen:
-                seen.add((code, msg))
-                warned.append((code, msg))
-    return out + warning_lines(warned)
+        for a in getattr(r, 'asks_alone', ()):
+            if getattr(a, '_scen', None) == sid:
+                alone[(a.id, sid)] = a
+    out.extend(alone_line(alone[k]) for k in sorted(alone))
+    return (out or ['ok']) + warning_lines(load_warned(realities))
 
 
 def make_cross(aid, sf, realities, chains):
@@ -602,7 +657,9 @@ def declared_asks(src):
     return set(re.findall(r'^ask ([a-z][a-z0-9_]*)\s*:', src, re.M))
 
 
-def run_one(texts, ids=None, members=None):
+def run_one(texts, ids=None, members=None, check=False):
+    """A model with no scenario file: load, then its asks answered (Asker.run), or with check OPERATIONS §2.3's lines
+    (Asker.load_check), each refusal through the same handlers."""
     from .loader import load_texts
     from .ask import Asker
     try:
@@ -617,7 +674,7 @@ def run_one(texts, ids=None, members=None):
             raise
         return ['refused: REFCORE-NOT-YET an input this interpreter can\'t handle (%s: %s)' % (type(e).__name__, e)]
     try:
-        return Asker(m).run(ids)
+        return Asker(m).load_check() if check else Asker(m).run(ids)
     except TallyError as e:
         return ['refused: %s' % e.text()]
     except Exception as e:
@@ -670,13 +727,14 @@ def reprint_paths(paths):
 
 
 def command_lines(argv):
-    """The lines `run` or `reprint` prints (argv as main takes it; testrun's `=== options disk` calls it too)."""
+    """The lines `run`, `reprint` or `check` prints (argv as main takes it, a usage error excluded; testrun's
+    `=== options disk` calls it too).  `check` reads its words as `run` does (OPERATIONS §2.3: inputs as run's)."""
     if argv[0] == 'reprint':
         return reprint_paths(argv[1:])
     paths = []
     ids = []
     mode = 'paths'
-    options = {}
+    options = {'check': '1'} if argv[0] == 'check' else {}
     for a in argv[1:]:
         if a == '--ask':
             mode = 'ask'
@@ -709,14 +767,33 @@ def big_stack(fn):
     return box['v']
 
 
+def usage_error(argv):
+    """No command, an unknown one, or `check` given `--ask` (OPERATIONS §2.3: inputs as run's, no asks): exit 2."""
+    return not argv or argv[0] not in ('run', 'test', 'reprint', 'check') or (argv[0] == 'check' and '--ask' in argv)
+
+
+def exit_code(command, lines):
+    """OPERATIONS §2: `run` and `reprint` exit 1 when the first line is a refusal, else 0; `check`'s exit is its own
+    (§2.3): 0 only when the first line is `ok`, else 1."""
+    if command == 'check':
+        return 0 if lines and lines[0] == 'ok' else 1
+    return 1 if lines and lines[0].startswith('refused: ') else 0
+
+
+def command(argv):
+    """(the lines printed, the exit code) of `run`, `reprint` or `check`, or of a usage error (the usage text, 2)."""
+    if usage_error(argv):
+        return __doc__.split('\n'), 2
+    lines = command_lines(argv)
+    return lines, exit_code(argv[0], lines)
+
+
 def main(argv):
-    if not argv or argv[0] not in ('run', 'test', 'reprint'):
-        print(__doc__)
-        return 2
-    if argv[0] == 'test':
+    if argv and argv[0] == 'test' and not usage_error(argv):
         from .testrun import run_tests
         return big_stack(lambda: run_tests(argv[1:]))
-    lines = big_stack(lambda: command_lines(argv)) if argv[0] == 'run' else command_lines(argv)
+    # check loads as run loads, on the same stack
+    lines, code = big_stack(lambda: command(argv)) if argv and argv[0] in ('run', 'check') else command(argv)
     for l in lines:
         print(l)
-    return 1 if lines and lines[0].startswith('refused: ') else 0
+    return code

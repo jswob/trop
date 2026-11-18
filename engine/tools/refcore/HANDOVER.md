@@ -7,6 +7,23 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## M3: `check` (OPERATIONS §2.3; tally 2.2 kept, issue #226)
+
+`python -m refcore check <path>… [--pin=bytes]`: load without the run. `cli._run_texts` takes an option `check` and
+goes down run's own path (`run_one`, `run_worlds`, `joint`, each shape of reality through the same loader and the
+same handlers), stopping where run would answer its first ask: `Asker.load_check` (a model without scenario files:
+the literal key at a stepped range, then the asks refused alone, `ok` when none, then `m.warnings`) and
+`check_worlds` (with scenario files: the same check on every reality, the scenario lines in the files' full-path
+order, the asks refused alone by id, the base's and a scenario file's own, then `load_warned`, the warnings run takes
+from load). An ask refused alone prints through `ask.alone_line`, shared with run. The exit is `cli.exit_code`
+(0 only after `ok`); `--ask` is a usage error (2), `cli.usage_error`. `refcore_fast` runs it unchanged (it hands its
+argv to `cli.main`). `testrun` gained `=== options check` (warning lines always compared), `exit=N`, and for disk
+runs `paths=` and `args=`. **17 tests** `O2_3_check_*`; **1 500 tests, all pass.** Three places where check isn't
+run's bytes, each the spec's text over refcore's run (logged for the spec round after M3, the M3 spec step's notes):
+a scenario file's own ask refused alone (run prints nothing for it, even named); the literal-key check on a
+scenario's reality (run makes it only when an ask in that world is answered, and prints it on the ask); and a
+`LOAD-` code refcore raises only while evaluating (`ask.LoadAtRun`), which check, like the load probe, can't see.
+
 ## tally 2.2 (the cuts round: nine forms removed; groups G1 to G5; closed 2026-11-18, 1 483 tests)
 
 The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,

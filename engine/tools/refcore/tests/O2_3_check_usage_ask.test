@@ -1,0 +1,17 @@
+# OPERATIONS §2.3 (M3): check's inputs are run's, no asks; `--ask` is a usage error: the usage text, exit 2 (§2.3
+# "2 for a usage error"; INTERFACE §1: a usage text of the engine's own, no check reads its words). Run as the
+# command line runs it, `check model.tally --ask q`.
+=== options disk check args=--ask,q exit=2
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+
+source card "a card (invented)"
+
+ask q: 1
+=== expect
+python -m refcore run ...
+...

@@ -1,0 +1,27 @@
+# OPERATIONS §2.3 (M3): with a base that loads, the refused scenarios' lines first, then the asks refused alone, then
+# the warnings load decides. bad is refused (LOAD-DUP, its q is the base's); q_low names lowered, whose file isn't
+# given (LOAD-SCENARIO, refused alone); qx, in bad's world, is covered by bad's line; spare is read by nothing
+# (WARN-UNREAD, L §8.5). Exit 1: the first line isn't `ok`.
+=== options check exit=1
+=== m.tally
+model f
+  tally 2
+  on 2025-01-01
+  start 2025-01-01
+  end 2025-12-31
+source s "synthetic"
+unit DUK: currency minor 0.01
+input spare: int
+ask q: minor(DUK)
+ask q_low: minor(DUK) in lowered
+=== bad.tally
+scenario bad over f
+  tally 2
+  from 2025-01-01
+def q: int = 1
+ask qx: q in bad
+=== expect
+scenario bad: refused: LOAD-DUP q is declared twice (bad.tally:4)
+q_low: refused: LOAD-SCENARIO ask q_low names lowered, neither the model nor a loaded scenario (m.tally:10)
+warning: WARN-UNREAD input spare is read by nothing
+warning: WARN-UNREAD source s is read by nothing
