@@ -1,6 +1,7 @@
 # tally 2.1.8 §4 (#169-e), L §4.4: a sum's term that a window leaves open (days_between to dk[a], a window) makes the
 # sum the window's hole, named by the day it comes from. 2.1.7's refcore refused the addition (RUN-DOMAIN 0 +
-# window(59, 68)). T's fixes/p60/sum_days_win.
+# window(59, 68)). T's fixes/p60/sum_days_win. (tally 2.2, 2.2-1: wallet's kind, of unit any,
+# is of unit PLN: its opening states PLN.)
 === m.tally
 model pw
   tally 2
@@ -12,7 +13,7 @@ source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
@@ -41,5 +42,6 @@ version v
 ask q: sum(days_between(d0, dk[k]) for k in ks)
 === expect
 q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
+  unknown day: dk[a]
   cut 2026-04-25
 warning: WARN-UNREAD place wallet is read by nothing

@@ -312,12 +312,12 @@ version card_2026
   opening[sav] of ania = 10.00 PLN at 2026-01-01 start "the card"
   opening[sav] of tomek = 20.00 PLN at 2026-01-01 start "the card"
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
-,11:kplace/base,7:REQ-ASK,6:kplace,32:run base.tally --ask zz_m0_probe,998:10:base.tally,979:model kplace
+,11:kplace/base,7:REQ-ASK,6:kplace,32:run base.tally --ask zz_m0_probe,1106:10:base.tally,1086:model kplace
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T's base for M0's load-code fixtures (invented): a place keyed by persons, and two rows stated same at its keys; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+  note "T's base for M0's load-code fixtures (invented): a place and a move keyed by persons, and two of its move instances stated same at their keys (tally 2.2, S-8: no longer two rows of an input); it loads clean; each fixture of codes/m0/edits.tsv changes one line"
 
 source card "T's fixture card (invented)"
 
@@ -329,11 +329,15 @@ place konto[p in persons]: accounts PLN lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
-input lim[k in accounts]: money PLN
-
 input amt: money PLN
 
+input pay_day: date
+
 def twice: money PLN = amt + amt
+
+move pay[p in persons on pay_day]: transfers
+  on pay_day
+  leg cash from world to konto[p] amount amt
 
 ask q: twice
 
@@ -344,11 +348,10 @@ version card_2026
   persons + [ana] lives 2026-01-01..
   persons + [ben] lives 2026-01-01..
   amt = 1.00 PLN "the card"
+  pay_day = 2026-03-02 "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   opening[konto[ben]] = 2.00 PLN at 2026-01-01 start "the card"
-  lim[konto[ana]] = 5.00 PLN "the card"
-  lim[konto[ben]] = 5.00 PLN "the card"
-  same lim[konto[ana]] = lim[konto[ben]]
+  same pay[ana] = pay[ben]
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
 ,13:lifepath/base,7:REQ-ASK,8:lifepath,32:run base.tally --ask zz_m0_probe,1234:10:base.tally,1214:model lifepath
   tally 2
@@ -3514,7 +3517,7 @@ version card_2026
   rate[q1] = 0.1 "the card"
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 "the card"
-,,1:1,102:refused: LOAD-INSTANT balance reading opening at 2026-01-01 needs start, end or after (base.tally:44)
+,,1:1,95:refused: LOAD-INSTANT balance reading opening at 2026-01-01 needs start or end (base.tally:44)
 ,18:basic/instant-none,12:LOAD-INSTANT,5:basic,32:run base.tally --ask zz_m0_probe,1010:10:base.tally,991:model basic
   tally 2
   on 2026-03-01
@@ -4829,7 +4832,7 @@ version card_2026
   governs always
   known 2026-01-01
   pay = 4 000.00 PLN "the card"
-,,1:1,73:refused: LOAD-SAME same a.pay = a.twice: a row and a def (joint.tally:1)
+,,1:1,85:refused: LOAD-SAME same a.pay = a.twice: a row of an input and a def (joint.tally:1)
 ,19:joint/same-unjoined,9:LOAD-SAME,5:joint,33:run joint.tally --ask zz_m0_probe,912:11:joint.tally,471:model family
   tally 2
   on 2026-03-01
@@ -6787,12 +6790,12 @@ version raise_2027
 
 ask q_raised: doubled in raised law 2027-06-01
 ,,1:0,66:scenario raised: refused: LOAD-NAME unknown id sum (scen.tally:9)
-,25:kplace/same-place-unknown,8:LOAD-KEY,6:kplace,32:run base.tally --ask zz_m0_probe,997:10:base.tally,978:model kplace
+,25:kplace/same-place-unknown,8:LOAD-KEY,6:kplace,32:run base.tally --ask zz_m0_probe,1105:10:base.tally,1085:model kplace
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T's base for M0's load-code fixtures (invented): a place keyed by persons, and two rows stated same at its keys; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+  note "T's base for M0's load-code fixtures (invented): a place and a move keyed by persons, and two of its move instances stated same at their keys (tally 2.2, S-8: no longer two rows of an input); it loads clean; each fixture of codes/m0/edits.tsv changes one line"
 
 source card "T's fixture card (invented)"
 
@@ -6804,11 +6807,15 @@ place konto[p in persons]: accounts PLN lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
-input lim[k in accounts]: money PLN
-
 input amt: money PLN
 
+input pay_day: date
+
 def twice: money PLN = amt + amt
+
+move pay[p in persons on pay_day]: transfers
+  on pay_day
+  leg cash from world to konto[p] amount amt
 
 ask q: twice
 
@@ -6819,12 +6826,11 @@ version card_2026
   persons + [ana] lives 2026-01-01..
   persons + [ben] lives 2026-01-01..
   amt = 1.00 PLN "the card"
+  pay_day = 2026-03-02 "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   opening[konto[ben]] = 2.00 PLN at 2026-01-01 start "the card"
-  lim[konto[ana]] = 5.00 PLN "the card"
-  lim[konto[ben]] = 5.00 PLN "the card"
-  same lim[konto[zz]] = lim[konto[ben]]
-,,1:1,61:refused: LOAD-KEY zz is not a key of persons (base.tally:37)
+  same pay[zz] = pay[ben]
+,,1:1,61:refused: LOAD-KEY zz is not a key of persons (base.tally:40)
 ,19:adjust/adjusts-type,9:LOAD-UNIT,6:adjust,32:run base.tally --ask zz_m0_probe,1362:10:base.tally,1342:model adjust
   tally 2
   on 2026-10-20
@@ -9238,12 +9244,12 @@ version card_2026
   same rate[*] = rate[q1]
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:1,76:refused: LOAD-PARSE cannot parse: expected a literal, got * (base.tally:44)
-,21:kplace/same-key-index,8:LOAD-KEY,6:kplace,32:run base.tally --ask zz_m0_probe,996:10:base.tally,977:model kplace
+,21:kplace/same-key-index,8:LOAD-KEY,6:kplace,32:run base.tally --ask zz_m0_probe,1111:10:base.tally,1091:model kplace
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T's base for M0's load-code fixtures (invented): a place keyed by persons, and two rows stated same at its keys; it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+  note "T's base for M0's load-code fixtures (invented): a place and a move keyed by persons, and two of its move instances stated same at their keys (tally 2.2, S-8: no longer two rows of an input); it loads clean; each fixture of codes/m0/edits.tsv changes one line"
 
 source card "T's fixture card (invented)"
 
@@ -9255,11 +9261,15 @@ place konto[p in persons]: accounts PLN lives 2026-01-01..
 
 place world: outside lives 2026-01-01..
 
-input lim[k in accounts]: money PLN
-
 input amt: money PLN
 
+input pay_day: date
+
 def twice: money PLN = amt + amt
+
+move pay[p in persons on pay_day]: transfers
+  on pay_day
+  leg cash from world to konto[p] amount amt
 
 ask q: twice
 
@@ -9270,12 +9280,11 @@ version card_2026
   persons + [ana] lives 2026-01-01..
   persons + [ben] lives 2026-01-01..
   amt = 1.00 PLN "the card"
+  pay_day = 2026-03-02 "the card"
   opening[konto[ana]] = 1.00 PLN at 2026-01-01 start "the card"
   opening[konto[ben]] = 2.00 PLN at 2026-01-01 start "the card"
-  lim[konto[ana]] = 5.00 PLN "the card"
-  lim[konto[ben]] = 5.00 PLN "the card"
-  same lim[amt[ana]] = lim[konto[ben]]
-,,1:1,68:refused: LOAD-KEY amt[ana] is not a key of accounts (base.tally:37)
+  same pay[amt[ana]] = pay[ben]
+,,1:1,67:refused: LOAD-KEY amt[ana] is not a key of persons (base.tally:40)
 ,16:basic/s1-def-pct,10:LOAD-LIMIT,5:basic,32:run base.tally --ask zz_m0_probe,1054:10:base.tally,1034:model basic
   tally 2
   on 2026-03-01

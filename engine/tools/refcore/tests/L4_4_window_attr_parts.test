@@ -73,10 +73,12 @@ version new
   on1 = 0 "s"
 === expect
 b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: ma
   unfulfilled: mb
   cut 2026-08-01
 c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: ma
   unfulfilled: mb
   cut 2026-08-01
@@ -87,8 +89,10 @@ f_mb: 1.00 PLN
   unfulfilled: mb
   cut 2026-08-01
 f_mw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   cut 2026-08-01
 n_ma: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (ma)
+  unknown day: wl
   cut 2026-08-01
 n_mb: 7
   cut 2026-08-01

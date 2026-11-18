@@ -3,6 +3,7 @@
 # first itself with a fuller ties by, first(m in K over d ..) ties by (m.day, e)". bonus[x] and bonus[y] fall on one
 # day: RUN-TIE (n1; index order never breaks a tie, L §5.11), as g1 and g2 of two moves (n2). n3 states the fuller
 # ties by (m.day, m.rank), rank = pos(j): bonus[x] (rank 1). (Writer 8: n1 was bonus[x] by key order, removed.)
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model n
   tally 2
@@ -48,11 +49,11 @@ version v
   gday = 2026-04-01
   amt = 10.00 PLN
 
-ask n1: next(wages, 2026-03-01)
-ask n2: next(gifts, 2026-03-01)
+ask n1: (first(mv in wages over 2026-03-01 ..) ties by mv.day)
+ask n2: (first(mv in gifts over 2026-03-01 ..) ties by mv.day)
 ask n3: first(m in wages over 2026-03-01 ..) ties by (m.day, m.rank)
 === expect
-n1: refused: RUN-TIE next(wages, 2026-03-01) has a tie at bonus[x], bonus[y] that changes the result, and its ties by doesn't break it
+n1: refused: RUN-TIE first has a tie at bonus[x], bonus[y] that changes the result, and its ties by doesn't break it
   cut 2026-01-01
 n2: refused: RUN-TIE ...
   cut 2026-01-01

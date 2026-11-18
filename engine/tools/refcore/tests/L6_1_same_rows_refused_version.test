@@ -1,0 +1,27 @@
+# tally 2.2 (CHANGES.md 2.2-8), L §6.1: a `same` line joins kinds, things and movements, never two rows of a state or
+# reading input; L §8.3 LOAD-SAME "same <p> = <q>: <what p is> and <what q is>" (a row of an input on either side).
+# A version's line between two rows of one model's inputs is refused. Inside one model the figure is a def that reads
+# both inputs (MIGRATION.md § 2.1 → 2.2).
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input fee_bank[m in months]: money PLN
+input fee_broker[m in months]: money PLN
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  fee_bank[2026-03] = 10.00 PLN "bank"
+  fee_broker[2026-03] = 10.00 PLN "broker"
+  same fee_bank[2026-03] = fee_broker[2026-03]
+
+ask q: fee_bank[2026-03]
+=== expect
+refused: LOAD-SAME same fee_bank[2026-03] = fee_broker[2026-03]: a row of an input and a row of an input (m.tally:18)

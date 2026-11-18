@@ -2,6 +2,8 @@
 # is an unknown day of its own, so two equal windows are two holidays, which may fall on one day or two: the next
 # business day after Friday 2026-05-29 is any of 1 to 3 June, and windows each splits on both entries. 2.1.6's
 # refcore counted the two entries as one (window(2026-06-01, 2026-06-02), two lines).
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model f5
   tally 2
@@ -14,7 +16,7 @@ source card "invented"
 input cal: calendar
 
 ask one: add_business(2026-05-29, 1, cal)
-ask each: add_business(2026-05-29, 1, cal) windows each
+ask each: add_business(2026-05-29, 1, cal)
 
 version v
   cite card
@@ -22,13 +24,7 @@ version v
   known 2026-01-01
   cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02), window(2026-06-01, 2026-06-02)]) "c"
 === expect
-each [added window(2026-06-01, 2026-06-02) = 2026-06-01, added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-02
-...
-each [added window(2026-06-01, 2026-06-02) = 2026-06-01, added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-03
-...
-each [added window(2026-06-01, 2026-06-02) = 2026-06-02, added window(2026-06-01, 2026-06-02) = 2026-06-01]: 2026-06-03
-...
-each [added window(2026-06-01, 2026-06-02) = 2026-06-02, added window(2026-06-01, 2026-06-02) = 2026-06-02]: 2026-06-01
-...
+each: window(2026-06-01, 2026-06-03)
+  cut 2026-03-01
 one: window(2026-06-01, 2026-06-03)
-...
+  cut 2026-03-01

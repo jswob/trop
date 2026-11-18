@@ -2,6 +2,8 @@
 # 04-07, is refused on every day of oa's window and its words differ by the day, so pot is the hole; oa, never
 # refused, keeps its 10.00 PLN at jar and in its flows (j1, j3), as every pin and windows each print.
 # 435db654 printed the hole for j1 and j3.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -40,7 +42,7 @@ version v
   opening[jar] = 0.00 PLN at 2026-01-01 start "s"
 
 ask j1: bal(jar, 2026-04-30)
-ask j2: bal(jar, 2026-04-30) windows each
+ask j2: bal(jar, 2026-04-30)
 ask j3: flows(oa, 2026-04)
 ask j4: bal(jar, 2026-04-30) with wa = 2026-04-05
 ask j5: bal(jar, 2026-04-30) with wa = 2026-04-09

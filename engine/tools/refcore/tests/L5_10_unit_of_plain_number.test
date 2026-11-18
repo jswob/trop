@@ -1,6 +1,7 @@
 # L §5.10 Kind and unit: "a quantity unit (unit hour …, §5.4), a compound unit such as PLN/year and a plain number are
 # keys of no unit kind, so unit of such a place or quantity is refused (§8.4): at load where load sees it (LOAD-UNIT)".
 # unit(n_units), n_units a plain num.
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === m.tally
 model t
   tally 2
@@ -11,7 +12,7 @@ model t
 source s "s"
 unit PLN: currency minor 0.01
 kind notes: unit
-kind brokerages: place any min 0
+kind brokerages: place any min 0 outside
 kind trades: event certain
   leg units: notes
   leg cash: PLN

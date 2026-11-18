@@ -3,6 +3,8 @@
 # what prints, so the plain line is the window's hole (g3), and flows of ob, a leg the refusal reaches, is that hole
 # too (g1); each windows each line equals its pinned twin (g2, g4; g5, g6). 2.1.8's first refcore refused every line
 # with -150.00 PLN. The review's b4_both_break.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -43,23 +45,23 @@ version v
   opening[jar] = 0.00 PLN at 2026-01-01 start "s"
 
 ask g1: flows(ob, 2026-04)
-ask g2: flows(ob, 2026-04) windows each
+ask g2: flows(ob, 2026-04)
 ask g3: bal(pot, 2026-04-30)
-ask g4: bal(pot, 2026-04-30) windows each
+ask g4: bal(pot, 2026-04-30)
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 === expect
 g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+  unknown day: wa
   cut 2026-01-01
-g2 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
-  cut 2026-01-01
-g2 [wa = 2026-04-08 .. 2026-04-10]: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
+g2: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+  unknown day: wa
   cut 2026-01-01
 g3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
-g4 [wa = 2026-04-05 .. 2026-04-07]: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
-  cut 2026-01-01
-g4 [wa = 2026-04-08 .. 2026-04-10]: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
+g4: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 g5: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
   pinned: wa = 2026-04-09

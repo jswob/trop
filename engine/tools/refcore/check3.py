@@ -286,30 +286,6 @@ def m_movement_field(self, n, t, sc):
 
 # -- bindings over movements (L §5.6, §5.7, §5.19) --------------------------------------------------------------
 
-def m_kind_bind_edges(self, sc, kinfo):
-    """What a variable over an event kind reads: the kind, each move of it and of its subkinds, and the observed
-    inputs, whose rows are its movements (readers-of, E §10; tally 2.1.7 R7). An aggregate's binding and a def's own
-    key record the same edges, so the def's cell is trimmed to what it can depend on (E §3.2; tally 2.2, the fault
-    of a def keyed by a movement)."""
-    m = self.m
-    self.edge(sc, ('kind', kinfo.id), 'bind')
-    sub = kinfo.subtree(m)
-    for qid, mi in m.moves.items():
-        if self.move_kind(mi) in sub:
-            self.edge(sc, ('move', qid), 'bind')
-    for qid, inf in m.inputs.items():
-        if inf.observed:
-            self.edge(sc, ('input', qid), 'bind')
-
-
-def m_def_key_edges(self, d, sc):
-    """A def's header key over an event kind reads what a binding over the kind reads (m_kind_bind_edges)."""
-    for b in d.binds:
-        kinfo = self.m.kinds.get(b.dom[1]) if b.dom[0] == 'kind' else None
-        if kinfo is not None and kinfo.spec == 'event':
-            self.kind_bind_edges(sc, kinfo)
-
-
 def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
     """A binding over an event kind or an observed input's rows: needs on or over (LOAD-ALIVE), but a fill's key bind
     (L §5.6, round 18 C1-38)."""
@@ -318,14 +294,20 @@ def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
         raise LoadError('LOAD-ALIVE', 'binding over %s needs on or over' % (kinfo.id if kinfo else obs.id), b.loc)
     if kinfo is not None:
         b._dom = ('event', kinfo.id)
-        self.kind_bind_edges(sc, kinfo)
+        # the binding reads its kind, subkinds included (readers-of, E §10; tally 2.1.7 R7)
+        self.edge(sc, ('kind', kinfo.id), 'bind')
         sub = kinfo.subtree(m)
         for qid, mi in m.moves.items():
-            if self.move_kind(mi) in sub and mi.decision:
-                self.mark(sc, 'legs', ('move', qid))
+            if self.move_kind(mi) in sub:
+                self.edge(sc, ('move', qid), 'bind')
+                if mi.decision:
+                    self.mark(sc, 'legs', ('move', qid))
         if 'pads' in sub:
             # a binding over pads is a running read (L §5.14.1 Running reads)
             self.mark(sc, 'legs', ('kind', 'pads'))
+        for qid, inf in m.inputs.items():
+            if inf.observed:
+                self.edge(sc, ('input', qid), 'bind')
         ty = T.key(kinfo.id)
         # a binding over an event kind needs no covered guard: its plan instances stand on the days no statement
         # covers (L §5.19, round 7); LOAD-COVERED guards an aggregate of an observed input's rows
@@ -575,7 +557,7 @@ def m_place_arg(self, r, sc, what):
 
 def m_any_needs_unit(self, n):
     """bal(x, d) of a place written by name whose unit is any names no unit, which load sees (R5; item 76, #162's
-    sweep): LOAD-UNIT, in the words run gave it. low(x, a .. b) is refused so, as the bal(x, d) of its definition."""
+    sweep): LOAD-UNIT, in the words run gave it."""
     th = self.literal_place(n.ref)
     if th is not None and self.m.place_unit(self.m.things[th]) in (None, 'any'):
         raise LoadError('LOAD-UNIT', 'bal(%s, d) of a place of unit any states its unit: bal(x, u, d)' % th, n.loc)
@@ -706,10 +688,6 @@ def m_check_proj(self, n, sc, target):
             raise uerr('the level of random at quantile is %s' % T.show(qt), n.loc)
     if 'frm' not in p:
         raise LoadError('LOAD-PARSE', 'cannot parse: a projection states from t (bal(x, d) from t)', n.loc)
-    if p.get('windows') == 'each':
-        # L §4.4: "The clause stands on a projection read ..., for that read": a line that reaches one splits by the
-        # windows that read meets (ask.Asker)
-        self.m.read_each = True
     self.mark(sc, 'proj', target)
     # L §8.3 item 10 (round 19, GD-4): a projection of a place a random movement books into is in the random cone;
     # one with a random clause reads the amounts after t as the question L §5.16 writes ("which reads no sample")
@@ -720,29 +698,6 @@ def m_check_proj(self, n, sc, target):
         n._ctgt = ('projc', target)
     self.projs.append((n, sc.item))
     n._holder = sc.item
-
-
-def m_t_low(self, n, sc, expect):
-    t = self.place_arg(n.ref, sc, 'low')
-    ut = self.place_type_unit(t, n.ref)
-    self.any_needs_unit(n)
-    target = self.place_target(n.ref)
-    self.span(n.span, sc)
-    if n.span.a is None or n.span.b is None:
-        raise LoadError('LOAD-DOMAIN', 'low over a span with an open end', n.loc)
-    if n.proj and 'frm' in n.proj:
-        self.check_proj(n, sc, target)
-        n._form = 'proj'
-    else:
-        n._form = 'day'
-        self.mark(sc, 'bal', target)
-        n._ctgt = ('bal', target)
-        if n.proj and n.proj.get('windows') == 'each':
-            # L §4.4 "for that read": a line that reaches a low stating windows each splits by the windows it meets
-            # (ask.Asker), as for a projection's (tally 2.1.8 R13, #169: P11's low without from)
-            self.m.read_each = True
-    self.edge(sc, ('balances',), 'bal')
-    return ut
 
 
 def m_leg_guarded(self, mi, leg):
@@ -1334,39 +1289,6 @@ def m_price_edges(self, sc, things):
         self.edge(sc, pn._r, 'explicit')
 
 
-def m_c_next(self, n, sc, expect):
-    m = self.m
-    if len(n.args) != 2:
-        raise LoadError('LOAD-PARSE', 'cannot parse: next(K, d) takes two arguments', n.loc)
-    kn = n.args[0]
-    if kn.k == 'name':
-        hit = m.lookup(kn.id, sc.regime)
-    elif kn.k == 'field' and kn.obj.k == 'name':
-        hit = m.qualified(kn.obj.id, kn.name)
-    else:
-        hit = None
-    if hit is None or hit[0] != 'kind' or m.kinds[hit[1].id].spec != 'event':
-        raise LoadError('LOAD-NAME', 'next takes an event kind: %s' % _txt(kn), n.loc)
-    kid = hit[1].id
-    kn._r = ('kind', kid)
-    kn._t = Ty('kindname')
-    dt = self.tc(n.args[1], sc)
-    if not self.is_date(dt):
-        raise uerr('next(K, d): d is %s, not a date' % T.show(dt), n.loc)
-    n._kind = kid
-    sub = m.kinds[kid].subtree(m)
-    for qid, mi in m.moves.items():
-        if self.move_kind(mi) in sub:
-            self.edge(sc, ('move', qid), 'next')
-            if mi.decision:
-                # next(K, d) is first(m in K over d ..) ties by m.day (L §5.14.1): its binding's reads are its own, so a
-                # binding over a decision's movements is a running read (tally 2.1.7 R6, G4, G5)
-                self.mark(sc, 'legs', ('move', qid))
-    if 'pads' in sub:
-        self.mark(sc, 'legs', ('kind', 'pads'))
-    return T.key(kid)
-
-
 def m_c_covered(self, n, sc, expect):
     if len(n.args) != 2:
         raise LoadError('LOAD-PARSE', 'cannot parse: covered(x, span) takes two arguments', n.loc)
@@ -1809,7 +1731,7 @@ def m_check_move_lawdates(self):
     """A move states at when anything it reads is law-dated (L §4.3, §5.14: LOAD-LAWDATE)."""
     m = self.m
     E = self.edges
-    skip = {'pin', 'calendar', 'explicit', 'lawpin', 'bind', 'flows', 'next', 'observed', 'leg', 'bal'}
+    skip = {'pin', 'calendar', 'explicit', 'lawpin', 'bind', 'flows', 'observed', 'leg', 'bal'}
     for qid, mi in m.moves.items():
         # an at reader def reached from `at e` itself has no law date to take: the chain ends at the law date `at`
         # gives (L §5.14 at e, round 7c): LOAD-LAWDATE
@@ -2143,60 +2065,6 @@ def m_check_schedules(self):
                 raise
         except TallyError:
             pass
-
-
-def m_check_after_readings(self):
-    """L §4.6 Readings (round 19, GD-10, C4-2): "A reading `after m` with m an observation or a plan is refused at load,
-    which sees m's class (LOAD-ORDER): the batch has no order (§5.14.2, P-7). The refusal is by class, so it holds for
-    an observation booked at a decision's point too"; L §8.3 `<x> after <m>: <m> is a plan or an observation`."""
-    m = self.m
-    rows = []
-    for iid in ('stated', 'opening'):
-        inf = m.inputs.get(iid)
-        if inf is None:
-            continue
-        for r in inf.rows:
-            ins = getattr(r, 'instant', None)
-            if not (isinstance(ins, tuple) and ins and ins[0] == 'after'):
-                continue
-            node = ins[1]
-            base = node.obj if node.k == 'index' else node
-            if base.k != 'name':
-                continue
-            rows.append((iid, r, node, m.moves.get(base.id), base.id in m.inputs and m.inputs[base.id].observed))
-    # E §3.1's passes: a row's keys are pass 3's, the readings `after` a decision pass 5's, so every row's key check
-    # comes before any order check (group 3's fix review N-b: `after rent[ka]` with rent a plan is LOAD-KEY)
-    for iid, r, node, mv, obs in rows:
-        if mv is not None and node.k == 'index':
-                # a key load sees that isn't a key of m's index (L §4.6, §8.3 R5; tally 2.1.8 R16, #175)
-                for kn, b in zip(node.keys, mv.binds):
-                    kv = _after_key(kn)
-                    dom = getattr(b, 'dom', None)
-                    if kv is None and kn.k == 'name' and getattr(kn, '_r', None) is None and \
-                            isinstance(dom, tuple) and dom[0] == 'index':
-                        # a bare key of a list index, which load sees too (B6 of group 3's review: kz of ks)
-                        from .values import Key
-                        kv = Key(dom[1], kn.id)
-                    if kv is not None and isinstance(dom, tuple) and dom[0] == 'index' and dom[1] in m.indexes \
-                            and m.indexes[dom[1]].pos(kv) is None:
-                        raise LoadError('LOAD-KEY', '%s%s after %s: %s is not a key of %s' % (
-                            iid, r.keys_text(), _txt(node), _txt(kn), dom[1]), r.loc)
-    for iid, r, node, mv, obs in rows:
-        if (mv is not None and not mv.decision) or obs:
-            raise LoadError('LOAD-ORDER', '%s%s after %s: %s is a plan or an observation' % (
-                iid, r.keys_text(), _txt(node), _txt(node)), r.loc)
-
-
-def _after_key(kn):
-    """A literal key of a reading's `after m[k]` as a key value, or None where load doesn't see it."""
-    from .dates import month_period, quarter_period, year_period
-    if kn.k == 'month' and getattr(kn, '_r', None) is None:
-        return month_period(*kn.v)
-    if kn.k == 'quarter' and getattr(kn, '_r', None) is None:
-        return quarter_period(*kn.v)
-    if kn.k == 'date':
-        return kn.v
-    return None
 
 
 def m_check_proj_seen(self):

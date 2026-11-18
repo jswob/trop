@@ -4,6 +4,8 @@
 # on 04-06 while give's 20.00 PLN may or may not have come (window(04-05, 04-10)): refused either way, but as
 # -30.00 PLN or -50.00 PLN, so the plain line is the window's hole and windows each prints each day's refusal (s1,
 # s2). 2.1.7's refcore didn't test pot while give was pending and refused it on 04-10 (-30.00 PLN).
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -51,17 +53,17 @@ version v
   opening[pot] = 50.00 PLN at 2026-01-01 start "s"
 
 ask l1: bal(jar, 2026-03-31)
-ask l2: bal(jar, 2026-03-31) windows each
+ask l2: bal(jar, 2026-03-31)
 ask s1: bal(pot, 2026-04-30)
-ask s2: bal(pot, 2026-04-30) windows each
+ask s2: bal(pot, 2026-04-30)
 === expect
 l1: refused: RUN-LIFESPAN put.cash moves into or out of late outside its lifespan
   cut 2026-01-01
 l2: refused: RUN-LIFESPAN put.cash moves into or out of late outside its lifespan
   cut 2026-01-01
 s1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (give)
+  unknown day: wi
   cut 2026-01-01
-s2 [wi = 2026-04-05 .. 2026-04-06]: refused: RUN-PLACE pot is -30.00 PLN after the day's observations and plans of 2026-04-06
-  cut 2026-01-01
-s2 [wi = 2026-04-07 .. 2026-04-10]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
+s2: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (give)
+  unknown day: wi
   cut 2026-01-01

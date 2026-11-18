@@ -105,7 +105,7 @@ b7: 9 999.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02])
 b8: ?"how much in Feb" (hamt[2026-02]) ?"how much in Mar" (hamt[2026-03])
   projection of k2 (PLN) from 2026-03-05 to the end of 2026-03-31
   holder: ask b8 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: ?"how much in Feb" (hamt[2026-02]) at the start of 2026-03-05
   counted:
     2026-03-05:

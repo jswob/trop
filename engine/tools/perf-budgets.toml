@@ -358,7 +358,7 @@ blocks = "tag"
 [[row]]
 id = "P8-L9"
 group = "L"
-what = "household A, A-05's windows each asks for Ania on the full text"
+what = "household A, A-05's asks for Ania, the plain line and its four pinned days, on the full text"
 recipe = "waits: T's load runner (load.tsv L:9)"
 wall_s = 10.0
 footprint_mb = 4096
@@ -394,7 +394,7 @@ blocks = "tag"
 [[row]]
 id = "P8-L13"
 group = "L"
-what = "the household's explain_room, M2's cut-downs at full span, F2's windows each"
+what = "the household's explain_room, M2's cut-downs at full span"
 recipe = "waits: T's load runner (load.tsv L:13)"
 wall_s = 10.0
 footprint_mb = 4096
@@ -430,7 +430,7 @@ blocks = "tag"
 [[row]]
 id = "P8-L17"
 group = "L"
-what = "household A, A-13 (b)'s 2024 difference with windows each"
+what = "household A, A-13 (b)'s 2024 difference on its four pinned days"
 recipe = "waits: T's load runner (load.tsv L:17)"
 wall_s = 10.0
 footprint_mb = 4096

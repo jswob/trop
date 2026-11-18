@@ -1,5 +1,6 @@
-# L §4.5: "A row may state its own known, later than its version's; one before its version's (a window by its first
-# day) is refused (LOAD-KNOWN)." (Writer 6: was REFCORE-UNSPECIFIED §4.5.)
+# L §4.5: "A row may state its own known, later than its version's; one before its version's is refused
+# (LOAD-KNOWN)." (Writer 6: was REFCORE-UNSPECIFIED §4.5; tally 2.2, 2.2-2: the row was known in a window from
+# 2026-02-01, now on that day.)
 === m.tally
 model t
   tally 2
@@ -14,7 +15,7 @@ version v
   cite s
   governs always
   known 2026-03-01
-  x = 1 known window(2026-02-01, 2026-04-01) "s"
+  x = 1 known 2026-02-01 "s"
 
 ask q1: x
 === expect

@@ -2,6 +2,7 @@
 # is priced per the key it is read at: eurcash holding EUR is valued at fxs[EUR] in PLN/EUR. 2.1.6's refcore
 # refused RUN-DOMAIN `eurcash is priced in PLN/$u, not PLN/EUR`, the placeholder never replaced. (T's G14
 # p130_uk.)
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === p130_uk.tally
 model unitkind
   tally 2
@@ -18,7 +19,7 @@ unit EUR: currency minor 0.01
 
 unit USD: currency minor 0.01
 
-kind safes: place any signed
+kind safes: place any signed outside
 
 kind fxheld: place one min 0 priced fxs
 

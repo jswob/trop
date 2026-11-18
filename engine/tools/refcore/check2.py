@@ -1105,7 +1105,7 @@ def reads_balances(e):
             continue
         if not isinstance(x, Node):
             continue
-        if x.k in ('bal', 'low', 'flows', 'value'):
+        if x.k in ('bal', 'flows', 'value'):
             return True
         for a, b in x.__dict__.items():
             if a in ('loc',) or a.startswith('_'):

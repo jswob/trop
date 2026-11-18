@@ -5,6 +5,7 @@
 # 2026-03-10 the first is wage[2026-03], on or after 2026-03-11 wage[2026-04] on 2026-04-10; after the last
 # (2026-06-10) none is planned: HOLE-NOTYET.  L §5.10 "Kind and unit are read by x in K and unit(x)": konto is a place
 # of unit PLN.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model n
   tally 2
@@ -36,16 +37,16 @@ version v
   pay_dom = 10
   pay_amt = 4 000.00 PLN
 
-ask n1: next(wages, 2026-03-10), next(wages, 2026-03-11)
-ask n2: next(wages, 2026-03-11).day
-ask n3: next(wages, 2026-06-11)
+ask n1: (first(mv in wages over 2026-03-10 ..) ties by mv.day), (first(mv in wages over 2026-03-11 ..) ties by mv.day)
+ask n2: (first(mv in wages over 2026-03-11 ..) ties by mv.day).day
+ask n3: (first(mv in wages over 2026-06-11 ..) ties by mv.day)
 ask u1: unit(konto)
 === expect
 n1: (wage[2026-03], wage[2026-04])
   cut 2026-01-01
 n2: 2026-04-10
   cut 2026-01-01
-n3: ?"next(wages, 2026-06-11): no wages yet, and its span reaches past the cut" (wages)
+n3: ?"mv: no wages yet, and its span reaches past the cut" (wages)
   cut 2026-01-01
 u1: PLN
   cut 2026-01-01

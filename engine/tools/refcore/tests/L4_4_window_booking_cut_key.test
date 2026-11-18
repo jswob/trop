@@ -1,6 +1,8 @@
 # tally 2.1.8 §4 (#169-e), L §5.14.3 and L §4.4: v2, known 2026-03-15, adds the key a2 inside mw[a2]'s day window,
 # so whether mw[a2] existed at its booking cut is open: the balance after it is the window's hole (bw). 2.1.7's
 # refcore read the key at the last cut and booked it (20.00 PLN). T's fixes/g3/n7.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model pn7
   tally 2
@@ -24,7 +26,7 @@ move mw[k in acct]: transfers
   leg cash from work to konto amount amt
 
 ask bw: bal(konto, 2026-04-30)
-ask bww: bal(konto, 2026-04-30) windows each
+ask bww: bal(konto, 2026-04-30)
 ask aw: mw[a2].cash.amount
 
 version v
@@ -42,31 +44,13 @@ version v2
   acct + [a2]
 === expect
 aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+  unknown day: wd
   cut 2026-06-30
 bw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+  unknown day: wd
   unfulfilled: mw[a1]
   cut 2026-06-30
-bww [wd = 2026-03-10]: ?"mw[a2] on 2026-03-10 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
+bww: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
+  unknown day: wd
   unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-11]: ?"mw[a2] on 2026-03-11 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-12]: ?"mw[a2] on 2026-03-12 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-13]: ?"mw[a2] on 2026-03-13 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-14]: ?"mw[a2] on 2026-03-14 changed after it was paid (version v2); is back pay due, and when?" (mw[a2])
-  adjustment: mw[a2] by 10.00 PLN on 2026-03-15 (version v2), remaining 10.00 PLN
-  unfulfilled: mw[a1]
-  cut 2026-06-30
-bww [wd = 2026-03-15 .. 2026-03-20]: 20.00 PLN
-  unfulfilled: mw[a1]
-  unfulfilled: mw[a2]
   cut 2026-06-30

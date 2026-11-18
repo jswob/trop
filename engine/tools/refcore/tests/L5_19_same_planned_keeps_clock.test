@@ -1,0 +1,48 @@
+# tally 2.2 (CHANGES.md 2.2-5, the lead's bound P4, critic C-11), L §4.5's list: a version's same line with a planned
+# instance on a side keeps its clock. Two planned moves of 100.00 PLN on one day, stated same by a version known
+# 2026-05-01: before it is known they are two movements (200.00 PLN), after it one (100.00 PLN). The critic's s5mm.
+=== m.tally
+model s5mm
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input a1: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d1
+  leg cash from world to wallet amount a1
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  a1 = 100.00 PLN "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+
+ask today: bal(wallet, 2026-03-31)
+ask before: bal(wallet, 2026-03-31) as known 2026-04-01
+=== expect
+before: 200.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-04-01
+today: 100.00 PLN
+  unfulfilled: in2
+  cut 2026-06-10

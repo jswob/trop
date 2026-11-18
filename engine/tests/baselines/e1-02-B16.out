@@ -771,6 +771,7 @@ tx2_mtg_day: (window(2027-04-05, 2027-04-06), 2027-04-05, 36 326.10 DUK, 18 700.
 tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for flows of cis" (gap_card_pays), 14 652.96 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  unknown day: window(2025-11-14, 2025-11-30)
   anchor: cis 2025-06-30 end, stated 14 652.96 DUK, difference 0.00 DUK
   anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
   anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR

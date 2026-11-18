@@ -1,0 +1,26 @@
+# tally 2.2 (CHANGES.md 2.2-1), L §5.10, §8.3 LOAD-UNIT: a place of unit `any` takes no balance reading, since it is
+# the world beyond the model: a stated row of the prelude's `world` is refused at load. 2.1.8 loaded it and printed
+# an anchor with a hole difference.
+=== m.tally
+model t
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  anchor world
+  opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+  stated[world] = 5.00 PLN at 2026-03-31 end "s"
+
+ask q: bal(konto, 2026-04-30)
+=== expect
+refused: LOAD-UNIT stated[world]: a place of unit any takes no balance reading (m.tally:18)

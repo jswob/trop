@@ -255,3 +255,35 @@ fixes/t22/cut_flows_ask	fixes-22		engine/tests/m2/fixes/t22/cut_flows_ask	engine
 fixes/t22/fault_fx3	fixes-22		engine/tests/m2/fixes/t22/fault_fx3	engine/tests/m2/fixes/t22/fault_fx3/m.tally			F211
 fixes/t22/fault_paths	fixes-22		engine/tests/m2/fixes/t22/fault_paths	engine/tests/m2/fixes/t22/fault_paths/m.tally			F211
 fixes/t22/order_keyed_def	fixes-22		engine/tests/m2/fixes/t22/order_keyed_def	engine/tests/m2/fixes/t22/order_keyed_def/m.tally			F211
+fixes/t22/cut_place_kind_any	fixes-22		engine/tests/m2/fixes/t22/cut_place_kind_any	engine/tests/m2/fixes/t22/cut_place_kind_any/m.tally			S-1
+fixes/t22/cut_place_kind_any_twin	fixes-22		engine/tests/m2/fixes/t22/cut_place_kind_any_twin	engine/tests/m2/fixes/t22/cut_place_kind_any_twin/m.tally			-
+fixes/t22/cut_outside_reading	fixes-22		engine/tests/m2/fixes/t22/cut_outside_reading	engine/tests/m2/fixes/t22/cut_outside_reading/m.tally			S-1
+fixes/t22/outside_any_kept	fixes-22		engine/tests/m2/fixes/t22/outside_any_kept	engine/tests/m2/fixes/t22/outside_any_kept/m.tally			S-1
+fixes/t22/cut_after_m	fixes-22		engine/tests/m2/fixes/t22/cut_after_m	engine/tests/m2/fixes/t22/cut_after_m/m.tally			S-3
+fixes/t22/cut_after_m_twin	fixes-22		engine/tests/m2/fixes/t22/cut_after_m_twin	engine/tests/m2/fixes/t22/cut_after_m_twin/m.tally			-
+fixes/t22/cut_known_window	fixes-22		engine/tests/m2/fixes/t22/cut_known_window	engine/tests/m2/fixes/t22/cut_known_window/m.tally			S-2
+fixes/t22/cut_known_window_twin	fixes-22		engine/tests/m2/fixes/t22/cut_known_window_twin	engine/tests/m2/fixes/t22/cut_known_window_twin/m.tally			-
+fixes/t22/cut_same_rows_version	fixes-22		engine/tests/m2/fixes/t22/cut_same_rows_version	engine/tests/m2/fixes/t22/cut_same_rows_version/m.tally			S-8
+fixes/t22/cut_same_rows_header	fixes-22		engine/tests/m2/fixes/t22/cut_same_rows_header	engine/tests/m2/fixes/t22/cut_same_rows_header/m.tally			S-8
+fixes/t22/cut_same_rows_twin	fixes-22		engine/tests/m2/fixes/t22/cut_same_rows_twin	engine/tests/m2/fixes/t22/cut_same_rows_twin/m.tally			-
+fixes/t22/same_kept_clock	fixes-22		engine/tests/m2/fixes/t22/same_kept_clock	engine/tests/m2/fixes/t22/same_kept_clock/m.tally			S-5
+fixes/t22/cut_low	fixes-22		engine/tests/m2/fixes/t22/cut_low	engine/tests/m2/fixes/t22/cut_low/m.tally			S-9
+fixes/t22/cut_low_twin	fixes-22		engine/tests/m2/fixes/t22/cut_low_twin	engine/tests/m2/fixes/t22/cut_low_twin/m.tally			-
+fixes/t22/cut_next	fixes-22		engine/tests/m2/fixes/t22/cut_next	engine/tests/m2/fixes/t22/cut_next/m.tally			S-9
+fixes/t22/cut_next_twin	fixes-22		engine/tests/m2/fixes/t22/cut_next_twin	engine/tests/m2/fixes/t22/cut_next_twin/m.tally			-
+fixes/t22/cut_explain_low	fixes-22		engine/tests/m2/fixes/t22/cut_explain_low	engine/tests/m2/fixes/t22/cut_explain_low/m.tally			S-9
+fixes/t22/cut_explain_low_twin	fixes-22		engine/tests/m2/fixes/t22/cut_explain_low_twin	engine/tests/m2/fixes/t22/cut_explain_low_twin/m.tally			-
+fixes/t22/cut_each_ask	fixes-22		engine/tests/m2/fixes/t22/cut_each_ask	engine/tests/m2/fixes/t22/cut_each_ask/m.tally			S-4
+fixes/t22/cut_each_ask_twin	fixes-22		engine/tests/m2/fixes/t22/cut_each_ask_twin	engine/tests/m2/fixes/t22/cut_each_ask_twin/m.tally			S-4
+fixes/t22/cut_each_read	fixes-22		engine/tests/m2/fixes/t22/cut_each_read	engine/tests/m2/fixes/t22/cut_each_read/m.tally			S-4
+fixes/t22/cut_each_read_twin	fixes-22		engine/tests/m2/fixes/t22/cut_each_read_twin	engine/tests/m2/fixes/t22/cut_each_read_twin/m.tally			S-4
+fixes/t22/unknown_day_names	fixes-22		engine/tests/m2/fixes/t22/unknown_day_names	engine/tests/m2/fixes/t22/unknown_day_names/m.tally			S-4
+fixes/t22/fault_n4	fixes-22		engine/tests/m2/fixes/t22/fault_n4	engine/tests/m2/fixes/t22/fault_n4/m.tally			F211
+fixes/t22/fault_n3	fixes-22		engine/tests/m2/fixes/t22/fault_n3	engine/tests/m2/fixes/t22/fault_n3/m.tally			F211
+fixes/t22/rv3_scen_over_base	fixes-22		engine/tests/m2/fixes/t22/rv3_scen_over_base	engine/tests/m2/fixes/t22/rv3_scen_over_base/base.tally engine/tests/m2/fixes/t22/rv3_scen_over_base/scen.tally			S-5
+fixes/t22/rv3_scen_over_base_noline	fixes-22		engine/tests/m2/fixes/t22/rv3_scen_over_base_noline	engine/tests/m2/fixes/t22/rv3_scen_over_base_noline/base.tally engine/tests/m2/fixes/t22/rv3_scen_over_base_noline/scen.tally			S-5
+fixes/t22/rv3_removed	fixes-22		engine/tests/m2/fixes/t22/rv3_removed	engine/tests/m2/fixes/t22/rv3_removed/m.tally			S-5
+fixes/t22/rv3_cut_on_row	fixes-22		engine/tests/m2/fixes/t22/rv3_cut_on_row	engine/tests/m2/fixes/t22/rv3_cut_on_row/m.tally			S-5
+fixes/t22/rv3_row_later	fixes-22		engine/tests/m2/fixes/t22/rv3_row_later	engine/tests/m2/fixes/t22/rv3_row_later/m.tally			S-5
+fixes/t22/rv3_line_later	fixes-22		engine/tests/m2/fixes/t22/rv3_line_later	engine/tests/m2/fixes/t22/rv3_line_later/m.tally			S-5
+fixes/t22/rv3_line_early	fixes-22		engine/tests/m2/fixes/t22/rv3_line_early	engine/tests/m2/fixes/t22/rv3_line_early/m.tally			S-5

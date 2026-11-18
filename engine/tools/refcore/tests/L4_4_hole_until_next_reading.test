@@ -3,6 +3,8 @@
 # The reach: out's sign-rule hole at jar holds up to jar's next reading, on 04-15, and ends there (r3, r4: 80.00 PLN,
 # the anchor's difference the hole). 2.1.7's refcore: 50.00 PLN before the reading, a difference of 30.00 PLN at it.
 # The plan's c5s with a reading of jar in April.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -42,13 +44,15 @@ version v
 ask r1: bal(jar, 2026-03-31)
 ask r2: bal(jar, 2026-04-14)
 ask r3: bal(jar, 2026-04-30)
-ask r4: bal(jar, 2026-04-30) windows each
+ask r4: bal(jar, 2026-04-30)
 === expect
 r1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unknown day: wd
   unfulfilled: inn
   unfulfilled: out
   cut 2026-05-01
 r2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unknown day: wd
   unfulfilled: inn
   unfulfilled: out
   cut 2026-05-01

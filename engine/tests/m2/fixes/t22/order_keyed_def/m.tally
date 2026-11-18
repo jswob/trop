@@ -3,7 +3,7 @@ model fxorder
   on 2026-06-10
   start 2026-01-01
   end 2026-12-31
-  note "T, tally 2.2 G1 (#211, pick P11, G1's review): two decisions on one day read one place, and b reads a def keyed by a movement. With the fault's fix the def's key records its edge to the movements, so load orders a, then b, and both answer (2.1.8: RUN-ORDER decisions a and b read each other); readers-of a gains the def (classes S-7/d, S-7/e)."
+  note "T, tally 2.2 G1 (#211, pick P11, G1's review): two decisions on one day read one place, and b reads a def keyed by a movement. With the fault fixed as now (pick P14) the graph is tally 2.1.8's: RUN-ORDER decisions a and b read each other, and readers-of a doesn't list the def."
 
 source s "s"
 unit PLN: currency minor 0.01

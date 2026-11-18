@@ -1,6 +1,7 @@
 # L §5.14.1 (round 12): a projection "starts from x's balance at the start of day t (a t before S is a hole,
 # HOLE-PRERUN: nothing before S is walked)"; L §8.1 HOLE-PRERUN "before the run's start" (round 12: "or a projection
 # starts before it"). (Was REFCORE-UNSPECIFIED §5.14.1, writer 5's T-66.)
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model t
   tally 2
@@ -19,7 +20,7 @@ version v
   opening[konto] = 10.00 PLN at 2026-01-01 start "s"
 
 ask q: bal(konto, 2026-06-30) from 2025-12-01
-ask r: low(konto, 2026-01-01 .. 2026-06-30) from 2025-12-01
+ask r: min(bal(konto, d) from 2025-12-01 for d in 2026-01-01 .. 2026-06-30 step 1 day)
 === expect
 q: ?"before the run's start" (konto)
   cut 2026-10-18

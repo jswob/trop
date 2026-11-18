@@ -2,6 +2,7 @@
 # in each world, and through every place a random movement books into: a balance or a projection of such a place is in
 # the cone, so a line that reads it without a query is refused at load, as any random line is (LOAD-RANDOM, §5.16)";
 # E §3.1 step 10. buy (amount round(spend[m]), a dist) books konto. low(konto, span) on an ask line: a balance of konto, refused at load.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model r
   tally 2
@@ -34,6 +35,6 @@ version v
   spend_dom = 15 "own"
   opening[konto] = 10 000.00 PLN at 2026-01-01 start "statement"
 
-ask l1: low(konto, 2026-03-01 .. 2026-03-31)
+ask l1: min(bal(konto, d) for d in 2026-03-01 .. 2026-03-31 step 1 day)
 === expect
-refused: LOAD-RANDOM ask l1: low(konto, 2026-03-01 .. 2026-03-31) is random; apply a query (m.tally:32)
+refused: LOAD-RANDOM ask l1: min(...) is random; apply a query (m.tally:32)

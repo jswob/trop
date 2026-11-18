@@ -1,0 +1,21 @@
+model same_rows_version
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-8): a version's same between two rows of a state input; tally 2.2: LOAD-SAME same fee_bank = fee_broker: a row of an input on either side. Twin cut_same_rows_twin (two inputs and a def with a stated-hole rule)."
+
+source s "s"
+unit PLN: currency minor 0.01
+input fee_bank: money PLN
+input fee_broker: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_bank = 12.00 PLN "s"
+  fee_broker = 12.00 PLN "s"
+  same fee_bank = fee_broker
+
+ask q: fee_bank

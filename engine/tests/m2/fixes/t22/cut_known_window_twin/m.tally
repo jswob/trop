@@ -1,0 +1,28 @@
+model known_day
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-2): cut_known_window's stated twin: a day known only to lie in a range is the range's last day (100.00 PLN before, 200.00 PLN after)."
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+input fee: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 100.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+
+version raise
+  cite s
+  governs always
+  known 2026-04-15
+  replace fee = 200.00 PLN "s"
+
+ask early: fee as known 2026-03-31
+ask mid: fee as known 2026-04-10
+ask late: fee as known 2026-05-01

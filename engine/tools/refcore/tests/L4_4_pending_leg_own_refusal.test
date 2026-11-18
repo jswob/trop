@@ -1,6 +1,8 @@
 # tally 2.1.8 item 77 (item 14 of the third turn), the guard beside L4_4_pending_leg_not_refused: oa's own
 # 60.00 PLN breaks pot on each day of its window, tested in the day's batch, so the hole reaches its other end
 # (j1) and its flows (j3); each pin is the refusal.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -39,19 +41,20 @@ version v
   opening[jar] = 0.00 PLN at 2026-01-01 start "s"
 
 ask j1: bal(jar, 2026-04-30)
-ask j2: bal(jar, 2026-04-30) windows each
+ask j2: bal(jar, 2026-04-30)
 ask j3: flows(oa, 2026-04)
 ask j4: bal(jar, 2026-04-30) with wa = 2026-04-05
 ask j5: bal(jar, 2026-04-30) with wa = 2026-04-09
 ask j6: flows(oa, 2026-04) with wa = 2026-04-09
 === expect
 j1: ?"date within one_of([2026-04-05, 2026-04-09]) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
-j2 [wa = 2026-04-05]: refused: RUN-PLACE pot is -10.00 PLN after the day's observations and plans of 2026-04-05
-  cut 2026-01-01
-j2 [wa = 2026-04-09]: refused: RUN-PLACE pot is -10.00 PLN after the day's observations and plans of 2026-04-09
+j2: ?"date within one_of([2026-04-05, 2026-04-09]) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
 j3: ?"date within one_of([2026-04-05, 2026-04-09]) not precise enough for flows of oa" (oa)
+  unknown day: wa
   cut 2026-01-01
 j4: refused: RUN-PLACE pot is -10.00 PLN after the day's observations and plans of 2026-04-05
   pinned: wa = 2026-04-05

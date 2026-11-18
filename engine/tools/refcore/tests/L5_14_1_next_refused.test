@@ -1,0 +1,22 @@
+# tally 2.2 (CHANGES.md 2.2-9), L §5.14.1: `next` is cut; the next movement of a kind is `first(m in K over d ..)
+# ties by m.day`. `next` is a plain id again, and no item has it.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+ask q: next(transfers, 2026-01-01)
+=== expect
+refused: LOAD-NAME unknown id next (m.tally:17)

@@ -2,6 +2,7 @@
 # first(m in pays over d ..) ties by m.day, so a decision's `reads pays` is a read it makes; load passes, and the
 # run meets the binding's own reach past the decision's day (RUN-FUTURE). 2.1.6's refcore refused LOAD-READS fee
 # declares reads pays and never reads it.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model g4
   tally 2
@@ -20,7 +21,7 @@ move pay[m in months]: pays
   leg cash from world to konto amount 1
 move fee[m in months]: transfers
   on end_of(m)
-  when next(pays, start_of(m)).day < end_of(m)
+  when (first(mv in pays over start_of(m) ..) ties by mv.day).day < end_of(m)
   reads pays
   leg cash from world to konto amount 1
 ask q: bal(konto, 2025-03-31)

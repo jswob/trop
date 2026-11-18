@@ -1,0 +1,22 @@
+model outside_read
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1): a balance reading of an outside place of unit any; tally 2.2: LOAD-UNIT (a balance reading of a place of unit any). Twin outside_any_kept (no reading of it)."
+
+source s "s"
+unit PLN: currency minor 0.01
+kind outs: place any signed outside
+place out: outs lives 1900-01-01..
+place konto: accounts PLN lives 2026-01-01..
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  anchor out
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  stated[out] = 5.00 PLN at 2026-03-31 end "s"
+
+ask q: bal(konto, 2026-03-31)

@@ -207,7 +207,6 @@ class Checker:
         self.check_moves_graph()
         self.parts_walk_bound()
         self.check_arrival_reads()
-        self.check_after_readings()
         self.check_seen_days()
         self.check_seen_day_limits()
         self.check_literal_ranges()
@@ -386,7 +385,6 @@ class Checker:
         m = self.m
         # law date
         sc0 = self.def_scope(d, 'at')
-        self.def_key_edges(d, sc0)
         # a key bind's where is a condition over the key variables, read like the def's rules (L §2.3 bind, L §5.6)
         for b in d.binds:
             w = getattr(b.node, 'where', None) if b.node is not None else None
@@ -628,8 +626,6 @@ class Checker:
             scq = sc.child()
             scq.allow_lit = True   # the level of a quantile (L §7.1 An ask)
             t = self.tc(a.random[1], scq)
-        if a.windows == 'each':
-            pass
         f = a.form
         if f == 'exprs':
             for e in a.exprs:
@@ -643,7 +639,7 @@ class Checker:
             self.compare('==', l, r, a.loc)
         elif f in ('explain', 'inputs-of'):
             self.open_key(a.ref, self.tc(a.ref, sc), sc)
-            ok = ('name', 'index', 'field') + (('bal', 'low') if f == 'explain' else ())
+            ok = ('name', 'index', 'field') + (('bal',) if f == 'explain' else ())
             if a.ref.k not in ok:
                 raise LoadError('LOAD-PARSE', 'cannot parse: %s takes a reference' % f, a.loc)
         elif f == 'readers-of':
@@ -1957,7 +1953,7 @@ class Checker:
             sc2 = sc.child()
             sc2.allow_lit = True
         if lt is None:
-            # a side load can't type (a reading at a place of unit any) takes the other side's type
+            # a side load can't type (a reading of a place whose unit load doesn't see) takes the other side's type
             rt = self.tc(n.r, sc2)
             lt = self.tc(n.l, sc, expect=rt)
             if lt is None:
@@ -3184,10 +3180,6 @@ class Checker:
             cur = self.m.place_unit(th) if th is not None else None
             if isinstance(cur, str) and cur in CURRENCIES:
                 t = T.money(cur)
-            elif cur == 'any' and expect is not None:
-                # at a place of unit any a reading's unit is its value's (L §5.10, R14): it is read in the unit of
-                # what it meets (group 3's fix review, p4_planlast)
-                t = expect
         return t
 
     def t_star(self, n, sc, expect):
@@ -3262,17 +3254,6 @@ class Checker:
                 read.add(t)
         # tally 2.1: a def an arrival rule or a takes clause reads is read (parts.chk_check_parts)
         read |= getattr(self, 'parts_reads', set())
-        # rows stated same are read together, by every read of either (L §6.1 l.1806; tally 2.1.8 §4, #187): a read of
-        # one side reads the other's input
-        edges = getattr(m, 'same_row_edges', [])
-        grew = True
-        while grew:
-            grew = False
-            for a, b, _v in edges:
-                for x, y in ((a, b), (b, a)):
-                    if ('input', x[0]) in read and ('input', y[0]) not in read:
-                        read.add(('input', y[0]))
-                        grew = True
         for qid, inf in m.inputs.items():
             if inf.builtin:
                 continue
@@ -3686,11 +3667,6 @@ def _txt(n):
         s = 'bal(%s%s%s)' % (_txt(n.ref), ''.join(', ' + _txt(a) for a in n.args), ' start' if n.start else '')
         if n.modelled:
             s += ' modelled'
-        if n.proj and 'frm' in n.proj:
-            s += ' from ' + _txt(n.proj['frm'])
-        return s
-    if k == 'low':
-        s = 'low(%s, %s)' % (_txt(n.ref), _txt(n.span))
         if n.proj and 'frm' in n.proj:
             s += ' from ' + _txt(n.proj['frm'])
         return s

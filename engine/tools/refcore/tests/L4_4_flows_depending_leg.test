@@ -1,6 +1,8 @@
 # tally 2.1.8 item 77 (item 8 of the follow-up): oa's sign test at pot depends on its day in window(04-05, 04-10), so
 # the hole reaches oa's own flows (f1), and windows each splits them as the pin does (f2, f3). 2.1.8's first refcore
 # printed 100.00 PLN. The review's b4_sign_ends.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -37,16 +39,14 @@ version v
   opening[jar] = 0.00 PLN at 2026-01-01 start "s"
 
 ask f1: flows(oa, 2026-04)
-ask f2: flows(oa, 2026-04) windows each
+ask f2: flows(oa, 2026-04)
 ask f3: flows(oa, 2026-04) with wa = 2026-04-05
 === expect
 f1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of oa" (oa)
+  unknown day: wa
   cut 2026-01-01
-f2 [wa = 2026-04-05]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
-  cut 2026-01-01
-f2 [wa = 2026-04-06]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
-  cut 2026-01-01
-f2 [wa = 2026-04-07 .. 2026-04-10]: 100.00 PLN
+f2: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of oa" (oa)
+  unknown day: wa
   cut 2026-01-01
 f3: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
   pinned: wa = 2026-04-05

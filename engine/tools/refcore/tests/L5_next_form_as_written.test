@@ -2,6 +2,7 @@
 # m.day, and "gives its values, holes and refusals, their messages naming the form as written". gift and gift2 fall on
 # one day: RUN-TIE naming next(transfers, d1) (n_tie_next); after both, HOLE-NOTYET naming next(transfers, after_all)
 # (n_none). 2.1.7's first refcore named the definition's bound m and the day's value, next(transfers, 2026-03-02).
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === sr7.tally
 model sr7
   tally 2
@@ -33,9 +34,9 @@ move gift: transfers
   on late
   leg cash from world to konto amount fee
 
-ask n_tie_next: next(transfers, d1)
+ask n_tie_next: (first(m in transfers over d1 ..) ties by m.day)
 
-ask n_none: next(transfers, after_all)
+ask n_none: (first(m in transfers over after_all ..) ties by m.day)
 
 version v_card
   cite card
@@ -47,7 +48,7 @@ version v_card
   after_all = 2026-07-01 "after both gifts"
   opening[konto] = 100.00 PLN at 2026-01-01 start "the card"
 === expect
-n_none: ?"next(transfers, after_all): no transfers yet, and its span reaches past the cut" (transfers)
+n_none: ?"m: no transfers yet, and its span reaches past the cut" (transfers)
   cut 2026-03-01
-n_tie_next: refused: RUN-TIE next(transfers, d1) has a tie at gift, gift2 that changes the result, and its ties by doesn't break it
+n_tie_next: refused: RUN-TIE first has a tie at gift, gift2 that changes the result, and its ties by doesn't break it
   cut 2026-03-01

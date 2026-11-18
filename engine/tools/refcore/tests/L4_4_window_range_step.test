@@ -29,6 +29,7 @@ version v
   d2 = 2027-03-10 "c"
 === expect
 g: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+  unknown day: w
   cut 2026-12-31
 g_twin: 15
   cut 2026-12-31
