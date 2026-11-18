@@ -190551,12 +190551,12 @@ version v_y17
   opening[konto] = 100.00 PLN at 2026-01-01 start "c"
   fee = 10.00 PLN "c"
 ,,1:1,67:refused: LOAD-UNIT day_of: the argument is dyn (rf_x_y17.tally:12)
-,16:fixes/g14/b1_kpd,9:fixes-g14,16:run b1_kpd.tally,2434:12:b1_kpd.tally,2412:model kp
+,16:fixes/g14/b1_kpd,9:fixes-g14,16:run b1_kpd.tally,2769:12:b1_kpd.tally,2747:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -190566,30 +190566,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -190603,23 +190602,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -190637,8 +190632,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -190651,19 +190644,17 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 
@@ -190676,7 +190667,7 @@ ask z2: po[fb] + po[fb]
 ask z3: pi[fa]
 
 ask z4: pz[fa] * n3a
-,,1:1,94:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (b1_kpd.tally:115)
+,,1:1,94:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (b1_kpd.tally:106)
 ,28:fixes/g14/b2_base_with_b2_b2,9:fixes-g14,29:run b2_base.tally b2_b2.tally,577:13:b2_base.tally,387:model two
   tally 2
   on 2026-03-01
@@ -191139,12 +191130,12 @@ version readings_2026
 warning: WARN-UNREAD input fxu is read by nothing
 warning: WARN-UNREAD place eur_acc is read by nothing
 warning: WARN-UNREAD place usd_acc is read by nothing
-,17:fixes/g14/p130_kp,9:fixes-g14,17:run p130_kp.tally,1854:13:p130_kp.tally,1831:model kp
+,17:fixes/g14/p130_kp,9:fixes-g14,17:run p130_kp.tally,1995:13:p130_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -191154,30 +191145,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -191191,23 +191181,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -191225,8 +191211,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -191234,9 +191218,8 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,,1:0,147:warning: WARN-UNREAD input pl is read by nothing
+,,1:0,98:warning: WARN-UNREAD input pl is read by nothing
 warning: WARN-UNREAD input px is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
 ,17:fixes/g14/p130_uk,9:fixes-g14,17:run p130_uk.tally,1881:13:p130_uk.tally,1858:model unitkind
   tally 2
   on 2026-06-30
@@ -191429,7 +191412,7 @@ warning: WARN-UNREAD place hut is read by nothing
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place safe_eur is read by nothing
 warning: WARN-UNREAD place safe_pln is read by nothing
-,35:fixes/g14/p130_keyed_with_p130_asks,9:fixes-g14,36:run p130_keyed.tally p130_asks.tally,2104:16:p130_keyed.tally,1555:model keyed
+,35:fixes/g14/p130_keyed_with_p130_asks,9:fixes-g14,36:run p130_keyed.tally p130_asks.tally,2299:16:p130_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -191493,30 +191476,26 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,15:p130_asks.tally,499:part asks
+,15:p130_asks.tally,694:part asks
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
 
-ask k_eur: value(ike, 2026-03-31) in EUR by px
+ask k_eur: (value(ike_fa, 2026-03-31) in EUR by px) + (value(ike_fb, 2026-03-31) in EUR by px)
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
 
-ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
+ask k_last_eur: (value(ike_fa, 2026-03-31) in EUR by last(pl)) + (value(ike_fb, 2026-03-31) in EUR by last(pl))
 
-ask k_wrong: value(ike, 2026-03-31) in PLN by qx
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-
-ask c_eur: value(pike, 2026-03-31) in EUR
-
-ask c_wrong: value(wike, 2026-03-31) in PLN
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
 
 ask c_lot: value(lot, 2026-03-31) in PLN
 
 ask c_lot_eur: value(lot, 2026-03-31) in EUR
-,,1:1,65:refused: LOAD-KEY ike is not a key of places (p130_asks.tally:4)
-,32:fixes/g14/p130_uk_with_p130_asks,9:fixes-g14,33:run p130_uk.tally p130_asks.tally,2404:13:p130_uk.tally,1858:model unitkind
+,,1:1,68:refused: LOAD-KEY ike_fa is not a key of places (p130_asks.tally:4)
+,32:fixes/g14/p130_uk_with_p130_asks,9:fixes-g14,33:run p130_uk.tally p130_asks.tally,2599:13:p130_uk.tally,1858:model unitkind
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -191589,30 +191568,26 @@ version readings_2026
 ask uk_value: value(eurcash, 2026-03-31) in PLN
 
 ask uk_bal: bal(eurcash, 2026-03-31)
-,15:p130_asks.tally,499:part asks
+,15:p130_asks.tally,694:part asks
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
 
-ask k_eur: value(ike, 2026-03-31) in EUR by px
+ask k_eur: (value(ike_fa, 2026-03-31) in EUR by px) + (value(ike_fb, 2026-03-31) in EUR by px)
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
 
-ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
+ask k_last_eur: (value(ike_fa, 2026-03-31) in EUR by last(pl)) + (value(ike_fb, 2026-03-31) in EUR by last(pl))
 
-ask k_wrong: value(ike, 2026-03-31) in PLN by qx
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-
-ask c_eur: value(pike, 2026-03-31) in EUR
-
-ask c_wrong: value(wike, 2026-03-31) in PLN
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
 
 ask c_lot: value(lot, 2026-03-31) in PLN
 
 ask c_lot_eur: value(lot, 2026-03-31) in EUR
-,,1:1,65:refused: LOAD-KEY ike is not a key of places (p130_asks.tally:4)
-,35:fixes/g14/p130_units_with_p130_asks,9:fixes-g14,36:run p130_units.tally p130_asks.tally,2848:16:p130_units.tally,2299:model units
+,,1:1,68:refused: LOAD-KEY ike_fa is not a key of places (p130_asks.tally:4)
+,35:fixes/g14/p130_units_with_p130_asks,9:fixes-g14,36:run p130_units.tally p130_asks.tally,3043:16:p130_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -191710,35 +191685,31 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,15:p130_asks.tally,499:part asks
+,15:p130_asks.tally,694:part asks
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
 
-ask k_eur: value(ike, 2026-03-31) in EUR by px
+ask k_eur: (value(ike_fa, 2026-03-31) in EUR by px) + (value(ike_fb, 2026-03-31) in EUR by px)
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
 
-ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
+ask k_last_eur: (value(ike_fa, 2026-03-31) in EUR by last(pl)) + (value(ike_fb, 2026-03-31) in EUR by last(pl))
 
-ask k_wrong: value(ike, 2026-03-31) in PLN by qx
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-
-ask c_eur: value(pike, 2026-03-31) in EUR
-
-ask c_wrong: value(wike, 2026-03-31) in PLN
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
 
 ask c_lot: value(lot, 2026-03-31) in PLN
 
 ask c_lot_eur: value(lot, 2026-03-31) in EUR
-,,1:1,65:refused: LOAD-KEY ike is not a key of places (p130_asks.tally:4)
-,33:fixes/g14/p130_kp_with_p130_kasks,9:fixes-g14,34:run p130_kp.tally p130_kasks.tally,2230:13:p130_kp.tally,1831:model kp
+,,1:1,68:refused: LOAD-KEY ike_fa is not a key of places (p130_asks.tally:4)
+,33:fixes/g14/p130_kp_with_p130_kasks,9:fixes-g14,34:run p130_kp.tally p130_kasks.tally,2371:13:p130_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -191748,30 +191719,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -191785,23 +191755,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -191819,8 +191785,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -192027,12 +191991,12 @@ ask up_none: value(fund, 2026-03-31) in PLN
 
 ask up_eur_own: value(eur_acc, 2026-03-31) in EUR by unit_price
 ,,1:1,67:refused: LOAD-KEY fund is not a key of places (p130_uasks.tally:4)
-,33:fixes/g14/p130_kp_with_p130_uasks,9:fixes-g14,34:run p130_kp.tally p130_uasks.tally,2126:13:p130_kp.tally,1831:model kp
+,33:fixes/g14/p130_kp_with_p130_uasks,9:fixes-g14,34:run p130_kp.tally p130_uasks.tally,2267:13:p130_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -192042,30 +192006,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -192079,23 +192042,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -192113,8 +192072,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -192285,12 +192242,12 @@ version readings_2026
 warning: WARN-UNREAD input fxu is read by nothing
 warning: WARN-UNREAD place eur_acc is read by nothing
 warning: WARN-UNREAD place usd_acc is read by nothing
-,21:fixes/g14/p130_one_kp,9:fixes-g14,21:run p130_one_kp.tally,1858:17:p130_one_kp.tally,1831:model kp
+,21:fixes/g14/p130_one_kp,9:fixes-g14,21:run p130_one_kp.tally,1999:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -192300,30 +192257,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -192337,23 +192293,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -192371,8 +192323,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -192380,9 +192330,8 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,,1:0,147:warning: WARN-UNREAD input pl is read by nothing
+,,1:0,98:warning: WARN-UNREAD input pl is read by nothing
 warning: WARN-UNREAD input px is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
 ,24:fixes/g14/p130_one_units,9:fixes-g14,24:run p130_one_units.tally,2329:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
@@ -192494,7 +192443,7 @@ warning: WARN-UNREAD place hut is read by nothing
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place safe_eur is read by nothing
 warning: WARN-UNREAD place safe_pln is read by nothing
-,44:fixes/g14/p130_one_keyed_with_p130_one_c_eur,9:fixes-g14,45:run p130_one_keyed.tally p130_one_c_eur.tally,1679:20:p130_one_keyed.tally,1555:model keyed
+,44:fixes/g14/p130_one_keyed_with_p130_one_c_eur,9:fixes-g14,45:run p130_one_keyed.tally p130_one_c_eur.tally,1723:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -192558,17 +192507,17 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,20:p130_one_c_eur.tally,66:part p_c_eur
+,20:p130_one_c_eur.tally,109:part p_c_eur
   tally 2
 
-ask c_eur: value(pike, 2026-03-31) in EUR
-,,1:1,71:refused: LOAD-KEY pike is not a key of places (p130_one_c_eur.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_c_eur,9:fixes-g14,42:run p130_one_kp.tally p130_one_c_eur.tally,1952:17:p130_one_kp.tally,1831:model kp
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
+,,1:1,74:refused: LOAD-KEY pike_fa is not a key of places (p130_one_c_eur.tally:4)
+,41:fixes/g14/p130_one_kp_with_p130_one_c_eur,9:fixes-g14,42:run p130_one_kp.tally p130_one_c_eur.tally,2137:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -192578,30 +192527,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -192615,23 +192563,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -192649,8 +192593,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -192658,12 +192600,12 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,20:p130_one_c_eur.tally,66:part p_c_eur
+,20:p130_one_c_eur.tally,109:part p_c_eur
   tally 2
 
-ask c_eur: value(pike, 2026-03-31) in EUR
-,,1:1,101:refused: LOAD-UNIT value(pike) in EUR: pike is priced in PLN/fa, not EUR/fa (p130_one_c_eur.tally:4)
-,44:fixes/g14/p130_one_units_with_p130_one_c_eur,9:fixes-g14,45:run p130_one_units.tally p130_one_c_eur.tally,2423:20:p130_one_units.tally,2299:model units
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
+,,1:1,107:refused: LOAD-UNIT value(pike_fa) in EUR: pike_fa is priced in PLN/fa, not EUR/fa (p130_one_c_eur.tally:4)
+,44:fixes/g14/p130_one_units_with_p130_one_c_eur,9:fixes-g14,45:run p130_one_units.tally p130_one_c_eur.tally,2467:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -192761,11 +192703,11 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,20:p130_one_c_eur.tally,66:part p_c_eur
+,20:p130_one_c_eur.tally,109:part p_c_eur
   tally 2
 
-ask c_eur: value(pike, 2026-03-31) in EUR
-,,1:1,71:refused: LOAD-KEY pike is not a key of places (p130_one_c_eur.tally:4)
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
+,,1:1,74:refused: LOAD-KEY pike_fa is not a key of places (p130_one_c_eur.tally:4)
 ,44:fixes/g14/p130_one_keyed_with_p130_one_c_lot,9:fixes-g14,45:run p130_one_keyed.tally p130_one_c_lot.tally,1678:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
@@ -192835,12 +192777,12 @@ version readings_2026
 
 ask c_lot: value(lot, 2026-03-31) in PLN
 ,,1:1,70:refused: LOAD-KEY lot is not a key of places (p130_one_c_lot.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_c_lot,9:fixes-g14,42:run p130_one_kp.tally p130_one_c_lot.tally,1951:17:p130_one_kp.tally,1831:model kp
+,41:fixes/g14/p130_one_kp_with_p130_one_c_lot,9:fixes-g14,42:run p130_one_kp.tally p130_one_c_lot.tally,2092:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -192850,30 +192792,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -192887,23 +192828,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -192921,8 +192858,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -192934,11 +192869,10 @@ version readings_2026
   tally 2
 
 ask c_lot: value(lot, 2026-03-31) in PLN
-,,1:0,147:c_lot: 50 PLN
+,,1:0,98:c_lot: 50 PLN
   unfulfilled: b6
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
 ,44:fixes/g14/p130_one_units_with_p130_one_c_lot,9:fixes-g14,45:run p130_one_units.tally p130_one_c_lot.tally,2422:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
@@ -193111,12 +193045,12 @@ version readings_2026
 
 ask c_lot_eur: value(lot, 2026-03-31) in EUR
 ,,1:1,74:refused: LOAD-KEY lot is not a key of places (p130_one_c_lot_eur.tally:4)
-,45:fixes/g14/p130_one_kp_with_p130_one_c_lot_eur,9:fixes-g14,46:run p130_one_kp.tally p130_one_c_lot_eur.tally,1963:17:p130_one_kp.tally,1831:model kp
+,45:fixes/g14/p130_one_kp_with_p130_one_c_lot_eur,9:fixes-g14,46:run p130_one_kp.tally p130_one_c_lot_eur.tally,2104:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -193126,30 +193060,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -193163,23 +193096,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -193197,8 +193126,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -193314,7 +193241,7 @@ version readings_2026
 
 ask c_lot_eur: value(lot, 2026-03-31) in EUR
 ,,1:1,74:refused: LOAD-KEY lot is not a key of places (p130_one_c_lot_eur.tally:4)
-,44:fixes/g14/p130_one_keyed_with_p130_one_c_pln,9:fixes-g14,45:run p130_one_keyed.tally p130_one_c_pln.tally,1679:20:p130_one_keyed.tally,1555:model keyed
+,44:fixes/g14/p130_one_keyed_with_p130_one_c_pln,9:fixes-g14,45:run p130_one_keyed.tally p130_one_c_pln.tally,1723:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -193378,17 +193305,17 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,20:p130_one_c_pln.tally,66:part p_c_pln
+,20:p130_one_c_pln.tally,109:part p_c_pln
   tally 2
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-,,1:1,71:refused: LOAD-KEY pike is not a key of places (p130_one_c_pln.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_c_pln,9:fixes-g14,42:run p130_one_kp.tally p130_one_c_pln.tally,1952:17:p130_one_kp.tally,1831:model kp
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
+,,1:1,74:refused: LOAD-KEY pike_fa is not a key of places (p130_one_c_pln.tally:4)
+,41:fixes/g14/p130_one_kp_with_p130_one_c_pln,9:fixes-g14,42:run p130_one_kp.tally p130_one_c_pln.tally,2137:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -193398,30 +193325,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -193435,23 +193361,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -193469,8 +193391,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -193478,17 +193398,16 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,20:p130_one_c_pln.tally,66:part p_c_pln
+,20:p130_one_c_pln.tally,109:part p_c_pln
   tally 2
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-,,1:0,165:c_pln: 70 PLN
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
+,,1:0,116:c_pln: 70 PLN
   unfulfilled: b3
   unfulfilled: b4
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,44:fixes/g14/p130_one_units_with_p130_one_c_pln,9:fixes-g14,45:run p130_one_units.tally p130_one_c_pln.tally,2423:20:p130_one_units.tally,2299:model units
+,44:fixes/g14/p130_one_units_with_p130_one_c_pln,9:fixes-g14,45:run p130_one_units.tally p130_one_c_pln.tally,2467:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -193586,288 +193505,12 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,20:p130_one_c_pln.tally,66:part p_c_pln
+,20:p130_one_c_pln.tally,109:part p_c_pln
   tally 2
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-,,1:1,71:refused: LOAD-KEY pike is not a key of places (p130_one_c_pln.tally:4)
-,46:fixes/g14/p130_one_keyed_with_p130_one_c_wrong,9:fixes-g14,47:run p130_one_keyed.tally p130_one_c_wrong.tally,1685:20:p130_one_keyed.tally,1555:model keyed
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "a price keyed by unit in another currency (invented): G8 fix review NB1; tally 2.2 (S-1): a model's place holds one unit, so each place that held several is one place per unit under a kind of unit one, and a value of it is the sum over those places"
-
-source card "probe card"
-
-unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-unit USD: currency minor 0.01
-
-kind safes: place one signed
-
-place eur_acc: accounts EUR lives 2026-01-01..
-
-place usd_acc: accounts USD lives 2026-01-01..
-
-place safe_eur: safes EUR lives 2026-01-01..
-
-place safe_pln: safes PLN lives 2026-01-01..
-
-place market: outside lives 2026-01-01..
-
-input fxu[u in currencies]: num PLN/u reading
-
-input fxs[u in currencies]: num PLN/u
-
-input put_day: date
-
-input amt_eur: money EUR
-
-input amt_pln: money PLN
-
-def fxd[u in currencies]: num PLN/u = fxs[u]
-
-move put_eur: transfers
-  on put_day
-  leg cash from market to safe_eur amount amt_eur
-
-move put_pln: transfers
-  on put_day
-  leg cash from market to safe_pln amount amt_pln
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  put_day = 2026-02-20 "the card"
-  amt_eur = 200.00 EUR "the card"
-  amt_pln = 300.00 PLN "the card"
-  fxs[EUR] = 4.25 PLN/EUR "the card"
-  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
-  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
-
-version readings_2026
-  cite card
-  governs 2026-01..2026-12
-  known 2026-01-01
-  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
-
-,22:p130_one_c_wrong.tally,70:part p_c_wrong
-  tally 2
-
-ask c_wrong: value(wike, 2026-03-31) in PLN
-,,1:1,73:refused: LOAD-KEY wike is not a key of places (p130_one_c_wrong.tally:4)
-,43:fixes/g14/p130_one_kp_with_p130_one_c_wrong,9:fixes-g14,44:run p130_one_kp.tally p130_one_c_wrong.tally,1958:17:p130_one_kp.tally,1831:model kp
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
-
-source card "probe card"
-
-unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-kind funds: unit
-
-kind ikes: place any min 0
-
-kind pikes: place any min 0 priced px
-
-kind wikes: place any min 0 priced qx
-
-kind lots: place one min 0 priced px
-
-kind unit_buys: event certain
-  leg units: funds
-
-place ike: ikes lives 2026-01-01..
-
-place pike: pikes lives 2026-01-01..
-
-place wike: wikes lives 2026-01-01..
-
-place lot: lots fa lives 2026-01-01..
-
-place market: outside lives 2026-01-01..
-
-input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
-
-input pl[u in funds]: num PLN/u reading
-
-input buy_day: date
-
-input n3a: num fa
-
-input n2b: num fb
-
-input n5a: num fa
-
-move b1: unit_buys
-  on buy_day
-  leg units from market to ike amount n3a
-
-move b2: unit_buys
-  on buy_day
-  leg units from market to ike amount n2b
-
-move b3: unit_buys
-  on buy_day
-  leg units from market to pike amount n3a
-
-move b4: unit_buys
-  on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
-
-move b6: unit_buys
-  on buy_day
-  leg units from market to lot amount n5a
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  funds + [fa] lives 2026-01-01..
-  funds + [fb] lives 2026-01-01..
-  buy_day = 2026-02-10 "the card"
-  n3a = 3 fa "the card"
-  n2b = 2 fb "the card"
-  n5a = 5 fa "the card"
-  px[fa] = 10 PLN/fa "the card"
-  px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
-
-version readings_2026
-  cite card
-  governs 2026-01..2026-12
-  known 2026-01-01
-  pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
-  pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,22:p130_one_c_wrong.tally,70:part p_c_wrong
-  tally 2
-
-ask c_wrong: value(wike, 2026-03-31) in PLN
-,,1:0,219:c_wrong: refused: RUN-DOMAIN value(wike) in PLN: wike is priced in PLN/fa, not PLN/fb
-  unfulfilled: b5
-  cut 2026-06-30
-warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input px is read by nothing
-,46:fixes/g14/p130_one_units_with_p130_one_c_wrong,9:fixes-g14,47:run p130_one_units.tally p130_one_c_wrong.tally,2429:20:p130_one_units.tally,2299:model units
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "a price of another currency or unit (invented): G8 fix review NB1, its keyed form, and its twins; tally 2.2 (S-1): a model's place holds one unit, so each place that held several is one place per unit under a kind of unit one, and a value of it is the sum over those places"
-
-source card "probe card"
-
-unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-unit etf "a fund unit"
-
-unit gold "an ounce"
-
-kind funds: place one min 0 priced unit_price
-
-kind boxes: holdings
-
-kind safes: place one signed
-
-kind unit_buys: event certain
-  leg units: etf
-
-index month = month 2026-01..2026-12
-
-index day = day 2026-01-01..2026-12-31
-
-place fund: funds etf lives 2026-01-01..
-
-place box: boxes etf lives 2026-01-01..
-
-place safe_eur: safes EUR lives 2026-01-01..
-
-place safe_pln: safes PLN lives 2026-01-01..
-
-place konto: accounts PLN lives 2026-01-01..
-
-place eur_acc: accounts EUR lives 2026-01-01..
-
-place flat: assets EUR priced flat_eur lives 2026-01-01..
-
-place hut: assets PLN priced last(hut_val) lives 2026-01-01..
-
-place market: outside lives 2026-01-01..
-
-input unit_price[x in funds]: num PLN/etf
-
-input mprice[m in month]: num PLN/etf
-
-input px: num PLN/etf reading
-
-input fx[d in day]: num PLN/EUR
-
-input eurpx: num PLN/EUR
-
-input flat_eur: money EUR
-
-input hut_val: money PLN reading
-
-input buy_day: date
-
-input n_fund: num etf
-
-input n_box: num etf
-
-move buy: unit_buys
-  on buy_day
-  leg units from market to fund amount n_fund
-
-move buy2: unit_buys
-  on buy_day
-  leg units from market to box amount n_box
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  buy_day = 2026-02-10 "the card"
-  n_box = 4 etf "the card"
-  n_fund = 10 etf "the card"
-  eurpx = 4.30 PLN/EUR "the card"
-  flat_eur = 100000.00 EUR "the card"
-  fx[2026-03-31] = 4.25 PLN/EUR "the card"
-  mprice[2026-02] = none "the card"
-  mprice[2026-03] = 150 PLN/etf "the card"
-  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
-  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-  unit_price[fund] = 140 PLN/etf "the card"
-
-version readings_2026
-  cite card
-  governs 2026-01..2026-12
-  known 2026-01-01
-  hut_val = 250000.00 PLN at 2026-02-01 "valued"
-  px = 151 PLN/etf at 2026-04-01 "quoted"
-,22:p130_one_c_wrong.tally,70:part p_c_wrong
-  tally 2
-
-ask c_wrong: value(wike, 2026-03-31) in PLN
-,,1:1,73:refused: LOAD-KEY wike is not a key of places (p130_one_c_wrong.tally:4)
-,44:fixes/g14/p130_one_keyed_with_p130_one_k_eur,9:fixes-g14,45:run p130_one_keyed.tally p130_one_k_eur.tally,1684:20:p130_one_keyed.tally,1555:model keyed
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
+,,1:1,74:refused: LOAD-KEY pike_fa is not a key of places (p130_one_c_pln.tally:4)
+,44:fixes/g14/p130_one_keyed_with_p130_one_k_eur,9:fixes-g14,45:run p130_one_keyed.tally p130_one_k_eur.tally,1733:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -193931,17 +193574,17 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,20:p130_one_k_eur.tally,71:part p_k_eur
+,20:p130_one_k_eur.tally,119:part p_k_eur
   tally 2
 
-ask k_eur: value(ike, 2026-03-31) in EUR by px
-,,1:1,70:refused: LOAD-KEY ike is not a key of places (p130_one_k_eur.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_k_eur,9:fixes-g14,42:run p130_one_kp.tally p130_one_k_eur.tally,1957:17:p130_one_kp.tally,1831:model kp
+ask k_eur: (value(ike_fa, 2026-03-31) in EUR by px) + (value(ike_fb, 2026-03-31) in EUR by px)
+,,1:1,73:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_eur.tally:4)
+,41:fixes/g14/p130_one_kp_with_p130_one_k_eur,9:fixes-g14,42:run p130_one_kp.tally p130_one_k_eur.tally,2147:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -193951,30 +193594,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -193988,23 +193630,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -194022,8 +193660,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -194031,12 +193667,12 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,20:p130_one_k_eur.tally,71:part p_k_eur
+,20:p130_one_k_eur.tally,119:part p_k_eur
   tally 2
 
-ask k_eur: value(ike, 2026-03-31) in EUR by px
+ask k_eur: (value(ike_fa, 2026-03-31) in EUR by px) + (value(ike_fb, 2026-03-31) in EUR by px)
 ,,1:1,96:refused: LOAD-UNIT value by px: the price is num PLN/$u, not num EUR/u (p130_one_k_eur.tally:4)
-,44:fixes/g14/p130_one_units_with_p130_one_k_eur,9:fixes-g14,45:run p130_one_units.tally p130_one_k_eur.tally,2428:20:p130_one_units.tally,2299:model units
+,44:fixes/g14/p130_one_units_with_p130_one_k_eur,9:fixes-g14,45:run p130_one_units.tally p130_one_k_eur.tally,2477:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194134,12 +193770,12 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,20:p130_one_k_eur.tally,71:part p_k_eur
+,20:p130_one_k_eur.tally,119:part p_k_eur
   tally 2
 
-ask k_eur: value(ike, 2026-03-31) in EUR by px
-,,1:1,70:refused: LOAD-KEY ike is not a key of places (p130_one_k_eur.tally:4)
-,45:fixes/g14/p130_one_keyed_with_p130_one_k_last,9:fixes-g14,46:run p130_one_keyed.tally p130_one_k_last.tally,1693:20:p130_one_keyed.tally,1555:model keyed
+ask k_eur: (value(ike_fa, 2026-03-31) in EUR by px) + (value(ike_fb, 2026-03-31) in EUR by px)
+,,1:1,73:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_eur.tally:4)
+,45:fixes/g14/p130_one_keyed_with_p130_one_k_last,9:fixes-g14,46:run p130_one_keyed.tally p130_one_k_last.tally,1748:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194203,17 +193839,17 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,21:p130_one_k_last.tally,79:part p_k_last
+,21:p130_one_k_last.tally,133:part p_k_last
   tally 2
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
-,,1:1,71:refused: LOAD-KEY ike is not a key of places (p130_one_k_last.tally:4)
-,42:fixes/g14/p130_one_kp_with_p130_one_k_last,9:fixes-g14,43:run p130_one_kp.tally p130_one_k_last.tally,1966:17:p130_one_kp.tally,1831:model kp
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
+,,1:1,74:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_last.tally:4)
+,42:fixes/g14/p130_one_kp_with_p130_one_k_last,9:fixes-g14,43:run p130_one_kp.tally p130_one_k_last.tally,2162:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -194223,30 +193859,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -194260,23 +193895,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -194294,8 +193925,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -194303,19 +193932,18 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,21:p130_one_k_last.tally,79:part p_k_last
+,21:p130_one_k_last.tally,133:part p_k_last
   tally 2
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
-,,1:0,294:k_last: 75 PLN
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
+,,1:0,245:k_last: 75 PLN
   unfulfilled: b1
   unfulfilled: b2
   held: pl[fa] = 11 PLN/fa (readings_2026), read for 2026-03-31
   held: pl[fb] = 21 PLN/fb (readings_2026), read for 2026-03-31
   cut 2026-06-30
 warning: WARN-UNREAD input px is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,45:fixes/g14/p130_one_units_with_p130_one_k_last,9:fixes-g14,46:run p130_one_units.tally p130_one_k_last.tally,2437:20:p130_one_units.tally,2299:model units
+,45:fixes/g14/p130_one_units_with_p130_one_k_last,9:fixes-g14,46:run p130_one_units.tally p130_one_k_last.tally,2492:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194413,12 +194041,12 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,21:p130_one_k_last.tally,79:part p_k_last
+,21:p130_one_k_last.tally,133:part p_k_last
   tally 2
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
-,,1:1,71:refused: LOAD-KEY ike is not a key of places (p130_one_k_last.tally:4)
-,49:fixes/g14/p130_one_keyed_with_p130_one_k_last_eur,9:fixes-g14,50:run p130_one_keyed.tally p130_one_k_last_eur.tally,1705:20:p130_one_keyed.tally,1555:model keyed
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
+,,1:1,74:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_last.tally:4)
+,49:fixes/g14/p130_one_keyed_with_p130_one_k_last_eur,9:fixes-g14,50:run p130_one_keyed.tally p130_one_k_last_eur.tally,1760:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194482,17 +194110,17 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,25:p130_one_k_last_eur.tally,87:part p_k_last_eur
+,25:p130_one_k_last_eur.tally,141:part p_k_last_eur
   tally 2
 
-ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
-,,1:1,75:refused: LOAD-KEY ike is not a key of places (p130_one_k_last_eur.tally:4)
-,46:fixes/g14/p130_one_kp_with_p130_one_k_last_eur,9:fixes-g14,47:run p130_one_kp.tally p130_one_k_last_eur.tally,1978:17:p130_one_kp.tally,1831:model kp
+ask k_last_eur: (value(ike_fa, 2026-03-31) in EUR by last(pl)) + (value(ike_fb, 2026-03-31) in EUR by last(pl))
+,,1:1,78:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_last_eur.tally:4)
+,46:fixes/g14/p130_one_kp_with_p130_one_k_last_eur,9:fixes-g14,47:run p130_one_kp.tally p130_one_k_last_eur.tally,2174:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -194502,30 +194130,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -194539,23 +194166,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -194573,8 +194196,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -194582,12 +194203,12 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,25:p130_one_k_last_eur.tally,87:part p_k_last_eur
+,25:p130_one_k_last_eur.tally,141:part p_k_last_eur
   tally 2
 
-ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
+ask k_last_eur: (value(ike_fa, 2026-03-31) in EUR by last(pl)) + (value(ike_fb, 2026-03-31) in EUR by last(pl))
 ,,1:1,107:refused: LOAD-UNIT value by last(pl): the price is num PLN/$u, not num EUR/u (p130_one_k_last_eur.tally:4)
-,49:fixes/g14/p130_one_units_with_p130_one_k_last_eur,9:fixes-g14,50:run p130_one_units.tally p130_one_k_last_eur.tally,2449:20:p130_one_units.tally,2299:model units
+,49:fixes/g14/p130_one_units_with_p130_one_k_last_eur,9:fixes-g14,50:run p130_one_units.tally p130_one_k_last_eur.tally,2504:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194685,12 +194306,12 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,25:p130_one_k_last_eur.tally,87:part p_k_last_eur
+,25:p130_one_k_last_eur.tally,141:part p_k_last_eur
   tally 2
 
-ask k_last_eur: value(ike, 2026-03-31) in EUR by last(pl)
-,,1:1,75:refused: LOAD-KEY ike is not a key of places (p130_one_k_last_eur.tally:4)
-,44:fixes/g14/p130_one_keyed_with_p130_one_k_pln,9:fixes-g14,45:run p130_one_keyed.tally p130_one_k_pln.tally,1684:20:p130_one_keyed.tally,1555:model keyed
+ask k_last_eur: (value(ike_fa, 2026-03-31) in EUR by last(pl)) + (value(ike_fb, 2026-03-31) in EUR by last(pl))
+,,1:1,78:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_last_eur.tally:4)
+,44:fixes/g14/p130_one_keyed_with_p130_one_k_pln,9:fixes-g14,45:run p130_one_keyed.tally p130_one_k_pln.tally,1733:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194754,17 +194375,17 @@ version readings_2026
   known 2026-01-01
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
 
-,20:p130_one_k_pln.tally,71:part p_k_pln
+,20:p130_one_k_pln.tally,119:part p_k_pln
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
-,,1:1,70:refused: LOAD-KEY ike is not a key of places (p130_one_k_pln.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_k_pln,9:fixes-g14,42:run p130_one_kp.tally p130_one_k_pln.tally,1957:17:p130_one_kp.tally,1831:model kp
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
+,,1:1,73:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_pln.tally:4)
+,41:fixes/g14/p130_one_kp_with_p130_one_k_pln,9:fixes-g14,42:run p130_one_kp.tally p130_one_k_pln.tally,2147:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -194774,30 +194395,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -194811,23 +194431,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -194845,8 +194461,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -194854,17 +194468,16 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,20:p130_one_k_pln.tally,71:part p_k_pln
+,20:p130_one_k_pln.tally,119:part p_k_pln
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
-,,1:0,165:k_pln: 70 PLN
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
+,,1:0,116:k_pln: 70 PLN
   unfulfilled: b1
   unfulfilled: b2
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,44:fixes/g14/p130_one_units_with_p130_one_k_pln,9:fixes-g14,45:run p130_one_units.tally p130_one_k_pln.tally,2428:20:p130_one_units.tally,2299:model units
+,44:fixes/g14/p130_one_units_with_p130_one_k_pln,9:fixes-g14,45:run p130_one_units.tally p130_one_k_pln.tally,2477:20:p130_one_units.tally,2299:model units
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -194962,288 +194575,11 @@ version readings_2026
   known 2026-01-01
   hut_val = 250000.00 PLN at 2026-02-01 "valued"
   px = 151 PLN/etf at 2026-04-01 "quoted"
-,20:p130_one_k_pln.tally,71:part p_k_pln
+,20:p130_one_k_pln.tally,119:part p_k_pln
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
-,,1:1,70:refused: LOAD-KEY ike is not a key of places (p130_one_k_pln.tally:4)
-,46:fixes/g14/p130_one_keyed_with_p130_one_k_wrong,9:fixes-g14,47:run p130_one_keyed.tally p130_one_k_wrong.tally,1690:20:p130_one_keyed.tally,1555:model keyed
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "a price keyed by unit in another currency (invented): G8 fix review NB1; tally 2.2 (S-1): a model's place holds one unit, so each place that held several is one place per unit under a kind of unit one, and a value of it is the sum over those places"
-
-source card "probe card"
-
-unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-unit USD: currency minor 0.01
-
-kind safes: place one signed
-
-place eur_acc: accounts EUR lives 2026-01-01..
-
-place usd_acc: accounts USD lives 2026-01-01..
-
-place safe_eur: safes EUR lives 2026-01-01..
-
-place safe_pln: safes PLN lives 2026-01-01..
-
-place market: outside lives 2026-01-01..
-
-input fxu[u in currencies]: num PLN/u reading
-
-input fxs[u in currencies]: num PLN/u
-
-input put_day: date
-
-input amt_eur: money EUR
-
-input amt_pln: money PLN
-
-def fxd[u in currencies]: num PLN/u = fxs[u]
-
-move put_eur: transfers
-  on put_day
-  leg cash from market to safe_eur amount amt_eur
-
-move put_pln: transfers
-  on put_day
-  leg cash from market to safe_pln amount amt_pln
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  put_day = 2026-02-20 "the card"
-  amt_eur = 200.00 EUR "the card"
-  amt_pln = 300.00 PLN "the card"
-  fxs[EUR] = 4.25 PLN/EUR "the card"
-  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
-  opening[usd_acc] = 50.00 USD at 2026-01-01 start "the card"
-
-version readings_2026
-  cite card
-  governs 2026-01..2026-12
-  known 2026-01-01
-  fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
-
-,22:p130_one_k_wrong.tally,75:part p_k_wrong
-  tally 2
-
-ask k_wrong: value(ike, 2026-03-31) in PLN by qx
-,,1:1,72:refused: LOAD-KEY ike is not a key of places (p130_one_k_wrong.tally:4)
-,43:fixes/g14/p130_one_kp_with_p130_one_k_wrong,9:fixes-g14,44:run p130_one_kp.tally p130_one_k_wrong.tally,1963:17:p130_one_kp.tally,1831:model kp
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
-
-source card "probe card"
-
-unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-kind funds: unit
-
-kind ikes: place any min 0
-
-kind pikes: place any min 0 priced px
-
-kind wikes: place any min 0 priced qx
-
-kind lots: place one min 0 priced px
-
-kind unit_buys: event certain
-  leg units: funds
-
-place ike: ikes lives 2026-01-01..
-
-place pike: pikes lives 2026-01-01..
-
-place wike: wikes lives 2026-01-01..
-
-place lot: lots fa lives 2026-01-01..
-
-place market: outside lives 2026-01-01..
-
-input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
-
-input pl[u in funds]: num PLN/u reading
-
-input buy_day: date
-
-input n3a: num fa
-
-input n2b: num fb
-
-input n5a: num fa
-
-move b1: unit_buys
-  on buy_day
-  leg units from market to ike amount n3a
-
-move b2: unit_buys
-  on buy_day
-  leg units from market to ike amount n2b
-
-move b3: unit_buys
-  on buy_day
-  leg units from market to pike amount n3a
-
-move b4: unit_buys
-  on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
-
-move b6: unit_buys
-  on buy_day
-  leg units from market to lot amount n5a
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  funds + [fa] lives 2026-01-01..
-  funds + [fb] lives 2026-01-01..
-  buy_day = 2026-02-10 "the card"
-  n3a = 3 fa "the card"
-  n2b = 2 fb "the card"
-  n5a = 5 fa "the card"
-  px[fa] = 10 PLN/fa "the card"
-  px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
-
-version readings_2026
-  cite card
-  governs 2026-01..2026-12
-  known 2026-01-01
-  pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
-  pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,22:p130_one_k_wrong.tally,75:part p_k_wrong
-  tally 2
-
-ask k_wrong: value(ike, 2026-03-31) in PLN by qx
-,,1:0,235:k_wrong: refused: RUN-DOMAIN value(ike) in PLN: the price 9 PLN/fa is not in PLN/fb
-  unfulfilled: b1
-  unfulfilled: b2
-  cut 2026-06-30
-warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input px is read by nothing
-,46:fixes/g14/p130_one_units_with_p130_one_k_wrong,9:fixes-g14,47:run p130_one_units.tally p130_one_k_wrong.tally,2434:20:p130_one_units.tally,2299:model units
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "a price of another currency or unit (invented): G8 fix review NB1, its keyed form, and its twins; tally 2.2 (S-1): a model's place holds one unit, so each place that held several is one place per unit under a kind of unit one, and a value of it is the sum over those places"
-
-source card "probe card"
-
-unit PLN: currency minor 0.01
-
-unit EUR: currency minor 0.01
-
-unit etf "a fund unit"
-
-unit gold "an ounce"
-
-kind funds: place one min 0 priced unit_price
-
-kind boxes: holdings
-
-kind safes: place one signed
-
-kind unit_buys: event certain
-  leg units: etf
-
-index month = month 2026-01..2026-12
-
-index day = day 2026-01-01..2026-12-31
-
-place fund: funds etf lives 2026-01-01..
-
-place box: boxes etf lives 2026-01-01..
-
-place safe_eur: safes EUR lives 2026-01-01..
-
-place safe_pln: safes PLN lives 2026-01-01..
-
-place konto: accounts PLN lives 2026-01-01..
-
-place eur_acc: accounts EUR lives 2026-01-01..
-
-place flat: assets EUR priced flat_eur lives 2026-01-01..
-
-place hut: assets PLN priced last(hut_val) lives 2026-01-01..
-
-place market: outside lives 2026-01-01..
-
-input unit_price[x in funds]: num PLN/etf
-
-input mprice[m in month]: num PLN/etf
-
-input px: num PLN/etf reading
-
-input fx[d in day]: num PLN/EUR
-
-input eurpx: num PLN/EUR
-
-input flat_eur: money EUR
-
-input hut_val: money PLN reading
-
-input buy_day: date
-
-input n_fund: num etf
-
-input n_box: num etf
-
-move buy: unit_buys
-  on buy_day
-  leg units from market to fund amount n_fund
-
-move buy2: unit_buys
-  on buy_day
-  leg units from market to box amount n_box
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  buy_day = 2026-02-10 "the card"
-  n_box = 4 etf "the card"
-  n_fund = 10 etf "the card"
-  eurpx = 4.30 PLN/EUR "the card"
-  flat_eur = 100000.00 EUR "the card"
-  fx[2026-03-31] = 4.25 PLN/EUR "the card"
-  mprice[2026-02] = none "the card"
-  mprice[2026-03] = 150 PLN/etf "the card"
-  opening[eur_acc] = 1000.00 EUR at 2026-01-01 start "the card"
-  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-  unit_price[fund] = 140 PLN/etf "the card"
-
-version readings_2026
-  cite card
-  governs 2026-01..2026-12
-  known 2026-01-01
-  hut_val = 250000.00 PLN at 2026-02-01 "valued"
-  px = 151 PLN/etf at 2026-04-01 "quoted"
-,22:p130_one_k_wrong.tally,75:part p_k_wrong
-  tally 2
-
-ask k_wrong: value(ike, 2026-03-31) in PLN by qx
-,,1:1,72:refused: LOAD-KEY ike is not a key of places (p130_one_k_wrong.tally:4)
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
+,,1:1,73:refused: LOAD-KEY ike_fa is not a key of places (p130_one_k_pln.tally:4)
 ,44:fixes/g14/p130_one_keyed_with_p130_one_n_own,9:fixes-g14,45:run p130_one_keyed.tally p130_one_n_own.tally,1689:20:p130_one_keyed.tally,1555:model keyed
   tally 2
   on 2026-06-30
@@ -195313,12 +194649,12 @@ version readings_2026
 
 ask n_own: value(eur_acc, 2026-03-31) in EUR by fxs
 ,,1:1,97:refused: LOAD-UNIT value by fxs: the price is num PLN/$u, not num EUR/u (p130_one_n_own.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_n_own,9:fixes-g14,42:run p130_one_kp.tally p130_one_n_own.tally,1962:17:p130_one_kp.tally,1831:model kp
+,41:fixes/g14/p130_one_kp_with_p130_one_n_own,9:fixes-g14,42:run p130_one_kp.tally p130_one_n_own.tally,2103:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -195328,30 +194664,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -195365,23 +194700,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -195399,8 +194730,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -195589,12 +194918,12 @@ ask n_pln: value(eur_acc, 2026-03-31) in PLN by fxs
 warning: WARN-UNREAD def fxd is read by nothing
 warning: WARN-UNREAD input fxu is read by nothing
 warning: WARN-UNREAD place usd_acc is read by nothing
-,41:fixes/g14/p130_one_kp_with_p130_one_n_pln,9:fixes-g14,42:run p130_one_kp.tally p130_one_n_pln.tally,1962:17:p130_one_kp.tally,1831:model kp
+,41:fixes/g14/p130_one_kp_with_p130_one_n_pln,9:fixes-g14,42:run p130_one_kp.tally p130_one_n_pln.tally,2103:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -195604,30 +194933,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -195641,23 +194969,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -195675,8 +194999,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -195868,12 +195190,12 @@ warning: WARN-UNREAD def fxd is read by nothing
 warning: WARN-UNREAD input fxu is read by nothing
 warning: WARN-UNREAD place eur_acc is read by nothing
 warning: WARN-UNREAD place usd_acc is read by nothing
-,46:fixes/g14/p130_one_kp_with_p130_one_n_safe_pln,9:fixes-g14,47:run p130_one_kp.tally p130_one_n_safe_pln.tally,2027:17:p130_one_kp.tally,1831:model kp
+,46:fixes/g14/p130_one_kp_with_p130_one_n_safe_pln,9:fixes-g14,47:run p130_one_kp.tally p130_one_n_safe_pln.tally,2168:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -195883,30 +195205,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -195920,23 +195241,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -195954,8 +195271,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -196140,12 +195455,12 @@ version readings_2026
 
 ask n_usd: value(eur_acc, 2026-03-31) in USD by fxs
 ,,1:1,97:refused: LOAD-UNIT value by fxs: the price is num PLN/$u, not num USD/u (p130_one_n_usd.tally:4)
-,41:fixes/g14/p130_one_kp_with_p130_one_n_usd,9:fixes-g14,42:run p130_one_kp.tally p130_one_n_usd.tally,1962:17:p130_one_kp.tally,1831:model kp
+,41:fixes/g14/p130_one_kp_with_p130_one_n_usd,9:fixes-g14,42:run p130_one_kp.tally p130_one_n_usd.tally,2103:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -196155,30 +195470,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -196192,23 +195506,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -196226,8 +195536,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -196412,12 +195720,12 @@ version readings_2026
 
 ask n_usd_last: value(eur_acc, 2026-03-31) in USD by last(fxu)
 ,,1:1,108:refused: LOAD-UNIT value by last(fxu): the price is num PLN/$u, not num USD/u (p130_one_n_usd_last.tally:4)
-,46:fixes/g14/p130_one_kp_with_p130_one_n_usd_last,9:fixes-g14,47:run p130_one_kp.tally p130_one_n_usd_last.tally,1983:17:p130_one_kp.tally,1831:model kp
+,46:fixes/g14/p130_one_kp_with_p130_one_n_usd_last,9:fixes-g14,47:run p130_one_kp.tally p130_one_n_usd_last.tally,2124:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -196427,30 +195735,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -196464,23 +195771,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -196498,8 +195801,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -196684,12 +195985,12 @@ version readings_2026
 
 ask up_eur: value(fund, 2026-03-31) in EUR by unit_price
 ,,1:1,72:refused: LOAD-KEY fund is not a key of places (p130_one_up_eur.tally:4)
-,42:fixes/g14/p130_one_kp_with_p130_one_up_eur,9:fixes-g14,43:run p130_one_kp.tally p130_one_up_eur.tally,1969:17:p130_one_kp.tally,1831:model kp
+,42:fixes/g14/p130_one_kp_with_p130_one_up_eur,9:fixes-g14,43:run p130_one_kp.tally p130_one_up_eur.tally,2110:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -196699,30 +196000,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -196736,23 +196036,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -196770,8 +196066,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -196956,12 +196250,12 @@ version readings_2026
 
 ask up_eur_own: value(eur_acc, 2026-03-31) in EUR by unit_price
 ,,1:1,105:refused: LOAD-UNIT value by unit_price: the price is keylit, not num EUR/u (p130_one_up_eur_own.tally:4)
-,46:fixes/g14/p130_one_kp_with_p130_one_up_eur_own,9:fixes-g14,47:run p130_one_kp.tally p130_one_up_eur_own.tally,1984:17:p130_one_kp.tally,1831:model kp
+,46:fixes/g14/p130_one_kp_with_p130_one_up_eur_own,9:fixes-g14,47:run p130_one_kp.tally p130_one_up_eur_own.tally,2125:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -196971,30 +196265,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -197008,23 +196301,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -197042,8 +196331,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -197228,12 +196515,12 @@ version readings_2026
 
 ask up_none: value(fund, 2026-03-31) in PLN
 ,,1:1,73:refused: LOAD-KEY fund is not a key of places (p130_one_up_none.tally:4)
-,43:fixes/g14/p130_one_kp_with_p130_one_up_none,9:fixes-g14,44:run p130_one_kp.tally p130_one_up_none.tally,1958:17:p130_one_kp.tally,1831:model kp
+,43:fixes/g14/p130_one_kp_with_p130_one_up_none,9:fixes-g14,44:run p130_one_kp.tally p130_one_up_none.tally,2099:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -197243,30 +196530,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -197280,23 +196566,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -197314,8 +196596,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -197514,12 +196794,12 @@ version readings_2026
 
 ask up_pln: value(fund, 2026-03-31) in PLN by unit_price
 ,,1:1,72:refused: LOAD-KEY fund is not a key of places (p130_one_up_pln.tally:4)
-,42:fixes/g14/p130_one_kp_with_p130_one_up_pln,9:fixes-g14,43:run p130_one_kp.tally p130_one_up_pln.tally,1969:17:p130_one_kp.tally,1831:model kp
+,42:fixes/g14/p130_one_kp_with_p130_one_up_pln,9:fixes-g14,43:run p130_one_kp.tally p130_one_up_pln.tally,2110:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -197529,30 +196809,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -197566,23 +196845,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -197600,8 +196875,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -197667,12 +196940,12 @@ ask s1: bal(acct, 2027-03-01)
 ,,1:0,89:s1: -3.00 PLN
   cut 2027-01-01
 warning: WARN-NEGATIVE acct is below zero from 2027-01-01
-,27:fixes/g14/r_agent_p130_bare,9:fixes-g14,27:run r_agent_p130_bare.tally,1772:23:r_agent_p130_bare.tally,1739:model kp
+,27:fixes/g14/r_agent_p130_bare,9:fixes-g14,27:run r_agent_p130_bare.tally,1913:23:r_agent_p130_bare.tally,1880:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -197682,30 +196955,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -197719,23 +196991,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -197752,23 +197020,20 @@ version card_2026
   n2b = 2 fb "the card"
   n5a = 5 fa "the card"
   px[*] = 10 "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
   governs 2026-01..2026-12
   known 2026-01-01
   pl[*] = 11 at 2026-03-01 "quoted"
-,,1:0,147:warning: WARN-UNREAD input pl is read by nothing
+,,1:0,98:warning: WARN-UNREAD input pl is read by nothing
 warning: WARN-UNREAD input px is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,26:fixes/g14/r_agent_p130_kpd,9:fixes-g14,26:run r_agent_p130_kpd.tally,2365:22:r_agent_p130_kpd.tally,2333:model kp
+,26:fixes/g14/r_agent_p130_kpd,9:fixes-g14,26:run r_agent_p130_kpd.tally,2700:22:r_agent_p130_kpd.tally,2668:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -197778,30 +197043,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -197815,23 +197079,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -197849,8 +197109,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -197863,30 +197121,28 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 
 ask d7: value(lot, 2026-03-31) in PLN by pz
-,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:115)
-,51:fixes/g14/r_agent_p130_bare_with_r_agent_p130_c_lot,9:fixes-g14,52:run r_agent_p130_bare.tally r_agent_p130_c_lot.tally,1869:23:r_agent_p130_bare.tally,1739:model kp
+,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:106)
+,51:fixes/g14/r_agent_p130_bare_with_r_agent_p130_c_lot,9:fixes-g14,52:run r_agent_p130_bare.tally r_agent_p130_c_lot.tally,2010:23:r_agent_p130_bare.tally,1880:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -197896,30 +197152,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -197933,23 +197188,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -197966,8 +197217,6 @@ version card_2026
   n2b = 2 fb "the card"
   n5a = 5 fa "the card"
   px[*] = 10 "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -197978,17 +197227,16 @@ version readings_2026
   tally 2
 
 ask c_lot: value(lot, 2026-03-31) in PLN
-,,1:0,147:c_lot: 50 PLN
+,,1:0,98:c_lot: 50 PLN
   unfulfilled: b6
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,50:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_c_lot,9:fixes-g14,51:run r_agent_p130_kpd.tally r_agent_p130_c_lot.tally,2462:22:r_agent_p130_kpd.tally,2333:model kp
+,50:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_c_lot,9:fixes-g14,51:run r_agent_p130_kpd.tally r_agent_p130_c_lot.tally,2797:22:r_agent_p130_kpd.tally,2668:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -197998,30 +197246,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198035,23 +197282,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198069,8 +197312,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -198083,19 +197324,17 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 
@@ -198104,13 +197343,13 @@ ask d7: value(lot, 2026-03-31) in PLN by pz
   tally 2
 
 ask c_lot: value(lot, 2026-03-31) in PLN
-,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:115)
-,51:fixes/g14/r_agent_p130_bare_with_r_agent_p130_c_pln,9:fixes-g14,52:run r_agent_p130_bare.tally r_agent_p130_c_pln.tally,1870:23:r_agent_p130_bare.tally,1739:model kp
+,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:106)
+,51:fixes/g14/r_agent_p130_bare_with_r_agent_p130_c_pln,9:fixes-g14,52:run r_agent_p130_bare.tally r_agent_p130_c_pln.tally,2055:23:r_agent_p130_bare.tally,1880:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -198120,30 +197359,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198157,23 +197395,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198190,30 +197424,27 @@ version card_2026
   n2b = 2 fb "the card"
   n5a = 5 fa "the card"
   px[*] = 10 "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
   governs 2026-01..2026-12
   known 2026-01-01
   pl[*] = 11 at 2026-03-01 "quoted"
-,24:r_agent_p130_c_pln.tally,66:part p_c_pln
+,24:r_agent_p130_c_pln.tally,109:part p_c_pln
   tally 2
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-,,1:0,165:c_pln: 50 PLN
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
+,,1:0,116:c_pln: 50 PLN
   unfulfilled: b3
   unfulfilled: b4
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,50:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_c_pln,9:fixes-g14,51:run r_agent_p130_kpd.tally r_agent_p130_c_pln.tally,2463:22:r_agent_p130_kpd.tally,2333:model kp
+,50:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_c_pln,9:fixes-g14,51:run r_agent_p130_kpd.tally r_agent_p130_c_pln.tally,2842:22:r_agent_p130_kpd.tally,2668:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -198223,30 +197454,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198260,23 +197490,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198294,8 +197520,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -198308,34 +197532,32 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 
 ask d7: value(lot, 2026-03-31) in PLN by pz
-,24:r_agent_p130_c_pln.tally,66:part p_c_pln
+,24:r_agent_p130_c_pln.tally,109:part p_c_pln
   tally 2
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:115)
-,52:fixes/g14/r_agent_p130_bare_with_r_agent_p130_k_last,9:fixes-g14,53:run r_agent_p130_bare.tally r_agent_p130_k_last.tally,1884:23:r_agent_p130_bare.tally,1739:model kp
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
+,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:106)
+,52:fixes/g14/r_agent_p130_bare_with_r_agent_p130_k_last,9:fixes-g14,53:run r_agent_p130_bare.tally r_agent_p130_k_last.tally,2080:23:r_agent_p130_bare.tally,1880:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -198345,30 +197567,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198382,23 +197603,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198415,32 +197632,29 @@ version card_2026
   n2b = 2 fb "the card"
   n5a = 5 fa "the card"
   px[*] = 10 "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
   governs 2026-01..2026-12
   known 2026-01-01
   pl[*] = 11 at 2026-03-01 "quoted"
-,25:r_agent_p130_k_last.tally,79:part p_k_last
+,25:r_agent_p130_k_last.tally,133:part p_k_last
   tally 2
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
-,,1:0,294:k_last: 55 PLN
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
+,,1:0,245:k_last: 55 PLN
   unfulfilled: b1
   unfulfilled: b2
   held: pl[fa] = 11 PLN/fa (readings_2026), read for 2026-03-31
   held: pl[fb] = 11 PLN/fb (readings_2026), read for 2026-03-31
   cut 2026-06-30
 warning: WARN-UNREAD input px is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,51:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_k_last,9:fixes-g14,52:run r_agent_p130_kpd.tally r_agent_p130_k_last.tally,2477:22:r_agent_p130_kpd.tally,2333:model kp
+,51:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_k_last,9:fixes-g14,52:run r_agent_p130_kpd.tally r_agent_p130_k_last.tally,2867:22:r_agent_p130_kpd.tally,2668:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -198450,30 +197664,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198487,23 +197700,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198521,8 +197730,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -198535,34 +197742,32 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 
 ask d7: value(lot, 2026-03-31) in PLN by pz
-,25:r_agent_p130_k_last.tally,79:part p_k_last
+,25:r_agent_p130_k_last.tally,133:part p_k_last
   tally 2
 
-ask k_last: value(ike, 2026-03-31) in PLN by last(pl)
-,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:115)
-,51:fixes/g14/r_agent_p130_bare_with_r_agent_p130_k_pln,9:fixes-g14,52:run r_agent_p130_bare.tally r_agent_p130_k_pln.tally,1875:23:r_agent_p130_bare.tally,1739:model kp
+ask k_last: (value(ike_fa, 2026-03-31) in PLN by last(pl)) + (value(ike_fb, 2026-03-31) in PLN by last(pl))
+,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:106)
+,51:fixes/g14/r_agent_p130_bare_with_r_agent_p130_k_pln,9:fixes-g14,52:run r_agent_p130_bare.tally r_agent_p130_k_pln.tally,2065:23:r_agent_p130_bare.tally,1880:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -198572,30 +197777,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198609,23 +197813,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198642,30 +197842,27 @@ version card_2026
   n2b = 2 fb "the card"
   n5a = 5 fa "the card"
   px[*] = 10 "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
   governs 2026-01..2026-12
   known 2026-01-01
   pl[*] = 11 at 2026-03-01 "quoted"
-,24:r_agent_p130_k_pln.tally,71:part p_k_pln
+,24:r_agent_p130_k_pln.tally,119:part p_k_pln
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
-,,1:0,165:k_pln: 50 PLN
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
+,,1:0,116:k_pln: 50 PLN
   unfulfilled: b1
   unfulfilled: b2
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,50:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_k_pln,9:fixes-g14,51:run r_agent_p130_kpd.tally r_agent_p130_k_pln.tally,2468:22:r_agent_p130_kpd.tally,2333:model kp
+,50:fixes/g14/r_agent_p130_kpd_with_r_agent_p130_k_pln,9:fixes-g14,51:run r_agent_p130_kpd.tally r_agent_p130_k_pln.tally,2852:22:r_agent_p130_kpd.tally,2668:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -198675,30 +197872,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -198712,23 +197908,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -198746,8 +197938,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -198760,28 +197950,26 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 
 ask d7: value(lot, 2026-03-31) in PLN by pz
-,24:r_agent_p130_k_pln.tally,71:part p_k_pln
+,24:r_agent_p130_k_pln.tally,119:part p_k_pln
   tally 2
 
-ask k_pln: value(ike, 2026-03-31) in PLN by px
-,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:115)
+ask k_pln: (value(ike_fa, 2026-03-31) in PLN by px) + (value(ike_fb, 2026-03-31) in PLN by px)
+,,1:1,104:refused: LOAD-PRICE value(lot) by pz[fa]: lot's price already gives its fa (r_agent_p130_kpd.tally:106)
 ,25:fixes/g14/r_agent_pt_base,9:fixes-g14,25:run r_agent_pt_base.tally,417:21:r_agent_pt_base.tally,387:model two
   tally 2
   on 2026-03-01
@@ -213914,11 +213102,12 @@ version plan_2026
 ask f: flows(konto, 2026-04-01 .. 2026-05-01)
 ,,1:0,34:f: -4 000.00 PLN
   cut 2026-10-20
-,22:fixes/gate8/k6_by_form,11:fixes-gate8,20:run k6_by_form.tally,1086:16:k6_by_form.tally,1060:model t
+,22:fixes/gate8/k6_by_form,11:fixes-gate8,20:run k6_by_form.tally,928:16:k6_by_form.tally,903:model t
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
+  note "T; tally 2.2 (S-1, pick P16): a model's place holds one unit, so box, priced to fit its etf and not its EUR, went with q4; q1 to q3 as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -213926,30 +213115,19 @@ unit EUR: currency minor 0.01
 unit etf "fund unit"
 
 kind funds: place etf min 0
-kind mixed: place any min 0
 kind buys: event certain
   leg units: etf
 
 input px: num PLN/etf reading
 input day: date
 input amt: num etf
-input eur_amt: money EUR
 
 place fund: funds lives 2026-01-01..
-place box: mixed lives 2026-01-01..
 place market: outside lives 1900-01-01..
 
 move buy: buys
   on day
   leg units from market to fund amount amt
-
-move buy2: buys
-  on day
-  leg units from market to box amount amt
-
-move fx: transfers
-  on day
-  leg cash from market to box amount eur_amt
 
 version v
   cite s
@@ -213958,13 +213136,11 @@ version v
   px = 12 PLN/etf at 2026-03-01 "kurs"
   day = 2026-02-02 "own"
   amt = 1 etf "own"
-  eur_amt = 1.00 EUR "own"
 
 ask q1: value(fund, 2026-06-30) in PLN by last(px)
 ask q2: value(fund, 2026-06-30) in PLN by px law 2026-06-30
 ask q3: value(fund, 2026-01-31) in PLN by last(px)
-ask q4: value(box, 2026-06-30) in PLN by last(px)
-,,1:0,390:q1: 12 PLN
+,,1:0,224:q1: 12 PLN
   unfulfilled: buy
   held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
@@ -213972,10 +213148,6 @@ q2: ?"px has no reading at 2026-06-30" (px)
   unfulfilled: buy
   law date 2026-06-30, cut 2026-06-30
 q3: 0 PLN
-  cut 2026-06-30
-q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EUR
-  unfulfilled: fx
-  held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
 ,28:fixes/gate8/k4_changed_after,11:fixes-gate8,30:run household.tally late.tally,761:15:household.tally,563:model household
   tally 2
@@ -214357,11 +213529,12 @@ version plan_2026
 ask f: flows(konto, 2026-04-01 .. 2026-05-01)
 ,,1:0,34:f: -4 000.00 PLN
   cut 2026-10-20
-,26:fixes/gate8/p47_k6_by_form,11:fixes-gate8,11:run m.tally,1076:7:m.tally,1060:model t
+,26:fixes/gate8/p47_k6_by_form,11:fixes-gate8,11:run m.tally,918:7:m.tally,903:model t
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
+  note "T; tally 2.2 (S-1, pick P16): a model's place holds one unit, so box, priced to fit its etf and not its EUR, went with q4; q1 to q3 as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -214369,30 +213542,19 @@ unit EUR: currency minor 0.01
 unit etf "fund unit"
 
 kind funds: place etf min 0
-kind mixed: place any min 0
 kind buys: event certain
   leg units: etf
 
 input px: num PLN/etf reading
 input day: date
 input amt: num etf
-input eur_amt: money EUR
 
 place fund: funds lives 2026-01-01..
-place box: mixed lives 2026-01-01..
 place market: outside lives 1900-01-01..
 
 move buy: buys
   on day
   leg units from market to fund amount amt
-
-move buy2: buys
-  on day
-  leg units from market to box amount amt
-
-move fx: transfers
-  on day
-  leg cash from market to box amount eur_amt
 
 version v
   cite s
@@ -214401,13 +213563,11 @@ version v
   px = 12 PLN/etf at 2026-03-01 "kurs"
   day = 2026-02-02 "own"
   amt = 1 etf "own"
-  eur_amt = 1.00 EUR "own"
 
 ask q1: value(fund, 2026-06-30) in PLN by last(px)
 ask q2: value(fund, 2026-06-30) in PLN by px law 2026-06-30
 ask q3: value(fund, 2026-01-31) in PLN by last(px)
-ask q4: value(box, 2026-06-30) in PLN by last(px)
-,,1:0,390:q1: 12 PLN
+,,1:0,224:q1: 12 PLN
   unfulfilled: buy
   held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
@@ -214416,15 +213576,12 @@ q2: ?"px has no reading at 2026-06-30" (px)
   law date 2026-06-30, cut 2026-06-30
 q3: 0 PLN
   cut 2026-06-30
-q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EUR
-  unfulfilled: fx
-  held: px = 12 PLN/etf (v), read for 2026-06-30
-  cut 2026-06-30
-,31:fixes/gate8/p47_k9_by_last_hole,11:fixes-gate8,11:run m.tally,1127:7:m.tally,1111:model t
+,31:fixes/gate8/p47_k9_by_last_hole,11:fixes-gate8,11:run m.tally,969:7:m.tally,954:model t
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
+  note "T; tally 2.2 (S-1, pick P16): a model's place holds one unit, so box, priced to fit its etf and not its EUR, went with q4; q1 to q3 as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -214432,30 +213589,19 @@ unit EUR: currency minor 0.01
 unit etf "fund unit"
 
 kind funds: place etf min 0
-kind mixed: place any min 0
 kind buys: event certain
   leg units: etf
 
 input px: num PLN/etf reading
 input day: date
 input amt: num etf
-input eur_amt: money EUR
 
 place fund: funds lives 2026-01-01..
-place box: mixed lives 2026-01-01..
 place market: outside lives 1900-01-01..
 
 move buy: buys
   on day
   leg units from market to fund amount amt
-
-move buy2: buys
-  on day
-  leg units from market to box amount amt
-
-move fx: transfers
-  on day
-  leg cash from market to box amount eur_amt
 
 version v
   cite s
@@ -214464,14 +213610,12 @@ version v
   px = 12 PLN/etf at 2026-03-01 "kurs"
   day = 2026-02-02 "own"
   amt = 1 etf "own"
-  eur_amt = 1.00 EUR "own"
 
 ask q1: value(fund, 2026-06-30) in PLN by last(px)
 ask q2: value(fund, 2026-06-30) in PLN by px law 2026-06-30
 ask q3: value(fund, 2026-01-31) in PLN by last(px)
-ask q4: value(box, 2026-06-30) in PLN by last(px)
 ask q5: value(fund, 2026-02-15) in PLN by last(px)
-,,1:0,478:q1: 12 PLN
+,,1:0,312:q1: 12 PLN
   unfulfilled: buy
   held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
@@ -214479,10 +213623,6 @@ q2: ?"px has no reading at 2026-06-30" (px)
   unfulfilled: buy
   law date 2026-06-30, cut 2026-06-30
 q3: 0 PLN
-  cut 2026-06-30
-q4: refused: RUN-DOMAIN value(box) in PLN: the price 12 PLN/etf is not in PLN/EUR
-  unfulfilled: fx
-  held: px = 12 PLN/etf (v), read for 2026-06-30
   cut 2026-06-30
 q5: ?"etf has no price in PLN on 2026-02-15" (px[])
   unfulfilled: buy
@@ -234418,12 +233558,12 @@ warning: WARN-UNREAD def fxd is read by nothing
 warning: WARN-UNREAD input fxu is read by nothing
 warning: WARN-UNREAD place eur_acc is read by nothing
 warning: WARN-UNREAD place usd_acc is read by nothing
-,32:b3/l5_10_priced_per_key_unit_lot,7:fixes-b,81:run p130_one_kp.tally p130_one_c_lot.tally p130_one_c_pln.tally --ask c_lot c_pln,2045:17:p130_one_kp.tally,1831:model kp
+,32:b3/l5_10_priced_per_key_unit_lot,7:fixes-b,81:run p130_one_kp.tally p130_one_c_lot.tally p130_one_c_pln.tally --ask c_lot c_pln,2230:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -234433,30 +233573,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -234470,23 +233609,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -234504,8 +233639,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -234517,11 +233650,11 @@ version readings_2026
   tally 2
 
 ask c_lot: value(lot, 2026-03-31) in PLN
-,20:p130_one_c_pln.tally,66:part p_c_pln
+,20:p130_one_c_pln.tally,109:part p_c_pln
   tally 2
 
-ask c_pln: value(pike, 2026-03-31) in PLN
-,,1:0,214:c_lot: 50 PLN
+ask c_pln: (value(pike_fa, 2026-03-31) in PLN) + (value(pike_fb, 2026-03-31) in PLN)
+,,1:0,165:c_lot: 50 PLN
   unfulfilled: b6
   cut 2026-06-30
 c_pln: 70 PLN
@@ -234529,13 +233662,12 @@ c_pln: 70 PLN
   unfulfilled: b4
   cut 2026-06-30
 warning: WARN-UNREAD input pl is read by nothing
-warning: WARN-UNREAD input qx is read by nothing
-,36:b3/l5_10_priced_per_key_unit_message,7:fixes-b,42:run p130_one_kp.tally p130_one_c_eur.tally,1952:17:p130_one_kp.tally,1831:model kp
+,36:b3/l5_10_priced_per_key_unit_message,7:fixes-b,42:run p130_one_kp.tally p130_one_c_eur.tally,2137:17:p130_one_kp.tally,1972:model kp
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong), every other answer as before"
 
 source card "probe card"
 
@@ -234545,30 +233677,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -234582,23 +233713,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -234616,8 +233743,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -234625,11 +233750,11 @@ version readings_2026
   known 2026-01-01
   pl[fa] = 11 PLN/fa at 2026-03-01 "quoted"
   pl[fb] = 21 PLN/fb at 2026-03-01 "quoted"
-,20:p130_one_c_eur.tally,66:part p_c_eur
+,20:p130_one_c_eur.tally,109:part p_c_eur
   tally 2
 
-ask c_eur: value(pike, 2026-03-31) in EUR
-,,1:1,101:refused: LOAD-UNIT value(pike) in EUR: pike is priced in PLN/fa, not EUR/fa (p130_one_c_eur.tally:4)
+ask c_eur: (value(pike_fa, 2026-03-31) in EUR) + (value(pike_fb, 2026-03-31) in EUR)
+,,1:1,107:refused: LOAD-UNIT value(pike_fa) in EUR: pike_fa is priced in PLN/fa, not EUR/fa (p130_one_c_eur.tally:4)
 ,30:b5/l4_2_by_n_key_plus_duration,7:fixes-b,23:run by_n_years_98.tally,1107:19:by_n_years_98.tally,1078:model g14_by_n_years_98
   tally 2
   on 2026-12-31

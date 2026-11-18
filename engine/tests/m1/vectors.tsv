@@ -1298,9 +1298,6 @@ fixes/g14/p130_one_units_with_p130_one_c_lot_eur	fixes-g14		engine/tests/m1/fixe
 fixes/g14/p130_one_keyed_with_p130_one_c_pln	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_keyed.tally engine/tests/m1/fixes/g14/p130_one_c_pln.tally			G14
 fixes/g14/p130_one_kp_with_p130_one_c_pln	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_kp.tally engine/tests/m1/fixes/g14/p130_one_c_pln.tally			G14
 fixes/g14/p130_one_units_with_p130_one_c_pln	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_units.tally engine/tests/m1/fixes/g14/p130_one_c_pln.tally			G14
-fixes/g14/p130_one_keyed_with_p130_one_c_wrong	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_keyed.tally engine/tests/m1/fixes/g14/p130_one_c_wrong.tally			G14
-fixes/g14/p130_one_kp_with_p130_one_c_wrong	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_kp.tally engine/tests/m1/fixes/g14/p130_one_c_wrong.tally			G14
-fixes/g14/p130_one_units_with_p130_one_c_wrong	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_units.tally engine/tests/m1/fixes/g14/p130_one_c_wrong.tally			G14
 fixes/g14/p130_one_keyed_with_p130_one_k_eur	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_keyed.tally engine/tests/m1/fixes/g14/p130_one_k_eur.tally			G14
 fixes/g14/p130_one_kp_with_p130_one_k_eur	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_kp.tally engine/tests/m1/fixes/g14/p130_one_k_eur.tally			G14
 fixes/g14/p130_one_units_with_p130_one_k_eur	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_units.tally engine/tests/m1/fixes/g14/p130_one_k_eur.tally			G14
@@ -1313,9 +1310,6 @@ fixes/g14/p130_one_units_with_p130_one_k_last_eur	fixes-g14		engine/tests/m1/fix
 fixes/g14/p130_one_keyed_with_p130_one_k_pln	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_keyed.tally engine/tests/m1/fixes/g14/p130_one_k_pln.tally			G14
 fixes/g14/p130_one_kp_with_p130_one_k_pln	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_kp.tally engine/tests/m1/fixes/g14/p130_one_k_pln.tally			G14
 fixes/g14/p130_one_units_with_p130_one_k_pln	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_units.tally engine/tests/m1/fixes/g14/p130_one_k_pln.tally			G14
-fixes/g14/p130_one_keyed_with_p130_one_k_wrong	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_keyed.tally engine/tests/m1/fixes/g14/p130_one_k_wrong.tally			G14
-fixes/g14/p130_one_kp_with_p130_one_k_wrong	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_kp.tally engine/tests/m1/fixes/g14/p130_one_k_wrong.tally			G14
-fixes/g14/p130_one_units_with_p130_one_k_wrong	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_units.tally engine/tests/m1/fixes/g14/p130_one_k_wrong.tally			G14
 fixes/g14/p130_one_keyed_with_p130_one_n_own	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_keyed.tally engine/tests/m1/fixes/g14/p130_one_n_own.tally			G14
 fixes/g14/p130_one_kp_with_p130_one_n_own	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_kp.tally engine/tests/m1/fixes/g14/p130_one_n_own.tally			G14
 fixes/g14/p130_one_units_with_p130_one_n_own	fixes-g14		engine/tests/m1/fixes/g14	engine/tests/m1/fixes/g14/p130_one_units.tally engine/tests/m1/fixes/g14/p130_one_n_own.tally			G14

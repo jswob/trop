@@ -3,7 +3,7 @@ model kp
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by"
+  note "G14 probes for #130: per-unit prices keyed by a unit kind, by a clause and by a by; tally 2.2 (S-1, pick P16): a model's place holds one unit, so ike and pike are one place per unit and a value of either is the sum over them; wike, priced in a way that fits one of its units and not the other, went with its asks (c_wrong, k_wrong) and so did d3 (px[fa] for ike, which holds fb too), every other answer as before"
 
 source card "probe card"
 
@@ -13,30 +13,29 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place one min 0
 
-kind pikes: place any min 0 priced px
+kind pikes: place one min 0 priced px
 
-kind wikes: place any min 0 priced qx
 
 kind lots: place one min 0 priced px
 
 kind unit_buys: event certain
   leg units: funds
 
-place ike: ikes lives 2026-01-01..
+place ike_fa: ikes fa lives 2026-01-01..
 
-place pike: pikes lives 2026-01-01..
+place ike_fb: ikes fb lives 2026-01-01..
 
-place wike: wikes lives 2026-01-01..
+place pike_fa: pikes fa lives 2026-01-01..
+
+place pike_fb: pikes fb lives 2026-01-01..
 
 place lot: lots fa lives 2026-01-01..
 
 place market: outside lives 2026-01-01..
 
 input px[u in funds]: num PLN/u
-
-input qx[u in funds]: num PLN/fa
 
 input pl[u in funds]: num PLN/u reading
 
@@ -50,23 +49,19 @@ input n5a: num fa
 
 move b1: unit_buys
   on buy_day
-  leg units from market to ike amount n3a
+  leg units from market to ike_fa amount n3a
 
 move b2: unit_buys
   on buy_day
-  leg units from market to ike amount n2b
+  leg units from market to ike_fb amount n2b
 
 move b3: unit_buys
   on buy_day
-  leg units from market to pike amount n3a
+  leg units from market to pike_fa amount n3a
 
 move b4: unit_buys
   on buy_day
-  leg units from market to pike amount n2b
-
-move b5: unit_buys
-  on buy_day
-  leg units from market to wike amount n2b
+  leg units from market to pike_fb amount n2b
 
 move b6: unit_buys
   on buy_day
@@ -84,8 +79,6 @@ version card_2026
   n5a = 5 fa "the card"
   px[fa] = 10 PLN/fa "the card"
   px[fb] = 20 PLN/fb "the card"
-  qx[fa] = 7 PLN/fa "the card"
-  qx[fb] = 9 PLN/fa "the card"
 
 version readings_2026
   cite card
@@ -98,19 +91,17 @@ def pd[u in funds]: num PLN/u = px[u] + px[u]
 
 def pz[u in funds]: num PLN/u = 0
 
-ask d1: value(ike, 2026-03-31) in PLN by pd
+ask d1: (value(ike_fa, 2026-03-31) in PLN by pd) + (value(ike_fb, 2026-03-31) in PLN by pd)
 
-ask d2: value(ike, 2026-03-31) in PLN by pz
-
-ask d3: value(ike, 2026-03-31) in PLN by px[fa]
+ask d2: (value(ike_fa, 2026-03-31) in PLN by pz) + (value(ike_fb, 2026-03-31) in PLN by pz)
 
 def po[u in funds]: num PLN/u = 1
 
 def pi[u in funds]: num PLN/u = if u == fa then 0 else px[u]
 
-ask d4: value(ike, 2026-03-31) in PLN by po
+ask d4: (value(ike_fa, 2026-03-31) in PLN by po) + (value(ike_fb, 2026-03-31) in PLN by po)
 
-ask d5: value(ike, 2026-03-31) in PLN by pi
+ask d5: (value(ike_fa, 2026-03-31) in PLN by pi) + (value(ike_fb, 2026-03-31) in PLN by pi)
 
 ask d6: value(lot, 2026-03-31) in PLN by pz[fa]
 

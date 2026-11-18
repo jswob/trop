@@ -1161,13 +1161,13 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g14`, part 1 of 2 (at 0 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g14_part_1() {
-        group_holds(M1_VECTORS, "fixes-g14", (0, 2), 96);
+        group_holds(M1_VECTORS, "fixes-g14", (0, 2), 93);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g14`, part 2 of 2 (at 1 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g14_part_2() {
-        group_holds(M1_VECTORS, "fixes-g14", (1, 2), 96);
+        group_holds(M1_VECTORS, "fixes-g14", (1, 2), 93);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-open`, every vector.

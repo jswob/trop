@@ -1115,19 +1115,19 @@ mod tests {
     /// G14's fix vectors, part 1 of 6 (at 0 modulo 6).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_1() {
-        fixes_hold("fixes-g14", (0, 6), 32);
+        fixes_hold("fixes-g14", (0, 6), 31);
     }
 
     /// G14's fix vectors, part 2 of 6 (at 1 modulo 6).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_2() {
-        fixes_hold("fixes-g14", (1, 6), 32);
+        fixes_hold("fixes-g14", (1, 6), 31);
     }
 
     /// G14's fix vectors, part 3 of 6 (at 2 modulo 6).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g14_part_3() {
-        fixes_hold("fixes-g14", (2, 6), 32);
+        fixes_hold("fixes-g14", (2, 6), 31);
     }
 
     /// G14's fix vectors, part 4 of 6 (at 3 modulo 6).
