@@ -4608,3 +4608,105 @@ On `build/2.2` at 201613ef. Plan `tmp/spec-2.2/plan.md`, S-4 and the hole's name
 - **What I tried:** nothing to change in the code: the item names exactly this line, and dropping it for a built-in's hole would leave refcore's `imprecise` behind and every runnable twin (`cut_each_ask_twin`, `unknown_day_names` n_cell) with it. Not an answer the items don't name.
 - **What I ask:** the tests session restates the nine rows with `  unknown day: w` before the cut (the engine's run of each, read against the spec before it is stored, as `m1_fixes.rs`' doc of the test says), or logs them `Logged-Red:` until it does.
 - **State:** the code is 4b9441bf (`check quick` green); this entry and report land in the commit after it, nothing else uncommitted.
+
+## 2026-11-18 tally 2.2, the closing turn: S-8 and the recognition in, the fault at the trimming, the reviews' leftovers (issue #211)
+
+On `build/2.2` at 0b615a0e (T's merge of the three count pins and the nine named holes). Spec and refcore are this worktree's, tally 2.2's whole text. `check commit` at the start: `red at tests, stopped after 10 of 23 steps (98s)`, `5 of 1066 tests are red`, each on a `Logged-Red:` id (`tmp/spec-2.2-build/close/red-start.txt`):
+- `m0_code_load_instant` (basic/instant-side), `m1_fixes_gate8_survivors` (`m2_rt_l5_19_load_instant`): LOAD-INSTANT's words.
+- `m0_code_load_same` (joint/same-what): S-8's words.
+- `m2_fixes_tally_22`, 7 of 42: `cut_same_rows_version`, `cut_same_rows_header` (S-8); `fault_n3`, `fault_n4`, `order_keyed_def` (the fault); `rv3_scen_over_base`, `rv3_scen_over_base_noline` (P21).
+- `m2_counts_lows` (the recognition).
+
+**The pieces, each done:**
+1. **2559cfdb, S-8: `same` never joins two rows of an input.** 6270a1b0 re-applied unchanged, file by file with `patch` (the guard refuses `git apply`). One hunk of `eval/read.rs` didn't apply: its context, `row_window`'s call, G4 reworded. I removed its three functions (`same_class`, `read_same_rows`, `same_side`) by hand. The diff then equals 6270a1b0's but for that one line (compared sorted, line by line). Green: `cut_same_rows_version`, `cut_same_rows_header`, `m0_code_load_same` (`a row of an input and a def`), `m0_code_load_key`'s kplace family. Nothing else moved.
+2. **ec3604c0, the fault at the trimming (pick P14), as refcore's 8a6b5366.**
+   - The graph is tally 2.1.8's again. `load/defs.rs` is 8ece2484's byte for byte: the key's edge in `check_def` and 7a4c4cb6's reorder are gone, with their two tests. `load/binds.rs` `bind_movements` and `kind_movements` are 2.1.8's, but for G5's one relation. `key_movements`, `bound_kind`, `bound_observed` and `Reality::moves_of` are gone.
+   - `eval/context.rs`: `movement_keyed_cone` walks the graph from the def, cached per def. `keyed_by_movement`: a def's header key over a kind whose spec is `Event`, a subkind's included, since a subkind's spec is its root's. A def's key over an observed input's rows is `LOAD-KEY`, so a kind is the one case.
+   - `trimmed` keeps the context whole for such a def: every axis and every pin. Refcore keys a cell by its full pins and trims only axes, and the engine also trims pins by reach, so keeping the whole layer is the engine's form of refcore's `def_axes` returning none.
+   - The shared-cell test in `_read_def` has no twin here: the engine has no path in `Ctx`, since paths aren't built. `fault-b/paths.tally` is `tally run: not implemented`, as before.
+   - The h/h2/hp test moved to `tests/eval_cases.rs`, its lines unchanged.
+   - Green: `fault_fx3` (kept: `h`, `h2` split by `work`; `hp` 400.00, 2 000.00, 2 000.00 PLN), `fault_n3` (`LOAD-LAWDATE`), `fault_n4` (`q: 2.00 DUK`), `order_keyed_def` (`RUN-ORDER decisions a and b read each other`). All four are tally 2.1.8's lines.
+   - The first form nested a closure in a closure, and `check commit` refused it at `exceptions` (`nested-closure-review`). It is a loop now.
+3. **439e6e25, the recognition (C-10 (a)): `recognition-v2.patch` applied as saved, file by file, but one line.**
+   - That line is `lowest_shape`'s `!read.proj.windows_each`, which can't compile: G4 (4b9441bf) removed `Proj.windows_each` after G5 saved the patch on dce04b1c. A cut clause has no subject left to exclude, so the shape is the same.
+   - Read against R-130:
+     - The fence is F5. Its entry is `lowest_shape` and `reads_lowest` (`walk/projection.rs`), read from `eval/aggregate.rs` `range_minimum`.
+     - The switch is `Lows::Tree`. `reads_lowest` is false under `Lows::Walk`, on a `partial` line and in a traced read, and the plain aggregate reads each of those term by term: that is the twin.
+     - The equivalence test is `tally-cli/tests/walk_oracle.rs`: the kernel and M1 corpora, M1's `low-min` and `foresight-low` spelled as the `min` since tally 2.2, run under Tree and under Walk.
+     - F5's `PERF:` header already names P8-5, P8-M4, the twin and that test.
+     - For review: the entry's code sits in `walk/projection.rs` (F5's plain twin's module) and `eval/aggregate.rs`, not in `walk/lows.rs`, as G5 built it.
+   - Green: `m2_counts_lows` on its stored counts, m1/lows `every` `on/off days_stepped=880 nonempty_days=878 walks=28 walks_shared=0 legs_booked=878 def_hits=710 def_misses=494`. T's three pins of 140e340f are unchanged: `m2_counts_days` r1, `m2_counts_r4` r7, `m2_counts_ahead` b2_min.
+   - `perf row P8-5` on the reference Mac (AC): median 273.6 ns, budget 300 ns. G5 measured 265.6 ns. The bench times `RangeMinimum::lowest_change` alone, which the patch doesn't change.
+4. **81263310, `LOAD-INSTANT`'s words.** `load/rows.rs` `row_instant` now says `balance reading <x> at <D> needs start or end`. Green: `m0_code_load_instant`, `m2_rt_l5_19_load_instant`.
+5. **73643de8, a scenario's restatement ranks first (pick P21).**
+   - `book/observe.rs` `observed_row_seen` and `seen_observations` rank each restatement by `(m.scenarios.layer(version), known)`. That is refcore's `(row_layer, known)` in `obs_row_seen` and `m_observations`. Of two equal, the first written still wins.
+   - The header's Spec line says so (L §4.6 step 2).
+   - Green: `rv3_scen_over_base` (`in_sc: (1, 950.00 PLN, 1 050.00 PLN)`), `rv3_scen_over_base_noline`. The other five `rv3_*` stay green.
+   - No other stored vector moved: `check commit` on its tree was green over every gating vector, and the sweep moved nothing.
+6. **c8730b25, the reviews' leftovers.**
+   - Done:
+     - Review G2a, 2: `walk/readings.rs` (`fallen_places`, `window_end`) and `walk/state.rs` (`Change::Unperm`) cite L §5.19 Holes.
+     - G2a, 6: `ask/answer.rs` `ask_engine` sets `engine.booked` in place, so no `let engine = …; engine` is left without `fault-injection`. `eval/state.rs` `with_booked` lost its one caller and goes.
+     - G2a, 7: `walk/plan.rs` `LegVal.day` stays, and its doc now says why. It isn't only a copy: a refused instance with no day dates its legs at the end of time (`refused_places`, l.1137) while `inst.day` is none. About 17 readers in 10 files take the leg without its instance: the day's acts, the ledger, `flows`, `same`, the members, F5, P8-14.
+     - G3, 3: `book/same.rs`'s and `book/observe.rs`'s headers name S-5's rule and `obs_row_seen`.
+   - Found done already: G3, 4. `hole/questions.rs` no longer lists `known of v`; G4's 4b9441bf rewrote `Unknown`'s doc.
+   - Measured, left uncached: G3, 2 (`moves_seen`). `perf counts P8-10`, the row that walks household A (`I:A:a05_ania@c05-ania`), gives `ok P8-10 counts(1w): def_misses 0, days_stepped 0, walks_shared 0 (exit 69 …)`. The engine answers that cut `not implemented`, as G4 found, so the row measures nothing yet. `moves_seen` reads the lines and the observations only, with no def cell and no day step, so a cache can't move any count budget. By the brief's condition it stays uncached.
+   - Left, with why:
+     - G2a, 5 and G3, 5: `book/reading.rs`'s `NotBuilt("a reading at an instant other than a day's start or end")` and `reading_of`'s `NotBuilt("a reading of a place with no unit")`. Both can't be reached. A narrower type on `Row.instant` can't remove them, because `Row` is shared by every input, state readings with a bare day among them, and about 25 sites read `row.instant`.
+     - The type that would remove them is a table of balance-reading rows typed at load: place, day, `Edge`, unit and type, beside the rows. It would also remove `readings`' `a reading of a place not named`, `ask/walked.rs`' edge-none arm and `eval/read.rs`' `the value of a reading of no unit`. That is a new structure across load, model, book and eval for arms no input reaches, so I propose it for M3 or the next round, not this closing turn. Both stay `NotBuilt`, with no behaviour change.
+     - G5's three `crates/tally/benches/p8_5.rs` comments (`low(x, a .. b) from t`, l.4, l.16, l.57): the guard keeps `engine/crates/*/benches/*` from the build role (R-91). They are for the rules step.
+7. **Whatever else is red: nothing.** After 73643de8 `check commit` is green, so no `Logged-Red:` id of the branch is red, and no id was left unexplained. `m1_fixes_the_spec_where_refcore_crashes` (G4's STOP-REPORT) was green at the start, on T's cf38e76c.
+
+**Red tests:** 5 of 1 066 at the start (above). 0 at the end, of 1 061: 4 crate tests went with S-8 (`group4_cases.rs` B1 ×2 and G1, `ask_cases.rs` N3), and the fault's 2 `load/defs.rs` tests went for 1 in `eval_cases.rs`.
+
+**Sweep** (`tmp/spec-2.2-build/close/sweep.py`). It runs G3's 74 sets (`tmp/spec-2.2/probes/`, `inputs/review/probes/`, `critic-scratch-2.2/`, with the joint sets) and `fault-b/`'s 5 texts, 79 sets. Refcore's outputs are kept once in `close/sw/ref` (refcore doesn't change this turn). Piece 2's "before" was G4's sweep outputs at 4b9441bf, covering pieces 1 and 2; each later piece's was the commit before's binary. Nothing turned same → different on any piece:
+- Pieces 1 and 2: same 72, moved 2.
+  - `s8`: S-8, now refcore's.
+  - `f1`: G4's first sweep outputs, before its `syntax/binds.rs` fix; now refcore's.
+  - `fault-b`'s n3, n4, n4g and order equal refcore's (no earlier sweep held them).
+- Pieces 3 to 6: same 72, moved 0, each.
+- The 7 that differ, before and after alike: 6 `tally run: not implemented` (a2e, CMP-01.inline, j1 and its joint, r1, r1b) and `fault-b/paths` (paths aren't built).
+
+**The round's sizes at this head, `git diff --shortstat 8ece2484..HEAD -- engine/crates`:** 104 files, 9 172 out, 1 949 in.
+- `crates/tally/src`: 85 files, 7 315 out, 1 493 in. The plan said about 5 590 to 5 690 out, 230 in. The crate's tests and the CLI's: 19 files, 1 857 out, 456 in.
+- By item, `crates/tally/src`, out/in, from each item's commits. Later items rewrote some earlier lines, so the sum runs over the head's diff:
+
+  | Item | Commits | src out / in | tests out / in |
+  |---|---|---|---|
+  | S-6 | eb8fcc43, bfeeceb8 | 572 / 197 | 111 / 10 |
+  | S-7 | 6012f936 (9af299a6 and a8ec49f7 cancel) | 68 / 27 | 11 / 1 |
+  | The fault, net at the head | `eval/context.rs` only; fd126be1 and 7a4c4cb6 taken back by ec3604c0 | 5 / 53 | 2 / 88 |
+  | S-3 | 361a9074 | 1 144 / 243 | 497 / 12 |
+  | S-3's words | 81263310 | 1 / 1 | |
+  | S-1 | 86f2745f | 498 / 106 | 356 / 16 |
+  | S-2 | ab8fe0ce | 1 635 / 272 | 286 / 20 |
+  | S-5 | 002cee8a, e9a54509 | 76 / 143 | 0 / 178 |
+  | S-8 | 2559cfdb (6270a1b0 and f846a48d cancel) | 568 / 95 | 274 / 10 |
+  | S-4 and the hole's name | 4b9441bf | 2 250 / 240 | 285 / 96 |
+  | S-9 | dce04b1c | 730 / 137 | 39 / 29 |
+  | The recognition (C-10 (a)) | 439e6e25 | 19 / 230 | |
+  | P21 | 73643de8 | 17 / 22 | |
+  | The reviews' leftovers | c8730b25 | 29 / 24 | |
+
+**Kernel files the round touched** (`engine/tools/kernel.toml`'s globs, `git diff --name-only 8ece2484..HEAD`): 22.
+- book/ledger.rs, members.rs, observe.rs, reading.rs, same.rs.
+- hole/questions.rs.
+- read/gap.rs, rows.rs.
+- walk/agenda.rs (P8-14), day.rs, flows.rs, fork.rs (F6), legs.rs, lows.rs (F5), modelled.rs, move_flows.rs, order.rs, plan.rs, projection.rs, readings.rs, reads.rs, state.rs.
+- This turn touched book/observe.rs, book/same.rs, walk/agenda.rs, lows.rs, plan.rs, projection.rs, readings.rs and state.rs, each already in the round's list.
+
+**Exceptions over the round** (`git diff 8ece2484..HEAD -- engine/EXCEPTIONS.lock`): count +0 (6); report-only hits −1, 9 → 8 (G5's `ask/walked.rs` `Read<'a>` lifetime review). This turn +0.
+
+**STOP-REPORTs:** none this turn. The round's six are all ruled and closed by these pieces or earlier: S-7 (P9), the key's edge (P14), LOAD-INSTANT's words (the close), S-8 (T's kplace base), the recognition (P24), the nine named holes (T's cf38e76c).
+
+**For the lead:** `engine/ARCHITECTURE.md` names nothing this turn adds or removes. The leftovers the earlier entries list for it stand.
+
+**Next:** the second, short turn, P25: a print's window hole names its unknown day in the register, refcore first, `ask/` unchanged here until then. Also the fourth review's findings.
+
+**Usage:** about 0.55 % of the week by `engine/tools/usage tmp/spec-2.2-build/close-ids.txt` before this entry (budget about 2 %, stop at 3.2 %).
+
+**Checks:**
+- Each piece's commit was on a green `check quick`: 74, 79, 87, 11, memo and 82 s.
+- `check fences: green, 1 step` after pieces 2 (49 s) and 3 (43 s).
+- `check commit` on 73643de8's tree: `check commit: green, 23 steps (198s)`.
+- On this entry's tree (c8730b25's code): `check commit: green, 23 steps (150s)`, 1 061 tests.
