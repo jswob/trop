@@ -24,7 +24,7 @@ use crate::book::{gap_text, instant_text};
 use crate::eval::{Ctx, Engine, Env, Item};
 use crate::model::{GapRole, Reality, Value};
 use crate::num::Num;
-use crate::syntax::{Ask, Bal, Expr, Instant, Stop};
+use crate::syntax::{Ask, Bal, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
     ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, qty_value, state_value,
@@ -210,8 +210,7 @@ fn modelled_lines(
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a walk the engine lacks; `NotBuilt` for a reading at an instant
-/// other than a day's start or end.
+/// `ENGINE-INVARIANT` for a walk the engine lacks, or a reading's row load didn't build.
 pub(crate) fn plain_lines(
     m: &Reality,
     engine: &Engine,
@@ -459,25 +458,14 @@ fn reading_text(
 
 /// A reading row's instant as text, `2026-01-01 start` (refcore's `instant_text`). L §4.6.
 fn reading_instant(m: &Reality, sid: &str) -> Result<String, Stop> {
-    // an opening's row, else a stated reading's
-    let mut found = None;
-    for input in ["opening", "stated"] {
-        if found.is_none()
-            && let Some(info) = m.inputs.get(input)
-        {
-            found = info.rows.iter().find(|r| r.sid == sid);
-        }
-    }
-    let row = found.ok_or_else(|| invariant("a reading's row load didn't build"))?;
-    match row.instant {
-        Some(Instant {
-            day,
-            edge: Some(edge),
-        }) => Ok(instant_text(day, edge)),
-        Some(Instant { edge: None, .. }) | None => Err(Stop::NotBuilt(
-            "explain of a reading at an instant other than a day's start or end",
-        )),
-    }
+    // an opening's row or a stated reading's, of any place
+    let found = m
+        .balance_readings
+        .values()
+        .flat_map(|of_place| &of_place.rows)
+        .find(|balance| balance.row.sid == sid);
+    let balance = found.ok_or_else(|| invariant("a reading's row load didn't build"))?;
+    Ok(instant_text(balance.day, balance.edge))
 }
 
 /// A reset entry's value: the balance it states, or the hole it is (refcore's `fmt(e.val)`,

@@ -107,6 +107,7 @@ pub(super) fn load_among(
     loader.build_items()?;
     loader.check_rows()?;
     loader.finish_rows();
+    loader.type_readings()?;
     super::overlap::check_obs(&loader.m)?;
     loader.check_sames()?;
     super::scenarios::check_scenarios(&loader.m)?;
@@ -199,6 +200,7 @@ impl Loader {
                 things: Table::new(),
                 indexes: Table::new(),
                 inputs: Table::new(),
+                balance_readings: BTreeMap::new(),
                 defs: Table::new(),
                 bands: Table::new(),
                 places: Table::new(),

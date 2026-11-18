@@ -7,7 +7,7 @@
 //! lifespan under a cut is its latest entry the cut and the read's world see, a `replace` line
 //! winning (L §6.4: a scenario's entry is seen in its world and those over it).
 
-use super::decl::{BandInfo, DefInfo, Domain, InputInfo, MoveInfo, PlaceInfo};
+use super::decl::{BandInfo, DefInfo, Domain, InputInfo, MoveInfo, PlaceInfo, PlaceReadings};
 use super::graph::Graph;
 use super::ids::{
     AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Names, PlaceId, SourceId,
@@ -149,6 +149,9 @@ pub struct Reality {
     pub indexes: Table<IndexId, IndexInfo>,
     /// The inputs.
     pub inputs: Table<InputId, InputInfo>,
+    /// Each place's balance readings, typed at load from the `opening` and `stated` rows
+    /// (L §5.19, §4.6 Readings, §5.10).
+    pub balance_readings: BTreeMap<String, PlaceReadings>,
     /// The defs.
     pub defs: Table<DefId, DefInfo>,
     /// The bands.
