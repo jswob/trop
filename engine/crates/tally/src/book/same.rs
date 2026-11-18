@@ -4,12 +4,14 @@
 //! `observed`), §5.19 (One movement on two statements: a read of the movement away from its
 //! places is the disagreement's hole, `HOLE-SAME`, naming both rows), §8.1 (`HOLE-SAME`'s form
 //! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`), §4.5 (tally
-//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are).
+//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are, but a version's
+//! line between two observed rows, which has no clock of its own: it holds at every cut that
+//! sees both rows, in the worlds its file is in; tally 2.2, S-5).
 //! Twin: engine/tools/refcore/moves.py (`same_lines`, `same_groups`, `once_obs`,
-//! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`); refcore's
-//! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
-//! model's lines since load refuses the pair in one model (tally 2.1.8), and is built here from
-//! it when joint models run (M5c).
+//! `same_obs_differ`, `obs_row_seen`), model.py (`same_seen`) and mreads.py
+//! (`once_by_same`); refcore's walk.py `same_observed` (an instance stated `same` as an
+//! observed row) serves only a joint model's lines since load refuses the pair in one model
+//! (tally 2.1.8), and is built here from it when joint models run (M5c).
 //! Invariants: a group's members are in the order of their ids, an id by its item's name and
 //! then each key by its place in its index, an open index's by code point (tally 2.1.8 S6, pick
 //! P50); a group is counted by its first member a read meets, its other members beside it;
@@ -23,7 +25,7 @@ use super::observe::{Obs, observed_row_seen};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, num_stop};
 use crate::hole::Hole;
-use crate::model::{KeyVal, MvRef, Reality, SamePair, Value, World};
+use crate::model::{KeyVal, MvRef, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -44,7 +46,7 @@ pub type Groups = BTreeMap<String, Vec<String>>;
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a version load didn't build.
-pub(crate) fn same_line_seen(
+fn same_line_seen(
     m: &Reality,
     version: Option<&str>,
     (cut, world): (Day, World),
@@ -84,9 +86,8 @@ fn rows_line_seen(
 
 impl Engine {
     /// Whether cut `cut` sees each `same` line of the reality, in the order written: a
-    /// version's line between two observed rows as [`rows_line_seen`] decides, any other line
-    /// of movements as [`same_line_seen`] does, a line of rows never (its read is the row's,
-    /// `eval/read.rs`). L §6.1, §5.19, §4.5.
+    /// version's line between two observed rows as [`rows_line_seen`] decides, any other as
+    /// [`same_line_seen`] does. L §6.1, §5.19, §4.5.
     ///
     /// # Errors
     ///
@@ -95,14 +96,11 @@ impl Engine {
         let world = self.timeline_world();
         let mut out = Vec::with_capacity(m.sames.len());
         for pair in &m.sames {
-            let seen = match pair {
-                SamePair::Moves(left, right, Some(version), true) => {
-                    rows_line_seen(m, (left, right), version, (cut, world))?
+            let seen = match (&pair.version, pair.observed) {
+                (Some(version), true) => {
+                    rows_line_seen(m, (&pair.left, &pair.right), version, (cut, world))?
                 }
-                SamePair::Moves(_, _, version, _) => {
-                    same_line_seen(m, version.as_deref(), (cut, world))?
-                }
-                SamePair::Rows(..) => false,
+                (version, _) => same_line_seen(m, version.as_deref(), (cut, world))?,
             };
             out.push(seen);
         }
@@ -197,13 +195,13 @@ impl Engine {
     }
 }
 
-/// The `same` lines of movements of `m` that `seen` flags (one flag per line, as
-/// [`Engine::moves_seen`] gives them), each its two sides, in the order written. L §6.1, §4.5.
+/// The `same` lines of `m` that `seen` flags (one flag per line, as [`Engine::moves_seen`]
+/// gives them), each its two sides, in the order written. L §6.1, §4.5.
 fn move_lines(m: &Reality, seen: Vec<bool>) -> Vec<(&String, &String)> {
     let mut out = Vec::new();
     for (pair, flag) in m.sames.iter().zip(seen) {
-        if let (SamePair::Moves(left, right, _, _), true) = (pair, flag) {
-            out.push((left, right));
+        if flag {
+            out.push((&pair.left, &pair.right));
         }
     }
     out

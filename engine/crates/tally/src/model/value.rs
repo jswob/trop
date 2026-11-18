@@ -171,15 +171,18 @@ impl Eq for Window {}
 
 impl Value {
     /// The unknown days the holes in the value carry, added to `into` in order, each once: a
-    /// hole's, and those of the holes a record or a list holds; a window value that is no hole
-    /// gives none (refcore's `hole_days`). L §4.4, §8.2 `unknown day:`.
+    /// hole's, those of the holes a record or a list holds, and a window's that is no window
+    /// of days, which prints as the hole `not precise enough for a print`; a window of days
+    /// prints as a window and gives none (refcore's `hole_days`; tally 2.2, pick P25). L §4.4,
+    /// §8.2 `unknown day:`.
     pub fn hole_days_into(&self, into: &mut Vec<crate::hole::Unknown>) {
         let mut todo: Vec<&Value> = vec![self];
         while let Some(v) = todo.pop() {
             match v {
-                Value::Hole(h) => crate::hole::carry_union(into, h.carried()),
+                Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
                 Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
                 Value::List(items) => todo.extend(items.iter().rev()),
+                Value::Window(w) if !w.of_days() => crate::hole::carry_union(into, &w.carry),
                 Value::Window(_)
                 | Value::Number(_)
                 | Value::Money(_)

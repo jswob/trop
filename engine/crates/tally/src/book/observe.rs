@@ -1,14 +1,17 @@
 //! Observations the cut sees, the places versions cover, and the links that tie an
 //! observation to the instance it fulfils.
-//! Spec: L §5.19 (observations: each row's latest restatement, `none` removes it; `covers`;
+//! Spec: L §5.19 (observations: each row's latest restatement, a scenario's above its base's
+//! whatever their `known` days as L §4.6 step 2 ranks claims, `none` removes it; `covers`;
 //! links written, judged by existence at the ask's cut, `RUN-RECORD` for a link to nothing or
 //! a record that lacks the instance's leg); E §4.1 step 3 (an instance an observation fulfils,
 //! or one on a covered day before K, is modelled past), §6.1 (each end of an observed leg booked
 //! from the observation of the version that covers its place that day; `WARN-LEGS`); L §6.4
-//! (the observations and coverage the timeline's world sees).
+//! (the observations and coverage the timeline's world sees); L §6.1, §5.19 (whether a cut
+//! sees one observed row as the observations do: a `same` line between two observed rows has
+//! no clock of its own and holds where both are seen; tally 2.2, S-5).
 //! Twin: engine/tools/refcore/moves.py (`ObsMv`, `coverage`, `covering`, `covered_on`,
 //! `observations`, `obs_links`, `link_targets`, `obs_links_for`, `link_tuple`, `link_places`,
-//! `touches_covered`) and walk.py (`obs_end_on`, `prepare`'s `WARN-LEGS`).
+//! `touches_covered`, `obs_row_seen`) and walk.py (`obs_end_on`, `prepare`'s `WARN-LEGS`).
 //! Invariants: observations and coverage are computed once per cut; a link is judged once per
 //! cut, and what judging it read goes with every observation that fulfils it; an observation's
 //! link is never inferred, only read from its row.
@@ -723,9 +726,10 @@ fn observation_at(input: &InputInfo, at: usize) -> Result<&crate::model::Observa
 
 /// Whether cut `cut` in world `world` sees observed row `id` (`bank[r1]`) as the observations
 /// do ([`seen_observations`]): its latest restatement known by the cut in a version the world
-/// sees, of two known the same day the first written, isn't `none`. A row no version states
-/// is seen: a line naming it stands, and the read of that side refuses (`RUN-RECORD`)
-/// (refcore's `obs_row_seen`). L §5.19, §6.1, §6.4 (tally 2.2, S-5).
+/// sees, a scenario's above its base's whatever their `known` days, of two in one layer known
+/// the same day the first written, isn't `none`. A row no version states is seen: a line
+/// naming it stands, and the read of that side refuses (`RUN-RECORD`) (refcore's
+/// `obs_row_seen`). L §5.19, §6.1, §6.4, §4.6 step 2 (tally 2.2, S-5).
 ///
 /// # Errors
 ///
@@ -742,8 +746,8 @@ pub(crate) fn observed_row_seen(
         return Ok(true);
     };
     let mut stated = false;
-    // the latest restatement's `known` day and whether it removes the row
-    let mut latest: Option<(Day, bool)> = None;
+    // the latest restatement's layer and `known` day, and whether it removes the row
+    let mut latest: Option<((usize, Day), bool)> = None;
     for o in input.observations.iter().filter(|o| o.key == key) {
         stated = true;
         let version = m
@@ -754,17 +758,19 @@ pub(crate) fn observed_row_seen(
         if known_on > cut || !m.scenarios.sees(world, Some(&o.version)) {
             continue;
         }
-        if latest.is_none_or(|(kept, _)| known_on > kept) {
-            latest = Some((known_on, o.removed));
+        let rank = (m.scenarios.layer(Some(&o.version)), known_on);
+        if latest.is_none_or(|(kept, _)| rank > kept) {
+            latest = Some((rank, o.removed));
         }
     }
     Ok(!stated || latest.is_some_and(|(_, removed)| !removed))
 }
 
 /// The observations the cut and the world of `seen` see: per observed input, each row id's
-/// latest restatement known by the cut in a version the world sees, `none` removing it; sorted
-/// by day and id, each with its row among what it met where `rows` says so (refcore's
-/// `observations`). L §5.19, §6.4; E §10.
+/// latest restatement known by the cut in a version the world sees, a scenario's above its
+/// base's whatever their `known` days, `none` removing it; sorted by day and id, each with its
+/// row among what it met where `rows` says so (refcore's `observations`). L §5.19, §6.4, §4.6
+/// step 2; E §10.
 fn seen_observations(
     m: &Reality,
     (cut, world): (Day, World),
@@ -772,9 +778,9 @@ fn seen_observations(
 ) -> Result<Vec<Obs>, Stop> {
     let mut out = Vec::new();
     for (_, input) in m.inputs.entries() {
-        // each row id's latest restatement, its `known` day and its position; of two known
-        // the same day, the first written
-        let mut latest: BTreeMap<&str, (Day, usize)> = BTreeMap::new();
+        // each row id's latest restatement, its layer and `known` day, and its position; of
+        // two in one layer known the same day, the first written
+        let mut latest: BTreeMap<&str, ((usize, Day), usize)> = BTreeMap::new();
         for (at, o) in input.observations.iter().enumerate() {
             let version = m
                 .versions
@@ -784,14 +790,15 @@ fn seen_observations(
             if known_on > cut || !m.scenarios.sees(world, Some(&o.version)) {
                 continue;
             }
+            let rank = (m.scenarios.layer(Some(&o.version)), known_on);
             latest
                 .entry(o.key.as_str())
                 .and_modify(|kept| {
-                    if known_on > kept.0 {
-                        *kept = (known_on, at);
+                    if rank > kept.0 {
+                        *kept = (rank, at);
                     }
                 })
-                .or_insert((known_on, at));
+                .or_insert((rank, at));
         }
         for (_, (_, at)) in latest {
             let o = observation_at(input, at)?;

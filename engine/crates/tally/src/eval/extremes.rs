@@ -84,7 +84,7 @@ fn unordered(m: &Reality, bind: &Bind) -> Option<Unordered> {
 ///
 /// The refusals of comparing the values; an invariant for no value, which every caller
 /// refuses first (`RUN-EMPTY`, the call's arity).
-pub(super) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value, Stop> {
+pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value, Stop> {
     let Some(w) = vals.iter().find_map(as_window) else {
         return extreme_of(m, vals, pick);
     };

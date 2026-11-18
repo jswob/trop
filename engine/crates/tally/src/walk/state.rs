@@ -73,7 +73,7 @@ pub enum Change {
     /// A hole no reading answers: a hole day, `HOLE-CHANGED` (E §4.2, E §5 step 5).
     Perm(Hole),
     /// A decision dated by a window has fallen at the window's last day: its hole no reading
-    /// answered is taken back, as each unit's hole a reading ends takes its place (L §4.6,
+    /// answered is taken back, as each unit's hole a reading ends takes its place (L §5.19 Holes,
     /// §4.4; pick P29 on #175; refcore's `unperm`).
     Unperm(Hole),
     /// A refusal that holds from here to the place's next reading: a dated refused movement's,

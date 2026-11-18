@@ -7,9 +7,10 @@
 //! can make one, and an operator that meets holes calls [`spread`], the one rule. A hole is
 //! never 0 and never a default (R-27). The bound a later milestone adds to a hole has its slot
 //! here, empty at S (seam U). The unknown days a hole carries (L §4.4, which the register's
-//! `unknown day:` lines name, §8.2) spread with its questions and are no part of its identity.
+//! `unknown day:` lines name, §8.2) are kept by question, spread with them, go with a question
+//! a hole loses, and are no part of its identity.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// One question of a hole and the figure it was asked of (`pay[ana, 2026-01]`), or the empty
 /// text for a hole no figure names (a record's field written `?"…"`). L §8.1.
@@ -30,6 +31,20 @@ impl Ord for Asked {
     }
 }
 
+impl Asked {
+    /// The question a read `read` asks where a window put it for a balance (`date within …
+    /// for a balance`), or the question as it is (the plan's §14.1). L §4.4.
+    fn for_read(&self, read: &str) -> Asked {
+        match self.text.strip_suffix(" for a balance") {
+            Some(head) if head.starts_with("date within ") => Asked {
+                text: format!("{head} for {read}"),
+                figure: self.figure.clone(),
+            },
+            _ => self.clone(),
+        }
+    }
+}
+
 impl PartialOrd for Asked {
     /// As [`Ord`]: the print order (L §8.1).
     fn partial_cmp(&self, other: &Asked) -> Option<core::cmp::Ordering> {
@@ -47,10 +62,12 @@ pub struct Hole {
     bound: Bound,
     /// What a `partial` ask line knows of it (L §5.18 Partial answers).
     lin: Lin,
-    /// The unknown days it was made of, in the order the line's reads met them, each once:
-    /// what the register's `unknown day:` lines name (L §4.4: "a hole made of either carries
-    /// them too"; §8.2). No part of the hole's identity.
-    carry: Vec<Unknown>,
+    /// The unknown days each question was made of, in the order the line's reads met them,
+    /// each once: what the register's `unknown day:` lines name (L §4.4: "a hole made of
+    /// either carries them too"; §8.2). Kept by question, as refcore's `CARRY` keys them, so a
+    /// hole that loses a question loses the days only it carried. No part of the hole's
+    /// identity.
+    carry: BTreeMap<Asked, Vec<Unknown>>,
 }
 
 /// An unknown day a value or a hole carries: its identity (the read that gave it, or a
@@ -128,42 +145,51 @@ impl Hole {
             questions,
             bound: Bound::Unbounded,
             lin: Lin::Unsaid,
-            carry: Vec::new(),
+            carry: BTreeMap::new(),
         }
     }
 
-    /// The hole, carrying the unknown days `unknowns` too, after its own (refcore's
-    /// `carry_hole`). L §4.4; tally 2.1.8 R13.
+    /// The hole, each of its questions carrying the unknown days `unknowns` too, after its own
+    /// (refcore's `carry_hole`). L §4.4; tally 2.1.8 R13.
     #[must_use]
     pub fn carrying(mut self, unknowns: &[Unknown]) -> Hole {
-        carry_union(&mut self.carry, unknowns);
+        if unknowns.is_empty() {
+            return self;
+        }
+        for q in &self.questions {
+            let days = self.carry.entry(q.clone()).or_insert_with(Vec::new);
+            carry_union(days, unknowns);
+        }
         self
     }
 
     /// The hole a read `read` meets where a window's test reaches it: each question a window
-    /// put for a balance asked for `read` instead, the rest as they are (the plan's §14.1: a
-    /// hole's printed question is the read's; tally 2.1.8 item 77). L §4.4.
+    /// put for a balance asked for `read` instead, carrying the days it did, the rest as they
+    /// are (the plan's §14.1: a hole's printed question is the read's; tally 2.1.8 item 77;
+    /// refcore's `_reask`). L §4.4.
     #[must_use]
     pub fn for_read(&self, read: &str) -> Hole {
         let mut out = self.clone();
-        out.questions = self
-            .questions
-            .iter()
-            .map(|q| match q.text.strip_suffix(" for a balance") {
-                Some(head) if head.starts_with("date within ") => Asked {
-                    text: format!("{head} for {read}"),
-                    figure: q.figure.clone(),
-                },
-                _ => q.clone(),
-            })
-            .collect();
+        out.questions = self.questions.iter().map(|q| q.for_read(read)).collect();
+        out.carry = BTreeMap::new();
+        for (q, days) in &self.carry {
+            carry_union(
+                out.carry.entry(q.for_read(read)).or_insert_with(Vec::new),
+                days,
+            );
+        }
         out
     }
 
-    /// The unknown days it carries, in the order met (refcore's `carried` of a hole). L §4.4.
+    /// The unknown days it carries, each once: its questions' in their order, each
+    /// question's in the order met (refcore's `carried` of a hole). L §4.4.
     #[must_use]
-    pub fn carried(&self) -> &[Unknown] {
-        &self.carry
+    pub fn carried(&self) -> Vec<Unknown> {
+        let mut out = Vec::new();
+        for days in self.carry.values() {
+            carry_union(&mut out, days);
+        }
+        out
     }
 
     /// The hole of `self`'s questions that is linear in its named holes as `lin` says, for a
@@ -233,8 +259,9 @@ impl Hole {
         self.questions == other.questions
     }
 
-    /// The hole of the questions this one carries and `other` doesn't, with its unknown days;
-    /// none where `other` carries every one (refcore's `perm - e.qs`). L §8.1.
+    /// The hole of the questions this one carries and `other` doesn't, with the unknown days
+    /// those questions carry; none where `other` carries every one (refcore's `perm - e.qs`,
+    /// each question's days its `CARRY[q]`). L §8.1, §4.4.
     #[must_use]
     pub fn without(&self, other: &Hole) -> Option<Hole> {
         let questions: BTreeSet<Asked> = self
@@ -245,10 +272,17 @@ impl Hole {
         if questions.is_empty() {
             return None;
         }
+        let carry = self
+            .carry
+            .iter()
+            .filter(|(q, _)| questions.contains(*q))
+            .map(|(q, days)| (q.clone(), days.clone()))
+            .collect();
         Some(Hole {
             questions,
+            bound: self.bound,
             lin: Lin::Plain,
-            ..self.clone()
+            carry,
         })
     }
 
@@ -381,7 +415,9 @@ pub fn spread(operands: &[Option<&Hole>]) -> Option<Hole> {
             }
             Some(acc) => {
                 acc.questions.extend(hole.questions.iter().cloned());
-                carry_union(&mut acc.carry, &hole.carry);
+                for (q, days) in &hole.carry {
+                    carry_union(acc.carry.entry(q.clone()).or_insert_with(Vec::new), days);
+                }
             }
         }
     }

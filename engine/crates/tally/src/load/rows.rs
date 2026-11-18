@@ -601,7 +601,7 @@ fn row_instant(
         return Err(refuse(
             Load::Instant,
             format!(
-                "balance reading {id} at {} needs start, end or after",
+                "balance reading {id} at {} needs start or end",
                 instant.day.text()
             ),
             file,

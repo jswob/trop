@@ -21,8 +21,11 @@
 //! P56, #128).
 //! PERF: P8-5, P8-M4 (one read of a written projection in E §4.3's common case: O(log n) in
 //! the n days x moves, where the walk plans and walks the window and reads each of its days;
-//! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`: the
-//! projection's own walk); the equivalence test: the CLI's
+//! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (for one read,
+//! `projection`: the projection's own walk; for the `min` of `bal(x, d) from t` over the days
+//! a .. b that E §4.3 reads as one range minimum, projection.rs's `lowest_shape` and
+//! `range_minimum`, the aggregate `min`, its terms read day by day, eval/aggregate.rs, as
+//! `Lows::Walk` reads it); the equivalence test: the CLI's
 //! `tests/walk_oracle.rs` (the kernel and M1 corpora, and a projection under axes and in a
 //! scenario's world, the same bytes under `Lows::Tree` and `Lows::Walk`), and this file's tests.
 //!
@@ -650,7 +653,8 @@ impl Engine {
             .checked_add(&tree.lowest_change(counts, (first, last))?)
             .map_err(num_stop)?;
         let mut met = tree.register(counts, last);
-        let lines = left_out_lines(&tree.counted, (t, last))?;
+        // a `min` over the days first through last reads each day's projection (E §4.3)
+        let lines = left_out_lines(&tree.counted, (t, (first, last)))?;
         for line in lines {
             self.note("left out", line, String::new());
         }
@@ -1341,7 +1345,7 @@ version rise
             let (tree, walks, _) = read(&m, id, Lows::Tree);
             let (walk, _, _) = read(&m, id, Lows::Walk);
             assert_eq!(tree, walk, "{id}: the same value");
-            assert!(walks > 0, "{id}: the projection's walk reads it");
+            assert_eq!(walks, 1, "{id}: one projection's walk reads its days");
         }
     }
 

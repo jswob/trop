@@ -820,7 +820,7 @@ pub(super) fn is_read(m: &Reality, name: &str) -> bool {
 }
 
 /// The hole of the operands' questions (the hole module's one rule, L §8.1).
-pub(super) fn hole_of(operands: &[Option<&Hole>]) -> Result<Value, Stop> {
+pub(crate) fn hole_of(operands: &[Option<&Hole>]) -> Result<Value, Stop> {
     spread(operands)
         .map(Value::Hole)
         .ok_or_else(|| invariant("a hole spread over operands that hold none"))

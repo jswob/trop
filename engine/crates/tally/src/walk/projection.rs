@@ -1,18 +1,25 @@
-//! The written projection `bal(x, d) from t`, a walk of its own from day t without its holder's dependents.
+//! The written projection `bal(x, d) from t`, a walk of its own from day t without its holder's dependents, and the `min` of it read as one range minimum.
 //! Spec: L §5.14.1 (The projection is written: its start at t, or at a decision's point on t;
 //! the movements dated t through d counted as known on t; those that depend on the holder left
 //! out and listed; `with uncertain`; `HOLE-PRERUN` before S; `RUN-FUTURE`; `RUN-DOMAIN` for a
 //! day before t), E §4.3 (steps 1–3; nesting is finite; the projection's own walk is the plain
-//! twin of fence F5; the common case offered to F5 first, `lows.rs`), §3.2 (the projection in
-//! a cell's context), L §8.2 (`left out:`).
+//! twin of fence F5; the common case offered to F5 first, `lows.rs`; the `min` of `bal(x, d)
+//! from t` over the days a .. b a range minimum: its shape recognised here, `lowest_shape`,
+//! and read by `range_minimum`, from F5 or one walk read day by day; its plain twin the
+//! aggregate `min`, its terms read one by one, eval/aggregate.rs), §3.2 (the projection in a
+//! cell's context), L §5.11 (`min`), §8.2 (`left out:`).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `proj_regs`, `proj_uncertain`,
-//! `proj_clauses`) and walk.py (`proj_walk`).
+//! `proj_clauses`), walk.py (`proj_walk`) and, for the recognised `min`, evaluate.py
+//! (`e_agg`).
 //! Invariants: a projection's walk starts each place as the walk it continues stood at its
 //! point and books nothing of a move that depends on its holder; there is one walk per (walk
 //! continued, point, cut, moves left out), walked only as far as a read needs; a decision
 //! reads no projection from a day after its own; a read F5 answers is answered as this walk
-//! would, and every read F5 leaves is read here unchanged.
+//! would, and every read F5 leaves is read here unchanged; a recognised `min` gives the
+//! aggregate's value, hole or refusal, and one `range_minimum` leaves is the aggregate's, read
+//! from the same range's values.
 
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::left_out_lines;
@@ -23,10 +30,11 @@ use super::point::At;
 use super::reads::Sees;
 use super::state::{Projected, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Ctx, Engine, Env};
+use crate::eval::{Ctx, Engine, Env, hole_of, min_max, reads_name};
 use crate::hole::Hole;
 use crate::model::{Reality, Value};
-use crate::syntax::{Bal, Stop};
+use crate::num::Num;
+use crate::syntax::{Agg, AggFn, Bal, Domain, Expr, Lit, Stop};
 use crate::time::{Day, Period};
 
 /// A projection's walk by what makes it: the walk it continues, the point it starts after,
@@ -120,6 +128,137 @@ impl Engine {
             return self.proj_uncertain(m, id, (place, unit), (day, &value), ctx);
         }
         Ok(value)
+    }
+
+    /// Whether a `min` of [`lowest_shape`]'s shape is read as one range minimum: as `run` reads
+    /// (`Lows::Tree`), and never on a `partial` line or in a traced read, which read each
+    /// day's projection as the aggregate's terms do (L §5.18, E §10). E §4.3.
+    pub(crate) fn reads_lowest(&self, ctx: Ctx) -> bool {
+        self.lows == Lows::Tree && !ctx.partial && !self.tracing()
+    }
+
+    /// A `min` of [`lowest_shape`]'s shape, its term `read`, read as one range minimum over
+    /// its range's values `days`, read once as its binding reads them: its balances
+    /// ([`Engine::lowest_balances`]) folded as the aggregate folds its terms, a hole where any
+    /// is one. None where the aggregate reads it term by term from the same values: a range
+    /// of no day or of other values, or what `lowest_balances` leaves. L §5.11, E §4.3.
+    ///
+    /// # Errors
+    ///
+    /// The refusals of [`Engine::lowest_balances`] and of the fold (L §5.11's `min`).
+    pub(crate) fn range_minimum(
+        &mut self,
+        m: &Reality,
+        read: &Bal,
+        days: &[(Value, Option<Hole>)],
+        (env, ctx): (&Env, Ctx),
+    ) -> Result<Option<Value>, Stop> {
+        let Some(ends) = first_and_last(days) else {
+            return Ok(None);
+        };
+        let Some(balances) = self.lowest_balances(m, read, ends, (env, ctx))? else {
+            return Ok(None);
+        };
+        let holes: Vec<Option<&Hole>> = balances
+            .iter()
+            .filter_map(Value::as_hole)
+            .map(Some)
+            .collect();
+        if !holes.is_empty() {
+            return hole_of(&holes).map(Some);
+        }
+        min_max(m, balances, crate::eval::End::Low).map(Some)
+    }
+
+    /// The end-of-day balances of a `min` of [`lowest_shape`]'s shape, its term `read`, on its
+    /// days `first` through `last`, its place and start read once: in E §4.3's common case
+    /// one balance, the least, from fence F5's tree; else each day's, from one walk continued
+    /// from day t, walked day by day. None where the aggregate reads it day by day as
+    /// written, so that every hole and refusal its days meet is the aggregate's own: a day
+    /// outside the run, a place or a start that is a hole or a window, a start before the run
+    /// or after the first day. L §5.14.1, E §4.3.
+    ///
+    /// # Errors
+    ///
+    /// The refusals the aggregate's first term meets: its place's, its unit's (`LOAD-UNIT`),
+    /// its start's, `RUN-FUTURE` for a decision's projection from a later day; the refusals of
+    /// the walk.
+    fn lowest_balances(
+        &mut self,
+        m: &Reality,
+        read: &Bal,
+        (first, last): (Day, Day),
+        (env, ctx): (&Env, Ctx),
+    ) -> Result<Option<Vec<Value>>, Stop> {
+        let Some(from) = &read.proj.from else {
+            return Ok(None);
+        };
+        if first < m.start || last > m.end {
+            return Ok(None);
+        }
+        let Ok(place) = self.place_arg(m, &read.place, env, ctx)? else {
+            return Ok(None);
+        };
+        let unit = own_unit(m, &place)?;
+        let start = self.ev(m, from, env, ctx)?;
+        if let Value::Hole(_) = start {
+            return Ok(None);
+        }
+        let Ok(start) = crate::eval::one_day(m, &start, "the day of a projection")? else {
+            return Ok(None);
+        };
+        if first < start || start < m.start {
+            return Ok(None);
+        }
+        let uncertain = read.proj.uncertain || ctx.unc;
+        let window = (start, (first, last));
+        if let Some(v) = self.common_case(m, (&place, &unit), window, (uncertain, ctx))? {
+            return Ok(Some(vec![v]));
+        }
+        let left_out = self.holder_left_out(m)?;
+        let id = self.proj_walk(m, ctx, (start, last), left_out)?;
+        let balances = self.days_read(
+            m,
+            id,
+            (&place, &unit),
+            (start, (first, last)),
+            (uncertain, ctx),
+        );
+        self.end_projection(id, balances.as_ref().err())?;
+        balances.map(Some)
+    }
+
+    /// [`Engine::lowest_balances`]' read of its walk `id` from day `start`: each day's end
+    /// balance from `first` through `last`, the walk walked through that day first, with that
+    /// day's `left out:` lines, its uncertain movements counted under `with uncertain`, as the
+    /// `min`'s terms read them one by one (refcore's `proj_bal`). L §5.14.1, E §4.3.
+    fn days_read(
+        &mut self,
+        m: &Reality,
+        id: usize,
+        (place, unit): (&str, &str),
+        (start, (first, last)): (Day, (Day, Day)),
+        (uncertain, ctx): (bool, Ctx),
+    ) -> Result<Vec<Value>, Stop> {
+        if let Some(at) = ctx.at {
+            self.note_read(at.walk, place, Sees::AtPoint)?;
+        }
+        // a day's balance reads the walk through that day (L §8, a scan; tally 2.1.7 R1, #127):
+        // a walk that fails on a day refuses the `min` there, after the days before it are read
+        let mut out = Vec::new();
+        let mut day = Some(first);
+        while let Some(d) = day.filter(|d| *d <= last) {
+            self.walk_projection(m, id, d)?;
+            self.proj_regs(id, start, d)?;
+            let v = self.read_state(m, id, place, unit, At::end(d))?;
+            out.push(if uncertain && !matches!(v, Value::Hole(_)) {
+                self.proj_uncertain(m, id, (place, unit), (d, &v), ctx)?
+            } else {
+                v
+            });
+            day = d.next();
+        }
+        Ok(out)
     }
 
     /// The plain twin's walk of a projection from day `t`, as the item holding it now leaves
@@ -366,12 +505,69 @@ impl Engine {
             .proj
             .as_ref()
             .ok_or_else(|| invariant("a projection read of a main walk"))?;
-        let lines = left_out_lines(&p.counted, (t, d))?;
+        let lines = left_out_lines(&p.counted, (t, (d, d)))?;
         for line in lines {
             self.note("left out", line, String::new());
         }
         Ok(())
     }
+}
+
+/// A range's ends and step as written, `a .. b step s` (L §2.3 `bind`).
+pub(crate) type RangeText = (Expr, Expr, Option<Expr>);
+
+/// The range and the term of a `min` E §4.3 reads as one range minimum, `min(bal(x, d) from
+/// t [with uncertain] for d in a .. b step 1 day)`: one binding, a range of days stepped by
+/// one day with no `where`, `on` or `over`; its term the projection's balance of the bound
+/// day at its end, whose place and start don't read the bound day; no `ties by` or `random
+/// at`. None for any other `min`, which is the aggregate, term by term (L §5.11). L §5.14.1,
+/// E §4.3.
+pub(crate) fn lowest_shape(agg: &Agg) -> Option<(&RangeText, &Bal)> {
+    let (AggFn::Min, [bind], Some(Expr::Bal(read)), None) =
+        (agg.func, agg.binds.as_slice(), &agg.term, &agg.ties)
+    else {
+        return None;
+    };
+    let (Domain::Range(range), None, None, None) =
+        (&bind.domain, &bind.on, &bind.over, &bind.filter)
+    else {
+        return None;
+    };
+    let ([Expr::Name(day)], Some(from), None) = (read.args.as_slice(), &read.proj.from, &read.of)
+    else {
+        return None;
+    };
+    let clauses = !read.start && !read.modelled && read.proj.random.is_none();
+    let free = !reads_name(&read.place, &bind.var) && !reads_name(from, &bind.var);
+    let shape = *day == bind.var && clauses && free && one_day_step(range.2.as_ref());
+    shape.then_some((&**range, &**read))
+}
+
+/// Whether a range's step is written `1 day`. L §2.3 `bind`, §5.6.
+fn one_day_step(step: Option<&Expr>) -> bool {
+    let Some(Expr::Lit(Lit::Num(n))) = step else {
+        return false;
+    };
+    let one = |q: &Num| q.compare(&Num::int(1)) == Ok(Ordering::Equal);
+    let day = n.unit.as_ref().is_some_and(
+        |u| matches!(u.terms.as_slice(), [term] if term.base == "day" && one(&term.power)),
+    );
+    day && one(&n.value)
+}
+
+/// The first and last of a range's days, where every value is a day with no hole of its own;
+/// none for a range of no day or of other values. L §5.6.
+fn first_and_last(values: &[(Value, Option<Hole>)]) -> Option<(Day, Day)> {
+    let mut days = values.iter().map(|value| match value {
+        (Value::Day(d), None) => Some(*d),
+        _ => None,
+    });
+    let first = days.next()??;
+    let mut last = first;
+    for d in days {
+        last = d?;
+    }
+    Some((first, last))
 }
 
 /// The day a projection's walk read through `through` is planned through: on to the last day
