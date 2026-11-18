@@ -1,6 +1,8 @@
 # tally 2.1.8 (L §4.4; the third turn's non-blocking note from group 2's fix review): days_between(wa, wa) names one
 # window twice, taken with its own name once, so it is 0 on every day it can take (z1), as wa == wa is true (z4)
 # and windows each prints it plain (z2); two windows stay the hole (z3). 4651a48f printed z1 as the hole.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -41,7 +43,7 @@ version v
   opening[jar] = 0.00 PLN at 2026-01-01 start "s"
 
 ask z1: days_between(wa, wa)
-ask z2: days_between(wa, wa) windows each
+ask z2: days_between(wa, wa)
 ask z3: days_between(wa, wb)
 ask z4: wa == wa
 === expect

@@ -2,6 +2,7 @@
 # branch doesn't book (a decision whose projection the branch changed) is listed, `before from: <instance> on
 # <day> removed by <branch>`, under the reads of the places it touched. 2.1.6's refcore listed nothing. (T's G14
 # g6f3.)
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === g6f3_m.tally
 model decided
   tally 2
@@ -38,7 +39,7 @@ move bill: transfers
 move sweep: transfers
   on sweep_day
   reads konto
-  leg cash from konto to savings amount max(0 PLN, low(konto, sweep_day .. horizon) from sweep_day - floor)
+  leg cash from konto to savings amount max(0 PLN, min(bal(konto, d) from sweep_day for d in sweep_day .. horizon step 1 day) - floor)
 
 ask b0: bal(konto, 2026-06-30)
 

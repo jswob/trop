@@ -4,6 +4,7 @@
 # the hole (b); low over 2026-06-01 .. 2026-08-31 is the min of those bals, so the hole too (c, L §5.14.1); low inside
 # the run stands (d); bal before S is HOLE-PRERUN (e); a projection to a day after E is the hole (g), one to E stands
 # (h). Was (2.1.6): b 600.00, c 500.00, g 600.00, e "konto has no balance before 2026-01-01".
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model t
   tally 2
@@ -33,8 +34,8 @@ version v
 
 ask a: bal(konto, 2026-06-30)
 ask b: bal(konto, 2026-08-31)
-ask c: low(konto, 2026-06-01 .. 2026-08-31)
-ask d: low(konto, 2026-01-01 .. 2026-06-30)
+ask c: min(bal(konto, dd) for dd in 2026-06-01 .. 2026-08-31 step 1 day)
+ask d: min(bal(konto, dd) for dd in 2026-01-01 .. 2026-06-30 step 1 day)
 ask e: bal(konto, 2025-12-31)
 ask g: bal(konto, 2026-08-31) from 2026-03-01
 ask h: bal(konto, 2026-06-30) from 2026-03-01

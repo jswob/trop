@@ -4,6 +4,7 @@
 # 2026-02-01 start: bal on 2026-01-20 (a), low over 2026-01-20 .. 2026-02-15 (b) and bal on the stated day (d) are
 # the hole; bal inside the run reads the opening (c). Was (2.1.6): a, b, d "konto has no balance before
 # 2026-01-05", a question false of the day read.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === pre.tally
 model t
   tally 2
@@ -24,7 +25,7 @@ version v
   opening[konto] = 50.00 PLN at 2026-02-01 start "s"
 
 ask a: bal(konto, 2026-01-20)
-ask b: low(konto, 2026-01-20 .. 2026-02-15)
+ask b: min(bal(konto, dd) for dd in 2026-01-20 .. 2026-02-15 step 1 day)
 ask c: bal(konto, 2026-02-15)
 ask d: bal(konto, 2026-01-05)
 === expect

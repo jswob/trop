@@ -31,6 +31,8 @@ version v
   d = 2026-03-15 "mid-March"
 === expect
 qa: ?"date within window(2026-03-01, 2026-03-31) not precise enough for add_days(w_in, 1) == d" (w_in)
+  unknown day: w_in
   cut 2026-12-31
 qm: ?"date within window(2026-03-01, 2026-03-31) not precise enough for max(w_in, d) == d" (w_in)
+  unknown day: w_in
   cut 2026-12-31

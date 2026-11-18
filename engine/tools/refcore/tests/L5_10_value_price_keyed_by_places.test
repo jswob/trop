@@ -1,6 +1,7 @@
 # L §5.10 Value, §8.4 (tally 2.1.7 R5, issue #144; G11): `by p` is a num CUR/u keyed by units; unit_price
 # is keyed by places, which load sees: refused at load. 2.1.6's refcore gave the hole unit_price at etf: no value.
 # (T's G14 vectors p130_one_units, up_pln.)
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === p130_one_units.tally
 model units
   tally 2
@@ -23,7 +24,7 @@ kind funds: place one min 0 priced unit_price
 
 kind boxes: holdings
 
-kind safes: place any signed
+kind safes: place any signed outside
 
 kind unit_buys: event certain
   leg units: etf

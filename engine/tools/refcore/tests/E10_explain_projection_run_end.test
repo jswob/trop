@@ -4,7 +4,8 @@
 # 10.00 PLN are booked before 2026-11-01, so the start is 500.00 - 100.00 = 400.00 PLN; the rents of 2026-11-01 and
 # 2026-12-01 bring it to 380.00 PLN, the lowest; from 2026-12-31 the balance is 380.00 PLN. room[2026-12] reads
 # the projection from 2026-12-01 to the last day: 380.00 PLN. (A household text's explain of such a def crashed; the
-# crash's cause is the printer's, test E10_explain_cause_order; this one guards the run's end.)
+# crash's cause is the printer's, test E10_explain_cause_order; this one guards the run's end.) tally 2.2 (2.2-9):
+# `low` is cut; the lowest balance is explained in two asks, its day (e, 2026-12-01) and that day's projection (e1).
 === m.tally
 model m
   tally 2
@@ -27,9 +28,10 @@ move rent[m in mon]: transfers
   on start_of(m)
   leg cash from konto to world amount amt
 
-def room[m in mon]: money PLN = low(konto, start_of(m) .. last_day) from start_of(m)
+def room[m in mon]: money PLN = min(bal(konto, d) from start_of(m) for d in start_of(m) .. last_day step 1 day)
 
-ask e: explain low(konto, 2026-11-01 .. 2026-12-31) from 2026-11-01
+ask e: argmin(bal(konto, d) from 2026-11-01 for d in 2026-11-01 .. 2026-12-31 step 1 day) ties by d
+ask e1: explain bal(konto, 2026-12-01) from 2026-11-01
 ask e2: explain bal(konto, 2026-12-31) from 2026-12-31
 ask r: room[2026-12]
 
@@ -41,10 +43,12 @@ version v1
   last_day = 2026-12-31
   opening[konto] = 500.00 PLN at 2026-01-01 start "s"
 === expect
-e: 380.00 PLN
-  projection of konto (PLN) from 2026-11-01, lowest end-of-day balance on 2026-11-01 .. 2026-12-31
-  holder: ask e (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+e: 2026-12-01
+...
+e1: 380.00 PLN
+  projection of konto (PLN) from 2026-11-01 to the end of 2026-12-01
+  holder: ask e1 (an ask line leaves out nothing, L §5.14.1)
+  clauses: random none, without uncertain
   start: 400.00 PLN at the start of 2026-11-01
   counted:
     2026-11-01:
@@ -52,7 +56,6 @@ e: 380.00 PLN
     2026-12-01:
       rent[2026-12].cash (plan): -10.00 PLN
   left out: none
-  lowest: 380.00 PLN at the end of 2026-12-01
 ...
 e2: 380.00 PLN
   projection of konto (PLN) from 2026-12-31 to the end of 2026-12-31

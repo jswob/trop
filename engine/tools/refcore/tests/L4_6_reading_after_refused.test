@@ -1,0 +1,35 @@
+# tally 2.2 (CHANGES.md 2.2-3), L §2.3 `instant`, §4.6: a balance reading stands at the start or the end of a day;
+# the instant `after m` is cut, so a row that writes it is refused by the grammar. A running balance printed row by
+# row is stated once a day, `at D end`. (Was L4_6_after_plan_refused, LOAD-ORDER for a reading after a plan.)
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dom: int
+
+move pay[m in months]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  anchor konto
+  amt = 100.00 PLN
+  dom = 5
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  stated[konto] = 900.00 PLN after pay[2026-01] "s"
+
+ask q: bal(konto, 2026-01-31)
+=== expect
+refused: LOAD-PARSE cannot parse: expected end of line, got after (m.tally:27)

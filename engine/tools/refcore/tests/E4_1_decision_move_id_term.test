@@ -50,7 +50,7 @@ version v
 p: 80.00 PLN
   projection of konto (PLN) from 2026-02-01 to the end of 2026-02-15
   holder: ask p (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 90.00 PLN at the start of 2026-02-01
   counted:
     2026-02-15:

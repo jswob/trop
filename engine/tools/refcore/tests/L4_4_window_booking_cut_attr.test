@@ -1,6 +1,8 @@
 # tally 2.1.8 §4 (#169-e), L §5.14.3 and L §4.4: v2, known 2026-03-15, changes mw's size inside mw's day window, so
 # its booking cut, min(day, K), is open across v2's known: the size is the window's hole (sw), its amount agrees (aw).
 # 2.1.7's refcore read the attributes at the first cut (sw 1). T's fixes/g3/n6.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model pn6
   tally 2
@@ -27,7 +29,7 @@ move mw: tagged
   leg cash from work to konto amount amt
 
 ask sw: mw.size
-ask sww: mw.size windows each
+ask sww: mw.size
 ask aw: mw.cash.amount
 ask bw: bal(konto, 2026-04-30)
 
@@ -52,8 +54,8 @@ bw: 10.00 PLN
   unfulfilled: mw
   cut 2026-06-30
 sw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw" (mw)
+  unknown day: wd
   cut 2026-06-30
-sww [wd = 2026-03-10 .. 2026-03-14]: 1
-  cut 2026-06-30
-sww [wd = 2026-03-15 .. 2026-03-20]: 2
+sww: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw" (mw)
+  unknown day: wd
   cut 2026-06-30

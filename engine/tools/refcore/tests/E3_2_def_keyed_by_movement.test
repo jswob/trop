@@ -1,9 +1,10 @@
-# tally 2.2 (CHANGES.md 2.2-10, plan §3, choice C-2 (a)). E §3.2: a def's cell is kept under its context trimmed to
-# what the def can depend on, and a def keyed by a movement depends on the movement. The dependency graph had no edge
-# for a def's own key over an event kind, where an aggregate's binding over the same kind records the kind and its
-# moves, so in_pln's cone held no movement and no axis: h and h2 printed one line [work = *], 400.00 PLN, the cell
-# computed once under the first option. With the edge, the helper def splits as the inline sum i does: 100.00 EUR at
-# 4 under yes, 300.00 EUR under no. hp, a pin of amt[yes] under work = yes, reaches the def: 2 000.00 PLN.
+# tally 2.2 (CHANGES.md 2.2-10, plan §3, pick P14). E §3.2: a def's cell is kept under its context trimmed to what
+# the def can depend on, and a def keyed by a movement depends on the movement. The dependency graph records no edge
+# for a def's own key, so in_pln's cone looked free of movements and axes: h and h2 printed one line [work = *],
+# 400.00 PLN, the cell computed once under the first option. The trimming now calls a cone that holds a def keyed by
+# an event kind no plain cone, and the cell keeps its context's axes and pins; the graph stays tally 2.1.8's. The
+# helper def splits as the inline sum i does: 100.00 EUR at 4 under yes, 300.00 EUR under no. hp, a pin of amt[yes]
+# under work = yes, reaches the def: 2 000.00 PLN.
 === m.tally
 model fx1
   tally 2

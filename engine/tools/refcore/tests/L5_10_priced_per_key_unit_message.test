@@ -1,6 +1,7 @@
 # L §2.4 Values, §3.2 (tally 2.1.7 B3, issue #151; F21): a message names a price keyed by unit by the key's
 # unit, PLN/fa, for a place of any unit the first its legs bring. 2.1.6's refcore printed the placeholder,
 # `PLN/$u, not EUR/$u`. (T's G14 p130_one_kp with c_eur.)
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === p130_one_kp.tally
 model kp
   tally 2
@@ -17,11 +18,11 @@ unit EUR: currency minor 0.01
 
 kind funds: unit
 
-kind ikes: place any min 0
+kind ikes: place any min 0 outside
 
-kind pikes: place any min 0 priced px
+kind pikes: place any min 0 priced px outside
 
-kind wikes: place any min 0 priced qx
+kind wikes: place any min 0 priced qx outside
 
 kind lots: place one min 0 priced px
 

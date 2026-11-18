@@ -1,0 +1,21 @@
+# L §4.5 (round 12): a row known after on is refused (LOAD-KNOWN), as a version is. (tally 2.2, 2.2-2: was
+# L4_5_row_known_window_after_on, a row known in window(2026-02-01, 2026-11-30).)
+=== m.tally
+model t
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input x: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1 known 2026-11-30
+
+ask q: x
+=== expect
+refused: LOAD-KNOWN row x is known after the model's on date (m.tally:14)

@@ -17,7 +17,7 @@ import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
 from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on
-from .model import key_text, set_world, set_each
+from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
 from .eval2 import QOut
@@ -26,14 +26,6 @@ from .eval2 import QOut
 REG_ORDER = ['assumed', 'given', 'missing', 'pinned', 'pinned sample', 'sample', 'world', 'reading', 'anchor', 'pad',
              'adjustment', 'unfulfilled', 'open', 'left out', 'uncertain', 'held']
 MAX_PATHS = 100000   # E §7: N <= 100 000 (REQ-PATHS)
-# L §7.6 Limits 6 (tally 2.1.8 S7, #174): "One line's windows each takes at most 20 000 combinations of days, for one
-# binding tuple and one combination of axis options (RUN-LIMIT)"; L §8.4's form
-EACH_LIMIT = 20000
-
-
-def each_limit():
-    from .evaluate import refuse
-    return refuse('RUN-LIMIT', 'windows each over more than 20 000 day combinations')
 
 
 class LoadAtRun(Exception):
@@ -289,30 +281,6 @@ def lin_day(d):
     return day_lo(d)
 
 
-class DiffSide(DiffOut):
-    """One side's cell of a diff over two stacks, run under windows each: its lines ({world: [(key, value)]}) and
-    the expression's type; its values carry the unknown days (cli.cross_stack_diff pairs the two sides' runs)."""
-
-    def __init__(self, res, t):
-        DiffOut.__init__(self, '', (), [v for lines in res.values() for _k, v in lines])
-        self.res = res
-        self.t = t
-
-
-class EachRes:
-    """One axis combination's windows-each lines, as a result the axis grouping compares (L §5.5)."""
-
-    def __init__(self, rows):
-        self.trace = rows
-        self.vals = None
-        self.coll = Coll()
-        for suffix, ln in rows:
-            self.coll.merge(ln.coll)
-
-    def key(self):
-        return tuple((suffix, tuple(rkey(v) for v in ln.vals)) for suffix, ln in self.trace)
-
-
 class ExplainLines:
     """An explanation given as text lines (a movement instance, E §10)."""
 
@@ -497,15 +465,10 @@ class Asker:
             law = eng.date_of(v, 'the law of an ask')
         # in S names the world (L §5.18, §6.4); the model's own id is the base
         w0 = a.world if (a.world is not None and a.world != m.header.id) else None
-        ctx = Ctx(law, K, windows=a.windows, partial=a.partial, unc=bool(a.uncertain), world=w0)
+        ctx = Ctx(law, K, partial=a.partial, unc=bool(a.uncertain), world=w0)
         if a.random is not None:
             # the line's random clause, for every projection it reaches (L §5.18)
             ctx = ctx.but(rnd=eng.rnd_clause(a.random, ctx))
-        each_mode = 'each' if a.windows == 'each' else ('each-read' if getattr(m, 'read_each', False) else None)
-        if each_mode is not None:
-            # windows each on the line, or on a projection read some line may reach (L §4.4: "for that read"): the
-            # line splits by the sub-windows; under each-read only the reads that state it take the assignment
-            ctx = ctx.but(windows=(each_mode, ()))
         pins_coll = Coll()
         eng.stack.append(pins_coll)
         self._outside_ctx = ctx
@@ -522,7 +485,7 @@ class Asker:
         eng.ask_K = ctx.cut
         old_ws = set_world(eng.world_chain(ctx.world))
         try:
-            out = self.answer_same_undecided(eng, a, ctx, pins_coll)
+            out = self._answer_in(eng, a, ctx, pins_coll)
         finally:
             set_world(old_ws)
         # E §9 invariant 4: asks move no money; the timelines the ask walked are as they were when walked
@@ -533,93 +496,8 @@ class Asker:
                         'ask was answered (E §9 invariant 4)' % (a.id, w.K)]
         return out
 
-    def answer_same_undecided(self, eng, a, ctx, pins_coll):
-        """L §4.5 Whatever a version states is read as its rows are (tally 2.1.8 R12; #187's known-window comment): a
-        same line known in a window that holds the cut is read as seen and as unseen, and a result on which the two
-        differ is HOLE-IMPRECISE, naming the rows it joins and its version; one on which they agree answers. The line
-        is answered with every such line it meets seen, then again with each other choice, on fresh caches."""
-        from . import model as MD
-        if MD._SAMEMET[0] is not None or MD._SAMEPICK[0] is not None:
-            return self._answer_in(eng, a, ctx, pins_coll)
-        MD._SAMEMET[0] = {}
-        try:
-            out = self._answer_in(eng, a, ctx, pins_coll)
-            met = MD._SAMEMET[0]
-        finally:
-            MD._SAMEMET[0] = None
-        if not met:
-            return out
-        vids = sorted(met)
-        if 2 ** len(vids) > EACH_LIMIT:
-            # L §7.6 limit 6 (tally 2.1.8, pick P27): a plain line takes at most 20 000 seen and unseen choices,
-            # refused before any rerun
-            from .evaluate import refuse
-            raise refuse('RUN-LIMIT', 'seen and unseen over more than 20 000 choices')
-        picks = [()]
-        for v in vids:
-            picks = [p + ((v, s),) for p in picks for s in (True, False)]
-        names = ('memo', 'run_cache', 'walks', 'walk_cells', '_fast', 'walk_warnings')
-        saved = dict((n, eng.__dict__[n]) for n in names if n in eng.__dict__)
-        outs = [out]
-        try:
-            for p in picks[1:]:
-                for n in names:
-                    if n == '_fast':
-                        eng.__dict__.pop(n, None)
-                    elif n in saved:
-                        eng.__dict__[n] = [] if n == 'walk_warnings' else {}
-                MD._SAMEPICK[0] = dict(p)
-                try:
-                    outs.append(self._answer_in(eng, a, ctx, pins_coll))
-                finally:
-                    MD._SAMEPICK[0] = None
-        finally:
-            for n in names:
-                eng.__dict__.pop(n, None)
-            eng.__dict__.update(saved)
-        if all(o == out for o in outs):
-            return out
-        qs = []
-        for v in vids:
-            (lo, hi), rows = met[v]
-            q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
-            qs += [(q, x) for x in sorted(rows)] + [(q, v)]
-        hole = fmt_value(Hole(qs))
-
-        def blocks(lines):
-            bs = []
-            for ln in lines:
-                if ln.startswith(' ') and bs:
-                    bs[-1].append(ln)
-                else:
-                    bs.append([ln])
-            return bs
-        bss = [blocks(o) for o in outs]
-        heads = [[b[0].split(': ', 1)[0] for b in bs] for bs in bss]
-        if any(h != heads[0] for h in heads):
-            regs = [ln for ln in bss[0][-1][1:] if ln.startswith(('  cut', '  law date'))] if bss[0] else []
-            return ['%s: %s' % (a.id, hole)] + regs[-1:]
-        res = []
-        # a result is all the form prints (R13.1): a ledger, a diff, an explanation or a read set that differs in any
-        # line is the hole; a value's, a check's or a solve's register may differ (tally 2.1.8, item 5)
-        whole = a.form in ('diff', 'explain', 'inputs-of', 'readers-of', 'residuals')
-        for i, b in enumerate(bss[0]):
-            if whole and any(bs[i] != b for bs in bss):
-                regs = [ln for ln in b[1:] if ln.startswith(('  cut', '  law date'))]
-                res.append('%s: %s' % (heads[0][i], hole))
-                res.extend(regs[-1:])
-                continue
-            if all(bs[i][0] == b[0] for bs in bss) or not b[0].split(': ', 1)[1:]:
-                res.extend(b)
-                continue
-            # the value differs between the two accounts: the hole, with the register the seen account gives
-            res.append('%s: %s' % (heads[0][i], hole))
-            res.extend(b[1:])
-        return res
-
     def _answer_in(self, eng, a, ctx, pins_coll):
         m = self.m
-        each_mode = ctx.windows[0] if isinstance(ctx.windows, tuple) and ctx.windows else None
         if a.form == 'diff':
             return self.answer_diff(eng, a, ctx, pins_coll)
         if a.path is not None:
@@ -631,10 +509,8 @@ class Asker:
         for ax in axes:
             opts = m.axes[ax].options
             combos = [c + ((ax, o),) for c in combos for o in opts]
-        if a.binds and axes and a.form != 'readers-of' and each_mode is None:
+        if a.binds and axes and a.form != 'readers-of':
             return self.binds_over_axes(eng, a, ctx, pins_coll, pinned_axes, axes, combos)
-        if a.binds and a.form != 'readers-of' and each_mode is not None:
-            return self.each_binds(eng, a, ctx, pins_coll, pinned_axes, axes, combos, each_mode)
         # binding tuples (L §5.18: one line per binding tuple)
         tuples = []
         tregs = {}
@@ -658,13 +534,6 @@ class Asker:
                 env_text = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
             if wh is not None:
                 out.append('%s%s: %s' % (a.id, env_text, fmt_value(wh)))
-                continue
-            if each_mode is not None:
-                if axes:
-                    out.extend(self.each_over_axes(eng, a, env, env_text, ctx, pins_coll, pinned_axes, axes, combos))
-                    continue
-                out.extend(self.each_lines(eng, a, env, env_text, ctx.but(axes=tuple(sorted(pinned_axes.items()))),
-                                           pins_coll))
                 continue
             results = {}
             for c in combos:
@@ -739,10 +608,6 @@ class Asker:
         one of the two worlds (cli.cross_stack_diff) the cells of that side are kept for the caller instead."""
         if a.binds and getattr(self, '_diff_env', None) is None:
             return self.diff_binds(eng, a, ctx, pins_coll)
-        if isinstance(ctx.windows, tuple) and ctx.windows and getattr(self, '_diff_only', None) is None:
-            return self.diff_each(eng, a, ctx, pins_coll)
-        if isinstance(ctx.windows, tuple) and ctx.windows:
-            return self.diff_side_each(eng, a, ctx, pins_coll)
         axes = self.diff_axes(a, ctx)
         pinned = list(ctx.axes)
         cells = {}
@@ -794,60 +659,6 @@ class Asker:
         if only:
             self._diff_side = ('binds', tsides)
             return []
-        return out
-
-    def diff_each(self, eng, a, ctx, pins_coll):
-        """diff under windows each: each combination's cell read again per sub-window (each_rows), one block per run
-        of sub-windows whose set of lines agrees, under its head, then its lines; one unlabelled block where all agree
-        (L §4.4, §5.18; tally 2.1.8 R13, #186).  Layout: the window part, then the axis part, as a value line's."""
-        axes = self.diff_axes(a, ctx)
-        pinned = list(ctx.axes)
-        combos = self.diff_combos(axes)
-
-        def evalf(xctx):
-            res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
-            counted, body = self.diff_lines(a, res, xctx, t)
-            return Result((DiffOut(counted, body, [v for lines in res.values() for _k, v in lines]),), coll)
-        results = {}
-        for c in combos:
-            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
-            results[c] = EachRes(self.each_rows(eng, a, None, cctx, evalf=evalf))
-
-        return self.diff_each_print(a, axes, combos, results, ctx)
-
-    def diff_side_each(self, eng, a, ctx, pins_coll):
-        """One side of a diff over two stacks under windows each (cli.cross_stack_diff): per combination of the
-        axes it reads, that side's runs, each once per choice of its windows' days (each_rows' runs), kept for the
-        caller, which pairs them (L §4.4, §5.18; tally 2.1.8 R13.1, item 2)."""
-        axes = self.diff_axes(a, ctx)
-        pinned = list(ctx.axes)
-
-        def evalf(xctx):
-            res, coll, _c, t = self.diff_worlds(eng, a, xctx, pins_coll)
-            return Result((DiffSide(res, t),), coll)
-        runs = {}
-        for c in self.diff_combos(axes):
-            cctx = ctx.but(axes=tuple(sorted(pinned + list(c)))) if c else ctx
-            runs[c] = self.each_rows(eng, a, None, cctx, evalf=evalf, runs=True)
-        self._diff_side = (axes, runs, ctx, 'each')
-        return []
-
-    def diff_each_print(self, a, axes, combos, results, ctx):
-        """A windows-each diff's blocks: per run of sub-windows (and axis options) that agree, its head, its lines
-        and its register."""
-        def block(head, row, reading):
-            d = row.vals[0]
-            return ['%s: %s' % (head, d.counted)] + list(d.body) + ['  ' + r for r in self.register(row.coll, reading,
-                                                                                                    ctx)]
-        out = []
-        if not axes:
-            for suffix, row in results[()].trace:
-                out.extend(block(a.id + suffix, row, []))
-            return out
-        for ln in self.group(a, axes, combos, results):
-            ax = ' [%s]' % ', '.join('%s = %s' % (x, '*' if ol is None else ' | '.join(ol)) for x, ol in ln.axes_text)
-            for suffix, row in ln.trace:
-                out.extend(block(a.id + suffix + ax, row, ln.reading))
         return out
 
     def diff_worlds(self, eng, a, ctx, pins_coll):
@@ -926,7 +737,7 @@ class Asker:
         if not axes:
             counted, body = results[()]
             return (['%s: %s' % (a.id, counted)] + list(body) +
-                    ['  ' + r for r in self.register(cells[()][1], [], ctx)])
+                    ['  ' + r for r in self.register(cells[()][1], [], ctx, unknown=diff_days(cells[()][0]))])
         by, order = {}, []
         for c in self.diff_combos(axes):
             if results[c] not in by:
@@ -938,10 +749,12 @@ class Asker:
             cs = by[k]
             for prod in split(axes, [dict(c) for c in cs], m):
                 coll = Coll()
+                days = set()
                 for c in cs:
                     d = dict(c)
                     if all(d[ax] in opts for ax, opts in prod):
                         coll.merge(cells[c][1])
+                        days |= diff_days(cells[c][0])
                 lab, reading, sk = [], [], []
                 for ax, opts in prod:
                     allo = m.axes[ax].options
@@ -952,7 +765,7 @@ class Asker:
                         reading.append('%s = %s' % (ax, ' | '.join(ol)))
                     sk.append(-1 if whole else allo.index(ol[0]))
                 out.append((sk, ['%s [%s]: %s' % (a.id, ', '.join(lab), k[0])] + list(k[1]) +
-                            ['  ' + r for r in self.register(coll, reading, ctx)]))
+                            ['  ' + r for r in self.register(coll, reading, ctx, unknown=days)]))
         # order: by the axes' options in declaration order, axes in id order; * first (as `group`)
         out.sort(key=lambda x: x[0])
         return [l for _, ls in out for l in ls]
@@ -960,8 +773,8 @@ class Asker:
     # -- residuals (E §6.3) ----------------------------------------------------------------------------
     def ledgers(self, eng, a, env, ctx):
         """residuals x span [by f]: the ledger's groups, each with its totals and its lines, as one answer of the
-        line, so a binding, an axis and windows each fan it out as any answer (L §5.5, §4.4, §5.18; tally 2.1.8 R13,
-        #185, #186).  Layout (this interpreter's): per group `<month> <group>: model M, observed O, difference D`
+        line, so a binding and an axis fan it out as any answer (L §5.5, §5.18; tally 2.1.8 R13, #185,
+        #186).  Layout (this interpreter's): per group `<month> <group>: model M, observed O, difference D`
         and its lines indented under it; a place of unit any's ledgers each under `ledger <u>:`."""
         r, sp, by = a.resid
         p = eng.place_arg(r, env, ctx)
@@ -1003,302 +816,6 @@ class Asker:
                     out.append(ind + '  ' + ln.text)
         return Ledgers('%s %s%s' % (p.name, _txt(sp), (' by %s' % by) if by else ''), out, vals)
 
-    # -- windows each (L §4.4, §5.18) ----------------------------------------------------------------
-    def each_lines(self, eng, a, env, env_text, ctx, pins_coll):
-        """One line per maximal sub-window, or combination of sub-windows, over which the answer is constant;
-        one plain line when it doesn't depend on the day.  Layout: `<ask> [<window> = <first> .. <last>]: v`."""
-        out = []
-        for suffix, ln in self.each_rows(eng, a, env, ctx):
-            out.extend(self.print_line(a, env_text + suffix, ln, pins_coll, ctx))
-        return out
-
-    def each_over_axes(self, eng, a, env, env_text, ctx, pins_coll, pinned_axes, axes, combos):
-        """windows each on a line that reaches axes: each combination's sub-window lines; combinations whose lines
-        are the same are printed together, split into products by the axes (L §4.4, §5.5).  Layout: the window part,
-        then the axis part."""
-        results = {}
-        for c in combos:
-            cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
-            results[c] = EachRes(self.each_rows(eng, a, env, cctx))
-        out = []
-        for ln in self.group(a, axes, combos, results):
-            for suffix, row in ln.trace:
-                l2 = Line(None, ln.axes_text, row.vals, row.coll, ln.reading, row.trace)
-                out.extend(self.print_line(a, env_text + suffix, l2, pins_coll, ctx))
-        return out
-
-    def each_binds(self, eng, a, ctx, pins_coll, pinned_axes, axes, combos, mode):
-        """windows each on a line with a binding: the binding is read inside each run, so a tuple bound over some
-        sub-windows of a window its binding reads prints under those only, with their head (L §4.4, §5.18; P29,
-        tally 2.1.8 R13, #169).  Over axes, every combination binds its own tuples (L §5.5)."""
-        order = []
-        per = {}
-        binding = {}
-        for c in combos:
-            cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
-            r = self.each_binding(eng, a, cctx, mode)
-            if isinstance(r, str):
-                return [r]
-            prev = -1
-            for key, env, info in r:
-                if key not in per:
-                    per[key] = env
-                    order.insert(prev + 1, key)
-                prev = order.index(key)
-                binding.setdefault(c, {})[key] = info
-        out = []
-        for key in order:
-            env = per[key]
-            env_text = ' (%s)' % ', '.join('%s = %s' % (b.var, fmt_bind(b, env[b.var])) for b in a.binds)
-            cs = [c for c in combos if key in binding.get(c, {})]
-            sts = [st for c in cs for (e, st, rg) in binding[c][key][0].values()]
-            if all(isinstance(st, Hole) for st in sts):
-                # L §5.18: "A tuple whose where is a hole prints its line as that hole, its value unevaluated"
-                out.append('%s%s: %s' % (a.id, env_text, fmt_value(merge(*sts))))
-                continue
-            results = {}
-            for c in cs:
-                cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
-                results[c] = EachRes(self.each_rows(eng, a, env, cctx, bound=binding[c][key]))
-            if not axes:
-                for suffix, ln in results[()].trace:
-                    out.extend(self.print_line(a, env_text + suffix, ln, pins_coll, ctx))
-                continue
-            for ln in self.group(a, axes, cs, results):
-                for suffix, row in ln.trace:
-                    l2 = Line(None, ln.axes_text, row.vals, row.coll, ln.reading, row.trace)
-                    out.extend(self.print_line(a, env_text + suffix, l2, pins_coll, ctx))
-        return out
-
-    def each_binding(self, eng, a, ctx, mode):
-        """The binding of a windows each line read day by day over the windows it reads: [(tuple key, env,
-        (starts, full, labels))], starts mapping each run of the windows that decide whether the tuple is bound
-        (or its where's hole) to that run's (env, status, registers); full when it is bound over every run.  A
-        line's text (a domain hole) instead when the binding has no members to give."""
-        from .evaluate import EachMet
-        pending = [()]
-        done = []
-        labels = {}
-        while pending:
-            asg = pending.pop(0)
-            eng.each_met = EachMet(eng)
-            old = set_each(eng.each_met)
-            coll = Coll()
-            eng.stack.append(coll)
-            try:
-                mem = list(eng.members(a.binds, {}, ctx.but(windows=(mode, asg)), regs=[]))
-            finally:
-                eng.stack.pop()
-                set_each(old)
-                met = eng.each_met
-                eng.each_met = None
-            for k, v in (coll.each or {}).items():
-                dict.setdefault(met, k, v)
-            nxt = each_next(met, dict(asg), [st for _e, st, _r in mem], met.forced)
-            if nxt is not None:
-                w, label, days = nxt
-                labels[w] = (label, days)
-                pending = [asg + ((w, d),) for d in days] + pending
-                if len(pending) + len(done) > EACH_LIMIT:
-                    raise each_limit()
-                continue
-            for env, st, rg in mem:
-                if isinstance(st, tuple) and st[0] == 'domainhole':
-                    return '%s: %s' % (a.id, fmt_value(st[1]))
-            done.append((asg, mem))
-        order = list(labels)
-        uniform = all(set(dict(asg)) == set(order) for asg, mem in done)
-        keys = []
-        runs = {}
-        envs = {}
-        for asg, mem in done:
-            for env, st, rg in mem:
-                key = tuple(vkey(env[b.var]) for b in a.binds)
-                if key not in runs:
-                    keys.append(key)
-                    runs[key] = {}
-                    envs[key] = env
-                runs[key][asg] = (env, st, rg)
-        out = []
-        for key in keys:
-            got = runs[key]
-            if uniform and order:
-                sig = {}
-                for asg, mem in done:
-                    x = got.get(asg)
-                    sig[tuple(sorted(asg))] = None if x is None else rkey(x[1])
-
-                def keeps(w):
-                    # the tuple's binding doesn't change along w: w doesn't split it
-                    for asg, mem in done:
-                        d = dict(asg)
-                        for o in labels[w][1]:
-                            d2 = dict(d)
-                            d2[w] = o
-                            if sig.get(tuple(sorted(d2.items()))) != sig[tuple(sorted(asg))]:
-                                return False
-                    return True
-                matter = [w for w in order if not keeps(w)]
-                starts = {}
-                for asg, mem in done:
-                    if asg in got:
-                        d = dict(asg)
-                        starts.setdefault(tuple((w, d[w]) for w in matter), got[asg])
-                n = 1
-                for w in matter:
-                    n *= len(labels[w][1])
-                full = len(starts) == n and len(set(rkey(x[1]) for x in starts.values())) == 1
-            else:
-                starts = dict(got)
-                full = len(got) == len(done) and len(set(rkey(x[1]) for x in got.values())) == 1
-            out.append((key, envs[key], (starts, full, labels)))
-        return out
-
-    def each_rows(self, eng, a, env, ctx, bound=None, evalf=None, runs=False):
-        """The sub-window lines of windows each: [(window part, Line)].  With bound (each_binding's), the line's
-        runs start from those its binding is read in, each with its own tuple; a run whose where is a hole is
-        that hole.  With evalf, a run is evalf(its context) (a diff's cell, answer_diff).  With runs, the runs
-        themselves, (done, seqs, labels): one side of a diff over two stacks (cli.cross_stack_diff pairs them)."""
-        pending = [()]
-        done = []
-        seqs = []
-        labels = {}
-        mode = ctx.windows[0] if isinstance(ctx.windows, tuple) and ctx.windows else 'each'
-        starts = None
-        if bound is not None:
-            starts, full, blabels = bound
-            pending = list(starts)
-            for s in starts:
-                for w, d in s:
-                    labels[w] = blabels[w]
-        while pending:
-            asg = pending.pop(0)
-            from .evaluate import EachMet
-            benv, bst, brg = env, True, ()
-            if starts is not None:
-                s = next(s for s in starts if asg[:len(s)] == s)
-                benv, bst, brg = starts[s]
-            if isinstance(bst, Hole):
-                done.append((dict(asg), Result((bst,), Coll())))
-                seqs.append(asg)
-                continue
-            eng.each_met = EachMet(eng)
-            old = set_each(eng.each_met)
-            try:
-                if evalf is not None:
-                    res = evalf(ctx.but(windows=(mode, asg)))
-                else:
-                    res = self.evaluate(eng, a, benv, ctx.but(windows=(mode, asg)))
-                for rc in brg:
-                    res.coll.merge(rc)
-            finally:
-                set_each(old)
-                met = eng.each_met
-                eng.each_met = None
-            # the windows met by memo cells the line reused (an earlier axis option computed them; MC-A-F1)
-            for k, v in (getattr(getattr(res, 'coll', None), 'each', None) or {}).items():
-                dict.setdefault(met, k, v)
-            assigned = dict(asg)
-            nxt = each_next(met, assigned, res, met.forced)
-            if nxt is not None:
-                w, label, days = nxt
-                labels[w] = (label, days)
-                pending = [asg + ((w, d),) for d in days] + pending
-                if len(pending) + len(done) > EACH_LIMIT:
-                    raise each_limit()
-                continue
-            done.append((assigned, res))
-            seqs.append(asg)
-        if runs:
-            return done, seqs, labels
-        return self.each_group(done, seqs, labels, starts is None or full)
-
-    def each_group(self, done, seqs, labels, full=True):
-        """windows each's runs, (assignment, Result) with their assignment sequences, as its printed blocks: one
-        plain line where all agree, else one per maximal sub-window (or nested combination) whose answer agrees."""
-        keys = set(self.each_key(r) for asg, r in done)
-        if len(keys) == 1 and full:
-            ln = Line(None, [], done[0][1].vals, done[0][1].coll, [], done[0][1].trace)
-            for asg, r in done[1:]:
-                ln.coll.merge(r.coll)
-            return [('', ln)]
-        order = list(labels)
-        if any(set(asg) != set(order) for asg, r in done):
-            return self.each_nested([(sq, r) for sq, (asg, r) in zip(seqs, done)], labels)
-        # runs of consecutive days with the same answer, window by window (a product of runs per line)
-        by = {}
-        for asg, r in done:
-            by.setdefault(self.each_key(r), []).append((asg, r))
-        rows = []
-        for k, items in by.items():
-            cells = [tuple(asg[w] for w in order) for asg, r in items]
-            for box in boxes(cells, [labels[w][1] for w in order]):
-                rr = [r for asg, r in items if all(lo <= asg[w] <= hi for w, (lo, hi) in zip(order, box))]
-                rows.append((box, rr))
-        rows.sort(key=lambda x: tuple(lo for lo, hi in x[0]))
-        out = []
-        for box, rr in rows:
-            parts = []
-            for w, (lo, hi) in zip(order, box):
-                parts.append('%s = %s' % (labels[w][0], lo if lo == hi else '%s .. %s' % (lo, hi)))
-            ln = Line(None, [], rr[0].vals, rr[0].coll, [], rr[0].trace)
-            for r in rr[1:]:
-                ln.coll.merge(r.coll)
-            out.append((' [%s]' % ', '.join(parts), ln))
-        return out
-
-    def each_key(self, r):
-        """What a run's answer is, for windows each: its values, and what its explanation prints with them, each
-        cause with its value (the derivation is something the form prints, L §4.4; tally 2.1.8 R13, #191 Q4).  A
-        run's own law date is no part of it: a block prints its first sub-window's."""
-        k = r.key()
-        if isinstance(r.trace, ExplainLines):
-            # its causes and their values, whatever days they fall on: a block prints its first sub-window's
-            k = k + (tuple(sorted(re.sub(r'\d{4}-\d{2}-\d{2}', 'D', ln) for ln in r.trace.lines
-                                  if not re.match(r'^\s*\d{4}-\d{2}-\d{2}:$', ln))),)
-        elif isinstance(r.trace, TraceNode):
-            k = k + (trace_key(r.trace),)
-        return k
-
-    def each_nested(self, items, labels):
-        """windows each where the windows a line meets depend on the day an earlier window takes: "the combinations
-        nest: under each sub-window of the earlier window, the windows met there are split in turn" (L §4.4)."""
-        def span(days, lo, hi):
-            return days[lo] if lo == hi else '%s .. %s' % (days[lo], days[hi])
-
-        def nest(its, depth):
-            # its share their first `depth` assignments; the next window met is then one and the same
-            if len(set(self.each_key(r) for sq, r in its)) == 1:
-                return [((), [r for sq, r in its])]
-            w = its[0][0][depth][0]
-            label, days = labels[w]
-            per = []
-            for d in days:
-                sub = [(sq, r) for sq, r in its if sq[depth][1] == d]
-                if sub:
-                    per.append((d, nest(sub, depth + 1)))
-            out = []
-            i = 0
-            while i < len(per):
-                sig = [(parts, self.each_key(rs[0])) for parts, rs in per[i][1]]
-                j = i
-                while j + 1 < len(per) and [(parts, self.each_key(rs[0])) for parts, rs in per[j + 1][1]] == sig:
-                    j += 1
-                dl = [d for d, _ in per]
-                for k, (parts, rs) in enumerate(per[i][1]):
-                    allr = [r for t in range(i, j + 1) for r in per[t][1][k][1]]
-                    out.append(((('%s = %s' % (label, span(dl, i, j))),) + parts, allr))
-                i = j + 1
-            return out
-
-        out = []
-        for parts, rs in nest(items, 0):
-            ln = Line(None, [], rs[0].vals, rs[0].coll, [], rs[0].trace)
-            for r in rs[1:]:
-                ln.coll.merge(r.coll)
-            out.append((' [%s]' % ', '.join(parts), ln))
-        return out
-
     def evaluate(self, eng, a, env, ctx):
         coll = Coll()
         eng.stack.append(coll)
@@ -1332,7 +849,7 @@ class Asker:
                 v, lines = self.explain_walk_bound(eng, a, env, ctx)
                 vals = (v,)
                 trace = ExplainLines(lines)
-            elif f == 'explain' and a.ref.k in ('bal', 'low'):
+            elif f == 'explain' and a.ref.k == 'bal':
                 # a balance or a projection (L §5.18 explain row, E §10)
                 v, lines = self.explain_balance(eng, a, a.ref, env, ctx)
                 vals = (v,)
@@ -1558,7 +1075,7 @@ class Asker:
             if not refused or ('pin met', e[1]) in ln.coll.reg:
                 coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
-        out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws))
+        out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws, hole_days(vals)))
         if a.orient is not None:
             # "Any other ask may state it, and it is printed" (L §5.15): this interpreter's layout
             out.append('  orient %s' % a.orient)
@@ -1571,7 +1088,7 @@ class Asker:
             return getattr(a.solve, '_t', None)
         return None
 
-    def register(self, coll, reading, ctx, samples=False, laws=None):
+    def register(self, coll, reading, ctx, samples=False, laws=None, unknown=()):
         ent = {}
         assumed = {}
         smp = []
@@ -1613,6 +1130,9 @@ class Asker:
             ent['pinned'] = merge_pin_days(ent['pinned'])
         for kind in ('given', 'missing', 'pinned', 'pinned sample'):
             out.extend(sorted(ent.get(kind, ())))
+        # each unknown day a hole of the result carries, by the name its read gives it, sorted as each kind's lines
+        # are (L §8.2 `unknown day:`, §4.4; tally 2.2, 2.2-11)
+        out.extend(sorted('unknown day: %s' % u for u in unknown))
         if samples:
             # each sample the path p line reached, in canonical order (L §5.16 Order, §8.2)
             first = {}
@@ -1754,10 +1274,6 @@ class Asker:
         from .evaluate import _tfmt
         pinned = set(p.axis for p in a.pins if getattr(p, 'pkind', None) == 'axis')
         octx = self._outside_ctx.but(axes=tuple((ax, o) for ax, o in ctx.axes if ax not in pinned))
-        if isinstance(ctx.windows, tuple) and ctx.windows:
-            # under windows each the part outside the pins keeps the sub-window's choice, and a window only it meets
-            # is one the line meets, split under its own head (L §4.4; tally 2.1.8 R13, #191 Q4, #169-d)
-            octx = octx.but(windows=ctx.windows)
 
         def outside_of(oc, fixed):
             # outside the pins, an axis the ask pinned is read as every other line reads an axis: the derivation fans
@@ -1934,13 +1450,9 @@ class Asker:
         return v, out
 
     def explain_balance(self, eng, a, n, env, ctx):
-        """`explain bal(x, d)` (a balance) and `explain bal(x, d) from t` / `explain low(x, a .. b) from t` (a
-        projection), E §10.  Layout: this interpreter's."""
+        """`explain bal(x, d)` (a balance) and `explain bal(x, d) from t` (a projection), E §10.  Layout: this
+        interpreter's."""
         form = getattr(n, '_form', None)
-        if n.k == 'low' and form != 'proj':
-            # L §5.18 (round 8): "explain low(x, span) without from explains the day of its lowest balance as a
-            # balance"
-            return self.explain_low_plain(eng, a, n, env, ctx)
         v = self.one(eng, n, env, ctx)
         if isinstance(v, TallyError) or form == 'now':
             return v, []
@@ -1969,57 +1481,7 @@ class Asker:
                 raise LoadAtRun(e)
             return ['refused: %s %s' % (e.code, e.msg)]
 
-    def explain_low_plain(self, eng, a, n, env, ctx):
-        """`explain low(x, a .. b)` without `from`: the lowest of the plain end-of-day balances (L §5.14.1), and the
-        day it is reached, explained as a balance (L §5.18 explain row, E §10's balance row). Days of one run of that
-        balance with no entry between them share one derivation, explained at the run's first day; a lowest balance
-        reached in two runs, with movements between, names no one day (REFCORE-UNSPECIFIED)."""
-        from .walk import K_end
-        v = self.one(eng, n, env, ctx)
-        if isinstance(v, (TallyError, Hole)):
-            return v, []
-        sub = Coll()
-        eng.stack.append(sub)
-        try:
-            p = eng.place_arg(n.ref, env, ctx)
-            unit = eng.bal_unit(n, p.name, env, ctx) if not isinstance(p, Hole) else p
-            sp = eng.span_value(n.span, env, ctx)
-            if isinstance(p, Hole) or isinstance(unit, Hole) or isinstance(sp, Hole):
-                return v, []
-            w = eng.main_walk(ctx)
-            d = sp.start
-            last = sp.end - datetime.timedelta(days=1)
-            runs = []
-            prev = None
-            while d <= last:
-                st = w.pstate(p.name, unit, K_end(d), raw=True)
-                if isinstance(st.val, Num) and isinstance(v, Num) and st.val.q == v.q:
-                    if prev is not None and prev == d - datetime.timedelta(days=1):
-                        runs[-1][1] = d
-                    else:
-                        runs.append([d, d])
-                    prev = d
-                d += datetime.timedelta(days=1)
-            if not runs:
-                raise NotYet('explain low(%s, ...): its lowest balance %s is on no day of the span' % (p.name, fmt(v)))
-            # L §5.18: "explain low(x, span) without from explains the first day its lowest balance is reached, as a
-            # balance": the first run (a later run of the same balance is not explained)
-            d1, d2 = runs[0]
-            head = 'lowest end-of-day balance of %s on %s .. %s: %s, on %s%s' % (
-                p.name, sp.start, last, fmt(v), d1, (' (through %s)' % d2) if d2 != d1 else '')
-            try:
-                lines = self._explain_bal_lines(eng, a, n, env, ctx, day=d1)
-            except HoleSignal:
-                lines = []
-            except TallyError as e:
-                if is_load(e):
-                    raise LoadAtRun(e)
-                lines = ['refused: %s %s' % (e.code, e.msg)]
-            return v, [head] + lines
-        finally:
-            eng.stack.pop()
-
-    def _explain_bal_lines(self, eng, a, n, env, ctx, day=None):
+    def _explain_bal_lines(self, eng, a, n, env, ctx):
         from .walk import K_end, K_start, kday, gtext, St
         p = eng.place_arg(n.ref, env, ctx)
         if isinstance(p, Hole):
@@ -2028,24 +1490,14 @@ class Asker:
         unit = eng.bal_unit(n, place, env, ctx)
         if isinstance(unit, Hole):
             return ['the unit is a hole: %s' % fmt_hole(unit)]
-        if day is not None:
-            lo_day = end = day
-        elif n.k == 'low':
-            sp = eng.span_value(n.span, env, ctx)
-            if isinstance(sp, Hole):
-                return []
-            lo_day, end = sp.start, sp.end - datetime.timedelta(days=1)
-        else:
-            d = eng.ev(n.args[-1], env, ctx)
-            if isinstance(d, Hole):
-                return []
-            if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-                d = eng.window_choice(d, ctx)
-                if isinstance(d, Iv):
-                    return []
-            end = lo_day = eng.date_of(d, 'the day of bal')
+        d = eng.ev(n.args[-1], env, ctx)
+        if isinstance(d, Hole):
+            return []
+        if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
+            return []
+        end = eng.date_of(d, 'the day of bal')
         if getattr(n, '_form', None) == 'proj':
-            return self._explain_projection(eng, a, n, env, ctx, place, unit, lo_day, end)
+            return self._explain_projection(eng, a, n, env, ctx, place, unit, end)
         w = eng.main_walk(ctx)
         key = K_start(end) if getattr(n, 'start', False) else K_end(end)
         modelled = getattr(n, '_form', None) == 'modelled'
@@ -2075,7 +1527,7 @@ class Asker:
             e = lg.ents[st.rst]
             lo = st.rst
             since = e.key
-            out.append('from: %s' % self._reading_text(w, place, e, gtext, unit))
+            out.append('from: %s' % self._reading_text(w, place, e, gtext))
         ents = []
         if modelled:
             ents.extend(m_ents)
@@ -2107,7 +1559,7 @@ class Asker:
         out.extend(self._by_day(rows))
         return out
 
-    def _explain_projection(self, eng, a, n, env, ctx, place, unit, lo_day, end):
+    def _explain_projection(self, eng, a, n, env, ctx, place, unit, end):
         from .walk import K_end, kday, gtext
         t = eng.ev(n.proj['frm'], env, ctx)
         if isinstance(t, Hole):
@@ -2116,19 +1568,13 @@ class Asker:
         clauses = eng.proj_clauses(n.proj, ctx)
         w = eng.proj_walk(ctx, t, n._leftout, clauses)
         w.run_to(end)
-        windows, rnd, unc = clauses
-        out = []
-        if n.k == 'low':
-            out.append('projection of %s (%s) from %s, lowest end-of-day balance on %s .. %s' % (
-                place, unit, t, lo_day, end))
-        else:
-            out.append('projection of %s (%s) from %s to the end of %s' % (place, unit, t, end))
+        rnd, unc = clauses
+        out = ['projection of %s (%s) from %s to the end of %s' % (place, unit, t, end)]
         out.append('holder: ask %s (an ask line leaves out nothing, L §5.14.1)' % a.id)
         rtext = 'none'
         if rnd:
             rtext = 'at mean' if rnd[0] == 'mean' else 'at quantile(%s)' % fmt_q(rnd[1])
-        out.append('clauses: windows %s, random %s, %s' % (windows or 'none', rtext,
-                                                            'with uncertain' if unc else 'without uncertain'))
+        out.append('clauses: random %s, %s' % (rtext, 'with uncertain' if unc else 'without uncertain'))
         st0 = w.default(place, unit)
         out.append('start: %s at the start of %s' % (gtext(w.st_value(st0, place, unit)), t))
         lg = w.logs.get((place, unit))
@@ -2160,20 +1606,9 @@ class Asker:
             out.extend('  %s %s' % (dd, i) for dd, i in lo)
         else:
             out.append('left out: none')
-        if n.k == 'low':
-            best = None
-            dd = lo_day
-            while dd <= end:
-                st = w.pstate(place, unit, K_end(dd), raw=True)
-                vv = w.st_value(st, place, unit)
-                if isinstance(vv, Num) and (best is None or vv.q < best[1].q):
-                    best = (dd, vv)
-                dd += datetime.timedelta(days=1)
-            if best is not None:
-                out.append('lowest: %s at the end of %s' % (fmt(best[1]), best[0]))
         return out
 
-    def _reading_text(self, w, place, e, gtext, unit=None):
+    def _reading_text(self, w, place, e, gtext):
         from .moves import instant_text
         rows = list(e.coll.rows.values()) if e.coll is not None else []
         val = fmt_hole(Hole(e.qs)) if e.qs else fmt(e.val)
@@ -2189,8 +1624,7 @@ class Asker:
         if e.note in ('anchor', 'pad'):
             from .walk import kday
             for key, gap, r2, role, u, _bc in w.gaps.get((place, kday(e.key)), ()):
-                # at a place of unit any each unit's reading has its own gap (L §5.10; tally 2.1.8 R14)
-                if (r2 is r or getattr(r2, 'sid', None) == r.sid) and (unit is None or u == unit):
+                if r2 is r or getattr(r2, 'sid', None) == r.sid:
                     if role[0] == 'anchor':
                         s += ', gap role anchor, gap %s' % gtext(gap)
                     else:
@@ -2392,21 +1826,6 @@ class Asker:
             self.explain_node(ch, k2, depth + 1, out, below)
 
 
-def trace_key(tn):
-    """An explanation's causes as a comparable value: each node's kind, label and value, its rules' states and its
-    causes in turn (ask.Asker.each_key)."""
-    out = [tn.kind, tn.label, rkey(tn.value) if tn.value is not None else None,
-           tuple(sorted(getattr(tn, 'rule_states', {}).items()))]
-    subs = [ch for _k, ch in tn.children]
-    subs += [ch for _k, w in getattr(tn, 'when_children', []) for _k2, ch in getattr(w, 'children', [])]
-    vc = getattr(tn, 'value_children', None)
-    if vc is not None:
-        subs += [ch for _k, ch in vc.children]
-    for ch in subs:
-        out.append(trace_key(ch) if isinstance(ch, TraceNode) else repr(ch))
-    return tuple(out)
-
-
 def law_reads_binds(a):
     """Whether an ask's law expression reads one of its ask-level for's variables."""
     from .node import walk
@@ -2415,63 +1834,32 @@ def law_reads_binds(a):
                             for x in walk(a.law))
 
 
-def each_next(met, assigned, answer, forced=()):
-    """The unknown day windows each takes next (L §4.4; tally 2.1.8 R13): of those the answer carries and the run
-    hasn't taken, the first its reads met; (id, label, days), or None when it carries none."""
-    from .evaluate import carried
-    cs = [w for w in carried(answer) if w[0] not in assigned]
-    ids = set(w[0] for w in cs) | set(w for w in forced if w not in assigned and w in met)
-    if not ids:
-        return None
-    for w in met:
-        if w in ids:
-            label, days = met[w]
-            return w, label, days
-    w = cs[0]
-    return w[0], w[1], list(w[2])
+def hole_days(vals):
+    """The names of the unknown days the holes among vals carry (L §8.2 `unknown day:`; tally 2.2, 2.2-11): each
+    question of a hole to the windows it was made of (evaluate.CARRY), by the label its read gives it (window_id). A
+    window value that is no hole gives none."""
+    from .evaluate import CARRY
+    out = set()
 
-
-def boxes(cells, axes_days):
-    """Cover a set of day tuples by maximal boxes of consecutive days, greedily in day order (the first
-    window's runs first)."""
-    left = set(cells)
-    pos = [{d: i for i, d in enumerate(ds)} for ds in axes_days]
-    out = []
-    for c in sorted(cells):
-        if c not in left:
-            continue
-        lo = list(c)
-        hi = list(c)
-        for i in range(len(c)):
-            while True:
-                nxt = pos[i].get(hi[i])
-                if nxt is None or nxt + 1 >= len(axes_days[i]):
-                    break
-                cand = axes_days[i][nxt + 1]
-                ok = True
-                for t in _box_cells(lo, hi[:i] + [cand] + hi[i + 1:], axes_days, pos, only_axis=i, val=cand):
-                    if t not in left:
-                        ok = False
-                        break
-                if not ok:
-                    break
-                hi[i] = cand
-        box = list(zip(lo, hi))
-        for t in _box_cells(lo, hi, axes_days, pos):
-            left.discard(t)
-        out.append(box)
+    def walk(x, depth=0):
+        if depth > 50:
+            return
+        if isinstance(x, Hole):
+            for q in x.qs:
+                out.update(str(w[1]) for w in CARRY.get(q, ()))
+        elif isinstance(x, (tuple, list, frozenset, set)):
+            for y in x:
+                walk(y, depth + 1)
+        elif hasattr(x, 'carry_vals'):
+            for y in x.carry_vals():
+                walk(y, depth + 1)
+    walk(vals)
     return out
 
 
-def _box_cells(lo, hi, axes_days, pos, only_axis=None, val=None):
-    import itertools
-    ranges = []
-    for i in range(len(lo)):
-        if only_axis is not None and i == only_axis:
-            ranges.append([val])
-        else:
-            ranges.append(axes_days[i][pos[i][lo[i]]:pos[i][hi[i]] + 1])
-    return itertools.product(*ranges)
+def diff_days(res):
+    """hole_days of a diff cell's values in its two worlds ({world: [(key, value)]})."""
+    return hole_days([v for lines in res.values() for _k, v in lines])
 
 
 def is_query_line(e):

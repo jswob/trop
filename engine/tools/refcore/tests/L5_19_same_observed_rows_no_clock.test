@@ -1,0 +1,67 @@
+# tally 2.2 (CHANGES.md 2.2-5), L §5.19 One movement on two statements: "A line between two observed rows has no day
+# of its own: in the worlds its file is in (§6.4) it holds at every cut that sees both rows, whichever version states
+# it." o1's rows are known 2026-03-10 and their line 2026-04-15: as known 2026-03-25 they are one movement (n1: 1, b3:
+# 1 000.00 - 100.00 - 50.00 = 850.00 PLN; 2.1.8 counted 2 and printed 750.00 PLN). o2's line is known 2026-03-12 and
+# card[o2] 2026-03-20: as known 2026-03-15 the line is not in force and bank[o2] is read alone (b2: 850.00 PLN; 2.1.8
+# refused it, RUN-RECORD `same bank[o2] = card[o2]: card[o2] doesn't exist`); as known 2026-03-25 they are one (n3).
+=== m.tally
+model t
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place sav: accounts PLN lives 2025-01-01..
+input bank: observed
+input card: observed
+
+ask n1: count(x in transfers over 2026-03-01 .. 2026-03-01) as known 2026-03-25
+ask n2: count(x in transfers over 2026-03-02 .. 2026-03-02) as known 2026-03-15
+ask b2: bal(konto, 2026-03-31) as known 2026-03-15
+ask b3: bal(konto, 2026-03-31) as known 2026-03-25
+ask n3: count(x in transfers over 2026-03-02 .. 2026-03-02) as known 2026-03-25
+
+version v0
+  cite s
+  governs always
+  known 2025-12-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "o"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "o"
+
+version b
+  cite s
+  governs 2026-03
+  known 2026-03-10
+  bank[o1] = (on: 2026-03-01, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b1"
+  card[o1] = (on: 2026-03-01, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "c1"
+  bank[o2] = (on: 2026-03-02, kind: transfers, leg cash from konto to sav amount 50.00 PLN) "b2"
+
+version c
+  cite s
+  governs 2026-03
+  known 2026-03-20
+  card[o2] = (on: 2026-03-02, kind: transfers, leg cash from konto to sav amount 50.00 PLN) "c2"
+
+version early
+  cite s
+  known 2026-03-12
+  same bank[o2] = card[o2]
+
+version late
+  cite s
+  known 2026-04-15
+  same bank[o1] = card[o1]
+=== expect
+b2: 850.00 PLN
+  cut 2026-03-15
+b3: 850.00 PLN
+  cut 2026-03-25
+n1: 1
+  cut 2026-03-25
+n2: 1
+  cut 2026-03-15
+n3: 1
+  cut 2026-03-25

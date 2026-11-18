@@ -4,6 +4,8 @@
 # three days, is modelled past on those days (open: no observation) and booked as past on the rest: c1 and c3 are the
 # hole, and each splits. As known 2026-03-07, st isn't known and nothing is covered (c5). 2.1.7's refcore asked the
 # window's first day (0.00 PLN). The plan's i77b.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -38,25 +40,23 @@ version st
   covers konto
 
 ask c1: bal(konto, 2026-03-31)
-ask c2: bal(konto, 2026-03-31) windows each
+ask c2: bal(konto, 2026-03-31)
 ask c3: flows(pay, 2026-03)
-ask c4: flows(pay, 2026-03) windows each
+ask c4: flows(pay, 2026-03)
 ask c5: bal(konto, 2026-03-31) as known 2026-03-07
-ask c6: bal(konto, 2026-03-31) as known 2026-03-07 windows each
+ask c6: bal(konto, 2026-03-31) as known 2026-03-07
 === expect
 c1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-03-08
-c2 [wd = 2026-03-05 .. 2026-03-07]: 0.00 PLN
-  open: pay
-  cut 2026-03-08
-c2 [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+c2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
+  unknown day: wd
   cut 2026-03-08
 c3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of pay" (pay)
+  unknown day: wd
   cut 2026-03-08
-c4 [wd = 2026-03-05 .. 2026-03-07]: 0.00 PLN
-  open: pay
-  cut 2026-03-08
-c4 [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+c4: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of pay" (pay)
+  unknown day: wd
   cut 2026-03-08
 c5: 100.00 PLN
   unfulfilled: pay
