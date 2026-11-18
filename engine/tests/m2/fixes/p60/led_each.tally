@@ -3,7 +3,7 @@ model pw
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:505, residuals with windows each over a statement known in a window; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:505, residuals with windows each over a statement known in a window; tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -40,6 +40,6 @@ ask q: residuals konto 2026-03 as known 2026-04-10 windows each
 version st
   cite s
   governs 2026-03
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"

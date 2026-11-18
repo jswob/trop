@@ -138,12 +138,6 @@ mod tests {
         formats_as_refcore("format/kinds_tree_order");
     }
 
-    /// L §2.4 Versions come last, sorted by `known` date (a window by its first day), then id.
-    #[test]
-    fn m0_format_rule_versions_last_by_known() {
-        formats_as_refcore("format/versions_last_by_known");
-    }
-
     /// L §2.4 One blank line between sections, always, one-line sections included.
     #[test]
     fn m0_format_rule_blank_lines() {
@@ -247,39 +241,6 @@ mod tests {
         formats_as_refcore("format/numbers_of_any_size");
     }
 
-    /// L §2.3 `sref`, §2.4 A `same` side of every `sref` form prints as written, its keys and
-    /// fields kept: three names deep, a field after its keys, keys after a field (G11's B3).
-    /// Each is the only `same` item of its list, so no order between sides is read: refcore
-    /// sorts a side deeper than `a.x` by its parse tree (#88, `m0/format/held.tsv`).
-    #[test]
-    fn m0_format_rule_same_sides() {
-        formats_as_refcore("format/same_sides");
-    }
-
-    /// L §2.3 `sref`, §2.4 A `same` side keyed by a keyed place (`lim[konto[ana]]`) prints as
-    /// written, its items sorted by their left sides' place keys (G12's N3). Beside a row of
-    /// its target and keys refcore sorts it by its parse tree (#88, `m0/format/held.tsv`).
-    #[test]
-    fn m0_format_rule_same_place_keys() {
-        formats_as_refcore("format/same_place_keys");
-    }
-
-    /// L §2.4 Version items (tally 2.1.7, R9, #96): a `same` side deeper than `a.x` beside
-    /// rows and a `same` item of two names sorts as the item it names, its target and keys its
-    /// left side's (refcore 2.1.6 sorted it by its parse tree; released from `format/held.tsv`).
-    #[test]
-    fn m0_format_rule_same_deep_beside_rows() {
-        formats_as_refcore("format/same_deep_beside_rows");
-    }
-
-    /// L §2.4 Version items (tally 2.1.7, R9, #96): a `same` side keyed by a keyed place beside
-    /// a row of its target and keys sorts as the item it names, a place keyed by things one
-    /// key; tied at target and keys, by the canonical line (GD-28).
-    #[test]
-    fn m0_format_rule_same_place_key_beside_row() {
-        formats_as_refcore("format/same_place_key_beside_row");
-    }
-
     /// E §3.1 step 1, L §2.4 (tally 2.1.6, #74): `reprint` reads and pins a joint model's
     /// members as `run` does, before it prints anything: a member with no file is refused
     /// `LOAD-PIN`, exit 1 (refcore 2.1.5 printed the model, exit 0).
@@ -318,16 +279,6 @@ mod tests {
     #[test]
     fn m0_format_refused_unknown_prefix() {
         formats_as_refcore("format/unknown_prefix");
-    }
-
-    /// L §2.3 `sref` (tally 2.1.6, #88), §2.4 (issue #90): a `same` side keyed by a signed
-    /// literal is no `sref`, so `reprint` refuses it at parse, `LOAD-PARSE`, as load does,
-    /// and the canonical order of `same` sides never meets a key that isn't a literal or a
-    /// place keyed by literals (the engine met `ENGINE-INVARIANT` there);
-    /// `format/same_place_keys` is its twin.
-    #[test]
-    fn m0_format_refused_same_key_signed() {
-        formats_as_refcore("format/same_key_signed");
     }
 
     /// L §2.4 (tally 2.1.6, #81): any spacing between tokens reads: a field spaced at its `.`,

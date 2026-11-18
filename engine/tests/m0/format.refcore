@@ -5334,20 +5334,6 @@ m/m.tally	m0/format/joint/outside/m/m.tally
 ,19:format/rules_sorted,19:format/rules_sorted,22:engine/tests/m0/format,26:reprint rules_sorted.tally,48:rules_sorted.tally	m0/format/rules_sorted.tally
 ,1:0,56:rules_sorted.tally	422	1072a3b119ea75b107236f7eabee7708
 ,72:sha256 c4c3e6b1ca0c586693956cf1d4500afde76eca24f9d794699609869cf97b5c96
-,28:format/same_deep_beside_rows,28:format/same_deep_beside_rows,22:engine/tests/m0/format,35:reprint same_deep_beside_rows.tally,66:same_deep_beside_rows.tally	m0/format/same_deep_beside_rows.tally
-,1:0,65:same_deep_beside_rows.tally	332	02fc745b6dc783ec16220b0494f049bd
-,72:sha256 7ca1c8196d4cdc782367a4cf6e43e42209579f9c712a7d5cfe0a55c0d11c0089
-,22:format/same_key_signed,22:format/same_key_signed,22:engine/tests/m0/format,29:reprint same_key_signed.tally,54:same_key_signed.tally	m0/format/same_key_signed.tally
-,1:1,0:,87:refused: LOAD-PARSE cannot parse: expected a literal, got - (same_key_signed.tally:24)
-,32:format/same_place_key_beside_row,32:format/same_place_key_beside_row,22:engine/tests/m0/format,39:reprint same_place_key_beside_row.tally,74:same_place_key_beside_row.tally	m0/format/same_place_key_beside_row.tally
-,1:0,69:same_place_key_beside_row.tally	488	056ba39679e4256604ed6c2ef6ef49d7
-,72:sha256 1c2c2ad2d828183ffbe117ec494ad78b5d860a6f2524b7c8d8b99addf6489d76
-,22:format/same_place_keys,22:format/same_place_keys,22:engine/tests/m0/format,29:reprint same_place_keys.tally,54:same_place_keys.tally	m0/format/same_place_keys.tally
-,1:0,59:same_place_keys.tally	452	14ceff864fd3fd1e175fba29ac87835b
-,72:sha256 85c3629a0b2449031fe8744192edc731be59eee641fca1477aef52792bc31ed5
-,17:format/same_sides,17:format/same_sides,22:engine/tests/m0/format,24:reprint same_sides.tally,44:same_sides.tally	m0/format/same_sides.tally
-,1:0,54:same_sides.tally	453	0c6fcdfde419001207c140780d0ad0dc
-,72:sha256 feec997bef8b5571bef838b31f5bbbede5f52ea74a358cab20fd0229c0179182
 ,25:format/section_kind_order,25:format/section_kind_order,22:engine/tests/m0/format,32:reprint section_kind_order.tally,60:section_kind_order.tally	m0/format/section_kind_order.tally
 ,1:0,62:section_kind_order.tally	324	0042d4bb689f966b1cd1c81452537951
 ,72:sha256 5a4b7e52bb2e67157995a517a0d9f153155b131d681028868d4e73f1135af661
@@ -5378,7 +5364,4 @@ members/banded/banded.tally	m0/format/members/banded/banded.tally
 ,36:format/version_items_wider_key_first,36:format/version_items_wider_key_first,22:engine/tests/m0/format,43:reprint version_items_wider_key_first.tally,82:version_items_wider_key_first.tally	m0/format/version_items_wider_key_first.tally
 ,1:0,73:version_items_wider_key_first.tally	404	1abfc3fdaf73b447073eaf0d4eb37cb1
 ,72:sha256 0885ce4809ecf4087b32a6c659f4fa4b79bdb0438c39c36064666b81326673b3
-,29:format/versions_last_by_known,29:format/versions_last_by_known,22:engine/tests/m0/format,36:reprint versions_last_by_known.tally,68:versions_last_by_known.tally	m0/format/versions_last_by_known.tally
-,1:0,66:versions_last_by_known.tally	484	0fc4eaabe34b81fa0991fd63453b7414
-,72:sha256 0b8301939af64db009d6c442e5d33e67180f2532fc1578b32b7e69ab137febf6
 ,

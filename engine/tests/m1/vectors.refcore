@@ -216150,11 +216150,12 @@ qd [added window(2026-12-01, 2026-12-02) = 2026-12-01]: 2026-12-02
 qd [added window(2026-12-01, 2026-12-02) = 2026-12-02]: 2026-12-01
   held: cal = calendar(weekends [sat, sun]) (c2), read for 2026-12-01
   law date 2026-05-01, cut 2026-03-01
-,19:fixes/gate8/m2_g3_j,11:fixes-gate8,11:run j.tally,460:7:j.tally,445:model pj
+,19:fixes/gate8/m2_g3_j,11:fixes-gate8,11:run j.tally,635:7:j.tally,620:model pj
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2027-12-31
+  note "T; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source card "invented"
 unit PLN: currency minor 0.01
@@ -216174,7 +216175,7 @@ version v
 version v2
   cite card
   governs 2027-01-01..
-  known window(2026-02-20, 2026-02-28)
+  known 2026-02-28
   replace rate = 12.00 PLN "c"
 ,,1:0,207:q: 10.00 PLN
   law date 2026-06-01, cut 2026-03-01
@@ -216183,11 +216184,12 @@ q27: 12.00 PLN
   law date 2027-06-01, cut 2026-03-01
 qw: 10.00 PLN
   law date 2026-06-01, cut 2026-03-01
-,20:fixes/gate8/m2_g3_j2,11:fixes-gate8,12:run j2.tally,461:8:j2.tally,445:model pj
+,20:fixes/gate8/m2_g3_j2,11:fixes-gate8,12:run j2.tally,636:8:j2.tally,620:model pj
   tally 2
   on 2026-03-01
   start 2026-01-01
   end 2027-12-31
+  note "T; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source card "invented"
 unit PLN: currency minor 0.01
@@ -216207,7 +216209,7 @@ version v
 version v2
   cite card
   governs 2027-01-01..
-  known window(2026-02-20, 2026-03-01)
+  known 2026-03-01
   replace rate = 12.00 PLN "c"
 ,,1:0,207:q: 10.00 PLN
   law date 2026-06-01, cut 2026-03-01
@@ -216216,36 +216218,6 @@ q27: 12.00 PLN
   law date 2027-06-01, cut 2026-03-01
 qw: 10.00 PLN
   law date 2026-06-01, cut 2026-03-01
-,20:fixes/gate8/m2_g3_j3,11:fixes-gate8,25:run j3.tally --ask qw q27,521:8:j3.tally,505:model pj
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2027-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input rate: money PLN
-
-ask q: rate law 2026-06-01 as known 2026-02-25
-ask qw: rate law 2026-06-01 as known 2026-02-25 windows each
-ask q27: rate law 2027-06-01 as known 2026-02-25
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  rate = 10.00 PLN "c"
-
-version v2
-  cite card
-  governs 2027-01-01..
-  known window(2026-02-20, 2026-02-28)
-  replace rate = 12.00 PLN "c"
-,,1:0,188:qw: 10.00 PLN
-  law date 2026-06-01, cut 2026-02-25
-q27: ?"date within window(2026-02-20, 2026-02-28) not precise enough for the cut 2026-02-25" (v2)
-  law date 2027-06-01, cut 2026-02-25
 ,19:fixes/gate8/m2_g3_k,11:fixes-gate8,23:run k.tally --ask s u b,913:7:k.tally,898:model pk
   tally 2
   on 2026-03-01
@@ -229664,12 +229636,12 @@ ask t: sum(x[k] for k in ks) - 1 partial
   cut 2026-01-01
 t: 4 + 1 × ?"x?" (x[b])
   cut 2026-01-01
-,33:fixes/gate8/m2_d512_known_win_end,11:fixes-gate8,23:run known_win_end.tally,1537:19:known_win_end.tally,1508:model pw
+,33:fixes/gate8/m2_d512_known_win_end,11:fixes-gate8,23:run known_win_end.tally,1701:19:known_win_end.tally,1672:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: a statement known in a window, read as known on its last day, the day after and before it (book/observe.rs unseen_known: the window holds a cut before its last day only); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: a statement known in a window, read as known on its last day, the day after and before it (book/observe.rs unseen_known: the window holds a cut before its last day only); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -229708,7 +229680,7 @@ ask q3: bal(konto, 2026-03-31) as known 2026-03-31
 version st
   cite s
   governs 2026-03
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
 ,,1:0,481:q: 32.00 PLN
@@ -239975,742 +239947,6 @@ warning: WARN-UNREAD input rr is read by nothing
 warning: WARN-UNREAD input t is read by nothing
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
-,22:fixes/gate8/m2_g6b_ow1,11:fixes-gate8,13:run ow1.tally,1688:9:ow1.tally,1670:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): an observation known in a window that holds the cut (G6's ow1; book/observe.rs known_at_cut); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-ask q2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask q3: covered(konto, 2026-03) as known 2026-04-10
-ask q4: flows(konto, 2026-03) as known 2026-04-10
-ask q5: bal(konto, 2026-02-28) as known 2026-04-10
-ask q6: bal(konto, 2026-03-31)
-ask q7: covered(konto, 2026-03) as known 2026-04-10 windows each
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,1259:q: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-q2 [known of st = 2026-04-01 .. 2026-04-10]: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-10
-q2 [known of st = 2026-04-11 .. 2026-04-20]: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-q3: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (st)
-  cut 2026-04-10
-q4: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-q5: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  cut 2026-04-10
-q6: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-25
-q7 [known of st = 2026-04-01 .. 2026-04-10]: true
-  cut 2026-04-10
-q7 [known of st = 2026-04-11 .. 2026-04-20]: false
-  cut 2026-04-10
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/gate8/m2_g6b_rw1,11:fixes-gate8,13:run rw1.tally,1629:9:rw1.tally,1611:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a reading known in a window that holds the cut (G6's rw1; book/reading.rs readings); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-ask q2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask q3: bal(konto, 2026-04-30) as known 2026-04-10
-ask q4: gap(konto, 2026-03-31) as known 2026-04-10
-ask q5: bal(konto, 2026-03-31)
-ask q6: bal(konto, 2026-02-28) as known 2026-04-10
-ask q7: bal(konto, 2026-03-31) modelled as known 2026-04-10
-
-version rd
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  anchor konto
-  stated[konto] = 50.00 PLN at 2026-03-31 end "saldo"
-,,1:0,1646:q: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  cut 2026-04-10
-q2 [known of rd = 2026-04-01 .. 2026-04-10]: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-10
-q2 [known of rd = 2026-04-11 .. 2026-04-20]: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-q3: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  cut 2026-04-10
-q4: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-q5: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-25
-q6: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  cut 2026-04-10
-q7: 30.00 PLN
-  cut 2026-04-10
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/gate8/m2_g6b_rw2,11:fixes-gate8,13:run rw2.tally,1591:9:rw2.tally,1573:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): an opening's own known window, a projection from, windows each (G6's rw2); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-  replace opening[konto] = 7.00 PLN known window(2026-02-20, 2026-03-10) at 2026-01-01 start "op"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-ask q2: bal(konto, 2026-04-30) from 2026-04-05 as known 2026-04-10
-ask q3: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask q4: bal(konto, 2026-01-31) as known 2026-03-01
-
-version rd
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  anchor konto
-  stated[konto] = 50.00 PLN at 2026-03-31 end "saldo"
-,,1:0,1371:q: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  cut 2026-04-10
-q2: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  cut 2026-04-10
-q3 [known of rd = 2026-04-01 .. 2026-04-10]: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 13.00 PLN
-  cut 2026-04-10
-q3 [known of rd = 2026-04-11 .. 2026-04-20]: 37.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-q4: ?"date within window(2026-02-20, 2026-03-10) not precise enough for the cut 2026-03-01" (opening[konto])
-  unfulfilled: pay[2026-01]
-  cut 2026-03-01
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/gate8/m2_g6b_sr1,11:fixes-gate8,13:run sr1.tally,1023:9:sr1.tally,1005:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): input rows stated same: agreeing, a missing side, a hole on one and both sides, a period-keyed pair under law (G6's sr1; eval/read.rs read_same_rows)"
-
-source s "s"
-unit PLN: currency minor 0.01
-index ks = [a, b, c, d]
-input x[k in ks]: int
-input y[k in ks]: int
-input r[m in months]: money PLN
-input t[m in months]: money PLN
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x[a] = 1 "s"
-  y[a] = 1 "s"
-  x[b] = 2 "s"
-  y[c] = ? "y c open" "s"
-  x[c] = 5 "s"
-  x[d] = ? "x d open" "s"
-  y[d] = ? "y d open" "s"
-  r[2026-03] = 10.00 PLN "s"
-  t[2026-03] = 12.00 PLN "s"
-
-ask q1: x[a] + y[a]
-ask q2: x[b], y[b]
-ask q3: x[c], y[c]
-ask q4: x[d], y[d]
-ask q5: r[2026-03] law 2026-03-15
-ask q6: t[2026-03]
-
-version sm
-  cite s
-  known 2026-01-02
-  same x[a] = y[a]
-  same x[b] = y[b]
-  same x[c] = y[c]
-  same x[d] = y[d]
-  same r[2026-03] = t[2026-03]
-,,1:0,584:q1: 2
-  cut 2026-06-30
-q2: (2, 2)
-  cut 2026-06-30
-q3: (?"y c open" (y[c]), ?"y c open" (y[c]))
-  cut 2026-06-30
-q4: (?"x d open" (x[d]) ?"y d open" (y[d]), ?"x d open" (x[d]) ?"y d open" (y[d]))
-  cut 2026-06-30
-q5: ?"r[2026-03] and t[2026-03] are one, but the value differs on 2026-03-01: 10.00 PLN (v:r[2026-03]) and 12.00 PLN (v:t[2026-03])" (r[2026-03], t[2026-03])
-  law date 2026-03-15, cut 2026-06-30
-q6: ?"r[2026-03] and t[2026-03] are one, but the value differs on 2026-03-01: 10.00 PLN (v:r[2026-03]) and 12.00 PLN (v:t[2026-03])" (r[2026-03], t[2026-03])
-  cut 2026-06-30
-,22:fixes/gate8/m2_g6b_cw1,11:fixes-gate8,13:run cw1.tally,929:9:cw1.tally,912:model pc
-  tally 2
-  on 2026-03-15
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a calendar restated by a version known in a window that holds the cut (G6's cw1; eval/business.rs calendar_row)"
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input cal: calendar
-input d1: date
-
-ask qc: add_business(d1, 1, cal) as known 2026-03-01 windows each
-ask qp: add_business(d1, 1, cal) as known 2026-03-01
-ask qn: add_business(d1, 1, cal) windows each
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  d1 = 2026-06-29 "c"
-
-version c1
-  cite card
-  governs always
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
-
-version c3
-  cite card
-  governs always
-  known window(2026-02-20, 2026-03-10)
-  replace cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-02)]) "c3"
-,,1:0,806:qc [known of c3 = 2026-02-20 .. 2026-03-01, added window(2026-06-30, 2026-07-02) = 2026-06-30]: 2026-07-01
-  cut 2026-03-01
-qc [known of c3 = 2026-02-20 .. 2026-03-01, added window(2026-06-30, 2026-07-02) = 2026-07-01 .. 2026-07-02]: 2026-06-30
-  cut 2026-03-01
-qc [known of c3 = 2026-03-02 .. 2026-03-10, added window(2026-06-30, 2026-07-01) = 2026-06-30]: 2026-07-01
-  cut 2026-03-01
-qc [known of c3 = 2026-03-02 .. 2026-03-10, added window(2026-06-30, 2026-07-01) = 2026-07-01]: 2026-06-30
-  cut 2026-03-01
-qn [added window(2026-06-30, 2026-07-02) = 2026-06-30]: 2026-07-01
-  cut 2026-03-15
-qn [added window(2026-06-30, 2026-07-02) = 2026-07-01 .. 2026-07-02]: 2026-06-30
-  cut 2026-03-15
-qp: ?"date within window(2026-02-20, 2026-03-10) not precise enough for the cut 2026-03-01" (c3)
-  cut 2026-03-01
-,22:fixes/gate8/m2_g6b_kb1,11:fixes-gate8,13:run kb1.tally,2151:9:kb1.tally,2133:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): an observation known in a window, cuts before, on its ends and after (review's kb1); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-ask b0: bal(konto, 2026-03-31) as known 2026-03-31
-ask c0: covered(konto, 2026-03) as known 2026-03-31
-ask e0: bal(konto, 2026-03-31) as known 2026-03-31 windows each
-ask b1: bal(konto, 2026-03-31) as known 2026-04-01
-ask c1: covered(konto, 2026-03) as known 2026-04-01
-ask e1: bal(konto, 2026-03-31) as known 2026-04-01 windows each
-ask b2: bal(konto, 2026-03-31) as known 2026-04-10
-ask c2: covered(konto, 2026-03) as known 2026-04-10
-ask e2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask b3: bal(konto, 2026-03-31) as known 2026-04-20
-ask c3: covered(konto, 2026-03) as known 2026-04-20
-ask e3: bal(konto, 2026-03-31) as known 2026-04-20 windows each
-ask b4: bal(konto, 2026-03-31) as known 2026-04-21
-ask c4: covered(konto, 2026-03) as known 2026-04-21
-ask e4: bal(konto, 2026-03-31) as known 2026-04-21 windows each
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,2132:b0: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-03-31
-b1: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-01" (bank[r1], st)
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-01
-b2: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], st)
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-b3: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-20
-b4: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-21
-c0: false
-  cut 2026-03-31
-c1: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-01" (st)
-  cut 2026-04-01
-c2: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (st)
-  cut 2026-04-10
-c3: true
-  cut 2026-04-20
-c4: true
-  cut 2026-04-21
-e0: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-03-31
-e1 [known of st = 2026-04-01]: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-01
-e1 [known of st = 2026-04-02 .. 2026-04-20]: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-01
-e2 [known of st = 2026-04-01 .. 2026-04-10]: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-10
-e2 [known of st = 2026-04-11 .. 2026-04-20]: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-e3: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-20
-e4: 32.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  open: pay[2026-03]
-  cut 2026-04-21
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/gate8/m2_g6b_kb2,11:fixes-gate8,13:run kb2.tally,2096:9:kb2.tally,2078:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a reading known in a window, cuts before, on its ends and after (review's kb2); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-ask b0: bal(konto, 2026-03-31) as known 2026-03-31
-ask g0: gap(konto, 2026-03-31) as known 2026-03-31
-ask e0: bal(konto, 2026-03-31) as known 2026-03-31 windows each
-ask b1: bal(konto, 2026-03-31) as known 2026-04-01
-ask g1: gap(konto, 2026-03-31) as known 2026-04-01
-ask e1: bal(konto, 2026-03-31) as known 2026-04-01 windows each
-ask b2: bal(konto, 2026-03-31) as known 2026-04-10
-ask g2: gap(konto, 2026-03-31) as known 2026-04-10
-ask e2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask b3: bal(konto, 2026-03-31) as known 2026-04-20
-ask g3: gap(konto, 2026-03-31) as known 2026-04-20
-ask e3: bal(konto, 2026-03-31) as known 2026-04-20 windows each
-ask b4: bal(konto, 2026-03-31) as known 2026-04-21
-ask g4: gap(konto, 2026-03-31) as known 2026-04-21
-ask e4: bal(konto, 2026-03-31) as known 2026-04-21 windows each
-
-version rd
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  anchor konto
-  stated[konto] = 50.00 PLN at 2026-03-31 end "saldo"
-,,1:0,2872:b0: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-03-31
-b1: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-01" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-01" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-01" (stated[konto])
-  cut 2026-04-01
-b2: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  anchor: konto 2026-03-31 end, stated ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto]), difference ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  cut 2026-04-10
-b3: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-20
-b4: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-21
-e0: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-03-31
-e1 [known of rd = 2026-04-01]: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-01
-e1 [known of rd = 2026-04-02 .. 2026-04-20]: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-01
-e2 [known of rd = 2026-04-01 .. 2026-04-10]: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-10
-e2 [known of rd = 2026-04-11 .. 2026-04-20]: 30.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-e3: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-20
-e4: 50.00 PLN
-  anchor: konto 2026-03-31 end, stated 50.00 PLN, difference 20.00 PLN
-  cut 2026-04-21
-g0: ?"stated[konto] has no reading at 2026-03-31" (stated[konto])
-  cut 2026-03-31
-g1: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-01" (stated[konto])
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-01
-g2: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto])
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-10
-g3: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-20
-g4: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  cut 2026-04-21
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
-,27:fixes/gate8/m2_g6b_same_two,11:fixes-gate8,18:run same_two.tally,650:14:same_two.tally,627:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): two same lines sharing a row, the last one read (the review's non-blocking; #187, today's answer)"
-
-source s "s"
-unit PLN: currency minor 0.01
-index ks = [a, b, c, d]
-input x[k in ks]: int
-input y[k in ks]: int
-input r[m in months]: money PLN
-input t[m in months]: money PLN
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  y[a] = 3 "s"
-  y[b] = 4 "s"
-
-ask q1: x[a]
-ask q2: y[a]
-ask q3: y[b]
-
-version sm
-  cite s
-  known 2026-01-02
-  same x[a] = y[a]
-  same x[a] = y[b]
-,,1:0,462:q1: ?"y[a] and y[b] are one, but the value differs on every day: 3 (v:y[a]) and 4 (v:y[b])" (y[a], y[b])
-  cut 2026-06-30
-q2: ?"y[a] and y[b] are one, but the value differs on every day: 3 (v:y[a]) and 4 (v:y[b])" (y[a], y[b])
-  cut 2026-06-30
-q3: ?"y[a] and y[b] are one, but the value differs on every day: 3 (v:y[a]) and 4 (v:y[b])" (y[a], y[b])
-  cut 2026-06-30
-warning: WARN-UNREAD input r is read by nothing
-warning: WARN-UNREAD input t is read by nothing
-,22:fixes/gate8/m2_g6b_sr2,11:fixes-gate8,51:run sr2.tally --ask q1 q2 q3 q4 q5 q6 q8 q9 q10 q11,1168:9:sr2.tally,1150:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): rows stated same that agree and that disagree, read by a key binding and by explain (review's sr2; q7 B4)"
-
-source s "s"
-unit PLN: currency minor 0.01
-index ks = [a, e]
-input x[k in ks]: int
-input y[k in ks]: int
-input r[m in months]: money PLN
-input t[m in months]: money PLN
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x[a] = 1 "s"
-  y[a] = 1 "s"
-  x[e] = 3 "s"
-  y[e] = 4 "s"
-  r[2026-03] = 10.00 PLN "s"
-  t[2026-03] = 12.00 PLN "s"
-  r[2026-04] = 7.00 PLN "s"
-  t[2026-04] = 7.00 PLN "s"
-
-ask q1: x[k] + 1 for k in ks
-ask q2: y[k] for k in ks
-ask q3: x[k] == y[k] for k in ks
-ask q4: explain x[a]
-ask q5: explain x[e]
-ask q6: explain y[e]
-ask q7: x[e] as known 2026-01-01
-ask q8: r[m] for m in months where m == 2026-03 or m == 2026-04
-ask q9: explain t[2026-03] law 2026-03-15
-ask q10: explain r[2026-04] law 2026-04-15
-ask q11: x[e] == y[e]
-
-version sm
-  cite s
-  known 2026-01-02
-  same x[a] = y[a]
-  same x[e] = y[e]
-  same r[2026-03] = t[2026-03]
-  same r[2026-04] = t[2026-04]
-,,1:0,2401:q1 (k = a): 2
-  cut 2026-06-30
-q1 (k = e): ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
-  cut 2026-06-30
-q2 (k = a): 1
-  cut 2026-06-30
-q2 (k = e): ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
-  cut 2026-06-30
-q3 (k = a): true
-  cut 2026-06-30
-q3 (k = e): ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
-  cut 2026-06-30
-q4: 1
-  [1] row v:x[a] = 1
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  [2] row v:y[a] = 1
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  cut 2026-06-30
-q5: ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
-  [1] row v:x[e] = 3
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  [2] row v:y[e] = 4
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  cut 2026-06-30
-q6: ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
-  [1] row v:x[e] = 3
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  [2] row v:y[e] = 4
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  cut 2026-06-30
-q8 (m = 2026-03): ?"r[2026-03] and t[2026-03] are one, but the value differs on 2026-03-01: 10.00 PLN (v:r[2026-03]) and 12.00 PLN (v:t[2026-03])" (r[2026-03], t[2026-03])
-  cut 2026-06-30
-q8 (m = 2026-04): 7.00 PLN
-  cut 2026-06-30
-q9: ?"r[2026-03] and t[2026-03] are one, but the value differs on 2026-03-01: 10.00 PLN (v:r[2026-03]) and 12.00 PLN (v:t[2026-03])" (r[2026-03], t[2026-03])
-  [1] row v:r[2026-03] = 10.00 PLN
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  [2] row v:t[2026-03] = 12.00 PLN
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  law date 2026-03-15, cut 2026-06-30
-q10: 7.00 PLN
-  [1] row v:r[2026-04] = 7.00 PLN
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  [2] row v:t[2026-04] = 7.00 PLN
-      version v, source s, "s", locator "s", governs always, known 2026-01-01
-  law date 2026-04-15, cut 2026-06-30
-q11: ?"x[e] and y[e] are one, but the value differs on every day: 3 (v:x[e]) and 4 (v:y[e])" (x[e], y[e])
-  cut 2026-06-30
 ,22:fixes/gate8/m2_g6b_pd3,11:fixes-gate8,31:run pd3.tally --ask q1 q3 q4 q5,735:9:pd3.tally,718:model pd
   tally 2
   on 2026-03-01
@@ -240847,12 +240083,12 @@ q4 (k = c) [ax = lo]: 10.00 PLN
 q4 (k = c) [ax = hi]: 20.00 PLN
   reading: ax = hi
   cut 2026-03-01
-,22:fixes/gate8/m2_g6b_le1,11:fixes-gate8,22:run le1.tally --ask q3,1564:9:le1.tally,1546:model pw
+,22:fixes/gate8/m2_g6b_le1,11:fixes-gate8,22:run le1.tally --ask q3,1728:9:le1.tally,1710:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a ledger's windows each over a window-dated move: the set differs by sub-window (G6's le1; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -240895,7 +240131,7 @@ ask q3: residuals konto 2026-03 as known 2026-04-10
 version st
   cite s
   governs 2026-03
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
 ,,1:0,571:q3: residuals konto 2026-03
@@ -240908,12 +240144,12 @@ version st
   cut 2026-04-10
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,22:fixes/gate8/m2_g6b_le5,11:fixes-gate8,25:run le5.tally --ask q2 q5,1620:9:le5.tally,1602:model pw
+,22:fixes/gate8/m2_g6b_le5,11:fixes-gate8,25:run le5.tally --ask q2 q5,1784:9:le5.tally,1766:model pw
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
+  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): a windows each ledger, runs 1-2 agree, run 3 differs (review's le5; #186); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -240958,7 +240194,7 @@ ask q5: residuals konto 2026-04
 version st
   cite s
   governs 2026-03..2026-04
-  known window(2026-04-01, 2026-04-20)
+  known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
 ,,1:0,482:q2: residuals konto 2026-02
@@ -240971,79 +240207,6 @@ q5: residuals konto 2026-04
   cut 2026-04-25
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
-,21:fixes/gate8/m2_g6b_b3,11:fixes-gate8,27:run b3.tally --ask q2 q3 q4,985:8:b3.tally,969:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B3, a removal known in a window that holds the cut (L 4.4, 4.5)"
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-01
-  covers konto
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-
-version fx
-  cite s
-  governs 2026-03
-  known window(2026-04-05, 2026-04-20)
-  replace bank[r1] = none "r1"
-
-ask q: bal(konto, 2026-03-31) as known 2026-04-10
-ask q2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask q3: bal(konto, 2026-03-31) as known 2026-04-21
-ask q4: bal(konto, 2026-03-31) as known 2026-04-04
-,,1:0,204:q2 [known of fx = 2026-04-05 .. 2026-04-10]: 0.00 PLN
-  cut 2026-04-10
-q2 [known of fx = 2026-04-11 .. 2026-04-20]: 12.00 PLN
-  cut 2026-04-10
-q3: 0.00 PLN
-  cut 2026-04-21
-q4: 12.00 PLN
-  cut 2026-04-04
-,21:fixes/gate8/m2_g6b_b4,11:fixes-gate8,21:run b4.tally --ask q2,502:8:b4.tally,486:model p
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 G6's last part (BUILD-LOG's fourth turn; tmp/m2/review-g6b.md): B4, a version's same line read at a cut before the version is known (L 4.5)"
-
-source s "s"
-input x: int
-input y: int
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x = 3 "s"
-  y = 4 "s"
-
-ask q1: x as known 2026-01-01
-ask q2: x
-ask q3: y as known 2026-03-01
-
-version sm
-  cite s
-  governs always
-  known 2026-03-02
-  same x = y
-,,1:0,104:q2: ?"x and y are one, but the value differs on every day: 3 (v:x) and 4 (v:y)" (x, y)
-  cut 2026-06-30
 ,32:fixes/gate8/m2_r437_same_outside,11:fixes-gate8,40:run same_outside.tally --ask l_s b_k b_s,1356:18:same_outside.tally,1328:model t
   tally 2
   on 2026-04-10
@@ -241102,78 +240265,6 @@ b_k: 970.00 PLN
 b_s: 100.00 PLN
   cut 2026-04-10
 warning: WARN-UNREAD place card is read by nothing
-,33:fixes/gate8/m2_r4371_cover_on_end,11:fixes-gate8,22:run cover_on_end.tally,1553:18:cover_on_end.tally,1525:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-03-01
-  note "T, M2 gate 8 run 43713764399: a cover known in a window holding the cut whose span starts on the run's last day E (walk/agenda.rs schedule_cover_holes: day > end); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-index ks = [a, b]
-kind mixed: place PLN signed
-place konto: accounts PLN lives 2026-01-01..
-place wallet: mixed lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input amt: money PLN
-input dk[k in ks]: date
-input d0: date
-input dd: int
-
-move pay[m in months]: transfers
-  on day_of(m, dd)
-  leg cash from world to konto amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d0 = 2026-01-01 "s"
-  dd = 10 "s"
-  dk[a] = window(2026-03-01, 2026-03-10) "s"
-  dk[b] = 2026-03-05 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
-
-
-ask e1: bal(konto, 2026-03-01) as known 2026-04-10
-ask e2: bal(konto, 2026-02-28) as known 2026-04-10
-ask e3: bal(konto, 2026-03-01) as known 2026-04-10 windows each
-ask e4: bal(konto, 2026-03-01) as known 2026-04-21
-
-version st
-  cite s
-  governs 2026-03
-  known window(2026-04-01, 2026-04-20)
-  covers konto
-  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,770:e1: ?"date within window(2026-04-01, 2026-04-20) not precise enough for the cut 2026-04-10" (st)
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  left out: pay, 1 instances, first 2026-03-10
-  cut 2026-04-10
-e2: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  left out: pay, 1 instances, first 2026-03-10
-  cut 2026-04-10
-e3: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  left out: pay, 1 instances, first 2026-03-10
-  cut 2026-04-10
-e4: 20.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  left out: pay, 1 instances, first 2026-03-10
-  cut 2026-04-21
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input dk is read by nothing
-warning: WARN-UNREAD place wallet is read by nothing
 ,36:fixes/gate8/m2_r4371_flows_for_after,11:fixes-gate8,25:run flows_for_after.tally,2274:21:flows_for_after.tally,2243:model p
   tally 2
   on 2026-06-30
@@ -243147,50 +242238,6 @@ n1: 3.00 PLN
   unfulfilled: op[2027-03]
   unfulfilled: op[2027-04]
   cut 2027-06-30
-,37:fixes/gate8/m2_g6r_same_holes_partial,11:fixes-gate8,28:run same_holes_partial.tally,715:24:same_holes_partial.tally,682:model t
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 gate 8: two input rows stated same whose values are holes, read in a partial sum (hole/questions.rs spread, delete field lin; eval/read.rs read_same_rows)"
-
-source s "s"
-unit PLN: currency minor 0.01
-input x: money PLN
-input y: money PLN
-input z: money PLN
-input ten: money PLN
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  x = ?"x amount" "s"
-  y = ?"y amount" "s"
-  z = 5.00 PLN "s"
-  ten = 10.00 PLN "s"
-
-version sm
-  cite s
-  governs always
-  known 2026-01-02
-  same x = y
-
-ask q1: x + ten partial
-ask q2: x + ten
-ask q3: y + z partial
-ask q4: x + y partial
-ask q5: z + ten partial
-,,1:0,243:q1: ?"x amount" (x) ?"y amount" (y)
-  cut 2026-06-30
-q2: ?"x amount" (x) ?"y amount" (y)
-  cut 2026-06-30
-q3: ?"x amount" (x) ?"y amount" (y)
-  cut 2026-06-30
-q4: ?"x amount" (x) ?"y amount" (y)
-  cut 2026-06-30
-q5: 15.00 PLN
-  cut 2026-06-30
 ,27:fixes/gate8/m2_g6r_dec_same,11:fixes-gate8,32:run dec_same.tally --ask l_k n_t,1173:14:dec_same.tally,1149:model t
   tally 2
   on 2026-04-10
@@ -244701,147 +243748,6 @@ cv1: false
   cut 2026-10-20
 bm: refused: RUN-DIV division by zero
   cut 2026-10-20
-,22:fixes/gate8/m2_gate_p4,11:fixes-gate8,12:run p4.tally,2360:8:p4.tally,2343:model hh
-  tally 2
-  on 2026-10-20
-  start 2026-01-01
-  end 2026-12-31
-
-source plan "plan"
-source bk "bank"
-unit PLN: currency minor 0.01
-kind groceries: transfers
-  attr cat: text
-input bank: observed
-input g_amt: money PLN
-input g_dom: int
-input g_cat: text
-place konto: accounts PLN lives 2019-05-01..
-place world: outside lives 1900-01-01..
-place unexplained: outside lives 1900-01-01..
-
-move groc[m in months]: groceries
-  on day_of(m, g_dom)
-  at start_of(m)
-  leg cash from konto to world amount g_amt
-  attr cat = g_cat
-
-version plan_2026
-  cite plan
-  governs 2026..
-  known 2026-01-01
-  g_amt = 500.00 PLN "plan"
-  g_dom = 5 "plan"
-  g_cat = "plan" "plan"
-  opening[konto] = 10 000.00 PLN at 2026-01-01 start "wyciąg"
-
-version statement_02
-  cite bk
-  governs 2026-02..2026-03
-  known window(2026-04-02, 2026-04-20)
-  covers konto
-  pad konto from unexplained
-  bank[r1] = (on: 2026-02-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-02]) "l1"
-  bank[r3] = (on: 2026-03-05, kind: groceries, leg cash from konto to world amount 300.00 PLN, cat: "food", fulfils: groc[2026-03]) "l3"
-  bank[r5] = (on: 2026-03-07, kind: groceries, leg cash from konto to world amount 5.00 PLN, cat: "home") "l5"
-  stated[konto] = 8 000.00 PLN at 2026-03-31 end "saldo"
-
-ask f1: flows(groc, 2026-02..2026-03) as known 2026-04-10
-ask f2: flows(groc, 2026-02..2026-03) as known 2026-04-10 windows each
-ask f3: flows(konto, 2026-02..2026-03) as known 2026-04-10
-ask o1: observed(groc[2026-02]).cash.amount as known 2026-04-10
-ask o2: observed(groc[2026-02]).cash.amount as known 2026-04-10 windows each
-ask b1: bal(konto, 2026-03-31) as known 2026-04-10
-ask b2: bal(konto, 2026-03-31) as known 2026-04-10 windows each
-ask b3: bal(konto, 2026-03-31) modelled as known 2026-04-10
-ask c1: sum(-t.cash.amount for t in groceries over 2026-02..2026-03) as known 2026-04-10
-ask c2: count(t in groceries over 2026-02..2026-03) as known 2026-04-10
-ask c3: count(o in bank over 2026-02..2026-03) as known 2026-04-10
-ask g1: gap(konto, 2026-03-31) as known 2026-04-10
-ask r1: residuals konto 2026-02..2026-03 as known 2026-04-10
-ask p1: bal(konto, 2026-06-30) from 2026-04-05 as known 2026-04-10
-ask p2: bal(konto, 2026-06-30) from 2026-04-05 as known 2026-04-10 windows each
-ask z1: flows(groc, 2026-02..2026-03)
-,,1:0,5497:b1: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto], statement_02)
-  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], stated[konto], statement_02)
-  cut 2026-04-10
-b2 [known of statement_02 = 2026-04-02 .. 2026-04-10]: 8 000.00 PLN
-  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -895.00 PLN
-  cut 2026-04-10
-b2 [known of statement_02 = 2026-04-11 .. 2026-04-20]: 8 500.00 PLN
-  unfulfilled: groc[2026-01]
-  unfulfilled: groc[2026-02]
-  unfulfilled: groc[2026-03]
-  cut 2026-04-10
-b3: 8 500.00 PLN
-  cut 2026-04-10
-c1: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], statement_02)
-  cut 2026-04-10
-c2: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r5], statement_02)
-  cut 2026-04-10
-c3: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], statement_02)
-  cut 2026-04-10
-f1: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], statement_02)
-  cut 2026-04-10
-f2 [known of statement_02 = 2026-04-02 .. 2026-04-10]: 600.00 PLN
-  cut 2026-04-10
-f2 [known of statement_02 = 2026-04-11 .. 2026-04-20]: 1 000.00 PLN
-  unfulfilled: groc[2026-02]
-  unfulfilled: groc[2026-03]
-  cut 2026-04-10
-f3: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], stated[konto], statement_02)
-  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], stated[konto], statement_02)
-  cut 2026-04-10
-g1: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], stated[konto], statement_02)
-  unfulfilled: groc[2026-01]
-  cut 2026-04-10
-o1: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], statement_02)
-  cut 2026-04-10
-o2 [known of statement_02 = 2026-04-02 .. 2026-04-10]: 300.00 PLN
-  cut 2026-04-10
-o2 [known of statement_02 = 2026-04-11 .. 2026-04-20]: refused: RUN-NONE observed(groc[2026-02]) is none here: a field read of it
-  cut 2026-04-10
-p1: ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (stated[konto], statement_02)
-  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], stated[konto], statement_02)
-  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
-  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
-  held: g_cat = "plan" (plan_2026), read for 2026-05-01
-  held: g_cat = "plan" (plan_2026), read for 2026-06-01
-  held: g_dom = 5 (plan_2026), read for 2026-05-01
-  held: g_dom = 5 (plan_2026), read for 2026-06-01
-  cut 2026-04-10
-p2 [known of statement_02 = 2026-04-02 .. 2026-04-10]: 6 500.00 PLN
-  pad: konto 2026-03-31 end, pads:statement_02:konto@2026-03-31 end of -895.00 PLN
-  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
-  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
-  held: g_cat = "plan" (plan_2026), read for 2026-05-01
-  held: g_cat = "plan" (plan_2026), read for 2026-06-01
-  held: g_dom = 5 (plan_2026), read for 2026-05-01
-  held: g_dom = 5 (plan_2026), read for 2026-06-01
-  cut 2026-04-10
-p2 [known of statement_02 = 2026-04-11 .. 2026-04-20]: 7 000.00 PLN
-  unfulfilled: groc[2026-01]
-  unfulfilled: groc[2026-02]
-  unfulfilled: groc[2026-03]
-  held: g_amt = 500.00 PLN (plan_2026), read for 2026-05-01
-  held: g_amt = 500.00 PLN (plan_2026), read for 2026-06-01
-  held: g_cat = "plan" (plan_2026), read for 2026-05-01
-  held: g_cat = "plan" (plan_2026), read for 2026-06-01
-  held: g_dom = 5 (plan_2026), read for 2026-05-01
-  held: g_dom = 5 (plan_2026), read for 2026-06-01
-  cut 2026-04-10
-r1: residuals konto 2026-02 .. 2026-03
-  2026-03 balance: model ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], statement_02), observed 8 000.00 PLN, difference ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], statement_02)
-    balance konto 2026-03-31 end (padded): booked ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], statement_02), stated 8 000.00 PLN, gap ?"date within window(2026-04-02, 2026-04-20) not precise enough for the cut 2026-04-10" (bank[r1], bank[r3], bank[r5], statement_02)
-  2026-02 move groc: model -500.00 PLN, observed -300.00 PLN, difference 200.00 PLN
-    matched groc[2026-02] on 2026-02-05: model -500.00 PLN, observed -300.00 PLN, difference 200.00 PLN, timing +0 days
-  2026-03 move groc: model -500.00 PLN, observed -300.00 PLN, difference 200.00 PLN
-    matched groc[2026-03] on 2026-03-05: model -500.00 PLN, observed -300.00 PLN, difference 200.00 PLN, timing +0 days
-  2026-03 unexplained: model 0.00 PLN, observed -5.00 PLN, difference -5.00 PLN
-    unexplained bank[r5] on 2026-03-07: observed -5.00 PLN
-  cut 2026-04-10
-z1: 600.00 PLN
-  cut 2026-10-20
 ,22:fixes/gate8/m2_gate_p5,11:fixes-gate8,54:run p5.tally --ask r2 r3 f1 c1 c2 c3 n1 fl1 fl2 cv1 bm,1898:8:p5.tally,1881:model hh
   tally 2
   on 2026-10-20
@@ -245109,12 +244015,12 @@ k3_sav: 950.00 PLN
 k4_sav: 950.00 PLN
   cut 2026-04-04
 warning: WARN-UNREAD place unexplained is read by nothing
-,22:fixes/gate8/m2_g8b_sc2,11:fixes-gate8,13:run sc2.tally,1614:9:sc2.tally,1596:model sc2
+,22:fixes/gate8/m2_g8b_sc2,11:fixes-gate8,13:run sc2.tally,1778:9:sc2.tally,1760:model sc2
   tally 2
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a movement same line in a version known in a window, read as known on its last day, the day after and at the cut (book/same.rs move_lines: the window holds a cut before its last day only)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a movement same line in a version known in a window, read as known on its last day, the day after and at the cut (book/same.rs move_lines: the window holds a cut before its last day only); tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -245155,7 +244061,7 @@ version st_konto
 version st_sav
   cite s
   governs 2026-03
-  known window(2026-04-03, 2026-04-08)
+  known 2026-04-08
   covers sav
   bank[b1] = (on: 2026-03-16, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
@@ -245170,12 +244076,12 @@ w9_n: 1
 w9_sav: 950.00 PLN
   cut 2026-04-09
 warning: WARN-UNREAD place unexplained is read by nothing
-,22:fixes/gate8/m2_g8b_ob1,11:fixes-gate8,42:run ob1.tally --ask b11 b12 led late early,1466:9:ob1.tally,1448:model ob1
+,22:fixes/gate8/m2_g8b_ob1,11:fixes-gate8,42:run ob1.tally --ask b11 b12 led late early,1634:9:ob1.tally,1616:model ob1
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep); tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day; the vector that read it as seen and unseen went with the form, and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -245194,7 +244100,7 @@ version v2
   cite s
   governs 2026-03
   known 2026-03-02
-  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm"
+  replace bank[r1] = none known 2026-04-10 "rm"
 
 version v3
   cite s
@@ -245224,12 +244130,12 @@ late: 0.00 PLN
   cut 2026-04-11
 early: 13.00 PLN
   cut 2026-03-31
-,22:fixes/gate8/m2_g8b_ob2,11:fixes-gate8,13:run ob2.tally,1187:9:ob2.tally,1169:model ob2
+,22:fixes/gate8/m2_g8b_ob2,11:fixes-gate8,13:run ob2.tally,1351:9:ob2.tally,1333:model ob2
   tally 2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open after a removal the cut sees; no row stands either way (book/observe.rs seen_observations)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open after a removal the cut sees; no row stands either way (book/observe.rs seen_observations); tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -245255,7 +244161,7 @@ version v3
   cite s
   governs 2026-03
   known 2026-03-03
-  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm2"
+  replace bank[r1] = none known 2026-04-10 "rm2"
 
 ask b31: bal(konto, 2026-03-31) as known 2026-04-05
 ask n: count(t in transfers over 2026-03) as known 2026-04-05

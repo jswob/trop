@@ -1,3 +1,2 @@
 id	target	issue	why
-r12/entry_known_window	m2_fixes	#204	tally 2.1.8 R12 (the plan's a2): a version's statement over the five forms the engine stops on, "not implemented" there; built at M3
 fixes/t22/fault_paths	m2_fixes	#211	tally 2.2 G1 (plan §3): the fault's def under paths, refcore's bytes after the fix; the engine stops on paths, "not implemented" there; built at M7, where it gates

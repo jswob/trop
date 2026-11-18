@@ -468,7 +468,9 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The corpus groups `vectors.py` sorts the 315 text sets into, and how many sets each
-    /// holds; with the 40 format fixtures, 355 vectors.
+    /// holds; with the 34 format fixtures, 349 vectors (40 and 355 before tally 2.2 dropped the
+    /// fixtures of a `known` window's order and of a `same` side that is a row of an input,
+    /// S-2, S-8).
     const GROUPS: [(&str, usize); 12] = [
         ("blind", 18),
         ("household-A", 8),
@@ -492,7 +494,7 @@ mod tests {
     /// member's absent or changed member (LOAD-PIN), a member folder with no model header or
     /// two (LOAD-HEADER), each a member's refusal. `vectors.py`'s `REPRINT_REFUSED` lists the
     /// same.
-    const REPRINT_REFUSED: [&str; 11] = [
+    const REPRINT_REFUSED: [&str; 10] = [
         "U:set/surf/SURF-04/SURF-04",
         "format/dup_id",
         "format/dup_kind",
@@ -502,7 +504,6 @@ mod tests {
         "format/member_folder_two",
         "format/member_nested_absent",
         "format/member_nested_changed",
-        "format/same_key_signed",
         "format/unknown_prefix",
     ];
 
@@ -526,7 +527,7 @@ mod tests {
     #[test]
     fn the_format_vectors_read_and_name_their_texts() {
         let vs = format_vectors(FORMAT).expect("m0/format.refcore reads");
-        assert_eq!(vs.len(), 355, "315 text sets and 40 format fixtures");
+        assert_eq!(vs.len(), 349, "315 text sets and 34 format fixtures");
         let all = texts();
         let mut ids = BTreeSet::new();
         for v in &vs {
@@ -581,7 +582,7 @@ mod tests {
         }
         assert_eq!(
             vs.iter().filter(|v| v.group.starts_with("format/")).count(),
-            40,
+            34,
             "one vector per format fixture"
         );
     }
