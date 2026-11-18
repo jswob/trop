@@ -46,7 +46,7 @@ pub(super) fn as_window(v: &Value) -> Option<&Window> {
 
 /// An end of an interval: its lowest value or its highest (L §4.4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum End {
+pub(crate) enum End {
     /// The lowest: a window's first day, `min`'s pick.
     Low,
     /// The highest: a window's last day, `max`'s pick.

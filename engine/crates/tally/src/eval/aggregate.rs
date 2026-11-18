@@ -2,6 +2,11 @@
 //! Spec: L §5.11 (aggregates; a key whose `where` is a hole is an unknown member; `sum` over
 //! no keys is 0 in the term's type; `count`, `any`, `all`), §8.1 (holes spread). The values a
 //! binding ranges over are `bindings.rs`'s; the extremes, `min` to `last`, `extremes.rs`'s.
+//! E §4.3: a `min` of `bal(x, d) from t` over the days a .. b is offered first, its range's
+//! values read once, to the range minimum (`walk/projection.rs`'s `lowest_shape` and
+//! `range_minimum`, fence F5); this aggregate, its terms read one by one from the same values,
+//! is its plain twin, as `Lows::Walk` reads it (the equivalence test: the CLI's
+//! `tests/walk_oracle.rs`).
 //! Twin: engine/tools/refcore/evaluate.py (`members`, `zero_of`, `e_agg`, `agg_anyall`).
 //! Invariants: tuples come in binding order, depth first as refcore's generator, one at a
 //! time, so `first` and `last` (from the last) read no `where` past their key; an unknown
@@ -23,9 +28,9 @@ use super::windows::End;
 use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
-use crate::syntax::{Agg, AggFn, Bal, Bind, Expr, Stop};
+use crate::syntax::{Agg, AggFn, Bind, Expr, Stop};
 use crate::time::Day;
-use crate::walk::{RangeText, lowest_shape};
+use crate::walk::lowest_shape;
 
 /// A binding tuple: its scope, the questions that make it an unknown member, and what its
 /// movements brought when it keeps them for its own line.
@@ -165,7 +170,10 @@ pub(super) struct Candidate {
 }
 
 impl Engine {
-    /// An aggregate (refcore's `e_agg`). L §5.11.
+    /// An aggregate (refcore's `e_agg`): a `min` of `walk::lowest_shape`'s shape, as `run`
+    /// reads it, its range's values read once, offered to the range minimum
+    /// (`walk/projection.rs`'s `range_minimum`, fence F5) and, where that leaves it, read
+    /// term by term from the same values; any other, term by term. L §5.11, E §4.3.
     pub(super) fn aggregate(
         &mut self,
         m: &Reality,
@@ -173,16 +181,22 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
-        if let Some(low) = lowest_shape(agg)
-            && self.reads_lowest(ctx)
-            && let Some(v) = self.range_minimum(m, low, env, ctx)?
-        {
-            return Ok(v);
-        }
-        if let AggFn::First | AggFn::Last = agg.func {
-            return self.first_last(m, agg, env, ctx);
-        }
-        let members = match self.members(m, &agg.binds, env, ctx, Brings::ToReader)? {
+        let walk = match lowest_shape(agg) {
+            Some((range, read)) if self.reads_lowest(ctx) => {
+                let days = self.range_values(m, range, env, ctx)?;
+                if let Values::Known(known) = &days
+                    && let Some(v) = self.range_minimum(m, read, known, (env, ctx))?
+                {
+                    return Ok(v);
+                }
+                walk_of(frame_of(days, env), Way::Forward)
+            }
+            _ if matches!(agg.func, AggFn::First | AggFn::Last) => {
+                return self.first_last(m, agg, env, ctx);
+            }
+            _ => self.tuple_walk(m, &agg.binds, env, ctx, Way::Forward)?,
+        };
+        let members = match self.walk_members(m, &agg.binds, walk, ctx, Brings::ToReader)? {
             Err(hole) => return Ok(Value::Hole(hole)),
             Ok(members) => members,
         };
@@ -197,38 +211,6 @@ impl Engine {
             return self.any_all(m, agg.func, term, &members, ctx);
         }
         self.terms_aggregate(m, agg, &members, env, ctx)
-    }
-
-    /// A `min` of `walk::lowest_shape`'s shape, its `range` and its term `read`, read as one
-    /// range minimum: its range of days read as the binding reads it, then its balances
-    /// (`walk/projection.rs`, fence F5) folded as its terms would be, a hole where any is one;
-    /// none where the aggregate reads it term by term (a range that is a hole or holds no
-    /// day, or what `lowest_balances` leaves). L §5.11, E §4.3.
-    fn range_minimum(
-        &mut self,
-        m: &Reality,
-        (range, read): (&RangeText, &Bal),
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Option<Value>, Stop> {
-        let Values::Known(values) = self.range_values(m, range, env, ctx)? else {
-            return Ok(None);
-        };
-        let Some(days) = first_and_last(&values) else {
-            return Ok(None);
-        };
-        let Some(balances) = self.lowest_balances(m, read, days, (env, ctx))? else {
-            return Ok(None);
-        };
-        let holes: Vec<Option<&Hole>> = balances
-            .iter()
-            .filter_map(Value::as_hole)
-            .map(Some)
-            .collect();
-        if !holes.is_empty() {
-            return hole_of(&holes).map(Some);
-        }
-        min_max(m, balances, End::Low).map(Some)
     }
 
     /// `count`, `sum`, `min`, `max`, `argmin`, `argmax` over their terms (refcore's
@@ -417,7 +399,21 @@ impl Engine {
         ctx: Ctx,
         brings: Brings,
     ) -> Result<Result<Vec<Member>, Hole>, Stop> {
-        let mut walk = match self.tuple_walk(m, binds, env, ctx, Way::Forward)? {
+        let walk = self.tuple_walk(m, binds, env, ctx, Way::Forward)?;
+        self.walk_members(m, binds, walk, ctx, brings)
+    }
+
+    /// [`Engine::members`] taken from the walk `walk` over the tuples of `binds`, or the hole
+    /// of their first domain (refcore's `members`). L §5.11, §5.19 Bindings, §8.2.
+    fn walk_members(
+        &mut self,
+        m: &Reality,
+        binds: &[Bind],
+        walk: Result<Walk, Hole>,
+        ctx: Ctx,
+        brings: Brings,
+    ) -> Result<Result<Vec<Member>, Hole>, Stop> {
+        let mut walk = match walk {
             Err(hole) => return Ok(Err(hole)),
             Ok(walk) => walk,
         };
@@ -449,10 +445,7 @@ impl Engine {
         let Some(first) = binds.first() else {
             return Err(invariant("an aggregate with no binding"));
         };
-        Ok(self.first_frame(m, first, env, ctx)?.map(|frame| Walk {
-            frames: vec![frame.taken(way)],
-            way,
-        }))
+        Ok(walk_of(self.first_frame(m, first, env, ctx)?, way))
     }
 
     /// The frame of the first binding's values in scope `env`, or the hole of a domain that
@@ -464,21 +457,7 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Result<Frame, Hole>, Stop> {
-        Ok(Ok(match self.bind_values(m, bind, env, ctx)? {
-            Values::Unknown(h) => return Ok(Err(h)),
-            Values::Known(values) => Frame {
-                level: 0,
-                env: env.clone(),
-                unknown: None,
-                brought: Collected::default(),
-                values,
-                next: 0,
-                colls: Vec::new(),
-            },
-            Values::Moves(moves) => {
-                moves_frame(0, (env.clone(), None, Collected::default()), moves)
-            }
-        }))
+        Ok(frame_of(self.bind_values(m, bind, env, ctx)?, env))
     }
 
     /// The walk's next tuple whose `where`s keep it, each `where` read when its binding is
@@ -762,19 +741,32 @@ impl Engine {
     }
 }
 
-/// The first and last of a range's days, where every value is a day with no hole of its own;
-/// none for a range of no day or of other values. L §5.6.
-fn first_and_last(values: &[(Value, Option<Hole>)]) -> Option<(Day, Day)> {
-    let mut days = values.iter().map(|value| match value {
-        (Value::Day(d), None) => Some(*d),
-        _ => None,
-    });
-    let first = days.next()??;
-    let mut last = first;
-    for d in days {
-        last = d?;
-    }
-    Some((first, last))
+/// The frame of the first binding's values `values` in scope `env`, or the hole of a domain
+/// that is one (refcore's `members`, its first binding). L §5.11.
+fn frame_of(values: Values, env: &Env) -> Result<Frame, Hole> {
+    Ok(match values {
+        Values::Unknown(h) => return Err(h),
+        Values::Known(values) => Frame {
+            level: 0,
+            env: env.clone(),
+            unknown: None,
+            brought: Collected::default(),
+            values,
+            next: 0,
+            colls: Vec::new(),
+        },
+        Values::Moves(moves) => moves_frame(0, (env.clone(), None, Collected::default()), moves),
+    })
+}
+
+/// The walk over the binding tuples from the first binding's frame `first`, its values taken
+/// from the end `way` says; or the hole of a first domain that is one (refcore's `members`).
+/// L §5.11.
+fn walk_of(first: Result<Frame, Hole>, way: Way) -> Result<Walk, Hole> {
+    first.map(|frame| Walk {
+        frames: vec![frame.taken(way)],
+        way,
+    })
 }
 
 /// `count(k in ks)`: the tuples, unless one is an unknown member (L §5.11).
