@@ -4,9 +4,10 @@
 //! binding ranges over are `bindings.rs`'s; the extremes, `min` to `last`, `extremes.rs`'s.
 //! E §4.3: a `min` of `bal(x, d) from t` over the days a .. b is offered first, its range's
 //! values read once, to the range minimum (`walk/projection.rs`'s `lowest_shape` and
-//! `range_minimum`, fence F5); this aggregate, its terms read one by one from the same values,
-//! is its plain twin, as `Lows::Walk` reads it (the equivalence test: the CLI's
-//! `tests/walk_oracle.rs`).
+//! `range_minimum`, fence F5 or its plain twin's one walk); this aggregate reads it term by
+//! term from the same values only where the range minimum leaves it, on a `partial` line and
+//! in a traced read. The two agree: T's law `low-min` (the same `min` with a `where` every
+//! day meets) and every vector of a spelled `min` against refcore, which reads it term by term.
 //! Twin: engine/tools/refcore/evaluate.py (`members`, `zero_of`, `e_agg`, `agg_anyall`).
 //! Invariants: tuples come in binding order, depth first as refcore's generator, one at a
 //! time, so `first` and `last` (from the last) read no `where` past their key; an unknown
@@ -170,10 +171,11 @@ pub(super) struct Candidate {
 }
 
 impl Engine {
-    /// An aggregate (refcore's `e_agg`): a `min` of `walk::lowest_shape`'s shape, as `run`
-    /// reads it, its range's values read once, offered to the range minimum
-    /// (`walk/projection.rs`'s `range_minimum`, fence F5) and, where that leaves it, read
-    /// term by term from the same values; any other, term by term. L §5.11, E §4.3.
+    /// An aggregate (refcore's `e_agg`): a `min` of `walk::lowest_shape`'s shape, but on a
+    /// `partial` line or in a traced read, its range's values read once, offered to the range
+    /// minimum (`walk/projection.rs`'s `range_minimum`, fence F5 or its plain twin) and, where
+    /// that leaves it, read term by term from the same values; any other, term by term. L
+    /// §5.11, E §4.3.
     pub(super) fn aggregate(
         &mut self,
         m: &Reality,

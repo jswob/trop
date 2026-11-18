@@ -4811,3 +4811,40 @@ On `build/2.2` at 821c4ce5 (the lead's `engine/ARCHITECTURE.md`). The fix review
 - **The fork paragraph** (`engine/ARCHITECTURE.md`, M2's F6): since the recognition, a decision's `min(bal(konto, d) from t for d in a .. b step 1 day)` is read by the range minimum whenever `run` reads with F5 on. `eval/aggregate.rs` `aggregate` decides, from `walk/projection.rs` `lowest_shape` (the shape) and `reads_lowest` (`Lows::Tree`, not a `partial` line, not a traced read). `range_minimum` then reads F5's tree (`common_case`, from the decision's walk at its point) or, where F5 declines, one walk from t read day by day (`days_read`). The paragraph's example holds only for a `min` outside the shape (another step, a `where`, `ties by`, a place or start that reads the bound day) and for `Lows::Walk`, `partial` or traced reads: there each term reads its projection, and F6's kept walks continue.
 - **Sizes:** the round's `engine/crates` 105 files, 9 224 out, 2 114 in; `crates/tally/src` 86 files, 7 367 out, 1 653 in (this fix: 6 out, 11 in). Kernel files 22; exceptions +0.
 - **Checks:** `check quick: green, 11 steps (87s)`; `check commit: green, 23 steps (140s)`, exit 0, on this commit's tree.
+
+## 2026-11-18 tally 2.2, CI's dev-tests: the recognised `min` read with the fence off as `low` was (issue #211)
+
+On `build/2.2` at f6445c07 (the tree of `spec/2.2` at 99285820). On the round's pull request, CI's debug job (`check group dev-tests`) ran three equivalence tests past nextest's 300 s.
+- **The cause, verified; the lead's reading holds.** `walk/projection.rs` `reads_lowest` required `Lows::Tree` (G5's recognition, 439e6e25). With the fence off, a recognised `min(bal(x, d) from t for d in a .. b step 1 day)` went to the plain aggregate. There every day's term is a projection of its own: `projection`'s `proj_walk` from t, then `end_projection`. That is quadratic in the span, where 2.1.8's `low` twin read one walk day by day (linear). With the forks off, nothing is kept between terms.
+  - The slow texts are the long ones. `m2_g7_p8m4` asks `min(bal(x, d) from 2025-01-01 for d in 2025-01-01 .. 2058-01-01 step 1 day)`, about 12 000 days; `fork_oracle` runs F5's realities under both `Lows` with the forks on and off.
+  - The engine's own test showed it too: `walk/lows.rs` `the_tree_reads_the_common_case_where_the_walk_isnt_walked` had pinned 150 walks for the twin since S-9 (dce04b1c), where 2.1.8 pinned 1.
+- **The fix:** `reads_lowest` no longer reads the switch, only `!ctx.partial && !self.tracing()`.
+  - A recognised `min` is read by `range_minimum` with the fence on or off. On, F5's tree (`common_case`, `common_low`), or one walk where F5 declines. Off, `common_case` declines (`Lows::Walk`), so it is one walk from t read day by day (`days_read`), F5's plain twin, as `low`'s was.
+  - The aggregate's day-by-day reading stays for every `min` outside the shape (a `where`, another step, `ties by`, a place or start that reads the bound day) and for a `partial` line or a traced read.
+  - The crate test's twin pin is 2.1.8's again: one walk for `low_from` as for `bal_from`. Headers and docs say so: `walk/lows.rs` (F5's `PERF:` twin), `walk/projection.rs`, `eval/aggregate.rs`.
+  - No test or text of T's changed; no check, timeout or count touched.
+- **Times, debug build, `engine/tools/check group dev-tests` on this Mac** (the lead's runs in brackets: master, then f6445c07):
+
+  | Test | before (f6445c07) | after |
+  | --- | --- | --- |
+  | `m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p8m4` | 105.9 s [27.7 s, 162.1 s] | 12.5 s |
+  | `…_p8m4_noopen` | 105.8 s | 12.5 s |
+  | `fork_oracle` `forks_on_prints_forks_off_on_f5s_realities` | 187.3 s [14.5 s, 188.8 s] | 15.0 s |
+  | the group `dev-tests` | 461 s [458 s, 608 s] | 297 s |
+
+  Before: `check group dev-tests: green, 5 steps (461s)`, 3 slow. After: `check group dev-tests: green, 5 steps (297s)`, none slow (gating 520 tests in 72.9 s, the CI profile's 541 in 88.5 s). In the quick profile, `check fences`' `fork_oracle` test went from 46.1 s to 2.0 s.
+- **Which test holds which equivalence, after the change:**
+  - **Tree against walk** (F5 against its plain twin, the recognised `min` included):
+    - the CLI's `tests/walk_oracle.rs` (the kernel and M1 corpora, the same bytes under `Lows::Tree` and `Lows::Walk`);
+    - T's `m1_lows` `the_tree_prints_the_walk_*`;
+    - `fork_oracle` (both `Lows`, forks on and off);
+    - `walk/lows.rs`'s crate tests.
+  - **Recognised against aggregate:**
+    - T's law `low-min` (`m1_properties` `m1_low_is_the_minimum_of_the_daily_balances`: the recognised `min` beside the same `min` with a `where` every day meets, under `run`);
+    - every gating vector of a spelled `min` against refcore, which has no recognition and reads it term by term;
+    - the three count pins on the plain aggregate with a `where` (`m2_counts_days` r1, `m2_counts_r4` r7, `m2_counts_ahead` b2_min), beside `m2_counts_lows`'s stored counts of the recognised read.
+  - **Nothing goes unseen.** Before, the walk side of `walk_oracle` and `m1_lows` was the aggregate, so those tests also held recognised against aggregate. Now their walk side is `days_read`. But `days_read` is also the tree side's read wherever F5 declines, and that side is held against the aggregate by the law and the vectors. Where F5 answers, `days_read` equals the tree (the tree-against-walk tests), and the tree equals the aggregate (the law and the vectors).
+  - `run` reads with the fence on, so no printed answer changes; that is why no sweep ran.
+- **Counts:** `m2_counts_lows` and the pins r1, r7, b2_min green on their stored counts.
+- **Sizes:** this commit, 3 files, 21 out, 27 in. The round's `engine/crates` 106 files, 9 229 out, 2 127 in (the 106th, `benches/p8_5.rs`, came with the lead's merges). `crates/tally/src` 86 files, 7 366 out, 1 658 in. Kernel files 22; exceptions +0.
+- **Checks:** `check quick: green, 11 steps (74s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (115s)`, exit 0.

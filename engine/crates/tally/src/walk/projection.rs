@@ -5,9 +5,10 @@
 //! day before t), E §4.3 (steps 1–3; nesting is finite; the projection's own walk is the plain
 //! twin of fence F5; the common case offered to F5 first, `lows.rs`; the `min` of `bal(x, d)
 //! from t` over the days a .. b a range minimum: its shape recognised here, `lowest_shape`,
-//! and read by `range_minimum`, from F5 or one walk read day by day; its plain twin the
-//! aggregate `min`, its terms read one by one, eval/aggregate.rs), §3.2 (the projection in a
-//! cell's context), L §5.11 (`min`), §8.2 (`left out:`).
+//! and read by `range_minimum` with the fence on or off, from F5's tree or, F5's plain twin,
+//! one walk read day by day; the aggregate `min`, its terms read one by one, eval/aggregate.rs,
+//! only on a `partial` line or in a traced read), §3.2 (the projection in a cell's context),
+//! L §5.11 (`min`), §8.2 (`left out:`).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `proj_regs`, `proj_uncertain`,
 //! `proj_clauses`), walk.py (`proj_walk`) and, for the recognised `min`, evaluate.py
 //! (`e_agg`).
@@ -130,11 +131,13 @@ impl Engine {
         Ok(value)
     }
 
-    /// Whether a `min` of [`lowest_shape`]'s shape is read as one range minimum: as `run` reads
-    /// (`Lows::Tree`), and never on a `partial` line or in a traced read, which read each
-    /// day's projection as the aggregate's terms do (L §5.18, E §10). E §4.3.
+    /// Whether a `min` of [`lowest_shape`]'s shape is read as one range minimum: always, with
+    /// the fence on or off, as `low` was (F5's tree under `Lows::Tree`, its plain twin's one
+    /// walk read day by day under `Lows::Walk`); never on a `partial` line or in a traced
+    /// read, which read each day's projection as the aggregate's terms do (L §5.18, E §10).
+    /// E §4.3.
     pub(crate) fn reads_lowest(&self, ctx: Ctx) -> bool {
-        self.lows == Lows::Tree && !ctx.partial && !self.tracing()
+        !ctx.partial && !self.tracing()
     }
 
     /// A `min` of [`lowest_shape`]'s shape, its term `read`, read as one range minimum over
