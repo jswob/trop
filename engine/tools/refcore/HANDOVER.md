@@ -7,15 +7,17 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2 (the cuts round: nine forms removed; groups G1 to G3 and G5)
+## tally 2.2 (the cuts round: nine forms removed; groups G1 to G5)
 
 The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
 all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
 refused by the grammar, `LOAD-PARSE`, with no message of its own.
 
-- **The fault S-7 waited on (2.2-10).** A def's header key over an event kind records the dependency edges an
-  aggregate's binding over the kind records (`check3.kind_bind_edges`, shared by both; `def_key_edges` from
-  `check_def`), so `def_axes` keeps the axes and pins a def keyed by a movement reads.
+- **The fault S-7 waited on (2.2-10).** Fixed at the trimming (pick P14; the dependency graph is tally 2.1.8's): a
+  cone that holds a def whose header key ranges over an event kind (`evaluate.movement_keyed_cone`,
+  `keyed_by_movement`) is no plain cone, so `def_axes` keeps the axes and pins, and `_read_def` keeps such a cell per
+  path. G1's edge for the def's key was taken out again: it refused a text 2.1.8 answers (`LOAD-GUARD`), answered
+  two it refuses and changed `readers-of` (`E3_2_def_keyed_by_movement_*`).
 - **A leg's own `on` (S-6, 2.2-6).** Gone from `parser.leg_body`, the loader's observed legs (their tuple has five
   fields), `check3`'s leg and scenario checks, `moves.eval_leg`, `m_plan_list`, `scen_early`, and the walk:
   `base_legs` (#183) and a decision's leg booked ahead. A `Leg` keeps its `day`: the movement's, or the day a
@@ -65,6 +67,20 @@ refused by the grammar, `LOAD-PARSE`, with no message of its own.
   aggregate `min` over `bal(x, d) [from t]` for each day; a lowest balance is explained by `argmin … ties by d` and
   `explain bal(x, <day>) [from t]`. Earlier sections' lines on `low`, `next` and `explain low` describe what tally
   2.2 removed.
+- **Group G4: 1 479 tests, all pass** (1 500, 26 dropped, 30 restated plain, 14 with an `unknown day:` line added, 5
+  with the projection's `clauses:` line shortened; `refcore_fast` byte-equal, its layer no longer reads
+  `each_met`, `ctx.windows` or `WCut`).
+- **`windows each` (S-4, 2.2-4).** Gone: the parser's two positions (`wchoice`; `windows` is no clause word), the
+  limit (`EACH_LIMIT`), `ask`'s split of a line by sub-windows (`each_lines`, `each_over_axes`, `each_binds`,
+  `each_binding`, `each_rows`, `each_group`, `each_key`, `each_nested`, `each_next`, `boxes`, `trace_key`),
+  `diff_each`, `diff_side_each`, `diff_each_print`, `DiffSide`, `EachRes`, explain's sub-window outside its pins,
+  `cli.cross_stack_each`, `evaluate.window_choice`, `EachMet`, `Coll.each`, the context's `windows`, `model.WCut`,
+  `wcut` and `set_each`, `check3`'s `read_each`, `walk.each_before_from`, a scenario move's window under the clause
+  (`moves`), and `proj_clauses`' first element. A text that writes the clause is refused `LOAD-PARSE … got windows`.
+- **The hole's name (2.2-11).** `ask.hole_days` walks the holes among a line's values (or a diff cell's) and names
+  each unknown day their questions carry (`evaluate.CARRY`, `carry_hole`), by `window_id`'s label; `register`
+  prints `unknown day: <name>` after the pins, sorted. A window value that is no hole names none. Earlier
+  sections' lines on `windows each` describe what tally 2.2 removed.
 
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
