@@ -34,9 +34,8 @@ It names no technology. Costs per construct and the budgets are in `PERFORMANCE.
 ```
 run(reality, request) → result
 
-request = { asks:     the asks to answer (ids in the reality, or asks given with the request)
-            clocks:   S and E are always the header's start and end (§2); K comes from each ask
-            pins:     extra pins applied to every ask, as `with` }
+request = { asks:     the ids of the asks to answer, asks of the reality's files; none for every ask
+            clocks:   S and E are always the header's start and end (§2); K comes from each ask }
 
 result  = { timeline: per (cut class, world, pin set, clauses, axis options the moves reach, path): movements and end-of-day balances
             answers:  per ask, the printed result (LANGUAGE §5.18), its register (LANGUAGE §8.2) and warnings
@@ -70,7 +69,7 @@ This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The 
 
 The **modelled past** (planned movements on covered days before K, and instances an observation the cut applies fulfils, §6.2) is computed and kept for the residual ledger, but it isn't in the timeline's balances.
 
-**Stored as aggregates.** A result is stored under its hash. Paths are not stored; any one is recomputed on demand (§7, N-2004).
+**Nothing is stored.** A caller may keep a result under its hash (`OPERATIONS.md` §5); a path is recomputed on demand (§7, N-2004).
 
 ---
 
@@ -85,7 +84,7 @@ The four clocks of the spec (T-16, N-1219):
 | **S**, run start | the header's `start` | the first day walked. Balances open at S from `opening` readings (LANGUAGE §5.10). Nothing before S is walked: a walked value or a `flows` of a day before S is `HOLE-PRERUN` (LANGUAGE §8.1) |
 | **K**, knowledge date | the ask's `as known D`, else the model's `on` | masks whatever a version or row known after K states (LANGUAGE §4.5). It splits the past (before K) from the plan (from K) |
 | **[K, E]**, evaluation window | E is the header's `end` | the plan runs to E, and nothing after E is walked: a walked value of a day after E is `HOLE-POSTRUN` (LANGUAGE §8.1). Observations in [K, E] are never applied by the run at cut K; only the evaluation layer compares them (§8) |
-| **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §1) |
+| **R**, record time | the store: the reality's files as they stood at R | "what did we think in March?" is the reality at R = March, asked as known in March (N-1222). The language has no R; the store keeps the history of the files (`OPERATIONS.md` §4) |
 
 - **A plain forecast** has K = `on`. S is the header's start. Covered days before K replay observations, and the plan starts at K.
 - **A backtest** sets K in the past with `as known`. The run sees only what was known then, and the evaluation layer judges it against what happened in [K, E] (N-1218).
@@ -103,7 +102,7 @@ The four clocks of the spec (T-16, N-1219):
 | projection day t | each `bal(x, d) from t` | LANGUAGE §5.14.1, §4.3 below |
 | scenario `from` D | each scenario | LANGUAGE §6.4 |
 
-**Cut classes.** A cut matters only through the set of versions and rows it admits. Two cuts that admit the same ones give the same values. K's own date still decides what the register prints and which rows are `held` (LANGUAGE §8.2), and what is past and what is plan (`OPERATIONS.md` §7); none of these is memoised. The distinct `known` dates of a reality, its versions' and its rows' own, split time into **cut classes**, and every memo is keyed by the class, not the date.
+**Cut classes.** A cut matters only through the set of versions and rows it admits. Two cuts that admit the same ones give the same values. K's own date still decides what the register prints and which rows are `held` (LANGUAGE §8.2), and what is past and what is plan (§1's statuses); none of these is memoised. The distinct `known` dates of a reality, its versions' and its rows' own, split time into **cut classes**, and every memo is keyed by the class, not the date.
 
 ---
 
@@ -487,10 +486,10 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 
 | Refusal | When | What happens |
 |---|---|---|
-| **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `OPERATIONS.md` refuses an amendment that would break loading, before it is accepted. A load error in a scenario file refuses only that scenario and the scenarios over it, and an ask's `LOAD-SCENARIO` for a scenario whose file isn't loaded refuses only that ask (LANGUAGE §6.4) |
+| **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `check` finds it before a caller keeps a change (`OPERATIONS.md` §2.3). A load error in a scenario file refuses only that scenario and the scenarios over it, and an ask's `LOAD-SCENARIO` for a scenario whose file isn't loaded refuses only that ask (LANGUAGE §6.4) |
 | **Per-value refusals** (LANGUAGE §8.4) | a value can't be computed | printed at its key; it propagates and outranks holes |
 | **Holes** (LANGUAGE §8.1) | a fact is missing | printed with their questions; other results stand |
-| `REQ-ASK` | the request names an ask that doesn't exist (an ask given with the request that doesn't load is refused with its own load code, LANGUAGE §8.3, as `OPERATIONS.md` §8 says) | the request is refused, after load (a load refusal outranks it), in every shape of reality (a plain one, one with scenarios, a joint model): `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
+| `REQ-ASK` | the request names an ask that doesn't exist (an ask in a file handed over with the reality that doesn't load is refused at load, LANGUAGE §8.3; `OPERATIONS.md` §3.1) | the request is refused, after load (a load refusal outranks it), in every shape of reality (a plain one, one with scenarios, a joint model): `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
 | `REQ-CLOCK` | a cut the request or an ask's literal states after `on` (`as known`, `with known`) | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s |
 | `REQ-PATHS` | more than 100 000 paths for one ask | the request is refused |
 | `ENGINE-INVARIANT` | §9 fails | the whole result is refused, with the evidence |
@@ -498,7 +497,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 **What the engine never does:**
 - choose an option for the household by a measure it wasn't given; a choice is an `argmin` over a finite set with a stated cost and tie-break, written by the household or the law, and a root is a `solve` (LANGUAGE §10);
 - read a clock, or anything outside the reality and the request;
-- write to the reality (only `OPERATIONS.md` writes: what the household confirms, statement imports and the store's advances, `OPERATIONS.md` §1);
+- write anything: the caller writes a reality's files and the store keeps them (`OPERATIONS.md` §1, §4);
 - approximate without a stated precision;
 - infer a link between an observation and a plan, or an identity between two things (LANGUAGE §5.19, §6.1);
 - book a question's moves.

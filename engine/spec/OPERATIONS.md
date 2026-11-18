@@ -23,7 +23,7 @@ How a caller uses the engine: its three operations, how each thing a caller does
 
 ## 2. The operations
 
-Each operation is a command of the engine's binary and a call of its library (`engine/tests/INTERFACE.md` §1 to §4).
+Each operation is a command of the engine's binary and a call of its library (`engine/tests/INTERFACE.md` §1 to §4). None adds a code: each prints only those of `LANGUAGE.md` §8 and `ENGINE.md` §11.
 
 **For all three.** A path is a file, or a directory: every `*.tally` file under it. A joint model's members are found from its `use` lines, relative to its file, each checked against its pin (`LANGUAGE.md` §6.1). The files are taken in full-path order, by code point, whatever order they are given in (`ENGINE.md` §3.1 step 1). Standard input and the environment are never read; everything prints to standard output. Exit 0 is an answer, 1 a refusal (the first line starts `refused: `), 2 a usage error.
 
@@ -107,7 +107,7 @@ Each recipe is a few lines of Tally text or one command; the ids are the design 
 - **CHG-5, end something.** Its lifespan, `replace jobs + [acme] lives 2020-02-01..2026-11-30`, and rows `none` where a fact stops. A leg that still moves into or out of it is refused (`RUN-LIFESPAN`).
 - **CHG-6, add structure.** New sections (kinds, places, inputs, defs, moves) in a new file (`LANGUAGE.md` §6.5 change 5).
 - **CHG-7, move `on` forward.** Rewrite the header's `on` line. A version known after `on` is refused until it moves: `refused: LOAD-KNOWN version statement_2026_10 is known after the model's on date`.
-- **CHG-11, what does this change?** Two runs, without and with the added files, the same asks; the caller compares the printed lines. Within one reality, `diff(e) in s against b` compares a scenario with its base.
+- **CHG-11, what does this change?** Two runs, without and with the added files, the same asks; the caller compares the printed lines. Nothing prints a run's movements, so the first day anything differs comes from asks of each place's balance by day. Within one reality, `diff(e) in s against b` compares a scenario with its base.
 
 ### 3.4 Scenarios
 
@@ -188,7 +188,7 @@ Real, and not in the first version; each with what a caller does meanwhile.
 | TXT-5 | the reference card | `LANGUAGE.md` is the contract |
 | TXT-7 | migration to a newer tally version | `MIGRATION.md`, applied by a writer |
 | LAW-2 | a gate on a law part: coverage, planted errors, the threshold table | the law's checks are run (LAW-1) |
-| STO-5 | results kept under their hash | every call computes |
+| STO-5 | results kept under their hash | every call computes; a caller may keep a printed result under the reality's hash |
 | STO-6 | the engine kept warm between calls | every call loads |
 | VER-1 | which engine this is: the tally version and the build (`LANGUAGE.md` §9) | the store knows which binary it runs; a file that states another tally version is refused at load |
 

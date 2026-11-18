@@ -1022,7 +1022,7 @@ A band is a function of one argument over intervals. The argument is a number, a
 
 **One table per version.** The rows of one band in one version form one table: ascending, without overlaps, and meeting without a gap, closed against open (`int` arguments are checked over the integers; a point interval `[a, a]` is a row). The first row may start at `-inf`, and the last may end at `inf`. A deliberate gap is a row whose value is a hole, which may carry a locator (N-709, N-710).
 
-A table that breaks these rules is refused at load (`LOAD-BAND`), and with it the whole reality (a table in a scenario file: that scenario, §8): nothing prints from an inconsistent law table, asks that never read the band included. In the store an amendment that breaks loading is refused before it lands (`ENGINE.md` §11).
+A table that breaks these rules is refused at load (`LOAD-BAND`), and with it the whole reality (a table in a scenario file: that scenario, §8): nothing prints from an inconsistent law table, asks that never read the band included. A caller finds such a refusal with `check` before it keeps the change (`OPERATIONS.md` §2.3).
 
 **Rows replaced** (P-14, P-5). A later version may replace rows of a table from its `governs`: `replace scale: (120000, inf) = …`. Its `replace` rows either all take intervals of the table they replace, and then that table stands with those rows' values replaced, or they form a whole table (ordered, without gaps or overlaps), which replaces it on the version's span with its own intervals. A version that mixes `replace` rows and plain rows of one band, or whose `replace` rows do neither, is refused (`LOAD-BAND`) (D-12, H-12). The table they replace is, on each day of the span, the one in force there by the read rule among the versions known before (§4.6), so a patch applies to the table in force on each day. On a day of its span where no table is in force, only a whole table stands, as an input's `replace` row is its value where no earlier row governs; a patch there is refused (`LOAD-REPLACE`) under every cut that sees the version, and so is a whole table that replaces no table on any day of its span (§4.6 step 3).
 
@@ -1699,10 +1699,10 @@ An observation is a real movement from an import: a bank row, a broker's fill, a
 - **A correction or a dropped row** is a later version restating the same key, with `replace` (§5.3); `replace bank[r18] = none` removes the movement with its legs (SF-14). The row keeps its id (N-1207).
 
 **Links.**
-- **Only confirmed links are written.** The importer proposes `fulfils` links, and the engine never infers one (N-1207, `OPERATIONS.md` §2). A `fulfils` naming something that is neither a planned instance nor an adjustment (a place, an input) is refused (`LOAD-KIND`).
+- **Only written links count.** The caller writes `fulfils` links; the engine checks each and never infers one (N-1207, `OPERATIONS.md` §3.5). A `fulfils` naming something that is neither a planned instance nor an adjustment (a place, an input) is refused (`LOAD-KIND`).
 - **A link is judged by existence, at the ask's cut.** A link reads only what it names: the existence of the instance, by its keys, `where` and `when` (an instance exists only where all three hold, `ENGINE.md` §4.1), never its amounts. So it is judged at the cut that applies its row: the ask's, or, in the residual ledger, which reads observations as known on the model's `on`, that date (`ENGINE.md` §6.3). At that cut, a `fulfils` naming an instance that doesn't exist, or one whose legs don't touch the observation's places or that has a leg the observation lacks, is refused (`RUN-RECORD`), and so is a `fulfils`, an observation's or a settling move's, naming an adjustment that no version made by that cut, or whose version makes no change to that leg there (§5.14.3). An instance fulfilled at that cut is counted by its observations and never re-measured, so no earlier cut judges its link (`ENGINE.md` §5 step 2).
 - **A link to a change learned later** is written in a version known on or after the change, by `replace` (`replace bank[r1] = (…, fulfils: adjustments[wage[2026-03].cash, raise_2026])`), so cuts before it read the row unlinked.
-- **The importer's rules are data too.** The built-in input `account_place[a]` maps the bank's account id a, a key of the built-in open index `bank_account`, to a place, each row with its source. The model may read it like any input, and the importer reads it to propose links (`P:REC-01`). The counterparty map and the matching tolerances are the importer's own settings, outside the language (D-8).
+- **The importer's rules are data too.** The built-in input `account_place[a]` maps the bank's account id a, a key of the built-in open index `bank_account`, to a place, each row with its source. The model may read it like any input, and so may a caller that matches rows (`P:REC-01`). A counterparty map or a matching tolerance is the caller's, outside the language (D-8).
 
 **Realised amounts.** `observed(m[k])` is the realised movement of a planned instance: a record whose legs are the sums of the legs of the observations that fulfil it, rows stated `same` counting as one (a leg's `from` or `to` is `none` where their legs name different places), known at the cut, and whose `day` is the last of their days; `none` when nothing fulfils it yet. What remains of the instance is written as a difference (`rent_amt[m] - observed(rent[m]).cash.amount`, behind a `!= none` test). An observation that fulfils a hole movement answers it: its day and amounts are the instance's (`S:9`, `Q:B-09`).
 
@@ -1771,7 +1771,7 @@ Until a statement covers the window, the budget stands; a rule with no fallback 
 
 A model is one or more `.tally` files in one directory tree. Each file starts with one of three headers:
 - **`model ID`**, then `tally N` and the clauses of §5.1, with any `use` and `same` lines (below). Exactly one file has it (`LOAD-HEADER` otherwise).
-- **`part ID`**, then `tally N`, and `law` for a **law part**. It holds sections only. A law part holds an act's sources, kinds, inputs, bands, defs, fills and moves, the versions of its figures, and the `check` asks its gate runs (M-07); the gate of `OPERATIONS.md` §3 applies to it, and to nothing else. A law part whose defs are stubs (a hole rule) passes the gate at once and gives its holes.
+- **`part ID`**, then `tally N`, and `law` for a **law part**. It holds sections only. A law part holds an act's sources, kinds, inputs, bands, defs, fills and moves, the versions of its figures, and the `check` asks that test it (M-07), which a run answers (`OPERATIONS.md` §3.6). A law part whose defs are stubs (a hole rule) gives its holes.
 - **`scenario ID over ID`**, then `tally N` and `from DAY` (§6.4). Its sections exist only in that scenario.
 
 Every file declares the same `tally N` (`LOAD-VERSION`).
@@ -1803,12 +1803,12 @@ A law used by several realities is **copied in, never linked**. A reality's hash
 
 ### 6.2 A change adds; it never edits facts or law
 
-Every change to the reality's facts and law is a set of **added lines**: new sections (most often one version), new rules inside an existing def, new notes. A version, once confirmed, never changes what it states and is never removed: the only edit that touches it is a `restate` (a locator's typo, a note, its move to another file), which changes no result. A later version that changes a row, a rule, a band row or a lifespan says `replace` (§5.3, D-12). Because nothing is edited, the old view stays runnable: an ask `as known D`, with D before the change, sees the reality as it was (N-705).
+Every change to the reality's facts and law is a set of **added lines**: new sections (most often one version), new rules inside an existing def, new notes. A version, once in the reality, never changes what it states and is never removed: the only edit that touches it is a `restate` (a locator's typo, a note, its move to another file), which changes no result. A later version that changes a row, a rule, a band row or a lifespan says `replace` (§5.3, D-12). Because nothing is edited, the old view stays runnable: an ask `as known D`, with D before the change, sees the reality as it was (N-705).
 
-Four kinds of change exist (`OPERATIONS.md` §4):
+A store may hold a change as one of four kinds (`OPERATIONS.md` §3.3, §4):
 - **add:** added lines only. This is every common change, and every fact and law.
-- **advance:** the header's `on` moves forward, and nothing else changes. It changes results, since `on` is the run's stated cut (§4.5), so it is not a restate: its plan shows what time passing did, the plan that became the past. An add that needs a later `on` (a version known after it) follows an advance.
-- **restate:** an edit that changes no result, such as a locator's typo, a note, or moving items between files. The operation proves it by comparing every result.
+- **advance:** the header's `on` moves forward, and nothing else changes. It changes results, since `on` is the run's stated cut (§4.5), so it is not a restate: runs before and after show what time passing did, the plan that became the past. An add that needs a later `on` (a version known after it) follows an advance.
+- **restate:** an edit that changes no result, such as a locator's typo, a note, or moving items between files. The store proves it by two runs that print the same.
 - **revise:** an edit of the model's structure (a kind, a def, a move, an ask) that does change results, because the model was wrong, not the world. It needs a reason. Versions can't be revised. The store keeps the old text, so the reality as it was recorded can still be run (record time R, `ENGINE.md` §2).
 
 | The change | What is added |
@@ -1837,8 +1837,8 @@ Four kinds of change exist (`OPERATIONS.md` §4):
    - two rows for one target and day that the read rule doesn't order (§4.6 steps 2 to 4: `LOAD-OVERLAP`, `LOAD-REPLACE`);
    - two rules with one label, neither a `replace` (`LOAD-LABEL`);
    - two versions known the same day that both move one version (`LOAD-MOVES`).
-3. **Text merges cleanly.** The canonical sort puts each added version at its own line: versions sort by `known` date, then id. Rules sort by label, then by their version's `known`. Two amendments that touch different items therefore merge without a textual conflict. Two edits (`restate`, `revise`) of one line meet at the store's first step instead, which refuses them with a store code outside §8 (`OP-BASE`, `OPERATIONS.md` §1, §10).
-4. **Outcomes are compared by `plan`.** `plan` loads the reality with and without an amendment and prints which ask results, which movements and which adjustments change (`OPERATIONS.md` §7).
+3. **Text merges cleanly.** The canonical sort puts each added version at its own line: versions sort by `known` date, then id. Rules sort by label, then by their version's `known`. Two amendments that touch different items therefore merge without a textual conflict. Two edits (`restate`, `revise`) of one line conflict as text; which stands is the store's (`OPERATIONS.md` §4).
+4. **Outcomes are compared by two runs,** without and with an amendment's files; `diff` compares a scenario with its base (`OPERATIONS.md` §3.3).
 
 ### 6.4 Scenarios
 
@@ -1872,7 +1872,7 @@ A scenario is a branch: the base's facts plus a set of ordinary versions, evalua
 - **`over s0`** names the base: the model, or another scenario, which stacks this one on it. Stacks are at most 4 deep and acyclic (`LOAD-SCENARIO`).
 - **Asking.** An ask names its world, `in s` or `in household` (the model's id); an ask in a scenario file that names neither is refused (`LOAD-WORLD`, §5.18). Inside an expression, `x as if {scenario s}` is x in s. `diff(e) in s against b` prints each key's outcome (§5.18). Random addresses don't name the scenario, so the paths of a scenario and its base are paired (common random numbers, N-1302).
 - **Staleness.** The base moves on weekly, and a scenario is always read over the current base, so it rebases by itself (N-1303). The store flags a scenario `WARN-STALE` (a run has no file times, `ENGINE.md` §1) when a base version known after the scenario file was last changed writes a target, at a key and span, that the scenario replaces: the scenario now overrides something newer than itself.
-- **Promotion** copies a scenario's versions into the reality with a `known` date of the day of promotion, since that is when the reality learned them (`OPERATIONS.md` §5); a version whose scenario `known` was earlier gives adjustments in the reality that it didn't give in the scenario, and `plan` lists them.
+- **Promotion** copies a scenario's versions into the reality with a `known` date of the day of promotion, since that is when the reality learned them (`OPERATIONS.md` §3.4); a version whose scenario `known` was earlier gives adjustments in the reality that it didn't give in the scenario, and the reality's run shows them (`adjustment:`, §8.2).
 
 **Cost:** a scenario's versions are one more candidate per read of a target they write. Its run shares every memo outside the cone of what it writes (N-2004). **Cases:** the household's change 7. No case model uses a scenario: their options are readings of the law, so they are axes (§5.5), and their what-ifs are `as if` pins.
 
@@ -2043,7 +2043,7 @@ part de_employment
 
 def net_wage_eur[j in jobs, m in months]: money EUR = ?"Wynagrodzenie netto z niemieckiej umowy o pracę nie jest opisane." at start_of(m)
 ```
-- The Polish `pit` for Ana from 2031 shows "Podatek nierezydenta Polski nie jest opisany": the rule `abroad` reads her residence in the January of each year, and she moves in July 2030. When the German law is written, its rules replace the stub in the part (a `revise` of the part, or rules that each beat `base`) and pass the gate (`OPERATIONS.md` §3).
+- The Polish `pit` for Ana from 2031 shows "Podatek nierezydenta Polski nie jest opisany": the rule `abroad` reads her residence in the January of each year, and she moves in July 2030. When the German law is written, its rules replace the stub in the part (a `revise` of the part, or rules that each beat `base`) and its `check` asks pass (`OPERATIONS.md` §3.6).
 
 **6. A new loan, and an overpayment on the first.**
 ```
@@ -2393,9 +2393,9 @@ A warning leaves the value as it is and prints beside it. A run's warnings print
 | `WARN-UNREAD` | `<source, input, def or place> is read by nothing` | something was declared and never used, such as an account no line names (N-1903, D-15's lint). A place declared by a `place` section (a thing a version enters is a fact, not a declaration) is used where a line names it: a read, a leg (a movement's, an observed row's, a pad's), a binding over its kind, a row whose value it is (`account_place`); a row keyed by it (`opening`, a reading), an `anchor` or a `covers` line is no use, and an `outside` place is held to the same (tally 2.1.2). Decided on the item graph (`ENGINE.md` §3.1), so it doesn't depend on what the asks reach |
 | `WARN-LEGS` | `the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)` | the import has a gap or an error (§5.19) |
 | `WARN-LABELS` | `labels dropped at <place> from <d>: <movements>` | a leg took labelled parts from a place that keeps them to a place of the model that keeps none and isn't `outside` (tally 2.1, §3.6); listed in the register of every result whose reads reach that place from the leg on (§8.2) |
-| `WARN-STALE` | `scenario <s> replaces <target> at <keys>, changed in the base by <version>` | the base moved under the scenario (§6.4); raised by the store, never by a run |
+| `WARN-STALE` | `scenario <s> replaces <target> at <keys>, changed in the base by <version>` | the base moved under the scenario (§6.4); raised by the store, never by a run (`OPERATIONS.md` §4) |
 
-The operations that change a reality have their own errors (`OP-*`) and warnings (`WARN-BACKPAY`, `WARN-DRAFT`, `WARN-ENDED`), listed in `OPERATIONS.md` §10.
+`run`, `reprint` and `check` add no code (`OPERATIONS.md` §2).
 
 ---
 

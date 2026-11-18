@@ -38,7 +38,7 @@ The scan behind rules 3 and 4 looks for six things in a check's text files, stri
 | M0 | Load and format | grammar with 2.1's clauses, canonical format, symbol table, types, load catalogue | 10 | none run; all load | 1 (all load), 5 (`LOAD-*`), 6 (format), 9 | — |
 | M1 | The household forecast | X's forecast: rules, axes, pins, decisions, the written projections, scenarios, asks | 90 | 3 | 1, 2, 3, 5, 6 | P8-2, P8-5, P8-9; P8-M4 set (tally 2.1.2) |
 | M2 | Replay against reality | observations, booking, the residual ledger, the clocks; then forks | 26 | 7 | 1, 2, 3, 4, 6, 8 | P8-14 kept |
-| M3 | The operations | E §1's run function; the rest waits for `OPERATIONS.md` | 0 | — | 5 (OP codes, later), 12 | P8-1, P8-7 (when rewritten) |
+| M3 | The operations | E §1's run function; `check` (`OPERATIONS.md` §2.3) | 0 | — | 10 (`check`), 12 | P8-1; P8-7 waits with the gate |
 | M4 | Law breadth | `beats`, `given`, Kleene logic, rounding modes, FX, calendars | 77 | 34 | 1, 3 | P8-L2, P8-L10 |
 | M5a | Allocation, holdings, many parties | `fill`, lots, holdings, ownership by shares, groups | 166 | 23 | 1, 8 (the fill) | P8-11; P8-L4, P8-L6, P8-L16 |
 | M5b | Parts and labels | owned and batched kinds, arrivals, takes, relabels, R-115, hole parts | 80 | — | 5, 6 | P8-10; P8-L9, P8-L15, P8-L17 |
@@ -185,24 +185,21 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 
 ## M3. The operations
 
-This is the surface Claude uses, built without fixing any MCP technology. **`OPERATIONS.md` stays stale** (`STALE.md`): it is tally 1.0.1's, and no session has rewritten it for tally 2. M3 therefore splits.
+This is the surface a caller uses, built without fixing any MCP technology: the three operations of `OPERATIONS.md` §2. `reprint` and `run` are built from M0 to M2; M3 builds the rest.
 
-**What M3 builds from E alone**
-- The run function `run(reality, request) → result` as the library's one entry and the CLI's (E §1): the request (asks, clocks, pins), the result (timelines, answers with their registers and warnings, residuals, the hash and the version).
-- Purity: the run reads its files and its request and nothing else, no clock, environment, locale or network (E §1; L §7.5).
-- The result stored as aggregates under its hash; a path never stored, recomputed on demand (E §1, §7).
+**What M3 builds**
+- The run function `run(reality, request) → result` as the library's one entry and the CLI's (E §1): the request (asks, clocks), the result (timelines, answers with their registers and warnings, residuals, the hash and the version).
+- Purity: the run reads its files and its request and nothing else, no clock, environment, locale or network (E §1; L §7.5). It stores nothing; a path is recomputed on demand (E §1, §7).
+- `check` (`OPERATIONS.md` §2.3): in the reference interpreter, in T's tests and in the engine, and its section in `engine/tests/INTERFACE.md`. T's vectors can reuse M0's 315 load sets. It adds no code.
 - A reality as a set of files, and a change as added files (L §6.1–§6.3), already exercised by X's changes in M1, M2 and M4.
 
-**What waits for the rewrite of `OPERATIONS.md`**
-- The store and its statuses, authors and record time; the amendment pipeline and its typed results; the change kinds as operations; scenario life.
-- `plan` and its outcome diff; saved analyses.
-- The gate on a law part, with its steps, planted errors and thresholds.
-- The rest of the surface, the OP codes and their fixtures (gate 5: they join when `OPERATIONS.md` is rewritten), and the reference card.
-- The budgets that lean on them: P8-1 (a conversation turn, 1–2 s) and P8-7 (the gate on one law part, ≤ 1 s).
+**What M3 doesn't build:** a store, an amendment pipeline, a gate, `plan`, matching. What the surface leaves to the store and what waits are `OPERATIONS.md` §4 and §5.
 
-No operation's meaning is written here. **Order:** M3's first part is tagged after M2. Its second part is planned when `OPERATIONS.md` is rewritten (G2a, 2026-10-30: the master schedules that rewrite as a paper session before M3). M4 to M8 don't wait for it: none of their checks runs an operation, since every engine check in `checks.tsv` is a run of the run function.
+**Budgets:** P8-1, a conversation turn, is one `check` and two `run`s, cold (1–2 s). P8-7, the gate on one law part, waits with the gate (`OPERATIONS.md` §5, LAW-2).
 
-**Green:** no check of `checks.tsv`. The seven changes as amendments through `plan`, and the gate's fixture, come with the rewrite.
+**Order:** M3 follows M2. M4 to M8 don't wait for it: none of their checks runs `check`, since every engine check in `checks.tsv` is a run of the run function.
+
+**Green:** no check of `checks.tsv`. *T's, not yet in `checks.tsv`:* `check`'s vectors against refcore's `check`, byte for byte (gate 10); the seven changes carried out as `OPERATIONS.md` §6.1 says.
 
 ---
 
@@ -371,7 +368,7 @@ PGO only here, and no budget may need it (D4-4). Every optimisation leaves every
 | Hindcast H1–H5, H8, H9 | 4 | M2 |
 | Hindcast H0, H6, H7 on a single origin | 4 | M7 |
 | Hindcast H0–H9 with pooled origins | 4 | M8 |
-| The codes' missing fixtures: a scan of which codes the baselines print against L §8 and E §11, their count by `tools/xref_check.py` (K8-13), and a fixture for each code no check prints; `ENGINE-INVARIANT` through the fault-injection hook | 5 | each in the milestone that builds its construct: `LOAD-*` at M0, the parts codes at M5b, the rest with their construct; OPERATIONS §10's when it is rewritten |
+| The codes' missing fixtures: a scan of which codes the baselines print against L §8 and E §11, their count by `tools/xref_check.py` (K8-13), and a fixture for each code no check prints; `ENGINE-INVARIANT` through the fault-injection hook | 5 | each in the milestone that builds its construct: `LOAD-*` at M0, the parts codes at M5b, the rest with their construct; the operations add none (`OPERATIONS.md` §2) |
 | `PROPERTIES.md` with its generators | 6 | the kernel's at S, the parser's and the format's at M0, M1's and M2's lists above, the worker sweep and reversed completion at M7 (D3-6) |
 | The generator of 10 000 random realities | 10 | the full differential run is gate 10's, after M9; whether earlier exits can run it over the constructs built so far is T's design |
 | The runner's count-budget check: each vector's counts against PERFORMANCE §8's count budgets, read from the protected budget table that session 8c builds from the P8 rows (plan B2.3) | 12 | before S, with the runner |
