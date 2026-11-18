@@ -48,7 +48,7 @@ e: 2026-12-01
 e1: 380.00 PLN
   projection of konto (PLN) from 2026-11-01 to the end of 2026-12-01
   holder: ask e1 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 400.00 PLN at the start of 2026-11-01
   counted:
     2026-11-01:

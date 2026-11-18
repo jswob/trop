@@ -1,8 +1,8 @@
 """Evaluation (L §4, §5.11, §7, §8; E §3.2).
 
 Every value is a cell (item, keys, context).  A context is the law date,
-the cut K, the pins, the axis options, the windows clause, the wording pins
-and whether the line is partial.  The memo maps cells to results; a result
+the cut K, the pins, the axis options, the wording pins and whether
+the line is partial.  The memo maps cells to results; a result
 is a value or a refusal, with its collector: the register entries, the rows
 read (inputs-of) and the axes
 read.  Refusals are exceptions (TallyError); holes are values.
@@ -18,7 +18,7 @@ from .dates import (Period, day_period, month_period, quarter_period, year_perio
                     end_months, END, past_days)
 from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now, at_run
 from .model import (in_world, set_world, Span, visible, InputInfo, DefInfo, BandInfo, key_text, _kv,
-                    wcut, Undecided)
+                    Undecided)
 from .values import MonthDay, range_key  # noqa: E402 (GD-2; B1)
 from .values import (fmt_typed, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Tup, Iv, Cal, Hole, NONE, NEVER,
                      Special, CURRENCIES, vkey, fmt, fmt_q, Mv, fmt_hole)
@@ -41,16 +41,14 @@ def after_on(m, d):
 LAWGUARD = '%s read with no law date, which L §4.3 refuses at load (LOAD-LAWDATE): an interpreter guard'
 
 class Ctx:
-    __slots__ = ('law', 'cut', 'pins', 'axes', 'windows', 'wording', 'partial', 'path', 'world', 'unc', 'rnd',
-                 'walk', 'wp')
+    __slots__ = ('law', 'cut', 'pins', 'axes', 'wording', 'partial', 'path', 'world', 'unc', 'rnd', 'walk', 'wp')
 
-    def __init__(self, law, cut, pins=(), axes=(), windows=None, wording=(), partial=False, path=None, world=None,
-                 unc=False, rnd=None, walk=None, wp=None):
+    def __init__(self, law, cut, pins=(), axes=(), wording=(), partial=False, path=None, world=None, unc=False,
+                 rnd=None, walk=None, wp=None):
         self.law = law
-        self.cut = wcut(cut, windows)
+        self.cut = cut
         self.pins = pins
         self.axes = axes
-        self.windows = windows
         self.wording = wording
         self.partial = partial
         self.path = path           # (seed, p): the path of a paths ask (L §5.16), or None
@@ -61,21 +59,18 @@ class Ctx:
         self.wp = wp               # the walk point of a decision's evaluation (E §3.2), or None
 
     def key(self):
-        return (self.law, self.cut, self.pins, self.axes, self.windows, self.wording, self.partial, self.path,
-                self.world, self.unc, self.rnd, id(self.walk) if self.walk is not None else None, self.wp)
+        return (self.law, self.cut, self.pins, self.axes, self.wording, self.partial, self.path, self.world,
+                self.unc, self.rnd, id(self.walk) if self.walk is not None else None, self.wp)
 
     def tkey(self):
         """The key of the timeline this context reads: everything but the law date, partial, the walk point."""
-        return (self.cut, self.pins, self.axes, self.windows, self.wording, self.path, self.world, self.unc,
-                self.rnd)
+        return (self.cut, self.pins, self.axes, self.wording, self.path, self.world, self.unc, self.rnd)
 
     def but(self, **kw):
-        c = Ctx(self.law, self.cut, self.pins, self.axes, self.windows, self.wording, self.partial, self.path,
-                self.world, self.unc, self.rnd, self.walk, self.wp)
+        c = Ctx(self.law, self.cut, self.pins, self.axes, self.wording, self.partial, self.path, self.world,
+                self.unc, self.rnd, self.walk, self.wp)
         for a, b in kw.items():
             setattr(c, a, b)
-        if 'cut' in kw or 'windows' in kw:
-            c.cut = wcut(c.cut, c.windows)
         return c
 
     def axis(self, a):
@@ -89,7 +84,7 @@ EMPTY_BIND = object()     # a binding that binds nothing (L §5.7 Bindings: a ho
 
 
 class Coll:
-    __slots__ = ('reg', 'rows', 'axes', 'missing', 'trace', 'each')
+    __slots__ = ('reg', 'rows', 'axes', 'missing', 'trace')
 
     def __init__(self):
         self.reg = set()
@@ -97,18 +92,11 @@ class Coll:
         self.axes = set()
         self.missing = []
         self.trace = None
-        self.each = None        # the windows windows each met here, {window id: (label, days)}: kept with a memo
-        #                         cell, so a line that reuses the cell still splits by them (L §4.4, §5.18; MC-A-F1)
 
     def merge(self, o):
         self.reg |= o.reg
         self.rows.update(o.rows)
         self.axes |= o.axes
-        if o.each:
-            if self.each is None:
-                self.each = {}
-            for k, v in o.each.items():
-                self.each.setdefault(k, v)
 
 
 class JournalDict(dict):
@@ -123,22 +111,6 @@ class JournalDict(dict):
         if self.journal is not None:
             self.journal.append(k)
         dict.__setitem__(self, k, v)
-
-
-class EachMet(dict):
-    """The windows a windows-each run meets (ask.each_rows): each also recorded in the collector being filled, so a
-    memo cell that met a window carries it to every line that reads the cell (Coll.each)."""
-
-    def __init__(self, eng):
-        dict.__init__(self)
-        self.eng = eng
-
-    def setdefault(self, k, v):
-        c = self.eng.cur
-        if c.each is None:
-            c.each = {}
-        c.each.setdefault(k, v)
-        return dict.setdefault(self, k, v)
 
 
 class PinVal:
@@ -1087,32 +1059,10 @@ class Engine:
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
             v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))
-            v = self.window_choice(v, ctx)
         if isinstance(v, Num) and any(b.startswith('$') for b, e in v.u):
             # a per-unit price num PLN/u takes the key it is read at (L §3.2)
             env = {b.var: key_text(k) for b, k in zip(info.binds, keys)}
             v = Num(v.q, U.subst(v.u, env), money=v.money, isint=v.isint, rate=v.rate)
-        return v
-
-    def window_choice(self, v, ctx):
-        ws = ctx.windows
-        if not (isinstance(ws, tuple) and ws and ws[0] == 'each'):
-            # the line's windows each rides on its cut into contexts made afresh (a walk's, an instance's)
-            ws = getattr(ctx.cut, 'windows', None)
-        if isinstance(ws, tuple) and ws and ws[0] == 'each':
-            # windows each: the day the run assigns to this window (L §4.4, §5.18)
-            wi = window_id(v)
-            if wi is None:
-                return v
-            wid, label, days = wi
-            for x, d in ws[1]:
-                if x == wid:
-                    return d
-            # not yet taken: the read is the plain line's, a window (tally 2.1.8 R13: windows each is the plain line
-            # read again with the unknown day its answer carries)
-            if self.each_met is not None:
-                self.each_met.setdefault(wid, (label, days))
-            return v
         return v
 
     def no_candidate(self, info, keys, ctx, d, period, calendar=False):
@@ -1166,10 +1116,10 @@ class Engine:
         if pv is not NOPIN and not (isinstance(pv, tuple) and pv[0] == 'fields'):
             if isinstance(pv, Iv) and pv.origin is None and isinstance(pv.lo, datetime.date):
                 # a pin whose value is a window written there: an unknown day named by the read it pins (L §4.4: a
-                # copy keeps the name), which windows each takes as the read's (tally 2.1.8 R13; P30)
+                # copy keeps the name; P30)
                 org = self.origin(info, keys)
-                pv = self.window_choice(Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
-                                           name=('pin', info.id, tuple(_kv(k) for k in keys))), ctx)
+                pv = Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
+                        name=('pin', info.id, tuple(_kv(k) for k in keys)))
             return pv
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
@@ -1495,7 +1445,7 @@ class Engine:
         if isinstance(v, datetime.date):
             return v
         if isinstance(v, Iv):
-            return self.window_choice(v, ctx)
+            return v
         if v is NONE:
             raise refuse('RUN-NONE', 'the law date of %s is none here' % info.id)
         if v is NEVER:
@@ -1646,7 +1596,7 @@ class Engine:
         cone = self.def_cone(info.id)
         pins = ctx.pins if cone is None else tuple(q for q in ctx.pins if getattr(q, 'item', None) in cone)
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
-              ctx.axes, ctx.windows, ctx.world, ctx.path)
+              ctx.axes, ctx.world, ctx.path)
         # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
         return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm, carry=getattr(v, 'carry', None))
 
@@ -4027,7 +3977,7 @@ class Engine:
         if a > b:
             # named in L §8.4 What isn't defined is refused
             raise refuse('RUN-DOMAIN', 'window(%s, %s) with a after b' % (a, b))
-        return self.window_choice(Iv(a, b, None, 'window(%s, %s)' % (a, b)), ctx)
+        return Iv(a, b, None, 'window(%s, %s)' % (a, b))
 
     def c_one_of(self, n, env, ctx):
         v, = self.args(n, env, ctx)
@@ -4036,8 +3986,7 @@ class Engine:
         ds = frozenset(self.date_of(x, 'one_of') for x in v.items)
         if not ds:
             raise refuse('RUN-DOMAIN', 'one_of of no days')
-        return self.window_choice(Iv(min(ds), max(ds), ds, 'one_of([%s])' % ', '.join(
-            d.isoformat() for d in sorted(ds))), ctx)
+        return Iv(min(ds), max(ds), ds, 'one_of([%s])' % ', '.join(d.isoformat() for d in sorted(ds)))
 
     def c_min(self, n, env, ctx):
         snap = self.trace_snap()
@@ -4206,7 +4155,7 @@ class Engine:
                 unknown.append(Hole([(a[1], node._r[2])]))
             if (a[0] == 'window' and a[1] <= day <= a[2]) or (a[0] == 'oneof' and day in a[1]):
                 # L §4.2: a day in added may be a window, "every day known but one. Such a window is one the line
-                # meets, so a result that depends on its day is HOLE-IMPRECISE unless the line states windows each"
+                # meets, so a result that depends on its day is HOLE-IMPRECISE"
                 if a[0] == 'window':
                     wt = 'window(%s, %s)' % (a[1], a[2])
                     iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
@@ -4217,17 +4166,6 @@ class Engine:
                     iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
                             name=('added', node._r[2], ai))
                     days = sorted(a[1])
-                if ctx.windows in ('earliest', 'latest') or (isinstance(ctx.windows, tuple) and ctx.windows and
-                                                             ctx.windows[0] == 'each'):
-                    # L §4.4: windows each splits the line by it, "a day in a calendar's added list (§4.2)"; an entry
-                    # not yet taken is read as the plain line reads it (tally 2.1.8 R13)
-                    ch = self.window_choice(iv, ctx)
-                    if not isinstance(ch, Iv):
-                        if ch == day:
-                            return False
-                        continue
-                    if ctx.windows in ('earliest', 'latest'):
-                        continue
                 if self.cal_choice is not None:
                     # evaluated at each day the window can take (over_added): this pass's day, or the first while
                     # the window is newly met (that pass is run again per day)
@@ -4251,8 +4189,8 @@ class Engine:
         another). One value: that value. Dates that differ: the interval of the days it can take, a window like any
         other (L §4.4: "Built-ins on a window ... give the interval of their values"; "Only a comparison decides an
         interval"), so a movement dated by it counts in a span that holds the whole interval (L §4.4, §5.14).
-        is_business that differs: HOLE-IMPRECISE (L §4.2: "a result that depends on its day is HOLE-IMPRECISE unless
-        the line states windows each"; L §8.1)."""
+        is_business that differs: HOLE-IMPRECISE (L §4.2: "a result that depends on its day is HOLE-IMPRECISE";
+        L §8.1)."""
         outer, outer_met = self.cal_choice, self.cal_met
         todo = [dict(outer) if outer is not None else {}]
         out = []
@@ -4589,7 +4527,8 @@ def carried(v):
 
 
 def window_id(v):
-    """A window's identity under windows each: its row (or its written text), its label and its days."""
+    """A window's identity: its row (or its written text), its label and its days (the label is the name a
+    register line prints, L §8.2 `unknown day:`)."""
     if not isinstance(v.lo, datetime.date):
         return None
     if v.days:

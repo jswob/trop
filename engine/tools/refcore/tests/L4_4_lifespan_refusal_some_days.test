@@ -5,6 +5,8 @@
 # windows each gives six lines, one of them 300.00 PLN. A refusal reaching jar after put's uncertain test (pin's,
 # with wo on 03-07) doesn't outrank put's hole: which comes first is what wd leaves open. 2.1.7's refcore: refused,
 # RUN-LIFESPAN pin.cash. T's d77/lifespan b_jar, rebuilt from the twin check's description.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -41,19 +43,13 @@ version v
   opening[old] = 0.00 PLN at 2026-01-01 start "s"
 
 ask b_jar: bal(jar, 2026-03-31)
-ask b_jar_each: bal(jar, 2026-03-31) windows each
+ask b_jar_each: bal(jar, 2026-03-31)
 === expect
 b_jar: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pin, put)
+  unknown day: wd
+  unknown day: wo
   cut 2026-01-01
-b_jar_each [wo = 2026-03-05 .. 2026-03-10, wd = 2026-03-05 .. 2026-03-06]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
-  cut 2026-01-01
-b_jar_each [wo = 2026-03-05 .. 2026-03-06, wd = 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
-  cut 2026-01-01
-b_jar_each [wo = 2026-03-05 .. 2026-03-06, wd = 2026-03-08 .. 2026-03-10]: 300.00 PLN
-  cut 2026-01-01
-b_jar_each [wo = 2026-03-07, wd = 2026-03-07 .. 2026-03-10]: refused: RUN-LIFESPAN pin.cash moves into or out of old outside its lifespan
-  cut 2026-01-01
-b_jar_each [wo = 2026-03-08 .. 2026-03-10, wd = 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
-  cut 2026-01-01
-b_jar_each [wo = 2026-03-08 .. 2026-03-10, wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN pin.cash moves into or out of old outside its lifespan
+b_jar_each: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pin, put)
+  unknown day: wd
+  unknown day: wo
   cut 2026-01-01

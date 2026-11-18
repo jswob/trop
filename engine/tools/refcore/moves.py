@@ -2,7 +2,7 @@
 observations and their links, balance readings, coverage, adjustments and their settlements.
 
 Every movement of a timeline is one of the records below; the walk (walk.py) books them.  A timeline is keyed by
-the context's cut, pins, axes, windows, wording, path, world and random clause (E §3.3); its instances are
+the context's cut, pins, axes, wording, path, world and random clause (E §3.3); its instances are
 memoised per key in the engine's run cache.
 
 Installed as Engine methods (`m_<name>` -> `<name>`), as eval2 is.
@@ -279,9 +279,9 @@ def day_hi(d):
 
 
 def m_wkey(self, ctx):
-    """The key of the timeline a context reads (E §3.3): its cut, pins, axes, windows, wording, path, world and
-    random clause.  `with uncertain` doesn't change the timeline: no decision sees it (L §5.14)."""
-    return (ctx.cut, ctx.pins, ctx.axes, ctx.windows, ctx.wording, ctx.path, ctx.world, ctx.rnd)
+    """The key of the timeline a context reads (E §3.3): its cut, pins, axes, wording, path, world and random
+    clause.  `with uncertain` doesn't change the timeline: no decision sees it (L §5.14)."""
+    return (ctx.cut, ctx.pins, ctx.axes, ctx.wording, ctx.path, ctx.world, ctx.rnd)
 
 
 def m_tctx(self, ctx):
@@ -529,8 +529,6 @@ def m_move_law(self, mi, env, ctx):
         if x.k == 'name' and r and r[0] == 'var' and r[1] not in env:
             return None
     v = self.ev(at, env, ctx.but(law=None))
-    if isinstance(v, Iv) and isinstance(v.lo, datetime.date):
-        v = self.window_choice(v, ctx)
     if isinstance(v, Hole):
         return v
     if v is NONE:
@@ -906,22 +904,6 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 raise past_days()
             if isinstance(day, Iv):
                 inst.wlo = day.lo
-                day = self.window_choice(day, tctx)
-            elif tctx.windows is not None and getattr(mi.decl, '_scen', None) is not None and \
-                    isinstance(day, datetime.date):
-                # a scenario's move dated by a window that the line's windows clause chose a day of: "an instance
-                # whose day, or a window's first day, falls before D is left out" (L §6.4) reads the window's first
-                # day, whichever day the clause takes
-                c0 = _coll()
-                self.stack.append(c0)
-                try:
-                    d0 = self.ev(mi.decl.on, env, tctx.but(law=law_days(law)[0], windows=None))
-                except Exception:  # a refused or hole day: no window to read
-                    d0 = None
-                finally:
-                    self.stack.pop()
-                if isinstance(d0, Iv):
-                    inst.wlo = d0.lo
             inst.day = day
             inst.exists = exists0
             if mi.decision:

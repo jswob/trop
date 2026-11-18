@@ -123,12 +123,14 @@ f_mk: 1.00 PLN
   unfulfilled: mk[p]
   cut 2026-08-01
 f_mk2: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mk2" (mk2)
+  unknown day: wl
   unfulfilled: mk2[p]
   cut 2026-08-01
 f_mq: 5.00 PLN
   unfulfilled: mq
   cut 2026-08-01
 f_ta: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mk2" (mk2)
+  unknown day: wl
   unfulfilled: mk2[p]
   unfulfilled: mk[p]
   unfulfilled: ta[p]

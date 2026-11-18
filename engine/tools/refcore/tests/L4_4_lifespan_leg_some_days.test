@@ -4,6 +4,8 @@
 # days, inside on three, so box's balance and flows of put are put's hole from the window's first day, and each
 # splits in two. 2.1.7's refcore booked put on 03-10 (100.00 PLN). T's d77/lifespan b_box and f_put, rebuilt from
 # the twin check's description; wo is a window neither reads.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -40,19 +42,19 @@ version v
   opening[old] = 0.00 PLN at 2026-01-01 start "s"
 
 ask b_box: bal(box, 2026-03-31)
-ask b_box_each: bal(box, 2026-03-31) windows each
+ask b_box_each: bal(box, 2026-03-31)
 ask f_put: flows(put, 2026-03)
-ask f_put_each: flows(put, 2026-03) windows each
+ask f_put_each: flows(put, 2026-03)
 === expect
 b_box: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (put)
+  unknown day: wd
   cut 2026-01-01
-b_box_each [wd = 2026-03-05 .. 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
-  cut 2026-01-01
-b_box_each [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+b_box_each: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (put)
+  unknown day: wd
   cut 2026-01-01
 f_put: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of put" (put)
+  unknown day: wd
   cut 2026-01-01
-f_put_each [wd = 2026-03-05 .. 2026-03-07]: refused: RUN-LIFESPAN put.cash moves into or out of box outside its lifespan
-  cut 2026-01-01
-f_put_each [wd = 2026-03-08 .. 2026-03-10]: 100.00 PLN
+f_put_each: ?"date within window(2026-03-05, 2026-03-10) not precise enough for flows of put" (put)
+  unknown day: wd
   cut 2026-01-01

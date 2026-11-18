@@ -626,8 +626,6 @@ class Checker:
             scq = sc.child()
             scq.allow_lit = True   # the level of a quantile (L §7.1 An ask)
             t = self.tc(a.random[1], scq)
-        if a.windows == 'each':
-            pass
         f = a.form
         if f == 'exprs':
             for e in a.exprs:

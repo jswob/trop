@@ -158,19 +158,18 @@ def merge(into, c):
 
 
 def notes(c):
-    return (c.reg, c.rows, c.axes, c.missing, c.trace, c.each)
+    return (c.reg, c.rows, c.axes, c.missing, c.trace)
 
 
 def read_input(self, info, keys, ctx, calendar=False, probe=False):
     orig = ORIG['read_input']
     st = state(self)
-    if SLOW[0] or self.tracing or self.each_met is not None or ctx.pins or not st['model_ok'] or not plain(st, info):
+    if SLOW[0] or self.tracing or ctx.pins or not st['model_ok'] or not plain(st, info):
         return orig(self, info, keys, ctx, calendar, probe)
     d, period = self.time_point(info, keys, ctx)
     try:
-        k = (id(info), tuple(map(model._kv, keys)), None if PLANT[0] else d, ctx.cut,
-             getattr(ctx.cut, 'windows', None), ctx.axes, ctx.windows, ctx.wording, ctx.path, ctx.world, ctx.unc,
-             ctx.rnd, model._WSET[0], self.ask_K, calendar, probe)
+        k = (id(info), tuple(map(model._kv, keys)), None if PLANT[0] else d, ctx.cut, ctx.axes, ctx.wording,
+             ctx.path, ctx.world, ctx.unc, ctx.rnd, model._WSET[0], self.ask_K, calendar, probe)
         e = st['reads'].get(k)
     except TypeError:
         return orig(self, info, keys, ctx, calendar, probe)
@@ -232,4 +231,4 @@ def install(verify=0, plant=False):
         ORIG[name] = getattr(E, name)
         setattr(E, name, fn)
     pure(model.InputInfo, 'lawless', lambda s: (id(s), len(s.rows)))
-    pure(model.IndexInfo, 'holding', lambda s, d: (id(s), d) if type(d) in (datetime.date, model.WCut) else None)
+    pure(model.IndexInfo, 'holding', lambda s, d: (id(s), d) if type(d) is datetime.date else None)

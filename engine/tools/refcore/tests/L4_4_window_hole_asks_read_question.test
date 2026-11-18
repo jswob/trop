@@ -44,7 +44,9 @@ ask g1: flows(ob, 2026-04)
 ask fp: flows(pot, 2026-04)
 === expect
 fp: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of pot" (oa)
+  unknown day: wa
   cut 2026-01-01
 g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+  unknown day: wa
   cut 2026-01-01
 warning: WARN-UNREAD input amt is read by nothing

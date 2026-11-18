@@ -3,6 +3,8 @@
 # a windows clause chooses."  rate is 1 to 2026-03-15, 2 from 2026-03-16.  A window inside March 1-10 gives 1; a
 # window across the change is imprecise; windows each splits it at the change, 1 on 03-10..03-15 and 2 on
 # 03-16..03-20 (L §4.4; writer 8: windows latest is gone).
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -42,13 +44,13 @@ version d
 
 ask q1: y1
 ask q2: y2
-ask q3: y2 windows each
+ask q3: y2
 === expect
 q1: 1
   cut 2026-12-31
 q2: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of y2" (y2)
+  unknown day: across
   cut 2026-12-31
-q3 [across = 2026-03-10 .. 2026-03-15]: 1
-  cut 2026-12-31
-q3 [across = 2026-03-16 .. 2026-03-20]: 2
+q3: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of y2" (y2)
+  unknown day: across
   cut 2026-12-31

@@ -133,13 +133,13 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 
 **Builds**
 - Exact numbers in full: the literal rule, `round` with every mode X's law uses (L §7.1, §7.2). M4 adds the rest.
-- The calendar built-ins, holiday inputs, the law date and its propagation, windows and `windows each` (L §4.2–§4.4).
+- The calendar built-ins, holiday inputs, the law date and its propagation, windows (L §4.2–§4.4).
 - `index`, `input`, `def` and `rule` with `when` and `beats` in X's forms, recurrences, `band`, `axis` with its 64-combination cap (L §5.5, §5.6, §5.8, §5.9, §5.11).
 - `prorata` with its three rests; its `rest largest`, the largest-remainder split, is written once here and is every later split (L §5.13; R-114).
 - Pins: `with` and `as if`, the law and known pins (L §5.11), as **layers** of the memo's context; axis combinations and scenarios too (D1-3).
 - Kinds and things with lifespans; places and their kinds, the prelude's place kinds (L §3.6, §5.7, §5.10); parties as things under the prelude kind `parties`, the subkinds the model's own (L §3.5; 2.1-6).
 - Moves: plans in dependency order over the whole run, decisions in the day walk with declared reads, **keyed decisions** (a keyed move that declares `reads`), ties by the move's `ties by`, written orders (`before`, `after`), the stratified order within a day (L §5.14, §5.14.1, §5.14.2; E §4.1, §4.2).
-- **The written projections** in full: `bal(x, d) from t` and its clauses (`windows each`, `with uncertain`), `value`, `flows` (L §5.10, §5.14.1; E §4.3). They replace 1.0.1's `plan_low`, `next_on` and `worth`.
+- **The written projections** in full: `bal(x, d) from t` and its clauses (`with uncertain`), `value`, `flows` (L §5.10, §5.14.1; E §4.3). They replace 1.0.1's `plan_low`, `next_on` and `worth`.
 - Scenarios as overlays of ordinary versions, compared by keyed difference (L §6.4), and amendments as added files (L §6.1–§6.3).
 - Asks: values, checks, partial answers, differences, `solve` in an ask, `explain` with provenance on every movement (L §5.18; E §10); the register and warnings (L §8.2, §8.5).
 - The run invariants (E §9) and the canonical projection of a result.
@@ -165,7 +165,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 - The four clocks S, K, (K, E] and R, and the dates inside a run (E §2); an ask's known date.
 - Prices and figures read from records (L §5.8, §5.19).
 
-**Then forks** (D1-4's second step), M2's last step: timelines forked at their first different day, once the walk matches refcore on every check from S to M2. It is a fence (D5-6) whose plain twin is the unforked walk, and the equivalence test runs both on every later check. Why here: from M2 on, the timelines that share a start multiply (X's changes and scenarios, axis combinations, `windows each`, pin sets, and later A's 64 repetitions behind P8-10), and each later milestone's budgets read them. Parts (M5b) and members (M5c) add place state, which the copied-on-write checkpoints carry (D2-6); the fork itself doesn't change.
+**Then forks** (D1-4's second step), M2's last step: timelines forked at their first different day, once the walk matches refcore on every check from S to M2. It is a fence (D5-6) whose plain twin is the unforked walk, and the equivalence test runs both on every later check. Why here: from M2 on, the timelines that share a start multiply (X's changes and scenarios, axis combinations, pin sets), and each later milestone's budgets read them. Parts (M5b) and members (M5c) add place state, which the copied-on-write checkpoints carry (D2-6); the fork itself doesn't change.
 
 **Green (26)**
 - X: `I:X:*@c3_fast` and `I:X:*@v3_fast`, change 3, the retroactive law (6).
@@ -273,7 +273,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 - Probes (26): `U:own/OWN-10/*` (13); OWN-11's but `p21-signed` (9); OWN-12's `p10`, `p17/ania`, `p17/halina`, `p23`.
 - *T's, not yet in `checks.tsv`:* the fixtures of `RUN-LABEL`, `HOLE-PART`, `WARN-LABELS` and the run codes 2.1 widened, where no probe prints them (gate 5).
 
-**Budgets touched:** P8-10 (`I:A:a05_ania@c05-ania`, A-05's `windows each`: refcore 37.7 s, 0.81 GB, 150 k def misses); P8-L9 (A-05 on the full text), P8-L15 (A's q12 asks), P8-L17 (A-13 (b) with `windows each`), at full size.
+**Budgets touched:** P8-10 (`I:A:a05_ania@c05-ania`, A-05's asks: refcore 37.7 s, 0.81 GB, 150 k def misses); P8-L9 (A-05 on the full text), P8-L15 (A's q12 asks), P8-L17 (A-13 (b)'s pinned days), at full size.
 
 ### M5c. Joint members as contexts
 
@@ -314,7 +314,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 - Path statistics with their counts, standard errors and horizon, `quantile`, `share`, paired paths (L §5.16); a quantile's standard error by intervals refined to the printed 1e-6 rounding, refcore's exact method the oracle at small N (D3-7); a path statistic's accumulator its own type, outside the cap check (2.1-15; R-117; K8-16, K8-17).
 - One path replayed for an explanation (E §7, §10).
 - **The thread module** (D3-1..D3-7), the only place threads, channels and locks live: the standard library's scoped threads, each spawned with a stack size passed in (R-42 as amended; BUILDER §7); workers fill numbered slots and one thread merges them in task-index order, the 1-worker run through the same module; the merge rule (per line, terms in order; the first refusing path wins, else the union of holes; quantiles sorted stably by value, then path; SO8-3); the shared layer run alone first, then frozen, with a counter of locally recomputed cells (D3-4); the worker count an argument, the CLI's default 6, never read from the machine (D3-5). A fence, its plain twin the 1-worker run.
-- **In parallel through it:** Monte Carlo paths, and the independent timelines that exist since M1 (axis combinations, `windows each`, scenarios) and from M8 (rolling origins), as D3-2 puts them in the first set.
+- **In parallel through it:** Monte Carlo paths, and the independent timelines that exist since M1 (axis combinations, scenarios) and from M8 (rolling origins), as D3-2 puts them in the first set.
 
 **Why the thread module lands here.** Every budget before M7 is single-worker: P8-10..P8-15 are cold runs on 1 worker, and P8-4 is the first row that names workers. Gate 6's worker sweep and the merge rule are about paths (which refusal prints, the union of holes, a quantile's order), so the module is tested where its hardest case first exists. And by M7 every single-threaded output from S to M6 is fixed by its check, so a difference between worker counts can only be the module's. Parallel joint members and parallel asks come later (D3-2), at M9, and only for a row that misses.
 

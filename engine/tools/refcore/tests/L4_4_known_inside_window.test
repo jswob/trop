@@ -3,6 +3,8 @@
 # rule for every window". g falls in window(2026-03-01, 2026-03-31); v2, known 2026-03-15 inside it, changes only
 # other, which g doesn't read: its amount is 100.00 PLN, no hole (q, q2). L4_4_known_inside_window_changes: v2 changes
 # amt.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -25,7 +27,7 @@ move g: gifts
   leg cash from world to konto amount amt
 
 ask q: g.cash.amount
-ask q2: g.cash.amount windows each
+ask q2: g.cash.amount
 
 version v1
   cite s

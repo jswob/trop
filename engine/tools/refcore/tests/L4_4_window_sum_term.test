@@ -42,5 +42,6 @@ version v
 ask q: sum(days_between(d0, dk[k]) for k in ks)
 === expect
 q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
+  unknown day: dk[a]
   cut 2026-04-25
 warning: WARN-UNREAD place wallet is read by nothing

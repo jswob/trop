@@ -100,6 +100,7 @@ version card_rows
   live = false "card: the payment never runs"
 === expect
 q_hand_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: by_hand[2025-01]
   unfulfilled: by_hand[2025-02]
   unfulfilled: by_hand[2025-03]
@@ -114,6 +115,7 @@ q_hand_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough f
   unfulfilled: by_hand[2025-12]
   law date 2025-12-31, cut 2026-01-15
 q_hand_at_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal), ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal))
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: by_hand_at[2025-01]
   unfulfilled: by_hand_at[2025-02]
   unfulfilled: by_hand_at[2025-03]
@@ -128,6 +130,7 @@ q_hand_at_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enou
   unfulfilled: by_hand_at[2025-12]
   law date 2025-12-31, cut 2026-01-15
 q_hand_dec_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: by_hand[2025-01]
   unfulfilled: by_hand[2025-02]
   unfulfilled: by_hand[2025-03]
@@ -166,6 +169,7 @@ q_hand_dec_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enou
   unfulfilled: by_schedule[2025-12]
   law date 2025-12-31, cut 2026-01-15
 q_hand_def_when_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal), ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal))
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: by_hand_def_when[2025-01]
   unfulfilled: by_hand_def_when[2025-02]
   unfulfilled: by_hand_def_when[2025-03]
@@ -180,10 +184,13 @@ q_hand_def_when_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precis
   unfulfilled: by_hand_def_when[2025-12]
   law date 2025-12-31, cut 2026-01-15
 q_hand_when_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   law date 2025-12-31, cut 2026-01-15
 q_konto2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   law date 2025-12-31, cut 2026-01-15
 q_konto_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: by_hand[2025-01]
   unfulfilled: by_hand[2025-02]
   unfulfilled: by_hand[2025-03]

@@ -1088,7 +1088,7 @@ class Walk:
             self.book_leg(i, lg, key, reg=reg, coll=i.coll)
         elif kind == 'imp_on':
             i, lg, wid, q = obj
-            reg = self.each_before_from(i, lg)
+            reg = ()
             for p, s in ((lg.frm, -1), (lg.to, 1)):
                 if isinstance(p, Thing):
                     self.add(p.name, lg.unit or '*', Ent(key, 'imp_on', wid=wid, qs=q, mv=i, coll=i.coll, win=lg.day,
@@ -1349,25 +1349,6 @@ class Walk:
             self.book_leg(mv, lg, key[:4] + (key[4] + 1,), reg=reg, coll=coll, ends=ends)
 
     # -- booking (E §4.2 step 5) -----------------------------------------------------------------------------------
-    def each_before_from(self, i, lg):
-        """Under windows each, a window-dated leg whose day the line hasn't taken stands for each of its window's days
-        in the block that covers them all: its `before from:` entry with each day, the read set of those days (picks
-        P34, P36; STOP-REPORT 5 of T's re-run, P37, the stored bytes 2.1.7 printed). The plain line lists none."""
-        ws = getattr(self.K, 'windows', None)
-        if not (isinstance(ws, tuple) and ws and ws[0] == 'each'):
-            return ()
-        w = lg.day if isinstance(lg.day, Iv) else getattr(i, 'day', None)
-        if not isinstance(w, Iv) or not isinstance(w.lo, datetime.date):
-            return ()
-        days = sorted(w.days) if w.days is not None else [
-            w.lo + datetime.timedelta(days=n) for n in range((w.hi - w.lo).days + 1)]
-        out = []
-        for d in days:
-            bf = self.before_from(i, lg, i.coll, day=d)
-            if bf is not None:
-                out.append(('before from', bf))
-        return tuple(out)
-
     def before_from(self, mv, lg, coll, day=None):
         """E §9 item 3, L §8.2 `before from:` (tally 2.1.7 R7, #121): a movement booked before a scenario's from that
         read that scenario's facts (its rows, a lifespan its entries change) is listed under each result whose reads
@@ -1406,10 +1387,6 @@ class Walk:
         bf = self.before_from(mv, lg, coll)
         if bf is not None:
             reg = tuple(reg) + (('before from', bf),)
-        elif coll is not None:
-            # a window-dated leg booked at its window's end, under windows each with its day not taken: each day's
-            # entry, as its pending entry lists them (each_before_from)
-            reg = tuple(reg) + tuple(r for r in self.each_before_from(mv, lg) if r not in reg)
         cs = self.consol(mv, lg)
         if cs != (None, None):
             ends = list(ends)
@@ -2406,7 +2383,7 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
         # L §5.14.1 (round 12): "a t before S is a hole, HOLE-PRERUN: nothing before S is walked"
         from .evaluate import HoleSignal
         raise HoleSignal(Hole([('before the run\'s start', 'from %s' % t)]))
-    windows, rnd, unc = clauses
+    rnd, unc = clauses
     if rnd and rnd[0] == 'proj':
         # a projection inside a projection's walk: the outer read's clause still holds (L §5.18 "every projection
         # the line reaches")
@@ -2415,8 +2392,8 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
     # projection carries the decision's day, since "An ask line's own projection is no decision" (L §5.16)
     dec = kday(ctx.wp) if (ctx.walk is not None and ctx.wp is not None) else None
     prnd = ('proj', rnd[0] if rnd else None, rnd[1] if rnd else None, t, dec)
-    tctx = self.tctx(ctx).but(cut=c, windows=windows, rnd=prnd)
-    wk = ('proj', id(base), point, c, leftout, windows, rnd, unc) + self.wkey(tctx)
+    tctx = self.tctx(ctx).but(cut=c, rnd=prnd)
+    wk = ('proj', id(base), point, c, leftout, rnd, unc) + self.wkey(tctx)
     w = self.walks.get(wk)
     if w is not None and getattr(w, 'failed', None) is not None and getattr(w, 'failed_day', None) is None:
         # its plan pass failed: every read of it is refused; a failure on a day refuses only the reads from that day

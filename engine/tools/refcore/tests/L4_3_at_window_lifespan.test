@@ -7,6 +7,8 @@
 # date (L §4.6 step 5, `no value at <law date>`), so the answer is not constant there (L §4.4), against E §3.2's "Every
 # law date inside one interval gives the same value" (a contradiction in the sixth pass's report; a window inside the
 # stretch is REFCORE-UNSPECIFIED, L4_3_at_window_gap_holes).
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -30,21 +32,11 @@ version v
   w = window(2026-06-10, 2026-06-20)
 
 ask q3: c[ola]
-ask q4: c[ola] windows each
+ask q4: c[ola]
 === expect
 q3: ?"date within window(2026-06-10, 2026-06-20) not precise enough for the law date of c" (c[ola])
+  unknown day: w
   cut 2026-12-31
-q4 [w = 2026-06-10]: ?"city at ola: no value at 2026-06-10" (city[ola])
-  cut 2026-12-31
-q4 [w = 2026-06-11]: ?"city at ola: no value at 2026-06-11" (city[ola])
-  cut 2026-12-31
-q4 [w = 2026-06-12]: ?"city at ola: no value at 2026-06-12" (city[ola])
-  cut 2026-12-31
-q4 [w = 2026-06-13]: ?"city at ola: no value at 2026-06-13" (city[ola])
-  cut 2026-12-31
-q4 [w = 2026-06-14]: ?"city at ola: no value at 2026-06-14" (city[ola])
-  cut 2026-12-31
-q4 [w = 2026-06-15]: ?"city at ola: no value at 2026-06-15" (city[ola])
-  cut 2026-12-31
-q4 [w = 2026-06-16 .. 2026-06-20]: none
+q4: ?"date within window(2026-06-10, 2026-06-20) not precise enough for the law date of c" (c[ola])
+  unknown day: w
   cut 2026-12-31

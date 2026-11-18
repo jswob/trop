@@ -2,6 +2,8 @@
 # the run's end: whether it falls in December, or in January after the run, is open, so flows of konto over either
 # month is the window's hole (fa, fb), as h's is over January and February. 2.1.7's refcore counted g nowhere
 # (December 0.00). T's fixes/g3/f.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model pf
   tally 2
@@ -32,7 +34,7 @@ ask fb: flows(konto, 2027-01-01 .. 2027-01-31)
 ask fc: flows(konto, 2027-02-01 .. 2027-02-28)
 ask be: bal(konto, 2026-12-31)
 ask bea: bal(konto, 2027-01-31)
-ask few: flows(konto, 2026-12-01 .. 2026-12-31) windows each
+ask few: flows(konto, 2026-12-01 .. 2026-12-31)
 
 version v
   cite card
@@ -44,17 +46,21 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
 === expect
 be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
+  unknown day: wd
   left out: h, 1 instances, first 2027-01-25
   cut 2026-03-01
 bea: ?"after the run's end" (konto)
   cut 2026-03-01
 fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  unknown day: wd
   cut 2026-03-01
 fb: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g) ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  unknown day: wd
+  unknown day: wd2
   cut 2026-03-01
 fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+  unknown day: wd2
   cut 2026-03-01
-few [wd = 2026-12-20 .. 2026-12-31]: 10.00 PLN
-  cut 2026-03-01
-few [wd = 2027-01-01 .. 2027-01-10]: 0.00 PLN
+few: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+  unknown day: wd
   cut 2026-03-01

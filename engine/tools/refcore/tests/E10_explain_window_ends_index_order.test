@@ -48,6 +48,7 @@ ask e: explain bal(konto, 2026-03-31)
 ask l: last(stated[konto], 2026-03-31)
 === expect
 b: (?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9]), ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9]), ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9]))
+  unknown day: d_save
   anchor: konto 2026-03-25 end, stated 700.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   anchor: sav 2026-03-25 end, stated 25.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   cut 2026-06-10
@@ -57,6 +58,7 @@ e: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day o
   2026-03-25:
     save[k9]: hole: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
     save[k10]: hole: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10])
+  unknown day: d_save
   anchor: konto 2026-03-25 end, stated 700.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   cut 2026-06-10
 l: 700.00 PLN

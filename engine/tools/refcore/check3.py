@@ -688,10 +688,6 @@ def m_check_proj(self, n, sc, target):
             raise uerr('the level of random at quantile is %s' % T.show(qt), n.loc)
     if 'frm' not in p:
         raise LoadError('LOAD-PARSE', 'cannot parse: a projection states from t (bal(x, d) from t)', n.loc)
-    if p.get('windows') == 'each':
-        # L §4.4: "The clause stands on a projection read ..., for that read": a line that reaches one splits by the
-        # windows that read meets (ask.Asker)
-        self.m.read_each = True
     self.mark(sc, 'proj', target)
     # L §8.3 item 10 (round 19, GD-4): a projection of a place a random movement books into is in the random cone;
     # one with a random clause reads the amounts after t as the question L §5.16 writes ("which reads no sample")

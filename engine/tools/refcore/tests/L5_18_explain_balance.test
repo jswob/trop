@@ -95,7 +95,7 @@ e2: 900.00 PLN
 e3: 220.00 PLN
   projection of konto (PLN) from 2026-11-01 to the end of 2026-12-31
   holder: ask e3 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 420.00 PLN at the start of 2026-11-01
   counted:
     2026-11-10:
@@ -109,7 +109,7 @@ e4: 2026-11-10
 e4b: 320.00 PLN
   projection of konto (PLN) from 2026-11-01 to the end of 2026-11-10
   holder: ask e4b (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, without uncertain
+  clauses: random none, without uncertain
   start: 420.00 PLN at the start of 2026-11-01
   counted:
     2026-11-10:

@@ -108,35 +108,6 @@ def in_world(version):
     return sc is None or sc in _WSET[0]
 
 
-class WCut(datetime.date):
-    """A cut that carries its ask line's `windows each` assignment (L §4.4: "That holds for every window, wherever the
-    line meets it: ... a version's known (§4.5)"), so every visibility test at it takes the day the run assigns."""
-
-    def __new__(cls, d, windows):
-        o = datetime.date.__new__(cls, d.year, d.month, d.day)
-        o.windows = windows
-        return o
-
-    def __reduce__(self):
-        return (WCut, (datetime.date(self.year, self.month, self.day), self.windows))
-
-    # arithmetic gives a plain day: a day computed from the cut is no cut (W-B-F4: date arithmetic builds its result
-    # through the class, which takes (day, windows))
-    def _plain(self):
-        return datetime.date(self.year, self.month, self.day)
-
-    def __add__(self, other):
-        return self._plain() + other
-
-    __radd__ = __add__
-
-    def __sub__(self, other):
-        return self._plain() - other
-
-    def replace(self, *args, **kw):
-        return self._plain().replace(*args, **kw)
-
-
 def same_seen(v, ctx):
     """Whether a version's same line is seen at ctx: its world and its known (L §4.5)."""
     if v is None:
@@ -147,28 +118,6 @@ def same_seen(v, ctx):
 def same_key(ctx):
     """The key of the same lines ctx sees: its cut and its world."""
     return (ctx.cut, _WSET[0])
-
-
-_EACH = [None]   # the windows met by the line windows each is running, {window id: (label, days)} (ask.each_rows)
-
-
-def set_each(met):
-    old = _EACH[0]
-    _EACH[0] = met
-    return old
-
-
-def wcut(d, windows):
-    """The cut d carrying a windows each assignment, or the plain day."""
-    if not isinstance(d, datetime.date) or isinstance(d, datetime.datetime):
-        return d
-    if isinstance(windows, tuple) and windows and windows[0] == 'each':
-        if isinstance(d, WCut) and d.windows == windows:
-            return d
-        return WCut(d, windows)
-    if isinstance(d, WCut):
-        return datetime.date(d.year, d.month, d.day)
-    return d
 
 
 class Undecided(NotYet):

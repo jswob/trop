@@ -985,9 +985,7 @@ def m_e_bal(self, n, env, ctx):
     if isinstance(d, Hole):
         return d
     if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-        d = self.window_choice(d, ctx)
-        if isinstance(d, Iv):
-            raise self.imprecise(d, 'the day of bal(%s, d)' % place)
+        raise self.imprecise(d, 'the day of bal(%s, d)' % place)
     d = self.date_of(d, 'the day of bal')
     if self.tracing and self.trace_stack and form != 'proj' and getattr(self, 'explainer', None) is not None:
         # E §10, §3.2 (tally 2.1.7 R7, #132b): a cause that is a balance prints in the balance's own form, its last
@@ -1024,9 +1022,6 @@ def m_bal_at(self, n, place, unit, d, env, ctx):
         # bal(x, d) in the model's own account, at the plain read's instant (L §5.19; tally 2.1.8 R16, B5)
         return self.bal_modelled(place, unit, d, ctx, start=getattr(n, 'start', False))
     key = K_start(d) if getattr(n, 'start', False) else K_end(d)
-    if n.proj and 'windows' in n.proj:
-        # the read's own clause; windows each takes the day the line's run assigns (m_proj_clauses)
-        ctx = ctx.but(windows=self.proj_clauses({'windows': n.proj['windows']}, ctx)[0])
     v = self.bal_day(place, unit, d, key, ctx)
     # a plain read counts uncertain movements only when it states the clause; the line's clause reaches
     # projections and bindings (L §5.14, §5.18)
@@ -1227,17 +1222,11 @@ def m_partial_leg(self, g, sgn, ctx):
 
 
 def m_proj_clauses(self, proj, ctx):
-    windows = proj.get('windows', ctx.windows)
-    if windows == 'each':
-        # windows each on the read (L §4.4, "for that read"): the line's runner's assignment applies inside it
-        lw = ctx.windows if isinstance(ctx.windows, tuple) else getattr(ctx.cut, 'windows', None)
-        if isinstance(lw, tuple) and lw:
-            windows = ('each', lw[1])
     rnd = ctx.rnd
     if proj.get('random') is not None:
         rnd = self.rnd_clause(proj['random'], ctx)
     unc = proj.get('uncertain', ctx.unc)
-    return windows, rnd, unc
+    return rnd, unc
 
 
 def m_rnd_clause(self, r, ctx):
@@ -1271,7 +1260,7 @@ def m_proj_bal(self, n, place, unit, d, env, ctx):
         # a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
         v = self.partial_bal(w, place, unit, K_end(d), v)
     self.proj_regs(w, t, d)
-    if clauses[2] and (not isinstance(v, Hole) or ctx.partial):
+    if clauses[1] and (not isinstance(v, Hole) or ctx.partial):
         # with uncertain partial: the uncertain amounts join the known part of a hole's linear form (L §5.18, §5.14;
         # tally 2.1.8 R15, B3 of group 3's review)
         v = self.proj_uncertain(w, place, unit, d, v, ctx)
