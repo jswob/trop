@@ -379,7 +379,8 @@ version card_2026
 def dx: key qs = q1 + age(w, d2)
 
 ask e1: dx
-,,1:0,450:e1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+,,1:0,467:e1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -453,7 +454,8 @@ version vk
   kq = q1 "c"
 
 ask e2: dy
-,,1:0,450:e2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+,,1:0,467:e2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing

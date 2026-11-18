@@ -1,0 +1,42 @@
+model g4_pin_copy3
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-12-31
+  note "G4 review: a def copy wc of a window wa, pinned to another window's read wb; only wb is read."
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input wa: date
+
+input wb: date
+
+def wc: date = wa
+
+move pay_a: transfers
+  on wc
+  leg cash from world to konto amount pay
+
+move pay_b: transfers
+  on wb
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  wa = window(2026-03-05, 2026-03-07) "c"
+  wb = window(2026-03-05, 2026-03-07) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+
+ask e1: bal(konto, 2026-03-06)
+ask e2: bal(konto, 2026-03-06) with wc = wb

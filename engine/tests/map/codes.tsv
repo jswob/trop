@@ -18,8 +18,8 @@ HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	6	M1	codes/m1/prices/n
 HOLE-PRICE	L §8.1	M1	<x> is in Y prices; no index moves it to <d>	1	M1	codes/m1/prices/price-year
 HOLE-CALENDAR	L §8.1	S	*	4	M2	m2/fixes/rv/g1_b2_fallback
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	4	M2	m2/fixes/rv/g1_b2_fallback
-HOLE-IMPRECISE	L §8.1	M1	*	117	M1	U:time/TIME-01
-HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	117	M1	U:time/TIME-01
+HOLE-IMPRECISE	L §8.1	M1	*	123	M1	U:time/TIME-01
+HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	123	M1	U:time/TIME-01
 HOLE-CHANGED	L §8.1	S	*	22	S	kernel/g11/adjust
 HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	22	S	kernel/g11/adjust
 HOLE-SAME	L §8.1	M2	*	22	M1	m1/fixes/gate8/m2_d512_both_cover_day
