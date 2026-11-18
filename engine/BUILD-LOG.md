@@ -4204,3 +4204,85 @@ On the lead's merge 8066ed27 (the tests session's close e115d8cb; the spec tagge
 - **Cost:** `perf counts P8-14`: def_misses 25 318, days_stepped 960, walks_shared 582 (exit 0; budget def_misses <= 30 400), unchanged.
 - **STOP-REPORTs:** none.
 - **Checks:** `check commit: green, 23 steps (330s)` on this tree, headers included.
+
+## 2026-11-18 tally 2.2, build group 1: S-6, S-7 (held), the fault of a def keyed by a movement (issue #211)
+
+On `build/2.2` at 38a3cdff (master 8ece2484 and the tests session's first G1 chunk). `check commit` was green at the start: `check commit: green, 23 steps (209s)`. Plan `tmp/spec-2.2/plan.md` §3, §4, §5; choice C-11, so the spec pinned here still describes what is removed.
+
+- **S-6, eb8fcc43: a leg is on its movement's day.** Out, by file:
+  - `syntax/tree.rs` `Leg.on` and `syntax/expr.rs` its parse. A move's leg `… amount q on d` is now `LOAD-PARSE cannot parse: expected end of line, got on`, an observed row's `LOAD-PARSE cannot parse: expected ")", got on` (choice C-1).
+  - Load: `load/moves.rs` the leg day's type check; `load/observed.rs` an observed leg's day and its window refusal; `model/decl.rs` `ObsLeg.day`; `load/across.rs` a leg's day in the scenario `from` check (one day per move now, `early_day` gone); `load/overlap.rs` (`covered`) and `load/texts.rs` (a record's leg).
+  - K `walk/legs.rs`: a leg's day is its instance's. `day_window` in `walk/plan.rs` is private now.
+  - K `walk/plan.rs`: `BookedLeg.own_day` and `booked_legs`'s move; `list_upto`'s "a move whose legs state their own days is taken whole"; `scenario_early`'s legs.
+  - K `walk/agenda.rs`: `base_legs` with both its calls (#183 and P39) and `after_the_point`'s list of earlier decisions. `outside_window` is now the instance's first day alone. `LegHole` acts are put on the instance's day.
+  - K `walk/lows.rs` (F5): `base_leg_inside`, and `leg`'s fallback for a leg dated apart (`day != Some(d)`, the hole-day arm).
+  - K `walk/fork.rs` (F6): `booked_ahead`, its filter in `keep_walked`, and `continue_with`'s carry of the legs booked ahead.
+  - K `walk/move_flows.rs`: `leg_day` and `flows_hole`'s leg window.
+  - K `book/members.rs`, `book/same.rs` (2 places), `book/reading.rs` (`stands_in`), `book/observe.rs`: an observed leg's own day, so each reads the observation's day.
+  - `ask/instance.rs`: `explain`'s ` on <day>` after a leg dated apart.
+- **Beyond the plan's list, with why:**
+  - N-6's mechanism, a decision's leg booked ahead onto a later day. Only a leg dated apart reached it, and plan §4 cuts N-6's row. It went from K `walk/order.rs` (the run's booking ahead), K `walk/state.rs` (`Checkpoint.ahead`), K `walk/day.rs` and `walk/agenda.rs` (`Mv::Run`; `Mv` keeps one variant, `Plan`).
+  - For the spec writer: P §2.2 l.122 ("an ordered insert for each N-6 leg"), §2.4 l.168 ("the legs booked ahead (N-6)") and §4.2 l.317 ("every leg booked ahead") lean on N-6. The last doesn't name it, so the plan's grep for `N-6` misses it.
+  - The observed side (`ObsLeg.day` and its readers in `book/`, `load/overlap.rs`, `load/observed.rs`, `model/decl.rs`).
+  - The crate's own texts of the form: `tests/group3_cases.rs` `a_base_leg_the_start_holds_is_counted_once` and `a_decision_run_earlier_on_t_counts_its_later_legs` (#183, P39), dropped. `walk/agenda.rs` `a_decisions_later_leg_takes_its_place_among_the_days_plans_in_the_movement_order`, dropped. `walk/state.rs`'s checkpoint text and test, restated (the sweep's leg on its own day; `a_place_that_did_not_move_is_shared`). `walk/fork.rs`'s booked-ahead test, restated as `a_continued_walk_takes_the_plans_acts_after_its_last_walked_day`.
+  - F6's own reality `tally-cli/tests/forks/days.tally`: the sweep's leg `on add_days(start_of(m), late)` is gone, with `late`. The expected lines of `forks_on_prints_forks_off_and_refcore_on_its_own_reality` are refcore's on the restated text. 7 are as before and 3 move with the sweep's day (17th, not 25th): `d_back (d = 2026-02-20) [high]` 950.00 → -75.00, `d_many [high]` 4 750.00 → 275.00, `d_axis [low]` 450.00 → 325.00 DUK.
+- **Listed and kept:**
+  - `syntax/item.rs` and `syntax/canon.rs`: the canonical print reprints a leg's tokens, so neither holds code of the leg's `on`.
+  - `load/targets.rs` and `load/parts.rs`: neither holds a leg's day (`parts.rs`'s `own_day_read` is a def's own day).
+  - `LegVal.day` stays: the booked leg's day, its instance's, which the walk's acts, the ledger and `x.leg.day` read in about 20 kernel places.
+- **S-7, 9af299a6, then held by a8ec49f7: the converted `flows`.**
+  - 9af299a6 took out `Flows.convert` (`syntax/tree.rs`), its parse (`syntax/calls.rs`), its parentheses (`syntax/expr.rs` `force`, `syntax/parens.rs`), its unit and mode check (`load/reads.rs`), its text (`load/texts.rs`), its parts (`ask/answer.rs`) and the not-built arm (`walk/flows.rs`), with `tests/load_cases.rs`'s two cases of the form.
+  - Its `check quick` was green; `check commit` then showed two gating texts that still write the form (STOP-REPORT below). a8ec49f7 puts those 9 files back as eb8fcc43 had them. The guard refuses `git revert` and `git apply`, so it was done with `git show eb8fcc43:<file>` per file.
+  - The head holds the form as 2.1.8 left it (parsed, typed, not built). The next turn re-applies 9af299a6 as it is.
+  - Kept with it, for the spec writer: `flows` of a place of unit `any` is `LOAD-UNIT … it sums no one unit; convert it (in CUR at fx mode)`, refcore's words (check3.py l.828). The refusal stays, but its hint names the cut form. No gating vector prints it, and `load_cases.rs` tests it. S-1 (G2) reshapes it.
+- **The fault, fd126be1** (plan §3, choice C-2 (a)):
+  - `load/defs.rs` `check_def`: after the `at`'s reads are taken, so `at_reads` is unchanged, a key over an event kind calls `load/binds.rs` `key_movements`.
+  - `key_movements` records the `bind` edges to every move of the kind and its subkinds and to every observed input, and lists the def among the kind's readers, as `bind_movements` does, but marks no running read.
+  - `bind_movements` now shares `bound_kind` and `bound_observed` with it.
+  - A declaration's key over an observed input is `LOAD-KEY` (`resolve_domain`), so the kind is the one case.
+  - Test: `load/defs.rs` `a_def_keyed_by_a_movement_keeps_the_axes_and_pins_its_movements_reach`, fx3.tally's `h`, `h2`, `hp`.
+- **The fault's asks against §3's table** (`tmp/spec-2.2/probes/fx3.tally` on the engine; each was `[work = *]` before):
+  - `h`: `[work = yes]: 400.00 PLN`, `[work = no]: 1 200.00 PLN`.
+  - `h2`: `(t = in1) [work = yes]: 400.00 PLN`, `[work = no]: 1 200.00 PLN`.
+  - `hp`: `(400.00 PLN, 2 000.00 PLN, 2 000.00 PLN)`, where it was `(400.00, 400.00, 2 000.00)`.
+  - `i`, `h3` and `hw` as before. Each of the three equals the table.
+- **The fault under `paths`** (`tmp/spec-2.2-build/g1/fx_paths.tally`: fx3 with `pay = round(amt[work] * u, …)`, `u = uniform(0, 4) to 0.01`, 40 paths, seed 7):
+  - refcore at the pin gives `mh [work = *]: 660 PLN (standard error 0; …)` against `mi` 775.2 and 2 325.6 PLN: the fault, as the tests session saw it.
+  - The engine answers both `mean(by_helper)` and `mean(by_inline)` `not implemented`: a random leg amount under `paths` isn't built. So whether the edge mends the shared cell there can't be checked on the engine yet.
+  - The engine's shared cell reads the same graph (`reach_axes`), which now reaches the move.
+- **Lines, `git diff --shortstat` per step, engine/crates/tally/src unless said:**
+  - S-6: 536 out, 168 in, net −368 (plan: about 250 out, 250 to 350 by §13.5). Over by N-6's mechanism and the observed side. Tests: 109 out, 9 in.
+  - S-7: 66 out, 23 in (plan: 60 to 100 out), then back by a8ec49f7. Net 0 at the head.
+  - The fault: 41 code lines in (`binds.rs` +33 −4, `defs.rs` +8; plan: about 40), and 87 of test.
+  - Group, 38a3cdff..HEAD over engine/crates: 27 files, 649 out, 301 in.
+- **Kernel files touched:** 13 (plan: 7).
+  - walk/legs.rs, plan.rs, agenda.rs, lows.rs (F5), fork.rs (F6), move_flows.rs, order.rs, state.rs, day.rs.
+  - book/members.rs, same.rs, reading.rs, observe.rs.
+  - `check fences: green, 1 step (30s)` after the commit that touched F5 and F6.
+- **Gating vectors:** none moved at the head. `m2_counts_ahead` and `m2_counts_days` hold the tests session's re-pinned counts, and `m2_forks`' floors hold, so S-6/a doesn't move again. S-7/c is empty: the fault's edge moved no gating line (no `readers-of`, `WARN-UNREAD`, `LOAD-CYCLE`, or `[<axis> = *]` split).
+- **Exceptions:** +0 (`git diff 38a3cdff..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Time:** about 40 minutes, about 18 of them checks.
+  - `check commit` four times: 209, 130, 89 (red, S-7) and 188 s.
+  - `check quick` four times: about 360 s.
+  - Fences 30 s; the CLI builds about 60 s.
+- **Usage:** 0.81 % of the week by `engine/tools/usage` (budget about 0.8 %).
+- **Checks on fd126be1's tree:** `check commit: green, 23 steps (188s)`.
+
+## STOP-REPORT 2026-11-18: S-7's removal refuses two gating texts that still write a converted flows
+
+- **Kind:** a test seems wrong (two texts the plan's step 2 assumes free of the cut form), and a plan ordering the build can't meet green.
+- **Where:**
+  - `engine/tests/integration/models/CMP-01.tally` l.243 (and `engine/spec/models/CMP-01.tally`): `rule base = flows(pln[p], flow_month) + (flows(eur[p], flow_month) in PLN at eur_pln half-up)`. Plan §5 and critic C-13: it moves only with the pin and T2.
+  - `engine/tests/m2/fixes/r15/lin/m.tally` l.115: `ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial`. The tests session's first chunk restated `L5_18_partial_not_linear` q6, not this file's `n_fx`.
+- **Rule or gate:** R-77 (never commit red), and plan §13.2 step 2 ("yes, before and after: no gating vector writes a cut form any more").
+- **What happens:** with 9af299a6, `engine/tools/check commit` stops `red at tests … 5 of 1090 tests are red`, each line `LOAD-PARSE` where refcore answers:
+  - `m0_load_models`, `m0_loadcheck_models`, `m0_format_models`: `I:M:CMP-01` (`LOAD-PARSE cannot parse: expected ")", got at (…/CMP-01.tally:243)`).
+  - `m2_fixes_tally_218_r15`: 8 of 10. `r15/mean_linear`, `walked_linear`, `not_linear`, `low_plain`, `share_plain`, `round_scale`, `zero_coefficient` and one more, each `LOAD-PARSE cannot parse: expected end of line, got in (m.tally:115)`.
+  - `m2_fixes_tally_218_d`: `d72/money_coefficient`, the same file.
+- **What I tried:** nothing on the tests' side, which isn't mine. A converted `flows` kept parsed beside its removal would be the second way to say a cut form the brief forbids. Committing red is T's alone.
+- **What I ask:**
+  - The tests session restates `r15/lin/m.tally`'s `n_fx` (as the sum of a def keyed by the movement, or drops the ask). Its other asks' stored answers can stay.
+  - CMP-01 moves with the pin and T2, as planned.
+  - Then the builder's next turn re-applies 9af299a6 unchanged, with the refusal vectors' words.
+  - For the lead: plan §13.2 step 2 can't remove S-7 green before T2 while CMP-01 writes the form. Either S-7's removal waits for T2 in every round like this, or CMP-01's checks are logged red on T2's commit.
+- **State:** last green commit fd126be1 (`check commit: green, 23 steps (188s)`), pushed with this entry; nothing uncommitted. S-6 and the fault are in; S-7 is held by a8ec49f7.
