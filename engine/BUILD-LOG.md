@@ -4379,3 +4379,49 @@ On `build/2.2` at d42bd950 (the STOP-REPORT on S-7 ruled P9; G1's spec and refco
 - **What I tried:** nothing in the code. Engine and refcore agree, and narrowing the edge to the movement a key names is what P11 ruled out.
 - **What I ask:** the spec writer's ruling. Either the refusal stands and the migration note says a def read at a shifted key needs its guard once its key ranges over a kind whose movements read the reader (the guarded form above loads), or `recurrences` leaves the key's edges out of `reaches`, in refcore and the spec first.
 - **State:** last green commit 7a4c4cb6 (`check commit: green, 23 steps (218s)`), pushed with this entry; nothing uncommitted.
+
+## 2026-11-18 tally 2.2, build group 2, item 1: S-3, a balance reading at a day's start or end (issue #211)
+
+On `build/2.2` at 87b44ef7 (T's G2 vectors merged). G2's spec and refcore are the snapshot `tmp/spec-2.2-build/g2-new` (`git archive 300cda08`). Plan `tmp/spec-2.2/plan.md` §7. `check commit` at the start: `check commit: green, 23 steps (116s)`.
+
+- **361a9074: the instant `after m` of a `stated` or `opening` row is cut.** Out, by file:
+  - `syntax/tree.rs`: `Instant` is a struct (`day`, `edge`), no `After` variant; `syntax/item.rs` its parse; `syntax/parse.rs` `after` no longer ends a value before its clause; `syntax/canon_order.rs` the after-rank of the canonical order.
+  - `model/decl.rs`: `RowInstant` folded into the syntax's `Instant`; `RowsHold.after`. `load/rows.rs` `row_instant`'s after arm; `load/strata.rs` `after_readings` and `after_keys` (the `LOAD-ORDER` form for a reading, and its `LOAD-KEY`); `load/parts.rs`, `load/overlap.rs`, `load/scenarios.rs` the variant's arms.
+  - K `book/reading.rs`: `Stands`, `AfterDay(s)`, `after_missing`, `stands_in`, `last_standing_day`, `stands_text`, `after_days`, `reading_day`, `standing_day`, `instance_day`; `Seen.stands` is `Seen.edge`; `readings`, `seen_readings`, `first_readings` lose the after days. The pad's refusal of a reading after `m` breaking (`RUN-RECORD`'s two forms).
+  - K `walk/readings.rs`: `AFTER_SUB`, `touched_inside`, `readings_after`, `after_missing`, `apply_after`, the window end's reading (`window_end` keeps the unperm and the hole).
+  - K `walk/agenda.rs` (P8-14): `schedule_after`, `Booked`, `last_standing_in`, `booked_rank`; `Act::WindowEnd` carries no day window.
+  - K `walk/state.rs` `Walk.after`, `after_at`; `walk/order.rs` the run's call; `walk/day.rs` the act's arm; `walk/modelled.rs` m's leg after a reading after m; `walk/reads.rs` `run_status`, `free_main_walk` (the judgement by a movement); `walk/lows.rs` (F5), `walk/projection.rs`, `book/ledger.rs`: the after days.
+  - `eval/read.rs`: `after_at`, `after_text`, `after_on_days`, `row_after_day` and their arms in last, since and the carry; `eval/trace.rs`, `ask/walked.rs` (the register's `after <m>`), K `read/gap.rs`, K `read/rows.rs` (`instant_day`).
+  - The reading's judgement by a movement goes whole: m with no instance, m's day a hole or a window, a row standing in for m, m before the run.
+- **Beyond the plan's list, with why:**
+  - A reading now always stands in a group of the sign rule (start: the day's first batch; end: the closing group; an opening before the start: the batch). So `apply_stated`'s and `sign_anchor`'s branch for a reading outside every group, with its held `Change::Bad`, is `ENGINE-INVARIANT` now.
+  - `walk/lows.rs` (F5), `order.rs`, `projection.rs`, `reads.rs`, `book/ledger.rs`, `eval/trace.rs`, `read/gap.rs`, `load/overlap.rs`, `load/parts.rs`, `load/scenarios.rs`: each read the after day or matched the variant.
+  - The crate's texts of the form: `tests/group3_cases.rs` B6, B8, N-a (2), N-b (2) dropped; B5 and N-f restated (a reading `at 2026-03-31 end`; N-f without version r and ask l), each answer refcore's at 300cda08. `tests/group4_cases.rs`'s r16 test dropped. `tests/load_cases.rs` after-plan, after-decision, after-obs are one after-cut case (`LOAD-PARSE`).
+- **Listed and kept:**
+  - The change kind for a window's end, `Change::Unperm`, `Act::WindowEnd`, its arms in K `walk/flows.rs`, and K `hole/questions.rs` `Hole::without`: refcore at 300cda08 keeps `dec_win_end`'s unperm and hole part (only the reading went).
+  - `load/rows.rs` `row_instant`'s words, `needs start, end or after`: STOP-REPORT below.
+  - The clause `after m` on a move, and `load/binds.rs`'s key edge with its tests (the brief).
+- **Refusals against refcore at 300cda08** (`tmp/spec-2.2-build/g2/`):
+  - `r_after.tally`: both `refused: LOAD-PARSE cannot parse: expected end of line, got after (r_after.tally:26)`.
+  - `r_at.tally`: refcore `LOAD-INSTANT balance reading stated at 2026-01-10 needs start or end`; the engine `… needs start, end or after` (held).
+  - `r_end.tally`, the twin at `end`: both `b: 900.00 PLN`.
+- **Sweep** (engine, the engine before at 87b44ef7, refcore at 300cda08; 67 texts of `tmp/spec-2.2/probes/` and `inputs/review/probes/`): no line turned same → different. The engine moved on `a1_after`, `a1b`, `a2` only, each now refcore's `LOAD-PARSE … got after`. 14 differ before and after alike: 10 `not implemented`, `u1_any`, `c_outread2`, `c_outread3` (S-1), `c_w` (bare `windows`: `expected each` against refcore's `expected more text`, S-4's ground).
+- **What stays by ruling, checked:** `u1_one.tally` `worth: 110 PLN` (P8), engine = before = refcore. An outside place's residuals (`g2/out_resid.tally`, `residuals world 2026-02`) print its ledger per unit, `ledger EUR:` and `ledger PLN:` (P12), engine = before = refcore.
+- **Lines, `git diff --shortstat 87b44ef7 361a9074`:** src 27 files, 1 144 out, 243 in (plan: about 870 out). Over by the beyond list. Tests 3 files, 497 out, 12 in.
+- **Kernel files touched:** 13 (plan: 11): walk/agenda.rs (P8-14), day.rs, lows.rs (F5), modelled.rs, order.rs, projection.rs, readings.rs, reads.rs, state.rs; book/ledger.rs, reading.rs; read/gap.rs, rows.rs. The plan's walk/flows.rs and hole/questions.rs are kept, as above.
+- **Gating vectors:** none moved. The two stored lines with LOAD-INSTANT's words hold (STOP-REPORT below).
+- **Exceptions:** +0 (`git diff 87b44ef7..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **For the lead:** `engine/ARCHITECTURE.md` l.226 still says a reading is applied "right after the movement it" names; the guard refuses the build role's edit there.
+- **Time:** about 30 minutes, about 7 of them checks: `check commit` 116 and 184 s, `check quick` 79 s (and one red at clippy-lib, 6 s), fences 25 s; the sweeps about 3 minutes.
+- **Usage:** 0.85 % of the week by `engine/tools/usage tmp/spec-2.2-build/g2-ids.txt` (stop at 3.2 %).
+- **Checks:** on 361a9074's tree `check commit: green, 23 steps (184s)`; after it `check fences: green, 1 step (25s)`.
+
+## STOP-REPORT 2026-11-18: LOAD-INSTANT's new words would turn two gating stored lines red
+
+- **Kind:** a test seems wrong (stored before the round): two gating lines print 2.1.8's words.
+- **Where:** `load/rows.rs` `row_instant` l.651; `engine/tests/m1/vectors.refcore` l.225889 (`l5_19_load_instant.tally:24`), `engine/tests/codes/m0.refcore` l.3517 (`base.tally:44`), and `engine/tests/map/codes.tsv` l.139's form.
+- **Rule or gate:** R-77 (never commit red); plan §13.2 (a stored line's move is T2's, Logged-Red, then the builder's).
+- **What happens:** refcore at 300cda08 (`loader.py` l.2001) says `LOAD-INSTANT balance reading <x> at <D> needs start or end`. Both stored lines end `needs start, end or after`, so the new words turn `m1` and `m0`'s codes red under `check commit`.
+- **What I tried:** nothing on the tests' side. The engine keeps 2.1.8's words; everything else of S-3 is in, green.
+- **What I ask:** T2 re-stores the two lines (and the map's form) on refcore at 300cda08 with `Logged-Red:` on their ids. Then the builder changes `row_instant`'s message to `needs start or end`, one line.
+- **State:** last green commit 361a9074 (`check commit: green, 23 steps (184s)`); this entry is the only change after it.
