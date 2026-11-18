@@ -1,0 +1,40 @@
+# tally 2.2 (CHANGES.md 2.2-10, pick P14): the fault's fix is at the trimming, and the dependency graph is tally
+# 2.1.8's. A def keyed by an event kind whose at binds over the kind, an ask with no law: LOAD-LAWDATE, as tally 2.1.8
+# refuses it (an edge for the def's key had let it answer). Expect: tally 2.1.8's refcore, byte for byte.
+=== m.tally
+model n3
+  tally 2
+  on 2025-04-01
+  start 2025-03-01
+  end 2025-03-31
+  note "N-3 probe: a def keyed by an event kind whose at binds over the kind, with an observed input; an ask with no law reads it."
+
+source s "s"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2025-03-01..
+place world: outside lives 2025-03-01..
+input bank: observed
+input mo: month
+input d1: date
+input amt: money DUK
+input f: money DUK
+
+def fee[t in transfers]: money DUK = f at max(x.day for x in transfers over mo)
+
+move m1: transfers
+  on d1
+  leg cash from world to konto amount amt
+
+ask q: sum(fee[t] for t in transfers over mo)
+
+version v
+  cite s
+  governs always
+  known 2025-03-01
+  mo = 2025-03 "s"
+  d1 = 2025-03-05 "s"
+  amt = 10.00 "s"
+  f = 1.00 "s"
+  opening[konto] = 0.00 at 2025-03-01 start "s"
+=== expect
+refused: LOAD-LAWDATE ask q reaches fee, whose at reads law-dated facts at its reader's law date, without law (L §4.3) (m.tally:24)

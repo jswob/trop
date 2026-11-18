@@ -1354,13 +1354,15 @@ class Engine:
     # -- defs (L §5.11) ----------------------------------------------------------------
     def def_axes(self, qid):
         """The axes a def's cone reaches, or None when the cone reaches movements or balances (whose timeline
-        carries every axis): E §3.2, the context is trimmed to what the item can depend on."""
+        carries every axis): E §3.2, the context is trimmed to what the item can depend on. A cone that holds a def
+        keyed by a movement reads the movements its key ranges over, which the dependency graph doesn't record, so
+        it is no plain cone (tally 2.2, 2.2-10)."""
         cache = self.m.__dict__.setdefault('_def_axes', {})
         if qid in cache:
             return cache[qid]
         ch = getattr(self.m, 'checker', None)
         out = None
-        if ch is not None:
+        if ch is not None and not self.movement_keyed_cone(qid):
             seen = set()
             stack = [('def', qid)]
             axes = set()
@@ -1388,6 +1390,43 @@ class Engine:
         cache[qid] = out
         return out
 
+    def movement_keyed_cone(self, qid):
+        """Whether def qid's cone holds a def whose header key ranges over an event kind (a subkind's included): its
+        cell reads those movements (tally 2.2, 2.2-10; E §3.2, §7 step 1)."""
+        cache = self.m.__dict__.setdefault('_movement_keyed_cone', {})
+        if qid in cache:
+            return cache[qid]
+        ch = getattr(self.m, 'checker', None)
+        edges = ch.edges if ch is not None else {}
+        seen = set()
+        stack = [('def', qid)]
+        out = False
+        while stack and not out:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            if x[0] == 'def' and self.keyed_by_movement(x[1]):
+                out = True
+            stack.extend(edges.get(x, {}))
+        cache[qid] = out
+        return out
+
+    def keyed_by_movement(self, qid):
+        """Whether def qid's header key ranges over an event kind, a subkind's included (L §5.6, §5.19). A def's key
+        can't range over an observed input's rows (LOAD-KEY), so a kind is the one case."""
+        d = self.m.defs.get(qid)
+        for b in (d.binds if d is not None else ()):
+            k = b.dom[1] if b.dom[0] == 'kind' else None
+            seen = set()
+            while k in self.m.kinds and k not in seen:
+                seen.add(k)
+                kn = self.m.kinds[k]
+                if kn.spec == 'event':
+                    return True
+                k = kn.parent if kn.spec == 'sub' else None
+        return False
+
     def read_def(self, info, keys, ctx):
         w = ctx.walk
         if ctx.wp is not None and w is not None and not w.proj and info.id in getattr(self.m, 'walk_bound', ()) and \
@@ -1405,8 +1444,9 @@ class Engine:
 
     def _read_def(self, info, keys, ctx):
         self.index_assumed(info)
-        if ctx.path is not None and info.id not in self.m.random_items:
-            # a cell no random fact reaches is shared by every path (E §7 step 1)
+        if ctx.path is not None and info.id not in self.m.random_items and not self.movement_keyed_cone(info.id):
+            # a cell no random fact reaches is shared by every path (E §7 step 1); one whose cone holds a def keyed by
+            # a movement reads that movement, which a path may draw (tally 2.2, 2.2-10)
             ctx = ctx.but(path=None)
         if ctx.axes:
             # an item that reaches no axis has no axis options in its context (E §3.2)

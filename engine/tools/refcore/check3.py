@@ -286,30 +286,6 @@ def m_movement_field(self, n, t, sc):
 
 # -- bindings over movements (L §5.6, §5.7, §5.19) --------------------------------------------------------------
 
-def m_kind_bind_edges(self, sc, kinfo):
-    """What a variable over an event kind reads: the kind, each move of it and of its subkinds, and the observed
-    inputs, whose rows are its movements (readers-of, E §10; tally 2.1.7 R7). An aggregate's binding and a def's own
-    key record the same edges, so the def's cell is trimmed to what it can depend on (E §3.2; tally 2.2, the fault
-    of a def keyed by a movement)."""
-    m = self.m
-    self.edge(sc, ('kind', kinfo.id), 'bind')
-    sub = kinfo.subtree(m)
-    for qid, mi in m.moves.items():
-        if self.move_kind(mi) in sub:
-            self.edge(sc, ('move', qid), 'bind')
-    for qid, inf in m.inputs.items():
-        if inf.observed:
-            self.edge(sc, ('input', qid), 'bind')
-
-
-def m_def_key_edges(self, d, sc):
-    """A def's header key over an event kind reads what a binding over the kind reads (m_kind_bind_edges)."""
-    for b in d.binds:
-        kinfo = self.m.kinds.get(b.dom[1]) if b.dom[0] == 'kind' else None
-        if kinfo is not None and kinfo.spec == 'event':
-            self.kind_bind_edges(sc, kinfo)
-
-
 def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
     """A binding over an event kind or an observed input's rows: needs on or over (LOAD-ALIVE), but a fill's key bind
     (L §5.6, round 18 C1-38)."""
@@ -318,14 +294,20 @@ def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
         raise LoadError('LOAD-ALIVE', 'binding over %s needs on or over' % (kinfo.id if kinfo else obs.id), b.loc)
     if kinfo is not None:
         b._dom = ('event', kinfo.id)
-        self.kind_bind_edges(sc, kinfo)
+        # the binding reads its kind, subkinds included (readers-of, E §10; tally 2.1.7 R7)
+        self.edge(sc, ('kind', kinfo.id), 'bind')
         sub = kinfo.subtree(m)
         for qid, mi in m.moves.items():
-            if self.move_kind(mi) in sub and mi.decision:
-                self.mark(sc, 'legs', ('move', qid))
+            if self.move_kind(mi) in sub:
+                self.edge(sc, ('move', qid), 'bind')
+                if mi.decision:
+                    self.mark(sc, 'legs', ('move', qid))
         if 'pads' in sub:
             # a binding over pads is a running read (L §5.14.1 Running reads)
             self.mark(sc, 'legs', ('kind', 'pads'))
+        for qid, inf in m.inputs.items():
+            if inf.observed:
+                self.edge(sc, ('input', qid), 'bind')
         ty = T.key(kinfo.id)
         # a binding over an event kind needs no covered guard: its plan instances stand on the days no statement
         # covers (L §5.19, round 7); LOAD-COVERED guards an aggregate of an observed input's rows
