@@ -745,16 +745,6 @@ version card_2026
                 "LOAD-KEY wrong number of keys for pay (a.tally:59)",
             ),
             (
-                flowed,
-                "def flowed: money PLN = flows(world, y) in PLN at amt half-up",
-                "LOAD-UNIT flows in PLN at amt: the rate is money PLN (a.tally:59)",
-            ),
-            (
-                flowed,
-                "def flowed: money PLN = flows(konto_eur, y) in PLN at fx half-up",
-                "loaded",
-            ),
-            (
                 worth,
                 "def worth: num PLN = value(amt, day) in PLN",
                 "LOAD-UNIT value of money PLN, which is not a place (a.tally:57)",

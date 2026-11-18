@@ -266,7 +266,7 @@ impl P<'_> {
         })))
     }
 
-    /// `flows(x, span [, for k]) [in CUR at fx MODE]` (L §2.3 `flowsx`, parse rule 4).
+    /// `flows(x, span [, for k])` (L §2.3 `flowsx`).
     fn flows(&mut self) -> Result<Expr, Stop> {
         self.skip(1)?;
         self.expect("(")?;
@@ -282,21 +282,10 @@ impl P<'_> {
         };
         self.expect(")")?;
         self.close()?;
-        let convert = if self.at("in", 0) && self.kind(1) == Some(&Kind::Cur) {
-            self.skip(1)?;
-            let cur = self.cur()?;
-            self.expect("at")?;
-            let rate = self.reference()?;
-            let mode = self.mode()?;
-            Some((cur, rate, mode))
-        } else {
-            None
-        };
         Ok(Expr::Flows(Box::new(Flows {
             target,
             span,
             for_key,
-            convert,
         })))
     }
 

@@ -220,15 +220,13 @@ impl P<'_> {
     }
 
     /// Marks an operand of an operator node for the reprint (L §2.4, refcore's `forced`): a
-    /// `… to u` (and, in a comparison or a membership, a converted `flows` or a `value`) is
-    /// always parenthesised, so its parentheses stay, and written bare it gets them. The
-    /// operand runs from the token at `from` to the one taken last.
+    /// `… to u` (and, in a comparison or a membership, a `value`) is always parenthesised, so
+    /// its parentheses stay, and written bare it gets them. The operand runs from the token at
+    /// `from` to the one taken last.
     fn force(&self, operand: &Expr, from: usize, under: Under) {
         let always = |expr: &Expr| {
             matches!(expr, Expr::To(..))
-                || (under == Under::Comparison
-                    && (matches!(expr, Expr::Value(_))
-                        || matches!(expr, Expr::Flows(f) if f.convert.is_some())))
+                || (under == Under::Comparison && matches!(expr, Expr::Value(_)))
         };
         if let Expr::Paren(inner) = operand {
             if always(inner) {

@@ -1,8 +1,8 @@
 //! A section's parentheses in the canonical format: a pair stays only where the parse needs it,
 //! and the pairs L §2.4 always prints stay or are added.
 //! Spec: L §2.4 (Expressions: "parentheses only where precedence needs them, … a `... to u`
-//! call used as an operand and a converted flows or value inside a comparison (parse rule 4) are
-//! always parenthesised").
+//! call used as an operand and a converted value inside a comparison (parse rule 4) are always
+//! parenthesised"; tally 2.2 cuts the converted `flows`).
 //! Twin: engine/tools/refcore/canon.py (`canon_block`, `reparse`, `sig`, `forced`).
 //! Invariants: a pair is taken out only when the section parsed without it is the same tree,
 //! parentheses aside (a blind parse, refcore's `sig`); each try parses the section once, so the

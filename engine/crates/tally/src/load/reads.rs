@@ -464,35 +464,17 @@ impl Checker {
     }
 
     /// `flows(x, span …)`: of a move (its leg named, or its one leg) or of a place; its unit
-    /// the leg's or the place's, or the currency it converts to (refcore's `m_t_flows`).
-    /// L §5.14.3, §5.14.1.
+    /// the leg's or the place's (refcore's `m_t_flows`). L §5.14.3, §5.14.1.
     pub(super) fn flows(&mut self, m: &Reality, scope: &Scope, flows: &Flows, depth: u32) -> Typed {
         let hit = flow_move(&flows.target)
             .filter(|(id, _, _)| !scope.is_var(id) && m.names.kind(id) == Some(NameKind::Move));
-        let mut ut = match hit {
+        let ut = match hit {
             Some((id, keys, leg)) => self.move_flows(m, scope, id, keys, leg, depth)?,
             None => self.place_flows(m, scope, flows, depth)?,
         };
         self.span(m, scope, &flows.span, depth)?;
         if let Some(key) = &flows.for_key {
             self.expr(m, scope, key, None, depth)?;
-        }
-        if let Some((cur, fx, mode)) = &flows.convert {
-            if !m.currencies.contains_key(cur) {
-                return Err(uerr(format!("money in an undeclared currency {cur}")));
-            }
-            let ft = self.expr(m, scope, fx, None, depth)?;
-            let rate =
-                matches!(ft, Ty::Unseen) || matches!(&ft, Ty::Num(unit, _) if !unit.is_one());
-            if !rate {
-                return Err(uerr(format!(
-                    "flows in {cur} at {}: the rate is {}",
-                    text(fx),
-                    ft.show()
-                )));
-            }
-            self.mode_arg(m, scope, "flows", mode, depth)?;
-            ut = Ty::Money(cur.clone());
         }
         Ok(ut)
     }
@@ -566,28 +548,27 @@ impl Checker {
         Ok(ut)
     }
 
-    /// `flows(x, …)` of a place: `LOAD-UNIT` for a place of unit `any` that doesn't convert
-    /// (refcore's `m_t_flows`, its place arm). L §5.14.3.
+    /// `flows(x, …)` of a place: `LOAD-UNIT` for a place of unit `any` (refcore's `m_t_flows`,
+    /// its place arm). L §5.14.3.
     fn place_flows(&mut self, m: &Reality, scope: &Scope, flows: &Flows, depth: u32) -> Typed {
         let target = &flows.target;
         let t = self.place_arg(m, scope, target, "flows", depth)?;
         let ut = place_type_unit(m, scope, &t, target)?;
-        if flows.convert.is_none() {
-            let held = if let Some(thing) =
-                literal_place(m, scope, target)?.and_then(|n| m.things.get(&n))
-            {
+        let held =
+            if let Some(thing) = literal_place(m, scope, target)?.and_then(|n| m.things.get(&n)) {
                 m.place_unit(thing)
             } else if let Ty::Key(ix) = &t {
                 m.kind_unit(ix).map(str::to_owned)
             } else {
                 None
             };
-            if held.as_deref() == Some("any") {
-                return Err(uerr(format!(
-                    "flows of {}, a place of unit any: it sums no one unit; convert it (in CUR at fx mode)",
-                    text(target)
-                )));
-            }
+        if held.as_deref() == Some("any") {
+            // refcore's words at the pin (check3.py `m_t_flows`), which still name the cut
+            // conversion
+            return Err(uerr(format!(
+                "flows of {}, a place of unit any: it sums no one unit; convert it (in CUR at fx mode)",
+                text(target)
+            )));
         }
         let place = place_target(m, scope, target)?;
         self.mark(&scope.item, Mark::Flows, place);

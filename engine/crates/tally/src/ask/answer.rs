@@ -1631,7 +1631,6 @@ fn extra_parts(x: &Expr) -> Vec<&Expr> {
         Expr::Flows(flows) => {
             out.extend([&flows.span.from, &flows.span.to].into_iter().flatten());
             out.extend(flows.for_key.iter());
-            out.extend(flows.convert.iter().flat_map(|(_, a, b)| [a, b]));
         }
         Expr::Covered(pair) => out.extend([&pair.1.from, &pair.1.to].into_iter().flatten()),
         Expr::AsIf(_, pins) => {
