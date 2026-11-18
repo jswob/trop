@@ -1,0 +1,3 @@
+scenario cy2 over cy1
+  tally 2
+  from 2027-01-01

@@ -1,0 +1,4 @@
+part zz_m3_probe
+  tally 2
+
+ask zz_m3_probe: 1 in zz_nowhere

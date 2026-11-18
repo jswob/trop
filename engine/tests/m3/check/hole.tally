@@ -1,0 +1,9 @@
+part hole
+  tally 2
+  note "an input with no row: run answers a hole, load doesn't see it"
+
+input missing: money PLN
+
+def from_missing: money PLN = missing + amt at reader
+
+ask q_hole: from_missing law 2026-03-01

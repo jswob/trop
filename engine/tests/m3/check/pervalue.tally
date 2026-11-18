@@ -1,0 +1,7 @@
+part pervalue
+  tally 2
+  note "a division by zero: run refuses the value, load doesn't see it"
+
+def ratio: num = amt / (amt - amt) at reader
+
+ask q_div: ratio law 2026-03-01

@@ -1,0 +1,6 @@
+part reads_scen
+  tally 2
+
+def leak: money PLN = extra_amt + amt at reader
+
+ask q_leak: leak law 2026-03-01

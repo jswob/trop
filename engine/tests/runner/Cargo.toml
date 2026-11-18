@@ -204,3 +204,11 @@ name = "m2_counts"
 path = "milestone/m2_counts.rs"
 test = false
 required-features = ["counters"]
+
+# M3: `check` (OPERATIONS.md §2.3) on M0's 315 text sets and the fixtures of m3/check/
+# (m3/check.vectors, predicted from refcore's run until refcore's check confirms it, pick P8;
+# MILESTONE-M3.md rows 2 and 3); `test = false` until M3 gates.
+[[test]]
+name = "m3_check"
+path = "milestone/m3_check.rs"
+test = false

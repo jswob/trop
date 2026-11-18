@@ -1,0 +1,9 @@
+part alone_forms
+  tally 2
+  note "an ask naming a world not loaded through diff, a scenario pin and as if (L §6.4 Asks are the exception)"
+
+ask q_diff: diff(doubled) in nowhere_c against plain law 2026-03-01
+
+ask q_with: doubled with scenario nowhere_d law 2026-03-01
+
+ask q_asif: doubled as if {scenario nowhere_e} law 2026-03-01

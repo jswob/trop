@@ -1,0 +1,9 @@
+scenario alpha over plain
+  tally 2
+  from 2027-01-01
+
+version alpha_rows
+  cite card
+  governs 2027..
+  known 2026-02-01
+  nothing_there = 1 "a row of an input no file declares"
