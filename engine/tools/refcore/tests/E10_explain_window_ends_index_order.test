@@ -1,6 +1,8 @@
 # tally 2.1.8 P50, E §4.1, §10 (the last review input, k9k10): an explain of a balance lists the movements of one day
 # with their keys in index order, never as text: at the window's end 2026-03-25 save[k9] comes before save[k10], as
-# on its first day. 00a00b22 listed save[k10] first there.
+# on its first day. 00a00b22 listed save[k10] first there. tally 2.2 (2.2-3): the two readings, `after save[k9]` and
+# `after save[k10]`, are stated at the window's end, 2026-03-25 end, so they anchor there and the explain starts from
+# konto's reading.
 === m.tally
 model t
   tally 2
@@ -38,24 +40,24 @@ version r
   covers konto, sav
   anchor konto
   anchor sav
-  stated[konto] = 700.00 PLN after save[k9] "after k9"
-  stated[sav] = 25.00 PLN after save[k10] "after k10"
+  stated[konto] = 700.00 PLN at 2026-03-25 end "after k9"
+  stated[sav] = 25.00 PLN at 2026-03-25 end "after k10"
 
 ask b: bal(konto, 2026-03-25), bal(konto, 2026-03-31), bal(sav, 2026-03-31)
 ask e: explain bal(konto, 2026-03-31)
 ask l: last(stated[konto], 2026-03-31)
 === expect
 b: (?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9]), ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9]), ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9]))
+  anchor: konto 2026-03-25 end, stated 700.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
+  anchor: sav 2026-03-25 end, stated 25.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   cut 2026-06-10
 e: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   balance of konto (PLN) at the end of 2026-03-31
-  from: opening v:opening[konto] = 1 000.00 PLN, 2026-03-01 start (version v, source s, locator "s")
-  2026-03-16:
-    save[k9]: hole: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
-    save[k10]: hole: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10])
+  from: anchor r:stated[konto] = 700.00 PLN, 2026-03-25 end (version r, source s, locator "after k9"), gap role anchor, gap ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   2026-03-25:
     save[k9]: hole: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
     save[k10]: hole: ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10])
+  anchor: konto 2026-03-25 end, stated 700.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]" (save[k10]) ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]" (save[k9])
   cut 2026-06-10
 l: 700.00 PLN
   held: stated[konto] = 700.00 PLN (r), read for 2026-03-31

@@ -1757,7 +1757,7 @@ def m_lots_holes(self, sups, dems, s, ctx):
         return {}
     opening = {}
     for iid, place, unit, r in self.readings(self.tctx(ctx)):
-        if iid != 'opening' or r.instant[0] == 'after' or r.instant[0] != S:
+        if iid != 'opening' or r.instant[0] != S:
             continue
         val = r.val
         if isinstance(val, Num):

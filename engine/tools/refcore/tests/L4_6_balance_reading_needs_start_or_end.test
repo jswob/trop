@@ -1,6 +1,5 @@
-# GD-10, C4-2 (round 19, writer 10): L §4.6 "A reading `after m` with m an observation or a plan is refused at
-# load, which sees m's class (LOAD-ORDER)"; L §8.3 `<x> after <m>: <m> is a plan or an observation`. pay is a plan (it
-# reads no place). E4_2_refused_pad_after_decision.test reads after a decision and loads.
+# tally 2.2 (CHANGES.md 2.2-3, choice C-5), L §4.6, §8.3 LOAD-INSTANT: a balance reading at a bare day is refused,
+# and the message offers the two instants that load: `needs start or end` (2.1.8: `needs start, end or after`).
 === m.tally
 model t
   tally 2
@@ -28,8 +27,8 @@ version v
   amt = 100.00 PLN
   dom = 5
   opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
-  stated[konto] = 900.00 PLN after pay[2026-01] "s"
+  stated[konto] = 900.00 PLN at 2026-01-31 "s"
 
 ask q: bal(konto, 2026-01-31)
 === expect
-refused: LOAD-ORDER stated[konto] after pay[2026-01]: pay[2026-01] is a plan or an observation (m.tally:27)
+refused: LOAD-INSTANT balance reading stated at 2026-01-31 needs start or end (m.tally:27)

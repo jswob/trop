@@ -1032,21 +1032,6 @@ class Engine:
                 continue
             if r.instant is not None:
                 rd = r.instant[0]
-                if rd == 'after':
-                    # a reading after m stands on m's day as the walk books m (L §4.6; tally 2.1.8 R16): a hole where
-                    # that is one, a window's days imprecise inside it, refused where m doesn't exist
-                    rd = self.after_day(r, info.id, ctx)
-                    if isinstance(rd, Hole):
-                        undecided.append(rd)
-                        continue
-                    if isinstance(rd, Iv):
-                        probe = instant if instant is not None else last_before
-                        if probe is None or probe < rd.lo or (instant is not None and instant > rd.hi):
-                            continue
-                        if instant is not None or probe < rd.hi:
-                            undecided.append(self.imprecise(rd, 'the day of %s' % self.after_text(r)).hole)
-                            continue
-                        rd = rd.hi
                 if instant is not None and rd != instant:
                     continue
                 if last_before is not None and not (isinstance(rd, datetime.date) and rd <= last_before):
@@ -1556,12 +1541,6 @@ class Engine:
             # L §4.6 Readings / L §8.1 HOLE-NOREADING: "<x>[k] has no reading on or before <d>"
             org = self.origin(info, keys)
             return Hole([('%s has no reading on or before %s' % (org, d), org)])
-        for inf, ks, t, cands in sides:
-            for c in cands:
-                rd = self.after_day(c, inf.id, ctx) if c.instant[0] == 'after' else None
-                if isinstance(rd, Iv):
-                    # since reads the day itself: a window's is imprecise (L §4.4)
-                    return self.imprecise(rd, 'the day of %s' % self.after_text(c)).hole
         # the latest reading not removed by a replace to none (carry_latest; #169-c)
         hit = self.carry_latest(sides, ctx)
         if hit is None:
@@ -1569,17 +1548,9 @@ class Engine:
             return Hole([('%s has no reading on or before %s' % (org, d), org)])
         return Int((d - hit[0]).days)
 
-    def after_text(self, r):
-        from .moves import instant_text
-        return instant_text(r)
-
     def reading_on(self, r, info, ctx):
-        """A reading's day: its instant's, or for a reading after m the day m gives it (after_day; a window's last
-        day once the read is past it)."""
-        if r.instant[0] != 'after':
-            return r.instant[0]
-        rd = self.after_day(r, info.id, ctx)
-        return rd.hi if isinstance(rd, Iv) else rd
+        """A reading's day: its instant's."""
+        return r.instant[0]
 
     # -- defs (L §5.11) ----------------------------------------------------------------
     def def_axes(self, qid):

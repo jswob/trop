@@ -416,7 +416,7 @@ class P:
         if tok.s in (',', '='):
             # `rule base governs 2028.. = …` (L §2.2 rulebody: ["governs" lspan] "=" …)
             return True
-        if tok.t == 'ID' and tok.s in ('known', 'at', 'after', 'governs', 'priced', 'lives'):
+        if tok.t == 'ID' and tok.s in ('known', 'at', 'governs', 'priced', 'lives'):
             return True
         return False
 
@@ -1577,9 +1577,7 @@ class P:
                 pos = 'start'
             elif self.accept('end'):
                 pos = 'end'
-            instant = self.N('instant', day=d, pos=pos, after=None)
-        elif self.accept('after'):
-            instant = self.N('instant', day=None, pos=None, after=self.ref())
+            instant = self.N('instant', day=d, pos=pos)
         if self.at_t('STR'):
             loc = self.string()
         return gov, known, instant, loc

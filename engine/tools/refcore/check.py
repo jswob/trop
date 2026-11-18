@@ -207,7 +207,6 @@ class Checker:
         self.check_moves_graph()
         self.parts_walk_bound()
         self.check_arrival_reads()
-        self.check_after_readings()
         self.check_seen_days()
         self.check_seen_day_limits()
         self.check_literal_ranges()

@@ -2145,60 +2145,6 @@ def m_check_schedules(self):
             pass
 
 
-def m_check_after_readings(self):
-    """L §4.6 Readings (round 19, GD-10, C4-2): "A reading `after m` with m an observation or a plan is refused at load,
-    which sees m's class (LOAD-ORDER): the batch has no order (§5.14.2, P-7). The refusal is by class, so it holds for
-    an observation booked at a decision's point too"; L §8.3 `<x> after <m>: <m> is a plan or an observation`."""
-    m = self.m
-    rows = []
-    for iid in ('stated', 'opening'):
-        inf = m.inputs.get(iid)
-        if inf is None:
-            continue
-        for r in inf.rows:
-            ins = getattr(r, 'instant', None)
-            if not (isinstance(ins, tuple) and ins and ins[0] == 'after'):
-                continue
-            node = ins[1]
-            base = node.obj if node.k == 'index' else node
-            if base.k != 'name':
-                continue
-            rows.append((iid, r, node, m.moves.get(base.id), base.id in m.inputs and m.inputs[base.id].observed))
-    # E §3.1's passes: a row's keys are pass 3's, the readings `after` a decision pass 5's, so every row's key check
-    # comes before any order check (group 3's fix review N-b: `after rent[ka]` with rent a plan is LOAD-KEY)
-    for iid, r, node, mv, obs in rows:
-        if mv is not None and node.k == 'index':
-                # a key load sees that isn't a key of m's index (L §4.6, §8.3 R5; tally 2.1.8 R16, #175)
-                for kn, b in zip(node.keys, mv.binds):
-                    kv = _after_key(kn)
-                    dom = getattr(b, 'dom', None)
-                    if kv is None and kn.k == 'name' and getattr(kn, '_r', None) is None and \
-                            isinstance(dom, tuple) and dom[0] == 'index':
-                        # a bare key of a list index, which load sees too (B6 of group 3's review: kz of ks)
-                        from .values import Key
-                        kv = Key(dom[1], kn.id)
-                    if kv is not None and isinstance(dom, tuple) and dom[0] == 'index' and dom[1] in m.indexes \
-                            and m.indexes[dom[1]].pos(kv) is None:
-                        raise LoadError('LOAD-KEY', '%s%s after %s: %s is not a key of %s' % (
-                            iid, r.keys_text(), _txt(node), _txt(kn), dom[1]), r.loc)
-    for iid, r, node, mv, obs in rows:
-        if (mv is not None and not mv.decision) or obs:
-            raise LoadError('LOAD-ORDER', '%s%s after %s: %s is a plan or an observation' % (
-                iid, r.keys_text(), _txt(node), _txt(node)), r.loc)
-
-
-def _after_key(kn):
-    """A literal key of a reading's `after m[k]` as a key value, or None where load doesn't see it."""
-    from .dates import month_period, quarter_period, year_period
-    if kn.k == 'month' and getattr(kn, '_r', None) is None:
-        return month_period(*kn.v)
-    if kn.k == 'quarter' and getattr(kn, '_r', None) is None:
-        return quarter_period(*kn.v)
-    if kn.k == 'date':
-        return kn.v
-    return None
-
-
 def m_check_proj_seen(self):
     """L §5.16 Decisions and projections: a projection a decision reaches, with neither a random clause nor a query
     around the read, that reads a random fact after its t "is refused: at load where load sees the projection reach the

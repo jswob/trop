@@ -301,7 +301,7 @@ class Open:
 
 class Tie:
     """L §2.4 (round 19): a sort component with a rank and a value; two items equal on both (two rows with no start,
-    two rows with one start, two `after m` rows) sort by their own canonical line (GD-28, the next component)."""
+    two rows with one start) sort by their own canonical line (GD-28, the next component)."""
 
     def __init__(self, rank, val, text, why):
         self.rank, self.val, self.text, self.why = rank, val, text, why
@@ -788,18 +788,15 @@ class FilePrinter:
 
     def span_key(self, gov, instant):
         # L §2.4 (round 19, GD-24): "then by the start of their own governs span or their instant (a row with no span
-        # of its own first, then a span with no start, a row governing always among them, then by start; a row read
-        # after m after the dated ones of its target and keys)". Ties it leaves (two rows with no start, two with one
-        # start, two after m rows) sort by their own canonical line (GD-28, the caller's last component)
+        # of its own first, then a span with no start, a row governing always among them, then by start)". Ties it
+        # leaves (two rows with no start, two with one start) sort by their own canonical line (GD-28, the caller's
+        # last component)
         if gov is not None:
             txt = 'always' if gov == 'always' else repr((first_day(gov.a), first_day(getattr(gov, 'b', None))))
             if gov == 'always' or gov.a is None:
                 return Tie(1, (), txt, None)
             return Tie(2, (first_day(gov.a),), txt, None)
         if instant is not None:
-            if instant.after is not None:
-                t = key_text(instant.after) if instant.after.k != 'name' else instant.after.id
-                return Tie(3, (), t, None)
             # "by ... their instant": in time, a day's start before its end (L §4.6: "at D start (before the day's
             # movements), at D end (after them)"); `at D` alone is a plain reading's, never beside the two
             return Tie(2, (instant.day, {'start': 0, None: 1, 'end': 2}[instant.pos]), '', None)

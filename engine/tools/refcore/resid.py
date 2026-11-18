@@ -417,25 +417,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     for iid, p, u, r in self.readings(octx):
         if iid != 'stated' or p != place:
             continue
-        ins = r.instant
-        if ins[0] == 'after':
-            # E §6.3 Grouping (round 12): "a reading after m stands on m's day, right after m" (writer 5's T-104)
-            key = w.after_keys.get(id(r))
-            if key is None:
-                continue    # m wasn't booked: the reading has no instant in the walk
-            d = kday(key)
-            if not in_span(d):
-                continue
-            pos = None
-        else:
-            d, pos = ins
-            key = None
+        d, pos = r.instant
         if not in_span(d):
             continue
-        if key is None:
-            key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
-        else:
-            key = key[:4] + (key[4] - 1,)
+        key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
         val = r.val
         if isinstance(val, tuple) and val[0] == 'hole':
             stated = Hole([(val[1], 'stated[%s]' % place)])

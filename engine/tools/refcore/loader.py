@@ -1997,13 +1997,10 @@ class Loader:
             if not (reading or balance):
                 # L §4.6 Readings: "an instant on a row of an input that isn't a reading, is refused, LOAD-INSTANT"
                 raise LoadError('LOAD-INSTANT', '%s is not a reading; its rows take no instant' % inf.id, it.loc)
-            if ins.after is not None:
-                instant = ('after', ins.after)
-            else:
-                if balance and ins.pos is None:
-                    raise LoadError('LOAD-INSTANT', 'balance reading %s at %s needs start, end or after' % (
-                        inf.id, ins.day), it.loc)
-                instant = (ins.day, ins.pos)
+            if balance and ins.pos is None:
+                raise LoadError('LOAD-INSTANT', 'balance reading %s at %s needs start or end' % (inf.id, ins.day),
+                                it.loc)
+            instant = (ins.day, ins.pos)
             if own_span is not None:
                 raise LoadError('LOAD-PARSE', 'cannot parse: a reading states an instant, not governs', it.loc)
         elif reading or balance:
@@ -2071,7 +2068,7 @@ class Loader:
                     if r.own_span is not None:
                         sid += ' ' + r.own_span.text()
                     elif r.instant is not None:
-                        # its instant, a day with start or end (L §2.5, §4.6; tally 2.1.7 B6, #135), or `after m`
+                        # its instant, a day with start or end (L §2.5, §4.6; tally 2.1.7 B6, #135)
                         from .moves import instant_text
                         sid += ' ' + instant_text(r)
                 r.sid = sid
