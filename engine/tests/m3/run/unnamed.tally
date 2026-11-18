@@ -1,0 +1,5 @@
+part run_unnamed
+  tally 2
+  note "in the file table but named by no argument: never read (E §1, OPERATIONS §2.1 inputs); read, it would refuse LOAD-DUP"
+
+input amt: num

@@ -1,0 +1,11 @@
+part m3_asks_c7
+  tally 2
+  note "T's diff asks for change 7: the scenario against its base, the three law asks' cells (OPERATIONS §2.1 CHG-11, §6.1 row 7)"
+
+ask c7_wife_diff: diff(emp_net[wife_acme, m] for m in [2026-10, 2027-01]) in wife_stops against tropek law cut
+
+ask c7_social_diff: diff(zus_social[m] for m in [2026-10, 2027-01, 2028-09]) in wife_stops against tropek law cut
+
+ask c7_health_diff: diff(health_month[m] for m in [2026-10, 2027-01, 2028-09]) in wife_stops against tropek law cut
+
+ask c7_pit37_diff: diff(pit37_due[p, y] for p in person over .., y in [2026, 2027, 2028]) in wife_stops against tropek law cut

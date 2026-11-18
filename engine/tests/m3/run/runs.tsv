@@ -1,0 +1,18 @@
+id	cwd	args	extra	rule
+run/twice	m3/run	run ../check/model.tally two.tally --ask q_b q_b	-	E §1, OPERATIONS §7: an id asked twice is answered twice, in the request's order
+run/order	m3/run	run ../check/model.tally two.tally --ask q_b q_a	-	E §1: the results in the request's order, not the files'
+run/ask-empty	m3/run	run ../check/model.tally two.tally --ask	-	OPERATIONS §2.1: --ask with no id after it asks every ask, as with none
+run/cuts	m3/run	run ../check/model.tally two.tally --ask q_k1 q_k2	-	E §1, L §7.5: each ask its own clock K in one run
+run/unnamed	m3/run	run ../check/model.tally two.tally --ask q_a	unnamed.tally	E §1: a file the request doesn't name is not read
+run/dir	m3/run	run ../check/model.tally d/ --ask q_d	d/notes.txt	L §6.1: under a directory given, only .tally files are read
+run/joint	m3/check/joint	run j.tally --ask x a.q	-	L §6.1: a member's ask beside the joint model's own
+run/covered	m3/check	run model.tally s_a_zulu.tally asks_zulu.tally --ask q_in_zulu q_zulu_own q	-	OPERATIONS §2.1: a refused scenario's line once, before every result; an ask in its world its own refusal; the file's own ask nothing, even named
+run/unknown	m3/run	frobnicate ../check/model.tally	-	usage
+run/none	m3/run		-	usage
+operations/ask	m3/mini	run reality.tally question.tally --ask q_oct	-	OPERATIONS §3.1 ASK-2: a question not saved, named in the run
+operations/asks	m3/mini	run reality.tally question.tally	-	OPERATIONS §3.1 ASK-3 to ASK-7: a past view, a pin, explain, residuals
+operations/bolt	m3/mini	run reality.tally bolt.tally more.tally --ask q_dec	-	OPERATIONS §3.3 CHG-4: what a new thing leaves unanswered prints as holes with their questions
+operations/diff	m3/mini	run reality.tally acme_stops.tally --ask q_diff	-	OPERATIONS §3.4 SCN-1's printed output
+operations/worked	m3/mini/w	run ../reality.tally ../more.tally acme_stops.tally --ask q_base q_dec q_in	-	OPERATIONS §7's worked output, exit 0
+operations/statement	m3/mini	run reality.tally statement.tally more.tally --ask q_base q_dec	-	OPERATIONS §3.5 IMP-1, IMP-3: the statement's rows and its stated balance's anchor line
+operations/law	m3/mini	run reality.tally pit.tally --ask pit_check	-	OPERATIONS §3.6 LAW-1: a law file's check, answered as any ask

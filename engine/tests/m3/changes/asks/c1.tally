@@ -1,0 +1,5 @@
+part m3_asks_c1
+  tally 2
+  note "T's def-level asks for change 1 (OPERATIONS §6.1 step 3, ASK-2: a question not saved, in its own file)"
+
+ask c1_revenue: revenue[m], health_month[m] for m in [2027-01, 2027-02, 2027-03, 2027-04] law cut

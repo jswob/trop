@@ -4771,4 +4771,298 @@ household/law/pl/wrappers.tally	../spec/amendments/household/law/pl/wrappers.tal
 household/records/mbank/2026-09.tally	../spec/amendments/household/records/mbank/2026-09.tally
 ,1:0,3:ok
 ,17:fixture/usage/ask,5:usage,4:rule,21:engine/tests/m3/check,25:check model.tally --ask q,33:model.tally	m3/check/model.tally
-,1:2,0:,
+,1:2,0:,27:fixture/operations/question,10:operations,3:run,20:engine/tests/m3/mini,34:check reality.tally question.tally,74:reality.tally	m3/mini/reality.tally
+question.tally	m3/mini/question.tally
+,1:0,3:ok
+,23:fixture/operations/bolt,10:operations,3:run,20:engine/tests/m3/mini,45:check reality.tally question.tally bolt.tally,104:reality.tally	m3/mini/reality.tally
+question.tally	m3/mini/question.tally
+bolt.tally	m3/mini/bolt.tally
+,1:0,3:ok
+,27:fixture/operations/scenario,10:operations,3:run,20:engine/tests/m3/mini,36:check reality.tally acme_stops.tally,78:reality.tally	m3/mini/reality.tally
+acme_stops.tally	m3/mini/acme_stops.tally
+,1:0,3:ok
+,28:fixture/operations/statement,10:operations,3:run,20:engine/tests/m3/mini,35:check reality.tally statement.tally,76:reality.tally	m3/mini/reality.tally
+statement.tally	m3/mini/statement.tally
+,1:0,3:ok
+,24:fixture/operations/known,10:operations,3:run,20:engine/tests/m3/mini,41:check early/reality.tally statement.tally,88:early/reality.tally	m3/mini/early/reality.tally
+statement.tally	m3/mini/statement.tally
+,1:1,101:refused: LOAD-KNOWN version statement_2026_10 is known after the model's on date (statement.tally:6)
+,25:fixture/operations/worked,10:operations,3:run,22:engine/tests/m3/mini/w,53:check ../reality.tally ../more.tally acme_stops.tally,116:../reality.tally	m3/mini/reality.tally
+../more.tally	m3/mini/more.tally
+acme_stops.tally	m3/mini/w/acme_stops.tally
+,1:1,165:scenario acme_stops: refused: LOAD-REPLACE replace salary[acme]: no earlier row to replace (acme_stops.tally:9)
+warning: WARN-UNREAD input unused is read by nothing
+,23:fixture/operations/name,10:operations,3:run,20:engine/tests/m3/mini,34:check reality.tally txt_name.tally,74:reality.tally	m3/mini/reality.tally
+txt_name.tally	m3/mini/txt_name.tally
+,1:1,66:refused: LOAD-KEY kotno is not a key of places (txt_name.tally:5)
+,22:fixture/operations/dup,10:operations,3:run,20:engine/tests/m3/mini,53:check reality.tally question.tally question_dup.tally,120:reality.tally	m3/mini/reality.tally
+question.tally	m3/mini/question.tally
+question_dup.tally	m3/mini/question_dup.tally
+,1:1,65:refused: LOAD-DUP q_oct is declared twice (question_dup.tally:5)
+,22:fixture/operations/law,10:operations,3:run,20:engine/tests/m3/mini,29:check reality.tally pit.tally,64:reality.tally	m3/mini/reality.tally
+pit.tally	m3/mini/pit.tally
+,1:0,3:ok
+,16:changes/check/c1,7:changes,3:run,42:engine/tests/integration/amendments/real11,43:check c1/ ../../../m3/changes/asks/c1.tally,1065:c1/loans.tally	integration/amendments/real11/c1/loans.tally
+c1/pays.tally	integration/amendments/real11/c1/pays.tally
+c1/people.tally	integration/amendments/real11/c1/people.tally
+c1/places.tally	integration/amendments/real11/c1/places.tally
+c1/reality.tally	integration/amendments/real11/c1/reality.tally
+c1/asks/core.tally	integration/amendments/real11/c1/asks/core.tally
+c1/facts/2026.tally	integration/amendments/real11/c1/facts/2026.tally
+c1/facts/2027.tally	integration/amendments/real11/c1/facts/2027.tally
+c1/law/pl/benefits.tally	integration/amendments/real11/c1/law/pl/benefits.tally
+c1/law/pl/business.tally	integration/amendments/real11/c1/law/pl/business.tally
+c1/law/pl/common.tally	integration/amendments/real11/c1/law/pl/common.tally
+c1/law/pl/employment.tally	integration/amendments/real11/c1/law/pl/employment.tally
+c1/law/pl/wrappers.tally	integration/amendments/real11/c1/law/pl/wrappers.tally
+c1/records/mbank/2026-09.tally	integration/amendments/real11/c1/records/mbank/2026-09.tally
+../../../m3/changes/asks/c1.tally	m3/changes/asks/c1.tally
+,1:0,3:ok
+,16:changes/check/k1,7:changes,3:run,42:engine/tests/integration/amendments/real11,200:check c1/asks/core.tally c1/facts/2026.tally c1/law/pl/ c1/loans.tally c1/pays.tally c1/people.tally c1/places.tally c1/records/ c1/facts/2027.tally ../../../../spec/amendments/household/reality.tally,1037:c1/asks/core.tally	integration/amendments/real11/c1/asks/core.tally
+c1/facts/2026.tally	integration/amendments/real11/c1/facts/2026.tally
+c1/law/pl/benefits.tally	integration/amendments/real11/c1/law/pl/benefits.tally
+c1/law/pl/business.tally	integration/amendments/real11/c1/law/pl/business.tally
+c1/law/pl/common.tally	integration/amendments/real11/c1/law/pl/common.tally
+c1/law/pl/employment.tally	integration/amendments/real11/c1/law/pl/employment.tally
+c1/law/pl/wrappers.tally	integration/amendments/real11/c1/law/pl/wrappers.tally
+c1/loans.tally	integration/amendments/real11/c1/loans.tally
+c1/pays.tally	integration/amendments/real11/c1/pays.tally
+c1/people.tally	integration/amendments/real11/c1/people.tally
+c1/places.tally	integration/amendments/real11/c1/places.tally
+c1/records/mbank/2026-09.tally	integration/amendments/real11/c1/records/mbank/2026-09.tally
+c1/facts/2027.tally	integration/amendments/real11/c1/facts/2027.tally
+../../../../spec/amendments/household/reality.tally	../spec/amendments/household/reality.tally
+,1:1,101:refused: LOAD-KNOWN version client_c_2027 is known after the model's on date (c1/facts/2027.tally:6)
+,16:changes/check/c2,7:changes,3:run,42:engine/tests/integration/amendments/real11,43:check c2/ ../../../m3/changes/asks/c2.tally,995:c2/loans.tally	integration/amendments/real11/c2/loans.tally
+c2/pays.tally	integration/amendments/real11/c2/pays.tally
+c2/people.tally	integration/amendments/real11/c2/people.tally
+c2/places.tally	integration/amendments/real11/c2/places.tally
+c2/reality.tally	integration/amendments/real11/c2/reality.tally
+c2/asks/core.tally	integration/amendments/real11/c2/asks/core.tally
+c2/facts/2026.tally	integration/amendments/real11/c2/facts/2026.tally
+c2/law/pl/benefits.tally	integration/amendments/real11/c2/law/pl/benefits.tally
+c2/law/pl/business.tally	integration/amendments/real11/c2/law/pl/business.tally
+c2/law/pl/common.tally	integration/amendments/real11/c2/law/pl/common.tally
+c2/law/pl/employment.tally	integration/amendments/real11/c2/law/pl/employment.tally
+c2/law/pl/wrappers.tally	integration/amendments/real11/c2/law/pl/wrappers.tally
+c2/records/mbank/2026-09.tally	integration/amendments/real11/c2/records/mbank/2026-09.tally
+../../../m3/changes/asks/c2.tally	m3/changes/asks/c2.tally
+,1:0,3:ok
+,16:changes/check/k2,7:changes,3:run,42:engine/tests/integration/amendments/real11,167:check c2/asks/core.tally c2/facts/ c2/law/ c2/loans.tally c2/pays.tally c2/people.tally c2/places.tally c2/records/ ../../../../spec/amendments/household/reality.tally,967:c2/asks/core.tally	integration/amendments/real11/c2/asks/core.tally
+c2/facts/2026.tally	integration/amendments/real11/c2/facts/2026.tally
+c2/law/pl/benefits.tally	integration/amendments/real11/c2/law/pl/benefits.tally
+c2/law/pl/business.tally	integration/amendments/real11/c2/law/pl/business.tally
+c2/law/pl/common.tally	integration/amendments/real11/c2/law/pl/common.tally
+c2/law/pl/employment.tally	integration/amendments/real11/c2/law/pl/employment.tally
+c2/law/pl/wrappers.tally	integration/amendments/real11/c2/law/pl/wrappers.tally
+c2/loans.tally	integration/amendments/real11/c2/loans.tally
+c2/pays.tally	integration/amendments/real11/c2/pays.tally
+c2/people.tally	integration/amendments/real11/c2/people.tally
+c2/places.tally	integration/amendments/real11/c2/places.tally
+c2/records/mbank/2026-09.tally	integration/amendments/real11/c2/records/mbank/2026-09.tally
+../../../../spec/amendments/household/reality.tally	../spec/amendments/household/reality.tally
+,1:1,107:refused: LOAD-KNOWN version proj_wage_2027 is known after the model's on date (c2/law/pl/common.tally:125)
+,16:changes/check/c3,7:changes,3:run,42:engine/tests/integration/amendments/real11,43:check c3/ ../../../m3/changes/asks/c3.tally,995:c3/loans.tally	integration/amendments/real11/c3/loans.tally
+c3/pays.tally	integration/amendments/real11/c3/pays.tally
+c3/people.tally	integration/amendments/real11/c3/people.tally
+c3/places.tally	integration/amendments/real11/c3/places.tally
+c3/reality.tally	integration/amendments/real11/c3/reality.tally
+c3/asks/core.tally	integration/amendments/real11/c3/asks/core.tally
+c3/facts/2026.tally	integration/amendments/real11/c3/facts/2026.tally
+c3/law/pl/benefits.tally	integration/amendments/real11/c3/law/pl/benefits.tally
+c3/law/pl/business.tally	integration/amendments/real11/c3/law/pl/business.tally
+c3/law/pl/common.tally	integration/amendments/real11/c3/law/pl/common.tally
+c3/law/pl/employment.tally	integration/amendments/real11/c3/law/pl/employment.tally
+c3/law/pl/wrappers.tally	integration/amendments/real11/c3/law/pl/wrappers.tally
+c3/records/mbank/2026-09.tally	integration/amendments/real11/c3/records/mbank/2026-09.tally
+../../../m3/changes/asks/c3.tally	m3/changes/asks/c3.tally
+,1:0,3:ok
+,16:changes/check/k3,7:changes,3:run,42:engine/tests/integration/amendments/real11,167:check c3/asks/core.tally c3/facts/ c3/law/ c3/loans.tally c3/pays.tally c3/people.tally c3/places.tally c3/records/ ../../../../spec/amendments/household/reality.tally,967:c3/asks/core.tally	integration/amendments/real11/c3/asks/core.tally
+c3/facts/2026.tally	integration/amendments/real11/c3/facts/2026.tally
+c3/law/pl/benefits.tally	integration/amendments/real11/c3/law/pl/benefits.tally
+c3/law/pl/business.tally	integration/amendments/real11/c3/law/pl/business.tally
+c3/law/pl/common.tally	integration/amendments/real11/c3/law/pl/common.tally
+c3/law/pl/employment.tally	integration/amendments/real11/c3/law/pl/employment.tally
+c3/law/pl/wrappers.tally	integration/amendments/real11/c3/law/pl/wrappers.tally
+c3/loans.tally	integration/amendments/real11/c3/loans.tally
+c3/pays.tally	integration/amendments/real11/c3/pays.tally
+c3/people.tally	integration/amendments/real11/c3/people.tally
+c3/places.tally	integration/amendments/real11/c3/places.tally
+c3/records/mbank/2026-09.tally	integration/amendments/real11/c3/records/mbank/2026-09.tally
+../../../../spec/amendments/household/reality.tally	../spec/amendments/household/reality.tally
+,1:1,114:refused: LOAD-KNOWN version health_ryczalt_2027 is known after the model's on date (c3/law/pl/business.tally:233)
+,17:changes/check/c4a,7:changes,3:run,42:engine/tests/integration/amendments/real11,217:check c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ ../../../m3/changes/on-2028-05-14/reality.tally ../../../m3/changes/c4a/facts/2028.tally,1032:c4/asks/core.tally	integration/amendments/real11/c4/asks/core.tally
+c4/facts/2026.tally	integration/amendments/real11/c4/facts/2026.tally
+c4/law/pl/benefits.tally	integration/amendments/real11/c4/law/pl/benefits.tally
+c4/law/pl/business.tally	integration/amendments/real11/c4/law/pl/business.tally
+c4/law/pl/common.tally	integration/amendments/real11/c4/law/pl/common.tally
+c4/law/pl/employment.tally	integration/amendments/real11/c4/law/pl/employment.tally
+c4/law/pl/wrappers.tally	integration/amendments/real11/c4/law/pl/wrappers.tally
+c4/loans.tally	integration/amendments/real11/c4/loans.tally
+c4/pays.tally	integration/amendments/real11/c4/pays.tally
+c4/people.tally	integration/amendments/real11/c4/people.tally
+c4/places.tally	integration/amendments/real11/c4/places.tally
+c4/records/mbank/2026-09.tally	integration/amendments/real11/c4/records/mbank/2026-09.tally
+../../../m3/changes/on-2028-05-14/reality.tally	m3/changes/on-2028-05-14/reality.tally
+../../../m3/changes/c4a/facts/2028.tally	m3/changes/c4a/facts/2028.tally
+,1:0,3:ok
+,17:changes/check/k4a,7:changes,3:run,42:engine/tests/integration/amendments/real11,221:check c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ ../../../m3/changes/c4a/facts/2028.tally ../../../../spec/amendments/household/reality.tally,1040:c4/asks/core.tally	integration/amendments/real11/c4/asks/core.tally
+c4/facts/2026.tally	integration/amendments/real11/c4/facts/2026.tally
+c4/law/pl/benefits.tally	integration/amendments/real11/c4/law/pl/benefits.tally
+c4/law/pl/business.tally	integration/amendments/real11/c4/law/pl/business.tally
+c4/law/pl/common.tally	integration/amendments/real11/c4/law/pl/common.tally
+c4/law/pl/employment.tally	integration/amendments/real11/c4/law/pl/employment.tally
+c4/law/pl/wrappers.tally	integration/amendments/real11/c4/law/pl/wrappers.tally
+c4/loans.tally	integration/amendments/real11/c4/loans.tally
+c4/pays.tally	integration/amendments/real11/c4/pays.tally
+c4/people.tally	integration/amendments/real11/c4/people.tally
+c4/places.tally	integration/amendments/real11/c4/places.tally
+c4/records/mbank/2026-09.tally	integration/amendments/real11/c4/records/mbank/2026-09.tally
+../../../m3/changes/c4a/facts/2028.tally	m3/changes/c4a/facts/2028.tally
+../../../../spec/amendments/household/reality.tally	../spec/amendments/household/reality.tally
+,1:1,117:refused: LOAD-KNOWN version ola_born is known after the model's on date (../../../m3/changes/c4a/facts/2028.tally:6)
+,17:changes/check/c4b,7:changes,3:run,42:engine/tests/integration/amendments/real11,9:check c4/,1072:c4/loans.tally	integration/amendments/real11/c4/loans.tally
+c4/pays.tally	integration/amendments/real11/c4/pays.tally
+c4/people.tally	integration/amendments/real11/c4/people.tally
+c4/places.tally	integration/amendments/real11/c4/places.tally
+c4/reality.tally	integration/amendments/real11/c4/reality.tally
+c4/asks/core.tally	integration/amendments/real11/c4/asks/core.tally
+c4/asks/ola.tally	integration/amendments/real11/c4/asks/ola.tally
+c4/facts/2026.tally	integration/amendments/real11/c4/facts/2026.tally
+c4/facts/2028.tally	integration/amendments/real11/c4/facts/2028.tally
+c4/law/pl/benefits.tally	integration/amendments/real11/c4/law/pl/benefits.tally
+c4/law/pl/business.tally	integration/amendments/real11/c4/law/pl/business.tally
+c4/law/pl/common.tally	integration/amendments/real11/c4/law/pl/common.tally
+c4/law/pl/employment.tally	integration/amendments/real11/c4/law/pl/employment.tally
+c4/law/pl/wrappers.tally	integration/amendments/real11/c4/law/pl/wrappers.tally
+c4/records/mbank/2026-09.tally	integration/amendments/real11/c4/records/mbank/2026-09.tally
+,1:0,3:ok
+,17:changes/check/k4b,7:changes,3:run,42:engine/tests/integration/amendments/real11,214:check c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ c4/asks/ola.tally c4/facts/2028.tally ../../../m3/changes/on-2028-05-14/reality.tally,1095:c4/asks/core.tally	integration/amendments/real11/c4/asks/core.tally
+c4/facts/2026.tally	integration/amendments/real11/c4/facts/2026.tally
+c4/law/pl/benefits.tally	integration/amendments/real11/c4/law/pl/benefits.tally
+c4/law/pl/business.tally	integration/amendments/real11/c4/law/pl/business.tally
+c4/law/pl/common.tally	integration/amendments/real11/c4/law/pl/common.tally
+c4/law/pl/employment.tally	integration/amendments/real11/c4/law/pl/employment.tally
+c4/law/pl/wrappers.tally	integration/amendments/real11/c4/law/pl/wrappers.tally
+c4/loans.tally	integration/amendments/real11/c4/loans.tally
+c4/pays.tally	integration/amendments/real11/c4/pays.tally
+c4/people.tally	integration/amendments/real11/c4/people.tally
+c4/places.tally	integration/amendments/real11/c4/places.tally
+c4/records/mbank/2026-09.tally	integration/amendments/real11/c4/records/mbank/2026-09.tally
+c4/asks/ola.tally	integration/amendments/real11/c4/asks/ola.tally
+c4/facts/2028.tally	integration/amendments/real11/c4/facts/2028.tally
+../../../m3/changes/on-2028-05-14/reality.tally	m3/changes/on-2028-05-14/reality.tally
+,1:1,96:refused: LOAD-KNOWN version ola_800 is known after the model's on date (c4/facts/2028.tally:42)
+,16:changes/check/c5,7:changes,3:run,42:engine/tests/integration/amendments/real11,9:check c5/,1152:c5/abroad.tally	integration/amendments/real11/c5/abroad.tally
+c5/loans.tally	integration/amendments/real11/c5/loans.tally
+c5/pays.tally	integration/amendments/real11/c5/pays.tally
+c5/people.tally	integration/amendments/real11/c5/people.tally
+c5/places.tally	integration/amendments/real11/c5/places.tally
+c5/reality.tally	integration/amendments/real11/c5/reality.tally
+c5/asks/core.tally	integration/amendments/real11/c5/asks/core.tally
+c5/facts/2026.tally	integration/amendments/real11/c5/facts/2026.tally
+c5/facts/2029.tally	integration/amendments/real11/c5/facts/2029.tally
+c5/law/de/employment.tally	integration/amendments/real11/c5/law/de/employment.tally
+c5/law/pl/benefits.tally	integration/amendments/real11/c5/law/pl/benefits.tally
+c5/law/pl/business.tally	integration/amendments/real11/c5/law/pl/business.tally
+c5/law/pl/common.tally	integration/amendments/real11/c5/law/pl/common.tally
+c5/law/pl/employment.tally	integration/amendments/real11/c5/law/pl/employment.tally
+c5/law/pl/wrappers.tally	integration/amendments/real11/c5/law/pl/wrappers.tally
+c5/records/mbank/2026-09.tally	integration/amendments/real11/c5/records/mbank/2026-09.tally
+,1:0,3:ok
+,16:changes/check/k5,7:changes,3:run,42:engine/tests/integration/amendments/real11,183:check c5/abroad.tally c5/asks/core.tally c5/facts/ c5/law/ c5/loans.tally c5/pays.tally c5/people.tally c5/places.tally c5/records/ ../../../../spec/amendments/household/reality.tally,1183:c5/abroad.tally	integration/amendments/real11/c5/abroad.tally
+c5/asks/core.tally	integration/amendments/real11/c5/asks/core.tally
+c5/facts/2026.tally	integration/amendments/real11/c5/facts/2026.tally
+c5/facts/2029.tally	integration/amendments/real11/c5/facts/2029.tally
+c5/law/de/employment.tally	integration/amendments/real11/c5/law/de/employment.tally
+c5/law/pl/benefits.tally	integration/amendments/real11/c5/law/pl/benefits.tally
+c5/law/pl/business.tally	integration/amendments/real11/c5/law/pl/business.tally
+c5/law/pl/common.tally	integration/amendments/real11/c5/law/pl/common.tally
+c5/law/pl/employment.tally	integration/amendments/real11/c5/law/pl/employment.tally
+c5/law/pl/wrappers.tally	integration/amendments/real11/c5/law/pl/wrappers.tally
+c5/loans.tally	integration/amendments/real11/c5/loans.tally
+c5/pays.tally	integration/amendments/real11/c5/pays.tally
+c5/people.tally	integration/amendments/real11/c5/people.tally
+c5/places.tally	integration/amendments/real11/c5/places.tally
+c5/records/mbank/2026-09.tally	integration/amendments/real11/c5/records/mbank/2026-09.tally
+../../../../spec/amendments/household/reality.tally	../spec/amendments/household/reality.tally
+,1:1,112:refused: LOAD-KNOWN version lifted_figures_5_job_abroad is known after the model's on date (c5/abroad.tally:44)
+,17:changes/check/c6a,7:changes,3:run,42:engine/tests/integration/amendments/real11,251:check c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ ../../../m3/changes/on-2027-04-02/reality.tally ../../../m3/changes/c6a/facts/2027.tally ../../../m3/changes/asks/c6.tally,1091:c6/asks/core.tally	integration/amendments/real11/c6/asks/core.tally
+c6/facts/2026.tally	integration/amendments/real11/c6/facts/2026.tally
+c6/law/pl/benefits.tally	integration/amendments/real11/c6/law/pl/benefits.tally
+c6/law/pl/business.tally	integration/amendments/real11/c6/law/pl/business.tally
+c6/law/pl/common.tally	integration/amendments/real11/c6/law/pl/common.tally
+c6/law/pl/employment.tally	integration/amendments/real11/c6/law/pl/employment.tally
+c6/law/pl/wrappers.tally	integration/amendments/real11/c6/law/pl/wrappers.tally
+c6/loans.tally	integration/amendments/real11/c6/loans.tally
+c6/pays.tally	integration/amendments/real11/c6/pays.tally
+c6/people.tally	integration/amendments/real11/c6/people.tally
+c6/places.tally	integration/amendments/real11/c6/places.tally
+c6/records/mbank/2026-09.tally	integration/amendments/real11/c6/records/mbank/2026-09.tally
+../../../m3/changes/on-2027-04-02/reality.tally	m3/changes/on-2027-04-02/reality.tally
+../../../m3/changes/c6a/facts/2027.tally	m3/changes/c6a/facts/2027.tally
+../../../m3/changes/asks/c6.tally	m3/changes/asks/c6.tally
+,1:0,3:ok
+,17:changes/check/k6a,7:changes,3:run,42:engine/tests/integration/amendments/real11,221:check c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ ../../../m3/changes/c6a/facts/2027.tally ../../../../spec/amendments/household/reality.tally,1040:c6/asks/core.tally	integration/amendments/real11/c6/asks/core.tally
+c6/facts/2026.tally	integration/amendments/real11/c6/facts/2026.tally
+c6/law/pl/benefits.tally	integration/amendments/real11/c6/law/pl/benefits.tally
+c6/law/pl/business.tally	integration/amendments/real11/c6/law/pl/business.tally
+c6/law/pl/common.tally	integration/amendments/real11/c6/law/pl/common.tally
+c6/law/pl/employment.tally	integration/amendments/real11/c6/law/pl/employment.tally
+c6/law/pl/wrappers.tally	integration/amendments/real11/c6/law/pl/wrappers.tally
+c6/loans.tally	integration/amendments/real11/c6/loans.tally
+c6/pays.tally	integration/amendments/real11/c6/pays.tally
+c6/people.tally	integration/amendments/real11/c6/people.tally
+c6/places.tally	integration/amendments/real11/c6/places.tally
+c6/records/mbank/2026-09.tally	integration/amendments/real11/c6/records/mbank/2026-09.tally
+../../../m3/changes/c6a/facts/2027.tally	m3/changes/c6a/facts/2027.tally
+../../../../spec/amendments/household/reality.tally	../spec/amendments/household/reality.tally
+,1:1,117:refused: LOAD-KNOWN version car_loan is known after the model's on date (../../../m3/changes/c6a/facts/2027.tally:6)
+,17:changes/check/c6b,7:changes,3:run,42:engine/tests/integration/amendments/real11,43:check c6/ ../../../m3/changes/asks/c6.tally,1065:c6/loans.tally	integration/amendments/real11/c6/loans.tally
+c6/pays.tally	integration/amendments/real11/c6/pays.tally
+c6/people.tally	integration/amendments/real11/c6/people.tally
+c6/places.tally	integration/amendments/real11/c6/places.tally
+c6/reality.tally	integration/amendments/real11/c6/reality.tally
+c6/asks/core.tally	integration/amendments/real11/c6/asks/core.tally
+c6/facts/2026.tally	integration/amendments/real11/c6/facts/2026.tally
+c6/facts/2027.tally	integration/amendments/real11/c6/facts/2027.tally
+c6/law/pl/benefits.tally	integration/amendments/real11/c6/law/pl/benefits.tally
+c6/law/pl/business.tally	integration/amendments/real11/c6/law/pl/business.tally
+c6/law/pl/common.tally	integration/amendments/real11/c6/law/pl/common.tally
+c6/law/pl/employment.tally	integration/amendments/real11/c6/law/pl/employment.tally
+c6/law/pl/wrappers.tally	integration/amendments/real11/c6/law/pl/wrappers.tally
+c6/records/mbank/2026-09.tally	integration/amendments/real11/c6/records/mbank/2026-09.tally
+../../../m3/changes/asks/c6.tally	m3/changes/asks/c6.tally
+,1:0,3:ok
+,17:changes/check/k6b,7:changes,3:run,42:engine/tests/integration/amendments/real11,196:check c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ c6/facts/2027.tally ../../../m3/changes/on-2027-04-02/reality.tally,1029:c6/asks/core.tally	integration/amendments/real11/c6/asks/core.tally
+c6/facts/2026.tally	integration/amendments/real11/c6/facts/2026.tally
+c6/law/pl/benefits.tally	integration/amendments/real11/c6/law/pl/benefits.tally
+c6/law/pl/business.tally	integration/amendments/real11/c6/law/pl/business.tally
+c6/law/pl/common.tally	integration/amendments/real11/c6/law/pl/common.tally
+c6/law/pl/employment.tally	integration/amendments/real11/c6/law/pl/employment.tally
+c6/law/pl/wrappers.tally	integration/amendments/real11/c6/law/pl/wrappers.tally
+c6/loans.tally	integration/amendments/real11/c6/loans.tally
+c6/pays.tally	integration/amendments/real11/c6/pays.tally
+c6/people.tally	integration/amendments/real11/c6/people.tally
+c6/places.tally	integration/amendments/real11/c6/places.tally
+c6/records/mbank/2026-09.tally	integration/amendments/real11/c6/records/mbank/2026-09.tally
+c6/facts/2027.tally	integration/amendments/real11/c6/facts/2027.tally
+../../../m3/changes/on-2027-04-02/reality.tally	m3/changes/on-2027-04-02/reality.tally
+,1:1,108:refused: LOAD-KNOWN version car_overpay_2028_01 is known after the model's on date (c6/facts/2027.tally:17)
+,16:changes/check/c7,7:changes,3:run,42:engine/tests/integration/amendments/real11,43:check c7/ ../../../m3/changes/asks/c7.tally,1085:c7/loans.tally	integration/amendments/real11/c7/loans.tally
+c7/pays.tally	integration/amendments/real11/c7/pays.tally
+c7/people.tally	integration/amendments/real11/c7/people.tally
+c7/places.tally	integration/amendments/real11/c7/places.tally
+c7/reality.tally	integration/amendments/real11/c7/reality.tally
+c7/asks/core.tally	integration/amendments/real11/c7/asks/core.tally
+c7/facts/2026.tally	integration/amendments/real11/c7/facts/2026.tally
+c7/law/pl/benefits.tally	integration/amendments/real11/c7/law/pl/benefits.tally
+c7/law/pl/business.tally	integration/amendments/real11/c7/law/pl/business.tally
+c7/law/pl/common.tally	integration/amendments/real11/c7/law/pl/common.tally
+c7/law/pl/employment.tally	integration/amendments/real11/c7/law/pl/employment.tally
+c7/law/pl/wrappers.tally	integration/amendments/real11/c7/law/pl/wrappers.tally
+c7/records/mbank/2026-09.tally	integration/amendments/real11/c7/records/mbank/2026-09.tally
+c7/scenarios/wife_stops.tally	integration/amendments/real11/c7/scenarios/wife_stops.tally
+../../../m3/changes/asks/c7.tally	m3/changes/asks/c7.tally
+,1:0,3:ok
+,

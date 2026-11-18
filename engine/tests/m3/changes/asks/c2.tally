@@ -1,0 +1,5 @@
+part m3_asks_c2
+  tally 2
+  note "T's def-level asks for change 2 (OPERATIONS §6.1 step 3, ASK-2)"
+
+ask c2_wages: min_wage_y[y], proj_wage_y[y], health_base_y[y] for y in [2026, 2027] law cut

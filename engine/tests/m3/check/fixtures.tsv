@@ -34,3 +34,12 @@ notclean/paths	m3/check	model.tally paths.tally	§2.3: `ok` isn't a clean run: r
 paths/nested	m3/check	nest	OPERATIONS §2, E §3.1 step 1: a directory's files by full path: the first refusal by full path (nest/a/y.tally)
 paths/household	../spec/amendments	household/	#226's example: the household as a directory
 usage/ask	m3/check	model.tally --ask q	P3 (#228): check takes no ask: a usage error, exit 2 (its words are the engine's)
+operations/question	m3/mini	reality.tally question.tally	OPERATIONS §3.1, §7: the small model and §3.1's asks load: ok
+operations/bolt	m3/mini	reality.tally question.tally bolt.tally	OPERATIONS §3.3 CHG-1: a fact added in a new file: ok
+operations/scenario	m3/mini	reality.tally acme_stops.tally	OPERATIONS §3.4 SCN-1: a scenario with no replace over a keyless row: ok
+operations/statement	m3/mini	reality.tally statement.tally	OPERATIONS §3.5 IMP-1: a statement as rows: ok
+operations/known	m3/mini	early/reality.tally statement.tally	OPERATIONS §3.3 CHG-7: the statement before on moves: LOAD-KNOWN (statement.tally:6)
+operations/worked	m3/mini/w	../reality.tally ../more.tally acme_stops.tally	OPERATIONS §7's worked output: the scenario's LOAD-REPLACE line, the unread input's warning; exit 1
+operations/name	m3/mini	reality.tally txt_name.tally	OPERATIONS §3.2 TXT-3: a name that is no id is refused at load
+operations/dup	m3/mini	reality.tally question.tally question_dup.tally	OPERATIONS §3.1 ASK-2: an ask's id must be new: LOAD-DUP
+operations/law	m3/mini	reality.tally pit.tally	OPERATIONS §3.6 LAW-1: a law part with its check ask: ok

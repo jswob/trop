@@ -1,0 +1,22 @@
+part facts_2028
+  tally 2
+
+source birth_ola "Akt urodzenia Oli, USC Kraków"
+
+version ola_born
+  cite birth_ola
+  governs always
+  known 2028-05-14
+  person + [ola] lives 2028-05-12..
+  born[ola] = 2028-05-12
+  replace parent = false "brak innych relacji rodzicielskich"
+  parent[ola, me] = true
+  parent[ola, wife] = true
+
+version ola_home
+  cite household
+  governs always
+  known 2028-05-14
+  claim_800[ola] = none "wniosek jeszcze nie złożony"
+  relief_parent[ola] = wife "ulgę na dziecko odlicza żona"
+  residence[ola] = pl governs 2026-01.. "mieszka z rodzicami w Krakowie"

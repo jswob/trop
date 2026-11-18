@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m3::{check_group_failures, check_groups};
 
     /// Every group of the store, each run by a test below.
-    const GROUPS: [&str; 20] = [
+    const GROUPS: [&str; 22] = [
         "probes",
         "probe-sets",
         "models",
@@ -38,6 +38,8 @@ mod tests {
         "notclean",
         "paths",
         "usage",
+        "changes",
+        "operations",
     ];
 
     /// Holds every vector of `group` at `part` modulo `parts` to its stored run.
@@ -217,5 +219,19 @@ mod tests {
     #[test]
     fn m3_check_usage() {
         checks_as_stored("usage");
+    }
+
+    /// The seven changes through OPERATIONS §6.1's step 2 (MILESTONE-M3.md row 6): each stage
+    /// with its change `ok`, and each without its advance of `on` refused `LOAD-KNOWN`.
+    #[test]
+    fn m3_check_changes() {
+        checks_as_stored("changes");
+    }
+
+    /// OPERATIONS §3 and §7's examples on the small model `mini`: the files §3 prints load, CHG-7's
+    /// `LOAD-KNOWN`, TXT-3's `LOAD-KEY`, ASK-2's `LOAD-DUP`, §7's worked scenario line and warning.
+    #[test]
+    fn m3_check_operations() {
+        checks_as_stored("operations");
     }
 }

@@ -1,0 +1,11 @@
+scenario acme_stops over mini
+  tally 2
+  from 2026-12-01
+
+version acme_stops_pay
+  cite s
+  governs 2026-12-01..
+  known 2026-10-19
+  salary[acme] = 0 PLN "założenie scenariusza"
+
+ask q_diff: diff(bal(konto, 2026-12-31)) in acme_stops against mini

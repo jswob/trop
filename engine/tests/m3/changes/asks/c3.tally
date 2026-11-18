@@ -1,0 +1,5 @@
+part m3_asks_c3
+  tally 2
+  note "T's def-level asks for change 3 (OPERATIONS §6.1 step 3, ASK-2)"
+
+ask c3_health: health_month[m] for m in [2026-12, 2027-01, 2027-02, 2027-03, 2027-04, 2027-05, 2027-06] law cut
