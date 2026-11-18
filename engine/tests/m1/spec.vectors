@@ -117,7 +117,8 @@ version card_2026
 
 
 ask c1: abs(age(w, d2))
-,,1:0,446:c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for abs" (w)
+,,1:0,463:c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for abs" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -182,7 +183,8 @@ version card_2026
 
 
 ask c3: pow(age(w, d2), n2)
-,,1:0,397:c3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+,,1:0,414:c3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input r2 is read by nothing
@@ -310,7 +312,8 @@ version card_2026
 
 
 ask c5: abs(age(w, d2) - n5)
-,,1:0,446:c5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for abs" (w)
+,,1:0,463:c5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for abs" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -515,7 +518,8 @@ version card_2026
 
 
 ask f1: add_months(d1, age(w, d2))
-,,1:0,453:f1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_months" (w)
+,,1:0,470:f1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_months" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -580,7 +584,8 @@ version card_2026
 
 
 ask f2: pow(n5, age(w, d2))
-,,1:0,446:f2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+,,1:0,463:f2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -645,7 +650,8 @@ version card_2026
 
 
 ask f3: add_days(d1, age(w, d2))
-,,1:0,451:f3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_days" (w)
+,,1:0,468:f3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_days" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -772,7 +778,8 @@ version card_2026
   tally 2
 
 ask w01: day_of(2026-03, age(w, d2))
-,,1:0,450:w01: ?"date within window(2026-03-03, 2026-03-20) not precise enough for day_of" (w)
+,,1:0,467:w01: ?"date within window(2026-03-03, 2026-03-20) not precise enough for day_of" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -836,7 +843,8 @@ version card_2026
   tally 2
 
 ask w11: pow(age(w, d2), age(w, d2))
-,,1:0,447:w11: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+,,1:0,464:w11: ?"date within window(2026-03-03, 2026-03-20) not precise enough for pow" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -900,7 +908,8 @@ version card_2026
   tally 2
 
 ask w13: add_years(w, age(w, d2))
-,,1:0,453:w13: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_years" (w)
+,,1:0,470:w13: ?"date within window(2026-03-03, 2026-03-20) not precise enough for add_years" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing

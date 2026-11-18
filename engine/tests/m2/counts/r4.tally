@@ -3,7 +3,7 @@ model r4
   on 2026-04-15
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2, the fence's counts (builder's R4, R7): a decision due on two days a month apart reads one projection from a fixed earlier day, a place first booked between the two runs; legs whose amount is a hole or refused on days a kept walk walked"
+  note "T, M2 gate 8 run 43749994847 on 205157a2, the fence's counts (builder's R4, R7): a decision due on two days a month apart reads one projection from a fixed earlier day, a place first booked between the two runs; legs whose amount is a hole or refused on days a kept walk walked (tally 2.2, pick P24: r7 takes a where that always holds, so it stays on the plain aggregate, whose day-by-day read, walks shared between its days, these counts pin; a vector of what the recognition of a min over days (C-10 (a)) must not take)"
 
 source card "invented for F6's counts"
 
@@ -71,7 +71,7 @@ move neg[m in month]: transfers
 
 ask r4: bal(konto, 2026-03-31)
 ask r4j: bal(jar, 2026-03-31)
-ask r7: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
+ask r7: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day where d >= 2026-02-01)
 
 version v
   cite card
