@@ -1475,12 +1475,16 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
     let engine = Engine::new(cut)
         .with_days(days)
         .with_how((seen.memo, seen.lows, seen.forks));
-    let mut engine = engine
+    let engine = engine
         .for_ask(ask)
         .in_tuple(env)
         .with_booked(core::mem::take(&mut seen.booked));
     #[cfg(feature = "fault-injection")]
-    engine.plant.clone_from(&seen.plant);
+    let engine = {
+        let mut engine = engine;
+        engine.plant.clone_from(&seen.plant);
+        engine
+    };
     engine
 }
 
@@ -1631,7 +1635,6 @@ fn extra_parts(x: &Expr) -> Vec<&Expr> {
         Expr::Flows(flows) => {
             out.extend([&flows.span.from, &flows.span.to].into_iter().flatten());
             out.extend(flows.for_key.iter());
-            out.extend(flows.convert.iter().flat_map(|(_, a, b)| [a, b]));
         }
         Expr::Covered(pair) => out.extend([&pair.1.from, &pair.1.to].into_iter().flatten()),
         Expr::AsIf(_, pins) => {

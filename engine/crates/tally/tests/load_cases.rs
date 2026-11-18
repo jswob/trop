@@ -736,23 +736,13 @@ version card_2026
             (
                 flowed,
                 "def flowed: money PLN = flows(world, y)",
-                "LOAD-UNIT flows of world, a place of unit any: it sums no one unit; convert it (in CUR at fx mode) (a.tally:59)",
+                "LOAD-UNIT flows of world, a place of unit any: it sums no one unit (a.tally:59)",
             ),
             (flowed, "def flowed: money PLN = flows(konto, y)", "loaded"),
             (
                 flowed,
                 "def flowed: money PLN = flows(pay[q1], y)",
                 "LOAD-KEY wrong number of keys for pay (a.tally:59)",
-            ),
-            (
-                flowed,
-                "def flowed: money PLN = flows(world, y) in PLN at amt half-up",
-                "LOAD-UNIT flows in PLN at amt: the rate is money PLN (a.tally:59)",
-            ),
-            (
-                flowed,
-                "def flowed: money PLN = flows(konto_eur, y) in PLN at fx half-up",
-                "loaded",
             ),
             (
                 worth,
