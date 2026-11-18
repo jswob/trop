@@ -1,0 +1,45 @@
+# tally 2.2 (CHANGES.md 2.2-11, pick P25). L §4.4: a computed value "carries the names it was computed from, as a
+# window does its own, and a hole made of either carries them too"; L §8.2 `unknown day:` names each unknown day a
+# hole of the result carries. A value computed from a window that a print needs as one value is the hole `not
+# precise enough for a print`, made where the answer is printed: its unknown days are named like any hole's, each
+# once, sorted with the rest (q1, q2: dx is computed from w and v; q3 beside a window value). A window value that
+# prints as a window is no hole and names none (q4).
+=== m.tally
+model ph
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+input w: date
+input v: date
+input d2: date
+
+def dx: int = age(w, d2) + age(v, d2)
+
+version r
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2000-03-01, 2000-03-31) "s"
+  v = window(1990-03-10, 1990-03-20) "s"
+  d2 = 2026-03-15 "s"
+
+ask q1: age(w, d2)
+ask q2: dx
+ask q3: age(w, d2), w
+ask q4: w
+=== expect
+q1: ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-06-30
+q2: ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
+  unknown day: v
+  unknown day: w
+  cut 2026-06-30
+q3: (?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w), window(2000-03-01, 2000-03-31))
+  unknown day: w
+  cut 2026-06-30
+q4: window(2000-03-01, 2000-03-31)
+  cut 2026-06-30

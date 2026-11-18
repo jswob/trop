@@ -1838,7 +1838,7 @@ def hole_days(vals):
     """The names of the unknown days the holes among vals carry (L §8.2 `unknown day:`; tally 2.2, 2.2-11): each
     question of a hole to the windows it was made of (evaluate.CARRY), by the label its read gives it (window_id). A
     window value that is no hole gives none."""
-    from .evaluate import CARRY
+    from .evaluate import CARRY, iv_carry
     out = set()
 
     def walk(x, depth=0):
@@ -1847,6 +1847,10 @@ def hole_days(vals):
         if isinstance(x, Hole):
             for q in x.qs:
                 out.update(str(w[1]) for w in CARRY.get(q, ()))
+        elif isinstance(x, Iv) and not isinstance(x.lo, datetime.date):
+            # a value computed from a window prints as the hole `not precise enough for a print` (fmt_value): a hole
+            # made of it carries its unknown days (L §4.4; tally 2.2, pick P25)
+            out.update(str(w[1]) for w in iv_carry(x))
         elif isinstance(x, (tuple, list, frozenset, set)):
             for y in x:
                 walk(y, depth + 1)

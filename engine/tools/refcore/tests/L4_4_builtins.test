@@ -26,4 +26,5 @@ ask q2: days_between(d, 2020-12-31)
 q1: (2020, window(2020-08-01, 2020-08-31))
   cut 2026-12-31
 q2: ?"date within window(2020-07-01, 2020-07-31) not precise enough for a print" (d)
+  unknown day: d
   cut 2026-12-31
