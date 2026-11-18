@@ -293,3 +293,4 @@ fixes/t22/rv4_b2_pins	fixes-22		engine/tests/m2/fixes/t22/rv4_b2_pins	engine/tes
 fixes/t22/rv4_b2_pin_calendar	fixes-22		engine/tests/m2/fixes/t22/rv4_b2_pin_calendar	engine/tests/m2/fixes/t22/rv4_b2_pin_calendar/m.tally	r7		S-4
 fixes/t22/rv4_pin_copy	fixes-22		engine/tests/m2/fixes/t22/rv4_pin_copy	engine/tests/m2/fixes/t22/rv4_pin_copy/m.tally	e1 e2		S-4
 fixes/t22/rv4_pin_copy_alone	fixes-22		engine/tests/m2/fixes/t22/rv4_pin_copy_alone	engine/tests/m2/fixes/t22/rv4_pin_copy_alone/m.tally	e2		S-4
+fixes/t22/min_step_week	fixes-22		engine/tests/m2/fixes/t22/min_step_week	engine/tests/m2/fixes/t22/min_step_week/m.tally			S-9
