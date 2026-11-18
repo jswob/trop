@@ -8,10 +8,12 @@
 //! (a `solve` step pins its one cell), §6.4 (the world a scenario names), §5.5 (an axis read
 //! at its option). The pins themselves are applied in `pins.rs`.
 //! Twin: engine/tools/refcore/evaluate.py (`PinVal`, `Ctx.pins`, `Ctx.wording`, `Ctx.axes`,
-//! `wording_ok`, `world_chain`, `axis_option`, `def_axes`).
+//! `wording_ok`, `world_chain`, `axis_option`, `def_axes`, `movement_keyed_cone`,
+//! `keyed_by_movement`).
 //! Invariants: layer 0 is the unpinned context; two pin sets with the same targets and values
 //! are one layer, whatever their texts; a def's cell is kept under its context trimmed to the
-//! pins its def reaches, and to every pin the walk reaches where it reads the timeline; a
+//! pins its def reaches, and to every pin the walk reaches where it reads the timeline, but
+//! whole where its cone holds a def keyed by a movement (tally 2.2, 2.2-10); a
 //! layer no open scope holds is freed with its cells and timelines when the scope that made it
 //! ends, never while a read that unwound past the counted depth still needs it; a scope's
 //! reads of the walk read the timeline of its world and walk pins (`timelines.rs`). The world
@@ -22,7 +24,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::state::{Ctx, Engine, invariant, refuse};
 use crate::base::Run;
-use crate::model::{KeyVal, NameKind, Node, NodeKind, Reality, Value, World};
+use crate::model::{Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, Reality, Value, World};
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -250,6 +252,8 @@ pub(crate) struct Layers {
     walkers: BTreeMap<Node, bool>,
     /// The axes each def reaches on the graph, once computed (L §5.5, E §3.2).
     def_axes: BTreeMap<String, BTreeSet<String>>,
+    /// Whether each def's cone holds a def keyed by a movement, once computed (E §3.2).
+    movement_keyed: BTreeMap<String, bool>,
     /// The axes the walk's readers reach, once computed (E §3.3).
     walk_axes: Option<BTreeSet<String>>,
     /// Each layer's pins on items the walk reaches and its options of the axes the walk
@@ -270,6 +274,7 @@ impl Default for Layers {
             timeline: None,
             walkers: BTreeMap::new(),
             def_axes: BTreeMap::new(),
+            movement_keyed: BTreeMap::new(),
             walk_axes: None,
             walk_pins: BTreeMap::new(),
             kept: Vec::new(),
@@ -422,13 +427,14 @@ impl Engine {
     /// item the def reaches and the options of the axes it reaches, and where the def reads
     /// the timeline every one the walk reaches too, so a def no pin or axis reaches shares
     /// the unpinned cell (E §3.2: "an item that reaches no axis has no axis options", §3.3;
-    /// P §3.1). The world is kept whole: a cell of one world is never another's.
+    /// P §3.1). The world is kept whole: a cell of one world is never another's. A def whose
+    /// cone holds a def keyed by a movement keeps `ctx` whole (tally 2.2, 2.2-10).
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a freed layer.
     pub(super) fn trimmed(&mut self, m: &Reality, def: &str, ctx: Ctx) -> Result<Ctx, Stop> {
-        if ctx.layer.is_base() {
+        if ctx.layer.is_base() || self.movement_keyed_cone(m, def) {
             return Ok(ctx);
         }
         let key = (def.to_owned(), ctx.layer.number());
@@ -499,6 +505,30 @@ impl Engine {
         let axes = crate::load::reach_axes(m, &m.graph, &Node::new(NodeKind::Def, def));
         self.layers.def_axes.insert(def.to_owned(), axes.clone());
         axes
+    }
+
+    /// Whether def `def`'s cone on the graph holds a def keyed by a movement, once computed.
+    /// Such a def reads the movements its key ranges over, which the graph records no edge
+    /// for, so the cone is no plain cone and the cell keeps its context's axes and pins
+    /// (refcore's `movement_keyed_cone`; tally 2.2, 2.2-10). E §3.2.
+    fn movement_keyed_cone(&mut self, m: &Reality, def: &str) -> bool {
+        if let Some(keyed) = self.layers.movement_keyed.get(def) {
+            return *keyed;
+        }
+        let mut seen = BTreeSet::new();
+        let mut stack = vec![Node::new(NodeKind::Def, def)];
+        let mut keyed = false;
+        while let Some(x) = stack.pop() {
+            if keyed || !seen.insert(x.clone()) {
+                continue;
+            }
+            keyed = x.kind == NodeKind::Def && keyed_by_movement(m, &x.id);
+            if let Some(reads) = m.graph.edges.get(&x) {
+                stack.extend(reads.keys().cloned());
+            }
+        }
+        self.layers.movement_keyed.insert(def.to_owned(), keyed);
+        keyed
     }
 
     /// The axes the walk's readers reach, `cone` being the items they reach, once computed:
@@ -745,6 +775,24 @@ pub(crate) fn world_named(m: &Reality, id: &str) -> Result<World, Stop> {
     m.scenarios.world(id, &m.header.id).ok_or(Stop::NotBuilt(
         "a world on another stack of scenarios than the ask's (refcore's cross evaluation)",
     ))
+}
+
+/// Whether def `def`'s header key ranges over an event kind, a subkind's included (refcore's
+/// `keyed_by_movement`; a subkind's spec is its root's). A def's key can't range over an
+/// observed input's rows (`LOAD-KEY`), so a kind is the one case. L §5.6, §5.19.
+fn keyed_by_movement(m: &Reality, def: &str) -> bool {
+    let Some(info) = m.defs.get(def) else {
+        return false;
+    };
+    for bind in &info.binds {
+        let Domain::Kind(kind) = &bind.domain else {
+            continue;
+        };
+        if m.kinds.get(kind).is_some_and(|k| k.spec == KindSpec::Event) {
+            return true;
+        }
+    }
+    false
 }
 
 /// Whether the def at `from` reaches the item `item`, as the graph's edges tell; an item the

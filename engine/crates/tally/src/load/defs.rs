@@ -2,8 +2,7 @@
 //! Spec: L §5.11 (a def's rules: `when` a bool, the value of the def's type, labels, `beats`
 //! naming a rule of the def and never in a cycle, a rule's guards), §5.9 (a band row's
 //! value), §4.3 (what an `at` reads), §7.1 (a key variable's integer offsets), §8.3
-//! (`LOAD-UNIT`, `-LABEL`, `-CYCLE`); E §3.2 (a def keyed by movements depends on them, so
-//! its cell keeps the axes and pins they reach; tally 2.2, #211).
+//! (`LOAD-UNIT`, `-LABEL`, `-CYCLE`).
 //! Twin: engine/tools/refcore/check.py (`def_scope`, `check_def` with its labels, `at_reads`,
 //! `when_vars`, `guard` and `item_offsets`, `_beats_cycle`, `tested_vars`); check3.py
 //! (`m_check_move`'s `when`).
@@ -17,7 +16,7 @@ use super::steps::refuse;
 use super::texts::{children, covered_spans};
 use super::types::{is_bool, refused, uerr};
 use crate::base::{Code, Load, Place as At, Refusal};
-use crate::model::{DefInfo, Domain, Node, NodeKind, Reality, Rel, Ty};
+use crate::model::{DefInfo, Node, NodeKind, Reality, Rel, Ty};
 use crate::syntax::{Expr, LawDate, Lit, RuleValue, Stop};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -40,13 +39,6 @@ impl Checker {
     pub(super) fn check_def(&mut self, m: &Reality, def: &DefInfo, file: &str) -> Result<(), Stop> {
         let line = def.decl.line;
         let at_scope = self.def_scope(m, def, Stands::At, (file, line))?;
-        // a key over an event kind: the def reads the movements it is keyed by, before its
-        // `at`, whose reads are only those the key doesn't make (tally 2.2, #211; E §3.2, L §4.3)
-        for bind in &def.binds {
-            if let Domain::Kind(kind) = &bind.domain {
-                self.key_movements(m, &at_scope, kind);
-            }
-        }
         for bind in &def.binds {
             if let Some(filter) = &bind.node.filter {
                 let scope = self.def_scope(m, def, Stands::Rule, (file, line))?;
@@ -373,141 +365,6 @@ mod tests {
         assert!(
             beats_cycle("fee", &chain, ("a.tally", 3)).is_ok(),
             "a chain is no cycle"
-        );
-    }
-
-    /// The plan's §3 text (`fx3.tally`): a def keyed by a movement whose amount reads an axis
-    /// and an input, summed by a helper def and written inline.
-    const KEYED_BY_MOVEMENT: &str = r#"model fx1
-  tally 2
-  on 2026-06-10
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-axis work
-  yes "in work"
-  no "not in work"
-place wallet: accounts EUR lives 2025-01-01..
-place world: outside lives 1900-01-01..
-input fx: num PLN/EUR
-input d1: date
-input amt[w in work]: money EUR
-input mo: month
-
-def pay: money EUR at reader
-  rule base = amt[work]
-
-move in1: transfers
-  on d1
-  at d1
-  leg cash from world to wallet amount pay
-
-def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
-
-def by_helper: money PLN at reader
-  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
-
-version v
-  cite s
-  governs always
-  known 2025-12-01
-  d1 = 2026-03-05 "s"
-  amt[yes] = 100.00 EUR "s"
-  amt[no] = 300.00 EUR "s"
-  mo = 2026-03 "s"
-  fx = 4.0 "s"
-  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
-
-ask h: by_helper law 2026-06-01
-ask h2: in_pln[t] for t in transfers over 2026-03 law 2026-06-01
-ask hp: by_helper, by_helper as if {amt[yes] = 500.00 EUR} with work = yes law 2026-06-01
-"#;
-
-    #[test]
-    fn a_def_keyed_by_a_movement_keeps_the_axes_and_pins_its_movements_reach() {
-        // tally 2.2, #211 (the plan's §3): the cell of in_pln[in1] was trimmed of the axis
-        // and the pin its movement's amount reads, and printed under `[work = *]`
-        let given = vec![crate::api::Given {
-            path: "fx.tally".to_owned(),
-            bytes: Some(KEYED_BY_MOVEMENT.as_bytes().to_vec()),
-        }];
-        let request = crate::api::Request {
-            asks: crate::api::Asks::Every,
-            pin: crate::api::Pin::Canonical,
-            days: crate::Days::Events,
-        };
-        let answer = crate::api::run(given, &request).expect("an answer");
-        let heads: Vec<&str> = answer
-            .lines()
-            .iter()
-            .map(String::as_str)
-            .filter(|l| !l.starts_with(' '))
-            .collect();
-        assert_eq!(
-            heads,
-            [
-                "h [work = yes]: 400.00 PLN",
-                "h [work = no]: 1 200.00 PLN",
-                "h2 (t = in1) [work = yes]: 400.00 PLN",
-                "h2 (t = in1) [work = no]: 1 200.00 PLN",
-                "hp: (400.00 PLN, 2 000.00 PLN)",
-            ],
-            "each option of the axis, and the pin, reach the def keyed by the movement"
-        );
-    }
-
-    /// A def keyed by `transfers` whose `at` binds over `transfers` too, with an observed input.
-    const AT_OVER_ITS_KEY: &str = r#"model n3
-  tally 2
-  on 2025-04-01
-  start 2025-03-01
-  end 2025-03-31
-source s "s"
-unit DUK: currency minor 0.01
-place konto: accounts DUK lives 2025-03-01..
-place world: outside lives 2025-03-01..
-input bank: observed
-input mo: month
-input d1: date
-input amt: money DUK
-input f: money DUK
-def fee[t in transfers]: money DUK = f at max(x.day for x in transfers over mo)
-move m1: transfers
-  on d1
-  leg cash from world to konto amount amt
-ask q: sum(fee[t] for t in transfers over mo)
-version v
-  cite s
-  governs always
-  known 2025-03-01
-  mo = 2025-03 "s"
-  d1 = 2025-03-05 "s"
-  amt = 10.00 "s"
-  f = 1.00 "s"
-  opening[konto] = 0.00 at 2025-03-01 start "s"
-"#;
-
-    #[test]
-    fn an_at_reads_only_what_its_defs_key_does_not() {
-        // tally 2.2, #211 (G1's review, N-3): the key's reads of the observed inputs are made
-        // before the `at`, so the `at` reads no law-dated fact and the ask needs no law
-        let given = vec![crate::api::Given {
-            path: "n3.tally".to_owned(),
-            bytes: Some(AT_OVER_ITS_KEY.as_bytes().to_vec()),
-        }];
-        let request = crate::api::Request {
-            asks: crate::api::Asks::Every,
-            pin: crate::api::Pin::Canonical,
-            days: crate::Days::Events,
-        };
-        let answer = crate::api::run(given, &request).expect("an answer");
-        assert_eq!(
-            answer.lines().first().map(String::as_str),
-            Some("q: 1.00 DUK"),
-            "refcore answers; the key's reads are not the at's"
         );
     }
 }

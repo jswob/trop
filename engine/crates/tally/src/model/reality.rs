@@ -363,18 +363,6 @@ impl Reality {
         out
     }
 
-    /// The moves of event kind `kind` or a subkind, in the table's order (refcore's
-    /// `m_kind_bind_edges`, its loop over the moves). L §5.7.
-    #[must_use]
-    pub fn moves_of(&self, kind: &str) -> Vec<&MoveInfo> {
-        let sub = self.subtree(kind);
-        self.moves
-            .entries()
-            .map(|(_, mv)| mv)
-            .filter(|mv| sub.contains(&mv.kind))
-            .collect()
-    }
-
     /// Whether the thing `name` is ever of kind `kind` or a subkind (refcore's `thing_in`).
     #[must_use]
     pub fn thing_in(&self, name: &str, kind: &str) -> bool {

@@ -286,39 +286,13 @@ impl Checker {
     /// input; one over a decision's movements or over `pads` is a running read (refcore's
     /// `m_bind_movements`). L §5.14.1.
     fn bind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
-        self.bound_kind(scope, kind);
-        self.kind_movements(m, scope, kind);
-        self.bound_observed(m, scope);
-    }
-
-    /// A def keyed by the movements of event kind `kind` depends on them as a binding over
-    /// the kind does: it reads every move of it or a subkind and every observed input, and
-    /// the kind's readers list it; one movement is no running read, so none is marked as one.
-    /// Its cell then keeps the axes and pins its movements depend on (refcore's `check_def`;
-    /// tally 2.2, #211). E §3.2, L §5.6.
-    pub(super) fn key_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
-        if m.kinds.get(kind).is_none_or(|k| k.spec != KindSpec::Event) {
-            return;
-        }
-        self.bound_kind(scope, kind);
-        for mv in m.moves_of(kind) {
-            self.edge(&scope.item, Node::new(NodeKind::Move, &mv.id), Rel::Bind);
-        }
-        self.bound_observed(m, scope);
-    }
-
-    /// `readers-of` kind `kind` lists the item (E §10, ruling P63).
-    fn bound_kind(&mut self, scope: &Scope, kind: &str) {
+        // `readers-of` the kind lists the item (E §10, ruling P63)
         self.graph
             .bound_kinds
             .entry(kind.to_owned())
             .or_insert_with(std::collections::BTreeSet::new)
             .insert(scope.item.clone());
-    }
-
-    /// The item reads every observed input, the rows a binding over an event kind meets
-    /// (refcore's `m_bind_movements`). L §5.19.
-    fn bound_observed(&mut self, m: &Reality, scope: &Scope) {
+        self.kind_movements(m, scope, kind);
         for (id, input) in m.inputs.entries() {
             if input.observed {
                 self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Bind);
@@ -330,17 +304,21 @@ impl Checker {
     /// those of a decision and `pads` a running read (refcore's `m_bind_movements`).
     /// L §5.14.1.
     fn kind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
-        for mv in m.moves_of(kind) {
-            self.edge(&scope.item, Node::new(NodeKind::Move, &mv.id), Rel::Bind);
+        let sub = m.subtree(kind);
+        for (id, mv) in m.moves.entries() {
+            if !sub.contains(&mv.kind) {
+                continue;
+            }
+            self.edge(&scope.item, Node::new(NodeKind::Move, id), Rel::Bind);
             if mv.decision {
                 self.mark(
                     &scope.item,
                     crate::model::Mark::Legs,
-                    crate::model::Target::Move(mv.id.clone()),
+                    crate::model::Target::Move(id.clone()),
                 );
             }
         }
-        if m.subtree(kind).contains("pads") {
+        if sub.contains("pads") {
             self.mark(
                 &scope.item,
                 crate::model::Mark::Legs,
