@@ -58,7 +58,7 @@ pub struct Pad {
 
 /// A reading row kept as the latest of its key: when it became known, and the row with its
 /// day and edge (L §5.19).
-type Kept<'a> = (Day, &'a BalanceRow);
+type Kept = (Day, BalanceRow);
 
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
 /// the cut, of a version the world sees, a restated one replaced as `replace` says (a
@@ -77,8 +77,7 @@ pub(crate) fn readings(
 ) -> Result<Vec<Seen>, Stop> {
     // a reading row is keyed by its place, instant and input; its unit is its place's (L §4.6,
     // §5.10)
-    let mut cands: BTreeMap<(&str, String, &str), (&PlaceReadings, Vec<Kept<'_>>)> =
-        BTreeMap::new();
+    let mut cands: BTreeMap<(&str, String, &str), (&PlaceReadings, Vec<Kept>)> = BTreeMap::new();
     for (place, of_place) in &m.balance_readings {
         for balance in &of_place.rows {
             if !m.scenarios.sees(world, Some(&balance.row.version)) {
@@ -94,7 +93,7 @@ pub(crate) fn readings(
                 .entry(key)
                 .or_insert_with(|| (of_place, Vec::new()))
                 .1
-                .push((known_on, balance));
+                .push((known_on, balance.clone()));
         }
     }
     let mut out = Vec::with_capacity(cands.len());
@@ -125,7 +124,7 @@ pub(crate) fn readings(
 /// The row that stands among the readings `rows_at` of one place, instant and input: of the
 /// rows no `replace` row beats, the latest known, the first at a tie (refcore's `choose`,
 /// its replacement, as `read/rows.rs` `unreplaced` weighs other rows). L §4.6 step 2, §6.4.
-fn standing<'a>(m: &Reality, rows_at: Vec<Kept<'a>>) -> Option<Kept<'a>> {
+fn standing(m: &Reality, rows_at: Vec<Kept>) -> Option<Kept> {
     let mut best: Option<usize> = None;
     for (at, (known, balance)) in rows_at.iter().enumerate() {
         if replaced(m, &rows_at, (*known, &balance.row)) {
@@ -144,7 +143,7 @@ fn standing<'a>(m: &Reality, rows_at: Vec<Kept<'a>>) -> Option<Kept<'a>> {
 /// Whether a `replace` row among `rows_at` beats row `row`, known on `known`: one of a layer
 /// above its own, whatever the two rows' `known` dates (a branch stands above its base), or
 /// one of its own layer known after it. L §4.6 step 2, §6.4.
-fn replaced(m: &Reality, rows_at: &[Kept<'_>], (known, row): (Day, &crate::model::Row)) -> bool {
+fn replaced(m: &Reality, rows_at: &[Kept], (known, row): (Day, &crate::model::Row)) -> bool {
     let layer = m.scenarios.layer(Some(&row.version));
     for (k, balance) in rows_at {
         let other = &balance.row;
