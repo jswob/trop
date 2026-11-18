@@ -69,7 +69,7 @@ This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The 
 
 The **modelled past** (planned movements on covered days before K, and instances an observation the cut applies fulfils, §6.2) is computed and kept for the residual ledger, but it isn't in the timeline's balances.
 
-**Nothing is stored.** A caller may keep a result under its hash (`OPERATIONS.md` §5); a path is recomputed on demand (§7, N-2004).
+**Nothing is stored.** A caller may keep a printed result under the reality's hash, the request and the binary (`OPERATIONS.md` §5); a path is recomputed on demand (§7, N-2004).
 
 ---
 
@@ -112,7 +112,7 @@ The four clocks of the spec (T-16, N-1219):
 
 ### 3.1 Loading
 
-Loading happens once per reality and is cached under the reality's hash; load sees what LANGUAGE §8.3 lists. When it finishes, no failure of structure remains: everything left is a per-value refusal or a hole.
+Loading happens once per call; load sees what LANGUAGE §8.3 lists. When it finishes, no failure of structure remains: everything left is a per-value refusal or a hole.
 
 1. **Parse** every file, and reprint it in the canonical format (LANGUAGE §2.4). The reality's hash is the sha256 of the UTF-8 bytes of its canonical text, its files reprinted and taken in the order of their paths in its directory tree (compared by code point), so spacing never changes a hash (a semantic hash: Dhall's is of a normal form, not of the text, D-9). A joint model's `use` line pins a member by this hash, written as 64 lower-case hexadecimal digits, so a member that is itself a joint model pins its own members through its `use` lines. A joint model's imports are checked against their hashes (`LOAD-PIN`) and loaded as closed members under their prefixes (LANGUAGE §6.1): a member's items are evaluated in its own namespace, as when it loads alone, its bindings over the prelude's kinds ranging over its own things. Only the joint model's own items range over every member's things, through the prelude's kinds, which all of them share, and through members' kinds stated `same`, which are one kind; a member's other kinds stay under its prefix. A movement of the joint model's own versions into a member's place is booked there only as LANGUAGE §6.1 says.
 2. **Resolve** names in the one namespace, imports' as `a.item`, keys by position, and the visibility of scenario items (LANGUAGE §2.5, §6.4).
@@ -490,7 +490,7 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 | **Per-value refusals** (LANGUAGE §8.4) | a value can't be computed | printed at its key; it propagates and outranks holes |
 | **Holes** (LANGUAGE §8.1) | a fact is missing | printed with their questions; other results stand |
 | `REQ-ASK` | the request names an ask that doesn't exist (an ask in a file handed over with the reality that doesn't load is refused at load, LANGUAGE §8.3; `OPERATIONS.md` §3.1) | the request is refused, after load (a load refusal outranks it), in every shape of reality (a plain one, one with scenarios, a joint model): `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
-| `REQ-CLOCK` | a cut the request or an ask's literal states after `on` (`as known`, `with known`) | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s |
+| `REQ-CLOCK` | a cut an ask's literal states after `on` (`as known`, `with known`) | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s |
 | `REQ-PATHS` | more than 100 000 paths for one ask | the request is refused |
 | `ENGINE-INVARIANT` | §9 fails | the whole result is refused, with the evidence |
 
