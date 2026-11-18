@@ -24,8 +24,9 @@
 //! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (for one read,
 //! `projection`: the projection's own walk; for the `min` of `bal(x, d) from t` over the days
 //! a .. b that E §4.3 reads as one range minimum, projection.rs's `lowest_shape` and
-//! `range_minimum`, the aggregate `min`, its terms read day by day, eval/aggregate.rs, as
-//! `Lows::Walk` reads it); the equivalence test: the CLI's
+//! `range_minimum`, one walk from t read day by day, `days_read`, as `Lows::Walk` reads it;
+//! the same `min` read term by term, eval/aggregate.rs, agrees with both by T's law `low-min`
+//! and refcore's vectors); the equivalence test: the CLI's
 //! `tests/walk_oracle.rs` (the kernel and M1 corpora, and a projection under axes and in a
 //! scenario's world, the same bytes under `Lows::Tree` and `Lows::Walk`), and this file's tests.
 //!
@@ -1182,9 +1183,9 @@ version rise
     #[test]
     fn the_tree_reads_the_common_case_where_the_walk_isnt_walked() {
         let m = reality();
-        // the twin reads the `min`'s 150 days as its terms, each day's projection a walk of
-        // its own with forks off; the tree reads each day's from its one tree
-        for (id, days) in [("low_from", 150), ("bal_from", 1)] {
+        // the twin reads the recognised `min`'s 150 days from one walk, day by day, as it
+        // reads the one balance: the range minimum with the fence off, as `low`'s was
+        for id in ["low_from", "bal_from"] {
             let (tree, walks, trees) = read(&m, id, Lows::Tree);
             let (walk, twin_walks, twin_trees) = read(&m, id, Lows::Walk);
             assert_eq!(tree, walk, "{id}: the same value");
@@ -1195,8 +1196,8 @@ version rise
             );
             assert_eq!(
                 (twin_walks, twin_trees),
-                (days, 0),
-                "{id}: the twin walks it"
+                (1, 0),
+                "{id}: the twin walks it once"
             );
         }
     }
