@@ -16,7 +16,7 @@ import datetime
 import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
-from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on
+from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on, new_ask
 from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
@@ -296,6 +296,7 @@ class Line:
         self.coll = coll
         self.reading = reading
         self.trace = trace
+        self.each_vals = None   # the values of every combination the line stands for (group), for its names
 
 
 def warning_lines(warnings):
@@ -340,6 +341,7 @@ class Asker:
         out = []
         try:
             for a in order:
+                new_ask()
                 if isinstance(a, str):
                     out.extend(self.member_ask(a))
                     continue
@@ -998,10 +1000,12 @@ class Asker:
             for prod in split(axes, [dict(c) for c in cs], self.m):
                 coll = Coll()
                 first = None
+                each_vals = []
                 for c in cs:
                     d = dict(c)
                     if all(d[ax] in opts for ax, opts in prod):
                         coll.merge(results[c].coll)
+                        each_vals.append(results[c].vals)
                         if first is None:
                             first = results[c]
                 axes_parts = []
@@ -1014,7 +1018,11 @@ class Asker:
                         ol = [o for o in allo if o in opts]
                         axes_parts.append((ax, ol))
                         reading.append('%s = %s' % (ax, ' | '.join(ol)))
-                lines.append(Line(None, axes_parts, first.vals, coll, reading, first.trace))
+                ln = Line(None, axes_parts, first.vals, coll, reading, first.trace)
+                # its unknown days are the union of the combinations' it stands for, as its register is
+                # (L §8.2, §5.5; tally 2.2, pick P26)
+                ln.each_vals = each_vals
+                lines.append(ln)
         # order: by the axes' options in declaration order, axes in id order; * first
         def sk(ln):
             out = []
@@ -1075,7 +1083,8 @@ class Asker:
             if not refused or ('pin met', e[1]) in ln.coll.reg:
                 coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
-        out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws, hole_days(vals)))
+        out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws,
+                                                          hole_days(ln.each_vals if ln.each_vals is not None else vals)))
         if a.orient is not None:
             # "Any other ask may state it, and it is printed" (L §5.15): this interpreter's layout
             out.append('  orient %s' % a.orient)

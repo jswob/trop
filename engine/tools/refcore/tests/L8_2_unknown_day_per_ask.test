@@ -1,0 +1,55 @@
+# tally 2.2 (CHANGES.md 2.2-11, pick P26). An ask's register doesn't depend on the asks before it: e2 pins the def
+# copy wc to the read of wb, so nothing reads wa under the pin and e2 names wb alone, run after e1 or alone (L §8.2:
+# an entry is listed exactly when a read in its set gives it). refcore kept e1's carried names across asks.
+=== m.tally
+model g4_pin_copy3
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-12-31
+  note "G4 review: a def copy wc of a window wa, pinned to another window's read wb; only wb is read."
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input wa: date
+
+input wb: date
+
+def wc: date = wa
+
+move pay_a: transfers
+  on wc
+  leg cash from world to konto amount pay
+
+move pay_b: transfers
+  on wb
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  wa = window(2026-03-05, 2026-03-07) "c"
+  wb = window(2026-03-05, 2026-03-07) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+
+ask e1: bal(konto, 2026-03-06)
+ask e2: bal(konto, 2026-03-06) with wc = wb
+=== expect e1 e2
+e1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_a, pay_b)
+  unknown day: wa
+  unknown day: wb
+  cut 2026-01-10
+e2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_a, pay_b)
+  pinned: wc = window(2026-03-05, 2026-03-07)
+  unknown day: wb
+  cut 2026-01-10

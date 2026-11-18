@@ -1114,13 +1114,7 @@ class Engine:
         self.index_assumed(info)
         pv = self.pin_value(info, keys, ctx)
         if pv is not NOPIN and not (isinstance(pv, tuple) and pv[0] == 'fields'):
-            if isinstance(pv, Iv) and pv.origin is None and isinstance(pv.lo, datetime.date):
-                # a pin whose value is a window written there: an unknown day named by the read it pins (L §4.4: a
-                # copy keeps the name; P30)
-                org = self.origin(info, keys)
-                pv = Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
-                        name=('pin', info.id, tuple(_kv(k) for k in keys)))
-            return pv
+            return self.pinned_read(pv, info, keys)
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
             return self.read_reading(info, keys, ctx, probe)
@@ -1231,13 +1225,23 @@ class Engine:
             return self.no_candidate(info, keys, ctx, d, None)
         return v
 
+    def pinned_read(self, pv, info, keys):
+        """A pin's value as the read of the cell it pins: a window written there is an unknown day named by that
+        read, as an input's, a def's or a `last` read names it (L §4.4: a copy keeps the name, a pin whose value is
+        the read; §8.2 `unknown day:`; P30; tally 2.2, pick P26)."""
+        if isinstance(pv, Iv) and pv.origin is None and isinstance(pv.lo, datetime.date):
+            org = self.origin(info, keys)
+            return Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
+                      name=('pin', info.id, tuple(_kv(k) for k in keys)))
+        return pv
+
     def last_value(self, info, keys, d, ctx):
         """last(x[k], d), the one carry every form defined by it reads (L §4.6; `by last(p)`, `priced last(p)`,
         L §5.10; tally 2.1.7 R6, #118, #123): the latest row whose span began on or before d (the latest reading for
         a reading), marked held unless it governs always; NONE where no row began."""
         pv = self.pin_value(info, keys, ctx)
         if pv is not NOPIN and not isinstance(pv, tuple):
-            return pv
+            return self.pinned_read(pv, info, keys)
         try:
             cands = self.candidates(info.rows, keys, d, ctx, info, last_before=d)
         except HoleSignal as h:
@@ -1408,7 +1412,7 @@ class Engine:
             ctx = ctx.but(walk=None, wp=None)
         pv = self.pin_value(info, keys, ctx)
         if pv is not NOPIN and not (isinstance(pv, tuple) and pv[0] == 'fields'):
-            return pv
+            return self.pinned_read(pv, info, keys)
         for b, k in zip(info.binds, keys):
             if b.node.where is not None or b.dom[0] == 'list':
                 pass
@@ -4448,6 +4452,12 @@ def range_is_literal(d):
 # of a HOLE-IMPRECISE, keyed as the hole holds it, to the windows it was made of, (id, label, days) in the order the
 # line's reads met them. A hole made of others keeps their questions, so it carries their windows.
 CARRY = {}
+
+
+def new_ask():
+    """Each ask starts with no carried names: CARRY's entries are those its own reads made, as its Engine's memo is
+    (an ask's output doesn't depend on the asks before it; tally 2.2, pick P26)."""
+    CARRY.clear()
 
 
 def cal_at_text(cal):

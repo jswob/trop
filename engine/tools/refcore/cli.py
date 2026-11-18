@@ -5,6 +5,7 @@ import sys
 import threading
 
 from .errors import TallyError, NotYet
+from .evaluate import new_ask
 
 
 def run_texts(texts, ids=None, options=None):
@@ -386,6 +387,7 @@ def run_worlds(heads, ids=None, loader=None, srcs=None):
     else:
         order = sorted(asks)
     for akey in order:
+        new_ask()
         if isinstance(akey, str):
             asker = askers.get(None)
             if asker is None:
