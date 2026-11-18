@@ -4940,6 +4940,38 @@ version v1
         }
     }
 
+    /// M3, #192's row 12 (G1-fix N-a): a base diff's axes over both its worlds are counted at
+    /// load, so a diff past 64 refuses the run whatever is asked: its own id, another ask's, an
+    /// id no ask has. Where its worlds share a stack, the deeper scenario's own load counts both
+    /// sides and refuses that scenario alone. Expected texts are refcore's
+    /// (`cross_world_forks`), on `tmp/m3/g1/r12` and `r12x`.
+    #[test]
+    fn a_base_diff_s_axes_over_both_worlds_are_counted_at_load_whatever_is_asked() {
+        const BASE: &str = "model fk\n  tally 2\n  on 2026-06-30\n  start 2026-01-01\n  end 2026-12-31\n\nsource s \"synthetic\"\n\naxis x\n  x1 \"1\"\n  x2 \"2\"\n  x3 \"3\"\n\naxis y\n  y1 \"1\"\n  y2 \"2\"\n  y3 \"3\"\n\naxis z\n  z1 \"1\"\n  z2 \"2\"\n  z3 \"3\"\n\naxis w\n  w1 \"1\"\n  w2 \"2\"\n  w3 \"3\"\n\ninput flag: bool\n\ndef d: int at reader\n  rule base = 1\n  rule bx beats base = 0 when x == x2 and y == y2\n  rule bz beats base, bx = 1 when flag\n\nask other: 1\n\nask q: diff(d) in sa against sb law 2026-06-01\n\nversion v\n  cite s\n  governs always\n  known 2026-01-01\n  flag = false\n";
+        let scenario = |id: &str, over: &str, axis: &str| {
+            format!(
+                "scenario {id} over {over}\n  tally 2\n  from 2026-01-01\n\nversion {id}_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-01\n  replace rule d.bz = 1 when {axis} == {axis}2\n"
+            )
+        };
+        let forks = "LOAD-FORKS ask q reaches 81 axis combinations; the cap is 64 (base.tally:38)";
+        let two_stacks = [
+            ("base.tally", BASE.to_owned()),
+            ("sa.tally", scenario("sa", "fk", "z")),
+            ("sb.tally", scenario("sb", "fk", "w")),
+        ];
+        for ask in ["q", "other", "nope"] {
+            let expected = format!("refused: {forks}");
+            assert_eq!(load_lines(&two_stacks, ask), expected, "two stacks, {ask}");
+        }
+        let one_stack = [
+            ("base.tally", BASE.to_owned()),
+            ("sa.tally", scenario("sa", "fk", "z")),
+            ("sb.tally", scenario("sb", "sa", "w")),
+        ];
+        let expected = format!("scenario sb: refused: {forks}");
+        assert_eq!(load_lines(&one_stack, "other"), expected, "one stack");
+    }
+
     /// `none` written for a place in an observed row's leg is named as written (refcore's
     /// `place_ref`, its `ref.k`; the review of group 2's N4). L §5.10.
     #[test]

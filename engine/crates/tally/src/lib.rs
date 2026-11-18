@@ -360,7 +360,7 @@ pub mod load {
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
     pub(crate) use keys::literal_end;
-    pub(crate) use pins::{forks_past_cap, reach_axes};
+    pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
     pub(crate) use texts::{children as expr_children, post_text, text as expr_text};

@@ -2,22 +2,26 @@
 //! refusal refuses only that scenario.
 //! Spec: L §6.4 (scenarios: `scenario s over b`, a stack over the model at most 4 deep; an id a
 //! scenario declares, read outside it), §6.1 (one model; a joint model, merged first), §8.3
-//! (which refusal prints: every file split, by full path, before any is parsed); E §3.1 step 1;
-//! E §11 (`REQ-ASK`: an ask a refused scenario's file declares exists).
+//! (which refusal prints: every file split, by full path, before any is parsed), §5.5 (a base
+//! diff's axes, both its worlds', counted at load: `LOAD-FORKS`); E §3.1 step 1; E §11
+//! (`REQ-ASK`: an ask a refused scenario's file declares exists).
 //! Twin: engine/tools/refcore/cli.py (`_run_texts`, `run_worlds` up to its asks, `declared_ids`,
-//! `declared_asks`); loader.py (`scenario_header`, `load_texts`). The base's own refusals of a
-//! scenario's ids, a key literal's read and
-//! a rule's `v`, have no twin: refcore refuses them at run or as `LOAD-NAME` (issue #75).
+//! `declared_asks`, `cross_world_forks`); loader.py (`scenario_header`, `load_texts`). The
+//! base's own refusals of a scenario's ids, a key literal's read and a rule's `v`, have no
+//! twin: refcore refuses them at run or as `LOAD-NAME` (issue #75).
 //! Invariants: every file is split, in the order given, before any is parsed; the base loads
 //! first, and its refusal is the run's; each scenario loads with the base's files, then its
-//! stack from the model up; a world that stops `NotBuilt` stops the run.
+//! stack from the model up; a world that stops `NotBuilt` stops the run; a base diff past 64
+//! combinations over its worlds refuses the run once every world is loaded.
 
+use super::check::invariant;
 use super::joint::{joint_root, load_joint};
+use super::pins::forks_past_cap;
 use super::steps::load_among;
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Place, Reach, Refusal};
 use crate::model::{Joint, Reality};
-use crate::syntax::{Line, Stop, cannot, parse_split, split_lines};
+use crate::syntax::{AskBody, Line, Stop, cannot, parse_split, split_lines};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The deepest stack of scenarios over the model (L §6.4).
@@ -225,7 +229,57 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>) -> Result<Worlds, Stop> {
             Err(stop @ (Stop::NotBuilt(_) | Stop::Deep)) => return Err(stop),
         }
     }
+    if let Some(refusal) = cross_world_forks(&worlds)? {
+        return Err(Stop::Refused(refusal));
+    }
     Ok(worlds)
+}
+
+/// `LOAD-FORKS` at the first of the base's diffs whose axes pass 64 combinations, counted over
+/// the base and both its worlds: a diff's cells are read in its two worlds, so it reaches the
+/// axes either reaches, where each world's own load counts its side only (refcore's
+/// `cross_world_forks`). Counted at load, it refuses the run whatever is asked. L §5.5
+/// Refusals, §5.18.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an axis its world doesn't declare or an ask with no file; `NotBuilt`
+/// for a count past the number kernel's digits.
+fn cross_world_forks(w: &Worlds) -> Result<Option<Refusal>, Stop> {
+    let counted = w
+        .base
+        .asks
+        .iter()
+        .filter(|ask| !w.base.asks_alone.contains_key(&ask.id));
+    for ask in counted {
+        let AskBody::Diff(diff) = &ask.body else {
+            continue;
+        };
+        let sides = [&diff.world, &diff.against].map(|world| w.loaded.get(world));
+        // an axis's options as the base declares it, else as the first world that reaches it
+        let mut options: BTreeMap<&str, usize> = BTreeMap::new();
+        for reality in core::iter::once(&w.base).chain(sides.into_iter().flatten()) {
+            for axis in reality.graph.ask_axes.get(&ask.id).into_iter().flatten() {
+                let declared = reality
+                    .axes
+                    .get(axis)
+                    .ok_or_else(|| invariant(format!("axis {axis} isn't declared")))?;
+                options.entry(axis).or_insert(declared.options.len());
+            }
+        }
+        let counts: Vec<usize> = options.into_values().collect();
+        if let Some(message) = forks_past_cap(&ask.id, &counts)? {
+            let file = w
+                .base
+                .graph
+                .ask_files
+                .get(&ask.id)
+                .ok_or_else(|| invariant(format!("ask {} has no file", ask.id)))?;
+            let place = Place::Line(file.clone(), ask.line);
+            return Ok(Some(Refusal::at(Code::Load(Load::Forks), message, place)));
+        }
+    }
+    Ok(None)
 }
 
 /// The stack of the scenario whose file and header are given: its id, then each scenario it is

@@ -85,7 +85,7 @@ pub(super) fn check_forks(
 /// # Errors
 ///
 /// `NotBuilt` for a count past the number kernel's digits.
-pub(crate) fn forks_past_cap(id: &str, counts: &[usize]) -> Result<Option<String>, Stop> {
+pub(super) fn forks_past_cap(id: &str, counts: &[usize]) -> Result<Option<String>, Stop> {
     let mut n = Num::int(1);
     for options in counts {
         let count = i64::try_from(*options).map_err(|_| too_many(NumError::Digits))?;
@@ -103,8 +103,8 @@ pub(crate) fn forks_past_cap(id: &str, counts: &[usize]) -> Result<Option<String
     )))
 }
 
-/// Each ask's file, for a refusal at its line met once the run plans its worlds: a diff whose
-/// two worlds sit on two stacks, whose cone is both worlds' (`LOAD-FORKS`). L §5.5, §6.4.
+/// Each ask's file, for a refusal at its line met once every world is loaded: a base diff,
+/// whose cone is both its worlds' (`LOAD-FORKS`). L §5.5, §6.4.
 ///
 /// # Errors
 ///
