@@ -94,7 +94,7 @@ impl Walk {
 
     /// The legs of the modelled-past instances at place `place` in unit `unit`, by position
     /// (the instance's, the leg's), each with its sign there (−1 out, +1 in), dated (by the
-    /// leg's day, else the instance's first) through day `d` and standing after the reading at
+    /// instance's day, a window's first) through day `d` and standing after the reading at
     /// `since` in the day walk's order (refcore's `m_bal_modelled`, its loop over
     /// `w.modelled`). E §6.2, §4.2 step 3.
     fn modelled_legs(
@@ -120,11 +120,11 @@ impl Walk {
             if after.contains(&inst.id.as_str()) {
                 continue;
             }
-            let inst_day = inst.day.as_ref().and_then(Dated::lo);
+            // its legs are on its day, a window's first
+            let Some(gd) = inst.day.as_ref().and_then(Dated::lo) else {
+                continue;
+            };
             for (li, lg) in inst.legs.iter().enumerate() {
-                let Some(gd) = lg.day.day().or(inst_day) else {
-                    continue;
-                };
                 let in_unit = lg.unit.as_deref().is_none_or(|u| u == unit);
                 if gd > key.day || !in_unit {
                     continue;

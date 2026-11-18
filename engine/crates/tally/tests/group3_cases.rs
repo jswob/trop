@@ -1,6 +1,5 @@
 //! The builder's tests of group 3's review: each review input, the lines refcore prints for the asks it names.
-//! Spec: L §5.14.1 and E §4.3 step 2 (a projection counts every leg dated t through d,
-//! tally 2.1.8 R16, #183; pick P39 on B2), L §5.18 (R15: `partial` follows what is linear),
+//! Spec: L §5.18 (R15: `partial` follows what is linear),
 //! L §5.10 and §4.6 (R14: a place of unit `any` read unit by unit), L §4.6 Readings and §4.4
 //! (#175: a reading `after m`, its key, its window day, pick P29), L §8 (refusals outrank
 //! holes), L §5.19 (`bal … modelled`, pick P39 on B8).

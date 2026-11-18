@@ -42,10 +42,7 @@ use crate::time::Day;
 /// A movement the plan pass hands the walk: a plan instance, by its place in the walk's list;
 /// a decision's run books its legs at its point (E §4.2 step 3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Mv {
-    /// A plan instance.
-    Plan(usize),
-}
+pub struct Mv(pub usize);
 
 /// A reading the cut sees, as the walk applies it (refcore's `readings` entries). L §5.19.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -751,7 +748,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     let ix = walk.insts.len();
     let status = inst.status;
     walk.insts.push(inst.clone());
-    let mv = Mv::Plan(ix);
+    let mv = Mv(ix);
     let point = |day: Day| At {
         rank,
         ..At::of(day, Step::Plans)

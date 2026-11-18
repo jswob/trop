@@ -886,7 +886,8 @@ impl Gathered {
                 self.tree.open = false;
                 return Ok(());
             }
-            // its instance's day is a hole, which the walk holds from its start
+            // a leg's day is its instance's, and a booked plan's is never a hole: an instance
+            // whose day is one has the status `Hole`, which `hole` takes
             Dated::Hole(_) => return Ok(()),
         };
         let q = match (&lg.amount, lg.unit.as_deref()) {

@@ -1245,7 +1245,7 @@ impl Engine {
                     continue;
                 }
                 if let Member::Obs(row) = o
-                    && !self.obs_end_on(m, row, p, g.day.day().unwrap_or(row.day), cut)?
+                    && !self.obs_end_on(m, row, p, row.day, cut)?
                 {
                     continue;
                 }
@@ -1259,7 +1259,8 @@ impl Engine {
     /// plans before decisions, a decision at its point (refcore's `same_book_key`). E §4.2
     /// steps 1–3, L §6.1.
     fn book_key(&self, id: usize, x: &Member, lg: &LegVal) -> Result<Option<At>, Stop> {
-        let Some(day) = lg.day.day().or_else(|| x.day()) else {
+        // a leg is on its member's day, a window's first
+        let Some(day) = x.day() else {
             return Ok(None);
         };
         let walk = self.walk(id)?;

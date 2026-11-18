@@ -933,8 +933,9 @@ impl Engine {
             .sub
             .checked_add(1)
             .ok_or_else(|| invariant("a point past the counted subpoints"))?;
-        for wo in &own {
-            for lg in wo.obs.legs.iter().filter(|lg| lg.day.day() == Some(t)) {
+        // its observations of day t, each leg on its observation's day
+        for wo in own.iter().filter(|wo| wo.obs.day == t) {
+            for lg in &wo.obs.legs {
                 self.book_obs_now(m, id, wo, lg, key.with_sub(sub))?;
             }
         }

@@ -372,11 +372,10 @@ impl Engine {
 
     /// A movement of the walk and one of its legs. E §4.2.
     fn movement_leg(&self, id: usize, mv: Mv, leg: usize) -> Result<(Inst, LegVal), Stop> {
-        let Mv::Plan(i) = mv;
         let inst = self
             .walk(id)?
             .insts
-            .get(i)
+            .get(mv.0)
             .ok_or_else(|| invariant("an act of a movement the walk lacks"))?;
         let lg = inst
             .legs
@@ -389,8 +388,8 @@ impl Engine {
     /// Books instance `inst`'s leg `lg`'s two ends: a hole at both for a hole amount, nothing
     /// for 0, `RUN-LIFESPAN` for an end outside its place's lifespan; in a group of the sign
     /// rule it waits for the group, otherwise it is tested at once (refcore's `book_leg`).
-    /// Its `before from:` entry is dated by the leg's day, else the instance's, and a leg
-    /// dated by neither has none (refcore's `before_from`). E §4.2 step 2, step 5, §9 item 3;
+    /// Its `before from:` entry is dated by the instance's day, and a leg of an instance dated
+    /// by no day has none (refcore's `before_from`). E §4.2 step 2, step 5, §9 item 3;
     /// L §5.14 Legs, §8.2 `before from:`.
     pub(super) fn book_leg(
         &mut self,
@@ -405,14 +404,9 @@ impl Engine {
             (walk.world, walk.cut)
         };
         let mut reg = reg.to_vec();
-        let day = lg
-            .day
-            .day()
-            .or_else(|| inst.day.as_ref().and_then(Dated::day));
-        // the window the leg is dated by, its own or its instance's
-        let window = if let Dated::Window(w) = &lg.day {
-            Some(w)
-        } else if let Some(Dated::Window(w)) = &inst.day {
+        // a leg is on its instance's day, a day or a window
+        let day = inst.day.as_ref().and_then(Dated::day);
+        let window = if let Some(Dated::Window(w)) = &inst.day {
             Some(w)
         } else {
             None

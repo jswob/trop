@@ -754,14 +754,14 @@ fn uncertain_rows(
     rows: &mut Vec<(Day, String)>,
 ) -> Result<(), Stop> {
     for inst in &walk.uncertain {
-        let day = inst.day.as_ref().and_then(Dated::lo);
+        // its legs are on its day, a window's first
+        let Some(gd) = inst.day.as_ref().and_then(Dated::lo) else {
+            continue;
+        };
+        if gd > end || since.is_some_and(|s| At::end(gd) <= s) {
+            continue;
+        }
         for lg in &inst.legs {
-            let Some(gd) = lg.day.day().or(day) else {
-                continue;
-            };
-            if gd > end || since.is_some_and(|s| At::end(gd) <= s) {
-                continue;
-            }
             for (side, at_end) in [(Side::Out, &lg.from), (Side::In, &lg.to)] {
                 if at_end.place() == Some(place) {
                     let amount = amount_text(m, lg, side)?;
