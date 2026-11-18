@@ -2,25 +2,12 @@
 
 These documents are carried into the package as they are. They plan or check the engine's build for tally 1.0.1, and nothing in session 4's design round checked them against tally 2 (brief §8). Each is rewritten for tally 2 before a gate that cites it is judged (`DONE-proposals.md`). Below, per document, the sections that name a construct tally 2 removed, merged or changed, and what reaches it. The list comes from a word scan (`scratch/lead/stale_map.py`), so it says where to reread, not what the new text is. A section not listed may still be reached through a word the scan doesn't know.
 
-**Tally 2.1** (session 7b, 2026-10-30) reaches them once more: a place whose kind keeps parts (`owned`, `batched`) carries a part map, an arrival rule and takes, so `PERFORMANCE.md`'s costs and `BOUNDS.md`'s bounds don't cover the labels' cost (`engine/BUILD-NOTES.md`, the labels' cost; load row L:18). `PERFORMANCE.md`, `BOUNDS.md` and `BUILD-ORDER.md` were rewritten for tally 2.1 on 2026-10-30 (session 8b, below); `OPERATIONS.md`, `smoke/` and `verification/` stay stale.
+**Tally 2.1** (session 7b, 2026-10-30) reaches them once more: a place whose kind keeps parts (`owned`, `batched`) carries a part map, an arrival rule and takes, so `PERFORMANCE.md`'s costs and `BOUNDS.md`'s bounds don't cover the labels' cost (`engine/BUILD-NOTES.md`, the labels' cost; load row L:18). `PERFORMANCE.md`, `BOUNDS.md` and `BUILD-ORDER.md` were rewritten for tally 2.1 on 2026-10-30 (session 8b, below), and `OPERATIONS.md` for tally 2.2 on 2026-11-18 (the operations round, below); `smoke/` and `verification/` stay stale.
 
 
-## `OPERATIONS.md`
+## `OPERATIONS.md`: no longer stale
 
-| Section | Words (count) | Reached by |
-|---|---|---|
-| (before the first section) | `records` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-8 (`observed` inputs) |
-| 1. The store, and the life of an amendment | `record` (2), `records` (2), `scenario` (2) | D-10 (overlay of ordinary versions); D-8 (`observed` inputs) |
-| 2.1 Add a fact | `arrears` (2), `correction` (1), `governs` (2), `known` (3), `pay` (3), `record` (1) | D-2, D-8 (`move`, `observed`); D-3 (per row); D-3 (required); D-6; D-6 (adjustments as ordinary movements); D-8 (`observed` inputs) |
-| 2.2 Import records | `correction` (3), `governs` (3), `holds` (1), `known` (1), `pay` (2), `pays` (1), `record` (17) | D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row); D-3 (required); D-6; D-8 (`observed` inputs) |
-| 3. Add a law version | `arrears` (3), `excepts` (3), `governs` (3), `holds` (1), `known` (3), `pay` (6), `scenario` (1) | D-10 (overlay of ordinary versions); D-12 (`beats`); D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row); D-3 (required); D-6 (adjustments as ordinary movements) |
-| 4. Amend: add, advance, restate, revise | `correction` (1), `draws` (1), `known` (2), `pay` (1), `pays` (1) | D-11; D-2, D-8 (`move`, `observed`); D-3 (per row); D-6 |
-| 5. Add a scenario patch | `arrears` (1), `correction` (1), `governs` (1), `known` (3), `pays` (1), `scenario` (26) | D-10 (overlay of ordinary versions); D-2, D-8 (`move`, `observed`); D-3 (per row); D-3 (required); D-6; D-6 (adjustments as ordinary movements) |
-| 6. End | `holds` (1), `known` (1), `pay` (4) | D-2, D-6 (obligations are places); D-2, D-8 (`move`, `observed`); D-3 (per row) |
-| 7. Plan | `bound` (1), `bounds` (1), `governs` (2), `path` (2), `pay` (1), `scenario` (4) | D-10 (overlay of ordinary versions); D-11 (`path p`, no path key); D-15; D-15 (an ordinary hole with its reason); D-2, D-8 (`move`, `observed`); D-3 (required) |
-| 8. Ask a question | `pay` (1), `record` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-2, D-8 (`move`, `observed`); D-8 (`observed` inputs) |
-| 9. The rest of the surface | `ledger` (1), `path` (1), `pay` (1), `record` (3), `records` (1), `scenario` (1) | D-10 (overlay of ordinary versions); D-11 (`path p`, no path key); D-2, D-8 (`move`, `observed`); D-8 (`observed` inputs); E §6.3 (the residual ledger) |
-| 10. Errors and warnings of the operations | `correction` (1), `pay` (2), `pays` (1), `scenario` (2) | D-10 (overlay of ordinary versions); D-2, D-8 (`move`, `observed`); D-6 |
+Rewritten for tally 2.2 by the operations round (issue #7), from its design, which the user confirmed on 2026-11-18 (`tmp/operations/design.md`): the engine's three operations (`run`, `reprint`, `check`), and each interaction of tally 1.0.1's text placed with the caller, the store or later. It carries no language meaning and adds no code, so `VERSION` stays `tally-2.2`. Its tally 1.0.1 text stays reachable at the tag `tally-2.2`.
 
 
 ## `PERFORMANCE.md`, `BOUNDS.md`, `BUILD-ORDER.md`: no longer stale

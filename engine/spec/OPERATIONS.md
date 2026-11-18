@@ -80,7 +80,7 @@ Each recipe is a few lines of Tally text or one command; the ids are the design 
 - **ASK-6, describe an item.** The text itself, canonical from `reprint`; `readers-of x` lists what reads it, `inputs-of ref` the rows a cell read.
 - **ASK-7, compare the model with the bank.** `ask q_resid: residuals konto 2026-10` prints the residual ledger by month and move (`ENGINE.md` §6.3); `explain bal(konto, 2026-10-31)` lists every movement since the anchor.
 - **ASK-10, save a question.** Keep the ask line in a file of the reality, `asks/<topic>.tally` (`LANGUAGE.md` §6.1).
-- **ASK-12, fit a parameter; replay one path.** One run per trial value, the parameter pinned by `with` (`ENGINE.md` §6.4); `path p` replays one path (`LANGUAGE.md` §5.16).
+- **ASK-12, fit a parameter; replay one path.** Pin the parameter with `with`, run, read the residuals, once per trial value (`ENGINE.md` §6.4); `path p` replays one path (`LANGUAGE.md` §5.16).
 
 ### 3.2 Names and members
 
@@ -101,7 +101,7 @@ Each recipe is a few lines of Tally text or one command; the ids are the design 
     known 2028-05-20
     overpay[house, 2028-05] = (amount: 10 000.00 PLN, choice: shorter) "nadpłata 10 000 zł, skrócenie okresu"
   ```
-- **CHG-2, add a law version.** A version with `replace` rows where a figure changes, and `replace rule d.r` where a formula does (`LANGUAGE.md` §6.5 change 2).
+- **CHG-2, add a law version.** A version with `replace` rows where a figure changes, and `replace rule d.r` where a formula does (`LANGUAGE.md` §6.2, §6.5 change 2).
 - **CHG-3, the back pay a change opens.** Run after a version that reaches back. Each booked instance it changed prints as a hole, `?"wage[2026-10, acme] on 2026-10-10 changed after it was paid (version raise_oct); is back pay due, and when?"`, with the register line `adjustment: wage[2026-10, acme] by 500.00 PLN on 2026-11-04 (version raise_oct), remaining 500.00 PLN`. The answer is a move that fulfils the adjustment, or one with no legs that waives it (`LANGUAGE.md` §6.5 change 3).
 - **CHG-4, what a new thing leaves unanswered.** Run after the entry. The reads at the new keys print as holes with their questions (`HOLE-UNGOVERNED`) or as `RUN-NO-RULE`; a closed-world row is restated with `replace` (`LANGUAGE.md` §6.2).
 - **CHG-5, end something.** Its lifespan, `replace jobs + [acme] lives 2020-02-01..2026-11-30`, and rows `none` where a fact stops. A leg that still moves into or out of it is refused (`RUN-LIFESPAN`).
