@@ -8,6 +8,6 @@ version richer_pay
   known 2026-01-01
   replace pay_low = 1100.00 "a raise"
 
-ask s_low: low(konto, 2026-05-01 .. 2026-12-31) from 2026-05-01 in richer
+ask s_low: min(bal(konto, d) from 2026-05-01 for d in 2026-05-01 .. 2026-12-31 step 1 day) in richer
 
 ask s_bal: bal(konto, 2026-12-31) from 2026-07-01 in richer
