@@ -430,8 +430,6 @@ impl Checker {
         if proj.random.is_some() {
             return Err(Stop::NotBuilt("a projection's `random at`"));
         }
-        // the read's `windows each` splits every line that reaches it (L §4.4)
-        self.graph.read_each |= proj.windows_each;
         self.graph.holders.insert(scope.item.clone());
         self.mark(&scope.item, Mark::Proj, target);
         Ok(())
@@ -778,7 +776,7 @@ fn seen_labels(
 
 /// Whether a projection states any clause.
 fn stated(proj: &Proj) -> bool {
-    proj.from.is_some() || proj.windows_each || proj.random.is_some() || proj.uncertain
+    proj.from.is_some() || proj.random.is_some() || proj.uncertain
 }
 
 /// The units the places of kind `kind` and its subkinds hold, a place's none where it holds

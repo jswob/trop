@@ -302,8 +302,7 @@ impl P<'_> {
             Some(tok) => {
                 tok.kind == Kind::Id
                     && [
-                        "with", "law", "as", "windows", "random", "paths", "path", "partial",
-                        "orient",
+                        "with", "law", "as", "random", "paths", "path", "partial", "orient",
                     ]
                     .contains(&tok.text.as_str())
             }

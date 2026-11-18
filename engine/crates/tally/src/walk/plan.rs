@@ -75,9 +75,8 @@ pub enum Dated {
     Hole(Hole),
 }
 
-/// A window of days a movement or a leg falls on, with no `windows each` choosing a day: it
-/// books at the window's last day, and a balance read inside the window is `HOLE-IMPRECISE`
-/// (L §4.4; E §4.2 Holes in the walk).
+/// A window of days a movement or a leg falls on: it books at the window's last day, and a
+/// balance read inside the window is `HOLE-IMPRECISE` (L §4.4; E §4.2 Holes in the walk).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DayWindow {
     /// Its first day.
@@ -1278,7 +1277,7 @@ impl Engine {
         }
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
-            // a window no `windows each` chose a day of (L §4.4)
+            // a window: one day not yet known (L §4.4)
             Value::Window(w) => match day_window(m, &w)? {
                 Some(day) => day,
                 None => Dated::Day(date_of(&Value::Window(w))?),

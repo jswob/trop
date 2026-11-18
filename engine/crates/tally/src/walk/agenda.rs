@@ -732,8 +732,8 @@ fn schedule_decision(
             decision_hole(walk, (at, h), &inst, places)?;
         }
         Some(Dated::Window(w)) => {
-            // a decision's day no `windows each` chose: a hole at its places from the
-            // window's first day (refcore's `prepare`, its decisions)
+            // a decision dated by a window: a hole at its places from the window's first day
+            // (refcore's `prepare`, its decisions)
             let at = At::before(w.lo.max(walk.start));
             let text = format!(
                 "date within {} not precise enough for the day of {}",

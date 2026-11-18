@@ -95,9 +95,8 @@ fn diff(p: &mut P<'_>) -> Result<Diff, Stop> {
     })
 }
 
-/// `ask id: body [for binds] [in world] [with pins] [law e] [as known e] [windows each]
-/// [with uncertain] [random at …] [paths N seed S] [path P] [partial] [orient …]`, one line
-/// (L §2.3 `ask`).
+/// `ask id: body [for binds] [in world] [with pins] [law e] [as known e] [with uncertain]
+/// [random at …] [paths N seed S] [path P] [partial] [orient …]`, one line (L §2.3 `ask`).
 pub(super) fn ask(p: &mut P<'_>, body: &[Line]) -> Result<Ask, Stop> {
     let id = p.ident("an id")?;
     p.expect(":")?;
@@ -132,7 +131,6 @@ pub(super) fn ask(p: &mut P<'_>, body: &[Line]) -> Result<Ask, Stop> {
         pins,
         law: None,
         known: None,
-        windows_each: false,
         uncertain: false,
         random: None,
         paths: None,
@@ -156,10 +154,6 @@ fn ask_clauses(p: &mut P<'_>, decl: &mut Ask) -> Result<(), Stop> {
     if p.at("as", 0) && p.at("known", 1) {
         p.skip(2)?;
         decl.known = Some(p.expr(Ends::Free)?);
-    }
-    if p.accept("windows")? {
-        p.each()?;
-        decl.windows_each = true;
     }
     decl.uncertain = p.with_uncertain()?;
     if p.at("random", 0) && p.at("at", 1) {

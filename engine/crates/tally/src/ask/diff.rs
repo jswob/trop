@@ -17,19 +17,16 @@
 //! variables, or the expression's text with no bindings; S's lines come in their order, then
 //! B's keys that S lacks; two values are unchanged only when they are the same value, a hole
 //! or a refusal included; a cell's register is the ask's pins' and both evaluations' entries;
-//! a cell across two stacks is each side's at the options of the axes that side reads, and
-//! under `windows each` each side takes only the windows its answer carries (tally 2.1.8
-//! R13.2), its runs being the pairs of the two sides' runs that take the same day of every
-//! window both meet (L §4.4; tally 2.1.8 R13, #186; refcore prints the first day's).
+//! a cell across two stacks is each side's at the options of the axes that side reads
+//! (tally 2.1.8 R13, #186).
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::answer::{item_text, tuple_key};
 use super::axes::{Axes, result_lines};
 use super::check::Printed;
-use super::register::register_lines;
-use super::windows::{CellRuns, EACH_CAP, crossed_lines, each_next, past_cap};
-use crate::eval::{Choice, Collected, Ctx, Engine, Entry, Env, Item, Met, world_named};
+use super::register::{name_unknown_days, register_lines};
+use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, world_named};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, Diff, Stop};
 use crate::walk::invariant;
@@ -62,19 +59,6 @@ struct Cell {
     theirs: Option<Side>,
     /// The register entries its evaluations met, the ask's pins' first.
     met: Collected,
-    /// Under `windows each` across two stacks, its runs; none otherwise.
-    runs: Runs,
-}
-
-/// Under `windows each`, a cell's runs: each choice of days for the windows its reads meet,
-/// depth first, with the cell that choice gives, and the windows met in the order met
-/// (refcore's `each_rows`, one side of a diff across two stacks at a time). L §4.4, §6.4.
-#[derive(Debug, Clone, Default)]
-struct Runs {
-    /// Each choice with its cell.
-    each: Vec<(Choice, Cell)>,
-    /// The windows met, in the order met.
-    windows: Vec<Met>,
 }
 
 /// A diff's cells: the axes they fan out over, one cell per combination in refcore's order,
@@ -109,14 +93,12 @@ pub(super) fn diff_result(
 }
 
 /// A diff's cells, one per combination of the axes the ask fans out over: in each, the
-/// diff's value in world `only` alone, the side this reality's stack holds, under `windows
-/// each` once per choice of days (refcore's `answer_diff`, `diff_worlds`, `_diff_only`).
-/// L §5.5, §5.18, §6.4, §4.4.
+/// diff's value in world `only` alone, the side this reality's stack holds (refcore's
+/// `answer_diff`, `diff_worlds`, `_diff_only`). L §5.5, §5.18, §6.4.
 ///
 /// # Errors
 ///
-/// A load refusal met at run; `RUN-LIMIT` past the cap of day combinations; `NotBuilt` past
-/// what the engine builds.
+/// A load refusal met at run; `NotBuilt` past what the engine builds.
 pub(super) fn diff_cells(
     m: &Reality,
     (ask, diff): (&Ask, &Diff),
@@ -126,12 +108,12 @@ pub(super) fn diff_cells(
 ) -> Result<Cells, Stop> {
     let axes = Axes::of(m, ask)?;
     let Some(fanned) = &axes else {
-        let cell = side_cell(
+        let cell = cell(
             m,
-            (ask, diff),
+            diff,
             engine,
             (env, ctx, pinned),
-            (Vec::new(), only),
+            (Vec::new(), Some(only)),
         )?;
         return Ok(Cells {
             axes,
@@ -145,97 +127,17 @@ pub(super) fn diff_cells(
         let options = fanned.options_of(combo)?;
         let inside = engine.with_options(ctx, &options)?;
         engine.open_layer(m, inside)?;
-        let made = side_cell(
+        let made = cell(
             m,
-            (ask, diff),
+            diff,
             engine,
             (env, inside, pinned),
-            (options, only),
+            (options, Some(only)),
         );
         engine.end_layer(inside.layer, made.as_ref().err())?;
         each.push(made?);
     }
     Ok(Cells { axes, each, ctx })
-}
-
-/// One side's cell at combination `options`: the diff's value in world `only`, or under
-/// `windows each` its runs, one per choice of the days of the windows its answer carries,
-/// the first its reads met taken first, depth first, each with its cell (refcore's
-/// `each_rows`, `each_next`, one side at a time). L §4.4, §6.4; tally 2.1.8 R13.2.
-fn side_cell(
-    m: &Reality,
-    (ask, diff): (&Ask, &Diff),
-    engine: &mut Engine,
-    (env, ctx, pinned): (&Env, Ctx, &Collected),
-    (options, only): (Vec<(String, String)>, &str),
-) -> Result<Cell, Stop> {
-    if !ask.windows_each {
-        return cell(m, diff, engine, (env, ctx, pinned), (options, Some(only)));
-    }
-    let mut pending: VecDeque<Choice> = VecDeque::from([Vec::new()]);
-    let mut runs = Runs::default();
-    while let Some(choice) = pending.pop_front() {
-        let outer = engine.each_met.replace(Vec::new());
-        let made = chosen_cell(m, diff, engine, (env, ctx, pinned), (&choice, only));
-        let met = core::mem::replace(&mut engine.each_met, outer)
-            .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
-        let made = made?;
-        // a run takes next only a window its answer carries (L §4.4; tally 2.1.8 R13.2)
-        let mut values: Vec<&Item> = Vec::new();
-        for side in [&made.ours, &made.theirs].into_iter().flatten() {
-            values.extend(side.iter().map(|(_, v)| v));
-        }
-        let carried = super::check::carried_of(&values);
-        let Some(new) = each_next(&met, &choice, &carried) else {
-            runs.each.push((choice, made));
-            continue;
-        };
-        for day in new.days.iter().rev() {
-            let mut next = choice.clone();
-            next.push((new.id.clone(), *day));
-            pending.push_front(next);
-        }
-        // the fan-out's cap, as a line's (pick P28, #174, interim)
-        if pending
-            .len()
-            .checked_add(runs.each.len())
-            .is_none_or(|n| n > EACH_CAP)
-        {
-            return Err(past_cap());
-        }
-        if !runs.windows.iter().any(|w| w.id == new.id) {
-            runs.windows.push(new);
-        }
-    }
-    Ok(Cell {
-        options,
-        ours: None,
-        theirs: None,
-        met: Collected::default(),
-        runs,
-    })
-}
-
-/// One run's cell: the diff's value in world `only` under choice `choice`, its layer open
-/// while it is evaluated. L §4.4.
-fn chosen_cell(
-    m: &Reality,
-    diff: &Diff,
-    engine: &mut Engine,
-    (env, ctx, pinned): (&Env, Ctx, &Collected),
-    (choice, only): (&Choice, &str),
-) -> Result<Cell, Stop> {
-    let inside = engine.with_windows(ctx, choice)?;
-    engine.open_layer(m, inside)?;
-    let made = cell(
-        m,
-        diff,
-        engine,
-        (env, inside, pinned),
-        (Vec::new(), Some(only)),
-    );
-    engine.end_layer(inside.layer, made.as_ref().err())?;
-    made
 }
 
 /// The cells of a diff whose two worlds sit on two stacks of scenarios, from `ours`, the side
@@ -246,8 +148,7 @@ fn chosen_cell(
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a side with no cell at a combination's options; `RUN-LIMIT` past
-/// [`EACH_CAP`] pairs of runs under `windows each`.
+/// `ENGINE-INVARIANT` for a side with no cell at a combination's options.
 pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<Cells, Stop> {
     let mut ids: BTreeSet<String> = BTreeSet::new();
     for side in [ours, theirs] {
@@ -276,7 +177,6 @@ pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<C
             ours: left.ours.clone(),
             theirs: right.theirs.clone(),
             met,
-            runs: paired(&left.runs, &right.runs)?,
         });
     }
     Ok(Cells {
@@ -286,70 +186,12 @@ pub(super) fn crossed(m: &Reality, (ours, theirs): (&Cells, &Cells)) -> Result<C
     })
 }
 
-/// The runs of a cell across two stacks under `windows each`: each run of the compared
-/// world's side with each of the other side's whose choice takes the same day of every window
-/// both meet, the choices joined, the compared world's windows first, as one stack's run
-/// meets them (L §4.4, §6.4).
-///
-/// # Errors
-///
-/// `RUN-LIMIT` past [`EACH_CAP`] pairs, as a line's runs (L §7.6 item 6; pick P28, #174).
-fn paired(left: &Runs, right: &Runs) -> Result<Runs, Stop> {
-    let mut windows = left.windows.clone();
-    for w in &right.windows {
-        if !windows.iter().any(|x| x.id == w.id) {
-            windows.push(w.clone());
-        }
-    }
-    let mut each = Vec::new();
-    for (ours, l) in &left.each {
-        for (theirs, r) in &right.each {
-            let Some(choice) = joined(ours, theirs) else {
-                continue;
-            };
-            let mut met = l.met.clone();
-            met.merge(&r.met);
-            each.push((
-                choice,
-                Cell {
-                    options: Vec::new(),
-                    ours: l.ours.clone(),
-                    theirs: r.theirs.clone(),
-                    met,
-                    runs: Runs::default(),
-                },
-            ));
-            if each.len() > EACH_CAP {
-                return Err(past_cap());
-            }
-        }
-    }
-    Ok(Runs { each, windows })
-}
-
-/// Choice `ours` then the days of `theirs` it names no day of; none where the two take
-/// different days of one window.
-fn joined(ours: &Choice, theirs: &Choice) -> Option<Choice> {
-    let mut choice = ours.clone();
-    for (id, day) in theirs {
-        match ours.iter().find(|(named, _)| named == id) {
-            Some((_, taken)) if taken != day => return None,
-            Some(_) => {}
-            None => choice.push((id.clone(), *day)),
-        }
-    }
-    Some(choice)
-}
-
 impl Cells {
     /// Merges `brought`, what a binding tuple brought (the movements it binds), into every
-    /// cell's register and every run's (L §8.2).
+    /// cell's register (L §8.2).
     pub(super) fn bring(&mut self, brought: &Collected) {
         for cell in &mut self.each {
             cell.met.merge(brought);
-            for (_, run) in &mut cell.runs.each {
-                run.met.merge(brought);
-            }
         }
     }
 
@@ -378,20 +220,9 @@ impl Cells {
 /// `ENGINE-INVARIANT` for a cell with a side unevaluated.
 pub(super) fn cells_lines(
     m: &Reality,
-    (ask, diff, head): (&Ask, &Diff, &str),
+    (diff, head): (&Diff, &str),
     cells: &Cells,
 ) -> Result<Vec<String>, Stop> {
-    if ask.windows_each {
-        let mut each: Vec<CellRuns> = Vec::with_capacity(cells.each.len());
-        for cell in &cells.each {
-            let mut runs = Vec::with_capacity(cell.runs.each.len());
-            for (choice, run) in &cell.runs.each {
-                runs.push((choice.clone(), result(m, diff, run)?));
-            }
-            each.push((runs, cell.runs.windows.clone()));
-        }
-        return crossed_lines(head, cells.axes.as_ref(), each, cells.ctx);
-    }
     let mut results = Vec::with_capacity(cells.each.len());
     for (at, cell) in cells.each.iter().enumerate() {
         results.push((at, result(m, diff, cell)?));
@@ -408,7 +239,9 @@ pub(super) fn cells_lines(
         ));
     };
     let mut out = only.lines(head);
-    let register = register_lines(&only.met, cells.ctx)?;
+    let mut met = only.met.clone();
+    name_unknown_days(&mut met, &only.unknown);
+    let register = register_lines(&met, cells.ctx)?;
     out.extend(register.into_iter().map(|l| format!("  {l}")));
     Ok(out)
 }
@@ -435,7 +268,6 @@ fn cell(
         ours,
         theirs,
         met,
-        runs: Runs::default(),
     })
 }
 
@@ -485,14 +317,14 @@ fn result(m: &Reality, diff: &Diff, cell: &Cell) -> Result<Printed, Stop> {
         alone: false,
         met: cell.met.clone(),
         laws: None,
-        carried: super::check::carried_of(
+        // the unknown days of the holes in both worlds' values (refcore's `diff_days`)
+        unknown: super::check::hole_days(
             &ours
                 .iter()
                 .chain(theirs)
                 .map(|(_, v)| v)
                 .collect::<Vec<_>>(),
         ),
-        causes: None,
     })
 }
 

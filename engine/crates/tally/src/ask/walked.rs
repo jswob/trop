@@ -72,15 +72,13 @@ pub(super) fn balance_line(
     let body: Vec<String> = body.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        causes: Some(super::check::undated_causes(&body)),
         body,
         bare: false,
-
         whole: false,
         alone: false,
         met,
         laws: None,
-        carried: super::check::carried_of(&[&item]),
+        unknown: super::check::hole_days(&[&item]),
     })
 }
 
@@ -307,7 +305,7 @@ fn projection_lines(
             "holder: ask {} (an ask line leaves out nothing, L §5.14.1)",
             ask.id
         ),
-        format!("clauses: windows none, random none, {with} uncertain"),
+        format!("clauses: random none, {with} uncertain"),
         format!("start: {start} at the start of {}", t.text()),
     ];
     let key = At::end(end);

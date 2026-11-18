@@ -20,7 +20,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, one_day};
+use super::windows::{as_read, named_window, one_day};
 use crate::base::{Load, Run};
 use crate::book::and_list;
 use crate::hole::{Hole, spread};
@@ -195,7 +195,7 @@ impl Engine {
         // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
         if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
             let value = pinned_at(pinned, &input.binds, keys)?;
-            return self.pin_chosen(value, &origin(&input.id, keys), ctx);
+            return Ok(Self::pinned_window(value, &origin(&input.id, keys)));
         }
         // rows stated `same` are read together, the whole class, a reading's at its instant
         // (L §6.1 l.1806, §5.19; tally 2.1.8 §4)
@@ -229,7 +229,7 @@ impl Engine {
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
                 let value = self.priced(m, input, keys, ctx, value)?;
-                self.row_window(value, (input, keys), row, ctx)
+                Ok(Self::row_window(value, (input, keys), row))
             }
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
@@ -237,26 +237,16 @@ impl Engine {
     }
 
     /// Row `row`'s value `value` as the read of input `input` at `keys` gives it: a window is
-    /// named by that read, its row and figure, and under `windows each` takes its day; any
-    /// other value is itself (L §4.4 "One unknown day, named by its read").
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::chosen`].
-    fn row_window(
-        &mut self,
-        value: Value,
-        (input, keys): (&InputInfo, &[KeyVal]),
-        row: &Row,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        // only a window keeps its read, and only a window takes a day (L §4.4)
+    /// named by that read, its row and figure; any other value is itself (L §4.4 "One unknown
+    /// day, named by its read").
+    fn row_window(value: Value, (input, keys): (&InputInfo, &[KeyVal]), row: &Row) -> Value {
+        // only a window keeps its read (L §4.4)
         if !matches!(value, Value::Window(_)) {
-            return Ok(value);
+            return value;
         }
         let value = as_read(value, (&input.id, keys), row_cell(row));
         let figure = origin(&input.id, keys);
-        self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
+        named_window(value, (format!("row {} {figure}", row.sid), &figure))
     }
 
     /// The rows stated `same` with input `id`'s at `keys`, that row among them, each as its
@@ -435,40 +425,26 @@ impl Engine {
         // each side at its own prices (L §3.4, §6.1: every read of either, a price's included)
         let value = self.priced(m, input, keys, ctx, value)?;
         // a window read through a `same` line is its row's read, as a plain read's (L §4.4)
-        let value = self.row_window(value, (input, keys), row, ctx)?;
+        let value = Self::row_window(value, (input, keys), row);
         Ok(Ok((Ok((value, row.sid.clone())), day)))
     }
 
-    /// A pinned value `value` of figure `figure` as a `windows each` in `ctx` takes it: a
-    /// pinned window is a window the line meets, so the line splits by it; one that came from
-    /// a read is that read's window, taken with its own name once, and a literal is named by
-    /// the figure pinned (L §4.4; picks P30, P32).
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::chosen`].
-    pub(super) fn pin_chosen(
-        &mut self,
-        value: Value,
-        figure: &str,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
+    /// A pinned value `value` of figure `figure` named as an unknown day: a window written
+    /// there, no row's, is the unknown day of the figure pinned, its holes asked of it; one
+    /// that came from a row, or was computed from one, keeps its name and the days it carries
+    /// (refcore's `pin_value` read: a pin whose `Iv` has no origin; L §4.4 "a copy keeps the
+    /// name"; picks P30, P32).
+    pub(super) fn pinned_window(value: Value, figure: &str) -> Value {
         let Value::Window(mut w) = value else {
-            return Ok(value);
+            return value;
         };
+        if w.figure.is_some() {
+            return Value::Window(w);
+        }
         // a pinned window's holes are asked of the item it pins, as a row's of its row
         // (L §8.1, §5.11)
-        if w.figure.is_none() {
-            w.figure = Some(figure.to_owned());
-        }
-        let (id, label) = match &w.read {
-            Some(read) => {
-                let from = origin(&read.item, &read.keys);
-                (format!("{} {from}", read.cell), from)
-            }
-            None => (format!("pin {figure}"), figure.to_owned()),
-        };
-        self.chosen(Value::Window(w), (id, &label), ctx)
+        w.figure = Some(figure.to_owned());
+        named_window(Value::Window(w), (format!("pin {figure}"), figure))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -590,7 +566,10 @@ impl Engine {
         }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
         let value = as_read(value, (&input.id, &latest.keys), row_cell(row));
-        self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
+        Ok(named_window(
+            value,
+            (format!("row {} {figure}", row.sid), &figure),
+        ))
     }
 
     /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole
@@ -676,11 +655,7 @@ impl Engine {
             && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
         {
             let value = pinned_at(pinned, &input.binds, &keys)?;
-            return Ok(Err(self.pin_chosen(
-                value,
-                &origin(&input.id, &keys),
-                ctx,
-            )?));
+            return Ok(Err(Self::pinned_window(value, &origin(&input.id, &keys))));
         }
         // rows stated `same` carry together, the whole class (L §6.1; tally 2.1.8 §4)
         if let Some(class) = Self::same_class(m, (&input.id, &keys), ctx)? {

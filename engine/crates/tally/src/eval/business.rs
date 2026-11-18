@@ -51,14 +51,13 @@ pub(crate) struct CalendarPass {
     met: MetWindows,
 }
 
-/// The unknown day of added window `id` that can take `days` (refcore's `added_carry`, the
-/// identity `windows each` names it by). L §4.4.
-fn added_unknown(id: &WindowId, days: &[Day]) -> crate::hole::Unknown {
+/// The unknown day of added window `id`, named `added <entry>` (refcore's `added_carry`).
+/// L §4.4, §8.2 `unknown day:`.
+fn added_unknown(id: &WindowId) -> crate::hole::Unknown {
     let (name, entry, text, row) = id;
     crate::hole::Unknown {
         id: format!("calendar {name}#{entry} {row}"),
         label: format!("added {text}"),
-        days: days.to_vec(),
     }
 }
 
@@ -336,10 +335,8 @@ impl Engine {
         let ((cal_id, _, written, _), _) = met
             .first()
             .ok_or_else(|| invariant("passes with no window"))?;
-        let carry: Vec<crate::hole::Unknown> = met
-            .iter()
-            .map(|(id, days)| added_unknown(id, days))
-            .collect();
+        let carry: Vec<crate::hole::Unknown> =
+            met.iter().map(|(id, _)| added_unknown(id)).collect();
         if let Value::Bool(_) = first {
             let call_text = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
             let text = format!("date within {written} not precise enough for {call_text}");
@@ -746,13 +743,11 @@ impl Engine {
         }
     }
 
-    /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: under a
-    /// `windows each` in context `ctx`, the day the line's choice names (L §4.4: the clause
-    /// splits the line by "a day in a calendar's added list"); else, as the plain line reads
-    /// it, this pass's choice for it, or its first day where the pass meets it newly, which the
-    /// pass records (refcore's `business`, its `window_choice` and `cal_choice`). Each entry of
-    /// each row is a read of its own: two rows' entries are two unknowns, whatever their text
-    /// (L §4.4; pick P32; tally 2.1.8 R13). L §4.2, §4.4.
+    /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: this
+    /// pass's choice for it, or its first day where the pass meets it newly, which the pass
+    /// records (refcore's `business`, its `cal_choice`). Each entry of each row is a read of
+    /// its own: two rows' entries are two unknowns, whatever their text (L §4.4; pick P32;
+    /// tally 2.1.8 R13). L §4.2, §4.4.
     fn window_takes(
         &mut self,
         m: &Reality,
@@ -765,15 +760,6 @@ impl Engine {
         let days = added
             .days()
             .ok_or_else(|| invariant("a window's days past the calendar"))?;
-        if self.chooses(ctx)? {
-            let window = added_unknown(&id, &days);
-            if let Some(named) = self.named_day(ctx, &window.id)? {
-                return Ok(named == day);
-            }
-            if let Some(taken) = self.window_day(ctx, window)? {
-                return Ok(taken == day);
-            }
-        }
         let pass = self
             .calendar_pass
             .as_mut()

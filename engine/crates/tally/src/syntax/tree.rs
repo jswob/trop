@@ -560,8 +560,6 @@ pub struct Bal {
 pub struct Proj {
     /// `from t`.
     pub from: Option<Expr>,
-    /// `windows each`.
-    pub windows_each: bool,
     /// `random at …`.
     pub random: Option<RChoice>,
     /// `with uncertain`.
@@ -1456,8 +1454,6 @@ pub struct Ask {
     pub law: Option<Expr>,
     /// `as known e`.
     pub known: Option<Expr>,
-    /// `windows each`.
-    pub windows_each: bool,
     /// `with uncertain`.
     pub uncertain: bool,
     /// `random at …`.

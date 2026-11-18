@@ -57,15 +57,13 @@ pub(super) fn instance_line(
     let body: Vec<String> = lines?.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        causes: Some(super::check::undated_causes(&body)),
         body,
         bare: false,
-
         whole: false,
         alone: false,
         met,
         laws: None,
-        carried: super::check::carried_of(&[&item]),
+        unknown: super::check::hole_days(&[&item]),
     })
 }
 

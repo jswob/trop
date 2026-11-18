@@ -4,7 +4,7 @@
 //! result, equal results under one head), §8.2 (the register), §8.4 (a run-time refusal
 //! prints as its tuple's or combination's line, alone), §8.1 (a place or span that is a hole
 //! makes that line the hole, alone; tally 2.1.8 R13.1: a result is all the form prints for
-//! one binding tuple, one combination, one window).
+//! one binding tuple and one combination).
 //! Twin: engine/tools/refcore/ask.py (`answer_residuals`, `one`) and check.py (`_txt`, a
 //! span's text).
 //! Invariants: the head names the place and the span as written, and ` by f` where the ask
@@ -38,11 +38,12 @@ pub(super) fn residual_result(
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
 ) -> Result<Printed, Stop> {
-    let (text, carried) = match ledger_result(m, r, engine, (env, ctx, pinned)) {
+    // a line alone prints no register, so it names no unknown day (refcore's `print_line`)
+    let text = match ledger_result(m, r, engine, (env, ctx, pinned)) {
         Ok(Ok(result)) => return Ok(result),
-        Ok(Err(hole)) => (hole.text(), hole.carried().to_vec()),
+        Ok(Err(hole)) => hole.text(),
         Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
-            (format!("refused: {}", refusal.text()), Vec::new())
+            format!("refused: {}", refusal.text())
         }
         Err(stop) => return Err(stop),
     };
@@ -54,8 +55,7 @@ pub(super) fn residual_result(
         alone: true,
         met: Collected::default(),
         laws: None,
-        carried,
-        causes: None,
+        unknown: Vec::new(),
     })
 }
 
@@ -81,16 +81,16 @@ fn ledger_result(
         } => (place, per_unit, ledgers),
     };
     let mut body = Vec::new();
-    let mut carried = Vec::new();
+    let mut unknown = Vec::new();
     for one in &ledgers {
-        // the unknown days its figures and days carry (refcore's `answer_residuals`, its
-        // `vals`; tally 2.1.8 R13)
+        // the unknown days its holes carry, a figure's or a day's (refcore's
+        // `answer_residuals`, its `vals`, and `hole_days`)
         for g in &one.groups {
             for fig in [&g.model, &g.observed, &g.diff] {
-                fig.carried_into(&mut carried);
+                fig.hole_days_into(&mut unknown);
             }
             for line in &g.lines {
-                line.carried_into(&mut carried);
+                line.hole_days_into(&mut unknown);
             }
         }
         // a place of unit `any`: each unit's ledger under its own head (E §6.3)
@@ -111,8 +111,7 @@ fn ledger_result(
         alone: false,
         met,
         laws: None,
-        carried,
-        causes: None,
+        unknown,
     }))
 }
 

@@ -240,10 +240,11 @@ impl Engine {
                 )
             {
                 // only a comparison decides an interval: a term of any other aggregate needs
-                // its one value (L §4.4), `HOLE-IMPRECISE` named by the window's input
+                // its one value (L §4.4), `HOLE-IMPRECISE` named by the window's input and
+                // carrying its unknown days (refcore's `carry_hole`, §8.2 `unknown day:`)
                 let window = w.question_text(m).map_err(num_stop)?;
                 let text = format!("date within {window} not precise enough for a term of {word}");
-                holes.push(Hole::asked(&text, w.figure()));
+                holes.push(Hole::asked(&text, w.figure()).carrying(&w.carry));
                 continue;
             }
             terms.push((&member.env, t));

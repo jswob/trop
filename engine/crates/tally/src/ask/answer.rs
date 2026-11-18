@@ -22,10 +22,10 @@
 use std::collections::BTreeMap;
 
 use super::axes::{Axes, fanned_lines};
-use super::check::{Printed, carried_of, check_line};
+use super::check::{Printed, check_line, hole_days};
 use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_result};
 use super::explain::{explain_line, inputs_line, readers_line};
-use super::register::{check_register_lines, register_lines, warning_lines};
+use super::register::{check_register_lines, name_unknown_days, register_lines, warning_lines};
 use super::residuals::residual_result;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
@@ -359,16 +359,16 @@ fn crossed_tuples(
             ))?;
         match (left, right) {
             (Err(hole), _) | (_, Err(hole)) => out.push(format!("{head}: {hole}")),
-            (Ok(l), Ok(r)) => match crossed(m, (l, r))
-                .and_then(|cells| cells_lines(m, (ask, diff, &head), &cells))
-            {
-                Ok(lines) => out.extend(lines),
-                // a run-time refusal, past S7's runs say, prints as the tuple's line (L §8.4)
-                Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
-                    out.push(format!("{head}: refused: {}", refusal.text()));
+            (Ok(l), Ok(r)) => {
+                match crossed(m, (l, r)).and_then(|cells| cells_lines(m, (diff, &head), &cells)) {
+                    Ok(lines) => out.extend(lines),
+                    // a run-time refusal, past S7's runs say, prints as the tuple's line (L §8.4)
+                    Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
+                        out.push(format!("{head}: refused: {}", refusal.text()));
+                    }
+                    Err(stop) => return Err(stop),
                 }
-                Err(stop) => return Err(stop),
-            },
+            }
         }
     }
     Ok(out)
@@ -695,9 +695,8 @@ fn ask_body(
             }
             Ok(vec![readers_line(m, ask, reference)?])
         }
-        // one side of a diff whose worlds sit on two stacks: its cells, under `windows each`
-        // each cell's runs, kept for the turn that prints both (refcore's `_diff_only`,
-        // `_diff_side`; tally 2.1.8 R13, #186)
+        // one side of a diff whose worlds sit on two stacks: its cells, kept for the turn
+        // that prints both (refcore's `_diff_only`, `_diff_side`; tally 2.1.8 R13, #186)
         (AskBody::Diff(diff), Some(side)) => {
             // a tuple answered as an ask of its own adds its cells to the side's
             match side_tuples(m, (ask, diff), engine, (ctx, &pinned), &side.world)? {
@@ -710,8 +709,8 @@ fn ask_body(
             }
             Ok(Vec::new())
         }
-        // every other form: per binding tuple, axis combination and sub-window, its result
-        // what the form prints (L §5.18, tally 2.1.8 R13)
+        // every other form: per binding tuple and axis combination, its result what the
+        // form prints (L §5.18, tally 2.1.8 R13)
         _ => tuple_lines(m, ask, engine, (ctx, &pinned)),
     }
 }
@@ -728,73 +727,15 @@ fn model_ctx(
     Ok(ctx)
 }
 
-/// An ask's lines: a line per binding tuple with the register under it, fanned out over the
-/// axes the ask reaches and, under `windows each`, split by sub-window, each line the result
-/// its form prints: values, a check, a solve, an `explain`, an `inputs-of`, a residual ledger
-/// or a diff (refcore's `_answer_in`, `print_line`). L §5.18 (tally 2.1.8 R13: every clause
-/// stands on every form), §5.5, §4.4.
+/// An ask's lines: a line per binding tuple with the register under it, or fanned out over
+/// the axes the ask reaches, each line the result its form prints: values, a check, a solve,
+/// an `explain`, an `inputs-of`, a residual ledger or a diff (refcore's `_answer_in`,
+/// `print_line`). L §5.18 (tally 2.1.8 R13: every clause stands on every form), §5.5.
+///
+/// # Errors
+///
+/// A load refusal met at run; `NotBuilt` for a construct not built yet.
 fn tuple_lines(
-    m: &Reality,
-    ask: &Ask,
-    engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
-) -> Result<Vec<String>, Stop> {
-    clause_lines(m, ask, engine, (ctx, pinned))
-}
-
-/// [`tuple_lines`] of an ask whose binding its form takes: its `windows each` clause, a
-/// read's, or neither. L §4.4, §5.18.
-fn clause_lines(
-    m: &Reality,
-    ask: &Ask,
-    engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
-) -> Result<Vec<String>, Stop> {
-    if ask.windows_each {
-        // the line's clause: one run per sub-window (L §4.4)
-        return super::windows::each_lines(m, ask, engine, (ctx, pinned));
-    }
-    if m.graph.read_each {
-        return read_each_lines(m, ask, engine, (ctx, pinned));
-    }
-    plain_lines(m, ask, engine, (ctx, pinned))
-}
-
-/// The lines of ask `ask` in a reality where a read states `windows each`, which holds for
-/// that read (L §4.4, §8.2): the line runs plain, such a read taking its windows' first days;
-/// only where one met a window does the line run once per sub-window, so a line no such read
-/// reaches answers as it would without the clause (refcore's `proj_clauses`).
-///
-/// # Errors
-///
-/// As [`tuple_lines`].
-fn read_each_lines(
-    m: &Reality,
-    ask: &Ask,
-    engine: &mut Engine,
-    (ctx, pinned): (Ctx, &Collected),
-) -> Result<Vec<String>, Stop> {
-    let probe = engine.with_read_windows(ctx, &Vec::new())?;
-    let outer = engine.each_met.replace(Vec::new());
-    engine.open_layer(m, probe)?;
-    let lines = plain_lines(m, ask, engine, (probe, pinned));
-    engine.end_layer(probe.layer, lines.as_ref().err())?;
-    let met = core::mem::replace(&mut engine.each_met, outer)
-        .ok_or_else(|| invariant("a line's windows met taken while it ran"))?;
-    let lines = lines?;
-    if met.is_empty() {
-        return Ok(lines);
-    }
-    super::windows::each_lines(m, ask, engine, (ctx, pinned))
-}
-
-/// The lines of ask `ask` with no `windows each` to run: per binding tuple, or fanned out
-/// over the axes it reaches (L §5.5, §5.18).
-///
-/// # Errors
-///
-/// As [`tuple_lines`].
-fn plain_lines(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
@@ -829,6 +770,7 @@ fn plain_lines(
         }
         line.met.merge(&tuple.brought);
         line.met.merge(&ask_pins_listed(pinned, &line.met));
+        name_unknown_days(&mut line.met, &line.unknown);
         let register = match line.laws {
             Some(laws) => check_register_lines(&line.met, ctx, laws)?,
             None => register_lines(&line.met, ctx)?,
@@ -901,18 +843,16 @@ pub(super) fn form_line(
                 let taken = refused_pins(pinned, &met);
                 met.merge(&taken);
             }
-            let carried = carried_of(&items.iter().collect::<Vec<_>>());
+            let unknown = hole_days(&items.iter().collect::<Vec<_>>());
             Ok(Printed {
                 text: line_values(m, &items)?,
                 body: Vec::new(),
                 bare: false,
-
                 whole: false,
                 alone: false,
                 met,
                 laws: None,
-                carried,
-                causes: None,
+                unknown,
             })
         }
         AskBody::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
@@ -922,13 +862,11 @@ pub(super) fn form_line(
                 text: item_text(m, &item)?,
                 body: Vec::new(),
                 bare: false,
-
                 whole: false,
                 alone: false,
                 met,
                 laws: None,
-                carried: carried_of(&[&item]),
-                causes: None,
+                unknown: hole_days(&[&item]),
             })
         }
         AskBody::Explain(reference) => explain_line(m, (ask, reference), engine, env, ctx),

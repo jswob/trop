@@ -321,6 +321,7 @@ ask e: explain bal(konto, 2026-03-31)
             &lines_of("k9k10.tally", text),
             &[
                 "b: (?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]), ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]), ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]))",
+                "  unknown day: d_save",
                 "  cut 2026-06-10",
                 "e: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
                 "  balance of konto (PLN) at the end of 2026-03-31",
@@ -331,6 +332,7 @@ ask e: explain bal(konto, 2026-03-31)
                 "  2026-03-25:",
                 "    save[k9]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
                 "    save[k10]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10])",
+                "  unknown day: d_save",
                 "  cut 2026-06-10",
                 "warning: WARN-UNREAD place world is read by nothing",
             ],

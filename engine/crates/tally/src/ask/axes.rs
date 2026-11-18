@@ -21,7 +21,7 @@ use std::collections::BTreeSet;
 
 use super::answer::{env_text, form_line};
 use super::check::Printed;
-use super::register::{check_register_lines, register_lines};
+use super::register::{check_register_lines, name_unknown_days, register_lines};
 use crate::base::{Code, Refusal};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Member, combinations};
 use crate::hole::{Hole, spread};
@@ -403,16 +403,13 @@ pub(super) fn result_lines(
 }
 
 /// One line of a fan-out: the product of options it names and the result they give.
-pub(super) struct Grouped {
+struct Grouped {
     /// Each axis's options the line names.
-    pub(super) product: Product,
+    product: Product,
     /// The first combination's result, by its place among the tuple's results: its text
     /// after the line's head, the lines under it.
-    pub(super) first: usize,
-    /// Every combination's result inside the product, by its place among the tuple's
-    /// results, the first first.
-    pub(super) members: Vec<usize>,
-    /// What the line's combinations met, together.
+    first: usize,
+    /// What the line's combinations met, together, and the unknown days their holes carry.
     met: Collected,
     /// A check's sides' law dates, as its first combination read them.
     laws: Option<(Option<Day>, Option<Day>)>,
@@ -422,7 +419,7 @@ pub(super) struct Grouped {
 /// combinations that give one result, the results in the order first met, each set split into
 /// products by the axes in id order; then every line sorted by each axis's first option, `*`
 /// first, the sort keeping the order made between equal keys (refcore's `group`). L §5.5.
-pub(super) fn grouped(
+fn grouped(
     axes: &Axes,
     combos: &[Combo],
     results: &[(usize, Printed)],
@@ -469,7 +466,6 @@ fn product_line(
 ) -> Result<Grouped, Stop> {
     let mut met = Collected::default();
     let mut first: Option<(usize, &Printed)> = None;
-    let mut inside = Vec::new();
     for at in members {
         let combo = combo_of(combos, results, *at)?;
         if !product
@@ -483,7 +479,9 @@ fn product_line(
             .get(*at)
             .ok_or_else(|| invariant("a result past the results"))?;
         met.merge(&printed.met);
-        inside.push(*at);
+        // each combination's holes name their unknown days (refcore's `diff_print`, its
+        // `days`; L §8.2)
+        name_unknown_days(&mut met, &printed.unknown);
         if first.is_none() {
             first = Some((*at, printed));
         }
@@ -493,7 +491,6 @@ fn product_line(
     Ok(Grouped {
         product,
         first: at,
-        members: inside,
         met,
         laws: first.laws,
     })

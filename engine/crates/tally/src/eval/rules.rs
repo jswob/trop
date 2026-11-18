@@ -30,7 +30,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
-use super::windows::{as_read, window_days};
+use super::windows::{as_read, named_window, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -139,7 +139,7 @@ impl Engine {
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
             let value = pinned_at(pinned, &def.binds, keys)?;
-            return Ok(Err(self.pin_chosen(value, &origin(&def.id, keys), ctx)?));
+            return Ok(Err(Self::pinned_window(value, &origin(&def.id, keys))));
         }
         let ctx = self.trimmed(m, &def.id, ctx)?;
         for bind in &def.binds {
@@ -701,14 +701,16 @@ impl Engine {
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);
             self.trace_line(node, line);
         }
-        // only a window keeps its read, and under `windows each` a given's window takes its
-        // day, named by its row and figure as an input row's is (L §4.4)
+        // only a window keeps its read, a given's window named by its row and figure as an
+        // input row's is (L §4.4)
         if !matches!(value, Value::Window(_)) {
             return Ok(Some(value));
         }
         let value = as_read(value, (&def.id, keys), row_cell(row));
-        let chosen = self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)?;
-        Ok(Some(chosen))
+        Ok(Some(named_window(
+            value,
+            (format!("row {} {figure}", row.sid), &figure),
+        )))
     }
 }
 

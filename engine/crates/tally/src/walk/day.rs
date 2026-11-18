@@ -400,31 +400,11 @@ impl Engine {
             (walk.world, walk.cut)
         };
         let mut reg = reg.to_vec();
-        // a leg is on its instance's day, a day or a window
-        let day = inst.day.as_ref().and_then(Dated::day);
-        let window = if let Some(Dated::Window(w)) = &inst.day {
-            Some(w)
-        } else {
-            None
-        };
-        let mut each = None;
-        if let Some(day) = day {
+        // a leg is on its instance's day; a window-dated leg lists no `before from:` (L §8.2)
+        if let Some(day) = inst.day.as_ref().and_then(Dated::day) {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
-        } else if let Some(w) = window {
-            // a window-dated leg whose day the line hasn't taken: its `before from:` with each
-            // of its window's days, which only a `windows each` line lists (refcore's
-            // `each_before_from`; pick P37)
-            let mut days_from = Vec::new();
-            for d in window_days(w)? {
-                days_from.extend(before_from(m, world, (&inst.move_id, d), &inst.coll));
-            }
-            if !days_from.is_empty() {
-                let mut coll = inst.coll.clone();
-                coll.each.extend(days_from);
-                each = Some(coll);
-            }
         }
-        let coll = each.as_ref().unwrap_or(&inst.coll);
+        let coll = &inst.coll;
         let mut mask = Ends::both();
         if self.stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
@@ -1220,30 +1200,6 @@ fn before_from(
         text: format!("{move_id} on {} reads {}", day.text(), items.join(", ")),
         figure: String::new(),
     })
-}
-
-/// The days window `w` can take, in day order: a `one_of`'s, else every day from its first
-/// to its last (refcore's `each_before_from`, its `days`). L §4.4.
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for a window past the calendar.
-fn window_days(w: &DayWindow) -> Result<Vec<Day>, Stop> {
-    if let Some(days) = &w.value.days {
-        return Ok(days.clone());
-    }
-    let mut out = Vec::new();
-    let mut d = w.lo;
-    while d < w.hi {
-        out.push(d);
-        d = d
-            .next()
-            .ok_or_else(|| invariant("a window's day past the calendar"))?;
-    }
-    if w.lo <= w.hi {
-        out.push(w.hi);
-    }
-    Ok(out)
 }
 
 /// Whether `section` is of a scenario world `world` sees whose `from` is after `day` (refcore's

@@ -312,35 +312,6 @@ impl Trace {
         }))
     }
 
-    /// The unknown days the values it prints carry, in the order printed: each node's but a
-    /// row's, which prints what its row states, and those of the groups its rules read
-    /// (refcore's `TraceNode.carry_vals`; `outside the pins`' value included). L §4.4; tally
-    /// 2.1.8 R13, #191 Q4.
-    pub(crate) fn carried(&self) -> Vec<crate::hole::Unknown> {
-        let mut out = Vec::new();
-        let mut seen = std::collections::BTreeSet::new();
-        let mut todo = vec![ROOT];
-        while let Some(at) = todo.pop() {
-            let Some(node) = self.nodes.get(at).filter(|_| seen.insert(at)) else {
-                continue;
-            };
-            if let (false, Some(Item::Value(v))) =
-                (matches!(node.kind, Kind::Row | Kind::BandRow), &node.value)
-            {
-                v.carried_into(&mut out);
-            }
-            let rules = node
-                .rules
-                .values()
-                .flat_map(|r| [r.value, r.when])
-                .flatten();
-            let mut next: Vec<usize> = node.children.iter().copied().chain(rules).collect();
-            next.reverse();
-            todo.extend(next);
-        }
-        out
-    }
-
     /// The trace of an ask's line explained under its `with` pins, this trace read inside
     /// them: under the root, the pins with their values, then this derivation with the value
     /// inside them, then each of `outside`'s, read outside them, with its options' tag and its

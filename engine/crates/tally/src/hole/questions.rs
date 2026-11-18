@@ -6,12 +6,10 @@
 //! Invariants: a hole is built only here (R-116): its fields are private, so no other module
 //! can make one, and an operator that meets holes calls [`spread`], the one rule. A hole is
 //! never 0 and never a default (R-27). The bound a later milestone adds to a hole has its slot
-//! here, empty at S (seam U). The unknown days a hole carries (`windows each`'s, L §4.4, tally
-//! 2.1.8 R13) spread with its questions and are no part of its identity.
+//! here, empty at S (seam U). The unknown days a hole carries (L §4.4, which the register's
+//! `unknown day:` lines name, §8.2) spread with its questions and are no part of its identity.
 
 use std::collections::BTreeSet;
-
-use crate::time::Day;
 
 /// One question of a hole and the figure it was asked of (`pay[ana, 2026-01]`), or the empty
 /// text for a hole no figure names (a record's field written `?"…"`). L §8.1.
@@ -50,22 +48,21 @@ pub struct Hole {
     /// What a `partial` ask line knows of it (L §5.18 Partial answers).
     lin: Lin,
     /// The unknown days it was made of, in the order the line's reads met them, each once:
-    /// what `windows each` takes next (L §4.4: "a hole made of either carries them too";
-    /// tally 2.1.8 R13). No part of the hole's identity.
+    /// what the register's `unknown day:` lines name (L §4.4: "a hole made of either carries
+    /// them too"; §8.2). No part of the hole's identity.
     carry: Vec<Unknown>,
 }
 
-/// An unknown day a value or a hole carries under `windows each`: its identity (the read that
-/// gave it, a calendar's entry, a version's or row's `known`), the label a line's head names it
-/// by, and the days it can take, in order (refcore's `window_id`, `each_met`). L §4.4.
+/// An unknown day a value or a hole carries: its identity (the read that gave it, or a
+/// calendar's entry) and the name the register's `unknown day:` line prints (refcore's
+/// `window_id`). L §4.4, §8.2.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unknown {
     /// Its identity.
     pub id: String,
-    /// Its label: `wd`, `added window(…)`, `known of v`.
+    /// Its name: the cell as its read names it (`wd`, `held_from[b]`), `added <entry>`, or
+    /// the window's own text.
     pub label: String,
-    /// The days it can take, in order.
-    pub days: Vec<Day>,
 }
 
 /// `into` with each unknown day of `more` it lacks added at its end, in order (refcore's

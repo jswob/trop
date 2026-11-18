@@ -8,7 +8,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Warn};
-use crate::eval::{Collected, Ctx};
+use crate::eval::{Collected, Ctx, Entry};
+use crate::hole::Unknown;
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -22,13 +23,14 @@ enum Style {
 }
 
 /// The words printed after `assumed:`, in the register's order, each with its style
-/// (refcore's `register`: given, missing, pinned, world, reading, then the walk's words, then
-/// held; `before from` after `world` and `reading`, by ruling P43, refcore having none).
-/// L §8.2, §5.5, E §9 item 3.
-const WORDS: [(&str, Style); 14] = [
+/// (refcore's `register`: given, missing, pinned, unknown day, world, reading, then the walk's
+/// words, then held; `before from` after `world` and `reading`, by ruling P43, refcore having
+/// none). L §8.2, §5.5, E §9 item 3.
+const WORDS: [(&str, Style); 15] = [
     ("given", Style::Plain),
     ("missing", Style::Missing),
     ("pinned", Style::Plain),
+    ("unknown day", Style::Plain),
     ("world", Style::Plain),
     ("reading", Style::Plain),
     ("before from", Style::Plain),
@@ -41,6 +43,19 @@ const WORDS: [(&str, Style); 14] = [
     ("uncertain", Style::Plain),
     ("held", Style::Plain),
 ];
+
+/// Adds to `met` an `unknown day:` entry for each unknown day of `unknown`, by its name: one
+/// line per name, sorted with the other lines of its word (L §8.2 `unknown day:`, §4.4;
+/// refcore's `register`, its `unknown`).
+pub(super) fn name_unknown_days(met: &mut Collected, unknown: &[Unknown]) {
+    for day in unknown {
+        met.entries.insert(Entry {
+            word: "unknown day",
+            text: day.label.clone(),
+            figure: String::new(),
+        });
+    }
+}
 
 /// The register's lines for what a line met, in context `ctx`, without their indent: the
 /// `assumed` entries merged by reason, the other words in their order, each sorted, then the

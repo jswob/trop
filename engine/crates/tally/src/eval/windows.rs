@@ -9,18 +9,17 @@
 //! and a use that needs one value, is the window's `HOLE-IMPRECISE`, asked of the row it came
 //! from; a window keeps the text it was written with and its row's figure through every
 //! operation that keeps it a window, but only a read of an item gives it a read, so a value
-//! an operation computed is never decided against itself (#115, pick P28); under `windows
-//! each` a window not yet taken stays a window carrying its unknown day, and every interval
-//! and hole made of it carries it too (tally 2.1.8 R13).
+//! an operation computed is never decided against itself (#115, pick P28); a window a read
+//! gives carries its unknown day, named by that read, and every interval and hole made of it
+//! carries it too, for the register's `unknown day:` (L §4.4, §8.2).
 
 use core::cmp::Ordering;
 
 use super::arith::{Op, Test, arith, compare, negate};
-use super::context::Met;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Load, Run};
-use crate::hole::Hole;
+use crate::hole::{Hole, Unknown};
 use crate::model::{KeyVal, ReadOf, Reality, Value, Window};
 use crate::syntax::{Call, CmpOp, Stop};
 use crate::time::{Day, PeriodKind};
@@ -367,46 +366,26 @@ pub(crate) fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
     Ok(out)
 }
 
-impl Engine {
-    /// Value `v`, as a `windows each` in force in `ctx` takes it: a window of days takes the
-    /// day the line's choice names for it, the window named `id` and labelled `label` (a read's
-    /// row and figure, or the window as written); one the choice names no day of stays a
-    /// window, carrying that unknown day; any other value, or a context no `windows each`
-    /// holds, is left as it is (refcore's `window_choice`, `window_id`). L §4.4; tally 2.1.8
-    /// R13.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer; `RUN-LIMIT` past the calendar's edge.
-    pub(super) fn chosen(
-        &mut self,
-        v: Value,
-        (id, label): (String, &str),
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let Value::Window(mut w) = v else {
-            return Ok(v);
-        };
-        if !matches!(w.lo, Value::Day(_)) || !self.chooses(ctx)? {
-            return Ok(Value::Window(w));
-        }
-        if let Some(day) = self.named_day(ctx, &id)? {
-            return Ok(Value::Day(day));
-        }
-        let window = Met {
-            id,
-            label: label.to_owned(),
-            days: window_days(&w)?,
-        };
-        if let Some(day) = self.window_day(ctx, window.clone())? {
-            return Ok(Value::Day(day));
-        }
-        let mut carry = vec![window];
-        crate::hole::carry_union(&mut carry, &w.carry);
-        w.carry = carry;
-        Ok(Value::Window(w))
+/// Value `v` named by the read that gave it: a window of days is the one unknown day `id` (a
+/// read's row and figure, or the window as written) labelled `label`, and carries that day
+/// alone, whatever it carried before, a written window's own text included; any other value
+/// is left as it is (refcore's `window_id`, `iv_carry`: the read's new `Iv`, no carry kept).
+/// L §4.4 (one unknown day, named by its read), §8.2 (`unknown day:`).
+pub(super) fn named_window(v: Value, (id, label): (String, &str)) -> Value {
+    let Value::Window(mut w) = v else {
+        return v;
+    };
+    if !matches!(w.lo, Value::Day(_)) {
+        return Value::Window(w);
     }
+    w.carry = vec![Unknown {
+        id,
+        label: label.to_owned(),
+    }];
+    Value::Window(w)
+}
 
+impl Engine {
     /// `window(a, b)`: one day from a to b, not yet known (refcore's `c_window`). L §4.4, §8.4.
     pub(super) fn window_call(
         &mut self,
@@ -443,7 +422,7 @@ impl Engine {
             read: None,
             carry: Vec::new(),
         }));
-        self.chosen(window, (format!("src {written}"), &written), ctx)
+        Ok(named_window(window, (format!("src {written}"), &written)))
     }
 
     /// `one_of(ds)`: one of a list's days, not yet known (refcore's `c_one_of`). L §4.4, §8.4.
@@ -483,11 +462,10 @@ impl Engine {
             .src
             .clone()
             .ok_or_else(|| invariant("a one_of with no text"))?;
-        self.chosen(
+        Ok(named_window(
             Value::Window(Box::new(window)),
             (format!("src {written}"), &written),
-            ctx,
-        )
+        ))
     }
 }
 
