@@ -20,8 +20,8 @@ use crate::model::{
     pattern_text,
 };
 use crate::syntax::{
-    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Row as WrittenRow, RowKey, Rule,
-    Section, Stop,
+    BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Row as WrittenRow, RowKey, Rule, Section,
+    Stop,
 };
 use crate::time::Day;
 use std::collections::BTreeMap;
@@ -360,7 +360,7 @@ impl Loader {
             .as_ref()
             .map(|g| governs_span(g, file, line))
             .transpose()?;
-        let (own_known, own_window) = self.row_known(vid, id, &pattern, row, file, line)?;
+        let own_known = self.row_known(vid, id, &pattern, row, file, line)?;
         let read_as = if balance {
             ReadAs::Balance
         } else if reading {
@@ -387,7 +387,6 @@ impl Loader {
             version: vid.to_owned(),
             own_span,
             own_known,
-            own_window,
             instant,
             locator: row.locator.clone(),
             given: row.given,
@@ -506,8 +505,8 @@ impl Loader {
         Ok((pattern, stated))
     }
 
-    /// A row's own `known`: its day, or its window's first and last days; not before its
-    /// version's, not after `on` (refcore's `row_item`). L §4.5.
+    /// A row's own `known`: its day, not before its version's, not after `on` (refcore's
+    /// `row_item`). L §4.5.
     fn row_known(
         &self,
         vid: &str,
@@ -516,13 +515,9 @@ impl Loader {
         row: &WrittenRow,
         file: &str,
         line: u32,
-    ) -> Result<(Option<Day>, Option<Day>), Stop> {
-        let Some(known) = &row.known else {
-            return Ok((None, None));
-        };
-        let (day, window) = match known {
-            Known::Day(day) => (*day, None),
-            Known::Window(a, b) => (*a, Some(*b)),
+    ) -> Result<Option<Day>, Stop> {
+        let Some(day) = row.known else {
+            return Ok(None);
         };
         let shown = format!("{id}{}", load_pattern_text(pattern));
         let version_known = self.m.versions.get(vid).map(|v| v.known);
@@ -534,7 +529,7 @@ impl Loader {
                 line,
             ));
         }
-        if window.unwrap_or(day) > self.m.on {
+        if day > self.m.on {
             return Err(refuse(
                 Load::Known,
                 format!("row {shown} is known after the model's on date"),
@@ -542,39 +537,21 @@ impl Loader {
                 line,
             ));
         }
-        Ok((Some(day), window))
+        Ok(Some(day))
     }
 
     /// Each row's stable id, `version:target[keys]`, with its own span or instant where two
-    /// rows of a version share a pattern (refcore's `check_rows`, its end); and each input's
-    /// note of a row known in a window, so a read of an input with none sees every row at
-    /// once. L §2.5, §4.5, §4.6 Readings.
+    /// rows of a version share a pattern (refcore's `check_rows`, its end). L §2.5, §4.6
+    /// Readings.
     pub(super) fn finish_rows(&mut self) {
-        let versions = &self.m.versions;
         for (_, input) in self.m.inputs.entries_mut() {
             if !input.observed {
                 set_sids(&input.id, &mut input.rows);
             }
-            input.holds.known_window = input.rows.iter().any(|row| known_in_window(versions, row));
         }
         for (_, def) in self.m.defs.entries_mut() {
             set_sids(&def.id, &mut def.givens);
         }
-    }
-}
-
-/// Whether row `row` is known in a window: its own `known` window, or, with no `known` of its
-/// own, its version's (refcore's `row_known_sid`, as `known_inside` tests it). L §4.5.
-fn known_in_window(
-    versions: &crate::base::Table<crate::model::VersionId, crate::model::VersionInfo>,
-    row: &Row,
-) -> bool {
-    match (row.own_known, row.own_window) {
-        (Some(_), Some(_)) => true,
-        (Some(_), None) => false,
-        (None, _) => versions
-            .get(&row.version)
-            .is_some_and(|version| version.window.is_some()),
     }
 }
 

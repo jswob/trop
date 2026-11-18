@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, booked_amount, reading_rank};
+use super::reading::{Seen, booked_amount, reading_rank, readings};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, Unknown, carry_union, spread};
@@ -43,8 +43,8 @@ pub enum Fig {
 }
 
 impl Fig {
-    /// The unknown days the figure carries, a hole's, added to `into` in order. L §4.4.
-    pub fn carried_into(&self, into: &mut Vec<Unknown>) {
+    /// The unknown days the figure carries, a hole's, added to `into` in order. L §4.4, §8.2.
+    pub fn hole_days_into(&self, into: &mut Vec<Unknown>) {
         if let Fig::Hole(h) = self {
             carry_union(into, h.carried());
         }
@@ -84,15 +84,15 @@ pub struct Line {
     pub text: String,
     /// Its movement's order, typed: the last tie's key (E §6.3 Order, tally 2.1.2).
     pub(super) order: Term,
-    /// The unknown days the day it prints carries: an expected instance's window or hole
-    /// (L §4.4; tally 2.1.8 R13; refcore's `carry_day`).
+    /// The unknown days the day it prints carries where that day is a hole: an expected
+    /// instance's (L §4.4; refcore's `carry_day`, which `hole_days` reads only as a hole).
     pub(super) carry: Vec<Unknown>,
 }
 
 impl Line {
-    /// The unknown days it prints, its figures' and its day's, added to `into` in order
-    /// (refcore's `answer_residuals`, its `vals`). L §4.4.
-    pub fn carried_into(&self, into: &mut Vec<Unknown>) {
+    /// The unknown days its holes carry, its figures' and its day's, added to `into` in order
+    /// (refcore's `answer_residuals`, its `vals`, and `hole_days`). L §4.4, §8.2.
+    pub fn hole_days_into(&self, into: &mut Vec<Unknown>) {
         for fig in [
             self.model.as_ref(),
             self.observed.as_ref(),
@@ -101,7 +101,7 @@ impl Line {
         .into_iter()
         .flatten()
         {
-            fig.carried_into(into);
+            fig.hole_days_into(into);
         }
         carry_union(into, &self.carry);
     }
@@ -372,7 +372,7 @@ impl Engine {
                 continue;
             }
             if let Some(day) = day {
-                let shown = !self.covering(m, &of.place, day, m.on)?.is_empty()
+                let shown = !self.covering(m, &of.place, day, m.on).is_empty()
                     || fulfilled.contains(&inst.id);
                 if !(span.contains(day) && shown) {
                     continue;
@@ -414,7 +414,7 @@ impl Engine {
             let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
                 continue;
             };
-            if !span.contains(day) || self.covering(m, &of.place, day, m.on)?.is_empty() {
+            if !span.contains(day) || self.covering(m, &of.place, day, m.on).is_empty() {
                 continue;
             }
             if let Some(err) = &inst.err {
@@ -474,8 +474,8 @@ impl Engine {
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
-        let walked = self.seen_readings(m, (cut, world), Rows::Unkept)?;
-        for seen in self.seen_readings(m, (m.on, world), Rows::Unkept)? {
+        let walked = readings(m, (cut, world), Rows::Unkept)?;
+        for seen in readings(m, (m.on, world), Rows::Unkept)? {
             if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }
@@ -627,12 +627,8 @@ fn instance_line(
             day.text(),
             fig_text(m, &mdl, &lines.of.unit)?
         );
-        // a window inside one month: the day it prints is an unknown day the ledger carries
-        // (tally 2.1.8 R13, L §4.4)
-        let carry = match &inst.day {
-            Some(Dated::Window(w)) => w.value.carry.clone(),
-            Some(Dated::Day(_) | Dated::Hole(_)) | None => Vec::new(),
-        };
+        // a window inside one month: the day it prints is a window, no hole, so it names no
+        // unknown day (L §8.2 `unknown day:`, holes only)
         lines.out.push(Line {
             day: Some(day),
             group,
@@ -641,7 +637,7 @@ fn instance_line(
             diff,
             text,
             order: inst.order.term()?,
-            carry,
+            carry: Vec::new(),
         });
         return Ok(());
     }
@@ -795,11 +791,11 @@ fn undated_line(
     if mdl.is_zero() {
         return Ok(());
     }
-    // a hole as the hole, a window as a question names it (refcore's `window_text`); the
-    // day it prints is an unknown day the ledger carries (tally 2.1.8 R13, L §4.4)
+    // a hole as the hole, a window as a question names it (refcore's `window_text`); a day
+    // that is a hole carries its unknown days, a window none (L §4.4, §8.2 `unknown day:`)
     let (day_text, carry) = match &inst.day {
         Some(Dated::Hole(h)) => (h.text(), h.carried().to_vec()),
-        Some(Dated::Window(w)) => (w.question.clone(), w.value.carry.clone()),
+        Some(Dated::Window(w)) => (w.question.clone(), Vec::new()),
         Some(Dated::Day(_)) | None => {
             return Err(invariant("an undated instance whose day isn't a hole"));
         }

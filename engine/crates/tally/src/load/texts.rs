@@ -131,18 +131,6 @@ pub(crate) fn text(e: &Expr) -> String {
             };
             format!("{word}({s})")
         }
-        Expr::Low(low) => {
-            let mut s = format!(
-                "low({}, {})",
-                text(&low.place),
-                super::reads::span_text(&low.span)
-            );
-            if let Some(from) = &low.proj.from {
-                s.push_str(" from ");
-                s.push_str(&text(from));
-            }
-            s
-        }
         Expr::Crps(_) => "crps".to_owned(),
         Expr::DistFn(_) => "distfn".to_owned(),
         Expr::Dist(_) => "dist".to_owned(),
@@ -368,7 +356,6 @@ pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
         | Expr::List(_)
         | Expr::Calendar(_)
         | Expr::Query(_)
-        | Expr::Low(_)
         | Expr::Crps(_)
         | Expr::DistFn(_)
         | Expr::Dist(_)

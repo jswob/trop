@@ -13,7 +13,7 @@
 //! passes the binding's `where`; an uncertain instance is a member only `with uncertain`, and
 //! brings its `uncertain:` line.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 use super::adjust::Adjustment;
 use super::observe::Obs;
@@ -24,7 +24,7 @@ use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value};
 use crate::num::Num;
-use crate::syntax::{Bind, Call, Expr, Stop};
+use crate::syntax::{Bind, Stop};
 use crate::time::Day;
 use crate::walk::{
     Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegOut, LegVal, Status, Term, WalkAt,
@@ -67,9 +67,6 @@ pub(crate) struct MvMember {
     pub day: Dated,
     /// Its stable id (L §2.5).
     pub id: String,
-    /// For a row known in a window that holds the cut whose day and its instance's differ,
-    /// that row's hole: which comes first is undecided (L §4.5, tally 2.1.8 R12, B6).
-    pub two_days: Option<Hole>,
 }
 
 impl Moving {
@@ -250,32 +247,12 @@ impl Engine {
         binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
-        let mut two_days: BTreeMap<String, Hole> = BTreeMap::new();
         for x in self.movements_of(m, dom, ctx)? {
             // a binding rests on each movement it takes: S1's refusal is its own (L §5.19, P42)
             if let Some(e) = self.s1_refusal(m, x.id(), ctx.cut)?
                 && rests_in(&x, sp)
             {
                 return Err(Stop::Refused(e));
-            }
-            if let Moving::Obs(o) = &x
-                && let Some(und) = &o.undecided
-            {
-                // a row known in a window that holds the cut is one movement read seen and
-                // unseen: unseen, a row of an observed input is no row, and a movement of an
-                // event kind is the instance it fulfils; a member either way is a member,
-                // else an unknown one (L §4.5, tally 2.1.8 R12; refcore's `span_members`)
-                let alt = self.unseen_day(m, o, dom.0, ctx)?;
-                let (seen_in, unseen_in) =
-                    (sp.contains(o.day), alt.is_some_and(|d| sp.contains(d)));
-                if alt.is_some_and(|d| d != o.day) {
-                    two_days.insert(o.id.clone(), und.clone());
-                }
-                if seen_in || unseen_in {
-                    let unknown = (!(seen_in && unseen_in)).then(|| und.clone());
-                    out.push((x, unknown));
-                }
-                continue;
             }
             let mut st = match x.day() {
                 None => {
@@ -363,117 +340,9 @@ impl Engine {
                 coll,
                 day,
                 id: x.id().to_owned(),
-                two_days: two_days.get(x.id()).cloned(),
             });
         }
         Ok(res)
-    }
-
-    /// The day an undecided row's movement has unseen: for a binding over an event kind, the
-    /// day of the instance it fulfils, if any; for an observed input's, none, since unseen it
-    /// is no row (refcore's `span_members`, `x.target`). L §4.5, §5.19.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::move_instances`].
-    fn unseen_day(
-        &mut self,
-        m: &Reality,
-        o: &Obs,
-        dom: MvDom,
-        ctx: Ctx,
-    ) -> Result<Option<Day>, Stop> {
-        let (MvDom::Event, Some(tid)) = (dom, o.target_id()) else {
-            return Ok(None);
-        };
-        Ok(match self.planned_by_id(m, &tid, ctx.cut)? {
-            Some(Moving::Plan(i)) => i.day.as_ref().and_then(Dated::day),
-            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => None,
-        })
-    }
-
-    /// `next(K, d)`: `first(m in K over d ..) ties by m.day`, the first movement of event kind
-    /// K dated on or after d. A member whose day is a hole may come first, so the result is
-    /// that hole; two on the first day are a tie (`RUN-TIE`); none at the cut is
-    /// `HOLE-NOTYET`, since `d ..` reaches past every cut (refcore's `m_c_next`,
-    /// `first_by_day`). L §5.14.1 (its table), §3.1, §8.1, §8.4; E §4.3.
-    ///
-    /// # Errors
-    ///
-    /// `RUN-TIE`; the refusals the day and the members meet.
-    pub(crate) fn next_movement(
-        &mut self,
-        m: &Reality,
-        call: &Call,
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let [Expr::Name(kind), day] = call.args.as_slice() else {
-            return Err(invariant("a next(K, d) load didn't check"));
-        };
-        let d = self.ev(m, day, env, ctx)?;
-        if let Value::Hole(_) = d {
-            return Ok(d);
-        }
-        let d = match crate::eval::one_day(m, &d, "the day of next")? {
-            Ok(d) => d,
-            Err(h) => return Ok(Value::Hole(h)),
-        };
-        let members =
-            self.span_members(m, (MvDom::Event, kind), &Span::between(Some(d), None), ctx)?;
-        // a member whose day is a hole may come first, and so may an undecided row's
-        // movement where its two days differ, never a tie (L §4.5, tally 2.1.8 R12, B6)
-        let mut hole_days: Vec<Option<&Hole>> = Vec::with_capacity(members.len());
-        for x in &members {
-            if matches!(x.day, Dated::Hole(_)) {
-                hole_days.push(x.unknown.as_ref());
-            }
-        }
-        hole_days.extend(members.iter().map(|x| x.two_days.as_ref()));
-        if let Some(h) = spread(&hole_days) {
-            return Ok(Value::Hole(h));
-        }
-        // its holes and refusals name the form as written, not its definition's bound
-        // variable or the day's value (L §5 A form defined by another; tally 2.1.7 R6, SR-7)
-        let written = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
-        // the first last day, and every member that may fall on or before it: a window's
-        // first and last days (refcore's `first_by_day`, `day_lo`, `day_hi`)
-        let Some(top) = members.iter().filter_map(|x| x.day.hi()).min() else {
-            let text = format!("{written}: no {kind} yet, and its span reaches past the cut");
-            return Ok(Value::Hole(Hole::asked(&text, kind)));
-        };
-        let firsts: Vec<&MvMember> = members
-            .iter()
-            .filter(|x| matches!(x.day.lo(), Some(lo) if lo <= top))
-            .collect();
-        let unknown: Vec<Option<&Hole>> = firsts.iter().map(|x| x.unknown.as_ref()).collect();
-        if let Some(h) = spread(&unknown) {
-            return Ok(Value::Hole(h));
-        }
-        let [first] = firsts.as_slice() else {
-            if let Some((w, id)) = firsts.iter().find_map(|x| match &x.day {
-                Dated::Window(w) => Some((w, &x.id)),
-                Dated::Day(_) | Dated::Hole(_) => None,
-            }) {
-                // which comes first is a comparison of windows, undecided (L §4.4)
-                let text = format!(
-                    "date within {} not precise enough for {written}",
-                    w.question
-                );
-                return Ok(Value::Hole(Hole::asked(&text, id).carrying(&w.value.carry)));
-            }
-            let ids: Vec<&str> = firsts.iter().map(|x| x.id.as_str()).collect();
-            return Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::Tie),
-                format!(
-                    "{written} has a tie at {} that changes the result, and its ties by \
-                     doesn't break it",
-                    ids.join(", ")
-                ),
-            )));
-        };
-        self.absorb(&first.coll);
-        Ok(first.value.clone())
     }
 
     /// The members a binding over an event kind leaves out so that a planned instance and the
@@ -531,7 +400,7 @@ impl Engine {
         }
         for lg in &o.legs {
             for p in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
-                if !self.covering(m, p, o.day, cut)?.is_empty() {
+                if !self.covering(m, p, o.day, cut).is_empty() {
                     return Ok(true);
                 }
             }

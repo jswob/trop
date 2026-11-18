@@ -55,9 +55,9 @@ fn dating(rels: &[Rel]) -> bool {
         .any(|rel| !matches!(rel, Rel::Calendar | Rel::Explicit | Rel::Pin | Rel::LawPin))
 }
 
-/// Whether a move's read with `rels` dates it: neither a binding, `flows`, `next`,
-/// `observed` nor a balance, which read the timeline (refcore's `m_check_move_lawdates`,
-/// its `skip`). L §4.3, §5.14.
+/// Whether a move's read with `rels` dates it: neither a binding, `flows`, `observed` nor a
+/// balance, which read the timeline (refcore's `m_check_move_lawdates`, its `skip`). L §4.3,
+/// §5.14.
 fn dating_move(rels: &[Rel]) -> bool {
     rels.iter().any(|rel| {
         !matches!(
@@ -68,7 +68,6 @@ fn dating_move(rels: &[Rel]) -> bool {
                 | Rel::LawPin
                 | Rel::Bind
                 | Rel::Flows
-                | Rel::Next
                 | Rel::Observed
                 | Rel::Bal
         )

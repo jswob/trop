@@ -1,12 +1,11 @@
-//! Load's checker, its reads of the ledger: `bal`, `low`, `flows`, `gap`, `covered`, `observed`, `next`, `unit`, a leg's `of`, projections, each typed and marked.
+//! Load's checker, its reads of the ledger: `bal`, `flows`, `gap`, `covered`, `observed`, `unit`, a leg's `of`, projections, each typed and marked.
 //! Spec: L §5.10 (`bal`, `unit`, a place's unit), §5.14 (The leg read), §5.14.1 (running
-//! reads, projections, `next`), §5.14.3 (`flows` of a place or a move), §5.19 (`observed`,
-//! `gap`, `covered`), §3.6 (`of q`), §8.3 (`LOAD-UNIT`, `-PARSE`, `-LEG`, `-KEY`, `-NAME`,
+//! reads, projections), §5.14.3 (`flows` of a place or a move), §5.19 (`observed`, `gap`,
+//! `covered`), §3.6 (`of q`), §8.3 (`LOAD-UNIT`, `-PARSE`, `-LEG`, `-KEY`, `-NAME`,
 //! `-DOMAIN`, `-FIELD`, `-PARTS`); E §3.1 step 7 (the marks).
 //! Twin: engine/tools/refcore/check3.py (`m_place_arg`, `m_place_type_unit`, `m_t_bal`,
-//! `m_check_of`, `m_t_legof`, `m_legof_read`, `m_check_proj`, `m_t_low`, `m_t_flows`,
-//! `m_c_next`, `m_c_covered`, `m_c_gap`, `m_c_observed`, `m_c_unit`, `m_unit_of_quantity`,
-//! `m_leg_type`).
+//! `m_check_of`, `m_t_legof`, `m_legof_read`, `m_check_proj`, `m_t_flows`, `m_c_covered`,
+//! `m_c_gap`, `m_c_observed`, `m_c_unit`, `m_unit_of_quantity`, `m_leg_type`).
 //! Invariants: each read is typed in refcore's order, its marks and edges recorded as refcore
 //! records them; a type load doesn't see yet (`Unseen`) passes every one of these checks, and
 //! `Dyn`, refcore's `DYN`, is checked as refcore checks it (no place, no movement);
@@ -21,7 +20,7 @@ use crate::base::Load;
 use crate::model::{
     KindInfo, KindSpec, Labels, Mark, NameKind, Node, NodeKind, Reality, Rel, Target, Ty,
 };
-use crate::syntax::{Bal, Expr, Flows, Key, Lit, Low, OfQ, Postfix, Proj, Span, Stop};
+use crate::syntax::{Bal, Expr, Flows, Key, Lit, OfQ, Postfix, Proj, Span, Stop};
 use std::collections::BTreeSet;
 
 /// Which sort an `of q` asks for at a position (refcore's `sort_of`'s `want`).
@@ -431,36 +430,9 @@ impl Checker {
         if proj.random.is_some() {
             return Err(Stop::NotBuilt("a projection's `random at`"));
         }
-        // the read's `windows each` splits every line that reaches it (L §4.4)
-        self.graph.read_each |= proj.windows_each;
         self.graph.holders.insert(scope.item.clone());
         self.mark(&scope.item, Mark::Proj, target);
         Ok(())
-    }
-
-    /// `low(x, span)`: a place over a closed span, as a running read or a projection
-    /// (refcore's `m_t_low`). L §5.14.1.
-    pub(super) fn low(&mut self, m: &Reality, scope: &Scope, low: &Low, depth: u32) -> Typed {
-        let t = self.place_arg(m, scope, &low.place, "low", depth)?;
-        let ut = place_type_unit(m, scope, &t, &low.place)?;
-        any_needs_unit(m, scope, &low.place)?;
-        let target = place_target(m, scope, &low.place)?;
-        self.span(m, scope, &low.span, depth)?;
-        if low.span.from.is_none() || low.span.to.is_none() {
-            return Err(refused(
-                Load::Domain,
-                "low over a span with an open end".to_owned(),
-            ));
-        }
-        if low.proj.from.is_some() {
-            self.proj(m, scope, &low.proj, target, depth)?;
-        } else {
-            // a `low`'s own `windows each` holds for that read, with `from` or without (L §4.4)
-            self.graph.read_each |= low.proj.windows_each;
-            self.mark(&scope.item, Mark::Bal, target);
-        }
-        self.edge(&scope.item, Node::balances(), Rel::Bal);
-        Ok(ut)
     }
 
     /// `flows(x, span …)`: of a move (its leg named, or its one leg) or of a place; its unit
@@ -681,37 +653,6 @@ impl Checker {
         Ok(Ty::Record(fields))
     }
 
-    /// `next(K, d)`: an event kind and a date; every move of K or a subkind read, a
-    /// decision's a running read, as its definition's binding reads them (refcore's
-    /// `m_c_next`). L §5 A form defined by another, §5.14.1.
-    pub(super) fn next(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
-        let [kind, day] = args else {
-            return Err(refused(
-                Load::Parse,
-                "cannot parse: next(K, d) takes two arguments".to_owned(),
-            ));
-        };
-        let event = if let Expr::Name(id) = kind
-            && m.names.kind(id) == Some(NameKind::Kind)
-        {
-            m.kinds.get(id).filter(|k| k.spec == KindSpec::Event)
-        } else {
-            None
-        };
-        let Some(kid) = event.map(|k| k.id.clone()) else {
-            return Err(refused(
-                Load::Name,
-                format!("next takes an event kind: {}", text(kind)),
-            ));
-        };
-        let dt = self.expr(m, scope, day, None, depth)?;
-        if !is_date(m, &dt) {
-            return Err(uerr(format!("next(K, d): d is {}, not a date", dt.show())));
-        }
-        self.kind_movements(m, scope, &kid, &Rel::Next);
-        Ok(Ty::Key(kid))
-    }
-
     /// `unit(x)`: of a place, its unit as a key of the unit kind holding it; of a quantity,
     /// its unit's (refcore's `m_c_unit`). L §5.10 Kind and unit.
     pub(super) fn unit(&mut self, m: &Reality, scope: &Scope, args: &[Expr], depth: u32) -> Typed {
@@ -835,7 +776,7 @@ fn seen_labels(
 
 /// Whether a projection states any clause.
 fn stated(proj: &Proj) -> bool {
-    proj.from.is_some() || proj.windows_each || proj.random.is_some() || proj.uncertain
+    proj.from.is_some() || proj.random.is_some() || proj.uncertain
 }
 
 /// The units the places of kind `kind` and its subkinds hold, a place's none where it holds
@@ -863,10 +804,10 @@ fn quantity_unit(m: &Reality, unit: Option<&str>) -> bool {
         && !matches!(u, "any" | "one")
 }
 
-/// `bal(x, d)` or `low(x, a .. b)` that names no unit, of a place written by name whose unit
-/// is `any`: `LOAD-UNIT`, which load sees, in the words the run gives it; a place read
-/// through a variable stays the run's (refcore's `m_any_needs_unit`; tally 2.1.8 item 76,
-/// P31). A `low` is refused as the `bal(x, d)` of its definition. L §5.10, §5.14.1, §8.4.
+/// `bal(x, d)` that names no unit, of a place written by name whose unit is `any`:
+/// `LOAD-UNIT`, which load sees, in the words the run gives it; a place read through a
+/// variable stays the run's (refcore's `m_any_needs_unit`; tally 2.1.8 item 76, P31).
+/// L §5.10, §8.4.
 fn any_needs_unit(m: &Reality, scope: &Scope, place: &Expr) -> Result<(), Stop> {
     let Some(name) = literal_place(m, scope, place)? else {
         return Ok(());

@@ -34,7 +34,7 @@ use crate::base::Refusal;
 use crate::book::Seen;
 use crate::eval::{Collected, Engine, Entry};
 use crate::hole::{Hole, spread};
-use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
+use crate::model::{KeyVal, MoveInfo, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
@@ -91,10 +91,6 @@ pub enum Act {
     /// A hole at one place in every unit from the walk's start, by a decision instance whose
     /// day is a hole, with its id and what it met (refcore's `placehole`).
     PlaceHole(String, Hole, String, Collected),
-    /// A hole at one place in every unit from the first day of a span a version covers, the
-    /// version known in a window that holds the cut, with no `windows each` (L §4.5, §5.19
-    /// Coverage; refcore's `covhole`).
-    CoverHole(String, Hole),
     /// A hole that holds for every place.
     GlobalHole(Hole),
     /// A refusal that holds for every place.
@@ -172,15 +168,13 @@ impl Engine {
             (walk.cut, walk.proj.is_none(), walk.world)
         };
         let readings = if main {
-            self.seen_readings(m, (cut, world), self.keep_rows)?
+            crate::book::readings(m, (cut, world), self.keep_rows)?
         } else {
             Vec::new()
         };
         let mut observed = Vec::new();
         let mut legs_warned = Vec::new();
-        let mut cover_holes = Vec::new();
         if main {
-            cover_holes.clone_from(&self.coverage(m, cut)?.undecided);
             legs_warned = self.disagreeing_links(m, cut)?;
             for obs in self.observations(m, cut)?.to_vec() {
                 let decision_day = self.decision_fulfilled(m, &obs, cut)?;
@@ -228,7 +222,6 @@ impl Engine {
             }
         }
         schedule_readings(walk, &readings)?;
-        schedule_cover_holes(walk, cover_holes)?;
         schedule_observations(walk, observed)?;
         for inst in plans {
             if left_out_of(walk, &inst.move_id) {
@@ -446,33 +439,6 @@ fn schedule_readings(walk: &mut Walk, readings: &[Seen]) -> Result<(), Stop> {
             reading_point(*day, seen.edge, rank),
             Act::Read(Box::new(reading.clone())),
         );
-    }
-    Ok(())
-}
-
-/// Puts each cover the cut leaves undecided on the walk: a hole at its place in every unit
-/// from its span's first day, or the walk's start, before that day's readings, ranked by
-/// place (refcore's `prepare`, its `covhole`, keyed `covers <place>`). L §4.5, §5.19
-/// Coverage.
-fn schedule_cover_holes(
-    walk: &mut Walk,
-    mut covers: Vec<(String, Span, Hole)>,
-) -> Result<(), Stop> {
-    covers.sort_by(|a, b| a.0.cmp(&b.0));
-    for (rank, (place, span, hole)) in covers.into_iter().enumerate() {
-        let day = span
-            .start()
-            .filter(|d| *d > walk.start)
-            .unwrap_or(walk.start);
-        if day > walk.end {
-            continue;
-        }
-        let rank = u32::try_from(rank).map_err(|_| super::plan::invariant("a cover's rank"))?;
-        let at = At {
-            rank,
-            ..At::of(day, Step::Start)
-        };
-        walk.at(at, Act::CoverHole(place, hole));
     }
     Ok(())
 }
@@ -766,8 +732,8 @@ fn schedule_decision(
             decision_hole(walk, (at, h), &inst, places)?;
         }
         Some(Dated::Window(w)) => {
-            // a decision's day no `windows each` chose: a hole at its places from the
-            // window's first day (refcore's `prepare`, its decisions)
+            // a decision dated by a window: a hole at its places from the window's first day
+            // (refcore's `prepare`, its decisions)
             let at = At::before(w.lo.max(walk.start));
             let text = format!(
                 "date within {} not precise enough for the day of {}",

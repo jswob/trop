@@ -513,8 +513,10 @@ version v2
         let lines = lines_of("pn7.tally", text);
         let want = [
             format!("aw: {hole}"),
+            "  unknown day: wd".to_owned(),
             "  cut 2026-06-30".to_owned(),
             format!("bw: {hole}"),
+            "  unknown day: wd".to_owned(),
             "  unfulfilled: mw[a1]".to_owned(),
             "  cut 2026-06-30".to_owned(),
         ];
@@ -775,7 +777,7 @@ ask e: explain fee_out[2026-03].cash.amount
     /// window's days give; tally 2.1.8 item 77): a window leg whose lifespan test comes out
     /// both ways is the window's hole from the window's first day, and a refusal a fixed-day
     /// leg brings the place later doesn't outrank it, which comes first being the window's to
-    /// say; `windows each` splits on that window.
+    /// say; a pin on either side of the split gives each side's refusal.
     #[test]
     fn a_refusal_after_a_window_lifespan_test_leaves_the_windows_hole() {
         let text = r#"model t
@@ -812,7 +814,8 @@ version v
   opening[shut] = 0.00 PLN at 2026-01-01 start "s"
 
 ask b: bal(pot, 2026-04-30)
-ask b_each: bal(pot, 2026-04-30) windows each
+ask b_05: bal(pot, 2026-04-30) with dw = 2026-04-05
+ask b_08: bal(pot, 2026-04-30) with dw = 2026-04-08
 "#;
         let lines = lines_of("d77_lifespan_first.tally", text);
         assert_eq!(
@@ -820,24 +823,27 @@ ask b_each: bal(pot, 2026-04-30) windows each
             [
                 "b: ?\"date within window(2026-04-05, 2026-04-10) not precise enough for a \
                  balance\" (into_fresh)",
+                "  unknown day: dw",
                 "  cut 2026-01-01",
-                "b_each [dw = 2026-04-05 .. 2026-04-07]: refused: RUN-LIFESPAN into_fresh.cash \
-                 moves into or out of fresh outside its lifespan",
+                "b_05: refused: RUN-LIFESPAN into_fresh.cash moves into or out of fresh outside \
+                 its lifespan",
+                "  pinned: dw = 2026-04-05",
                 "  cut 2026-01-01",
-                "b_each [dw = 2026-04-08 .. 2026-04-10]: refused: RUN-LIFESPAN into_shut.cash \
-                 moves into or out of shut outside its lifespan",
+                "b_08: refused: RUN-LIFESPAN into_shut.cash moves into or out of shut outside its \
+                 lifespan",
+                "  pinned: dw = 2026-04-08",
                 "  cut 2026-01-01",
             ],
-            "the window's hole, then one refusal per sub-window"
+            "the window's hole naming its day, then one refusal per pinned side"
         );
     }
 
-    /// The final check's `fixes/rv/rc_diff_two_stacks_each` (L §4.4; tally 2.1.8 R13.2): a
-    /// diff whose worlds sit on two stacks, under `windows each`, names in its heads only the
-    /// windows its answer carries: `db`, the day `main` is paid on, never `da`, a window its
-    /// walk meets at another place.
+    /// The final check's `fixes/rv/rc_diff_two_stacks_each`, restated without `windows each`
+    /// (L §4.4, §8.2; tally 2.2): a diff whose worlds sit on two stacks names in its register
+    /// only the unknown days its holes carry: `db`, the day `main` is paid on, never `da`, a
+    /// window its walk meets at another place.
     #[test]
-    fn a_two_stack_diff_head_names_only_the_windows_its_answer_carries() {
+    fn a_two_stack_diff_names_only_the_unknown_days_its_holes_carry() {
         let model = r#"model q
   tally 2
   on 2026-05-01
@@ -875,7 +881,7 @@ version v
   opening[main] = 0.00 PLN at 2026-01-01 start "s"
   opening[side] = 0.00 PLN at 2026-01-01 start "s"
 
-ask d: diff(bal(main, 2026-02-04)) in s2 against s1 windows each
+ask d: diff(bal(main, 2026-02-04)) in s2 against s1
 "#;
         let scenario = |name: &str, fee: &str| {
             format!(
@@ -901,21 +907,16 @@ ask d: diff(bal(main, 2026-02-04)) in s2 against s1 windows each
             days: Days::Events,
         };
         let answer = run(given, &request).expect("an answer");
-        let heads: Vec<&str> = answer
-            .lines()
-            .iter()
-            .filter(|l| l.starts_with("d "))
-            .map(String::as_str)
-            .collect();
         assert_eq!(
-            heads,
+            answer.lines(),
             [
-                "d [db = 2026-02-03 .. 2026-02-04]: diff in s2 against s1: 1 changed, 0 added, \
-                 0 removed, 0 unchanged",
-                "d [db = 2026-02-05]: diff in s2 against s1: 0 changed, 0 added, 0 removed, 1 \
-                 unchanged",
+                "d: diff in s2 against s1: 0 changed, 0 added, 0 removed, 1 unchanged",
+                "  unknown day: db",
+                "  world: s1",
+                "  world: s2",
+                "  cut 2026-05-01",
             ],
-            "db alone in the heads"
+            "db alone among the unknown days"
         );
     }
 }

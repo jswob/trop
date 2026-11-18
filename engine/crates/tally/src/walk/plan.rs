@@ -75,9 +75,8 @@ pub enum Dated {
     Hole(Hole),
 }
 
-/// A window of days a movement or a leg falls on, with no `windows each` choosing a day: it
-/// books at the window's last day, and a balance read inside the window is `HOLE-IMPRECISE`
-/// (L §4.4; E §4.2 Holes in the walk).
+/// A window of days a movement or a leg falls on: it books at the window's last day, and a
+/// balance read inside the window is `HOLE-IMPRECISE` (L §4.4; E §4.2 Holes in the walk).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DayWindow {
     /// Its first day.
@@ -825,7 +824,7 @@ impl Engine {
         if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && !applied {
             return Ok(Status::Uncertain);
         }
-        if d < cut && self.touches_covered(m, inst, (cut, None))? {
+        if d < cut && self.touches_covered(m, inst, (cut, None)) {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })
@@ -838,7 +837,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::touches_covered`]; `ENGINE-INVARIANT` for a day past the calendar.
+    /// `ENGINE-INVARIANT` for a day past the calendar.
     fn class_depends(
         &mut self,
         m: &Reality,
@@ -868,7 +867,7 @@ impl Engine {
                 every = false;
                 break;
             }
-            let modelled = self.touches_covered(m, inst, (cut, Some(d)))?;
+            let modelled = self.touches_covered(m, inst, (cut, Some(d)));
             some = some || modelled;
             every = every && modelled;
             if (some && !every) || d >= w.hi {
@@ -1278,7 +1277,7 @@ impl Engine {
         }
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
-            // a window no `windows each` chose a day of (L §4.4)
+            // a window: one day not yet known (L §4.4)
             Value::Window(w) => match day_window(m, &w)? {
                 Some(day) => day,
                 None => Dated::Day(date_of(&Value::Window(w))?),

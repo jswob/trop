@@ -37,13 +37,9 @@ pub(super) struct Printed {
     pub met: Collected,
     /// A check's sides' law dates, where a side's own `as if {law D}` makes them differ.
     pub laws: Option<(Option<Day>, Option<Day>)>,
-    /// The unknown days the values it prints carry, in the order met: what `windows each`
-    /// takes next (L §4.4; tally 2.1.8 R13; refcore's `carried` of a result).
-    pub carried: Vec<Unknown>,
-    /// An `explain`'s causes as two runs of `windows each` compare them: each cause with its
-    /// value and its rules, whatever law date it ran at, a block printing its first
-    /// sub-window's (refcore's `each_key`, `trace_key`; tally 2.1.8 R13, #191 Q4).
-    pub causes: Option<String>,
+    /// The unknown days the holes among the values it prints carry: what its register's
+    /// `unknown day:` lines name (L §4.4, §8.2; refcore's `hole_days`).
+    pub unknown: Vec<Unknown>,
 }
 
 impl Printed {
@@ -68,79 +64,16 @@ impl Printed {
             && self.whole == other.whole
             && (!(self.bare || self.whole) || self.body == other.body)
     }
-
-    /// Whether `other`, another run of a `windows each` line, gives the same answer: the same
-    /// result, and an `explain`'s same causes (refcore's `each_key`). L §4.4.
-    pub(super) fn same_run(&self, other: &Printed) -> bool {
-        self.same(other) && self.causes == other.causes
-    }
-
-    /// The answer of a run of a `windows each` line as one text, equal for two runs exactly
-    /// where `same_run` holds: the text, the two kinds, the lines under a bare head or a
-    /// diff's, and an `explain`'s causes (refcore's `each_key`, `rkey`). L §5.5, §4.4.
-    pub(super) fn key(&self) -> String {
-        let under = if self.bare || self.whole {
-            self.body.join("\u{0}")
-        } else {
-            String::new()
-        };
-        format!(
-            "{}\u{0}{}{}\u{0}{under}\u{0}{}",
-            self.text,
-            u8::from(self.bare),
-            u8::from(self.whole),
-            self.causes.as_deref().unwrap_or("")
-        )
-    }
 }
 
-/// The unknown days the values `items` carry, in order, each once (refcore's `carried`).
-/// L §4.4; tally 2.1.8 R13.
-pub(super) fn carried_of(items: &[&Item]) -> Vec<Unknown> {
+/// The unknown days the holes among the values `items` carry, in order, each once (refcore's
+/// `hole_days`). L §4.4, §8.2.
+pub(super) fn hole_days(items: &[&Item]) -> Vec<Unknown> {
     let mut out = Vec::new();
     for item in items {
         if let Item::Value(v) = item {
-            v.carried_into(&mut out);
+            v.hole_days_into(&mut out);
         }
-    }
-    out
-}
-
-/// A walk explanation's lines `body` as two runs of `windows each` compare them: its causes and
-/// their values whatever days they fall on, each date written `D`, a line of a date alone left
-/// out, sorted; a block prints its first sub-window's (refcore's `each_key` of its
-/// `ExplainLines`). L §4.4; tally 2.1.8 R13.
-pub(super) fn undated_causes(body: &[String]) -> String {
-    let mut out: Vec<String> = Vec::with_capacity(body.len());
-    for line in body {
-        let undated = dates_written_d(line);
-        if undated.trim() == "D:" {
-            continue;
-        }
-        out.push(undated);
-    }
-    out.sort();
-    out.join("\u{0}")
-}
-
-/// `line` with each `yyyy-mm-dd` in it written `D` (refcore's `re.sub(r'\d{4}-\d{2}-\d{2}',
-/// 'D', ln)`).
-fn dates_written_d(line: &str) -> String {
-    let chars: Vec<char> = line.chars().collect();
-    let mut out = String::with_capacity(line.len());
-    let mut rest: &[char] = &chars;
-    while let [first, tail @ ..] = rest {
-        if let [y1, y2, y3, y4, '-', m1, m2, '-', d1, d2, after @ ..] = rest
-            && [y1, y2, y3, y4, m1, m2, d1, d2]
-                .iter()
-                .all(|c| c.is_ascii_digit())
-        {
-            out.push('D');
-            rest = after;
-            continue;
-        }
-        out.push(*first);
-        rest = tail;
     }
     out
 }
@@ -167,18 +100,16 @@ pub(super) fn check_line(
         Ok((text, laws))
     });
     let met = engine.pop_alone();
-    let ((text, carried), laws) = read?;
+    let ((text, unknown), laws) = read?;
     Ok(Printed {
         text,
         body: Vec::new(),
         bare: false,
-
         whole: false,
         alone: false,
         met,
         laws: (laws.0 != laws.1).then_some(laws),
-        carried,
-        causes: None,
+        unknown,
     })
 }
 
@@ -201,11 +132,11 @@ fn sides_text(
             side_text(m, &lv)?,
             side_text(m, &rv)?
         );
-        let mut carried = carried_of(&[&lv, &rv]);
+        let mut unknown = hole_days(&[&lv, &rv]);
         if let Some(v) = open {
-            v.carried_into(&mut carried);
+            v.hole_days_into(&mut unknown);
         }
-        Ok((text, carried))
+        Ok((text, unknown))
     };
     let (Item::Value(a), Item::Value(b)) = (&lv, &rv) else {
         return both(None);

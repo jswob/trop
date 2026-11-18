@@ -44,24 +44,6 @@ impl Engine {
     /// `LOAD-READS` for `bal(x)` outside a decision; `LOAD-UNIT` for a unit a place doesn't
     /// hold; the refusals of the walk; `NotBuilt` for what S doesn't build.
     pub(crate) fn bal(&mut self, m: &Reality, b: &Bal, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
-        // a projection's own `windows each` holds for that read: the line's run's choice
-        // (L §4.4)
-        let inside = if b.proj.windows_each {
-            self.read_windows(ctx)?
-        } else {
-            None
-        };
-        let Some(inside) = inside else {
-            return self.bal_read(m, b, env, ctx);
-        };
-        self.open_layer(m, inside)?;
-        let v = self.bal_read(m, b, env, inside);
-        self.end_layer(inside.layer, v.as_ref().err())?;
-        v
-    }
-
-    /// [`Engine::bal`] in context `ctx`, a projection's own clause taken. L §5.10, §5.14.1.
-    fn bal_read(&mut self, m: &Reality, b: &Bal, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let place = match self.place_arg(m, &b.place, env, ctx)? {
             Err(h) => return Ok(Value::Hole(h)),
             Ok(p) => p,
@@ -90,8 +72,8 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        // a window left a window (no `windows each`) is the hole of its imprecision for this
-        // read, named with its place (refcore's `m_e_bal`); else the one-day reader's text
+        // a window is the hole of its imprecision for this read, named with its place
+        // (refcore's `m_e_bal`); else the one-day reader's text
         let named;
         let what = if let Value::Window(_) = d {
             named = format!("the day of bal({place}, d)");
@@ -820,10 +802,10 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::seen_readings`].
+    /// As [`crate::book::readings`].
     fn stated_on(&mut self, m: &Reality, place: &str, day: Day, cut: Day) -> Result<bool, Stop> {
         let world = self.timeline_world();
-        let seen = self.seen_readings(m, (cut, world), Rows::Unkept)?;
+        let seen = crate::book::readings(m, (cut, world), Rows::Unkept)?;
         Ok(seen
             .iter()
             .any(|s| s.input == "stated" && s.place == place && s.day == day))

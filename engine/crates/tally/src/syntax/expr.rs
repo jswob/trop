@@ -56,7 +56,7 @@ enum KeysOf {
 }
 
 /// The built-in names, read as built-ins only directly before `(` (L §2.2).
-const BUILTINS: [&str; 75] = [
+const BUILTINS: [&str; 73] = [
     "sum",
     "count",
     "min",
@@ -74,8 +74,6 @@ const BUILTINS: [&str; 75] = [
     "flows",
     "bal",
     "value",
-    "low",
-    "next",
     "covered",
     "round",
     "pow",
@@ -304,8 +302,7 @@ impl P<'_> {
             Some(tok) => {
                 tok.kind == Kind::Id
                     && [
-                        "with", "law", "as", "windows", "random", "paths", "path", "partial",
-                        "orient",
+                        "with", "law", "as", "random", "paths", "path", "partial", "orient",
                     ]
                     .contains(&tok.text.as_str())
             }

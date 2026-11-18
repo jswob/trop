@@ -491,7 +491,6 @@ impl Checker {
             Expr::Covered(covered) => self.covered(m, scope, &covered.0, &covered.1, depth),
             Expr::Value(value) => self.value(m, scope, value, depth),
             Expr::Query(query) => self.query(m, scope, query, depth),
-            Expr::Low(low) => self.low(m, scope, low, depth),
             Expr::Crps(crps) => self.crps(m, scope, crps, depth),
             Expr::DistFn(dist_fn) => self.dist_fn(m, scope, dist_fn, depth),
             Expr::Dist(dist) => self.dist(m, scope, dist, expect, depth),

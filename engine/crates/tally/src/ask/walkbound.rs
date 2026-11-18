@@ -165,13 +165,12 @@ fn named(reference: &Expr) -> Result<(&str, &[Key]), Stop> {
 fn printed(text: String, body: Vec<String>) -> Printed {
     Printed {
         text,
-        causes: Some(super::check::undated_causes(&body)),
         body,
         bare: false,
         whole: false,
         alone: false,
         met: Collected::default(),
         laws: None,
-        carried: Vec::new(),
+        unknown: Vec::new(),
     }
 }

@@ -285,7 +285,7 @@ fn is_random(m: &Reality, items: &BTreeSet<Node>, e: &Expr) -> bool {
 }
 
 /// The children a walk for randomness or balances visits: `children`'s, and the parts of
-/// the random forms, `low` and `prorata` it leaves out (refcore's walks visit every field
+/// the random forms and `prorata` it leaves out (refcore's walks visit every field
 /// of a node; a binding's domain names keys, never a random value).
 pub(super) fn all_children(e: &Expr) -> Vec<&Expr> {
     let mut out = children(e);
@@ -301,8 +301,6 @@ pub(super) fn all_children(e: &Expr) -> Vec<&Expr> {
     } else if let Expr::Dist(d) = e {
         out.extend(d.args.iter());
         out.extend(d.term.as_ref());
-    } else if let Expr::Low(low) = e {
-        out.push(&low.place);
     } else if let Expr::Prorata(p) = e {
         out.extend([&p.total, &p.weight, &p.key]);
         out.extend(p.mode.as_ref());
@@ -325,15 +323,11 @@ fn post_keys(posts: &[Postfix]) -> Vec<&Expr> {
     out
 }
 
-/// Whether an expression reads a balance, a low, flows or a value (refcore's
-/// `reads_balances`).
+/// Whether an expression reads a balance, flows or a value (refcore's `reads_balances`).
 fn reads_balances(e: &Expr) -> bool {
     let mut stack = vec![e];
     while let Some(x) = stack.pop() {
-        if matches!(
-            x,
-            Expr::Bal(_) | Expr::Low(_) | Expr::Flows(_) | Expr::Value(_)
-        ) {
+        if matches!(x, Expr::Bal(_) | Expr::Flows(_) | Expr::Value(_)) {
             return true;
         }
         stack.extend(all_children(x));
@@ -489,11 +483,6 @@ fn line_random(m: &Reality, cone: &Cone, ask: &Ask, e: &Expr) -> Result<bool, St
             read = Some((
                 bal.proj.from.is_some(),
                 place_target(m, &scope, &bal.place)?,
-            ));
-        } else if let Expr::Low(low) = x {
-            read = Some((
-                low.proj.from.is_some(),
-                place_target(m, &scope, &low.place)?,
             ));
         } else if let Expr::Flows(flows) = x {
             read = Some((false, flows_target(m, &scope, &flows.target)?));

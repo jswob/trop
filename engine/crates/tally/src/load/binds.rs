@@ -287,7 +287,7 @@ impl Checker {
     /// `m_bind_movements`). L §5.14.1.
     fn bind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
         self.bound_kind(scope, kind);
-        self.kind_movements(m, scope, kind, &Rel::Bind);
+        self.kind_movements(m, scope, kind);
         self.bound_observed(m, scope);
     }
 
@@ -326,13 +326,12 @@ impl Checker {
         }
     }
 
-    /// The movements of event kind `kind` read, each move of it or a subkind by `rel`; those
-    /// of a decision and `pads` a running read (refcore's `m_bind_movements`, `m_c_next`).
-    /// `next(K, d)` reads them as the binding its definition holds does (L §5 A form defined
-    /// by another, §5.14.1; tally 2.1.7 R6).
-    pub(super) fn kind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str, rel: &Rel) {
+    /// The movements of event kind `kind` a binding reads, each move of it or a subkind;
+    /// those of a decision and `pads` a running read (refcore's `m_bind_movements`).
+    /// L §5.14.1.
+    fn kind_movements(&mut self, m: &Reality, scope: &Scope, kind: &str) {
         for mv in m.moves_of(kind) {
-            self.edge(&scope.item, Node::new(NodeKind::Move, &mv.id), rel.clone());
+            self.edge(&scope.item, Node::new(NodeKind::Move, &mv.id), Rel::Bind);
             if mv.decision {
                 self.mark(
                     &scope.item,

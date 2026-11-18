@@ -1,20 +1,18 @@
-//! The written projection `bal(x, d) from t`, a walk of its own from day t without its holder's dependents, and `low`, its least day.
+//! The written projection `bal(x, d) from t`, a walk of its own from day t without its holder's dependents.
 //! Spec: L §5.14.1 (The projection is written: its start at t, or at a decision's point on t;
 //! the movements dated t through d counted as known on t; those that depend on the holder left
-//! out and listed; `with uncertain`; `HOLE-PRERUN` before S; `RUN-FUTURE`; `low` the minimum
-//! of the end-of-day balances, `RUN-DOMAIN` for a day before t), E §4.3 (steps 1–3; nesting is
-//! finite; `low` read day by day here, the plain twin of fence F5; the common case offered to
-//! F5 first, `lows.rs`), §3.2 (the projection in a cell's context), L §8.2 (`left out:`).
+//! out and listed; `with uncertain`; `HOLE-PRERUN` before S; `RUN-FUTURE`; `RUN-DOMAIN` for a
+//! day before t), E §4.3 (steps 1–3; nesting is finite; the projection's own walk is the plain
+//! twin of fence F5; the common case offered to F5 first, `lows.rs`), §3.2 (the projection in
+//! a cell's context), L §8.2 (`left out:`).
 //! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `proj_regs`, `proj_uncertain`,
-//! `proj_clauses`, `m_e_low`) and walk.py (`proj_walk`).
+//! `proj_clauses`) and walk.py (`proj_walk`).
 //! Invariants: a projection's walk starts each place as the walk it continues stood at its
 //! point and books nothing of a move that depends on its holder; there is one walk per (walk
 //! continued, point, cut, moves left out), walked only as far as a read needs; a decision
-//! reads no projection from a day after its own; `low` is the first of equal lows, a hole
-//! where any day's balance is one; a read F5 answers is answered as this walk would, and every
-//! read F5 leaves is read here unchanged.
+//! reads no projection from a day after its own; a read F5 answers is answered as this walk
+//! would, and every read F5 leaves is read here unchanged.
 
-use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::left_out_lines;
@@ -22,14 +20,13 @@ use super::fork::Held;
 use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
-use super::reads::{Sees, outside_run};
+use super::reads::Sees;
 use super::state::{Projected, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env};
-use crate::hole::{Hole, spread};
+use crate::hole::Hole;
 use crate::model::{Reality, Value};
-use crate::num::Num;
-use crate::syntax::{Bal, Low, Stop};
+use crate::syntax::{Bal, Stop};
 use crate::time::{Day, Period};
 
 /// A projection's walk by what makes it: the walk it continues, the point it starts after,
@@ -123,193 +120,6 @@ impl Engine {
             return self.proj_uncertain(m, id, (place, unit), (day, &value), ctx);
         }
         Ok(value)
-    }
-
-    /// `low(x, a .. b) [from t] [clauses]`: the lowest end-of-day balance of x on the days a
-    /// through b, the first of equal lows; with `from t` each day's balance in the walk
-    /// continued from day t, else the plain balance, with the read's clauses either way; a
-    /// hole where any day's balance is one, with every day's questions (refcore's `m_e_low`).
-    /// L §5.14.1 (the built-ins' table), E §4.3.
-    ///
-    /// # Errors
-    ///
-    /// `RUN-EMPTY` for a window with no day (b before a: L §5.11, `min` over no keys);
-    /// `RUN-DOMAIN` for a first day before the projection's start, a start that isn't a day;
-    /// `LOAD-UNIT` for a place of unit `any`; `RUN-FUTURE` for a decision's projection from a
-    /// later day; the refusals of the walk.
-    pub(crate) fn low(
-        &mut self,
-        m: &Reality,
-        read: &Low,
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        // its own `windows each` holds for that read: the line's run's choice (L §4.4)
-        let inside = if read.proj.windows_each {
-            self.read_windows(ctx)?
-        } else {
-            None
-        };
-        let Some(inside) = inside else {
-            return self.low_read(m, read, env, ctx);
-        };
-        self.open_layer(m, inside)?;
-        let v = self.low_read(m, read, env, inside);
-        self.end_layer(inside.layer, v.as_ref().err())?;
-        v
-    }
-
-    /// [`Engine::low`] in context `ctx`, its own clause taken. L §5.14.1, E §4.3.
-    fn low_read(&mut self, m: &Reality, read: &Low, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
-        let place = match self.place_arg(m, &read.place, env, ctx)? {
-            Err(h) => return Ok(Value::Hole(h)),
-            Ok(p) => p,
-        };
-        let unit = own_unit(m, &place)?;
-        let span = match self.span_value(m, &read.span, env, ctx)? {
-            Err(h) => return Ok(Value::Hole(h)),
-            Ok(sp) => sp,
-        };
-        let first = span
-            .start()
-            .ok_or_else(|| invariant("a span with no start"))?;
-        let last = super::flows::span_last(m, &span)?;
-        if last < first {
-            // `min(bal(x, d) … for d in a .. b step 1 day)` over no day: its terms are never read
-            return Err(refuse(Run::Empty, "low over no keys".to_owned()));
-        }
-        let start = match &read.proj.from {
-            None => None,
-            Some(from) => {
-                let start = self.ev(m, from, env, ctx)?;
-                if let Value::Hole(_) = start {
-                    return Ok(start);
-                }
-                let start = match crate::eval::one_day(m, &start, "the day of a projection")? {
-                    Ok(start) => start,
-                    Err(h) => return Ok(Value::Hole(h)),
-                };
-                if first < start {
-                    return Err(refuse(
-                        Run::Domain,
-                        format!(
-                            "low({place}, {} .. {}) from {}: a day before the projection's start",
-                            first.text(),
-                            last.text(),
-                            start.text()
-                        ),
-                    ));
-                }
-                if start < m.start {
-                    return Ok(Value::Hole(Hole::before_run(&place)));
-                }
-                Some(start)
-            }
-        };
-        // `low` is the `min` of its days' balances (L §5.14.1): a day the walk doesn't hold is
-        // the hole naming the end it passes (L §8.1), the others are read as the walk has them
-        let days = Days {
-            first: first.max(m.start),
-            last: last.min(m.end),
-        };
-        let mut balances = Vec::new();
-        if days.first <= days.last {
-            balances = match start {
-                Some(start) => {
-                    let uncertain = read.proj.uncertain || ctx.unc;
-                    let window = (start, (days.first, days.last));
-                    match self.common_case(m, (&place, &unit), window, (uncertain, ctx))? {
-                        Some(v) => vec![v],
-                        None => {
-                            self.projected_days(m, (&place, &unit), (start, days), (read, ctx))?
-                        }
-                    }
-                }
-                None => self.plain_days(m, (&place, &unit), days, (read, ctx))?,
-            };
-        }
-        balances.extend(
-            [first, last]
-                .into_iter()
-                .filter_map(|d| outside_run(m, d, &place).map(Value::Hole)),
-        );
-        lowest(balances)
-    }
-
-    /// The end-of-day balances of a place on the days of a `low`, in the walk continued from
-    /// day `start`, its uncertain movements counted under `with uncertain` (refcore's
-    /// `m_e_low`, its `proj` form). L §5.14.1, E §4.3.
-    fn projected_days(
-        &mut self,
-        m: &Reality,
-        (place, unit): (&str, &str),
-        (start, days): (Day, Days),
-        (read, ctx): (&Low, Ctx),
-    ) -> Result<Vec<Value>, Stop> {
-        let left_out = self.holder_left_out(m)?;
-        let id = self.proj_walk(m, ctx, (start, days.last), left_out)?;
-        let balances = self.days_read(m, id, (place, unit), (start, days), (read, ctx));
-        self.end_projection(id, balances.as_ref().err())?;
-        balances
-    }
-
-    /// [`Engine::projected_days`]' read of its walk `id`: each day's end balance, the walk
-    /// walked through that day first (refcore's `m_e_low`, its `proj` form). L §5.14.1, E §4.3.
-    fn days_read(
-        &mut self,
-        m: &Reality,
-        id: usize,
-        (place, unit): (&str, &str),
-        (start, days): (Day, Days),
-        (read, ctx): (&Low, Ctx),
-    ) -> Result<Vec<Value>, Stop> {
-        // the read's own clause, else the ask line's, which no decision's context carries
-        let uncertain = read.proj.uncertain || ctx.unc;
-        if let Some(at) = ctx.at {
-            self.note_read(at.walk, place, Sees::AtPoint)?;
-        }
-        // a day's balance reads the walk through that day (L §8, a scan; tally 2.1.7 R1, #127):
-        // a walk that fails on a day refuses the `low` there, after the days before it are read
-        let mut out = Vec::new();
-        let mut day = Some(days.first);
-        while let Some(d) = day.filter(|d| *d <= days.last) {
-            self.walk_projection(m, id, d)?;
-            if d == days.first {
-                self.proj_regs(id, start, days.last)?;
-            }
-            let v = self.read_state(m, id, place, unit, At::end(d))?;
-            out.push(if uncertain && !matches!(v, Value::Hole(_)) {
-                self.proj_uncertain(m, id, (place, unit), (d, &v), ctx)?
-            } else {
-                v
-            });
-            day = d.next();
-        }
-        Ok(out)
-    }
-
-    /// The plain end-of-day balances of a place on the days of a `low` with no `from`, each
-    /// with the clauses a plain `bal` takes: `with uncertain` (refcore's `m_e_low`, its plain
-    /// form; pick P51, #125). L §5.14.1 (`low` "with the same clauses"), §5.14.
-    fn plain_days(
-        &mut self,
-        m: &Reality,
-        (place, unit): (&str, &str),
-        days: Days,
-        (read, ctx): (&Low, Ctx),
-    ) -> Result<Vec<Value>, Stop> {
-        let mut out = Vec::new();
-        let mut day = Some(days.first);
-        while let Some(d) = day.filter(|d| *d <= days.last) {
-            let v = self.bal_day(m, (place, unit), d, At::end(d), ctx)?;
-            out.push(if read.proj.uncertain {
-                self.with_uncertain(m, (place, unit), d, &v, ctx)?
-            } else {
-                v
-            });
-            day = d.next();
-        }
-        Ok(out)
     }
 
     /// The plain twin's walk of a projection from day `t`, as the item holding it now leaves
@@ -477,7 +287,7 @@ impl Engine {
             .checked_sub(1)
             .ok_or_else(|| invariant("a projection's read ended twice"))?;
         // a walk being walked has a reader still: every walk of a projection's walk is a
-        // read's (`projected_bal`, `low`'s days, explain's `projection_walk`), which holds it
+        // read's (`projected_bal`, explain's `projection_walk`), which holds it
         if resumes || p.readers > 0 {
             return Ok(());
         }
@@ -496,7 +306,7 @@ impl Engine {
         left_out: &BTreeSet<String>,
     ) -> Result<Walk, Stop> {
         let world = self.walk(base)?.world;
-        let mut first_reading = self.first_readings(m, (c, world))?;
+        let mut first_reading = crate::book::first_readings(m, (c, world))?;
         let from = self.walk(base)?;
         let mut states: BTreeMap<(String, String), St> = BTreeMap::new();
         for (place, unit) in from.logs.keys() {
@@ -564,15 +374,6 @@ impl Engine {
     }
 }
 
-/// The days of a `low`, first through last. L §5.14.1.
-#[derive(Debug, Clone, Copy)]
-struct Days {
-    /// The first day, a.
-    first: Day,
-    /// The last day, b.
-    last: Day,
-}
-
 /// The day a projection's walk read through `through` is planned through: on to the last day
 /// of that day's month (P §2.4's interval), within the run, so that a projection read day by
 /// day plans once a month, not once a read, while its walk stays within a month of its window
@@ -584,35 +385,6 @@ fn horizon(m: &Reality, through: Day) -> Day {
         Some(last) => last.min(m.end).max(through),
         None => through,
     }
-}
-
-/// The lowest of a `low`'s daily balances, the first of equal ones; the holes of every day
-/// where any is one (refcore's `m_e_low`, its end). L §5.14.1, §8.1.
-fn lowest(balances: Vec<Value>) -> Result<Value, Stop> {
-    let holes: Vec<Option<&Hole>> = balances.iter().map(Value::as_hole).collect();
-    if let Some(h) = spread(&holes) {
-        return Ok(Value::Hole(h));
-    }
-    let mut best: Option<(Value, Num)> = None;
-    for v in balances {
-        // one place in one unit: money by its minor units, a number by its value
-        let q = if let Value::Money(x) = &v {
-            x.minor_units()
-        } else if let Value::Number(n) = &v {
-            n.q.clone()
-        } else {
-            return Err(invariant("a day's balance that is no quantity"));
-        };
-        let lower = match &best {
-            None => true,
-            Some((_, b)) => q.compare(b).map_err(crate::eval::num_stop)? == Ordering::Less,
-        };
-        if lower {
-            best = Some((v, q));
-        }
-    }
-    best.map(|(v, _)| v)
-        .ok_or_else(|| invariant("a low over no day"))
 }
 
 /// A place's own unit, for a read that names none: `LOAD-UNIT` for a place of unit `any`

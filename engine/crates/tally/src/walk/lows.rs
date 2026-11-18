@@ -1,12 +1,13 @@
 //! Fence F5: a written projection's common case read from running sums of x's counted plan legs, kept in a tree, not from the projection's own walk.
 //! Spec: E §4.3 (The common case is cheap: with no decision the projection counts, `bal(x, d)
 //! from t` is the start balance plus a prefix sum F of the plan movements as known on t, and
-//! `low(x, a .. b) from t` a range minimum over F; F changes only with the cut min(t, K)),
-//! §4.1 step 3 and §4.2 steps 2 and 5 (what the projection's walk books, refuses or makes a
-//! hole at x); L §5.14.1 (`bal … from t`, `low`, `left out:`), §8.2 (a balance's register);
-//! P §2.3 (F in a segment tree over the days x has a counted movement, a query O(log n)).
-//! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `m_e_low`) and walk.py (`proj_walk`),
-//! which walk the projection day by day, as projection.rs does.
+//! the `min` of `bal(x, d) from t` over the days a .. b a range minimum over F; F changes
+//! only with the cut min(t, K)), §4.1 step 3 and §4.2 steps 2 and 5 (what the projection's
+//! walk books, refuses or makes a hole at x); L §5.14.1 (`bal … from t`, `left out:`), §8.2
+//! (a balance's register); P §2.3 (F in a segment tree over the days x has a counted
+//! movement, a query O(log n)).
+//! Twin: engine/tools/refcore/mreads.py (`proj_bal`) and walk.py (`proj_walk`), which walk
+//! the projection day by day, as projection.rs does.
 //! Invariants: a read is answered here only where the projection's walk would book nothing at
 //! x in the window but whole plan legs in x's unit, inside both ends' lifespans and sign
 //! rules, and run no decision; it then gives that walk's value and register, and every other
@@ -20,8 +21,8 @@
 //! P56, #128).
 //! PERF: P8-5, P8-M4 (one read of a written projection in E §4.3's common case: O(log n) in
 //! the n days x moves, where the walk plans and walks the window and reads each of its days;
-//! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`,
-//! `projected_days`: the projection's own walk); the equivalence test: the CLI's
+//! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`: the
+//! projection's own walk); the equivalence test: the CLI's
 //! `tests/walk_oracle.rs` (the kernel and M1 corpora, and a projection under axes and in a
 //! scenario's world, the same bytes under `Lows::Tree` and `Lows::Walk`), and this file's tests.
 //!
@@ -498,8 +499,9 @@ impl RangeMinimum {
     }
 
     /// The legs counted from day `counts` through `first`, then the least running sum of the
-    /// days after it through `last`, if below zero: what a served `low(x, first .. last) from
-    /// t` adds to its start balance, two queries of the tree. P §2.3, E §4.3.
+    /// days after it through `last`, if below zero: what the `min` of `bal(x, d) from t` over
+    /// the days `first` through `last`, served, adds to its start balance, two queries of the
+    /// tree. P §2.3, E §4.3.
     ///
     /// # Errors
     ///
@@ -585,11 +587,11 @@ impl Size {
 }
 
 impl Engine {
-    /// `bal(x, d) from t` or `low(x, a .. b) from t` in E §4.3's common case, from the tree:
-    /// the lowest end-of-day balance of the days `first` through `last` in the walk continued
-    /// from `base` on day t (`bal`: one day), with the register that walk's reads carry; none
-    /// where the read isn't the common case, for the projection's own walk to read (P §2.3).
-    /// E §4.3, L §5.14.1.
+    /// `bal(x, d) from t`, or the `min` of it over the days a .. b, in E §4.3's common case,
+    /// from the tree: the lowest end-of-day balance of the days `first` through `last` in the
+    /// walk continued from `base` on day t (`bal`: one day), with the register that walk's
+    /// reads carry; none where the read isn't the common case, for the projection's own walk
+    /// to read (P §2.3). E §4.3, L §5.14.1.
     ///
     /// # Errors
     ///
@@ -727,11 +729,9 @@ impl Engine {
     ) -> Result<(Tree, Vec<Num>), Stop> {
         // the projection's walk reads its cut's first readings before its plan pass, and books
         // none (a projection's plan pass schedules no reading, E §4.3 counts movements only);
-        // the tree needs no anchor, only that read's effects, so its value goes unused: its
-        // refusals come first, as the walk's do, and under `windows each` it meets the
-        // readings' known windows the walk meets, so the line splits as the walk's would
-        // (L §4.4, §4.5)
-        self.first_readings(m, (cut, world))?;
+        // the tree needs no anchor, only that read's refusals, which come first, as the walk's
+        // do, so its value goes unused
+        crate::book::first_readings(m, (cut, world))?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),
@@ -1110,17 +1110,17 @@ move late: transfers
   at gift_day
   leg cash from out to konto amount gift
 
-ask low_from: low(konto, 2026-02-01 .. 2026-06-30) from 2026-01-20
+ask low_from: min(bal(konto, d) from 2026-01-20 for d in 2026-02-01 .. 2026-06-30 step 1 day)
 
 ask bal_from: bal(konto, 2026-06-30) from 2026-02-01
 
-ask low_hole: low(konto, 2026-04-01 .. 2026-09-30) from 2026-04-01
+ask low_hole: min(bal(konto, d) from 2026-04-01 for d in 2026-04-01 .. 2026-09-30 step 1 day)
 
-ask low_unc: low(konto, 2026-02-01 .. 2026-06-30) from 2026-01-20 with uncertain
+ask low_unc: min(bal(konto, d) from 2026-01-20 with uncertain for d in 2026-02-01 .. 2026-06-30 step 1 day)
 
-ask low_feb: low(konto, 2026-02-01 .. 2026-06-30) from 2026-02-01
+ask low_feb: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-06-30 step 1 day)
 
-ask low_mar: low(konto, 2026-03-01 .. 2026-06-30) from 2026-03-01
+ask low_mar: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-06-30 step 1 day)
 
 version facts
   cite card
@@ -1178,7 +1178,9 @@ version rise
     #[test]
     fn the_tree_reads_the_common_case_where_the_walk_isnt_walked() {
         let m = reality();
-        for id in ["low_from", "bal_from"] {
+        // the twin reads the `min`'s 150 days as its terms, each day's projection a walk of
+        // its own with forks off; the tree reads each day's from its one tree
+        for (id, days) in [("low_from", 150), ("bal_from", 1)] {
             let (tree, walks, trees) = read(&m, id, Lows::Tree);
             let (walk, twin_walks, twin_trees) = read(&m, id, Lows::Walk);
             assert_eq!(tree, walk, "{id}: the same value");
@@ -1187,7 +1189,11 @@ version rise
                 (0, 1),
                 "{id}: the tree, no projection's walk"
             );
-            assert_eq!((twin_walks, twin_trees), (1, 0), "{id}: the twin walks it");
+            assert_eq!(
+                (twin_walks, twin_trees),
+                (days, 0),
+                "{id}: the twin walks it"
+            );
         }
     }
 
@@ -1335,7 +1341,7 @@ version rise
             let (tree, walks, _) = read(&m, id, Lows::Tree);
             let (walk, _, _) = read(&m, id, Lows::Walk);
             assert_eq!(tree, walk, "{id}: the same value");
-            assert_eq!(walks, 1, "{id}: the projection's walk reads it");
+            assert!(walks > 0, "{id}: the projection's walk reads it");
         }
     }
 

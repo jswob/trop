@@ -585,7 +585,7 @@ fn obs_known(m: &Reality, o: &Observation) -> Result<Day, Stop> {
     version_known(m, &o.version)
 }
 
-/// A version's `known`, or its window's first day.
+/// A version's `known` day.
 fn version_known(m: &Reality, id: &str) -> Result<Day, Stop> {
     m.versions
         .get(id)

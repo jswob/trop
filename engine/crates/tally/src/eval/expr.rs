@@ -90,7 +90,6 @@ impl Engine {
             Expr::Calendar(..) => Err(Stop::NotBuilt("a calendar written in a rule")),
             Expr::Value(v) => self.valuation(m, v, env, ctx),
             Expr::Query(query) => self.key_query(m, query, env, ctx),
-            Expr::Low(low) => self.low(m, low, env, ctx),
             Expr::Crps(..) => Err(Stop::NotBuilt("`crps`")),
             Expr::DistFn(..) => Err(Stop::NotBuilt("`cdf`, `pdf` and `pmf`")),
             Expr::Dist(..) => Err(Stop::NotBuilt("distributions")),
@@ -304,7 +303,6 @@ impl Engine {
             | Expr::Calendar(_)
             | Expr::Value(_)
             | Expr::Query(_)
-            | Expr::Low(_)
             | Expr::Crps(_)
             | Expr::DistFn(_)
             | Expr::Dist(_)

@@ -68,10 +68,8 @@ pub struct Row {
     pub version: String,
     /// Its own `governs` span.
     pub own_span: Option<Span>,
-    /// Its own `known` date, or its window's first day.
+    /// Its own `known` date.
     pub own_known: Option<Day>,
-    /// Its own `known window(a, b)`'s last day, b (L §4.5).
-    pub own_window: Option<Day>,
     /// A reading's instant (L §4.6 Readings, §5.19).
     pub instant: Option<Instant>,
     /// Its locator text.
@@ -123,17 +121,6 @@ pub struct InputInfo {
     pub part_rows: Vec<Row>,
     /// Its line.
     pub line: Option<u32>,
-    /// What its rows hold that a read must look for, set once they are loaded.
-    pub holds: RowsHold,
-}
-
-/// What an input's rows hold that a read must look for: a read of an input with none sees
-/// every row as stated (L §4.5).
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct RowsHold {
-    /// A row known in a window, its own or its version's: only then can a cut fall inside a
-    /// row's `known` (L §4.5).
-    pub known_window: bool,
 }
 
 impl InputInfo {
@@ -156,7 +143,6 @@ impl InputInfo {
             observations: Vec::new(),
             part_rows: Vec::new(),
             line,
-            holds: RowsHold::default(),
         }
     }
 }
@@ -348,10 +334,8 @@ pub struct Observation {
     pub key: String,
     /// The version that states it.
     pub version: String,
-    /// Its own `known` date, or its window's first day.
+    /// Its own `known` date.
     pub own_known: Option<Day>,
-    /// Its own `known window(a, b)`'s last day, b (L §4.5).
-    pub own_window: Option<Day>,
     /// Its locator text.
     pub locator: Option<String>,
     /// Whether it is a `replace` line.

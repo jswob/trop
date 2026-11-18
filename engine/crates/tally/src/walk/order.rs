@@ -723,7 +723,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None))?)
+            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None)))
                 || !run.inst.obs.is_empty());
         let legless = m
             .moves
@@ -882,8 +882,8 @@ impl Engine {
                 if d >= t || d >= cut || d < start {
                     continue;
                 }
-                let from = self.end_booked(m, &o, &leg.from, (d, cut))?;
-                let to = self.end_booked(m, &o, &leg.to, (d, cut))?;
+                let from = self.end_booked(m, &o, &leg.from, (d, cut));
+                let to = self.end_booked(m, &o, &leg.to, (d, cut));
                 out.push(OwnLeg {
                     leg: leg.clone(),
                     from,
@@ -897,15 +897,9 @@ impl Engine {
     /// Whether observation `o` books its end `end` on day `d`: a place no version covers
     /// that day, or one `o`'s own version covers (refcore's `own_obs`, its `obs_end_on`).
     /// L §5.19 Booking an observation.
-    fn end_booked(
-        &mut self,
-        m: &Reality,
-        o: &Obs,
-        end: &End,
-        (d, cut): (Day, Day),
-    ) -> Result<bool, Stop> {
+    fn end_booked(&mut self, m: &Reality, o: &Obs, end: &End, (d, cut): (Day, Day)) -> bool {
         let Some(place) = end.place() else {
-            return Ok(false);
+            return false;
         };
         self.obs_end_on(m, o, place, d, cut)
     }

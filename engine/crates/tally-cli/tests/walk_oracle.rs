@@ -6,7 +6,7 @@
 //! with it on and off, the bytes compared), P §2.3 (F5's tree);
 //! BUILD-ORDER § S, Green ("the event walk equals the step-every-day walk on every S check").
 //! Twin: engine/tools/refcore/walk.py (`run_to`, which steps every day), evaluate.py
-//! (`def_cell`, its memo keyed by the exact law date), mreads.py (`proj_bal`, `m_e_low`).
+//! (`def_cell`, its memo keyed by the exact law date), mreads.py (`proj_bal`).
 //! Invariants: reads the corpora's realities, X's files and its own reality only, never an
 //! answer key or a baseline (R-93); every record and every check answers, both walks print
 //! each alike (SQ-3), and so do both memos on the kernel corpus, and F5's tree and the
@@ -25,11 +25,13 @@ mod tests {
     const CORPUS: &str = include_str!("../../../tests/properties/kernel.corpus");
 
     /// T's M1 realities (chunk C6), in the kernel corpus's form: each M1 law's records, the
-    /// `low` laws' among them (`low-min`, `foresight-low`).
+    /// lowest balance's laws among them (`low-min`, `foresight-low`), spelled as the `min`
+    /// over days since tally 2.2.
     const M1_CORPUS: &str = include_str!("../../../tests/properties/m1.corpus");
 
     /// F5's own reality: a pay that differs by an axis's option, a rent that a later version
-    /// raises, a monthly look-ahead decision reading `low` from its own day, and projections
+    /// raises, a monthly look-ahead decision reading the `min` of its projected balances from
+    /// its own day, and projections
     /// from days before and after the cut, one with the axis pinned.
     const LOWS_MODEL: &str = include_str!("lows/lows.tally");
 

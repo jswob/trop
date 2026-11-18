@@ -290,7 +290,7 @@ impl Engine {
                 continue;
             }
             for lg in o.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
-                // a row known in a window that holds the cut has its legs a hole (L §4.4, §4.5)
+                // a leg whose amount is a hole adds that hole to the sum
                 match &lg.amount {
                     Amount::Qty(q) => acc.add(q, lg.unit.as_ref())?,
                     Amount::Hole(h) => acc.holes.push(h.clone()),

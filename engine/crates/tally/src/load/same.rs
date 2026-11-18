@@ -152,9 +152,11 @@ impl Loader {
                     let version = same.version.clone();
                     self.m.sames.push(SamePair::Rows(a, ka, b, kb, version));
                 }
-                (Side::Move(a, _), Side::Move(b, _)) => {
+                (Side::Move(a, ma), Side::Move(b, mb)) => {
                     let version = same.version.clone();
-                    self.m.sames.push(SamePair::Moves(a, b, version));
+                    // a line between two observed rows has no day of its own (S-5)
+                    let observed = ma == Mover::Row && mb == Mover::Row;
+                    self.m.sames.push(SamePair::Moves(a, b, version, observed));
                 }
                 (Side::Thing, Side::Thing) => {
                     return Err(at(format!(

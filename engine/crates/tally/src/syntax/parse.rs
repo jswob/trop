@@ -9,7 +9,7 @@
 //! The expressions are in `expr.rs`, the sections in `item.rs`; both extend this parser.
 
 use super::lex::{Canon, Kind, Line, Mark, Read, Role, Tok, cannot};
-use super::tree::{Known, LSpan, Lit, Number, Site, Unit, UnitTerm};
+use super::tree::{LSpan, Lit, Number, Site, Unit, UnitTerm};
 use crate::base::{Code, Internal, Load, Place, Reach, Refusal};
 use crate::num::Num;
 use crate::time::Day;
@@ -909,18 +909,5 @@ impl<'a> P<'a> {
             | Kind::MonthDay(..)
             | Kind::Cur => false,
         }
-    }
-
-    /// `known`: a day, or `window(a, b)` (L §2.3).
-    pub(super) fn known(&mut self) -> Result<Known, Stop> {
-        if self.at("window", 0) && self.at("(", 1) {
-            self.skip(2)?;
-            let a = self.day()?;
-            self.expect(",")?;
-            let b = self.day()?;
-            self.expect(")")?;
-            return Ok(Known::Window(a, b));
-        }
-        Ok(Known::Day(self.day()?))
     }
 }

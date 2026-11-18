@@ -20,7 +20,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, known_hole, one_day};
+use super::windows::{as_read, named_window, one_day};
 use crate::base::{Load, Run};
 use crate::book::and_list;
 use crate::hole::{Hole, spread};
@@ -29,8 +29,8 @@ use crate::model::{
     World,
 };
 use crate::read::{
-    Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
-    read_input, read_last, row_span, standing_rows, time_point,
+    Asked, Clocks, Found, held, last_began, origin, read_input, read_last, row_span, standing_rows,
+    time_point,
 };
 use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
@@ -83,8 +83,6 @@ struct Latest {
 enum Side {
     /// The row it reads.
     Row(Latest),
-    /// A known window's hole, which is the read's whatever the other sides hold (L §4.5).
-    Signal(Value),
     /// No row: `none`, the gap rule's hole or `HOLE-NOREADING`, the read's own where no side
     /// has a row.
     Missing(Value),
@@ -117,18 +115,6 @@ fn no_reading(figure: &str, day: Day) -> Hole {
 /// law date, cut and pins the read depends on decide (L §4.4; refcore's `('row', sid, …)`).
 pub(super) fn row_cell(row: &Row) -> String {
     format!("row {}", row.sid)
-}
-
-/// The rows of `rows` but those at the positions `hidden`, which the cut doesn't see under
-/// the line's choice (L §4.5).
-pub(super) fn kept_rows(rows: &[Row], hidden: &[usize]) -> Vec<Row> {
-    let mut out = Vec::new();
-    for (at, row) in rows.iter().enumerate() {
-        if !hidden.contains(&at) {
-            out.push(row.clone());
-        }
-    }
-    out
 }
 
 /// Whether `last(x, d)` reads its row past it, for day `day`: a reading past its instant's
@@ -209,11 +195,11 @@ impl Engine {
         // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
         if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
             let value = pinned_at(pinned, &input.binds, keys)?;
-            return self.pin_chosen(value, &origin(&input.id, keys), ctx);
+            return Ok(Self::pinned_window(value, &origin(&input.id, keys)));
         }
         // rows stated `same` are read together, the whole class, a reading's at its instant
         // (L §6.1 l.1806, §5.19; tally 2.1.8 §4)
-        if let Some(class) = self.same_class(m, (&input.id, keys), ctx)? {
+        if let Some(class) = Self::same_class(m, (&input.id, keys), ctx)? {
             return self.read_same_rows(m, (input, keys), &class, ctx, asked);
         }
         let clocks = self.clocks(ctx, &input.id)?;
@@ -224,18 +210,8 @@ impl Engine {
             id: input.id.clone(),
             keys: keys.to_vec(),
         });
-        // every row's span, the ones a known window hides included, decides the read's class
+        // every row's span decides the read's class
         let by_law = self.read_class(m, input, ctx, asked)?;
-        // a row known in a window that holds the cut: the line's `windows each` decides it,
-        // else the read is `HOLE-IMPRECISE` (L §4.5)
-        let view = match self.input_view(m, input, keys, (None, clocks), ctx)? {
-            Err(h) => return Ok(Value::Hole(h)),
-            Ok(view) => view,
-        };
-        let input = match &view {
-            Some(seen) => seen,
-            None => input,
-        };
         let found = read_input(m, input, keys, clocks, asked)?;
         if by_law && !matches!(found, Found::Row(_)) {
             // a thing's lifespan or the question's text: the day itself (L §4.6 step 5)
@@ -253,7 +229,7 @@ impl Engine {
                 });
                 let value = self.row_value(m, input, row, keys, ctx)?;
                 let value = self.priced(m, input, keys, ctx, value)?;
-                self.row_window(value, (input, keys), row, ctx)
+                Ok(Self::row_window(value, (input, keys), row))
             }
             Found::None => Ok(Value::None),
             Found::Hole(q) => Ok(Value::Hole(Hole::asked(&q.text, &q.origin))),
@@ -261,40 +237,29 @@ impl Engine {
     }
 
     /// Row `row`'s value `value` as the read of input `input` at `keys` gives it: a window is
-    /// named by that read, its row and figure, and under `windows each` takes its day; any
-    /// other value is itself (L §4.4 "One unknown day, named by its read").
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::chosen`].
-    fn row_window(
-        &mut self,
-        value: Value,
-        (input, keys): (&InputInfo, &[KeyVal]),
-        row: &Row,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        // only a window keeps its read, and only a window takes a day (L §4.4)
+    /// named by that read, its row and figure; any other value is itself (L §4.4 "One unknown
+    /// day, named by its read").
+    fn row_window(value: Value, (input, keys): (&InputInfo, &[KeyVal]), row: &Row) -> Value {
+        // only a window keeps its read (L §4.4)
         if !matches!(value, Value::Window(_)) {
-            return Ok(value);
+            return value;
         }
         let value = as_read(value, (&input.id, keys), row_cell(row));
         let figure = origin(&input.id, keys);
-        self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
+        named_window(value, (format!("row {} {figure}", row.sid), &figure))
     }
 
     /// The rows stated `same` with input `id`'s at `keys`, that row among them, each as its
     /// input and keys, in id order (a list or range index keeping its own, P50); none where no
     /// line the cut of `ctx` sees names it. `same` is an equivalence: lines that share a side
-    /// make one class, each line seen as [`Engine::same_line_seen`] decides, and only the
+    /// make one class, each line seen as [`crate::book::same_line_seen`] decides, and only the
     /// lines that reach the row are asked (refcore's `same_class`). L §6.1, §2.5, §4.5 (tally
     /// 2.1.8 R12, S6).
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`].
+    /// As [`crate::book::same_line_seen`].
     pub(super) fn same_class(
-        &mut self,
         m: &Reality,
         (id, keys): (&str, &[KeyVal]),
         ctx: Ctx,
@@ -313,9 +278,7 @@ impl Engine {
                 {
                     continue;
                 }
-                let sides = [origin(&x, &xk), origin(other, other_keys)];
-                let [ours, theirs] = &sides;
-                if self.same_line_seen(m, version, ctx, [ours, theirs])? {
+                if crate::book::same_line_seen(m, version, (ctx.cut, ctx.world))? {
                     let next: SameRow = (other.to_owned(), other_keys.to_vec());
                     class.push(next.clone());
                     todo.push(next);
@@ -442,14 +405,6 @@ impl Engine {
             keys: keys.to_vec(),
         });
         let by_law = self.read_class(m, input, ctx, asked)?;
-        let view = match self.input_view(m, input, keys, (None, clocks), ctx)? {
-            Err(h) => return Ok(Err(h)),
-            Ok(view) => view,
-        };
-        let input = match &view {
-            Some(seen) => seen,
-            None => input,
-        };
         let day = time_point(input, keys, ctx.law)?.day;
         let found = read_input(m, input, keys, clocks, asked)?;
         let Found::Row(at) = found else {
@@ -470,112 +425,26 @@ impl Engine {
         // each side at its own prices (L §3.4, §6.1: every read of either, a price's included)
         let value = self.priced(m, input, keys, ctx, value)?;
         // a window read through a `same` line is its row's read, as a plain read's (L §4.4)
-        let value = self.row_window(value, (input, keys), row, ctx)?;
+        let value = Self::row_window(value, (input, keys), row);
         Ok(Ok((Ok((value, row.sid.clone())), day)))
     }
 
-    /// A pinned value `value` of figure `figure` as a `windows each` in `ctx` takes it: a
-    /// pinned window is a window the line meets, so the line splits by it; one that came from
-    /// a read is that read's window, taken with its own name once, and a literal is named by
-    /// the figure pinned (L §4.4; picks P30, P32).
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::chosen`].
-    pub(super) fn pin_chosen(
-        &mut self,
-        value: Value,
-        figure: &str,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
+    /// A pinned value `value` of figure `figure` named as an unknown day: a window written
+    /// there, no row's, is the unknown day of the figure pinned, its holes asked of it; one
+    /// that came from a row, or was computed from one, keeps its name and the days it carries
+    /// (refcore's `pin_value` read: a pin whose `Iv` has no origin; L §4.4 "a copy keeps the
+    /// name"; picks P30, P32).
+    pub(super) fn pinned_window(value: Value, figure: &str) -> Value {
         let Value::Window(mut w) = value else {
-            return Ok(value);
+            return value;
         };
+        if w.figure.is_some() {
+            return Value::Window(w);
+        }
         // a pinned window's holes are asked of the item it pins, as a row's of its row
         // (L §8.1, §5.11)
-        if w.figure.is_none() {
-            w.figure = Some(figure.to_owned());
-        }
-        let (id, label) = match &w.read {
-            Some(read) => {
-                let from = origin(&read.item, &read.keys);
-                (format!("{} {from}", read.cell), from)
-            }
-            None => (format!("pin {figure}"), figure.to_owned()),
-        };
-        self.chosen(Value::Window(w), (id, &label), ctx)
-    }
-
-    /// Input `input` as a read at `keys` in `ctx` under `clocks` sees its rows, a read at its
-    /// law date or, for `last(x, d)` and `since`, on or before day `past`: a row whose `known`
-    /// window holds the cut and that applies at the read's time is left out where the line's
-    /// choice puts its day after the cut; none where every row stands, at once for an input
-    /// with no row known in a window; the hole where no `windows each` decides one (refcore's
-    /// `row_visible`, `known_vis`). L §4.5, §4.4, §4.6 step 1.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer or a row whose version is missing; as
-    /// [`read_input`] for a dated read with no law date.
-    pub(super) fn input_view(
-        &mut self,
-        m: &Reality,
-        input: &InputInfo,
-        keys: &[KeyVal],
-        (past, clocks): (Option<Day>, Clocks),
-        ctx: Ctx,
-    ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
-        if !input.holds.known_window {
-            return Ok(Ok(None));
-        }
-        let test = match past {
-            Some(day) => Test::Last(day),
-            // a reading stands from its instant on (L §4.6 Readings)
-            None if input.reading => match clocks.law {
-                Some(day) => Test::Last(day),
-                None => Test::At(None),
-            },
-            None => {
-                let point = time_point(input, keys, clocks.law)?;
-                need_law(m, input, point.day)?;
-                Test::At(point.day)
-            }
-        };
-        let inside = known_inside(m, &input.rows, (&input.binds, keys), test, clocks)?;
-        let hidden = match self.hidden_rows(&inside, ctx)? {
-            Err(h) => return Ok(Err(h)),
-            Ok(hidden) => hidden,
-        };
-        if hidden.is_empty() {
-            return Ok(Ok(None));
-        }
-        Ok(Ok(Some(InputInfo {
-            rows: kept_rows(&input.rows, &hidden),
-            ..input.clone()
-        })))
-    }
-
-    /// The positions of the rows `inside`, each known in a window that holds the cut, that
-    /// the line's choice leaves out; the hole of the first where no `windows each` decides
-    /// it (refcore's `known_vis`). L §4.5, §4.4.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer.
-    pub(super) fn hidden_rows(
-        &mut self,
-        inside: &[KnownInside],
-        ctx: Ctx,
-    ) -> Result<Result<Vec<usize>, Hole>, Stop> {
-        let mut out = Vec::new();
-        for row in inside {
-            match self.known_seen(ctx, row.window, &row.sid)? {
-                Some(true) => {}
-                Some(false) => out.push(row.at),
-                None => return Ok(Err(known_hole(row.window, ctx.cut, &row.sid)?)),
-            }
-        }
-        Ok(Ok(out))
+        w.figure = Some(figure.to_owned());
+        named_window(Value::Window(w), (format!("pin {figure}"), figure))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law
@@ -697,7 +566,10 @@ impl Engine {
         }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
         let value = as_read(value, (&input.id, &latest.keys), row_cell(row));
-        self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)
+        Ok(named_window(
+            value,
+            (format!("row {} {figure}", row.sid), &figure),
+        ))
     }
 
     /// `since(x[k], d)`: the days from the last reading of x on or before d to d, a hole
@@ -783,27 +655,23 @@ impl Engine {
             && let Some(pinned) = self.pin_of(&input.id, &keys, ctx)?
         {
             let value = pinned_at(pinned, &input.binds, &keys)?;
-            return Ok(Err(self.pin_chosen(
-                value,
-                &origin(&input.id, &keys),
-                ctx,
-            )?));
+            return Ok(Err(Self::pinned_window(value, &origin(&input.id, &keys))));
         }
         // rows stated `same` carry together, the whole class (L §6.1; tally 2.1.8 §4)
-        if let Some(class) = self.same_class(m, (&input.id, &keys), ctx)? {
+        if let Some(class) = Self::same_class(m, (&input.id, &keys), ctx)? {
             return self.latest_in_class(m, (input, &keys), &class, (day, past), ctx);
         }
         Ok(match self.latest_side(m, (input, keys), day, past, ctx)? {
             Side::Row(latest) => Ok(latest),
-            Side::Signal(value) | Side::Missing(value) => Err(value),
+            Side::Missing(value) => Err(value),
         })
     }
 
     /// The row the class `class` of rows stated `same` with input `input`'s at `keys` carries
     /// for `last` or `since` on day `day`: of the sides' latest rows, those that began latest,
     /// the first side's; where two such disagree, `last`'s `HOLE-SAME` naming them on that day;
-    /// with no side's row, what the read of `input` itself finds; a hole a side's known window
-    /// gives is the read's (refcore's `carry_sides`, `carry_latest`, `last_value`). L §6.1
+    /// with no side's row, what the read of `input` itself finds (refcore's `carry_sides`,
+    /// `carry_latest`, `last_value`). L §6.1
     /// l.1806, §4.6, §8.1 (tally 2.1.8 §4, items 40 and 41).
     fn latest_in_class(
         &mut self,
@@ -833,10 +701,9 @@ impl Engine {
                         Side::Missing(Value::Hole(no_reading(&origin(id, ks), day)))
                     }
                 }
-                side @ (Side::Row(_) | Side::Signal(_) | Side::Missing(_)) => side,
+                side @ (Side::Row(_) | Side::Missing(_)) => side,
             };
             match side {
-                Side::Signal(value) => return Ok(Err(value)),
                 Side::Missing(value) => {
                     if *id == input.id && ks.as_slice() == keys {
                         own = Some(value);
@@ -935,8 +802,8 @@ impl Engine {
     }
 
     /// One side's row for `last` or `since` of `input` at `keys` on day `day`, recorded as
-    /// read; or what it is instead: a known window's hole (`Signal`), or `none`, the gap
-    /// rule's hole, `HOLE-NOREADING` (`Missing`) (refcore's `last_of`). L §4.6, §4.5.
+    /// read; or what it is instead: `none`, the gap rule's hole, `HOLE-NOREADING` (`Missing`)
+    /// (refcore's `last_of`). L §4.6.
     fn latest_side(
         &mut self,
         m: &Reality,
@@ -949,18 +816,7 @@ impl Engine {
             id: input.id.clone(),
             keys: keys.clone(),
         });
-        // a row known in a window that holds the cut: the line's `windows each` decides it,
-        // else the read is `HOLE-IMPRECISE` (L §4.5)
         let clocks = self.clocks(ctx, &input.id)?;
-        let view = match self.input_view(m, input, &keys, (Some(day), clocks), ctx)? {
-            Err(h) => return Ok(Side::Signal(Value::Hole(h))),
-            Ok(view) => view,
-        };
-        let all = input;
-        let input = match &view {
-            Some(seen) => seen,
-            None => input,
-        };
         let found = match past {
             // `since` reads only the day the latest rows began, which they share (L §4.6
             // Readings); a reading `replace … = none` removed is none (L §5.19), so with only
@@ -996,16 +852,10 @@ impl Engine {
             version: row.version.clone(),
             sid: row.sid.clone(),
         });
-        // its place among all the input's rows, the ones the cut doesn't see included
-        let among = all
-            .rows
-            .iter()
-            .position(|r| r.sid == row.sid)
-            .ok_or_else(|| invariant("a row of a read past its input's rows"))?;
         Ok(Side::Row(Latest {
             input: input.id.clone(),
             keys,
-            at: among,
+            at,
             day,
         }))
     }
