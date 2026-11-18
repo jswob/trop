@@ -115285,4 +115285,37 @@ w7_days (d = 2026-03-22): 800.00 PLN
   cut 2026-01-01
 w7_days (d = 2026-03-29): 800.00 PLN
   cut 2026-01-01
+,26:fixes/t22/list_window_name,8:fixes-22,11:run m.tally,756:7:m.tally,741:model p25l
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, the fix review of the builder's last turn, blocking 1): a window that is no window of days (gap, an int within 4 .. 6) inside a list prints as the window and its line names no unknown day (a); the same value as the line's own is the hole with unknown day: w (b); in the ask line's tuple it names w (t). A hole inside a list or a record is left out: refcore does not walk them for the name (#221)."
+
+source s "s"
+
+input w: date
+
+input d0: date
+
+def gap: int = days_between(d0, w)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-05, 2026-03-07) "s"
+  d0 = 2026-03-01 "s"
+
+ask a: [gap, 1]
+ask b: gap
+ask t: gap, 1
+,,1:0,279:a: [window(4, 6), 1]
+  cut 2026-01-01
+b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-01-01
+t: (?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1)
+  unknown day: w
+  cut 2026-01-01
 ,
