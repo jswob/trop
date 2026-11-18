@@ -1013,7 +1013,7 @@ A fresh critic read `bar.md`, `problems.md`, these records, `core.md`, the learn
 | C-10 | Random query without `paths`; the carry kept without `plan` | fixed in D-11: closed form where the spec's table has one, else `paths N seed S` or `LOAD-RANDOM`; `share` prints no carry | none added |
 | C-11 | A gap with no pad re-anchors by default | fixed in D-8: each statement version writes `pad x from y` or `anchor x` (`LOAD-GAPROLE`) | `anchor x` is new: a reading had no way to say "restart the walk here" apart from silence, which is the default removed |
 | C-12 | Built-in period indexes' anchors unstated | fixed in D-13: calendar periods meeting [S, E], partial ends as whole keys; `weeks` not built in | none added; one index removed |
-| C-13 | A movement's day undefined with legs on several days or a window | fixed in D-2: `move` states `on d`; legs state their own or take the movement's, as rows take a version's span | none added: `on` was a leg line; it is also a move line |
+| C-13 | A movement's day undefined with legs on several days or a window | fixed in D-2: `move` states `on d`; legs state their own or take the movement's, as rows take a version's span | none added: `on` was a leg line; it is also a move line. A leg's own `on` cut in tally 2.2 (`CHANGES.md` 2.2-6) |
 | C-14 | D-9 matches internal movements by equality; an outside place changes kind; law copies identified by name | fixed in D-9: links are written (`same`, `fulfils`); an outside place lends only its legs; law parts by declared id | none added |
 | C-15 | LC-6 and LC-25 claimed closed, untouched | fixed in D-3: a rule may state its own `governs` (LC-6 (a)); `covers x` may state its own span (LC-25) | none added: the rule line takes the row's clause |
 | C-16 | Ownership absent | fixed in D-1: `owns` kept from 1.0.1 and listed in `core.md`; a split by origin is a regime's lots | none added |
@@ -1466,7 +1466,7 @@ Every requirement of the spec (`tmp/engine-requirements.md`), every proposed cha
 | U-01 | Unit algebra | taken | L §3.2 |
 | U-02 | Only small integers as literals | taken | Stricter: L §7.1 also bans date literals in rules |
 | U-03 | Round where the law rounds, with its mode and unit at each step; tests tolerate published 1-grosz disagreements with a reason | taken | `round(x, u, mode)`: seven modes, any positive step (L §7.2). A published disagreement is a check with its errata (O §3, L-41) or an axis |
-| U-04 | EUR and USD places; FX as dated values; NBP previous business day; a group balance at a declared FX read | taken | Places per currency; rates `num A/B` (L §3.2); `prev_business` with `at`; `flows … in CUR at fx mode` (L §5.13.3) |
+| U-04 | EUR and USD places; FX as dated values; NBP previous business day; a group balance at a declared FX read | taken | Places per currency; rates `num A/B` (L §3.2); `prev_business` with `at`; `flows … in CUR at fx mode` (L §5.13.3). Cut in tally 2.2 (`CHANGES.md` 2.2-7) |
 | U-05 | FX applies only between different currencies | taken | Unrepresentable: `money EUR × num PLN/EUR` is PLN, and the same rate applied to PLN money is `LOAD-UNIT` |
 | U-06 | Holdings in FIFO lots; value = units × price; revaluation by unit flows | merged | Holdings in units, priced (L §5.9); lots by `fill` in FIFO order (CHG-01); revaluation by an ask over `worth` and unit flows |
 | U-07 | A gain split into FX, price and interaction | merged | Ask expressions with `as if` pins of the rate or the price (L §5.10) |
@@ -1694,7 +1694,7 @@ The law content (L-01 to L-23) is data: law parts the engine runs, written after
 | CHG-03 Group units and relations with dates | taken | Membership and relation inputs with dated rows; sums over keys (L §3.5). No built-in unit type |
 | CHG-04 Carryback | taken differently | The later year's loss is matched to earlier years by `fill`; the refund is its own pay, dated when claimed. The closed year's booked amount stays fixed (L §5.13.3), so history isn't rewritten |
 | CHG-05 Classifications from facts | taken | Defs, read by other laws like any def; a court's ruling is a given (L §5.10) |
-| CHG-06 Conventions: FX per leg, day count, compounding | taken | `dcf` with five day counts; the rate basis as type (L §3.3); FX per movement with a mode (L §5.13.3); per leg as rows or axes. No default can be written (L §10) |
+| CHG-06 Conventions: FX per leg, day count, compounding | taken | `dcf` with five day counts; the rate basis as type (L §3.3); FX per movement with a mode (L §5.13.3); per leg as rows or axes. No default can be written (L §10). The converted `flows` cut in tally 2.2 (`CHANGES.md` 2.2-7) |
 | CHG-07 Entity parties and look-through | taken | Entities are keys with places; `stake`; look-through by a bounded depth recurrence (L §3.6) |
 | CHG-08 Stochastic lifetimes | taken | A draw per party per path, `alive[p, m]`, `when alive` (E §7) |
 | CHG-09 Ranked allocation | taken | `fill` in a stated order; `prorata` with its remainder; an unstated order is a hole (L §5.11, §5.12) |

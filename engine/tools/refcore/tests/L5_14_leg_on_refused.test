@@ -1,0 +1,21 @@
+# tally 2.2 (CHANGES.md 2.2-6), L §2.3 `leg`, §5.14 Legs: every leg is on its movement's day, and a leg has no `on`
+# of its own; cash that lands later is a second movement, a move keyed by the first. A leg that still writes one is
+# refused by the grammar: the production ends at its amount.
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on 2026-03-02
+  leg cash from world to konto amount 100.00 PLN on 2026-03-04
+
+ask q: bal(konto, 2026-03-31)
+=== expect
+refused: LOAD-PARSE cannot parse: expected end of line, got on (m.tally:13)

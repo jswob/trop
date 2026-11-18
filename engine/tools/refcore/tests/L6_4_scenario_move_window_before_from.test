@@ -1,9 +1,9 @@
-# L §6.4 from D: "A move the scenario declares books nothing before D: an instance whose day, a window's first day, or
-# a leg's own day falls before D is left out". extra is dated window(2026-12-20, 2027-01-10), which starts before from
-# 2027-01-01: left out by its window's first day, whatever day it takes (writer 8: no windows clause is needed;
-# windows earliest and latest are gone); late_ is dated 2027-01-05, but its leg's own
-# day is 2026-12-28: left out. So konto keeps its opening, 100.00 PLN, in early as in the base. (Was
-# REFCORE-UNSPECIFIED §6.4, a scenario move booking before from through a window day or a leg's own day.)
+# L §6.4 from D: "A move the scenario declares books nothing before D: an instance whose day, or a window's first day,
+# falls before D is left out". extra is dated window(2026-12-20, 2027-01-10), which starts before from 2027-01-01:
+# left out by its window's first day, whatever day it takes (writer 8: no windows clause is needed; windows earliest
+# and latest are gone). So konto keeps its opening, 100.00 PLN, in early as in the base. (Was REFCORE-UNSPECIFIED
+# §6.4, a scenario move booking before from through a window day; tally 2.2 (2.2-6) drops late_, whose leg stated
+# its own day.)
 === household.tally
 model household
   tally 2
@@ -29,17 +29,11 @@ scenario early over household
   from 2027-01-01
 
 input xday: date
-input lday: date
-input legday: date
 input xamt: money PLN
 
 move extra: transfers
   on xday
   leg cash from konto to world amount xamt
-
-move late_: transfers
-  on lday
-  leg cash from konto to world amount xamt on legday
 
 version ex
   cite plan
@@ -47,8 +41,6 @@ version ex
   known 2026-06-01
   xday = window(2026-12-20, 2027-01-10) "plan"
   xamt = 10.00 PLN "plan"
-  lday = 2027-01-05 "plan"
-  legday = 2026-12-28 "plan"
 
 ask e: bal(konto, 2027-12-31) in early
 === expect
@@ -57,5 +49,4 @@ b: 100.00 PLN
 e: 100.00 PLN
   world: early
   left out: extra, 1 instances, first 2026-12-20
-  left out: late_, 1 instances, first 2027-01-05
   cut 2026-10-20

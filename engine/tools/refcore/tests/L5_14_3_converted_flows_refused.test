@@ -1,0 +1,46 @@
+# tally 2.2 (CHANGES.md 2.2-7), L §2.3 `flowsx`, §5.14.3: `flows` has no conversion clause; a total converted
+# movement by movement is a sum of a def keyed by the movement that rounds each at its day. In a rule, `in PLN`
+# after flows(…) reads on as a membership test and the line stops at `at`, refused by the grammar. (Was
+# L8_3_flows_mode_not_rounding, the converted flows' mode check, gone with the form.)
+=== m.tally
+model m
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+input fx: num PLN/EUR
+
+input day: date
+
+input eamt: money EUR
+
+place konto: accounts EUR lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+move pay[m in months]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount eamt
+
+def c: money PLN at reader
+  rule base = flows(konto, 2026-01) in PLN at fx half-up
+
+ask b: c law 2026-01-01
+
+version v
+  cite s
+  governs 2026..
+  known 2025-12-01
+  fx = 4.3333
+  day = 2026-02-10
+  eamt = 1.00 EUR
+=== expect
+refused: LOAD-PARSE cannot parse: expected end of line, got at (m.tally:29)

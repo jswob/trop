@@ -1,5 +1,6 @@
-# L §5.19: "A window belongs in an attribute (a giver's acquisition day), never in on, the observation's or a leg's
-# (LOAD-LEG)." Here a leg's on is a window. (Writer 6; L5_19_window_in_on is the observation's.)
+# tally 2.2 (CHANGES.md 2.2-6), L §5.19: an observed row's leg is written as in a move, which has no `on` of its own
+# (L §2.3 `leg`); its day is the row's `on`. A leg that writes one is refused by the grammar. (Was
+# L5_19_window_in_leg_on, LOAD-LEG for a window in a leg's on.)
 === m.tally
 model hh
   tally 2
@@ -21,8 +22,8 @@ version stmt
   covers konto
   pad konto from unexplained
   opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
-  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN on window(2026-02-03, 2026-02-05)) "line 1"
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN on 2026-02-06) "line 1"
 
 ask q: bal(konto, 2026-02-28)
 === expect
-refused: LOAD-LEG ...
+refused: LOAD-PARSE cannot parse: expected ")", got on (m.tally:21)

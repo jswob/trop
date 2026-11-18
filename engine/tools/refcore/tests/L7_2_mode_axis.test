@@ -1,7 +1,7 @@
 # Round 18, C1-7 (follows). L §2.3: "MODE = a rounding code, a ref to an input of type rounding, or an axis whose
 # options are rounding codes (§5.5)"; L §7.2: "The mode may be an axis whose options are mode names". prorata and a
-# converted flows fan out by the axis: 100.00 PLN in three equal shares is 33.33 down and 33.34 up (rest none); 1.00
-# EUR at 4.3333 is 4.33 down and 4.34 up.
+# round fan out by the axis: 100.00 PLN in three equal shares is 33.33 down and 33.34 up (rest none); 1.00 EUR at
+# 4.3333, rounded in a def keyed by the movement, is 4.33 down and 4.34 up (tally 2.2, 2.2-7: was a converted flows).
 === m.tally
 model m
   tally 2
@@ -25,6 +25,7 @@ move pay[m in months]: transfers
   on start_of(m)
   at start_of(m)
   leg cash from world to konto amount eamt
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), cut_mode) at t.day
 def sh[j in parts]: money PLN = prorata(tot, w[i] for i in parts, j, minor(PLN), cut_mode, rest none) at reader
 version v
   cite s
@@ -35,7 +36,7 @@ version v
   fx = 4.3333
   eamt = 1.00 EUR
 ask a: sh[a1] law 2026-06-30
-ask b: flows(konto, 2026-01) in PLN at fx cut_mode law 2026-01-01
+ask b: sum(in_pln[t] for t in transfers over 2026-01 where t.cash.to == konto) law 2026-01-01
 === expect
 a [cut_mode = down]: 33.33 PLN
   reading: cut_mode = down

@@ -84,3 +84,13 @@ tally 2.1 is opt-in (`CHANGES.md`, 2.0 → 2.1). A 2.0 text declares `tally 2`, 
 
 Every 2.0 text that uses none of these prints byte for byte as on 2.0 (the round's hard rule 5, checked by the suite).
 
+## 2.1 → 2.2
+
+tally 2.2 is a new version of the language (`CHANGES.md`, 2.1.8 → 2.2): the user cut nine forms on 2026-11-17. A 2.1 text declares `tally 2`, as a 2.2 text does, and loads and means the same on 2.2, except as the rows below say. A text that still writes a cut form is refused, by the grammar (`LOAD-PARSE`) unless its row names another form.
+
+| 2.1 construct | 2.2 form | Class | Reaches | Record |
+|---|---|---|---|---|
+| a leg's own day, `leg l from A to B amount q on d`, in a move or an observed row | every leg is on its movement's day; cash that lands later is a second move keyed by the first, `move paid[x in sales over ..]: …` with `on add_days(x.day, lag)`; on a statement, its own row | manual | no household, model, blind text, amendment or probe card; T's vectors | 2.2-6 (S-6) |
+| a converted total, `flows(x, span) in CUR at fx mode` | a def keyed by the movement that rounds it at its day, `def in_cur[t in K]: money CUR = round(t.l.amount * fx, minor(CUR), mode) at t.day`, summed: `sum(in_cur[t] for t in K over span where t.l.to == x) - sum(in_cur[t] for t in K over span where t.l.from == x)` | manual | model CMP-01 (`net_flow`) | 2.2-7 (S-7) |
+
+Every 2.1.8 text that uses none of these prints byte for byte as on 2.1.8, but for the lines `CHANGES.md` names under each row.
