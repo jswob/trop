@@ -19,7 +19,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::observe::Obs;
+use super::observe::{Obs, observed_row_seen};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, num_stop};
 use crate::hole::Hole;
@@ -62,20 +62,44 @@ pub(crate) fn same_line_seen(
     Ok(info.known <= cut)
 }
 
+/// Whether cut `cut` in world `world` sees a version's `same` line between observed rows
+/// `left` and `right`: it has no day of its own, so in the worlds its version's file is in it
+/// holds at every cut that sees both rows, whichever version states it (refcore's
+/// `same_lines`, `obs_row_seen`). L §5.19 One movement on two statements, §6.4 (tally 2.2,
+/// S-5).
+///
+/// # Errors
+///
+/// As [`observed_row_seen`].
+fn rows_line_seen(
+    m: &Reality,
+    (left, right): (&str, &str),
+    version: &str,
+    (cut, world): (Day, World),
+) -> Result<bool, Stop> {
+    Ok(m.scenarios.sees(world, Some(version))
+        && observed_row_seen(m, left, (cut, world))?
+        && observed_row_seen(m, right, (cut, world))?)
+}
+
 impl Engine {
-    /// Whether cut `cut` sees each `same` line of the reality, in the order written: a line
-    /// of movements as [`same_line_seen`] decides, a line of rows never (its read is the
-    /// row's, `eval/read.rs`). L §6.1, §4.5.
+    /// Whether cut `cut` sees each `same` line of the reality, in the order written: a
+    /// version's line between two observed rows as [`rows_line_seen`] decides, any other line
+    /// of movements as [`same_line_seen`] does, a line of rows never (its read is the row's,
+    /// `eval/read.rs`). L §6.1, §5.19, §4.5.
     ///
     /// # Errors
     ///
-    /// As [`same_line_seen`].
+    /// As [`same_line_seen`] and [`rows_line_seen`].
     fn moves_seen(&self, m: &Reality, cut: Day) -> Result<Vec<bool>, Stop> {
         let world = self.timeline_world();
         let mut out = Vec::with_capacity(m.sames.len());
         for pair in &m.sames {
             let seen = match pair {
-                SamePair::Moves(_, _, version) => {
+                SamePair::Moves(left, right, Some(version), true) => {
+                    rows_line_seen(m, (left, right), version, (cut, world))?
+                }
+                SamePair::Moves(_, _, version, _) => {
                     same_line_seen(m, version.as_deref(), (cut, world))?
                 }
                 SamePair::Rows(..) => false,
@@ -178,7 +202,7 @@ impl Engine {
 fn move_lines(m: &Reality, seen: Vec<bool>) -> Vec<(&String, &String)> {
     let mut out = Vec::new();
     for (pair, flag) in m.sames.iter().zip(seen) {
-        if let (SamePair::Moves(left, right, _), true) = (pair, flag) {
+        if let (SamePair::Moves(left, right, _, _), true) = (pair, flag) {
             out.push((left, right));
         }
     }
