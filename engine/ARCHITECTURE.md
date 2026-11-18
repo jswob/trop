@@ -188,7 +188,8 @@ the row index (fence F3) is opened when a budget row asks.
   key arithmetic: a day moved by days or a duration, a period by its periods, a key by
   positions, and the difference of two; split from `arith.rs` at M2), `aggregate.rs` (`sum`,
   `count`, `any`, `all`, the unknown members a hole `where` makes; a `min` of a projection
-  over days handed to the walk's range minimum, and read term by term where that leaves it), `queries.rs` (`mean`,
+  over days handed to the range minimum, `walk/projection.rs`'s `range_minimum`, and read
+  term by term where that leaves it), `queries.rs` (`mean`,
   `share` and `quantile` over keys with `for`: the exact average, the exact fraction, the
   type-1 quantile), `extremes.rs` (`min` to `last`, and the `ties by` that breaks a tie),
   `band.rs` (bands), `builtin.rs` (the built-ins' dispatch and the number built-ins),
@@ -494,8 +495,12 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   prints its known part and how much each named hole adds, where the value is linear in
   them; otherwise the plain hole.
 - **Forks within one timeline** (fence F6, `walk/fork.rs`, P §2.5). A decision that reads a
-  projection day by day (`min(bal(konto, d) from t for d in …)`) read the same walk again
-  for every day, each from its first day. A timeline now keeps its last four projection
+  projection day by day read the same walk again for every day, each from its first day.
+  Since tally 2.2 that holds for a `min(bal(konto, d) from t for d in …)` outside the
+  recognised shape (another step, a `where`, `ties by`) and under `Lows::Walk`, a `partial`
+  line or a traced read; with F5 on, the shape `… for d in a .. b step 1 day` is read as one
+  range minimum instead (`aggregate` decides by `lowest_shape` and `reads_lowest`, and
+  `range_minimum` reads F5's tree, or one walk day by day where F5 declines). A timeline now keeps its last four projection
   walks; the next read of the same projection through a later day continues the kept walk,
   once the plan pass shows the new read's acts are the same on every day already walked.
   On X's September replay (P8-14's check) the days stepped fell from 9 868 to 1 826, with
