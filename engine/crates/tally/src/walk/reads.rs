@@ -820,10 +820,10 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::seen_readings`].
+    /// As [`crate::book::readings`].
     fn stated_on(&mut self, m: &Reality, place: &str, day: Day, cut: Day) -> Result<bool, Stop> {
         let world = self.timeline_world();
-        let seen = self.seen_readings(m, (cut, world), Rows::Unkept)?;
+        let seen = crate::book::readings(m, (cut, world), Rows::Unkept)?;
         Ok(seen
             .iter()
             .any(|s| s.input == "stated" && s.place == place && s.day == day))

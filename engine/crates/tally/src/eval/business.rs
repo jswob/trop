@@ -688,10 +688,9 @@ impl Engine {
 
     /// The row calendar `name`'s read at `keys` on `day` takes, by its stable id, or `pin`
     /// where a pin gives the calendar: what names its added windows, each entry of each row
-    /// a read of its own; among the rows a known window leaves visible under the line's
-    /// choice, as the calendar's own read sees them; where it takes none, the row of the
-    /// calendar a `same` line states one with it, whose value the read then is (L §4.4,
-    /// §4.5, §4.6 step 1, §6.1 What `same` does).
+    /// a read of its own, as the calendar's own read sees its rows; where it takes none, the
+    /// row of the calendar a `same` line states one with it, whose value the read then is
+    /// (L §4.4, §4.6 step 1, §6.1 What `same` does).
     ///
     /// # Errors
     ///
@@ -709,7 +708,7 @@ impl Engine {
         if let Some(row) = self.calendar_own_row(m, (name, keys), ctx)? {
             return Ok(row);
         }
-        let Some(class) = self.same_class(m, (name, keys), ctx)? else {
+        let Some(class) = Self::same_class(m, (name, keys), ctx)? else {
             return Err(invariant("a calendar's added window read from no row"));
         };
         for (other, other_keys) in class {
@@ -720,14 +719,12 @@ impl Engine {
         Err(invariant("a calendar's added window read from no row"))
     }
 
-    /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id, among the
-    /// rows a known window leaves visible under the line's choice; none where it takes none
-    /// (L §4.5, §4.6 step 1).
+    /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id; none where
+    /// it takes none (L §4.6 step 1).
     ///
     /// # Errors
     ///
-    /// The read rule's refusals; `ENGINE-INVARIANT` for an input load didn't build, or a
-    /// known window no `windows each` decides (the caller reads under one).
+    /// The read rule's refusals; `ENGINE-INVARIANT` for an input load didn't build.
     fn calendar_own_row(
         &mut self,
         m: &Reality,
@@ -739,18 +736,6 @@ impl Engine {
             .get(name)
             .ok_or_else(|| invariant("a calendar input load didn't build"))?;
         let clocks = self.clocks(ctx, name)?;
-        let view = self
-            .input_view(m, input, keys, (None, clocks), ctx)?
-            .map_err(|h| {
-                invariant(&format!(
-                    "a calendar's known window no `windows each` decides: {}",
-                    h.text()
-                ))
-            })?;
-        let input = match &view {
-            Some(seen) => seen,
-            None => input,
-        };
         match read_input(m, input, keys, clocks, Asked::Calendar)? {
             Found::Row(at) => input
                 .rows

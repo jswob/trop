@@ -825,7 +825,7 @@ impl Engine {
         if kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain) && !applied {
             return Ok(Status::Uncertain);
         }
-        if d < cut && self.touches_covered(m, inst, (cut, None))? {
+        if d < cut && self.touches_covered(m, inst, (cut, None)) {
             return Ok(Status::Modelled);
         }
         Ok(if d < cut { Status::Past } else { Status::Plan })
@@ -838,7 +838,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::touches_covered`]; `ENGINE-INVARIANT` for a day past the calendar.
+    /// `ENGINE-INVARIANT` for a day past the calendar.
     fn class_depends(
         &mut self,
         m: &Reality,
@@ -868,7 +868,7 @@ impl Engine {
                 every = false;
                 break;
             }
-            let modelled = self.touches_covered(m, inst, (cut, Some(d)))?;
+            let modelled = self.touches_covered(m, inst, (cut, Some(d)));
             some = some || modelled;
             every = every && modelled;
             if (some && !every) || d >= w.hi {

@@ -186,7 +186,7 @@ fn side_cell(
             values.extend(side.iter().map(|(_, v)| v));
         }
         let carried = super::check::carried_of(&values);
-        let Some(new) = each_next(&met, &choice, (&carried, &[])) else {
+        let Some(new) = each_next(&met, &choice, &carried) else {
             runs.each.push((choice, made));
             continue;
         };

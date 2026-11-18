@@ -783,15 +783,6 @@ pub enum Governs {
     Span(LSpan),
 }
 
-/// `known`: a day, or a window.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Known {
-    /// A day.
-    Day(Day),
-    /// `window(a, b)`.
-    Window(Day, Day),
-}
-
 /// A type (L §3.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
@@ -1582,7 +1573,7 @@ pub struct Row {
     /// Its own `governs`.
     pub governs: Option<Governs>,
     /// Its own `known`.
-    pub known: Option<Known>,
+    pub known: Option<Day>,
     /// Its instant.
     pub instant: Option<Instant>,
     /// Its locator.
@@ -1694,7 +1685,7 @@ pub struct Version {
     /// `governs`.
     pub governs: Option<Governs>,
     /// `known`.
-    pub known: Known,
+    pub known: Day,
     /// `enters`.
     pub enters: Option<Day>,
     /// `assumed`.

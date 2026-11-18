@@ -17,7 +17,6 @@
 
 use std::collections::BTreeMap;
 
-use super::observe::{KnownAtCut, Windows};
 use crate::base::{Code, Load, Refusal};
 use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
@@ -64,10 +63,9 @@ type Kept = (Day, Day, Edge, crate::model::Row);
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
 /// the cut, of a version the world sees, a restated one replaced as `replace` says (a
 /// scenario's over its base's whatever their `known` dates, as `standing` takes it), sorted
-/// by place, instant and input, each with its row among what it met where `rows` says so; one
-/// known in a window that holds the cut as `known` decides it: unseen, or with no `windows
-/// each` its value `HOLE-IMPRECISE`, it is stated or not (refcore's `readings`, `world_ok`,
-/// `visible`). L §5.19, §4.6 step 2, Readings, §6.4, §4.5; E §10.
+/// by place, instant and input, each with its row among what it met where `rows` says so
+/// (refcore's `readings`, `world_ok`, `visible`). L §5.19, §4.6 step 2, Readings, §6.4, §4.5;
+/// E §10.
 ///
 /// # Errors
 ///
@@ -76,7 +74,6 @@ pub(crate) fn readings(
     m: &Reality,
     (cut, world): (Day, World),
     rows: Rows,
-    known: &KnownAtCut,
 ) -> Result<Vec<Seen>, Stop> {
     // a reading row is keyed by its place, instant and input; its unit is its place's (L §4.6,
     // §5.10)
@@ -90,8 +87,7 @@ pub(crate) fn readings(
                 continue;
             }
             let known_on = row_known(m, row)?;
-            let sid = row_known_sid(row);
-            if known_on > cut || known.unseen.contains(&sid) {
+            if known_on > cut {
                 continue;
             }
             let Some(crate::model::Pat::Key(crate::model::KeyVal::Thing(place))) =
@@ -99,10 +95,6 @@ pub(crate) fn readings(
             else {
                 return Err(Stop::NotBuilt("a reading of a place not named"));
             };
-            let mut row = row.clone();
-            if let Some(question) = known.question(&sid, cut) {
-                row.value = crate::syntax::Value::Hole(question);
-            }
             let Some(Instant {
                 day,
                 edge: Some(edge),
@@ -116,7 +108,7 @@ pub(crate) fn readings(
             cands
                 .entry(key)
                 .or_insert_with(Vec::new)
-                .push((known_on, day, edge, row));
+                .push((known_on, day, edge, row.clone()));
         }
     }
     let mut out = Vec::with_capacity(cands.len());
@@ -125,13 +117,6 @@ pub(crate) fn readings(
             continue;
         };
         let mut reading = reading_of(m, (&input, &place, &instant), &row)?;
-        // one known in a window the cut leaves undecided: the hole it states carries that
-        // unknown day (L §4.4; tally 2.1.8 R13; refcore's `CARRY_TEXT`)
-        if let Some(Reading { value: Err(h), .. }) = &mut reading
-            && let Some(u) = known.unknown(&row_known_sid(&row))?
-        {
-            *h = h.clone().carrying(&[u]);
-        }
         // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
         if rows == Rows::Kept
             && let Some(r) = &mut reading
@@ -216,45 +201,17 @@ pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
     Ok(before)
 }
 
-/// Whose `known` a reading row's is: its own (the row's id), else its version's (refcore's
-/// `row_known_sid`). L §4.5.
-fn row_known_sid(row: &crate::model::Row) -> String {
-    if row.own_known.is_some() {
-        row.sid.clone()
-    } else {
-        row.version.clone()
-    }
-}
-
-/// Each `opening` and `stated` row known in a window, its own or its version's, with whose
-/// `known` it is (L §4.5, §5.19).
+/// Each place's first reading day among the readings the cut and the world of `by` see,
+/// for `HOLE-ANCHOR` (refcore's `anchor_question`, its days). L §8.1, §6.4.
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a row of a version load didn't build.
-fn reading_windows(m: &Reality) -> Result<Windows, Stop> {
-    let mut out = Windows::new();
-    for input in ["opening", "stated"] {
-        let Some(info) = m.inputs.get(input) else {
-            continue;
-        };
-        for row in &info.rows {
-            let window = match (row.own_known, row.own_window) {
-                (Some(lo), Some(hi)) => (lo, hi),
-                (Some(_), None) => continue,
-                (None, _) => {
-                    let version = m
-                        .versions
-                        .get(&row.version)
-                        .ok_or_else(|| invariant("a reading of a version load didn't build"))?;
-                    match version.window {
-                        Some(hi) => (version.known, hi),
-                        None => continue,
-                    }
-                }
-            };
-            out.push((window, row_known_sid(row)));
-        }
+/// As [`readings`].
+pub(crate) fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, Day>, Stop> {
+    let mut out: BTreeMap<String, Day> = BTreeMap::new();
+    for seen in readings(m, by, Rows::Unkept)? {
+        let first = out.entry(seen.place).or_insert(seen.day);
+        *first = (*first).min(seen.day);
     }
     Ok(out)
 }
@@ -309,42 +266,6 @@ fn reading_of(
 }
 
 impl Engine {
-    /// The readings cut `cut` and world `world` see ([`readings`]), each known in a window
-    /// that holds the cut decided by the line's `windows each`, or undecided without one
-    /// (refcore's `readings`, `visible`). L §5.19, §4.5, §4.4.
-    ///
-    /// # Errors
-    ///
-    /// As [`readings`]; `ENGINE-INVARIANT` for a freed layer.
-    pub(crate) fn seen_readings(
-        &mut self,
-        m: &Reality,
-        (cut, world): (Day, World),
-        rows: Rows,
-    ) -> Result<Vec<Seen>, Stop> {
-        let known = self.known_at_cut(reading_windows(m)?, cut)?;
-        readings(m, (cut, world), rows, &known)
-    }
-
-    /// Each place's first reading day among the readings the cut and the world of `by` see,
-    /// for `HOLE-ANCHOR` (refcore's `anchor_question`, its days). L §8.1, §6.4.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::seen_readings`].
-    pub(crate) fn first_readings(
-        &mut self,
-        m: &Reality,
-        by: (Day, World),
-    ) -> Result<BTreeMap<String, Day>, Stop> {
-        let mut out: BTreeMap<String, Day> = BTreeMap::new();
-        for seen in self.seen_readings(m, by, Rows::Unkept)? {
-            let first = out.entry(seen.place).or_insert(seen.day);
-            *first = (*first).min(seen.day);
-        }
-        Ok(out)
-    }
-
     /// A `stated` reading at its point: its gap against the booked balance, then, by its
     /// version's gap role, an anchor that sets the balance or a pad that books the gap from
     /// the other place (refcore's `apply_reading`). E §6.1, L §5.19.

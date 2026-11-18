@@ -3,7 +3,7 @@
 //! (versions), §5.7 (kinds, things, lifespans), §5.10 (places), §5.19 (observations), §8.3,
 //! §8.5 (WARN-UNREAD for a source and a place); §5.10 (priced places, `bal`, `value`), §5.14
 //! (moves and legs, `flows`), §5.19 (`observed`, `gap`, `covered`) for the checks of moves,
-//! prices and reads; §5.3 (known windows, `moves`), §4.6 (overlap and `replace`, a period
+//! prices and reads; §5.3 (`known`, `moves`), §4.6 (overlap and `replace`, a period
 //! across keys), §5.9 (band tables), §5.19 (`covers`) for the checks of versions and rows;
 //! §3.6, §5.7 (the parts clauses, the arrival and leaving rules), §5.19 (stated parts),
 //! §5.14.1 (an arrival rule's reads) for the checks of parts; §5.11 (recurrence reads and
@@ -915,13 +915,11 @@ version bank_a
         let fy = "\n\nindex fy = year 2025..2026 from 04-06\n\ninput lim[y in fy]: num\n\n";
         let obs2 = "  bank[r1] = (on: 2026-02-11, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) \"again\"";
         let cases: Vec<(&str, String, &str)> = vec![
-            // a version known in a window, and a row's own window
-            (known, "  known window(2025-12-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "loaded"),
-            (known, "  known window(2026-02-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-DOMAIN window(a, b) with a after b (L §8.4) (a.tally:46)"),
-            (known, "  known window(2026-01-01, 2026-07-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-KNOWN version card_2026 is known after the model's on date (a.tally:46)"),
-            (rate, "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"".to_owned(), "loaded"),
-            (rate, "  rate[q2] = 2 known window(2026-01-02, 2026-07-01) \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known after the model's on date (a.tally:53)"),
-            (rate, "  rate[q2] = 2 known window(2025-12-01, 2026-02-01) \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known before its version card_2026 (a.tally:53)"),
+            // a version's and a row's `known` is a day (tally 2.2, S-2)
+            (known, "  known window(2025-12-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-PARSE cannot parse: expected a day, got window (a.tally:49)"),
+            (known, "  known 2026-07-01\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-KNOWN version card_2026 is known after the model's on date (a.tally:46)"),
+            (rate, "  rate[q2] = 2 known 2026-07-01 \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known after the model's on date (a.tally:53)"),
+            (rate, "  rate[q2] = 2 known 2025-12-01 \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known before its version card_2026 (a.tally:53)"),
             // a version's moves
             (obs, format!("{obs}{later}  moves bank_a to 2026-02-01..2026-03-31"), "loaded"),
             ("  covers konto", "  moves zz to 2026-03-01..\n  covers konto".to_owned(), "LOAD-MOVES moves zz: unknown, or not known before this version (a.tally:65)"),
@@ -929,8 +927,6 @@ version bank_a
             ("  covers konto", "  moves bank_a to 2026-03\n  covers konto".to_owned(), "LOAD-MOVES moves bank_a: unknown, or not known before this version (a.tally:65)"),
             (tier, format!("{tier}{later}  moves card_2026 to 2026-02-01..\n\nversion card_d\n  cite card\n  known 2026-04-01\n  moves card_2026 to 2026-05-01..\n"), "LOAD-MOVES two moves of card_2026 known the same day (a.tally:69)"),
             ("  covers konto", "  moves card_2026 to amt\n  covers konto".to_owned(), "LOAD-PARSE cannot parse: expected a date or a period, got amt (a.tally:65)"),
-            (obs, format!("{obs}\n\nversion card_w\n  cite card\n  known window(2026-03-15, 2026-04-01)\n  moves bank_a to 2026-02-01..2026-03-31\n"), "loaded"),
-            (obs, format!("{obs}\n\nversion card_w\n  cite card\n  known window(2026-04-01, 2026-04-10)\n  moves bank_a to 2026-02-01..2026-03-31\n{later}  moves bank_a to 2026-02-01..2026-04-30"), "LOAD-MOVES two moves of bank_a known the same day (a.tally:78)"),
             // a key that is also an id
             (tiers, "index tiers = [t1, t2, amt]".to_owned(), "LOAD-KEY a key is also an id: amt (a key of tiers) (a.tally:16)"),
             ("place world: outside lives 1900-01-01..", "place world: outside lives 1900-01-01..\n\nkind persons".to_owned(), "loaded"),
@@ -1036,45 +1032,26 @@ version bank_a
         }
     }
 
-    /// A version known in a window over an opening's row is not built yet; a row's own known
-    /// window and a `moves` line, which M1 stopped on, run since M2 (picks P6, P26, P36).
+    /// A `moves` line, which M1 stopped on, runs since M2 (picks P6, P26, P36).
     #[test]
-    fn an_ask_over_a_known_window_or_a_moves_line_is_not_built_yet() {
+    fn an_ask_over_a_moves_line_runs() {
         assert_eq!(
             first_line(VERSIONS).as_deref(),
             Some("q: 200.00 PLN"),
             "refcore's first line"
         );
-        let unbuilt = [(
-            "  known 2026-01-01\n  amt",
-            "  known window(2025-12-01, 2026-01-01)\n  amt",
-        )];
-        for (old, new) in unbuilt {
-            assert!(VERSIONS.contains(old), "{old} is in the base");
-            let text = VERSIONS.replacen(old, new, 1);
-            assert_eq!(refusal(&text), "loaded", "{new} loads");
-            assert_eq!(first_line(&text), None, "{new}: M1 runs it");
-        }
-        let built = [
-            (
-                "  rate[q2] = 2 \"the card\"",
-                "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"",
-            ),
-            (
-                "\"the statement\"\n",
-                "\"the statement\"\n\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n  moves bank_a to 2026-02-01..2026-03-31\n",
-            ),
-        ];
-        for (old, new) in built {
-            assert!(VERSIONS.contains(old), "{old} is in the base");
-            let text = VERSIONS.replacen(old, new, 1);
-            assert_eq!(refusal(&text), "loaded", "{new} loads");
-            assert_eq!(
-                first_line(&text).as_deref(),
-                Some("q: 200.00 PLN"),
-                "{new}: refcore's first line"
-            );
-        }
+        let (old, new) = (
+            "\"the statement\"\n",
+            "\"the statement\"\n\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n  moves bank_a to 2026-02-01..2026-03-31\n",
+        );
+        assert!(VERSIONS.contains(old), "{old} is in the base");
+        let text = VERSIONS.replacen(old, new, 1);
+        assert_eq!(refusal(&text), "loaded", "{new} loads");
+        assert_eq!(
+            first_line(&text).as_deref(),
+            Some("q: 200.00 PLN"),
+            "{new}: refcore's first line"
+        );
     }
 
     /// Two place kinds that keep parts, one by owner and one by batch, an arrival rule and

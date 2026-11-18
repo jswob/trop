@@ -4,8 +4,7 @@
 //! `observed`), §5.19 (One movement on two statements: a read of the movement away from its
 //! places is the disagreement's hole, `HOLE-SAME`, naming both rows), §8.1 (`HOLE-SAME`'s form
 //! `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`), §4.5 (tally
-//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are, one known in a
-//! window that holds the cut read as seen and as unseen).
+//! 2.1.8 R12: a `same` line is seen under a cut as its version's rows are).
 //! Twin: engine/tools/refcore/moves.py (`same_lines`, `same_groups`, `once_obs`,
 //! `same_obs_differ`), model.py (`same_seen`) and mreads.py (`once_by_same`); refcore's
 //! walk.py `same_observed` (an instance stated `same` as an observed row) serves only a joint
@@ -24,7 +23,7 @@ use super::observe::Obs;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, num_stop};
 use crate::hole::Hole;
-use crate::model::{KeyVal, MvRef, Reality, SamePair, Value};
+use crate::model::{KeyVal, MvRef, Reality, SamePair, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -33,108 +32,51 @@ use crate::walk::{
     qty_value,
 };
 
-/// The versions whose `same` line a line's first run read under a cut their `known` window
-/// holds, no `windows each` deciding it: each with its window and the sides its lines name
-/// (refcore's `_SAMEMET`). L §4.5 (tally 2.1.8 R12).
-pub(crate) type SameMet = BTreeMap<String, ((Day, Day), BTreeSet<String>)>;
-
-/// How one run of an ask's line reads the `same` lines known in a window that holds the
-/// cut, which no `windows each` decides (L §4.5, tally 2.1.8 R12: such a line is read as
-/// seen and as unseen): the line's first run takes each seen and notes it; a later run takes
-/// each as its pick says (refcore's `_SAMEMET`, `_SAMEPICK`).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct SamePicks {
-    /// Each version's line seen or not in this run; none in the line's first run.
-    pub(crate) pick: Option<BTreeMap<String, bool>>,
-    /// What the line's first run met.
-    pub(crate) met: SameMet,
-}
-
-impl SamePicks {
-    /// Whether this run sees the line of version `id`, known in `window`, which holds the cut
-    /// and no `windows each` decides: as the pick says, a line it names no choice for seen;
-    /// in the line's first run seen, noted with its window and the sides `sides` it names
-    /// (refcore's `same_seen`). L §4.5 (tally 2.1.8 R12).
-    fn seen(&mut self, id: &str, window: (Day, Day), sides: [&str; 2]) -> bool {
-        if let Some(pick) = &self.pick {
-            return pick.get(id) != Some(&false);
-        }
-        let (_, named) = self
-            .met
-            .entry(id.to_owned())
-            .or_insert_with(|| (window, BTreeSet::new()));
-        named.extend(sides.iter().map(|side| (*side).to_owned()));
-        true
-    }
-}
-
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
 pub type Groups = BTreeMap<String, Vec<String>>;
 
-impl Engine {
-    /// Whether the cut of `ctx` sees a `same` line of version `version`, which names `sides`:
-    /// a line in a joint model's header always; else only in the worlds its version's file is
-    /// in, its version's `known` on or before the cut, a window that holds the cut decided by
-    /// the line's `windows each`, else as the run's pick says, read as seen and as unseen
-    /// (refcore's `same_seen`, `same_lines`). L §4.5 (tally 2.1.8 R12: whatever a version
-    /// states is read as its rows are), §4.4, §6.4.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a version load didn't build; as [`Engine::known_seen`].
-    pub(crate) fn same_line_seen(
-        &mut self,
-        m: &Reality,
-        version: Option<&str>,
-        ctx: Ctx,
-        sides: [&str; 2],
-    ) -> Result<bool, Stop> {
-        let Some(id) = version else {
-            return Ok(true);
-        };
-        if !m.scenarios.sees(ctx.world, Some(id)) {
-            return Ok(false);
-        }
-        let info = m
-            .versions
-            .get(id)
-            .ok_or_else(|| invariant("a same line's version load didn't build"))?;
-        let (lo, cut) = (info.known, ctx.cut);
-        // a window that ends on or before the cut is seen, one that starts after it unseen
-        let Some(hi) = info.window.filter(|hi| lo <= cut && cut < *hi) else {
-            return Ok(lo <= cut);
-        };
-        if let Some(seen) = self.known_seen(ctx, (lo, hi), &info.id)? {
-            return Ok(seen);
-        }
-        if self.chooses(ctx)? {
-            // under `windows each`, a line not yet taken is an unknown day the line's answer
-            // rests on: the run takes it as seen, and the line takes its days next (L §4.5,
-            // §4.4; tally 2.1.8 R12, R13; refcore's `same_seen`, its `forced`)
-            let forced = crate::eval::known_unknown((lo, hi), &info.id)?.id;
-            if !self.each_forced.contains(&forced) {
-                self.each_forced.push(forced);
-            }
-            return Ok(true);
-        }
-        Ok(self.same_picks.seen(&info.id, (lo, hi), sides))
+/// Whether cut `cut` in world `world` sees a `same` line of version `version`: a line in a
+/// joint model's header always; else only in the worlds its version's file is in, its
+/// version's `known` on or before the cut (refcore's `same_seen`, `same_lines`). L §4.5
+/// (tally 2.1.8 R12: whatever a version states is read as its rows are), §6.4.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a version load didn't build.
+pub(crate) fn same_line_seen(
+    m: &Reality,
+    version: Option<&str>,
+    (cut, world): (Day, World),
+) -> Result<bool, Stop> {
+    let Some(id) = version else {
+        return Ok(true);
+    };
+    if !m.scenarios.sees(world, Some(id)) {
+        return Ok(false);
     }
+    let info = m
+        .versions
+        .get(id)
+        .ok_or_else(|| invariant("a same line's version load didn't build"))?;
+    Ok(info.known <= cut)
+}
 
+impl Engine {
     /// Whether cut `cut` sees each `same` line of the reality, in the order written: a line
-    /// of movements as [`Engine::same_line_seen`] decides, a line of rows never (its read is
-    /// the row's, `eval/read.rs`). L §6.1, §4.5.
+    /// of movements as [`same_line_seen`] decides, a line of rows never (its read is the
+    /// row's, `eval/read.rs`). L §6.1, §4.5.
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`].
-    fn moves_seen(&mut self, m: &Reality, cut: Day) -> Result<Vec<bool>, Stop> {
-        let ctx = self.timeline_ctx(None, cut);
+    /// As [`same_line_seen`].
+    fn moves_seen(&self, m: &Reality, cut: Day) -> Result<Vec<bool>, Stop> {
+        let world = self.timeline_world();
         let mut out = Vec::with_capacity(m.sames.len());
         for pair in &m.sames {
             let seen = match pair {
-                SamePair::Moves(left, right, version) => {
-                    self.same_line_seen(m, version.as_deref(), ctx, [left, right])?
+                SamePair::Moves(_, _, version) => {
+                    same_line_seen(m, version.as_deref(), (cut, world))?
                 }
                 SamePair::Rows(..) => false,
             };
@@ -149,7 +91,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`].
+    /// As [`same_line_seen`].
     pub(crate) fn same_groups(&mut self, m: &Reality, cut: Day) -> Result<Groups, Stop> {
         // a class joined by lines in two files has no written order: its members go by their
         // ids in id order (L §2.5; tally 2.1.8 S6, P50)
@@ -189,7 +131,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`].
+    /// As [`same_line_seen`].
     pub(crate) fn same_sides(&mut self, m: &Reality, cut: Day) -> Result<Vec<String>, Stop> {
         let mut out: BTreeSet<String> = BTreeSet::new();
         for (left, right) in move_lines(m, self.moves_seen(m, cut)?) {
@@ -205,7 +147,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`].
+    /// As [`same_line_seen`].
     pub(crate) fn stated_same(&mut self, m: &Reality, id: &str, cut: Day) -> Result<bool, Stop> {
         Ok(move_lines(m, self.moves_seen(m, cut)?)
             .iter()
@@ -217,7 +159,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`].
+    /// As [`same_line_seen`].
     fn first_line(
         &mut self,
         m: &Reality,
@@ -704,7 +646,7 @@ impl Engine {
             // a row stated same shows at the place only where its own statement books its
             // end there; where it doesn't, another row's statement does, or none (L §5.19:
             // each end is booked once, from the statement that covers it)
-            if !self.books_ends_at(m, o, place, cut)? {
+            if !self.books_ends_at(m, o, place, cut) {
                 continue;
             }
             let row = match self.end_book_at(m, id, o, place)? {
@@ -735,19 +677,15 @@ impl Engine {
     /// Whether row `o` books each of its ends at `place` by its own coverage: each on a day
     /// no version covers the place, or its own version does (refcore's `m_residuals`, its
     /// `obs_end_on` test). E §6.3, §6.1; L §5.19 Coverage, One movement on two statements.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::obs_end_on`].
-    fn books_ends_at(&mut self, m: &Reality, o: &Obs, place: &str, cut: Day) -> Result<bool, Stop> {
+    fn books_ends_at(&mut self, m: &Reality, o: &Obs, place: &str, cut: Day) -> bool {
         for lg in &o.legs {
             for end in [&lg.from, &lg.to] {
-                if end.place() == Some(place) && !self.obs_end_on(m, o, place, o.day, cut)? {
-                    return Ok(false);
+                if end.place() == Some(place) && !self.obs_end_on(m, o, place, o.day, cut) {
+                    return false;
                 }
             }
         }
-        Ok(true)
+        true
     }
 
     /// What row `o`'s end at `place` books under the `same` lines, as walk `id` books it:
@@ -787,7 +725,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::covering`].
+    /// As [`same_line_seen`].
     pub(crate) fn unjoined(
         &mut self,
         m: &Reality,
@@ -802,7 +740,7 @@ impl Engine {
         let groups = self.same_groups(m, cut)?;
         for (i, a) in good.iter().enumerate() {
             for b in good.iter().skip(i).skip(1) {
-                if !self.one_transfer(m, &groups, (a, b), cut)? {
+                if !self.one_transfer(m, &groups, (a, b), cut) {
                     continue;
                 }
                 let err = Refusal::new(
@@ -827,7 +765,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// As [`Engine::same_line_seen`], and the observations'.
+    /// As [`same_line_seen`], and the observations'.
     pub(crate) fn fulfils_differ(
         &mut self,
         m: &Reality,
@@ -893,19 +831,19 @@ impl Engine {
         groups: &BTreeMap<String, Vec<String>>,
         (a, b): (&Obs, &Obs),
         cut: Day,
-    ) -> Result<bool, Stop> {
+    ) -> bool {
         if a.version == b.version || groups.get(&a.id).is_some_and(|g| g.contains(&b.id)) {
-            return Ok(false);
+            return false;
         }
         let places = row_places(a);
         if places.len() != 2 || row_places(b) != places {
-            return Ok(false);
+            return false;
         }
         let (in_a, in_b) = (
-            self.row_covers(m, a, &places, cut)?,
-            self.row_covers(m, b, &places, cut)?,
+            self.row_covers(m, a, &places, cut),
+            self.row_covers(m, b, &places, cut),
         );
-        Ok(some_differ(&in_a, &in_b))
+        some_differ(&in_a, &in_b)
     }
 
     /// Of places `places`, those row `o`'s own version covers on its day, where it has a leg
@@ -916,17 +854,17 @@ impl Engine {
         o: &Obs,
         places: &BTreeSet<&str>,
         cut: Day,
-    ) -> Result<BTreeSet<String>, Stop> {
+    ) -> BTreeSet<String> {
         let mut out = BTreeSet::new();
         if o.legs.is_empty() {
-            return Ok(out);
+            return out;
         }
         for p in places {
-            if self.covering(m, p, o.day, cut)?.contains(&o.version) {
+            if self.covering(m, p, o.day, cut).contains(&o.version) {
                 out.insert((*p).to_owned());
             }
         }
-        Ok(out)
+        out
     }
 
     /// The ends of leg `lg` of `mover` its booking keeps under the `same` lines: an end the
@@ -1245,7 +1183,7 @@ impl Engine {
                     continue;
                 }
                 if let Member::Obs(row) = o
-                    && !self.obs_end_on(m, row, p, row.day, cut)?
+                    && !self.obs_end_on(m, row, p, row.day, cut)
                 {
                     continue;
                 }

@@ -80,11 +80,11 @@ pub mod syntax {
         Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
         Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs,
         Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
-        Item, ItemForm, Key, KindDecl, KindSpec, Known, LSpan, LawDate, Leg, Lit, Low, Move,
-        MoveLines, MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm,
-        Place, Postfix, Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row,
-        RowKey, Rule, RuleValue, Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes,
-        Type, TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        Item, ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Low, Move, MoveLines,
+        MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix,
+        Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule,
+        RuleValue, Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type,
+        TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -117,7 +117,7 @@ pub mod model {
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
-        ObsLeg, Observation, PlaceInfo, Row, RowsHold, RuleVer, Table as BandTable, TimePos,
+        ObsLeg, Observation, PlaceInfo, Row, RuleVer, Table as BandTable, TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
@@ -205,7 +205,7 @@ pub mod eval {
     pub(crate) use trace::{
         Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
     };
-    pub(crate) use windows::{known_question, known_unknown, one_day, window_days};
+    pub(crate) use windows::{one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -281,9 +281,9 @@ pub mod book {
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, reading_rank};
-    pub(crate) use reading::{gap_text, instant_text};
+    pub(crate) use reading::{first_readings, gap_text, instant_text, readings};
     pub use same::{Groups, kept_once, once_obs, same_differ};
-    pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
+    pub(crate) use same::{Member, Waiting, and_list, same_line_seen};
     pub(crate) use settle::settlement_move;
 }
 
@@ -384,8 +384,8 @@ pub mod read {
         read_last,
     };
     pub use rows::{
-        Clocks, KnownInside, Point, Test, candidates, choose, held, known_inside, lawless,
-        need_law, row_known, row_place, row_span, standing_rows, time_point, worded,
+        Clocks, Point, Test, candidates, choose, held, lawless, need_law, row_known, row_place,
+        row_span, standing_rows, time_point, worded,
     };
     pub use rules::rule_in_force;
 }

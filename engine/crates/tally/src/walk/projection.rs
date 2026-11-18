@@ -496,7 +496,7 @@ impl Engine {
         left_out: &BTreeSet<String>,
     ) -> Result<Walk, Stop> {
         let world = self.walk(base)?.world;
-        let mut first_reading = self.first_readings(m, (c, world))?;
+        let mut first_reading = crate::book::first_readings(m, (c, world))?;
         let from = self.walk(base)?;
         let mut states: BTreeMap<(String, String), St> = BTreeMap::new();
         for (place, unit) in from.logs.keys() {

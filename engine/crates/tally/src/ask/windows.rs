@@ -73,10 +73,6 @@ impl Done {
 /// What one run gives: its result to compare, and under a binding each tuple's line.
 type Ran = (Printed, Vec<Tuple>);
 
-/// What one run met: the windows its choice names no day of, in the order met, and the `same`
-/// lines known in a window it took as seen untaken, by id.
-type RunMet = (Vec<Met>, Vec<String>);
-
 /// One box of days: each window's first and last day, its line, the runs it stands for.
 type Boxed = (Vec<(Day, Day)>, Printed, Vec<usize>);
 
@@ -835,9 +831,8 @@ fn each_rows(
     let mut done: Vec<Done> = Vec::new();
     let mut labels: Vec<Met> = Vec::new();
     while let Some(choice) = pending.pop_front() {
-        let ((line, tuples), (met, forced)) =
-            run_once(m, ask, engine, (env, ctx, pinned), (&choice, shape))?;
-        let Some(new) = each_next(&met, &choice, (&line.carried, &forced)) else {
+        let ((line, tuples), met) = run_once(m, ask, engine, (env, ctx, pinned), (&choice, shape))?;
+        let Some(new) = each_next(&met, &choice, &line.carried) else {
             done.push(Done {
                 choice,
                 line,
@@ -867,22 +862,12 @@ fn each_rows(
 }
 
 /// The unknown day `windows each` takes after a run under choice `choice` that met the
-/// windows `met`, in order: of those its answer carries, `carried`, and the `same` lines it
-/// rests on, `forced`, that the choice names no day of, the first the run met; else the first
-/// its answer carries; none where it carries none (refcore's `each_next`). L §4.4; tally
-/// 2.1.8 R13.
-pub(super) fn each_next(
-    met: &[Met],
-    choice: &Choice,
-    (carried, forced): (&[Met], &[String]),
-) -> Option<Met> {
+/// windows `met`, in order: of those its answer carries, `carried`, that the choice names no
+/// day of, the first the run met; else the first its answer carries; none where it carries
+/// none (refcore's `each_next`). L §4.4; tally 2.1.8 R13.
+pub(super) fn each_next(met: &[Met], choice: &Choice, carried: &[Met]) -> Option<Met> {
     let open: Vec<&Met> = carried.iter().filter(|w| !names(choice, &w.id)).collect();
-    let mut wanted: Vec<&str> = open.iter().map(|w| w.id.as_str()).collect();
-    for f in forced {
-        if !names(choice, f) {
-            wanted.push(f);
-        }
-    }
+    let wanted: Vec<&str> = open.iter().map(|w| w.id.as_str()).collect();
     if let Some(w) = met.iter().find(|w| wanted.contains(&w.id.as_str())) {
         return Some(w.clone());
     }
@@ -946,22 +931,20 @@ enum Shape {
 }
 
 /// One run of the line under choice `choice`: its result, its tuples under a binding
-/// (`Shape::Bound`), the windows it met that the choice names no day of, in the order met,
-/// and the `same` lines known in a window it took as seen untaken. L §4.4, §4.5.
+/// (`Shape::Bound`), and the windows it met that the choice names no day of, in the order
+/// met. L §4.4.
 fn run_once(
     m: &Reality,
     ask: &Ask,
     engine: &mut Engine,
     (env, ctx, pinned): (&Env, Ctx, &Collected),
     (choice, shape): (&Choice, Shape),
-) -> Result<(Ran, RunMet), Stop> {
+) -> Result<(Ran, Vec<Met>), Stop> {
     let outer = engine.each_met.replace(Vec::new());
-    let outer_forced = core::mem::take(&mut engine.each_forced);
     let line = run_inside(m, ask, engine, (env, ctx, pinned), (choice, shape));
-    let forced = core::mem::replace(&mut engine.each_forced, outer_forced);
     let met = core::mem::replace(&mut engine.each_met, outer)
         .ok_or_else(|| invariant("a run's windows met taken while it ran"))?;
-    Ok((line?, (met, forced)))
+    Ok((line?, met))
 }
 
 /// The line of ask `ask` in scope `env`, or under a binding (`Shape::Bound`) its tuples'

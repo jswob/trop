@@ -727,11 +727,9 @@ impl Engine {
     ) -> Result<(Tree, Vec<Num>), Stop> {
         // the projection's walk reads its cut's first readings before its plan pass, and books
         // none (a projection's plan pass schedules no reading, E §4.3 counts movements only);
-        // the tree needs no anchor, only that read's effects, so its value goes unused: its
-        // refusals come first, as the walk's do, and under `windows each` it meets the
-        // readings' known windows the walk meets, so the line splits as the walk's would
-        // (L §4.4, §4.5)
-        self.first_readings(m, (cut, world))?;
+        // the tree needs no anchor, only that read's refusals, which come first, as the walk's
+        // do, so its value goes unused
+        crate::book::first_readings(m, (cut, world))?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),

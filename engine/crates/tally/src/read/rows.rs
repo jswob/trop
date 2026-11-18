@@ -10,10 +10,9 @@
 //! Invariants: a plain scan of the target's rows in the order versions state them; the
 //! candidates keep that order; two rows still tied are refused, never broken by order; a
 //! scenario's `replace` beats its base's row at the same keys whatever their `known` dates.
-//! Joint models and known windows stop before load ends (`NotBuilt`), so every row is known
-//! on one day; a `wording` pin narrows the candidates by their entry into force alone; a
-//! dated read with no law date is refused by load (`LOAD-LAWDATE`), so here it is an
-//! invariant.
+//! Every row is known on one day (L §4.5); a `wording` pin narrows the candidates by their
+//! entry into force alone; a dated read with no law date is refused by load
+//! (`LOAD-LAWDATE`), so here it is an invariant.
 
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
@@ -444,59 +443,6 @@ pub fn candidates(
             && in_time(m, row, test, (cut, clocks.world))?
         {
             out.push(at);
-        }
-    }
-    Ok(out)
-}
-
-/// A row a read meets whose `known` is a window holding the cut: whether the cut sees it is
-/// the line's `windows each`'s, else `HOLE-IMPRECISE` (L §4.5).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct KnownInside {
-    /// Its position among the rows.
-    pub at: usize,
-    /// The window's first day and last.
-    pub window: (Day, Day),
-    /// Whose `known` it is: the row's own (its stable id), else its version's (refcore's
-    /// `row_known_sid`).
-    pub sid: String,
-}
-
-/// The rows of `rows` a read at `keys` by time test `test` meets, as [`candidates`] tests
-/// them but for the cut, whose `known` is a window holding the read's cut: its first day on
-/// or before the cut, its last after it. A row that doesn't apply at the read's time changes
-/// nothing the read sees, so it is none of them (L §4.5, §4.6 step 1; E §5 step 1).
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for a row whose version is missing, and as [`candidates`] for a dated
-/// row read with no law date.
-pub fn known_inside(
-    m: &Reality,
-    rows: &[Row],
-    (binds, keys): (&[BindInfo], &[KeyVal]),
-    test: Test,
-    clocks: Clocks,
-) -> Result<Vec<KnownInside>, Stop> {
-    let mut out = Vec::new();
-    for (at, row) in rows.iter().enumerate() {
-        let version = m.versions.get(&row.version).ok_or_else(no_version)?;
-        let (window, sid) = match (row.own_known, row.own_window) {
-            (Some(lo), Some(hi)) => ((lo, hi), row.sid.clone()),
-            (Some(_), None) => continue,
-            (None, _) => match version.window {
-                Some(hi) => ((version.known, hi), version.id.clone()),
-                None => continue,
-            },
-        };
-        let inside = window.0 <= clocks.cut && clocks.cut < window.1;
-        if inside
-            && m.scenarios.sees(clocks.world, Some(&row.version))
-            && row_matches(m, row, binds, keys)
-            && unstated_ok(m, row, (binds, keys), clocks.world)?
-            && in_time(m, row, test, (clocks.cut, clocks.world))?
-        {
-            out.push(KnownInside { at, window, sid });
         }
     }
     Ok(out)

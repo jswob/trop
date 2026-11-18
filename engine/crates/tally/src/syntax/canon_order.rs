@@ -13,7 +13,7 @@
 
 use super::lex::cannot;
 use super::parse::Stop;
-use super::tree::{Bind, Domain, File, Governs, IndexForm, Instant, Known, Lit, RowKey, Section};
+use super::tree::{Bind, Domain, File, Governs, IndexForm, Instant, Lit, RowKey, Section};
 use crate::base::{Code, Load, Place, Refusal};
 use crate::num::Num;
 use crate::time::Day;
@@ -83,7 +83,7 @@ pub(super) struct Decls {
     /// The bindings of each declaration that has them, by id.
     binds: BTreeMap<String, Vec<Bind>>,
     /// Each version's `known`, by id.
-    versions: BTreeMap<String, Known>,
+    versions: BTreeMap<String, Day>,
 }
 
 impl Decls {
@@ -123,7 +123,7 @@ impl Decls {
     }
 
     /// A version's `known`, by id.
-    pub(super) fn known(&self, version: &str) -> Option<Known> {
+    pub(super) fn known(&self, version: &str) -> Option<Day> {
         self.versions.get(version).copied()
     }
 
@@ -216,13 +216,6 @@ pub(super) fn first_day(lit: &Lit) -> Option<Day> {
         | Lit::Inf { .. }
         | Lit::Nominal(_)
         | Lit::Name(_) => None,
-    }
-}
-
-/// A version's `known` as its first day: a window by its first.
-pub(super) fn known_day(known: Known) -> Day {
-    match known {
-        Known::Day(day) | Known::Window(day, _) => day,
     }
 }
 

@@ -353,10 +353,6 @@ impl Engine {
                 ent.coll = Some(coll);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
-            Act::CoverHole(place, h) => {
-                self.walk_mut(id)?
-                    .add(m, &place, ALL, Ent::new(at, Change::Hole(h)))
-            }
             Act::GlobalHole(h) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Perm(h)))
@@ -663,7 +659,7 @@ impl Engine {
         let mut on = [true, true];
         for (end, slot) in [&lg.from, &lg.to].into_iter().zip(on.iter_mut()) {
             if let Some(p) = end.place() {
-                *slot = self.obs_end_on(m, &wo.obs, p, day, cut)?;
+                *slot = self.obs_end_on(m, &wo.obs, p, day, cut);
             }
         }
         let [from, to] = on;

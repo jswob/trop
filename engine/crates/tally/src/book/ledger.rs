@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, booked_amount, reading_rank};
+use super::reading::{Seen, booked_amount, reading_rank, readings};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, Unknown, carry_union, spread};
@@ -372,7 +372,7 @@ impl Engine {
                 continue;
             }
             if let Some(day) = day {
-                let shown = !self.covering(m, &of.place, day, m.on)?.is_empty()
+                let shown = !self.covering(m, &of.place, day, m.on).is_empty()
                     || fulfilled.contains(&inst.id);
                 if !(span.contains(day) && shown) {
                     continue;
@@ -414,7 +414,7 @@ impl Engine {
             let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
                 continue;
             };
-            if !span.contains(day) || self.covering(m, &of.place, day, m.on)?.is_empty() {
+            if !span.contains(day) || self.covering(m, &of.place, day, m.on).is_empty() {
                 continue;
             }
             if let Some(err) = &inst.err {
@@ -474,8 +474,8 @@ impl Engine {
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
-        let walked = self.seen_readings(m, (cut, world), Rows::Unkept)?;
-        for seen in self.seen_readings(m, (m.on, world), Rows::Unkept)? {
+        let walked = readings(m, (cut, world), Rows::Unkept)?;
+        for seen in readings(m, (m.on, world), Rows::Unkept)? {
             if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }

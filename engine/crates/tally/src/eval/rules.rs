@@ -22,13 +22,13 @@ use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
     Window, pattern_text,
 };
-use crate::read::{Clocks, Test, candidates, choose, known_inside, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{at_keys, kept_rows, pinned_at, row_cell, shown};
+use super::read::{at_keys, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
 use super::windows::{as_read, window_days};
 
@@ -659,20 +659,7 @@ impl Engine {
         }
         let clocks = self.clocks(ctx, &def.id)?;
         let binds = (def.binds.as_slice(), keys);
-        // a given known in a window that holds the cut: the line's `windows each` decides
-        // it, else the read is `HOLE-IMPRECISE` (L §4.5)
-        let inside = known_inside(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
-        let hidden = match self.hidden_rows(&inside, ctx)? {
-            Err(h) => return Ok(Some(Value::Hole(h))),
-            Ok(hidden) => hidden,
-        };
-        let seen;
-        let givens = if hidden.is_empty() {
-            &def.givens
-        } else {
-            seen = kept_rows(&def.givens, &hidden);
-            &seen
-        };
+        let givens = &def.givens;
         let cands = candidates(m, givens, binds, Test::At(ctx.law), clocks)?;
         let cands = worded(m, givens, cands, clocks)?;
         let Some(at) = choose(m, givens, &def.binds, &cands, (ctx.cut, ctx.world), &def.id)? else {
