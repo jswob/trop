@@ -958,8 +958,8 @@ The author sketched the 18 hard-set cards in the core's notation (`hardset/sketc
 
 | SF | Card | Finding | Settlement |
 |---|---|---|---|
-| SF-1 | S3, migration | The prelude's place kinds can't fix a unit, so `place konto: account PLN` had no tally 2 form | fixed in D-1: a place kind's unit may be `one`, stated by each thing as it enters |
-| SF-2 | S1, S2, P-TIME-07, Q-B-08 | A reading of a balance had no place in its day, and the answer turns on it when a decision acts that day | fixed in D-3: `at D start`, `at D end`, `after m`; `LOAD-INSTANT` |
+| SF-1 | S3, migration | The prelude's place kinds can't fix a unit, so `place konto: account PLN` had no tally 2 form | fixed in D-1: a place kind's unit may be `one`, stated by each thing as it enters. In tally 2.2 a place of the model holds one unit; `any` is the unit of an `outside` kind only (`CHANGES.md` 2.2-1) |
+| SF-2 | S1, S2, P-TIME-07, Q-B-08 | A reading of a balance had no place in its day, and the answer turns on it when a decision acts that day | fixed in D-3: `at D start`, `at D end`, `after m`; `LOAD-INSTANT`. `after m` cut in tally 2.2 (`CHANGES.md` 2.2-3) |
 | SF-3 | S1 | The projection's value depended on who read the def (a dynamic scope, like the one D-4 removes) | fixed in D-6: `bal(x, d) from t`, with the dependents of the item holding the read left out; a plain future read inside a decision is a cycle |
 | SF-4 | S1, all | No record showed where a movement's law date is written | fixed in D-2 and D-4: `at e` as a line of `move` |
 | SF-5 | S2 | A movement that reads a decided movement's leg, but no balance, was classed as a plan | fixed in D-5: reads of other movements are edges, visible in the text |
@@ -987,7 +987,7 @@ The author sketched the 18 hard-set cards in the core's notation (`hardset/sketc
 | SF-27 | P-PTY-05 | An outside place joined to an account: which kind | fixed in D-9: the non-outside kind; `LOAD-SAME` when two others differ |
 | SF-28 | Q-D-10 | Pinning every sample of a fact | fixed in D-11: `with sample x[*] = …` |
 | SF-29 | S-4 | `currency` as a kind of units to bind over | fixed in D-12 |
-| SF-30 | S-4 | A balance reading of an `any` place in two units | fixed in D-3: one row per unit |
+| SF-30 | S-4 | A balance reading of an `any` place in two units | fixed in D-3: one row per unit. Moot in tally 2.2: a place of unit `any` is `outside` and takes no balance reading (`CHANGES.md` 2.2-1) |
 | SF-31 | Q-B-05 | A branch "as if known then" against a change learned later | fixed in D-10: the scenario version's `known` decides, and the writer states it |
 | SF-32 | Q-E1-01 | The joint model's own movement into a member's place | fixed in D-9: matched like any internal movement |
 | SF-33 | Q-B-04 | The refund's amount needs a figure "as known" on another day inside a def | answered: two asks give it today; whether a def read may carry `as known` is checked against the visible cases in phase 4 |
@@ -1289,7 +1289,7 @@ The user's answers at G2 (`G2-list.md`), written into L and E by spec round 19 (
 - **GD-7. `add_business` takes a negative n** (C1-21 (a)): `add_business(t, -2, len)` is the second business day before t, as L §4.2 states. It departs from D-13 and C-8, which settled n ≥ 1.
 - **GD-8. A plain read of a reading at an instant with no reading is a hole at that key** (`HOLE-NOREADING`; C1-23 (a)), as L §4.6 states; there is no `LOAD-CARRY`. It departs from D-3's explicit form.
 - **GD-9. `kind` sections print in tree order** (C1-31 (b)): each kind is followed by its subkinds, kinds with the same parent (or none) sorted by id (L §2.4).
-- **GD-10. A reading `after m` with m in the day's first batch** (an observation or a plan) is refused at load (`LOAD-ORDER`; C2-3 (b)), since the batch has no order (L §4.6, §5.14.2; P-7).
+- **GD-10. A reading `after m` with m in the day's first batch** (an observation or a plan) is refused at load (`LOAD-ORDER`; C2-3 (b)), since the batch has no order (L §4.6, §5.14.2; P-7). Moot in tally 2.2: the reading `after m` is cut (`CHANGES.md` 2.2-3).
 - **GD-11. Plans always come first** (C2-4 (b)): `before m` orders a decision only against another decision, and with m a plan or an observation it is refused (`LOAD-ORDER`); the start-of-day balance is `bal(x, d start)` (L §5.14.2). It departs from D-5 and SF-15, which let `before m` put a decision ahead of a plan.
 - **GD-12. C2-8 is closed by GD-1:** `LOAD-PRIVATE` went with `regime`.
 - **GD-13. Day K is plan** (C2-19 (b)): observations dated K are unread at cut K, and E §2's evaluation window is [K, E]. It departs from D-6 ("Day K is past").

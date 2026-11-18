@@ -7,7 +7,7 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2 (the cuts round: nine forms removed; group G1)
+## tally 2.2 (the cuts round: nine forms removed; groups G1 and G2)
 
 The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
 all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
@@ -23,6 +23,21 @@ refused by the grammar, `LOAD-PARSE`, with no message of its own.
 - **The converted `flows` (S-7, 2.2-7).** Gone from the parser, `canon.forced`, `check._txt`, `check3.t_flows`
   (and `check.mode_arg`'s `fn`), and `mreads`' conversion thread (`m_convert`). A total converted movement by
   movement is a sum of a def keyed by the movement (`L7_2_mode_axis` b, `L5_18_partial_not_linear` q6).
+- **Group G2: 1 520 tests, all pass** (1 550, 34 dropped, 4 new, 1 refusal rewritten, 10 restated, 15 with their
+  kind marked `outside`; `refcore_fast` byte-equal).
+- **A place of the model holds one unit (S-1, 2.2-1).** 2.1.8's R14 is gone whole: `loader.reading_of_any`, the
+  overlap check's `wider`, `moves.any_unitless`, `PadMv`'s `per_unit`, `evaluate`'s unit-keyed choice
+  (`units_at_reading`, `_Kctx`, `unit_of_row`, `instant_key`, `units_at_instant`; `carry_latest` takes `'last'`
+  again), `mreads.c_gap`'s two-unit check, the walk's `units_held`, `resid`'s exception for the unitless row,
+  `ask._reading_text`'s unit. Two refusals in: `LOAD-PLACEKIND … is of unit any and isn't outside` (the place-kind
+  loop, `outside` read along the parent chain) and `LOAD-UNIT …: a place of unit any takes no balance reading`
+  (`place_value`). The per-unit ledger of an `outside` place of unit `any` stays (E §6.3; `residuals`,
+  `E6_3_residuals_unit_any`).
+- **A balance reading at a day's start or end (S-3, 2.2-3).** The instant `after m` is gone from the parser (`after`
+  is no longer a row's clause word), `canon`'s sort, `moves.instant_text`, `check3.m_check_after_readings`, `evaluate` and
+  `eval2`, `resid`, `mreads.m_after_day` and `m_after_refusal`, and the walk: `after`, `after_keys`, `after_mv`,
+  `after_standing`, `after_missing`, the `rbad` entry and the `after` half of `dec_win_end` (P29). The earlier
+  sections' lines on a reading `after m` describe what tally 2.2 removed. The move's `after m` stays.
 
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
