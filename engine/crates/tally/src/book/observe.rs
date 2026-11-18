@@ -721,20 +721,31 @@ fn observation_at(input: &InputInfo, at: usize) -> Result<&crate::model::Observa
         .ok_or_else(|| invariant("an observation past the input's"))
 }
 
-/// Each row id of observed input `input` that cut `cut` sees in world `world`: its latest
-/// restatement's `known` day and position, of two known the same day the first written
-/// (refcore's `observations`, its `by`). L §5.19, §4.5, §6.4.
+/// Whether cut `cut` in world `world` sees observed row `id` (`bank[r1]`) as the observations
+/// do ([`seen_observations`]): its latest restatement known by the cut in a version the world
+/// sees, of two known the same day the first written, isn't `none`. A row no version states
+/// is seen: a line naming it stands, and the read of that side refuses (`RUN-RECORD`)
+/// (refcore's `obs_row_seen`). L §5.19, §6.1, §6.4 (tally 2.2, S-5).
 ///
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a version load didn't build.
-fn latest_restatements<'a>(
+pub(crate) fn observed_row_seen(
     m: &Reality,
-    input: &'a InputInfo,
+    id: &str,
     (cut, world): (Day, World),
-) -> Result<BTreeMap<&'a str, (Day, usize)>, Stop> {
-    let mut latest: BTreeMap<&str, (Day, usize)> = BTreeMap::new();
-    for (at, o) in input.observations.iter().enumerate() {
+) -> Result<bool, Stop> {
+    let Some((name, key)) = id.strip_suffix(']').and_then(|inner| inner.split_once('[')) else {
+        return Ok(true);
+    };
+    let Some(input) = m.inputs.get(name) else {
+        return Ok(true);
+    };
+    let mut stated = false;
+    // the latest restatement's `known` day and whether it removes the row
+    let mut latest: Option<(Day, bool)> = None;
+    for o in input.observations.iter().filter(|o| o.key == key) {
+        stated = true;
         let version = m
             .versions
             .get(&o.version)
@@ -743,40 +754,11 @@ fn latest_restatements<'a>(
         if known_on > cut || !m.scenarios.sees(world, Some(&o.version)) {
             continue;
         }
-        latest
-            .entry(o.key.as_str())
-            .and_modify(|kept| {
-                if known_on > kept.0 {
-                    *kept = (known_on, at);
-                }
-            })
-            .or_insert((known_on, at));
+        if latest.is_none_or(|(kept, _)| known_on > kept) {
+            latest = Some((known_on, o.removed));
+        }
     }
-    Ok(latest)
-}
-
-/// Whether cut `cut` in world `world` sees observed row `id` (`bank[r1]`) as the observations
-/// do: its latest restatement the cut sees isn't `none`. A row no version states is seen: a
-/// line naming it stands, and the read of that side refuses (`RUN-RECORD`) (refcore's
-/// `obs_row_seen`). L §5.19, §6.1 (tally 2.2, S-5).
-///
-/// # Errors
-///
-/// As [`latest_restatements`].
-pub(crate) fn observed_row_seen(m: &Reality, id: &str, by: (Day, World)) -> Result<bool, Stop> {
-    let Some((name, key)) = id.strip_suffix(']').and_then(|inner| inner.split_once('[')) else {
-        return Ok(true);
-    };
-    let Some(input) = m.inputs.get(name) else {
-        return Ok(true);
-    };
-    if !input.observations.iter().any(|o| o.key == key) {
-        return Ok(true);
-    }
-    let Some(&(_, at)) = latest_restatements(m, input, by)?.get(key) else {
-        return Ok(false);
-    };
-    Ok(!observation_at(input, at)?.removed)
+    Ok(!stated || latest.is_some_and(|(_, removed)| !removed))
 }
 
 /// The observations the cut and the world of `seen` see: per observed input, each row id's
@@ -790,7 +772,28 @@ fn seen_observations(
 ) -> Result<Vec<Obs>, Stop> {
     let mut out = Vec::new();
     for (_, input) in m.inputs.entries() {
-        for (_, (_, at)) in latest_restatements(m, input, (cut, world))? {
+        // each row id's latest restatement, its `known` day and its position; of two known
+        // the same day, the first written
+        let mut latest: BTreeMap<&str, (Day, usize)> = BTreeMap::new();
+        for (at, o) in input.observations.iter().enumerate() {
+            let version = m
+                .versions
+                .get(&o.version)
+                .ok_or_else(|| invariant("an observation of a version load didn't build"))?;
+            let known_on = o.own_known.unwrap_or(version.known);
+            if known_on > cut || !m.scenarios.sees(world, Some(&o.version)) {
+                continue;
+            }
+            latest
+                .entry(o.key.as_str())
+                .and_modify(|kept| {
+                    if known_on > kept.0 {
+                        *kept = (known_on, at);
+                    }
+                })
+                .or_insert((known_on, at));
+        }
+        for (_, (_, at)) in latest {
             let o = observation_at(input, at)?;
             if o.removed {
                 continue;
