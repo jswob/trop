@@ -16,8 +16,8 @@ use super::steps::{Loader, refuse};
 use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
-    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RowInstant,
-    RuleVer, Value, pattern_text,
+    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RuleVer, Value,
+    pattern_text,
 };
 use crate::syntax::{
     BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Known, Row as WrittenRow, RowKey, Rule,
@@ -547,48 +547,20 @@ impl Loader {
 
     /// Each row's stable id, `version:target[keys]`, with its own span or instant where two
     /// rows of a version share a pattern (refcore's `check_rows`, its end); and each input's
-    /// note of a row known in a window or standing `after m`, so a read of an input with
-    /// neither sees every row at once. L §2.5, §4.5, §4.6 Readings.
+    /// note of a row known in a window, so a read of an input with none sees every row at
+    /// once. L §2.5, §4.5, §4.6 Readings.
     pub(super) fn finish_rows(&mut self) {
-        let mut unitless = Vec::new();
-        for (_, input) in self.m.inputs.entries() {
-            if input.reading && input.rows.iter().any(|row| unitless_any(&self.m, row)) {
-                unitless.push(input.id.clone());
-            }
-        }
         let versions = &self.m.versions;
         for (_, input) in self.m.inputs.entries_mut() {
-            input.holds.unitless = unitless.contains(&input.id);
             if !input.observed {
                 set_sids(&input.id, &mut input.rows);
             }
             input.holds.known_window = input.rows.iter().any(|row| known_in_window(versions, row));
-            input.holds.after = input
-                .rows
-                .iter()
-                .any(|row| matches!(row.instant, Some(RowInstant::After(_))));
         }
         for (_, def) in self.m.defs.entries_mut() {
             set_sids(&def.id, &mut def.givens);
         }
     }
-}
-
-/// Whether reading row `row` is at a place of unit `any` and states no unit (L §5.10; tally
-/// 2.1.8 R14).
-fn unitless_any(m: &crate::model::Reality, row: &Row) -> bool {
-    let Some(place) = crate::book::reading_place(row) else {
-        return false;
-    };
-    let any = m
-        .things
-        .get(place)
-        .and_then(|t| m.place_unit(t))
-        .is_some_and(|u| u == "any");
-    any && !matches!(
-        row.value,
-        crate::syntax::Value::Lit(crate::syntax::Lit::Num(_))
-    )
 }
 
 /// Whether row `row` is known in a window: its own `known` window, or, with no `known` of its
@@ -613,7 +585,7 @@ enum ReadAs {
     Plain,
     /// A reading, at an instant.
     Reading,
-    /// A balance reading (`opening`, `stated`), at the start or end of a day, or after a move.
+    /// A balance reading (`opening`, `stated`), at the start or end of a day.
     Balance,
 }
 
@@ -625,7 +597,7 @@ fn row_instant(
     written: Option<&Instant>,
     read_as: ReadAs,
     (file, line): (&str, u32),
-) -> Result<Option<RowInstant>, Stop> {
+) -> Result<Option<Instant>, Stop> {
     let Some(instant) = written else {
         if read_as == ReadAs::Plain {
             return Ok(None);
@@ -648,23 +620,18 @@ fn row_instant(
             line,
         ));
     }
-    match instant {
-        Instant::After(expr) => Ok(Some(RowInstant::After(expr.clone()))),
-        Instant::At(day, edge) => {
-            if read_as == ReadAs::Balance && edge.is_none() {
-                return Err(refuse(
-                    Load::Instant,
-                    format!(
-                        "balance reading {id} at {} needs start, end or after",
-                        day.text()
-                    ),
-                    file,
-                    line,
-                ));
-            }
-            Ok(Some(RowInstant::At(*day, *edge)))
-        }
+    if read_as == ReadAs::Balance && instant.edge.is_none() {
+        return Err(refuse(
+            Load::Instant,
+            format!(
+                "balance reading {id} at {} needs start, end or after",
+                instant.day.text()
+            ),
+            file,
+            line,
+        ));
     }
+    Ok(Some(*instant))
 }
 
 /// The stable ids of one target's rows: `version:target[keys]`, with the row's own `governs`
@@ -690,7 +657,7 @@ fn set_sids(id: &str, rows: &mut [Row]) {
             if let Some(span) = &row.own_span {
                 sid.push(' ');
                 sid.push_str(&span.text());
-            } else if let Some(RowInstant::At(day, edge)) = &row.instant {
+            } else if let Some(Instant { day, edge }) = &row.instant {
                 // its instant, a day's start or end (L §4.6): two readings of one day are two
                 // rows (refcore's id gives the day alone)
                 sid.push(' ');

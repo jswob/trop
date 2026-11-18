@@ -22,12 +22,12 @@ use super::worlds::no_version;
 use crate::base::{Code, Load};
 use crate::model::{
     DefInfo, Domain, Graph, InputInfo, KeyVal, KindInfo, KindSpec, Labels, NameKind, Node,
-    NodeKind, Number, Pat, Reality, Row, RowInstant, Ty, Value, currency,
+    NodeKind, Number, Pat, Reality, Row, Ty, Value, currency,
 };
 use crate::num::{Money, Num};
 use crate::syntax::{
-    AddOp, Call, Edge, Expr, Key, LawDate, Lit, OfRow, PartsClause, Postfix, RuleValue, Sign, Step,
-    Stop, Takes, Value as Written,
+    AddOp, Call, Edge, Expr, Instant, Key, LawDate, Lit, OfRow, PartsClause, Postfix, RuleValue,
+    Sign, Step, Stop, Takes, Value as Written,
 };
 use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
@@ -924,20 +924,21 @@ impl Loader {
     }
 }
 
-/// A row's instant as a message names it: `2026-01-01 start`, `after x` (refcore's
-/// `instant_text`).
+/// A row's instant as a message names it: `2026-01-01 start` (refcore's `instant_text`).
 fn instant_text(row: &Row) -> Result<String, Stop> {
     match &row.instant {
         // a reading at a bare day: its instant is the day, as written (L §2.5, §4.6; R9)
-        Some(RowInstant::At(day, None)) => Ok(day.text()),
-        Some(RowInstant::At(day, Some(edge))) => {
+        Some(Instant { day, edge: None }) => Ok(day.text()),
+        Some(Instant {
+            day,
+            edge: Some(edge),
+        }) => {
             let edge = match edge {
                 Edge::Start => "start",
                 Edge::End => "end",
             };
             Ok(format!("{} {edge}", day.text()))
         }
-        Some(RowInstant::After(e)) => Ok(format!("after {}", text(e))),
         None => Err(invariant("a reading with no instant".to_owned())),
     }
 }
@@ -975,7 +976,8 @@ fn is_negative(value: &Value) -> bool {
 
 /// The parts' sum where it is over the total, every amount of the total's unit; none where
 /// it isn't over, or an amount is of another unit (refcore sums their quantities as they
-/// are, a corner only a place of unit `any` meets).
+/// are, a corner only a place of unit `any` met, which takes no reading since tally 2.2,
+/// S-1).
 fn amounts_over(m: &Reality, total: &Value, parts: &[&Value]) -> Result<Option<Value>, Stop> {
     if let Value::Money(t) = total {
         let (_, minor) = currency(m, t.currency()).map_err(num_stop)?;

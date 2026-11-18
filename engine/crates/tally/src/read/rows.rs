@@ -17,8 +17,7 @@
 
 use crate::base::{Code, Load, Refusal};
 use crate::model::{
-    BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, RowInstant, Span, TimePos,
-    Value, World,
+    BindInfo, Domain, InputInfo, KeyVal, OwnTime, Pat, Reality, Row, Span, TimePos, Value, World,
 };
 use crate::num::Num;
 use crate::syntax::Stop;
@@ -378,14 +377,6 @@ fn unstated_ok(
     Ok(true)
 }
 
-/// The day of a reading's instant `at D`; none for `after m` (L §4.6 Readings).
-fn instant_day(instant: &RowInstant) -> Option<Day> {
-    match instant {
-        RowInstant::At(day, _) => Some(*day),
-        RowInstant::After(_) => None,
-    }
-}
-
 /// Whether a row holds the read's time: a reading at its instant; a state when its span
 /// holds the day, or governs `always` for a read with no law date; for `last(x, d)`, a
 /// reading at an instant on or before d, a state whose span began on or before d, a span
@@ -395,8 +386,8 @@ fn in_time(m: &Reality, row: &Row, test: Test, seen: (Day, World)) -> Result<boo
     if let Some(instant) = &row.instant {
         return Ok(match test {
             Test::At(_) => true,
-            Test::Instant(at) => instant_day(instant) == Some(at),
-            Test::Last(at) => instant_day(instant).is_some_and(|day| day <= at),
+            Test::Instant(at) => instant.day == at,
+            Test::Last(at) => instant.day <= at,
         });
     }
     let Some(span) = row_span(m, row, seen)? else {
@@ -416,12 +407,11 @@ fn in_time(m: &Reality, row: &Row, test: Test, seen: (Day, World)) -> Result<boo
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a reading with no day or a state with no span, which `in_time`
-/// never takes, or a row whose version is missing.
+/// `ENGINE-INVARIANT` for a state with no span, which `in_time` never takes, or a row whose
+/// version is missing.
 pub(super) fn row_start(m: &Reality, row: &Row, seen: (Day, World)) -> Result<Option<Day>, Stop> {
     if let Some(instant) = &row.instant {
-        let day = instant_day(instant).ok_or_else(|| invariant("a reading of last with no day"))?;
-        return Ok(Some(day));
+        return Ok(Some(instant.day));
     }
     let span =
         row_span(m, row, seen)?.ok_or_else(|| invariant("a candidate of last with no span"))?;
@@ -547,8 +537,8 @@ fn own_time(row: &Row) -> OwnTime {
         return OwnTime::Stated(span.start());
     }
     match &row.instant {
-        Some(RowInstant::At(day, _)) => OwnTime::Stated(Some(*day)),
-        Some(RowInstant::After(_)) | None => OwnTime::Version,
+        Some(instant) => OwnTime::Stated(Some(instant.day)),
+        None => OwnTime::Version,
     }
 }
 

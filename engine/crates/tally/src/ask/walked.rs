@@ -25,9 +25,9 @@ use super::explain::{head_text, invariant, plain_text};
 use crate::base::Code;
 use crate::book::{gap_text, instant_text};
 use crate::eval::{Ctx, Engine, Env, Item};
-use crate::model::{GapRole, Reality, RowInstant, Value};
+use crate::model::{GapRole, Reality, Value};
 use crate::num::Num;
-use crate::syntax::{Ask, Bal, Expr, Low, Proj, Stop};
+use crate::syntax::{Ask, Bal, Expr, Instant, Low, Proj, Stop};
 use crate::time::Day;
 use crate::walk::{
     ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, own_unit, qty_value, quantity,
@@ -628,10 +628,12 @@ fn reading_instant(m: &Reality, sid: &str) -> Result<String, Stop> {
         }
     }
     let row = found.ok_or_else(|| invariant("a reading's row load didn't build"))?;
-    match &row.instant {
-        Some(RowInstant::At(day, Some(edge))) => Ok(instant_text(*day, *edge)),
-        Some(RowInstant::After(node)) => Ok(format!("after {}", crate::load::expr_text(node))),
-        Some(RowInstant::At(_, None)) | None => Err(Stop::NotBuilt(
+    match row.instant {
+        Some(Instant {
+            day,
+            edge: Some(edge),
+        }) => Ok(instant_text(day, edge)),
+        Some(Instant { edge: None, .. }) | None => Err(Stop::NotBuilt(
             "explain of a reading at an instant other than a day's start or end",
         )),
     }

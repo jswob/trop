@@ -869,9 +869,7 @@ fn row_meta(q: &mut P<'_>) -> Result<Meta, Stop> {
         } else {
             None
         };
-        Some(Instant::At(day, edge))
-    } else if q.accept("after")? {
-        Some(Instant::After(q.reference()?))
+        Some(Instant { day, edge })
     } else {
         None
     };

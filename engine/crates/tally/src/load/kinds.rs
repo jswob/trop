@@ -86,7 +86,8 @@ impl Loader {
     /// Every declared place kind states its unit and its sign rule, or takes them from the
     /// place kind it is a subkind of; the root `places` states neither, so a subkind of it
     /// whose chain states no unit, or no sign, is refused at its line, whatever the asks
-    /// (refcore's `build_kinds`, P44). L §5.7, §8.3.
+    /// (refcore's `build_kinds`, P44); `any` is the unit of an `outside` kind only (tally
+    /// 2.2, S-1). L §5.7, §8.3.
     fn place_kinds_whole(&self) -> Result<(), Stop> {
         for (file, section) in &self.sections {
             let Section::Kind(decl) = section else {
@@ -95,8 +96,13 @@ impl Loader {
             if self.m.kinds.get(&decl.id).map(|k| k.spec) != Some(KindSpec::Place) {
                 continue;
             }
-            if self.m.kind_unit(&decl.id).is_none() || self.m.kind_sign(&decl.id).is_none() {
+            let unit = self.m.kind_unit(&decl.id);
+            if unit.is_none() || self.m.kind_sign(&decl.id).is_none() {
                 let message = format!("place kind {} has no unit or sign rule", decl.id);
+                return Err(refuse(Load::PlaceKind, message, file, decl.line));
+            }
+            if unit == Some("any") && !self.m.kind_outside(&decl.id) {
+                let message = format!("place kind {} is of unit any and isn't outside", decl.id);
                 return Err(refuse(Load::PlaceKind, message, file, decl.line));
             }
         }

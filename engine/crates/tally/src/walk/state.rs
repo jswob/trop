@@ -25,7 +25,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::agenda::{Act, Reading};
+use super::agenda::Act;
 use super::order::{CycleItem, Run};
 use super::plan::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
@@ -445,12 +445,6 @@ pub struct Walk {
     /// The gaps of the `stated` readings it applied, per (place, day), in the order applied
     /// (L §5.19 `gap(x, d)`, E §6.1).
     pub(crate) gaps: BTreeMap<(String, Day), Vec<GapAt>>,
-    /// The readings `after m` before the cut that wait on decision instance m's run, by its
-    /// id, in the order the cut sees them (L §4.6, E §4.2 step 3).
-    pub(crate) after: BTreeMap<String, Vec<Reading>>,
-    /// Where each reading `after m` applied, by (place, instant, version), for its balance
-    /// line (refcore's `after_keys`; E §6.3 Grouping).
-    pub(crate) after_at: BTreeMap<(String, String, String), At>,
     /// The ends stated `same` as a decision not yet run, by the decision's id: booked at its
     /// point (refcore's `same_waiting`; L §6.1).
     pub(crate) same_waiting: BTreeMap<String, Vec<crate::book::Waiting>>,
@@ -652,8 +646,6 @@ impl Walk {
             less_obs: None,
             checkpoints: Vec::new(),
             gaps: BTreeMap::new(),
-            after: BTreeMap::new(),
-            after_at: BTreeMap::new(),
             same_waiting: BTreeMap::new(),
             pads: Vec::new(),
             upto: None,

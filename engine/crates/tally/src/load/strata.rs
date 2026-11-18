@@ -3,11 +3,10 @@
 //! condition on its key; reading itself both earlier and later), §5.14.1 (running reads
 //! and `reads`, decisions, walk-bound defs, the movements a projection leaves out),
 //! §5.14.2 (the order within a day: the decision graph, written `before` and `after`,
-//! cycles), §4.6 (a reading `after` a plan or an observation), §8.3 (`LOAD-CYCLE`,
-//! `-GUARD`, `-READS`, `-ORDER`), §5.5 (`LOAD-FORKS`), §8.5 (`WARN-UNREAD`).
+//! cycles), §8.3 (`LOAD-CYCLE`, `-GUARD`, `-READS`, `-ORDER`), §5.5 (`LOAD-FORKS`), §8.5
+//! (`WARN-UNREAD`).
 //! Twin: engine/tools/refcore/check.py (`Checker.run` from `check_graph` on, `check_graph`,
-//! `_cycles`); check3.py (`_tname`, `_covers`, `m_check_moves_graph`, `m_strata`, `_meets`,
-//! `m_check_after_readings`).
+//! `_cycles`); check3.py (`_tname`, `_covers`, `m_check_moves_graph`, `m_strata`, `_meets`).
 //! Invariants: every search of the graph is a loop over an explicit stack (R-16); cycles are
 //! searched from sorted nodes over sorted reads, as refcore searches them, so a refusal names
 //! the cycle refcore names; the moves' running reads are checked by id and their marks in
@@ -25,13 +24,12 @@ use super::parts::{arrival_reads, parts_walk_bound};
 use super::pins::{ask_files, check_forks};
 use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
-use super::texts::text;
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
-    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, RowInstant, SamePair,
-    Shift, Target, Ty, pattern_text,
+    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, SamePair, Shift, Target,
+    Ty,
 };
-use crate::syntax::{AskBody, Expr, Field, Lit, Order, Postfix, Section, Stop, Value as Written};
+use crate::syntax::{AskBody, Field, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -53,7 +51,7 @@ impl Loader {
     /// `check_graph` on): the walk; same-key cycles, recurrence reads and their guards, law
     /// dates, the asks' axis combinations, unread items; the running reads, the decisions' reach, walk-bound defs (an
     /// arrival rule's among them), left-out moves, the strata; an arrival rule's reads of its
-    /// own day; readings `after` a plan; a decision's balances of days load sees; periods
+    /// own day; a decision's balances of days load sees; periods
     /// across keys; moves' law dates; what a scenario's expression rows read; schedules that
     /// give no date (issue #72). A scenario's reality keeps only the asks its world evaluates.
     /// E §3.1 steps 5–8; L §4.2, §4.3, §5.11, §5.14.1, §5.14.2, §6.4.
@@ -92,7 +90,6 @@ impl Loader {
         self.m.graph = graph;
         self.strata()?;
         arrival_reads(&self.m, &self.m.graph, &files)?;
-        after_readings(&self.m, &files)?;
         check_seen_days(&self.m, &walked.day_reads, &files)?;
         check_seen_day_limits(&self.m, &files)?;
         check_literal_ranges(&self.m, &files)?;
@@ -685,92 +682,6 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
         }
     }
     None
-}
-
-/// `LOAD-KEY` for a reading `after m[k]` whose literal month, quarter or day k load sees isn't
-/// a key of the index m's binding ranges over: m has no such instance (refcore's
-/// `_after_key`). L §4.6 Readings, §8.3 (tally 2.1.8 R16, #175).
-fn after_keys(
-    m: &Reality,
-    (id, row): (&str, &crate::model::Row),
-    (node, keys): (&Expr, &[crate::syntax::Key]),
-    binds: &[crate::model::BindInfo],
-    (file, line): (&str, u32),
-) -> Result<(), Stop> {
-    for (key, bind) in keys.iter().zip(binds) {
-        let (crate::syntax::Key::Expr(e), Domain::Index(ix)) = (key, &bind.domain) else {
-            continue;
-        };
-        // a period, a day, or a bare key of a list index, a def's name too: a reading's key is
-        // a literal (L §2.5 Keys; B6 of group 3's review, `kz` of `ks`; N-a of its fix's)
-        let period = matches!(
-            e,
-            Expr::Lit(Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_))
-        );
-        if !period && !matches!(e, Expr::Name(_)) {
-            continue;
-        }
-        let Some(lit) = super::types::key_lit_of(e) else {
-            continue;
-        };
-        if super::keys::resolve_key(m, &lit, &bind.domain, file, line).is_err() {
-            let message = format!(
-                "{id}{} after {}: {} is not a key of {ix}",
-                pattern_text(&row.pattern),
-                text(node),
-                text(e)
-            );
-            return Err(refuse(Load::Key, message, file, line));
-        }
-    }
-    Ok(())
-}
-
-/// `LOAD-ORDER` for a reading `after m` of `stated` or `opening`, with m a plan or an
-/// observation: load sees m's class, and the batch has no order (refcore's
-/// `m_check_after_readings`). L §4.6 Readings, §5.14.2, §8.3.
-fn after_readings(m: &Reality, files: &Files) -> Result<(), Stop> {
-    for id in ["stated", "opening"] {
-        let Some(input) = m.inputs.get(id) else {
-            continue;
-        };
-        for row in input.rows.iter().chain(&input.part_rows) {
-            let Some(RowInstant::After(node)) = &row.instant else {
-                continue;
-            };
-            let mut base = node;
-            let mut keys: &[crate::syntax::Key] = &[];
-            if let Expr::Post(inner, posts) = node
-                && let [Postfix::Keys(written)] = posts.as_slice()
-            {
-                base = inner;
-                keys = written;
-            }
-            let Expr::Name(name) = base else {
-                continue;
-            };
-            if let Some(mv) = m.moves.get(name) {
-                let at = (files.of_version(&row.version)?, row.line);
-                after_keys(m, (id, row), (node, keys), &mv.binds, at)?;
-            }
-            let plan = m.moves.get(name).is_some_and(|mv| !mv.decision);
-            let observed = m.inputs.get(name).is_some_and(|named| named.observed);
-            if plan || observed {
-                let shown = text(node);
-                let message = format!(
-                    "{id}{} after {shown}: {shown} is a plan or an observation",
-                    pattern_text(&row.pattern)
-                );
-                return Err(refuse(
-                    Load::Order,
-                    message,
-                    files.of_version(&row.version)?,
-                    row.line,
-                ));
-            }
-        }
-    }
-    Ok(())
 }
 
 /// Whether a node is a def or a band.

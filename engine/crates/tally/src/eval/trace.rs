@@ -26,9 +26,9 @@ use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
 use super::state::{Ctx, Engine, Env, invariant};
 use crate::base::Code;
-use crate::model::{KeyVal, Reality, Row, RowInstant, Value, World};
+use crate::model::{KeyVal, Reality, Row, Value, World};
 use crate::read::{origin, row_known, row_span};
-use crate::syntax::{Edge, Expr, Stop};
+use crate::syntax::{Edge, Expr, Instant, Stop};
 use crate::time::Day;
 
 /// What a node of a trace is.
@@ -1038,23 +1038,16 @@ fn provenance(m: &Reality, row: &Row, seen: (Day, World)) -> Result<String, Stop
     if let Some(locator) = &row.locator {
         bits.push(format!("locator \"{locator}\""));
     }
-    match &row.instant {
-        Some(RowInstant::At(day, edge)) => {
-            let edge = match edge {
-                Some(Edge::Start) => " start",
-                Some(Edge::End) => " end",
-                None => "",
-            };
-            bits.push(format!("at {}{edge}", day.text()));
-        }
-        // L §4.6's instant: refcore prints its node's object here, no stored vector's text
-        Some(RowInstant::After(node)) => {
-            bits.push(format!("after {}", crate::load::expr_text(node)));
-        }
-        None => {
-            let span = row_span(m, row, seen)?.map_or_else(|| "?".to_owned(), |s| s.text());
-            bits.push(format!("governs {span}"));
-        }
+    if let Some(Instant { day, edge }) = &row.instant {
+        let edge = match edge {
+            Some(Edge::Start) => " start",
+            Some(Edge::End) => " end",
+            None => "",
+        };
+        bits.push(format!("at {}{edge}", day.text()));
+    } else {
+        let span = row_span(m, row, seen)?.map_or_else(|| "?".to_owned(), |s| s.text());
+        bits.push(format!("governs {span}"));
     }
     bits.push(format!("known {}", row_known(m, row)?.text()));
     Ok(bits.join(", "))
