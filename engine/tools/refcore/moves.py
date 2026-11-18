@@ -1343,10 +1343,13 @@ def m_obs_links_for(self, tid, ctx):
 def same_lines(m, ctx):
     """[(a, b, loc, owner)] of the movements' same lines seen at ctx's cut in the world it reads (L §4.5 Whatever a
     version states is read as its rows are, tally 2.1.8 R12): a version's line only when known by the cut and in the
-    worlds its file is in (§6.4); the header's always. ctx None: every line (load's own reads)."""
+    worlds its file is in (§6.4); the header's always. A version's line between two observed rows has no day of its
+    own: in the worlds its file is in it holds at every cut that sees both rows (L §5.19; tally 2.2, S-5). ctx None:
+    every line (load's own reads)."""
     sm = getattr(m, 'same_moves', None) or ()
     vs = getattr(m, 'same_versions', None) or [None] * len(sm)
     ows = getattr(m, 'same_owners', None) or [''] * len(sm)
+    obs = getattr(m, 'same_obs', None) or [False] * len(sm)
     if ctx is None:
         return [(a, b, loc, o) for (a, b, loc), o in zip(sm, ows)]
     key = same_key(ctx)
@@ -1355,12 +1358,32 @@ def same_lines(m, ctx):
     if hit is not None:
         return hit
     out = []
-    for (a, b, loc), v, o in zip(sm, vs, ows):
-        if not same_seen(v, ctx):
+    for (a, b, loc), v, o, ob in zip(sm, vs, ows, obs):
+        if v is not None and ob:
+            if not (in_world(v) and obs_row_seen(m, a, ctx) and obs_row_seen(m, b, ctx)):
+                continue
+        elif not same_seen(v, ctx):
             continue
         out.append((a, b, loc, o))
     cache[key] = out
     return out
+
+
+def obs_row_seen(m, sid, ctx):
+    """Whether the cut sees observed row sid as the observations do (m_observations: in its world, known by the cut,
+    the latest restatement not a removal). A row no version states is seen: the line stands, and its side is refused
+    where it is read (RUN-RECORD `same <p> = <q>: <q> doesn't exist`, L §8.4)."""
+    from .loader import row_layer
+    inf = m.inputs.get(sid[:sid.index('[')]) if '[' in sid else None
+    rows = [o for o in getattr(inf, 'obs', ()) if o.sid == sid]
+    if not rows:
+        return True
+    cur = None
+    for o in rows:
+        if in_world(o.version) and visible(o.known, ctx.cut) and \
+                (cur is None or (row_layer(m, o), o.known) > (row_layer(m, cur), cur.known)):
+            cur = o
+    return cur is not None and not cur.removed
 
 
 def id_order(m, sid):

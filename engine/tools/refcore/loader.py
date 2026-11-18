@@ -1672,6 +1672,7 @@ class Loader:
         m.same_moves = []
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
+        m.same_obs = []         # whether each line joins two observed rows, which no cut of its own reads (S-5)
         m.same_rows = {}            # {a row's key: (its input, its keys, its text)} for every row a same line names
         m.same_row_edges = []       # (one row's key, the other's, the version stating the line or None: the header)
         m.same_settle = {}
@@ -1724,6 +1725,7 @@ class Loader:
             m.same_moves.append((a[1], b[1], loc))
             m.same_owners.append(owner_of(v.id) if v is not None else '')
             m.same_versions.append(v)
+            m.same_obs.append(a[2] == b[2] == 'row')
         # a row of the joint model on a member's item states the value of two rows stated same ("the joint model
         # settles it with a version row of its own"); on any other member's item it would change an imported one
         if getattr(m, 'joint', None) is not None:
