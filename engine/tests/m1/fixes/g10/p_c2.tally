@@ -62,10 +62,10 @@ move p2: pays
   leg cash from world to konto amount b
 
 move p3: transfers
-  on next(pays, e2).day
-  leg cash from world to savings amount next(pays, e2).cash.amount
+  on (first(m in pays over e2 ..) ties by m.day).day
+  leg cash from world to savings amount (first(m in pays over e2 ..) ties by m.day).cash.amount
 
-ask q: next(pays, e2).day, next(pays, e2).cash.amount, next(pays, e4).day
+ask q: (first(m in pays over e2 ..) ties by m.day).day, (first(m in pays over e2 ..) ties by m.day).cash.amount, (first(m in pays over e4 ..) ties by m.day).day
 
 ask q3: bal(savings, 2026-12-31), flows(p3, 2026-01-01..2026-12-31)
 

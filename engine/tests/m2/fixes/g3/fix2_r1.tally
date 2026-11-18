@@ -10,7 +10,6 @@ unit PLN: currency minor 0.01
 index kk = [a, b]
 input d[k in kk]: date
 
-ask q: d[k] < 2026-03-02 for k in kk windows each
 ask q0: d[k] < 2026-03-02 for k in kk
 
 version v

@@ -68,7 +68,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -104,11 +104,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial

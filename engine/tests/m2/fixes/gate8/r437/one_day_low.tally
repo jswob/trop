@@ -27,7 +27,7 @@ move pay[m in months]: transfers
 move sw[m in months]: transfers
   on day_of(m, de)
   reads konto
-  leg cash from konto to sav amount round(low(konto, dm .. dm) from da * k, minor(PLN), down)
+  leg cash from konto to sav amount round(min(bal(konto, d) from da for d in dm .. dm step 1 day) * k, minor(PLN), down)
 
 version v
   cite s

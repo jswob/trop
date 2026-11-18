@@ -39,10 +39,24 @@ version v
   opening[old] = 0.00 PLN at 2026-01-01 start "s"
 
 ask b_box: bal(box, 2026-03-31)
-ask b_box_each: bal(box, 2026-03-31) windows each
+ask b_box_each_s1: bal(box, 2026-03-31) with wd = 2026-03-05
+
+ask b_box_each_s2: bal(box, 2026-03-31) with wd = 2026-03-08
 ask b_jar: bal(jar, 2026-03-31)
-ask b_jar_each: bal(jar, 2026-03-31) windows each
+ask b_jar_each_s1: bal(jar, 2026-03-31) with wo = 2026-03-05, wd = 2026-03-05
+
+ask b_jar_each_s2: bal(jar, 2026-03-31) with wo = 2026-03-05, wd = 2026-03-07
+
+ask b_jar_each_s3: bal(jar, 2026-03-31) with wo = 2026-03-05, wd = 2026-03-08
+
+ask b_jar_each_s4: bal(jar, 2026-03-31) with wo = 2026-03-07, wd = 2026-03-07
+
+ask b_jar_each_s5: bal(jar, 2026-03-31) with wo = 2026-03-08, wd = 2026-03-07
+
+ask b_jar_each_s6: bal(jar, 2026-03-31) with wo = 2026-03-08, wd = 2026-03-08
 ask b_old: bal(old, 2026-03-06)
-ask b_old_each: bal(old, 2026-03-06) windows each
+ask b_old_each: bal(old, 2026-03-06)
 ask f_put: flows(put, 2026-03)
-ask f_put_each: flows(put, 2026-03) windows each
+ask f_put_each_s1: flows(put, 2026-03) with wd = 2026-03-05
+
+ask f_put_each_s2: flows(put, 2026-03) with wd = 2026-03-08

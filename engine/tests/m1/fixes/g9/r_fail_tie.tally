@@ -43,9 +43,9 @@ move pick[k in month]: transfers
   ties by prio
   leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
 
-ask f_long_short: low(konto, 2026-06-01 .. 2026-12-31) from 2026-06-01, bal(konto, 2026-07-31) from 2026-06-01
+ask f_long_short: min(bal(konto, d) from 2026-06-01 for d in 2026-06-01 .. 2026-12-31 step 1 day), bal(konto, 2026-07-31) from 2026-06-01
 
-ask f_short_long: bal(konto, 2026-07-31) from 2026-06-01, low(konto, 2026-06-01 .. 2026-12-31) from 2026-06-01
+ask f_short_long: bal(konto, 2026-07-31) from 2026-06-01, min(bal(konto, d) from 2026-06-01 for d in 2026-06-01 .. 2026-12-31 step 1 day)
 
 ask f_short: bal(konto, 2026-07-31) from 2026-06-01
 

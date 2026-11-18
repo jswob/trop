@@ -55,7 +55,7 @@ Session 4.5b, 2026-10-29. Paper only: no `refcore` run. The one run made: `keys_
 | run end | 2028-12-31 | scale (B-07 ends 2025-04-30) | 2025-12-31 (the writer's span; 9 of 9 figures judged there) | (i) |
 | search steps | 4 001 (`gross_lo`/`gross_hi` 10 340.00/10 380.00, the key's ±20.00) | scale | ±0.50 (101 steps) around the key's answer: it keeps the step, the stopping rule and `b07_unique`'s count | (i) |
 | cuts | 2025-04-30, 2025-02-27 | capability (two knowledge dates are the question) | – | – |
-| `windows each` (both Wrzos asks) | every window to the run end | scale, through the run end | follows the run end | (i) |
+| the Wrzos asks' windows (plain lines since tally 2.2, S-4) | every window to the run end | scale, through the run end | follows the run end | (i) |
 
 ## K5 · `I:B:B-12`, B's paths (`L:5`, `L:14`)
 
@@ -84,11 +84,12 @@ Even 1 path at full span is over budget (5 min CPython, about 75 s PyPy, estimat
 | B inside E1 | B's whole text (a walk about 3 min on CPython) | scale if a stub states B's keyed figures as readings. E1's own rules (PTY-05's joins) all stay, and B's rules are B's own checks | the `scratch/mc-e1/cdB/` stub, B stubbed (the walk cells judged there) | (i): `keys_e1.py` builds on B's keys (it reads B-11's shape), so the stub's figures are the keys' |
 | B's run end | 2028-12-31 | scale (E1 ends ≤ 2026-01-15) | 2026-01-31 | (i) |
 
-## K8 · `I:A:A-05`, `windows each` for Ania (`L:9`)
+## K8 · `I:A:A-05`, Ania's plain line and its four pinned days (`L:9`)
 
 | Knob | Full | Kind | Capability setting | Source |
 |---|---|---|---|---|
 | walk end | A's full text | scale (A-05 ends 2024-12-31, known 2025-04-30) | the walk stops at 2025-12 (22 s on snap8, every figure matching) | (i) |
+| pinned days | `held_from[kbank[k20230912_04]]` on 2019-03-01, 06, 07 and 31 (tally 2.2, S-4: `windows each` is cut) | capability (the days either side of the split are the question) | – | – |
 
 ## K9 · `I:A:A-12` under O:A-3's `one_of` forecast (`L:15`)
 

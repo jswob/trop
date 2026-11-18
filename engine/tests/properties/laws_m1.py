@@ -218,7 +218,7 @@ def law_low_min(v):
     if bad:
         return False, bad
     lo, mn = values(first(v['one'][0], 'lo'))[0], values(first(v['one'][0], 'mn'))[0]
-    return lo == mn and cents(lo) is not None, 'low %s, min over days %s' % (lo, mn)
+    return lo == mn and cents(lo) is not None, 'min %s, the same with a where every day meets %s' % (lo, mn)
 
 
 LAWS = {'determinism': law_determinism, 'conservation': law_conservation, 'networth': law_networth,

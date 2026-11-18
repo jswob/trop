@@ -21,7 +21,11 @@ So each kind of line each model's explanations print stays once per form, and th
 copies go. Every expected byte is still refcore's: m1/vectors.py stores refcore's run of the restated asks, and an ask
 alone prints what it printed in its run (the ask rule, TESTING.md, known-faults.md).
 
-    python3 -I -B engine/tests/m1/restate_g12.py            -> writes the asks column of the 63 in m1/vectors.tsv
+tally 2.2 (S-9, #211) cut `low(…)` and `explain low(…)`: the 16 of the 63 that were `explain low`'s print families
+(`pp_low_*`, `pp_lowproj_*`, `pp4_lowproj_*`, `prr_low_*`, `r_pb_low-*`) were dropped with their texts, so RESTATED
+holds the other 47.
+
+    python3 -I -B engine/tests/m1/restate_g12.py            -> writes the asks column of RESTATED's rows in vectors.tsv
     python3 -I -B engine/tests/m1/restate_g12.py --check    -> exit 1 if a row's asks aren't what the rule picks
     python3 -I -B engine/tests/m1/restate_g12.py --show     -> per vector: asks before and kept, lines kept
 
@@ -46,20 +50,16 @@ _spec.loader.exec_module(KV)
 LIST = os.path.join(HERE, 'vectors.tsv')
 
 RESTATED = """
-prr_bal_g8_proj_proj r_pb_bal-sign_sign prr_bal_g9_sign_sign pr_bal_g9_sign_sign pb_g9_sign_sign
-r_pb_projunc-proj_proj prr_projunc_g8_proj_proj r_pb_proj-proj_proj prr_proj_g8_proj_proj pp_lowproj_g9_sign_sign
-pp4_lowproj_g9_sign_sign pb_g5_agenda_agenda pb2_g5_agenda_agenda prr_proj_g9_sign_sign pr_proj_g9_sign_sign
-pp_proj_g9_sign_sign pp4_proj_g9_sign_sign prr_projunc_g9_sign_sign r_pb_low-proj_proj prr_low_g8_proj_proj
-pp_lowproj_g5_agenda_agenda prr_low_g9_sign_sign pp_low_g9_sign_sign pp_proj_g5_agenda_agenda pb_g10_observe_observe
-pp_lowproj_g10_ledger_ledger prr_projunc_g10_ledger_ledger pb_g12_members_members pp_lowproj_g10_observe_observe
-pp4_lowproj_g10_observe_observe pr_proj_g10_ledger_ledger prr_proj_g10_ledger_ledger pp_proj_g10_ledger_ledger
-r_pb_bal-ledger_ledger prr_bal_g10_ledger_ledger pr_bal_g10_ledger_ledger pb_g10_ledger_ledger pb2_g10_ledger_ledger
-pp_proj_g10_observe_observe pp4_proj_g10_observe_observe pp_low_g5_agenda_agenda pp_low_g10_observe_observe
-prr_low_g10_ledger_ledger pp_low_g10_ledger_ledger r_agent_ord_order prr_bal_g5_order_order r_pb_bal-order_order
+prr_bal_g8_proj_proj r_pb_bal-sign_sign prr_bal_g9_sign_sign pr_bal_g9_sign_sign pb_g9_sign_sign r_pb_projunc-proj_proj
+prr_projunc_g8_proj_proj r_pb_proj-proj_proj prr_proj_g8_proj_proj pb_g5_agenda_agenda pb2_g5_agenda_agenda
+prr_proj_g9_sign_sign pr_proj_g9_sign_sign pp_proj_g9_sign_sign pp4_proj_g9_sign_sign prr_projunc_g9_sign_sign
+pp_proj_g5_agenda_agenda pb_g10_observe_observe prr_projunc_g10_ledger_ledger pb_g12_members_members
+pr_proj_g10_ledger_ledger prr_proj_g10_ledger_ledger pp_proj_g10_ledger_ledger r_pb_bal-ledger_ledger
+prr_bal_g10_ledger_ledger pr_bal_g10_ledger_ledger pb_g10_ledger_ledger pb2_g10_ledger_ledger
+pp_proj_g10_observe_observe pp4_proj_g10_observe_observe r_agent_ord_order prr_bal_g5_order_order r_pb_bal-order_order
 prr_proj_g5_order_order r_pb_proj-order_order prr_projunc_g5_order_order r_pb_projunc-order_order
-prr_low_g5_order_order r_pb_low-order_order pb_g7_flows_touched_flows_touched pm8_g12_members_members
-pm4_g12_members_members pm2_g12_members_members pm8_g5_agenda_agenda pm4_g5_agenda_agenda pm2_g5_agenda_agenda
-pm8_g9_sign_sign pm4_g9_sign_sign pm2_g9_sign_sign
+pb_g7_flows_touched_flows_touched pm8_g12_members_members pm4_g12_members_members pm2_g12_members_members
+pm8_g5_agenda_agenda pm4_g5_agenda_agenda pm2_g5_agenda_agenda pm8_g9_sign_sign pm4_g9_sign_sign pm2_g9_sign_sign
 """.split()
 
 EXPLAINS = ('explain', 'inputs-of', 'readers-of')
@@ -185,8 +185,8 @@ def main(argv):
     fields, rs = rows()
     mine = {'fixes/g12/' + n for n in RESTATED}
     chosen = [r for r in rs if r['id'] in mine]
-    if len(chosen) != len(RESTATED) or len(set(RESTATED)) != 63:
-        sys.exit('restate_g12: %d of the 63 found in vectors.tsv' % len(chosen))
+    if len(chosen) != len(RESTATED) or len(set(RESTATED)) != 47:
+        sys.exit('restate_g12: %d of the %d found in vectors.tsv' % (len(chosen), len(RESTATED)))
     whole = [dict(r, asks='') for r in chosen]
     pairs = KV.checks_of(whole)
     res = KV.refcore_runs(pairs)
@@ -200,15 +200,16 @@ def main(argv):
     if '--show' in argv:
         for vid, na, nk, before, after in report:
             print('%-48s asks %4d -> %3d   lines %5d -> %4d' % (vid, na, nk, before, after))
-        print('the 63: %d lines of output in their whole runs, about %d kept' % (
-            sum(r[3] for r in report), sum(r[4] for r in report)))
+        print('the %d: %d lines of output in their whole runs, about %d kept' % (
+            len(RESTATED), sum(r[3] for r in report), sum(r[4] for r in report)))
         return 0
     if '--check' in argv:
         bad = [r['id'] for r in chosen if r['asks'] != want[r['id']]]
         if bad:
             print('restate_g12: %d rows of vectors.tsv aren\'t what the rule picks: %s' % (len(bad), ' '.join(bad[:5])))
             return 1
-        print('restate_g12: the 63 rows name the asks the rule picks (%d asks)' % sum(r[2] for r in report))
+        print('restate_g12: the %d rows name the asks the rule picks (%d asks)' % (
+            len(RESTATED), sum(r[2] for r in report)))
         return 0
     for r in rs:
         if r['id'] in want:
@@ -217,7 +218,8 @@ def main(argv):
         w = csv.DictWriter(f, fieldnames=fields, delimiter='\t', quoting=csv.QUOTE_NONE, lineterminator='\n')
         w.writeheader()
         w.writerows(rs)
-    print('restate_g12: the 63 rows of vectors.tsv now name %d asks; run m1/vectors.py' % sum(r[2] for r in report))
+    print('restate_g12: the %d rows of vectors.tsv now name %d asks; run m1/vectors.py' % (
+        len(RESTATED), sum(r[2] for r in report)))
     return 0
 
 

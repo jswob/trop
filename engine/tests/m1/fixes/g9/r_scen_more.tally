@@ -23,6 +23,6 @@ version more_rent
 
 ask s_early: bal(konto, 2026-09-30) from 2026-02-01 in more
 
-ask s_late: low(konto, 2026-07-01 .. 2026-12-31) from 2026-07-01 in more
+ask s_late: min(bal(konto, d) from 2026-07-01 for d in 2026-07-01 .. 2026-12-31 step 1 day) in more
 
 ask s_mixed: bal(konto, 2026-09-30) from 2026-06-01 in more

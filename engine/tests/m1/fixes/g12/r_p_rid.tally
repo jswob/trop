@@ -78,7 +78,9 @@ ask e6: explain bal(konto, 2026-04-30)
 
 ask e7: explain bal(konto, 2026-05-31) from 2026-04-01 with uncertain
 
-ask e8: explain low(konto, 2026-03-01 .. 2026-05-31) from 2026-03-20
+ask e8_day: argmin(bal(konto, d) from 2026-03-20 for d in 2026-03-01 .. 2026-05-31 step 1 day) ties by d
+
+ask e8: explain bal(konto, 2026-03-01) from 2026-03-20
 
 ask e9: explain bal(jar, 2026-03-10)
 

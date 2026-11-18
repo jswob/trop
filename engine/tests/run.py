@@ -710,13 +710,6 @@ def self_test(checks):
         for script, flag in (('m2/hindcast/gen.py', ['--check']), ('m2/hindcast/judge.py', [])):
             p = subprocess.run([sys.executable, '-I', '-B', T + script] + flag, capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
-        # 8s. the `windows each` twins (tally 2.1.8, P34, P36): each sub-window's answer line is its plain line pinned
-        # to each of its days, and the plain line is the hole exactly where two days' answers differ (answer lines
-        # only, not registers); tools/twins.py's own self-test, then map/twins.tsv against refcore (its cache)
-        for flag in ('--self-test', '--check'):
-            p = subprocess.run([sys.executable, '-I', '-B', T + 'tools/twins.py', flag], capture_output=True, text=True)
-            say(p.returncode == 0, 'twins.py %s: ' % flag + (p.stdout.strip().split('\n')[-1] if p.stdout.strip()
-                                                              else p.stderr[-200:]))
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

@@ -56,11 +56,15 @@ def gap_ok[m in month]: bool = bal(konto, end_of(m)) > mark
 
 def n_pays[m in month]: money PLN = sum(p.cash.amount for p in pays over start_of(m) .. end_of(m))
 
-ask l0: low(konto, 2026-04-01 .. 2026-05-31) with uncertain, low(konto, 2026-04-01 .. 2026-05-31)
+ask l0: min(bal(konto, d) with uncertain for d in 2026-04-01 .. 2026-05-31 step 1 day), min(bal(konto, d) for d in 2026-04-01 .. 2026-05-31 step 1 day)
 
-ask l1: explain low(konto, 2026-04-01 .. 2026-05-31) with uncertain
+ask l1_day: argmin(bal(konto, d) with uncertain for d in 2026-04-01 .. 2026-05-31 step 1 day) ties by d
 
-ask l2: explain low(konto, 2026-04-01 .. 2026-05-31)
+ask l1: explain bal(konto, 2026-05-05) with uncertain
+
+ask l2_day: argmin(bal(konto, d) for d in 2026-04-01 .. 2026-05-31 step 1 day) ties by d
+
+ask l2: explain bal(konto, 2026-05-05)
 
 ask l3: explain bal(konto, 2026-04-30) from 2026-03-20 with uncertain
 
@@ -78,7 +82,9 @@ ask e6: explain bal(konto, 2026-04-30)
 
 ask e7: explain bal(konto, 2026-05-31) from 2026-04-01 with uncertain
 
-ask e8: explain low(konto, 2026-03-01 .. 2026-05-31) from 2026-03-20
+ask e8_day: argmin(bal(konto, d) from 2026-03-20 for d in 2026-03-01 .. 2026-05-31 step 1 day) ties by d
+
+ask e8: explain bal(konto, 2026-03-01) from 2026-03-20
 
 ask e9: explain bal(jar, 2026-03-10)
 

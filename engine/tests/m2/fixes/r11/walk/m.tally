@@ -73,8 +73,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)

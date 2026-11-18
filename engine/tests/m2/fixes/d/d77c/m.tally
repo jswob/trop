@@ -31,8 +31,14 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
 
 ask s1: bal(konto, 2026-01-31)
-ask s2: bal(konto, 2026-01-31) windows each
+ask s2: bal(konto, 2026-01-31)
 ask s3: flows(early, 2026-01)
 ask s4: count(t in transfers over 2025-12-01 .. 2026-01-31)
 ask e1: bal(konto, 2026-06-30)
-ask e2: bal(konto, 2026-06-30) windows each
+ask e2_s1: bal(konto, 2026-06-30) with ws = 2025-12-30, we = 2026-06-28
+
+ask e2_s2: bal(konto, 2026-06-30) with ws = 2025-12-30, we = 2026-07-01
+
+ask e2_s3: bal(konto, 2026-06-30) with ws = 2026-01-01, we = 2026-06-28
+
+ask e2_s4: bal(konto, 2026-06-30) with ws = 2026-01-01, we = 2026-07-01

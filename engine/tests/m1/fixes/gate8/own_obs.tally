@@ -33,7 +33,7 @@ move pay[m in month]: transfers
 
 ask b1: bal(konto, 2026-01-31)
 
-ask l1: low(konto, 2026-01-01 .. 2026-01-31)
+ask l1: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day)
 
 ask x1: explain bal(konto, 2026-01-31)
 

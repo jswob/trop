@@ -33,11 +33,11 @@ move rent_pay[m in month]: transfers
 
 ask e_bal: bal(konto, 2027-03-31) from 2026-06-01
 
-ask e_low: low(konto, 2026-06-01 .. 2027-03-31) from 2026-06-01
+ask e_low: min(bal(konto, d) from 2026-06-01 for d in 2026-06-01 .. 2027-03-31 step 1 day)
 
 ask e_t_at_k: bal(konto, 2026-09-30) from 2026-04-15
 
-ask e_t_at_s: low(konto, 2026-01-01 .. 2026-03-31) from 2026-01-01
+ask e_t_at_s: min(bal(konto, d) from 2026-01-01 for d in 2026-01-01 .. 2026-03-31 step 1 day)
 
 ask e_t_end: bal(konto, 2026-12-31) from 2026-12-31
 

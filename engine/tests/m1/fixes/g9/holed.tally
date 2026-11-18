@@ -34,9 +34,9 @@ move odd: transfers
   on odd_day
   leg cash from konto to world amount rent
 
-ask h_low: low(konto, 2026-05-20 .. 2026-08-31) from 2026-05-20
+ask h_low: min(bal(konto, d) from 2026-05-20 for d in 2026-05-20 .. 2026-08-31 step 1 day)
 
-ask h_low_before: low(konto, 2026-05-20 .. 2026-07-05) from 2026-05-20
+ask h_low_before: min(bal(konto, d) from 2026-05-20 for d in 2026-05-20 .. 2026-07-05 step 1 day)
 
 ask h_bal: bal(konto, 2026-07-31) from 2026-05-20
 

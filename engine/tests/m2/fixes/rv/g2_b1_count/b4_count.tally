@@ -30,6 +30,6 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
 
 ask s4: count(t in transfers over 2025-12-01 .. 2026-01-31)
-ask s4w: count(t in transfers over 2025-12-01 .. 2026-01-31) windows each
+ask s4w: count(t in transfers over 2025-12-01 .. 2026-01-31)
 ask s4a: count(t in transfers over 2025-12-01 .. 2026-01-31) with ws = 2025-12-30
 ask s4b: count(t in transfers over 2025-12-01 .. 2026-01-31) with ws = 2026-01-02

@@ -40,13 +40,13 @@ move fee: transfers
   at fee_day
   leg cash from konto to world amount fee_amt
 
-ask r_both: low(konto, 2026-05-10 .. 2026-06-20) from 2026-05-01
+ask r_both: min(bal(konto, d) from 2026-05-01 for d in 2026-05-10 .. 2026-06-20 step 1 day)
 
-ask r_first: low(konto, 2026-05-10 .. 2026-06-19) from 2026-05-01
+ask r_first: min(bal(konto, d) from 2026-05-01 for d in 2026-05-10 .. 2026-06-19 step 1 day)
 
-ask r_last: low(konto, 2026-05-11 .. 2026-06-20) from 2026-05-01
+ask r_last: min(bal(konto, d) from 2026-05-01 for d in 2026-05-11 .. 2026-06-20 step 1 day)
 
-ask r_none: low(konto, 2026-05-11 .. 2026-06-19) from 2026-05-01
+ask r_none: min(bal(konto, d) from 2026-05-01 for d in 2026-05-11 .. 2026-06-19 step 1 day)
 
 ask r_bal_last: bal(konto, 2026-06-20) from 2026-05-01
 
@@ -56,11 +56,11 @@ ask r_bal_first: bal(konto, 2026-05-10) from 2026-05-01
 
 ask r_bal_early: bal(konto, 2026-05-09) from 2026-05-01
 
-ask r_t_on: low(konto, 2026-05-10 .. 2026-06-20) from 2026-05-10
+ask r_t_on: min(bal(konto, d) from 2026-05-10 for d in 2026-05-10 .. 2026-06-20 step 1 day)
 
-ask r_t_after: low(konto, 2026-05-11 .. 2026-06-20) from 2026-05-11
+ask r_t_after: min(bal(konto, d) from 2026-05-11 for d in 2026-05-11 .. 2026-06-20 step 1 day)
 
-ask r_b_before: low(konto, 2026-05-10 .. 2026-06-19) from 2026-05-10
+ask r_b_before: min(bal(konto, d) from 2026-05-10 for d in 2026-05-10 .. 2026-06-19 step 1 day)
 
 ask r_bt_on: bal(konto, 2026-06-20) from 2026-05-10
 

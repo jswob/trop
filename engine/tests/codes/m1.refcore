@@ -2965,7 +2965,7 @@ version card_2026
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
 ,,1:1,74:refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
-,16:decide/low-empty,9:RUN-EMPTY,6:decide,29:run base.tally --ask q_decide,1388:10:base.tally,1368:model decide
+,16:decide/low-empty,9:RUN-EMPTY,6:decide,29:run base.tally --ask q_decide,1415:10:base.tally,1395:model decide
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -3005,7 +3005,7 @@ move spend: transfers
   after save
   leg cash from konto to world amount min(spend_cap, bal(konto))
 
-ask q_decide: low(konto, horizon .. 2026-03-01)
+ask q_decide: min(bal(konto, d) for d in horizon .. 2026-03-01 step 1 day)
 
 version card_2026
   cite card
@@ -3019,9 +3019,9 @@ version card_2026
   spend_cap = 50.00 PLN "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,63:q_decide: refused: RUN-EMPTY low over no keys
+,,1:0,63:q_decide: refused: RUN-EMPTY min over no keys
   cut 2026-03-01
-,21:decide/low-empty-from,9:RUN-EMPTY,6:decide,29:run base.tally --ask q_decide,1404:10:base.tally,1384:model decide
+,21:decide/low-empty-from,9:RUN-EMPTY,6:decide,29:run base.tally --ask q_decide,1431:10:base.tally,1411:model decide
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -3061,7 +3061,7 @@ move spend: transfers
   after save
   leg cash from konto to world amount min(spend_cap, bal(konto))
 
-ask q_decide: low(konto, horizon .. 2026-03-01) from 2026-03-01
+ask q_decide: min(bal(konto, d) from 2026-03-01 for d in horizon .. 2026-03-01 step 1 day)
 
 version card_2026
   cite card
@@ -3075,7 +3075,7 @@ version card_2026
   spend_cap = 50.00 PLN "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,63:q_decide: refused: RUN-EMPTY low over no keys
+,,1:0,63:q_decide: refused: RUN-EMPTY min over no keys
   cut 2026-03-01
 ,15:decide/post-run,12:HOLE-POSTRUN,6:decide,29:run base.tally --ask q_decide,1400:10:base.tally,1380:model decide
   tally 2

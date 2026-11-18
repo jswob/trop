@@ -58,14 +58,6 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
 
 ask t1: bal(konto, 2026-03-06)
-ask t2: bal(konto, 2026-03-06) windows each
 ask x1: (w1 < 2026-03-06) or (w2 > 2026-03-07)
-ask x2: (w1 < 2026-03-06) or (w2 > 2026-03-07) windows each
 ask n1: b[a] > 2026-04-01
-ask n2: b[a] > 2026-04-01 windows each
-ask sv: solve bal(konto, 2026-03-06) + y == goal for y in [0 PLN, 1000 PLN] to 0.01 PLN windows each
-ask io: inputs-of early[k] for k in ks windows each
-ask sb: sum(t.cash.amount for t in transfers over 2026-03-05 .. 2026-03-07) windows each
-ask ex: explain bal(konto, 2026-03-06) windows each
-ask exp: explain bal(konto, 2026-03-31) with w1 = 2026-03-05 windows each
 ask fk: vv[k] for k in ks
