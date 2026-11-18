@@ -803,6 +803,18 @@ version card_2026
                 "def worth: num PLN = value(st, day) in PLN by last(flowed)",
                 "LOAD-UNIT value by flowed: a price is a num CUR/u keyed by unit, or an expression of that type with its keys (a.tally:57)",
             ),
+            // tally 2.2, S-1: `any` is the unit of an outside kind only, and a place of unit
+            // `any` takes no balance reading (refcore's words at spec/2.2 300cda08)
+            (
+                "kind homes: place PLN min 0",
+                "kind homes: place PLN min 0\n\nkind wallets: place any signed",
+                "LOAD-PLACEKIND place kind wallets is of unit any and isn't outside (a.tally:19)",
+            ),
+            (
+                "  known 2026-01-01",
+                "  known 2026-01-01\n  anchor world\n  stated[world] = 5.00 PLN at 2026-01-31 end \"the card\"",
+                "LOAD-UNIT stated[world]: a place of unit any takes no balance reading (a.tally:68)",
+            ),
         ];
         for (old, new, expected) in cases {
             assert!(MOVES.contains(old), "{old} is in the base");

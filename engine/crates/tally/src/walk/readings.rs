@@ -71,9 +71,8 @@ pub enum Broke {
 }
 
 impl Engine {
-    /// A reading at its point, once per unit it stands for: an `opening` anchors, a `stated`
-    /// one pads or anchors by its version's gap role (refcore's `apply_reading`). E §4.2 steps
-    /// 0 and 4, E §6.1, L §5.19.
+    /// A reading at its point: an `opening` anchors, a `stated` one pads or anchors by its
+    /// version's gap role (refcore's `apply_reading`). E §4.2 steps 0 and 4, E §6.1, L §5.19.
     pub(super) fn apply_reading(
         &mut self,
         m: &Reality,
@@ -81,15 +80,11 @@ impl Engine {
         at: At,
         reading: &Reading,
     ) -> Result<(), Stop> {
-        // a hole that states no unit stands for each unit its place holds here (pick P22, #173)
-        for each in crate::book::per_unit(self.walk(id)?, reading, at) {
-            if each.input == "opening" {
-                self.walk_mut(id)?.apply_opening(m, at, &each)?;
-            } else {
-                self.apply_stated(m, id, at, &each)?;
-            }
+        if reading.input == "opening" {
+            self.walk_mut(id)?.apply_opening(m, at, reading)
+        } else {
+            self.apply_stated(m, id, at, reading)
         }
-        Ok(())
     }
 
     /// The end of the last day of decision `mid`'s window, at point `at`: m has fallen, so the

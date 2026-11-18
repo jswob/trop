@@ -280,8 +280,8 @@ pub mod book {
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{Pad, Seen, per_unit, reading_rank};
-    pub(crate) use reading::{gap_text, instant_text, reading_place};
+    pub use reading::{Pad, Seen, reading_rank};
+    pub(crate) use reading::{gap_text, instant_text};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
     pub(crate) use settle::settlement_move;
@@ -381,7 +381,7 @@ pub mod read {
     pub use bands::{BandAt, band_no_row, band_no_table, band_origin, band_rows, table_held};
     pub use gap::{
         Asked, Found, Question, last_began, member_span, no_candidate, origin, read_input,
-        read_last, two_units,
+        read_last,
     };
     pub use rows::{
         Clocks, KnownInside, Point, Test, candidates, choose, held, known_inside, lawless,

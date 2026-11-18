@@ -6,8 +6,6 @@
 //! Invariants: a row's pattern has one position per key bind of its target; a rule's
 //! versions are kept in the order versions state them.
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use super::graph::Target;
 use super::key::{KeyVal, Pat, Span};
 use super::ty::Ty;
@@ -127,22 +125,15 @@ pub struct InputInfo {
     pub line: Option<u32>,
     /// What its rows hold that a read must look for, set once they are loaded.
     pub holds: RowsHold,
-    /// For a read's view of a reading with a row that states no unit: the units the walk
-    /// applied such a row in, by its instant's text (L §5.10; tally 2.1.8 R14; refcore's
-    /// `units_at_reading`); empty otherwise.
-    pub held: BTreeMap<String, BTreeSet<String>>,
 }
 
-/// What an input's rows hold that a read must look for: a read of an input with neither sees
-/// every row as stated (L §4.5, §4.6 Readings).
+/// What an input's rows hold that a read must look for: a read of an input with none sees
+/// every row as stated (L §4.5).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct RowsHold {
     /// A row known in a window, its own or its version's: only then can a cut fall inside a
     /// row's `known` (L §4.5).
     pub known_window: bool,
-    /// A reading row at a place of unit `any` that states no unit (a hole, `none`): it stands
-    /// for every unit the place holds at its instant (L §5.10; tally 2.1.8 R14).
-    pub unitless: bool,
 }
 
 impl InputInfo {
@@ -166,7 +157,6 @@ impl InputInfo {
             part_rows: Vec::new(),
             line,
             holds: RowsHold::default(),
-            held: BTreeMap::new(),
         }
     }
 }

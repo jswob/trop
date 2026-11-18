@@ -976,7 +976,8 @@ fn is_negative(value: &Value) -> bool {
 
 /// The parts' sum where it is over the total, every amount of the total's unit; none where
 /// it isn't over, or an amount is of another unit (refcore sums their quantities as they
-/// are, a corner only a place of unit `any` meets).
+/// are, a corner only a place of unit `any` met, which takes no reading since tally 2.2,
+/// S-1).
 fn amounts_over(m: &Reality, total: &Value, parts: &[&Value]) -> Result<Option<Value>, Stop> {
     if let Value::Money(t) = total {
         let (_, minor) = currency(m, t.currency()).map_err(num_stop)?;

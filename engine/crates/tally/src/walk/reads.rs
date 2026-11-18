@@ -15,8 +15,6 @@
 //! a refused `with uncertain` keeps the register it met before the refusal, as refcore
 //! registers while it counts.
 
-use std::collections::BTreeSet;
-
 use super::plan::{Amount, Dated, HoleSrc, Inst, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
@@ -769,8 +767,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusal the booked balance at the reading is; `RUN-DOMAIN` where two units'
-    /// readings stand at the instant (L §5.10); the refusals of the walk.
+    /// The refusal the booked balance at the reading is; the refusals of the walk.
     pub(crate) fn gap(
         &mut self,
         m: &Reality,
@@ -808,17 +805,6 @@ impl Engine {
             let text = format!("stated[{place}] has no reading at {}", d.text());
             return Ok(Value::Hole(Hole::asked(&text, &format!("stated[{place}]"))));
         };
-        // two units' readings at the instant gap reads: refused (L §5.10; tally 2.1.8 R14)
-        let mut units: BTreeSet<String> = BTreeSet::new();
-        for g in gaps.into_iter().flatten() {
-            if g.instant == last.instant {
-                units.insert(g.unit.clone());
-            }
-        }
-        if units.len() > 1 {
-            let units: Vec<String> = units.into_iter().collect();
-            return Err(crate::read::two_units("gap", &place, &last.instant, &units));
-        }
         self.absorb(&last.coll);
         match last.gap {
             Amount::Qty(q) => qty_value(m, &q, &last.unit),

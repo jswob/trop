@@ -14,8 +14,6 @@
 //! Invariants: a row's value has its input's declared type; a hole is built in the hole
 //! module.
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use super::arith::{Op, arith, same_value};
 use super::builtin::read_parts;
 use super::convert::{ConvertFor, Converted, convert_read};
@@ -24,7 +22,7 @@ use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::windows::{as_read, known_hole, one_day};
 use crate::base::{Load, Run};
-use crate::book::{and_list, reading_place};
+use crate::book::and_list;
 use crate::hole::{Hole, spread};
 use crate::model::{
     BindInfo, Class, Domain, InputInfo, KeyVal, Number, Pat, Reality, Row, TimePos, Unit, Value,
@@ -34,7 +32,7 @@ use crate::read::{
     Asked, Clocks, Found, KnownInside, Test, held, known_inside, last_began, need_law, origin,
     read_input, read_last, row_span, standing_rows, time_point,
 };
-use crate::syntax::{Call, Expr, Instant, Stop, Value as Written};
+use crate::syntax::{Call, Expr, Stop, Value as Written};
 use crate::time::{Day, PeriodKind};
 
 /// One side of two rows stated `same`: the value of the row its read takes with the row's
@@ -527,7 +525,7 @@ impl Engine {
         (past, clocks): (Option<Day>, Clocks),
         ctx: Ctx,
     ) -> Result<Result<Option<InputInfo>, Hole>, Stop> {
-        if !input.holds.known_window && !input.holds.unitless {
+        if !input.holds.known_window {
             return Ok(Ok(None));
         }
         let test = match past {
@@ -548,87 +546,13 @@ impl Engine {
             Err(h) => return Ok(Err(h)),
             Ok(hidden) => hidden,
         };
-        // a read takes its keys' rows only (L §4.6 step 1)
-        let held = match keys.first() {
-            Some(KeyVal::Thing(p)) if input.holds.unitless => {
-                self.unitless_held(m, &input.rows, p, ctx)?
-            }
-            Some(_) | None => BTreeMap::new(),
-        };
-        if hidden.is_empty() && held.is_empty() {
+        if hidden.is_empty() {
             return Ok(Ok(None));
         }
         Ok(Ok(Some(InputInfo {
             rows: kept_rows(&input.rows, &hidden),
-            held,
             ..input.clone()
         })))
-    }
-
-    /// For each instant where a reading row of `place` among `rows` states no unit: the units
-    /// the walk of the read's cut up to the instant's day applied a reading in there, its gaps
-    /// at that instant, alike for every reader at that cut, inside a walk or not (L §5.10;
-    /// tally 2.1.8 R14, B4 of group 3's review, pick P46; refcore's `units_at_reading`).
-    fn unitless_held(
-        &mut self,
-        m: &Reality,
-        rows: &[Row],
-        place: &str,
-        ctx: Ctx,
-    ) -> Result<BTreeMap<String, BTreeSet<String>>, Stop> {
-        let mut out = BTreeMap::new();
-        let mut instants = Vec::new();
-        for row in rows {
-            if let Some(Instant {
-                day,
-                edge: Some(edge),
-            }) = row.instant
-                && reading_place(row) == Some(place)
-                && m.reading_ty(place, &row.value).map_err(num_stop)?.is_none()
-            {
-                instants.push((day, crate::book::instant_text(day, edge)));
-            }
-        }
-        for (day, text) in instants {
-            // the cut's walk up to the day, which lists no plan after it; one being walked
-            // already holds its gaps of the days it passed (refcore's `prefix_walk`, its
-            // running walk); stated units alone where it is refused at run
-            let Some(id) = self.unitless_walk(m, ctx.cut, day)? else {
-                out.insert(text, BTreeSet::new());
-                continue;
-            };
-            let walk = self.walk(id)?;
-            let mut units = BTreeSet::new();
-            for g in walk
-                .gaps
-                .get(&(place.to_owned(), day))
-                .into_iter()
-                .flatten()
-            {
-                if g.instant == text {
-                    units.insert(g.unit.clone());
-                }
-            }
-            out.insert(text, units);
-        }
-        Ok(out)
-    }
-
-    /// The walk of cut `cut` up to day `day` whose gaps give a unitless row its units: one
-    /// kept to that day or a later one, if it is being walked, else the prefix walk; none
-    /// where it is refused at run (refcore's `prefix_walk`). L §5.10, E §3.2, §4.1.
-    fn unitless_walk(&mut self, m: &Reality, cut: Day, day: Day) -> Result<Option<usize>, Stop> {
-        let kept = self
-            .prefixes
-            .walks
-            .range((cut, day)..)
-            .next()
-            .filter(|((c, _), id)| *c == cut && self.walking.contains(id))
-            .map(|(_, id)| *id);
-        if kept.is_some() {
-            return Ok(kept);
-        }
-        self.prefix_walk(m, cut, Some(day))
     }
 
     /// The positions of the rows `inside`, each known in a window that holds the cut, that
@@ -1038,10 +962,9 @@ impl Engine {
             None => input,
         };
         let found = match past {
-            // `since` reads only the day the latest rows began, which they share: one reading
-            // per unit at a place of unit `any` is no tie for it (L §4.6 Readings); a reading
-            // `replace … = none` removed is none (L §5.19), so with only such it is
-            // `HOLE-NOREADING`
+            // `since` reads only the day the latest rows began, which they share (L §4.6
+            // Readings); a reading `replace … = none` removed is none (L §5.19), so with only
+            // such it is `HOLE-NOREADING`
             Past::Since => match last_began(m, input, &keys, day, clocks)? {
                 Ok(kept) => {
                     let stand = standing_rows(m, &input.rows, &kept)?;
@@ -1379,17 +1302,12 @@ fn row_value(
     let reading;
     let ty = match (&input.ty, input.reading, row.pattern.first()) {
         (Some(ty), ..) => ty,
-        // a balance reading's value is a quantity in its place's unit, or the unit its row
-        // states at a place of unit `any` (L §4.6 Readings, §5.19)
+        // a balance reading's value is a quantity in its place's unit (L §4.6 Readings, §5.19)
         (None, true, Some(Pat::Key(KeyVal::Thing(place)))) => {
-            reading = m.reading_ty(place, &row.value).map_err(num_stop)?;
-            match (&reading, &row.value) {
-                (Some((_, ty)), _) => ty,
-                // a row that states no unit, a hole or `none`, stands for every unit (pick
-                // P22, #173)
-                (None, Written::Hole(text)) => return Ok(Value::Hole(Hole::asked(text, figure))),
-                (None, Written::None) => return Ok(Value::None),
-                (None, _) => return Err(Stop::NotBuilt("the value of a reading of no unit")),
+            reading = m.reading_ty(place).map_err(num_stop)?;
+            match &reading {
+                Some((_, ty)) => ty,
+                None => return Err(Stop::NotBuilt("the value of a reading of no unit")),
             }
         }
         (None, ..) => return Err(Stop::NotBuilt("the value of an observed row")),

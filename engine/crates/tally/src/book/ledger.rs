@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, booked_amount, per_unit, reading_rank};
+use super::reading::{Seen, booked_amount, reading_rank};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, Unknown, carry_union, spread};
@@ -28,7 +28,7 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Residuals, Stop};
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, Dated, Exists, Inst, LegVal, Status, Term, invariant, kind_certainty, qty_value,
+    Amount, Dated, Exists, Inst, LegVal, Status, Term, invariant, kind_certainty, qty_value,
     reading_point,
 };
 
@@ -254,8 +254,8 @@ impl Engine {
 
     /// The units of a place of unit `any`'s ledgers: those of the plan instances' legs at cut
     /// `cut` and of the observations' legs, as known on the model's `on` date, that touch it,
-    /// and of its readings that state one, in the order of the units' ids (refcore's
-    /// `m_residual_units`). E §6.3.
+    /// in the order of the units' ids; it takes no reading (refcore's `m_residual_units`).
+    /// E §6.3, L §5.10.
     fn ledger_units(&mut self, m: &Reality, place: &str, cut: Day) -> Result<Vec<String>, Stop> {
         let mut units: BTreeSet<String> = BTreeSet::new();
         let mut add = |legs: &[LegVal]| {
@@ -276,15 +276,6 @@ impl Engine {
         }
         for o in self.observations(m, m.on)? {
             add(&o.legs);
-        }
-        let world = self.timeline_world();
-        for seen in self.seen_readings(m, (m.on, world), Rows::Unkept)? {
-            if let Some(r) = &seen.reading
-                && seen.place == place
-                && r.unit != ALL
-            {
-                units.insert(r.unit.clone());
-            }
         }
         Ok(units.into_iter().collect())
     }
@@ -488,7 +479,7 @@ impl Engine {
             if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }
-            let Some(stated) = seen.reading.clone() else {
+            let Some(reading) = seen.reading.clone() else {
                 continue;
             };
             let at = reading_point(seen.day, seen.edge, reading_rank(&walked, &seen)?);
@@ -496,18 +487,6 @@ impl Engine {
                 continue;
             }
             let walk = self.walk(id)?;
-            // one unit's ledger shows that unit's readings (E §6.3), and a reading that
-            // states no unit where it stands for that unit (pick P22, #173)
-            let reading = if lines.of.only {
-                let mut mine = per_unit(walk, &stated, at);
-                mine.retain(|r| r.unit == lines.of.unit);
-                match mine.pop() {
-                    Some(r) => r,
-                    None => continue,
-                }
-            } else {
-                stated
-            };
             let st = walk.pstate_before(m, &reading.place, &reading.unit, at);
             let booked = match booked_amount(&st, &walk.anchor_question(&reading.place)) {
                 Amount::Qty(q) => Fig::Qty(q),
