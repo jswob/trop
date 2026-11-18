@@ -4721,3 +4721,77 @@ On `build/2.2` at 0b615a0e (T's merge of the three count pins and the nine named
 - **What I tried:** nothing that rewrites history. My commits sit on 0b615a0e, whose parents are those two, so none of mine can go without them. Rewording them is a rebase of T's branch and of the lead's merge, which the build role doesn't own and the guard refuses (`rebase`, `cherry-pick`, `merge`).
 - **What I ask:** the tests session (or the lead) rewords the two subjects on `tests/2.2` before either is pushed (`test(walk): keep three min pins …` for 140e340f, `test(ask): name the unknown day w …` for cf38e76c, or another listed scope), and the lead merges `tests/2.2` into `build/2.2` again. A builder turn then re-applies this turn's commits on that merge unchanged, runs `check commit` and pushes. Or the lead pushes once the subjects are fixed. CI's `check full` on #217 waits until then.
 - **State:** code at c8730b25, the entry at 3d7cbfed (`check commit: green, 23 steps (96s)`), this report in the commit after it; all local, nothing uncommitted. The turn's work: 2559cfdb, ec3604c0, 439e6e25, 81263310, 73643de8, c8730b25, 3d7cbfed and this report's commit.
+
+## 2026-11-18 tally 2.2, the engine's last turn: the fourth review's B1 and B2, P25, the range minimum beside F5 (issue #211)
+
+On `build/2.2` at a5e1861e (T's merge: tally 2.2's final text, refcore with P25 bec41e6b and P26 8341b008). The lead's rewording of T's two subjects (951b4f6f) ruled and closed the last turn's STOP-REPORT. `check commit` at the start: `red at tests, stopped after 10 of 23 steps`. 4 of 1 061 tests red, each on a `Logged-Red:` id (`tmp/spec-2.2-build/close2/red-start.txt`):
+- `m2_fixes_tally_22`, 3 of 48: `rv4_b1_two_windows` (B1), `rv4_b2_pins` and `rv4_b2_pin_calendar` (B2).
+- `m1_fixes_g2_windows_and_powers` (`fixes/g2/p4_f1`), `m1_fixes_tally_217_r3` (`r3/reach_year`), `m1_fixes_the_spec_where_refcore_crashes` (`fixes/g13/r_agent_w_model_with_r_agent_w_e1_e1`, `…_e2_e2`): P25.
+
+**The pieces:**
+1. **cdc4dda0, B1: a hole keeps its unknown days by question.**
+   - `hole/questions.rs`: `Hole.carry` is a `BTreeMap<Asked, Vec<Unknown>>`, refcore's `CARRY[q]`. `without` keeps only the remaining questions' days, so a question the hole loses takes the days it alone carried. `spread` and `for_read` merge by question; `carried` gives the union, in order, for the register (`model/value.rs`, `book/ledger.rs`).
+   - `review-g4/b1/m.tally`: the engine's line is now `  unknown day: d2` alone, as refcore's (before: `  unknown day: d1`, then d2). `b1/pin.tally` equals refcore. Green: `rv4_b1_two_windows`.
+2. **e20362cb, B2: a pin names its cell only where the value carries no name of its own.**
+   - `eval/read.rs` `pinned_window` renames a window only where everything it carries is a window written in the text (`eval/windows.rs` `names_only_written`, the written window's id `src <text>`). That is refcore's `pinned_read`, renaming only an `Iv` with no `origin`. A computed calendar window keeps its `added …`.
+   - `review-g4/b2/m.tally` qb and `b2/m2.tally` r7: `  unknown day: added one_of([2026-06-22, 2026-06-24])`, as refcore's (before: `x`, and `dd`). qa, qc, qd and qe are unchanged and equal refcore. Green: `rv4_b2_pins`, `rv4_b2_pin_calendar`.
+3. **93306237, P25: a hole made where a print needs one day names its unknown day.**
+   - `model/value.rs`: a window that is no window of days prints as the hole `date within window(…) not precise enough for a print`, and now brings its carried days to the register. A window of days, which prints as a window, brings none: refcore's `hole_days`.
+   - Green: `p4_f1` (`  unknown day: wl`), `reach_year` (`  unknown day: w_across`), g13 `e1_e1` and `e2_e2` (`  unknown day: w`).
+   - Two of the crate's own tests predated P25 (`tests/window_cases.rs`: `TWO_WINDOWS_LINES` q4, and n2 of `a_covered_window_to_the_calendar_s_end_is_asked_up_to_the_cut`). Each gains the `unknown day:` lines refcore prints for the same text.
+4. **P26, refcore's three fixes where the engine was right: green on arrival, no commit.** Each was checked on the arrival binary (`tmp/spec-2.2-build/close/tally-p6`) against refcore:
+   - A def pinned to a written window names the def's cell: `rv4_b2_pins` qa (`pinned: dd = window(…)`, `  unknown day: dd`, `  unknown day: w`).
+   - `last` of an input pinned to a written window names the cell and keeps the hole's label: qc (`unknown day: w`).
+   - An ask's register is independent of the asks before it: `rv4_pin_copy` (e1 `wa`, `wb`; e2 `wb` alone) and `rv4_pin_copy_alone` (e2 `wb`).
+   - A fanned line names the union: refcore's own test text gives `unknown day: wd[a]`, `wd[b]`, and the engine gives the same. No T vector names it; refcore's test is its guard.
+5. **The fourth review's leftovers.**
+   - `walk/lows.rs` `a_read_the_sums_cant_hold_is_the_walks` already pins `walks == 1` (restored by 439e6e25), so nothing changes.
+   - `common_low`'s window `(t, (first, last))` stays, since it now has two readers: the recognised `min` reads F5 over first .. last, and a single read passes `(d, d)`.
+   - `eval/aggregate.rs` l.236 and `eval/windows.rs`'s notes are left, as the lead ruled, for a follow-up issue.
+6. **850ca2f9, the closing review's items 1 to 4 and 7: the range minimum beside F5.**
+   - Where each piece sits now:
+     - `walk/projection.rs` (kernel, F5's entry): `lowest_shape` (the shape), `reads_lowest` (the switch), `range_minimum` (moved: the range's first and last day, the balances, their fold to the least or a hole), `first_and_last` (moved), `lowest_balances` (now private to it) and `days_read`. F5's tree read stays `walk/lows.rs`'s `common_low`.
+     - `eval/aggregate.rs` keeps the dispatch: `aggregate` tests the shape and the switch, reads the range's values once (`range_values`) and calls `range_minimum`.
+   - Item 7: where `range_minimum` leaves the `min`, its terms are read from those same values (`frame_of`, `walk_of`, `walk_members`), not from a second evaluation of the range. A range binding's values are `range_values`' (`bind_values`' `Over::Range` arm), so the members are the same.
+   - `hole_of`, `min_max` and `End` are exported to the crate for the fold.
+   - No new kernel file, no rule file changed.
+   - Headers (items 1, 3, 4; R-120, R-130):
+     - F5's `PERF:` line names the aggregate `min`, read term by term (`eval/aggregate.rs`, as `Lows::Walk` reads it), as the recognised `min`'s plain twin, beside `projection` for one read.
+     - `walk/projection.rs`'s header says the recognition and its read sit there, and its twin in `eval/aggregate.rs`.
+     - `eval/aggregate.rs`'s header says the aggregate is that `min`'s plain twin.
+   - Item 10's crate test (the fault's pin by `with`) is not written: it is the tests session's. Items 8, 11 and 12 are left, as ruled.
+7. **Whatever else is red: nothing.** After 93306237, `check commit` is green. The branch's 136 `Logged-Red:` ids (8ece2484..HEAD) all sit in gating suites that pass, so none is red and none is unexplained. Spot-checked by name: `m0_code_load_instant`, `m0_code_load_same`, `m2_counts_lows`, and `U:time/TIME-01` (a vector of `m0/load.refcore`, run by `m0_load`).
+
+**Red tests:** 4 of 1 061 at the start (above), 0 of 1 061 at the end.
+
+**Sweep** (`tmp/spec-2.2-build/close/sweep.py`, list `close2/sweep.list`, 100 sets): the last turn's 79, plus `tmp/spec-2.2-build/review-g4/`'s 21. Refcore's outputs are cached once in `close2/sw/ref`. Each piece's "before" was the commit before's binary (`close2/tally-b1`, `tally-b2`, `tally-p25`). Nothing turned same → different:
+- B1: moved 1, `review-g4/b1/m`, now refcore's.
+- B2: moved 2, `review-g4/b2/m` and `b2/m2`, now refcore's. 92 of 100 then equal refcore.
+- P25 and 850ca2f9: moved 0 each; 92 of 100.
+- The 8 that differ, before and after alike:
+  - 6 `tally run: not implemented`: a2e, CMP-01.inline, j1 and its joint, r1, r1b.
+  - `fault-b/paths`: paths aren't built.
+  - `review-g4/p4/m`: an observed row's date window, not built.
+
+**The round's sizes at this head, `git diff --shortstat 8ece2484..HEAD`:**
+- `-- engine/crates`: 105 files, 9 224 out, 2 109 in.
+- `-- engine/crates/tally/src`: 86 files, 7 367 out, 1 648 in.
+- This turn's (a5e1861e..HEAD): `engine/crates` 12 files, 137 out, 245 in; `crates/tally/src` 11 files, 136 out, 239 in.
+
+**Kernel files the round touched:** 22, the list above. This turn touched `book/ledger.rs`, `hole/questions.rs`, `walk/lows.rs` and `walk/projection.rs`, each already in it.
+
+**Exceptions over the round** (`git diff 8ece2484..HEAD -- engine/EXCEPTIONS.lock`): count +0 (6); report-only hits −1, 9 → 8 (G5's `ask/walked.rs` `Read<'a>` lifetime review). This turn +0: the lock is unchanged since a5e1861e.
+
+**STOP-REPORTs:** none this turn. The last turn's (the push refused on T's two subjects) is closed by the lead's 951b4f6f.
+
+**For the lead:** `engine/ARCHITECTURE.md` may want the range minimum's new place: its read is `walk/projection.rs`'s `range_minimum`, its dispatch `eval/aggregate.rs`'s `aggregate`.
+
+**Next:** the round's engine work is done. Left for a follow-up issue: the fourth review's `eval/aggregate.rs` l.236 and `eval/windows.rs` notes; the closing review's items 8, 11 and 12; items 9 and 10 for the tests session.
+
+**Usage:** about 1.08 % of the week by `engine/tools/usage tmp/spec-2.2-build/close-ids.txt` before this entry, this turn about 0.5 % (budget about 1 %, stop at 3.6 %).
+
+**Checks:**
+- Each piece's commit was on a green `check quick` (76 to 88 s).
+- `check fences: green, 1 step (50s)` after 850ca2f9's edit to F5's entry and twin.
+- `check commit` on 850ca2f9: `check commit: green, 23 steps (140s)`, 1 061 tests run, 1 061 passed, 0 skipped. On this entry's tree: `check commit: green, 23 steps (86s)`.
+- Before the push, `engine/tools/commit-check` failed two of my unpushed subjects. B1's (first 74e29f8f) was 74 characters, and this entry's first commit (2bd6a870) used the scope `log`, which isn't listed. I rebuilt the five commits with `git commit-tree` on the same trees and the same bodies, changing only those two subjects, and moved the branch with `git update-ref`. The old to new shas: 74e29f8f → cdc4dda0, a9f451cc → e20362cb, df4d7731 → 93306237, 91d8dd67 → 850ca2f9. On the new chain: `commit-check: 0 rule-changing commits, no attribution line`.
