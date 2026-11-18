@@ -5,8 +5,8 @@
 //! load, refused scenarios, asks refused alone, the three sections together, `ok` where `run`
 //! wouldn't answer cleanly, paths and arguments, a usage error. The engine must exit with the
 //! vector's code and print its whole output (a usage error: exit 2, its words the engine's).
-//! The bytes are predicted from refcore's `run` until refcore's own `check` confirms them
-//! (pick P8; chunk C4). Red until the engine builds `check`, so this target has `test =
+//! The bytes are refcore's `check` (chunk C4), which confirmed what its `run` predicted
+//! (pick P8). Red until the engine builds `check`, so this target has `test =
 //! false`; it gates once M3 is tagged (`engine/tools/milestones.toml`).
 
 #![forbid(unsafe_code)]

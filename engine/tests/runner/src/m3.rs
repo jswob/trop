@@ -4,8 +4,8 @@
 //! and on the fixtures of `m3/check/`, one per line kind the sets don't reach, stored in
 //! `m3/check.vectors`. Each vector's exit code and whole output were predicted from refcore's
 //! `run` (the load probe, a probe ask refused alone that prints load's lines and warnings, and
-//! the asks refused alone: pick P8), until refcore's own `check` confirms them byte for byte
-//! (chunk C4; the vector's `source` then reads `check`). A usage error's words are the
+//! the asks refused alone: pick P8), until refcore's own `check` confirmed them byte for byte
+//! (chunk C4, 2026-11-19: each `source` now reads `check`). A usage error's words are the
 //! engine's (`INTERFACE.md` §1): its vectors (`source` `rule`) hold the exit code alone.
 //!
 //! `run` (rows 5 and 6): the seven changes' realities before and after (`m3/changes/stages.tsv`,
@@ -42,7 +42,8 @@ pub struct CheckVector {
     pub id: String,
     /// The test that runs it: an M0 corpus group, or a fixture's kind.
     pub group: String,
-    /// Where its bytes come from: `run` (predicted), `rule` (a usage error) or `check`.
+    /// Where its bytes come from: `check` (refcore's `check`, since chunk C4), `run` (refcore's
+    /// run: a `run` vector, or a `check` vector's prediction before C4) or `rule` (a usage error).
     pub source: String,
     /// The words after the program name: `check` or `run` first, or a usage error's (none at all).
     pub args: Vec<String>,
