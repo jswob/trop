@@ -286,6 +286,30 @@ def m_movement_field(self, n, t, sc):
 
 # -- bindings over movements (L §5.6, §5.7, §5.19) --------------------------------------------------------------
 
+def m_kind_bind_edges(self, sc, kinfo):
+    """What a variable over an event kind reads: the kind, each move of it and of its subkinds, and the observed
+    inputs, whose rows are its movements (readers-of, E §10; tally 2.1.7 R7). An aggregate's binding and a def's own
+    key record the same edges, so the def's cell is trimmed to what it can depend on (E §3.2; tally 2.2, the fault
+    of a def keyed by a movement)."""
+    m = self.m
+    self.edge(sc, ('kind', kinfo.id), 'bind')
+    sub = kinfo.subtree(m)
+    for qid, mi in m.moves.items():
+        if self.move_kind(mi) in sub:
+            self.edge(sc, ('move', qid), 'bind')
+    for qid, inf in m.inputs.items():
+        if inf.observed:
+            self.edge(sc, ('input', qid), 'bind')
+
+
+def m_def_key_edges(self, d, sc):
+    """A def's header key over an event kind reads what a binding over the kind reads (m_kind_bind_edges)."""
+    for b in d.binds:
+        kinfo = self.m.kinds.get(b.dom[1]) if b.dom[0] == 'kind' else None
+        if kinfo is not None and kinfo.spec == 'event':
+            self.kind_bind_edges(sc, kinfo)
+
+
 def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
     """A binding over an event kind or an observed input's rows: needs on or over (LOAD-ALIVE), but a fill's key bind
     (L §5.6, round 18 C1-38)."""
@@ -294,20 +318,14 @@ def m_bind_movements(self, b, sc, kinfo=None, obs=None, key_bind=False):
         raise LoadError('LOAD-ALIVE', 'binding over %s needs on or over' % (kinfo.id if kinfo else obs.id), b.loc)
     if kinfo is not None:
         b._dom = ('event', kinfo.id)
-        # the binding reads its kind, subkinds included (readers-of, E §10; tally 2.1.7 R7)
-        self.edge(sc, ('kind', kinfo.id), 'bind')
+        self.kind_bind_edges(sc, kinfo)
         sub = kinfo.subtree(m)
         for qid, mi in m.moves.items():
-            if self.move_kind(mi) in sub:
-                self.edge(sc, ('move', qid), 'bind')
-                if mi.decision:
-                    self.mark(sc, 'legs', ('move', qid))
+            if self.move_kind(mi) in sub and mi.decision:
+                self.mark(sc, 'legs', ('move', qid))
         if 'pads' in sub:
             # a binding over pads is a running read (L §5.14.1 Running reads)
             self.mark(sc, 'legs', ('kind', 'pads'))
-        for qid, inf in m.inputs.items():
-            if inf.observed:
-                self.edge(sc, ('input', qid), 'bind')
         ty = T.key(kinfo.id)
         # a binding over an event kind needs no covered guard: its plan instances stand on the days no statement
         # covers (L §5.19, round 7); LOAD-COVERED guards an aggregate of an observed input's rows
@@ -543,10 +561,6 @@ def m_check_leg(self, mi, ln, d, sc):
     elif not (self.numcls(t) in ('money', 'num', 'int', 'flex') or t.k in ('dyn', 'hole')):
         raise uerr('the amount of leg %s of %s is %s' % (ln.name, mi.id, T.show(t)), ln.loc)
     ln._lt = lt
-    if ln.on is not None:
-        t = self.tc(ln.on, sc)
-        if not self.is_date(t):
-            raise uerr('on of leg %s of %s is %s, not a date' % (ln.name, mi.id, T.show(t)), ln.loc)
     return ends
 
 
@@ -818,31 +832,19 @@ def m_t_flows(self, n, sc, expect):
         t = self.place_arg(r, sc, 'flows')
         ut = self.place_type_unit(t, r)
         n._form = 'place'
-        if n.conv is None:
-            # L §5.14.3 (round 12): "a place of unit any ... is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
-            # otherwise), unless the flows converts"
-            th = self.literal_place(r)
-            pu = m.place_unit(m.things[th]) if th is not None else (
-                m.kind_unit(t.ix) if t.k == 'key' and t.ix in m.kinds else None)
-            if pu == 'any':
-                raise uerr('flows of %s, a place of unit any: it sums no one unit; convert it (in CUR at fx mode)'
-                           % _txt(r), n.loc)
+        # L §5.14.3 (round 12): "a place of unit any ... is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
+        # otherwise)"
+        th = self.literal_place(r)
+        pu = m.place_unit(m.things[th]) if th is not None else (
+            m.kind_unit(t.ix) if t.k == 'key' and t.ix in m.kinds else None)
+        if pu == 'any':
+            raise uerr('flows of %s, a place of unit any: it sums no one unit' % _txt(r), n.loc)
         self.mark(sc, 'flows', self.place_target(r))
         n._ctgt = ('flows', self.place_target(r))
         self.edge(sc, ('balances',), 'flows')
     self.span(n.span, sc)
     if n.forkey is not None:
         self.tc(n.forkey, sc)
-    if n.conv is not None:
-        cur, fx, mode = n.conv
-        if cur not in CURRENCIES:
-            raise uerr('money in an undeclared currency %s' % cur, n.loc)
-        ft = self.tc(fx, sc)
-        if ft.k != 'num' or not ft.u:
-            raise uerr('flows in %s at %s: the rate is %s' % (cur, _txt(fx), T.show(ft)), n.loc)
-        # a flows node has no name: its word names it (tally 2.1.6, issue #79: refcore 2.1.5 crashed here)
-        self.mode_arg(mode, sc, n, 'flows')
-        return T.money(cur)
     return ut
 
 
@@ -2010,11 +2012,10 @@ def m_check_seen_day_limits(self):
 
 
 def m_check_scenario_moves(self):
-    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, a window's first day, or a
-    leg's own day falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6,
-    issue #75): a move a scenario's file declares, whose day or leg's own day load sees, folded at every key of its
-    bindings, before the scenario's from, is refused at load: the first such move by id, at its line or its leg's,
-    with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
+    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, or a window's first day,
+    falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6, issue #75): a move
+    a scenario's file declares, whose day load sees, folded at every key of its bindings, before the scenario's from,
+    is refused at load: the first such move by id, at its line, with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
     as the walk reached the instance (moves.m_before_scen_from), so an ask that didn't reach it answered."""
     m = self.m
     import itertools
@@ -2028,10 +2029,9 @@ def m_check_scenario_moves(self):
         frm = froms.get(sc) if sc is not None else None
         if frm is None:
             continue
-        days = [(mi.decl.on, mi.decl.loc)] + [(ln.on, ln.loc) for ln in mi.decl.legs if ln.on is not None]
-        days = [(e, loc) for e, loc in days if e is not None and self.seen_day(e, mi)]
+        on = mi.decl.on
         # P29 (SR-T1): load sees that an instance books before D only where it sees its existence too
-        if not days or not self.existence_seen(mi):
+        if on is None or not self.seen_day(on, mi) or not self.existence_seen(mi):
             continue
         doms = []
         for b in mi.binds:
@@ -2049,14 +2049,13 @@ def m_check_scenario_moves(self):
                     continue
             except TallyError:
                 continue
-            for e, loc in days:
-                try:
-                    first = day_lo(eng.ev(e, env, ctx))
-                except TallyError:
-                    continue
-                if first is not None and first < frm:
-                    raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mid, sc, first, frm),
-                                    loc)
+            try:
+                first = day_lo(eng.ev(on, env, ctx))
+            except TallyError:
+                continue
+            if first is not None and first < frm:
+                raise LoadError('LOAD-SCENARIO', 'move %s of %s books on %s, before %s' % (mid, sc, first, frm),
+                                mi.decl.loc)
 
 
 def m_check_literal_ranges(self):

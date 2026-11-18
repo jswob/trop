@@ -151,7 +151,7 @@ The expected outputs, cell by cell, are in `amendments/expected/5-job-abroad.md`
 - `net_worth`:
   - the 2026-12-31 row is unchanged;
   - the 2031, 2041 and 2059 rows are holes, because `konto` is.
-  - It sums PLN places only. Once the German part is written, `konto_eur` is empty after each 28th, so the PLN sum is still the household's whole net worth. EUR held over a month-end would need the ask to convert, with `in PLN at fx_eur`.
+  - It sums PLN places only. Once the German part is written, `konto_eur` is empty after each 28th, so the PLN sum is still the household's whole net worth. EUR held over a month-end would need the ask to convert it to PLN.
 - **Unchanged:** `konto_balance` (all rows are before 2029), `taxes_paid`, `health_settlement`, `pit28`, `social_and_health`, `wife_net`, `ike_left`, `explain_room` and `replay_september`.
 - `explain room[2029-08]` shows the hole and its question at the root.
 

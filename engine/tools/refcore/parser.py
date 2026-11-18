@@ -987,10 +987,7 @@ class P:
         b = self.expr()
         self.expect('amount')
         q = self.expr()
-        on = None
-        if self.accept('on'):
-            on = self.expr()
-        return self.N('leg', name=name, frm=a, to=b, amount=q, on=on)
+        return self.N('leg', name=name, frm=a, to=b, amount=q)
 
     def builtin(self, s):
         i0 = self.i
@@ -1088,15 +1085,7 @@ class P:
                 fk = self.expr()
             self.expect(')')
             self.close()
-            conv = None
-            if self.at('in') and self.at_t('CUR', 1):
-                self.i += 1
-                c = self.cur()
-                self.expect('at')
-                fx = self.ref()
-                m = self.mode()
-                conv = (c, fx, m)
-            n = self.N('flows', ref=r, span=sp, forkey=fk, conv=conv)
+            n = self.N('flows', ref=r, span=sp, forkey=fk)
             n._t0, n._t1 = self.t[i0], self.t[self.i - 1]
             return n
         if s == 'crps':

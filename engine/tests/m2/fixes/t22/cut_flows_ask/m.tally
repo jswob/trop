@@ -1,0 +1,31 @@
+model flows_conv_ask
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-7 (#211, plan §5): a converted flows on an ask line is cut; the grammar stops at in (LOAD-PARSE, choice C-1 (a); the plan foresaw LOAD-SCENARIO for the ask alone), so the whole file is refused and q_ok, a plain flows, answers nothing beside it."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt: money EUR
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt = 100.00 EUR "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask q: flows(wallet, 2026-03) in PLN at fx half-up law 2026-06-01
+ask q_ok: flows(wallet, 2026-03) law 2026-06-01

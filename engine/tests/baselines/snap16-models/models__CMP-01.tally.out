@@ -155,6 +155,7 @@ q_c5_net (p = de_u) [cmp_spouses = *, dt_cut_round = largest_rem, dt_u_work = no
   unfulfilled: maint[k3]
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = de_e) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 1.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   unfulfilled: debt_pay[f0, f1]
   unfulfilled: debt_pay[f1, f0]
   unfulfilled: debt_pay[f1, f2]
@@ -198,6 +199,7 @@ q_c5_net (p = de_k3) [cmp_spouses = *, dt_cut_round = *, dt_u_work = not_employe
   unfulfilled: maint[k3]
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_a) [cmp_spouses = a_is_f2, dt_cut_round = *, dt_u_work = *]: 2.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   reading: cmp_spouses = a_is_f2
   unfulfilled: debt_pay[f1, f2]
   unfulfilled: debt_pay[f2, f0]
@@ -205,16 +207,19 @@ q_c5_net (p = fr_a) [cmp_spouses = a_is_f2, dt_cut_round = *, dt_u_work = *]: 2.
   unfulfilled: debt_pay[f3, f2]
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_a) [cmp_spouses = b_is_f2, dt_cut_round = *, dt_u_work = *]: 3.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   reading: cmp_spouses = b_is_f2
   unfulfilled: debt_pay[f0, f3]
   unfulfilled: debt_pay[f3, f2]
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_b) [cmp_spouses = a_is_f2, dt_cut_round = *, dt_u_work = *]: 3.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   reading: cmp_spouses = a_is_f2
   unfulfilled: debt_pay[f0, f3]
   unfulfilled: debt_pay[f3, f2]
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_b) [cmp_spouses = b_is_f2, dt_cut_round = *, dt_u_work = *]: 2.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   reading: cmp_spouses = b_is_f2
   unfulfilled: debt_pay[f1, f2]
   unfulfilled: debt_pay[f2, f0]
@@ -222,12 +227,16 @@ q_c5_net (p = fr_b) [cmp_spouses = b_is_f2, dt_cut_round = *, dt_u_work = *]: 2.
   unfulfilled: debt_pay[f3, f2]
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_c1) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_c2) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_c3) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   law date 2026-10-18, cut 2026-10-18
 q_c5_net (p = fr_c4) [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
+  assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])
   law date 2026-10-18, cut 2026-10-18
 q_c5_sum [cmp_spouses = *, dt_cut_round = *, dt_u_work = *]: 0.00 PLN
   assumed: the example treats K1 as a first-rank child; § 1603 Abs. 2 Satz 2 BGB requires unverheiratet, which the example does not state (unmarried[k1])

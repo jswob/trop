@@ -196,7 +196,8 @@ mod tests {
     /// built-in through a scenario row's base prefix, a `same` side keyed by a keyed place,
     /// an adjustment's fields and a field read through `.adjusts` or an aggregate, `lifespan`
     /// of `dyn`, and 4 of G13's: `lifespan` of a bound name's field, axis combinations past
-    /// 15 digits and past 64 bits).
+    /// 15 digits and past 64 bits). tally 2.2 drops `basic/order`, a reading `after` a plan
+    /// (S-3): 238 fixtures.
     #[test]
     fn the_m0_fixtures_read_and_print_their_codes() {
         let vs = m0_fixtures(M0).expect("codes/m0.refcore reads");
@@ -243,8 +244,8 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (253, 52),
-            "239 fixtures of 52 codes"
+            (252, 52),
+            "238 fixtures of 52 codes"
         );
     }
 
@@ -340,8 +341,9 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (10, 2),
-            "1 base, 4 answers, 5 fixtures of 2 codes (records/reading-after released at 2.1.8)"
+            (9, 2),
+            "1 base, 4 answers, 4 fixtures of 2 codes (records/reading-after, released at 2.1.8, \
+             dropped at tally 2.2: a reading after m is cut, S-3)"
         );
     }
 

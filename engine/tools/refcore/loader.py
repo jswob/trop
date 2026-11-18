@@ -1544,17 +1544,7 @@ class Loader:
             frm = self.place_ref(ln.frm, loc)
             to = self.place_ref(ln.to, loc)
             amt, unit = self.obs_amount(ln.amount, d, frm, to, o)
-            lday = None
-            if ln.on is not None:
-                dn = ln.on
-                if dn.k in ('window', 'oneof') or (dn.k == 'call' and dn.name in ('window', 'one_of')):
-                    # L §5.19: a window is "never in on, the observation's or a leg's (LOAD-LEG)"
-                    raise LoadError('LOAD-LEG', 'the on of leg %s of %s is a window; a window belongs in an '
-                                                'attribute' % (d.name, o.sid), loc)
-                if ln.on.k != 'date':
-                    raise LoadError('LOAD-UNIT', 'the on of leg %s of %s is a day' % (d.name, o.sid), loc)
-                lday = ln.on.v
-            o.legs.append((d.name, frm, to, amt, unit, lday))
+            o.legs.append((d.name, frm, to, amt, unit))
         attrs = m.kind_attrs(k.id)
         anames = [a for a, t in attrs]
         for f in fields:
@@ -2265,8 +2255,7 @@ class Loader:
                     span = sp if sp is not None else v.span_at(m.on)
                     for ln in o.legs:
                         if th.name in (ln[1].name, ln[2].name):
-                            d = ln[5] or o.day
-                            if span is None or not span.contains(d):
+                            if span is None or not span.contains(o.day):
                                 raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
                                                 % (o.sid, th.name, v.id), o.loc)
 

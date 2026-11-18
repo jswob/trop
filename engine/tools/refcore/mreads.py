@@ -11,7 +11,7 @@ from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
 from .evaluate import member_owns, member_moves, move_owner, carry_hole
 from .model import Span, _kv, key_text, WindowUndecided
-from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
+from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
                     same_groups, same_lines, once_obs, same_obs_differ)
@@ -1552,20 +1552,12 @@ def m_e_flows(self, n, env, ctx):
         fk = self.ev(n.forkey, env, ctx)
         if isinstance(fk, Hole):
             return fk
-    conv = None
-    if n.conv is not None:
-        cur, fx, mode = n.conv
-        if getattr(mode, '_r', None) and mode._r[0] == 'axismode':
-            mv = Code('rounding', self.axis_option(mode._r[1], ctx))
-        else:
-            mv = self.ev(mode, env, ctx)
-        conv = (cur, fx, mv)
     if n._form == 'move':
-        return self.flows_move(n, sp, fk, conv, env, ctx)
+        return self.flows_move(n, sp, fk, env, ctx)
     p = self.place_arg(n.ref, env, ctx)
     if isinstance(p, Hole):
         return p
-    return self.flows_place(p.name, sp, conv, env, ctx, fk=fk)
+    return self.flows_place(p.name, sp, env, ctx, fk=fk)
 
 
 def mv_for(mv):
@@ -1580,7 +1572,7 @@ def mv_for(mv):
     return getattr(mv, 'forp', None)
 
 
-def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
+def m_flows_place(self, place, sp, env, ctx, fk=None):
     m = self.m
 
     def other_for(e):
@@ -1621,16 +1613,16 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     totals = {}
     holes = []
     for w, limit in chain:
-        self.flows_place_walk(w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes)
+        self.flows_place_walk(w, limit, place, units, lo, sp, last, env, ctx, fk, other_for, totals, holes)
     if last > m.E:
-        self.flows_post_e(chain[-1][0], place, sp, last, conv, env, ctx, fk, totals, holes)
+        self.flows_post_e(chain[-1][0], place, sp, last, env, ctx, fk, totals, holes)
     w, limit = chain[0]
     for (ad, e) in w.adj_regs.get(place, ()):
         if ad <= last:
             self.reg(e)
     # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
     self.joint_left_out(w, place, limit)
-    if holes and ctx.partial and conv is None and pu != 'any' and len(totals) <= 1 and (totals or units or pu):
+    if holes and ctx.partial and pu != 'any' and len(totals) <= 1 and (totals or units or pu):
         # flows is a sum of its movements (L §5.18; tally 2.1.8 R15): linear in each hole leg's amount
         if totals:
             u, q = list(totals.items())[0]
@@ -1640,11 +1632,9 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
             return lin_fold(qty(q, u), holes)
     if holes:
         return merge(*holes)
-    if conv is not None:
-        return Money(totals.get(conv[0], 0), conv[0])
     # L §5.14.3 (round 12): "Its unit is that of the places it reads ...; a place of unit any, movements in two
     # units, or an empty span whose unit load can't see is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
-    # otherwise), unless the flows converts"
+    # otherwise)"
     if pu == 'any':
         raise refuse('RUN-DOMAIN', 'flows of %s, a place of unit any: it sums no one unit' % place)
     if len(totals) > 1:
@@ -1659,7 +1649,7 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     return qty(q, u)
 
 
-def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
+def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
     """flows of a place over days after E (E §2 Movements outside [S, E]; tally 2.1.7 S1, #93): the walk books none
     of them (walk.note_post_e), and flows counts them, a plan's instance with its amount and a decision's instance as
     a hole movement, HOLE-POSTRUN, since its amount reads a walk that doesn't hold its day (L §8.1)."""
@@ -1705,12 +1695,7 @@ def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
             if isinstance(a, Hole):
                 holes.append(a)
                 continue
-            if conv is not None:
-                a = self.convert(a, lo, conv, env, ctx)
-                if isinstance(a, Hole):
-                    holes.append(a)
-                    continue
-            u = conv[0] if conv is not None else unit_of_value(a)
+            u = unit_of_value(a)
             for s in sides:
                 totals[u] = totals.get(u, Fraction(0)) + s * a.q
 
@@ -1746,7 +1731,7 @@ def _zero_at(mv, place):
     return bool(legs) and all(_zero_flow(lg.amount) for lg in legs)
 
 
-def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
+def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk, other_for, totals, holes):
     """One walk's part of flows of a place: its entries in (lo, limit], added to totals and holes."""
     # what holds for the whole walk (a refused movement whose places aren't known, a decision refused, a movement
     # whose day is a hole): a balance reads it (Walk.pstate), and so does a place's flows, which could count it
@@ -1805,7 +1790,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if other_for(e) or (fk is not None and e.kind == 'reset'):
                 continue
             if e.kind in ('hole', 'perm'):
-                lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' and conv is None else None
+                lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' else None
                 holes.append(_reask(Hole(e.qs, lh if lh is not None else False), 'flows of %s' % place))
                 # its register too, as a balance takes it (Walk.cum): the joint model's own movement into a member's
                 # place, a hole there, is listed under every result that reads the place (L §6.1, round 17; §8.2
@@ -1832,13 +1817,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if isinstance(f, Hole):
                 holes.append(f)
                 continue
-            if conv is not None:
-                f = self.convert(f, kday(e.key), conv, env, ctx)
-                if isinstance(f, Hole):
-                    holes.append(f)
-                    continue
-            uu = conv[0] if conv is not None else u
-            totals[uu] = totals.get(uu, Fraction(0)) + f.q
+            totals[u] = totals.get(u, Fraction(0)) + f.q
         holes.extend(Hole(x.qs) for x in perms)
         # a movement whose window opened by the span's end and closes after the walk's end books no delta in this walk:
         # whether it falls in the span is the window's hole, as for one that closes after the span (L §4.4; tally
@@ -1853,34 +1832,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                     win.window_text(), place), mv.id if mv is not None else place)]), win))
 
 
-def m_convert(self, f, day, conv, env, ctx):
-    """One movement converted (L §5.14.3): the rate at its day, its amount (>= 0) rounded to the minor unit with
-    the mode, then its direction."""
-    from .evaluate import round_mode
-    cur, fx, mode = conv
-    u = unit_of_value(f)
-    if u == cur:
-        return f
-    rate = self.ev(fx, env, ctx.but(law=day))
-    if isinstance(rate, Hole):
-        return rate
-    if isinstance(mode, Hole):
-        return mode
-    if not isinstance(rate, Num):
-        raise refuse('LOAD-UNIT', 'flows in %s at %s: the rate is %s' % (cur, fmt_node(fx), fmt(rate)))
-    want = tuple(sorted([(cur, 1), (u, -1)]))
-    if tuple(sorted(rate.u)) != want:
-        raise refuse('LOAD-UNIT', 'an exchange rate %s applied to %s' % (fmt(rate), u))
-    q = abs(f.q) * rate.q
-    minor = CURRENCIES[cur]
-    k = round_mode(q / minor, mode.word)
-    q = k * minor
-    if f.q < 0:
-        q = -q
-    return Money(q, cur)
-
-
-def m_flows_move(self, n, sp, fk, conv, env, ctx):
+def m_flows_move(self, n, sp, fk, env, ctx):
     """flows(m[keys], span [, for k]): the move's movements in the span, settlements included (L §5.14.3)."""
     m = self.m
     mi = m.moves[n._move]
@@ -2015,11 +1967,6 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                     if isinstance(a, Hole):
                         holes.append(a)
                         continue
-                    if conv is not None:
-                        a = self.convert(a, lg.day if isinstance(lg.day, datetime.date) else o.day, conv, env, ctx)
-                        if isinstance(a, Hole):
-                            holes.append(a)
-                            continue
                     total = a.q if total is None else total + a.q
                     u = unit_of_value(a)
                     seen_units.add(u)
@@ -2044,7 +1991,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if isinstance(a, TallyError):
                 raise a
             if isinstance(a, Hole):
-                holes.append(self.partial_leg(lg, 1, ctx) if conv is None else a)
+                holes.append(self.partial_leg(lg, 1, ctx))
                 continue
             err = self.leg_refused(i.id, lg.name, ctx, lg.day if isinstance(lg.day, datetime.date) else i.day) \
                 if a.q != 0 else None
@@ -2061,11 +2008,6 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 continue
             if err is not None:
                 raise err
-            if conv is not None:
-                a = self.convert(a, lg.day if isinstance(lg.day, datetime.date) else day_lo(d), conv, env, ctx)
-                if isinstance(a, Hole):
-                    holes.append(a)
-                    continue
             total = a.q if total is None else total + a.q
             u = unit_of_value(a)
             seen_units.add(u)
@@ -2105,7 +2047,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                     continue
                 total = sign * amt.q if total is None else total + sign * amt.q
                 u = u or unit_of_value(amt)
-    if holes and ctx.partial and conv is None and len(seen_units) <= 1:
+    if holes and ctx.partial and len(seen_units) <= 1:
         # flows of a move is a sum of its movements (L §5.18; tally 2.1.8 R15)
         lt = getattr(n, '_t', None)
         known = qty(total or 0, u) if u is not None else (
@@ -2116,8 +2058,6 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             return lin_fold(known, holes)
     if holes:
         return merge(*holes)
-    if conv is not None:
-        return Money(total or 0, conv[0])
     # L §5.14.3 (round 12): the unit of flows of a move is its leg's places', known at load where they have one fixed
     # unit, otherwise taken from the movements it counts; movements in two units, or an empty span whose unit load
     # can't see, are refused (RUN-DOMAIN here)

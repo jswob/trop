@@ -82,7 +82,7 @@ The case's checks for the debts (Transcription notes, Debts): `print(0+3+0+6, 1+
 | `q_c3_adults` | fr_a | question 3 | `a_is_f2`: 6.00, 8.00, -2.00; `b_is_f2`: 3.00, 6.00, -3.00 | friend 2 or friend 3 |
 | `q_c3_adults` | fr_b | question 3 | `a_is_f2`: 3.00, 6.00, -3.00; `b_is_f2`: 6.00, 8.00, -2.00 | friend 3 or friend 2 |
 | `q_c4_outflow` | — | question 4: "the maintenance of question 1 (converted payment by payment) plus that parent's net balance from question 3" | 1274.01 PLN | `employed`; 1268.01 + 6.00 |
-| `q_c4_flows_check` | — | question 4, read from the booked pays | ok, under every option | `-net_flow[de_u]`: minus U's January flows on `pln[de_u]` and on `eur[de_u]` (converted movement by movement) equals `payer_outflow`. Both sides read the same maintenance, so it holds on the `not_employed` line too |
+| `q_c4_flows_check` | — | question 4, read from the booked pays | ok, under every option | `-net_flow[de_u]`: minus U's January flows on `pln[de_u]` and on `eur[de_u]` (converted movement by movement, the helper def `in_pln`) equals `payer_outflow`. Both sides read the same maintenance, so it holds on the `not_employed` line too |
 | `q_c5_net` | de_u | question 5: "each person's net flow in złoty" | -1274.01 | `employed`; `dt_cut_round = *`; `cmp_spouses = *`. Flows in − out, euro movements converted one by one |
 | `q_c5_net` | de_e | question 5 | 1.00 | `*` on every axis: E receives no maintenance |
 | `q_c5_net` | de_k1, de_k2, de_k3 | question 5 | 454.79, 443.89, 369.33 | `employed`; `dt_cut_round = *`; `cmp_spouses = *` |

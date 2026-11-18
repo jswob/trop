@@ -471,13 +471,11 @@ def _nodes_in(b):
 
 
 def forced(x, par):
-    """L §2.4: "a `... to u` call used as an operand and a converted flows or value inside a comparison (parse rule 4)
+    """L §2.4: "a `... to u` call used as an operand and a converted value inside a comparison (parse rule 4)
     are always parenthesised"."""
     if par is None:
         return False
     if x.k == 'to' and par.k in OPERATORS:
-        return True
-    if x.k == 'flows' and x.conv is not None and par.k in ('cmp', 'in'):
         return True
     if x.k == 'value' and par.k in ('cmp', 'in'):
         return True

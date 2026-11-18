@@ -222630,318 +222630,6 @@ version v
 ,,1:0,73:qd0: true
   pinned: dd = window(2026-01-01, 2026-01-02)
   cut 2026-03-01
-,23:fixes/gate8/m2_g4_a_cov,11:fixes-gate8,60:run a_cov.tally --ask q_save q_obs q_sav q_moved q_n b13 b14,1828:11:a_cov.tally,1807:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-ask q_obs: observed(save[2026-03]).cash.amount
-ask q_sav: bal(sav, 2026-03-31)
-ask q_konto: bal(konto, 2026-03-31)
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-ask q_n: count(t in transfers over 2026-03)
-ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
-ask q_led: residuals konto 2026-03
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b15: bal(konto, 2026-03-15)
-ask b16: bal(konto, 2026-03-16)
-ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask e15: explain bal(konto, 2026-03-15)
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-  same bank[a2] = bank[b1]
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from unexplained
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-,,1:0,237:q_save: 950.00 PLN
-  cut 2026-04-10
-q_obs: 950.00 PLN
-  cut 2026-04-10
-q_sav: 950.00 PLN
-  cut 2026-04-10
-q_moved: 950.00 PLN
-  cut 2026-04-10
-q_n: 1
-  cut 2026-04-10
-b13: 1 050.00 PLN
-  cut 2026-04-10
-b14: 1 050.00 PLN
-  cut 2026-04-10
-,22:fixes/gate8/m2_g4_a_mp,11:fixes-gate8,55:run a_mp.tally --ask q_save q_obs q_sav q_moved q_n b13,1827:10:a_mp.tally,1807:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-ask q_obs: observed(save[2026-03]).cash.amount
-ask q_sav: bal(sav, 2026-03-31)
-ask q_konto: bal(konto, 2026-03-31)
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-ask q_n: count(t in transfers over 2026-03)
-ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
-ask q_led: residuals konto 2026-03
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b15: bal(konto, 2026-03-15)
-ask b16: bal(konto, 2026-03-16)
-ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask e15: explain bal(konto, 2026-03-15)
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-  same bank[a2] = bank[b1]
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from unexplained
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-,,1:0,202:q_save: 950.00 PLN
-  cut 2026-04-10
-q_obs: 950.00 PLN
-  cut 2026-04-10
-q_sav: 950.00 PLN
-  cut 2026-04-10
-q_moved: 950.00 PLN
-  cut 2026-04-10
-q_n: 1
-  cut 2026-04-10
-b13: 1 050.00 PLN
-  cut 2026-04-10
-,24:fixes/gate8/m2_g4_a_none,11:fixes-gate8,70:run a_none.tally --ask q_save q_obs q_sav q_moved q_n q_led b13 b14 pd,1582:12:a_none.tally,1560:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-ask q_obs: observed(save[2026-03]).cash.amount
-ask q_sav: bal(sav, 2026-03-31)
-ask q_konto: bal(konto, 2026-03-31)
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-ask q_n: count(t in transfers over 2026-03)
-ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
-ask q_led: residuals konto 2026-03
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b15: bal(konto, 2026-03-15)
-ask b16: bal(konto, 2026-03-16)
-ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask e15: explain bal(konto, 2026-03-15)
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "a"
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from unexplained
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-,,1:0,537:q_save: 0.00 PLN
-  open: save[2026-03]
-  cut 2026-04-10
-q_obs: refused: RUN-NONE observed(save[2026-03]) is none here: a field read of it
-  cut 2026-04-10
-q_sav: 950.00 PLN
-  cut 2026-04-10
-q_moved: 950.00 PLN
-  cut 2026-04-10
-q_n: 1
-  cut 2026-04-10
-q_led: residuals konto 2026-03
-  2026-03 unexplained: model 0.00 PLN, observed -950.00 PLN, difference -950.00 PLN
-    unexplained bank[a2] on 2026-03-15: observed -950.00 PLN
-  cut 2026-04-10
-b13: 1 050.00 PLN
-  cut 2026-04-10
-b14: 1 050.00 PLN
-  cut 2026-04-10
-pd: 0
-  cut 2026-04-10
-,23:fixes/gate8/m2_g4_a_unc,11:fixes-gate8,15:run a_unc.tally,1249:11:a_unc.tally,1228:model t
-  tally 2
-  on 2026-04-30
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-ask q_obs: observed(save[2026-03]).cash.amount
-ask q_sav: bal(sav, 2026-03-31)
-ask q_konto: bal(konto, 2026-03-31)
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-ask q_n: count(t in transfers over 2026-03)
-ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
-ask q_led: residuals konto 2026-03
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b415: bal(konto, 2026-04-15)
-ask b414: bal(konto, 2026-04-14)
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from unexplained
-  stated[konto] = 90.00 PLN after save[2026-04] "saldo"
-,,1:0,704:b414: 100.00 PLN
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
-b415: 90.00 PLN
-  pad: konto after save[2026-04], pads:rd:konto@after save[2026-04] of -10.00 PLN
-  cut 2026-04-30
-q_flk: -950.00 PLN
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
-q_konto: 100.00 PLN
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
-q_led: residuals konto 2026-03
-  cut 2026-04-30
-q_moved: 950.00 PLN
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
-q_n: 1
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
-q_obs: refused: RUN-NONE observed(save[2026-03]) is none here: a field read of it
-  cut 2026-04-30
-q_sav: 950.00 PLN
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
-q_save: 950.00 PLN
-  unfulfilled: save[2026-03]
-  cut 2026-04-30
 ,25:fixes/gate8/m2_g4_adj_amt,11:fixes-gate8,27:run adj_amt.tally --ask led,1545:13:adj_amt.tally,1522:model hh
   tally 2
   on 2026-10-20
@@ -223290,246 +222978,6 @@ led: residuals konto 2026-05
   2026-05 move wage: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN
     matched adjustments[wage[2026-03].cash, raise_2026] on 2026-05-01: model 500.00 PLN, observed 500.00 PLN, difference 0.00 PLN, timing +14 days
   cut 2026-10-20
-,26:fixes/gate8/m2_g4_b1_since,11:fixes-gate8,78:run b1_since.tally --ask rk rk_sub n2 e_konto e_sav e_jar la_before ls lj e_wb,2621:14:b1_since.tally,2597:model x_explain
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
-
-source s "synthetic"
-
-unit PLN: currency minor 0.01
-
-kind pays: event certain
-  leg cash: PLN
-
-kind subpays: pays
-
-place konto: accounts PLN lives 2026-01-01..
-
-place jar: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place work: outside lives 1900-01-01..
-
-input amt[m in months]: money PLN
-
-input fee[m in months]: money PLN
-
-def n_pays[m in months]: int = count(p in pays over m)
-
-def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
-
-move pay[m in months]: subpays
-  on start_of(m)
-  leg cash from work to konto amount amt[m]
-
-move tip[m in months]: transfers
-  on start_of(m)
-  leg cash from work to jar amount fee[m]
-
-move save[m in months]: transfers
-  on end_of(m)
-  reads konto
-  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
-
-ask rk: readers-of pays
-
-ask rk_sub: readers-of subpays
-
-ask n2: n_pays[2026-02]
-
-ask e_konto: explain bal(konto, 2026-04-30)
-
-ask e_sav: explain bal(sav, 2026-02-28)
-
-ask e_jar: explain bal(jar, 2026-04-30)
-
-ask la: last(stated[konto], 2026-05-01)
-
-ask sn: since(stated[konto], 2026-05-01)
-
-ask la_before: last(stated[konto], 2026-03-30)
-
-ask ls: last(stated[sav], 2026-03-01)
-
-ask lj: last(stated[jar], 2026-02-02)
-
-ask e_wb: explain wb[2026-02]
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt[2026-01..2026-12] = 10.00 PLN "plan"
-  fee[2026-01..2026-02] = 5.00 PLN "plan"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
-
-version konto_read
-  cite s
-  governs 2026-03
-  known 2026-03-05
-  anchor konto
-  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
-
-version sav_read
-  cite s
-  governs 2026-01
-  known 2026-02-01
-  pad sav from work
-  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
-
-version jar_read
-  cite s
-  governs 2026-02
-  known 2026-02-03
-  anchor jar
-  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"
-,,1:0,2559:rk: n_pays, n2
-rk_sub: n_pays, n2
-n2: 1
-  unfulfilled: pay[2026-02]
-  cut 2026-06-30
-e_konto: 10.00 PLN
-  balance of konto (PLN) at the end of 2026-04-30
-  from: anchor konto_read:stated[konto] = 10.00 PLN, after save[2026-03] (version konto_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
-  no movement
-  anchor: konto after save[2026-03], stated 10.00 PLN, difference 0.00 PLN
-  cut 2026-06-30
-e_sav: 10.50 PLN
-  balance of sav (PLN) at the end of 2026-02-28
-  from: pad sav_read:stated[sav] = 0.50 PLN, 2026-01-31 end (version sav_read, source s, locator "saldo"), gap role pad from work, gap 0.50 PLN (pads:sav_read:sav@2026-01-31 end)
-  2026-02-01:
-    save[2026-01].cash (past): +10.00 PLN
-  pad: sav 2026-01-31 end, pads:sav_read:sav@2026-01-31 end of 0.50 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: save[2026-01]
-  cut 2026-06-30
-e_jar: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03]) ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  balance of jar (PLN) at the end of 2026-04-30
-  from: anchor jar_read:stated[jar] = 10.00 PLN, 2026-02-02 end (version jar_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
-  2026-03-01:
-    tip[2026-03].cash (past): hole: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03])
-  2026-04-01:
-    tip[2026-04].cash (past): hole: ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  anchor: jar 2026-02-02 end, stated 10.00 PLN, difference 0.00 PLN
-  unfulfilled: tip[2026-03]
-  unfulfilled: tip[2026-04]
-  cut 2026-06-30
-la_before: ?"stated[konto] has no reading on or before 2026-03-30" (stated[konto])
-  cut 2026-06-30
-ls: 0.50 PLN
-  held: stated[sav] = 0.50 PLN (sav_read), read for 2026-03-01
-  cut 2026-06-30
-lj: 10.00 PLN
-  cut 2026-06-30
-e_wb: 10.00 PLN
-  [1] wb[2026-02] = 10.00 PLN, law date 2026-03-01
-      rule base: won
-        [2] bal(konto, 2026-03-01) = 10.00 PLN
-            balance of konto (PLN) at the end of 2026-03-01
-            from: opening v:opening[konto] = 0.00 PLN, 2026-01-01 start (version v, source s, locator "own")
-            2026-01-01:
-              pay[2026-01].cash (past): +10.00 PLN
-            2026-02-01:
-              pay[2026-02].cash (past): +10.00 PLN
-              save[2026-01].cash (past): -10.00 PLN
-            2026-03-01:
-              pay[2026-03].cash (past): +10.00 PLN
-              save[2026-02].cash (past): -10.00 PLN
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  unfulfilled: save[2026-01]
-  unfulfilled: save[2026-02]
-  cut 2026-06-30
-,25:fixes/gate8/m2_g4_b2_last,11:fixes-gate8,58:run b2_last.tally --ask q_save q_obs q_sav q_moved q_n b13,1954:13:b2_last.tally,1931:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-ask q_obs: observed(save[2026-03]).cash.amount
-ask q_sav: bal(sav, 2026-03-31)
-ask q_konto: bal(konto, 2026-03-31)
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-ask q_n: count(t in transfers over 2026-03)
-ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
-ask q_led: residuals konto 2026-03
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b15: bal(konto, 2026-03-15)
-ask b16: bal(konto, 2026-03-16)
-ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask e15: explain bal(konto, 2026-03-15)
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-  same bank[a2] = bank[b1]
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from unexplained
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-
-ask l14: last(stated[konto], 2026-03-14)
-ask l16: last(stated[konto], 2026-03-16)
-ask s14: last(stated[konto], 2026-03-15)
-,,1:0,202:q_save: 950.00 PLN
-  cut 2026-04-10
-q_obs: 950.00 PLN
-  cut 2026-04-10
-q_sav: 950.00 PLN
-  cut 2026-04-10
-q_moved: 950.00 PLN
-  cut 2026-04-10
-q_n: 1
-  cut 2026-04-10
-b13: 1 050.00 PLN
-  cut 2026-04-10
 ,31:fixes/gate8/m2_g4_b3_onefulfils,11:fixes-gate8,23:run b3_onefulfils.tally,1226:19:b3_onefulfils.tally,1197:model t
   tally 2
   on 2026-04-10
@@ -223586,161 +223034,6 @@ q_sav: 940.00 PLN
 q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 940.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (940.00 PLN)
-,26:fixes/gate8/m2_g4_b4_cycle,11:fixes-gate8,80:run b4_cycle.tally --ask b rk rk_sub n2 e_konto e_sav e_jar la_before ls lj e_wb,2651:14:b4_cycle.tally,2627:model x_explain
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
-
-source s "synthetic"
-
-unit PLN: currency minor 0.01
-
-kind pays: event certain
-  leg cash: PLN
-
-kind subpays: pays
-
-place konto: accounts PLN lives 2026-01-01..
-
-place jar: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place work: outside lives 1900-01-01..
-
-input amt[m in months]: money PLN
-
-input fee[m in months]: money PLN
-
-def n_pays[m in months]: int = count(p in pays over m)
-
-def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
-
-move pay[m in months]: subpays
-  on start_of(m)
-  leg cash from work to konto amount amt[m]
-
-move tip[m in months]: transfers
-  on start_of(m)
-  leg cash from work to jar amount fee[m]
-
-move save[m in months]: transfers
-  on end_of(m) - since(stated[jar], end_of(m)) * 0 days
-  reads konto
-  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
-
-ask b: bal(konto, 2026-04-30)
-
-ask rk: readers-of pays
-
-ask rk_sub: readers-of subpays
-
-ask n2: n_pays[2026-02]
-
-ask e_konto: explain bal(konto, 2026-04-30)
-
-ask e_sav: explain bal(sav, 2026-02-28)
-
-ask e_jar: explain bal(jar, 2026-04-30)
-
-ask la: last(stated[konto], 2026-05-01)
-
-ask la_before: last(stated[konto], 2026-03-30)
-
-ask ls: last(stated[sav], 2026-03-01)
-
-ask lj: last(stated[jar], 2026-02-02)
-
-ask e_wb: explain wb[2026-02]
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt[2026-01..2026-12] = 10.00 PLN "plan"
-  fee[2026-01..2026-02] = 5.00 PLN "plan"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
-
-version konto_read
-  cite s
-  governs 2026-03
-  known 2026-03-05
-  anchor konto
-  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
-
-version sav_read
-  cite s
-  governs 2026-01
-  known 2026-02-01
-  pad sav from work
-  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
-
-version jar_read
-  cite s
-  governs 2026-02
-  known 2026-02-03
-  anchor jar
-  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"
-,,1:0,3162:b: ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  anchor: konto after save[2026-03], stated 10.00 PLN, difference ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  cut 2026-06-30
-rk: n_pays, n2
-rk_sub: n_pays, n2
-n2: 1
-  unfulfilled: pay[2026-02]
-  cut 2026-06-30
-e_konto: ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  balance of konto (PLN) at the end of 2026-04-30
-  from: anchor konto_read:stated[konto] = 10.00 PLN, after save[2026-03] (version konto_read, source s, locator "saldo"), gap role anchor, gap ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  no movement
-  anchor: konto after save[2026-03], stated 10.00 PLN, difference ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  cut 2026-06-30
-e_sav: ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  balance of sav (PLN) at the end of 2026-02-28
-  from: pad sav_read:stated[sav] = 0.50 PLN, 2026-01-31 end (version sav_read, source s, locator "saldo"), gap role pad from work, gap ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar]) (pads:sav_read:sav@2026-01-31 end)
-  no movement
-  pad: sav 2026-01-31 end, pads:sav_read:sav@2026-01-31 end of ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  cut 2026-06-30
-e_jar: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03]) ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  balance of jar (PLN) at the end of 2026-04-30
-  from: anchor jar_read:stated[jar] = 10.00 PLN, 2026-02-02 end (version jar_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
-  2026-03-01:
-    tip[2026-03].cash (past): hole: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03])
-  2026-04-01:
-    tip[2026-04].cash (past): hole: ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  anchor: jar 2026-02-02 end, stated 10.00 PLN, difference 0.00 PLN
-  unfulfilled: tip[2026-03]
-  unfulfilled: tip[2026-04]
-  cut 2026-06-30
-la_before: ?"stated[konto] has no reading on or before 2026-03-30" (stated[konto])
-  cut 2026-06-30
-ls: 0.50 PLN
-  held: stated[sav] = 0.50 PLN (sav_read), read for 2026-03-01
-  cut 2026-06-30
-lj: 10.00 PLN
-  cut 2026-06-30
-e_wb: ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  [1] wb[2026-02] = ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar]), law date 2026-03-01
-      rule base: won
-        [2] bal(konto, 2026-03-01) = ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-            balance of konto (PLN) at the end of 2026-03-01
-            from: opening v:opening[konto] = 0.00 PLN, 2026-01-01 start (version v, source s, locator "own")
-            2026-01-01:
-              pay[2026-01].cash (past): +10.00 PLN
-            2026-02-01:
-              pay[2026-02].cash (past): +10.00 PLN
-            2026-03-01:
-              pay[2026-03].cash (past): +10.00 PLN
-              save[2026-02].cash (past): hole: ?"stated[jar] has no reading on or before 2026-02-01" (stated[jar])
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: pay[2026-03]
-  unfulfilled: save[2026-02]
-  cut 2026-06-30
 ,25:fixes/gate8/m2_g4_b4_twin,11:fixes-gate8,17:run b4_twin.tally,2648:13:b4_twin.tally,2625:model x_explain
   tally 2
   on 2026-06-30
@@ -223905,251 +223198,6 @@ n2: 1
   cut 2026-06-30
 rk: n_pays, n2
 rk_sub: n_pays, n2
-,23:fixes/gate8/m2_g4_b4own,11:fixes-gate8,46:run b4own.tally --ask rk rk_sub n2 e_jar ls lj,2795:11:b4own.tally,2774:model x_explain
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
-
-source s "synthetic"
-
-unit PLN: currency minor 0.01
-
-kind pays: event certain
-  leg cash: PLN
-
-kind subpays: pays
-
-place konto: accounts PLN lives 2026-01-01..
-
-place jar: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place work: outside lives 1900-01-01..
-
-input d_sw: int
-input amt[m in months]: money PLN
-
-input fee[m in months]: money PLN
-
-def n_pays[m in months]: int = count(p in pays over m)
-
-def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
-
-move pay[m in months]: subpays
-  on start_of(m)
-  leg cash from work to konto amount amt[m]
-
-move tip[m in months]: transfers
-  on start_of(m)
-  leg cash from work to jar amount fee[m]
-
-move sw[m in months]: transfers
-  on day_of(m, d_sw)
-  reads jar
-  leg cash from jar to sav amount bal(jar) * 0
-move save[m in months]: transfers
-  on end_of(m) - since(stated[konto], end_of(m)) * 0 days
-  reads konto
-  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
-
-ask b: bal(konto, 2026-04-30)
-
-ask rk: readers-of pays
-
-ask rk_sub: readers-of subpays
-
-ask n2: n_pays[2026-02]
-
-ask e_konto: explain bal(konto, 2026-04-30)
-
-ask e_sav: explain bal(sav, 2026-02-28)
-
-ask e_jar: explain bal(jar, 2026-04-30)
-
-ask la: last(stated[konto], 2026-05-01)
-
-ask la_before: last(stated[konto], 2026-03-30)
-
-ask ls: last(stated[sav], 2026-03-01)
-
-ask lj: last(stated[jar], 2026-02-02)
-
-ask e_wb: explain wb[2026-02]
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt[2026-01..2026-12] = 10.00 PLN "plan"
-  d_sw = 10 "plan"
-  fee[2026-01..2026-02] = 5.00 PLN "plan"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
-
-version konto_read
-  cite s
-  governs 2026-03
-  known 2026-03-05
-  anchor konto
-  stated[konto] = 10.00 PLN after sw[2026-03] "saldo"
-
-version sav_read
-  cite s
-  governs 2026-01
-  known 2026-02-01
-  pad sav from work
-  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
-
-version jar_read
-  cite s
-  governs 2026-02
-  known 2026-02-03
-  anchor jar
-  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"
-,,1:0,1183:rk: n_pays, n2
-rk_sub: n_pays, n2
-n2: 1
-  unfulfilled: pay[2026-02]
-  cut 2026-06-30
-e_jar: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03]) ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  balance of jar (PLN) at the end of 2026-04-30
-  from: anchor jar_read:stated[jar] = 10.00 PLN, 2026-02-02 end (version jar_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
-  2026-03-01:
-    tip[2026-03].cash (past): hole: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03])
-  2026-03-10:
-    sw[2026-03].cash (past): hole: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03])
-  2026-04-01:
-    tip[2026-04].cash (past): hole: ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  2026-04-10:
-    sw[2026-04].cash (past): hole: ?"fee at 2026-03: no value for 2026-03" (fee[2026-03]) ?"fee at 2026-04: no value for 2026-04" (fee[2026-04])
-  anchor: jar 2026-02-02 end, stated 10.00 PLN, difference 0.00 PLN
-  unfulfilled: sw[2026-03]
-  unfulfilled: sw[2026-04]
-  unfulfilled: tip[2026-03]
-  unfulfilled: tip[2026-04]
-  cut 2026-06-30
-ls: 0.50 PLN
-  held: stated[sav] = 0.50 PLN (sav_read), read for 2026-03-01
-  cut 2026-06-30
-lj: 10.00 PLN
-  cut 2026-06-30
-,27:fixes/gate8/m2_g4_b4own_cyc,11:fixes-gate8,57:run b4own_cyc.tally --ask rk rk_sub n2 la la_before ls lj,2654:15:b4own_cyc.tally,2629:model x_explain
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
-
-source s "synthetic"
-
-unit PLN: currency minor 0.01
-
-kind pays: event certain
-  leg cash: PLN
-
-kind subpays: pays
-
-place konto: accounts PLN lives 2026-01-01..
-
-place jar: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place work: outside lives 1900-01-01..
-
-input amt[m in months]: money PLN
-
-input fee[m in months]: money PLN
-
-def n_pays[m in months]: int = count(p in pays over m)
-
-def wb[m in months]: money PLN = bal(konto, end_of(m)) at end_of(m)
-
-move pay[m in months]: subpays
-  on start_of(m)
-  leg cash from work to konto amount amt[m]
-
-move tip[m in months]: transfers
-  on start_of(m)
-  leg cash from work to jar amount fee[m]
-
-move save[m in months]: transfers
-  on end_of(m) - since(stated[konto], end_of(m)) * 0 days
-  reads konto
-  leg cash from konto to sav amount max(bal(konto) - amt[m], 0)
-
-ask b: bal(konto, 2026-04-30)
-
-ask rk: readers-of pays
-
-ask rk_sub: readers-of subpays
-
-ask n2: n_pays[2026-02]
-
-ask e_konto: explain bal(konto, 2026-04-30)
-
-ask e_sav: explain bal(sav, 2026-02-28)
-
-ask e_jar: explain bal(jar, 2026-04-30)
-
-ask la: last(stated[konto], 2026-05-01)
-
-ask la_before: last(stated[konto], 2026-03-30)
-
-ask ls: last(stated[sav], 2026-03-01)
-
-ask lj: last(stated[jar], 2026-02-02)
-
-ask e_wb: explain wb[2026-02]
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt[2026-01..2026-12] = 10.00 PLN "plan"
-  fee[2026-01..2026-02] = 5.00 PLN "plan"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-  opening[jar] = 0.00 PLN at 2026-01-01 start "own"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "own"
-
-version konto_read
-  cite s
-  governs 2026-03
-  known 2026-03-05
-  anchor konto
-  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
-
-version sav_read
-  cite s
-  governs 2026-01
-  known 2026-02-01
-  pad sav from work
-  stated[sav] = 0.50 PLN at 2026-01-31 end "saldo"
-
-version jar_read
-  cite s
-  governs 2026-02
-  known 2026-02-03
-  anchor jar
-  stated[jar] = 10.00 PLN at 2026-02-02 end "saldo"
-,,1:0,354:rk: n_pays, n2
-rk_sub: n_pays, n2
-n2: 1
-  unfulfilled: pay[2026-02]
-  cut 2026-06-30
-la: refused: RUN-CYCLE save reads its own instances
-  cut 2026-06-30
-la_before: refused: RUN-CYCLE save reads its own instances
-  cut 2026-06-30
-ls: 0.50 PLN
-  held: stated[sav] = 0.50 PLN (sav_read), read for 2026-03-01
-  cut 2026-06-30
-lj: 10.00 PLN
-  cut 2026-06-30
 ,28:fixes/gate8/m2_g4_b4own_twin,11:fixes-gate8,20:run b4own_twin.tally,2800:16:b4own_twin.tally,2774:model x_explain
   tally 2
   on 2026-06-30
@@ -224325,12 +223373,12 @@ n2: 1
   cut 2026-06-30
 rk: n_pays, n2
 rk_sub: n_pays, n2
-,28:fixes/gate8/m2_g4_bf_b1_more,11:fixes-gate8,88:run bf_b1_more.tally --ask rk rk_sub n2 e_konto e_sav e_jar la_before ls lj e_wb l31 s31,2751:16:bf_b1_more.tally,2725:model x_explain
+,28:fixes/gate8/m2_g4_bf_b1_more,11:fixes-gate8,88:run bf_b1_more.tally --ask rk rk_sub n2 e_konto e_sav e_jar la_before ls lj e_wb l31 s31,2894:16:bf_b1_more.tally,2868:model x_explain
   tally 2
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
+  note "T, M2 C2 (items/explain/m with la, P11, P12: last of a reading after m, past its day, L §4.6), G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -224409,7 +223457,7 @@ version konto_read
   governs 2026-03
   known 2026-03-05
   anchor konto
-  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
+  stated[konto] = 10.00 PLN at 2026-04-01 end "saldo"
 
 version sav_read
   cite s
@@ -224430,16 +223478,16 @@ ask l31: last(stated[konto], 2026-03-31)
 ask s31: since(stated[konto], 2026-03-31)
 
 ask s41: since(stated[konto], 2026-04-01)
-,,1:0,2747:rk: n_pays, n2
+,,1:0,2737:rk: n_pays, n2
 rk_sub: n_pays, n2
 n2: 1
   unfulfilled: pay[2026-02]
   cut 2026-06-30
 e_konto: 10.00 PLN
   balance of konto (PLN) at the end of 2026-04-30
-  from: anchor konto_read:stated[konto] = 10.00 PLN, after save[2026-03] (version konto_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
+  from: anchor konto_read:stated[konto] = 10.00 PLN, 2026-04-01 end (version konto_read, source s, locator "saldo"), gap role anchor, gap 0.00 PLN
   no movement
-  anchor: konto after save[2026-03], stated 10.00 PLN, difference 0.00 PLN
+  anchor: konto 2026-04-01 end, stated 10.00 PLN, difference 0.00 PLN
   cut 2026-06-30
 e_sav: 10.50 PLN
   balance of sav (PLN) at the end of 2026-02-28
@@ -224660,96 +223708,6 @@ rk: n_pays, n2
 rk_sub: n_pays, n2
 sn: 31
   cut 2026-06-30
-,25:fixes/gate8/m2_g4_c_since,11:fixes-gate8,67:run c_since.tally --ask q_save q_obs q_sav q_moved q_n b13 sc13 l13,2124:13:c_since.tally,2101:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place unexplained: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-ask q_obs: observed(save[2026-03]).cash.amount
-ask q_sav: bal(sav, 2026-03-31)
-ask q_konto: bal(konto, 2026-03-31)
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-ask q_n: count(t in transfers over 2026-03)
-ask q_flk: flows(konto, 2026-03-01 .. 2026-03-31)
-ask q_led: residuals konto 2026-03
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b15: bal(konto, 2026-03-15)
-ask b16: bal(konto, 2026-03-16)
-ask pd: sum(p.cash.amount for p in pads over 2026-03)
-ask e15: explain bal(konto, 2026-03-15)
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a2] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "a"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  bank[b1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
-  same bank[a2] = bank[b1]
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from unexplained
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-
-ask l14: last(stated[konto], 2026-03-14)
-ask l16: last(stated[konto], 2026-03-16)
-ask s14: last(stated[konto], 2026-03-15)
-ask sc20: since(stated[konto], 2026-03-20)
-ask sc14: since(stated[konto], 2026-03-14)
-ask sc13: since(stated[konto], 2026-03-13)
-ask l13: last(stated[konto], 2026-03-13)
-,,1:0,391:q_save: 950.00 PLN
-  cut 2026-04-10
-q_obs: 950.00 PLN
-  cut 2026-04-10
-q_sav: 950.00 PLN
-  cut 2026-04-10
-q_moved: 950.00 PLN
-  cut 2026-04-10
-q_n: 1
-  cut 2026-04-10
-b13: 1 050.00 PLN
-  cut 2026-04-10
-sc13: ?"stated[konto] has no reading on or before 2026-03-13" (stated[konto])
-  cut 2026-04-10
-l13: ?"stated[konto] has no reading on or before 2026-03-13" (stated[konto])
-  cut 2026-04-10
 ,26:fixes/gate8/m2_g4_g3_agree,11:fixes-gate8,18:run g3_agree.tally,1712:14:g3_agree.tally,1688:model t
   tally 2
   on 2026-04-10
@@ -226680,36 +225638,6 @@ ask q: bal(konto, 2026-01-31)
   open: pay[2]
   open: pay[3]
   cut 2026-12-31
-,41:fixes/gate8/m2_rt_l4_6_after_plan_refused,11:fixes-gate8,33:run l4_6_after_plan_refused.tally,625:29:l4_6_after_plan_refused.tally,587:model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2025-01-01..
-place world: outside lives 1900-01-01..
-input amt: money PLN
-input dom: int
-
-move pay[m in months]: transfers
-  on day_of(m, dom)
-  at start_of(m)
-  leg cash from konto to world amount amt
-
-version v
-  cite s
-  governs always
-  known 2025-01-01
-  anchor konto
-  amt = 100.00 PLN
-  dom = 5
-  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
-  stated[konto] = 900.00 PLN after pay[2026-01] "s"
-
-ask q: bal(konto, 2026-01-31)
-,,1:1,130:refused: LOAD-ORDER stated[konto] after pay[2026-01]: pay[2026-01] is a plan or an observation (l4_6_after_plan_refused.tally:27)
 ,27:fixes/gate8/m2_rt_l4_6_last,11:fixes-gate8,19:run l4_6_last.tally,273:15:l4_6_last.tally,249:model t
   tally 2
   on 2026-12-31
@@ -229908,12 +228836,12 @@ r_b: refused: RUN-RECORD bank[a1] and bank[b1] state one transfer and both fulfi
   cut 2026-04-10
 warning: WARN-UNREAD input d10 is read by nothing
 warning: WARN-UNREAD place world is read by nothing
-,29:fixes/gate8/m2_d512_alone_pad,11:fixes-gate8,19:run alone_pad.tally,1172:15:alone_pad.tally,1147:model t
+,29:fixes/gate8/m2_d512_alone_pad,11:fixes-gate8,19:run alone_pad.tally,1315:15:alone_pad.tally,1290:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: a reading after a decision padded from a min 0 place that stays above 0 (walk/readings.rs tested_alone)"
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: a reading after a decision padded from a min 0 place that stays above 0 (walk/readings.rs tested_alone); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -229949,89 +228877,31 @@ version rd
   governs 2026-03..2026-04
   known 2026-04-04
   pad konto from sav
-  stated[konto] = 400.00 PLN after save[2026-03] "saldo"
-,,1:0,631:b15: 400.00 PLN
-  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of 300.00 PLN
+  stated[konto] = 400.00 PLN at 2026-03-15 end "saldo"
+,,1:0,591:b15: 400.00 PLN
+  pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 300.00 PLN
   cut 2026-04-10
 b31: 400.00 PLN
-  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of 300.00 PLN
+  pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 300.00 PLN
   cut 2026-04-10
 pd: 300.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-04-10
 s15: 650.00 PLN
-  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of 300.00 PLN
+  pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 300.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-04-10
 s31: 650.00 PLN
-  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of 300.00 PLN
+  pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 300.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-04-10
 warning: WARN-UNREAD place world is read by nothing
-,33:fixes/gate8/m2_d512_alone_pad_neg,11:fixes-gate8,23:run alone_pad_neg.tally,1170:19:alone_pad_neg.tally,1141:model t
+,32:fixes/gate8/m2_d512_alone_anchor,11:fixes-gate8,22:run alone_anchor.tally,1248:18:alone_anchor.tally,1220:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: a reading after a decision whose pad takes a min 0 place below 0 (walk/readings.rs tested_alone)"
-
-source s "s"
-unit PLN: currency minor 0.01
-kind savings: place PLN min 0
-place konto: accounts PLN lives 2026-01-01..
-place sav: savings lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-ask b15: bal(konto, 2026-03-15)
-ask b31: bal(konto, 2026-03-31)
-ask s15: bal(sav, 2026-03-15)
-ask s31: bal(sav, 2026-03-31)
-ask pd: sum(p.cash.amount for p in pads over 2026-03)
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from sav
-  stated[konto] = 1100.00 PLN after save[2026-03] "saldo"
-,,1:0,655:b15: 1 100.00 PLN
-  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of 1 000.00 PLN
-  cut 2026-04-10
-b31: 1 100.00 PLN
-  pad: konto after save[2026-03], pads:rd:konto@after save[2026-03] of 1 000.00 PLN
-  cut 2026-04-10
-pd: refused: RUN-PLACE pads:rd:konto@after save[2026-03] takes sav below 0
-  unfulfilled: save[2026-03]
-  cut 2026-04-10
-s15: refused: RUN-PLACE pads:rd:konto@after save[2026-03] takes sav below 0
-  unfulfilled: save[2026-03]
-  cut 2026-04-10
-s31: refused: RUN-PLACE pads:rd:konto@after save[2026-03] takes sav below 0
-  unfulfilled: save[2026-03]
-  cut 2026-04-10
-warning: WARN-UNREAD place world is read by nothing
-,32:fixes/gate8/m2_d512_alone_anchor,11:fixes-gate8,22:run alone_anchor.tally,1105:18:alone_anchor.tally,1077:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: an anchored reading of a min 0 place after a decision, at a number that keeps the rule (walk/readings.rs sign_anchor, open_group)"
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: an anchored reading of a min 0 place after a decision, at a number that keeps the rule (walk/readings.rs sign_anchor, open_group); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -230065,23 +228935,23 @@ version rd
   governs 2026-03..2026-04
   known 2026-04-04
   anchor sav
-  stated[sav] = 940.00 PLN after save[2026-03] "saldo"
-,,1:0,332:b15: 100.00 PLN
+  stated[sav] = 940.00 PLN at 2026-03-15 end "saldo"
+,,1:0,322:b15: 100.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-04-10
 s15: 940.00 PLN
-  anchor: sav after save[2026-03], stated 940.00 PLN, difference -10.00 PLN
+  anchor: sav 2026-03-15 end, stated 940.00 PLN, difference -10.00 PLN
   cut 2026-04-10
 s31: 940.00 PLN
-  anchor: sav after save[2026-03], stated 940.00 PLN, difference -10.00 PLN
+  anchor: sav 2026-03-15 end, stated 940.00 PLN, difference -10.00 PLN
   cut 2026-04-10
 warning: WARN-UNREAD place world is read by nothing
-,36:fixes/gate8/m2_d512_alone_anchor_neg,11:fixes-gate8,26:run alone_anchor_neg.tally,1071:22:alone_anchor_neg.tally,1039:model t
+,36:fixes/gate8/m2_d512_alone_anchor_neg,11:fixes-gate8,26:run alone_anchor_neg.tally,1214:22:alone_anchor_neg.tally,1182:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: an anchored reading of a min 0 place after a decision below 0 (walk/readings.rs sign_anchor)"
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: an anchored reading of a min 0 place after a decision below 0 (walk/readings.rs sign_anchor); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -230115,15 +228985,15 @@ version rd
   governs 2026-03..2026-04
   known 2026-04-04
   anchor sav
-  stated[sav] = -5.00 PLN after save[2026-03] "saldo"
-,,1:0,464:b15: 100.00 PLN
+  stated[sav] = -5.00 PLN at 2026-03-15 end "saldo"
+,,1:0,444:b15: 100.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-04-10
-s15: refused: RUN-PLACE sav is -5.00 PLN after its reading at after save[2026-03]
-  anchor: sav after save[2026-03], stated -5.00 PLN, difference -955.00 PLN
+s15: refused: RUN-PLACE sav is -5.00 PLN after its reading at 2026-03-15 end
+  anchor: sav 2026-03-15 end, stated -5.00 PLN, difference -955.00 PLN
   cut 2026-04-10
-s31: refused: RUN-PLACE sav is -5.00 PLN after its reading at after save[2026-03]
-  anchor: sav after save[2026-03], stated -5.00 PLN, difference -955.00 PLN
+s31: refused: RUN-PLACE sav is -5.00 PLN after its reading at 2026-03-15 end
+  anchor: sav 2026-03-15 end, stated -5.00 PLN, difference -955.00 PLN
   cut 2026-04-10
 warning: WARN-UNREAD place world is read by nothing
 ,30:fixes/gate8/m2_d512_made_exist,11:fixes-gate8,20:run made_exist.tally,1016:16:made_exist.tally,991:model hh
@@ -242865,185 +241735,6 @@ b_k: 970.00 PLN
 b_s: 100.00 PLN
   cut 2026-04-10
 warning: WARN-UNREAD place card is read by nothing
-,31:fixes/gate8/m2_r437_after_m_end,11:fixes-gate8,43:run after_m_end.tally --ask b16 b30 l16 l30,1841:17:after_m_end.tally,1814:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-03-31
-  note "T, M2 gate 8 run 43702332507: last of a reading after m, m fulfilled by o1 at konto on the run's last day E (03-31), o3 at konto on 04-02 past E, the cut after E: the reading stands on E (book/reading.rs last_standing_day > to ==, > to >=; walk/agenda.rs last_standing_in || to &&)"
-
-source s "s"
-unit PLN: currency minor 0.01
-kind savings: place PLN min 0
-place konto: accounts PLN lives 2026-01-01..
-place sav: savings lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[o1] = (on: 2026-03-31, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
-  bank[o2] = (on: 2026-03-16, kind: transfers, leg cash from sav to world amount 20.00 PLN, fulfils: save[2026-03]) "o2"
-
-version late
-  cite s
-  governs 2026-04
-  known 2026-04-03
-  bank[o3] = (on: 2026-04-02, kind: transfers, leg cash from konto to sav amount 5.00 PLN, fulfils: save[2026-03]) "o3"
-
-version rd
-  cite s
-  governs 2026-03
-  known 2026-04-04
-  pad konto from world
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-
-ask l16: last(stated[konto], 2026-03-16)
-ask l30: last(stated[konto], 2026-03-30)
-ask l31: last(stated[konto], 2026-03-31)
-ask b16: bal(konto, 2026-03-16)
-ask b30: bal(konto, 2026-03-30)
-ask b31: bal(konto, 2026-03-31)
-,,1:0,483:b16: 1 050.00 PLN
-  cut 2026-04-10
-b30: 1 050.00 PLN
-  cut 2026-04-10
-l16: ?"stated[konto] has no reading on or before 2026-03-16" (stated[konto])
-  cut 2026-04-10
-l30: ?"stated[konto] has no reading on or before 2026-03-30" (stated[konto])
-  cut 2026-04-10
-warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[o1] (500.00 PLN) and bank[o3] (5.00 PLN)
-warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[o2] (20.00 PLN) and bank[o3] (5.00 PLN)
-,28:fixes/gate8/m2_r437_am_rank3,11:fixes-gate8,28:run am_rank3.tally --ask b13,1648:14:am_rank3.tally,1624:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-  note "T, M2 gate 8 run 43702332507: a reading after m whose two fulfilling rows (c1, a1) stand on one day around an unlinked row b1, written c1, b1, a1: the reading stands after the last by rank, c1 (walk/agenda.rs booked_rank, last_standing_in's rank)"
-
-source s "s"
-unit PLN: currency minor 0.01
-kind savings: place PLN min 0
-place konto: accounts PLN lives 2026-01-01..
-place sav: savings lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[c1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 10.00 PLN, fulfils: save[2026-03]) "c1"
-  bank[b1] = (on: 2026-03-14, kind: transfers, leg cash from world to konto amount 50.00 PLN) "b1"
-  bank[a1] = (on: 2026-03-14, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "a1"
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from world
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-ask l14: last(stated[konto], 2026-03-14)
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b31: bal(konto, 2026-03-31)
-,,1:0,35:b13: 1 050.00 PLN
-  cut 2026-04-10
-,29:fixes/gate8/m2_r437_am_rank2l,11:fixes-gate8,29:run am_rank2l.tally --ask b13,1587:15:am_rank2l.tally,1562:model t
-  tally 2
-  on 2026-04-10
-  start 2026-03-01
-  end 2026-04-30
-  note "T, M2 gate 8 run 43702332507: a reading after m whose one fulfilling row has two legs at konto on one day, declared zfee before cash: the reading stands after the last by rank, zfee (walk/agenda.rs booked_rank -> 0, -> 1)"
-
-source s "s"
-unit PLN: currency minor 0.01
-kind savings: place PLN min 0
-place konto: accounts PLN lives 2026-01-01..
-place sav: savings lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input fee: money PLN
-kind twos: event certain
-  leg zfee: PLN
-  leg cash: PLN
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: twos
-  on day_of(m, d_save)
-  reads konto
-  leg zfee from konto to world amount fee
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep - fee)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  fee = 5.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  bank[a1] = (on: 2026-03-14, kind: twos, leg zfee from konto to world amount 5.00 PLN, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "a1"
-
-version rd
-  cite s
-  governs 2026-03..2026-04
-  known 2026-04-04
-  pad konto from world
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-ask l14: last(stated[konto], 2026-03-14)
-ask b13: bal(konto, 2026-03-13)
-ask b14: bal(konto, 2026-03-14)
-ask b31: bal(konto, 2026-03-31)
-,,1:0,35:b13: 1 050.00 PLN
-  cut 2026-04-10
 ,33:fixes/gate8/m2_r4371_cover_on_end,11:fixes-gate8,22:run cover_on_end.tally,1406:18:cover_on_end.tally,1378:model pw
   tally 2
   on 2026-04-25
@@ -244605,12 +243296,12 @@ s_room (m = 2026-05) [pay_reading = high]: 943.75 DUK
   held: rent = 950.00 DUK (later), read for 2026-05-01
   held: rent_off = 3 (richer_pay), read for 2026-05-01
   cut 2026-04-15
-,31:fixes/gate8/m2_g7_p3_after_same,11:fixes-gate8,57:run p3_after_same.tally --ask a_min a_back a_both a_known,1959:19:p3_after_same.tally,1930:model t
+,31:fixes/gate8/m2_g7_p3_after_same,11:fixes-gate8,57:run p3_after_same.tally --ask a_min a_back a_both a_known,2102:19:p3_after_same.tally,2073:model t
   tally 2
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "G7 review probe: after-reading and same inside a kept walk"
+  note "G7 review probe: after-reading and same inside a kept walk; tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -244652,7 +243343,7 @@ version rd
   governs 2026-03..2026-04
   known 2026-04-04
   pad konto from world
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+  stated[konto] = 90.00 PLN at 2026-03-14 end "saldo"
 
 
 ask a_min: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day)
@@ -246308,55 +244999,6 @@ w24 [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
-,23:fixes/gate8/m2_gate_b5a,11:fixes-gate8,27:run b5a.tally --ask m14 m15,1240:9:b5a.tally,1222:model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  pad konto from world
-  bank[o1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-
-ask b: bal(konto, 2026-03-14), bal(konto, 2026-03-15), bal(konto, 2026-03-31)
-ask m14: bal(konto, 2026-03-14) modelled
-ask m15: bal(konto, 2026-03-15) modelled
-ask m16: bal(konto, 2026-03-16) modelled
-ask m31: bal(konto, 2026-03-31) modelled
-ask g: gap(konto, 2026-03-15)
-ask r: residuals konto 2026-03
-,,1:0,68:m14: 1 050.00 PLN
-  cut 2026-06-10
-m15: 100.00 PLN
-  cut 2026-06-10
 ,23:fixes/gate8/m2_gate_b5p,11:fixes-gate8,13:run b5p.tally,1238:9:b5p.tally,1220:model t
   tally 2
   on 2026-06-10
@@ -246917,55 +245559,6 @@ cv1: false
   cut 2026-10-20
 bm: refused: RUN-DIV division by zero
   cut 2026-10-20
-,23:fixes/gate8/m2_gate_p7a,11:fixes-gate8,27:run p7a.tally --ask m14 m15,1240:9:p7a.tally,1222:model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  pad konto from world
-  bank[o1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
-
-ask b: bal(konto, 2026-03-14), bal(konto, 2026-03-15), bal(konto, 2026-03-31)
-ask m14: bal(konto, 2026-03-14) modelled
-ask m15: bal(konto, 2026-03-15) modelled
-ask m16: bal(konto, 2026-03-16) modelled
-ask m31: bal(konto, 2026-03-31) modelled
-ask g: gap(konto, 2026-03-15)
-ask r: residuals konto 2026-03
-,,1:0,68:m14: 1 050.00 PLN
-  cut 2026-06-10
-m15: 100.00 PLN
-  cut 2026-06-10
 ,23:fixes/gate8/m2_gate_p7b,11:fixes-gate8,33:run p7b.tally --ask b m14 m15 g r,1238:9:p7b.tally,1220:model t
   tally 2
   on 2026-06-10

@@ -1,7 +1,7 @@
 # tally 2.1.8 R15 (#169-i), L §5.18: a hole met any other way than by adding, scaling by a known number or passing
 # on makes the plain hole naming every hole: -(min(x, 0)) + 1 (q1), a sum whose where is a hole (q2), a balance with a
-# movement whose day is a hole (q3), a period's difference (q4), low (q5), a converted flows (q6), a share (q7), a
-# rounding (q8). A where known whatever the hole (q9) and the plain balance (q10) stay linear.
+# movement whose day is a hole (q3), a period's difference (q4), low (q5), a sum of movements each rounded in a def
+# (q6; tally 2.2, 2.2-7: was a converted flows), a share (q7), a rounding (q8). A where known whatever the hole (q9) and the plain balance (q10) stay linear.
 === m.tally
 model t
   tally 2
@@ -26,6 +26,8 @@ input ten: money PLN
 place konto: accounts PLN lives 2026-01-01..
 place konto2: accounts PLN lives 2026-01-01..
 place world: outside lives 1900-01-01..
+
+def in_eur[t in transfers]: money EUR = round(t.cash.amount / fx, minor(EUR), half-even) at t.day
 
 move pay: transfers
   on pday
@@ -61,7 +63,7 @@ ask q2: sum(z[k] for k in ks where f[k]) partial
 ask q3: bal(konto2, 2026-06-30) partial
 ask q4: pm - 2026-01 partial
 ask q5: low(konto, 2026-02-01 .. 2026-02-28) partial
-ask q6: flows(konto, 2026-02) in EUR at fx half-even partial
+ask q6: sum(in_eur[t] for t in transfers over 2026-02 where t.cash.to == konto) partial
 ask q7: share(c[k] for k in ks) partial
 ask q8: round(x, 1 PLN, half-even) partial
 ask q9: sum(z[k] for k in ks where c[k] or true) partial
