@@ -136,7 +136,7 @@ The number type comes first. Wrap the big-integer crate in the engine's own `Num
 ## 6. Errors and codes (A2 §5.6, A1 §6)
 
 - One `enum Code`, one variant per row of LANGUAGE §8, ENGINE §11 and OPERATIONS §10 (87 codes). `const ALL: [Code; 87]`, `fn as_str(self) -> &'static str` and the message function, each an exhaustive `match`.
-  - _Changed 2026-10-30 (K8-13):_ "87" is 1.0.1's count; 2.0 has 91 and 2.1 adds four (R-76). Recount at 8c with `tools/xref_check.py`; `ALL`'s length follows the recount, and the test below compares with the spec's tables either way.
+  - _Changed 2026-10-30 (K8-13):_ "87" is 1.0.1's count; 2.0 has 91 and 2.1 adds four (R-76). Recount at 8c with `tools/xref_check.py`; `ALL`'s length follows the recount, and the test below compares with the spec's tables either way. OPERATIONS has had no codes since its rewrite for tally 2.2 (#7).
 - A unit test reads the spec's tables (read only) and compares them with `Code::ALL`, as rustc's tidy check does for its error codes.
 - A refusal value carries code, message, file, line and item (LANGUAGE l.1582). The CLI's JSON shape is `{ code, message, … }` (engine-tests §4).
 - No `anyhow`, `eyre`, `Box<dyn Error>` or `String` errors (R-58). `thiserror` is optional; a hand-written `Display` is fine. No rendering crate (miette, ariadne): the spec fixes the message text.

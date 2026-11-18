@@ -29,8 +29,8 @@
 [[row]]
 id = "P8-1"
 group = "I"
-what = "a conversation turn: validate a patch, run the reality and one scenario, compare"
-recipe = "waits: T's generator (SO8-10) and OPERATIONS.md's rewrite"
+what = "a conversation turn: one check and two runs, cold, the reality without and with a change"
+recipe = "waits: T's generator (SO8-10) and M3, which builds check"
 wall_s = 2.0
 footprint_mb = 1024
 blocks = "tag"
@@ -99,7 +99,7 @@ blocks = "tag"
 id = "P8-7"
 group = "I"
 what = "the gate on one law part: its check asks and the threshold table"
-recipe = "waits: OPERATIONS.md §3's rewrite"
+recipe = "waits: the gate (OPERATIONS.md §5, LAW-2)"
 wall_s = 1.0
 footprint_mb = 1024
 blocks = "tag"

@@ -631,11 +631,11 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
 
 ## Where the next milestones plug in
 
-- **M3, the operations** (its first part; BUILD-ORDER § M3). The run function
+- **M3, the operations** (BUILD-ORDER § M3). The run function
   `run(reality, request) → result` as the library's one entry and the CLI's (E §1), the
-  request carrying the asks, the clocks and the pins; `api.rs`'s `run` is where it starts.
-  The result stored as aggregates under its hash. The rest (the store, `plan`, the gate on a
-  law part) waits for `OPERATIONS.md`'s rewrite (#7).
+  request carrying the asks and the clocks; `api.rs`'s `run` is where it starts. It stores
+  nothing. `check` (`OPERATIONS.md` §2.3) comes with it; the store, `plan` and the gate on a
+  law part are the store's or wait (`OPERATIONS.md` §4, §5).
 - **Later milestones** find their load side done too: fills (M5a) are typed with their
   sides and arcs, parts clauses (M5b) checked, joint models (M5c) merged with their members
   loaded alone and their asks known, distributions and queries (M6, M7) typed and their
