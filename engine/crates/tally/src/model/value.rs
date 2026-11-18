@@ -170,19 +170,24 @@ impl PartialEq for Window {
 impl Eq for Window {}
 
 impl Value {
-    /// The unknown days the holes in the value carry, added to `into` in order, each once: a
-    /// hole's, those of the holes a record or a list holds, and a window's that is no window
-    /// of days, which prints as the hole `not precise enough for a print`; a window of days
-    /// prints as a window and gives none (refcore's `hole_days`; tally 2.2, pick P25). L §4.4,
-    /// §8.2 `unknown day:`.
+    /// The unknown days the holes the value prints carry, added to `into` in order, each
+    /// once: a hole's, and those of the holes a record or a list holds. A window that is no
+    /// window of days prints as the hole `not precise enough for a print` only as the value
+    /// itself, a line's value, so only there it gives its days; inside a record or a list it
+    /// prints as the window, as a window of days does anywhere, and gives none (refcore's
+    /// `hole_days`; tally 2.2, pick P25). L §4.4, §8.2 `unknown day:`.
     pub fn hole_days_into(&self, into: &mut Vec<crate::hole::Unknown>) {
+        if let Value::Window(w) = self
+            && !w.of_days()
+        {
+            return crate::hole::carry_union(into, &w.carry);
+        }
         let mut todo: Vec<&Value> = vec![self];
         while let Some(v) = todo.pop() {
             match v {
                 Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
                 Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
                 Value::List(items) => todo.extend(items.iter().rev()),
-                Value::Window(w) if !w.of_days() => crate::hole::carry_union(into, &w.carry),
                 Value::Window(_)
                 | Value::Number(_)
                 | Value::Money(_)
