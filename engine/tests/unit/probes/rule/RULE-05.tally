@@ -42,7 +42,7 @@ move instal[m in grow_months]: instalments
   reads savings
   leg cash from konto to world amount instal_amt
 
-ask q: first(d in days where bal(savings, d) >= threshold), next(instalments, 2025-01-31).day, day_of(first(m in grow_months where seen_by_15th[m] > 0), rule_dom)
+ask q: first(d in days where bal(savings, d) >= threshold), (first(mm in instalments over 2025-01-31 ..) ties by mm.day).day, day_of(first(m in grow_months where seen_by_15th[m] > 0), rule_dom)
 
 version card_2025
   cite card

@@ -64,7 +64,7 @@ move p2: pays
 move peek: transfers
   on e3
   reads konto
-  leg cash from konto to savings amount min(bal(konto), next(pays, e2).cash.amount)
+  leg cash from konto to savings amount min(bal(konto), (first(m in pays over e2 ..) ties by m.day).cash.amount)
 
 ask q: bal(savings, 2026-12-31)
 

@@ -14872,7 +14872,7 @@ fl: -40.00 PLN
   before from: advw on 2026-12-28 reads amt
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
   cut 2026-10-20
-,15:items/windows/m,13:items-windows,11:run m.tally,1686:7:m.tally,1670:model w_each
+,15:items/windows/m,13:items-windows,11:run m.tally,1713:7:m.tally,1697:model w_each
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -14909,7 +14909,7 @@ move gift: transfers
   leg cash from work to konto amount bonus_amt
 
 ask ab: add_business(2026-05-29, 1, cal) windows each
-ask lwf: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 windows each with ax = lo
+ask lwf: min(bal(konto, d) from 2026-03-01 windows each for d in 2026-03-01 .. 2026-04-30 step 1 day) with ax = lo
 ask bw: bal(konto, 2026-04-30) windows each
 ask bw_plain: bal(konto, 2026-04-30)
 ask bx: bal(konto, 2026-04-30) with ax = hi windows each
@@ -15386,7 +15386,7 @@ ask w5: explain avail[2026-03] with big_put = 50.00
           rule base: won
             [2] running read bal(konto) = 2 300.00 PLN, the balance up to this point of 2026-01-20
   cut 2026-02-15
-,13:fixes/g2/wb_r,13:fixes-explain,23:run wb_r.tally --ask xc,7783:10:wb_r.tally,7763:model g5_order
+,13:fixes/g2/wb_r,13:fixes-explain,23:run wb_r.tally --ask xc,7859:10:wb_r.tally,7839:model g5_order
   tally 2
   on 2026-02-15
   start 2026-01-01
@@ -15602,7 +15602,9 @@ ask y7: explain lean[second, 2026-01]
 
 ask y8: explain bal(pocket, 2026-02-12) from 2026-02-10
 
-ask y9: explain low(konto, 2026-01-01 .. 2026-03-31)
+ask y9_day: argmin(bal(konto, d) for d in 2026-01-01 .. 2026-03-31 step 1 day) ties by d
+
+ask y9: explain bal(konto, 2026-02-15)
 
 ask y10: explain feed[2026-03]
 
@@ -15861,7 +15863,7 @@ version r3
 s1: 29
   cut 2026-06-30
 warning: WARN-UNREAD place work is read by nothing
-,17:fixes/g3/low_each,13:fixes-windows,27:run low_each.tally --ask lw,1830:14:low_each.tally,1806:model w_each
+,17:fixes/g3/low_each,13:fixes-windows,27:run low_each.tally --ask lw,1884:14:low_each.tally,1860:model w_each
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -15898,8 +15900,8 @@ move gift: transfers
   leg cash from work to konto amount bonus_amt
 
 ask ab: add_business(2026-05-29, 1, cal) windows each
-ask lw: low(konto, 2026-03-01 .. 2026-04-30) windows each
-ask lwf: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 windows each with ax = lo
+ask lw: min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day) windows each
+ask lwf: min(bal(konto, d) from 2026-03-01 windows each for d in 2026-03-01 .. 2026-04-30 step 1 day) with ax = lo
 ask bw: bal(konto, 2026-04-30) windows each
 ask bw_plain: bal(konto, 2026-04-30)
 ask bx: bal(konto, 2026-04-30) with ax = hi windows each
@@ -16446,7 +16448,7 @@ q_z [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations
 q_z [pa = hi]: 10.00 DUK
   reading: pa = hi
   law date 2026-10-25, cut 2026-10-25
-,26:items/sweep/next_uncertain,11:items-sweep,31:run forms.tally --ask nx nx_unc,1961:11:forms.tally,1940:model sweep_forms
+,26:items/sweep/next_uncertain,11:items-sweep,31:run forms.tally --ask nx nx_unc,2019:11:forms.tally,1998:model sweep_forms
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -16505,9 +16507,9 @@ ask am_untied: argmin(c1[k] for k in ks) ties by h[k]
 
 ask am_tied: argmin(c2[k] for k in ks) ties by h[k]
 
-ask nx: next(transfers, 2026-03-01).cash.amount
+ask nx: (first(m in transfers over 2026-03-01 ..) ties by m.day).cash.amount
 
-ask nx_unc: next(transfers, 2026-03-01).cash.amount with uncertain
+ask nx_unc: (first(m in transfers over 2026-03-01 ..) ties by m.day).cash.amount with uncertain
 
 version v
   cite s
@@ -35078,7 +35080,7 @@ version bank_2026_10
 warning: WARN-NEGATIVE konto is below zero from 2024-02-01
 warning: WARN-NEGATIVE konto is below zero from 2024-03-05
 warning: WARN-NEGATIVE konto is below zero from 2026-10-03
-,13:goldens/r7_g3,15:goldens-records,860:run r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/returns.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask g3_konto g3_pay g3_rule,339795:15:r7/to2028.tally,1737:model tropek_r7
+,13:goldens/r7_g3,15:goldens-records,860:run r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/returns.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask g3_konto g3_pay g3_rule,339822:15:r7/to2028.tally,1737:model tropek_r7
   tally 2
   on 2026-10-17
   start 2024-01-01
@@ -35313,7 +35315,7 @@ version holidays
   governs always
   known 2023-12-31
   holidays_pl = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-03-31, 2024-04-01, 2024-05-01, 2024-05-03, 2024-05-19, 2024-05-30, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26, 2025-01-01, 2025-01-06, 2025-04-20, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-08, 2025-06-19, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-24, 2025-12-25, 2025-12-26, 2026-01-01, 2026-01-06, 2026-04-05, 2026-04-06, 2026-05-01, 2026-05-03, 2026-05-24, 2026-06-04, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-24, 2026-12-25, 2026-12-26, 2027-01-01, 2027-01-06, 2027-03-28, 2027-03-29, 2027-05-01, 2027-05-03, 2027-05-16, 2027-05-27, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-24, 2027-12-25, 2027-12-26, 2028-01-01, 2028-01-06, 2028-04-16, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-04, 2028-06-15, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-24, 2028-12-25, 2028-12-26, 2029-01-01, 2029-01-06, 2029-04-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-20, 2029-05-31, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-01-06, 2030-04-21, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-09, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26, 2031-01-01, 2031-01-06, 2031-04-13, 2031-04-14, 2031-05-01, 2031-05-03, 2031-06-01, 2031-06-12, 2031-08-15, 2031-11-01, 2031-11-11, 2031-12-24, 2031-12-25, 2031-12-26, 2032-01-01, 2032-01-06, 2032-03-28, 2032-03-29, 2032-05-01, 2032-05-03, 2032-05-16, 2032-05-27, 2032-08-15, 2032-11-01, 2032-11-11, 2032-12-24, 2032-12-25, 2032-12-26, 2033-01-01, 2033-01-06, 2033-04-17, 2033-04-18, 2033-05-01, 2033-05-03, 2033-06-05, 2033-06-16, 2033-08-15, 2033-11-01, 2033-11-11, 2033-12-24, 2033-12-25, 2033-12-26, 2034-01-01, 2034-01-06, 2034-04-09, 2034-04-10, 2034-05-01, 2034-05-03, 2034-05-28, 2034-06-08, 2034-08-15, 2034-11-01, 2034-11-11, 2034-12-24, 2034-12-25, 2034-12-26, 2035-01-01, 2035-01-06, 2035-03-25, 2035-03-26, 2035-05-01, 2035-05-03, 2035-05-13, 2035-05-24, 2035-08-15, 2035-11-01, 2035-11-11, 2035-12-24, 2035-12-25, 2035-12-26, 2036-01-01, 2036-01-06, 2036-04-13, 2036-04-14, 2036-05-01, 2036-05-03, 2036-06-01, 2036-06-12, 2036-08-15, 2036-11-01, 2036-11-11, 2036-12-24, 2036-12-25, 2036-12-26, 2037-01-01, 2037-01-06, 2037-04-05, 2037-04-06, 2037-05-01, 2037-05-03, 2037-05-24, 2037-06-04, 2037-08-15, 2037-11-01, 2037-11-11, 2037-12-24, 2037-12-25, 2037-12-26, 2038-01-01, 2038-01-06, 2038-04-25, 2038-04-26, 2038-05-01, 2038-05-03, 2038-06-13, 2038-06-24, 2038-08-15, 2038-11-01, 2038-11-11, 2038-12-24, 2038-12-25, 2038-12-26, 2039-01-01, 2039-01-06, 2039-04-10, 2039-04-11, 2039-05-01, 2039-05-03, 2039-05-29, 2039-06-09, 2039-08-15, 2039-11-01, 2039-11-11, 2039-12-24, 2039-12-25, 2039-12-26, 2040-01-01, 2040-01-06, 2040-04-01, 2040-04-02, 2040-05-01, 2040-05-03, 2040-05-20, 2040-05-31, 2040-08-15, 2040-11-01, 2040-11-11, 2040-12-24, 2040-12-25, 2040-12-26, 2041-01-01, 2041-01-06, 2041-04-21, 2041-04-22, 2041-05-01, 2041-05-03, 2041-06-09, 2041-06-20, 2041-08-15, 2041-11-01, 2041-11-11, 2041-12-24, 2041-12-25, 2041-12-26, 2042-01-01, 2042-01-06, 2042-04-06, 2042-04-07, 2042-05-01, 2042-05-03, 2042-05-25, 2042-06-05, 2042-08-15, 2042-11-01, 2042-11-11, 2042-12-24, 2042-12-25, 2042-12-26, 2043-01-01, 2043-01-06, 2043-03-29, 2043-03-30, 2043-05-01, 2043-05-03, 2043-05-17, 2043-05-28, 2043-08-15, 2043-11-01, 2043-11-11, 2043-12-24, 2043-12-25, 2043-12-26, 2044-01-01, 2044-01-06, 2044-04-17, 2044-04-18, 2044-05-01, 2044-05-03, 2044-06-05, 2044-06-16, 2044-08-15, 2044-11-01, 2044-11-11, 2044-12-24, 2044-12-25, 2044-12-26, 2045-01-01, 2045-01-06, 2045-04-09, 2045-04-10, 2045-05-01, 2045-05-03, 2045-05-28, 2045-06-08, 2045-08-15, 2045-11-01, 2045-11-11, 2045-12-24, 2045-12-25, 2045-12-26, 2046-01-01, 2046-01-06, 2046-03-25, 2046-03-26, 2046-05-01, 2046-05-03, 2046-05-13, 2046-05-24, 2046-08-15, 2046-11-01, 2046-11-11, 2046-12-24, 2046-12-25, 2046-12-26, 2047-01-01, 2047-01-06, 2047-04-14, 2047-04-15, 2047-05-01, 2047-05-03, 2047-06-02, 2047-06-13, 2047-08-15, 2047-11-01, 2047-11-11, 2047-12-24, 2047-12-25, 2047-12-26, 2048-01-01, 2048-01-06, 2048-04-05, 2048-04-06, 2048-05-01, 2048-05-03, 2048-05-24, 2048-06-04, 2048-08-15, 2048-11-01, 2048-11-11, 2048-12-24, 2048-12-25, 2048-12-26, 2049-01-01, 2049-01-06, 2049-04-18, 2049-04-19, 2049-05-01, 2049-05-03, 2049-06-06, 2049-06-17, 2049-08-15, 2049-11-01, 2049-11-11, 2049-12-24, 2049-12-25, 2049-12-26, 2050-01-01, 2050-01-06, 2050-04-10, 2050-04-11, 2050-05-01, 2050-05-03, 2050-05-29, 2050-06-09, 2050-08-15, 2050-11-01, 2050-11-11, 2050-12-24, 2050-12-25, 2050-12-26, 2051-01-01, 2051-01-06, 2051-04-02, 2051-04-03, 2051-05-01, 2051-05-03, 2051-05-21, 2051-06-01, 2051-08-15, 2051-11-01, 2051-11-11, 2051-12-24, 2051-12-25, 2051-12-26, 2052-01-01, 2052-01-06, 2052-04-21, 2052-04-22, 2052-05-01, 2052-05-03, 2052-06-09, 2052-06-20, 2052-08-15, 2052-11-01, 2052-11-11, 2052-12-24, 2052-12-25, 2052-12-26, 2053-01-01, 2053-01-06, 2053-04-06, 2053-04-07, 2053-05-01, 2053-05-03, 2053-05-25, 2053-06-05, 2053-08-15, 2053-11-01, 2053-11-11, 2053-12-24, 2053-12-25, 2053-12-26, 2054-01-01, 2054-01-06, 2054-03-29, 2054-03-30, 2054-05-01, 2054-05-03, 2054-05-17, 2054-05-28, 2054-08-15, 2054-11-01, 2054-11-11, 2054-12-24, 2054-12-25, 2054-12-26, 2055-01-01, 2055-01-06, 2055-04-18, 2055-04-19, 2055-05-01, 2055-05-03, 2055-06-06, 2055-06-17, 2055-08-15, 2055-11-01, 2055-11-11, 2055-12-24, 2055-12-25, 2055-12-26, 2056-01-01, 2056-01-06, 2056-04-02, 2056-04-03, 2056-05-01, 2056-05-03, 2056-05-21, 2056-06-01, 2056-08-15, 2056-11-01, 2056-11-11, 2056-12-24, 2056-12-25, 2056-12-26, 2057-01-01, 2057-01-06, 2057-04-22, 2057-04-23, 2057-05-01, 2057-05-03, 2057-06-10, 2057-06-21, 2057-08-15, 2057-11-01, 2057-11-11, 2057-12-24, 2057-12-25, 2057-12-26]) "calendar.ts holidays(y) for 2024 to 2057, Easter by the anonymous Gregorian algorithm"
-,16:r7/forward.tally,13039:part r7_forward
+,16:r7/forward.tally,13066:part r7_forward
   tally 2
   note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
   note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
@@ -35409,7 +35411,7 @@ def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], 
 def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
   note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
 
-def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+def surplus[m in month]: money PLN = max(0, min(bal(konto, d) from day_of(m, invest_dom) for d in day_of(m, invest_dom) .. add_days(next_pay[m], -1) step 1 day) - floor_15) at start_of(m)
   note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
 
 def ike_seen[y in cal_year]: money PLN at start_of(y)
@@ -38125,7 +38127,7 @@ warning: WARN-NEGATIVE konto is below zero from 2026-10-03
 warning: WARN-UNREAD def fire_on_track is read by nothing
 warning: WARN-UNREAD def spend_daily is read by nothing
 warning: WARN-UNREAD input fire_from is read by nothing
-,20:goldens/r7_pins_2027,15:goldens-records,933:run r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/returns.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_invest pin_to_ike pin_to_rest pin_konto pin_net_worth pin_net_worth_2027 pin_oki_tax pin_pit,339795:15:r7/to2028.tally,1737:model tropek_r7
+,20:goldens/r7_pins_2027,15:goldens-records,933:run r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/returns.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_invest pin_to_ike pin_to_rest pin_konto pin_net_worth pin_net_worth_2027 pin_oki_tax pin_pit,339822:15:r7/to2028.tally,1737:model tropek_r7
   tally 2
   on 2026-10-17
   start 2024-01-01
@@ -38360,7 +38362,7 @@ version holidays
   governs always
   known 2023-12-31
   holidays_pl = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-03-31, 2024-04-01, 2024-05-01, 2024-05-03, 2024-05-19, 2024-05-30, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26, 2025-01-01, 2025-01-06, 2025-04-20, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-08, 2025-06-19, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-24, 2025-12-25, 2025-12-26, 2026-01-01, 2026-01-06, 2026-04-05, 2026-04-06, 2026-05-01, 2026-05-03, 2026-05-24, 2026-06-04, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-24, 2026-12-25, 2026-12-26, 2027-01-01, 2027-01-06, 2027-03-28, 2027-03-29, 2027-05-01, 2027-05-03, 2027-05-16, 2027-05-27, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-24, 2027-12-25, 2027-12-26, 2028-01-01, 2028-01-06, 2028-04-16, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-04, 2028-06-15, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-24, 2028-12-25, 2028-12-26, 2029-01-01, 2029-01-06, 2029-04-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-20, 2029-05-31, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-01-06, 2030-04-21, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-09, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26, 2031-01-01, 2031-01-06, 2031-04-13, 2031-04-14, 2031-05-01, 2031-05-03, 2031-06-01, 2031-06-12, 2031-08-15, 2031-11-01, 2031-11-11, 2031-12-24, 2031-12-25, 2031-12-26, 2032-01-01, 2032-01-06, 2032-03-28, 2032-03-29, 2032-05-01, 2032-05-03, 2032-05-16, 2032-05-27, 2032-08-15, 2032-11-01, 2032-11-11, 2032-12-24, 2032-12-25, 2032-12-26, 2033-01-01, 2033-01-06, 2033-04-17, 2033-04-18, 2033-05-01, 2033-05-03, 2033-06-05, 2033-06-16, 2033-08-15, 2033-11-01, 2033-11-11, 2033-12-24, 2033-12-25, 2033-12-26, 2034-01-01, 2034-01-06, 2034-04-09, 2034-04-10, 2034-05-01, 2034-05-03, 2034-05-28, 2034-06-08, 2034-08-15, 2034-11-01, 2034-11-11, 2034-12-24, 2034-12-25, 2034-12-26, 2035-01-01, 2035-01-06, 2035-03-25, 2035-03-26, 2035-05-01, 2035-05-03, 2035-05-13, 2035-05-24, 2035-08-15, 2035-11-01, 2035-11-11, 2035-12-24, 2035-12-25, 2035-12-26, 2036-01-01, 2036-01-06, 2036-04-13, 2036-04-14, 2036-05-01, 2036-05-03, 2036-06-01, 2036-06-12, 2036-08-15, 2036-11-01, 2036-11-11, 2036-12-24, 2036-12-25, 2036-12-26, 2037-01-01, 2037-01-06, 2037-04-05, 2037-04-06, 2037-05-01, 2037-05-03, 2037-05-24, 2037-06-04, 2037-08-15, 2037-11-01, 2037-11-11, 2037-12-24, 2037-12-25, 2037-12-26, 2038-01-01, 2038-01-06, 2038-04-25, 2038-04-26, 2038-05-01, 2038-05-03, 2038-06-13, 2038-06-24, 2038-08-15, 2038-11-01, 2038-11-11, 2038-12-24, 2038-12-25, 2038-12-26, 2039-01-01, 2039-01-06, 2039-04-10, 2039-04-11, 2039-05-01, 2039-05-03, 2039-05-29, 2039-06-09, 2039-08-15, 2039-11-01, 2039-11-11, 2039-12-24, 2039-12-25, 2039-12-26, 2040-01-01, 2040-01-06, 2040-04-01, 2040-04-02, 2040-05-01, 2040-05-03, 2040-05-20, 2040-05-31, 2040-08-15, 2040-11-01, 2040-11-11, 2040-12-24, 2040-12-25, 2040-12-26, 2041-01-01, 2041-01-06, 2041-04-21, 2041-04-22, 2041-05-01, 2041-05-03, 2041-06-09, 2041-06-20, 2041-08-15, 2041-11-01, 2041-11-11, 2041-12-24, 2041-12-25, 2041-12-26, 2042-01-01, 2042-01-06, 2042-04-06, 2042-04-07, 2042-05-01, 2042-05-03, 2042-05-25, 2042-06-05, 2042-08-15, 2042-11-01, 2042-11-11, 2042-12-24, 2042-12-25, 2042-12-26, 2043-01-01, 2043-01-06, 2043-03-29, 2043-03-30, 2043-05-01, 2043-05-03, 2043-05-17, 2043-05-28, 2043-08-15, 2043-11-01, 2043-11-11, 2043-12-24, 2043-12-25, 2043-12-26, 2044-01-01, 2044-01-06, 2044-04-17, 2044-04-18, 2044-05-01, 2044-05-03, 2044-06-05, 2044-06-16, 2044-08-15, 2044-11-01, 2044-11-11, 2044-12-24, 2044-12-25, 2044-12-26, 2045-01-01, 2045-01-06, 2045-04-09, 2045-04-10, 2045-05-01, 2045-05-03, 2045-05-28, 2045-06-08, 2045-08-15, 2045-11-01, 2045-11-11, 2045-12-24, 2045-12-25, 2045-12-26, 2046-01-01, 2046-01-06, 2046-03-25, 2046-03-26, 2046-05-01, 2046-05-03, 2046-05-13, 2046-05-24, 2046-08-15, 2046-11-01, 2046-11-11, 2046-12-24, 2046-12-25, 2046-12-26, 2047-01-01, 2047-01-06, 2047-04-14, 2047-04-15, 2047-05-01, 2047-05-03, 2047-06-02, 2047-06-13, 2047-08-15, 2047-11-01, 2047-11-11, 2047-12-24, 2047-12-25, 2047-12-26, 2048-01-01, 2048-01-06, 2048-04-05, 2048-04-06, 2048-05-01, 2048-05-03, 2048-05-24, 2048-06-04, 2048-08-15, 2048-11-01, 2048-11-11, 2048-12-24, 2048-12-25, 2048-12-26, 2049-01-01, 2049-01-06, 2049-04-18, 2049-04-19, 2049-05-01, 2049-05-03, 2049-06-06, 2049-06-17, 2049-08-15, 2049-11-01, 2049-11-11, 2049-12-24, 2049-12-25, 2049-12-26, 2050-01-01, 2050-01-06, 2050-04-10, 2050-04-11, 2050-05-01, 2050-05-03, 2050-05-29, 2050-06-09, 2050-08-15, 2050-11-01, 2050-11-11, 2050-12-24, 2050-12-25, 2050-12-26, 2051-01-01, 2051-01-06, 2051-04-02, 2051-04-03, 2051-05-01, 2051-05-03, 2051-05-21, 2051-06-01, 2051-08-15, 2051-11-01, 2051-11-11, 2051-12-24, 2051-12-25, 2051-12-26, 2052-01-01, 2052-01-06, 2052-04-21, 2052-04-22, 2052-05-01, 2052-05-03, 2052-06-09, 2052-06-20, 2052-08-15, 2052-11-01, 2052-11-11, 2052-12-24, 2052-12-25, 2052-12-26, 2053-01-01, 2053-01-06, 2053-04-06, 2053-04-07, 2053-05-01, 2053-05-03, 2053-05-25, 2053-06-05, 2053-08-15, 2053-11-01, 2053-11-11, 2053-12-24, 2053-12-25, 2053-12-26, 2054-01-01, 2054-01-06, 2054-03-29, 2054-03-30, 2054-05-01, 2054-05-03, 2054-05-17, 2054-05-28, 2054-08-15, 2054-11-01, 2054-11-11, 2054-12-24, 2054-12-25, 2054-12-26, 2055-01-01, 2055-01-06, 2055-04-18, 2055-04-19, 2055-05-01, 2055-05-03, 2055-06-06, 2055-06-17, 2055-08-15, 2055-11-01, 2055-11-11, 2055-12-24, 2055-12-25, 2055-12-26, 2056-01-01, 2056-01-06, 2056-04-02, 2056-04-03, 2056-05-01, 2056-05-03, 2056-05-21, 2056-06-01, 2056-08-15, 2056-11-01, 2056-11-11, 2056-12-24, 2056-12-25, 2056-12-26, 2057-01-01, 2057-01-06, 2057-04-22, 2057-04-23, 2057-05-01, 2057-05-03, 2057-06-10, 2057-06-21, 2057-08-15, 2057-11-01, 2057-11-11, 2057-12-24, 2057-12-25, 2057-12-26]) "calendar.ts holidays(y) for 2024 to 2057, Easter by the anonymous Gregorian algorithm"
-,16:r7/forward.tally,13039:part r7_forward
+,16:r7/forward.tally,13066:part r7_forward
   tally 2
   note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
   note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
@@ -38456,7 +38458,7 @@ def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], 
 def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
   note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
 
-def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+def surplus[m in month]: money PLN = max(0, min(bal(konto, d) from day_of(m, invest_dom) for d in day_of(m, invest_dom) .. add_days(next_pay[m], -1) step 1 day) - floor_15) at start_of(m)
   note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
 
 def ike_seen[y in cal_year]: money PLN at start_of(y)
@@ -41612,7 +41614,7 @@ warning: WARN-NEGATIVE konto is below zero from 2026-10-03
 warning: WARN-UNREAD def fire_on_track is read by nothing
 warning: WARN-UNREAD def spend_daily is read by nothing
 warning: WARN-UNREAD input fire_from is read by nothing
-,21:goldens/r7_joint_2027,15:goldens-records,887:run r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_net_worth pin_net_worth_2027 pin_oki_tax pin_pit,340434:15:r7/to2028.tally,1737:model tropek_r7
+,21:goldens/r7_joint_2027,15:goldens-records,887:run r7/to2028.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_net_worth pin_net_worth_2027 pin_oki_tax pin_pit,340461:15:r7/to2028.tally,1737:model tropek_r7
   tally 2
   on 2026-10-17
   start 2024-01-01
@@ -41847,7 +41849,7 @@ version holidays
   governs always
   known 2023-12-31
   holidays_pl = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-03-31, 2024-04-01, 2024-05-01, 2024-05-03, 2024-05-19, 2024-05-30, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26, 2025-01-01, 2025-01-06, 2025-04-20, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-08, 2025-06-19, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-24, 2025-12-25, 2025-12-26, 2026-01-01, 2026-01-06, 2026-04-05, 2026-04-06, 2026-05-01, 2026-05-03, 2026-05-24, 2026-06-04, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-24, 2026-12-25, 2026-12-26, 2027-01-01, 2027-01-06, 2027-03-28, 2027-03-29, 2027-05-01, 2027-05-03, 2027-05-16, 2027-05-27, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-24, 2027-12-25, 2027-12-26, 2028-01-01, 2028-01-06, 2028-04-16, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-04, 2028-06-15, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-24, 2028-12-25, 2028-12-26, 2029-01-01, 2029-01-06, 2029-04-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-20, 2029-05-31, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-01-06, 2030-04-21, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-09, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26, 2031-01-01, 2031-01-06, 2031-04-13, 2031-04-14, 2031-05-01, 2031-05-03, 2031-06-01, 2031-06-12, 2031-08-15, 2031-11-01, 2031-11-11, 2031-12-24, 2031-12-25, 2031-12-26, 2032-01-01, 2032-01-06, 2032-03-28, 2032-03-29, 2032-05-01, 2032-05-03, 2032-05-16, 2032-05-27, 2032-08-15, 2032-11-01, 2032-11-11, 2032-12-24, 2032-12-25, 2032-12-26, 2033-01-01, 2033-01-06, 2033-04-17, 2033-04-18, 2033-05-01, 2033-05-03, 2033-06-05, 2033-06-16, 2033-08-15, 2033-11-01, 2033-11-11, 2033-12-24, 2033-12-25, 2033-12-26, 2034-01-01, 2034-01-06, 2034-04-09, 2034-04-10, 2034-05-01, 2034-05-03, 2034-05-28, 2034-06-08, 2034-08-15, 2034-11-01, 2034-11-11, 2034-12-24, 2034-12-25, 2034-12-26, 2035-01-01, 2035-01-06, 2035-03-25, 2035-03-26, 2035-05-01, 2035-05-03, 2035-05-13, 2035-05-24, 2035-08-15, 2035-11-01, 2035-11-11, 2035-12-24, 2035-12-25, 2035-12-26, 2036-01-01, 2036-01-06, 2036-04-13, 2036-04-14, 2036-05-01, 2036-05-03, 2036-06-01, 2036-06-12, 2036-08-15, 2036-11-01, 2036-11-11, 2036-12-24, 2036-12-25, 2036-12-26, 2037-01-01, 2037-01-06, 2037-04-05, 2037-04-06, 2037-05-01, 2037-05-03, 2037-05-24, 2037-06-04, 2037-08-15, 2037-11-01, 2037-11-11, 2037-12-24, 2037-12-25, 2037-12-26, 2038-01-01, 2038-01-06, 2038-04-25, 2038-04-26, 2038-05-01, 2038-05-03, 2038-06-13, 2038-06-24, 2038-08-15, 2038-11-01, 2038-11-11, 2038-12-24, 2038-12-25, 2038-12-26, 2039-01-01, 2039-01-06, 2039-04-10, 2039-04-11, 2039-05-01, 2039-05-03, 2039-05-29, 2039-06-09, 2039-08-15, 2039-11-01, 2039-11-11, 2039-12-24, 2039-12-25, 2039-12-26, 2040-01-01, 2040-01-06, 2040-04-01, 2040-04-02, 2040-05-01, 2040-05-03, 2040-05-20, 2040-05-31, 2040-08-15, 2040-11-01, 2040-11-11, 2040-12-24, 2040-12-25, 2040-12-26, 2041-01-01, 2041-01-06, 2041-04-21, 2041-04-22, 2041-05-01, 2041-05-03, 2041-06-09, 2041-06-20, 2041-08-15, 2041-11-01, 2041-11-11, 2041-12-24, 2041-12-25, 2041-12-26, 2042-01-01, 2042-01-06, 2042-04-06, 2042-04-07, 2042-05-01, 2042-05-03, 2042-05-25, 2042-06-05, 2042-08-15, 2042-11-01, 2042-11-11, 2042-12-24, 2042-12-25, 2042-12-26, 2043-01-01, 2043-01-06, 2043-03-29, 2043-03-30, 2043-05-01, 2043-05-03, 2043-05-17, 2043-05-28, 2043-08-15, 2043-11-01, 2043-11-11, 2043-12-24, 2043-12-25, 2043-12-26, 2044-01-01, 2044-01-06, 2044-04-17, 2044-04-18, 2044-05-01, 2044-05-03, 2044-06-05, 2044-06-16, 2044-08-15, 2044-11-01, 2044-11-11, 2044-12-24, 2044-12-25, 2044-12-26, 2045-01-01, 2045-01-06, 2045-04-09, 2045-04-10, 2045-05-01, 2045-05-03, 2045-05-28, 2045-06-08, 2045-08-15, 2045-11-01, 2045-11-11, 2045-12-24, 2045-12-25, 2045-12-26, 2046-01-01, 2046-01-06, 2046-03-25, 2046-03-26, 2046-05-01, 2046-05-03, 2046-05-13, 2046-05-24, 2046-08-15, 2046-11-01, 2046-11-11, 2046-12-24, 2046-12-25, 2046-12-26, 2047-01-01, 2047-01-06, 2047-04-14, 2047-04-15, 2047-05-01, 2047-05-03, 2047-06-02, 2047-06-13, 2047-08-15, 2047-11-01, 2047-11-11, 2047-12-24, 2047-12-25, 2047-12-26, 2048-01-01, 2048-01-06, 2048-04-05, 2048-04-06, 2048-05-01, 2048-05-03, 2048-05-24, 2048-06-04, 2048-08-15, 2048-11-01, 2048-11-11, 2048-12-24, 2048-12-25, 2048-12-26, 2049-01-01, 2049-01-06, 2049-04-18, 2049-04-19, 2049-05-01, 2049-05-03, 2049-06-06, 2049-06-17, 2049-08-15, 2049-11-01, 2049-11-11, 2049-12-24, 2049-12-25, 2049-12-26, 2050-01-01, 2050-01-06, 2050-04-10, 2050-04-11, 2050-05-01, 2050-05-03, 2050-05-29, 2050-06-09, 2050-08-15, 2050-11-01, 2050-11-11, 2050-12-24, 2050-12-25, 2050-12-26, 2051-01-01, 2051-01-06, 2051-04-02, 2051-04-03, 2051-05-01, 2051-05-03, 2051-05-21, 2051-06-01, 2051-08-15, 2051-11-01, 2051-11-11, 2051-12-24, 2051-12-25, 2051-12-26, 2052-01-01, 2052-01-06, 2052-04-21, 2052-04-22, 2052-05-01, 2052-05-03, 2052-06-09, 2052-06-20, 2052-08-15, 2052-11-01, 2052-11-11, 2052-12-24, 2052-12-25, 2052-12-26, 2053-01-01, 2053-01-06, 2053-04-06, 2053-04-07, 2053-05-01, 2053-05-03, 2053-05-25, 2053-06-05, 2053-08-15, 2053-11-01, 2053-11-11, 2053-12-24, 2053-12-25, 2053-12-26, 2054-01-01, 2054-01-06, 2054-03-29, 2054-03-30, 2054-05-01, 2054-05-03, 2054-05-17, 2054-05-28, 2054-08-15, 2054-11-01, 2054-11-11, 2054-12-24, 2054-12-25, 2054-12-26, 2055-01-01, 2055-01-06, 2055-04-18, 2055-04-19, 2055-05-01, 2055-05-03, 2055-06-06, 2055-06-17, 2055-08-15, 2055-11-01, 2055-11-11, 2055-12-24, 2055-12-25, 2055-12-26, 2056-01-01, 2056-01-06, 2056-04-02, 2056-04-03, 2056-05-01, 2056-05-03, 2056-05-21, 2056-06-01, 2056-08-15, 2056-11-01, 2056-11-11, 2056-12-24, 2056-12-25, 2056-12-26, 2057-01-01, 2057-01-06, 2057-04-22, 2057-04-23, 2057-05-01, 2057-05-03, 2057-06-10, 2057-06-21, 2057-08-15, 2057-11-01, 2057-11-11, 2057-12-24, 2057-12-25, 2057-12-26]) "calendar.ts holidays(y) for 2024 to 2057, Easter by the anonymous Gregorian algorithm"
-,16:r7/forward.tally,13039:part r7_forward
+,16:r7/forward.tally,13066:part r7_forward
   tally 2
   note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
   note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
@@ -41943,7 +41945,7 @@ def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], 
 def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
   note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
 
-def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+def surplus[m in month]: money PLN = max(0, min(bal(konto, d) from day_of(m, invest_dom) for d in day_of(m, invest_dom) .. add_days(next_pay[m], -1) step 1 day) - floor_15) at start_of(m)
   note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
 
 def ike_seen[y in cal_year]: money PLN at start_of(y)
@@ -44887,7 +44889,7 @@ warning: WARN-NEGATIVE konto is below zero from 2026-10-03
 warning: WARN-UNREAD def fire_on_track is read by nothing
 warning: WARN-UNREAD def spend_daily is read by nothing
 warning: WARN-UNREAD input fire_from is read by nothing
-,19:goldens/r7_oki_2030,15:goldens-records,853:run r7/to2031.tally bank.tally r7/forward.tally r7/business.tally r7/returns.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_oki_tax_2030,338730:15:r7/to2031.tally,673:model tropek_r7
+,19:goldens/r7_oki_2030,15:goldens-records,853:run r7/to2031.tally bank.tally r7/forward.tally r7/business.tally r7/returns.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_oki_tax_2030,338757:15:r7/to2031.tally,673:model tropek_r7
   tally 2
   on 2026-10-17
   start 2024-01-01
@@ -45101,7 +45103,7 @@ version holidays
   governs always
   known 2023-12-31
   holidays_pl = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-03-31, 2024-04-01, 2024-05-01, 2024-05-03, 2024-05-19, 2024-05-30, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26, 2025-01-01, 2025-01-06, 2025-04-20, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-08, 2025-06-19, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-24, 2025-12-25, 2025-12-26, 2026-01-01, 2026-01-06, 2026-04-05, 2026-04-06, 2026-05-01, 2026-05-03, 2026-05-24, 2026-06-04, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-24, 2026-12-25, 2026-12-26, 2027-01-01, 2027-01-06, 2027-03-28, 2027-03-29, 2027-05-01, 2027-05-03, 2027-05-16, 2027-05-27, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-24, 2027-12-25, 2027-12-26, 2028-01-01, 2028-01-06, 2028-04-16, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-04, 2028-06-15, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-24, 2028-12-25, 2028-12-26, 2029-01-01, 2029-01-06, 2029-04-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-20, 2029-05-31, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-01-06, 2030-04-21, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-09, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26, 2031-01-01, 2031-01-06, 2031-04-13, 2031-04-14, 2031-05-01, 2031-05-03, 2031-06-01, 2031-06-12, 2031-08-15, 2031-11-01, 2031-11-11, 2031-12-24, 2031-12-25, 2031-12-26, 2032-01-01, 2032-01-06, 2032-03-28, 2032-03-29, 2032-05-01, 2032-05-03, 2032-05-16, 2032-05-27, 2032-08-15, 2032-11-01, 2032-11-11, 2032-12-24, 2032-12-25, 2032-12-26, 2033-01-01, 2033-01-06, 2033-04-17, 2033-04-18, 2033-05-01, 2033-05-03, 2033-06-05, 2033-06-16, 2033-08-15, 2033-11-01, 2033-11-11, 2033-12-24, 2033-12-25, 2033-12-26, 2034-01-01, 2034-01-06, 2034-04-09, 2034-04-10, 2034-05-01, 2034-05-03, 2034-05-28, 2034-06-08, 2034-08-15, 2034-11-01, 2034-11-11, 2034-12-24, 2034-12-25, 2034-12-26, 2035-01-01, 2035-01-06, 2035-03-25, 2035-03-26, 2035-05-01, 2035-05-03, 2035-05-13, 2035-05-24, 2035-08-15, 2035-11-01, 2035-11-11, 2035-12-24, 2035-12-25, 2035-12-26, 2036-01-01, 2036-01-06, 2036-04-13, 2036-04-14, 2036-05-01, 2036-05-03, 2036-06-01, 2036-06-12, 2036-08-15, 2036-11-01, 2036-11-11, 2036-12-24, 2036-12-25, 2036-12-26, 2037-01-01, 2037-01-06, 2037-04-05, 2037-04-06, 2037-05-01, 2037-05-03, 2037-05-24, 2037-06-04, 2037-08-15, 2037-11-01, 2037-11-11, 2037-12-24, 2037-12-25, 2037-12-26, 2038-01-01, 2038-01-06, 2038-04-25, 2038-04-26, 2038-05-01, 2038-05-03, 2038-06-13, 2038-06-24, 2038-08-15, 2038-11-01, 2038-11-11, 2038-12-24, 2038-12-25, 2038-12-26, 2039-01-01, 2039-01-06, 2039-04-10, 2039-04-11, 2039-05-01, 2039-05-03, 2039-05-29, 2039-06-09, 2039-08-15, 2039-11-01, 2039-11-11, 2039-12-24, 2039-12-25, 2039-12-26, 2040-01-01, 2040-01-06, 2040-04-01, 2040-04-02, 2040-05-01, 2040-05-03, 2040-05-20, 2040-05-31, 2040-08-15, 2040-11-01, 2040-11-11, 2040-12-24, 2040-12-25, 2040-12-26, 2041-01-01, 2041-01-06, 2041-04-21, 2041-04-22, 2041-05-01, 2041-05-03, 2041-06-09, 2041-06-20, 2041-08-15, 2041-11-01, 2041-11-11, 2041-12-24, 2041-12-25, 2041-12-26, 2042-01-01, 2042-01-06, 2042-04-06, 2042-04-07, 2042-05-01, 2042-05-03, 2042-05-25, 2042-06-05, 2042-08-15, 2042-11-01, 2042-11-11, 2042-12-24, 2042-12-25, 2042-12-26, 2043-01-01, 2043-01-06, 2043-03-29, 2043-03-30, 2043-05-01, 2043-05-03, 2043-05-17, 2043-05-28, 2043-08-15, 2043-11-01, 2043-11-11, 2043-12-24, 2043-12-25, 2043-12-26, 2044-01-01, 2044-01-06, 2044-04-17, 2044-04-18, 2044-05-01, 2044-05-03, 2044-06-05, 2044-06-16, 2044-08-15, 2044-11-01, 2044-11-11, 2044-12-24, 2044-12-25, 2044-12-26, 2045-01-01, 2045-01-06, 2045-04-09, 2045-04-10, 2045-05-01, 2045-05-03, 2045-05-28, 2045-06-08, 2045-08-15, 2045-11-01, 2045-11-11, 2045-12-24, 2045-12-25, 2045-12-26, 2046-01-01, 2046-01-06, 2046-03-25, 2046-03-26, 2046-05-01, 2046-05-03, 2046-05-13, 2046-05-24, 2046-08-15, 2046-11-01, 2046-11-11, 2046-12-24, 2046-12-25, 2046-12-26, 2047-01-01, 2047-01-06, 2047-04-14, 2047-04-15, 2047-05-01, 2047-05-03, 2047-06-02, 2047-06-13, 2047-08-15, 2047-11-01, 2047-11-11, 2047-12-24, 2047-12-25, 2047-12-26, 2048-01-01, 2048-01-06, 2048-04-05, 2048-04-06, 2048-05-01, 2048-05-03, 2048-05-24, 2048-06-04, 2048-08-15, 2048-11-01, 2048-11-11, 2048-12-24, 2048-12-25, 2048-12-26, 2049-01-01, 2049-01-06, 2049-04-18, 2049-04-19, 2049-05-01, 2049-05-03, 2049-06-06, 2049-06-17, 2049-08-15, 2049-11-01, 2049-11-11, 2049-12-24, 2049-12-25, 2049-12-26, 2050-01-01, 2050-01-06, 2050-04-10, 2050-04-11, 2050-05-01, 2050-05-03, 2050-05-29, 2050-06-09, 2050-08-15, 2050-11-01, 2050-11-11, 2050-12-24, 2050-12-25, 2050-12-26, 2051-01-01, 2051-01-06, 2051-04-02, 2051-04-03, 2051-05-01, 2051-05-03, 2051-05-21, 2051-06-01, 2051-08-15, 2051-11-01, 2051-11-11, 2051-12-24, 2051-12-25, 2051-12-26, 2052-01-01, 2052-01-06, 2052-04-21, 2052-04-22, 2052-05-01, 2052-05-03, 2052-06-09, 2052-06-20, 2052-08-15, 2052-11-01, 2052-11-11, 2052-12-24, 2052-12-25, 2052-12-26, 2053-01-01, 2053-01-06, 2053-04-06, 2053-04-07, 2053-05-01, 2053-05-03, 2053-05-25, 2053-06-05, 2053-08-15, 2053-11-01, 2053-11-11, 2053-12-24, 2053-12-25, 2053-12-26, 2054-01-01, 2054-01-06, 2054-03-29, 2054-03-30, 2054-05-01, 2054-05-03, 2054-05-17, 2054-05-28, 2054-08-15, 2054-11-01, 2054-11-11, 2054-12-24, 2054-12-25, 2054-12-26, 2055-01-01, 2055-01-06, 2055-04-18, 2055-04-19, 2055-05-01, 2055-05-03, 2055-06-06, 2055-06-17, 2055-08-15, 2055-11-01, 2055-11-11, 2055-12-24, 2055-12-25, 2055-12-26, 2056-01-01, 2056-01-06, 2056-04-02, 2056-04-03, 2056-05-01, 2056-05-03, 2056-05-21, 2056-06-01, 2056-08-15, 2056-11-01, 2056-11-11, 2056-12-24, 2056-12-25, 2056-12-26, 2057-01-01, 2057-01-06, 2057-04-22, 2057-04-23, 2057-05-01, 2057-05-03, 2057-06-10, 2057-06-21, 2057-08-15, 2057-11-01, 2057-11-11, 2057-12-24, 2057-12-25, 2057-12-26]) "calendar.ts holidays(y) for 2024 to 2057, Easter by the anonymous Gregorian algorithm"
-,16:r7/forward.tally,13039:part r7_forward
+,16:r7/forward.tally,13066:part r7_forward
   tally 2
   note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
   note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
@@ -45197,7 +45199,7 @@ def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], 
 def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
   note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
 
-def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+def surplus[m in month]: money PLN = max(0, min(bal(konto, d) from day_of(m, invest_dom) for d in day_of(m, invest_dom) .. add_days(next_pay[m], -1) step 1 day) - floor_15) at start_of(m)
   note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
 
 def ike_seen[y in cal_year]: money PLN at start_of(y)
@@ -48014,7 +48016,7 @@ warning: WARN-NEGATIVE konto is below zero from 2026-10-03
 warning: WARN-UNREAD def fire_on_track is read by nothing
 warning: WARN-UNREAD def spend_daily is read by nothing
 warning: WARN-UNREAD input fire_from is read by nothing
-,25:goldens/r7_joint_oki_2030,15:goldens-records,851:run r7/to2031.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_oki_tax_2030,339369:15:r7/to2031.tally,673:model tropek_r7
+,25:goldens/r7_joint_oki_2030,15:goldens-records,851:run r7/to2031.tally bank.tally r7/forward.tally r7/business.tally r7/joint.tally records/2024-01.tally records/2024-02.tally records/2024-03.tally records/2024-04.tally records/2024-05.tally records/2024-06.tally records/2024-07.tally records/2024-08.tally records/2024-09.tally records/2024-10.tally records/2024-11.tally records/2024-12.tally records/2025-01.tally records/2025-02.tally records/2025-03.tally records/2025-04.tally records/2025-05.tally records/2025-06.tally records/2025-07.tally records/2025-08.tally records/2025-09.tally records/2025-10.tally records/2025-11.tally records/2025-12.tally records/2026-01.tally records/2026-02.tally records/2026-03.tally records/2026-04.tally records/2026-05.tally records/2026-06.tally records/2026-07.tally records/2026-08.tally records/2026-09.tally records/2026-10.tally --ask pin_oki_tax_2030,339396:15:r7/to2031.tally,673:model tropek_r7
   tally 2
   on 2026-10-17
   start 2024-01-01
@@ -48228,7 +48230,7 @@ version holidays
   governs always
   known 2023-12-31
   holidays_pl = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-03-31, 2024-04-01, 2024-05-01, 2024-05-03, 2024-05-19, 2024-05-30, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26, 2025-01-01, 2025-01-06, 2025-04-20, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-08, 2025-06-19, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-24, 2025-12-25, 2025-12-26, 2026-01-01, 2026-01-06, 2026-04-05, 2026-04-06, 2026-05-01, 2026-05-03, 2026-05-24, 2026-06-04, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-24, 2026-12-25, 2026-12-26, 2027-01-01, 2027-01-06, 2027-03-28, 2027-03-29, 2027-05-01, 2027-05-03, 2027-05-16, 2027-05-27, 2027-08-15, 2027-11-01, 2027-11-11, 2027-12-24, 2027-12-25, 2027-12-26, 2028-01-01, 2028-01-06, 2028-04-16, 2028-04-17, 2028-05-01, 2028-05-03, 2028-06-04, 2028-06-15, 2028-08-15, 2028-11-01, 2028-11-11, 2028-12-24, 2028-12-25, 2028-12-26, 2029-01-01, 2029-01-06, 2029-04-01, 2029-04-02, 2029-05-01, 2029-05-03, 2029-05-20, 2029-05-31, 2029-08-15, 2029-11-01, 2029-11-11, 2029-12-24, 2029-12-25, 2029-12-26, 2030-01-01, 2030-01-06, 2030-04-21, 2030-04-22, 2030-05-01, 2030-05-03, 2030-06-09, 2030-06-20, 2030-08-15, 2030-11-01, 2030-11-11, 2030-12-24, 2030-12-25, 2030-12-26, 2031-01-01, 2031-01-06, 2031-04-13, 2031-04-14, 2031-05-01, 2031-05-03, 2031-06-01, 2031-06-12, 2031-08-15, 2031-11-01, 2031-11-11, 2031-12-24, 2031-12-25, 2031-12-26, 2032-01-01, 2032-01-06, 2032-03-28, 2032-03-29, 2032-05-01, 2032-05-03, 2032-05-16, 2032-05-27, 2032-08-15, 2032-11-01, 2032-11-11, 2032-12-24, 2032-12-25, 2032-12-26, 2033-01-01, 2033-01-06, 2033-04-17, 2033-04-18, 2033-05-01, 2033-05-03, 2033-06-05, 2033-06-16, 2033-08-15, 2033-11-01, 2033-11-11, 2033-12-24, 2033-12-25, 2033-12-26, 2034-01-01, 2034-01-06, 2034-04-09, 2034-04-10, 2034-05-01, 2034-05-03, 2034-05-28, 2034-06-08, 2034-08-15, 2034-11-01, 2034-11-11, 2034-12-24, 2034-12-25, 2034-12-26, 2035-01-01, 2035-01-06, 2035-03-25, 2035-03-26, 2035-05-01, 2035-05-03, 2035-05-13, 2035-05-24, 2035-08-15, 2035-11-01, 2035-11-11, 2035-12-24, 2035-12-25, 2035-12-26, 2036-01-01, 2036-01-06, 2036-04-13, 2036-04-14, 2036-05-01, 2036-05-03, 2036-06-01, 2036-06-12, 2036-08-15, 2036-11-01, 2036-11-11, 2036-12-24, 2036-12-25, 2036-12-26, 2037-01-01, 2037-01-06, 2037-04-05, 2037-04-06, 2037-05-01, 2037-05-03, 2037-05-24, 2037-06-04, 2037-08-15, 2037-11-01, 2037-11-11, 2037-12-24, 2037-12-25, 2037-12-26, 2038-01-01, 2038-01-06, 2038-04-25, 2038-04-26, 2038-05-01, 2038-05-03, 2038-06-13, 2038-06-24, 2038-08-15, 2038-11-01, 2038-11-11, 2038-12-24, 2038-12-25, 2038-12-26, 2039-01-01, 2039-01-06, 2039-04-10, 2039-04-11, 2039-05-01, 2039-05-03, 2039-05-29, 2039-06-09, 2039-08-15, 2039-11-01, 2039-11-11, 2039-12-24, 2039-12-25, 2039-12-26, 2040-01-01, 2040-01-06, 2040-04-01, 2040-04-02, 2040-05-01, 2040-05-03, 2040-05-20, 2040-05-31, 2040-08-15, 2040-11-01, 2040-11-11, 2040-12-24, 2040-12-25, 2040-12-26, 2041-01-01, 2041-01-06, 2041-04-21, 2041-04-22, 2041-05-01, 2041-05-03, 2041-06-09, 2041-06-20, 2041-08-15, 2041-11-01, 2041-11-11, 2041-12-24, 2041-12-25, 2041-12-26, 2042-01-01, 2042-01-06, 2042-04-06, 2042-04-07, 2042-05-01, 2042-05-03, 2042-05-25, 2042-06-05, 2042-08-15, 2042-11-01, 2042-11-11, 2042-12-24, 2042-12-25, 2042-12-26, 2043-01-01, 2043-01-06, 2043-03-29, 2043-03-30, 2043-05-01, 2043-05-03, 2043-05-17, 2043-05-28, 2043-08-15, 2043-11-01, 2043-11-11, 2043-12-24, 2043-12-25, 2043-12-26, 2044-01-01, 2044-01-06, 2044-04-17, 2044-04-18, 2044-05-01, 2044-05-03, 2044-06-05, 2044-06-16, 2044-08-15, 2044-11-01, 2044-11-11, 2044-12-24, 2044-12-25, 2044-12-26, 2045-01-01, 2045-01-06, 2045-04-09, 2045-04-10, 2045-05-01, 2045-05-03, 2045-05-28, 2045-06-08, 2045-08-15, 2045-11-01, 2045-11-11, 2045-12-24, 2045-12-25, 2045-12-26, 2046-01-01, 2046-01-06, 2046-03-25, 2046-03-26, 2046-05-01, 2046-05-03, 2046-05-13, 2046-05-24, 2046-08-15, 2046-11-01, 2046-11-11, 2046-12-24, 2046-12-25, 2046-12-26, 2047-01-01, 2047-01-06, 2047-04-14, 2047-04-15, 2047-05-01, 2047-05-03, 2047-06-02, 2047-06-13, 2047-08-15, 2047-11-01, 2047-11-11, 2047-12-24, 2047-12-25, 2047-12-26, 2048-01-01, 2048-01-06, 2048-04-05, 2048-04-06, 2048-05-01, 2048-05-03, 2048-05-24, 2048-06-04, 2048-08-15, 2048-11-01, 2048-11-11, 2048-12-24, 2048-12-25, 2048-12-26, 2049-01-01, 2049-01-06, 2049-04-18, 2049-04-19, 2049-05-01, 2049-05-03, 2049-06-06, 2049-06-17, 2049-08-15, 2049-11-01, 2049-11-11, 2049-12-24, 2049-12-25, 2049-12-26, 2050-01-01, 2050-01-06, 2050-04-10, 2050-04-11, 2050-05-01, 2050-05-03, 2050-05-29, 2050-06-09, 2050-08-15, 2050-11-01, 2050-11-11, 2050-12-24, 2050-12-25, 2050-12-26, 2051-01-01, 2051-01-06, 2051-04-02, 2051-04-03, 2051-05-01, 2051-05-03, 2051-05-21, 2051-06-01, 2051-08-15, 2051-11-01, 2051-11-11, 2051-12-24, 2051-12-25, 2051-12-26, 2052-01-01, 2052-01-06, 2052-04-21, 2052-04-22, 2052-05-01, 2052-05-03, 2052-06-09, 2052-06-20, 2052-08-15, 2052-11-01, 2052-11-11, 2052-12-24, 2052-12-25, 2052-12-26, 2053-01-01, 2053-01-06, 2053-04-06, 2053-04-07, 2053-05-01, 2053-05-03, 2053-05-25, 2053-06-05, 2053-08-15, 2053-11-01, 2053-11-11, 2053-12-24, 2053-12-25, 2053-12-26, 2054-01-01, 2054-01-06, 2054-03-29, 2054-03-30, 2054-05-01, 2054-05-03, 2054-05-17, 2054-05-28, 2054-08-15, 2054-11-01, 2054-11-11, 2054-12-24, 2054-12-25, 2054-12-26, 2055-01-01, 2055-01-06, 2055-04-18, 2055-04-19, 2055-05-01, 2055-05-03, 2055-06-06, 2055-06-17, 2055-08-15, 2055-11-01, 2055-11-11, 2055-12-24, 2055-12-25, 2055-12-26, 2056-01-01, 2056-01-06, 2056-04-02, 2056-04-03, 2056-05-01, 2056-05-03, 2056-05-21, 2056-06-01, 2056-08-15, 2056-11-01, 2056-11-11, 2056-12-24, 2056-12-25, 2056-12-26, 2057-01-01, 2057-01-06, 2057-04-22, 2057-04-23, 2057-05-01, 2057-05-03, 2057-06-10, 2057-06-21, 2057-08-15, 2057-11-01, 2057-11-11, 2057-12-24, 2057-12-25, 2057-12-26]) "calendar.ts holidays(y) for 2024 to 2057, Easter by the anonymous Gregorian algorithm"
-,16:r7/forward.tally,13039:part r7_forward
+,16:r7/forward.tally,13066:part r7_forward
   tally 2
   note "T, M2 (issues #167, #114), DONE gate 2: the forward half of the prototype's reality R7 (load.ts REALITY: blocks 01-month, 03-ike-first, 04-employment, 05-side-business, 07-oki; engine/spec/verification/goldens.md: G1, G3, G6, G10 and the 20 pins), beside the bank half (../bank.tally), from today, 2026-10-17. Here: the daily spending (01), the 15th rule with IKE first (02, 03, 07), the ETF units and their price (01), OKI's tax (07), net worth and FIRE (13). The side business is business.tally, the yearly returns returns.tally; the header (to2036.tally, to2050.tally, to2056.tally) states the horizon."
   note "The holdings: the prototype converts each movement into a holding at that day's price.etf (run.ts post: units = amount / price), and price.etf changes only on the 1st of a month. So the PLN the bank history moves into ike and maklerskie (accounts here, as the records state them) is bought at the month's last day at that month's price (buy_ike, buy_mak), which gives the prototype's units, and the 15th rule buys its units on its day. Units are kept to units_step and each month's price to etf_price_step (the prototype keeps floats); price.etf from 2026-11 is the month before's times pow(1.06, 1 / 12), stated as the factor."
@@ -48324,7 +48326,7 @@ def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], 
 def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
   note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
 
-def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+def surplus[m in month]: money PLN = max(0, min(bal(konto, d) from day_of(m, invest_dom) for d in day_of(m, invest_dom) .. add_days(next_pay[m], -1) step 1 day) - floor_15) at start_of(m)
   note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
 
 def ike_seen[y in cal_year]: money PLN at start_of(y)
@@ -106028,7 +106030,7 @@ ask r: residuals konto 2026-03
   cut 2026-06-10
 m31: 90.00 PLN
   cut 2026-06-10
-,17:fixes/gate/w1_w19,11:fixes-sweep,22:run w1.tally --ask w19,2815:8:w1.tally,2798:model w_each
+,17:fixes/gate/w1_w19,11:fixes-sweep,22:run w1.tally --ask w19,2842:8:w1.tally,2825:model w_each
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -106086,7 +106088,7 @@ ask w19: explain bonus_amt with ax = hi windows each
 ask w20: flows(konto, 2026-03-28 .. 2026-03-31) with ax = lo windows each
 ask w21: bal(konto, 2026-03-31) with ax = lo
 ask w22: flows(konto, 2026-03-28 .. 2026-04-03) with ax = lo
-ask w23: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 with ax = lo
+ask w23: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) with ax = lo
 ask w24: bal(konto, 2026-04-30) modelled with ax = lo windows each
 
 version v
@@ -106169,7 +106171,7 @@ w19 [wd = 2026-04-01 .. 2026-04-03]: 24.00 PLN
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
-,18:fixes/gate/b9n_feb,11:fixes-sweep,28:run b9n.tally --ask r1 r2 r3,1842:9:b9n.tally,1824:model hh
+,18:fixes/gate/b9n_feb,11:fixes-sweep,28:run b9n.tally --ask r1 r2 r3,1871:9:b9n.tally,1853:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -106226,7 +106228,7 @@ ask f1: flows(groc, 2026-02), flows(groc, 2026-03), bal(konto, 2026-02-28), bal(
 ask c1: count(t in transfers over 2026-02)
 ask c2: sum(t.cash.amount for t in transfers over 2026-02)
 ask c3: count(t in transfers over 2026-04..2026-05)
-ask n1: next(transfers, 2026-02-01).day
+ask n1: (first(m in transfers over 2026-02-01 ..) ties by m.day).day
 ask fl1: flows(konto, ..2026-03-31)
 ask fl2: flows(groc, ..2026-02-28)
 ask cv1: covered(konto, ..2026-03-31)
@@ -106234,7 +106236,7 @@ ask bm: bal(konto, 2026-02-28) modelled
 ,,1:0,114:r1: refused: RUN-DIV division by zero
 r2: refused: RUN-DIV division by zero
 r3: refused: RUN-DIV division by zero
-,17:fixes/gate/p5_feb,11:fixes-sweep,21:run p5.tally --ask r1,1898:8:p5.tally,1881:model hh
+,17:fixes/gate/p5_feb,11:fixes-sweep,21:run p5.tally --ask r1,1927:8:p5.tally,1910:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -106292,13 +106294,13 @@ ask f1: flows(groc, 2026-02), flows(groc, 2026-03), bal(konto, 2026-02-28), bal(
 ask c1: count(t in transfers over 2026-02)
 ask c2: sum(t.cash.amount for t in transfers over 2026-02)
 ask c3: count(t in transfers over 2026-04..2026-05)
-ask n1: next(transfers, 2026-02-01).day
+ask n1: (first(m in transfers over 2026-02-01 ..) ties by m.day).day
 ask fl1: flows(konto, ..2026-03-31)
 ask fl2: flows(groc, ..2026-02-28)
 ask cv1: covered(konto, ..2026-03-31)
 ask bm: bal(konto, 2026-02-28) modelled
 ,,1:0,38:r1: refused: RUN-DIV division by zero
-,21:fixes/gate/a3_explain,11:fixes-sweep,24:run a3.tally --ask e1 e2,3507:8:a3.tally,3490:model rec
+,21:fixes/gate/a3_explain,11:fixes-sweep,24:run a3.tally --ask e1 e2,3534:8:a3.tally,3517:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
@@ -106354,7 +106356,7 @@ ask b2: bal(konto, 2026-06-30) partial
 ask b3: bal(konto, 2026-06-30) with ax = hi partial
 ask b4: bal(konto, 2026-05-10), bal(konto, 2026-05-20) partial
 ask b5: bal(konto, 2026-05-10) from 2026-04-11 partial
-ask b6: low(konto, 2026-04-11 .. 2026-05-12) partial
+ask b6: min(bal(konto, d) for d in 2026-04-11 .. 2026-05-12 step 1 day) partial
 ask b7: flows(konto, 2026-05-01 .. 2026-05-10) partial
 ask b8: sum(t.cash.amount for t in transfers over 2026-05-01 .. 2026-05-10) partial
 ask b9: flows(bonus, 2026-05-01 .. 2026-05-10) with ax = lo partial
@@ -106503,7 +106505,7 @@ version new
   on1 = 0 "s"
 ,,1:0,116:n_ma: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (ma)
   cut 2026-08-01
-,24:r11/count_refused_amount,9:fixes-r11,23:run m.tally --ask c_ref,3112:7:m.tally,3096:model hh
+,24:r11/count_refused_amount,9:fixes-r11,23:run m.tally --ask c_ref,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -106578,8 +106580,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -106706,7 +106708,7 @@ r_k9: residuals k9 2026-02
   2026-02 move nine: model -500.00 PLN, observed -500.00 PLN, difference 0.00 PLN
     matched nine[2026-02] on 2026-02-09: model -500.00 PLN, observed -500.00 PLN, difference 0.00 PLN, timing +0 days
   cut 2026-10-20
-,16:r11/anchor_heals,9:fixes-r11,35:run m.tally --ask q2 q2_hole q2_led,3112:7:m.tally,3096:model hh
+,16:r11/anchor_heals,9:fixes-r11,35:run m.tally --ask q2 q2_hole q2_led,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -106781,8 +106783,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -106905,7 +106907,7 @@ div: refused: RUN-DIV division by zero
   cut 2026-12-31
 div_twin: ?"how much" (xh)
   cut 2026-12-31
-,12:r11/pad_from,9:fixes-r11,21:run m.tally --ask pad,3112:7:m.tally,3096:model hh
+,12:r11/pad_from,9:fixes-r11,21:run m.tally --ask pad,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -106980,8 +106982,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -107050,7 +107052,7 @@ an: (refused: RUN-PLACE can is -50.00 PLN after its reading at 2026-03-20 end, 7
   cut 2026-06-10
 m: (70.00 PLN, 70.00 PLN)
   cut 2026-06-10
-,15:r11/low_reading,9:fixes-r11,36:run m.tally --ask low_after low_over,3112:7:m.tally,3096:model hh
+,15:r11/low_reading,9:fixes-r11,36:run m.tally --ask low_after low_over,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -107125,8 +107127,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -107140,7 +107142,7 @@ low_over: refused: RUN-DIV division by zero
   cut 2026-10-20
 warning: WARN-NEGATIVE k3 is below zero from 2026-04-03
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
-,22:r11/from_after_reading,9:fixes-r11,40:run m.tally --ask from_after from_before,3112:7:m.tally,3096:model hh
+,22:r11/from_after_reading,9:fixes-r11,40:run m.tally --ask from_after from_before,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -107215,8 +107217,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -107230,7 +107232,7 @@ from_before: refused: RUN-DIV division by zero
   cut 2026-10-20
 warning: WARN-NEGATIVE k3 is below zero from 2026-04-03
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
-,13:r11/sum_first,9:fixes-r11,34:run m.tally --ask sum_ref first_ok,3112:7:m.tally,3096:model hh
+,13:r11/sum_first,9:fixes-r11,34:run m.tally --ask sum_ref first_ok,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -107305,8 +107307,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -107381,7 +107383,7 @@ ask c_day: count(t in transfers over 2026-02), count(t in transfers over 2026-03
   anchor: konto 2026-03-10 end, stated 200.00 PLN, difference refused: RUN-DIV division by zero
   unfulfilled: rd[2026-01]
   cut 2026-10-20
-,15:r11/flows_after,9:fixes-r11,26:run m.tally --ask fl_after,3112:7:m.tally,3096:model hh
+,15:r11/flows_after,9:fixes-r11,26:run m.tally --ask fl_after,3166:7:m.tally,3150:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -107456,8 +107458,8 @@ ask q2: bal(konto, 2026-03-09), bal(konto, 2026-03-10), bal(konto, 2026-03-31), 
 ask q2_hole: bal(k2, 2026-03-10), bal(k2, 2026-03-31), gap(k2, 2026-03-10), bal(k2, 2026-03-31) modelled
 ask q2_led: residuals konto 2026-03
 ask pad: bal(k3, 2026-03-10), bal(k3, 2026-03-31), gap(k3, 2026-03-10), bal(k4, 2026-03-09), bal(k4, 2026-03-10), bal(k4, 2026-03-31)
-ask low_after: low(konto, 2026-03-11 .. 2026-03-31)
-ask low_over: low(konto, 2026-02-01 .. 2026-03-31)
+ask low_after: min(bal(konto, d) for d in 2026-03-11 .. 2026-03-31 step 1 day)
+ask low_over: min(bal(konto, d) for d in 2026-02-01 .. 2026-03-31 step 1 day)
 ask from_after: bal(konto, 2026-03-31) from 2026-03-15
 ask from_before: bal(konto, 2026-03-31) from 2026-02-15
 ask sum_ref: sum(t.cash.amount for t in transfers over 2026-02)
@@ -108279,7 +108281,7 @@ version sc_v
   known 2026-01-01
   replace amt = 20.00 PLN "s"
 ,,1:1,61:refused: LOAD-UNIT membership of date in keylit (m.tally:55)
-,25:r13/partial_check_explain,9:fixes-r13,23:run m.tally --ask cp ep,2273:7:m.tally,2257:model hh
+,25:r13/partial_check_explain,9:fixes-r13,23:run m.tally --ask cp ep,2300:7:m.tally,2284:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -108349,7 +108351,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 ask cp: check bal(k2, 2026-02-28) == z[a] partial
 ask ep: explain bal(k2, 2026-02-28) partial
 ,,1:0,663:cp: bal(k2, 2026-02-28) = 9 999.00 PLN + -1 × ?"how much in Feb" (hamt[2026-02]), z[a] = 10.00 PLN
@@ -109021,7 +109023,7 @@ version sc_v
   known 2026-01-01
   replace amt = 20.00 PLN "s"
 ,,1:1,61:refused: LOAD-UNIT membership of date in keylit (m.tally:55)
-,24:r13/each_one_window_read,9:fixes-r13,32:run m.tally --ask lo lo_plain bj,1777:7:m.tally,1761:model t
+,24:r13/each_one_window_read,9:fixes-r13,32:run m.tally --ask lo lo_plain bj,1858:7:m.tally,1842:model t
   tally 2
   on 2026-01-01
   start 2026-01-01
@@ -109064,10 +109066,10 @@ version v
   pd[2026-10] = window(2026-10-10, 2026-10-12) "s"
   opening[konto] = 500.00 PLN at 2026-01-01 start "s"
 
-ask lo: low(konto, 2026-01-01 .. 2026-01-31) windows each
-ask lo_plain: low(konto, 2026-01-01 .. 2026-01-31)
+ask lo: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day) windows each
+ask lo_plain: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day)
 ask bj: bal(konto, 2026-01-31) windows each
-ask lim: low(konto, 2026-01-01 .. 2026-10-31) windows each
+ask lim: min(bal(konto, d) for d in 2026-01-01 .. 2026-10-31 step 1 day) windows each
 ,,1:0,244:lo: 400.00 PLN
   cut 2026-01-01
 lo_plain: ?"date within window(2026-01-10, 2026-01-12) not precise enough for a balance" (inc[2026-01])
@@ -109314,7 +109316,7 @@ x2 [w1 = 2026-03-06 .. 2026-03-07, w2 = 2026-03-06 .. 2026-03-07]: false
   cut 2026-01-01
 x2 [w1 = 2026-03-06 .. 2026-03-07, w2 = 2026-03-08]: true
   cut 2026-01-01
-,15:r15/mean_linear,9:fixes-r15,20:run m.tally --ask m1,3955:7:m.tally,3939:model hh
+,15:r15/mean_linear,9:fixes-r15,20:run m.tally --ask m1,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -109384,7 +109386,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -109420,11 +109422,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -109441,7 +109443,7 @@ ask n_money: kn * hn partial
 ,,1:0,127:m1: 5 PLN + 0 × ?"what is h" (xh) + 0.5 × ?"z of b" (z[b])
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,17:r15/walked_linear,9:fixes-r15,42:run m.tally --ask w_flp w_flm w_from w_unc,3955:7:m.tally,3939:model hh
+,17:r15/walked_linear,9:fixes-r15,42:run m.tally --ask w_flp w_flm w_from w_unc,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -109511,7 +109513,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -109547,11 +109549,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -109583,7 +109585,7 @@ w_unc: ?"how much in Feb" (hamt[2026-02])
   cut 2026-10-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input dz is read by nothing
-,14:r15/not_linear,9:fixes-r15,37:run m.tally --ask i_min i_where i_day,3955:7:m.tally,3939:model hh
+,14:r15/not_linear,9:fixes-r15,37:run m.tally --ask i_min i_where i_day,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -109653,7 +109655,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -109689,11 +109691,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -109773,7 +109775,7 @@ vp: 0 PLN + 3 etf × ?"price" (hpx)
 vb: ?"how many units" (na) ?"price" (hpx)
   unfulfilled: buy_c
   cut 2026-06-30
-,13:r15/low_plain,9:fixes-r15,23:run m.tally --ask n_low,3955:7:m.tally,3939:model hh
+,13:r15/low_plain,9:fixes-r15,23:run m.tally --ask n_low,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -109843,7 +109845,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -109879,11 +109881,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -109905,7 +109907,7 @@ ask n_money: kn * hn partial
   cut 2026-10-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input dz is read by nothing
-,15:r15/share_plain,9:fixes-r15,25:run m.tally --ask n_share,3955:7:m.tally,3939:model hh
+,15:r15/share_plain,9:fixes-r15,25:run m.tally --ask n_share,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -109975,7 +109977,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -110011,11 +110013,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -110032,7 +110034,7 @@ ask n_money: kn * hn partial
 ,,1:0,92:n_share: ?"z of b" (z[b])
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,15:r15/round_scale,9:fixes-r15,33:run m.tally --ask n_round n_scale,3955:7:m.tally,3939:model hh
+,15:r15/round_scale,9:fixes-r15,33:run m.tally --ask n_round n_scale,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -110102,7 +110104,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -110138,11 +110140,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -110166,7 +110168,7 @@ n_scale: 19 998 PLN + -2 × ?"how much in Feb" (hamt[2026-02])
   cut 2026-10-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-05
 warning: WARN-UNREAD input dz is read by nothing
-,20:r15/zero_coefficient,9:fixes-r15,24:run m.tally --ask n_zero,3955:7:m.tally,3939:model hh
+,20:r15/zero_coefficient,9:fixes-r15,24:run m.tally --ask n_zero,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -110236,7 +110238,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -110272,11 +110274,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -110293,7 +110295,7 @@ ask n_money: kn * hn partial
 ,,1:0,109:n_zero: 10.00 PLN + 0 × ?"what is h" (xh)
   cut 2026-10-20
 warning: WARN-UNREAD input dz is read by nothing
-,14:r15/planner_p7,9:fixes-r15,24:run m.tally --ask p1 p11,3955:7:m.tally,3939:model hh
+,14:r15/planner_p7,9:fixes-r15,24:run m.tally --ask p1 p11,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -110363,7 +110365,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -110399,11 +110401,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial
@@ -111230,7 +111232,7 @@ b: (1 050.00 PLN, 100.00 PLN, 100.00 PLN, 100.00 PLN)
   unfulfilled: save
   cut 2026-06-10
 warning: WARN-UNREAD place world is read by nothing
-,13:d4/low_window,7:fixes-d,11:run m.tally,1201:7:m.tally,1185:model hh
+,13:d4/low_window,7:fixes-d,11:run m.tally,1282:7:m.tally,1266:model hh
   tally 2
   on 2026-01-01
   start 2026-01-01
@@ -111258,9 +111260,9 @@ version v1
   wd = window(2026-03-05, 2026-03-10) "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "w"
 
-ask l1: low(konto, 2026-03-01 .. 2026-04-30)
+ask l1: min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day)
 ask l2: min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day)
-ask l3: low(konto, 2026-03-01 .. 2026-04-30) windows each
+ask l3: min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day) windows each
 ask b1: bal(konto, 2026-03-07)
 ask b2: bal(konto, 2026-03-07) >= zero
 ask b3: bal(konto, 2026-03-11)
@@ -111268,7 +111270,7 @@ ask b4: min(bal(konto, 2026-03-07), zero)
 ask b5: bal(konto, 2026-03-07) windows each
 ask f1: flows(konto, 2026-03)
 ask f2: flows(konto, 2026-03-01 .. 2026-03-07)
-ask h1: low(konto, 2026-03-11 .. 2026-04-30)
+ask h1: min(bal(konto, d) for d in 2026-03-11 .. 2026-04-30 step 1 day)
 ,,1:0,893:b1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
   cut 2026-01-01
 b2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (pay)
@@ -111610,7 +111612,7 @@ b_k2: 32.00 PLN
   unfulfilled: pay[2026-02]
   unfulfilled: pay[2026-03]
   cut 2026-03-20
-,21:d72/money_coefficient,7:fixes-d,25:run m.tally --ask n_money,3955:7:m.tally,3939:model hh
+,21:d72/money_coefficient,7:fixes-d,25:run m.tally --ask n_money,4036:7:m.tally,4020:model hh
   tally 2
   on 2026-10-20
   start 2026-01-01
@@ -111680,7 +111682,7 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 
 input xh: money PLN
 input hd: date
@@ -111716,11 +111718,11 @@ ask m1: mean(z[k] + xh for k in ks) - xh partial
 ask w_flp: flows(k2, 2026-01-01 .. 2026-02-28) partial
 ask w_flm: flows(hm, 2026-01-01 .. 2026-03-31) partial
 ask w_from: bal(k2, 2026-03-05) from 2026-01-10 partial
-ask w_unc: low(k2, 2026-03-01 .. 2026-03-31) from 2026-03-01 with uncertain partial
+ask w_unc: min(bal(k2, d) from 2026-03-01 with uncertain for d in 2026-03-01 .. 2026-03-31 step 1 day) partial
 ask i_min: -(min(z[b], zp)) + onep partial
 ask i_where: sum(z[k] for k in ks where z[k] > five) partial
 ask i_day: bal(k5, 2026-03-31) partial
-ask n_low: low(k2, 2026-02-01 .. 2026-03-31) partial
+ask n_low: min(bal(k2, d) for d in 2026-02-01 .. 2026-03-31 step 1 day) partial
 ask n_share: share(z[k] > five for k in ks) partial
 ask n_round: round(bal(k2, 2026-02-28), onepln, half-even) partial
 ask n_scale: bal(k2, 2026-02-28) * rate partial

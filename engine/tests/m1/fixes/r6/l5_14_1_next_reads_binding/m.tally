@@ -15,7 +15,7 @@ move pay[m in months]: pays
   leg cash from world to konto amount 1
 move fee[m in months]: transfers
   on end_of(m)
-  when next(pays, start_of(m)).day < end_of(m)
+  when (first(mm in pays over start_of(m) ..) ties by mm.day).day < end_of(m)
   reads pays
   leg cash from world to konto amount 1
 ask q: bal(konto, 2025-03-31)

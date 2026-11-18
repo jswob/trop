@@ -31,7 +31,7 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 
-ask c_many: min(low(konto, d .. 2026-12-31) from d for d in 2026-01-01 .. 2026-06-30 step 1 day)
+ask c_many: min(min(bal(konto, dd) from d for dd in d .. 2026-12-31 step 1 day) for d in 2026-01-01 .. 2026-06-30 step 1 day)
 
 ask c_sum: sum(bal(konto, 2026-12-31) from d for d in 2026-03-01 .. 2026-05-30 step 1 day)
 

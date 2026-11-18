@@ -50,15 +50,15 @@ move far: transfers
   at far_day
   leg cash from world to konto amount amt
 
-ask g_a: low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01 start) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, low(konto, 2026-05-15 .. 2026-06-30) from 2026-01-20
+ask g_a: min(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-06-30 step 1 day), min(bal(konto, d) from 2026-01-20 for d in 2026-04-01 .. 2026-04-30 step 1 day), bal(konto, 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01 start) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, min(bal(konto, d) from 2026-01-20 for d in 2026-05-15 .. 2026-06-30 step 1 day)
 
-ask g_b: bal(konto, 2026-04-30) from 2026-01-20, low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20, bal(konto, 2026-05-01) from 2026-01-20, low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, bal(konto, 2026-04-30) from 2026-01-20
+ask g_b: bal(konto, 2026-04-30) from 2026-01-20, min(bal(konto, d) from 2026-01-20 for d in 2026-04-01 .. 2026-04-30 step 1 day), bal(konto, 2026-05-01) from 2026-01-20, min(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-06-30 step 1 day), bal(konto, 2026-04-30) from 2026-01-20
 
-ask g_c: low(konto, 2026-01-20 .. 2026-04-30) from 2026-01-20
+ask g_c: min(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-04-30 step 1 day)
 
 ask g_d: bal(konto, 2026-04-30) from 2026-01-20
 
-ask g_e: low(konto, 2026-04-01 .. 2026-04-30) from 2026-01-20
+ask g_e: min(bal(konto, d) from 2026-01-20 for d in 2026-04-01 .. 2026-04-30 step 1 day)
 
 ask g_f: bal(konto, 2026-05-01 start) from 2026-01-20
 

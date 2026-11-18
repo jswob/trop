@@ -48,9 +48,9 @@ move wage: transfers
   on wage_day
   leg cash from world to konto amount wage_amt
 
-ask lowest_counted: low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15 with uncertain, argmin(bal(konto, d) from 2025-05-15 with uncertain for d in days) ties by d
+ask lowest_counted: min(bal(konto, dd) from 2025-05-15 with uncertain for dd in 2025-05-15 .. 2025-06-30 step 1 day), argmin(bal(konto, d) from 2025-05-15 with uncertain for d in days) ties by d
 
-ask lowest_planned: low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15, argmin(bal(konto, d) from 2025-05-15 for d in days) ties by d
+ask lowest_planned: min(bal(konto, dd) from 2025-05-15 for dd in 2025-05-15 .. 2025-06-30 step 1 day), argmin(bal(konto, d) from 2025-05-15 for d in days) ties by d
 
 version card_2025
   cite card

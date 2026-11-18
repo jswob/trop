@@ -1071,55 +1071,55 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 1 of 9 (at 0 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_1() {
-        group_holds(M1_VECTORS, "fixes-g12", (0, 9), 27);
+        group_holds(M1_VECTORS, "fixes-g12", (0, 9), 25);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 2 of 9 (at 1 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_2() {
-        group_holds(M1_VECTORS, "fixes-g12", (1, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (1, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 3 of 9 (at 2 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_3() {
-        group_holds(M1_VECTORS, "fixes-g12", (2, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (2, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 4 of 9 (at 3 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_4() {
-        group_holds(M1_VECTORS, "fixes-g12", (3, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (3, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 5 of 9 (at 4 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_5() {
-        group_holds(M1_VECTORS, "fixes-g12", (4, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (4, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 6 of 9 (at 5 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_6() {
-        group_holds(M1_VECTORS, "fixes-g12", (5, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (5, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 7 of 9 (at 6 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_7() {
-        group_holds(M1_VECTORS, "fixes-g12", (6, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (6, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 8 of 9 (at 7 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_8() {
-        group_holds(M1_VECTORS, "fixes-g12", (7, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (7, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 9 of 9 (at 8 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_9() {
-        group_holds(M1_VECTORS, "fixes-g12", (8, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (8, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g13`, part 1 of 6 (at 0 modulo 6).

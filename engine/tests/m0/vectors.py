@@ -86,8 +86,6 @@ REPRINT_REFUSED = {
     'format/dup_kind': '#91: a kind declared twice under two parents (LOAD-DUP; the fuzz input e523 minimized)',
     'format/unknown_prefix': '#91: an input keyed by an index under a prefix no use line names (LOAD-NAME; the '
                              'fuzz input c5a8 minimized)',
-    'format/same_key_signed': '#88, #90: a same side keyed by a signed literal, no sref (LOAD-PARSE at parse, before '
-                              'the canonical order of same sides)',
     'format/member_nested_absent': '#105 (B4, tally 2.1.7): a nested member\'s absent member, LOAD-PIN as run refuses '
                                    'it (reprint finds, pins and loads members as run does)',
     'format/member_nested_changed': '#105 (B4): a nested member whose text no longer matches its pin, LOAD-PIN as run',

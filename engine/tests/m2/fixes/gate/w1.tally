@@ -56,7 +56,7 @@ ask w19: explain bonus_amt with ax = hi windows each
 ask w20: flows(konto, 2026-03-28 .. 2026-03-31) with ax = lo windows each
 ask w21: bal(konto, 2026-03-31) with ax = lo
 ask w22: flows(konto, 2026-03-28 .. 2026-04-03) with ax = lo
-ask w23: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 with ax = lo
+ask w23: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-04-30 step 1 day) with ax = lo
 ask w24: bal(konto, 2026-04-30) modelled with ax = lo windows each
 
 version v

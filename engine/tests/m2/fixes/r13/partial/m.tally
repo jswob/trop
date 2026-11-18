@@ -68,6 +68,6 @@ ask p7: -bal(k2, 2026-02-28) partial
 ask p8: sum(t.cash.amount for t in transfers over 2026-02 where t.cash.from == k2) partial
 ask p9: check bal(k2, 2026-02-28) == z[a] partial
 ask p10: bal(k2, 2026-02-28) + z[b] partial
-ask p11: low(k2, 2026-02-01 .. 2026-02-28) partial
+ask p11: min(bal(k2, d) for d in 2026-02-01 .. 2026-02-28 step 1 day) partial
 ask cp: check bal(k2, 2026-02-28) == z[a] partial
 ask ep: explain bal(k2, 2026-02-28) partial

@@ -34,7 +34,7 @@ move repay_rest: promised_repayments
   on promise_day
   leg cash from friend_loan to konto amount promise_amount
 
-ask q_lowest_ahead: low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15, first(d in 2025-05-15 .. 2025-06-30 step 1 day where bal(konto, d) from 2025-05-15 == low(konto, 2025-05-15 .. 2025-06-30) from 2025-05-15)
+ask q_lowest_ahead: min(bal(konto, dd) from 2025-05-15 for dd in 2025-05-15 .. 2025-06-30 step 1 day), first(d in 2025-05-15 .. 2025-06-30 step 1 day where bal(konto, d) from 2025-05-15 == min(bal(konto, dd) from 2025-05-15 for dd in 2025-05-15 .. 2025-06-30 step 1 day))
 
 ask q_net_worth: sum(bal(x, 2025-05-15) for x in places on 2025-05-15 where not x in outside)
 

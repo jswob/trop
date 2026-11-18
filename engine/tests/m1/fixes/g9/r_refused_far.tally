@@ -43,9 +43,9 @@ ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
 ask a_bal_late: bal(konto, 2026-09-30) from 2026-06-01
 
-ask a_low_early: low(konto, 2026-02-01 .. 2026-12-31) from 2026-02-01
+ask a_low_early: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-12-31 step 1 day)
 
-ask a_low_late: low(konto, 2026-06-05 .. 2026-11-30) from 2026-06-01
+ask a_low_late: min(bal(konto, d) from 2026-06-01 for d in 2026-06-05 .. 2026-11-30 step 1 day)
 
 version v
   cite card
