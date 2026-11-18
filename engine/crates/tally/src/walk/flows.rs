@@ -26,7 +26,8 @@ impl Engine {
     /// # Errors
     ///
     /// The refusals of the walk and of the movements counted; `RUN-DOMAIN` for flows in no
-    /// one unit; `NotBuilt` for flows of a move's field.
+    /// one unit; `NotBuilt` for a conversion (`in CUR at fx mode`, BUILD-ORDER M4) and for
+    /// `for k` (the instances of a period, N-305), neither built in M1.
     pub(crate) fn flows(
         &mut self,
         m: &Reality,
@@ -48,6 +49,9 @@ impl Engine {
                 None => expr_text(&f.target)?,
             };
             return Ok(Value::Hole(Hole::before_run(&figure)));
+        }
+        if f.convert.is_some() {
+            return Err(Stop::NotBuilt("flows converted"));
         }
         // `, for k`: only the movements for period k (L §5.14.3); a hole k is the line's
         let fk = match &f.for_key {

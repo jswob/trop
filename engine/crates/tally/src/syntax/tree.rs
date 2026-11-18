@@ -581,7 +581,7 @@ pub struct Proj {
     pub uncertain: bool,
 }
 
-/// `flows(x, span [, for k])`.
+/// `flows(x, span [, for k]) [in CUR at fx mode]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Flows {
     /// The place or move.
@@ -590,6 +590,8 @@ pub struct Flows {
     pub span: Span,
     /// `for k`.
     pub for_key: Option<Expr>,
+    /// The conversion: currency, rate and rounding mode.
+    pub convert: Option<(String, Expr, Expr)>,
 }
 
 /// `of q`: a party, a batch, or the pair.

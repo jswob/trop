@@ -150,7 +150,8 @@ pub(crate) fn text(e: &Expr) -> String {
     }
 }
 
-/// A `flows` read's text, its `for` included (refcore's `_txt` of `flows`).
+/// A `flows` read's text, its `for` and its conversion included (refcore's `_txt` of
+/// `flows`).
 fn flows_text(flows: &crate::syntax::Flows) -> String {
     let mut s = format!(
         "flows({}, {}",
@@ -162,6 +163,9 @@ fn flows_text(flows: &crate::syntax::Flows) -> String {
         s.push_str(&text(key));
     }
     s.push(')');
+    if let Some((cur, fx, mode)) = &flows.convert {
+        s = format!("{s} in {cur} at {} {}", text(fx), text(mode));
+    }
     s
 }
 
