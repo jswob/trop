@@ -473,6 +473,8 @@ ask q7: n2
 "#;
 
     const TWO_WINDOWS_LINES: &str = r#"q4: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a)
+  unknown day: a
+  unknown day: b
   cut 2026-01-01
 q6: true
   cut 2026-01-01
@@ -738,9 +740,12 @@ ask n2: two
                 "n1: 0",
                 "  cut 2026-04-30",
                 "n2: ?\"date within window(2026-03-04, 2026-03-10) not precise enough for a print\" (wa)",
+                "  unknown day: wa",
+                "  unknown day: wd",
                 "  cut 2026-04-30",
             ],
-            "refcore's n1 and n2; c1 the covered face's hole, naming its day as COVER_GAP's c1"
+            "refcore's n1 and n2 (n2's print hole names both its days, pick P25); c1 the covered \
+             face's hole, naming its day as COVER_GAP's c1"
         );
     }
 }
