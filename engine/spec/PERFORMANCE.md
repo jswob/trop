@@ -5,7 +5,7 @@ This document covers, for **tally 2.1**:
 - the budgets it must meet (§8), and what caps what can grow (§9);
 - how a change costs only what it touches (§4, a seam for now).
 
-It plans the engine. It carries no language meaning: what a construct means is `LANGUAGE.md` (L) and how the engine computes it is `ENGINE.md` (E). Where this document and those differ, they win (G1 item 9). It names no technology: no library and no Rust API. Those live in `tmp/research_notes/engine-rust-strictness/BUILDER.md` and `RULEBOOK.md`, cited here by section and row (BUILDER §7, R-42).
+It plans the engine. It carries no language meaning: what a construct means is `LANGUAGE.md` (L) and how the engine computes it is `ENGINE.md` (E). Where this document and those differ, they win (G1 item 9). It names no technology: no library and no Rust API. Those live in `engine/BUILDER.md` and `engine/RULEBOOK.md`, cited here by section and row (BUILDER §7, R-42).
 
 **Estimates, not measurements.** Nothing here was built or run. The figures come from refcore, the reference interpreter, as session 8 measured it (`tmp/session8/shape.md`), and from the six research reports R1–R6 (`tmp/research_notes/engine-prep/`). Each estimate shows its arithmetic in a `python3 -c` block with its output, and is marked an estimate. Nothing on paper is "proven".
 
