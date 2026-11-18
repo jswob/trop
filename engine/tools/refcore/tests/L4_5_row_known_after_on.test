@@ -1,4 +1,5 @@
-# L §4.5 (round 12): a row "whose known window ends after" on is refused (LOAD-KNOWN), as a version is.
+# L §4.5 (round 12): a row known after on is refused (LOAD-KNOWN), as a version is. (tally 2.2, 2.2-2: was
+# L4_5_row_known_window_after_on, a row known in window(2026-02-01, 2026-11-30).)
 === m.tally
 model t
   tally 2
@@ -13,7 +14,7 @@ version v
   cite s
   governs always
   known 2026-01-01
-  x = 1 known window(2026-02-01, 2026-11-30)
+  x = 1 known 2026-11-30
 
 ask q: x
 === expect

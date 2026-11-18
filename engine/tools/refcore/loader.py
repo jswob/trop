@@ -12,7 +12,7 @@ from .dates import (Period, day_period, month_period, year_period, quarter_perio
                     month_add, next_day, end_days, end_months, END)
 from .errors import LoadError, Unspecified, NotYet, Refusal
 from .lexer import split_lines
-from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, known_first, VersionInfo, KindInfo,
+from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, VersionInfo, KindInfo,
                     Entry, ThingInfo, IndexInfo, AxisInfo, BindInfo, Row, InputInfo, RuleVer, DefInfo, Table,
                     BandRow, BandInfo, PRELUDE_PLACE, BUILTIN_INPUTS, BUILTIN_INDEXES, PRELUDE_KINDS,
                     BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow)
@@ -354,7 +354,7 @@ class Loader:
                 old = None
                 for o in olds:
                     if old is None or (o.replace and (old.version is None or o.version is not None and
-                                                      known_first(o.version.known) >= known_first(old.version.known))):
+                                                      o.version.known >= old.version.known)):
                         old = o
                 a = before(old.span, frm) if old is not None else None
                 b = before(e.span, frm)
@@ -760,17 +760,8 @@ class Loader:
             hit = m.names.get(s.cite)
             if hit is None or hit[0] != 'source':
                 raise LoadError('LOAD-NAME', 'unknown id %s (version %s cites no source)' % (s.cite, s.id), s.loc)
-            kn = v.known
-            if isinstance(kn, tuple):
-                if kn[0] > kn[1]:
-                    raise LoadError('LOAD-DOMAIN', 'window(a, b) with a after b (L §8.4)', s.loc)
-                if kn[0] > m.on:
-                    raise LoadError('LOAD-KNOWN', 'version %s is known after the model\'s on date' % s.id, s.loc)
-                if kn[1] > m.on:
-                    # L §4.5 (round 12): "A version or row known after on, or whose known window ends after it, is
-                    # refused (LOAD-KNOWN)"
-                    raise LoadError('LOAD-KNOWN', 'version %s is known after the model\'s on date' % s.id, s.loc)
-            elif kn > m.on:
+            if v.known > m.on:
+                # L §4.5 (round 12): "A version or row known after on is refused (LOAD-KNOWN)"
                 raise LoadError('LOAD-KNOWN', 'version %s is known after the model\'s on date' % s.id, s.loc)
         for vid, v in m.versions.items():
             for ref, ls in v.node.moves:
@@ -779,13 +770,13 @@ class Loader:
                     raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % _txt_node(ref),
                                     v.loc)
                 tgt = m.versions.get(ref.id)
-                if tgt is None or not (known_first(tgt.known) < known_first(v.known)):
+                if tgt is None or not (tgt.known < v.known):
                     raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % ref.id, v.loc)
                 tgt.moved_by.append((v, lspan_to_span(ls, v.loc)))
         for vid, v in m.versions.items():
             seen = {}
             for mover, sp in v.moved_by:
-                k = known_first(mover.known)
+                k = mover.known
                 if k in seen:
                     raise LoadError('LOAD-MOVES', 'two moves of %s known the same day' % vid, mover.loc)
                 seen[k] = mover
@@ -1058,7 +1049,7 @@ class Loader:
             t.entries.append(Entry('currencies', ALWAYS, None, False, None, None, None))
             m.things[c] = t
         # in known order, so a replace finds the earlier rows whatever the file order (L §6.1: a reality is a set)
-        for v in sorted(m.versions.values(), key=lambda v: known_first(v.known)):
+        for v in sorted(m.versions.values(), key=lambda v: v.known):
             for it in v.node.items:
                 if it.k != 'enter':
                     continue
@@ -1080,7 +1071,7 @@ class Loader:
                 t.base = nonplain[0]
             else:
                 def order(e):
-                    kn = known_first(e.version.known) if e.version is not None else datetime.date.min
+                    kn = e.version.known if e.version is not None else datetime.date.min
                     st = e.span.start if e.span is not None and e.span.start is not None else datetime.date.min
                     return (kn, st)
                 ks = sorted(firsts, key=order)
@@ -1170,11 +1161,11 @@ class Loader:
                 # scenario's own known day is replaced too" (L §6.4, §4.6 step 2; MC-X-F2)
                 lv = version_layer(m, v)
                 v._layer = lv
-                if not any(known_first(e.version.known) < known_first(v.known) or version_layer(m, e.version) < lv
+                if not any(e.version.known < v.known or version_layer(m, e.version) < lv
                            for e in olds if e.version):
                     raise LoadError('LOAD-REPLACE', 'replace %s + [%s]: no earlier row to replace' % (k.id, name), it.loc)
                 for e in olds:
-                    if e.version and e.replace and known_first(e.version.known) == known_first(v.known) and \
+                    if e.version and e.replace and e.version.known == v.known and \
                             version_layer(m, e.version) == lv:
                         # neither is known before the other and each replaces the lifespan whole: a tie (L §4.6 steps
                         # 2 and 4, LOAD-OVERLAP; round 18 C1-11 took `two replace lines ... known the same day` out of
@@ -1454,7 +1445,7 @@ class Loader:
                 ix.finish()
             else:
                 old = ix.added.get(_kv(kv))
-                if old is not None and known_first(version.known) < known_first(old.known):
+                if old is not None and version.known < old.known:
                     ix.added[_kv(kv)] = version
             return kv
         return resolve_key_literal(m, kn, bind.dom, loc)
@@ -1471,11 +1462,11 @@ class Loader:
         key = resolve_text(it.keys[0])
         own_known = None
         if it.known is not None:
-            own_known = (it.known.a, it.known.b) if it.known.k == 'window' else it.known.v
-            if known_first(own_known) < known_first(v.known):
+            own_known = it.known.v
+            if own_known < v.known:
                 # L §8.3 LOAD-KNOWN "row <x>[k] is known before its version <v>"
                 raise LoadError('LOAD-KNOWN', 'row %s[%s] is known before its version %s' % (inf.id, key, v.id), it.loc)
-            if known_last(own_known) > m.on:
+            if own_known > m.on:
                 raise LoadError('LOAD-KNOWN', 'row %s[%s] is known after the model\'s on date' % (inf.id, key), it.loc)
         if it.value.k not in ('record', 'none'):
             raise LoadError('LOAD-FIELD', 'an observation is a record with named fields: %s[%s]' % (inf.id, key),
@@ -1977,17 +1968,13 @@ class Loader:
             own_span = lspan_to_span(it.governs, it.loc)
         own_known = None
         if it.known is not None:
-            if it.known.k == 'window':
-                own_known = (it.known.a, it.known.b)
-            else:
-                own_known = it.known.v
+            own_known = it.known.v
             ktxt = '%s%s' % (inf.id, pattern_text(pattern))
-            if known_first(own_known) < known_first(v.known):
+            if own_known < v.known:
                 # L §8.3 LOAD-KNOWN "row <x>[k] is known before its version <v>"
                 raise LoadError('LOAD-KNOWN', 'row %s is known before its version %s' % (ktxt, v.id), it.loc)
-            if known_last(own_known) > m.on:
-                # L §4.5 (round 12): "A version or row known after on, or whose known window ends after it, is
-                # refused (LOAD-KNOWN)"
+            if own_known > m.on:
+                # L §4.5 (round 12): "A version or row known after on is refused (LOAD-KNOWN)"
                 raise LoadError('LOAD-KNOWN', 'row %s is known after the model\'s on date' % ktxt, it.loc)
         instant = None
         reading = (kind == 'input' and inf.reading)
@@ -2239,13 +2226,13 @@ class Loader:
             for key, os_ in by.items():
                 # a scenario's restatement stands above its base's rows whatever their known dates (L §4.6 step 2,
                 # §6.4): ordered by layer, then known
-                os_.sort(key=lambda o: (row_layer(m, o), known_first(o.known)))
+                os_.sort(key=lambda o: (row_layer(m, o), o.known))
                 for i, o in enumerate(os_):
                     if i == 0:
                         if o.replace:
                             raise LoadError('LOAD-REPLACE', 'replace %s: no earlier row to replace' % o.sid, o.loc)
                         continue
-                    if known_first(o.known) == known_first(os_[i - 1].known) and \
+                    if o.known == os_[i - 1].known and \
                             row_layer(m, o) == row_layer(m, os_[i - 1]):
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at [%s]' % (
                             os_[i - 1].loc, o.loc, qid, key), o.loc)
@@ -2325,7 +2312,7 @@ class Loader:
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at %s, neither replacing the '
                                                         'other' % (a.loc, b.loc, inf.id, a.keys_text() or 'no keys'),
                                         hi.loc)
-                    ka, kb = known_first(a.known), known_first(b.known)
+                    ka, kb = a.known, b.known
                     if ka == kb and a.instant is None and b.instant is None and \
                             sp(a).always != sp(b).always and row_layer(m, a) == row_layer(m, b):
                         # two same-day rows that precedence orders, a span over always, load (L §6.3 item 2,
@@ -2348,7 +2335,7 @@ class Loader:
             for r in rs:
                 # in a scenario, a base row at those keys is an earlier row whatever its known (L §4.6 step 2, §8.3
                 # LOAD-REPLACE "in a scenario, no base row at those keys either")
-                if r.replace and not any((known_first(o.known) < known_first(r.known) or
+                if r.replace and not any((o.known < r.known or
                                           row_layer(m, o) < row_layer(m, r)) and ov(o, r) and not owners_differ(o, r)
                                          for o in rs if o is not r and row_layer(m, o) <= row_layer(m, r)):
                     raise LoadError('LOAD-REPLACE', 'replace %s%s: no earlier row to replace' % (inf.id, r.keys_text()),
@@ -2403,10 +2390,10 @@ class Loader:
                     below = [o for o in ts if o is not t and version_layer(m, o.version) < lt
                              and _span_ov(o.version, t.version, m.on)]
                     earlier = [o for o in ts if o is not t and version_layer(m, o.version) == lt
-                               and known_first(o.version.known) < known_first(t.version.known)
+                               and o.version.known < t.version.known
                                and _span_ov(o.version, t.version, m.on)]
                     same = [o for o in ts if o is not t and version_layer(m, o.version) == lt
-                            and known_first(o.version.known) == known_first(t.version.known)
+                            and o.version.known == t.version.known
                             and _span_ov(o.version, t.version, m.on)]
                     if same:
                         raise LoadError('LOAD-OVERLAP', 'band %s: tables of %s and %s overlap, known the same day' % (
@@ -2530,14 +2517,14 @@ def patch_under_cut(m, K):
         b = m.bands[bid]
         for t in b.tables:
             if not any(r.replace for r in t.rows) or getattr(t, 'whole_ok', False) or \
-                    not known_first(t.version.known) <= K:
+                    not t.version.known <= K:
                 continue
             lt = version_layer(m, t.version)
-            seen = [o for o in b.tables if o is not t and known_first(o.version.known) <= K and
+            seen = [o for o in b.tables if o is not t and o.version.known <= K and
                     (_kv(o.key) if o.key is not None else None) == (_kv(t.key) if t.key is not None else None) and
                     _span_ov(o.version, t.version, K) and (version_layer(m, o.version) < lt or (
                         version_layer(m, o.version) == lt and
-                        known_first(o.version.known) < known_first(t.version.known)))]
+                        o.version.known < t.version.known))]
             sp = t.version.span_at(K)
             if sp is None:
                 continue
@@ -2818,11 +2805,6 @@ def range_literal(m, kn, loc):
             return range_key(Num(q, u))
         return range_key(Num(Fraction(kn.v), ()))
     raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % key_written(kn), loc)
-
-
-def known_last(k):
-    """The last day a known date or window can be."""
-    return k[1] if isinstance(k, tuple) else k
 
 
 def pattern_text(pattern):

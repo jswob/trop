@@ -11,8 +11,7 @@ import datetime
 
 from .dates import Period, ONE_DAY, END, past_days
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine, at_run
-from .model import visible, row_known_sid, known_first, PlaceThing, _kv, key_text, in_world, _WSET, _SAMEMET, \
-    same_seen, same_key
+from .model import visible, PlaceThing, _kv, key_text, in_world, _WSET, same_seen, same_key
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, NEVER, CURRENCIES, fmt, vkey
 
 # the stratum a pad takes in the movement order: above every decision's, as observations and adjustments take -1,
@@ -142,7 +141,6 @@ class ObsMv(Movement):
         self.attrs = {a: _obs_attr(v, o) for a, v in o.attrs.items()} if o.attrs else o.attrs
         self.fulfils = o.fulfils
         self.forp = None
-        self.und = None         # the hole of a row known in a window that holds the cut (m_observations)
         self.err = None
         self.status = 'observed'
         self.coll = None
@@ -365,27 +363,13 @@ def m_coverage(self, ctx):
     if hit is not None:
         return hit
     out = {}
-    und = []
     for vid in sorted(self.m.versions):
         v = self.m.versions[vid]
         if not getattr(v, 'covers', None):
             continue
         if not self.world_ok(v, ctx):
             continue
-        vis = visible(v.known, ctx.cut, v.id)
-        if vis is None:
-            # L §4.5 (round 12): a version known in a window that holds the cut, with no windows clause: whether it
-            # covers its places is undecided, so each covered place's balance is a hole from the span's first day
-            # (HOLE-IMPRECISE)
-            lo, hi = v.known
-            q = ('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut), vid)
-            carry_hole(Hole([q]), ids=[known_carry(v.id, v.known)])
-            for th, sp in v.covers:
-                span = sp if sp is not None else v.span_at(ctx.cut)
-                if span is not None:
-                    und.append((th.name, span, q))
-            continue
-        if not vis:
+        if not visible(v.known, ctx.cut):
             continue
         for th, sp in v.covers:
             span = sp if sp is not None else v.span_at(ctx.cut)
@@ -393,14 +377,7 @@ def m_coverage(self, ctx):
                 continue
             out.setdefault(th.name, []).append((span, v))
     self.run_cache[key] = out
-    self.run_cache[('covund',) + key[1:]] = und
     return out
-
-
-def m_coverage_undecided(self, ctx):
-    """[(place, span, question)] of the covers of versions known in a window that holds the cut (L §4.5)."""
-    self.coverage(ctx)
-    return self.run_cache.get(('covund', self.wkey(ctx)), [])
 
 
 def m_covering(self, place, day, ctx):
@@ -425,44 +402,21 @@ def m_observations(self, ctx):
         if not inf.observed:
             continue
         by = {}
-        by_dec = {}     # each row id's latest restatement whose known the cut decides
-        undecided = {}
         for o in getattr(inf, 'obs', []):
             if not self.world_ok(o.version, ctx):
                 continue
-            vis = visible(o.known, ctx.cut, o.version.id if getattr(o, 'own_known', None) is None else o.sid)
-            if vis is None:
-                # L §4.5 (round 12): known in a window that holds the cut, with no windows clause: "This holds for
-                # everything the version or row brings: ... its observations" (HOLE-IMPRECISE): it is booked or not,
-                # so each of its legs is a hole carrying that question
-                lo, hi = o.known
-                # tally 2.1.8 R12 (P70): the hole names the row and its version
-                q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
-                undecided[id(o)] = carry_hole(Hole([(q, o.sid), (q, o.version.id)]), ids=[known_carry(
-                    o.version.id if getattr(o, 'own_known', None) is None else o.sid, o.known)])
-            elif not vis:
+            if not visible(o.known, ctx.cut):
                 continue
             # the latest restatement; a scenario's stands above its base's whatever their known dates (L §4.6 step 2)
-            for tab in ((by,) if id(o) in undecided else (by, by_dec)):
-                cur = tab.get(o.key)
-                if cur is None or (row_layer(m, o), known_first(o.known)) > (row_layer(m, cur), known_first(cur.known)):
-                    tab[o.key] = o
+            cur = by.get(o.key)
+            if cur is None or (row_layer(m, o), o.known) > (row_layer(m, cur), cur.known):
+                by[o.key] = o
         for k in sorted(by):
             o = by[k]
-            hq = undecided.get(id(o))
-            if hq is not None and o.removed:
-                # an undecided removal removes the row or not (L §4.5, tally 2.1.8 R12, #169-f): the restatement before
-                # it stands, its legs that hole
-                o = by_dec.get(k)
-                if o is None:
-                    continue
             if o.removed:
                 continue
-            legs = [Leg(n, f, t, hq if hq is not None else a, u, o.day) for n, f, t, a, u in o.legs]
+            legs = [Leg(n, f, t, a, u, o.day) for n, f, t, a, u in o.legs]
             ob = ObsMv(o, legs)
-            # seen and unseen are two accounts of one movement (L §4.5, tally 2.1.8 R12): a binding meets it as one,
-            # an unknown member where the two differ (m_span_members)
-            ob.und = hq
             ob.coll = _coll()
             ob.coll.rows[o.sid] = o
             if ob.fulfils is not None and ob.fulfils[0] == 'inst':
@@ -499,16 +453,7 @@ def m_readings(self, ctx):
         for r in m.inputs[iid].rows:
             if not self.world_ok(r.version, ctx):
                 continue
-            vis = visible(r.known, ctx.cut, row_known_sid(r))
-            if vis is None:
-                # L §4.5 (round 12): a reading known in a window that holds the cut, with no windows clause: its
-                # value is HOLE-IMPRECISE (it is stated or not)
-                import copy
-                lo, hi = r.known
-                r = copy.copy(r)
-                r.val = ('hole', 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut))
-                CARRY_TEXT.setdefault(r.val[1], (known_carry(row_known_sid(r), r.known),))
-            elif not vis:
+            if not visible(r.known, ctx.cut):
                 continue
             place = r.pattern[0][1].name
             u = unit_of_value(r.val) if isinstance(r.val, Num) else m.place_unit(m.things[place])
@@ -516,7 +461,7 @@ def m_readings(self, ctx):
             cur = keep.get(k)
             # L §4.6 steps 2 and 3 (tally 2.1.7 R4, #137): a scenario's reading stands above its base's whatever
             # their known dates; inside one layer the latest known restates
-            if cur is None or (row_layer(m, r), known_first(r.known)) > (row_layer(m, cur), known_first(cur.known)):
+            if cur is None or (row_layer(m, r), r.known) > (row_layer(m, cur), cur.known):
                 keep[k] = r
     # a place stated same in a joint model: its readings from the members are read together, a joint model's own
     # row settles them, and two that disagree are a hole naming both rows (L §6.1, HOLE-SAME)
@@ -1397,9 +1342,8 @@ def m_obs_links_for(self, tid, ctx):
 
 def same_lines(m, ctx):
     """[(a, b, loc, owner)] of the movements' same lines seen at ctx's cut in the world it reads (L §4.5 Whatever a
-    version states is read as its rows are, tally 2.1.8 R12): a version's line only when known by the cut (its
-    visibility undecided, inside a known window, as seen; m_same_undecided) and in the worlds its file is in (§6.4);
-    the header's always. ctx None: every line (load's own reads)."""
+    version states is read as its rows are, tally 2.1.8 R12): a version's line only when known by the cut and in the
+    worlds its file is in (§6.4); the header's always. ctx None: every line (load's own reads)."""
     sm = getattr(m, 'same_moves', None) or ()
     vs = getattr(m, 'same_versions', None) or [None] * len(sm)
     ows = getattr(m, 'same_owners', None) or [''] * len(sm)
@@ -1409,14 +1353,10 @@ def same_lines(m, ctx):
     cache = m.__dict__.setdefault('_same_lines', {})
     hit = cache.get(key)
     if hit is not None:
-        if _SAMEMET[0] is not None:
-            for (a, b, loc), v in zip(sm, vs):
-                if v is not None:
-                    same_seen(v, ctx, (a, b))
         return hit
     out = []
     for (a, b, loc), v, o in zip(sm, vs, ows):
-        if not same_seen(v, ctx, (a, b)):
+        if not same_seen(v, ctx):
             continue
         out.append((a, b, loc, o))
     cache[key] = out
@@ -1916,14 +1856,14 @@ def m_known_dates(self):
         return kd
     ds = {}
     for v in m.versions.values():
-        ds.setdefault(known_first(v.known), set()).add(v.id)
+        ds.setdefault(v.known, set()).add(v.id)
     for inf in m.inputs.values():
         for r in inf.rows:
             if r.own_known is not None:
-                ds.setdefault(known_first(r.own_known), set()).add(r.version.id)
+                ds.setdefault(r.own_known, set()).add(r.version.id)
         for o in getattr(inf, 'obs', []):
             if o.own_known is not None:
-                ds.setdefault(known_first(o.own_known), set()).add(o.version.id)
+                ds.setdefault(o.own_known, set()).add(o.version.id)
     m._known_dates = sorted(ds.items())
     return m._known_dates
 
@@ -2309,4 +2249,4 @@ def settle_sign(lg, a, s):
 
 # last, so that walk, which evaluate imports, finds this module whole when moves is imported first (a joint
 # model's member load reaches it through loader.check_part_rows; STOP-REPORT 1 of T's re-run, pick P37)
-from .evaluate import carry_hole, known_carry, CARRY_TEXT  # noqa: E402
+from .evaluate import carry_hole  # noqa: E402

@@ -137,40 +137,16 @@ class WCut(datetime.date):
         return self._plain().replace(*args, **kw)
 
 
-# A same line known in a window that holds the cut is read seen and unseen (L §4.5, tally 2.1.8 R12): the line being
-# answered records the ones it meets ({version id: (known, the rows it names)}), and is read again with each choice
-# ({version id: seen}); ask.Asker.answer_same_undecided.
-_SAMEMET = [None]
-_SAMEPICK = [None]
-
-
-def same_seen(v, ctx, names):
-    """Whether a version's same line is seen at ctx: its world and its known, a known window that holds the cut taken
-    as the pick says, or as seen while it is recorded."""
+def same_seen(v, ctx):
+    """Whether a version's same line is seen at ctx: its world and its known (L §4.5)."""
     if v is None:
         return True
-    if not in_world(v):
-        return False
-    vis = visible(v.known, ctx.cut, v.id)
-    if vis is not None:
-        return vis
-    if _EACH[0] is not None and getattr(_EACH[0], 'forced', None) is not None:
-        # under windows each, a same line not yet taken is an unknown day the line's answer rests on (L §4.5, §4.4;
-        # tally 2.1.8 R12, R13): the run takes it, so it is no choice of the line's (ask.answer_same_undecided)
-        _EACH[0].forced.append(known_window_id(v.id)[0])
-        return True
-    pick = _SAMEPICK[0]
-    if pick is not None and v.id in pick:
-        return pick[v.id]
-    if _SAMEMET[0] is not None:
-        _SAMEMET[0].setdefault(v.id, (v.known, set())).__getitem__(1).update(names)
-    return True
+    return in_world(v) and visible(v.known, ctx.cut)
 
 
 def same_key(ctx):
-    """The key of the same lines ctx sees: its cut, its windows choice, its world and the pick."""
-    pick = _SAMEPICK[0]
-    return (ctx.cut, repr(getattr(ctx.cut, 'windows', None)), _WSET[0], tuple(sorted(pick.items())) if pick else ())
+    """The key of the same lines ctx sees: its cut and its world."""
+    return (ctx.cut, _WSET[0])
 
 
 _EACH = [None]   # the windows met by the line windows each is running, {window id: (label, days)} (ask.each_rows)
@@ -195,36 +171,15 @@ def wcut(d, windows):
     return d
 
 
-def known_window_id(sid):
-    """The identity of a known window under windows each (as evaluate.window_id gives it): one per version, or per
-    row for a row with its own known."""
-    return ('row', 'known %s' % sid, 'known of %s' % sid), 'known of %s' % sid
+class Undecided(NotYet):
+    """Whether a thing is alive on a day, left open by what the text states (a lifespan's end a stated hole, two
+    sides' entries that disagree): a read turns it into its hole (Engine.ev), a binding over a kind into an unknown
+    member (L §5.11); elsewhere it stays NOT-YET. Each kind gives its hole()."""
 
 
-class WindowUndecided(NotYet):
-    """A read of something known in a window that holds the cut, with no windows clause to choose (L §4.5): a read
-    turns it into HOLE-IMPRECISE (Engine.ev), a binding over a kind into an unknown member; elsewhere it stays
-    NOT-YET."""
-
-    def __init__(self, known, K, what, origin):
-        NotYet.__init__(self, '%s known in window(%s, %s), which holds the cut %s, read where no hole is kept' % (
-            what, known[0], known[1], K))
-        self.known = known
-        self.K = K
-        self.what = what
-        self.origin = origin
-
-    def hole(self):
-        from .evaluate import carry_hole, known_carry
-        lo, hi = self.known
-        return carry_hole(Hole([('date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, self.K),
-                                 self.origin)]), ids=[known_carry(self.origin, self.known)])
-
-
-class LifeHole(WindowUndecided):
+class LifeHole(Undecided):
     """A read of whether a thing is alive on a day after the start of a lifespan whose end is a stated hole (L §5.7,
-    round 18 C1-8): a read turns it into the hole (HOLE-STATED, its question), a binding into an unknown member, as
-    WindowUndecided."""
+    round 18 C1-8): a read turns it into the hole (HOLE-STATED, its question), a binding into an unknown member."""
 
     def __init__(self, name, span):
         NotYet.__init__(self, 'the lifespan of %s ends on a day not yet known' % name)
@@ -235,38 +190,9 @@ class LifeHole(WindowUndecided):
         return Hole([(self.span.end_q, self.name)])
 
 
-def visible(known, K, sid=None):
-    """Whether something known on `known` (a day, or a window (lo, hi)) is seen at cut K: True, False, or None when K
-    lies inside the window (L §4.5) and the line states no windows each; under windows each, the day the run assigns
-    to the window (a version's, or a row's own, named by sid) decides (L §4.4)."""
-    if isinstance(known, tuple):
-        lo, hi = known
-        if hi <= K:
-            return True
-        if lo > K:
-            return False
-        w = getattr(K, 'windows', None)
-        if isinstance(w, tuple) and w and w[0] == 'each' and sid is not None:
-            wid, label = known_window_id(sid)
-            for x, d in w[1]:
-                if x == wid:
-                    return d <= K
-            days = [lo + datetime.timedelta(days=i) for i in range((hi - lo).days + 1)]
-            if _EACH[0] is not None:
-                _EACH[0].setdefault(wid, (label, days))
-            # not yet taken: the plain line's, undecided (tally 2.1.8 R13)
-            return None
-        return None
+def visible(known, K):
+    """Whether something known on day `known` is seen at cut K (L §4.5)."""
     return known <= K
-
-
-def row_known_sid(r):
-    """Whose known a row's is: its own (the row), else its version's."""
-    return (r.sid or '') if getattr(r, 'own_known', None) is not None else r.version.id
-
-
-def known_first(known):
-    return known[0] if isinstance(known, tuple) else known
 
 
 # ---------------------------------------------------------------------------
@@ -279,10 +205,7 @@ class VersionInfo:
         self.loc = node.loc
         self.cite = node.cite
         self.governs = None if node.governs is None else lspan_to_span(node.governs, node.loc)
-        if node.known.k == 'window':
-            self.known = (node.known.a, node.known.b)
-        else:
-            self.known = node.known.v
+        self.known = node.known.v
         self.enters_stated = node.enters
         self.assumed = node.assumed
         self.moved_by = []   # (VersionInfo mover, Span)
@@ -294,12 +217,7 @@ class VersionInfo:
         for mover, span in self.moved_by:
             if not in_world(mover):
                 continue
-            vis = visible(mover.known, K, mover.id)
-            if vis is None:
-                # L §4.5 (round 12): "This holds for everything the version or row brings: ... its moves lines (the
-                # span in force is undecided)": HOLE-IMPRECISE unless windows chooses (writer 5's T-39)
-                raise WindowUndecided(mover.known, K, 'the moves line of version %s' % mover.id, mover.id)
-            if vis and (best is None or known_first(mover.known) > known_first(best[0].known)):
+            if visible(mover.known, K) and (best is None or mover.known > best[0].known):
                 best = (mover, span)
         if best is not None:
             return best[1]
@@ -311,7 +229,7 @@ class VersionInfo:
         D` states another day for every row."""
         if self.enters_stated is not None:
             return self.enters_stated
-        k = known_first(self.known)
+        k = self.known
         if own is not None:
             start = own if isinstance(own, datetime.date) else (None if own.always else own.start)
             return k if start is None else max(k, start)
@@ -390,24 +308,19 @@ class ThingInfo:
         for e in es:
             if not in_world(e.version):
                 continue
-            vis = visible(e.version.known, K, e.version.id) if e.version is not None else True
-            if vis is None:
-                # L §4.5 (round 12): "its entries, whose things are unknown members of every binding over their kinds,
-                # as keys whose where is a hole (§5.11)" (writer 5's T-32)
-                raise WindowUndecided(e.version.known, K, 'the entry of %s in %s' % (self.name, kind), e.version.id)
-            if not vis:
+            if e.version is not None and not visible(e.version.known, K):
                 continue
             # a replace line wins, a scenario's over the base's whatever their known dates (L §6.4, §4.6 step 2:
             # "a base row known on the scenario's own known day is replaced too"), then the later known
             if best is None or (e.replace and (best.version is None or not best.replace or
-                                               (getattr(e.version, '_layer', 0), known_first(e.version.known)) >=
+                                               (getattr(e.version, '_layer', 0), e.version.known) >=
                                                (getattr(best.version, '_layer', 0),
-                                                known_first(best.version.known)))):
+                                                best.version.known))):
                 best = e
         return best.span if best is not None else None
 
     def first_known(self, kind):
-        ks = [known_first(e.version.known) if e.version else datetime.date.min for e in self.entries_of(kind)
+        ks = [e.version.known if e.version else datetime.date.min for e in self.entries_of(kind)
               if not e.replace]
         return min(ks) if ks else None
 
@@ -425,11 +338,11 @@ def entry_owner(e):
     return owner_deep(v.id)
 
 
-class SameDiffers(WindowUndecided):
+class SameDiffers(Undecided):
     """L §6.1 What same does: "on a day on which the two sides' entries into one kind disagree, whatever depends on
     the thing being alive there is a HOLE-SAME hole (in a binding over that kind, an unknown member, §5.11)"; L §8.1
     HOLE-SAME `<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)`.  A read turns it into the
-    hole (Engine.ev), a binding into an unknown member, as WindowUndecided."""
+    hole (Engine.ev), a binding into an unknown member."""
 
     def __init__(self, names, kind, when, sides):
         NotYet.__init__(self, 'the entries of %s into %s differ on %s' % (' and '.join(names), kind, when))
@@ -588,7 +501,7 @@ class IndexInfo:
         v = self.added.get(_kv(k))
         if v is None:
             return True
-        return in_world(v) and bool(visible(v.known, K, v.id))
+        return in_world(v) and visible(v.known, K)
 
     def keys_at(self, K):
         return [k for k in self.keys if self.visible(k, K)]
@@ -995,9 +908,7 @@ class Reality:
             return all(self.thing_seen(t, K) for t in thing.keythings) and \
                 all(ix.visible(k, K) for ix, k in thing.keyidx)
         for e in thing.entries:
-            # an entry known in a window holding the cut makes its thing an unknown member (L §4.5): seen, its
-            # lifespan undecided
-            if e.version is None or (in_world(e.version) and visible(e.version.known, K, e.version.id) is not False):
+            if e.version is None or (in_world(e.version) and visible(e.version.known, K)):
                 return True
         return False
 

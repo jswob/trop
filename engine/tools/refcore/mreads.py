@@ -10,7 +10,7 @@ from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
 from .evaluate import member_owns, member_moves, move_owner, carry_hole
-from .model import Span, _kv, key_text, WindowUndecided
+from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
@@ -479,8 +479,8 @@ def m_bind_each(self, b, env, ctx):
             c = self.push()
             try:
                 ok = self.alive_test(b, e2, ctx, t, kind)
-            except WindowUndecided as w:
-                # L §4.5: an entry known in a window holding the cut: an unknown member (§5.11)
+            except Undecided as w:
+                # L §5.11: a thing whose life the text leaves open: an unknown member
                 ok = w.hole()
             except TallyError as e:
                 # refused at this member only (L §8.4): its tuple is refused, the others stand
@@ -777,20 +777,6 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             raise e1
         d = x.day
         st = True
-        und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
-        if und is not None:
-            # a row known in a window that holds the cut is one movement read seen and unseen (L §4.5, tally 2.1.8
-            # R12): unseen, a row of an observed input is no row, and a movement of an event kind is the instance it
-            # fulfils, if any; a member on both sides is one member, else an unknown member, that hole
-            alt = None
-            if b._dom[0] == 'event' and x.target is not None:
-                alt = getattr(x.target, 'day', None)
-            seen_in = isinstance(d, datetime.date) and sp.contains(d)
-            unseen_in = isinstance(alt, datetime.date) and sp.contains(alt)
-            if not seen_in and not unseen_in:
-                continue
-            out.append((x.mv(), True if (seen_in and unseen_in) else und, x))
-            continue
         if d is None and x.err is not None:
             # refused before its day was known: whether it is a member is refused with it (L §8.4)
             raise x.err
@@ -2267,17 +2253,8 @@ def m_first_by_day(self, res, what):
 
     def hi(x):
         return day_hi(x.day)
-    def two_days(x):
-        # a row known in a window that holds the cut, whose day and its instance's differ: which comes first is that
-        # hole (L §4.5, tally 2.1.8 R12, B6), never a tie
-        und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
-        if und is None:
-            return None
-        alt = getattr(x.target, 'day', None) if x.target is not None else None
-        return und if alt != x.day else None
-    known = [(v, s, x) for v, s, x in res if not isinstance(x.day, Hole) and two_days(x) is None]
-    holes = [s for v, s, x in res if isinstance(x.day, Hole)] + [two_days(x) for v, s, x in res
-                                                                 if two_days(x) is not None]
+    known = [(v, s, x) for v, s, x in res if not isinstance(x.day, Hole)]
+    holes = [s for v, s, x in res if isinstance(x.day, Hole)]
     if holes:
         # a movement whose day is a hole may come first (L §5.14)
         return merge(*holes)
@@ -2300,9 +2277,7 @@ def m_first_by_day(self, res, what):
 
 
 def m_c_covered(self, n, env, ctx):
-    """covered(x, span): versions known by the cut cover x on every day of the span (L §5.19); where a cover is known in
-    a window that holds the cut and the answer differs seen and unseen, HOLE-IMPRECISE naming its version (L §4.5,
-    tally 2.1.8 R12)."""
+    """covered(x, span): versions known by the cut cover x on every day of the span (L §5.19); never a hole (L §8.1)."""
     p = self.ev(n.args[0], env, ctx)
     if isinstance(p, Hole) or p is NONE:
         return False
@@ -2311,12 +2286,7 @@ def m_c_covered(self, n, env, ctx):
         return False
     if sp.start is None or sp.end is None:
         return False
-    dec = [s for s, v in self.coverage(ctx).get(p.name, ())]
-    und = [(s, q) for x, s, q in self.coverage_undecided(ctx) if x == p.name]
-    unseen = covers_all(dec, sp)
-    if und and covers_all(dec + [s for s, q in und], sp) != unseen:
-        return Hole([q for s, q in und])
-    return unseen
+    return covers_all([s for s, v in self.coverage(ctx).get(p.name, ())], sp)
 
 
 def covers_all(spans, sp):

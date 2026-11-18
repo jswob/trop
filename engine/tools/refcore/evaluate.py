@@ -17,8 +17,8 @@ from .dates import (Period, day_period, month_period, quarter_period, year_perio
                     add_days, add_months, age, age_months, overlap_days, last_day, WEEKDAYS, ONE_DAY, next_day,
                     end_months, END, past_days)
 from .errors import TallyError, LoadError, Refusal, Unspecified, NotYet, load_now, at_run
-from .model import (in_world, set_world, Span, visible, known_first, InputInfo, DefInfo, BandInfo, key_text, _kv,
-                    wcut, WindowUndecided, row_known_sid)
+from .model import (in_world, set_world, Span, visible, InputInfo, DefInfo, BandInfo, key_text, _kv,
+                    wcut, Undecided)
 from .values import MonthDay, range_key  # noqa: E402 (GD-2; B1)
 from .values import (fmt_typed, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Tup, Iv, Cal, Hole, NONE, NEVER,
                      Special, CURRENCIES, vkey, fmt, fmt_q, Mv, fmt_hole)
@@ -132,7 +132,6 @@ class EachMet(dict):
     def __init__(self, eng):
         dict.__init__(self)
         self.eng = eng
-        self.forced = []          # windows the answer rests on with no hole to carry them (model.same_seen)
 
     def setdefault(self, k, v):
         c = self.eng.cur
@@ -280,8 +279,8 @@ class Engine:
         except HoleSignal as h:
             # one value needed from an undecided interval: the operation is the hole (L §4.4)
             return Hole(h.hole.qs, False) if ctx.partial else h.hole
-        except WindowUndecided as w:
-            # something known in a window that holds the cut, with no windows clause: HOLE-IMPRECISE (L §4.5)
+        except Undecided as w:
+            # whether a thing is alive, left open by the text: its hole (L §5.7, §6.1)
             return Hole(w.hole().qs, False) if ctx.partial else w.hole()
 
     def e_paren(self, n, env, ctx):
@@ -903,7 +902,7 @@ class Engine:
         """A key a row leaves unstated, or covers with *, is one its index or kind had on the
         row's known date (L §4.6 step 1, §6.2)."""
         m = self.m
-        rk = known_first(r.known)
+        rk = r.known
         for p, k, b in zip(r.pattern, keys, info.binds):
             if p[0] != '*':
                 continue
@@ -911,7 +910,7 @@ class Engine:
             if dom[0] == 'index':
                 ix = m.indexes[dom[1]]
                 v = ix.added.get(_kv(k))
-                if v is not None and known_first(v.known) > rk:
+                if v is not None and v.known > rk:
                     return False
             elif dom[0] == 'kind':
                 t = m.things.get(k.name)
@@ -921,7 +920,7 @@ class Engine:
                 sub = m.kinds[dom[1]].subtree(m)
                 for e in t.entries:
                     if e.kind in sub and not e.replace:
-                        kk = known_first(e.version.known) if e.version is not None else datetime.date.min
+                        kk = e.version.known if e.version is not None else datetime.date.min
                         fk = kk if fk is None else min(fk, kk)
                 if fk is None or fk > rk:
                     return False
@@ -930,19 +929,7 @@ class Engine:
     def row_visible(self, r, ctx):
         if not in_world(r.version):
             return False
-        return self.known_vis(r.known, row_known_sid(r), 'a row', ctx, r.version.id)
-
-    def known_vis(self, known, sid, what, ctx, vid=None):
-        """Whether something known on `known` is seen at the cut. A window that holds the cut "states a windows clause
-        or is HOLE-IMPRECISE ... This holds for everything the version or row brings: its rows, band tables and rules"
-        (L §4.5). The hole names the row and its version (tally 2.1.8 R12, P70)."""
-        vis = visible(known, ctx.cut, sid or what)
-        if vis is None:
-            lo, hi = known
-            q = 'date within window(%s, %s) not precise enough for the cut %s' % (lo, hi, ctx.cut)
-            raise HoleSignal(carry_hole(Hole([(q, x) for x in (sid, vid) if x] or [(q, sid)]),
-                                        ids=[known_carry(sid or what, known)]))
-        return vis
+        return visible(r.known, ctx.cut)
 
     def wording_ok(self, version, item, ctx, own=None):
         """Inside a `wording D for [...]` pin naming the item: the candidate entered into force by D (L §4.3), row
@@ -987,7 +974,7 @@ class Engine:
             for o in cands:
                 if o is not c and o.replace and pattern_norm(o.pattern) == pc and \
                         (row_layer(self.m, o) > row_layer(self.m, c) or (row_layer(self.m, o) == row_layer(self.m, c)
-                                                                         and known_first(o.known) > known_first(c.known))):
+                                                                         and o.known > c.known)):
                     # in a scenario, its replace beats the base's row whatever their known dates (L §4.6 step 2)
                     beaten = True
                     break
@@ -1011,21 +998,14 @@ class Engine:
 
     def candidates(self, rows, keys, d, ctx, info, instant=None, last_before=None):
         out = []
-        undecided = []
         self._K = ctx.cut
         for r in rows:
             if not self.row_matches(r, keys, info):
                 continue
             if not self.unstated_ok(r, keys, info):
                 continue
-            try:
-                if not self.row_visible(r, ctx):
-                    continue
-                und = None
-            except HoleSignal as h:
-                # known in a window that holds the cut: a hole only where the row would be read (L §4.5, tally 2.1.8
-                # R12, #169-f), so its other tests are made first
-                und = h.hole
+            if not self.row_visible(r, ctx):
+                continue
             own = r.own_span if r.own_span is not None else (r.instant[0] if r.instant is not None and
                                                                  isinstance(r.instant[0], datetime.date) else None)
             if not self.wording_ok(r.version, info.id, ctx, own):
@@ -1043,9 +1023,6 @@ class Engine:
                 if d is None and last_before is None:
                     if not sp.always:
                         raise NotYet(LAWGUARD % ('a read of %s' % info.id))
-                    if und is not None:
-                        undecided.append(und)
-                        continue
                     out.append(r)
                     continue
                 if last_before is not None:
@@ -1055,12 +1032,7 @@ class Engine:
                         continue
                 elif not sp.contains(d):
                     continue
-            if und is not None:
-                undecided.append(und)
-                continue
             out.append(r)
-        if undecided:
-            raise HoleSignal(merge(*undecided))
         return out
 
     def row_value(self, r, info, keys, ctx, d, period):
@@ -1229,7 +1201,7 @@ class Engine:
         compared by code point (L §2.5), or None where no same line seen at ctx names x[k].  same is an equivalence:
         lines that share a side make one class (L §6.1 l.1805; tally 2.1.8 S6, #187).  A line is seen as its version's
         rows are: the header's always, a version's when known by the cut and in the worlds its file is in (L §4.5,
-        tally 2.1.8 R12; undecided inside a known window: as seen); only the lines that reach x[k] are asked."""
+        tally 2.1.8 R12); only the lines that reach x[k] are asked."""
         sr = getattr(self.m, 'same_rows', None)
         if not sr:
             return None
@@ -1247,7 +1219,7 @@ class Engine:
                 if x not in (a, b):
                     continue
                 y = b if x == a else a
-                if y in seen or not same_seen(v, ctx, (sr[a][2], sr[b][2])):
+                if y in seen or not same_seen(v, ctx):
                     continue
                 seen.add(y)
                 todo.append(y)
@@ -1875,7 +1847,7 @@ class Engine:
             # pointing at a scenario version: outside the scenario the rule is never a candidate (L §6.4)
             return False
         if rv.version is not None:
-            vis = self.known_vis(rv.version.known, rv.version.id, 'a version', ctx)
+            vis = visible(rv.version.known, ctx.cut)
             if not vis:
                 return False
             if not self.wording_ok(rv.version, info.id, ctx, rv.span):
@@ -1891,7 +1863,7 @@ class Engine:
             return sp.contains(p)
         ok = True
         if rv.v is not None:
-            vis = self.known_vis(rv.v.known, rv.v.id, 'a version', ctx)
+            vis = visible(rv.v.known, ctx.cut)
             if not vis:
                 return False
             if not self.wording_ok(rv.v, info.id, ctx, rv.span):
@@ -1918,8 +1890,8 @@ class Engine:
             return None
         reps = [rv for rv in vers if rv.replace]
         if reps:
-            best = max(reps, key=lambda rv: known_first(rv.known()))
-            same = [rv for rv in reps if known_first(rv.known()) == known_first(best.known())]
+            best = max(reps, key=lambda rv: rv.known())
+            same = [rv for rv in reps if rv.known() == best.known()]
             if len(same) > 1:
                 # two versions of the rule known the same day whose spans both hold p: neither replaces the other, a
                 # tie (L §4.6 steps 2 and 4; round 18 C1-11)
@@ -2071,7 +2043,7 @@ class Engine:
                 continue
             if not in_world(t.version):
                 continue
-            vis = self.known_vis(t.version.known, t.version.id, 'a version', ctx)
+            vis = visible(t.version.known, ctx.cut)
             if not vis or not self.wording_ok(t.version, info.id, ctx):
                 continue
             sp = t.version.span_at(ctx.cut)
@@ -2096,8 +2068,8 @@ class Engine:
         top_l = max(version_layer(self.m, t.version) for t in cands)
         lay = [t for t in cands if version_layer(self.m, t.version) == top_l]
         below = [t for t in cands if version_layer(self.m, t.version) < top_l]
-        best = max(lay, key=lambda t: known_first(t.version.known))
-        top = [t for t in lay if known_first(t.version.known) == known_first(best.version.known)]
+        best = max(lay, key=lambda t: t.version.known)
+        top = [t for t in lay if t.version.known == best.version.known]
         if len(top) > 1:
             raise refuse('LOAD-OVERLAP', 'band %s: two tables known the same day' % info.id)
         t = top[0]
@@ -2106,7 +2078,7 @@ class Engine:
             if others:
                 raise refuse('LOAD-OVERLAP', 'band %s: tables overlap without replace' % info.id)
             return [(r, t) for r in t.rows]
-        base = self._table_of([o for o in lay if known_first(o.version.known) < known_first(t.version.known)]
+        base = self._table_of([o for o in lay if o.version.known < t.version.known]
                               + below, info, key, d)
         if base is None:
             # L §5.9 Rows replaced: "On a day of its span where no table is in force, only a whole table stands, as an
@@ -3078,11 +3050,10 @@ class Engine:
             unknown = {}
 
             def alive(t, test):
-                # L §4.5: a thing whose entry is known in a window holding the cut is an unknown member, a key whose
-                # where is a hole (§5.11)
+                # L §5.11: a thing whose life the text leaves open is an unknown member, a key whose where is a hole
                 try:
                     return test(t)
-                except WindowUndecided as w:
+                except Undecided as w:
                     unknown[t.name] = w.hole()
                     return True
             if b.on is not None:
@@ -4640,8 +4611,7 @@ class Engine:
         day = rec.get('day')
         if isinstance(day, datetime.date):
             bits.append('on %s' % day)
-        kn = r.known
-        bits.append('known %s' % (('window(%s, %s)' % kn) if isinstance(kn, tuple) else kn))
+        bits.append('known %s' % r.known)
         tn.lines.append(', '.join(bits))
         tn.value = rec
         self.trace_stack[-1].children.append(('node', tn))
@@ -4661,8 +4631,7 @@ class Engine:
         else:
             sp = r.span(self.ask_K)
             bits.append('governs %s' % (sp.text() if sp is not None else '?'))
-        kn = r.known
-        bits.append('known %s' % (('window(%s, %s)' % kn) if isinstance(kn, tuple) else kn))
+        bits.append('known %s' % r.known)
         tn.lines.append(', '.join(bits))
         val = r.val
         tn.value = Hole([(val[1], self.origin(info, keys))]) if isinstance(val, tuple) and val[0] == 'hole' else val
@@ -4687,15 +4656,6 @@ def range_is_literal(d):
 # of a HOLE-IMPRECISE, keyed as the hole holds it, to the windows it was made of, (id, label, days) in the order the
 # line's reads met them. A hole made of others keeps their questions, so it carries their windows.
 CARRY = {}
-CARRY_TEXT = {}   # a question known only by its text (a reading's row known in a window), to the same
-
-
-def known_carry(sid, known):
-    """The unknown day of a known window (model.known_window_id): (id, label, days)."""
-    from .model import known_window_id
-    lo, hi = known
-    wid, label = known_window_id(sid)
-    return (wid, label, [lo + datetime.timedelta(days=i) for i in range((hi - lo).days + 1)])
 
 
 def cal_at_text(cal):
@@ -4761,7 +4721,7 @@ def carried(v):
             return
         if isinstance(x, Hole):
             for q in sorted(x.qs, key=repr):
-                add(CARRY.get(q) or CARRY_TEXT.get(q[0], ()))
+                add(CARRY.get(q, ()))
         elif isinstance(x, Iv):
             add(iv_carry(x))
         elif isinstance(x, (tuple, list, frozenset, set)):

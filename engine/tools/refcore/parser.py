@@ -421,13 +421,7 @@ class P:
         return False
 
     def known(self):
-        if self.at('window') and self.at('(', 1):
-            self.i += 2
-            a = self.day()
-            self.expect(',')
-            b = self.day()
-            self.expect(')')
-            return self.N('window', a=a, b=b)
+        # L §2.3 known = DAY (tally 2.2, S-2: a known window is cut)
         return self.N('date', v=self.day())
 
     # -- expressions ---------------------------------------------------------

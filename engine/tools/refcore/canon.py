@@ -11,7 +11,7 @@ here as its files' reprints, each ending with its newline, joined in that order 
 The reprint changes what L §2.4 states and nothing else:
 - the header's lines in their order, `use` lines by name, `same` lines by left side;
 - sections in kind order, by id; kinds in tree order (each followed by its subkinds, depth first, siblings by id);
-  versions last by `known` (a window by its first day), then id; a regime's items in that order one level in, then
+  versions last by `known`, then id; a regime's items in that order one level in, then
   its `export` line and its notes; one blank line between sections, none inside one;
 - inside a section its clause lines and notes first, in the grammar's order (a kind's leg, attr and note lines are
   one repeated choice there, so they keep their order), then rules (by label, the `known` of their `v`, none first, then their own
@@ -283,8 +283,6 @@ def first_day(lit):
         return datetime.date(lit.v[0], 3 * lit.v[1] - 2, 1)
     if lit.k == 'num' and lit.isint and lit.unit is None:
         return datetime.date(int(lit.v), 1, 1)
-    if lit.k == 'window':
-        return lit.a
     return None
 
 

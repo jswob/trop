@@ -15,7 +15,7 @@ import datetime
 from .dates import ONE_DAY, next_day
 from .moves import item_in_world, order_key, same_groups
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
-from .model import known_first, key_text, SameDiffers, in_world
+from .model import key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
 from .evaluate import carry_hole
 from .moves import Leg, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, instant_text, merge
@@ -469,11 +469,6 @@ class Walk:
                     if not isinstance(d, datetime.date) or d < S or d > self.end:
                         continue
                     self.at((d.toordinal(), 1, 0, o.id + ' ' + lg.name, 0), 'obs', (o, lg))
-            # a cover whose version is known in a window that holds the cut (L §4.5): a hole from its first day
-            for place, span, q in eng.coverage_undecided(ctx):
-                d = span.start if span.start is not None and span.start > S else S
-                if d <= self.end:
-                    self.at((d.toordinal(), 0, 0, 'covers ' + place, 0), 'covhole', (place, q))
             links = eng.obs_links(ctx)
             # two observations of versions covering the two ends that fulfil one instance and disagree (E §6.1); a row
             # stated same as one that fulfils it is one of them, its fulfils "stated on either row" (L §5.19)
@@ -1111,9 +1106,6 @@ class Walk:
                 if isinstance(p, Thing):
                     self.add(p.name, lg.unit or '*', Ent(key, 'hole', qs=frozenset(q), mv=i, coll=i.coll,
                                                          flow=Hole(q)))
-        elif kind == 'covhole':
-            place, q = obj
-            self.add(place, '*', Ent(key, 'hole', qs=frozenset([q]), mv=None, coll=None, flow=Hole([q])))
         elif kind == 'legbad':
             i, lg, err = obj
             # a refused movement whose day is a hole or refused may fall after any reading, so no reading ends its

@@ -592,17 +592,14 @@ def _st_total(st):
 
 def w_pstated_rows(self, e):
     """A reading's stated parts the walk's cut sees: [(q node, value, row)] (L §5.19 Stated parts)."""
-    from .model import visible, row_known_sid
+    from .model import visible
     row = getattr(e, 'row', None)
     parts = row.__dict__.get('parts') if row is not None else None
     if not parts:
         return []
     out = []
     for qn, v, pr in parts:
-        vis = visible(pr.known, self.K, row_known_sid(pr))
-        if vis is None:
-            raise NotYet('a stated part known in a window that holds the cut')
-        if vis:
+        if visible(pr.known, self.K):
             out.append((qn, v, pr))
     return out
 
