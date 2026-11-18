@@ -231843,12 +231843,12 @@ t_to: sav
   cut 2026-04-10
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place unexplained is read by nothing
-,21:fixes/gate8/m2_g8c_b2,11:fixes-gate8,12:run b2.tally,2207:8:b2.tally,2190:model b2
+,21:fixes/gate8/m2_g8c_b2,11:fixes-gate8,12:run b2.tally,2477:8:b2.tally,2460:model b2
   tally 2
   on 2026-04-15
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a sweep decision run 33 days after its month starts, in the next month (tally 2.2: run on the 18th, its leg stated its own day 33 days later; a leg has no day of its own now);a projection from January read day by day across the month's end, a kept walk continued past the day it walked to (walk/fork.rs booked_ahead, continue_with: the legs booked ahead carried)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a sweep decision run 33 days after its month starts, in the next month (tally 2.2: run on the 18th, its leg stated its own day 33 days later; a leg has no day of its own now);a projection from January read day by day across the month's end, a kept walk continued past the day it walked to (walk/fork.rs booked_ahead, continue_with: the legs booked ahead carried) (tally 2.2, pick P24: b2_min takes a where that always holds, so it stays on the plain aggregate, whose day-by-day read, walks shared between its days, these counts pin; a vector of what the recognition of a min over days (C-10 (a)) must not take)"
 
 source card "invented for F6's twin"
 
@@ -231902,7 +231902,7 @@ move sweep[m in month]: transfers
   reads konto
   leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
-ask b2_min: min(bal(konto, d) from 2026-01-10 for d in 2026-01-10 .. 2026-02-10 step 1 day)
+ask b2_min: min(bal(konto, d) from 2026-01-10 for d in 2026-01-10 .. 2026-02-10 step 1 day where d >= 2026-01-10)
 ask b2_all: bal(konto, d) from 2026-01-10 for d in 2026-01-28 .. 2026-02-06 step 1 day
 ask b2_one: bal(konto, 2026-02-05) from 2026-01-10
 

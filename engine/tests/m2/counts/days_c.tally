@@ -3,7 +3,7 @@ model days_c
   on 2026-04-15
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2, the fence's counts: G7's days.tally (tally-cli/tests/forks/) with the builder's R1 (a projection read day by day across a month's end), R2 (one read twice through a day), R3 (five projections, and four, across a month's end), R6 (the sweep, a decision on walked days)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2, the fence's counts: G7's days.tally (tally-cli/tests/forks/) with the builder's R1 (a projection read day by day across a month's end), R2 (one read twice through a day), R3 (five projections, and four, across a month's end), R6 (the sweep, a decision on walked days) (tally 2.2, pick P24: r1 takes a where that always holds, so it stays on the plain aggregate, whose day-by-day read, walks shared between its days, these counts pin; a vector of what the recognition of a min over days (C-10 (a)) must not take)"
 
 source card "invented for F6's twin"
 
@@ -57,7 +57,7 @@ move sweep[m in month]: transfers
   reads konto
   leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
-ask r1: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
+ask r1: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day where d >= 2026-02-01)
 ask r1b: sum(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
 ask r2: bal(konto, d) from 2026-02-03 for d in [2026-03-10, 2026-02-20, 2026-03-31, 2026-03-31, 2026-02-03]
 ask r3: min(bal(konto, d) from 2026-02-01 + bal(konto, d) from 2026-02-02 + bal(konto, d) from 2026-02-03 + bal(konto, d) from 2026-02-04 + bal(konto, d) from 2026-02-05 for d in 2026-02-20 .. 2026-03-10 step 1 day)
