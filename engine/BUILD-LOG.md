@@ -4709,4 +4709,15 @@ On `build/2.2` at 0b615a0e (T's merge of the three count pins and the nine named
 - Each piece's commit was on a green `check quick`: 74, 79, 87, 11, memo and 82 s.
 - `check fences: green, 1 step` after pieces 2 (49 s) and 3 (43 s).
 - `check commit` on 73643de8's tree: `check commit: green, 23 steps (198s)`.
-- On this entry's tree (c8730b25's code): `check commit: green, 23 steps (150s)`, 1 061 tests.
+- On this entry's tree (c8730b25's code): `check commit: green, 23 steps (150s)`, 1 061 tests. On 3d7cbfed, the entry committed: `check commit: green, 23 steps (96s)`.
+- **Not pushed:** the guard refuses `git push` (STOP-REPORT below).
+
+## STOP-REPORT 2026-11-18: the push is refused on two of T's commit subjects merged by 0b615a0e
+
+- **Kind:** other. Two commits of the tests session, never pushed, fail commit-check, and they reach the remote only with this branch.
+- **Where:** 140e340f `test(counts): keep three min pins on the plain aggregate with a where` and cf38e76c `test(spec): name the unknown day w in nine hand-written holes`. Both are on `tests/2.2` and came into `build/2.2` only through the lead's merge 0b615a0e (parents 6536744b, cf38e76c). `git branch -r --contains` names no remote branch for either. `origin/build/2.2` is 6536744b.
+- **Rule or gate:** R-100 (the guard runs commit-check over what every `git push` sends); `engine/CONVENTIONS.md`'s scopes: parse, format, load, eval, walk, book, ask, num, time, refcore, fuzz, rules. `counts` and `spec` aren't among them.
+- **What happens:** `git push origin build/2.2` is refused by the guard: `engine/tools/commit-check origin/master build/2.2 fails, as CI would (R-100)`, with `FAIL 140e340 test(counts): … the subject isn't type(scope): …` and `FAIL cf38e76 test(spec): …`, then `commit-check: 2 problems`. This turn's seven commits pass: `engine/tools/commit-check 0b615a0e` gives `0 rule-changing commits, no attribution line`.
+- **What I tried:** nothing that rewrites history. My commits sit on 0b615a0e, whose parents are those two, so none of mine can go without them. Rewording them is a rebase of T's branch and of the lead's merge, which the build role doesn't own and the guard refuses (`rebase`, `cherry-pick`, `merge`).
+- **What I ask:** the tests session (or the lead) rewords the two subjects on `tests/2.2` before either is pushed (`test(walk): keep three min pins …` for 140e340f, `test(ask): name the unknown day w …` for cf38e76c, or another listed scope), and the lead merges `tests/2.2` into `build/2.2` again. A builder turn then re-applies this turn's commits on that merge unchanged, runs `check commit` and pushes. Or the lead pushes once the subjects are fixed. CI's `check full` on #217 waits until then.
+- **State:** code at c8730b25, the entry at 3d7cbfed (`check commit: green, 23 steps (96s)`), this report in the commit after it; all local, nothing uncommitted. The turn's work: 2559cfdb, ec3604c0, 439e6e25, 81263310, 73643de8, c8730b25, 3d7cbfed and this report's commit.
