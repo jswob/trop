@@ -4,6 +4,7 @@
 # <move>, <n> instances, first <day>`. (No member reads b.konto after the day.) L6_1_joint_move_in_member_place's model (help, 50.00 PLN on 2026-05-05 from a.konto to
 # b.konto, linked to nothing), read by flows over May (kf), by low over a span holding the day (kl) and by a balance on
 # the day itself (kd): each a hole naming help, with help under left out:. snap8 printed kf with no left out: line.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === options pin=bytes
 === joint.tally
 model family
@@ -30,7 +31,7 @@ version jv
   jday = 2026-05-05 "plan"
   jamt = 50.00 PLN "plan"
 ask kf: flows(b.konto, 2026-05)
-ask kl: low(b.konto, 2026-04-01 .. 2026-06-30)
+ask kl: min(bal(b.konto, d) for d in 2026-04-01 .. 2026-06-30 step 1 day)
 ask kd: bal(b.konto, 2026-05-05)
 === ana.tally
 model ana

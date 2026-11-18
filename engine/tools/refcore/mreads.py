@@ -1,5 +1,5 @@
 """Writer 3's reads (L §5.10, §5.14, §5.14.1, §5.19; E §4.2-§4.3, §6): places and movements as values, their
-fields, bindings over event kinds and observed inputs, bal, low, flows, value, next, covered, gap, observed, unit.
+fields, bindings over event kinds and observed inputs, bal, flows, value, covered, gap, observed, unit.
 
 Installed as Engine methods (`m_<name>` -> `<name>`).
 """
@@ -1010,9 +1010,8 @@ def m_e_bal(self, n, env, ctx):
     return self.bal_at(n, place, unit, d, env, ctx)
 
 
-def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
-    """bal(x, d) with the read's own clauses (L §5.14.1): the one read `bal` and the forms defined by it (`low`, L §5,
-    a form defined by another; tally 2.1.7 R6, #125) make. A day outside the run is its hole (run_ends) before the
+def m_bal_at(self, n, place, unit, d, env, ctx):
+    """bal(x, d) with the read's own clauses (L §5.14.1). A day outside the run is its hole (run_ends) before the
     read's own forms: a projection's and the modelled walk's checks come after it."""
     if isinstance(d, datetime.date):
         out = self.run_ends(place, d)
@@ -1020,7 +1019,7 @@ def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
             return out
     form = n._form
     if form == 'proj':
-        return self.proj_bal(n, place, unit, d, env, ctx, regs_to)
+        return self.proj_bal(n, place, unit, d, env, ctx)
     if form == 'modelled':
         # bal(x, d) in the model's own account, at the plain read's instant (L §5.19; tally 2.1.8 R16, B5)
         return self.bal_modelled(place, unit, d, ctx, start=getattr(n, 'start', False))
@@ -1251,8 +1250,8 @@ def m_rnd_clause(self, r, ctx):
     return ('mean', None)
 
 
-def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
-    """`bal(x, d) from t` (L §5.14.1, E §4.3); regs_to: the last day whose left-out instances the reader lists."""
+def m_proj_bal(self, n, place, unit, d, env, ctx):
+    """`bal(x, d) from t` (L §5.14.1, E §4.3)."""
     t = self.ev(n.proj['frm'], env, ctx)
     if isinstance(t, Hole):
         return t
@@ -1271,7 +1270,7 @@ def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
     if ctx.partial and isinstance(v, Hole):
         # a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
         v = self.partial_bal(w, place, unit, K_end(d), v)
-    self.proj_regs(w, t, regs_to or d)
+    self.proj_regs(w, t, d)
     if clauses[2] and (not isinstance(v, Hole) or ctx.partial):
         # with uncertain partial: the uncertain amounts join the known part of a hole's linear form (L §5.18, §5.14;
         # tally 2.1.8 R15, B3 of group 3's review)
@@ -1405,44 +1404,6 @@ def m_bal_modelled(self, place, unit, d, ctx, start=False):
     if hs:
         return merge(*hs)
     return qty(q, unit)
-
-
-def m_e_low(self, n, env, ctx):
-    """low(x, a .. b) [from t] [clauses]: min(bal(x, d) [from t] [clauses] for d in a .. b step 1 day) (L §5.14.1),
-    its definition's reads, holes and refusals, named low (L §5, a form defined by another; tally 2.1.7 R6, #125,
-    #126a)."""
-    p = self.place_arg(n.ref, env, ctx)
-    if isinstance(p, Hole):
-        return p
-    place = p.name
-    unit = self.bal_unit(n, place, env, ctx)
-    sp = self.span_value(n.span, env, ctx)
-    if isinstance(sp, Hole):
-        return sp
-    a, b = sp.start, sp.end - ONE_DAY
-    if n._form == 'proj':
-        t = self.ev(n.proj['frm'], env, ctx)
-        if isinstance(t, Hole):
-            return t
-        t = self.date_of(t, 'the day of a projection')
-        if a < t:
-            raise refuse('RUN-DOMAIN', 'low(%s, %s .. %s) from %s: a day before the projection\'s start' % (
-                place, a, b, t))
-    vals = []
-    d = a
-    while d <= b:
-        vals.append(self.bal_at(n, place, unit, d, env, ctx, regs_to=b))
-        d += ONE_DAY
-    if not vals:
-        raise refuse('RUN-EMPTY', 'low over no keys')
-    hs = [v for v in vals if isinstance(v, Hole)]
-    if hs:
-        return merge(*hs)
-    best = vals[0]
-    for v in vals[1:]:
-        if v.q < best.q:
-            best = v
-    return best
 
 
 # -- flows (L §5.14.3) --------------------------------------------------------------------------------------------
@@ -2210,71 +2171,7 @@ def m_price_read(self, pid, keys, d, n, env, ctx, place, u):
     return v
 
 
-# -- next, covered, gap, observed, unit (L §5.14.1, §5.19, §5.10) -------------------------------------------------------
-
-def m_c_next(self, n, env, ctx):
-    """next(K, d) is `first(m in K over d ..) ties by m.day` (L §5.14.1 table): the first movement of event kind K
-    dated on or after d; two on that first day are a tie (RUN-TIE); none at the cut is HOLE-NOTYET (L §3.1), since
-    the span `d ..` reaches past every cut."""
-    kid = n._kind
-    d = self.ev(n.args[1], env, ctx)
-    if isinstance(d, Hole):
-        return d
-    d = self.date_of(d, 'the day of next')
-    res, colls = self.span_members(('event', kid), Span(d, None), ctx)
-    # L §5 A form defined by another (tally 2.1.7 R6, T's SR-7): its holes and refusals name the form as written,
-    # not the definition's bound variable or the day's value
-    from .check import _txt
-    what = _txt(n)
-    best = self.first_by_day(res, what)
-    if isinstance(best, Hole):
-        return best
-    if best is None:
-        return notyet_hole(what, kid)
-    v, x = best
-    c = colls.get(x.id)
-    if c is not None:
-        self.cur.merge(c)
-    return v
-
-
-def notyet_hole(var, dom):
-    """L §8.1 HOLE-NOTYET: `<x>: no <event> yet, and its span reaches past the cut`, naming the binding."""
-    return Hole([('%s: no %s yet, and its span reaches past the cut' % (var, dom), dom)])
-
-
-def m_first_by_day(self, res, what):
-    """The member first by day among [(Mv, status, movement)] (ties by m.day, L §5.11): (Mv, movement), None when
-    there is none, a Hole when an unknown member or a window could come first, RUN-TIE when two share the first day."""
-    if not res:
-        return None
-    def lo(x):
-        return day_lo(x.day)
-
-    def hi(x):
-        return day_hi(x.day)
-    known = [(v, s, x) for v, s, x in res if not isinstance(x.day, Hole)]
-    holes = [s for v, s, x in res if isinstance(x.day, Hole)]
-    if holes:
-        # a movement whose day is a hole may come first (L §5.14)
-        return merge(*holes)
-    top = min(hi(x) for v, s, x in known)
-    cands = [(v, s, x) for v, s, x in known if lo(x) <= top]
-    hs = [s for v, s, x in cands if isinstance(s, Hole)]
-    if hs:
-        return merge(*hs)
-    if len(cands) == 1:
-        v, s, x = cands[0]
-        return (v, x)
-    wins = [x for v, s, x in cands if isinstance(x.day, Iv)]
-    if wins:
-        # their order is a comparison of windows, undecided (L §4.4)
-        w = wins[0]
-        return carry_hole(Hole([('date within %s not precise enough for %s' % (w.day.window_text(), what), w.id)]),
-                          w.day)
-    raise refuse('RUN-TIE', "%s has a tie at %s that changes the result, and its ties by doesn't break it" % (
-        what, ', '.join(x.id for v, s, x in cands)))
-
+# -- covered, gap, observed, unit (L §5.19, §5.10) ----------------------------------------------------------------
 
 def m_c_covered(self, n, env, ctx):
     """covered(x, span): versions known by the cut cover x on every day of the span (L §5.19); never a hole (L §8.1)."""

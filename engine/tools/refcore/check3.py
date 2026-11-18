@@ -575,7 +575,7 @@ def m_place_arg(self, r, sc, what):
 
 def m_any_needs_unit(self, n):
     """bal(x, d) of a place written by name whose unit is any names no unit, which load sees (R5; item 76, #162's
-    sweep): LOAD-UNIT, in the words run gave it. low(x, a .. b) is refused so, as the bal(x, d) of its definition."""
+    sweep): LOAD-UNIT, in the words run gave it."""
     th = self.literal_place(n.ref)
     if th is not None and self.m.place_unit(self.m.things[th]) in (None, 'any'):
         raise LoadError('LOAD-UNIT', 'bal(%s, d) of a place of unit any states its unit: bal(x, u, d)' % th, n.loc)
@@ -720,29 +720,6 @@ def m_check_proj(self, n, sc, target):
         n._ctgt = ('projc', target)
     self.projs.append((n, sc.item))
     n._holder = sc.item
-
-
-def m_t_low(self, n, sc, expect):
-    t = self.place_arg(n.ref, sc, 'low')
-    ut = self.place_type_unit(t, n.ref)
-    self.any_needs_unit(n)
-    target = self.place_target(n.ref)
-    self.span(n.span, sc)
-    if n.span.a is None or n.span.b is None:
-        raise LoadError('LOAD-DOMAIN', 'low over a span with an open end', n.loc)
-    if n.proj and 'frm' in n.proj:
-        self.check_proj(n, sc, target)
-        n._form = 'proj'
-    else:
-        n._form = 'day'
-        self.mark(sc, 'bal', target)
-        n._ctgt = ('bal', target)
-        if n.proj and n.proj.get('windows') == 'each':
-            # L §4.4 "for that read": a line that reaches a low stating windows each splits by the windows it meets
-            # (ask.Asker), as for a projection's (tally 2.1.8 R13, #169: P11's low without from)
-            self.m.read_each = True
-    self.edge(sc, ('balances',), 'bal')
-    return ut
 
 
 def m_leg_guarded(self, mi, leg):
@@ -1334,39 +1311,6 @@ def m_price_edges(self, sc, things):
         self.edge(sc, pn._r, 'explicit')
 
 
-def m_c_next(self, n, sc, expect):
-    m = self.m
-    if len(n.args) != 2:
-        raise LoadError('LOAD-PARSE', 'cannot parse: next(K, d) takes two arguments', n.loc)
-    kn = n.args[0]
-    if kn.k == 'name':
-        hit = m.lookup(kn.id, sc.regime)
-    elif kn.k == 'field' and kn.obj.k == 'name':
-        hit = m.qualified(kn.obj.id, kn.name)
-    else:
-        hit = None
-    if hit is None or hit[0] != 'kind' or m.kinds[hit[1].id].spec != 'event':
-        raise LoadError('LOAD-NAME', 'next takes an event kind: %s' % _txt(kn), n.loc)
-    kid = hit[1].id
-    kn._r = ('kind', kid)
-    kn._t = Ty('kindname')
-    dt = self.tc(n.args[1], sc)
-    if not self.is_date(dt):
-        raise uerr('next(K, d): d is %s, not a date' % T.show(dt), n.loc)
-    n._kind = kid
-    sub = m.kinds[kid].subtree(m)
-    for qid, mi in m.moves.items():
-        if self.move_kind(mi) in sub:
-            self.edge(sc, ('move', qid), 'next')
-            if mi.decision:
-                # next(K, d) is first(m in K over d ..) ties by m.day (L §5.14.1): its binding's reads are its own, so a
-                # binding over a decision's movements is a running read (tally 2.1.7 R6, G4, G5)
-                self.mark(sc, 'legs', ('move', qid))
-    if 'pads' in sub:
-        self.mark(sc, 'legs', ('kind', 'pads'))
-    return T.key(kid)
-
-
 def m_c_covered(self, n, sc, expect):
     if len(n.args) != 2:
         raise LoadError('LOAD-PARSE', 'cannot parse: covered(x, span) takes two arguments', n.loc)
@@ -1809,7 +1753,7 @@ def m_check_move_lawdates(self):
     """A move states at when anything it reads is law-dated (L §4.3, §5.14: LOAD-LAWDATE)."""
     m = self.m
     E = self.edges
-    skip = {'pin', 'calendar', 'explicit', 'lawpin', 'bind', 'flows', 'next', 'observed', 'leg', 'bal'}
+    skip = {'pin', 'calendar', 'explicit', 'lawpin', 'bind', 'flows', 'observed', 'leg', 'bal'}
     for qid, mi in m.moves.items():
         # an at reader def reached from `at e` itself has no law date to take: the chain ends at the law date `at`
         # gives (L §5.14 at e, round 7c): LOAD-LAWDATE

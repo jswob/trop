@@ -3,6 +3,7 @@
 # 2026-03-28 .. 2026-04-03, with bonus_amt read there; the low over 2026-04-01 .. 2026-04-02 is three runs under
 # each axis option. 2.1.7's refcore replaced the line's assignment by the read's bare `each` and printed the plain
 # form's holes.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model w_each
   tally 2
@@ -32,7 +33,7 @@ move gift: transfers
   on wd
   leg cash from work to konto amount bonus_amt
 
-ask lw: low(konto, 2026-04-01 .. 2026-04-02) windows each
+ask lw: min(bal(konto, d) for d in 2026-04-01 .. 2026-04-02 step 1 day) windows each
 
 version v
   cite card

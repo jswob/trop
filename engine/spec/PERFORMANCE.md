@@ -82,7 +82,7 @@ Tally 2.1 keeps the plan pass (E §4.1). For each plan move, in the item graph's
 
 - **Per instance:** a few evaluations, mostly memo hits, since law and facts are shared cells; one more per later version that touches its read set. A version that touches nothing in the read set is skipped by an index lookup, with no evaluation (E §5 step 2).
 - **Total:** O(I · c) for I instances and c evaluations each, plus one sort of the booked movements by (day, stratum, move id, keys), O(M log M) (E §4.1, last paragraph).
-- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole and window movements, and the instance lists that `flows`, `next` and the projections read.
+- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole and window movements, and the instance lists that `flows`, bindings and the projections read.
 
 ### 2.2 The event-driven walk
 
@@ -135,13 +135,13 @@ So A steps about 18 900 days instead of 350 528, and E2-01a about 8 600 instead 
 - `bal(x, d)` at a past day: a binary search over x's change points, O(log Mₓ).
 - `flows(x, span)`: two lookups in x's prefix sums, O(log Mₓ) (L §5.14 cost).
 
-### 2.3 The written projection, `next` and `value`
+### 2.3 The written projection and `value`
 
-Tally 2's look-ahead is written: `bal(x, d) from t`, `low(x, a .. b) from t` and `next(K, d)` (L §5.14.1, D-6). They replace 1.0.1's `plan_low`, `next_on` and `worth` (`value(x, d) in C by p`, L §5.10). E §4.3 computes them.
+Tally 2's look-ahead is written: `bal(x, d) from t`, a lowest balance as its `min` over days, `min(bal(x, d) from t for d in a .. b step 1 day)`, and the next movement of a kind as a `first` over a binding (L §5.14.1, D-6). They replace 1.0.1's `plan_low`, `next_on` and `worth` (`value(x, d) in C by p`, L §5.10). E §4.3 computes them.
 
 **The general case.** `bal(x, d) from t`, held by item P, is a walk of its own from day t to d: it starts from x's balance at the start of t (or at the reader's point on t), counts every movement dated t..d that doesn't depend on P, each as known on t, and runs the decisions in the window stratum by stratum (E §4.3 steps 1–3). It is event-driven like the main walk (§2.2). Its cost is one walk of its window, memoised per (item, day, cut, clauses) (L §5.14 cost, l.1454). Nesting is finite: a chain of nested projections names each holder at most once (E §4.3 l.228).
 
-**The common case is cheap** (E §4.3 l.230). When the window holds no decision the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and `low(x, a .. b) from t` is a range minimum over F.
+**The common case is cheap** (E §4.3 l.230). When the window holds no decision the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and the `min` of `bal(x, d) from t` over the days a .. b is a range minimum over F.
 - F is held in a segment tree over the days on which x has a counted movement: a query is O(log n), and adding δ to every F(u) from day u₀ on is O(log n) by a lazy range add.
 - F changes only as the cut min(t, K) rises with t: when t passes a version's `known`, the instances that version changes get new amounts, and F gets one range add per changed instance. The cut never goes back during a walk, so one tree is updated in place, in walk order, before the next read.
 - A sparse table would answer in O(1) but must be rebuilt in O(n log n) when F changes, which it does during the walk.
@@ -156,8 +156,6 @@ $ python3 -I -c "import math; print(math.ceil(math.log2(12054)))"
 - **Cost:** O((n + Δ) log n) per (place, holder) for the whole walk, where Δ is the number of instance changes that versions known before K cause.
 
 **Groups of places** are written as sums in 2.1, `min(sum(bal(x, d) from t for x in liquid on d) for d in a .. b step 1 day)`, which isn't the sum of the members' lows (L §5.14.1 l.1409). Evaluated as written, it costs (b − a + 1) days × the members' reads. A sum of step functions is a step function, so the minimum can be taken over the members' change points instead; that is an optimisation that changes no value, taken only where a measured ask needs it.
-
-**`next(K, d)`** is a binary search in the sorted days of K's movements, planned and observed, as known at the reader's cut (E §4.3 l.232): O(log I_K).
 
 **`value(x, d) in C by p`** is a balance read and a price read, O(log Mₓ + log r); with `of q`, the parts read of §7 (L §5.10 l.1090, l.1099).
 
@@ -468,8 +466,7 @@ Each construct's section in L states its cost; collected, with 2.1's constructs 
 | `flows` | §5.14 | O(log Mₓ) by prefix sums | — |
 | adjustments | §5.14.3 | one re-evaluation per later version that touches the read set (E §5 step 2) | instance |
 | projection `bal(x, d) from t` | §5.14.1 | one walk of its window, event-driven; in the common case a prefix sum (§2.3) | (item, day, cut, clauses) |
-| `low` | §5.14.1 | O(log n) a query in the common case; O(log n) per changed instance | segment tree per (place, holder) |
-| `next` | §5.14.1 | O(log I_K) | — |
+| a lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)` | §5.14.1 | O(log n) a query in the common case; O(log n) per changed instance | segment tree per (place, holder) |
 | `value` | §5.10 | O(log Mₓ + log r); with `of q`, a parts read | — |
 | **parts: arrival** | §3.6, §5.14 | the arrival rule, one def cell per (movement, party) it reaches; the split O(L log L) by `rest largest` | parts per (place, unit) |
 | **parts: take** | §3.6, §5.14 | a fill over (part, outflow) arcs, O(L log L) for L live labels | parts per (place, unit) |
@@ -524,7 +521,7 @@ $ python3 -I -c "print(32/6)"
 | P8-2 | **A deterministic run, cold** (N-2002) | 33 years daily, 10× the household's instances and observations (1.0.1: 181 440 movements, so ≤ 5.5 µs a movement all in) | — (1.0.1's prototype: 0.34 s at 1×) | **≤ 1 s** | ≤ 1 GB | days stepped ≤ the non-empty days (§2.2) | Mac: its 1× twin (the household's own size) reported at the tags from M1; judged at 10× at M9, once T's generator gives the size (SO8-10). A miss at 10× also decides the seam (§4, D1-5) | the tag |
 | P8-3 | **A deterministic run, warm** | as P8-2, memo kept from the cold run | — | **≤ 50 ms** | ≤ 1 GB | def misses 0 | Mac: reported at 1× from M1; judged at 10× at M9, as P8-2 | the tag |
 | P8-4 | **Monte Carlo** (N-2003): law on every path, after the deterministic answer or from the cache | 1 000 paths × 30 years daily, 6 workers | — (prototype: 0.45 s, no law; refcore LH-17-mc-light ≈ 0.2 s a path) | **≤ 1 s** | ≤ 1 GB | cells recomputed locally reported | Mac, at the tags from the Monte Carlo milestone | the tag |
-| P8-5 | **One look-ahead decision**, in 2.1 one read of the written projection `low(x, a .. b) from t` in E §4.3's common case: one range minimum over F (§2.3, about 14 steps) | a 33-year place, n ≤ 12 054 | — (prototype: 0.1–0.3 µs, compiled) | **≤ 0.3 µs** | — | — | the range minimum's own bench at this size, from M1 (P56); the read inside a run is P8-M4 | a miss is reported at the gate, not re-budgeted (P56) |
+| P8-5 | **One look-ahead decision**, one read of the written projection's lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)`, in E §4.3's common case: one range minimum over F (§2.3, about 14 steps) | a 33-year place, n ≤ 12 054 | — (prototype: 0.1–0.3 µs, compiled) | **≤ 0.3 µs** | — | — | the range minimum's own bench at this size, from M1 (P56); the read inside a run is P8-M4 | a miss is reported at the gate, not re-budgeted (P56) |
 | P8-6 | **One path replayed** for an explanation (N-2004) | one path of P8-4's ask, shared layer cached | — (prototype ≈ 20 ms) | **≤ 20 ms** | ≤ 1 GB | — | Mac, at the tags from the Monte Carlo milestone | the tag |
 | P8-7 | **The gate on one law part** (N-2007): its `check` asks and the threshold table | about 9 checks, 61 planted errors | — (prototype ≈ 0.9 s) | **≤ 1 s** | ≤ 1 GB | — | Mac. **Rests on `OPERATIONS.md` §3, which stays stale**: the row waits for its rewrite | the tag |
 | P8-8 | **One fitting step** (N-2005): pin, replay, residuals (§4.4) | two years of history | — | **≤ 20 ms** | ≤ 1 GB | — | Mac, at the tags from M8, the milestone that builds the fitting loop | the tag |

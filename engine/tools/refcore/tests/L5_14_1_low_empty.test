@@ -1,6 +1,7 @@
 # L §5.14.1 low, L §5 (tally 2.1.7 R6, issue #145; #126a): low over no days is its min's RUN-EMPTY, named as
 # written, low over no keys; with from, with uncertain or computed ends alike. 2.1.6's refcore crashed (an empty
 # list). (T's G8 f1, its wrong-price asks left out.)
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === f1.tally
 model f1
   tally 2
@@ -83,23 +84,23 @@ ask f_last_k: value(flat, 2026-03-31) in PLN by last(fxu[EUR])
 
 ask f_same: value(flat, 2026-03-31) in EUR
 
-ask f_rev: low(konto, 2026-03-31 .. 2026-03-01)
+ask f_rev: min(bal(konto, dd) for dd in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask f_rev_from: low(konto, 2026-03-31 .. 2026-03-01) from 2026-03-01
+ask f_rev_from: min(bal(konto, dd) from 2026-03-01 for dd in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask f_rev_computed: low(konto, b_day .. a_day)
+ask f_rev_computed: min(bal(konto, dd) for dd in b_day .. a_day step 1 day)
 
-ask f_rev_unc: low(konto, 2026-03-31 .. 2026-03-01) with uncertain
+ask f_rev_unc: min(bal(konto, dd) with uncertain for dd in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask f_one: low(konto, 2026-03-01 .. 2026-03-01)
+ask f_one: min(bal(konto, dd) for dd in 2026-03-01 .. 2026-03-01 step 1 day)
 
-ask f_unc: low(konto, 2026-03-01 .. 2026-04-30) with uncertain, low(konto, 2026-03-01 .. 2026-04-30)
+ask f_unc: min(bal(konto, dd) with uncertain for dd in 2026-03-01 .. 2026-04-30 step 1 day), min(bal(konto, dd) for dd in 2026-03-01 .. 2026-04-30 step 1 day)
 
-ask f_unc_late: low(konto, 2026-03-15 .. 2026-04-30) with uncertain
+ask f_unc_late: min(bal(konto, dd) with uncertain for dd in 2026-03-15 .. 2026-04-30 step 1 day)
 
 ask f_unc_bal: min(bal(konto, d) with uncertain for d in 2026-03-15 .. 2026-04-30 step 1 day)
 
-ask f_unc_gift: low(konto, 2026-03-20 .. 2026-04-30) with uncertain, low(konto, 2026-03-20 .. 2026-04-30)
+ask f_unc_gift: min(bal(konto, dd) with uncertain for dd in 2026-03-20 .. 2026-04-30 step 1 day), min(bal(konto, dd) for dd in 2026-03-20 .. 2026-04-30 step 1 day)
 
 ask f_unc_gift_bal: min(bal(konto, d) with uncertain for d in 2026-03-20 .. 2026-04-30 step 1 day)
 
@@ -127,13 +128,13 @@ version readings_2026
   fxu[EUR] = 4.30 PLN/EUR at 2026-03-01 "quoted"
   px = 151 PLN/etf at 2026-04-01 "quoted"
 === expect f_rev f_rev_from f_rev_computed f_rev_unc f_one
-f_rev: refused: RUN-EMPTY low over no keys
+f_rev: refused: RUN-EMPTY min over no keys
   cut 2026-06-30
-f_rev_from: refused: RUN-EMPTY low over no keys
+f_rev_from: refused: RUN-EMPTY min over no keys
   cut 2026-06-30
-f_rev_computed: refused: RUN-EMPTY low over no keys
+f_rev_computed: refused: RUN-EMPTY min over no keys
   cut 2026-06-30
-f_rev_unc: refused: RUN-EMPTY low over no keys
+f_rev_unc: refused: RUN-EMPTY min over no keys
   cut 2026-06-30
 f_one: 1 000.00 PLN
   cut 2026-06-30

@@ -642,7 +642,7 @@ class Checker:
             self.compare('==', l, r, a.loc)
         elif f in ('explain', 'inputs-of'):
             self.open_key(a.ref, self.tc(a.ref, sc), sc)
-            ok = ('name', 'index', 'field') + (('bal', 'low') if f == 'explain' else ())
+            ok = ('name', 'index', 'field') + (('bal',) if f == 'explain' else ())
             if a.ref.k not in ok:
                 raise LoadError('LOAD-PARSE', 'cannot parse: %s takes a reference' % f, a.loc)
         elif f == 'readers-of':
@@ -3670,11 +3670,6 @@ def _txt(n):
         s = 'bal(%s%s%s)' % (_txt(n.ref), ''.join(', ' + _txt(a) for a in n.args), ' start' if n.start else '')
         if n.modelled:
             s += ' modelled'
-        if n.proj and 'frm' in n.proj:
-            s += ' from ' + _txt(n.proj['frm'])
-        return s
-    if k == 'low':
-        s = 'low(%s, %s)' % (_txt(n.ref), _txt(n.span))
         if n.proj and 'frm' in n.proj:
             s += ' from ' + _txt(n.proj['frm'])
         return s

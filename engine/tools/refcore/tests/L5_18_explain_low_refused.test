@@ -1,0 +1,22 @@
+# tally 2.2 (CHANGES.md 2.2-9), L §2.3 askbody, §5.18: `explain low(…)` is cut; a lowest balance is explained in two
+# asks, its day by `argmin(…) ties by d` and then `explain bal(x, <that day>) from t`.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+ask q: explain low(konto, 2026-01-01 .. 2026-01-31)
+=== expect
+refused: LOAD-PARSE cannot parse: expected end of line, got ( (m.tally:17)

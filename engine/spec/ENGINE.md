@@ -163,8 +163,8 @@ The **walk point** (day, stratum, movement, keys) is in the context only of a wa
 - **The memo maps cells to results.** A result is a value, a hole or a refusal, with its register and its **read set**: every read its value depends on, each named by what can change it (tally 2.1.6). The read set is what makes adjustments (§5), invalidation (`PERFORMANCE.md` §4), `inputs-of` and `readers-of` exact, so it leaves out no read:
   - **rows:** each row it read (an input's row, a reading, an observed row, by version and row id), each band row, each entry of a thing that a `lifespan` read takes (LANGUAGE §5.7), and each input read at keys where no row was chosen (the gap rule's read, LANGUAGE §4.6);
   - **cells:** each cell it read, by its key; that cell's own reads stay in its own set;
-  - **walk reads:** each balance, `flows` or `low` of a place, and each `flows` of a decision, by (place or move, unit, day or span, cut, and the walk point of a walk-bound cell), and each projection by (holder, place, t, d, clauses) (§4.2, §4.3);
-  - **movement reads:** each movement instance it read, by (move, keys) and what it read of it (a leg, its day, an attribute, whether it exists), and each `flows(m[keys], span)` and `next(K, d)` by (move or kind, span or day) (§4.1);
+  - **walk reads:** each balance or `flows` of a place, and each `flows` of a decision, by (place or move, unit, day or span, cut, and the walk point of a walk-bound cell), and each projection by (holder, place, t, d, clauses) (§4.2, §4.3);
+  - **movement reads:** each movement instance it read, by (move, keys) and what it read of it (a leg, its day, an attribute, whether it exists), and each `flows(m[keys], span)` by (move, span) (§4.1);
   - **bindings:** each binding or aggregate over a kind, an event kind or an index, by (kind or index, day or span), which an entry, a movement or a key added there changes.
 
   What the walk, the plan pass, adjustments or links read while a cell first needed them is theirs, not the cell's: a walk read names the walk, and the walk's own reads are those of the movements it books.
@@ -198,7 +198,7 @@ For each plan move m, in the dependency order of the item graph:
    - otherwise booked, as `past` before K and `plan` from K.
 4. **Adjustments.** Apply later versions to a booked instance (§5).
 
-Plans read other plans through `flows(m[keys], span)`, their legs and attributes, and `next`; never a place's running balance (`LOAD-READS`). The instance graph is acyclic, by the item graph's check plus the guard on time keys. Movements are sorted by (day, stratum, move id, keys in index order, things and an open index's keys in the text order of their stable ids, LANGUAGE §2.5), each term compared as its own type, never as text: a day as a date (a window's first day; a hole day after every day, 9999-12-31 included, tally 2.1.6), a stratum and a key position as numbers (tally 2.1.2). A day's observations and adjustments come before its plans, by their input's or move's id and then their row's id or the adjusted instance and leg, and its pads after its decisions; the order changes no balance and no set of refused places, since a day's plans read nothing running and a place's sign rule is checked after them all (§4.2 step 5); of several refusals at one place on one day, the first in this order, each term typed, is the one its reads print (tally 2.1.6).
+Plans read other plans through `flows(m[keys], span)`, their legs and attributes, and bindings over their kinds; never a place's running balance (`LOAD-READS`). The instance graph is acyclic, by the item graph's check plus the guard on time keys. Movements are sorted by (day, stratum, move id, keys in index order, things and an open index's keys in the text order of their stable ids, LANGUAGE §2.5), each term compared as its own type, never as text: a day as a date (a window's first day; a hole day after every day, 9999-12-31 included, tally 2.1.6), a stratum and a key position as numbers (tally 2.1.2). A day's observations and adjustments come before its plans, by their input's or move's id and then their row's id or the adjusted instance and leg, and its pads after its decisions; the order changes no balance and no set of refused places, since a day's plans read nothing running and a place's sign rule is checked after them all (§4.2 step 5); of several refusals at one place on one day, the first in this order, each term typed, is the one its reads print (tally 2.1.6).
 
 ### 4.2 The day walk
 
@@ -242,9 +242,7 @@ The walk is a fold over days, a read of day t reading its prefix through t (LANG
 
 **Nesting is finite.** Inside P's projection no movement reaches P, so a decision in it whose own projection is held by Q has Q ≠ P, and a chain of nested projections names each holder at most once.
 
-**The common case is cheap.** When the window holds no decision that the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and `low(x, a .. b) from t` is a range minimum over F. F changes only as the cut min(t, K) rises with t, so one structure is updated in place, in walk order (`PERFORMANCE.md` §2.3). On a path, a projection that reaches random facts only through its clause is the same on every path, so F is computed once, in the shared layer (§7).
-
-**`next(K, d)`** is a search in the sorted days of the movements of kind K, planned and observed, each once (LANGUAGE §5.19), as known at the reader's cut; its ties and holes are its definition's (LANGUAGE §5.14.1).
+**The common case is cheap.** When the window holds no decision that the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and the `min` of `bal(x, d) from t` over the days a .. b is a range minimum over F. F changes only as the cut min(t, K) rises with t, so one structure is updated in place, in walk order (`PERFORMANCE.md` §2.3). On a path, a projection that reaches random facts only through its clause is the same on every path, so F is computed once, in the shared layer (§7).
 
 ---
 

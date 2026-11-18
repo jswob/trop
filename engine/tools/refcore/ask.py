@@ -1248,7 +1248,7 @@ class Asker:
                 v, lines = self.explain_walk_bound(eng, a, env, ctx)
                 vals = (v,)
                 trace = ExplainLines(lines)
-            elif f == 'explain' and a.ref.k in ('bal', 'low'):
+            elif f == 'explain' and a.ref.k == 'bal':
                 # a balance or a projection (L §5.18 explain row, E §10)
                 v, lines = self.explain_balance(eng, a, a.ref, env, ctx)
                 vals = (v,)
@@ -1850,13 +1850,9 @@ class Asker:
         return v, out
 
     def explain_balance(self, eng, a, n, env, ctx):
-        """`explain bal(x, d)` (a balance) and `explain bal(x, d) from t` / `explain low(x, a .. b) from t` (a
-        projection), E §10.  Layout: this interpreter's."""
+        """`explain bal(x, d)` (a balance) and `explain bal(x, d) from t` (a projection), E §10.  Layout: this
+        interpreter's."""
         form = getattr(n, '_form', None)
-        if n.k == 'low' and form != 'proj':
-            # L §5.18 (round 8): "explain low(x, span) without from explains the day of its lowest balance as a
-            # balance"
-            return self.explain_low_plain(eng, a, n, env, ctx)
         v = self.one(eng, n, env, ctx)
         if isinstance(v, TallyError) or form == 'now':
             return v, []
@@ -1885,57 +1881,7 @@ class Asker:
                 raise LoadAtRun(e)
             return ['refused: %s %s' % (e.code, e.msg)]
 
-    def explain_low_plain(self, eng, a, n, env, ctx):
-        """`explain low(x, a .. b)` without `from`: the lowest of the plain end-of-day balances (L §5.14.1), and the
-        day it is reached, explained as a balance (L §5.18 explain row, E §10's balance row). Days of one run of that
-        balance with no entry between them share one derivation, explained at the run's first day; a lowest balance
-        reached in two runs, with movements between, names no one day (REFCORE-UNSPECIFIED)."""
-        from .walk import K_end
-        v = self.one(eng, n, env, ctx)
-        if isinstance(v, (TallyError, Hole)):
-            return v, []
-        sub = Coll()
-        eng.stack.append(sub)
-        try:
-            p = eng.place_arg(n.ref, env, ctx)
-            unit = eng.bal_unit(n, p.name, env, ctx) if not isinstance(p, Hole) else p
-            sp = eng.span_value(n.span, env, ctx)
-            if isinstance(p, Hole) or isinstance(unit, Hole) or isinstance(sp, Hole):
-                return v, []
-            w = eng.main_walk(ctx)
-            d = sp.start
-            last = sp.end - datetime.timedelta(days=1)
-            runs = []
-            prev = None
-            while d <= last:
-                st = w.pstate(p.name, unit, K_end(d), raw=True)
-                if isinstance(st.val, Num) and isinstance(v, Num) and st.val.q == v.q:
-                    if prev is not None and prev == d - datetime.timedelta(days=1):
-                        runs[-1][1] = d
-                    else:
-                        runs.append([d, d])
-                    prev = d
-                d += datetime.timedelta(days=1)
-            if not runs:
-                raise NotYet('explain low(%s, ...): its lowest balance %s is on no day of the span' % (p.name, fmt(v)))
-            # L §5.18: "explain low(x, span) without from explains the first day its lowest balance is reached, as a
-            # balance": the first run (a later run of the same balance is not explained)
-            d1, d2 = runs[0]
-            head = 'lowest end-of-day balance of %s on %s .. %s: %s, on %s%s' % (
-                p.name, sp.start, last, fmt(v), d1, (' (through %s)' % d2) if d2 != d1 else '')
-            try:
-                lines = self._explain_bal_lines(eng, a, n, env, ctx, day=d1)
-            except HoleSignal:
-                lines = []
-            except TallyError as e:
-                if is_load(e):
-                    raise LoadAtRun(e)
-                lines = ['refused: %s %s' % (e.code, e.msg)]
-            return v, [head] + lines
-        finally:
-            eng.stack.pop()
-
-    def _explain_bal_lines(self, eng, a, n, env, ctx, day=None):
+    def _explain_bal_lines(self, eng, a, n, env, ctx):
         from .walk import K_end, K_start, kday, gtext, St
         p = eng.place_arg(n.ref, env, ctx)
         if isinstance(p, Hole):
@@ -1944,24 +1890,16 @@ class Asker:
         unit = eng.bal_unit(n, place, env, ctx)
         if isinstance(unit, Hole):
             return ['the unit is a hole: %s' % fmt_hole(unit)]
-        if day is not None:
-            lo_day = end = day
-        elif n.k == 'low':
-            sp = eng.span_value(n.span, env, ctx)
-            if isinstance(sp, Hole):
+        d = eng.ev(n.args[-1], env, ctx)
+        if isinstance(d, Hole):
+            return []
+        if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
+            d = eng.window_choice(d, ctx)
+            if isinstance(d, Iv):
                 return []
-            lo_day, end = sp.start, sp.end - datetime.timedelta(days=1)
-        else:
-            d = eng.ev(n.args[-1], env, ctx)
-            if isinstance(d, Hole):
-                return []
-            if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-                d = eng.window_choice(d, ctx)
-                if isinstance(d, Iv):
-                    return []
-            end = lo_day = eng.date_of(d, 'the day of bal')
+        end = eng.date_of(d, 'the day of bal')
         if getattr(n, '_form', None) == 'proj':
-            return self._explain_projection(eng, a, n, env, ctx, place, unit, lo_day, end)
+            return self._explain_projection(eng, a, n, env, ctx, place, unit, end)
         w = eng.main_walk(ctx)
         key = K_start(end) if getattr(n, 'start', False) else K_end(end)
         modelled = getattr(n, '_form', None) == 'modelled'
@@ -2023,7 +1961,7 @@ class Asker:
         out.extend(self._by_day(rows))
         return out
 
-    def _explain_projection(self, eng, a, n, env, ctx, place, unit, lo_day, end):
+    def _explain_projection(self, eng, a, n, env, ctx, place, unit, end):
         from .walk import K_end, kday, gtext
         t = eng.ev(n.proj['frm'], env, ctx)
         if isinstance(t, Hole):
@@ -2033,12 +1971,7 @@ class Asker:
         w = eng.proj_walk(ctx, t, n._leftout, clauses)
         w.run_to(end)
         windows, rnd, unc = clauses
-        out = []
-        if n.k == 'low':
-            out.append('projection of %s (%s) from %s, lowest end-of-day balance on %s .. %s' % (
-                place, unit, t, lo_day, end))
-        else:
-            out.append('projection of %s (%s) from %s to the end of %s' % (place, unit, t, end))
+        out = ['projection of %s (%s) from %s to the end of %s' % (place, unit, t, end)]
         out.append('holder: ask %s (an ask line leaves out nothing, L §5.14.1)' % a.id)
         rtext = 'none'
         if rnd:
@@ -2076,17 +2009,6 @@ class Asker:
             out.extend('  %s %s' % (dd, i) for dd, i in lo)
         else:
             out.append('left out: none')
-        if n.k == 'low':
-            best = None
-            dd = lo_day
-            while dd <= end:
-                st = w.pstate(place, unit, K_end(dd), raw=True)
-                vv = w.st_value(st, place, unit)
-                if isinstance(vv, Num) and (best is None or vv.q < best[1].q):
-                    best = (dd, vv)
-                dd += datetime.timedelta(days=1)
-            if best is not None:
-                out.append('lowest: %s at the end of %s' % (fmt(best[1]), best[0]))
         return out
 
     def _reading_text(self, w, place, e, gtext):

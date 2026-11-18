@@ -7,6 +7,7 @@
 # 1st: 200, 100 (the pay adds 700 back): low = 100.00 PLN on 2026-08-01 whatever the pays' days, so one plain line
 # (writer 8: windows latest is gone; the run is 2026-07-01..2026-08-31, so windows each meets two windows).  Without a windows
 # clause the projection meets a window: HOLE-IMPRECISE (L §5.14.1, §8.1).
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model t
   tally 2
@@ -44,8 +45,8 @@ version v
   w_hi = 19
   opening[konto] = 1 000.00 PLN at 2026-07-01 start
 
-ask q9: low(konto, 2026-07-01 .. 2026-08-31) from 2026-07-01 windows each law 2026-07-01
-ask q9b: low(konto, 2026-07-01 .. 2026-08-31) from 2026-07-01 law 2026-07-01
+ask q9: min(bal(konto, d) from 2026-07-01 windows each for d in 2026-07-01 .. 2026-08-31 step 1 day) law 2026-07-01
+ask q9b: min(bal(konto, d) from 2026-07-01 for d in 2026-07-01 .. 2026-08-31 step 1 day) law 2026-07-01
 === expect
 q9: 100.00 PLN
   law date 2026-07-01, cut 2026-07-01

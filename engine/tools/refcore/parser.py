@@ -21,7 +21,7 @@ residuals'''.split())
 # L §2.2 Built-in names (the review removed first_business, latest, earliest, in_force, meta, reasons, real,
 # empirical and paths(); each is now an ordinary id, read as a band call before `(`)
 BUILTINS = set('''sum count min max any all first last argmin argmax share mean quantile prorata flows
-bal value low next covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
+bal value covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
 age_months weekday add_business last_business is_business schedule calendar window one_of since
 band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
@@ -1018,8 +1018,8 @@ class P:
             elif self.at('from'):
                 proj = self.proj()
             else:
-                # L §2.3 parse rule 7: a windows or random clause belongs to a projection read (bal(...) from t,
-                # low(...)); after a plain bal(x, d) it is the ask line's. A plain balance read may state with
+                # L §2.3 parse rule 7: a windows or random clause belongs to a projection read (bal(...) from t);
+                # after a plain bal(x, d) it is the ask line's. A plain balance read may state with
                 # uncertain, the read's own clause (L §5.14: "a plain balance read that states it, bal(x, d) with
                 # uncertain")
                 proj = {}
@@ -1027,16 +1027,6 @@ class P:
                     self.i += 2
                     proj['uncertain'] = True
             return self.N('bal', ref=r, args=args, start=start, modelled=modelled, proj=proj, of=of)
-        if s == 'low':
-            self.i += 1
-            self.expect('(')
-            self.open()
-            r = self.ref()
-            self.expect(',')
-            sp = self.span()
-            self.expect(')')
-            self.close()
-            return self.N('low', ref=r, span=sp, proj=self.proj())
         if s == 'value':
             self.i += 1
             self.expect('(')
@@ -2415,8 +2405,8 @@ def sec_ask(p, body, units, line):
              paths=None, seed=None, path=None, partial=False, orient=None)
     if p.accept('explain'):
         a.form = 'explain'
-        if p.at('bal') or p.at('low'):
-            # explain bal(x, d) [from t] / explain low(...) (L §2.3 askbody, §5.18)
+        if p.at('bal'):
+            # explain bal(x, d) [from t] (L §2.3 askbody, §5.18)
             a.ref = p.builtin(p.peek().s)
         else:
             a.ref = p.ref()

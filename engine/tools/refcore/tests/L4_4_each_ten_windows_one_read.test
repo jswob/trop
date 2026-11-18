@@ -3,6 +3,7 @@
 # end of each of ten months. January's lowest balance reads January's window only: three days taken, each 410.00 PLN,
 # one plain line (lo). The balance on 2026-01-31 is a value on the plain line (510.00 PLN), so nothing is taken
 # (b). 2.1.7's refcore took every window the walk met, 3^10 = 59 049 combinations, and ran for minutes.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model ten
   tally 2
@@ -31,7 +32,7 @@ version v
   d2 = 28 "s"
   opening[konto] = 410.00 PLN at 2026-01-01 start "s"
 
-ask lo: low(konto, 2026-01-01 .. 2026-01-31) windows each
+ask lo: min(bal(konto, d) for d in 2026-01-01 .. 2026-01-31 step 1 day) windows each
 ask b: bal(konto, 2026-01-31) windows each
 === expect
 b: 510.00 PLN

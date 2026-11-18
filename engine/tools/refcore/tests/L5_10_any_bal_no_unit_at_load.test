@@ -2,6 +2,7 @@
 # unit, which load sees: LOAD-UNIT at load, and low(x, a .. b) so, as the bal(x, d) of its definition. 2.1.8's first
 # refcore refused each value at run (RUN-DOMAIN). The plan's c9low. (tally 2.2, 2.2-1: a place of unit any is
 # outside and takes no reading: the kind is marked outside and its readings go, so the line is 19.)
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model t
   tally 2
@@ -21,6 +22,6 @@ version v1
   known 2026-01-01
 
 
-ask w: low(broker, 2026-02-10 .. 2026-02-20), bal(broker, 2026-02-20)
+ask w: min(bal(broker, d) for d in 2026-02-10 .. 2026-02-20 step 1 day), bal(broker, 2026-02-20)
 === expect
 refused: LOAD-UNIT bal(broker, d) of a place of unit any states its unit: bal(x, u, d) (m.tally:19)

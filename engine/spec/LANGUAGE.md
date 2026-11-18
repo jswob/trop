@@ -128,7 +128,7 @@ law known governs assumed none never check solve diff explain inputs-of readers-
 
 ```
 sum count min max any all first last argmin argmax share mean quantile prorata flows bal value
-low next covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
+covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
 age_months weekday add_business last_business is_business schedule calendar window one_of since
 band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
@@ -220,7 +220,7 @@ ask       = "ask" ID ":" askbody ["for" bind {"," bind}] ["in" ID] ["with" pin {
             ["law" expr] ["as" "known" expr] ["windows" wchoice] ["with" "uncertain"]
             ["random" "at" rchoice] ["paths" INT "seed" INT ["path" INT]] ["partial"]
             ["orient" ("lower" | "higher")] NL
-askbody   = expr {"," expr} | "explain" (ref | balx | lowx) | "inputs-of" ref | "readers-of" ref
+askbody   = expr {"," expr} | "explain" (ref | balx) | "inputs-of" ref | "readers-of" ref
           | "check" expr "==" expr | "residuals" ref span ["by" ID] | solvex
           | "diff" "(" expr ["for" bind {"," bind}] ")" "in" ID "against" ID
 solvex    = "solve" expr "==" expr "for" ref "in" "[" slit "," slit "]" "to" UNIT
@@ -263,7 +263,7 @@ sum       = prod {("+" | "-") prod}          prod = unary {("*" | "/") unary}
 unary     = ["-"] post
 post      = atom {"[" expr {"," expr} "]" | "." FIELD} ["." FIELD "of" ofq] ["to" UNIT] ["as" "if" "{" pin {"," pin} "}"]
                                                           (of after a field: a leg's amount, m.cash.amount of p, §5.14)
-atom      = lit | key | ref | call | agg | query | balx | lowx | valuex | flowsx | coveredx | crps | distfn | dist
+atom      = lit | key | ref | call | agg | query | balx | valuex | flowsx | coveredx | crps | distfn | dist
           | lastx | prorata | CUR | code | record | STR | "none" | "never" | "cut"
           | "(" expr ")" | "[" [key {"," key}] "]"                     (STR: a text literal, §7.1)
 agg       = AGG "(" [expr "for"] bind {"," bind} ")" [tieby]
@@ -275,7 +275,6 @@ query     = ("mean" | "share") "(" expr ("for" bind {"," bind} | ["where" expr])
                                     (with for: over keys, §5.11; without: a random value's query, §5.16)
 balx      = "bal" "(" ref ["," [expr ","] expr ["start"]] ")" ["of" ofq] [proj | "modelled"]   (bal(x), bal(x, d), bal(x, u, d))
 ofq       = ref | "(" expr "," expr ")"                        (a party, a batch, or the pair, §3.6)
-lowx      = "low" "(" ref "," span ")" [proj]
 proj      = ["from" post] ["windows" wchoice] ["random" "at" rchoice] ["with" "uncertain"]
 wchoice   = "each"            (§4.4)            rchoice = "mean" | "quantile" "(" expr ")"     (§5.16)
 valuex    = "value" "(" ref "," expr ")" "in" CUR ["by" (ref | "last" "(" ref ")")] ["of" ofq]
@@ -290,7 +289,7 @@ dist      = ("normal" | "lognormal" | "exponential" | "gamma" | "uniform" | "poi
           | "negbin") "(" expr {"," expr} ")"
           | "discrete" "(" expr "for" bind ")"
 call      = (ID {"." ID} ["[" expr "]"] | BUILTIN) "(" [expr {"," expr}] ")"   (a band, keyed or not, with its prefixes; BUILTIN: §2.2,
-            except the names with a production of their own: the aggregates and queries, bal, low,
+            except the names with a production of their own: the aggregates and queries, bal,
             value, flows, covered, crps, cdf, pdf, pmf, prorata, the distributions, last; min and max
             also take two or more plain arguments, §2.3 Calls)
 ref       = ID [["." ID] "[" expr {"," expr} "]"] {"." FIELD}
@@ -320,7 +319,7 @@ LABEL     = a word of the id pattern; keywords allowed (§2.2)
 4. **`in` after `value` and an ask's body.** `value(…) in CUR` converts, and keys or fields after its `by p` belong to p (`by px[month_of(d)]`). The printer parenthesises a converted `value` that is an operand of a comparison. On an ask line, `in ID` after the body and its `for` names the world (§5.18), so a membership test that ends an ask's body is written in parentheses.
 5. **`on` after a membership test** belongs to it: `x in wrapped on d` tests that x is a member of `wrapped` on day d (§5.7).
 6. **Bindings in an aggregate.** Inside an aggregate's parentheses, `ID in …` at a binding's place (the start, after `for`, or after the comma that ends a binding) is a binding, never a membership test: `min(k in ks)` is the aggregate, and `count(k in a, j in b)` binds two. Inside a binding's `where` it is a membership test (`where not x in outside`).
-7. **A clause belongs to the nearest read.** A `windows`, `random` or `with uncertain` clause directly after a projection read (`bal(…) from t`, `low(…)`) belongs to that read, not to the ask line, and a `ties by` directly after an aggregate belongs to it, so an aggregate that ends a fill's order list is parenthesised. `from` and `ties by` take one term, so `from (d + 1)` is written with parentheses. An `of` belongs to the read its production gives it (§3.6): a balance's comes before its projection clauses (`bal(x, d) of p from t`), a value's after its `by` (`value(x, d) in PLN by px of p`), and a leg's directly after the leg's field (`m.cash.amount of p`); a writer who means another read parenthesises.
+7. **A clause belongs to the nearest read.** A `windows`, `random` or `with uncertain` clause directly after a projection read (`bal(…) from t`) belongs to that read, not to the ask line, and a `ties by` directly after an aggregate belongs to it, so an aggregate that ends a fill's order list is parenthesised. `from` and `ties by` take one term, so `from (d + 1)` is written with parentheses. An `of` belongs to the read its production gives it (§3.6): a balance's comes before its projection clauses (`bal(x, d) of p from t`), a value's after its `by` (`value(x, d) in PLN by px of p`), and a leg's directly after the leg's field (`m.cash.amount of p`); a writer who means another read parenthesises.
 
 **Calls.** A call takes a built-in's name (§2.2) or a band's id, with the prefixes that name the band outside its member or its base: `a.b(x)` for a member's (§6.1), `household.b(x)` in a scenario's expression row (§6.4). There are no user functions: a def is read with brackets at its keys, a def keyed by a stepped range included (`net_of[g]`, §5.11). `min` and `max` also take two or more plain arguments, `min(a, b)`, besides the aggregate form `min(t for k in IDX)`. A period word is accepted as the period argument of `periodic` and `factor` (`factor(i, 1, year, effective)`).
 
@@ -1405,12 +1404,7 @@ A movement is a **decision** if it declares **`reads`**: the places whose runnin
 
 A decision that reaches a projection of x declares `reads x`. In an ask, or a def no movement reaches, `bal(x, d) from t` is the same walk; a plain `bal(x, d)` there is the balance on day d at the ask's cut, as in tally 1.
 
-| Built-in | Value |
-|---|---|
-| `low(x, a .. b) [from t] [clauses]` | the lowest end-of-day balance of x on days a..b: `min(bal(x, d) [from t] [clauses] for d in a .. b step 1 day)` (§5, a form defined by another) |
-| `next(K, d)` | the first movement of event kind K whose day is on or after d: `first(m in K over d ..) ties by m.day` (§5, a form defined by another); a reader that needs one of two on a day writes the `first` itself with a fuller `ties by`, `first(m in K over d ..) ties by (m.day, e)` |
-
-`low` takes a place and passes on the projection's clauses, and `next` takes a kind; a def can do neither, so they are built-ins (C-24). **Groups of places** are written as sums: the lowest end-of-day sum of the liquid accounts is `min(sum(bal(x, d) from t for x in liquid on d) for d in a .. b step 1 day)`, which isn't the sum of their lows (R-07).
+**A lowest balance** is a `min` over days: `min(bal(x, d) from t for d in a .. b step 1 day)` for one place, `min(sum(bal(x, d) from t for x in liquid on d) for d in a .. b step 1 day)` for a group, which isn't the sum of each place's lowest (R-07). **The next movement of a kind** is `first(m in K over d ..) ties by m.day`, with a fuller `ties by` where two fall on a day.
 
 **Refusals:** `LOAD-READS`; `LOAD-CYCLE`, `RUN-CYCLE` (a running read of the decision's own day, or of the arrival's day's end or later, reached through a computed day); `RUN-FUTURE` (a decision's running read of a day after its own, reached through a computed day).
 
@@ -1595,7 +1589,7 @@ ask q5: explain payable[f1, 2016-04] law 2016-04-30
 ask q6: readers-of base_amt
 ask q7: firm_value law 2026-06-30 partial
 ask q8: diff(free_cash[m] for m in months) in job_change against base law 2026-12-31
-ask q9: low(wallet, 2026-07-01 .. 2026-12-31) from 2026-07-01 law 2026-07-01 windows each
+ask q9: min(bal(wallet, d) from 2026-07-01 for d in 2026-07-01 .. 2026-12-31 step 1 day) law 2026-07-01 windows each
 ```
 
 An ask is a question. It can't book anything, since its grammar holds no move (N-1601).
@@ -1605,7 +1599,7 @@ An ask is a question. It can't book anything, since its grammar holds no move (N
 | `expr, expr` | values, one line per binding tuple and per distinct result (§5.5), the expressions in the order written. A random value needs a query or a path (§5.16) |
 | `check e == f` | `ok`, or `differs: e = …, f = …` and, where `e - f` is defined (§3.2, §4.2), the difference e − f; a hole or refused side prints in its place (`?` with its questions, or `refused: …`), with the other side's value beside it (`e = 120.00 PLN, f = ?`). Sides read at different law dates list each. Used for replay against records and for stated preconditions |
 | `solve f == g for v in [lo, hi] to u` | the grid point nearest the root of F(v) = f − g (below). v is a ref and may name keys (`for rate[line_a]`): only that cell is pinned |
-| `explain ref` | the derivation, in the stated order (below); `explain bal(x, d)` explains a balance, `explain bal(x, d) from t` a projection, and `explain low(…)` the `min` over days it is (§5.14.1, `ENGINE.md` §10) |
+| `explain ref` | the derivation, in the stated order (below); `explain bal(x, d)` explains a balance, `explain bal(x, d) from t` a projection (§5.14.1, `ENGINE.md` §10); a lowest balance is explained in two asks, its day by `argmin(…) ties by d` and then `explain bal(x, <that day>) from t` |
 | `inputs-of ref` | the set of rows its evaluation read, with their sources (N-1705), the rows an `at` reads included, and, for a balance, a `flows` or a movement it read, the rows behind what that counts (`ENGINE.md` §3.2, §10); a rule's `v` version isn't a row (`explain` shows it). For `marginal`, the rows it sums (lo < x). |
 | `readers-of x` | every item that reads x, directly or not (any node of the item graph, bands and places included, `ENGINE.md` §3.1 step 5), each once, the direct readers first, then by depth, then by id. Of an event kind, every binding over it or over a kind it is a subkind of (D-15) |
 | `residuals x span [by f]` | the residual ledger of place x over the span: the model at the ask's cut against the observations, grouped by month and move, or by field f of the observation input (`ENGINE.md` §6.3) |
@@ -1627,7 +1621,7 @@ An ask is a question. It can't book anything, since its grammar holds no move (N
 - `partial`: below.
 - `orient lower|higher`: §5.15.
 
-**Reads in an ask.** An ask reads any balance on any day of the run: `bal(x, d)` at the ask's cut, the projection `bal(x, d) from t` (§5.14.1), `low` and `next`, `bal(x, d) modelled` and `gap` (§5.19), `flows` and `value`. **Sums over planned movements** count what is planned and observed at the cut, and the register lists the planned instances counted that no observation has fulfilled yet (M-12).
+**Reads in an ask.** An ask reads any balance on any day of the run: `bal(x, d)` at the ask's cut, the projection `bal(x, d) from t` (§5.14.1), `bal(x, d) modelled` and `gap` (§5.19), `flows` and `value`. **Sums over planned movements** count what is planned and observed at the cut, and the register lists the planned instances counted that no observation has fulfilled yet (M-12).
 
 **Partial answers** (D-7, P-9). A line marked `partial` prints, when its value is a hole, its known part and the named holes it is linear in, each with its coefficient (`412 300.00 PLN + 1 × ?"value of the firm share"`). It is linear through every operation that adds its operands, scales them by a known number or passes one on unchanged (`+`, `-`, `sum`, a balance, a projection, `flows`, `mean` over a known count, `*` and `/` by a known number, a def, a taken branch, a member a known `where` picks). A hole met any other way (a day, a key, a `where`, a count, a rounding, an order, a band, a comparison, a product of two holes) makes the value a plain hole naming every hole; a `check` prints each side so. Every named hole is printed. Defs are unchanged: only the ask line computes the residual, and filling the holes later gives the same result as a rerun.
 
@@ -2239,7 +2233,7 @@ A hole is a fact that is missing: one a row could give (P-9). It is never 0, nev
 | `HOLE-STATED` | a row, field, rule value, leg end or lifespan end is `?"…"` (§5.3, §5.11, §5.14) | its text | answers it with a row |
 | `HOLE-UNGOVERNED` | the gap rule: no row governs an input or a band at those keys on that law date, inside the thing's lifespan (§4.6, §5.7); no row of the band's table holds its argument (§5.9) | the input's `question`, else `x at k: no value for <period>` (`no value at <law date>` with no time key, `no value` with no law date); `<b>: no row holds <x> at <law date>` (`<b>: no row holds <x>` with no law date) | adds a row, a `none` row, or a `?` row with a better question |
 | `HOLE-NOREADING` | a plain read of a reading, or `gap(x, d)`, at an instant with no reading; `last` or `since` with no reading on or before d (§4.6, §5.19) | `<x>[k] has no reading at <instant>`; `<x>[k] has no reading on or before <d>` | adds the reading, or writes the carry with `last` |
-| `HOLE-NOTYET` | `first`, `last` or `next` over a binding of things or movements that is empty at the cut and whose span reaches past it: a later fact may bring a member (§3.1, §5.11, §5.14.1) | `<x>: no <event> yet, and its span reaches past the cut` | adds the row that brings a member, or tests `count(…) > 0` first |
+| `HOLE-NOTYET` | `first` or `last` over a binding of things or movements that is empty at the cut and whose span reaches past it: a later fact may bring a member (§3.1, §5.11, §5.14.1) | `<x>: no <event> yet, and its span reaches past the cut` | adds the row that brings a member, or tests `count(…) > 0` first |
 | `HOLE-ANCHOR` | a balance of a place alive before S, read inside the run before its first `opening` or `stated` reading (§5.10, §5.19) | `<place> has no balance before <d>`, d its first reading's instant; with no reading at all, `<place> has no opening or stated reading` | adds an `opening` reading |
 | `HOLE-LOTS` | lots held before the run (observed acquisitions dated before S, which a fill binds and nothing books) whose sum disagrees with the opening reading that anchors it (§5.12) | `<place>: the lots held before <S> sum to <a>, the opening reading states <b>` | corrects the lots or the reading |
 | `HOLE-PRICE` | a position with no price on d, in `value` (§5.10); a `prices Y` figure read outside Y with no index (§3.4) | `<unit> has no price in <CUR> on <d>`; `<x> is in Y prices; no index moves it to <d>` | adds the price, or the index |
