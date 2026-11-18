@@ -280,3 +280,10 @@ fixes/t22/cut_each_read_twin	fixes-22		engine/tests/m2/fixes/t22/cut_each_read_t
 fixes/t22/unknown_day_names	fixes-22		engine/tests/m2/fixes/t22/unknown_day_names	engine/tests/m2/fixes/t22/unknown_day_names/m.tally			S-4
 fixes/t22/fault_n4	fixes-22		engine/tests/m2/fixes/t22/fault_n4	engine/tests/m2/fixes/t22/fault_n4/m.tally			F211
 fixes/t22/fault_n3	fixes-22		engine/tests/m2/fixes/t22/fault_n3	engine/tests/m2/fixes/t22/fault_n3/m.tally			F211
+fixes/t22/rv3_scen_over_base	fixes-22		engine/tests/m2/fixes/t22/rv3_scen_over_base	engine/tests/m2/fixes/t22/rv3_scen_over_base/base.tally engine/tests/m2/fixes/t22/rv3_scen_over_base/scen.tally			S-5
+fixes/t22/rv3_scen_over_base_noline	fixes-22		engine/tests/m2/fixes/t22/rv3_scen_over_base_noline	engine/tests/m2/fixes/t22/rv3_scen_over_base_noline/base.tally engine/tests/m2/fixes/t22/rv3_scen_over_base_noline/scen.tally			S-5
+fixes/t22/rv3_removed	fixes-22		engine/tests/m2/fixes/t22/rv3_removed	engine/tests/m2/fixes/t22/rv3_removed/m.tally			S-5
+fixes/t22/rv3_cut_on_row	fixes-22		engine/tests/m2/fixes/t22/rv3_cut_on_row	engine/tests/m2/fixes/t22/rv3_cut_on_row/m.tally			S-5
+fixes/t22/rv3_row_later	fixes-22		engine/tests/m2/fixes/t22/rv3_row_later	engine/tests/m2/fixes/t22/rv3_row_later/m.tally			S-5
+fixes/t22/rv3_line_later	fixes-22		engine/tests/m2/fixes/t22/rv3_line_later	engine/tests/m2/fixes/t22/rv3_line_later/m.tally			S-5
+fixes/t22/rv3_line_early	fixes-22		engine/tests/m2/fixes/t22/rv3_line_early	engine/tests/m2/fixes/t22/rv3_line_early/m.tally			S-5

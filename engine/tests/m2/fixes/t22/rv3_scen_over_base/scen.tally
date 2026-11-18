@@ -1,0 +1,11 @@
+scenario sc over p1
+  tally 2
+  from 2026-01-01
+
+version drop
+  cite s
+  governs 2026-03
+  known 2026-02-01
+  replace bank[a1] = none
+
+ask in_sc: count(m in transfers over 2026-03), bal(sav, 2026-03-31), bal(konto, 2026-03-31) in sc
