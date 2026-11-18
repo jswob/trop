@@ -4425,3 +4425,40 @@ On `build/2.2` at 87b44ef7 (T's G2 vectors merged). G2's spec and refcore are th
 - **What I tried:** nothing on the tests' side. The engine keeps 2.1.8's words; everything else of S-3 is in, green.
 - **What I ask:** T2 re-stores the two lines (and the map's form) on refcore at 300cda08 with `Logged-Red:` on their ids. Then the builder changes `row_instant`'s message to `needs start or end`, one line.
 - **State:** last green commit 361a9074 (`check commit: green, 23 steps (184s)`); this entry is the only change after it.
+
+## 2026-11-18 tally 2.2, build group 2, item 2: S-1, a place of the model holds one unit (issue #211)
+
+On `build/2.2` at 93ce6877 (the lead's merge of T's last unit-`any` texts; `check commit` green, 222 s, the lead's run). The lead ruled S-3's STOP-REPORT an order of work: `row_instant`'s words go at the round's close. The work list was `tmp/spec-2.2-build/g2/s1-notes.md`.
+
+- **The group's sizes at its head, `git diff --shortstat 87b44ef7 HEAD`, engine/crates/tally/src:** 30 files, 1 613 out, 320 in (plan: 870 + 580 = 1 450 out). Tests 3 files, 850 out, 25 in.
+  - S-3 (361a9074): 1 144 out, 243 in (plan: about 870).
+  - S-1 (86f2745f): 15 files, 498 out, 106 in (plan: about 580). Tests 2 files, 356 out, 16 in.
+- **86f2745f: S-1.** In, with refcore's words at 300cda08 (`loader.py` l.564, l.2206):
+  - `load/kinds.rs` `place_kinds_whole`: `LOAD-PLACEKIND place kind <K> is of unit any and isn't outside`.
+  - `load/values.rs` `place_reading`: `LOAD-UNIT <input>[<x>]: a place of unit any takes no balance reading`.
+- **Out, by file (R14's mechanism):**
+  - K `book/reading.rs`: `UnitKept`, `by_unit`, `rows_with`, `per_unit`; `readings` keys a reading by place, instant and input alone; `reading_of`'s unitless hole (`ALL`); `reading_place`, which had no caller left; `make_pad`'s `:<unit>` id and its `m`.
+  - K `walk/agenda.rs` (P8-14) `Reading.own`; K `walk/readings.rs` `apply_reading`'s loop over units.
+  - `model/reality.rs` `reading_ty`'s `any` branch and its `value` argument; `model/decl.rs` `InputInfo.held`, `RowsHold.unitless`.
+  - `load/rows.rs` `unitless_any` and its pass; `load/values.rs` the unstated arms; `load/overlap.rs` `Stated::Unstated`, `wider`.
+  - `eval/read.rs` `unitless_held`, `unitless_walk`, the value's unitless arms.
+  - K `read/gap.rs` `one_unit`, `instant_of`, `two_units` (`RUN-DOMAIN … its readings at <instant> are in <u> and <u'>`); K `walk/reads.rs` gap's two units.
+  - K `book/ledger.rs`: the units a place's readings bring, and a unit ledger's per-unit reading.
+- **Beyond the notes:** `make_pad`'s `m` and `reading_ty`'s `value`, unused once their `any` tests went; `load/parts.rs` `amounts_over`'s doc (its unit guard stays: it also tells money from a number).
+- **Kept against the notes, with why:**
+  - `RowsHold` keeps one field, `known_window`. A fourth bool on `InputInfo` is clippy's `struct_excessive_bools`, red at clippy-lib.
+  - `load/overlap.rs` `Group.unit`: refcore's `check_overlap` still groups by unit.
+  - `load/values.rs` `row_unit` (`holds any unit; its row states the unit`): refcore keeps its `pu is None` branch, a place with no unit.
+- **Kept by ruling, checked against refcore at 300cda08** (`tmp/spec-2.2-build/g2/s1_out.tally`):
+  - `bal(world, PLN, d), bal(world, EUR, d)` (P17): both `?"world has no opening or stated reading" (world)`.
+  - `value(world, d) in PLN by fx`: the same hole.
+  - `residuals world 2026-02` (P12): `ledger EUR:`, `ledger PLN:`.
+  - `u1_one.tally` (P8): `worth: 110 PLN`.
+- **The crate's tests:** `tests/group3_cases.rs` B4 (`t1_la`, `t1_pl`), N1 (`r14_none`) and G1 (`p5_min`, `p5_plan`, `p4_planlast`) dropped: each tests R14 on a place of unit `any`. Their header no longer cites R14. `tests/load_cases.rs` gains the two refusals on MOVES, each refcore's line on the same text.
+- **Sweep** (67 texts of `tmp/spec-2.2/probes/` and `inputs/review/probes/`; the engine against S-3's engine and refcore at 300cda08): no line turned same → different. The engine moved on `u1_any` (`LOAD-PLACEKIND`), `c_outread2` and `c_outread3` (`LOAD-UNIT`), each now refcore's. 11 differ before and after alike: 10 `not implemented` and `c_w` (S-4's ground).
+- **Kernel files touched by S-1:** 6 (plan: 7): book/reading.rs, ledger.rs; read/gap.rs; walk/agenda.rs (P8-14), readings.rs, reads.rs. The plan's walk/state.rs and walk/value.rs are untouched: `units_of` and the outside's value stay.
+- **Gating vectors:** none moved.
+- **Exceptions:** +0 (`git diff 87b44ef7..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Time:** about 25 minutes, about 8 of them checks: `check quick` 6 s (red, clippy-lib), 81 s (red, the six R14 tests), 14 s and 140 s; fences 33 s; the sweep about 1 minute.
+- **Usage:** 1.22 % of the week by `engine/tools/usage tmp/spec-2.2-build/g2-ids.txt` before this entry (stop at 3.2 %).
+- **Checks:** `check fences: green, 1 step (33s)` after 86f2745f; on its tree with this entry `check commit: green, 23 steps (124s)`.
