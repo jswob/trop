@@ -19,7 +19,7 @@ use super::parse::{P, Parens, Stop};
 use super::reads::dist_kind;
 use super::tree::{
     BandRow, Edge, Enter, Expr, File, Gap, Governs, Header, HeaderKind, Instant, Interval, Item,
-    ItemForm, Known, LSpan, Lit, Row, RowKey, RuleValue, Section, Value, Version,
+    ItemForm, LSpan, Lit, Row, RowKey, RuleValue, Section, Value, Version,
 };
 use crate::api::Source as Text;
 use crate::base::{Code, Load, Place as At, Refusal};
@@ -438,7 +438,7 @@ struct VersionLines {
     /// `governs`.
     governs: Option<Governs>,
     /// `known`.
-    known: Option<Known>,
+    known: Option<Day>,
     /// `enters`.
     enters: Option<Day>,
     /// `assumed`.
@@ -516,7 +516,7 @@ fn version_line(q: &mut P<'_>, tag: &str, lines: &mut VersionLines) -> Result<()
     match tag {
         "cite" => lines.cite = Some(q.ident("an id")?),
         "governs" => lines.governs = Some(governs(q)?),
-        "known" => lines.known = Some(q.known()?),
+        "known" => lines.known = Some(q.day()?),
         "enters" => lines.enters = Some(q.day()?),
         "assumed" => lines.assumed = Some(q.string()?),
         "moves" => {
@@ -841,7 +841,7 @@ struct Meta {
     /// `governs`.
     governs: Option<Governs>,
     /// `known`.
-    known: Option<Known>,
+    known: Option<Day>,
     /// `at d [start|end]` or `after x`.
     instant: Option<Instant>,
     /// The locator string.
@@ -856,7 +856,7 @@ fn row_meta(q: &mut P<'_>) -> Result<Meta, Stop> {
         None
     };
     let known = if q.accept("known")? {
-        Some(q.known()?)
+        Some(q.day()?)
     } else {
         None
     };
@@ -869,9 +869,7 @@ fn row_meta(q: &mut P<'_>) -> Result<Meta, Stop> {
         } else {
             None
         };
-        Some(Instant::At(day, edge))
-    } else if q.accept("after")? {
-        Some(Instant::After(q.reference()?))
+        Some(Instant { day, edge })
     } else {
         None
     };

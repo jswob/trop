@@ -1,0 +1,23 @@
+model same_rows_header
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  same fee[a1] = fee[a2]
+  note "T, tally 2.2 (#211, G3, S-8): a header's same between two rows of an input; tally 2.2: LOAD-SAME (a row of an input on either side). Twin cut_same_rows_twin; in a joint model the pin (with a.x[k] = b.y[j])."
+
+source s "s"
+unit PLN: currency minor 0.01
+kind flat
+input fee[f in flat]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flat + [a1] lives 2026-01-01..
+  flat + [a2] lives 2026-01-01..
+  fee[a1] = 12.00 PLN "s"
+  fee[a2] = 12.00 PLN "s"
+
+ask q: fee[a1]

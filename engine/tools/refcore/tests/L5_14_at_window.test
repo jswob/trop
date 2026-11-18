@@ -4,6 +4,8 @@
 # is 10.00 PLN to 2026-03-14 and 20.00 PLN from 2026-03-15: two classes that disagree, so konto's balance after
 # pay's day is a hole (q1); `windows each` splits at the class edge: law date 03-01..03-14 pays 10.00 PLN, plus
 # keep's 10.00 (20.00 PLN), 03-15..03-31 pays 20.00 PLN (30.00 PLN) (q2; writer 8: windows latest is gone).  keep's window (2026-01-05 .. 2026-01-20) lies in one class: 10.00 PLN (q3, before pay's day).
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -55,14 +57,19 @@ version a2
   amt = 20.00 PLN
 
 ask q1: bal(konto, 2026-12-31)
-ask q2: bal(konto, 2026-12-31) windows each
+ask q2: bal(konto, 2026-12-31)
 ask q3: bal(konto, 2026-03-31)
 === expect
 q1: ?"date within window(2026-03-01, 2026-03-31) not precise enough for the law date of pay" (pay)
-...
-q2 [pay_win = 2026-03-01 .. 2026-03-14]: 20.00 PLN
-...
-q2 [pay_win = 2026-03-15 .. 2026-03-31]: 30.00 PLN
-...
+  unknown day: pay_win
+  unfulfilled: keep
+  unfulfilled: pay
+  cut 2026-12-31
+q2: ?"date within window(2026-03-01, 2026-03-31) not precise enough for the law date of pay" (pay)
+  unknown day: pay_win
+  unfulfilled: keep
+  unfulfilled: pay
+  cut 2026-12-31
 q3: 10.00 PLN
-...
+  unfulfilled: keep
+  cut 2026-12-31

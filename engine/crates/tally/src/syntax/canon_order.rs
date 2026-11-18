@@ -13,7 +13,7 @@
 
 use super::lex::cannot;
 use super::parse::Stop;
-use super::tree::{Bind, Domain, File, Governs, IndexForm, Instant, Known, Lit, RowKey, Section};
+use super::tree::{Bind, Domain, File, Governs, IndexForm, Instant, Lit, RowKey, Section};
 use crate::base::{Code, Load, Place, Refusal};
 use crate::num::Num;
 use crate::time::Day;
@@ -83,7 +83,7 @@ pub(super) struct Decls {
     /// The bindings of each declaration that has them, by id.
     binds: BTreeMap<String, Vec<Bind>>,
     /// Each version's `known`, by id.
-    versions: BTreeMap<String, Known>,
+    versions: BTreeMap<String, Day>,
 }
 
 impl Decls {
@@ -123,7 +123,7 @@ impl Decls {
     }
 
     /// A version's `known`, by id.
-    pub(super) fn known(&self, version: &str) -> Option<Known> {
+    pub(super) fn known(&self, version: &str) -> Option<Day> {
         self.versions.get(version).copied()
     }
 
@@ -219,13 +219,6 @@ pub(super) fn first_day(lit: &Lit) -> Option<Day> {
     }
 }
 
-/// A version's `known` as its first day: a window by its first.
-pub(super) fn known_day(known: Known) -> Day {
-    match known {
-        Known::Day(day) | Known::Window(day, _) => day,
-    }
-}
-
 /// A literal's first day as a component; a literal that is no date or period is `Nothing`,
 /// carrying the refusal load gives it (`LOAD-PARSE … expected a date or a period`, refcore's
 /// loader), met only if the order compares it with a day.
@@ -240,9 +233,9 @@ fn day_val(lit: &Lit, place: &Place) -> Val {
 }
 
 /// The span component (L §2.4, round 19, GD-24): a row with no span of its own first, then a
-/// span with no start (a row governing always among them), then by start; a row read `after m`
-/// after the dated ones; an instant by its day, a day's start before its end. A rule's own
-/// span comes as `Governs::Span`; `place` is the row's or the rule's line.
+/// span with no start (a row governing always among them), then by start; an instant by its
+/// day, a day's start before its end. A rule's own span comes as `Governs::Span`; `place` is
+/// the row's or the rule's line.
 pub(super) fn span_key(gov: Option<&Governs>, instant: Option<&Instant>, place: &Place) -> Val {
     match (gov, instant) {
         (Some(Governs::Always), _) => Val::Tie(1, Vec::new()),
@@ -250,8 +243,7 @@ pub(super) fn span_key(gov: Option<&Governs>, instant: Option<&Instant>, place: 
             None => Val::Tie(1, Vec::new()),
             Some(from) => Val::Tie(2, vec![day_val(from, place)]),
         },
-        (None, Some(Instant::After(_))) => Val::Tie(3, Vec::new()),
-        (None, Some(Instant::At(day, edge))) => {
+        (None, Some(Instant { day, edge })) => {
             let at = match edge {
                 Some(super::tree::Edge::Start) => 0,
                 None => 1,

@@ -3,7 +3,7 @@ model ob2
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open after a removal the cut sees; no row stands either way (book/observe.rs seen_observations)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open after a removal the cut sees; no row stands either way (book/observe.rs seen_observations); tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -29,7 +29,7 @@ version v3
   cite s
   governs 2026-03
   known 2026-03-03
-  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm2"
+  replace bank[r1] = none known 2026-04-10 "rm2"
 
 ask b31: bal(konto, 2026-03-31) as known 2026-04-05
 ask n: count(t in transfers over 2026-03) as known 2026-04-05

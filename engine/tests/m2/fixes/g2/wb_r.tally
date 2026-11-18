@@ -214,7 +214,9 @@ ask y7: explain lean[second, 2026-01]
 
 ask y8: explain bal(pocket, 2026-02-12) from 2026-02-10
 
-ask y9: explain low(konto, 2026-01-01 .. 2026-03-31)
+ask y9_day: argmin(bal(konto, d) for d in 2026-01-01 .. 2026-03-31 step 1 day) ties by d
+
+ask y9: explain bal(konto, 2026-02-15)
 
 ask y10: explain feed[2026-03]
 

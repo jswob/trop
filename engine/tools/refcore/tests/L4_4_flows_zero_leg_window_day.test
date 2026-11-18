@@ -2,6 +2,8 @@
 # read is the window's hole only where its value depends on the day: a leg of known amount 0 adds 0.00 to flows of
 # the place on whichever day, so fz is 0.00 as its windows each line fe. The count (nz) and the bound member (xz),
 # which depend on the day, stay holes. dce84215 gave fz the window's hole.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model z1
   tally 2
@@ -25,7 +27,7 @@ ask fm: flows(zer, 2026-04-09 .. 2026-04-21)
 ask nz: count(t in transfers over 2026-04-09 .. 2026-04-21)
 ask bz: bal(konto, 2026-04-20)
 ask xz: x.cash.amount for x in transfers over 2026-04-09 .. 2026-04-21
-ask fe: flows(konto, 2026-04-09 .. 2026-04-21) windows each
+ask fe: flows(konto, 2026-04-09 .. 2026-04-21)
 
 
 version v
@@ -37,14 +39,17 @@ version v
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
 === expect
 bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
+  unknown day: w_zer
   cut 2026-08-01
 fe: 0.00 PLN
   cut 2026-08-01
 fm: ?"date within window(2026-04-15, 2026-04-25) not precise enough for flows of zer" (zer)
+  unknown day: w_zer
   cut 2026-08-01
 fz: 0.00 PLN
   cut 2026-08-01
 nz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)
+  unknown day: w_zer
   unfulfilled: zer
   cut 2026-08-01
 xz (x = zer): ?"date within window(2026-04-15, 2026-04-25) not precise enough for a binding over transfers" (zer)

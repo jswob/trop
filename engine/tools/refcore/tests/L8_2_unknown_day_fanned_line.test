@@ -1,0 +1,41 @@
+# tally 2.2 (CHANGES.md 2.2-11, pick P26). A line fanned over axis combinations that give one result prints it once,
+# under [pick = *] (L §5.5), and its register names the union of the unknown days of every combination it stands for,
+# by rule (L §8.2): wd[a] under a, wd[b] under b, one equal hole.
+=== m.tally
+model fan
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+axis pick
+  a "first"
+  b "second"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input wd[p in pick]: date
+
+def dday: date = wd[pick]
+
+move pay_p: transfers
+  on dday
+  leg cash from world to konto amount pay
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "s"
+  wd[a] = window(2026-03-05, 2026-03-07) "s"
+  wd[b] = window(2026-03-05, 2026-03-07) "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+
+ask f1: bal(konto, 2026-03-06)
+=== expect
+f1 [pick = *]: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_p)
+  unknown day: wd[a]
+  unknown day: wd[b]
+  cut 2026-01-10

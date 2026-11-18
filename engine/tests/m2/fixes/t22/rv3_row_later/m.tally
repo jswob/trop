@@ -1,0 +1,42 @@
+model p4
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, tally 2.2 (#211, the third review of G3): S-5's seen test at its edge: a row known later than its version"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input sbank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 2000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "konto line 2"
+  same bank[a2] = sbank[b1]
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers sav
+  sbank[b1] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 950.00 PLN) known 2026-04-06 "sav line 1"
+
+ask now: bal(konto, 2026-03-31), bal(sav, 2026-03-31), count(m in transfers over 2026-03), flows(konto, 2026-03)
+ask between: bal(konto, 2026-03-31), bal(sav, 2026-03-31), count(m in transfers over 2026-03), flows(konto, 2026-03) as known 2026-04-03
+ask before: bal(konto, 2026-03-31), bal(sav, 2026-03-31), count(m in transfers over 2026-03) as known 2026-04-01
+ask at04: count(m in transfers over 2026-03), bal(sav, 2026-03-31) as known 2026-04-04
+ask at06: count(m in transfers over 2026-03), bal(sav, 2026-03-31) as known 2026-04-06

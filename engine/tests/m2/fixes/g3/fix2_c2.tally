@@ -10,7 +10,6 @@ unit PLN: currency minor 0.01
 input cal: calendar
 input d1: date
 
-ask qc: add_business(d1, 1, cal) windows each
 ask qp: add_business(d1, 1, cal)
 
 version v

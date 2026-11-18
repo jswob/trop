@@ -37,22 +37,22 @@ move rent_pay[m in month]: transfers
   leg cash from konto to world amount rent
 
 move split[m in month]: transfers
-  on start_of(m)
+  on add_days(start_of(m), late)
   at start_of(m)
-  leg cash from world to konto amount rent on add_days(start_of(m), late)
+  leg cash from world to konto amount rent
 
 move holed: transfers
-  on hstart
+  on hday
   at hstart
-  leg cash from world to konto amount rent on hday
+  leg cash from world to konto amount rent
 
 ask a_bal_early: bal(konto, 2026-09-30) from 2026-02-01
 
 ask a_bal_late: bal(konto, 2026-09-30) from 2026-06-01
 
-ask a_low_early: low(konto, 2026-02-01 .. 2026-12-31) from 2026-02-01
+ask a_low_early: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-12-31 step 1 day)
 
-ask a_low_late: low(konto, 2026-06-05 .. 2026-11-30) from 2026-06-01
+ask a_low_late: min(bal(konto, d) from 2026-06-01 for d in 2026-06-05 .. 2026-11-30 step 1 day)
 
 ask h_from_after: bal(konto, 2026-09-30) from 2026-07-01
 

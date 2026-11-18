@@ -7,7 +7,7 @@ The Rust step (B) in milestones, for **tally 2.1**. Each milestone builds a slic
   - 154 **unit probes** `U:`, one card per edge of the capability catalogue `cases/boundaries.md` (99 edges on 15 axes), plus pair cards and probe sets;
   - 479 **integration** checks `I:`: the old models (`I:M:`: 77 of the 79, and two key scripts), the households A, B, C, D, E1, E2 one check per ask, the amendments household X (`I:X:`), the light twins of the heavy models, the blind texts (`I:hardset/`) and session 7's blind cards S1–S6;
   - **`R:all`**, refcore's own tests: the oracle's health, not the engine's.
-- **The load rows** `L:n` (`load/load.tsv` and `load/benchmarks.md`: 17 rows numbered L:1–L:18, with no L:7), the full-size runs no refcore job finishes. They are the engine's size targets, budgeted as PERFORMANCE §8's rows P8-L1..P8-L18, numbered as their rows (none for the missing L:7). 85 rows of `checks.tsv` whose note starts `not-run:` are such runs: listed so their ids exist, never run on refcore.
+- **The load rows** `L:n` (`load/load.tsv` and `load/benchmarks.md`: 17 rows numbered L:1–L:18, with no L:7), the full-size runs no refcore job finishes. They are the engine's size targets, budgeted as PERFORMANCE §8's rows P8-L1..P8-L18, numbered as their rows (none for the missing L:7). 84 rows of `checks.tsv` whose note starts `not-run:` are such runs: listed so their ids exist, never run on refcore.
 - **What step T still writes** (`tmp/session8/plan.md` §2), marked below as *T's, not yet in `checks.tsv`*: the goldens G1–G10 and the 36 pins restated in tally 2 (gate 2); the hindcast fixtures H0–H9 restated (gate 4); the codes' missing fixtures, one per refusal, hole and warning code of L §8 and E §11, their count taken by `tools/xref_check.py` (gate 5; K8-13); `PROPERTIES.md` with its generators (gate 6); and the generator of 10 000 random realities (gate 10).
 
 **Programming analogy.** A tracer bullet, then a compiler built front end first. The tracer slice (S) runs one thin path through the whole engine on the amendments household, in production code. Then M0 parses and checks every text before anything runs, and each later milestone adds a part of the runtime, like adding features behind a test suite that already exists (TDD, where the tests were written first by someone else).
@@ -41,19 +41,19 @@ The scan behind rules 3 and 4 looks for six things in a check's text files, stri
 | M3 | The operations | E §1's run function; the rest waits for `OPERATIONS.md` | 0 | — | 5 (OP codes, later), 12 | P8-1, P8-7 (when rewritten) |
 | M4 | Law breadth | `beats`, `given`, Kleene logic, rounding modes, FX, calendars | 77 | 34 | 1, 3 | P8-L2, P8-L10 |
 | M5a | Allocation, holdings, many parties | `fill`, lots, holdings, ownership by shares, groups | 166 | 23 | 1, 8 (the fill) | P8-11; P8-L4, P8-L6, P8-L16 |
-| M5b | Parts and labels | owned and batched kinds, arrivals, takes, relabels, R-115, hole parts | 79 | — | 5, 6 | P8-10; P8-L9, P8-L15, P8-L17 |
+| M5b | Parts and labels | owned and batched kinds, arrivals, takes, relabels, R-115, hole parts | 80 | — | 5, 6 | P8-10; P8-L9, P8-L15, P8-L17 |
 | M5c | Joint members as contexts | D1-7's two steps: a member's own context, then pruning | 40 | — | 6 | P8-12, P8-13, P8-15; P8-L8, P8-L18 |
 | M6 | Exact functions and iteration | `to u`, `dcf`, exact distributions, scores, `solve` in law | 36 | 10 (+ LH-15, LH-16 by light twins) | 1 | — |
 | M7 | Monte Carlo and parallel timelines | draws, paths, path statistics; the thread module | 21 | 0 (no model draws) | 4, 6, 7 | P8-4, P8-6, P8-9 (6 workers); P8-L1, P8-L3, P8-L5, P8-L11..P8-L14 |
 | M8 | The evaluation layer | rolling origins, own-forecast scores, the fitting loop | 0 | — | 4 | P8-8 |
-| M9 | Performance (step F) | every P8 row at size; seams on a measured miss; PGO | 85 | — | 12 | all, at size |
+| M9 | Performance (step F) | every P8 row at size; seams on a measured miss; PGO | 84 | — | 12 | all, at size |
 
-Counts: S=4 M0=10 M1=90 M2=26 M3=0 M4=77 M5a=166 M5b=79 M5c=40 M6=36 M7=21 M8=0 M9=85
+Counts: S=4 M0=10 M1=90 M2=26 M3=0 M4=77 M5a=166 M5b=80 M5c=40 M6=36 M7=21 M8=0 M9=84
 
 **The arithmetic.** The cases: 3 + 7 + 34 + 23 + 12 = 79, as in 1.0.1, since no 2.1 model text uses parts or a joint model (M5a's 23 is 1.0.1's M5; M6's 12 counts LH-15 and LH-16 through their light twins). The checks:
 
 ```sh
-python3 -c "print(4 + 10 + 90 + 26 + 0 + 77 + 166 + 79 + 40 + 36 + 21 + 0 + 85)"   # 634, every check once
+python3 -c "print(4 + 10 + 90 + 26 + 0 + 77 + 166 + 80 + 40 + 36 + 21 + 0 + 84)"   # 634, every check once
 python3 -c "print(3 + 7 + 34 + 23 + 10 + 2)"   # 79 I:M checks: 77 models and the 2 key scripts
 ```
 
@@ -83,7 +83,7 @@ A thin path through the whole engine, in production code, on the base of the ame
 - **The evaluator** (D1-1): a tree-walk over a resolved tree, one `match` per node kind (a `match` is a `switch` the compiler checks for missing cases). Recursion to a counted depth, then an explicit work stack; the depth is counted, never measured (K8-1, R-16).
 - **The memo** (D1-2, D1-3; seam F): the engine's own, keyed by (item, key values, an interned and trimmed context); a recurrence keyed by day or period held as a dense column per (def, context); one memo per context, freed when its scope ends, never evicted (D1-6, D2-7). Read sets are recorded per cell now; the rest of PERFORMANCE §4 stays a seam (D1-5). The context's layer slots exist from S; X's base fills only the base layer and its projections' (D1-3).
 - **The walk** (E §4.1, §4.2; D1-4): the plan pass, then a day walk driven by events, which steps only non-empty days; PERFORMANCE §2 derives what makes a day non-empty (SO8-1; the list approved at G2a, 2026-10-30). The **step-every-day walk** is kept as the event walk's test oracle: equal output, more days. Monthly checkpoints are copied-on-write place states (D2-6); their interval is an unknown measured here (PERFORMANCE §10). Decisions with declared reads and the stratified order within a day, in X's forms (L §5.14.1, §5.14.2; D-5).
-- **The written projection** in X's forms, `bal(x, d) from t`, `low` and `next` (L §5.14.1; E §4.3).
+- **The written projection** in X's forms, `bal(x, d) from t` (L §5.14.1; E §4.3).
 - **Numbers** (D2-1, D2-2; K8-2, K8-3): `Num` small (64-bit numerator and denominator) or big, with the whole-number shortcut and the Lehmer gcd written now; money a whole number of minor units, 64-bit or big; the 4 096-digit cap (`RUN-DIGITS`, L §7.1); `round` in X's forms (L §7.2).
 - The read rule with its cut (L §4.5, §4.6).
 - Booking at the cut, coverage, re-anchoring at X's statement rows and the residual ledger, in X's base forms (E §5, §6.1, §6.3; L §5.19).
@@ -133,13 +133,13 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 
 **Builds**
 - Exact numbers in full: the literal rule, `round` with every mode X's law uses (L §7.1, §7.2). M4 adds the rest.
-- The calendar built-ins, holiday inputs, the law date and its propagation, windows and `windows each` (L §4.2–§4.4).
+- The calendar built-ins, holiday inputs, the law date and its propagation, windows (L §4.2–§4.4).
 - `index`, `input`, `def` and `rule` with `when` and `beats` in X's forms, recurrences, `band`, `axis` with its 64-combination cap (L §5.5, §5.6, §5.8, §5.9, §5.11).
 - `prorata` with its three rests; its `rest largest`, the largest-remainder split, is written once here and is every later split (L §5.13; R-114).
 - Pins: `with` and `as if`, the law and known pins (L §5.11), as **layers** of the memo's context; axis combinations and scenarios too (D1-3).
 - Kinds and things with lifespans; places and their kinds, the prelude's place kinds (L §3.6, §5.7, §5.10); parties as things under the prelude kind `parties`, the subkinds the model's own (L §3.5; 2.1-6).
 - Moves: plans in dependency order over the whole run, decisions in the day walk with declared reads, **keyed decisions** (a keyed move that declares `reads`), ties by the move's `ties by`, written orders (`before`, `after`), the stratified order within a day (L §5.14, §5.14.1, §5.14.2; E §4.1, §4.2).
-- **The written projections** in full: `bal(x, d) from t`, `low`, `next` and their clauses (`windows each`, `with uncertain`), `value`, `flows` (L §5.10, §5.14.1; E §4.3). They replace 1.0.1's `plan_low`, `next_on` and `worth`.
+- **The written projections** in full: `bal(x, d) from t` and its clauses (`with uncertain`), `value`, `flows` (L §5.10, §5.14.1; E §4.3). They replace 1.0.1's `plan_low`, `next_on` and `worth`.
 - Scenarios as overlays of ordinary versions, compared by keyed difference (L §6.4), and amendments as added files (L §6.1–§6.3).
 - Asks: values, checks, partial answers, differences, `solve` in an ask, `explain` with provenance on every movement (L §5.18; E §10); the register and warnings (L §8.2, §8.5).
 - The run invariants (E §9) and the canonical projection of a result.
@@ -152,7 +152,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 
 **Properties** (gate 6): determinism; money conserved (E §9.1); net worth moves only at the boundary, a price or an anchor (§9.2); a scenario changes nothing before its `from` (§9.3); asks move no money (§9.4); things hold nothing outside their lifespans (§9.6); no foresight through declared reads and the written projection (D-5, D-6); a hole never becomes 0.
 
-**Budgets touched:** P8-5, one read of a written projection (its micro form P8-M4, measured at S, set here with `low` and F5; tally 2.1.2); P8-2's cold run at 1× on X's forecast (the 10× run is M9's, its size from T's generator, SO8-10); P8-9, equal hashes across runs with 1 worker.
+**Budgets touched:** P8-5, one read of a written projection (its micro form P8-M4, measured at S, set here with the `min` of `bal(x, d) from t` over its days and F5; tally 2.1.2); P8-2's cold run at 1× on X's forecast (the 10× run is M9's, its size from T's generator, SO8-10); P8-9, equal hashes across runs with 1 worker.
 
 ---
 
@@ -165,7 +165,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 - The four clocks S, K, (K, E] and R, and the dates inside a run (E §2); an ask's known date.
 - Prices and figures read from records (L §5.8, §5.19).
 
-**Then forks** (D1-4's second step), M2's last step: timelines forked at their first different day, once the walk matches refcore on every check from S to M2. It is a fence (D5-6) whose plain twin is the unforked walk, and the equivalence test runs both on every later check. Why here: from M2 on, the timelines that share a start multiply (X's changes and scenarios, axis combinations, `windows each`, pin sets, and later A's 64 repetitions behind P8-10), and each later milestone's budgets read them. Parts (M5b) and members (M5c) add place state, which the copied-on-write checkpoints carry (D2-6); the fork itself doesn't change.
+**Then forks** (D1-4's second step), M2's last step: timelines forked at their first different day, once the walk matches refcore on every check from S to M2. It is a fence (D5-6) whose plain twin is the unforked walk, and the equivalence test runs both on every later check. Why here: from M2 on, the timelines that share a start multiply (X's changes and scenarios, axis combinations, pin sets), and each later milestone's budgets read them. Parts (M5b) and members (M5c) add place state, which the copied-on-write checkpoints carry (D2-6); the fork itself doesn't change.
 
 **Green (26)**
 - X: `I:X:*@c3_fast` and `I:X:*@v3_fast`, change 3, the retroactive law (6).
@@ -213,7 +213,7 @@ The constructs that tax and benefit law needs beyond X's: exceptions, branches, 
 **Builds**
 - `beats` chains and `given` beyond X's forms; Kleene `and` and `or`, the aggregates, `argmin` and `argmax` (L §5.11).
 - Every rounding mode and step, and the rounding axis (L §7.2).
-- Several currencies: rates as `num A/B`, `flows … in CUR at fx mode`, an exchange's two legs (L §3.2, §5.10, §5.14).
+- Several currencies: rates as `num A/B`, an exchange's two legs (L §3.2, §5.10, §5.14).
 - Calendars per country (L §4.2).
 - The household law parts that C and D run on (GEN, PIT, SOC, IGT, CC, CIV and the rest), each in full.
 
@@ -256,7 +256,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 ### M5b. Parts and labels
 
 **Builds** (L §3.6, §5.7, §5.10, §5.12–§5.14.3, §5.19, §8.1; E §4.2, §6.3; the rows 2.1-2 to 2.1-23 of `CHANGES.md`)
-- Kinds that keep parts: `owned by D [ties by e]`, `batched`, `step u`, `takes … order … [prorata]` (L §5.7). A place's parts are walk state beside its balance, per unit a map from a label to an amount, paid only where a kind opts in: a place of any other kind keeps one number per unit and pays nothing (`engine/BUILD-NOTES.md`, the labels' cost; PERFORMANCE §7).
+- Kinds that keep parts: `owned by D [ties by e]`, `batched`, `step u`, `takes … order … [prorata]` (L §5.7). A place's parts are walk state beside its balance, a map from a label to an amount, paid only where a kind opts in: a place of any other kind keeps one number per unit and pays nothing (`engine/BUILD-NOTES.md`, the labels' cost; PERFORMANCE §7).
 - The **arrival rule**, a reader of start-of-day parts beside decisions, with its law at its movement's day (L §3.6, §5.14.1); the **split**, L §5.13's `rest largest` at the kind's step, the one function written at M1 (R-114), ties by `ties by`, else `RUN-TIE`.
 - The **leaving rule** (`takes`) as a fill over the place's parts, reusing M5a's fill (L §5.12, §5.14): ties, two outflows never sharing, the batch's arrivals as supplies, undecided takes; takes in the day's first batch in the order of their reads, and a cycle broken where L §5.14.2 says, else `RUN-CYCLE`.
 - **Relabels** and the leg read `m.leg.amount of q` (L §5.14).
@@ -267,13 +267,13 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 - The parts in the day walk, in E §4.2's order: the first batch's takes, a decision's take at its point, the arrival rule at booking, lifespans after the day's whole order.
 - **The parts check** (R-115): after every arrival, take and relabel, parts sum to the balance, are at least 0 and whole steps; a failure refuses as an invariant. It is checked at run time, at O(labels) per booking (G1 item 8). E §9 doesn't list it (SO8-7), so it is the engine's own check, not a DONE gate 6 property.
 
-**Green (79)**
-- Household A (46): every A check that runs (`I:A:*` but the 3 `not-run:` ones), A-13's, A-14's and A-15's included.
+**Green (80)**
+- Household A (47): every A check that runs (`I:A:*` but the 2 `not-run:` ones), A-13's, A-14's and A-15's included.
 - Session 7's blind cards (7): `I:S?:*`, S4's pinned twin `I:S4:S4-03P~pinned` among them.
 - Probes (26): `U:own/OWN-10/*` (13); OWN-11's but `p21-signed` (9); OWN-12's `p10`, `p17/ania`, `p17/halina`, `p23`.
 - *T's, not yet in `checks.tsv`:* the fixtures of `RUN-LABEL`, `HOLE-PART`, `WARN-LABELS` and the run codes 2.1 widened, where no probe prints them (gate 5).
 
-**Budgets touched:** P8-10 (`I:A:a05_ania@c05-ania`, A-05's `windows each`: refcore 37.7 s, 0.81 GB, 150 k def misses); P8-L9 (A-05 on the full text), P8-L15 (A's q12 asks), P8-L17 (A-13 (b) with `windows each`), at full size.
+**Budgets touched:** P8-10 (`I:A:a05_ania@c05-ania`, A-05's asks: refcore 37.7 s, 0.81 GB, 150 k def misses); P8-L9 (A-05 on the full text), P8-L15 (A's q12 asks), P8-L17 (A-13 (b)'s pinned days), at full size.
 
 ### M5c. Joint members as contexts
 
@@ -314,7 +314,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 - Path statistics with their counts, standard errors and horizon, `quantile`, `share`, paired paths (L §5.16); a quantile's standard error by intervals refined to the printed 1e-6 rounding, refcore's exact method the oracle at small N (D3-7); a path statistic's accumulator its own type, outside the cap check (2.1-15; R-117; K8-16, K8-17).
 - One path replayed for an explanation (E §7, §10).
 - **The thread module** (D3-1..D3-7), the only place threads, channels and locks live: the standard library's scoped threads, each spawned with a stack size passed in (R-42 as amended; BUILDER §7); workers fill numbered slots and one thread merges them in task-index order, the 1-worker run through the same module; the merge rule (per line, terms in order; the first refusing path wins, else the union of holes; quantiles sorted stably by value, then path; SO8-3); the shared layer run alone first, then frozen, with a counter of locally recomputed cells (D3-4); the worker count an argument, the CLI's default 6, never read from the machine (D3-5). A fence, its plain twin the 1-worker run.
-- **In parallel through it:** Monte Carlo paths, and the independent timelines that exist since M1 (axis combinations, `windows each`, scenarios) and from M8 (rolling origins), as D3-2 puts them in the first set.
+- **In parallel through it:** Monte Carlo paths, and the independent timelines that exist since M1 (axis combinations, scenarios) and from M8 (rolling origins), as D3-2 puts them in the first set.
 
 **Why the thread module lands here.** Every budget before M7 is single-worker: P8-10..P8-15 are cold runs on 1 worker, and P8-4 is the first row that names workers. Gate 6's worker sweep and the merge rule are about paths (which refusal prints, the union of holes, a quantile's order), so the module is tested where its hardest case first exists. And by M7 every single-threaded output from S to M6 is fixed by its check, so a difference between worker counts can only be the module's. Parallel joint members and parallel asks come later (D3-2), at M9, and only for a row that misses.
 
@@ -346,7 +346,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 
 ## M9. Performance (step F)
 
-Every row of PERFORMANCE §8 at the size it states, on the reference machine (DONE gate 12; D4-3): P8-2 and P8-3 at 10× (their sizes from T's generator, SO8-10), every load row (P8-L1 to P8-L18, 17 rows, no L:7) at full size, nightly, and the 85 `not-run:` checks of `checks.tsv` run as their rows: `I:A:*@q05-*` and `A-13~A5` (A), B-05, B-07, B-12 and K3's retired runs (B), `I:light/LH-16-light`, and X's c1_r2, mc, @k10 and @k11 runs.
+Every row of PERFORMANCE §8 at the size it states, on the reference machine (DONE gate 12; D4-3): P8-2 and P8-3 at 10× (their sizes from T's generator, SO8-10), every load row (P8-L1 to P8-L18, 17 rows, no L:7) at full size, nightly, and the 84 `not-run:` checks of `checks.tsv` run as their rows: `I:A:*@q05-*` (A), B-05, B-07, B-12 and K3's retired runs (B), `I:light/LH-16-light`, and X's c1_r2, mc, @k10 and @k11 runs.
 
 The seams built only on a measured miss come in here, each when its row misses, never before:
 - PERFORMANCE §4's verification and early cut-off, when a measured turn misses 1–2 s or the cold 33-year run misses 1 s at 10× (D1-5);
@@ -488,7 +488,7 @@ T's sizes for P8-1..P8-8 in 2.1's models also come from the generator (SO8-10).
 | M5b | `I:A:mca*` | 6 |
 | M5b | `I:A:a1*` | 11 |
 | M5b | `I:A:A-1[45]~*` | 2 |
-| M5b | `I:A:A-13~A[1-4]` | 4 |
+| M5b | `I:A:A-13~A[1-5]` | 5 |
 | M5b | `I:A:a05_*@c05-*` | 2 |
 | M5b | `I:A:a05_tomek*` | 2 |
 | M5b | `I:A:a05_wrapped` | 1 |
@@ -539,4 +539,3 @@ T's sizes for P8-1..P8-8 in 2.1's models also come from the generator (SO8-10).
 | M9 | `I:X:taxes_paid` | 1 |
 | M9 | `I:light/LH-16-light` | 1 |
 | M9 | `I:A:*@q05-*` | 2 |
-| M9 | `I:A:A-13~A5` | 1 |

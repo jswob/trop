@@ -1,6 +1,8 @@
 # tally 2.1.8 P50, R11 (#180), L §8 (G2 of group 4's fix review, agent/b2_cut): a count or sum of a binding over a
 # day with no value (dh), where one of the instances it could meet is refused by S1's two fulfils, is refused, as
-# with a where: hd and hs RUN-RECORD. A cut before the same line (k1, k3) answers. aa343e62 gave dh's hole.
+# with a where: hd and hs RUN-RECORD. aa343e62 gave dh's hole. tally 2.2 (2.2-5): the line between two observed rows
+# has no day of its own, so at the rows' cut 2026-03-10 it holds and k1 and k3 are refused too (they answered 2 and
+# 0.00 PLN, the cut before the line's version).
 === m.tally
 model p
   tally 2
@@ -74,11 +76,11 @@ hd: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[202
   cut 2026-06-30
 hs: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-06-30
-k1: 2
+k1: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-03-10
 k2: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-03-11
-k3: 0.00 PLN
+k3: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-03-10
 ob: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
   cut 2026-06-30

@@ -79,6 +79,7 @@ version card_rows
   opening[konto7] = 0.00 DUK at 2025-01-01 start "card"
 === expect
 q_dec2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: dec2[2025-01]
   unfulfilled: dec2[2025-02]
   unfulfilled: dec2[2025-03]
@@ -93,10 +94,13 @@ q_dec2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough f
   unfulfilled: dec2[2025-12]
   law date 2025-12-31, cut 2026-01-15
 q_hand_when_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   law date 2025-12-31, cut 2026-01-15
 q_konto2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   law date 2025-12-31, cut 2026-01-15
 q_konto6_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
+  unknown day: added one_of([2027-04-05, 2027-04-12])
   unfulfilled: dec2[2025-01]
   unfulfilled: dec2[2025-02]
   unfulfilled: dec2[2025-03]

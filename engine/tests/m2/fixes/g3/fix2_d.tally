@@ -13,8 +13,6 @@ input y: date
 def dd: date
   rule base = x
 
-ask qd: dd == y with dd = y windows each
-ask ql: last(x, 2026-02-01) == y with x = y windows each
 ask qd0: dd == y with dd = y
 
 version v

@@ -39,10 +39,10 @@ version dates
   adv_law = 2027-01-01 "own"
   wd = window(2026-12-20, 2026-12-28) "own"
 
-ask fl: flows(konto, 2026-12-01 .. 2027-01-31) in late windows each
+ask fl: flows(konto, 2026-12-01 .. 2027-01-31) in late
 ask p1: bal(konto, 2026-12-31) in late
 ask p2: flows(konto, 2026-12-01 .. 2027-01-31) in late
 ask p3: explain bal(konto, 2026-12-31) in late
-ask bl: bal(konto, 2026-12-31) in late windows each
-ask blw: bal(konto, 2026-12-24) in late windows each
+ask bl: bal(konto, 2026-12-31) in late
+ask blw: bal(konto, 2026-12-24) in late
 ask bl_plain: bal(konto, 2026-12-31) in late

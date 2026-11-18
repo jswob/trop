@@ -473,14 +473,14 @@ fn scheduled_day(
 
 /// `LOAD-SCENARIO` for a move a scenario's file declares that books before the scenario's
 /// `from` where load sees the day: at a choice of its keys over declared indexes, its `on`
-/// (a window's first day) or a leg's own day falls before it (L §6.4: such a move books
-/// nothing before D; issue #75, where refcore loads it). A fold that gives no day refuses
-/// nothing. L §8.3.
+/// (a window's first day), the day of its legs too, falls before it (L §6.4: such a move
+/// books nothing before D; issue #75, where refcore loads it). A fold that gives no day
+/// refuses nothing. L §8.3.
 ///
 /// # Errors
 ///
-/// The first such move's `LOAD-SCENARIO`, by id, at its line or its leg's; an invariant or
-/// `NotBuilt` the fold meets.
+/// The first such move's `LOAD-SCENARIO`, by id, at its line; an invariant or `NotBuilt` the
+/// fold meets.
 pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Stop> {
     let mut engine = Engine::new(m.on);
     for (id, mv) in m.moves.entries() {
@@ -490,16 +490,10 @@ pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Sto
         let Some(from) = m.scenarios.from.get(scenario).copied() else {
             continue;
         };
-        let mut days = vec![(&mv.decl.on, mv.decl.line)];
-        for leg in &mv.decl.legs {
-            if let Some(on) = &leg.on {
-                days.push((on, leg.line));
-            }
-        }
-        days.retain(|(day, _)| seen_day(m, day, &mv.binds));
+        let day = &mv.decl.on;
         // load sees that an instance books before the from only where it sees that the
         // instance exists (P29); the walk leaves out the others
-        if days.is_empty() || !existence_seen(m, mv) {
+        if !seen_day(m, day, &mv.binds) || !existence_seen(m, mv) {
             continue;
         }
         let Some(domains) = bind_keys(m, &mv.binds) else {
@@ -512,7 +506,9 @@ pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Sto
             if no_instance(&mut engine, m, &mv.binds, &env)? {
                 continue;
             }
-            if let Some((first, line)) = early_day(&mut engine, m, &days, &env, from)? {
+            if let Some(first) = first_day(&mut engine, m, day, &env)?
+                && first < from
+            {
                 let message = format!(
                     "move {id} of {scenario} books on {}, before {}",
                     first.text(),
@@ -522,31 +518,12 @@ pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Sto
                     Load::Scenario,
                     message,
                     files.get("move", id)?,
-                    line,
+                    mv.decl.line,
                 ));
             }
         }
     }
     Ok(())
-}
-
-/// The first of a move's days, at one choice of keys, that falls before `from`, with its
-/// line. L §6.4.
-fn early_day(
-    engine: &mut Engine,
-    m: &Reality,
-    days: &[(&Expr, u32)],
-    env: &Env,
-    from: Day,
-) -> Result<Option<(Day, u32)>, Stop> {
-    for (day, line) in days {
-        if let Some(first) = first_day(engine, m, day, env)?
-            && first < from
-        {
-            return Ok(Some((first, *line)));
-        }
-    }
-    Ok(None)
 }
 
 /// A day's value at one choice of keys, or a window's first day. L §4.4, §5.14.

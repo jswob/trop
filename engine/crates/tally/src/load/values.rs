@@ -88,8 +88,7 @@ impl Loader {
     }
 
     /// A balance reading's value: a quantity in its place's unit, which its rows are grouped
-    /// by; a place of unit `any` states its unit in the row (refcore's `place_value`). L §4.6,
-    /// §5.19.
+    /// by; a place of unit `any` takes none (refcore's `place_value`). L §4.6, §5.10, §5.19.
     fn place_value(&self, input: &str, row: &Row) -> Result<Stated, Stop> {
         self.place_reading(input, row).map(|(stated, _)| stated)
     }
@@ -113,12 +112,15 @@ impl Loader {
             .things
             .get(place)
             .and_then(|thing| self.m.place_unit(thing));
-        // a hole or `none` at a place of unit `any` states no unit: a row for every unit
-        // there (L §5.10; tally 2.1.8 R14)
-        let any = place_unit.as_deref() == Some("any");
+        // a place of unit `any`, the world beyond the model, takes no balance reading (L §5.10,
+        // §8.3; tally 2.2, S-1)
+        if place_unit.as_deref() == Some("any") {
+            return Err(load_refusal(
+                Load::Unit,
+                format!("{input}[{place}]: a place of unit any takes no balance reading"),
+            ));
+        }
         let number = match &row.value {
-            Written::Hole(_) if any => return Ok((Stated::Unstated, None)),
-            Written::None if any => return Ok((Stated::Unstated, Some(Value::None))),
             Written::Hole(_) => return Ok((Stated::Hole, None)),
             Written::None => return Ok((Stated::Nothing, Some(Value::None))),
             Written::Lit(Lit::Num(number)) => number,
@@ -137,7 +139,7 @@ impl Loader {
                 ));
             }
         };
-        let unit = match place_unit.filter(|unit| unit != "any") {
+        let unit = match place_unit {
             Some(unit) => unit,
             None => row_unit(input, place, number)?,
         };
@@ -163,8 +165,8 @@ impl Loader {
     }
 }
 
-/// The unit a reading of a place of unit `any` states in its row (refcore's `place_value`,
-/// its `any` branch). L §4.6.
+/// The unit a reading's row states where its place has none (refcore's `place_value`, its
+/// `pu is None` branch). L §4.6.
 fn row_unit(input: &str, place: &str, number: &crate::syntax::Number) -> Result<String, Stop> {
     let Some(written) = &number.unit else {
         return Err(load_refusal(

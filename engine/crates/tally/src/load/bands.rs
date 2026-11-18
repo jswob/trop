@@ -517,7 +517,7 @@ fn version_span(m: &Reality, id: &str) -> Result<Option<Span>, Stop> {
     Ok(version.span_at(&m.scenarios, (m.on, World::Whole)).cloned())
 }
 
-/// A version's `known`, or its window's first day. L §4.5.
+/// A version's `known` day. L §4.5.
 fn version_known(m: &Reality, id: &str) -> Result<Day, Stop> {
     m.versions
         .get(id)

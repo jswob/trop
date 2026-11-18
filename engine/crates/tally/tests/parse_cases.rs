@@ -231,7 +231,6 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
     fn expr_shape(e: &Expr) -> &'static str {
         let names = [
             (matches!(e, Expr::Query(_)), "query"),
-            (matches!(e, Expr::Low(_)), "low"),
             (matches!(e, Expr::Crps(_)), "crps"),
             (matches!(e, Expr::DistFn(_)), "distfn"),
             (matches!(e, Expr::Dist(_)), "dist"),
@@ -289,7 +288,6 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
         let cases = [
             ("def a: date = mean(x for i in k)", "query"),
             ("def a: date = quantile(x for i in k, 0.5)", "query"),
-            ("def a: date = low(acc, 2026-01-01 .. 2026-02-01)", "low"),
             ("def a: date = crps(x, y)", "crps"),
             ("def a: date = cdf(x, 1)", "distfn"),
             ("def a: date = normal(0, 1)", "dist"),

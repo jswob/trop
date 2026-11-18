@@ -3,7 +3,7 @@ model g5_sweep
   on 2026-03-15
   start 2026-01-01
   end 2026-03-31
-  note "T, issue #41, G5 (the sweep): openings before the start read under a cut before the start, one dated before the cut and one dated on it (E §4.2 step 0: a reading at or after the cut changes nothing), and read again under the model's own cut; a place below zero whose balance is a hole, so not warned (E §4.2 step 5: a warning is tested only where the balance is known), beside one below zero and known; a num that isn't whole where an int is needed (RUN-NOT-INT, L §3.2), beside one that is; a leg with its own later day, and a move on the keys of a day index (L §5.14)."
+  note "T, issue #41, G5 (the sweep): openings before the start read under a cut before the start, one dated before the cut and one dated on it (E §4.2 step 0: a reading at or after the cut changes nothing), and read again under the model's own cut; a place below zero whose balance is a hole, so not warned (E §4.2 step 5: a warning is tested only where the balance is known), beside one below zero and known; a num that isn't whole where an int is needed (RUN-NOT-INT, L §3.2), beside one that is; a move dated after the others (tally 2.2 restates a leg with its own later day: a leg has no day of its own), and a move on the keys of a day index (L §5.14)."
 
 source fixture "T's fixture for S's kernel tests (invented values)"
 
@@ -50,8 +50,8 @@ move paid2: transfers
   leg cash from konto6 to world amount known_amt
 
 move late_leg: transfers
-  on pay_day
-  leg cash from world to konto7 amount known_amt on leg_day
+  on leg_day
+  leg cash from world to konto7 amount known_amt
 
 move daily[k in dd]: transfers
   on k
@@ -73,7 +73,7 @@ version facts
   known 2025-12-01
   pay_day = 2026-02-10
   known_amt = 50.00
-  leg_day = 2026-02-20 "a leg on a later day than its movement"
+  leg_day = 2026-02-20 "a movement on a later day than pay_day"
   half_dom = 5.5 "a day of the month that isn't whole"
   whole_dom = 5
   opening[konto5] = 0 at 2026-01-01 start

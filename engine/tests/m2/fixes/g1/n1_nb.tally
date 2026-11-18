@@ -20,7 +20,7 @@ input p_lo: money DUK
 
 input p_hi: money DUK
 
-def n_before: money DUK = next(transfers, d1).cash.amount at reader
+def n_before: money DUK = (first(m in transfers over d1 ..) ties by m.day).cash.amount at reader
 
 input d1: date
 

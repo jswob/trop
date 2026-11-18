@@ -1,8 +1,10 @@
+# tally 2.2 (CHANGES.md 2.2-1): a place kind of unit `any` is an `outside` kind only; restated on one place per
+# unit, as the spec's example now is.
 # L §5.7 example kinds and version, copied whole (the source bank_letter declared).  "x in brokerages over s"
-# ranges over things alive on some day of s, subkinds included: broker (ordinary, from 2021-03-01) is alive on
+# ranges over things alive on some day of s, subkinds included: broker_n7 (ordinary, from 2021-03-01) is alive on
 # 2021-03-01 but not on any day to 2021-02-28.  "x in K on d tests membership on day d ... plain kinds with dated
 # memberships included": wrapped from 2024-01-01.  "x in K tests membership of a kind whose memberships aren't
-# dated (a base kind and its parents)": broker in brokerages.  (A membership test that ends an ask's body is
+# dated (a base kind and its parents)": broker_n7 in brokerages.  (A membership test that ends an ask's body is
 # written in parentheses, L §2.3 parse rule 4.)  "lifespan(k) is a record with .from and .to
 # (never for an open end)": n7 lives 2021-01-04..2031-03-01, a span of days through 2031-03-01 (L §4.1).
 === m.tally
@@ -17,7 +19,7 @@ source bank_letter "a letter"
 kind persons
 kind accounts_pl: place PLN signed
 kind lines: place PLN max 0
-kind brokerages: place any min 0
+kind brokerages: place one min 0
 kind ordinary: brokerages
 kind ira: brokerages
 kind wrapped
@@ -33,14 +35,14 @@ version opened
   known 2019-05-01
   persons + [ola] lives 1990-02-01..
   accounts_pl + [konto] lives 2019-05-01..
-  ordinary + [broker] lives 2021-03-01..
-  wrapped + [broker] lives 2024-01-01..
+  ordinary + [broker_n7] n7 lives 2021-03-01..
+  wrapped + [broker_n7] lives 2024-01-01..
   notes + [n7] lives 2021-01-04..2031-03-01
 
 unit PLN: currency minor 0.01
 
 ask q1: count(x in brokerages over 2019-01-01 .. 2021-03-01), count(x in brokerages over 2019-01-01 .. 2021-02-28)
-ask q2: broker in wrapped on 2023-12-31, broker in wrapped on 2024-01-01, broker in brokerages, (ola in persons)
+ask q2: broker_n7 in wrapped on 2023-12-31, broker_n7 in wrapped on 2024-01-01, broker_n7 in brokerages, (ola in persons)
 ask q3: lifespan(n7).from, lifespan(n7).to, lifespan(ola).to
 === expect
 q1: (1, 0)

@@ -3,6 +3,8 @@
 # Two pending legs at one min 0 place, oa out of pot in window(04-05, 04-10), ob into it in window(04-07, 04-12): pot
 # breaks wherever oa falls before ob, so t1 is oa's hole (the first its reads met) and t2 gives ten lines. 2.1.7's
 # refcore: 50.00 PLN. The plan's i77a t1.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -48,27 +50,11 @@ version v
   opening[pot] = 50.00 PLN at 2026-01-01 start "s"
 
 ask t1: bal(pot, 2026-04-30)
-ask t2: bal(pot, 2026-04-30) windows each
+ask t2: bal(pot, 2026-04-30)
 === expect
 t1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01
-t2 [wa = 2026-04-05]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-05
-  cut 2026-01-01
-t2 [wa = 2026-04-06]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-06
-  cut 2026-01-01
-t2 [wa = 2026-04-07, wb = 2026-04-07]: 50.00 PLN
-  cut 2026-01-01
-t2 [wa = 2026-04-07, wb = 2026-04-08 .. 2026-04-12]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-07
-  cut 2026-01-01
-t2 [wa = 2026-04-08, wb = 2026-04-07 .. 2026-04-08]: 50.00 PLN
-  cut 2026-01-01
-t2 [wa = 2026-04-08, wb = 2026-04-09 .. 2026-04-12]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-08
-  cut 2026-01-01
-t2 [wa = 2026-04-09, wb = 2026-04-07 .. 2026-04-09]: 50.00 PLN
-  cut 2026-01-01
-t2 [wa = 2026-04-09, wb = 2026-04-10 .. 2026-04-12]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-09
-  cut 2026-01-01
-t2 [wa = 2026-04-10, wb = 2026-04-07 .. 2026-04-10]: 50.00 PLN
-  cut 2026-01-01
-t2 [wa = 2026-04-10, wb = 2026-04-11 .. 2026-04-12]: refused: RUN-PLACE pot is -50.00 PLN after the day's observations and plans of 2026-04-10
+t2: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
+  unknown day: wa
   cut 2026-01-01

@@ -52,4 +52,4 @@ version st
   stated[jar[b]] = 30.00 PLN at 2026-03-31 end "s"
 
 ask r_in: residuals jar[a] 2026-03 in sc
-ask r_all: residuals jar[k] 2026-03 by cat for k in ks as known 2026-04-25 in sc windows each
+ask r_all: residuals jar[k] 2026-03 by cat for k in ks as known 2026-04-25 in sc

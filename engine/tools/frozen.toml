@@ -6,5 +6,5 @@
 # must match: the tag itself when `pin` is left out, or an approved amendment after the
 # tag that kept the version. A new version or amendment moves both lines.
 
-tag = "tally-2.1.8"
-approved = "the round lead's picks P1–P57 on tally 2.1.8's issues, each recorded in tmp/spec-2.1.8/auto-picks.md and on its issue where it rules one, under the user's standing rule, 2026-11-04 (\"I would prefer if the session would just pick the recommended…\"); the round's form under the user's principle, 2026-11-13 (\"I just don't want spec rounds to produce more edge cases. The point is that they make spec simpler and cleaner.\"); the user's two decisions of 2026-11-16 (\"Agreed with recommendations\"): a version's `same` between an observed row and a planned instance of one model is refused at load in this round (#187), and the unit argument at a place of unit `any` is left for the next round (#203); and the limit's two raises of 2026-11-17, to 34 % of the week (\"Yes\") and to 40 % (\"You may raise to 40%\")"
+tag = "tally-2.2"
+approved = "the user's decision of 2026-11-17 on the simplification review (\"I took its recommended set\": the cuts S-1 to S-9 taken, S-10 not), applied by the tally 2.2 round group by group and frozen as tally 2.2 at its close; the user's limit for the round, 2026-11-17 (\"I raise your limit to 30%\"); and the round lead's picks P1 to P28 on #211, each recorded in tmp/spec-2.2/auto-picks.md, under the user's standing rule, 2026-11-04 (\"I would prefer if the session would just pick the recommended…\")"

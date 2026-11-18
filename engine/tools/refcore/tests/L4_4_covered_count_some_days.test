@@ -2,6 +2,8 @@
 # days and booked on the rest, so whether a binding over transfers holds it is the window's hole: windows each
 # splits the count as its pins give it (p3: 0, then 1; p1, p2). 2.1.8's first refcore counted it on every day (1).
 # The review's b4_cover_count.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -37,7 +39,7 @@ version st
 
 ask p1: count(t in transfers over 2026-03-01 .. 2026-03-31) with wd = 2026-03-05
 ask p2: count(t in transfers over 2026-03-01 .. 2026-03-31) with wd = 2026-03-09
-ask p3: count(t in transfers over 2026-03-01 .. 2026-03-31) windows each
+ask p3: count(t in transfers over 2026-03-01 .. 2026-03-31)
 === expect
 p1: 0
   pinned: wd = 2026-03-05
@@ -45,7 +47,6 @@ p1: 0
 p2: 1
   pinned: wd = 2026-03-09
   cut 2026-03-08
-p3 [wd = 2026-03-05 .. 2026-03-07]: 0
-  cut 2026-03-08
-p3 [wd = 2026-03-08 .. 2026-03-10]: 1
+p3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a binding over transfers" (pay)
+  unknown day: wd
   cut 2026-03-08

@@ -94,7 +94,7 @@ def spend_amount[y in cal_year]: money PLN = round(spend_rate * price_index[y], 
 def next_pay[m in month]: date = pay_day[my_job, m] at start_of(m)
   note "next_date(my_tax/net) on the 15th of m: the pay for m, on the 3rd to 7th of the next month (the pay for m - 1 falls before the 15th)"
 
-def surplus[m in month]: money PLN = max(0, low(konto, day_of(m, invest_dom) .. add_days(next_pay[m], -1)) from day_of(m, invest_dom) - floor_15) at start_of(m)
+def surplus[m in month]: money PLN = max(0, min(bal(konto, d) from day_of(m, invest_dom) for d in day_of(m, invest_dom) .. add_days(next_pay[m], -1) step 1 day) - floor_15) at start_of(m)
   note "nadwyzka_ike@1 surplus: max(0, low_point(in.from, next_date(in.until)) - in.floor)"
 
 def ike_seen[y in cal_year]: money PLN at start_of(y)

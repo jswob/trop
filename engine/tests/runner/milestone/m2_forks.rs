@@ -291,7 +291,8 @@ mod tests {
         "fixes-s",
     ];
 
-    /// The groups of `m2/vectors.refcore`, each tested below.
+    /// The groups of `m2/vectors.refcore`, each tested below (`fixes-r14`, R14's readings per
+    /// unit, went whole at tally 2.2: a model's place holds one unit, S-1).
     const M2_GROUPS: [&str; 34] = [
         "checks-green",
         "checks-records",
@@ -312,13 +313,13 @@ mod tests {
         "fixes-r11",
         "fixes-r12",
         "fixes-r13",
-        "fixes-r14",
         "fixes-r15",
         "fixes-r16",
         "fixes-s",
         "fixes-d",
         "fixes-cut",
         "fixes-rv",
+        "fixes-22",
         "hindcasts-h0",
         "hindcasts-h1",
         "hindcasts-h2",
@@ -330,7 +331,8 @@ mod tests {
     ];
 
     /// The groups of `m2/spec.vectors`, each tested below.
-    const SPEC_GROUPS: [&str; 3] = ["spec-forms", "spec-records", "spec-sweep"];
+    /// `spec-records` (the `nb3_*` texts of a reading after m) went at tally 2.2, S-3.
+    const SPEC_GROUPS: [&str; 2] = ["spec-forms", "spec-sweep"];
 
     /// Each group of the four stores has its tests here, so a new group is never left out.
     #[test]
@@ -609,10 +611,11 @@ mod tests {
         group_holds(KERNEL_VECTORS, "g9", (0, 1), 5);
     }
 
-    /// `kernel/vectors.refcore`'s group `g6`, every vector.
+    /// `kernel/vectors.refcore`'s group `g6`, every vector (17 since tally 2.2 dropped
+    /// `g6/refusal_order_later_leg`: a leg has no day of its own, S-6).
     #[test]
     fn m2_forks_on_prints_off_on_kernel_g6() {
-        group_holds(KERNEL_VECTORS, "g6", (0, 1), 18);
+        group_holds(KERNEL_VECTORS, "g6", (0, 1), 17);
     }
 
     /// `kernel/vectors.refcore`'s group `g7`, every vector.
@@ -1038,19 +1041,19 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g9`, part 5 of 7 (at 4 modulo 7).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g9_part_5() {
-        group_holds(M1_VECTORS, "fixes-g9", (4, 7), 30);
+        group_holds(M1_VECTORS, "fixes-g9", (4, 7), 29);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g9`, part 6 of 7 (at 5 modulo 7).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g9_part_6() {
-        group_holds(M1_VECTORS, "fixes-g9", (5, 7), 30);
+        group_holds(M1_VECTORS, "fixes-g9", (5, 7), 29);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g9`, part 7 of 7 (at 6 modulo 7).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g9_part_7() {
-        group_holds(M1_VECTORS, "fixes-g9", (6, 7), 30);
+        group_holds(M1_VECTORS, "fixes-g9", (6, 7), 29);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g10`, every vector.
@@ -1068,55 +1071,55 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 1 of 9 (at 0 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_1() {
-        group_holds(M1_VECTORS, "fixes-g12", (0, 9), 27);
+        group_holds(M1_VECTORS, "fixes-g12", (0, 9), 25);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 2 of 9 (at 1 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_2() {
-        group_holds(M1_VECTORS, "fixes-g12", (1, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (1, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 3 of 9 (at 2 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_3() {
-        group_holds(M1_VECTORS, "fixes-g12", (2, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (2, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 4 of 9 (at 3 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_4() {
-        group_holds(M1_VECTORS, "fixes-g12", (3, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (3, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 5 of 9 (at 4 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_5() {
-        group_holds(M1_VECTORS, "fixes-g12", (4, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (4, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 6 of 9 (at 5 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_6() {
-        group_holds(M1_VECTORS, "fixes-g12", (5, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (5, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 7 of 9 (at 6 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_7() {
-        group_holds(M1_VECTORS, "fixes-g12", (6, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (6, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 8 of 9 (at 7 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_8() {
-        group_holds(M1_VECTORS, "fixes-g12", (7, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (7, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g12`, part 9 of 9 (at 8 modulo 9).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g12_part_9() {
-        group_holds(M1_VECTORS, "fixes-g12", (8, 9), 26);
+        group_holds(M1_VECTORS, "fixes-g12", (8, 9), 24);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g13`, part 1 of 6 (at 0 modulo 6).
@@ -1158,13 +1161,13 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g14`, part 1 of 2 (at 0 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g14_part_1() {
-        group_holds(M1_VECTORS, "fixes-g14", (0, 2), 96);
+        group_holds(M1_VECTORS, "fixes-g14", (0, 2), 93);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g14`, part 2 of 2 (at 1 modulo 2).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g14_part_2() {
-        group_holds(M1_VECTORS, "fixes-g14", (1, 2), 96);
+        group_holds(M1_VECTORS, "fixes-g14", (1, 2), 93);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-open`, every vector.
@@ -1176,67 +1179,67 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 1 of 11 (at 0 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_1() {
-        group_holds(M1_VECTORS, "fixes-gate8", (0, 11), 29);
+        group_holds(M1_VECTORS, "fixes-gate8", (0, 11), 27);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 2 of 11 (at 1 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_2() {
-        group_holds(M1_VECTORS, "fixes-gate8", (1, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (1, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 3 of 11 (at 2 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_3() {
-        group_holds(M1_VECTORS, "fixes-gate8", (2, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (2, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 4 of 11 (at 3 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_4() {
-        group_holds(M1_VECTORS, "fixes-gate8", (3, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (3, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 5 of 11 (at 4 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_5() {
-        group_holds(M1_VECTORS, "fixes-gate8", (4, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (4, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 6 of 11 (at 5 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_6() {
-        group_holds(M1_VECTORS, "fixes-gate8", (5, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (5, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 7 of 11 (at 6 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_7() {
-        group_holds(M1_VECTORS, "fixes-gate8", (6, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (6, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 8 of 11 (at 7 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_8() {
-        group_holds(M1_VECTORS, "fixes-gate8", (7, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (7, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 9 of 11 (at 8 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_9() {
-        group_holds(M1_VECTORS, "fixes-gate8", (8, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (8, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 10 of 11 (at 9 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_10() {
-        group_holds(M1_VECTORS, "fixes-gate8", (9, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (9, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 11 of 11 (at 10 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_11() {
-        group_holds(M1_VECTORS, "fixes-gate8", (10, 11), 28);
+        group_holds(M1_VECTORS, "fixes-gate8", (10, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-r1`, every vector.
@@ -1374,13 +1377,13 @@ mod tests {
     /// `m2/vectors.refcore`'s group `items-explain`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_items_explain() {
-        group_holds(M2_VECTORS, "items-explain", (0, 1), 4);
+        group_holds(M2_VECTORS, "items-explain", (0, 1), 3);
     }
 
     /// `m2/vectors.refcore`'s group `items-windows`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_items_windows() {
-        group_holds(M2_VECTORS, "items-windows", (0, 1), 2);
+        group_holds(M2_VECTORS, "items-windows", (0, 1), 1);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-forms`, every vector.
@@ -1392,19 +1395,20 @@ mod tests {
     /// `m2/vectors.refcore`'s group `fixes-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_sweep() {
-        group_holds(M2_VECTORS, "fixes-sweep", (0, 1), 45);
+        group_holds(M2_VECTORS, "fixes-sweep", (0, 1), 34);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-explain`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-explain`, every vector (8 since tally 2.2 dropped
+    /// `fixes/g2/after_m`: a reading after m is cut, S-3).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_explain() {
-        group_holds(M2_VECTORS, "fixes-explain", (0, 1), 9);
+        group_holds(M2_VECTORS, "fixes-explain", (0, 1), 6);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-windows`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_windows() {
-        group_holds(M2_VECTORS, "fixes-windows", (0, 1), 14);
+        group_holds(M2_VECTORS, "fixes-windows", (0, 1), 9);
     }
 
     /// `m2/vectors.refcore`'s group `items-sweep`, every vector.
@@ -1479,16 +1483,17 @@ mod tests {
         group_holds(M2_VECTORS, "goldens-ledger", (1, 2), 1);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-records`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-records`, every vector (3 since tally 2.2 dropped
+    /// G4's vectors of a reading after m, S-3).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_records() {
-        group_holds(M2_VECTORS, "fixes-records", (0, 1), 14);
+        group_holds(M2_VECTORS, "fixes-records", (0, 1), 3);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-ledger`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_ledger() {
-        group_holds(M2_VECTORS, "fixes-ledger", (0, 1), 37);
+        group_holds(M2_VECTORS, "fixes-ledger", (0, 1), 34);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-r11`, every vector.
@@ -1500,31 +1505,28 @@ mod tests {
     /// `m2/vectors.refcore`'s group `fixes-r12`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r12() {
-        group_holds(M2_VECTORS, "fixes-r12", (0, 1), 12);
+        group_holds(M2_VECTORS, "fixes-r12", (0, 1), 6);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-r13`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r13() {
-        group_holds(M2_VECTORS, "fixes-r13", (0, 1), 17);
+        group_holds(M2_VECTORS, "fixes-r13", (0, 1), 11);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-r14`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_m2_fixes_r14() {
-        group_holds(M2_VECTORS, "fixes-r14", (0, 1), 16);
-    }
-
-    /// `m2/vectors.refcore`'s group `fixes-r15`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-r15`, every vector (8 since tally 2.2 dropped
+    /// `r15/converted_plain`: the converted flows is cut, S-7).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r15() {
-        group_holds(M2_VECTORS, "fixes-r15", (0, 1), 9);
+        group_holds(M2_VECTORS, "fixes-r15", (0, 1), 8);
     }
 
-    /// `m2/vectors.refcore`'s group `fixes-r16`, every vector.
+    /// `m2/vectors.refcore`'s group `fixes-r16`, every vector (18 since tally 2.2 dropped
+    /// `r16/projection_leg_day` and `r16/low_from_leg_day`: a leg has no day of its own, S-6;
+    /// 4 since it dropped R16's vectors of a reading after m, S-3).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_r16() {
-        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 19);
+        group_holds(M2_VECTORS, "fixes-r16", (0, 1), 4);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-s`, every vector.
@@ -1536,7 +1538,7 @@ mod tests {
     /// `m2/vectors.refcore`'s group `fixes-d`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_d() {
-        group_holds(M2_VECTORS, "fixes-d", (0, 1), 16);
+        group_holds(M2_VECTORS, "fixes-d", (0, 1), 15);
     }
 
     /// `m2/vectors.refcore`'s group `fixes-cut`, every vector.
@@ -1549,6 +1551,14 @@ mod tests {
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_rv() {
         group_holds(M2_VECTORS, "fixes-rv", (0, 1), 25);
+    }
+
+    /// `m2/vectors.refcore`'s group `fixes-22`, every vector: tally 2.2's refusals of the cut
+    /// forms (refused alike, so not counted as answered) and their twins, and the fault of a
+    /// def keyed by a movement (#211).
+    #[test]
+    fn m2_forks_on_prints_off_on_m2_fixes_22() {
+        group_holds(M2_VECTORS, "fixes-22", (0, 1), 5);
     }
 
     /// `m2/vectors.refcore`'s group `hindcasts-h0`, part 1 of 2 (at 0 modulo 2).
@@ -1653,15 +1663,9 @@ mod tests {
         group_holds(M2_SPEC, "spec-forms", (0, 1), 2);
     }
 
-    /// `m2/spec.vectors`'s group `spec-records`, every vector.
-    #[test]
-    fn m2_forks_on_prints_off_on_spec_spec_records() {
-        group_holds(M2_SPEC, "spec-records", (0, 1), 2);
-    }
-
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_sweep() {
-        group_holds(M2_SPEC, "spec-sweep", (0, 1), 8);
+        group_holds(M2_SPEC, "spec-sweep", (0, 1), 7);
     }
 }

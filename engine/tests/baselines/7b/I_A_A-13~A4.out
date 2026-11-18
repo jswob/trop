@@ -30,6 +30,7 @@ a13_b_differs_2023 [px_round = *]: 237.00 DUK
   law date 2025-04-30, cut 2025-04-30
 a13_b_differs_2024_plain [px_round = *]: ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)"
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  unknown day: window(2019-03-01, 2019-03-31)
   world: a13_jul_sale
   unfulfilled: a13b_sale
   law date 2025-04-30, cut 2025-04-30

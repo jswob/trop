@@ -7,6 +7,89 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2 (the cuts round: nine forms removed; groups G1 to G5; closed 2026-11-18, 1 483 tests)
+
+The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
+all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
+refused by the grammar, `LOAD-PARSE`, with no message of its own.
+
+- **The fault S-7 waited on (2.2-10).** Fixed at the trimming (pick P14; the dependency graph is tally 2.1.8's): a
+  cone that holds a def whose header key ranges over an event kind (`evaluate.movement_keyed_cone`,
+  `keyed_by_movement`) is no plain cone, so `def_axes` keeps the axes and pins, and `_read_def` keeps such a cell per
+  path. G1's edge for the def's key was taken out again: it refused a text 2.1.8 answers (`LOAD-GUARD`), answered
+  two it refuses and changed `readers-of` (`E3_2_def_keyed_by_movement_*`).
+- **A leg's own `on` (S-6, 2.2-6).** Gone from `parser.leg_body`, the loader's observed legs (their tuple has five
+  fields), `check3`'s leg and scenario checks, `moves.eval_leg`, `m_plan_list`, `scen_early`, and the walk:
+  `base_legs` (#183) and a decision's leg booked ahead. A `Leg` keeps its `day`: the movement's, or the day a
+  window-dated instance takes (`ask.explain_instance` still prints ` on <day>` for that).
+- **The converted `flows` (S-7, 2.2-7).** Gone from the parser, `canon.forced`, `check._txt`, `check3.t_flows`
+  (and `check.mode_arg`'s `fn`), and `mreads`' conversion thread (`m_convert`). A total converted movement by
+  movement is a sum of a def keyed by the movement (`L7_2_mode_axis` b, `L5_18_partial_not_linear` q6).
+- **Group G2: 1 520 tests, all pass** (1 550, 34 dropped, 4 new, 1 refusal rewritten, 10 restated, 15 with their
+  kind marked `outside`; `refcore_fast` byte-equal).
+- **A place of the model holds one unit (S-1, 2.2-1).** 2.1.8's R14 is gone whole: `loader.reading_of_any`, the
+  overlap check's `wider`, `moves.any_unitless`, `PadMv`'s `per_unit`, `evaluate`'s unit-keyed choice
+  (`units_at_reading`, `_Kctx`, `unit_of_row`, `instant_key`, `units_at_instant`; `carry_latest` takes `'last'`
+  again), `mreads.c_gap`'s two-unit check, the walk's `units_held`, `resid`'s exception for the unitless row,
+  `ask._reading_text`'s unit. Two refusals in: `LOAD-PLACEKIND … is of unit any and isn't outside` (the place-kind
+  loop, `outside` read along the parent chain) and `LOAD-UNIT …: a place of unit any takes no balance reading`
+  (`place_value`). The per-unit ledger of an `outside` place of unit `any` stays (E §6.3; `residuals`,
+  `E6_3_residuals_unit_any`).
+- **A balance reading at a day's start or end (S-3, 2.2-3).** The instant `after m` is gone from the parser (`after`
+  is no longer a row's clause word), `canon`'s sort, `moves.instant_text`, `check3.m_check_after_readings`, `evaluate` and
+  `eval2`, `resid`, `mreads.m_after_day` and `m_after_refusal`, and the walk: `after`, `after_keys`, `after_mv`,
+  `after_standing`, `after_missing`, the `rbad` entry and the `after` half of `dec_win_end` (P29). The earlier
+  sections' lines on a reading `after m` describe what tally 2.2 removed. The move's `after m` stays.
+- **Group G3: 1 499 tests, all pass** (1 520, 25 dropped, 4 new, 8 restated; `refcore_fast` byte-equal, its
+  layer's `model_ok` no longer reads `m.same_rows`).
+- **`known` is a day (S-2, 2.2-2).** Gone: the parser's window, the loader's window checks, `known_first`,
+  `known_last`, `known_window_id`, `known_carry` and `CARRY_TEXT`, `row_known_sid`, `evaluate.known_vis` and the
+  undecided rows of `candidates`, the undecided covers (`m_coverage_undecided`, the walk's `covhole`), observations
+  (`ObsMv.und`, `mreads`' seen-and-unseen members and `two_days`) and readings, `covered`'s hole, and
+  `ask.answer_same_undecided` (the rerun, its merge and its limit) with `EachMet.forced`. `model.visible(known, K)`
+  is a day test; `WindowUndecided` became `Undecided`, the base of `LifeHole` and `SameDiffers`, which give their
+  own holes. Earlier sections' lines on a `known` window describe what tally 2.2 removed.
+- **A same line between two observed rows (S-5, 2.2-5).** The loader marks it (`m.same_obs`); `moves.same_lines`
+  takes it where its world holds and the cut sees both rows (`obs_row_seen`, the observations' own filter), any
+  other version's line by its known as before (`model.same_seen`).
+- **same joins no rows of an input (S-8, 2.2-8).** `loader.joint_sames` refuses a row side (`a row of an input`);
+  `m.same_rows`, `same_row_edges` and `same_settle` are gone, and a joint row on a member's input is refused. Gone
+  from `evaluate`: `same_class`, `same_hole`, `read_same_row`, `class_sides`, `same_value` and the class in
+  `last_value`, `e_call_since` (`carry_latest` reads one input's rows) and `read_reading`; `edge_first` and
+  `check`'s unread warning follow no row line. Earlier sections' lines on rows stated `same` (item 40, 41, #187)
+  describe what tally 2.2 removed; rows stated `same` that are observed rows are movements and stay.
+- **Group G5 (run before G4): 1 500 tests, all pass** (1 499, 2 dropped, 3 new, 24 respelled; `refcore_fast`
+  byte-equal).
+- **`low` and `next` (S-9, 2.2-9).** Gone: the parser's `low` (and both names from `BUILTINS`, so each reads as a
+  plain id), `mreads.m_e_low`, `m_c_next` with `first_by_day` and `notyet_hole`, `bal_at`'s and `proj_bal`'s
+  `regs_to`, `check3.t_low` and `c_next` (and the `next` edge), `check`'s print and explain test, `check2`'s read
+  set, and `ask`'s `explain low` (`explain_low_plain`, the projection's `lowest:` line). A lowest balance is the
+  aggregate `min` over `bal(x, d) [from t]` for each day; a lowest balance is explained by `argmin … ties by d` and
+  `explain bal(x, <day>) [from t]`. Earlier sections' lines on `low`, `next` and `explain low` describe what tally
+  2.2 removed.
+- **Group G4: 1 479 tests, all pass** (1 500, 26 dropped, 30 restated plain, 14 with an `unknown day:` line added, 5
+  with the projection's `clauses:` line shortened; `refcore_fast` byte-equal, its layer no longer reads
+  `each_met`, `ctx.windows` or `WCut`).
+- **`windows each` (S-4, 2.2-4).** Gone: the parser's two positions (`wchoice`; `windows` is no clause word), the
+  limit (`EACH_LIMIT`), `ask`'s split of a line by sub-windows (`each_lines`, `each_over_axes`, `each_binds`,
+  `each_binding`, `each_rows`, `each_group`, `each_key`, `each_nested`, `each_next`, `boxes`, `trace_key`),
+  `diff_each`, `diff_side_each`, `diff_each_print`, `DiffSide`, `EachRes`, explain's sub-window outside its pins,
+  `cli.cross_stack_each`, `evaluate.window_choice`, `EachMet`, `Coll.each`, the context's `windows`, `model.WCut`,
+  `wcut` and `set_each`, `check3`'s `read_each`, `walk.each_before_from`, a scenario move's window under the clause
+  (`moves`), and `proj_clauses`' first element. A text that writes the clause is refused `LOAD-PARSE … got windows`.
+- **The hole's name (2.2-11).** `ask.hole_days` walks the holes among a line's values (or a diff cell's) and names
+  each unknown day their questions carry (`evaluate.CARRY`, `carry_hole`), by `window_id`'s label; `register`
+  prints `unknown day: <name>` after the pins, sorted. A window value that is no hole names none. Earlier
+  sections' lines on `windows each` describe what tally 2.2 removed.
+- **A print's hole names its days (pick P25).** `hole_days` takes a value computed from a window that prints as the hole
+  `not precise enough for a print` (`fmt_value`) by its carried days (`iv_carry`); `L8_2_unknown_day_print_hole`.
+- **The name's three mends (pick P26).** `Engine.pinned_read` renames a window written in a pin to the pinned
+  cell's read for an input, a def and `last` alike; `evaluate.new_ask` clears `CARRY` at each ask (`Asker.run`,
+  `cli.run_worlds`), so an ask's names are its own reads'; `group` keeps every combination's values on the line
+  (`Line.each_vals`), whose names are their union (`L8_2_unknown_day_pinned_cell`, `_per_ask`, `_fanned_line`).
+- **The close: 1 483 tests (after P26), all pass; `refcore_fast` byte-equal; `VERSION` `tally-2.2`.** This interpreter is
+  tally 2.2's oracle, frozen with the spec at the tag `tally-2.2` (`spec/DONE.md` rule 1).
+
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
 The spec patch tally 2.1.8 (`spec/CHANGES.md` 2.1.8-1 to 2.1.8-25), the lead's ruling of the plan on 2026-11-16 and

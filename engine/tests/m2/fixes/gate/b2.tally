@@ -20,10 +20,7 @@ def bonus_amt: money PLN at wd
   rule base = rate
   rule hi beats base = rate * twice when ax == hi
 
-ask each: inputs-of bonus_amt windows each
 ask plain: inputs-of bonus_amt
-ask each_hi: inputs-of bonus_amt with ax = hi windows each
-
 version v
   cite card
   governs always

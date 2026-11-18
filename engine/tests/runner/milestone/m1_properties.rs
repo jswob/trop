@@ -135,7 +135,8 @@ mod tests {
         law_holds("foresight-keyed");
     }
 
-    /// Report-only until `low` is built (G8).
+    /// A decision reading the projection's lowest balance through its reach, `min(bal(x, d) from t
+    /// for d in t .. reach step 1 day)` (S-9: `low` cut in tally 2.2; the name kept).
     #[test]
     fn m1_no_foresight_through_low() {
         law_holds("foresight-low");
@@ -157,7 +158,8 @@ mod tests {
         law_holds("steps");
     }
 
-    /// Report-only until `low` is built (G8).
+    /// The projection's lowest balance as the engine may recognise it, against the same `min` with
+    /// a `where` every day meets (S-9: `low` cut in tally 2.2; the name kept).
     #[test]
     fn m1_low_is_the_minimum_of_the_daily_balances() {
         law_holds("low-min");

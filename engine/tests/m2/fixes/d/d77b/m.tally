@@ -32,8 +32,8 @@ version st
   covers konto
 
 ask c1: bal(konto, 2026-03-31)
-ask c2: bal(konto, 2026-03-31) windows each
+ask c2: bal(konto, 2026-03-31)
 ask c3: flows(pay, 2026-03)
-ask c4: flows(pay, 2026-03) windows each
+ask c4: flows(pay, 2026-03)
 ask c5: bal(konto, 2026-03-31) as known 2026-03-07
-ask c6: bal(konto, 2026-03-31) as known 2026-03-07 windows each
+ask c6: bal(konto, 2026-03-31) as known 2026-03-07

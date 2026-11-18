@@ -353,10 +353,6 @@ impl Engine {
                 ent.coll = Some(coll);
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
-            Act::CoverHole(place, h) => {
-                self.walk_mut(id)?
-                    .add(m, &place, ALL, Ent::new(at, Change::Hole(h)))
-            }
             Act::GlobalHole(h) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Perm(h)))
@@ -365,19 +361,18 @@ impl Engine {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Bad(err)))
             }
-            Act::WindowEnd(mid, window, h) => self.window_end(m, id, at, (&mid, &window, &h)),
+            Act::WindowEnd(mid, h) => self.window_end(m, id, at, (&mid, &h)),
             Act::Decide(..) => Err(invariant("a decision act taken as a plain act")),
         }
     }
 
     /// A movement of the walk and one of its legs. E §4.2.
     fn movement_leg(&self, id: usize, mv: Mv, leg: usize) -> Result<(Inst, LegVal), Stop> {
-        let walk = self.walk(id)?;
-        let inst = match mv {
-            Mv::Plan(i) => walk.insts.get(i),
-            Mv::Run(i) => walk.runs.get(i).map(|r| &r.inst),
-        }
-        .ok_or_else(|| invariant("an act of a movement the walk lacks"))?;
+        let inst = self
+            .walk(id)?
+            .insts
+            .get(mv.0)
+            .ok_or_else(|| invariant("an act of a movement the walk lacks"))?;
         let lg = inst
             .legs
             .get(leg)
@@ -389,8 +384,8 @@ impl Engine {
     /// Books instance `inst`'s leg `lg`'s two ends: a hole at both for a hole amount, nothing
     /// for 0, `RUN-LIFESPAN` for an end outside its place's lifespan; in a group of the sign
     /// rule it waits for the group, otherwise it is tested at once (refcore's `book_leg`).
-    /// Its `before from:` entry is dated by the leg's day, else the instance's, and a leg
-    /// dated by neither has none (refcore's `before_from`). E §4.2 step 2, step 5, §9 item 3;
+    /// Its `before from:` entry is dated by the instance's day, and a leg of an instance dated
+    /// by no day has none (refcore's `before_from`). E §4.2 step 2, step 5, §9 item 3;
     /// L §5.14 Legs, §8.2 `before from:`.
     pub(super) fn book_leg(
         &mut self,
@@ -405,36 +400,11 @@ impl Engine {
             (walk.world, walk.cut)
         };
         let mut reg = reg.to_vec();
-        let day = lg
-            .day
-            .day()
-            .or_else(|| inst.day.as_ref().and_then(Dated::day));
-        // the window the leg is dated by, its own or its instance's
-        let window = if let Dated::Window(w) = &lg.day {
-            Some(w)
-        } else if let Some(Dated::Window(w)) = &inst.day {
-            Some(w)
-        } else {
-            None
-        };
-        let mut each = None;
-        if let Some(day) = day {
+        // a leg is on its instance's day; a window-dated leg lists no `before from:` (L §8.2)
+        if let Some(day) = inst.day.as_ref().and_then(Dated::day) {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
-        } else if let Some(w) = window {
-            // a window-dated leg whose day the line hasn't taken: its `before from:` with each
-            // of its window's days, which only a `windows each` line lists (refcore's
-            // `each_before_from`; pick P37)
-            let mut days_from = Vec::new();
-            for d in window_days(w)? {
-                days_from.extend(before_from(m, world, (&inst.move_id, d), &inst.coll));
-            }
-            if !days_from.is_empty() {
-                let mut coll = inst.coll.clone();
-                coll.each.extend(days_from);
-                each = Some(coll);
-            }
         }
-        let coll = each.as_ref().unwrap_or(&inst.coll);
+        let coll = &inst.coll;
         let mut mask = Ends::both();
         if self.stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
@@ -567,7 +537,7 @@ impl Engine {
             return Ok(());
         }
         if err.is_none() && !on.is_empty() && !self.group_legs(id, at, movement, lg, &on, &unit)? {
-            // outside every group (a reading's pad after a decision): tested as it is booked
+            // outside every group: tested as it is booked
             match self
                 .walk(id)?
                 .tested_alone(m, (movement, &q), &on, &unit, at)?
@@ -669,7 +639,7 @@ impl Engine {
         let mut on = [true, true];
         for (end, slot) in [&lg.from, &lg.to].into_iter().zip(on.iter_mut()) {
             if let Some(p) = end.place() {
-                *slot = self.obs_end_on(m, &wo.obs, p, day, cut)?;
+                *slot = self.obs_end_on(m, &wo.obs, p, day, cut);
             }
         }
         let [from, to] = on;
@@ -1230,30 +1200,6 @@ fn before_from(
         text: format!("{move_id} on {} reads {}", day.text(), items.join(", ")),
         figure: String::new(),
     })
-}
-
-/// The days window `w` can take, in day order: a `one_of`'s, else every day from its first
-/// to its last (refcore's `each_before_from`, its `days`). L §4.4.
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for a window past the calendar.
-fn window_days(w: &DayWindow) -> Result<Vec<Day>, Stop> {
-    if let Some(days) = &w.value.days {
-        return Ok(days.clone());
-    }
-    let mut out = Vec::new();
-    let mut d = w.lo;
-    while d < w.hi {
-        out.push(d);
-        d = d
-            .next()
-            .ok_or_else(|| invariant("a window's day past the calendar"))?;
-    }
-    if w.lo <= w.hi {
-        out.push(w.hi);
-    }
-    Ok(out)
 }
 
 /// Whether `section` is of a scenario world `world` sees whose `from` is after `day` (refcore's

@@ -54,7 +54,7 @@ ask b2: bal(konto, 2026-06-30) partial
 ask b3: bal(konto, 2026-06-30) with ax = hi partial
 ask b4: bal(konto, 2026-05-10), bal(konto, 2026-05-20) partial
 ask b5: bal(konto, 2026-05-10) from 2026-04-11 partial
-ask b6: low(konto, 2026-04-11 .. 2026-05-12) partial
+ask b6: min(bal(konto, d) for d in 2026-04-11 .. 2026-05-12 step 1 day) partial
 ask b7: flows(konto, 2026-05-01 .. 2026-05-10) partial
 ask b8: sum(t.cash.amount for t in transfers over 2026-05-01 .. 2026-05-10) partial
 ask b9: flows(bonus, 2026-05-01 .. 2026-05-10) with ax = lo partial

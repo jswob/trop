@@ -1,0 +1,65 @@
+model g22_unknown_day_names
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (N/a, #211): a hole made from a day not yet known names it in its register, unknown day: <name>: the cell that holds it (n_cell, w), a calendar's entry (n_cal, added one_of([2026-06-22, 2026-06-24])), a window a rule builds, by its own text (n_rule); two at once, sorted by their text (n_two); a window value that is no hole names none (n_win)."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+input cal: calendar
+
+input d0: date
+
+input d1: date
+
+input from_day: date
+
+def wr: date = window(d0, d1)
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+move pay_cal: transfers
+  on add_business(from_day, 1, cal)
+  leg cash from world to sav amount pay
+
+move pay_r: transfers
+  on wr
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
+  d0 = 2026-05-04 "the card"
+  d1 = 2026-05-06 "the card"
+  from_day = 2026-06-19 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "the card"
+
+ask n_cell: bal(konto, 2026-03-06)
+
+ask n_cal: bal(sav, 2026-06-22)
+
+ask n_rule: bal(konto, 2026-05-05)
+
+ask n_two: bal(konto, 2026-03-06) + bal(konto, 2026-05-05)
+
+ask n_win: w

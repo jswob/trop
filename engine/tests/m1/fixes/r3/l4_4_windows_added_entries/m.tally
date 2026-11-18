@@ -9,8 +9,6 @@ source card "invented"
 input cal: calendar
 
 ask one: add_business(2026-05-29, 1, cal)
-ask each: add_business(2026-05-29, 1, cal) windows each
-
 version v
   cite card
   governs always

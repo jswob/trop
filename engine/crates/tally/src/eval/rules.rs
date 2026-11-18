@@ -22,15 +22,15 @@ use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
     Window, pattern_text,
 };
-use crate::read::{Clocks, Test, candidates, choose, known_inside, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
 use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
-use super::read::{at_keys, kept_rows, pinned_at, row_cell, shown};
+use super::read::{at_keys, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
-use super::windows::{as_read, window_days};
+use super::windows::{as_read, named_window, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -139,7 +139,7 @@ impl Engine {
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
             let value = pinned_at(pinned, &def.binds, keys)?;
-            return Ok(Err(self.pin_chosen(value, &origin(&def.id, keys), ctx)?));
+            return Ok(Err(Self::pinned_window(value, &origin(&def.id, keys))));
         }
         let ctx = self.trimmed(m, &def.id, ctx)?;
         for bind in &def.binds {
@@ -659,20 +659,7 @@ impl Engine {
         }
         let clocks = self.clocks(ctx, &def.id)?;
         let binds = (def.binds.as_slice(), keys);
-        // a given known in a window that holds the cut: the line's `windows each` decides
-        // it, else the read is `HOLE-IMPRECISE` (L §4.5)
-        let inside = known_inside(m, &def.givens, binds, Test::At(ctx.law), clocks)?;
-        let hidden = match self.hidden_rows(&inside, ctx)? {
-            Err(h) => return Ok(Some(Value::Hole(h))),
-            Ok(hidden) => hidden,
-        };
-        let seen;
-        let givens = if hidden.is_empty() {
-            &def.givens
-        } else {
-            seen = kept_rows(&def.givens, &hidden);
-            &seen
-        };
+        let givens = &def.givens;
         let cands = candidates(m, givens, binds, Test::At(ctx.law), clocks)?;
         let cands = worded(m, givens, cands, clocks)?;
         let Some(at) = choose(m, givens, &def.binds, &cands, (ctx.cut, ctx.world), &def.id)? else {
@@ -714,14 +701,16 @@ impl Engine {
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);
             self.trace_line(node, line);
         }
-        // only a window keeps its read, and under `windows each` a given's window takes its
-        // day, named by its row and figure as an input row's is (L §4.4)
+        // only a window keeps its read, a given's window named by its row and figure as an
+        // input row's is (L §4.4)
         if !matches!(value, Value::Window(_)) {
             return Ok(Some(value));
         }
         let value = as_read(value, (&def.id, keys), row_cell(row));
-        let chosen = self.chosen(value, (format!("row {} {figure}", row.sid), &figure), ctx)?;
-        Ok(Some(chosen))
+        Ok(Some(named_window(
+            value,
+            (format!("row {} {figure}", row.sid), &figure),
+        )))
     }
 }
 

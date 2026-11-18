@@ -82,7 +82,7 @@ Tally 2.1 keeps the plan pass (E §4.1). For each plan move, in the item graph's
 
 - **Per instance:** a few evaluations, mostly memo hits, since law and facts are shared cells; one more per later version that touches its read set. A version that touches nothing in the read set is skipped by an index lookup, with no evaluation (E §5 step 2).
 - **Total:** O(I · c) for I instances and c evaluations each, plus one sort of the booked movements by (day, stratum, move id, keys), O(M log M) (E §4.1, last paragraph).
-- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole and window movements, and the instance lists that `flows`, `next` and the projections read.
+- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole and window movements, and the instance lists that `flows`, bindings and the projections read.
 
 ### 2.2 The event-driven walk
 
@@ -95,22 +95,20 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 | N-1 | the run's start, t = S | the header's `start` | opens every place from its `opening` readings; places alive before S without one stay `HOLE-ANCHOR` until their first anchor | E §4.2 (opening), step 0, l.189–190; L §5.10 l.1088 |
 | N-2 | a reading at `t start` the cut sees: an `opening` with t before K or t = S, a `stated` with t before K | a `reading` input's row, `at D start` | anchors or pads the place by its version's gap role (§6.1), parts included at a place that keeps them | E §4.2 step 0, l.190; E §6.1 l.294–298; L §4.6 l.728 |
 | N-3 | an observation dated t, with t before K | an `observed` input's row, `on: t` | books each end by E §6.1's rule in the day's first batch, or, if it fulfils a decision instance dated t, at that instance's point (N-5) | E §4.2 step 1, l.191; E §6.1 l.287–289; L §4.5 l.699 |
-| N-4 | a booked plan leg dated t: a plan instance's day, or a leg's own `on` | a plan move (no `reads`), status `past` or `plan` | books the leg in the day's first batch; at a place that keeps parts, its take and its arrival (with the arrival rule run at booking) | E §4.2 step 2, l.192; E §4.2 parts, l.205–206; L §5.14 l.1348 |
-| N-5 | a decision instance due on t, whatever its `when` turns out to be | a move with `reads` | runs it at its stratum and point, books its legs dated t at once, and its own observations dated t after it; on a covered day before K, or where an observation fulfils it, computes it as modelled past against the booked balances | E §4.2 step 3, l.193–196; L §5.14.1 l.1374 |
-| N-6 | a decision's leg with its own later `on`, dated t | a decision's leg `on d` | books the leg on t; this day enters the agenda only when the decision books, so the agenda takes insertions | E §4.2 step 3, l.195 |
-| N-7 | a reading `after m`, m a decision on t (or, where m is modelled past, on the day of the last observation that fulfils m) | a `reading` row, `after m` | pads or anchors right after m, or after those observations | E §4.2 step 3, l.197; L §4.6 l.728 |
+| N-4 | a booked plan leg dated t, its instance's day | a plan move (no `reads`), status `past` or `plan` | books the leg in the day's first batch; at a place that keeps parts, its take and its arrival (with the arrival rule run at booking) | E §4.2 step 2, l.192; E §4.2 parts, l.205–206; L §5.14 l.1348 |
+| N-5 | a decision instance due on t, whatever its `when` turns out to be | a move with `reads` | runs it at its stratum and point, books its legs at once, and its own observations dated t after it; on a covered day before K, or where an observation fulfils it, computes it as modelled past against the booked balances | E §4.2 step 3, l.193–196; L §5.14.1 l.1374 |
 | N-8 | a reading at `t end` the cut sees, with t before K | a `reading` row, `at D end` | pads or anchors at the close | E §4.2 step 4, l.198 |
 | N-9 | the last day of a place's lifespan | an entry's `lives` span, a `place` section's | refuses the place from t on if a position isn't zero at the close (`RUN-LIFESPAN`) | E §4.2 step 5, l.201; L §5.7 l.942 |
 | N-10 | the last day of a party's lifespan, where some place keeps parts labelled to that party | `parties` and a parts kind | checks, after the day's whole order, that the party holds no part at the close; refuses that part's place from t on otherwise | E §4.2 parts, l.208; L §5.7 l.943 |
 | N-11 | the first day a hole movement may fall on: its day t when only its `when` is a hole; S when its day is a hole and not a window | a movement whose day or `when` is a hole | makes both ends' balances holes from t, with the movement's questions, up to each place's next reading | E §4.1 step 2, l.176; E §4.2 (holes), l.211; L §5.14 l.1348 |
-| N-12 | a window's first day, and the day after its last, for a movement dated by a window with no `windows` clause fixing it | a planned day `window(a, b)` | makes `bal(x, d)` a hole for d inside the window: the stretch begins on its first day and ends on the day after its last | E §4.1 step 2, l.177 |
+| N-12 | a window's first day, and the day after its last, for a movement dated by a window | a planned day `window(a, b)` | makes `bal(x, d)` a hole for d inside the window: the stretch begins on its first day and ends on the day after its last | E §4.1 step 2, l.177 |
 | N-13 | V.known of an adjustment that nothing fulfils or waives at the cut | `adjustments` (E §5) | makes the adjusted leg's places' balances holes from t on, past later readings too (`HOLE-CHANGED`); the adjustment itself moves nothing | E §5 steps 4–5, l.258–261; L §5.14.3 l.1435 |
 | N-14 | the day of a joint model's own movement into a member's place that no `same` or `fulfils` links | a joint model's versions | books nothing there; makes the place's balance, read in the joint model, a hole from t until the member's next reading of it | L §6.1 l.1805 |
 
 **What is not on the list, and why:**
 - **Movements outside [S, E], uncertain instances no observation fulfils, modelled-past plan instances, observations dated before S, and observations or readings dated on K or later** book nothing (E §4.1 step 3, l.179–182; E §4.2 steps 0–1; L §4.5 l.699). A projection or a `with uncertain` read counts the uncertain ones from the plan pass's lists, not from the walk (L §5.14 l.1356).
 - **An adjustment that is settled or waived** moves nothing on its day (E §5 step 4); its settlements are ordinary movements, on the list by N-3 or N-4.
-- **A lifespan's first day** puts no work in the walk: a place's balance is zero there (L §5.10 l.1088), and a leg into a thing before its lifespan is refused on the leg's own day (N-4, N-5). Putting it on the agenda changes nothing.
+- **A lifespan's first day** puts no work in the walk: a place's balance is zero there (L §5.10 l.1088), and a leg into a thing before its lifespan is refused on the movement's day (N-4, N-5). Putting it on the agenda changes nothing.
 - **A `known` date** is not a walk act. What it changes is what a projection read on a later day sees (the cut min(t, K) rises with t, E §4.3 l.230); the projection structure is updated before its next read (§2.3).
 - **The sign rule, `WARN-NEGATIVE` and the invariants** are checked at points that fall on listed days: the sign rule after each batch, decision and reading (L §5.10 l.1081–1084), and a stretch below zero starts on a day the balance changes (E §4.2 step 5, l.202). On a day with no act, no leg is booked (invariant 1 has nothing to sum), no position changes (invariant 6), and invariant 2 reduces to the revaluation equalling itself (E §9).
 
@@ -119,7 +117,7 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 **The oracle.** The engine keeps a step-every-day walk beside the event-driven one, built from the same step functions, that steps every day from S to E. It must print the same bytes; it steps more days. A property test runs both on every case and on T's generated realities, and compares the outputs byte for byte (R1 §3 Q3). A row missing from the list above shows as a difference there. The step-every-day walk is a test oracle, never the shipped path.
 
 **What the event walk costs:**
-- building the agenda: one sort of the acts, O(A log A) for A acts, plus an ordered insert for each N-6 leg;
+- building the agenda: one sort of the acts, O(A log A) for A acts;
 - per non-empty day: the acts of N-1..N-14, each O(1) or the parts work of §7; then one change point per place that moved;
 - per empty day: nothing.
 
@@ -130,20 +128,20 @@ $ python3 -I -c "print('A', 64*5477, round(64*5477*0.054), 'E2', 8*16070, round(
 A 350528 18929 E2 128560 8614 U 540 12
 ```
 
-So A steps about 18 900 days instead of 350 528, and E2-01a about 8 600 instead of 128 560. E1 is the exception: all 2 498 of its days hold a decision, so its floor is node speed (§10).
+So A's tally 2.1.8 ask stepped about 18 900 days instead of 350 528 (64 walks under the cut `windows each`; P8-10 is measured again, §8.2), and E2-01a about 8 600 instead of 128 560. E1 is the exception: all 2 498 of its days hold a decision, so its floor is node speed (§10).
 
 **Balance reads:**
 - `bal(x)` during the walk: O(1).
 - `bal(x, d)` at a past day: a binary search over x's change points, O(log Mₓ).
 - `flows(x, span)`: two lookups in x's prefix sums, O(log Mₓ) (L §5.14 cost).
 
-### 2.3 The written projection, `next` and `value`
+### 2.3 The written projection and `value`
 
-Tally 2's look-ahead is written: `bal(x, d) from t`, `low(x, a .. b) from t` and `next(K, d)` (L §5.14.1, D-6). They replace 1.0.1's `plan_low`, `next_on` and `worth` (`value(x, d) in C by p`, L §5.10). E §4.3 computes them.
+Tally 2's look-ahead is written: `bal(x, d) from t`, a lowest balance as its `min` over days, `min(bal(x, d) from t for d in a .. b step 1 day)`, and the next movement of a kind as a `first` over a binding (L §5.14.1, D-6). They replace 1.0.1's `plan_low`, `next_on` and `worth` (`value(x, d) in C by p`, L §5.10). E §4.3 computes them.
 
 **The general case.** `bal(x, d) from t`, held by item P, is a walk of its own from day t to d: it starts from x's balance at the start of t (or at the reader's point on t), counts every movement dated t..d that doesn't depend on P, each as known on t, and runs the decisions in the window stratum by stratum (E §4.3 steps 1–3). It is event-driven like the main walk (§2.2). Its cost is one walk of its window, memoised per (item, day, cut, clauses) (L §5.14 cost, l.1454). Nesting is finite: a chain of nested projections names each holder at most once (E §4.3 l.228).
 
-**The common case is cheap** (E §4.3 l.230). When the window holds no decision the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and `low(x, a .. b) from t` is a range minimum over F.
+**The common case is cheap** (E §4.3 l.230). When the window holds no decision the projection counts, the projection is the start balance plus a prefix sum F of the plan movements as known on t, and the `min` of `bal(x, d) from t` over the days a .. b is a range minimum over F.
 - F is held in a segment tree over the days on which x has a counted movement: a query is O(log n), and adding δ to every F(u) from day u₀ on is O(log n) by a lazy range add.
 - F changes only as the cut min(t, K) rises with t: when t passes a version's `known`, the instances that version changes get new amounts, and F gets one range add per changed instance. The cut never goes back during a walk, so one tree is updated in place, in walk order, before the next read.
 - A sparse table would answer in O(1) but must be rebuilt in O(n log n) when F changes, which it does during the walk.
@@ -159,13 +157,11 @@ $ python3 -I -c "import math; print(math.ceil(math.log2(12054)))"
 
 **Groups of places** are written as sums in 2.1, `min(sum(bal(x, d) from t for x in liquid on d) for d in a .. b step 1 day)`, which isn't the sum of the members' lows (L §5.14.1 l.1409). Evaluated as written, it costs (b − a + 1) days × the members' reads. A sum of step functions is a step function, so the minimum can be taken over the members' change points instead; that is an optimisation that changes no value, taken only where a measured ask needs it.
 
-**`next(K, d)`** is a binary search in the sorted days of K's movements, planned and observed, as known at the reader's cut (E §4.3 l.232): O(log I_K).
-
 **`value(x, d) in C by p`** is a balance read and a price read, O(log Mₓ + log r); with `of q`, the parts read of §7 (L §5.10 l.1090, l.1099).
 
 ### 2.4 Monthly checkpoints
 
-At the start of each month the walk keeps a **checkpoint**: every place's state (its balance, and its parts per (place, unit) where its kind keeps them), the legs booked ahead (N-6), and the projection structures of §2.3 (D1-4, D2-6).
+At the start of each month the walk keeps a **checkpoint**: every place's state (its balance, and its parts per (place, unit) where its kind keeps them) and the projection structures of §2.3 (D1-4, D2-6).
 - A checkpoint is a list of shared place states, copied on write: a place that didn't move since the last checkpoint costs one shared reference, a place that moved costs one copy (D2-6; BUILDER §3).
 - Pins and scenarios are small layers over the base's checkpoints, not copies (D2-6).
 - **Size for 33 years:** 396 checkpoints of P place states, most of them shared. The interval is a guess and an unknown (§10): it trades memory against the length of a walk restarted or forked from a checkpoint (R1 §6).
@@ -175,11 +171,11 @@ The checkpoints serve the forks (§2.5) and the walk restart (§4.2).
 ### 2.5 Timelines forked at their first different day (second)
 
 Two timelines whose acts agree up to day d share the walk to d: the engine walks the shared prefix once, takes the last checkpoint before d, and walks each timeline on from it (D1-4, second step; R1 §3 Q3).
-- **Which timelines:** the `windows each` sub-windows of one line, axis combinations the moves reach, rolling origins, the cuts of `as known`, scenario worlds, and a member's walk asked twice.
-- **The first different day** is the earliest of two days: that of the first plan act whose day, legs or amounts differ between the two, and that of the first act whose evaluation reads, through the item graph, a fact, an axis option, a pin, a window's day or a version that differs between them (tally 2.1.8). For a scenario those reads are E §9 invariant 3's (L §6.4), so the day is not its `from` alone. This is L §8's rule that a result reads only what its definition reads, said of walks.
+- **Which timelines:** axis combinations the moves reach, rolling origins, the cuts of `as known`, scenario worlds, and a member's walk asked twice.
+- **The first different day** is the earliest of two days: that of the first plan act whose day, legs or amounts differ between the two, and that of the first act whose evaluation reads, through the item graph, a fact, an axis option, a pin or a version that differs between them (tally 2.1.8). For a scenario those reads are E §9 invariant 3's (L §6.4), so the day is not its `from` alone. This is L §8's rule that a result reads only what its definition reads, said of walks.
 - **Built second,** after the event-driven walk matches refcore on every check. Its oracle is the unforked walk: the same bytes, fewer walks. The counter "walk shared" (§1.1) shows the saving.
 
-`shape.md`'s repetition is the target: 64 walks in A (`windows each`), 8–12 in E2 (members and asks), 20 in X (19 of them projections). How late those timelines diverge is unknown, so the fork's saving is an unknown until the engine runs (§10).
+`shape.md`'s repetition is the target: 8–12 in E2 (members and asks), 20 in X (19 of them projections). How late those timelines diverge is unknown, so the fork's saving is an unknown until the engine runs (§10).
 
 ### 2.6 Joint members as their own contexts (seam J)
 
@@ -213,7 +209,7 @@ Each context dimension is a layer over the one below. A cell lives in the lowest
 | world (scenario) | a scenario's versions | the base and other worlds otherwise | the run ends | E §3.2 l.151; L §6.4 cost |
 | pin set | a pin, keyed by the pins' values | the unpinned layer otherwise | its `as if`, `solve` step or fitting step ends | E §3.2 l.150 |
 | axis options | an axis | every combination otherwise | the run ends | E §3.2 l.149 |
-| clauses | a window, a random fact or an uncertain kind under the line's clauses | every clause set otherwise | the run ends | E §3.2 l.149 |
+| clauses | a random fact or an uncertain kind under the line's clauses | every clause set otherwise | the run ends | E §3.2 l.149 |
 | member | a joint model's member (§2.6) | — | the joint run ends | D1-7; seam J |
 | path | a random fact | every path otherwise | its terms are kept (§5) | E §3.2 l.148; E §7 step 3 |
 | walk point | a running read (a walk-bound def) | nothing: one cell per reader's point | the decision books | E §3.2 l.145; L §5.14.1 l.1393 |
@@ -240,7 +236,7 @@ E §3.2 puts the projection (holder P, day t) in the context of a cell evaluated
 2. the running reads: a balance, `flows` of a place or a decision, a decision's legs, and a binding over a decision's movements or `pads` read P's walk, not the main walk;
 3. what is left out: the movements that depend on P;
 4. a random amount dated after t is read at the `random` clause's value or by the query around the read, not by its sample;
-5. uncertain movements and windows count only under their clauses.
+5. uncertain movements count only under their clause.
 
 Everything else a cell reads goes through the read rule (L §4.6), whose result depends only on the item, its keys, the law date, the cut, the scenario layer and a `wording` pin (L §4.6 steps 1–5), all of them context dimensions already.
 
@@ -314,7 +310,7 @@ A cell that reads only the law tier skips verification when an amendment touches
 
 ### 4.2 The walk restart
 
-The walk is a fold, so a change on day d* changes the walk from d* on. The new walk starts at the last checkpoint before d*, the first day whose acts (§2.2) differ, and runs to E. It stops early at a month's checkpoint where every place state (balance and parts) and every leg booked ahead is equal to the old walk's; that is rare, since balances usually differ for good once money moves differently. A scenario's walk is the same restart from its first different day (§2.5).
+The walk is a fold, so a change on day d* changes the walk from d* on. The new walk starts at the last checkpoint before d*, the first day whose acts (§2.2) differ, and runs to E. It stops early at a month's checkpoint where every place state (balance and parts) is equal to the old walk's; that is rare, since balances usually differ for good once money moves differently. A scenario's walk is the same restart from its first different day (§2.5).
 
 ### 4.3 What one turn costs
 
@@ -351,7 +347,7 @@ A parameter that touches every day can't be cut short: the whole replay window i
 ### 5.1 What runs in parallel
 
 Every split in Tally's work is a set of independent evaluation contexts over a shared layer, each a pure function of itself (E §3.2, §7; L §7.4). So workers only map tasks into numbered slots; every merge runs on one thread, in task-index order (D3-1, R3 §2 item 1).
-- **First:** Monte Carlo paths (E §7), and the independent timelines: axis combinations the moves reach, `windows each` sub-windows, rolling origins, scenario worlds (D3-2). This reaches A's 64× and X's 20× repetition at up to 6×.
+- **First:** Monte Carlo paths (E §7), and the independent timelines: axis combinations the moves reach, rolling origins, scenario worlds (D3-2). This reaches X's 20× repetition at up to 6×.
 - **Later:** joint members (§2.6) and independent asks of one request.
 - **Never:** work inside one timeline or one path; the walk is a fold.
 
@@ -470,8 +466,7 @@ Each construct's section in L states its cost; collected, with 2.1's constructs 
 | `flows` | §5.14 | O(log Mₓ) by prefix sums | — |
 | adjustments | §5.14.3 | one re-evaluation per later version that touches the read set (E §5 step 2) | instance |
 | projection `bal(x, d) from t` | §5.14.1 | one walk of its window, event-driven; in the common case a prefix sum (§2.3) | (item, day, cut, clauses) |
-| `low` | §5.14.1 | O(log n) a query in the common case; O(log n) per changed instance | segment tree per (place, holder) |
-| `next` | §5.14.1 | O(log I_K) | — |
+| a lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)` | §5.14.1 | O(log n) a query in the common case; O(log n) per changed instance | segment tree per (place, holder) |
 | `value` | §5.10 | O(log Mₓ + log r); with `of q`, a parts read | — |
 | **parts: arrival** | §3.6, §5.14 | the arrival rule, one def cell per (movement, party) it reaches; the split O(L log L) by `rest largest` | parts per (place, unit) |
 | **parts: take** | §3.6, §5.14 | a fill over (part, outflow) arcs, O(L log L) for L live labels | parts per (place, unit) |
@@ -526,7 +521,7 @@ $ python3 -I -c "print(32/6)"
 | P8-2 | **A deterministic run, cold** (N-2002) | 33 years daily, 10× the household's instances and observations (1.0.1: 181 440 movements, so ≤ 5.5 µs a movement all in) | — (1.0.1's prototype: 0.34 s at 1×) | **≤ 1 s** | ≤ 1 GB | days stepped ≤ the non-empty days (§2.2) | Mac: its 1× twin (the household's own size) reported at the tags from M1; judged at 10× at M9, once T's generator gives the size (SO8-10). A miss at 10× also decides the seam (§4, D1-5) | the tag |
 | P8-3 | **A deterministic run, warm** | as P8-2, memo kept from the cold run | — | **≤ 50 ms** | ≤ 1 GB | def misses 0 | Mac: reported at 1× from M1; judged at 10× at M9, as P8-2 | the tag |
 | P8-4 | **Monte Carlo** (N-2003): law on every path, after the deterministic answer or from the cache | 1 000 paths × 30 years daily, 6 workers | — (prototype: 0.45 s, no law; refcore LH-17-mc-light ≈ 0.2 s a path) | **≤ 1 s** | ≤ 1 GB | cells recomputed locally reported | Mac, at the tags from the Monte Carlo milestone | the tag |
-| P8-5 | **One look-ahead decision**, in 2.1 one read of the written projection `low(x, a .. b) from t` in E §4.3's common case: one range minimum over F (§2.3, about 14 steps) | a 33-year place, n ≤ 12 054 | — (prototype: 0.1–0.3 µs, compiled) | **≤ 0.3 µs** | — | — | the range minimum's own bench at this size, from M1 (P56); the read inside a run is P8-M4 | a miss is reported at the gate, not re-budgeted (P56) |
+| P8-5 | **One look-ahead decision**, one read of the written projection's lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)`, in E §4.3's common case: one range minimum over F (§2.3, about 14 steps) | a 33-year place, n ≤ 12 054 | — (prototype: 0.1–0.3 µs, compiled) | **≤ 0.3 µs** | — | — | the range minimum's own bench at this size, from M1 (P56); the read inside a run is P8-M4 | a miss is reported at the gate, not re-budgeted (P56) |
 | P8-6 | **One path replayed** for an explanation (N-2004) | one path of P8-4's ask, shared layer cached | — (prototype ≈ 20 ms) | **≤ 20 ms** | ≤ 1 GB | — | Mac, at the tags from the Monte Carlo milestone | the tag |
 | P8-7 | **The gate on one law part** (N-2007): its `check` asks and the threshold table | about 9 checks, 61 planted errors | — (prototype ≈ 0.9 s) | **≤ 1 s** | ≤ 1 GB | — | Mac. **Rests on `OPERATIONS.md` §3, which stays stale**: the row waits for its rewrite | the tag |
 | P8-8 | **One fitting step** (N-2005): pin, replay, residuals (§4.4) | two years of history | — | **≤ 20 ms** | ≤ 1 GB | — | Mac, at the tags from M8, the milestone that builds the fitting loop | the tag |
@@ -545,7 +540,7 @@ The days-stepped budget is refcore's walks × days times its non-empty share (§
 
 | Id | Check | refcore: plain s, peak GB | Wall | Footprint | Def misses ≤ | Days stepped ≤ | Blocks |
 |---|---|---|---|---|---|---|---|
-| P8-10 | `I:A:a05_ania@c05-ania` | 37.7 s, 0.81 GB | ≤ 1 s | ≤ 512 MB | 150 k | 18 929 (64 × 5 477 at 5.4 %) | counts: every PR; wall, footprint: the tag |
+| P8-10 | `I:A:a05_ania@c05-ania` | 37.7 s, 0.81 GB | ≤ 1 s | ≤ 512 MB | 150 k | measured again on A-05's tally 2.2 asks, the plain line and its four pinned days, and logged (tally 2.1.8: 18 929, 64 × 5 477 at 5.4 %, on the cut form) | counts: every PR; wall, footprint: the tag |
 | P8-11 | `I:E1:tx2_mtg_day` | 60.5 s, 2.17 GB | ≤ 1 s | ≤ 512 MB | 619 k | 2 498 (every day holds a decision) | as P8-10 |
 | P8-12 | `I:E2:E2-01~e2_01a` | 49.1 s, 0.91 GB | ≤ 1 s | ≤ 512 MB | 161 k | 8 614 (8 × 16 070 at 6.7 %) | as P8-10 |
 | P8-13 | `I:E2:E2-01~e2_01b` | 65.8 s, 1.02 GB | ≤ 1 s | ≤ 512 MB | 547 k (partial: cells, not misses) | 12 920 (≥ 12 × 16 070 at 6.7 %, partial) | as P8-10 |
@@ -599,15 +594,15 @@ for H in (20,30,40): print(H, 10000/1000*H/30, 1000/1000*H/30)"
 | P8-L5 | household B, B-12 at 3 000 paths to 2028-12-31 | yes | about 5 min a path on snap8; `b12_liquid` at 1 path stopped at 18 GB after 1 587 s | deterministic asks ≤ 10 s; each path ask 3 × 2 498/10 958 ≈ 0.7 s | ≤ 4 GB |
 | P8-L6 | household B, the balance rows past 2026-12-31 | no | — | ≤ 10 s | ≤ 4 GB |
 | P8-L8 | household E1, the full joint model's walks | no | over 5 min a walk (a walk of B about 3 min) | ≤ 10 s | ≤ 4 GB |
-| P8-L9 | household A, A-05's `windows each` asks for Ania on the full text | no | stopped at 330 s on snap8 and snap11 | ≤ 10 s | ≤ 4 GB |
+| P8-L9 | household A, A-05's asks for Ania, the plain line and its four pinned days, on the full text | no | stopped at 330 s on snap8 and snap11 | ≤ 10 s | ≤ 4 GB |
 | P8-L10 | the amendments household's long-horizon walk cells, `c1_r2`, `v5_r2` | no | — (four snap11 runs passed 8 GB, L:14) | ≤ 10 s each run | ≤ 4 GB |
 | P8-L11 | household-bands at 1 000 paths, and its cut-down | yes | the 5 test-mode asks over 60 s alone | deterministic part ≤ 10 s; each path ask 1 × H/30 s (1 s at H = 30) | ≤ 4 GB |
 | P8-L12 | LH-15, LH-16, LH-17-mc at their full axes, cohorts, paths and span | LH-17-mc only | — | LH-15, LH-16: ≤ 10 s each; LH-17-mc: deterministic part ≤ 10 s, each path ask at the rate for its N and H | ≤ 4 GB |
-| P8-L13 | the household's `explain_room`, M2's cut-downs at full span, F2's `windows each` | no | — | ≤ 10 s each run | ≤ 4 GB |
+| P8-L13 | the household's `explain_room`, M2's cut-downs at full span | no | — | ≤ 10 s each run | ≤ 4 GB |
 | P8-L14 | session 4's snap11 runs past 8 GB: `b12_det`, `b12_p3`, household-bands' `cut11/mc`, `c1_r2` | `b12_p3` (3 paths), `cut11/mc` | all four stopped at 8 GB on snap14; `b12_p3` finished on snap15 | `b12_det`, `c1_r2`: ≤ 10 s; `b12_p3`: ≤ 10 s plus 3 paths at the rate (under 1 ms); `cut11/mc`: as P8-L11 | ≤ 4 GB each |
 | P8-L15 | O:A-3's run: A's `q12` asks with the `one_of` forecast copy | no | stopped at 11.0 GB | ≤ 10 s | ≤ 4 GB |
 | P8-L16 | household B, B-05's three asks known 2026-01-05 | no | 86.5 s, 90.6 s, 85.2 s on PyPy | ≤ 10 s | ≤ 4 GB |
-| P8-L17 | household A, A-13 (b)'s 2024 difference with `windows each` | no | over 60 s for C2 | ≤ 10 s | ≤ 4 GB |
+| P8-L17 | household A, A-13 (b)'s 2024 difference on its four pinned days | no | over 60 s for C2 | ≤ 10 s | ≤ 4 GB |
 | P8-L18 | decision 6: a joint model reading one row of a member whose walk is long; the three-member E2 | no | 1× twin `e2_01a` 33.5 s on refcore; session 5: 67.7 s with the third member against 17.1 s without, 73.1 s for one row of a long-walk member (fast layer) | ≤ 10 s | ≤ 4 GB |
 
 **L:18's count is the seam's own test** (§2.6, seam J): a member's walk stops at the last day a joint read asks of it, and the counters show that member's days stepped against its walk's length. Reported at first, a count budget once S has measured it.

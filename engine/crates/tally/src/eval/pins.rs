@@ -136,9 +136,8 @@ impl Engine {
 
     /// The context of an ask's line of context `line` outside the ask's `with` pins:
     /// `unpinned`, the line's context before them, with the options of the axes the line fans
-    /// out over, those in `fixed`, which the pins fix, left out, and the day choice of the
-    /// `windows each` run the line is in, which sets the world it is read in and which the
-    /// pins don't undo (refcore's `explain_pins`, its `octx`). E §10, L §5.5, §4.4.
+    /// out over, those in `fixed`, which the pins fix, left out (refcore's `explain_pins`, its
+    /// `octx`). E §10, L §5.5.
     ///
     /// # Errors
     ///
@@ -155,13 +154,7 @@ impl Engine {
             .filter(|(axis, _)| !fixed.contains(*axis))
             .map(|(axis, option)| (axis.clone(), option.clone()))
             .collect();
-        let (windows, read_windows) = (in_line.windows.clone(), in_line.read_windows.clone());
-        let outside = self.with_options(unpinned, &options)?;
-        let mut kept = self.layer_data(outside.layer)?.clone();
-        kept.windows = windows;
-        kept.read_windows = read_windows;
-        let layer = self.intern(kept)?;
-        Ok(Ctx { layer, ..outside })
+        self.with_options(unpinned, &options)
     }
 
     /// What the pins of `inside` change from `outside`, each as text: the value pins with

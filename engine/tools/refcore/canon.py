@@ -11,7 +11,7 @@ here as its files' reprints, each ending with its newline, joined in that order 
 The reprint changes what L §2.4 states and nothing else:
 - the header's lines in their order, `use` lines by name, `same` lines by left side;
 - sections in kind order, by id; kinds in tree order (each followed by its subkinds, depth first, siblings by id);
-  versions last by `known` (a window by its first day), then id; a regime's items in that order one level in, then
+  versions last by `known`, then id; a regime's items in that order one level in, then
   its `export` line and its notes; one blank line between sections, none inside one;
 - inside a section its clause lines and notes first, in the grammar's order (a kind's leg, attr and note lines are
   one repeated choice there, so they keep their order), then rules (by label, the `known` of their `v`, none first, then their own
@@ -283,8 +283,6 @@ def first_day(lit):
         return datetime.date(lit.v[0], 3 * lit.v[1] - 2, 1)
     if lit.k == 'num' and lit.isint and lit.unit is None:
         return datetime.date(int(lit.v), 1, 1)
-    if lit.k == 'window':
-        return lit.a
     return None
 
 
@@ -301,7 +299,7 @@ class Open:
 
 class Tie:
     """L §2.4 (round 19): a sort component with a rank and a value; two items equal on both (two rows with no start,
-    two rows with one start, two `after m` rows) sort by their own canonical line (GD-28, the next component)."""
+    two rows with one start) sort by their own canonical line (GD-28, the next component)."""
 
     def __init__(self, rank, val, text, why):
         self.rank, self.val, self.text, self.why = rank, val, text, why
@@ -471,13 +469,11 @@ def _nodes_in(b):
 
 
 def forced(x, par):
-    """L §2.4: "a `... to u` call used as an operand and a converted flows or value inside a comparison (parse rule 4)
+    """L §2.4: "a `... to u` call used as an operand and a converted value inside a comparison (parse rule 4)
     are always parenthesised"."""
     if par is None:
         return False
     if x.k == 'to' and par.k in OPERATORS:
-        return True
-    if x.k == 'flows' and x.conv is not None and par.k in ('cmp', 'in'):
         return True
     if x.k == 'value' and par.k in ('cmp', 'in'):
         return True
@@ -790,18 +786,15 @@ class FilePrinter:
 
     def span_key(self, gov, instant):
         # L §2.4 (round 19, GD-24): "then by the start of their own governs span or their instant (a row with no span
-        # of its own first, then a span with no start, a row governing always among them, then by start; a row read
-        # after m after the dated ones of its target and keys)". Ties it leaves (two rows with no start, two with one
-        # start, two after m rows) sort by their own canonical line (GD-28, the caller's last component)
+        # of its own first, then a span with no start, a row governing always among them, then by start)". Ties it
+        # leaves (two rows with no start, two with one start) sort by their own canonical line (GD-28, the caller's
+        # last component)
         if gov is not None:
             txt = 'always' if gov == 'always' else repr((first_day(gov.a), first_day(getattr(gov, 'b', None))))
             if gov == 'always' or gov.a is None:
                 return Tie(1, (), txt, None)
             return Tie(2, (first_day(gov.a),), txt, None)
         if instant is not None:
-            if instant.after is not None:
-                t = key_text(instant.after) if instant.after.k != 'name' else instant.after.id
-                return Tie(3, (), t, None)
             # "by ... their instant": in time, a day's start before its end (L §4.6: "at D start (before the day's
             # movements), at D end (after them)"); `at D` alone is a plain reading's, never beside the two
             return Tie(2, (instant.day, {'start': 0, None: 1, 'end': 2}[instant.pos]), '', None)

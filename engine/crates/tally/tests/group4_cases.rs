@@ -1,8 +1,10 @@
 //! The builder's tests of group 4's review: each review input, the lines refcore prints for the asks it names.
-//! Spec: L §6.1 (`same`: one value, the class's latest kept reading, #177; B1 and N3 of the
-//! review), L §5.19 and §4.6 Readings (`replace … = none` removes a reading).
+//! Spec: L §6.1 and §5.19 (a `same` class of movements: the member that stands for it, S1's
+//! refusals, `explain` of its field), §4.3 (an ask's law chain), §4.4 (a window's key, a
+//! lifespan test, a diff over two stacks), E §10 (an explanation's rows). The tests of a class
+//! of rows of an input went with tally 2.2's S-8.
 //! Twin: engine/tools/refcore (spec/2.1.8 at 61f8630b, the eighth turn, and at 00a00b22, the
-//! tenth, for the fix review's G1 and F1); each expected line is its run of the same text
+//! tenth, for the fix review's F1); each expected line is its run of the same text
 //! (`python3 -m refcore run`), each text an input of the review of build group 4 or of its fix
 //! (`tmp/spec-2.1.8-build/review-g4/`, `review-g4fix/`).
 //! Invariants: reads no test, vector or answer key (R-93); the texts are written here.
@@ -41,155 +43,6 @@ mod tests {
         };
         let answer = run(given, &request).expect("an answer");
         answer.lines().to_vec()
-    }
-
-    /// Each of `expected` is the line of `lines` with its head (the text before `: `).
-    fn holds(lines: &[String], expected: &[&str]) {
-        for want in expected {
-            let head = want.split(": ").next().expect("a head");
-            let got = lines
-                .iter()
-                .find(|l| l.split(": ").next() == Some(head))
-                .unwrap_or_else(|| panic!("no line {head} in {lines:?}"));
-            assert_eq!(got, want, "the line {head}");
-        }
-    }
-
-    /// B1 (`agent/same_removed.tally`): a side of a `same` class whose one reading is removed is
-    /// no row; `last` of the other side takes the class's latest kept reading.
-    #[test]
-    fn a_same_side_whose_readings_are_removed_is_no_row() {
-        let text = r#"model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-
-input px[u in currencies]: num PLN/u reading
-input qx[u in currencies]: num PLN/u reading
-
-version r
-  cite s
-  known 2026-03-09
-  px[EUR] = 4.3 PLN/EUR at 2026-03-02
-  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
-
-version r2
-  cite s
-  known 2026-04-01
-  replace qx[EUR] = none at 2026-03-08
-
-version j
-  cite s
-  governs always
-  known 2026-01-01
-  same px[EUR] = qx[EUR]
-
-ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
-ask q: last(qx[EUR], 2026-03-10), since(qx[EUR], 2026-03-10)
-ask v: px[EUR] law 2026-03-08
-"#;
-        let lines = lines_of("same_removed.tally", text);
-        assert_eq!(
-            lines,
-            [
-                "e: (4.3 PLN/EUR, 8)",
-                "  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10",
-                "  cut 2026-12-31",
-                "q: (4.3 PLN/EUR, 8)",
-                "  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10",
-                "  cut 2026-12-31",
-                "v: ?\"px[EUR] has no reading at 2026-03-08\" (px[EUR])",
-                "  law date 2026-03-08, cut 2026-12-31",
-            ],
-            "every line of the run"
-        );
-    }
-
-    /// B1 (`agent/same3.tally`): two removed sides of three; the third's kept reading carries,
-    /// and a class whose kept values differ is still the hole.
-    #[test]
-    fn the_class_latest_kept_reading_carries_over_two_removed_sides() {
-        let text = r#"model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-
-input px[u in currencies]: num PLN/u reading
-input qx[u in currencies]: num PLN/u reading
-input zx[u in currencies]: num PLN/u reading
-input a: money PLN
-input b: money PLN
-input c: money PLN
-
-version r
-  cite s
-  known 2026-03-09
-  px[EUR] = 4.3 PLN/EUR at 2026-03-02
-  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
-  zx[EUR] = 4.5 PLN/EUR at 2026-03-08
-
-version r2
-  cite s
-  known 2026-04-01
-  replace qx[EUR] = none at 2026-03-08
-  replace zx[EUR] = none at 2026-03-08
-
-version st
-  cite s
-  governs always
-  known 2026-01-01
-  a = 1.00 PLN
-  b = 2.00 PLN
-  c = 3.00 PLN
-
-version j
-  cite s
-  governs always
-  known 2026-01-01
-  same zx[EUR] = qx[EUR]
-  same c = b
-
-version j2
-  cite s
-  governs always
-  known 2026-01-01
-  same px[EUR] = qx[EUR]
-  same a = b
-
-ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10) as known 2026-03-20
-ask e2: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
-ask p8: px[EUR] law 2026-03-08 as known 2026-03-20
-ask p8b: zx[EUR] law 2026-03-08
-ask sa: a law 2026-05-01
-ask sl: last(c, 2026-05-01)
-"#;
-        let lines = lines_of("same3.tally", text);
-        // N3: rows that govern always disagree on the day the read reads them for
-        holds(
-            &lines,
-            &[
-                "sl: ?\"a, b and c are one, but the value differs on 2026-05-01: 1.00 PLN (st:a), 2.00 PLN (st:b) and 3.00 PLN (st:c)\" (a, b, c)",
-            ],
-        );
-        holds(
-            &lines,
-            &[
-                "e: (?\"qx[EUR] and zx[EUR] are one, but the value differs on 2026-03-08: 4.4 PLN/EUR (r:qx[EUR]) and 4.5 PLN/EUR (r:zx[EUR])\" (qx[EUR], zx[EUR]), 2)",
-                "e2: (4.3 PLN/EUR, 8)",
-                "  held: px[EUR] = 4.3 PLN/EUR (r), read for 2026-03-10",
-                "p8b: ?\"zx[EUR] has no reading at 2026-03-08\" (zx[EUR])",
-            ],
-        );
     }
 
     /// B2 (`s1_two_b.tally` and January's count): rows stated same whose `fulfils` name two
@@ -513,61 +366,12 @@ version v2
         let lines = lines_of("pn7.tally", text);
         let want = [
             format!("aw: {hole}"),
+            "  unknown day: wd".to_owned(),
             "  cut 2026-06-30".to_owned(),
             format!("bw: {hole}"),
+            "  unknown day: wd".to_owned(),
             "  unfulfilled: mw[a1]".to_owned(),
             "  cut 2026-06-30".to_owned(),
-        ];
-        assert_eq!(lines, want, "every line of the run");
-    }
-
-    /// G1 of the fix's review (`agent/b1_onlyq.tally`): a class whose only reading is removed
-    /// has no reading, so `last` is `HOLE-NOREADING` as `since` and the plain read are, never
-    /// none (L §4.6 l.730, R-27).
-    #[test]
-    fn a_class_whose_only_reading_is_removed_has_no_reading() {
-        let text = r#"model t
-  tally 2
-  on 2026-12-31
-  start 2026-01-01
-  end 2026-12-31
-
-source s "s"
-unit PLN: currency minor 0.01
-unit EUR: currency minor 0.01
-
-input px[u in currencies]: num PLN/u reading
-input qx[u in currencies]: num PLN/u reading
-
-version r
-  cite s
-  known 2026-03-09
-  qx[EUR] = 4.4 PLN/EUR at 2026-03-08
-
-version r2
-  cite s
-  known 2026-04-01
-  replace qx[EUR] = none at 2026-03-08
-
-version j
-  cite s
-  governs always
-  known 2026-01-01
-  same px[EUR] = qx[EUR]
-
-ask e: last(px[EUR], 2026-03-10), since(px[EUR], 2026-03-10)
-ask q: last(qx[EUR], 2026-03-10), since(qx[EUR], 2026-03-10)
-ask v: px[EUR] law 2026-03-08
-"#;
-        let none = |x: &str| format!("?\"{x} has no reading on or before 2026-03-10\" ({x})");
-        let lines = lines_of("b1_onlyq.tally", text);
-        let want = [
-            format!("e: ({}, {})", none("px[EUR]"), none("px[EUR]")),
-            "  cut 2026-12-31".to_owned(),
-            format!("q: ({}, {})", none("qx[EUR]"), none("qx[EUR]")),
-            "  cut 2026-12-31".to_owned(),
-            "v: ?\"px[EUR] has no reading at 2026-03-08\" (px[EUR])".to_owned(),
-            "  law date 2026-03-08, cut 2026-12-31".to_owned(),
         ];
         assert_eq!(lines, want, "every line of the run");
     }
@@ -704,66 +508,6 @@ ask s: sum(t.cash.amount for t in transfers over 2026-02)
         );
     }
 
-    /// The final check's `r16/after_m_obs_before_start` (L §4.6, §5.19 Before the run): a
-    /// reading `after m` whose m only an observation dated before S fulfils has no point the
-    /// walk applies (that row is booked by none), so it anchors nothing; a read of it is
-    /// `RUN-RECORD`, nothing booking m by the cut.
-    #[test]
-    fn a_reading_after_m_fulfilled_before_start_is_not_applied() {
-        let text = r#"model t
-  tally 2
-  on 2026-08-01
-  start 2026-05-02
-  end 2026-07-31
-
-source src "s"
-unit PLN: currency minor 0.01
-place a: accounts PLN lives 2026-01-01..
-place b: accounts PLN lives 2026-01-01..
-input rows: observed
-input floor: money PLN
-input d_sv: int
-
-move sv[m in months]: transfers
-  on day_of(m, d_sv)
-  reads a
-  leg cash from a to b amount max(0 PLN, bal(a) - floor)
-
-version v
-  cite src
-  governs always
-  known 2026-01-01
-  floor = 50.00 PLN "s"
-  d_sv = 20 "s"
-  opening[a] = 300.00 PLN at 2026-05-02 start "s"
-  opening[b] = 0.00 PLN at 2026-05-02 start "s"
-
-version st
-  cite src
-  governs 2026-05
-  known 2026-06-02
-  covers a
-  anchor a
-  rows[r1] = (on: 2026-05-01, kind: transfers, leg cash from a to b amount 250.00 PLN, fulfils: sv[2026-05]) "r1"
-  stated[a] = 300.00 PLN after sv[2026-05] "saldo"
-
-ask q: bal(a, 2026-05-31), bal(a, 2026-05-31) modelled
-ask r: since(stated[a], 2026-05-25)
-"#;
-        let lines = lines_of("r16_before_start.tally", text);
-        assert_eq!(
-            lines,
-            [
-                "q: (300.00 PLN, 50.00 PLN)",
-                "  cut 2026-08-01",
-                "r: refused: RUN-RECORD reading stated[a] after sv[2026-05]: sv[2026-05] is \
-                 modelled past and nothing fulfils it",
-                "  cut 2026-08-01",
-            ],
-            "no anchor line; the read of the reading refused"
-        );
-    }
-
     /// The final check's `fixes/gate8/d512_hole_ans` (E §10, §5 step 1): an explanation lists
     /// the row a later version answers a hole booking with right after that booking's hole,
     /// as the instance is answered where it is made, before the next instance's rows.
@@ -835,7 +579,7 @@ ask e: explain fee_out[2026-03].cash.amount
     /// window's days give; tally 2.1.8 item 77): a window leg whose lifespan test comes out
     /// both ways is the window's hole from the window's first day, and a refusal a fixed-day
     /// leg brings the place later doesn't outrank it, which comes first being the window's to
-    /// say; `windows each` splits on that window.
+    /// say; a pin on either side of the split gives each side's refusal.
     #[test]
     fn a_refusal_after_a_window_lifespan_test_leaves_the_windows_hole() {
         let text = r#"model t
@@ -872,7 +616,8 @@ version v
   opening[shut] = 0.00 PLN at 2026-01-01 start "s"
 
 ask b: bal(pot, 2026-04-30)
-ask b_each: bal(pot, 2026-04-30) windows each
+ask b_05: bal(pot, 2026-04-30) with dw = 2026-04-05
+ask b_08: bal(pot, 2026-04-30) with dw = 2026-04-08
 "#;
         let lines = lines_of("d77_lifespan_first.tally", text);
         assert_eq!(
@@ -880,24 +625,27 @@ ask b_each: bal(pot, 2026-04-30) windows each
             [
                 "b: ?\"date within window(2026-04-05, 2026-04-10) not precise enough for a \
                  balance\" (into_fresh)",
+                "  unknown day: dw",
                 "  cut 2026-01-01",
-                "b_each [dw = 2026-04-05 .. 2026-04-07]: refused: RUN-LIFESPAN into_fresh.cash \
-                 moves into or out of fresh outside its lifespan",
+                "b_05: refused: RUN-LIFESPAN into_fresh.cash moves into or out of fresh outside \
+                 its lifespan",
+                "  pinned: dw = 2026-04-05",
                 "  cut 2026-01-01",
-                "b_each [dw = 2026-04-08 .. 2026-04-10]: refused: RUN-LIFESPAN into_shut.cash \
-                 moves into or out of shut outside its lifespan",
+                "b_08: refused: RUN-LIFESPAN into_shut.cash moves into or out of shut outside its \
+                 lifespan",
+                "  pinned: dw = 2026-04-08",
                 "  cut 2026-01-01",
             ],
-            "the window's hole, then one refusal per sub-window"
+            "the window's hole naming its day, then one refusal per pinned side"
         );
     }
 
-    /// The final check's `fixes/rv/rc_diff_two_stacks_each` (L §4.4; tally 2.1.8 R13.2): a
-    /// diff whose worlds sit on two stacks, under `windows each`, names in its heads only the
-    /// windows its answer carries: `db`, the day `main` is paid on, never `da`, a window its
-    /// walk meets at another place.
+    /// The final check's `fixes/rv/rc_diff_two_stacks_each`, restated without `windows each`
+    /// (L §4.4, §8.2; tally 2.2): a diff whose worlds sit on two stacks names in its register
+    /// only the unknown days its holes carry: `db`, the day `main` is paid on, never `da`, a
+    /// window its walk meets at another place.
     #[test]
-    fn a_two_stack_diff_head_names_only_the_windows_its_answer_carries() {
+    fn a_two_stack_diff_names_only_the_unknown_days_its_holes_carry() {
         let model = r#"model q
   tally 2
   on 2026-05-01
@@ -935,7 +683,7 @@ version v
   opening[main] = 0.00 PLN at 2026-01-01 start "s"
   opening[side] = 0.00 PLN at 2026-01-01 start "s"
 
-ask d: diff(bal(main, 2026-02-04)) in s2 against s1 windows each
+ask d: diff(bal(main, 2026-02-04)) in s2 against s1
 "#;
         let scenario = |name: &str, fee: &str| {
             format!(
@@ -961,21 +709,16 @@ ask d: diff(bal(main, 2026-02-04)) in s2 against s1 windows each
             days: Days::Events,
         };
         let answer = run(given, &request).expect("an answer");
-        let heads: Vec<&str> = answer
-            .lines()
-            .iter()
-            .filter(|l| l.starts_with("d "))
-            .map(String::as_str)
-            .collect();
         assert_eq!(
-            heads,
+            answer.lines(),
             [
-                "d [db = 2026-02-03 .. 2026-02-04]: diff in s2 against s1: 1 changed, 0 added, \
-                 0 removed, 0 unchanged",
-                "d [db = 2026-02-05]: diff in s2 against s1: 0 changed, 0 added, 0 removed, 1 \
-                 unchanged",
+                "d: diff in s2 against s1: 0 changed, 0 added, 0 removed, 1 unchanged",
+                "  unknown day: db",
+                "  world: s1",
+                "  world: s2",
+                "  cut 2026-05-01",
             ],
-            "db alone in the heads"
+            "db alone among the unknown days"
         );
     }
 }

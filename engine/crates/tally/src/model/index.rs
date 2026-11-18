@@ -7,9 +7,9 @@
 //! Invariants: an index's keys are in its order (an open index's by text); a key's position
 //! is its place in that order, found by halving a slice of the positions sorted by key, kept
 //! beside the keys by every method that sets or adds them (P §3.4: a frozen table is a sorted
-//! slice searched by bisection); a version's known date, its window's last day too, is on or
-//! before the model's `on`; a version's span under a cut is that of the latest-known `moves`
-//! line the cut sees, else its own.
+//! slice searched by bisection); a version's known day is on or before the model's `on`; a
+//! version's span under a cut is that of the latest-known `moves` line the cut sees, else its
+//! own.
 
 use super::key::{KeyVal, Span};
 use super::world::{Scenarios, World};
@@ -249,10 +249,8 @@ pub struct VersionInfo {
     pub cite: String,
     /// `governs`: none, or its span.
     pub governs: Option<Span>,
-    /// `known`: the day, or a window's first day.
+    /// `known`: the day.
     pub known: Day,
-    /// `known window(a, b)`: the window's last day, b (L §4.5); none for a day.
-    pub window: Option<Day>,
     /// The `moves` lines of later versions that move this one, in version order (L §5.3).
     pub moved_by: Vec<Moved>,
     /// `enters D`.
@@ -274,20 +272,17 @@ pub struct VersionInfo {
 pub struct Moved {
     /// The version whose line it is.
     pub by: String,
-    /// That version's `known`, or its window's first day.
+    /// That version's `known`.
     pub known: Day,
-    /// That version's known window's last day, if it has one.
-    pub window: Option<Day>,
     /// The span it moves V to.
     pub span: Span,
 }
 
 impl Moved {
-    /// Whether cut `cut` sees the line: its version is known by `cut`, its whole window
-    /// included (L §4.5; a cut inside the window is the run's `windows each`, not built).
+    /// Whether cut `cut` sees the line: its version is known by `cut` (L §4.5).
     #[must_use]
     pub fn seen_at(&self, cut: Day) -> bool {
-        self.window.unwrap_or(self.known) <= cut
+        self.known <= cut
     }
 }
 

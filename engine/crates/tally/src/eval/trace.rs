@@ -26,9 +26,9 @@ use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
 use super::state::{Ctx, Engine, Env, invariant};
 use crate::base::Code;
-use crate::model::{KeyVal, Reality, Row, RowInstant, Value, World};
+use crate::model::{KeyVal, Reality, Row, Value, World};
 use crate::read::{origin, row_known, row_span};
-use crate::syntax::{Edge, Expr, Stop};
+use crate::syntax::{Edge, Expr, Instant, Stop};
 use crate::time::Day;
 
 /// What a node of a trace is.
@@ -310,35 +310,6 @@ impl Trace {
             when: None,
             value: None,
         }))
-    }
-
-    /// The unknown days the values it prints carry, in the order printed: each node's but a
-    /// row's, which prints what its row states, and those of the groups its rules read
-    /// (refcore's `TraceNode.carry_vals`; `outside the pins`' value included). L §4.4; tally
-    /// 2.1.8 R13, #191 Q4.
-    pub(crate) fn carried(&self) -> Vec<crate::hole::Unknown> {
-        let mut out = Vec::new();
-        let mut seen = std::collections::BTreeSet::new();
-        let mut todo = vec![ROOT];
-        while let Some(at) = todo.pop() {
-            let Some(node) = self.nodes.get(at).filter(|_| seen.insert(at)) else {
-                continue;
-            };
-            if let (false, Some(Item::Value(v))) =
-                (matches!(node.kind, Kind::Row | Kind::BandRow), &node.value)
-            {
-                v.carried_into(&mut out);
-            }
-            let rules = node
-                .rules
-                .values()
-                .flat_map(|r| [r.value, r.when])
-                .flatten();
-            let mut next: Vec<usize> = node.children.iter().copied().chain(rules).collect();
-            next.reverse();
-            todo.extend(next);
-        }
-        out
     }
 
     /// The trace of an ask's line explained under its `with` pins, this trace read inside
@@ -1038,23 +1009,16 @@ fn provenance(m: &Reality, row: &Row, seen: (Day, World)) -> Result<String, Stop
     if let Some(locator) = &row.locator {
         bits.push(format!("locator \"{locator}\""));
     }
-    match &row.instant {
-        Some(RowInstant::At(day, edge)) => {
-            let edge = match edge {
-                Some(Edge::Start) => " start",
-                Some(Edge::End) => " end",
-                None => "",
-            };
-            bits.push(format!("at {}{edge}", day.text()));
-        }
-        // L §4.6's instant: refcore prints its node's object here, no stored vector's text
-        Some(RowInstant::After(node)) => {
-            bits.push(format!("after {}", crate::load::expr_text(node)));
-        }
-        None => {
-            let span = row_span(m, row, seen)?.map_or_else(|| "?".to_owned(), |s| s.text());
-            bits.push(format!("governs {span}"));
-        }
+    if let Some(Instant { day, edge }) = &row.instant {
+        let edge = match edge {
+            Some(Edge::Start) => " start",
+            Some(Edge::End) => " end",
+            None => "",
+        };
+        bits.push(format!("at {}{edge}", day.text()));
+    } else {
+        let span = row_span(m, row, seen)?.map_or_else(|| "?".to_owned(), |s| s.text());
+        bits.push(format!("governs {span}"));
     }
     bits.push(format!("known {}", row_known(m, row)?.text()));
     Ok(bits.join(", "))

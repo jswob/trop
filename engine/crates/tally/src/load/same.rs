@@ -1,15 +1,16 @@
-//! Load's `same` lines of rows and movements: each side named, both sides of one sort, two rows of one type.
-//! Spec: L §6.1 (Identities are written: a side is a kind, a thing, a row or a movement, both
-//! of one sort, `LOAD-SAME` otherwise; a `same` in a version that names a kind or a thing is
-//! refused, and so is one between an observed row and a move instance of that model, tally
-//! 2.1.8), §5.19 (`same` between observed rows), §8.3 (`LOAD-SAME`'s forms).
+//! Load's `same` lines of movements: each side named, both sides movements, a row of an input refused.
+//! Spec: L §6.1 (Identities are written: a side is a kind, a thing or a movement, both of one
+//! sort, `LOAD-SAME` otherwise, a row of an input on either side included, tally 2.2 S-8; a
+//! `same` in a version that names a kind or a thing is refused, and so is one between an
+//! observed row and a move instance of that model, tally 2.1.8), §5.19 (`same` between
+//! observed rows), §8.3 (`LOAD-SAME`'s forms).
 //! Twin: engine/tools/refcore/loader.py (`joint_sames`, `sref`, `move_keys`, `_txt_node`,
 //! `joint_place_sames`, `place_side`, `_has_keys`).
 //! Invariants: the header's lines are taken first, then the versions' in the order load built
 //! their items; each side is resolved before the pair is judged, the left first; things,
 //! places and kinds a joint model's header names by id were joined before parsing (`joint.rs`),
-//! so only rows and movements stay; a pair is recorded for the run, which reads it at M2; a
-//! joint model's own row of a member's item stands only at a pair stated `same`.
+//! so only movements stay; a pair is recorded for the run, which reads it at M2; a joint
+//! model's own row of a member's input is refused.
 
 use super::check::invariant;
 use super::joint::owner_of;
@@ -17,7 +18,7 @@ use super::keys::{KeyLit, lit_of_expr, lit_text, resolve_key};
 use super::steps::{Loader, refuse};
 use super::texts::text;
 use crate::base::Load;
-use crate::model::{KeyVal, NameKind, Pat, SamePair, Ty, pattern_text};
+use crate::model::{KeyVal, NameKind, SamePair, pattern_text};
 use crate::syntax::{Expr, Key, Lit, Postfix, Stop};
 
 /// One `same` line as written: its two sides, where it stands, and the version that holds it
@@ -40,8 +41,8 @@ pub(super) struct SameLine {
 enum Side {
     /// A move instance or an observed row, by its id, and which of the two it is.
     Move(String, Mover),
-    /// An input's row at its keys: the input, its keys, its text and its type.
-    Row(String, Vec<KeyVal>, String, Option<Ty>),
+    /// An input's row at its keys, which no line joins (tally 2.2, S-8).
+    Row,
     /// A kind, a place or a thing.
     Thing,
     /// Any other item, by what a message calls it (`a def`, `a field path`).
@@ -62,7 +63,7 @@ impl Side {
     fn what(&self) -> String {
         match self {
             Side::Move(..) => "a movement".to_owned(),
-            Side::Row(..) => "a row".to_owned(),
+            Side::Row => "a row of an input".to_owned(),
             Side::Thing => "a thing".to_owned(),
             Side::Other(what) => what.clone(),
         }
@@ -72,7 +73,7 @@ impl Side {
     fn sort(&self) -> u8 {
         match self {
             Side::Move(..) => 0,
-            Side::Row(..) => 1,
+            Side::Row => 1,
             Side::Thing => 2,
             Side::Other(_) => 3,
         }
@@ -131,7 +132,9 @@ impl Loader {
             if let Some(message) = row_and_instance(same, (&left, &right)) {
                 return Err(at(message));
             }
-            if matches!(left, Side::Other(_)) || left.sort() != right.sort() {
+            // a row of an input is no side (tally 2.2, S-8)
+            let no_side = |side: &Side| matches!(side, Side::Row | Side::Other(_));
+            if no_side(&left) || no_side(&right) || left.sort() != right.sort() {
                 return Err(at(format!(
                     "same {l} = {r}: {} and {}",
                     left.what(),
@@ -139,29 +142,21 @@ impl Loader {
                 )));
             }
             match (left, right) {
-                (Side::Row(a, ka, ta, tya), Side::Row(b, kb, tb, tyb)) => {
-                    if tya != tyb {
-                        return Err(at(format!(
-                            "same {} = {}: rows of types {} and {}",
-                            super::joint::shown(&ta),
-                            super::joint::shown(&tb),
-                            shown_type(tya.as_ref()),
-                            shown_type(tyb.as_ref())
-                        )));
-                    }
-                    let version = same.version.clone();
-                    self.m.sames.push(SamePair::Rows(a, ka, b, kb, version));
-                }
-                (Side::Move(a, _), Side::Move(b, _)) => {
-                    let version = same.version.clone();
-                    self.m.sames.push(SamePair::Moves(a, b, version));
+                (Side::Move(a, ma), Side::Move(b, mb)) => {
+                    self.m.sames.push(SamePair {
+                        left: a,
+                        right: b,
+                        version: same.version.clone(),
+                        // a line between two observed rows has no day of its own (S-5)
+                        observed: ma == Mover::Row && mb == Mover::Row,
+                    });
                 }
                 (Side::Thing, Side::Thing) => {
                     return Err(at(format!(
                         "same {l} = {r}: a thing written with keys that is not a keyed place"
                     )));
                 }
-                (Side::Move(..) | Side::Row(..) | Side::Thing | Side::Other(_), _) => {
+                (Side::Move(..) | Side::Row | Side::Thing | Side::Other(_), _) => {
                     return Err(invariant(
                         "a same pair of two sorts past the sort test".to_owned(),
                     ));
@@ -175,9 +170,10 @@ impl Loader {
         Ok(())
     }
 
-    /// A joint model's own rows of a member's item: each stands only at a pair of rows stated
-    /// `same`, at all its keys (refcore's `joint_sames`, its last loop); a scenario's row may
-    /// replace a member's. L §6.1 (The joint model's own rows; Writes into members).
+    /// A joint model's own rows of a member's input: each would change an imported row, and
+    /// is refused, an observed row being a movement; a scenario's row may replace a member's
+    /// (refcore's `joint_sames`, its last loop). L §6.1 (Writes into members: of a member's
+    /// item only at a thing or a movement stated `same`; tally 2.2, S-8).
     fn joint_rows(&self) -> Result<(), Stop> {
         for (id, input) in self.m.inputs.entries() {
             let member = owner_of(id);
@@ -189,33 +185,18 @@ impl Loader {
                 if !owner_of(&row.version).is_empty() || scenario {
                     continue;
                 }
-                let keys: Vec<&KeyVal> = row
-                    .pattern
-                    .iter()
-                    .filter_map(|p| match p {
-                        Pat::Key(key) => Some(key),
-                        Pat::Star | Pat::Range(..) => None,
-                    })
-                    .collect();
-                let at = |x: &str, xs: &[KeyVal]| x == id && xs.iter().eq(keys.iter().copied());
-                let stated = self.m.sames.iter().any(|pair| match pair {
-                    SamePair::Rows(a, ka, b, kb, _) => at(a, ka) || at(b, kb),
-                    SamePair::Moves(..) => false,
-                });
-                if !stated || keys.len() != input.binds.len() {
-                    let file = self
-                        .m
-                        .versions
-                        .get(&row.version)
-                        .map(|v| v.file.clone())
-                        .ok_or_else(|| invariant(format!("version {} isn't built", row.version)))?;
-                    let message = format!(
-                        "the joint model states {}{}, an item of member {member} that no same line joins",
-                        super::joint::shown(id),
-                        pattern_text(&row.pattern)
-                    );
-                    return Err(refuse(Load::Same, message, &file, row.line));
-                }
+                let file = self
+                    .m
+                    .versions
+                    .get(&row.version)
+                    .map(|v| v.file.clone())
+                    .ok_or_else(|| invariant(format!("version {} isn't built", row.version)))?;
+                let message = format!(
+                    "the joint model states {}{}, an item of member {member} that no same line joins",
+                    super::joint::shown(id),
+                    pattern_text(&row.pattern)
+                );
+                return Err(refuse(Load::Same, message, &file, row.line));
             }
         }
         Ok(())
@@ -335,7 +316,8 @@ impl Loader {
         }
     }
 
-    /// A side naming an input: an observed row by its id, or a row at its keys. L §6.1, §5.19.
+    /// A side naming an input: an observed row by its id, or a row at its keys, each key
+    /// resolved as refcore's `sref` resolves it before the line is refused. L §6.1, §5.19.
     fn input_side(&self, name: &str, keys: &[Key], same: &SameLine) -> Result<Side, Stop> {
         let at = |message: String| refuse(Load::Key, message, &same.file, same.line);
         let info = self.m.inputs.at(self.m.names.input_id(name)?)?;
@@ -350,7 +332,6 @@ impl Loader {
         if keys.len() != info.binds.len() {
             return Err(at(format!("wrong number of keys for {name}")));
         }
-        let mut values = Vec::with_capacity(keys.len());
         for (key, bind) in keys.iter().zip(&info.binds) {
             let written = match key {
                 Key::Expr(key) => KeyLit::of_expr(key),
@@ -362,16 +343,9 @@ impl Loader {
                     "a same side keyed by * or a computed key".to_owned(),
                 ));
             };
-            values.push(resolve_key(
-                &self.m,
-                &written,
-                &bind.domain,
-                &same.file,
-                same.line,
-            )?);
+            resolve_key(&self.m, &written, &bind.domain, &same.file, same.line)?;
         }
-        let text = instance_text(name, &values);
-        Ok(Side::Row(name.to_owned(), values, text, info.ty.clone()))
+        Ok(Side::Row)
     }
 
     /// A move instance's written keys, each a literal (refcore's `move_keys`). L §2.5.
@@ -447,9 +421,4 @@ pub(super) fn instance_text(name: &str, keys: &[KeyVal]) -> String {
     }
     let texts: Vec<String> = keys.iter().map(KeyVal::text).collect();
     format!("{name}[{}]", texts.join(", "))
-}
-
-/// A row's type as a message names it.
-fn shown_type(ty: Option<&Ty>) -> String {
-    ty.map_or_else(String::new, Ty::show)
 }

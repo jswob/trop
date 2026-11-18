@@ -79,23 +79,23 @@ ask f_last_k: value(flat, 2026-03-31) in PLN by last(fxu[EUR])
 
 ask f_same: value(flat, 2026-03-31) in EUR
 
-ask f_rev: low(konto, 2026-03-31 .. 2026-03-01)
+ask f_rev: min(bal(konto, d) for d in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask f_rev_from: low(konto, 2026-03-31 .. 2026-03-01) from 2026-03-01
+ask f_rev_from: min(bal(konto, d) from 2026-03-01 for d in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask f_rev_computed: low(konto, b_day .. a_day)
+ask f_rev_computed: min(bal(konto, d) for d in b_day .. a_day step 1 day)
 
-ask f_rev_unc: low(konto, 2026-03-31 .. 2026-03-01) with uncertain
+ask f_rev_unc: min(bal(konto, d) with uncertain for d in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask f_one: low(konto, 2026-03-01 .. 2026-03-01)
+ask f_one: min(bal(konto, d) for d in 2026-03-01 .. 2026-03-01 step 1 day)
 
-ask f_unc: low(konto, 2026-03-01 .. 2026-04-30) with uncertain, low(konto, 2026-03-01 .. 2026-04-30)
+ask f_unc: min(bal(konto, d) with uncertain for d in 2026-03-01 .. 2026-04-30 step 1 day), min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day)
 
-ask f_unc_late: low(konto, 2026-03-15 .. 2026-04-30) with uncertain
+ask f_unc_late: min(bal(konto, d) with uncertain for d in 2026-03-15 .. 2026-04-30 step 1 day)
 
 ask f_unc_bal: min(bal(konto, d) with uncertain for d in 2026-03-15 .. 2026-04-30 step 1 day)
 
-ask f_unc_gift: low(konto, 2026-03-20 .. 2026-04-30) with uncertain, low(konto, 2026-03-20 .. 2026-04-30)
+ask f_unc_gift: min(bal(konto, d) with uncertain for d in 2026-03-20 .. 2026-04-30 step 1 day), min(bal(konto, d) for d in 2026-03-20 .. 2026-04-30 step 1 day)
 
 ask f_unc_gift_bal: min(bal(konto, d) with uncertain for d in 2026-03-20 .. 2026-04-30 step 1 day)
 

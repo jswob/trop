@@ -31,9 +31,9 @@ mod tests {
     /// T's M2 realities, in the same form.
     const M2_CORPUS: &[u8] = include_bytes!("../../../tests/properties/m2.corpus");
 
-    /// F6's own reality: a pay that differs by an axis's option, a monthly decision whose leg
-    /// is booked ahead and whose amount reads a projection day by day from its month's first
-    /// day, a rent a later version raises; projections read day by day, back and forth, five
+    /// F6's own reality: a pay that differs by an axis's option, a monthly decision whose
+    /// amount reads a projection day by day from its month's first day, a rent a later
+    /// version raises; projections read day by day, back and forth, five
     /// at a time (past the walks a timeline keeps), and with `with uncertain`.
     const DAYS: &str = include_str!("forks/days.tally");
 
@@ -262,15 +262,16 @@ mod tests {
         let files = bytes(&[("days.tally", DAYS)]);
         for lows in [Lows::Tree, Lows::Walk] {
             let lines = alike("days.tally", &files, &Asks::Every, lows).expect("answered");
-            // refcore's lines (tally 2.1.7), each under both options of the axis the pay reads
+            // refcore's lines (tally 2.1.8, the sweep's leg on its day as tally 2.2 books it),
+            // each under both options of the axis the pay reads
             for line in [
                 "d_min [pay_reading = low]: 350.00 DUK",
                 "d_min [pay_reading = high]: 575.00 DUK",
                 "d_back (d = 2026-03-10) [pay_reading = low]: -50.00 DUK",
-                "d_back (d = 2026-02-20) [pay_reading = high]: 950.00 DUK",
+                "d_back (d = 2026-02-20) [pay_reading = high]: -75.00 DUK",
                 "d_back (d = 2026-02-03) [pay_reading = low]: 1 400.00 DUK",
-                "d_many [pay_reading = high]: 4 750.00 DUK",
-                "d_axis [pay_reading = low]: 450.00 DUK",
+                "d_many [pay_reading = high]: 275.00 DUK",
+                "d_axis [pay_reading = low]: 325.00 DUK",
                 "d_uncertain [pay_reading = low]: -218.75 DUK",
                 "d_room (m = 2026-07) [pay_reading = high]: 910.94 DUK",
                 "  held: rent = 950.00 DUK (later), read for 2026-07-01",

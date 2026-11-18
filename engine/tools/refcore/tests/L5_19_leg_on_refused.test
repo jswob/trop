@@ -1,0 +1,29 @@
+# tally 2.2 (CHANGES.md 2.2-6), L §5.19: an observed row's leg is written as in a move, which has no `on` of its own
+# (L §2.3 `leg`); its day is the row's `on`. A leg that writes one is refused by the grammar. (Was
+# L5_19_window_in_leg_on, LOAD-LEG for a window in a leg's on.)
+=== m.tally
+model hh
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+
+source bank "bank"
+unit PLN: currency minor 0.01
+input bank_rows: observed
+place konto: accounts PLN lives 2019-05-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+
+version stmt
+  cite bank
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  pad konto from unexplained
+  opening[konto] = 5 000.00 PLN at 2026-02-01 start "wyciąg"
+  bank_rows[r1] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 100.00 PLN on 2026-02-06) "line 1"
+
+ask q: bal(konto, 2026-02-28)
+=== expect
+refused: LOAD-PARSE cannot parse: expected ")", got on (m.tally:21)

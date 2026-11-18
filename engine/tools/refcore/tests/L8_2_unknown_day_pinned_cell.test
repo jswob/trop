@@ -1,0 +1,96 @@
+# tally 2.2 (CHANGES.md 2.2-11, pick P26). L §4.4: "a pin whose value is the read" keeps the read's name, and a
+# window written in a pin is a read of the pinned cell; L §8.2 `unknown day:` names "the cell that holds it, as its
+# read names it". A def pinned to a written window (qa: dd) is named by its cell, as an input is (qd: w); so is `last`
+# of an input pinned so (qc), whose hole keeps its label (w) as unpinned. qa reads pay_w on w too.
+=== m.tally
+model g4_b2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (N/a, #211): a hole made from a day not yet known names it in its register, unknown day: <name>: the cell that holds it (n_cell, w), a calendar's entry (n_cal, added one_of([2026-06-22, 2026-06-24])), a window a rule builds, by its own text (n_rule); two at once, sorted by their text (n_two); a window value that is no hole names none (n_win)."
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+input cal: calendar
+
+input d0: date
+
+input d1: date
+
+input from_day: date
+
+input x: date
+
+input d_fix: date
+
+def dd: date = d_fix
+
+def wr: date = window(d0, d1)
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+move pay_cal: transfers
+  on add_business(from_day, 1, cal)
+  leg cash from world to sav amount pay
+
+move pay_r: transfers
+  on wr
+  leg cash from world to konto amount pay
+
+move pay_d: transfers
+  on dd
+  leg cash from world to konto amount pay
+
+move pay_x: transfers
+  on x
+  leg cash from world to konto amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "the card"
+  w = window(2026-03-05, 2026-03-07) "the card"
+  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
+  d0 = 2026-05-04 "the card"
+  x = 2026-01-15 "the card"
+  d_fix = 2026-02-01 "the card"
+  d1 = 2026-05-06 "the card"
+  from_day = 2026-06-19 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "the card"
+
+ask qa: bal(konto, 2026-03-06) with dd = window(2026-03-05, 2026-03-07)
+ask qb: bal(konto, 2026-06-22) with x = add_business(from_day, 1, cal)
+ask qc: last(w, 2026-06-01) < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
+ask qd: bal(konto, 2026-03-06) with w = window(2026-03-05, 2026-03-07)
+ask qe: w < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
+=== expect qa qc qd
+qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_d, pay_w)
+  pinned: dd = window(2026-03-05, 2026-03-07)
+  unknown day: dd
+  unknown day: w
+  cut 2026-01-01
+qc: ?"date within window(2026-03-05, 2026-03-07) not precise enough for last(w, 2026-06-01) < 2026-03-06" (w)
+  pinned: w = window(2026-03-05, 2026-03-07)
+  unknown day: w
+  cut 2026-01-01
+qd: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
+  pinned: w = window(2026-03-05, 2026-03-07)
+  unknown day: w
+  cut 2026-01-01

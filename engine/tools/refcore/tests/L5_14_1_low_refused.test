@@ -1,0 +1,22 @@
+# tally 2.2 (CHANGES.md 2.2-9), L §5.14.1: `low` is cut; a lowest balance is a `min` over days,
+# `min(bal(x, d) from t for d in a .. b step 1 day)`. `low(…)` reads on as an item at its keys and stops at the span.
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+ask q: low(konto, 2026-01-01 .. 2026-01-31) from 2026-01-01
+=== expect
+refused: LOAD-PARSE cannot parse: expected ")", got .. (m.tally:17)

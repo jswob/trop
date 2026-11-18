@@ -3,7 +3,7 @@ model units
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "a price of another currency or unit (invented): G8 fix review NB1, its keyed form, and its twins"
+  note "a price of another currency or unit (invented): G8 fix review NB1, its keyed form, and its twins; tally 2.2 (S-1): a model's place holds one unit, so each place that held several is one place per unit under a kind of unit one, and a value of it is the sum over those places"
 
 source card "probe card"
 
@@ -19,7 +19,7 @@ kind funds: place one min 0 priced unit_price
 
 kind boxes: holdings
 
-kind safes: place any signed
+kind safes: place one signed
 
 kind unit_buys: event certain
   leg units: etf
@@ -32,7 +32,9 @@ place fund: funds etf lives 2026-01-01..
 
 place box: boxes etf lives 2026-01-01..
 
-place safe: safes lives 2026-01-01..
+place safe_eur: safes EUR lives 2026-01-01..
+
+place safe_pln: safes PLN lives 2026-01-01..
 
 place konto: accounts PLN lives 2026-01-01..
 

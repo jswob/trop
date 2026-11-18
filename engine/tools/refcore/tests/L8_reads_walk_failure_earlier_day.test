@@ -2,6 +2,7 @@
 # projection's walk that fails on day D (here the decision's tie, 2026-05-01) refuses only the reads that reach D,
 # and answers an earlier day's read in either order: f_long_short's second term, bal(konto, 2026-03-31), is 800.00 as
 # f_short alone is. 2.1.6's refcore refused every read after the failing one, so the line depended on its order.
+# tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model p
   tally 2
@@ -48,9 +49,9 @@ move pick[k in month]: transfers
   ties by add_days(start_of(k), prio)
   leg cash from world to konto amount amt + 0 * bal(konto, dec_day start)
 
-ask f_long_short: low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20, bal(konto, 2026-03-31) from 2026-01-20
+ask f_long_short: min(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-06-30 step 1 day), bal(konto, 2026-03-31) from 2026-01-20
 
-ask f_short_long: bal(konto, 2026-03-31) from 2026-01-20, low(konto, 2026-01-20 .. 2026-06-30) from 2026-01-20
+ask f_short_long: bal(konto, 2026-03-31) from 2026-01-20, min(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-06-30 step 1 day)
 
 version v
   cite card

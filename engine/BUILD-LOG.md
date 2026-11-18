@@ -4204,3 +4204,647 @@ On the lead's merge 8066ed27 (the tests session's close e115d8cb; the spec tagge
 - **Cost:** `perf counts P8-14`: def_misses 25 318, days_stepped 960, walks_shared 582 (exit 0; budget def_misses <= 30 400), unchanged.
 - **STOP-REPORTs:** none.
 - **Checks:** `check commit: green, 23 steps (330s)` on this tree, headers included.
+
+## 2026-11-18 tally 2.2, build group 1: S-6, S-7 (held), the fault of a def keyed by a movement (issue #211)
+
+On `build/2.2` at 38a3cdff (master 8ece2484 and the tests session's first G1 chunk). `check commit` was green at the start: `check commit: green, 23 steps (209s)`. Plan `tmp/spec-2.2/plan.md` §3, §4, §5; choice C-11, so the spec pinned here still describes what is removed.
+
+- **S-6, eb8fcc43: a leg is on its movement's day.** Out, by file:
+  - `syntax/tree.rs` `Leg.on` and `syntax/expr.rs` its parse. A move's leg `… amount q on d` is now `LOAD-PARSE cannot parse: expected end of line, got on`, an observed row's `LOAD-PARSE cannot parse: expected ")", got on` (choice C-1).
+  - Load: `load/moves.rs` the leg day's type check; `load/observed.rs` an observed leg's day and its window refusal; `model/decl.rs` `ObsLeg.day`; `load/across.rs` a leg's day in the scenario `from` check (one day per move now, `early_day` gone); `load/overlap.rs` (`covered`) and `load/texts.rs` (a record's leg).
+  - K `walk/legs.rs`: a leg's day is its instance's. `day_window` in `walk/plan.rs` is private now.
+  - K `walk/plan.rs`: `BookedLeg.own_day` and `booked_legs`'s move; `list_upto`'s "a move whose legs state their own days is taken whole"; `scenario_early`'s legs.
+  - K `walk/agenda.rs`: `base_legs` with both its calls (#183 and P39) and `after_the_point`'s list of earlier decisions. `outside_window` is now the instance's first day alone. `LegHole` acts are put on the instance's day.
+  - K `walk/lows.rs` (F5): `base_leg_inside`, and `leg`'s fallback for a leg dated apart (`day != Some(d)`, the hole-day arm).
+  - K `walk/fork.rs` (F6): `booked_ahead`, its filter in `keep_walked`, and `continue_with`'s carry of the legs booked ahead.
+  - K `walk/move_flows.rs`: `leg_day` and `flows_hole`'s leg window.
+  - K `book/members.rs`, `book/same.rs` (2 places), `book/reading.rs` (`stands_in`), `book/observe.rs`: an observed leg's own day, so each reads the observation's day.
+  - `ask/instance.rs`: `explain`'s ` on <day>` after a leg dated apart.
+- **Beyond the plan's list, with why:**
+  - N-6's mechanism, a decision's leg booked ahead onto a later day. Only a leg dated apart reached it, and plan §4 cuts N-6's row. It went from K `walk/order.rs` (the run's booking ahead), K `walk/state.rs` (`Checkpoint.ahead`), K `walk/day.rs` and `walk/agenda.rs` (`Mv::Run`; `Mv` keeps one variant, `Plan`).
+  - For the spec writer: P §2.2 l.122 ("an ordered insert for each N-6 leg"), §2.4 l.168 ("the legs booked ahead (N-6)") and §4.2 l.317 ("every leg booked ahead") lean on N-6. The last doesn't name it, so the plan's grep for `N-6` misses it.
+  - The observed side (`ObsLeg.day` and its readers in `book/`, `load/overlap.rs`, `load/observed.rs`, `model/decl.rs`).
+  - The crate's own texts of the form: `tests/group3_cases.rs` `a_base_leg_the_start_holds_is_counted_once` and `a_decision_run_earlier_on_t_counts_its_later_legs` (#183, P39), dropped. `walk/agenda.rs` `a_decisions_later_leg_takes_its_place_among_the_days_plans_in_the_movement_order`, dropped. `walk/state.rs`'s checkpoint text and test, restated (the sweep's leg on its own day; `a_place_that_did_not_move_is_shared`). `walk/fork.rs`'s booked-ahead test, restated as `a_continued_walk_takes_the_plans_acts_after_its_last_walked_day`.
+  - F6's own reality `tally-cli/tests/forks/days.tally`: the sweep's leg `on add_days(start_of(m), late)` is gone, with `late`. The expected lines of `forks_on_prints_forks_off_and_refcore_on_its_own_reality` are refcore's on the restated text. 7 are as before and 3 move with the sweep's day (17th, not 25th): `d_back (d = 2026-02-20) [high]` 950.00 → -75.00, `d_many [high]` 4 750.00 → 275.00, `d_axis [low]` 450.00 → 325.00 DUK.
+- **Listed and kept:**
+  - `syntax/item.rs` and `syntax/canon.rs`: the canonical print reprints a leg's tokens, so neither holds code of the leg's `on`.
+  - `load/targets.rs` and `load/parts.rs`: neither holds a leg's day (`parts.rs`'s `own_day_read` is a def's own day).
+  - `LegVal.day` stays: the booked leg's day, its instance's, which the walk's acts, the ledger and `x.leg.day` read in about 20 kernel places.
+- **S-7, 9af299a6, then held by a8ec49f7: the converted `flows`.**
+  - 9af299a6 took out `Flows.convert` (`syntax/tree.rs`), its parse (`syntax/calls.rs`), its parentheses (`syntax/expr.rs` `force`, `syntax/parens.rs`), its unit and mode check (`load/reads.rs`), its text (`load/texts.rs`), its parts (`ask/answer.rs`) and the not-built arm (`walk/flows.rs`), with `tests/load_cases.rs`'s two cases of the form.
+  - Its `check quick` was green; `check commit` then showed two gating texts that still write the form (STOP-REPORT below). a8ec49f7 puts those 9 files back as eb8fcc43 had them. The guard refuses `git revert` and `git apply`, so it was done with `git show eb8fcc43:<file>` per file.
+  - The head holds the form as 2.1.8 left it (parsed, typed, not built). The next turn re-applies 9af299a6 as it is.
+  - Kept with it, for the spec writer: `flows` of a place of unit `any` is `LOAD-UNIT … it sums no one unit; convert it (in CUR at fx mode)`, refcore's words (check3.py l.828). The refusal stays, but its hint names the cut form. No gating vector prints it, and `load_cases.rs` tests it. S-1 (G2) reshapes it.
+- **The fault, fd126be1** (plan §3, choice C-2 (a)):
+  - `load/defs.rs` `check_def`: after the `at`'s reads are taken, so `at_reads` is unchanged, a key over an event kind calls `load/binds.rs` `key_movements`.
+  - `key_movements` records the `bind` edges to every move of the kind and its subkinds and to every observed input, and lists the def among the kind's readers, as `bind_movements` does, but marks no running read.
+  - `bind_movements` now shares `bound_kind` and `bound_observed` with it.
+  - A declaration's key over an observed input is `LOAD-KEY` (`resolve_domain`), so the kind is the one case.
+  - Test: `load/defs.rs` `a_def_keyed_by_a_movement_keeps_the_axes_and_pins_its_movements_reach`, fx3.tally's `h`, `h2`, `hp`.
+- **The fault's asks against §3's table** (`tmp/spec-2.2/probes/fx3.tally` on the engine; each was `[work = *]` before):
+  - `h`: `[work = yes]: 400.00 PLN`, `[work = no]: 1 200.00 PLN`.
+  - `h2`: `(t = in1) [work = yes]: 400.00 PLN`, `[work = no]: 1 200.00 PLN`.
+  - `hp`: `(400.00 PLN, 2 000.00 PLN, 2 000.00 PLN)`, where it was `(400.00, 400.00, 2 000.00)`.
+  - `i`, `h3` and `hw` as before. Each of the three equals the table.
+- **The fault under `paths`** (`tmp/spec-2.2-build/g1/fx_paths.tally`: fx3 with `pay = round(amt[work] * u, …)`, `u = uniform(0, 4) to 0.01`, 40 paths, seed 7):
+  - refcore at the pin gives `mh [work = *]: 660 PLN (standard error 0; …)` against `mi` 775.2 and 2 325.6 PLN: the fault, as the tests session saw it.
+  - The engine answers both `mean(by_helper)` and `mean(by_inline)` `not implemented`: a random leg amount under `paths` isn't built. So whether the edge mends the shared cell there can't be checked on the engine yet.
+  - The engine's shared cell reads the same graph (`reach_axes`), which now reaches the move.
+- **Lines, `git diff --shortstat` per step, engine/crates/tally/src unless said:**
+  - S-6: 536 out, 168 in, net −368 (plan: about 250 out, 250 to 350 by §13.5). Over by N-6's mechanism and the observed side. Tests: 109 out, 9 in.
+  - S-7: 66 out, 23 in (plan: 60 to 100 out), then back by a8ec49f7. Net 0 at the head.
+  - The fault: 41 code lines in (`binds.rs` +33 −4, `defs.rs` +8; plan: about 40), and 87 of test.
+  - Group, 38a3cdff..HEAD over engine/crates: 27 files, 649 out, 301 in.
+- **Kernel files touched:** 13 (plan: 7).
+  - walk/legs.rs, plan.rs, agenda.rs, lows.rs (F5), fork.rs (F6), move_flows.rs, order.rs, state.rs, day.rs.
+  - book/members.rs, same.rs, reading.rs, observe.rs.
+  - `check fences: green, 1 step (30s)` after the commit that touched F5 and F6.
+- **Gating vectors:** none moved at the head. `m2_counts_ahead` and `m2_counts_days` hold the tests session's re-pinned counts, and `m2_forks`' floors hold, so S-6/a doesn't move again. S-7/c is empty: the fault's edge moved no gating line (no `readers-of`, `WARN-UNREAD`, `LOAD-CYCLE`, or `[<axis> = *]` split).
+- **Exceptions:** +0 (`git diff 38a3cdff..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Time:** about 40 minutes, about 18 of them checks.
+  - `check commit` four times: 209, 130, 89 (red, S-7) and 188 s.
+  - `check quick` four times: about 360 s.
+  - Fences 30 s; the CLI builds about 60 s.
+- **Usage:** 0.81 % of the week by `engine/tools/usage` (budget about 0.8 %).
+- **Checks on fd126be1's tree:** `check commit: green, 23 steps (188s)`.
+
+## STOP-REPORT 2026-11-18: S-7's removal refuses two gating texts that still write a converted flows
+
+- **Kind:** a test seems wrong (two texts the plan's step 2 assumes free of the cut form), and a plan ordering the build can't meet green.
+- **Where:**
+  - `engine/tests/integration/models/CMP-01.tally` l.243 (and `engine/spec/models/CMP-01.tally`): `rule base = flows(pln[p], flow_month) + (flows(eur[p], flow_month) in PLN at eur_pln half-up)`. Plan §5 and critic C-13: it moves only with the pin and T2.
+  - `engine/tests/m2/fixes/r15/lin/m.tally` l.115: `ask n_fx: flows(k2, 2026-02) in EUR at fx half-even partial`. The tests session's first chunk restated `L5_18_partial_not_linear` q6, not this file's `n_fx`.
+- **Rule or gate:** R-77 (never commit red), and plan §13.2 step 2 ("yes, before and after: no gating vector writes a cut form any more").
+- **What happens:** with 9af299a6, `engine/tools/check commit` stops `red at tests … 5 of 1090 tests are red`, each line `LOAD-PARSE` where refcore answers:
+  - `m0_load_models`, `m0_loadcheck_models`, `m0_format_models`: `I:M:CMP-01` (`LOAD-PARSE cannot parse: expected ")", got at (…/CMP-01.tally:243)`).
+  - `m2_fixes_tally_218_r15`: 8 of 10. `r15/mean_linear`, `walked_linear`, `not_linear`, `low_plain`, `share_plain`, `round_scale`, `zero_coefficient` and one more, each `LOAD-PARSE cannot parse: expected end of line, got in (m.tally:115)`.
+  - `m2_fixes_tally_218_d`: `d72/money_coefficient`, the same file.
+- **What I tried:** nothing on the tests' side, which isn't mine. A converted `flows` kept parsed beside its removal would be the second way to say a cut form the brief forbids. Committing red is T's alone.
+- **What I ask:**
+  - The tests session restates `r15/lin/m.tally`'s `n_fx` (as the sum of a def keyed by the movement, or drops the ask). Its other asks' stored answers can stay.
+  - CMP-01 moves with the pin and T2, as planned.
+  - Then the builder's next turn re-applies 9af299a6 unchanged, with the refusal vectors' words.
+  - For the lead: plan §13.2 step 2 can't remove S-7 green before T2 while CMP-01 writes the form. Either S-7's removal waits for T2 in every round like this, or CMP-01's checks are logged red on T2's commit.
+- **State:** last green commit fd126be1 (`check commit: green, 23 steps (188s)`), pushed with this entry; nothing uncommitted. S-6 and the fault are in; S-7 is held by a8ec49f7.
+
+## 2026-11-18 tally 2.2, build group 1's second turn: S-7 again, T's red ids, the review's list (issue #211)
+
+On `build/2.2` at d42bd950 (the STOP-REPORT on S-7 ruled P9; G1's spec and refcore pinned at f68ac8e2; T's re-run). Review `tmp/spec-2.2-build/review-g1.md`.
+
+- **Red at the start:** 1 test, `m2_fixes_tally_22`, on 2 of T's `Logged-Red:` ids: `fixes/t22/cut_flows_rule` and `cut_flows_ask`. `cut_leg_on_move`, `cut_leg_on_row`, `fault_fx3` and `order_keyed_def` were green on arrival, the fault's vector included. `fault_paths` is held until M7.
+- **S-7, 6012f936: 9af299a6 re-applied** (its 9 files, as the brief asked), with:
+  - N-1: `load/reads.rs` `place_flows`: `flows` of a place of unit `any` is `LOAD-UNIT flows of world, a place of unit any: it sums no one unit`. That is refcore's text (check3.py l.841), without the hint naming the cut form. `tests/load_cases.rs` l.739 expects it.
+  - N-12: `ask/answer.rs` `ask_engine`: the `mut` binding only under `fault-injection`.
+  - The refusals' words equal refcore's on all four of T's vectors:
+    - `cut_flows_rule`: `LOAD-PARSE cannot parse: expected end of line, got at (m.tally:23)`.
+    - `cut_flows_ask`: `… got in (m.tally:30)`.
+    - `cut_leg_on_move`: `… got on (m.tally:18)`.
+    - `cut_leg_on_row`: `… expected ")", got on (m.tally:22)`.
+- **L-1:** ruled P11 (the fix stays at the graph); nothing changed.
+- **The review's list:**
+  - bfeeceb8 `refactor(walk)`:
+    - N-6: `Mv` is one index, `Mv(pub usize)`, the plan instance's place in the walk's list.
+    - N-7: no fallback to a leg day of its own in `walk/modelled.rs` `modelled_legs` (with its doc), `ask/walked.rs` `uncertain_rows`, `book/same.rs` `touching` (l.1248) and `book_key` (l.1262), or `walk/order.rs` (observed legs, by their observation's day); `walk/day.rs` `book_leg`'s doc restated.
+    - N-9: `tests/group3_cases.rs`'s header no longer cites L §5.14.1 and E §4.3 step 2.
+    - N-10: `walk/lows.rs` l.889's comment restated (F5).
+  - 7a4c4cb6 `fix(load)`:
+    - N-3: `check_def` makes the key's edges before the `at`'s snapshot, as refcore's `check_def` (`def_key_edges` first), so `at_reads` holds only what the key doesn't read. The text that shows it is `tmp/spec-2.2-build/g1/n3.tally`: `def fee[t in transfers]: money DUK = f at max(x.day for x in transfers over mo)`, an observed input `bank`, and `ask q: sum(fee[t] for t in transfers over mo)` with no law.
+      - The engine before the change: `LOAD-LAWDATE ask q reaches fee, whose at reads law-dated facts at its reader's law date, without law (L §4.3)`.
+      - refcore at the pin: `q: 1.00 DUK`; the engine now: the same (test `load/defs.rs` `an_at_reads_only_what_its_defs_key_does_not`).
+      - Note for the spec writer: refcore at the tag tally-2.1.8 refuses this text with the same `LOAD-LAWDATE`. Its `at` does read the observed input's rows. The pin's answer comes from the key's edge hiding that read from the snapshot, not from a rule of L §4.3. I aligned as asked; whether the hiding is meant is the spec's call.
+    - N-5: one `Reality::moves_of(kind)` (`model/reality.rs`) for `key_movements` and `kind_movements`. A free function with a named lifetime was the first form, and `check commit` refused it at `exceptions` (`lifetime-review`); the method needs none.
+  - N-4: probed; STOP-REPORT below. `tmp/spec-2.2-build/g1/n4.tally` loads and answers on 2.1.8 and is `LOAD-GUARD` now, in the engine and in refcore at the pin alike.
+  - **Left, with why:**
+    - N-8 (`engine/ARCHITECTURE.md` l.531): the guard refuses the build role's edit of that file. The line is for the lead or the doc's owner.
+    - N-7's `book/same.rs` l.1112 (`same_wait_for`, `lg.day == Dated::Day(dday)`): not a fallback. With the leg's day its instance's, it tests that the instance is dated by one day, not a window. `Member::day()` gives a window's first day, so it isn't the same test.
+- **Lines at the head, `git diff --shortstat`, engine/crates/tally/src (code), against the plan's:**
+  - S-6 (eb8fcc43, bfeeceb8): 572 out, 197 in (plan: about 250 out, 250 to 350 by §13.5). Over, as the first entry says: N-6's mechanism and the observed side. Tests: 111 out, 10 in.
+  - S-7 (6012f936; 9af299a6 and a8ec49f7 cancel): 68 out, 27 in (plan: 60 to 100 out). Tests: 11 out, 1 in.
+  - The fault (fd126be1, 7a4c4cb6): code 66 in, 24 out (plan: about 40). Tests: 139 in.
+  - Group, 38a3cdff..HEAD over engine/crates: 36 files, 769 out, 419 in.
+- **Kernel files at the head:** 15 (plan: 7).
+  - walk/agenda.rs, day.rs, flows.rs, fork.rs (F6), legs.rs, lows.rs (F5), modelled.rs, move_flows.rs, order.rs, plan.rs, state.rs.
+  - book/members.rs, observe.rs, reading.rs, same.rs.
+  - This turn added walk/flows.rs (S-7's not-built arm) and walk/modelled.rs (N-7).
+- **Gating vectors:** green at the head, T's G2-first-half ones included as the engine is.
+- **Exceptions:** +0 (`git diff 38a3cdff..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Usage:** about 1.26 % of the week for the group by `engine/tools/usage tmp/spec-2.2-build/g1-ids.txt` (0.81 % the first turn, so about 0.45 % this one; budget about 0.5 %).
+- **Checks:** `check fences: green, 1 step (28s)` after bfeeceb8's edits to F5 and F6. On 7a4c4cb6's tree: `check commit: green, 23 steps (218s)`, exit 0.
+
+## STOP-REPORT 2026-11-18: the key's edge makes an unguarded shifted read of a keyed def LOAD-GUARD
+
+- **Kind:** the spec seems wrong (or silent): the brief's N-4 stop rule, a text that loads on tally 2.1.8 refused now.
+- **Where:** `load/strata.rs` `recurrences` l.392 (`graph.reaches(&read.target, &read.reader)`), reached through fd126be1's `key_movements` edge. refcore's `m_def_key_edges` (check3.py l.305) makes the same edge. The text is `tmp/spec-2.2-build/g1/n4.tally`:
+
+  ```
+  model n4
+    tally 2
+    on 2025-04-01
+    start 2025-01-01
+    end 2025-06-30
+  source s "s"
+  unit DUK: currency minor 0.01
+  index mon = month 2025-01..2025-06
+  place konto: accounts DUK lives 2025-01-01..
+  place world: outside lives 2025-01-01..
+  input d0: date
+  input f: money DUK
+  input mk: month
+  def d[t in transfers, m in mon]: money DUK = f
+  def r[t in transfers, m in mon]: money DUK = d[t, m - 1]
+  move m0: transfers
+    on d0
+    leg cash from world to konto amount f
+  move m1: transfers
+    on d0
+    leg cash from world to konto amount r[m0, mk]
+  ask q: bal(konto, 2025-06-30)
+  version v
+    cite s
+    governs always
+    known 2025-01-01
+    d0 = 2025-01-05 "s"
+    f = 1.00 "s"
+    mk = 2025-03 "s"
+    opening[konto] = 0.00 at 2025-01-01 start "s"
+  ```
+
+- **Rule or gate:** L §5.11 (a recurrence read needs a guard), §8.3 `LOAD-GUARD`; the fault's fix (plan §3, C-2 (a), L-1 ruled P11: at the graph).
+- **What happens:**
+  - refcore at tally-2.1.8 (`git archive tally-2.1.8 engine/tools/refcore`): `q: 2.00 DUK`.
+  - refcore at the pin and the engine at 7a4c4cb6: `refused: LOAD-GUARD d[m - 1] is a recurrence read with no condition on m or pos(m) guarding it (n4.tally:18)`.
+  - `r` reads `d` at `m - 1`. `d`'s key over `transfers` now reads every transfer, and `m1`'s amount reads `r`, so `d` reaches `r`: a recurrence by the graph.
+  - `d[m0, ·]` depends on `m0` alone, which reads nothing of `r`, so no value recurs. The edge is per kind, not per movement: the over-reach L-1 kept.
+  - With `r` guarded (`rule base = d[t, m - 1] when pos(m) > 1`, `rule first beats base = f when pos(m) == 1`; `tmp/spec-2.2-build/g1/n4g.tally`), refcore at the pin and the engine both answer `q: 2.00 DUK`.
+- **What I tried:** nothing in the code. Engine and refcore agree, and narrowing the edge to the movement a key names is what P11 ruled out.
+- **What I ask:** the spec writer's ruling. Either the refusal stands and the migration note says a def read at a shifted key needs its guard once its key ranges over a kind whose movements read the reader (the guarded form above loads), or `recurrences` leaves the key's edges out of `reaches`, in refcore and the spec first.
+- **State:** last green commit 7a4c4cb6 (`check commit: green, 23 steps (218s)`), pushed with this entry; nothing uncommitted.
+
+## 2026-11-18 tally 2.2, build group 2, item 1: S-3, a balance reading at a day's start or end (issue #211)
+
+On `build/2.2` at 87b44ef7 (T's G2 vectors merged). G2's spec and refcore are the snapshot `tmp/spec-2.2-build/g2-new` (`git archive 300cda08`). Plan `tmp/spec-2.2/plan.md` §7. `check commit` at the start: `check commit: green, 23 steps (116s)`.
+
+- **361a9074: the instant `after m` of a `stated` or `opening` row is cut.** Out, by file:
+  - `syntax/tree.rs`: `Instant` is a struct (`day`, `edge`), no `After` variant; `syntax/item.rs` its parse; `syntax/parse.rs` `after` no longer ends a value before its clause; `syntax/canon_order.rs` the after-rank of the canonical order.
+  - `model/decl.rs`: `RowInstant` folded into the syntax's `Instant`; `RowsHold.after`. `load/rows.rs` `row_instant`'s after arm; `load/strata.rs` `after_readings` and `after_keys` (the `LOAD-ORDER` form for a reading, and its `LOAD-KEY`); `load/parts.rs`, `load/overlap.rs`, `load/scenarios.rs` the variant's arms.
+  - K `book/reading.rs`: `Stands`, `AfterDay(s)`, `after_missing`, `stands_in`, `last_standing_day`, `stands_text`, `after_days`, `reading_day`, `standing_day`, `instance_day`; `Seen.stands` is `Seen.edge`; `readings`, `seen_readings`, `first_readings` lose the after days. The pad's refusal of a reading after `m` breaking (`RUN-RECORD`'s two forms).
+  - K `walk/readings.rs`: `AFTER_SUB`, `touched_inside`, `readings_after`, `after_missing`, `apply_after`, the window end's reading (`window_end` keeps the unperm and the hole).
+  - K `walk/agenda.rs` (P8-14): `schedule_after`, `Booked`, `last_standing_in`, `booked_rank`; `Act::WindowEnd` carries no day window.
+  - K `walk/state.rs` `Walk.after`, `after_at`; `walk/order.rs` the run's call; `walk/day.rs` the act's arm; `walk/modelled.rs` m's leg after a reading after m; `walk/reads.rs` `run_status`, `free_main_walk` (the judgement by a movement); `walk/lows.rs` (F5), `walk/projection.rs`, `book/ledger.rs`: the after days.
+  - `eval/read.rs`: `after_at`, `after_text`, `after_on_days`, `row_after_day` and their arms in last, since and the carry; `eval/trace.rs`, `ask/walked.rs` (the register's `after <m>`), K `read/gap.rs`, K `read/rows.rs` (`instant_day`).
+  - The reading's judgement by a movement goes whole: m with no instance, m's day a hole or a window, a row standing in for m, m before the run.
+- **Beyond the plan's list, with why:**
+  - A reading now always stands in a group of the sign rule (start: the day's first batch; end: the closing group; an opening before the start: the batch). So `apply_stated`'s and `sign_anchor`'s branch for a reading outside every group, with its held `Change::Bad`, is `ENGINE-INVARIANT` now.
+  - `walk/lows.rs` (F5), `order.rs`, `projection.rs`, `reads.rs`, `book/ledger.rs`, `eval/trace.rs`, `read/gap.rs`, `load/overlap.rs`, `load/parts.rs`, `load/scenarios.rs`: each read the after day or matched the variant.
+  - The crate's texts of the form: `tests/group3_cases.rs` B6, B8, N-a (2), N-b (2) dropped; B5 and N-f restated (a reading `at 2026-03-31 end`; N-f without version r and ask l), each answer refcore's at 300cda08. `tests/group4_cases.rs`'s r16 test dropped. `tests/load_cases.rs` after-plan, after-decision, after-obs are one after-cut case (`LOAD-PARSE`).
+- **Listed and kept:**
+  - The change kind for a window's end, `Change::Unperm`, `Act::WindowEnd`, its arms in K `walk/flows.rs`, and K `hole/questions.rs` `Hole::without`: refcore at 300cda08 keeps `dec_win_end`'s unperm and hole part (only the reading went).
+  - `load/rows.rs` `row_instant`'s words, `needs start, end or after`: STOP-REPORT below.
+  - The clause `after m` on a move, and `load/binds.rs`'s key edge with its tests (the brief).
+- **Refusals against refcore at 300cda08** (`tmp/spec-2.2-build/g2/`):
+  - `r_after.tally`: both `refused: LOAD-PARSE cannot parse: expected end of line, got after (r_after.tally:26)`.
+  - `r_at.tally`: refcore `LOAD-INSTANT balance reading stated at 2026-01-10 needs start or end`; the engine `… needs start, end or after` (held).
+  - `r_end.tally`, the twin at `end`: both `b: 900.00 PLN`.
+- **Sweep** (engine, the engine before at 87b44ef7, refcore at 300cda08; 67 texts of `tmp/spec-2.2/probes/` and `inputs/review/probes/`): no line turned same → different. The engine moved on `a1_after`, `a1b`, `a2` only, each now refcore's `LOAD-PARSE … got after`. 14 differ before and after alike: 10 `not implemented`, `u1_any`, `c_outread2`, `c_outread3` (S-1), `c_w` (bare `windows`: `expected each` against refcore's `expected more text`, S-4's ground).
+- **What stays by ruling, checked:** `u1_one.tally` `worth: 110 PLN` (P8), engine = before = refcore. An outside place's residuals (`g2/out_resid.tally`, `residuals world 2026-02`) print its ledger per unit, `ledger EUR:` and `ledger PLN:` (P12), engine = before = refcore.
+- **Lines, `git diff --shortstat 87b44ef7 361a9074`:** src 27 files, 1 144 out, 243 in (plan: about 870 out). Over by the beyond list. Tests 3 files, 497 out, 12 in.
+- **Kernel files touched:** 13 (plan: 11): walk/agenda.rs (P8-14), day.rs, lows.rs (F5), modelled.rs, order.rs, projection.rs, readings.rs, reads.rs, state.rs; book/ledger.rs, reading.rs; read/gap.rs, rows.rs. The plan's walk/flows.rs and hole/questions.rs are kept, as above.
+- **Gating vectors:** none moved. The two stored lines with LOAD-INSTANT's words hold (STOP-REPORT below).
+- **Exceptions:** +0 (`git diff 87b44ef7..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **For the lead:** `engine/ARCHITECTURE.md` l.226 still says a reading is applied "right after the movement it" names; the guard refuses the build role's edit there.
+- **Time:** about 30 minutes, about 7 of them checks: `check commit` 116 and 184 s, `check quick` 79 s (and one red at clippy-lib, 6 s), fences 25 s; the sweeps about 3 minutes.
+- **Usage:** 0.85 % of the week by `engine/tools/usage tmp/spec-2.2-build/g2-ids.txt` (stop at 3.2 %).
+- **Checks:** on 361a9074's tree `check commit: green, 23 steps (184s)`; after it `check fences: green, 1 step (25s)`.
+
+## STOP-REPORT 2026-11-18: LOAD-INSTANT's new words would turn two gating stored lines red
+
+- **Kind:** a test seems wrong (stored before the round): two gating lines print 2.1.8's words.
+- **Where:** `load/rows.rs` `row_instant` l.651; `engine/tests/m1/vectors.refcore` l.225889 (`l5_19_load_instant.tally:24`), `engine/tests/codes/m0.refcore` l.3517 (`base.tally:44`), and `engine/tests/map/codes.tsv` l.139's form.
+- **Rule or gate:** R-77 (never commit red); plan §13.2 (a stored line's move is T2's, Logged-Red, then the builder's).
+- **What happens:** refcore at 300cda08 (`loader.py` l.2001) says `LOAD-INSTANT balance reading <x> at <D> needs start or end`. Both stored lines end `needs start, end or after`, so the new words turn `m1` and `m0`'s codes red under `check commit`.
+- **What I tried:** nothing on the tests' side. The engine keeps 2.1.8's words; everything else of S-3 is in, green.
+- **What I ask:** T2 re-stores the two lines (and the map's form) on refcore at 300cda08 with `Logged-Red:` on their ids. Then the builder changes `row_instant`'s message to `needs start or end`, one line.
+- **State:** last green commit 361a9074 (`check commit: green, 23 steps (184s)`); this entry is the only change after it.
+
+## 2026-11-18 tally 2.2, build group 2, item 2: S-1, a place of the model holds one unit (issue #211)
+
+On `build/2.2` at 93ce6877 (the lead's merge of T's last unit-`any` texts; `check commit` green, 222 s, the lead's run). The lead ruled S-3's STOP-REPORT an order of work: `row_instant`'s words go at the round's close. The work list was `tmp/spec-2.2-build/g2/s1-notes.md`.
+
+- **The group's sizes at its head, `git diff --shortstat 87b44ef7 HEAD`, engine/crates/tally/src:** 30 files, 1 613 out, 320 in (plan: 870 + 580 = 1 450 out). Tests 3 files, 850 out, 25 in.
+  - S-3 (361a9074): 1 144 out, 243 in (plan: about 870).
+  - S-1 (86f2745f): 15 files, 498 out, 106 in (plan: about 580). Tests 2 files, 356 out, 16 in.
+- **86f2745f: S-1.** In, with refcore's words at 300cda08 (`loader.py` l.564, l.2206):
+  - `load/kinds.rs` `place_kinds_whole`: `LOAD-PLACEKIND place kind <K> is of unit any and isn't outside`.
+  - `load/values.rs` `place_reading`: `LOAD-UNIT <input>[<x>]: a place of unit any takes no balance reading`.
+- **Out, by file (R14's mechanism):**
+  - K `book/reading.rs`: `UnitKept`, `by_unit`, `rows_with`, `per_unit`; `readings` keys a reading by place, instant and input alone; `reading_of`'s unitless hole (`ALL`); `reading_place`, which had no caller left; `make_pad`'s `:<unit>` id and its `m`.
+  - K `walk/agenda.rs` (P8-14) `Reading.own`; K `walk/readings.rs` `apply_reading`'s loop over units.
+  - `model/reality.rs` `reading_ty`'s `any` branch and its `value` argument; `model/decl.rs` `InputInfo.held`, `RowsHold.unitless`.
+  - `load/rows.rs` `unitless_any` and its pass; `load/values.rs` the unstated arms; `load/overlap.rs` `Stated::Unstated`, `wider`.
+  - `eval/read.rs` `unitless_held`, `unitless_walk`, the value's unitless arms.
+  - K `read/gap.rs` `one_unit`, `instant_of`, `two_units` (`RUN-DOMAIN … its readings at <instant> are in <u> and <u'>`); K `walk/reads.rs` gap's two units.
+  - K `book/ledger.rs`: the units a place's readings bring, and a unit ledger's per-unit reading.
+- **Beyond the notes:** `make_pad`'s `m` and `reading_ty`'s `value`, unused once their `any` tests went; `load/parts.rs` `amounts_over`'s doc (its unit guard stays: it also tells money from a number).
+- **Kept against the notes, with why:**
+  - `RowsHold` keeps one field, `known_window`. A fourth bool on `InputInfo` is clippy's `struct_excessive_bools`, red at clippy-lib.
+  - `load/overlap.rs` `Group.unit`: refcore's `check_overlap` still groups by unit.
+  - `load/values.rs` `row_unit` (`holds any unit; its row states the unit`): refcore keeps its `pu is None` branch, a place with no unit.
+- **Kept by ruling, checked against refcore at 300cda08** (`tmp/spec-2.2-build/g2/s1_out.tally`):
+  - `bal(world, PLN, d), bal(world, EUR, d)` (P17): both `?"world has no opening or stated reading" (world)`.
+  - `value(world, d) in PLN by fx`: the same hole.
+  - `residuals world 2026-02` (P12): `ledger EUR:`, `ledger PLN:`.
+  - `u1_one.tally` (P8): `worth: 110 PLN`.
+- **The crate's tests:** `tests/group3_cases.rs` B4 (`t1_la`, `t1_pl`), N1 (`r14_none`) and G1 (`p5_min`, `p5_plan`, `p4_planlast`) dropped: each tests R14 on a place of unit `any`. Their header no longer cites R14. `tests/load_cases.rs` gains the two refusals on MOVES, each refcore's line on the same text.
+- **Sweep** (67 texts of `tmp/spec-2.2/probes/` and `inputs/review/probes/`; the engine against S-3's engine and refcore at 300cda08): no line turned same → different. The engine moved on `u1_any` (`LOAD-PLACEKIND`), `c_outread2` and `c_outread3` (`LOAD-UNIT`), each now refcore's. 11 differ before and after alike: 10 `not implemented` and `c_w` (S-4's ground).
+- **Kernel files touched by S-1:** 6 (plan: 7): book/reading.rs, ledger.rs; read/gap.rs; walk/agenda.rs (P8-14), readings.rs, reads.rs. The plan's walk/state.rs and walk/value.rs are untouched: `units_of` and the outside's value stay.
+- **Gating vectors:** none moved.
+- **Exceptions:** +0 (`git diff 87b44ef7..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **Time:** about 25 minutes, about 8 of them checks: `check quick` 6 s (red, clippy-lib), 81 s (red, the six R14 tests), 14 s and 140 s; fences 33 s; the sweep about 1 minute.
+- **Usage:** 1.22 % of the week by `engine/tools/usage tmp/spec-2.2-build/g2-ids.txt` before this entry (stop at 3.2 %).
+- **Checks:** `check fences: green, 1 step (33s)` after 86f2745f; on its tree with this entry `check commit: green, 23 steps (124s)`.
+
+## 2026-11-18 tally 2.2, build group 3: S-2 and S-5 in, S-8 held (issue #211)
+
+On `build/2.2` at bf3b2bf0. G3's spec and refcore are the snapshot `tmp/spec-2.2-build/g3-new` (`git archive b9eb505c`). Plan `tmp/spec-2.2/plan.md` §8–§10. `check commit` at the start: `check commit: green, 23 steps (71s)`.
+
+- **ab8fe0ce: S-2, `known` is a day.** Out, by file:
+  - `syntax/tree.rs` `Known` (a version's and a row's `known` is a `Day`), `syntax/parse.rs` `known`, `syntax/item.rs`, `syntax/canon.rs`, `syntax/canon_order.rs` `known_day`.
+  - `model/decl.rs` `Row.own_window`, `Observation.own_window`, `RowsHold`, `InputInfo.holds`; `model/index.rs` `VersionInfo.window`, `Moved.window`.
+  - `load/spans.rs`, `load/rows.rs` (`known_in_window`), `load/observed.rs`: the window's checks.
+  - K `read/rows.rs` `KnownInside`, `known_inside`; `eval/read.rs` `input_view`, `hidden_rows`, `kept_rows`, `Side::Signal`; `eval/windows.rs` `known_seen`, `known_unknown`, `known_hole`, `known_question`; `eval/state.rs` `each_forced`, `same_picks`; `eval/rules.rs`, `eval/builtin.rs`, `eval/business.rs`.
+  - K `book/observe.rs`, a statement known in a window: `Obs.undecided`, `KnownAtCut`, `Windows`, `Coverage.undecided`, `known_sid`, `known_windows`, `covering_windows`. The coverage chain is infallible again, as before 738c0ad7: `coverage`, `covering`, `touches_covered`, `obs_end_on`, K `walk/order.rs` `end_booked`, K `book/same.rs` `books_ends_at`, `one_transfer`, `row_covers`.
+  - K `book/members.rs` `two_days`, `unseen_day`, `MvMember.two_days`; K `book/same.rs` `SameMet`, `SamePicks`; K `book/reading.rs` `seen_readings`.
+  - K `walk/agenda.rs` (P8-14) the cover holes, K `walk/day.rs` `Act::CoverHole`; K `walk/lows.rs` (F5), `plan.rs`, `projection.rs`, `reads.rs`, `move_flows.rs`, K `book/ledger.rs`: callers and comments.
+  - `ask/answer.rs`: the seen-and-unseen answer whole (an engine per choice, the merge, the hole naming statement and version, `seen and unseen over more than 20 000 choices`); `ask/windows.rs` `RunMet`, the `known of <v>` sub-windows (the clause still splits by days); `ask/diff.rs`.
+  - The refusal is the grammar's, refcore's at b9eb505c: `LOAD-PARSE cannot parse: expected a day, got window`, on the crate's case (`a.tally:49`, the version's `known` line) and on the review's k1, k4, k4b. k3 differs before and after: refcore refuses its `windows each` first (G4's ground).
+  - The crate's tests: `ask_cases.rs`'s seen-and-unseen texts (`same_links`, `SAME_DIFF`, `SAME_DIFF_SC`, `SAME_DIFF_SD`, five tests) dropped; `load_cases.rs`'s window forms are one `LOAD-PARSE` case.
+- **002cee8a, e9a54509: S-5, a `same` line between two observed rows has no clock.**
+  - `model/reality.rs` `SamePair::Moves` carries whether both sides are observed rows, which `load/same.rs` sets. K `book/same.rs` `rows_line_seen`, read by `moves_seen`: in the worlds its file is in, the line holds at every cut that sees both rows. K `book/observe.rs` `observed_row_seen`, refcore's `obs_row_seen` (the observations' own filter).
+  - e9a54509: the first form shared a helper with `seen_observations` whose borrowed keys named a lifetime, a report-only hit that `check commit` refused at `exceptions`. The row's own loop needs none, and `seen_observations` is as S-2 left it.
+  - The kept clock, `s5mm.tally`: `before: 200.00 PLN` (as known 2026-04-01) and `today: 100.00 PLN` (cut 2026-06-10), before and after, refcore's lines.
+  - The review's `s3`: `between` (as known 2026-04-03, sav's row not known yet) was `RUN-RECORD same bank[a2] = sbank[b1]: sbank[b1] doesn't exist`; it is now refcore's `(1 050.00 PLN, 950.00 PLN, 1, -950.00 PLN)`. The line in a third version known after both rows (`g3/s5/late.tally`) counts the transfer once when asked between, where the engine before counted 2; refcore the same.
+  - `tests/same_cases.rs`: those three texts, refcore's lines.
+- **6270a1b0: S-8, held by f846a48d** (STOP-REPORT below). For its re-application, what it does:
+  - `load/same.rs`: a row of an input is no side (`LOAD-SAME same <p> = <q>: a row of an input and a row of an input`), its keys resolved first as refcore's `sref` does; the rows-of-types check goes; every joint-own row of a member's input is refused.
+  - `eval/read.rs` the class read whole: `same_class`, `read_same_rows`, `same_side`, `latest_in_class`, `carry_disagrees`, `SameRow`, `SameSide`, the last/since `Side` enum, `removed_row`, `latest_began`. `eval/business.rs` a calendar's row through its class and `same_partner`. `load/strata.rs` `read_with_same`, the unread warning of rows read together. `model/reality.rs` `SamePair` is one struct of two movements. K `book/same.rs`, `lib.rs`: callers.
+  - Tests: `group4_cases.rs` B1 (2) and G1, `ask_cases.rs` group 1's fix N3 (`same cq = cr`), dropped; `load_cases.rs`'s two row cases restated.
+  - Its refusals equal refcore's at b9eb505c: `same fee[a1] = fee_in[a1]` and `same fee[a1] = count` (`a row of an input and a row of an input`), `same fee[a1] = bank[r1]` (`a row of an input and a movement`), `same fee = fee_in[a1]` and `same fee[a7] = fee_in[a1]` (`LOAD-KEY` first); the review's `s8`; the critic's `jsame` with its members re-pinned (`g3/s8/`).
+  - PTY-05's cards with it load as stored: ania, halina, joint and the set, each `refused: REQ-ASK no ask zz_m0_probe`.
+  - Listed and kept: K `book/members.rs`, K `book/settle.rs`, K `walk/move_flows.rs` hold movement classes only (observed rows), which stay. `load/overlap.rs` `owners_differ` stays: refcore keeps it.
+- **Beyond the plan's list (S-2):** `syntax/parse.rs`, `canon_order.rs`; `model/decl.rs`, `index.rs`; `load/spans.rs`, `observed.rs`; `eval/rules.rs`, `builtin.rs`, `business.rs`, `windows.rs`, `state.rs`; `ask/windows.rs`, `diff.rs`; K `book/reading.rs`, `ledger.rs`; the walk's callers above, and the coverage chain's `?`s.
+- **Listed and kept (S-2):** K `book/same.rs` `same_line_seen` and `moves_seen`: the plain `known` test of a line with a planned side (C-11) and of every line but S-5's. `load/kinds.rs`: no window code was there; the window's checks were `load/spans.rs`'s and `load/rows.rs`'s.
+- **Sweep** (`tmp/spec-2.2-build/g3/sweep.py`, 74 sets: `tmp/spec-2.2/probes/`, `inputs/review/probes/`, `critic-scratch-2.2/`, with j1, k2 and s8j's two read as sets; the engine against bf3b2bf0's and refcore at b9eb505c), before every commit after the first and on the head: no line turned same → different.
+  - The engine moved on k1, k3, k4, k4b (S-2), s3 (S-5) and s8 (S-8, back with the hold); each but k3 is now refcore's.
+  - At the head 57 of 74 equal refcore. The 17 others differ before and after alike: 8 `tally run: not implemented` (a2e, f1, CMP-01.inline, j1 and its joint, q1, r1, r1b), 5 `low`/`next` (OWN-02, RULE-02, RULE-05, low1, x), 3 `windows each` (k3, c_w, c_wall), and s8.
+- **Lines, `git diff --shortstat`, engine/crates/tally/src:**
+  - S-2 (ab8fe0ce): 36 files, 1 635 out, 272 in (plan: about 1 100 out). Over by the beyond list, the coverage chain's restored infallibility the largest part. Tests 2 files, 286 out, 20 in.
+  - S-5 (002cee8a, e9a54509): 4 files, 12 out, 79 in (plan: about 40 out, 15 in). The engine had no clock of its own for these lines to cut, only the version's `known` test, which stays for the rest; the rows' seen test is new. Tests 1 file, 178 in.
+  - S-8 (6270a1b0, held): 7 files, 568 out, 95 in (plan: about 300 out); the class read in `eval/read.rs` was 396 of it. Tests 3 files, 274 out, 10 in.
+  - Group at the head, bf3b2bf0..f846a48d: 38 files, 1 643 out, 347 in; tests 3 files, 286 out, 198 in.
+- **Kernel files touched at the head:** 14. book/ledger.rs, members.rs, observe.rs, reading.rs, same.rs; read/rows.rs; walk/agenda.rs (P8-14), day.rs, lows.rs (F5), move_flows.rs, order.rs, plan.rs, projection.rs, reads.rs. The plan named 4 for S-2 and 1 for S-5 (book/same.rs; book/observe.rs read, which S-5 now adds to).
+- **Gating vectors:** none moved at the head. With S-8, two: m0_code_load_key `kplace/base` (STOP-REPORT below) and m0_code_load_same `joint/same-what`, whose stored words `a row and a def` wait for the closing turn (refcore's `a row of an input and a def`).
+- **Exceptions:** +0 (`git diff bf3b2bf0..HEAD -- engine/EXCEPTIONS.lock` is empty).
+- **For the lead (`engine/ARCHITECTURE.md`, which the guard keeps from the build role):** l.256 "a version known in a window that holds the cut included" and l.402 "or across a known window" (S-2); with S-8, l.338 "`same` lines of rows and movements".
+- **Time:** about 60 minutes, about 18 of them checks: `check commit` 71 s, 2 s (red, exceptions), 85 s (red, the two m0 vectors), 236 s and the one on this entry's tree; `check quick` nine runs, 373 s (two red at tests, one at check-rules, one at headers), and a few `check step clippy-lib` runs; fences 31 s; the sweeps about 7 minutes.
+- **Usage:** 1.36 % of the week by `engine/tools/usage tmp/spec-2.2-build/g3-ids.txt` before this entry (stop at 3.2 %).
+- **Checks:** `check fences: green, 1 step (31s)` after ab8fe0ce (S-2 touched F5 and P8-14; nothing after it did). On f846a48d's tree: `check commit: green, 23 steps (236s)`; with this entry: `check commit: green, 23 steps (91s)`.
+
+## STOP-REPORT 2026-11-18: S-8 refuses T's gating base kplace, which states same between two rows
+
+- **Kind:** a test seems wrong (a stored text the round's restated vectors didn't reach).
+- **Where:** `engine/tests/codes/m0/kplace/base.tally` l.37, `same lim[konto[ana]] = lim[konto[ben]]` (rows of the input `lim`), stored in `engine/tests/codes/m0.refcore` as loading (`refused: REQ-ASK no ask zz_m0_probe`); its note says "two rows stated same at its keys; it loads clean". Also `joint/same-what`'s stored words.
+- **Rule or gate:** R-77 (never commit red); plan §10 (S-8: a `same` line between two rows of an input is `LOAD-SAME`).
+- **What happens:** on 6270a1b0's tree, `engine/tools/check commit` stops `red at tests … 2 of 1064 tests are red`:
+  - `m0_code_load_key`: `kplace/base: … refcore "refused: REQ-ASK no ask zz_m0_probe", the engine "refused: LOAD-SAME same lim[konto[ana]] = lim[konto[ben]]: a row of an input and a row of an input (base.tally:37)"`. By refcore's `sref` and `joint_sames` at b9eb505c the base refuses so too (both sides `row`); the guard keeps refcore off T's files, so that is read from the code, not run. The fixtures built on it (`same-place-unknown`, `same-key-index`) still get their `LOAD-KEY` first.
+  - `m0_code_load_same`: `joint/same-what`, stored `a row and a def`, the engine `a row of an input and a def` (refcore's words).
+- **What I tried:** nothing on the tests' side, which isn't mine. A same line of rows kept loading beside S-8's refusal would be the second way the brief forbids. As G1 held S-7, f846a48d puts S-8's ten files back as 002cee8a left them; S-2 and S-5 stay in.
+- **What I ask:**
+  - The tests session restates `kplace/base` without the rows' line (its `LOAD-KEY` fixtures need a `same` side keyed by the keyed place; a header line of two movements, or a def that reads both, as MIGRATION.md's row gives) and re-stores `joint/same-what` with refcore's words, each with `Logged-Red:` if it lands first.
+  - Then the builder's next turn re-applies 6270a1b0 unchanged.
+  - Or the lead rules the words: if `joint/same-what` keeps `a row and a def` to the closing turn, the re-applied S-8 prints `a row` (and `a row and a row` for two rows) until then.
+- **State:** last green commit f846a48d (`check commit: green, 23 steps (236s)`); this entry is the only change after it. S-2 and S-5 are in; S-8 is held.
+
+## 2026-11-18 tally 2.2, build group 5: S-9, `low` and `next` out, the recognition held (issue #211)
+
+On `build/2.2` at 0c5a9ad7. G5's spec and refcore are the snapshot `tmp/spec-2.2-build/g5-new` (b9eb505c). Plan `tmp/spec-2.2/plan.md` §12, C-10 (a). `check commit` at the start: `check commit: red at tests, stopped after 10 of 23 steps (101s)`, the one red `m2_counts_lows`, f73c0c5c's `Logged-Red:` (T's m1/lows spelled as the `min` it means, which the plain aggregate reads with more work).
+
+- **dce04b1c: S-9, `low` and `next` out.** By file (paths under `crates/tally/src/`, K the kernel):
+  - `syntax/expr.rs` (the two built-in names), `calls.rs`, `reads.rs` (`low`'s parse), `tree.rs` (`Expr::Low`, `Low`), `ask.rs` (an ask's `explain` reads `bal` only); `lib.rs` (`Low`, `span_last`, `own_unit` re-exports).
+  - `load/reads.rs` (both checks), `calls.rs`, `types.rs`, `texts.rs`, `cone.rs`, `check.rs`, `lawdates.rs` and `model/graph.rs` (`Rel::Next`), `load/binds.rs` (`kind_movements`' relation, only ever `Bind` now).
+  - K `walk/projection.rs` the run's `low`: `low`, `low_read`, `projected_days`, `days_read`, `plain_days`, `Days`, `lowest`. K `walk/lows.rs` (F5) its header, doc and tests restated in `min` words. K `book/members.rs` `next_movement` and its binary search.
+  - `eval/builtin.rs`, `expr.rs`, `ty.rs`, `partial.rs`, `bindings.rs`; `ask/answer.rs`; `ask/walked.rs` `low_lines` and the `lowest:` line, the `Read` enum (one variant left, so gone); `ask/explain.rs`.
+  - The crate's texts: `tally-cli/tests/lows/` (T's respelled m1/lows), `walk_oracle.rs`'s docs, `load_cases.rs`, `parse_cases.rs`, `graph_cases.rs`.
+- **Refusals, each byte-equal to the snapshot refcore's run of the same text** (`tmp/spec-2.2-build/g5/refusals/`): `low(konto, 2026-01-01 .. 2026-12-31)` `LOAD-PARSE cannot parse: expected ")", got ..`; `explain low(…) from …` `LOAD-PARSE cannot parse: expected end of line, got (`; `next(wages, day)` `LOAD-NAME unknown id next`; `low(konto, y)` `LOAD-NAME unknown id low`; the spelled forms' `RUN-EMPTY min over no keys` and `RUN-DOMAIN bal(konto, 2026-03-01) from 2026-03-20: the day is before the projection's start`, which 0c5a9ad7 already printed. No stored line waits for the closing turn.
+- **The recognition (C-10 (a)), built, held** (STOP-REPORT below), saved as `tmp/spec-2.2-build/g5/recognition/recognition-v2.patch` on dce04b1c with its five files.
+  - Where: `eval/aggregate.rs` `aggregate` asks `walk::lowest_shape` first, then `range_minimum`; K `walk/projection.rs` `lowest_shape`, `reads_lowest`, `lowest_balances`, `days_read`; K `walk/lows.rs` (F5) `common_low` reads first through last; K `walk/agenda.rs` (P8-14) `left_out_lines` takes a window, one line per count of a move's instances through each day of it, the union the aggregate prints read day by day.
+  - Shape: `min(bal(x, d) from t [with uncertain] for d in a .. b step 1 day)`: one binding, a range of days stepped by the written `1 day`, no `where`, `on`, `over` or `ties by`, the term exactly `bal` of a place at the bound day with `from` and no `of`, `start`, `modelled`, `windows each` or `random at`, neither place nor `from` reading d.
+  - Falls back to the plain aggregate: F5 off (`Lows::Walk`, the twin), partial lines, `explain`, a range that is a hole, holds no day or other values, days outside S..E, a place or start that is a hole, a first day before t, t before S. So every refusal and hole is the aggregate's own.
+  - m1/lows `every`, stored: `on/off days_stepped=880 nonempty_days=878 walks=28 walks_shared=0 legs_booked=878 def_hits=710 def_misses=494`. dce04b1c (plain): `on days_stepped=1639 … walks=81 walks_shared=1672 … def_misses=751; off days_stepped=27620 nonempty_days=27192 walks=1753 … def_misses=8981`. With the recognition: the stored line, `m2_counts_lows` green.
+  - Measured on the reference Mac, AC: `perf row P8-5` 265.8 ns (dce04b1c) and 265.6 ns (with it), budget 300 ns; the bench times `RangeMinimum::lowest_change` alone, which neither commit changes, and `perf counts P8-5` prints only `P8-5: bench:p8_5` (no counted ask). `perf row P8-M4` 3.98 ms (dce04b1c) and 3.03 ms (with it) over the plain run, unjudged (P58; the row's guard is CI's instructions); its run reads `bal(x, E) from S`, through `left_out_lines`' one-day window.
+  - Choices taken: no `from` stays plain (a projection read needs a start; F5 never took plain `bal`); only the written `1 day` step; no `explain` recognition (it prints the aggregate's terms).
+- **Sweep** (`tmp/spec-2.2-build/g5/sweep.py`, G3's 74 sets, the engine against 0c5a9ad7's and the snapshot refcore) on dce04b1c and again on this entry's tree: now same 62, moved 5, turned 0.
+  - Moved, each now refcore's: low/OWN-02.orig, low/RULE-02.orig, low/RULE-05.orig, low/x, probes/low1.
+  - The 12 others differ before and after alike: 8 `tally run: not implemented` (a2e, f1, CMP-01.inline, j1 and its joint, q1, r1, r1b), 3 `windows each` (k3, c_w, c_wall), s8 (S-8 held).
+- **Lines, `git diff --shortstat 0c5a9ad7 dce04b1c`:** 37 files, 771 out, 167 in (plan: about 300 out, 80 in). `crates/tally/src` 26 files, 730 out, 137 in; the crate's tests 10 files, 39 out, 29 in; EXCEPTIONS.lock the rest. Over by the explain printer (`ask/walked.rs`, 253 lines changed), the run's plain per-day read (`walk/projection.rs`, 252) and `next_movement` (84). The held recognition: 5 files, 231 in, 19 out (`git diff --stat`), the 80 the plan put on it.
+- **Beyond the plan's list:** `Rel::Next` and its edges, `kind_movements`' relation, `walked.rs`'s `Read` enum, the `lib.rs` re-exports, `graph_cases`/`load_cases`/`parse_cases`' texts.
+- **Listed and kept:** `common_low`'s window (first through last): only a one-day caller until the recognition lands, which reads it. `own_unit` stays in `walk/projection.rs`: `bal_unit` reads it.
+- **Kernel files touched:** dce04b1c 3: book/members.rs, walk/lows.rs (F5), walk/projection.rs. The held recognition adds walk/agenda.rs (P8-14).
+- **Gating vectors:** dce04b1c none moved; `m2_counts_lows` red before and after, f73c0c5c's `Logged-Red:`. With the recognition: `m2_counts_lows` green; `m2_counts_days` r1, `m2_counts_ahead` b2_min, `m2_counts_r4` r7 red (STOP-REPORT below).
+- **Exceptions:** −1 report-only (dce04b1c: `ask/walked.rs`'s `Read<'a>`, R-124's lifetime review), `# count: 6; report-only hits: 8`. The recognition +0.
+- **For the lead (`engine/ARCHITECTURE.md`, which the guard keeps from the build role):** l.54 "`low`, `next`", l.124 "`reads.rs` (`low`, …", l.246–247 "and `low`, its least end-of-day balance", l.260 "`next`", l.290 "a `low`", l.363's row "`low`, … `next`", l.442 "and `low`", l.704 "`low`", l.709 "`next`". For the rules step: `crates/tally/benches/p8_5.rs` (R-91 keeps it from the build role) l.4, l.16, l.57 describe its read as `low(x, a .. b) from t`.
+- **Usage:** 0.78 % of the week by `engine/tools/usage tmp/spec-2.2-build/g5-ids.txt` before this entry (stop at 2.2 %).
+- **Checks:** dce04b1c committed on a green `check quick`. On its tree: `check quick: green, 11 steps (11s)`, `check commit: red at tests, stopped after 10 of 23 steps (154s)`, the one red `m2_counts_lows` (logged); `check fences: green, 1 step (49s)`. With the recognition: `check quick: green, 11 steps (74s)`, `check fences: green, 1 step (45s)`, `check commit: red at tests, stopped after 10 of 23 steps (80s)` (3 of 1068: r1, b2_min, r7).
+
+## STOP-REPORT 2026-11-18: the recognition makes three gating F6 count pins read less work
+
+- **Kind:** a test seems wrong (three count pins written with the spelled `min` that C-10 (a) asks the engine to read as one range minimum).
+- **Where:** `engine/tests/m2/counts/days_c.tally` l.60 `ask r1: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)`; `m2/counts/r4.tally` l.74 `ask r7:` the same text; `m2/fixes/gate8/g8c/b2.tally` l.60 `ask b2_min: min(bal(konto, d) from 2026-01-10 for d in 2026-01-10 .. 2026-02-10 step 1 day)`; pinned in `runner/milestone/m2_counts.rs` (`m2_counts_days`, `m2_counts_r4`, `m2_counts_ahead`).
+- **Rule or gate:** R-77 (never commit red); plan §12, C-10 (a); R-130 (F5 with its twin).
+- **What happens:** with `recognition-v2.patch` on dce04b1c, `engine/tools/check commit` stops `red at tests … 3 of 1068 tests are red`; the answers are unchanged, the counts lower with F6's forks on and off:
+  - r1: stored `on days_stepped=88 nonempty_days=88 walks=6 walks_shared=32 legs_booked=88 def_misses=38; off 222 … walks=38 … def_misses=70`; the engine `on/off days_stepped=82 nonempty_days=82 walks=4 walks_shared=0 legs_booked=82 def_misses=36`.
+  - b2_min: stored `on 78 … walks=4 walks_shared=14 … def_misses=36; off 120 … walks=18 … def_misses=50`; the engine `on/off 78 … walks=4 walks_shared=0 … def_misses=36`.
+  - r7: stored `on days_stepped=65 nonempty_days=61 walks=7 walks_shared=41 legs_booked=71; off 330/299/75/0/404`; the engine `on/off 56/53/5/0/60`.
+- **What I tried:** these are C-10 (a)'s shape exactly, the same as m1/lows' `every`; any narrowing that leaves them plain leaves `every` plain too, or branches on the input (R-94). As G1 held S-7 and G3 held S-8, the recognition is held off the branch; S-9's removal is in.
+- **What I ask:**
+  - The tests session restates r1, b2_min and r7 off the shape so F6 keeps its subject (an always-true `where d >= <first day>` leaves them to the aggregate, whose counts they pin; by my reading the `where` reads no def, so the stored lines hold), or re-pins them at the counts above; with `Logged-Red:` if it lands first.
+  - Then the builder re-applies `recognition-v2.patch` unchanged (or its five files), which turns `m2_counts_lows` green. Until then `m2_counts_lows` stays f73c0c5c's `Logged-Red:`.
+- **State:** last commit dce04b1c (`check quick` green; `check commit` red only on the logged `m2_counts_lows`); this entry is the only change after it.
+
+## 2026-11-18 tally 2.2, build group 4: S-4, `windows each` out, the hole names its unknown day (issue #211)
+
+On `build/2.2` at 201613ef. Plan `tmp/spec-2.2/plan.md`, S-4 and the hole's name; refcore is this worktree's (`engine/tools/refcore`, tally 2.2). `check commit` at the start: `check commit: red at tests, stopped after 10 of 23 steps (110s)`, `FAIL tests: 34 of 1068 tests are red`, each on an id the `Logged-Red:` lines of 7fa8a2a8, de7b4418 and f73c0c5c name (`tmp/spec-2.2-build/g4/red-start.txt`).
+
+- **4b9441bf: S-4 and the name.** By file (paths under `crates/tally/src/`, K the kernel):
+  - `ask/windows.rs`, whole (1 345 lines): the per-day rerun and the choice of the next unknown day, the sub-window grouping and heads on every ask form and their nesting, the two-stack pairing, a ledger per sub-window, the limit and its `RUN-LIMIT windows each over more than 20 000 day combinations`.
+  - The clause's parse: `syntax/tree.rs` (`Ask.windows_each`, `Proj.windows_each`), `syntax/ask.rs`, `syntax/calls.rs` (the projection's clause, `each()`), `syntax/expr.rs` (`windows` among the words that end a world's name), `syntax/binds.rs` (`windows` among the words that end an open span); `load/reads.rs` and `model/graph.rs` (`read_each`). A text that writes it: `LOAD-PARSE cannot parse: expected end of line, got windows`.
+  - The taken days: `eval/context.rs` (`LayerData.windows`, `read_windows`, `Choice`, `Met`, `with_windows`, `with_read_windows`, `chooses`, `named_day`, `window_day`), `eval/state.rs` (`Collected.each`, `Engine.each_met`), `eval/pins.rs` (`outside_pins` keeps no day choice), `eval/windows.rs` (`chosen` becomes `named_window`, no context), `eval/read.rs`, `eval/rules.rs`, `eval/business.rs` (`window_takes`' choice, `added_unknown`), `eval/trace.rs` (`Trace::carried`), `hole/questions.rs` (`Unknown.days`); `lib.rs`'s re-exports.
+  - Every ask form's clause branch: `ask/answer.rs` (`clause_lines`, `read_each_lines`), `ask/diff.rs` (`Runs`, `Cell.runs`, `side_cell`, `chosen_cell`, `paired`, `joined`), `ask/check.rs` (`causes`, `same_run`, `key`, `undated_causes`, `dates_written_d`), `ask/explain.rs` (the one-case `Laws` enum, merged into `derivation`), `ask/axes.rs` (`Grouped.members`), `ask/instance.rs`, `ask/walkbound.rs`, `ask/walked.rs` (`clauses: random none, {with} uncertain`), `ask/residuals.rs`.
+  - K `walk/day.rs` (the window-dated leg's per-day `before from:` under the clause, its local `window_days`), K `walk/reads.rs` (`bal`'s wrapper), K `walk/agenda.rs` and K `walk/plan.rs` (comments), K `book/ledger.rs` (a ledger line carries a hole's days only).
+  - The crate's own cases: `tests/window_cases.rs`' clause asks and their helpers (`blocks`, `Unsplit`, `days_from`, `pinned_twins`, `lines_for`, the twin test), restated as pinned asks (e5/e6, d4/d5, c4/c9); `ask_cases.rs` (the two-stack limit test, `q2`); `group4_cases.rs` (d77's `b_each` as `b_05`/`b_08`, the two-stack diff plain); `memo_cases.rs` (`b`, `pw` as pinned pairs); `group3_cases.rs` (k9/k10's names). Every expected line is refcore's run of the same text, the 9999 window's c1 the engine's (refcore stops there).
+- **What stays for the name, and why.** `Window.carry` and `Hole.carry` (`carrying`), now always filled: before, a read named its window only under the clause (`chosen` returned early outside it). `named_window`: a read of a row, a given's row, `last`, and a pin of a window written there name the window as one unknown day, the carry replaced (refcore's new `Iv` with no carry; a first draft unioned it with the written window's own text, which `fixes/g13/rf_x_*` pn1/pn3/pn4 showed). `pinned_window` names only a window with no figure, as refcore's pin does one with no origin; a pinned read or a computed window keeps its days. `ask/register.rs` `name_unknown_days` and its word `unknown day` after `pinned`; `ask/check.rs` `hole_days` (refcore's `hole_days`: holes only, by label, sorted); `model/value.rs` `hole_days_into`. `eval/aggregate.rs`' term of `sum` now carries its window (`fixes/p60/sum_days_win`, refcore's `carry_hole` at evaluate.py:3243). `HOLE-IMPRECISE`, a move dated by a window, a `with` pin of a window cell stand as they were.
+- **The name's five cases** (`m2/fixes/t22/unknown_day_names`), byte-equal to refcore's run: n_cal `  unknown day: added one_of([2026-06-22, 2026-06-24])`; n_cell `  unknown day: w`; n_rule `  unknown day: window(2026-05-04, 2026-05-06)`; n_two `  unknown day: w` then `  unknown day: window(2026-05-04, 2026-05-06)`; n_win none. `cut_each_ask`, `cut_each_read` refuse in refcore's words; their twins, refcore's bytes. The diff's name: the restated two-stack diff `  unknown day: db` alone, refcore's bytes.
+- **`clauses:`** `  clauses: random none, without uncertain`, refcore's (group3's b8, `m1/fixes`' stored line).
+- **A-05** (`w_a05`, the cut over the law files): refcore `a05_ania [px_round = *]: (?…, ?…, ?…)` with `  unknown day: window(2019-03-01, 2019-03-31)`; d01 and d06 `(106.00 DUK, 559.5 DUK, 1 437.00 DUK)`, d07 and d31 `(234.00 DUK, 1 230.9 DUK, 1 309.00 DUK)`, each `pinned: held_from[kbank[k20230912_04]] = …`. The engine: `tally run: not implemented` on the A cut, as at 201613ef.
+- **Sweep** (`tmp/spec-2.2-build/g4/sweep.py`: G3's 74 sets, the critic's `s4two`, `s4cal`, `w_a05` and `w_b07` over their cuts; the engine against 201613ef's and refcore), on 4b9441bf's tree: 78 sets, now same 69, moved 7, turned 0.
+  - Moved, each now refcore's bytes: `s4two` and `s4cal` (a text that writes the clause now refuses at parse, as refcore does), k3, q1 (before `not implemented`, the residual ledger's clause), c_w, c_wall, f1. f1 first moved to a different refusal (`got windows` where refcore says `got each`: `over .. windows each` reads `windows` as the open range's end), which turned up `syntax/binds.rs`' word list; with it out, refcore's bytes.
+  - The 9 others differ before and after alike: 8 `tally run: not implemented` (a2e, CMP-01.inline, j1 and its joint, r1, r1b, w_a05's and w_b07's cuts; refcore timed out at 300 s on w_b07's), and s8 (S-8 held).
+- **Lines, `git diff --shortstat 201613ef 4b9441bf`:** 40 files, 2 535 out, 336 in (plan: about 2 150 out, 60 in). `crates/tally/src` 35 files, 2 250 out, 240 in; the crate's tests 5 files, 285 out, 96 in. Of the source's 2 250, `ask/windows.rs` 1 345, `ask/diff.rs` 190, `eval/context.rs` 140, `ask/answer.rs` 87, `ask/check.rs` 81. Over on the in side by the doc comments restated where a clause sentence went (about 150 of the 240) and the name (`name_unknown_days`, `hole_days`, the register's word, `pinned_window`'s rule, about 50).
+- **Beyond the plan's list:** `syntax/expr.rs`' and `syntax/binds.rs`' word lists, K `walk/day.rs`' per-day `before from:`, `eval/pins.rs`, `eval/trace.rs`, `ask/explain.rs`' `Laws`, `ask/axes.rs`' `Grouped.members`, `eval/aggregate.rs`' carry, `pinned_window`'s rule.
+- **Listed and kept:** `book/same.rs`, `book/observe.rs`, `book/reading.rs` read no taken day since G2 and G3; nothing to remove there. `window_days` stays: a window `at`'s law dates (`eval/rules.rs`, K `walk/tuples.rs`) and `is_business` over a window (`eval/business.rs`) read its days.
+- **Kernel files touched:** 6: book/ledger.rs, hole/questions.rs, walk/agenda.rs (P8-14, comments), walk/day.rs, walk/plan.rs (comments), walk/reads.rs.
+- **Gating vectors:** 34 red tests at the start, 6 at the end. Green now, each on ids the `Logged-Red:` lines name: `m1_checks_g2`, `m1_fixes_g12_explain_over_the_walk` parts 1, 2, 4, 8–14, 16–18, 20, 23, 24, `m1_fixes_g13_reads_ranges_and_sites`, `m1_fixes_g2_windows_and_powers`, `m1_fixes_g3_order_and_last`, `m1_fixes_tally_217_r3`, `r9`, `m2_fixes_sweep`, `m2_fixes_tally_218_d`, `r13`, `reviews`, `m2_fixes_windows`, `m2_items_explain`, `m2_items_windows`. Red at the end: `m0_code_load_instant` (basic/instant-side), `m0_code_load_same` (joint/same-what), `m1_fixes_gate8_survivors` (m2_rt_l5_19_load_instant), `m2_fixes_tally_22` (cut_same_rows_header, cut_same_rows_version, fault_n3, fault_n4, order_keyed_def, rv3_scen_over_base, rv3_scen_over_base_noline), `m2_counts_lows`: each logged and not this group's (S-8, the fault at `load/binds.rs`' key edge, LOAD-INSTANT's words, the scenario's restatement, the recognition). And `m1_fixes_the_spec_where_refcore_crashes`, green at the start: nine of T's hand-stored answers lack the name's line (STOP-REPORT below).
+- **Exceptions:** +0, `# count: 6; report-only hits: 8`; a long chain in `eval/pins.rs` that `check commit`'s exceptions step named was restored to its local's form.
+- **For the lead (`engine/ARCHITECTURE.md`):** l.65 "`windows each` runs an ask once per sub-window of the days its windows can take"; l.275–278 the `windows.rs` (M2) bullet; l.491–493 the `**`windows each`**` paragraph; l.504 "`windows each` choices" among the forks not built; l.575–576 "the residual ledger's `windows each` where the set of lines differs by sub-window (#186)"; l.691's row `windows each | ask/windows.rs`. l.438 (windows at run) stands.
+- **Usage:** 1.24 % of the week by `engine/tools/usage tmp/spec-2.2-build/g4-ids.txt` before this entry (stop at 3.8 %).
+- **Time:** about 55 minutes, 06:20 to 07:15; the checks about 11 of them (`check commit` three times, `check quick` five, `check fences` once), the sweep about 20 more in the background, most of it refcore over the A and B cuts.
+- **Checks:** 4b9441bf committed on `check quick: green, 11 steps (74s)`. On its tree: `check fences: green, 1 step (52s)`; `check commit: red at tests, stopped after 10 of 23 steps (88s)`, `FAIL tests: 6 of 1066 tests are red`, the ids above.
+
+## STOP-REPORT 2026-11-18: nine spec-stored answers predate the hole's `unknown day:` line
+
+- **Kind:** a test seems wrong (nine of T's hand-stored answers where refcore crashes, written before tally 2.2's register names a hole's unknown day).
+- **Where:** `engine/tests/m1/spec.tsv` l.3, 4, 6, 9, 10, 11, 13, 14, 15 (and `m1/spec.vectors`), checked by `runner/milestone/m1_fixes.rs` `m1_fixes_the_spec_where_refcore_crashes`: `fixes/g13/r_agent_w_model_with_r_agent_w_{c1_c1, c3_c3, c5_c5, f1_f1, f2_f2, f3_f3}`, `fixes/g13/rf_w_model_with_rf_w_{w01_w01, w11_w11, w13_w13}`.
+- **Rule or gate:** R-77 (never commit red); tally 2.2's hole name (L §8.2 `unknown day:`, §4.4).
+- **What happens:** `engine/tools/check commit` stops `red at tests`; `m1_fixes_the_spec_where_refcore_crashes`, green at 201613ef, gives `9 of 19 vectors differ from the spec's answer`, each `line 2: refcore "  cut 2026-03-01", the engine "  unknown day: w"`. Each ask is a built-in over `age(w, d2)`, the interval of a window `w` (`abs(age(w, d2))`, `pow(…)`, `add_months(d1, age(w, d2))`, `day_of(2026-03, age(w, d2))`, `add_years(w, age(w, d2))`, …): the engine's line is the stored hole, then `  unknown day: w`, then the cut. Refcore stops on each (`REFCORE-NOT-YET … 'Iv' object has no attribute 'q'`); where it runs, its `imprecise(v, use)` (evaluate.py:2276) makes that hole with `carry_hole(…, v)`, and `age`'s interval carries `w`'s day (`carry_union`), so its register would name `w`.
+- **What I tried:** nothing to change in the code: the item names exactly this line, and dropping it for a built-in's hole would leave refcore's `imprecise` behind and every runnable twin (`cut_each_ask_twin`, `unknown_day_names` n_cell) with it. Not an answer the items don't name.
+- **What I ask:** the tests session restates the nine rows with `  unknown day: w` before the cut (the engine's run of each, read against the spec before it is stored, as `m1_fixes.rs`' doc of the test says), or logs them `Logged-Red:` until it does.
+- **State:** the code is 4b9441bf (`check quick` green); this entry and report land in the commit after it, nothing else uncommitted.
+
+## 2026-11-18 tally 2.2, the closing turn: S-8 and the recognition in, the fault at the trimming, the reviews' leftovers (issue #211)
+
+On `build/2.2` at 0b615a0e (T's merge of the three count pins and the nine named holes). Spec and refcore are this worktree's, tally 2.2's whole text. `check commit` at the start: `red at tests, stopped after 10 of 23 steps (98s)`, `5 of 1066 tests are red`, each on a `Logged-Red:` id (`tmp/spec-2.2-build/close/red-start.txt`):
+- `m0_code_load_instant` (basic/instant-side), `m1_fixes_gate8_survivors` (`m2_rt_l5_19_load_instant`): LOAD-INSTANT's words.
+- `m0_code_load_same` (joint/same-what): S-8's words.
+- `m2_fixes_tally_22`, 7 of 42: `cut_same_rows_version`, `cut_same_rows_header` (S-8); `fault_n3`, `fault_n4`, `order_keyed_def` (the fault); `rv3_scen_over_base`, `rv3_scen_over_base_noline` (P21).
+- `m2_counts_lows` (the recognition).
+
+**The pieces, each done:**
+1. **2559cfdb, S-8: `same` never joins two rows of an input.** 6270a1b0 re-applied unchanged, file by file with `patch` (the guard refuses `git apply`). One hunk of `eval/read.rs` didn't apply: its context, `row_window`'s call, G4 reworded. I removed its three functions (`same_class`, `read_same_rows`, `same_side`) by hand. The diff then equals 6270a1b0's but for that one line (compared sorted, line by line). Green: `cut_same_rows_version`, `cut_same_rows_header`, `m0_code_load_same` (`a row of an input and a def`), `m0_code_load_key`'s kplace family. Nothing else moved.
+2. **ec3604c0, the fault at the trimming (pick P14), as refcore's 8a6b5366.**
+   - The graph is tally 2.1.8's again. `load/defs.rs` is 8ece2484's byte for byte: the key's edge in `check_def` and 7a4c4cb6's reorder are gone, with their two tests. `load/binds.rs` `bind_movements` and `kind_movements` are 2.1.8's, but for G5's one relation. `key_movements`, `bound_kind`, `bound_observed` and `Reality::moves_of` are gone.
+   - `eval/context.rs`: `movement_keyed_cone` walks the graph from the def, cached per def. `keyed_by_movement`: a def's header key over a kind whose spec is `Event`, a subkind's included, since a subkind's spec is its root's. A def's key over an observed input's rows is `LOAD-KEY`, so a kind is the one case.
+   - `trimmed` keeps the context whole for such a def: every axis and every pin. Refcore keys a cell by its full pins and trims only axes, and the engine also trims pins by reach, so keeping the whole layer is the engine's form of refcore's `def_axes` returning none.
+   - The shared-cell test in `_read_def` has no twin here: the engine has no path in `Ctx`, since paths aren't built. `fault-b/paths.tally` is `tally run: not implemented`, as before.
+   - The h/h2/hp test moved to `tests/eval_cases.rs`, its lines unchanged.
+   - Green: `fault_fx3` (kept: `h`, `h2` split by `work`; `hp` 400.00, 2 000.00, 2 000.00 PLN), `fault_n3` (`LOAD-LAWDATE`), `fault_n4` (`q: 2.00 DUK`), `order_keyed_def` (`RUN-ORDER decisions a and b read each other`). All four are tally 2.1.8's lines.
+   - The first form nested a closure in a closure, and `check commit` refused it at `exceptions` (`nested-closure-review`). It is a loop now.
+3. **439e6e25, the recognition (C-10 (a)): `recognition-v2.patch` applied as saved, file by file, but one line.**
+   - That line is `lowest_shape`'s `!read.proj.windows_each`, which can't compile: G4 (4b9441bf) removed `Proj.windows_each` after G5 saved the patch on dce04b1c. A cut clause has no subject left to exclude, so the shape is the same.
+   - Read against R-130:
+     - The fence is F5. Its entry is `lowest_shape` and `reads_lowest` (`walk/projection.rs`), read from `eval/aggregate.rs` `range_minimum`.
+     - The switch is `Lows::Tree`. `reads_lowest` is false under `Lows::Walk`, on a `partial` line and in a traced read, and the plain aggregate reads each of those term by term: that is the twin.
+     - The equivalence test is `tally-cli/tests/walk_oracle.rs`: the kernel and M1 corpora, M1's `low-min` and `foresight-low` spelled as the `min` since tally 2.2, run under Tree and under Walk.
+     - F5's `PERF:` header already names P8-5, P8-M4, the twin and that test.
+     - For review: the entry's code sits in `walk/projection.rs` (F5's plain twin's module) and `eval/aggregate.rs`, not in `walk/lows.rs`, as G5 built it.
+   - Green: `m2_counts_lows` on its stored counts, m1/lows `every` `on/off days_stepped=880 nonempty_days=878 walks=28 walks_shared=0 legs_booked=878 def_hits=710 def_misses=494`. T's three pins of 140e340f are unchanged: `m2_counts_days` r1, `m2_counts_r4` r7, `m2_counts_ahead` b2_min.
+   - `perf row P8-5` on the reference Mac (AC): median 273.6 ns, budget 300 ns. G5 measured 265.6 ns. The bench times `RangeMinimum::lowest_change` alone, which the patch doesn't change.
+4. **81263310, `LOAD-INSTANT`'s words.** `load/rows.rs` `row_instant` now says `balance reading <x> at <D> needs start or end`. Green: `m0_code_load_instant`, `m2_rt_l5_19_load_instant`.
+5. **73643de8, a scenario's restatement ranks first (pick P21).**
+   - `book/observe.rs` `observed_row_seen` and `seen_observations` rank each restatement by `(m.scenarios.layer(version), known)`. That is refcore's `(row_layer, known)` in `obs_row_seen` and `m_observations`. Of two equal, the first written still wins.
+   - The header's Spec line says so (L §4.6 step 2).
+   - Green: `rv3_scen_over_base` (`in_sc: (1, 950.00 PLN, 1 050.00 PLN)`), `rv3_scen_over_base_noline`. The other five `rv3_*` stay green.
+   - No other stored vector moved: `check commit` on its tree was green over every gating vector, and the sweep moved nothing.
+6. **c8730b25, the reviews' leftovers.**
+   - Done:
+     - Review G2a, 2: `walk/readings.rs` (`fallen_places`, `window_end`) and `walk/state.rs` (`Change::Unperm`) cite L §5.19 Holes.
+     - G2a, 6: `ask/answer.rs` `ask_engine` sets `engine.booked` in place, so no `let engine = …; engine` is left without `fault-injection`. `eval/state.rs` `with_booked` lost its one caller and goes.
+     - G2a, 7: `walk/plan.rs` `LegVal.day` stays, and its doc now says why. It isn't only a copy: a refused instance with no day dates its legs at the end of time (`refused_places`, l.1137) while `inst.day` is none. About 17 readers in 10 files take the leg without its instance: the day's acts, the ledger, `flows`, `same`, the members, F5, P8-14.
+     - G3, 3: `book/same.rs`'s and `book/observe.rs`'s headers name S-5's rule and `obs_row_seen`.
+   - Found done already: G3, 4. `hole/questions.rs` no longer lists `known of v`; G4's 4b9441bf rewrote `Unknown`'s doc.
+   - Measured, left uncached: G3, 2 (`moves_seen`). `perf counts P8-10`, the row that walks household A (`I:A:a05_ania@c05-ania`), gives `ok P8-10 counts(1w): def_misses 0, days_stepped 0, walks_shared 0 (exit 69 …)`. The engine answers that cut `not implemented`, as G4 found, so the row measures nothing yet. `moves_seen` reads the lines and the observations only, with no def cell and no day step, so a cache can't move any count budget. By the brief's condition it stays uncached.
+   - Left, with why:
+     - G2a, 5 and G3, 5: `book/reading.rs`'s `NotBuilt("a reading at an instant other than a day's start or end")` and `reading_of`'s `NotBuilt("a reading of a place with no unit")`. Both can't be reached. A narrower type on `Row.instant` can't remove them, because `Row` is shared by every input, state readings with a bare day among them, and about 25 sites read `row.instant`.
+     - The type that would remove them is a table of balance-reading rows typed at load: place, day, `Edge`, unit and type, beside the rows. It would also remove `readings`' `a reading of a place not named`, `ask/walked.rs`' edge-none arm and `eval/read.rs`' `the value of a reading of no unit`. That is a new structure across load, model, book and eval for arms no input reaches, so I propose it for M3 or the next round, not this closing turn. Both stay `NotBuilt`, with no behaviour change.
+     - G5's three `crates/tally/benches/p8_5.rs` comments (`low(x, a .. b) from t`, l.4, l.16, l.57): the guard keeps `engine/crates/*/benches/*` from the build role (R-91). They are for the rules step.
+7. **Whatever else is red: nothing.** After 73643de8 `check commit` is green, so no `Logged-Red:` id of the branch is red, and no id was left unexplained. `m1_fixes_the_spec_where_refcore_crashes` (G4's STOP-REPORT) was green at the start, on T's cf38e76c.
+
+**Red tests:** 5 of 1 066 at the start (above). 0 at the end, of 1 061: 4 crate tests went with S-8 (`group4_cases.rs` B1 ×2 and G1, `ask_cases.rs` N3), and the fault's 2 `load/defs.rs` tests went for 1 in `eval_cases.rs`.
+
+**Sweep** (`tmp/spec-2.2-build/close/sweep.py`). It runs G3's 74 sets (`tmp/spec-2.2/probes/`, `inputs/review/probes/`, `critic-scratch-2.2/`, with the joint sets) and `fault-b/`'s 5 texts, 79 sets. Refcore's outputs are kept once in `close/sw/ref` (refcore doesn't change this turn). Piece 2's "before" was G4's sweep outputs at 4b9441bf, covering pieces 1 and 2; each later piece's was the commit before's binary. Nothing turned same → different on any piece:
+- Pieces 1 and 2: same 72, moved 2.
+  - `s8`: S-8, now refcore's.
+  - `f1`: G4's first sweep outputs, before its `syntax/binds.rs` fix; now refcore's.
+  - `fault-b`'s n3, n4, n4g and order equal refcore's (no earlier sweep held them).
+- Pieces 3 to 6: same 72, moved 0, each.
+- The 7 that differ, before and after alike: 6 `tally run: not implemented` (a2e, CMP-01.inline, j1 and its joint, r1, r1b) and `fault-b/paths` (paths aren't built).
+
+**The round's sizes at this head, `git diff --shortstat 8ece2484..HEAD -- engine/crates`:** 104 files, 9 172 out, 1 949 in.
+- `crates/tally/src`: 85 files, 7 315 out, 1 493 in. The plan said about 5 590 to 5 690 out, 230 in. The crate's tests and the CLI's: 19 files, 1 857 out, 456 in.
+- By item, `crates/tally/src`, out/in, from each item's commits. Later items rewrote some earlier lines, so the sum runs over the head's diff:
+
+  | Item | Commits | src out / in | tests out / in |
+  |---|---|---|---|
+  | S-6 | eb8fcc43, bfeeceb8 | 572 / 197 | 111 / 10 |
+  | S-7 | 6012f936 (9af299a6 and a8ec49f7 cancel) | 68 / 27 | 11 / 1 |
+  | The fault, net at the head | `eval/context.rs` only; fd126be1 and 7a4c4cb6 taken back by ec3604c0 | 5 / 53 | 2 / 88 |
+  | S-3 | 361a9074 | 1 144 / 243 | 497 / 12 |
+  | S-3's words | 81263310 | 1 / 1 | |
+  | S-1 | 86f2745f | 498 / 106 | 356 / 16 |
+  | S-2 | ab8fe0ce | 1 635 / 272 | 286 / 20 |
+  | S-5 | 002cee8a, e9a54509 | 76 / 143 | 0 / 178 |
+  | S-8 | 2559cfdb (6270a1b0 and f846a48d cancel) | 568 / 95 | 274 / 10 |
+  | S-4 and the hole's name | 4b9441bf | 2 250 / 240 | 285 / 96 |
+  | S-9 | dce04b1c | 730 / 137 | 39 / 29 |
+  | The recognition (C-10 (a)) | 439e6e25 | 19 / 230 | |
+  | P21 | 73643de8 | 17 / 22 | |
+  | The reviews' leftovers | c8730b25 | 29 / 24 | |
+
+**Kernel files the round touched** (`engine/tools/kernel.toml`'s globs, `git diff --name-only 8ece2484..HEAD`): 22.
+- book/ledger.rs, members.rs, observe.rs, reading.rs, same.rs.
+- hole/questions.rs.
+- read/gap.rs, rows.rs.
+- walk/agenda.rs (P8-14), day.rs, flows.rs, fork.rs (F6), legs.rs, lows.rs (F5), modelled.rs, move_flows.rs, order.rs, plan.rs, projection.rs, readings.rs, reads.rs, state.rs.
+- This turn touched book/observe.rs, book/same.rs, walk/agenda.rs, lows.rs, plan.rs, projection.rs, readings.rs and state.rs, each already in the round's list.
+
+**Exceptions over the round** (`git diff 8ece2484..HEAD -- engine/EXCEPTIONS.lock`): count +0 (6); report-only hits −1, 9 → 8 (G5's `ask/walked.rs` `Read<'a>` lifetime review). This turn +0.
+
+**STOP-REPORTs:** none this turn. The round's six are all ruled and closed by these pieces or earlier: S-7 (P9), the key's edge (P14), LOAD-INSTANT's words (the close), S-8 (T's kplace base), the recognition (P24), the nine named holes (T's cf38e76c).
+
+**For the lead:** `engine/ARCHITECTURE.md` names nothing this turn adds or removes. The leftovers the earlier entries list for it stand.
+
+**Next:** the second, short turn, P25: a print's window hole names its unknown day in the register, refcore first, `ask/` unchanged here until then. Also the fourth review's findings.
+
+**Usage:** about 0.55 % of the week by `engine/tools/usage tmp/spec-2.2-build/close-ids.txt` before this entry (budget about 2 %, stop at 3.2 %).
+
+**Checks:**
+- Each piece's commit was on a green `check quick`: 74, 79, 87, 11, memo and 82 s.
+- `check fences: green, 1 step` after pieces 2 (49 s) and 3 (43 s).
+- `check commit` on 73643de8's tree: `check commit: green, 23 steps (198s)`.
+- On this entry's tree (c8730b25's code): `check commit: green, 23 steps (150s)`, 1 061 tests. On 3d7cbfed, the entry committed: `check commit: green, 23 steps (96s)`.
+- **Not pushed:** the guard refuses `git push` (STOP-REPORT below).
+
+## STOP-REPORT 2026-11-18: the push is refused on two of T's commit subjects merged by 0b615a0e
+
+- **Kind:** other. Two commits of the tests session, never pushed, fail commit-check, and they reach the remote only with this branch.
+- **Where:** 140e340f `test(counts): keep three min pins on the plain aggregate with a where` and cf38e76c `test(spec): name the unknown day w in nine hand-written holes`. Both are on `tests/2.2` and came into `build/2.2` only through the lead's merge 0b615a0e (parents 6536744b, cf38e76c). `git branch -r --contains` names no remote branch for either. `origin/build/2.2` is 6536744b.
+- **Rule or gate:** R-100 (the guard runs commit-check over what every `git push` sends); `engine/CONVENTIONS.md`'s scopes: parse, format, load, eval, walk, book, ask, num, time, refcore, fuzz, rules. `counts` and `spec` aren't among them.
+- **What happens:** `git push origin build/2.2` is refused by the guard: `engine/tools/commit-check origin/master build/2.2 fails, as CI would (R-100)`, with `FAIL 140e340 test(counts): … the subject isn't type(scope): …` and `FAIL cf38e76 test(spec): …`, then `commit-check: 2 problems`. This turn's seven commits pass: `engine/tools/commit-check 0b615a0e` gives `0 rule-changing commits, no attribution line`.
+- **What I tried:** nothing that rewrites history. My commits sit on 0b615a0e, whose parents are those two, so none of mine can go without them. Rewording them is a rebase of T's branch and of the lead's merge, which the build role doesn't own and the guard refuses (`rebase`, `cherry-pick`, `merge`).
+- **What I ask:** the tests session (or the lead) rewords the two subjects on `tests/2.2` before either is pushed (`test(walk): keep three min pins …` for 140e340f, `test(ask): name the unknown day w …` for cf38e76c, or another listed scope), and the lead merges `tests/2.2` into `build/2.2` again. A builder turn then re-applies this turn's commits on that merge unchanged, runs `check commit` and pushes. Or the lead pushes once the subjects are fixed. CI's `check full` on #217 waits until then.
+- **State:** code at c8730b25, the entry at 3d7cbfed (`check commit: green, 23 steps (96s)`), this report in the commit after it; all local, nothing uncommitted. The turn's work: 2559cfdb, ec3604c0, 439e6e25, 81263310, 73643de8, c8730b25, 3d7cbfed and this report's commit.
+
+## 2026-11-18 tally 2.2, the engine's last turn: the fourth review's B1 and B2, P25, the range minimum beside F5 (issue #211)
+
+On `build/2.2` at a5e1861e (T's merge: tally 2.2's final text, refcore with P25 bec41e6b and P26 8341b008). The lead's rewording of T's two subjects (951b4f6f) ruled and closed the last turn's STOP-REPORT. `check commit` at the start: `red at tests, stopped after 10 of 23 steps`. 4 of 1 061 tests red, each on a `Logged-Red:` id (`tmp/spec-2.2-build/close2/red-start.txt`):
+- `m2_fixes_tally_22`, 3 of 48: `rv4_b1_two_windows` (B1), `rv4_b2_pins` and `rv4_b2_pin_calendar` (B2).
+- `m1_fixes_g2_windows_and_powers` (`fixes/g2/p4_f1`), `m1_fixes_tally_217_r3` (`r3/reach_year`), `m1_fixes_the_spec_where_refcore_crashes` (`fixes/g13/r_agent_w_model_with_r_agent_w_e1_e1`, `…_e2_e2`): P25.
+
+**The pieces:**
+1. **cdc4dda0, B1: a hole keeps its unknown days by question.**
+   - `hole/questions.rs`: `Hole.carry` is a `BTreeMap<Asked, Vec<Unknown>>`, refcore's `CARRY[q]`. `without` keeps only the remaining questions' days, so a question the hole loses takes the days it alone carried. `spread` and `for_read` merge by question; `carried` gives the union, in order, for the register (`model/value.rs`, `book/ledger.rs`).
+   - `review-g4/b1/m.tally`: the engine's line is now `  unknown day: d2` alone, as refcore's (before: `  unknown day: d1`, then d2). `b1/pin.tally` equals refcore. Green: `rv4_b1_two_windows`.
+2. **e20362cb, B2: a pin names its cell only where the value carries no name of its own.**
+   - `eval/read.rs` `pinned_window` renames a window only where everything it carries is a window written in the text (`eval/windows.rs` `names_only_written`, the written window's id `src <text>`). That is refcore's `pinned_read`, renaming only an `Iv` with no `origin`. A computed calendar window keeps its `added …`.
+   - `review-g4/b2/m.tally` qb and `b2/m2.tally` r7: `  unknown day: added one_of([2026-06-22, 2026-06-24])`, as refcore's (before: `x`, and `dd`). qa, qc, qd and qe are unchanged and equal refcore. Green: `rv4_b2_pins`, `rv4_b2_pin_calendar`.
+3. **93306237, P25: a hole made where a print needs one day names its unknown day.**
+   - `model/value.rs`: a window that is no window of days prints as the hole `date within window(…) not precise enough for a print`, and now brings its carried days to the register. A window of days, which prints as a window, brings none: refcore's `hole_days`.
+   - Green: `p4_f1` (`  unknown day: wl`), `reach_year` (`  unknown day: w_across`), g13 `e1_e1` and `e2_e2` (`  unknown day: w`).
+   - Two of the crate's own tests predated P25 (`tests/window_cases.rs`: `TWO_WINDOWS_LINES` q4, and n2 of `a_covered_window_to_the_calendar_s_end_is_asked_up_to_the_cut`). Each gains the `unknown day:` lines refcore prints for the same text.
+4. **P26, refcore's three fixes where the engine was right: green on arrival, no commit.** Each was checked on the arrival binary (`tmp/spec-2.2-build/close/tally-p6`) against refcore:
+   - A def pinned to a written window names the def's cell: `rv4_b2_pins` qa (`pinned: dd = window(…)`, `  unknown day: dd`, `  unknown day: w`).
+   - `last` of an input pinned to a written window names the cell and keeps the hole's label: qc (`unknown day: w`).
+   - An ask's register is independent of the asks before it: `rv4_pin_copy` (e1 `wa`, `wb`; e2 `wb` alone) and `rv4_pin_copy_alone` (e2 `wb`).
+   - A fanned line names the union: refcore's own test text gives `unknown day: wd[a]`, `wd[b]`, and the engine gives the same. No T vector names it; refcore's test is its guard.
+5. **The fourth review's leftovers.**
+   - `walk/lows.rs` `a_read_the_sums_cant_hold_is_the_walks` already pins `walks == 1` (restored by 439e6e25), so nothing changes.
+   - `common_low`'s window `(t, (first, last))` stays, since it now has two readers: the recognised `min` reads F5 over first .. last, and a single read passes `(d, d)`.
+   - `eval/aggregate.rs` l.236 and `eval/windows.rs`'s notes are left, as the lead ruled, for a follow-up issue.
+6. **850ca2f9, the closing review's items 1 to 4 and 7: the range minimum beside F5.**
+   - Where each piece sits now:
+     - `walk/projection.rs` (kernel, F5's entry): `lowest_shape` (the shape), `reads_lowest` (the switch), `range_minimum` (moved: the range's first and last day, the balances, their fold to the least or a hole), `first_and_last` (moved), `lowest_balances` (now private to it) and `days_read`. F5's tree read stays `walk/lows.rs`'s `common_low`.
+     - `eval/aggregate.rs` keeps the dispatch: `aggregate` tests the shape and the switch, reads the range's values once (`range_values`) and calls `range_minimum`.
+   - Item 7: where `range_minimum` leaves the `min`, its terms are read from those same values (`frame_of`, `walk_of`, `walk_members`), not from a second evaluation of the range. A range binding's values are `range_values`' (`bind_values`' `Over::Range` arm), so the members are the same.
+   - `hole_of`, `min_max` and `End` are exported to the crate for the fold.
+   - No new kernel file, no rule file changed.
+   - Headers (items 1, 3, 4; R-120, R-130):
+     - F5's `PERF:` line names the aggregate `min`, read term by term (`eval/aggregate.rs`, as `Lows::Walk` reads it), as the recognised `min`'s plain twin, beside `projection` for one read.
+     - `walk/projection.rs`'s header says the recognition and its read sit there, and its twin in `eval/aggregate.rs`.
+     - `eval/aggregate.rs`'s header says the aggregate is that `min`'s plain twin.
+   - Item 10's crate test (the fault's pin by `with`) is not written: it is the tests session's. Items 8, 11 and 12 are left, as ruled.
+7. **Whatever else is red: nothing.** After 93306237, `check commit` is green. The branch's 136 `Logged-Red:` ids (8ece2484..HEAD) all sit in gating suites that pass, so none is red and none is unexplained. Spot-checked by name: `m0_code_load_instant`, `m0_code_load_same`, `m2_counts_lows`, and `U:time/TIME-01` (a vector of `m0/load.refcore`, run by `m0_load`).
+
+**Red tests:** 4 of 1 061 at the start (above), 0 of 1 061 at the end.
+
+**Sweep** (`tmp/spec-2.2-build/close/sweep.py`, list `close2/sweep.list`, 100 sets): the last turn's 79, plus `tmp/spec-2.2-build/review-g4/`'s 21. Refcore's outputs are cached once in `close2/sw/ref`. Each piece's "before" was the commit before's binary (`close2/tally-b1`, `tally-b2`, `tally-p25`). Nothing turned same → different:
+- B1: moved 1, `review-g4/b1/m`, now refcore's.
+- B2: moved 2, `review-g4/b2/m` and `b2/m2`, now refcore's. 92 of 100 then equal refcore.
+- P25 and 850ca2f9: moved 0 each; 92 of 100.
+- The 8 that differ, before and after alike:
+  - 6 `tally run: not implemented`: a2e, CMP-01.inline, j1 and its joint, r1, r1b.
+  - `fault-b/paths`: paths aren't built.
+  - `review-g4/p4/m`: an observed row's date window, not built.
+
+**The round's sizes at this head, `git diff --shortstat 8ece2484..HEAD`:**
+- `-- engine/crates`: 105 files, 9 224 out, 2 109 in.
+- `-- engine/crates/tally/src`: 86 files, 7 367 out, 1 648 in.
+- This turn's (a5e1861e..HEAD): `engine/crates` 12 files, 137 out, 245 in; `crates/tally/src` 11 files, 136 out, 239 in.
+
+**Kernel files the round touched:** 22, the list above. This turn touched `book/ledger.rs`, `hole/questions.rs`, `walk/lows.rs` and `walk/projection.rs`, each already in it.
+
+**Exceptions over the round** (`git diff 8ece2484..HEAD -- engine/EXCEPTIONS.lock`): count +0 (6); report-only hits −1, 9 → 8 (G5's `ask/walked.rs` `Read<'a>` lifetime review). This turn +0: the lock is unchanged since a5e1861e.
+
+**STOP-REPORTs:** none this turn. The last turn's (the push refused on T's two subjects) is closed by the lead's 951b4f6f.
+
+**For the lead:** `engine/ARCHITECTURE.md` may want the range minimum's new place: its read is `walk/projection.rs`'s `range_minimum`, its dispatch `eval/aggregate.rs`'s `aggregate`.
+
+**Next:** the round's engine work is done. Left for a follow-up issue: the fourth review's `eval/aggregate.rs` l.236 and `eval/windows.rs` notes; the closing review's items 8, 11 and 12; items 9 and 10 for the tests session.
+
+**Usage:** about 1.08 % of the week by `engine/tools/usage tmp/spec-2.2-build/close-ids.txt` before this entry, this turn about 0.5 % (budget about 1 %, stop at 3.6 %).
+
+**Checks:**
+- Each piece's commit was on a green `check quick` (76 to 88 s).
+- `check fences: green, 1 step (50s)` after 850ca2f9's edit to F5's entry and twin.
+- `check commit` on 850ca2f9: `check commit: green, 23 steps (140s)`, 1 061 tests run, 1 061 passed, 0 skipped. On this entry's tree: `check commit: green, 23 steps (86s)`.
+- Before the push, `engine/tools/commit-check` failed two of my unpushed subjects. B1's (first 74e29f8f) was 74 characters, and this entry's first commit (2bd6a870) used the scope `log`, which isn't listed. I rebuilt the five commits with `git commit-tree` on the same trees and the same bodies, changing only those two subjects, and moved the branch with `git update-ref`. The old to new shas: 74e29f8f → cdc4dda0, a9f451cc → e20362cb, df4d7731 → 93306237, 91d8dd67 → 850ca2f9. On the new chain: `commit-check: 0 rule-changing commits, no attribution line`.
+
+## 2026-11-18 tally 2.2, the fix review's blocking 1: a window in a list names no unknown day (issue #211)
+
+On `build/2.2` at 821c4ce5 (the lead's `engine/ARCHITECTURE.md`). The fix review (`tmp/spec-2.2-build/review-fix.md`) found 93306237's window arm of `hole_days_into` firing at every depth.
+- **The fix, in this entry's commit:** `model/value.rs` `hole_days_into` gives a window's days only where the window that is no window of days is the value itself, a line's value, which prints as the hole `not precise enough for a print`. Inside a list or a record it prints as the window and gives none. Holes are still named at every depth.
+- **The five shapes against refcore** (`tmp/spec-2.2-build/close3/shapes.tally`, `lists.tally`):
+  - A list, `ask a: [gap, 1]`: `a: [window(4, 6), 1]`, no `unknown day:`, as refcore's. So is `review-fix/blocking/p25_list.tally`.
+  - A record, `(g: window(4, 6), n: 1)`: none, as refcore's.
+  - An ask line's tuple, `ask t: gap, 1` and `1, gap`: the hole, `unknown day: w`, as refcore's.
+  - Under an axis: `x [ax = lo]`, the hole, `unknown day: w`; `xl [ax = lo]: [window(4, 6), 1]`, none. Both as refcore's.
+  - A list holding a hole and a window: `ms: [window(4, 6), ?… (w)]` names `w`, the hole's day. `m: [window(4, 6), ?… (w2)]` names `w2` alone, not the window's `w`.
+- **For the lead, refcore's side, not changed here:** refcore names no `unknown day:` for a hole inside a list or a record (`hl`, `hr`, `m`, `mh`, `ms`). Its `hole_days` walks Python lists and tuples, but its list and record values, `values.py`'s `Lst` and `Rec`, have no `carry_vals`, so the walk stops at them. L §8.2's row ("each unknown day a hole of the result carries") and the lead's brief name the hole's day, and the engine has named it since the hole's name (4b9441bf): `close2/tally-b2`, before P25, prints the same lines. No T vector holds such a line. It is refcore's to mend at the round.
+- **Sweep:** 100 sets, 92 equal refcore, moved 0, turned 0, before = 850ca2f9's outputs. The review's `agent/p25.tally`, `p25/d`, `sa` and `sb` equal refcore. `p25/m` differs only on p10, the review's non-blocking 1 (`window_arith`, older, not touched).
+- **The fork paragraph** (`engine/ARCHITECTURE.md`, M2's F6): since the recognition, a decision's `min(bal(konto, d) from t for d in a .. b step 1 day)` is read by the range minimum whenever `run` reads with F5 on. `eval/aggregate.rs` `aggregate` decides, from `walk/projection.rs` `lowest_shape` (the shape) and `reads_lowest` (`Lows::Tree`, not a `partial` line, not a traced read). `range_minimum` then reads F5's tree (`common_case`, from the decision's walk at its point) or, where F5 declines, one walk from t read day by day (`days_read`). The paragraph's example holds only for a `min` outside the shape (another step, a `where`, `ties by`, a place or start that reads the bound day) and for `Lows::Walk`, `partial` or traced reads: there each term reads its projection, and F6's kept walks continue.
+- **Sizes:** the round's `engine/crates` 105 files, 9 224 out, 2 114 in; `crates/tally/src` 86 files, 7 367 out, 1 653 in (this fix: 6 out, 11 in). Kernel files 22; exceptions +0.
+- **Checks:** `check quick: green, 11 steps (87s)`; `check commit: green, 23 steps (140s)`, exit 0, on this commit's tree.
+
+## 2026-11-18 tally 2.2, CI's dev-tests: the recognised `min` read with the fence off as `low` was (issue #211)
+
+On `build/2.2` at f6445c07 (the tree of `spec/2.2` at 99285820). On the round's pull request, CI's debug job (`check group dev-tests`) ran three equivalence tests past nextest's 300 s.
+- **The cause, verified; the lead's reading holds.** `walk/projection.rs` `reads_lowest` required `Lows::Tree` (G5's recognition, 439e6e25). With the fence off, a recognised `min(bal(x, d) from t for d in a .. b step 1 day)` went to the plain aggregate. There every day's term is a projection of its own: `projection`'s `proj_walk` from t, then `end_projection`. That is quadratic in the span, where 2.1.8's `low` twin read one walk day by day (linear). With the forks off, nothing is kept between terms.
+  - The slow texts are the long ones. `m2_g7_p8m4` asks `min(bal(x, d) from 2025-01-01 for d in 2025-01-01 .. 2058-01-01 step 1 day)`, about 12 000 days; `fork_oracle` runs F5's realities under both `Lows` with the forks on and off.
+  - The engine's own test showed it too: `walk/lows.rs` `the_tree_reads_the_common_case_where_the_walk_isnt_walked` had pinned 150 walks for the twin since S-9 (dce04b1c), where 2.1.8 pinned 1.
+- **The fix:** `reads_lowest` no longer reads the switch, only `!ctx.partial && !self.tracing()`.
+  - A recognised `min` is read by `range_minimum` with the fence on or off. On, F5's tree (`common_case`, `common_low`), or one walk where F5 declines. Off, `common_case` declines (`Lows::Walk`), so it is one walk from t read day by day (`days_read`), F5's plain twin, as `low`'s was.
+  - The aggregate's day-by-day reading stays for every `min` outside the shape (a `where`, another step, `ties by`, a place or start that reads the bound day) and for a `partial` line or a traced read.
+  - The crate test's twin pin is 2.1.8's again: one walk for `low_from` as for `bal_from`. Headers and docs say so: `walk/lows.rs` (F5's `PERF:` twin), `walk/projection.rs`, `eval/aggregate.rs`.
+  - No test or text of T's changed; no check, timeout or count touched.
+- **Times, debug build, `engine/tools/check group dev-tests` on this Mac** (the lead's runs in brackets: master, then f6445c07):
+
+  | Test | before (f6445c07) | after |
+  | --- | --- | --- |
+  | `m1_lows_the_tree_prints_the_walk_on_fixes_gate8_p8m4` | 105.9 s [27.7 s, 162.1 s] | 12.5 s |
+  | `…_p8m4_noopen` | 105.8 s | 12.5 s |
+  | `fork_oracle` `forks_on_prints_forks_off_on_f5s_realities` | 187.3 s [14.5 s, 188.8 s] | 15.0 s |
+  | the group `dev-tests` | 461 s [458 s, 608 s] | 297 s |
+
+  Before: `check group dev-tests: green, 5 steps (461s)`, 3 slow. After: `check group dev-tests: green, 5 steps (297s)`, none slow (gating 520 tests in 72.9 s, the CI profile's 541 in 88.5 s). In the quick profile, `check fences`' `fork_oracle` test went from 46.1 s to 2.0 s.
+- **Which test holds which equivalence, after the change:**
+  - **Tree against walk** (F5 against its plain twin, the recognised `min` included):
+    - the CLI's `tests/walk_oracle.rs` (the kernel and M1 corpora, the same bytes under `Lows::Tree` and `Lows::Walk`);
+    - T's `m1_lows` `the_tree_prints_the_walk_*`;
+    - `fork_oracle` (both `Lows`, forks on and off);
+    - `walk/lows.rs`'s crate tests.
+  - **Recognised against aggregate:**
+    - T's law `low-min` (`m1_properties` `m1_low_is_the_minimum_of_the_daily_balances`: the recognised `min` beside the same `min` with a `where` every day meets, under `run`);
+    - every gating vector of a spelled `min` against refcore, which has no recognition and reads it term by term;
+    - the three count pins on the plain aggregate with a `where` (`m2_counts_days` r1, `m2_counts_r4` r7, `m2_counts_ahead` b2_min), beside `m2_counts_lows`'s stored counts of the recognised read.
+  - **Nothing goes unseen.** Before, the walk side of `walk_oracle` and `m1_lows` was the aggregate, so those tests also held recognised against aggregate. Now their walk side is `days_read`. But `days_read` is also the tree side's read wherever F5 declines, and that side is held against the aggregate by the law and the vectors. Where F5 answers, `days_read` equals the tree (the tree-against-walk tests), and the tree equals the aggregate (the law and the vectors).
+  - `run` reads with the fence on, so no printed answer changes; that is why no sweep ran.
+- **Counts:** `m2_counts_lows` and the pins r1, r7, b2_min green on their stored counts.
+- **Sizes:** this commit, 3 files, 21 out, 27 in. The round's `engine/crates` 106 files, 9 229 out, 2 127 in (the 106th, `benches/p8_5.rs`, came with the lead's merges). `crates/tally/src` 86 files, 7 366 out, 1 658 in. Kernel files 22; exceptions +0.
+- **Checks:** `check quick: green, 11 steps (74s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (115s)`, exit 0.

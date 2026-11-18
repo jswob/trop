@@ -1,0 +1,37 @@
+model n4
+  tally 2
+  on 2025-04-01
+  start 2025-01-01
+  end 2025-06-30
+  note "T, tally 2.2 G1 (#211, pick P14: the fault as now fixed; the lead's N-4 probe): a def keyed by an event kind and an ordered index, read at a shifted index with no guard by a def a transfer's amount reads."
+
+source s "s"
+unit DUK: currency minor 0.01
+index mon = month 2025-01..2025-06
+place konto: accounts DUK lives 2025-01-01..
+place world: outside lives 2025-01-01..
+input d0: date
+input f: money DUK
+input mk: month
+
+def d[t in transfers, m in mon]: money DUK = f
+def r[t in transfers, m in mon]: money DUK = d[t, m - 1]
+
+move m0: transfers
+  on d0
+  leg cash from world to konto amount f
+
+move m1: transfers
+  on d0
+  leg cash from world to konto amount r[m0, mk]
+
+ask q: bal(konto, 2025-06-30)
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d0 = 2025-01-05 "s"
+  f = 1.00 "s"
+  mk = 2025-03 "s"
+  opening[konto] = 0.00 at 2025-01-01 start "s"

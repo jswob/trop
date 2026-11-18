@@ -8,10 +8,12 @@
 //! (a `solve` step pins its one cell), §6.4 (the world a scenario names), §5.5 (an axis read
 //! at its option). The pins themselves are applied in `pins.rs`.
 //! Twin: engine/tools/refcore/evaluate.py (`PinVal`, `Ctx.pins`, `Ctx.wording`, `Ctx.axes`,
-//! `wording_ok`, `world_chain`, `axis_option`, `def_axes`).
+//! `wording_ok`, `world_chain`, `axis_option`, `def_axes`, `movement_keyed_cone`,
+//! `keyed_by_movement`).
 //! Invariants: layer 0 is the unpinned context; two pin sets with the same targets and values
 //! are one layer, whatever their texts; a def's cell is kept under its context trimmed to the
-//! pins its def reaches, and to every pin the walk reaches where it reads the timeline; a
+//! pins its def reaches, and to every pin the walk reaches where it reads the timeline, but
+//! whole where its cone holds a def keyed by a movement (tally 2.2, 2.2-10); a
 //! layer no open scope holds is freed with its cells and timelines when the scope that made it
 //! ends, never while a read that unwound past the counted depth still needs it; a scope's
 //! reads of the walk read the timeline of its world and walk pins (`timelines.rs`). The world
@@ -22,7 +24,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::state::{Ctx, Engine, invariant, refuse};
 use crate::base::Run;
-use crate::model::{KeyVal, NameKind, Node, NodeKind, Reality, Value, World};
+use crate::model::{Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, Reality, Value, World};
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -128,30 +130,12 @@ pub(crate) struct LayerData {
     /// The option each axis takes, by the axis's id: one combination of an ask's fan-out, or
     /// an axis pin (L §5.5).
     pub(super) axes: BTreeMap<String, String>,
-    /// `windows each`'s choice in force: the day each window met takes, by the window's
-    /// identity, in the order met; none where no `windows each` holds (L §4.4).
-    pub(super) windows: Option<Choice>,
-    /// The choice of a run of a line that reaches a read stating `windows each`: only such a
-    /// read takes it (L §4.4 "for that read"; refcore's `each-read` assignment).
-    pub(super) read_windows: Option<Choice>,
 }
-
-/// One run of a `windows each` line: the day each window it met takes, by the window's
-/// identity, in the order the windows were met (refcore's assignment `asg`). L §4.4.
-pub(crate) type Choice = Vec<(String, Day)>;
-
-/// A window a `windows each` run met that its choice names no day of: an unknown day, its
-/// identity, label and days (refcore's `each_met`). L §4.4.
-pub(crate) type Met = crate::hole::Unknown;
 
 impl LayerData {
     /// Whether it pins nothing and sets no axis: the unpinned context.
     fn is_empty(&self) -> bool {
-        self.pins.is_empty()
-            && self.wording.is_empty()
-            && self.axes.is_empty()
-            && self.windows.is_none()
-            && self.read_windows.is_none()
+        self.pins.is_empty() && self.wording.is_empty() && self.axes.is_empty()
     }
 
     /// Whether every pin, wording pin and axis option of this layer is one of `other`'s.
@@ -162,8 +146,6 @@ impl LayerData {
                 .axes
                 .iter()
                 .all(|(axis, option)| other.axes.get(axis) == Some(option))
-            && (self.windows.is_none() || self.windows == other.windows)
-            && (self.read_windows.is_none() || self.read_windows == other.read_windows)
     }
 
     /// Whether `pin` is one of the layer's pins, by target and value.
@@ -176,8 +158,6 @@ impl LayerData {
         self.pins.len() == other.pins.len()
             && self.wording.len() == other.wording.len()
             && self.axes.len() == other.axes.len()
-            && self.windows == other.windows
-            && self.read_windows == other.read_windows
             && self.within(other)
     }
 
@@ -210,10 +190,6 @@ impl LayerData {
                 .filter(|(axis, _)| axes.contains(*axis))
                 .map(|(axis, option)| (axis.clone(), option.clone()))
                 .collect(),
-            // a window is a value, not an item of the graph: which cells read one is known
-            // only at run, so the choice stays in every context it holds (E §3.2)
-            windows: self.windows.clone(),
-            read_windows: self.read_windows.clone(),
         }
     }
 
@@ -276,6 +252,8 @@ pub(crate) struct Layers {
     walkers: BTreeMap<Node, bool>,
     /// The axes each def reaches on the graph, once computed (L §5.5, E §3.2).
     def_axes: BTreeMap<String, BTreeSet<String>>,
+    /// Whether each def's cone holds a def keyed by a movement, once computed (E §3.2).
+    movement_keyed: BTreeMap<String, bool>,
     /// The axes the walk's readers reach, once computed (E §3.3).
     walk_axes: Option<BTreeSet<String>>,
     /// Each layer's pins on items the walk reaches and its options of the axes the walk
@@ -296,6 +274,7 @@ impl Default for Layers {
             timeline: None,
             walkers: BTreeMap::new(),
             def_axes: BTreeMap::new(),
+            movement_keyed: BTreeMap::new(),
             walk_axes: None,
             walk_pins: BTreeMap::new(),
             kept: Vec::new(),
@@ -448,13 +427,14 @@ impl Engine {
     /// item the def reaches and the options of the axes it reaches, and where the def reads
     /// the timeline every one the walk reaches too, so a def no pin or axis reaches shares
     /// the unpinned cell (E §3.2: "an item that reaches no axis has no axis options", §3.3;
-    /// P §3.1). The world is kept whole: a cell of one world is never another's.
+    /// P §3.1). The world is kept whole: a cell of one world is never another's. A def whose
+    /// cone holds a def keyed by a movement keeps `ctx` whole (tally 2.2, 2.2-10).
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a freed layer.
     pub(super) fn trimmed(&mut self, m: &Reality, def: &str, ctx: Ctx) -> Result<Ctx, Stop> {
-        if ctx.layer.is_base() {
+        if ctx.layer.is_base() || self.movement_keyed_cone(m, def) {
             return Ok(ctx);
         }
         let key = (def.to_owned(), ctx.layer.number());
@@ -525,6 +505,30 @@ impl Engine {
         let axes = crate::load::reach_axes(m, &m.graph, &Node::new(NodeKind::Def, def));
         self.layers.def_axes.insert(def.to_owned(), axes.clone());
         axes
+    }
+
+    /// Whether def `def`'s cone on the graph holds a def keyed by a movement, once computed.
+    /// Such a def reads the movements its key ranges over, which the graph records no edge
+    /// for, so the cone is no plain cone and the cell keeps its context's axes and pins
+    /// (refcore's `movement_keyed_cone`; tally 2.2, 2.2-10). E §3.2.
+    fn movement_keyed_cone(&mut self, m: &Reality, def: &str) -> bool {
+        if let Some(keyed) = self.layers.movement_keyed.get(def) {
+            return *keyed;
+        }
+        let mut seen = BTreeSet::new();
+        let mut stack = vec![Node::new(NodeKind::Def, def)];
+        let mut keyed = false;
+        while let Some(x) = stack.pop() {
+            if keyed || !seen.insert(x.clone()) {
+                continue;
+            }
+            keyed = x.kind == NodeKind::Def && keyed_by_movement(m, &x.id);
+            if let Some(reads) = m.graph.edges.get(&x) {
+                stack.extend(reads.keys().cloned());
+            }
+        }
+        self.layers.movement_keyed.insert(def.to_owned(), keyed);
+        keyed
     }
 
     /// The axes the walk's readers reach, `cone` being the items they reach, once computed:
@@ -607,119 +611,6 @@ impl Engine {
         }
         let layer = self.intern(data)?;
         Ok(Ctx { layer, ..ctx })
-    }
-
-    /// Context `ctx` under `windows each`'s choice `choice`: every read in it takes the day
-    /// the choice names for each window it meets (L §4.4).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer.
-    pub(crate) fn with_windows(&mut self, ctx: Ctx, choice: &Choice) -> Result<Ctx, Stop> {
-        let mut data = self.layer_data(ctx.layer)?.clone();
-        data.windows = Some(choice.clone());
-        let layer = self.intern(data)?;
-        Ok(Ctx { layer, ..ctx })
-    }
-
-    /// Context `ctx` under the choice `choice` of a run of a line that reaches a read stating
-    /// `windows each`: only that read takes it ([`Engine::read_windows`]). L §4.4.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer.
-    pub(crate) fn with_read_windows(&mut self, ctx: Ctx, choice: &Choice) -> Result<Ctx, Stop> {
-        let mut data = self.layer_data(ctx.layer)?.clone();
-        data.read_windows = Some(choice.clone());
-        let layer = self.intern(data)?;
-        Ok(Ctx { layer, ..ctx })
-    }
-
-    /// The context a read stating `windows each` is read in: the line's run's choice, taken
-    /// by that read; none where the line's own clause holds already (L §4.4 "for that read";
-    /// refcore's `proj_clauses`).
-    ///
-    /// # Errors
-    ///
-    /// `NotBuilt` for a line that runs no loop for the read (a `diff`, a ledger);
-    /// `ENGINE-INVARIANT` for a freed layer.
-    pub(crate) fn read_windows(&mut self, ctx: Ctx) -> Result<Option<Ctx>, Stop> {
-        let data = if ctx.layer.is_base() {
-            LayerData::default()
-        } else {
-            self.layer_data(ctx.layer)?.clone()
-        };
-        if data.windows.is_some() {
-            return Ok(None);
-        }
-        let Some(choice) = data.read_windows else {
-            return Err(Stop::NotBuilt(
-                "a read's `windows each` on a line that runs no loop for it",
-            ));
-        };
-        self.with_windows(ctx, &choice).map(Some)
-    }
-
-    /// Whether a `windows each` holds in context `ctx`, so a window met there takes one day
-    /// (L §4.4).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer.
-    pub(crate) fn chooses(&self, ctx: Ctx) -> Result<bool, Stop> {
-        if ctx.layer.is_base() {
-            return Ok(false);
-        }
-        Ok(self.layer_data(ctx.layer)?.windows.is_some())
-    }
-
-    /// The day the line's choice names for window `id` in context `ctx`, where a `windows
-    /// each` holds and names it; none else, so the window's days are listed only for a
-    /// window met newly (L §4.4).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer.
-    pub(crate) fn named_day(&self, ctx: Ctx, id: &str) -> Result<Option<Day>, Stop> {
-        if ctx.layer.is_base() {
-            return Ok(None);
-        }
-        let Some(choice) = &self.layer_data(ctx.layer)?.windows else {
-            return Ok(None);
-        };
-        Ok(choice
-            .iter()
-            .find(|(named, _)| named == id)
-            .map(|(_, day)| *day))
-    }
-
-    /// The day window `window` takes in context `ctx`, where a `windows each` holds and its
-    /// choice names one; else none, so the window stays one, as the plain line reads it, noted
-    /// as met where a `windows each` holds, so the line runs again once per day of it if its
-    /// answer carries it (refcore's `window_choice`, `visible`). L §4.4; tally 2.1.8 R13.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a freed layer or a window with no day.
-    pub(crate) fn window_day(&mut self, ctx: Ctx, window: Met) -> Result<Option<Day>, Stop> {
-        if ctx.layer.is_base() {
-            return Ok(None);
-        }
-        let Some(choice) = &self.layer_data(ctx.layer)?.windows else {
-            return Ok(None);
-        };
-        if let Some((_, day)) = choice.iter().find(|(id, _)| *id == window.id) {
-            return Ok(Some(*day));
-        }
-        if window.days.is_empty() {
-            return Err(invariant("a window with no day"));
-        }
-        if let Some(met) = &mut self.each_met
-            && !met.iter().any(|w| w.id == window.id)
-        {
-            met.push(window);
-        }
-        Ok(None)
     }
 
     /// The items the walk's readers reach, once computed; the caller puts it back in
@@ -884,6 +775,24 @@ pub(crate) fn world_named(m: &Reality, id: &str) -> Result<World, Stop> {
     m.scenarios.world(id, &m.header.id).ok_or(Stop::NotBuilt(
         "a world on another stack of scenarios than the ask's (refcore's cross evaluation)",
     ))
+}
+
+/// Whether def `def`'s header key ranges over an event kind, a subkind's included (refcore's
+/// `keyed_by_movement`; a subkind's spec is its root's). A def's key can't range over an
+/// observed input's rows (`LOAD-KEY`), so a kind is the one case. L §5.6, §5.19.
+fn keyed_by_movement(m: &Reality, def: &str) -> bool {
+    let Some(info) = m.defs.get(def) else {
+        return false;
+    };
+    for bind in &info.binds {
+        let Domain::Kind(kind) = &bind.domain else {
+            continue;
+        };
+        if m.kinds.get(kind).is_some_and(|k| k.spec == KindSpec::Event) {
+            return true;
+        }
+    }
+    false
 }
 
 /// Whether the def at `from` reaches the item `item`, as the graph's edges tell; an item the

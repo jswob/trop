@@ -13,9 +13,7 @@
 //! lines change only by its parentheses (`parens.rs`) and the orders L §2.4 states; what the
 //! spec leaves open keeps the file's order and spelling.
 
-use super::canon_order::{
-    Decls, KeyRef, Val, ascii_key, key_comp, known_day, row_key, sorted_by, span_key,
-};
+use super::canon_order::{Decls, KeyRef, Val, ascii_key, key_comp, row_key, sorted_by, span_key};
 use super::item::{first, parse_file, prescan_units};
 use super::lex::{Kind, Line, Mark, Role, Tok, split_lines};
 use super::parens::canon_block;
@@ -382,7 +380,7 @@ impl Printer {
         let v = match &rule.v {
             None => Val::Tup(vec![Val::Int(0)]),
             Some(v) => match self.decls.known(v) {
-                Some(known) => Val::Tup(vec![Val::Int(1), Val::Day(known_day(known))]),
+                Some(known) => Val::Tup(vec![Val::Int(1), Val::Day(known)]),
                 None => {
                     return Err(Stop::Refused(Refusal::at(
                         Code::Load(Load::Name),
@@ -773,7 +771,7 @@ fn section_key(node: &Section) -> (u8, Option<u32>, &str) {
         Section::Fill(x) => (9, None, &x.id),
         Section::Move(x) => (10, None, &x.id),
         Section::Ask(x) => (11, None, &x.id),
-        Section::Version(x) => (12, Some(known_day(x.known).number()), &x.id),
+        Section::Version(x) => (12, Some(x.known.number()), &x.id),
     }
 }
 

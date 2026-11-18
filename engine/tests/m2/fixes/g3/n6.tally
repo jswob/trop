@@ -23,7 +23,6 @@ move mw: tagged
   leg cash from work to konto amount amt
 
 ask sw: mw.size
-ask sww: mw.size windows each
 ask aw: mw.cash.amount
 ask bw: bal(konto, 2026-04-30)
 

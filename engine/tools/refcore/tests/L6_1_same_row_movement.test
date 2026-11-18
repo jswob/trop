@@ -1,7 +1,7 @@
-# L §6.1 (round 14): "The two sides are of one sort: ... two rows of one type, or two movements; any other pair is
-# refused (LOAD-SAME)"; L §8.3 LOAD-SAME "same <p> = <q>: <what p is> and <what q is>" (a row and a movement, rows of
-# types <T> and <T'>, a def, an index or another item). a.rate is a
-# row, b.gift a movement: LOAD-SAME. (Writer 6's U-21.)
+# L §6.1: "The two sides are of one sort: ... or two movements; any other pair is refused (LOAD-SAME)"; L §8.3
+# LOAD-SAME "same <p> = <q>: <what p is> and <what q is>" (a row of an input on either side, a def, an index or another
+# item). a.rate is a row of an input, b.gift a movement: LOAD-SAME. (Writer 6's U-21; tally 2.2, 2.2-8: "a row"
+# is "a row of an input".)
 === options pin=bytes
 === joint.tally
 model family
@@ -67,4 +67,4 @@ version v
   share = 5.00 PLN "umowa"
   gday = 2026-03-01 "umowa"
 === expect
-refused: LOAD-SAME same a.rate = b.gift: a row and a movement ...
+refused: LOAD-SAME same a.rate = b.gift: a row of an input and a movement ...

@@ -37,7 +37,7 @@ ask x2: explain bal(konto, 2026-04-01) with uncertain
 x1: 1 500.00 PLN
   projection of konto (PLN) from 2026-01-01 to the end of 2026-04-01
   holder: ask x1 (an ask line leaves out nothing, L §5.14.1)
-  clauses: windows none, random none, with uncertain
+  clauses: random none, with uncertain
   start: 1 000.00 PLN at the start of 2026-01-01
   counted:
     2026-03-01:

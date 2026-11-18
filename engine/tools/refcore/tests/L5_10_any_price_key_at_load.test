@@ -1,6 +1,7 @@
 # tally 2.1.8 §4 (#162's comment, P48), L §8.4 Load refuses what load sees: broker is of unit any, priced by pxp,
 # keyed by currencies; move buy writes a leg of unit etf into it, which currencies doesn't hold: LOAD-KEY at load,
 # whatever the asks read (a reads n alone). 2.1.7's refcore loaded it clean and gave a hole where value read it.
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === m.tally
 model t
   tally 2
@@ -11,7 +12,7 @@ model t
 source s "s"
 unit PLN: currency minor 0.01
 unit etf "fund unit"
-kind brokerages: place any min 0 priced pxp
+kind brokerages: place any min 0 priced pxp outside
 kind buys: event certain
   leg u: etf
 place broker: brokerages lives 2026-01-01..

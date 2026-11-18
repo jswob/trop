@@ -33,5 +33,7 @@ version st
 ask a1: bal(konto, 2026-02-28)
 ask a2: bal(konto, 2026-03-04)
 ask a3: count(t in transfers over 2026-03-01 .. 2026-03-31)
-ask a4: count(t in transfers over 2026-03-01 .. 2026-03-31) windows each
+ask a4_s1: count(t in transfers over 2026-03-01 .. 2026-03-31) with wd = 2026-03-05
+
+ask a4_s2: count(t in transfers over 2026-03-01 .. 2026-03-31) with wd = 2026-03-08
 ask a5: flows(pay, 2026-02)

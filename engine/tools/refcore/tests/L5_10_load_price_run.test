@@ -2,6 +2,7 @@
 # value(broker, d) in PLN with no by is refused at load, at its line (L §8.4 R-load: "no run meets a fault load could
 # see"; tally 2.1.7 R5, the review's finding 3, pick P41). Until 2.1.7 refcore refused it at run, with no line, when
 # the run had booked the EUR.
+# tally 2.2 (CHANGES.md 2.2-1): a kind of unit any is an outside kind only, so this one is marked outside.
 === m.tally
 model t
   tally 2
@@ -13,7 +14,7 @@ source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 
-kind brokerages: place any min 0
+kind brokerages: place any min 0 outside
 kind fx_buys: event certain
   leg eur: EUR
   leg cash: PLN

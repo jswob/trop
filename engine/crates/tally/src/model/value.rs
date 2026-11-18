@@ -149,8 +149,8 @@ pub struct Window {
     /// reads alike are one value, decided against itself (L §4.4).
     pub read: Option<ReadOf>,
     /// The unknown days it was computed from, in the order the line's reads met them: a read's
-    /// own under `windows each`, an operation's operands' (L §4.4: "a window value carries the
-    /// names of the unknown days it was computed from"; tally 2.1.8 R13). No part of the value.
+    /// own, an operation's operands' (L §4.4: "it carries the names it was computed from"),
+    /// which a hole made of it carries too. No part of the value.
     pub carry: Vec<crate::hole::Unknown>,
 }
 
@@ -170,18 +170,26 @@ impl PartialEq for Window {
 impl Eq for Window {}
 
 impl Value {
-    /// The unknown days the value carries, added to `into` in order, each once: a hole's and a
-    /// window's, and those of the values a record or a list holds (refcore's `carried`). L §4.4;
-    /// tally 2.1.8 R13.
-    pub fn carried_into(&self, into: &mut Vec<crate::hole::Unknown>) {
+    /// The unknown days the holes the value prints carry, added to `into` in order, each
+    /// once: a hole's, and those of the holes a record or a list holds. A window that is no
+    /// window of days prints as the hole `not precise enough for a print` only as the value
+    /// itself, a line's value, so only there it gives its days; inside a record or a list it
+    /// prints as the window, as a window of days does anywhere, and gives none (refcore's
+    /// `hole_days`; tally 2.2, pick P25). L §4.4, §8.2 `unknown day:`.
+    pub fn hole_days_into(&self, into: &mut Vec<crate::hole::Unknown>) {
+        if let Value::Window(w) = self
+            && !w.of_days()
+        {
+            return crate::hole::carry_union(into, &w.carry);
+        }
         let mut todo: Vec<&Value> = vec![self];
         while let Some(v) = todo.pop() {
             match v {
-                Value::Hole(h) => crate::hole::carry_union(into, h.carried()),
-                Value::Window(w) => crate::hole::carry_union(into, &w.carry),
+                Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
                 Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
                 Value::List(items) => todo.extend(items.iter().rev()),
-                Value::Number(_)
+                Value::Window(_)
+                | Value::Number(_)
                 | Value::Money(_)
                 | Value::Bool(_)
                 | Value::Day(_)

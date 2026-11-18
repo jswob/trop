@@ -3,7 +3,7 @@ model cyc
   on 2026-03-01
   start 2026-01-01
   end 2026-12-31
-  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; a plan and a decision before the cut whose legs state their own days, one before the cut and one after"
+  note "T C9 (invented): a two-member cycle a written before breaks, a third member after it by its read, a fourth apart; a plan and a decision before the cut (tally 2.2: their legs no longer state their own days, and the asks e and ep that read them on those days are dropped)"
 
 source card "T's card (invented)"
 
@@ -14,8 +14,6 @@ input d1: date
 input dp: date
 
 input dl: date
-
-input dq: date
 
 input keep: money PLN
 
@@ -48,21 +46,19 @@ move z: transfers
   leg cash from world to a5 amount bal(a4)
 
 move pp: transfers
-  on dp
-  leg cash from world to a1 amount extra on dl
+  on dl
+  leg cash from world to a1 amount extra
 
 move dd: transfers
   on dp
   reads a1
-  leg cash from a1 to a6 amount bal(a1) - keep - keep on dq
+  leg cash from a1 to a6 amount bal(a1) - keep - keep
 
 move w: transfers
   on d1
   reads a6
   leg cash from world to a6 amount bal(a6) + one
 
-ask e: bal(a1, 2026-02-11), bal(a1, 2026-02-12), bal(a6, 2026-03-04), bal(a6, 2026-03-05), flows(pp, 2026-01-01..2026-12-31), flows(dd, 2026-01-01..2026-12-31)
-ask ep: bal(a6, 2026-06-30) from 2026-02-11, bal(a1, 2026-06-30) from 2026-02-11
 ask q: bal(a1, 2026-06-30), bal(a2, 2026-06-30), bal(a3, 2026-06-30), bal(a4, 2026-06-30), bal(a5, 2026-06-30), bal(a6, 2026-06-30)
 ask fl: flows(x, 2026-01-01..2026-12-31), flows(y, 2026-01-01..2026-12-31), flows(z, 2026-01-01..2026-12-31)
 
@@ -73,7 +69,6 @@ version card_2026
   d1 = 2026-04-15 "the card"
   dp = 2026-02-10 "the card"
   dl = 2026-02-12 "the card"
-  dq = 2026-03-05 "the card"
   keep = 400.00 PLN "the card"
   extra = 50.00 PLN "the card"
   one = 1.00 PLN "the card"

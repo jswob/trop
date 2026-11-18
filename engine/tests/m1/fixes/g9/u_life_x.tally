@@ -91,12 +91,12 @@ version k2end
 
 ask q_sum_bal: sum(bal(k2, 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
 
-ask q_sum_low: sum(low(k2, d .. 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
+ask q_sum_low: sum(min(bal(k2, dd) from d for dd in d .. 2026-12-31 step 1 day) for d in 2026-01-01 .. 2026-09-30 step 1 day)
 
-ask q_min_low: min(low(k2, d .. 2026-12-31) from d for d in 2026-01-01 .. 2026-09-30 step 1 day)
+ask q_min_low: min(min(bal(k2, dd) from d for dd in d .. 2026-12-31 step 1 day) for d in 2026-01-01 .. 2026-09-30 step 1 day)
 
-ask q_back: bal(k2, 2026-12-31) from 2026-08-01, bal(k2, 2026-12-31) from 2026-05-25, low(k2, 2026-02-01 .. 2026-12-31) from 2026-02-01, bal(k2, 2026-11-30) from 2026-06-20, low(k2, 2026-01-05 .. 2026-12-31) from 2026-01-05, bal(k2, 2026-12-31) from 2026-09-30
+ask q_back: bal(k2, 2026-12-31) from 2026-08-01, bal(k2, 2026-12-31) from 2026-05-25, min(bal(k2, d) from 2026-02-01 for d in 2026-02-01 .. 2026-12-31 step 1 day), bal(k2, 2026-11-30) from 2026-06-20, min(bal(k2, d) from 2026-01-05 for d in 2026-01-05 .. 2026-12-31 step 1 day), bal(k2, 2026-12-31) from 2026-09-30
 
-ask q_fwd: low(k2, 2026-01-05 .. 2026-12-31) from 2026-01-05, low(k2, 2026-04-11 .. 2026-12-31) from 2026-04-11, low(k2, 2026-05-21 .. 2026-12-31) from 2026-05-21, low(k2, 2026-06-16 .. 2026-12-31) from 2026-06-16, low(k2, 2026-04-09 .. 2026-12-31) from 2026-04-09
+ask q_fwd: min(bal(k2, d) from 2026-01-05 for d in 2026-01-05 .. 2026-12-31 step 1 day), min(bal(k2, d) from 2026-04-11 for d in 2026-04-11 .. 2026-12-31 step 1 day), min(bal(k2, d) from 2026-05-21 for d in 2026-05-21 .. 2026-12-31 step 1 day), min(bal(k2, d) from 2026-06-16 for d in 2026-06-16 .. 2026-12-31 step 1 day), min(bal(k2, d) from 2026-04-09 for d in 2026-04-09 .. 2026-12-31 step 1 day)
 
 ask q_edge: bal(k2, 2026-12-31) from 2026-04-09, bal(k2, 2026-12-31) from 2026-04-10, bal(k2, 2026-12-31) from 2026-04-11, bal(k2, 2026-12-31) from 2026-04-12, bal(k2, 2026-12-31) from 2026-04-10

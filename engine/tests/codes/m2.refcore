@@ -1,9 +1,9 @@
-12:records/base,7:REQ-ASK,7:records,32:run base.tally --ask zz_m0_probe,2389:10:base.tally,2369:model rec
+12:records/base,7:REQ-ASK,7:records,32:run base.tally --ask zz_m0_probe,2533:10:base.tally,2513:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -67,7 +67,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -78,12 +78,12 @@ version st_sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
   same bank[a2] = bank[b1]
 ,,1:1,36:refused: REQ-ASK no ask zz_m0_probe
-,23:records/answers/q_konto,1:-,7:records,28:run base.tally --ask q_konto,2389:10:base.tally,2369:model rec
+,23:records/answers/q_konto,1:-,7:records,28:run base.tally --ask q_konto,2533:10:base.tally,2513:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -147,7 +147,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -157,15 +157,15 @@ version st_sav
   anchor sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
   same bank[a2] = bank[b1]
-,,1:0,112:q_konto: 200.00 PLN
-  anchor: konto after top[2026-03], stated 200.00 PLN, difference 0.00 PLN
+,,1:0,108:q_konto: 200.00 PLN
+  anchor: konto 2026-03-20 end, stated 200.00 PLN, difference 0.00 PLN
   cut 2026-04-10
-,21:records/answers/q_sav,1:-,7:records,26:run base.tally --ask q_sav,2389:10:base.tally,2369:model rec
+,21:records/answers/q_sav,1:-,7:records,26:run base.tally --ask q_sav,2533:10:base.tally,2513:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -229,7 +229,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -245,12 +245,12 @@ version st_sav
   unfulfilled: save[2026-01]
   unfulfilled: save[2026-02]
   cut 2026-04-10
-,23:records/answers/q_moved,1:-,7:records,28:run base.tally --ask q_moved,2389:10:base.tally,2369:model rec
+,23:records/answers/q_moved,1:-,7:records,28:run base.tally --ask q_moved,2533:10:base.tally,2513:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -314,7 +314,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -326,12 +326,12 @@ version st_sav
   same bank[a2] = bank[b1]
 ,,1:0,39:q_moved: 2 000.00 PLN
   cut 2026-04-10
-,22:records/answers/q_save,1:-,7:records,27:run base.tally --ask q_save,2389:10:base.tally,2369:model rec
+,22:records/answers/q_save,1:-,7:records,27:run base.tally --ask q_save,2533:10:base.tally,2513:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -395,7 +395,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -407,12 +407,12 @@ version st_sav
   same bank[a2] = bank[b1]
 ,,1:0,36:q_save: 950.00 PLN
   cut 2026-04-10
-,20:records/same-differs,9:HOLE-SAME,7:records,27:run base.tally --ask q_save,2389:10:base.tally,2369:model rec
+,20:records/same-differs,9:HOLE-SAME,7:records,27:run base.tally --ask q_save,2533:10:base.tally,2513:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -476,7 +476,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -489,12 +489,12 @@ version st_sav
 ,,1:0,289:q_save: ?"bank[a2] and bank[b1] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[a2]) and 951.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[a2] (950.00 PLN) and bank[b1] (951.00 PLN)
-,20:records/same-missing,10:RUN-RECORD,7:records,26:run base.tally --ask q_sav,2416:10:base.tally,2396:model rec
+,20:records/same-missing,10:RUN-RECORD,7:records,26:run base.tally --ask q_sav,2560:10:base.tally,2540:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -558,7 +558,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -571,12 +571,12 @@ version st_sav
   same bank[a9] = bank[a1]
 ,,1:0,93:q_sav: refused: RUN-RECORD same bank[a9] = bank[a1]: bank[a9] doesn't exist
   cut 2026-04-10
-,16:records/unjoined,10:RUN-RECORD,7:records,27:run base.tally --ask q_save,2362:10:base.tally,2342:model rec
+,16:records/unjoined,10:RUN-RECORD,7:records,27:run base.tally --ask q_save,2506:10:base.tally,2486:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -640,7 +640,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -651,12 +651,12 @@ version st_sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
 ,,1:0,133:q_save: refused: RUN-RECORD bank[a2] and bank[b1] state one transfer and both fulfil save[2026-03]: state them same
   cut 2026-04-10
-,25:records/adjustment-unmade,10:RUN-RECORD,7:records,28:run base.tally --ask q_moved,2410:10:base.tally,2390:model rec
+,25:records/adjustment-unmade,10:RUN-RECORD,7:records,28:run base.tally --ask q_moved,2554:10:base.tally,2534:model rec
   tally 2
   on 2026-04-10
   start 2026-01-01
   end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
+  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -720,7 +720,7 @@ version st_konto
   bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: adjustments[pay[2026-03].cash, v]) "PENSJA"
   bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN, fulfils: top[2026-03]) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
+  stated[konto] = 200.00 PLN at 2026-03-20 end "saldo"
 
 version st_sav
   cite s
@@ -731,90 +731,5 @@ version st_sav
   bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
   same bank[a2] = bank[b1]
 ,,1:0,131:q_moved: refused: RUN-RECORD bank[a1] fulfils adjustments[pay[2026-03].cash, v], which no version made by the cut
-  cut 2026-04-10
-,21:records/reading-after,10:RUN-RECORD,7:records,28:run base.tally --ask q_konto,2366:10:base.tally,2346:model rec
-  tally 2
-  on 2026-04-10
-  start 2026-01-01
-  end 2026-12-31
-  note "codes/m2's records family (T, M2 C6): a covered month of two places, konto and sav, each with its own statement; one transfer between them on both, stated same and fulfilling its decision's instance; a reading of konto after a decision the statement fulfils. Each fixture is one edit: a link that names no instance's turn (RUN-RECORD), a same row that doesn't exist, the two rows unjoined, the two disagreeing (HOLE-SAME)"
-
-source s "synthetic"
-
-unit PLN: currency minor 0.01
-
-place konto: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place world: outside lives 1900-01-01..
-
-input bank: observed
-
-input keep: money PLN
-
-input amt: money PLN
-
-input d_save: int
-
-input d_top: int
-
-move pay[m in months]: transfers
-  on start_of(m)
-  leg cash from world to konto amount amt
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move top[m in months]: transfers
-  on day_of(m, d_top)
-  reads konto
-  leg cash from world to konto amount max(0 PLN, keep - bal(konto))
-
-ask q_konto: bal(konto, 2026-03-31)
-
-ask q_sav: bal(sav, 2026-03-31)
-
-ask q_moved: sum(t.cash.amount for t in transfers over 2026-03)
-
-ask q_save: flows(save, 2026-03-01 .. 2026-03-31)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  amt = 1000.00 PLN "s"
-  d_save = 15 "s"
-  d_top = 20 "s"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
-
-version st_konto
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[a1] = (on: 2026-03-01, kind: transfers, leg cash from world to konto amount 1000.00 PLN, fulfils: pay[2026-03]) "PENSJA"
-  bank[a2] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "NA OSZCZEDNOSCI"
-  bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN) "DOPLATA"
-  stated[konto] = 200.00 PLN after top[2026-03] "saldo"
-
-version st_sav
-  cite s
-  governs 2026-03
-  known 2026-04-03
-  covers sav
-  anchor sav
-  bank[b1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "Z KONTA"
-  same bank[a2] = bank[b1]
-,,1:0,255:q_konto: refused: RUN-RECORD reading stated[konto] after top[2026-03]: top[2026-03] is modelled past and nothing fulfils it
-  unfulfilled: pay[2026-01]
-  unfulfilled: pay[2026-02]
-  unfulfilled: save[2026-01]
-  unfulfilled: save[2026-02]
   cut 2026-04-10
 ,

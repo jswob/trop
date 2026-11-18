@@ -3,6 +3,8 @@
 # out takes 100.00 PLN from jar (min 0, 50.00 PLN) on a day of window(03-05, 03-10), inn brings 100.00 PLN on 03-07:
 # on 03-05 and 03-06 jar breaks its sign rule, on the rest it holds, so p1 is the hole and p2 splits it. 2.1.7's
 # refcore booked out on the window's last day only (50.00 PLN). The plan's c5s.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -37,13 +39,11 @@ version v
   opening[jar] = 50.00 PLN at 2026-01-01 start "s"
 
 ask p1: bal(jar, 2026-03-31)
-ask p2: bal(jar, 2026-03-31) windows each
+ask p2: bal(jar, 2026-03-31)
 === expect
 p1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unknown day: wd
   cut 2026-01-01
-p2 [wd = 2026-03-05]: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
-  cut 2026-01-01
-p2 [wd = 2026-03-06]: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-06
-  cut 2026-01-01
-p2 [wd = 2026-03-07 .. 2026-03-10]: 50.00 PLN
+p2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+  unknown day: wd
   cut 2026-01-01

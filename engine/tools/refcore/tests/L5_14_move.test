@@ -12,6 +12,8 @@
 # Round 7's example writes the salary's lead as a row, last_business(m, pay_lead, len) (L §7.1); here pay_lead = 3.
 # (Writer 8: windows latest is gone; landlord, read by flows, is a thing of its own outside kind of unit PLN, since
 # L §5.10 refuses a unit on an outside place and flows of a place of unit any is refused, L §5.14.3.)
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -70,20 +72,27 @@ version v
   opening[konto] = 1 000.00 PLN at 2026-01-01 start
   opening[kredyt] = 0 PLN at 2026-01-01 start
 
-ask jan: bal(konto, 2026-01-31), bal(kredyt, 2026-01-31) law 2026-01-31 windows each
-ask feb: bal(konto, 2026-02-28), bal(kredyt, 2026-02-28) law 2026-02-28 windows each
-ask mar: bal(konto, 2026-03-31), bal(kredyt, 2026-03-31) law 2026-03-31 windows each
+ask jan: bal(konto, 2026-01-31), bal(kredyt, 2026-01-31) law 2026-01-31
+ask feb: bal(konto, 2026-02-28), bal(kredyt, 2026-02-28) law 2026-02-28
+ask mar: bal(konto, 2026-03-31), bal(kredyt, 2026-03-31) law 2026-03-31
 ask open_: bal(konto, 2026-01-29)
 ask when_: rent[2026-01].day, rent[2026-02].day, salary[2026-01].day
 ask rents: flows(rent, 2026-01-01 .. 2026-03-31, for 2026-02), flows(landlord, 2026-01-01 .. 2026-03-31)
 === expect
-feb: (2 000.00 PLN, -3 000.00 PLN)
+feb: (?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01]) ?"date within window(2026-02-25, 2026-02-27) not precise enough for a balance" (salary[2026-02]), ?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01]) ?"date within window(2026-02-25, 2026-02-27) not precise enough for a balance" (salary[2026-02]))
+  unknown day: window(2026-01-28, 2026-01-30)
+  unknown day: window(2026-02-25, 2026-02-27)
   law date 2026-02-28, cut 2026-01-01
-jan: (2 000.00 PLN, -2 000.00 PLN)
+jan: (?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01]), ?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01]))
+  unknown day: window(2026-01-28, 2026-01-30)
   law date 2026-01-31, cut 2026-01-01
-mar: (2 000.00 PLN, -4 000.00 PLN)
+mar: (?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01]) ?"date within window(2026-02-25, 2026-02-27) not precise enough for a balance" (salary[2026-02]) ?"date within window(2026-03-27, 2026-03-31) not precise enough for a balance" (salary[2026-03]), ?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01]) ?"date within window(2026-02-25, 2026-02-27) not precise enough for a balance" (salary[2026-02]) ?"date within window(2026-03-27, 2026-03-31) not precise enough for a balance" (salary[2026-03]))
+  unknown day: window(2026-01-28, 2026-01-30)
+  unknown day: window(2026-02-25, 2026-02-27)
+  unknown day: window(2026-03-27, 2026-03-31)
   law date 2026-03-31, cut 2026-01-01
-open_: ?"date within window(2026-01-28, 2026-01-30) not precise enough for ...
+open_: ?"date within window(2026-01-28, 2026-01-30) not precise enough for a balance" (salary[2026-01])
+  unknown day: window(2026-01-28, 2026-01-30)
   cut 2026-01-01
 rents: (3 000.00 PLN, 9 000.00 PLN)
   cut 2026-01-01

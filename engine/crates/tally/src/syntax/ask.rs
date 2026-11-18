@@ -26,9 +26,8 @@ fn ask_expr(p: &mut P<'_>) -> Result<Expr, Stop> {
 /// What an ask asks, after `ask id:` (L §2.3 `askbody`).
 fn ask_body(p: &mut P<'_>) -> Result<AskBody, Stop> {
     if p.accept("explain")? {
-        let target = if p.at("bal", 0) || p.at("low", 0) {
-            let word = p.peek(0).map_or("", |tok| tok.text.as_str());
-            p.builtin(word)?
+        let target = if p.at("bal", 0) {
+            p.builtin("bal")?
         } else {
             p.reference()?
         };
@@ -96,9 +95,8 @@ fn diff(p: &mut P<'_>) -> Result<Diff, Stop> {
     })
 }
 
-/// `ask id: body [for binds] [in world] [with pins] [law e] [as known e] [windows each]
-/// [with uncertain] [random at …] [paths N seed S] [path P] [partial] [orient …]`, one line
-/// (L §2.3 `ask`).
+/// `ask id: body [for binds] [in world] [with pins] [law e] [as known e] [with uncertain]
+/// [random at …] [paths N seed S] [path P] [partial] [orient …]`, one line (L §2.3 `ask`).
 pub(super) fn ask(p: &mut P<'_>, body: &[Line]) -> Result<Ask, Stop> {
     let id = p.ident("an id")?;
     p.expect(":")?;
@@ -133,7 +131,6 @@ pub(super) fn ask(p: &mut P<'_>, body: &[Line]) -> Result<Ask, Stop> {
         pins,
         law: None,
         known: None,
-        windows_each: false,
         uncertain: false,
         random: None,
         paths: None,
@@ -157,10 +154,6 @@ fn ask_clauses(p: &mut P<'_>, decl: &mut Ask) -> Result<(), Stop> {
     if p.at("as", 0) && p.at("known", 1) {
         p.skip(2)?;
         decl.known = Some(p.expr(Ends::Free)?);
-    }
-    if p.accept("windows")? {
-        p.each()?;
-        decl.windows_each = true;
     }
     decl.uncertain = p.with_uncertain()?;
     if p.at("random", 0) && p.at("at", 1) {

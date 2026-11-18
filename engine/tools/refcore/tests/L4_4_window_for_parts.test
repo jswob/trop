@@ -72,9 +72,11 @@ version new
   go = false "s"
 === expect
 d3: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
+  unknown day: wl
   unfulfilled: md
   cut 2026-08-01
 d4: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (md)
+  unknown day: wl
   unfulfilled: md
   cut 2026-08-01
 e4: 0.00 PLN
@@ -83,12 +85,15 @@ e5: 1.00 PLN
   unfulfilled: me
   cut 2026-08-01
 k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   cut 2026-08-01
 n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   unfulfilled: md
   unfulfilled: me
   cut 2026-08-01
 w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+  unknown day: wl
   cut 2026-08-01

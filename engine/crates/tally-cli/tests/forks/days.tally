@@ -28,8 +28,6 @@ input floor: money DUK
 
 input share: num
 
-input late: int
-
 input rent_off: int
 
 input sweep_off: int
@@ -56,7 +54,7 @@ move sweep[m in month]: transfers
   on add_days(start_of(m), sweep_off)
   at start_of(m)
   reads konto
-  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down) on add_days(start_of(m), late)
+  leg cash from konto to world amount round(max(0, room[m] - floor) * share, minor(DUK), down)
 
 ask d_min: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-03-15 step 1 day)
 
@@ -79,7 +77,6 @@ version v
   rent = 900.00
   floor = 200.00
   share = 0.5
-  late = 25
   rent_off = 9
   sweep_off = 17
   reach = 15

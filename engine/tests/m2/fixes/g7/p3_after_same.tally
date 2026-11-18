@@ -3,7 +3,7 @@ model t
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "G7 review probe: after-reading and same inside a kept walk"
+  note "G7 review probe: after-reading and same inside a kept walk; tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -45,7 +45,7 @@ version rd
   governs 2026-03..2026-04
   known 2026-04-04
   pad konto from world
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+  stated[konto] = 90.00 PLN at 2026-03-14 end "saldo"
 
 
 ask a_min: min(bal(konto, d) from 2026-03-10 for d in 2026-03-10 .. 2026-04-30 step 1 day)

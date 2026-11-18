@@ -1,5 +1,5 @@
 """Writer 3's reads (L §5.10, §5.14, §5.14.1, §5.19; E §4.2-§4.3, §6): places and movements as values, their
-fields, bindings over event kinds and observed inputs, bal, low, flows, value, next, covered, gap, observed, unit.
+fields, bindings over event kinds and observed inputs, bal, flows, value, covered, gap, observed, unit.
 
 Installed as Engine methods (`m_<name>` -> `<name>`).
 """
@@ -10,8 +10,8 @@ from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
 from .evaluate import member_owns, member_moves, move_owner, carry_hole
-from .model import Span, _kv, key_text, WindowUndecided
-from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Code, Key, NONE, CURRENCIES, fmt,
+from .model import Span, _kv, key_text, Undecided
+from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
                     same_groups, same_lines, once_obs, same_obs_differ)
@@ -479,8 +479,8 @@ def m_bind_each(self, b, env, ctx):
             c = self.push()
             try:
                 ok = self.alive_test(b, e2, ctx, t, kind)
-            except WindowUndecided as w:
-                # L §4.5: an entry known in a window holding the cut: an unknown member (§5.11)
+            except Undecided as w:
+                # L §5.11: a thing whose life the text leaves open: an unknown member
                 ok = w.hole()
             except TallyError as e:
                 # refused at this member only (L §8.4): its tuple is refused, the others stand
@@ -777,20 +777,6 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             raise e1
         d = x.day
         st = True
-        und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
-        if und is not None:
-            # a row known in a window that holds the cut is one movement read seen and unseen (L §4.5, tally 2.1.8
-            # R12): unseen, a row of an observed input is no row, and a movement of an event kind is the instance it
-            # fulfils, if any; a member on both sides is one member, else an unknown member, that hole
-            alt = None
-            if b._dom[0] == 'event' and x.target is not None:
-                alt = getattr(x.target, 'day', None)
-            seen_in = isinstance(d, datetime.date) and sp.contains(d)
-            unseen_in = isinstance(alt, datetime.date) and sp.contains(alt)
-            if not seen_in and not unseen_in:
-                continue
-            out.append((x.mv(), True if (seen_in and unseen_in) else und, x))
-            continue
         if d is None and x.err is not None:
             # refused before its day was known: whether it is a member is refused with it (L §8.4)
             raise x.err
@@ -999,9 +985,7 @@ def m_e_bal(self, n, env, ctx):
     if isinstance(d, Hole):
         return d
     if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-        d = self.window_choice(d, ctx)
-        if isinstance(d, Iv):
-            raise self.imprecise(d, 'the day of bal(%s, d)' % place)
+        raise self.imprecise(d, 'the day of bal(%s, d)' % place)
     d = self.date_of(d, 'the day of bal')
     if self.tracing and self.trace_stack and form != 'proj' and getattr(self, 'explainer', None) is not None:
         # E §10, §3.2 (tally 2.1.7 R7, #132b): a cause that is a balance prints in the balance's own form, its last
@@ -1024,9 +1008,8 @@ def m_e_bal(self, n, env, ctx):
     return self.bal_at(n, place, unit, d, env, ctx)
 
 
-def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
-    """bal(x, d) with the read's own clauses (L §5.14.1): the one read `bal` and the forms defined by it (`low`, L §5,
-    a form defined by another; tally 2.1.7 R6, #125) make. A day outside the run is its hole (run_ends) before the
+def m_bal_at(self, n, place, unit, d, env, ctx):
+    """bal(x, d) with the read's own clauses (L §5.14.1). A day outside the run is its hole (run_ends) before the
     read's own forms: a projection's and the modelled walk's checks come after it."""
     if isinstance(d, datetime.date):
         out = self.run_ends(place, d)
@@ -1034,14 +1017,11 @@ def m_bal_at(self, n, place, unit, d, env, ctx, regs_to=None):
             return out
     form = n._form
     if form == 'proj':
-        return self.proj_bal(n, place, unit, d, env, ctx, regs_to)
+        return self.proj_bal(n, place, unit, d, env, ctx)
     if form == 'modelled':
         # bal(x, d) in the model's own account, at the plain read's instant (L §5.19; tally 2.1.8 R16, B5)
         return self.bal_modelled(place, unit, d, ctx, start=getattr(n, 'start', False))
     key = K_start(d) if getattr(n, 'start', False) else K_end(d)
-    if n.proj and 'windows' in n.proj:
-        # the read's own clause; windows each takes the day the line's run assigns (m_proj_clauses)
-        ctx = ctx.but(windows=self.proj_clauses({'windows': n.proj['windows']}, ctx)[0])
     v = self.bal_day(place, unit, d, key, ctx)
     # a plain read counts uncertain movements only when it states the clause; the line's clause reaches
     # projections and bindings (L §5.14, §5.18)
@@ -1242,17 +1222,11 @@ def m_partial_leg(self, g, sgn, ctx):
 
 
 def m_proj_clauses(self, proj, ctx):
-    windows = proj.get('windows', ctx.windows)
-    if windows == 'each':
-        # windows each on the read (L §4.4, "for that read"): the line's runner's assignment applies inside it
-        lw = ctx.windows if isinstance(ctx.windows, tuple) else getattr(ctx.cut, 'windows', None)
-        if isinstance(lw, tuple) and lw:
-            windows = ('each', lw[1])
     rnd = ctx.rnd
     if proj.get('random') is not None:
         rnd = self.rnd_clause(proj['random'], ctx)
     unc = proj.get('uncertain', ctx.unc)
-    return windows, rnd, unc
+    return rnd, unc
 
 
 def m_rnd_clause(self, r, ctx):
@@ -1265,8 +1239,8 @@ def m_rnd_clause(self, r, ctx):
     return ('mean', None)
 
 
-def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
-    """`bal(x, d) from t` (L §5.14.1, E §4.3); regs_to: the last day whose left-out instances the reader lists."""
+def m_proj_bal(self, n, place, unit, d, env, ctx):
+    """`bal(x, d) from t` (L §5.14.1, E §4.3)."""
     t = self.ev(n.proj['frm'], env, ctx)
     if isinstance(t, Hole):
         return t
@@ -1285,8 +1259,8 @@ def m_proj_bal(self, n, place, unit, d, env, ctx, regs_to=None):
     if ctx.partial and isinstance(v, Hole):
         # a projection's balance is a sum as the plain one is (L §5.18; tally 2.1.8 R15)
         v = self.partial_bal(w, place, unit, K_end(d), v)
-    self.proj_regs(w, t, regs_to or d)
-    if clauses[2] and (not isinstance(v, Hole) or ctx.partial):
+    self.proj_regs(w, t, d)
+    if clauses[1] and (not isinstance(v, Hole) or ctx.partial):
         # with uncertain partial: the uncertain amounts join the known part of a hole's linear form (L §5.18, §5.14;
         # tally 2.1.8 R15, B3 of group 3's review)
         v = self.proj_uncertain(w, place, unit, d, v, ctx)
@@ -1335,12 +1309,11 @@ def m_modelled_account(self, w, place, unit, key, d):
     """`bal(x, d) modelled` is bal(x, d) in the model's own account (L §5.19; tally 2.1.8 R16): from x's last reading
     before day d (the opening, before the first; a reading on day d is what it is compared with), every booked movement
     of x since that is no observation, with every instance the observations stand in for (the modelled past) at the
-    point its walk books it, up to the read's instant; m's leg is never counted after a reading `after m`.
+    point its walk books it, up to the read's instant.
     Returns (lg, r0, ents, legs): r0 the start reading's index in lg (-1: the place's default), ents the log entries
     counted, legs the modelled instances' legs, (x, g, sign, key) or (x, None, err or hole, None) for an instance whose
     day is refused or a hole, which may fall anywhere."""
     from .walk import same_book_key
-    from .check import _txt
     st, lg, i = w.state(place, unit, key)
     r0 = -1
     if lg is not None:
@@ -1350,14 +1323,6 @@ def m_modelled_account(self, w, place, unit, key, d):
             r0 = next((j for j in range(i, -1, -1) if lg.ents[j].kind == 'reset' and
                        lg.ents[j].note == 'opening' and lg.ents[j].key[0] == d.toordinal()), -1)
     since = lg.ents[r0].key if (lg is not None and r0 >= 0) else None
-    # m's leg is never counted after a reading `after m`: the start reading's, or an earlier one's, which every later
-    # reading holds too (pick P39 on B8 of group 3's review)
-    after = set()
-    if since is not None:
-        for e in lg.ents[:r0 + 1]:
-            ins = getattr(getattr(e, 'row', None), 'instant', None) if e.kind == 'reset' else None
-            if isinstance(ins, tuple) and ins and ins[0] == 'after':
-                after.add(_txt(ins[1]))
     ents = []
     if lg is not None:
         for e in lg.ents[r0 + 1:i + 1]:
@@ -1367,8 +1332,6 @@ def m_modelled_account(self, w, place, unit, key, d):
             ents.append(e)
     legs = []
     for x in w.modelled:
-        if x.id in after:
-            continue
         for g in x.legs:
             if not any(isinstance(p, Thing) and p.name == place for p in (g.frm, g.to)):
                 continue
@@ -1384,75 +1347,6 @@ def m_modelled_account(self, w, place, unit, key, d):
                 if isinstance(p, Thing) and p.name == place:
                     legs.append((x, g, s, bk))
     return lg, r0, ents, legs
-
-
-def m_after_day(self, r, iid, ctx):
-    """The day of a reading `after m` (L §4.6; tally 2.1.8 R16): m's day as the walk books m, or, where observations
-    stand in for m, the day of the last of them; a hole or a window where m's day is one; before S a fact the walk
-    doesn't apply, on that day. Refused where m doesn't exist (RUN-RECORD)."""
-    from .check import _txt
-    node = r.instant[1]
-    mid = _txt(node)
-    base = node.obj if node.k == 'index' else node
-    mi = self.m.moves.get(base.id)
-    active = self.__dict__.setdefault('_after_active', set())
-    if id(r) in active:
-        # m's day or existence reads the reading that stands after it (L §8.4)
-        raise refuse('RUN-CYCLE', '%s reads its own instances' % (mi.id if mi is not None else mid))
-    active.add(id(r))
-    try:
-        w = ctx.walk if ctx.walk is not None else self.main_walk(ctx)
-        ck = ('afterday', id(r), id(w))
-        hit = self.run_cache.get(ck)
-        if hit is not None:
-            if isinstance(hit, TallyError):
-                raise hit
-            return hit
-        run = None
-        ww = w
-        while ww is not None and run is None:
-            run = ww.decs.get(mid)
-            ww = ww.base
-        if run is None:
-            run = next((i for i in self.decision_instances(mi, w.tctx) if i.id == mid), None) if mi is not None \
-                else None
-        days = []
-        if run is not None and run.exists is not False and not isinstance(run.exists, Hole):
-            from .walk import leg_at
-            place = r.pattern[0][1].name
-            # the legs the walk books: inside [S, E] and before the cut (E §4.2 step 1)
-            legs = [lg for o in self.obs_links_for(mid, w.tctx) for lg in o.legs if isinstance(lg.day, datetime.date)
-                    and self.m.S <= lg.day <= self.m.E and lg.day < w.K]
-            # the last standing-in leg at the reading's place, else the last of them (L §4.6)
-            days = [lg.day for lg in legs if leg_at(lg, place)] or [lg.day for lg in legs]
-        if run is not None and getattr(run, 'err', None) is not None and \
-                not isinstance(run.day, (datetime.date, Hole, Iv)):
-            # m's day is refused: so is the reading's (L §8.4)
-            out = run.err
-        elif run is None or run.exists is False or getattr(run, 'status', None) == 'none':
-            out = self.after_refusal(iid, r, mid)
-        elif isinstance(run.exists, Hole):
-            out = run.exists
-        elif days:
-            out = max(days)
-        elif getattr(run, 'status', None) == 'modelled':
-            # modelled past with no observation standing in: nothing books it by the cut (L §4.6)
-            out = self.after_refusal(iid, r, mid, 'is modelled past and nothing fulfils it')
-        else:
-            out = run.day
-        if not w.proj:
-            self.run_cache[ck] = out
-        if isinstance(out, TallyError):
-            raise out
-        return out
-    finally:
-        active.discard(id(r))
-
-
-def m_after_refusal(self, iid, r, mid, why="doesn't exist"):
-    """RUN-RECORD `reading <r> after <m>: <m> doesn't exist`, `... <m> is modelled past and nothing fulfils it`
-    (L §4.6, §8.4; tally 2.1.8 R16)."""
-    return refuse('RUN-RECORD', "reading %s%s after %s: %s %s" % (iid, r.keys_text(), mid, mid, why))
 
 
 def m_bal_modelled(self, place, unit, d, ctx, start=False):
@@ -1473,7 +1367,7 @@ def m_bal_modelled(self, place, unit, d, ctx, start=False):
     q = v.q
     hs = []
     for e in ents:
-        if e.kind in ('bad', 'pbad', 'rbad'):
+        if e.kind in ('bad', 'pbad'):
             raise e.err
         if e.kind == 'delta':
             q += e.flow.q
@@ -1501,44 +1395,6 @@ def m_bal_modelled(self, place, unit, d, ctx, start=False):
     return qty(q, unit)
 
 
-def m_e_low(self, n, env, ctx):
-    """low(x, a .. b) [from t] [clauses]: min(bal(x, d) [from t] [clauses] for d in a .. b step 1 day) (L §5.14.1),
-    its definition's reads, holes and refusals, named low (L §5, a form defined by another; tally 2.1.7 R6, #125,
-    #126a)."""
-    p = self.place_arg(n.ref, env, ctx)
-    if isinstance(p, Hole):
-        return p
-    place = p.name
-    unit = self.bal_unit(n, place, env, ctx)
-    sp = self.span_value(n.span, env, ctx)
-    if isinstance(sp, Hole):
-        return sp
-    a, b = sp.start, sp.end - ONE_DAY
-    if n._form == 'proj':
-        t = self.ev(n.proj['frm'], env, ctx)
-        if isinstance(t, Hole):
-            return t
-        t = self.date_of(t, 'the day of a projection')
-        if a < t:
-            raise refuse('RUN-DOMAIN', 'low(%s, %s .. %s) from %s: a day before the projection\'s start' % (
-                place, a, b, t))
-    vals = []
-    d = a
-    while d <= b:
-        vals.append(self.bal_at(n, place, unit, d, env, ctx, regs_to=b))
-        d += ONE_DAY
-    if not vals:
-        raise refuse('RUN-EMPTY', 'low over no keys')
-    hs = [v for v in vals if isinstance(v, Hole)]
-    if hs:
-        return merge(*hs)
-    best = vals[0]
-    for v in vals[1:]:
-        if v.q < best.q:
-            best = v
-    return best
-
-
 # -- flows (L §5.14.3) --------------------------------------------------------------------------------------------
 
 def m_e_flows(self, n, env, ctx):
@@ -1552,20 +1408,12 @@ def m_e_flows(self, n, env, ctx):
         fk = self.ev(n.forkey, env, ctx)
         if isinstance(fk, Hole):
             return fk
-    conv = None
-    if n.conv is not None:
-        cur, fx, mode = n.conv
-        if getattr(mode, '_r', None) and mode._r[0] == 'axismode':
-            mv = Code('rounding', self.axis_option(mode._r[1], ctx))
-        else:
-            mv = self.ev(mode, env, ctx)
-        conv = (cur, fx, mv)
     if n._form == 'move':
-        return self.flows_move(n, sp, fk, conv, env, ctx)
+        return self.flows_move(n, sp, fk, env, ctx)
     p = self.place_arg(n.ref, env, ctx)
     if isinstance(p, Hole):
         return p
-    return self.flows_place(p.name, sp, conv, env, ctx, fk=fk)
+    return self.flows_place(p.name, sp, env, ctx, fk=fk)
 
 
 def mv_for(mv):
@@ -1580,7 +1428,7 @@ def mv_for(mv):
     return getattr(mv, 'forp', None)
 
 
-def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
+def m_flows_place(self, place, sp, env, ctx, fk=None):
     m = self.m
 
     def other_for(e):
@@ -1621,16 +1469,16 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     totals = {}
     holes = []
     for w, limit in chain:
-        self.flows_place_walk(w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes)
+        self.flows_place_walk(w, limit, place, units, lo, sp, last, env, ctx, fk, other_for, totals, holes)
     if last > m.E:
-        self.flows_post_e(chain[-1][0], place, sp, last, conv, env, ctx, fk, totals, holes)
+        self.flows_post_e(chain[-1][0], place, sp, last, env, ctx, fk, totals, holes)
     w, limit = chain[0]
     for (ad, e) in w.adj_regs.get(place, ()):
         if ad <= last:
             self.reg(e)
     # the joint model's own unlinked movements into the place on or before the span's last day (L §6.1, round 17b)
     self.joint_left_out(w, place, limit)
-    if holes and ctx.partial and conv is None and pu != 'any' and len(totals) <= 1 and (totals or units or pu):
+    if holes and ctx.partial and pu != 'any' and len(totals) <= 1 and (totals or units or pu):
         # flows is a sum of its movements (L §5.18; tally 2.1.8 R15): linear in each hole leg's amount
         if totals:
             u, q = list(totals.items())[0]
@@ -1640,11 +1488,9 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
             return lin_fold(qty(q, u), holes)
     if holes:
         return merge(*holes)
-    if conv is not None:
-        return Money(totals.get(conv[0], 0), conv[0])
     # L §5.14.3 (round 12): "Its unit is that of the places it reads ...; a place of unit any, movements in two
     # units, or an empty span whose unit load can't see is refused (LOAD-UNIT where load sees it, RUN-DOMAIN
-    # otherwise), unless the flows converts"
+    # otherwise)"
     if pu == 'any':
         raise refuse('RUN-DOMAIN', 'flows of %s, a place of unit any: it sums no one unit' % place)
     if len(totals) > 1:
@@ -1659,7 +1505,7 @@ def m_flows_place(self, place, sp, conv, env, ctx, fk=None):
     return qty(q, u)
 
 
-def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
+def m_flows_post_e(self, w, place, sp, last, env, ctx, fk, totals, holes):
     """flows of a place over days after E (E §2 Movements outside [S, E]; tally 2.1.7 S1, #93): the walk books none
     of them (walk.note_post_e), and flows counts them, a plan's instance with its amount and a decision's instance as
     a hole movement, HOLE-POSTRUN, since its amount reads a walk that doesn't hold its day (L §8.1)."""
@@ -1705,12 +1551,7 @@ def m_flows_post_e(self, w, place, sp, last, conv, env, ctx, fk, totals, holes):
             if isinstance(a, Hole):
                 holes.append(a)
                 continue
-            if conv is not None:
-                a = self.convert(a, lo, conv, env, ctx)
-                if isinstance(a, Hole):
-                    holes.append(a)
-                    continue
-            u = conv[0] if conv is not None else unit_of_value(a)
+            u = unit_of_value(a)
             for s in sides:
                 totals[u] = totals.get(u, Fraction(0)) + s * a.q
 
@@ -1746,7 +1587,7 @@ def _zero_at(mv, place):
     return bool(legs) and all(_zero_flow(lg.amount) for lg in legs)
 
 
-def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ctx, fk, other_for, totals, holes):
+def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk, other_for, totals, holes):
     """One walk's part of flows of a place: its entries in (lo, limit], added to totals and holes."""
     # what holds for the whole walk (a refused movement whose places aren't known, a decision refused, a movement
     # whose day is a hole): a balance reads it (Walk.pstate), and so does a place's flows, which could count it
@@ -1805,7 +1646,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if other_for(e) or (fk is not None and e.kind == 'reset'):
                 continue
             if e.kind in ('hole', 'perm'):
-                lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' and conv is None else None
+                lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' else None
                 holes.append(_reask(Hole(e.qs, lh if lh is not None else False), 'flows of %s' % place))
                 # its register too, as a balance takes it (Walk.cum): the joint model's own movement into a member's
                 # place, a hole there, is listed under every result that reads the place (L §6.1, round 17; §8.2
@@ -1832,13 +1673,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
             if isinstance(f, Hole):
                 holes.append(f)
                 continue
-            if conv is not None:
-                f = self.convert(f, kday(e.key), conv, env, ctx)
-                if isinstance(f, Hole):
-                    holes.append(f)
-                    continue
-            uu = conv[0] if conv is not None else u
-            totals[uu] = totals.get(uu, Fraction(0)) + f.q
+            totals[u] = totals.get(u, Fraction(0)) + f.q
         holes.extend(Hole(x.qs) for x in perms)
         # a movement whose window opened by the span's end and closes after the walk's end books no delta in this walk:
         # whether it falls in the span is the window's hole, as for one that closes after the span (L §4.4; tally
@@ -1853,34 +1688,7 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, conv, env, ct
                     win.window_text(), place), mv.id if mv is not None else place)]), win))
 
 
-def m_convert(self, f, day, conv, env, ctx):
-    """One movement converted (L §5.14.3): the rate at its day, its amount (>= 0) rounded to the minor unit with
-    the mode, then its direction."""
-    from .evaluate import round_mode
-    cur, fx, mode = conv
-    u = unit_of_value(f)
-    if u == cur:
-        return f
-    rate = self.ev(fx, env, ctx.but(law=day))
-    if isinstance(rate, Hole):
-        return rate
-    if isinstance(mode, Hole):
-        return mode
-    if not isinstance(rate, Num):
-        raise refuse('LOAD-UNIT', 'flows in %s at %s: the rate is %s' % (cur, fmt_node(fx), fmt(rate)))
-    want = tuple(sorted([(cur, 1), (u, -1)]))
-    if tuple(sorted(rate.u)) != want:
-        raise refuse('LOAD-UNIT', 'an exchange rate %s applied to %s' % (fmt(rate), u))
-    q = abs(f.q) * rate.q
-    minor = CURRENCIES[cur]
-    k = round_mode(q / minor, mode.word)
-    q = k * minor
-    if f.q < 0:
-        q = -q
-    return Money(q, cur)
-
-
-def m_flows_move(self, n, sp, fk, conv, env, ctx):
+def m_flows_move(self, n, sp, fk, env, ctx):
     """flows(m[keys], span [, for k]): the move's movements in the span, settlements included (L §5.14.3)."""
     m = self.m
     mi = m.moves[n._move]
@@ -2015,11 +1823,6 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                     if isinstance(a, Hole):
                         holes.append(a)
                         continue
-                    if conv is not None:
-                        a = self.convert(a, lg.day if isinstance(lg.day, datetime.date) else o.day, conv, env, ctx)
-                        if isinstance(a, Hole):
-                            holes.append(a)
-                            continue
                     total = a.q if total is None else total + a.q
                     u = unit_of_value(a)
                     seen_units.add(u)
@@ -2044,7 +1847,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             if isinstance(a, TallyError):
                 raise a
             if isinstance(a, Hole):
-                holes.append(self.partial_leg(lg, 1, ctx) if conv is None else a)
+                holes.append(self.partial_leg(lg, 1, ctx))
                 continue
             err = self.leg_refused(i.id, lg.name, ctx, lg.day if isinstance(lg.day, datetime.date) else i.day) \
                 if a.q != 0 else None
@@ -2061,11 +1864,6 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                 continue
             if err is not None:
                 raise err
-            if conv is not None:
-                a = self.convert(a, lg.day if isinstance(lg.day, datetime.date) else day_lo(d), conv, env, ctx)
-                if isinstance(a, Hole):
-                    holes.append(a)
-                    continue
             total = a.q if total is None else total + a.q
             u = unit_of_value(a)
             seen_units.add(u)
@@ -2105,7 +1903,7 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
                     continue
                 total = sign * amt.q if total is None else total + sign * amt.q
                 u = u or unit_of_value(amt)
-    if holes and ctx.partial and conv is None and len(seen_units) <= 1:
+    if holes and ctx.partial and len(seen_units) <= 1:
         # flows of a move is a sum of its movements (L §5.18; tally 2.1.8 R15)
         lt = getattr(n, '_t', None)
         known = qty(total or 0, u) if u is not None else (
@@ -2116,8 +1914,6 @@ def m_flows_move(self, n, sp, fk, conv, env, ctx):
             return lin_fold(known, holes)
     if holes:
         return merge(*holes)
-    if conv is not None:
-        return Money(total or 0, conv[0])
     # L §5.14.3 (round 12): the unit of flows of a move is its leg's places', known at load where they have one fixed
     # unit, otherwise taken from the movements it counts; movements in two units, or an empty span whose unit load
     # can't see, are refused (RUN-DOMAIN here)
@@ -2364,85 +2160,10 @@ def m_price_read(self, pid, keys, d, n, env, ctx, place, u):
     return v
 
 
-# -- next, covered, gap, observed, unit (L §5.14.1, §5.19, §5.10) -------------------------------------------------------
-
-def m_c_next(self, n, env, ctx):
-    """next(K, d) is `first(m in K over d ..) ties by m.day` (L §5.14.1 table): the first movement of event kind K
-    dated on or after d; two on that first day are a tie (RUN-TIE); none at the cut is HOLE-NOTYET (L §3.1), since
-    the span `d ..` reaches past every cut."""
-    kid = n._kind
-    d = self.ev(n.args[1], env, ctx)
-    if isinstance(d, Hole):
-        return d
-    d = self.date_of(d, 'the day of next')
-    res, colls = self.span_members(('event', kid), Span(d, None), ctx)
-    # L §5 A form defined by another (tally 2.1.7 R6, T's SR-7): its holes and refusals name the form as written,
-    # not the definition's bound variable or the day's value
-    from .check import _txt
-    what = _txt(n)
-    best = self.first_by_day(res, what)
-    if isinstance(best, Hole):
-        return best
-    if best is None:
-        return notyet_hole(what, kid)
-    v, x = best
-    c = colls.get(x.id)
-    if c is not None:
-        self.cur.merge(c)
-    return v
-
-
-def notyet_hole(var, dom):
-    """L §8.1 HOLE-NOTYET: `<x>: no <event> yet, and its span reaches past the cut`, naming the binding."""
-    return Hole([('%s: no %s yet, and its span reaches past the cut' % (var, dom), dom)])
-
-
-def m_first_by_day(self, res, what):
-    """The member first by day among [(Mv, status, movement)] (ties by m.day, L §5.11): (Mv, movement), None when
-    there is none, a Hole when an unknown member or a window could come first, RUN-TIE when two share the first day."""
-    if not res:
-        return None
-    def lo(x):
-        return day_lo(x.day)
-
-    def hi(x):
-        return day_hi(x.day)
-    def two_days(x):
-        # a row known in a window that holds the cut, whose day and its instance's differ: which comes first is that
-        # hole (L §4.5, tally 2.1.8 R12, B6), never a tie
-        und = getattr(x, 'und', None) if isinstance(x, ObsMv) else None
-        if und is None:
-            return None
-        alt = getattr(x.target, 'day', None) if x.target is not None else None
-        return und if alt != x.day else None
-    known = [(v, s, x) for v, s, x in res if not isinstance(x.day, Hole) and two_days(x) is None]
-    holes = [s for v, s, x in res if isinstance(x.day, Hole)] + [two_days(x) for v, s, x in res
-                                                                 if two_days(x) is not None]
-    if holes:
-        # a movement whose day is a hole may come first (L §5.14)
-        return merge(*holes)
-    top = min(hi(x) for v, s, x in known)
-    cands = [(v, s, x) for v, s, x in known if lo(x) <= top]
-    hs = [s for v, s, x in cands if isinstance(s, Hole)]
-    if hs:
-        return merge(*hs)
-    if len(cands) == 1:
-        v, s, x = cands[0]
-        return (v, x)
-    wins = [x for v, s, x in cands if isinstance(x.day, Iv)]
-    if wins:
-        # their order is a comparison of windows, undecided (L §4.4)
-        w = wins[0]
-        return carry_hole(Hole([('date within %s not precise enough for %s' % (w.day.window_text(), what), w.id)]),
-                          w.day)
-    raise refuse('RUN-TIE', "%s has a tie at %s that changes the result, and its ties by doesn't break it" % (
-        what, ', '.join(x.id for v, s, x in cands)))
-
+# -- covered, gap, observed, unit (L §5.19, §5.10) ----------------------------------------------------------------
 
 def m_c_covered(self, n, env, ctx):
-    """covered(x, span): versions known by the cut cover x on every day of the span (L §5.19); where a cover is known in
-    a window that holds the cut and the answer differs seen and unseen, HOLE-IMPRECISE naming its version (L §4.5,
-    tally 2.1.8 R12)."""
+    """covered(x, span): versions known by the cut cover x on every day of the span (L §5.19); never a hole (L §8.1)."""
     p = self.ev(n.args[0], env, ctx)
     if isinstance(p, Hole) or p is NONE:
         return False
@@ -2451,12 +2172,7 @@ def m_c_covered(self, n, env, ctx):
         return False
     if sp.start is None or sp.end is None:
         return False
-    dec = [s for s, v in self.coverage(ctx).get(p.name, ())]
-    und = [(s, q) for x, s, q in self.coverage_undecided(ctx) if x == p.name]
-    unseen = covers_all(dec, sp)
-    if und and covers_all(dec + [s for s, q in und], sp) != unseen:
-        return Hole([q for s, q in und])
-    return unseen
+    return covers_all([s for s, v in self.coverage(ctx).get(p.name, ())], sp)
 
 
 def covers_all(spans, sp):
@@ -2500,11 +2216,6 @@ def m_c_gap(self, n, env, ctx):
         return Hole([('stated[%s] has no reading at %s' % (p.name, d), 'stated[%s]' % p.name)])
     gs = sorted(gs, key=lambda x: x[0])
     key, gap, r, role, unit, bc = gs[-1]
-    units = sorted(set(g[4] for g in gs if g[0] == key))
-    if len(units) > 1:
-        # two units' readings at the instant gap reads (L §5.10; tally 2.1.8 R14)
-        from .evaluate import units_at_instant
-        raise refuse('RUN-DOMAIN', units_at_instant('gap', p.name, r, units))
     self.cur.merge(bc)
     self.cur.rows[r.sid] = r
     if isinstance(gap, TallyError):

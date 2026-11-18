@@ -150,10 +150,10 @@ class R1:
             s.append(('', 'input sweep_floor: money DUK\n'))
             s.append(('', 'input sweep_day: date\n'))
             read = 'bal(%s)' % w['src']
-            if w.get('reach'):  # the projection's lowest balance through its reach, `low` (L §5.14.1)
+            if w.get('reach'):  # the projection's lowest balance through its reach (L §5.14.1; `low` until 2.2)
                 s.append(('', 'input sweep_reach: date\n'))
-                s.append(('', 'def low_room: money DUK = low(%s, sweep_day .. sweep_reach) from sweep_day at '
-                              'sweep_day\n' % w['src']))
+                s.append(('', 'def low_room: money DUK = min(bal(%s, d) from sweep_day for d in sweep_day .. '
+                              'sweep_reach step 1 day) at sweep_day\n' % w['src']))
                 rows.append('sweep_reach = %s' % w['reach'])
                 read = 'low_room'
             s.append(('', 'move sweep: transfers\n  on sweep_day\n  at sweep_day\n  reads %s\n  leg cash from %s to %s '
@@ -384,9 +384,10 @@ def foresight_keyed(r, i):
 
 
 def foresight_low(r, i):
-    """A decision that reads `low(x, t .. reach) from t` (L §5.14.1, the written projection's lowest balance): a
-    movement dated after the reach changes nothing it moved; the control, inside the reach, lowers what it sees
-    (D-6). gen.py's `foresight-projection` with M1's `low` in place of S's `min` over days."""
+    """A decision that reads `min(bal(x, d) from t for d in t .. reach step 1 day)` (L §5.14.1, the written
+    projection's lowest balance; `low(x, t .. reach) from t` until tally 2.2 cut it, S-9): a movement dated after the
+    reach changes nothing it moved; the control, inside the reach, lowers what it sees (D-6). gen.py's
+    `foresight-projection` with M1's projection read in place of S's balance."""
     x = R1(r, 'fl%02d' % i, plan=False, split=False, fee=False, sweep=True)
     w = x.sweep
     w['day'] = day(r, dt.date(2025, 1, 15), dt.date(2025, 4, 30))
@@ -524,15 +525,16 @@ def steps(r, i):
 
 
 def low_min(r, i):
-    """`low(x, a .. b) from t` is the minimum over d in a..b of `bal(x, d) from t` (L §5.14.1's table: the same
-    expression; F5's correctness side)."""
+    """The projection's lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)` (L §5.14.1; the form
+    tally 2.2 kept when it cut `low(x, a .. b) from t`, S-9), is the same minimum written with a `where` that every
+    day meets: the form an engine may recognise and the plain aggregate agree (F5's correctness side)."""
     x = rich(r, 'lo%02d' % i)
     p = r.choice(x.acc)
     a = day(r, START, dt.date(2025, 5, 1))
     b = day(r, plus(a, 1), END)
     t = day(r, START, a)
-    x.asks = [('lo', 'low(%s, %s .. %s) from %s' % (p, a, b, t)),
-              ('mn', 'min(bal(%s, d) from %s for d in %s .. %s step 1 day)' % (p, t, a, b))]
+    x.asks = [('lo', 'min(bal(%s, d) from %s for d in %s .. %s step 1 day)' % (p, t, a, b)),
+              ('mn', 'min(bal(%s, d) from %s for d in %s .. %s step 1 day where d >= %s)' % (p, t, a, b, a))]
     return [('one', x.files())]
 
 

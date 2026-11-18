@@ -1,12 +1,13 @@
 //! Fence F5: a written projection's common case read from running sums of x's counted plan legs, kept in a tree, not from the projection's own walk.
 //! Spec: E §4.3 (The common case is cheap: with no decision the projection counts, `bal(x, d)
 //! from t` is the start balance plus a prefix sum F of the plan movements as known on t, and
-//! `low(x, a .. b) from t` a range minimum over F; F changes only with the cut min(t, K)),
-//! §4.1 step 3 and §4.2 steps 2 and 5 (what the projection's walk books, refuses or makes a
-//! hole at x); L §5.14.1 (`bal … from t`, `low`, `left out:`), §8.2 (a balance's register);
-//! P §2.3 (F in a segment tree over the days x has a counted movement, a query O(log n)).
-//! Twin: engine/tools/refcore/mreads.py (`proj_bal`, `m_e_low`) and walk.py (`proj_walk`),
-//! which walk the projection day by day, as projection.rs does.
+//! the `min` of `bal(x, d) from t` over the days a .. b a range minimum over F; F changes
+//! only with the cut min(t, K)), §4.1 step 3 and §4.2 steps 2 and 5 (what the projection's
+//! walk books, refuses or makes a hole at x); L §5.14.1 (`bal … from t`, `left out:`), §8.2
+//! (a balance's register); P §2.3 (F in a segment tree over the days x has a counted
+//! movement, a query O(log n)).
+//! Twin: engine/tools/refcore/mreads.py (`proj_bal`) and walk.py (`proj_walk`), which walk
+//! the projection day by day, as projection.rs does.
 //! Invariants: a read is answered here only where the projection's walk would book nothing at
 //! x in the window but whole plan legs in x's unit, inside both ends' lifespans and sign
 //! rules, and run no decision; it then gives that walk's value and register, and every other
@@ -20,8 +21,12 @@
 //! P56, #128).
 //! PERF: P8-5, P8-M4 (one read of a written projection in E §4.3's common case: O(log n) in
 //! the n days x moves, where the walk plans and walks the window and reads each of its days;
-//! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (`projection`,
-//! `projected_days`: the projection's own walk); the equivalence test: the CLI's
+//! S measured P8-M4's read at 72.9 ms); plain twin: projection.rs (for one read,
+//! `projection`: the projection's own walk; for the `min` of `bal(x, d) from t` over the days
+//! a .. b that E §4.3 reads as one range minimum, projection.rs's `lowest_shape` and
+//! `range_minimum`, one walk from t read day by day, `days_read`, as `Lows::Walk` reads it;
+//! the same `min` read term by term, eval/aggregate.rs, agrees with both by T's law `low-min`
+//! and refcore's vectors); the equivalence test: the CLI's
 //! `tests/walk_oracle.rs` (the kernel and M1 corpora, and a projection under axes and in a
 //! scenario's world, the same bytes under `Lows::Tree` and `Lows::Walk`), and this file's tests.
 //!
@@ -498,8 +503,9 @@ impl RangeMinimum {
     }
 
     /// The legs counted from day `counts` through `first`, then the least running sum of the
-    /// days after it through `last`, if below zero: what a served `low(x, first .. last) from
-    /// t` adds to its start balance, two queries of the tree. P §2.3, E §4.3.
+    /// days after it through `last`, if below zero: what the `min` of `bal(x, d) from t` over
+    /// the days `first` through `last`, served, adds to its start balance, two queries of the
+    /// tree. P §2.3, E §4.3.
     ///
     /// # Errors
     ///
@@ -585,11 +591,11 @@ impl Size {
 }
 
 impl Engine {
-    /// `bal(x, d) from t` or `low(x, a .. b) from t` in E §4.3's common case, from the tree:
-    /// the lowest end-of-day balance of the days `first` through `last` in the walk continued
-    /// from `base` on day t (`bal`: one day), with the register that walk's reads carry; none
-    /// where the read isn't the common case, for the projection's own walk to read (P §2.3).
-    /// E §4.3, L §5.14.1.
+    /// `bal(x, d) from t`, or the `min` of it over the days a .. b, in E §4.3's common case,
+    /// from the tree: the lowest end-of-day balance of the days `first` through `last` in the
+    /// walk continued from `base` on day t (`bal`: one day), with the register that walk's
+    /// reads carry; none where the read isn't the common case, for the projection's own walk
+    /// to read (P §2.3). E §4.3, L §5.14.1.
     ///
     /// # Errors
     ///
@@ -624,7 +630,7 @@ impl Engine {
             .built
             .get(&key)
             .ok_or_else(|| invariant("a tree just built"))?;
-        if !tree.common(t, counts, last) || self.base_leg_inside(base, place, (t, last))? {
+        if !tree.common(t, counts, last) {
             return Ok(None);
         }
         // the projection's own walk refuses a read once a number passes the cap at any place
@@ -648,44 +654,14 @@ impl Engine {
             .checked_add(&tree.lowest_change(counts, (first, last))?)
             .map_err(num_stop)?;
         let mut met = tree.register(counts, last);
-        let lines = left_out_lines(&tree.counted, (t, last))?;
+        // a `min` over the days first through last reads each day's projection (E §4.3)
+        let lines = left_out_lines(&tree.counted, (t, (first, last)))?;
         for line in lines {
             self.note("left out", line, String::new());
         }
         self.chain_register(m, (base, point), (place, unit), &mut met)?;
         self.absorb(&met);
         qty_value(m, &low, unit).map(Some)
-    }
-
-    /// Whether a decision that walk `base`, or a walk it continues, ran before day `t` has a
-    /// leg at `place` dated `t` through `last`, which the projection's walk books on the leg's
-    /// own day: a read that counts one is the walk's (refcore's `base_legs`; tally 2.1.8 R16,
-    /// #183). E §4.3 step 2, L §5.14.1.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn base_leg_inside(
-        &self,
-        base: usize,
-        place: &str,
-        (t, last): (Day, Day),
-    ) -> Result<bool, Stop> {
-        for wid in self.chain(base)? {
-            for run in &self.walk(wid)?.runs {
-                let before = matches!(run.inst.day, Some(Dated::Day(d)) if d < t);
-                if !before || !matches!(run.inst.status, Status::Past | Status::Plan) {
-                    continue;
-                }
-                let inside = run.inst.legs.iter().any(|lg| {
-                    matches!(lg.day, Dated::Day(d) if d >= t && d <= last) && at_place(lg, place)
-                });
-                if inside {
-                    return Ok(true);
-                }
-            }
-        }
-        Ok(false)
     }
 
     /// The widest balance, in bits, that a projection's walk continued from `base` at `point`
@@ -758,12 +734,9 @@ impl Engine {
     ) -> Result<(Tree, Vec<Num>), Stop> {
         // the projection's walk reads its cut's first readings before its plan pass, and books
         // none (a projection's plan pass schedules no reading, E §4.3 counts movements only);
-        // the tree needs no anchor, only that read's effects, so its value goes unused: its
-        // refusals come first, as the walk's do, and under `windows each` it meets the
-        // readings' known windows the walk meets, so the line splits as the walk's would
-        // (L §4.4, §4.5)
-        let after = self.after_days(m, cut)?;
-        self.first_readings(m, (cut, world), &after)?;
+        // the tree needs no anchor, only that read's refusals, which come first, as the walk's
+        // do, so its value goes unused
+        crate::book::first_readings(m, (cut, world))?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),
@@ -816,7 +789,7 @@ impl Gathered {
             Status::Hole => self.hole(inst, day, place),
             Status::Past | Status::Plan => {
                 for lg in &inst.legs {
-                    self.leg(m, (place, unit), seen, (lg, day), &inst.coll)?;
+                    self.leg(m, (place, unit), seen, lg, &inst.coll)?;
                 }
             }
             Status::Modelled
@@ -894,16 +867,16 @@ impl Gathered {
         }
     }
 
-    /// One leg of a booked plan instance dated `day`: its ends at x summed into the tree where
-    /// the walk would book them whole (a quantity in x's unit, both ends places inside their
-    /// lifespans, neither with a sign rule), its day an act the sums don't hold otherwise.
-    /// E §4.2 steps 2 and 5, L §5.14 Legs, §5.10.
+    /// One leg of a booked plan instance, on its instance's day: its ends at x summed into the
+    /// tree where the walk would book them whole (a quantity in x's unit, both ends places
+    /// inside their lifespans, neither with a sign rule), its day an act the sums don't hold
+    /// otherwise. E §4.2 steps 2 and 5, L §5.14 Legs, §5.10.
     fn leg(
         &mut self,
         m: &Reality,
         (place, unit): (&str, &str),
         seen: (Day, World),
-        (lg, day): (&LegVal, Option<Day>),
+        lg: &LegVal,
         coll: &Collected,
     ) -> Result<(), Stop> {
         if !at_place(lg, place) {
@@ -917,12 +890,9 @@ impl Gathered {
                 self.tree.open = false;
                 return Ok(());
             }
-            Dated::Hole(_) => {
-                if let Some(first) = day {
-                    self.tree.later.insert(first);
-                }
-                return Ok(());
-            }
+            // a leg's day is its instance's, and a booked plan's is never a hole: an instance
+            // whose day is one has the status `Hole`, which `hole` takes
+            Dated::Hole(_) => return Ok(()),
         };
         let q = match (&lg.amount, lg.unit.as_deref()) {
             (Amount::Qty(q), Some(u)) if u == unit => q,
@@ -935,7 +905,7 @@ impl Gathered {
         if q.is_zero() {
             return Ok(());
         }
-        if day != Some(d) || !ends_book(m, lg, d, seen) {
+        if !ends_book(m, lg, d, seen) {
             self.tree.acts.insert(d);
             return Ok(());
         }
@@ -1145,17 +1115,17 @@ move late: transfers
   at gift_day
   leg cash from out to konto amount gift
 
-ask low_from: low(konto, 2026-02-01 .. 2026-06-30) from 2026-01-20
+ask low_from: min(bal(konto, d) from 2026-01-20 for d in 2026-02-01 .. 2026-06-30 step 1 day)
 
 ask bal_from: bal(konto, 2026-06-30) from 2026-02-01
 
-ask low_hole: low(konto, 2026-04-01 .. 2026-09-30) from 2026-04-01
+ask low_hole: min(bal(konto, d) from 2026-04-01 for d in 2026-04-01 .. 2026-09-30 step 1 day)
 
-ask low_unc: low(konto, 2026-02-01 .. 2026-06-30) from 2026-01-20 with uncertain
+ask low_unc: min(bal(konto, d) from 2026-01-20 with uncertain for d in 2026-02-01 .. 2026-06-30 step 1 day)
 
-ask low_feb: low(konto, 2026-02-01 .. 2026-06-30) from 2026-02-01
+ask low_feb: min(bal(konto, d) from 2026-02-01 for d in 2026-02-01 .. 2026-06-30 step 1 day)
 
-ask low_mar: low(konto, 2026-03-01 .. 2026-06-30) from 2026-03-01
+ask low_mar: min(bal(konto, d) from 2026-03-01 for d in 2026-03-01 .. 2026-06-30 step 1 day)
 
 version facts
   cite card
@@ -1213,6 +1183,8 @@ version rise
     #[test]
     fn the_tree_reads_the_common_case_where_the_walk_isnt_walked() {
         let m = reality();
+        // the twin reads the recognised `min`'s 150 days from one walk, day by day, as it
+        // reads the one balance: the range minimum with the fence off, as `low`'s was
         for id in ["low_from", "bal_from"] {
             let (tree, walks, trees) = read(&m, id, Lows::Tree);
             let (walk, twin_walks, twin_trees) = read(&m, id, Lows::Walk);
@@ -1222,7 +1194,11 @@ version rise
                 (0, 1),
                 "{id}: the tree, no projection's walk"
             );
-            assert_eq!((twin_walks, twin_trees), (1, 0), "{id}: the twin walks it");
+            assert_eq!(
+                (twin_walks, twin_trees),
+                (1, 0),
+                "{id}: the twin walks it once"
+            );
         }
     }
 
@@ -1370,7 +1346,7 @@ version rise
             let (tree, walks, _) = read(&m, id, Lows::Tree);
             let (walk, _, _) = read(&m, id, Lows::Walk);
             assert_eq!(tree, walk, "{id}: the same value");
-            assert_eq!(walks, 1, "{id}: the projection's walk reads it");
+            assert_eq!(walks, 1, "{id}: one projection's walk reads its days");
         }
     }
 

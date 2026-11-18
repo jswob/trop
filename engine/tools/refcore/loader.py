@@ -12,7 +12,7 @@ from .dates import (Period, day_period, month_period, year_period, quarter_perio
                     month_add, next_day, end_days, end_months, END)
 from .errors import LoadError, Unspecified, NotYet, Refusal
 from .lexer import split_lines
-from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, known_first, VersionInfo, KindInfo,
+from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, VersionInfo, KindInfo,
                     Entry, ThingInfo, IndexInfo, AxisInfo, BindInfo, Row, InputInfo, RuleVer, DefInfo, Table,
                     BandRow, BandInfo, PRELUDE_PLACE, BUILTIN_INPUTS, BUILTIN_INDEXES, PRELUDE_KINDS,
                     BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow)
@@ -354,7 +354,7 @@ class Loader:
                 old = None
                 for o in olds:
                     if old is None or (o.replace and (old.version is None or o.version is not None and
-                                                      known_first(o.version.known) >= known_first(old.version.known))):
+                                                      o.version.known >= old.version.known)):
                         old = o
                 a = before(old.span, frm) if old is not None else None
                 b = before(e.span, frm)
@@ -550,13 +550,18 @@ class Loader:
             if k.spec != 'place':
                 continue
             unit = sign = None
+            outside = False
             x = k
-            while x is not None and (unit is None or sign is None):
+            while x is not None:
                 unit = x.unit if unit is None else unit
                 sign = x.sign if sign is None else sign
+                outside = outside or bool(x.outside)
                 x = K[x.parent] if x.parent is not None else None
             if unit is None or sign is None:
                 raise LoadError('LOAD-PLACEKIND', 'place kind %s has no unit or sign rule' % k.id, s.loc)
+            if unit == 'any' and not outside:
+                # L §5.7, §8.3 (tally 2.2, S-1): `any` is the unit of an outside kind only
+                raise LoadError('LOAD-PLACEKIND', "place kind %s is of unit any and isn't outside" % k.id, s.loc)
         for kid, k in K.items():
             if k.spec == 'event' and k.certainty is None:
                 x = k
@@ -755,17 +760,8 @@ class Loader:
             hit = m.names.get(s.cite)
             if hit is None or hit[0] != 'source':
                 raise LoadError('LOAD-NAME', 'unknown id %s (version %s cites no source)' % (s.cite, s.id), s.loc)
-            kn = v.known
-            if isinstance(kn, tuple):
-                if kn[0] > kn[1]:
-                    raise LoadError('LOAD-DOMAIN', 'window(a, b) with a after b (L §8.4)', s.loc)
-                if kn[0] > m.on:
-                    raise LoadError('LOAD-KNOWN', 'version %s is known after the model\'s on date' % s.id, s.loc)
-                if kn[1] > m.on:
-                    # L §4.5 (round 12): "A version or row known after on, or whose known window ends after it, is
-                    # refused (LOAD-KNOWN)"
-                    raise LoadError('LOAD-KNOWN', 'version %s is known after the model\'s on date' % s.id, s.loc)
-            elif kn > m.on:
+            if v.known > m.on:
+                # L §4.5 (round 12): "A version or row known after on is refused (LOAD-KNOWN)"
                 raise LoadError('LOAD-KNOWN', 'version %s is known after the model\'s on date' % s.id, s.loc)
         for vid, v in m.versions.items():
             for ref, ls in v.node.moves:
@@ -774,13 +770,13 @@ class Loader:
                     raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % _txt_node(ref),
                                     v.loc)
                 tgt = m.versions.get(ref.id)
-                if tgt is None or not (known_first(tgt.known) < known_first(v.known)):
+                if tgt is None or not (tgt.known < v.known):
                     raise LoadError('LOAD-MOVES', 'moves %s: unknown, or not known before this version' % ref.id, v.loc)
                 tgt.moved_by.append((v, lspan_to_span(ls, v.loc)))
         for vid, v in m.versions.items():
             seen = {}
             for mover, sp in v.moved_by:
-                k = known_first(mover.known)
+                k = mover.known
                 if k in seen:
                     raise LoadError('LOAD-MOVES', 'two moves of %s known the same day' % vid, mover.loc)
                 seen[k] = mover
@@ -1053,7 +1049,7 @@ class Loader:
             t.entries.append(Entry('currencies', ALWAYS, None, False, None, None, None))
             m.things[c] = t
         # in known order, so a replace finds the earlier rows whatever the file order (L §6.1: a reality is a set)
-        for v in sorted(m.versions.values(), key=lambda v: known_first(v.known)):
+        for v in sorted(m.versions.values(), key=lambda v: v.known):
             for it in v.node.items:
                 if it.k != 'enter':
                     continue
@@ -1075,7 +1071,7 @@ class Loader:
                 t.base = nonplain[0]
             else:
                 def order(e):
-                    kn = known_first(e.version.known) if e.version is not None else datetime.date.min
+                    kn = e.version.known if e.version is not None else datetime.date.min
                     st = e.span.start if e.span is not None and e.span.start is not None else datetime.date.min
                     return (kn, st)
                 ks = sorted(firsts, key=order)
@@ -1165,11 +1161,11 @@ class Loader:
                 # scenario's own known day is replaced too" (L §6.4, §4.6 step 2; MC-X-F2)
                 lv = version_layer(m, v)
                 v._layer = lv
-                if not any(known_first(e.version.known) < known_first(v.known) or version_layer(m, e.version) < lv
+                if not any(e.version.known < v.known or version_layer(m, e.version) < lv
                            for e in olds if e.version):
                     raise LoadError('LOAD-REPLACE', 'replace %s + [%s]: no earlier row to replace' % (k.id, name), it.loc)
                 for e in olds:
-                    if e.version and e.replace and known_first(e.version.known) == known_first(v.known) and \
+                    if e.version and e.replace and e.version.known == v.known and \
                             version_layer(m, e.version) == lv:
                         # neither is known before the other and each replaces the lifespan whole: a tie (L §4.6 steps
                         # 2 and 4, LOAD-OVERLAP; round 18 C1-11 took `two replace lines ... known the same day` out of
@@ -1449,7 +1445,7 @@ class Loader:
                 ix.finish()
             else:
                 old = ix.added.get(_kv(kv))
-                if old is not None and known_first(version.known) < known_first(old.known):
+                if old is not None and version.known < old.known:
                     ix.added[_kv(kv)] = version
             return kv
         return resolve_key_literal(m, kn, bind.dom, loc)
@@ -1466,11 +1462,11 @@ class Loader:
         key = resolve_text(it.keys[0])
         own_known = None
         if it.known is not None:
-            own_known = (it.known.a, it.known.b) if it.known.k == 'window' else it.known.v
-            if known_first(own_known) < known_first(v.known):
+            own_known = it.known.v
+            if own_known < v.known:
                 # L §8.3 LOAD-KNOWN "row <x>[k] is known before its version <v>"
                 raise LoadError('LOAD-KNOWN', 'row %s[%s] is known before its version %s' % (inf.id, key, v.id), it.loc)
-            if known_last(own_known) > m.on:
+            if own_known > m.on:
                 raise LoadError('LOAD-KNOWN', 'row %s[%s] is known after the model\'s on date' % (inf.id, key), it.loc)
         if it.value.k not in ('record', 'none'):
             raise LoadError('LOAD-FIELD', 'an observation is a record with named fields: %s[%s]' % (inf.id, key),
@@ -1544,17 +1540,7 @@ class Loader:
             frm = self.place_ref(ln.frm, loc)
             to = self.place_ref(ln.to, loc)
             amt, unit = self.obs_amount(ln.amount, d, frm, to, o)
-            lday = None
-            if ln.on is not None:
-                dn = ln.on
-                if dn.k in ('window', 'oneof') or (dn.k == 'call' and dn.name in ('window', 'one_of')):
-                    # L §5.19: a window is "never in on, the observation's or a leg's (LOAD-LEG)"
-                    raise LoadError('LOAD-LEG', 'the on of leg %s of %s is a window; a window belongs in an '
-                                                'attribute' % (d.name, o.sid), loc)
-                if ln.on.k != 'date':
-                    raise LoadError('LOAD-UNIT', 'the on of leg %s of %s is a day' % (d.name, o.sid), loc)
-                lday = ln.on.v
-            o.legs.append((d.name, frm, to, amt, unit, lday))
+            o.legs.append((d.name, frm, to, amt, unit))
         attrs = m.kind_attrs(k.id)
         anames = [a for a, t in attrs]
         for f in fields:
@@ -1676,27 +1662,25 @@ class Loader:
             earlier[b.var] = kv
         return kvs
 
-    # -- same lines of rows and movements (L §6.1, §5.19 SF-25) ---------------------------------------------------
+    # -- same lines of movements (L §6.1, §5.19 SF-25) -------------------------------------------------------------
     def joint_sames(self):
-        """`same p = q` naming two rows or two movements, in a joint model's header or in a version: two rows are
-        read together (HOLE-SAME where they disagree, a joint model's own row settles them), two movements count once
-        (the walk).  Things, places and kinds were joined before parsing (joint.py)."""
+        """`same p = q` naming two movements, in a joint model's header or in a version: they count once (the walk).
+        Things, places and kinds were joined before parsing (joint.py); a row of an input on either side is refused
+        (tally 2.2, S-8)."""
         from .joint import owner_deep, owner_of, shown
         m = self.m
         m.same_moves = []
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
-        m.same_rows = {}            # {a row's key: (its input, its keys, its text)} for every row a same line names
-        m.same_row_edges = []       # (one row's key, the other's, the version stating the line or None: the header)
-        m.same_settle = {}
+        m.same_obs = []         # whether each line joins two observed rows, which no cut of its own reads (S-5)
         pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
         for l, r, loc, v in pairs:
             a = self.sref(l, loc)
             b = self.sref(r, loc)
-            # L §6.1 (round 14): "The two sides are of one sort: two kinds declared alike ..., two things of one base
-            # kind ..., two rows of one type, or two movements; any other pair is refused (LOAD-SAME)"; "A same in a
-            # version that names a kind or a thing is refused (LOAD-SAME): only the header joins them"
-            what = {'thing': 'a thing', 'row': 'a row', 'move': 'a movement'}
+            # L §6.1: "The two sides are of one sort: two kinds declared alike ..., two things of one base kind ..., or
+            # two movements; any other pair is refused (LOAD-SAME)"; "A same in a version that names a kind or a thing
+            # is refused (LOAD-SAME): only the header joins them"; a row of an input is no side (tally 2.2, S-8)
+            what = {'thing': 'a thing', 'row': 'a row of an input', 'move': 'a movement'}
             if v is not None and (a[0] == 'thing' or b[0] == 'thing'):
                 raise LoadError('LOAD-SAME', 'same %s = %s in a version names a kind or a thing' % (
                     shown(_txt_node(l)), shown(_txt_node(r))), loc)
@@ -1709,7 +1693,7 @@ class Loader:
                 raise LoadError('LOAD-SAME', 'same %s = %s: an observed row and a planned instance of one model; '
                                              'state fulfils on the row' % (shown(_txt_node(row)), shown(_txt_node(inst))),
                                 loc)
-            if a[0] == 'other' or b[0] == 'other' or a[0] != b[0]:
+            if a[0] in ('other', 'row') or b[0] in ('other', 'row') or a[0] != b[0]:
                 wa = what.get(a[0]) or ('a %s' % a[1])
                 wb = what.get(b[0]) or ('a %s' % b[1])
                 raise LoadError('LOAD-SAME', 'same %s = %s: %s and %s' % (shown(_txt_node(l)), shown(_txt_node(r)),
@@ -1721,48 +1705,23 @@ class Loader:
                 # that isn't a keyed place is no thing (L §6.1: "any other pair is refused (LOAD-SAME)")
                 raise LoadError('LOAD-SAME', 'same %s = %s: a thing written with keys that is not a keyed place' % (
                     shown(_txt_node(l)), shown(_txt_node(r))), loc)
-            if a[0] == 'row':
-                ia, ka, ta = a[1], a[2], a[3]
-                ib, kb, tb = b[1], b[2], b[3]
-                if repr(ia.type) != repr(ib.type):
-                    raise LoadError('LOAD-SAME', 'same %s = %s: rows of types %s and %s' % (
-                        shown(ta), shown(tb), T.show(ia.type), T.show(ib.type)), loc)
-                kka = (ia.id, tuple(_kv(k) for k in ka))
-                kkb = (ib.id, tuple(_kv(k) for k in kb))
-                # L §6.1 l.1805: same is an equivalence, lines that share a side make one class (tally 2.1.8 S6,
-                # #187): each line is an edge, read by its version's cut (evaluate.same_class)
-                m.same_rows.setdefault(kka, (ia, ka, ta))
-                m.same_rows.setdefault(kkb, (ib, kb, tb))
-                m.same_row_edges.append((kka, kkb, v))
-                continue
             m.same_moves.append((a[1], b[1], loc))
             m.same_owners.append(owner_of(v.id) if v is not None else '')
             m.same_versions.append(v)
-        # a row of the joint model on a member's item states the value of two rows stated same ("the joint model
-        # settles it with a version row of its own"); on any other member's item it would change an imported one
+            m.same_obs.append(a[2] == b[2] == 'row')
+        # a row of the joint model on a member's input would change an imported one, and is refused (L §6.1 Writes
+        # into members: "of a member's item only at a thing or a movement stated same"; an observed row is a movement)
         if getattr(m, 'joint', None) is not None:
             for inf in list(m.inputs.values()):
                 if owner_of(inf.id) == '' or inf.observed:
                     continue
-                own = []
                 for r in inf.rows:
-                    if r.version is not None and owner_of(r.version.id) == '':
-                        if r.version.scenario is not None:
-                            # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the
-                            # members' rows too, named with their prefixes"
-                            continue
-                        key = (inf.id, tuple(_kv(x[1]) for x in r.pattern if x[0] == 'k'))
-                        if key not in m.same_rows or len(key[1]) != len(inf.binds):
-                            # L §6.1 (round 14) The joint model's own rows: "of a member's item only at a pair stated
-                            # same, which they settle; a row ... of any other member's item would change an imported
-                            # one, and is refused (LOAD-SAME)"
-                            raise LoadError('LOAD-SAME', 'the joint model states %s%s, an item of member %s that no '
-                                                         'same line joins' % (shown(inf.id), r.keys_text(),
-                                                                              owner_of(inf.id)), r.loc)
-                        m.same_settle.setdefault(key, []).append(r)
-                        own.append(r)
-                if own:
-                    inf.rows = [r for r in inf.rows if r not in own]
+                    if r.version is not None and owner_of(r.version.id) == '' and r.version.scenario is None:
+                        # L §6.1 Writes into members: "A scenario over a joint model (§6.4) may replace the members'
+                        # rows too, named with their prefixes"
+                        raise LoadError('LOAD-SAME', 'the joint model states %s%s, an item of member %s that no '
+                                                     'same line joins' % (shown(inf.id), r.keys_text(),
+                                                                          owner_of(inf.id)), r.loc)
 
     def joint_place_sames(self):
         """`same p = q` in a joint model's header where a side is a keyed place at its keys (L §6.1: "each side names
@@ -1982,17 +1941,13 @@ class Loader:
             own_span = lspan_to_span(it.governs, it.loc)
         own_known = None
         if it.known is not None:
-            if it.known.k == 'window':
-                own_known = (it.known.a, it.known.b)
-            else:
-                own_known = it.known.v
+            own_known = it.known.v
             ktxt = '%s%s' % (inf.id, pattern_text(pattern))
-            if known_first(own_known) < known_first(v.known):
+            if own_known < v.known:
                 # L §8.3 LOAD-KNOWN "row <x>[k] is known before its version <v>"
                 raise LoadError('LOAD-KNOWN', 'row %s is known before its version %s' % (ktxt, v.id), it.loc)
-            if known_last(own_known) > m.on:
-                # L §4.5 (round 12): "A version or row known after on, or whose known window ends after it, is
-                # refused (LOAD-KNOWN)"
+            if own_known > m.on:
+                # L §4.5 (round 12): "A version or row known after on is refused (LOAD-KNOWN)"
                 raise LoadError('LOAD-KNOWN', 'row %s is known after the model\'s on date' % ktxt, it.loc)
         instant = None
         reading = (kind == 'input' and inf.reading)
@@ -2002,13 +1957,10 @@ class Loader:
             if not (reading or balance):
                 # L §4.6 Readings: "an instant on a row of an input that isn't a reading, is refused, LOAD-INSTANT"
                 raise LoadError('LOAD-INSTANT', '%s is not a reading; its rows take no instant' % inf.id, it.loc)
-            if ins.after is not None:
-                instant = ('after', ins.after)
-            else:
-                if balance and ins.pos is None:
-                    raise LoadError('LOAD-INSTANT', 'balance reading %s at %s needs start, end or after' % (
-                        inf.id, ins.day), it.loc)
-                instant = (ins.day, ins.pos)
+            if balance and ins.pos is None:
+                raise LoadError('LOAD-INSTANT', 'balance reading %s at %s needs start or end' % (inf.id, ins.day),
+                                it.loc)
+            instant = (ins.day, ins.pos)
             if own_span is not None:
                 raise LoadError('LOAD-PARSE', 'cannot parse: a reading states an instant, not governs', it.loc)
         elif reading or balance:
@@ -2076,7 +2028,7 @@ class Loader:
                     if r.own_span is not None:
                         sid += ' ' + r.own_span.text()
                     elif r.instant is not None:
-                        # its instant, a day with start or end (L §2.5, §4.6; tally 2.1.7 B6, #135), or `after m`
+                        # its instant, a day with start or end (L §2.5, §4.6; tally 2.1.7 B6, #135)
                         from .moves import instant_text
                         sid += ' ' + instant_text(r)
                 r.sid = sid
@@ -2203,13 +2155,16 @@ class Loader:
         return one(n)
 
     def place_value(self, inf, r):
-        """A balance reading's value: a quantity in its place's unit; a place of unit any states one row per unit
-        (L §4.6 Readings)."""
+        """A balance reading's value: a quantity in its place's unit (L §4.6 Readings); a place of unit any takes no
+        balance reading (L §5.10, §8.3 LOAD-UNIT; tally 2.2, S-1)."""
         m = self.m
         if not r.pattern or r.pattern[0][0] != 'k':
             raise LoadError('LOAD-KEY', 'a row of %s states its place' % inf.id, r.loc)
         th = m.things[r.pattern[0][1].name]
         pu = m.place_unit(th)
+        if pu == 'any':
+            raise LoadError('LOAD-UNIT', '%s[%s]: a place of unit any takes no balance reading' % (inf.id, th.name),
+                            r.loc)
         node = r.value
         if node.k == 'hole':
             return ('hole', node.text)
@@ -2217,7 +2172,7 @@ class Loader:
             return NONE
         if node.k != 'num':
             raise LoadError('LOAD-UNIT', 'a value of the wrong type for %s[%s]' % (inf.id, th.name), r.loc)
-        if pu == 'any' or pu is None:
+        if pu is None:
             if node.unit is None:
                 raise LoadError('LOAD-UNIT', '%s[%s] holds any unit; its row states the unit' % (inf.id, th.name),
                                 r.loc)
@@ -2244,13 +2199,13 @@ class Loader:
             for key, os_ in by.items():
                 # a scenario's restatement stands above its base's rows whatever their known dates (L §4.6 step 2,
                 # §6.4): ordered by layer, then known
-                os_.sort(key=lambda o: (row_layer(m, o), known_first(o.known)))
+                os_.sort(key=lambda o: (row_layer(m, o), o.known))
                 for i, o in enumerate(os_):
                     if i == 0:
                         if o.replace:
                             raise LoadError('LOAD-REPLACE', 'replace %s: no earlier row to replace' % o.sid, o.loc)
                         continue
-                    if known_first(o.known) == known_first(os_[i - 1].known) and \
+                    if o.known == os_[i - 1].known and \
                             row_layer(m, o) == row_layer(m, os_[i - 1]):
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at [%s]' % (
                             os_[i - 1].loc, o.loc, qid, key), o.loc)
@@ -2265,8 +2220,7 @@ class Loader:
                     span = sp if sp is not None else v.span_at(m.on)
                     for ln in o.legs:
                         if th.name in (ln[1].name, ln[2].name):
-                            d = ln[5] or o.day
-                            if span is None or not span.contains(d):
+                            if span is None or not span.contains(o.day):
                                 raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
                                                 % (o.sid, th.name, v.id), o.loc)
 
@@ -2293,8 +2247,7 @@ class Loader:
             gk = pattern_norm(r.pattern)
             if isinstance(inf, InputInfo) and inf.builtin and isinstance(getattr(r, 'val', None), Num):
                 gk = gk + (r.val.u,)
-            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE and \
-                    not reading_of_any(m, r):
+            elif isinstance(inf, InputInfo) and inf.builtin and getattr(r, 'val', None) is NONE:
                 nones.append((gk, r))
                 continue
             groups.setdefault(gk, []).append(r)
@@ -2302,14 +2255,6 @@ class Loader:
             # a balance reading of none states no balance (L §5.19); it is of the unit of the readings it may replace
             units = [g for g in groups if g[:-1] == gk and len(g) == len(gk) + 1]
             groups.setdefault(units[0] if len(units) == 1 else gk, []).append(r)
-        # at a place of unit any a row that states no unit (a hole, none) is a row for every unit there: with
-        # replace it replaces every unit's reading at its instant (L §5.10; tally 2.1.8 R14, P25 reopened)
-        wider = {}
-        if isinstance(inf, InputInfo) and inf.builtin:
-            for gk, rs in groups.items():
-                if rs and reading_of_any(m, rs[0]) and not isinstance(getattr(rs[0], 'val', None), Num):
-                    wider[gk] = [o for g2, rs2 in groups.items() if g2[:-1] == gk and len(g2) == len(gk) + 1
-                                 for o in rs2]
         jo = getattr(m, 'joint', None) is not None
         if jo:
             from .joint import owner_of
@@ -2340,7 +2285,7 @@ class Loader:
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at %s, neither replacing the '
                                                         'other' % (a.loc, b.loc, inf.id, a.keys_text() or 'no keys'),
                                         hi.loc)
-                    ka, kb = known_first(a.known), known_first(b.known)
+                    ka, kb = a.known, b.known
                     if ka == kb and a.instant is None and b.instant is None and \
                             sp(a).always != sp(b).always and row_layer(m, a) == row_layer(m, b):
                         # two same-day rows that precedence orders, a span over always, load (L §6.3 item 2,
@@ -2363,10 +2308,9 @@ class Loader:
             for r in rs:
                 # in a scenario, a base row at those keys is an earlier row whatever its known (L §4.6 step 2, §8.3
                 # LOAD-REPLACE "in a scenario, no base row at those keys either")
-                if r.replace and not any((known_first(o.known) < known_first(r.known) or
+                if r.replace and not any((o.known < r.known or
                                           row_layer(m, o) < row_layer(m, r)) and ov(o, r) and not owners_differ(o, r)
-                                         for o in rs + wider.get(pat, [])
-                                         if o is not r and row_layer(m, o) <= row_layer(m, r)):
+                                         for o in rs if o is not r and row_layer(m, o) <= row_layer(m, r)):
                     raise LoadError('LOAD-REPLACE', 'replace %s%s: no earlier row to replace' % (inf.id, r.keys_text()),
                                     r.loc)
         # ties between rows of different patterns (L §4.6 step 4)
@@ -2419,10 +2363,10 @@ class Loader:
                     below = [o for o in ts if o is not t and version_layer(m, o.version) < lt
                              and _span_ov(o.version, t.version, m.on)]
                     earlier = [o for o in ts if o is not t and version_layer(m, o.version) == lt
-                               and known_first(o.version.known) < known_first(t.version.known)
+                               and o.version.known < t.version.known
                                and _span_ov(o.version, t.version, m.on)]
                     same = [o for o in ts if o is not t and version_layer(m, o.version) == lt
-                            and known_first(o.version.known) == known_first(t.version.known)
+                            and o.version.known == t.version.known
                             and _span_ov(o.version, t.version, m.on)]
                     if same:
                         raise LoadError('LOAD-OVERLAP', 'band %s: tables of %s and %s overlap, known the same day' % (
@@ -2546,14 +2490,14 @@ def patch_under_cut(m, K):
         b = m.bands[bid]
         for t in b.tables:
             if not any(r.replace for r in t.rows) or getattr(t, 'whole_ok', False) or \
-                    not known_first(t.version.known) <= K:
+                    not t.version.known <= K:
                 continue
             lt = version_layer(m, t.version)
-            seen = [o for o in b.tables if o is not t and known_first(o.version.known) <= K and
+            seen = [o for o in b.tables if o is not t and o.version.known <= K and
                     (_kv(o.key) if o.key is not None else None) == (_kv(t.key) if t.key is not None else None) and
                     _span_ov(o.version, t.version, K) and (version_layer(m, o.version) < lt or (
                         version_layer(m, o.version) == lt and
-                        known_first(o.version.known) < known_first(t.version.known)))]
+                        o.version.known < t.version.known))]
             sp = t.version.span_at(K)
             if sp is None:
                 continue
@@ -2635,15 +2579,6 @@ def narrower(m, inf, pa, pb):
         if r == 'in':
             strict = True
     return strict
-
-
-def reading_of_any(m, r):
-    """Whether a row is a balance reading of a place of unit any (L §5.10)."""
-    try:
-        place = r.pattern[0][1].name
-        return m.place_unit(m.things[place]) == 'any'
-    except (AttributeError, IndexError, KeyError, TypeError):
-        return False
 
 
 def row_layer(m, r):
@@ -2843,11 +2778,6 @@ def range_literal(m, kn, loc):
             return range_key(Num(q, u))
         return range_key(Num(Fraction(kn.v), ()))
     raise LoadError('LOAD-KEY', '%s is not a value of a stepped range' % key_written(kn), loc)
-
-
-def known_last(k):
-    """The last day a known date or window can be."""
-    return k[1] if isinstance(k, tuple) else k
 
 
 def pattern_text(pattern):

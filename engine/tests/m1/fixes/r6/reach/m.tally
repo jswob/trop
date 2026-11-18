@@ -27,11 +27,11 @@ move gift: transfers
   on late
   leg cash from world to konto amount fee
 
-ask n_next: next(transfers, d1)
+ask n_next: (first(m in transfers over d1 ..) ties by m.day)
 
 ask n_first: first(t in transfers over d1 ..) ties by t.day
 
-ask l_low: low(konto, d0 .. d9)
+ask l_low: min(bal(konto, d) for d in d0 .. d9 step 1 day)
 
 ask l_min: min(bal(konto, d) for d in d0 .. d9 step 1 day)
 

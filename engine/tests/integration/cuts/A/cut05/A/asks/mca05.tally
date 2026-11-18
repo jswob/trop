@@ -2,6 +2,22 @@ part asks_mca05
   tally 2
   note "MC-A diagnostic on the cut-down copy: A-05 Ania's line with the axis px_round pinned to each option."
 
-ask mca05_down: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down law 2025-04-30 as known 2025-04-30 windows each
+ask mca05_down: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down law 2025-04-30 as known 2025-04-30
 
-ask mca05_up: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up law 2025-04-30 as known 2025-04-30 windows each
+ask mca05_down_d01: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down, held_from[kbank[k20230912_04]] = 2019-03-01 law 2025-04-30 as known 2025-04-30
+
+ask mca05_down_d06: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down, held_from[kbank[k20230912_04]] = 2019-03-06 law 2025-04-30 as known 2025-04-30
+
+ask mca05_down_d07: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down, held_from[kbank[k20230912_04]] = 2019-03-07 law 2025-04-30 as known 2025-04-30
+
+ask mca05_down_d31: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = down, held_from[kbank[k20230912_04]] = 2019-03-31 law 2025-04-30 as known 2025-04-30
+
+ask mca05_up: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up law 2025-04-30 as known 2025-04-30
+
+ask mca05_up_d01: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up, held_from[kbank[k20230912_04]] = 2019-03-01 law 2025-04-30 as known 2025-04-30
+
+ask mca05_up_d06: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up, held_from[kbank[k20230912_04]] = 2019-03-06 law 2025-04-30 as known 2025-04-30
+
+ask mca05_up_d07: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up, held_from[kbank[k20230912_04]] = 2019-03-07 law 2025-04-30 as known 2025-04-30
+
+ask mca05_up_d31: cg_tax[ania, 2024], net_gain[ania, 2024], cg_too_much[ania, 2024] with px_round = half-up, held_from[kbank[k20230912_04]] = 2019-03-31 law 2025-04-30 as known 2025-04-30

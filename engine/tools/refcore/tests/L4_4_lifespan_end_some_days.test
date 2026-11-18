@@ -4,6 +4,8 @@
 # 03-07, tmp ends empty and jar holds 100.00 PLN; on 03-08 to 03-10 the leg is outside tmp's lifespan and tmp ends
 # holding 100.00 PLN. e1 and e3 are the hole, and each splits. 2.1.7's refcore refused both (RUN-LIFESPAN). The plan's
 # i77a e1 and e3.
+# tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
+# carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
 === m.tally
 model t
   tally 2
@@ -49,19 +51,19 @@ version v
   opening[pot] = 50.00 PLN at 2026-01-01 start "s"
 
 ask e1: bal(jar, 2026-03-31)
-ask e2: bal(jar, 2026-03-31) windows each
+ask e2: bal(jar, 2026-03-31)
 ask e3: bal(tmp, 2026-03-07)
-ask e4: bal(tmp, 2026-03-07) windows each
+ask e4: bal(tmp, 2026-03-07)
 === expect
 e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  unknown day: wd
   cut 2026-01-01
-e2 [wd = 2026-03-05 .. 2026-03-07]: 100.00 PLN
-  cut 2026-01-01
-e2 [wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN empty.cash moves into or out of tmp outside its lifespan
+e2: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  unknown day: wd
   cut 2026-01-01
 e3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  unknown day: wd
   cut 2026-01-01
-e4 [wd = 2026-03-05 .. 2026-03-07]: 0.00 PLN
-  cut 2026-01-01
-e4 [wd = 2026-03-08 .. 2026-03-10]: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding 100.00 PLN
+e4: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (empty)
+  unknown day: wd
   cut 2026-01-01

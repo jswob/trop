@@ -51,9 +51,9 @@ move p2: pays
   on d2
   leg cash from world to konto amount b
 
-ask q: next(pays, 2026-02-01).day
+ask q: (first(m in pays over 2026-02-01 ..) ties by m.day).day
 
-ask q2: next(pays, 2026-04-16).day
+ask q2: (first(m in pays over 2026-04-16 ..) ties by m.day).day
 
 version card_2026
   cite card

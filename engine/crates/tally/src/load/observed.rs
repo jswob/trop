@@ -19,7 +19,7 @@ use crate::model::{
     Value as ModelValue,
 };
 use crate::syntax::{
-    Certainty, Expr, Field, FieldValue, Key, Known, Leg, Lit, Postfix, Row, Stop, Type, Value,
+    Certainty, Expr, Field, FieldValue, Key, Leg, Lit, Postfix, Row, Stop, Type, Value,
 };
 use crate::time::Day;
 use std::collections::BTreeMap;
@@ -85,7 +85,7 @@ impl Loader {
             file: file.to_owned(),
             line,
         };
-        let (own_known, own_window) = self.obs_known(vid, id, &key, row.known.as_ref(), &at)?;
+        let own_known = self.obs_known(vid, id, &key, row.known, &at)?;
         let fields = match &row.value {
             Value::Record(fields) => Some(fields.as_slice()),
             Value::None => None,
@@ -109,7 +109,6 @@ impl Loader {
             key,
             version: vid.to_owned(),
             own_known,
-            own_window,
             locator: row.locator.clone(),
             replace: row.replace,
             removed: fields.is_none(),
@@ -132,36 +131,32 @@ impl Loader {
         Ok(true)
     }
 
-    /// An observation's own `known`: its day, or its window's first and last days; not
-    /// before its version's, not after `on` (refcore's `obs_item`). L §4.5.
+    /// An observation's own `known`: its day, not before its version's, not after `on`
+    /// (refcore's `obs_item`). L §4.5.
     fn obs_known(
         &self,
         vid: &str,
         id: &str,
         key: &str,
-        known: Option<&Known>,
+        known: Option<Day>,
         at: &At,
-    ) -> Result<(Option<Day>, Option<Day>), Stop> {
-        let Some(written) = known else {
-            return Ok((None, None));
+    ) -> Result<Option<Day>, Stop> {
+        let Some(day) = known else {
+            return Ok(None);
         };
-        let (first, window) = match written {
-            Known::Day(day) => (*day, None),
-            Known::Window(a, b) => (*a, Some(*b)),
-        };
-        if self.m.versions.get(vid).is_some_and(|v| first < v.known) {
+        if self.m.versions.get(vid).is_some_and(|v| day < v.known) {
             return Err(at.refuse(
                 Load::Known,
                 format!("row {id}[{key}] is known before its version {vid}"),
             ));
         }
-        if window.unwrap_or(first) > self.m.on {
+        if day > self.m.on {
             return Err(at.refuse(
                 Load::Known,
                 format!("row {id}[{key}] is known after the model's on date"),
             ));
         }
-        Ok((Some(first), window))
+        Ok(Some(day))
     }
 
     /// An observation's fields: its day, kind, `fulfils`, legs and attributes (refcore's
@@ -226,18 +221,12 @@ impl Loader {
             let from = self.place_ref(&leg.from, Written::Place, &at.file, at.line)?;
             let to = self.place_ref(&leg.to, Written::Place, &at.file, at.line)?;
             let (amount, amount_unit) = self.obs_amount(&leg.amount, name, unit, &from, &to, at)?;
-            let day = leg
-                .on
-                .as_ref()
-                .map(|d| expr_day(d, at, &format!("the on of leg {name} of {sid}")))
-                .transpose()?;
             observation.legs.push(ObsLeg {
                 name: name.clone(),
                 from,
                 to,
                 amount,
                 unit: amount_unit,
-                day,
             });
         }
         let attrs = self.m.kind_attrs(&kind);

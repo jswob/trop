@@ -21,7 +21,7 @@ residuals'''.split())
 # L §2.2 Built-in names (the review removed first_business, latest, earliest, in_force, meta, reasons, real,
 # empirical and paths(); each is now an ordinary id, read as a band call before `(`)
 BUILTINS = set('''sum count min max any all first last argmin argmax share mean quantile prorata flows
-bal value low next covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
+bal value covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
 age_months weekday add_business last_business is_business schedule calendar window one_of since
 band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
@@ -416,18 +416,12 @@ class P:
         if tok.s in (',', '='):
             # `rule base governs 2028.. = …` (L §2.2 rulebody: ["governs" lspan] "=" …)
             return True
-        if tok.t == 'ID' and tok.s in ('known', 'at', 'after', 'governs', 'priced', 'lives'):
+        if tok.t == 'ID' and tok.s in ('known', 'at', 'governs', 'priced', 'lives'):
             return True
         return False
 
     def known(self):
-        if self.at('window') and self.at('(', 1):
-            self.i += 2
-            a = self.day()
-            self.expect(',')
-            b = self.day()
-            self.expect(')')
-            return self.N('window', a=a, b=b)
+        # L §2.3 known = DAY (tally 2.2, S-2: a known window is cut)
         return self.N('date', v=self.day())
 
     # -- expressions ---------------------------------------------------------
@@ -487,8 +481,8 @@ class P:
         if not (self.at('in') and self.peek(1) is not None and self.peek(1).t == 'ID'):
             return False
         nxt = self.peek(2)
-        return nxt is None or (nxt.t == 'ID' and nxt.s in ('with', 'law', 'as', 'windows', 'random', 'paths', 'path',
-                                                            'partial', 'orient'))
+        return nxt is None or (nxt.t == 'ID' and nxt.s in ('with', 'law', 'as', 'random', 'paths', 'path', 'partial',
+                                                            'orient'))
 
     def _no_chain(self):
         tok = self.peek()
@@ -706,8 +700,8 @@ class P:
             return True
         if tok.t == 'OP' and tok.s in (',', ')', ']', '}'):
             return True
-        if tok.t == 'ID' and tok.s in ('where', 'by', 'for', 'law', 'with', 'as', 'windows', 'random',
-                                       'paths', 'path', 'partial', 'orient', 'in', 'from'):
+        if tok.t == 'ID' and tok.s in ('where', 'by', 'for', 'law', 'with', 'as', 'random', 'paths',
+                                       'path', 'partial', 'orient', 'in', 'from'):
             return True
         return False
 
@@ -834,9 +828,6 @@ class P:
             self.open()
             out['frm'] = self.post()
             self.close()
-        if self.at('windows'):
-            self.i += 1
-            out['windows'] = self.wchoice()
         if self.at('random') and self.at('at', 1):
             self.i += 2
             out['random'] = self.rchoice()
@@ -844,14 +835,6 @@ class P:
             self.i += 2
             out['uncertain'] = True
         return out
-
-    def wchoice(self):
-        # L §2.3 wchoice = "each" (the review removed latest and earliest)
-        tok = self.next()
-        if tok.s != 'each':
-            self.i -= 1
-            self.err('each')
-        return tok.s
 
     def rchoice(self):
         if self.accept('mean'):
@@ -987,10 +970,7 @@ class P:
         b = self.expr()
         self.expect('amount')
         q = self.expr()
-        on = None
-        if self.accept('on'):
-            on = self.expr()
-        return self.N('leg', name=name, frm=a, to=b, amount=q, on=on)
+        return self.N('leg', name=name, frm=a, to=b, amount=q)
 
     def builtin(self, s):
         i0 = self.i
@@ -1027,8 +1007,8 @@ class P:
             elif self.at('from'):
                 proj = self.proj()
             else:
-                # L §2.3 parse rule 7: a windows or random clause belongs to a projection read (bal(...) from t,
-                # low(...)); after a plain bal(x, d) it is the ask line's. A plain balance read may state with
+                # L §2.3 parse rule 7: a random clause belongs to a projection read (bal(...) from t);
+                # after a plain bal(x, d) it is the ask line's. A plain balance read may state with
                 # uncertain, the read's own clause (L §5.14: "a plain balance read that states it, bal(x, d) with
                 # uncertain")
                 proj = {}
@@ -1036,16 +1016,6 @@ class P:
                     self.i += 2
                     proj['uncertain'] = True
             return self.N('bal', ref=r, args=args, start=start, modelled=modelled, proj=proj, of=of)
-        if s == 'low':
-            self.i += 1
-            self.expect('(')
-            self.open()
-            r = self.ref()
-            self.expect(',')
-            sp = self.span()
-            self.expect(')')
-            self.close()
-            return self.N('low', ref=r, span=sp, proj=self.proj())
         if s == 'value':
             self.i += 1
             self.expect('(')
@@ -1088,15 +1058,7 @@ class P:
                 fk = self.expr()
             self.expect(')')
             self.close()
-            conv = None
-            if self.at('in') and self.at_t('CUR', 1):
-                self.i += 1
-                c = self.cur()
-                self.expect('at')
-                fx = self.ref()
-                m = self.mode()
-                conv = (c, fx, m)
-            n = self.N('flows', ref=r, span=sp, forkey=fk, conv=conv)
+            n = self.N('flows', ref=r, span=sp, forkey=fk)
             n._t0, n._t1 = self.t[i0], self.t[self.i - 1]
             return n
         if s == 'crps':
@@ -1588,9 +1550,7 @@ class P:
                 pos = 'start'
             elif self.accept('end'):
                 pos = 'end'
-            instant = self.N('instant', day=d, pos=pos, after=None)
-        elif self.accept('after'):
-            instant = self.N('instant', day=None, pos=None, after=self.ref())
+            instant = self.N('instant', day=d, pos=pos)
         if self.at_t('STR'):
             loc = self.string()
         return gov, known, instant, loc
@@ -2423,19 +2383,19 @@ def sec_move(p, body, units, line):
     return n
 
 
-ASK_CLAUSES = ('for', 'in', 'with', 'law', 'as', 'windows', 'random', 'paths', 'path', 'partial', 'orient')
+ASK_CLAUSES = ('for', 'in', 'with', 'law', 'as', 'random', 'paths', 'path', 'partial', 'orient')
 
 
 def sec_ask(p, body, units, line):
     aid = p.ident()
     p.expect(':')
     a = Node('ask', id=aid, form=None, exprs=None, ref=None, check=None, solve=None, diff=None, resid=None,
-             binds=[], world=None, pins=[], law=None, known=None, windows=None, uncertain=False, random=None,
+             binds=[], world=None, pins=[], law=None, known=None, uncertain=False, random=None,
              paths=None, seed=None, path=None, partial=False, orient=None)
     if p.accept('explain'):
         a.form = 'explain'
-        if p.at('bal') or p.at('low'):
-            # explain bal(x, d) [from t] / explain low(...) (L §2.3 askbody, §5.18)
+        if p.at('bal'):
+            # explain bal(x, d) [from t] (L §2.3 askbody, §5.18)
             a.ref = p.builtin(p.peek().s)
         else:
             a.ref = p.ref()
@@ -2514,8 +2474,6 @@ def sec_ask(p, body, units, line):
     if p.at('as') and p.at('known', 1):
         p.i += 2
         a.known = p.expr()
-    if p.accept('windows'):
-        a.windows = p.wchoice()
     if p.at('with') and p.at('uncertain', 1):
         p.i += 2
         a.uncertain = True
