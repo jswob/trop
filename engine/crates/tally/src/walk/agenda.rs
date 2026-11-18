@@ -39,14 +39,12 @@ use crate::num::Num;
 use crate::syntax::{Edge, Stop};
 use crate::time::Day;
 
-/// A movement the walk books: a plan instance, or a decision's run, by its place in the
-/// walk's lists.
+/// A movement the plan pass hands the walk: a plan instance, by its place in the walk's list;
+/// a decision's run books its legs at its point (E §4.2 step 3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mv {
     /// A plan instance.
     Plan(usize),
-    /// A decision's run.
-    Run(usize),
 }
 
 /// A reading the cut sees, as the walk applies it (refcore's `readings` entries). L §5.19.
@@ -80,7 +78,7 @@ type HolePlaces = Option<BTreeSet<String>>;
 pub enum Act {
     /// A reading at the start of the day (E §4.2 step 0).
     Read(Box<Reading>),
-    /// A booked leg (E §4.2 step 2, and a decision's leg with its own later day).
+    /// A booked leg (E §4.2 step 2).
     Leg(Mv, usize),
     /// A leg dated by a window, from the window's first day: its places' balances are
     /// `HOLE-IMPRECISE` until it books at the window's last day (L §4.4; refcore's `imp_on`).
@@ -263,16 +261,11 @@ impl Engine {
             }
             schedule_plan(walk, inst)?;
         }
-        let mut before_start = Vec::new();
         for (rank, (move_id, stratum, insts)) in ranked3(decisions).into_iter().enumerate() {
             for inst in insts {
                 if left_out_of(walk, &move_id) {
                     count_left_out(walk, &inst)?;
                     continue;
-                }
-                if walk.proj.is_some() && matches!(inst.day, Some(Dated::Day(d)) if d < walk.start)
-                {
-                    before_start.push(inst.id.clone());
                 }
                 let places = hole_places.remove(&inst.id);
                 schedule_decision(m, walk, (&move_id, stratum, rank), (inst, places))?;
@@ -288,63 +281,9 @@ impl Engine {
             }
         }
         walk.endings = endings(m, walk);
-        walk.progress = Progress::Walking;
         // the legs of day t the start state already holds go with the point's filter
-        self.base_legs(id, &before_start, None)?;
-        let planned = self.walk_mut(id)?;
-        let first = planned.start;
-        let earlier = after_the_point(planned);
-        // a decision that ran earlier on day t: its legs dated after t (pick P39 on B2)
-        self.base_legs(id, &earlier, Some(first))
-    }
-
-    /// A projection's walk `id`: each decision of `ids`, dated before its first day t or run
-    /// on t before the projection's point, ran in the walk it continues; that run's legs dated
-    /// t on (after day `after`, where given: those of t are in the start) are put on their
-    /// own days here, as the projection counts every leg dated t through d by the leg's own
-    /// day (refcore's `base_legs`). E §4.3 step 2, L §5.14.1 (tally 2.1.8 R16, #183; pick P39
-    /// on B2 of group 3's review).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn base_legs(&mut self, id: usize, ids: &[String], after: Option<Day>) -> Result<(), Stop> {
-        let base = self.walk(id)?.proj.as_ref().map(|p| p.base);
-        for inst_id in ids {
-            let mut found = None;
-            let mut next = base;
-            while let (None, Some(b)) = (&found, next) {
-                let from = self.walk(b)?;
-                found = from
-                    .run_ids
-                    .get(inst_id)
-                    .and_then(|ix| from.runs.get(*ix))
-                    .cloned();
-                next = from.proj.as_ref().map(|p| p.base);
-            }
-            let Some(run) = found.filter(|r| matches!(r.inst.status, Status::Past | Status::Plan))
-            else {
-                continue;
-            };
-            let walk = self.walk_mut(id)?;
-            let rank = walk.plan_rank(&run.inst.order)?;
-            let legs = run.inst.legs.clone();
-            let ix = walk.runs.len();
-            walk.record(run);
-            for (li, lg) in legs.iter().enumerate() {
-                if let Dated::Day(d) = lg.day
-                    && d >= walk.start
-                    && d <= walk.end
-                    && after.is_none_or(|a| d > a)
-                {
-                    let at = At {
-                        rank,
-                        ..At::of(d, Step::Plans)
-                    };
-                    walk.at(at, Act::Leg(Mv::Run(ix), li));
-                }
-            }
-        }
+        after_the_point(walk);
+        walk.progress = Progress::Walking;
         Ok(())
     }
 
@@ -476,36 +415,19 @@ pub(super) fn left_out_lines(
 }
 
 /// A projection's walk read at a decision's point: on its first day only the decisions after
-/// that point are left, since what the day booked before it is in the start; the instances
-/// of the decisions it drops, which ran earlier that day (refcore's `proj_walk`). L §5.14.1,
-/// E §4.3 step 1.
-fn after_the_point(walk: &mut Walk) -> Vec<String> {
+/// that point are left, since what the day booked before it is in the start (refcore's
+/// `proj_walk`). L §5.14.1, E §4.3 step 1.
+fn after_the_point(walk: &mut Walk) {
     let Some(p) = &walk.proj else {
-        return Vec::new();
+        return;
     };
     let (point, first) = (p.point, walk.start);
     if point <= At::start(first) {
-        return Vec::new();
+        return;
     }
-    let Some(acts) = walk.agenda.get_mut(&first) else {
-        return Vec::new();
-    };
-    let mut ran = Vec::new();
-    for (at, act) in acts.iter() {
-        if let Act::Decide(move_id, day) = act
-            && *at <= point
-        {
-            ran.push((move_id.clone(), *day));
-        }
+    if let Some(acts) = walk.agenda.get_mut(&first) {
+        acts.retain(|(at, act)| matches!(act, Act::Decide(..)) && *at > point);
     }
-    acts.retain(|(at, act)| matches!(act, Act::Decide(..)) && *at > point);
-    let mut earlier = Vec::new();
-    for key in ran {
-        if let Some(insts) = walk.due.get(&key) {
-            earlier.extend(insts.iter().map(|i| i.id.clone()));
-        }
-    }
-    earlier
 }
 
 /// The decision moves by id (refcore's decision day keys). E §4.2 step 3.
@@ -795,26 +717,15 @@ fn schedule_decided(
 }
 
 /// Whether a projection's walk leaves plan instance `inst` out: dated after the last day it
-/// plans and every leg of it too, each on a known day. A projection counts every leg dated t
-/// through d by the leg's own day, whatever its movement's (E §4.3 step 2, E §4.2 step 2;
-/// tally 2.1.8 R16, #183): an instance dated before t keeps its legs from t on, and the
-/// legs before t, which the walk it continues booked, aren't put on its days.
+/// plans, on a known day; its legs are on its day (E §4.3 step 2, E §4.2 step 2). An
+/// instance dated before t is kept: its legs before t, which the walk it continues booked,
+/// aren't put on its days.
 fn outside_window(walk: &Walk, inst: &Inst) -> bool {
     // a window's first day (refcore's `day_lo`)
-    let Some(first) = inst.day.as_ref().and_then(Dated::lo) else {
-        return false;
-    };
-    let through = walk.plans_through();
-    if first <= through {
-        return false;
-    }
-    for lg in &inst.legs {
-        match lg.day.lo() {
-            Some(d) if d > through => {}
-            Some(_) | None => return false,
-        }
-    }
-    true
+    inst.day
+        .as_ref()
+        .and_then(Dated::lo)
+        .is_some_and(|first| first > walk.plans_through())
 }
 
 /// Puts a plan instance's legs on their days by its status: left out, uncertain, refused, a
@@ -891,14 +802,13 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
                 qs = spread(&[qs.as_ref(), Some(&class)]);
             }
-            for (leg, lg) in inst.legs.iter().enumerate() {
-                // a leg's own day, else its instance's, a window's first (refcore's
-                // `sched_leg_hole`)
-                let day = lg
-                    .day
-                    .day()
-                    .or_else(|| inst.day.as_ref().and_then(Dated::lo))
-                    .map_or(start, |d| d.max(start));
+            // its legs on its day, a window's first (refcore's `sched_leg_hole`)
+            let day = inst
+                .day
+                .as_ref()
+                .and_then(Dated::lo)
+                .map_or(start, |d| d.max(start));
+            for leg in 0..inst.legs.len() {
                 walk.at(point(day), Act::LegHole(mv, leg, qs.clone()));
             }
         }
@@ -1188,65 +1098,6 @@ mod tests {
             days: Days::Events,
         };
         run(given, &request).expect("an answer").lines().to_vec()
-    }
-
-    /// A decision dated 3 January whose leg is dated 10 January, and a plan dated 10 January,
-    /// each moving into `gone` after its lifespan ends: both refuse `src` that day.
-    const LATER_LEG: &str = r#"model later_leg
-  tally 2
-  on 2025-12-31
-  start 2025-01-01
-  end 2025-12-31
-
-source card "a card"
-
-unit DUK: currency minor 0.01
-
-input amt: money DUK
-
-input d0: date
-
-input d1: date
-
-place src: accounts DUK lives 2025-01-01..
-
-place gone: accounts DUK lives 2025-01-01..2025-01-05
-
-move a: transfers
-  on d0
-  leg cash from src to gone amount amt
-
-move sweep: transfers
-  on d1
-  reads src
-  leg cash from src to gone amount min(amt, bal(src)) on d0
-
-ask q: bal(src, 2025-01-31)
-
-version facts
-  cite card
-  governs always
-  known 2025-01-01
-  amt = 1.00 DUK
-  d0 = 2025-01-10
-  d1 = 2025-01-03
-  opening[src] = 500.00 DUK at 2025-01-01 start
-  opening[gone] = 0 DUK at 2025-01-01 start
-"#;
-
-    #[test]
-    fn a_decisions_later_leg_takes_its_place_among_the_days_plans_in_the_movement_order() {
-        // E §4.1 (tally 2.1.6): the decision's instance is dated 3 January, before the plan's
-        // 10 January, so its leg on 10 January is booked first there and src keeps its
-        // refusal; ranked as the plans are scheduled, the plan's would be first
-        assert_eq!(
-            answer(&[("later_leg.tally", LATER_LEG)], "q"),
-            [
-                "q: refused: RUN-LIFESPAN sweep.cash moves into or out of gone outside its lifespan",
-                "  cut 2025-12-31"
-            ],
-            "the decision's refusal, first in the typed movement order"
-        );
     }
 
     /// The base of a scenario whose two decisions are dated on its `from` and after it.

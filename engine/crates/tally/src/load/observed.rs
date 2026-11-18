@@ -226,18 +226,12 @@ impl Loader {
             let from = self.place_ref(&leg.from, Written::Place, &at.file, at.line)?;
             let to = self.place_ref(&leg.to, Written::Place, &at.file, at.line)?;
             let (amount, amount_unit) = self.obs_amount(&leg.amount, name, unit, &from, &to, at)?;
-            let day = leg
-                .on
-                .as_ref()
-                .map(|d| expr_day(d, at, &format!("the on of leg {name} of {sid}")))
-                .transpose()?;
             observation.legs.push(ObsLeg {
                 name: name.clone(),
                 from,
                 to,
                 amount,
                 unit: amount_unit,
-                day,
             });
         }
         let attrs = self.m.kind_attrs(&kind);

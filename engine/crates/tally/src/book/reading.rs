@@ -105,14 +105,9 @@ pub(crate) fn reading_place(row: &crate::model::Row) -> Option<&str> {
 /// gives a reading `after` the instance no point (refcore's `after_day`, its `legs`). L §4.6
 /// Readings, §5.19 Before the run.
 pub(crate) fn stands_in(obs: &[Obs], links: &[String], (start, end, cut): (Day, Day, Day)) -> bool {
-    for o in obs.iter().filter(|o| links.contains(&o.id)) {
-        for d in o.legs.iter().filter_map(|lg| lg.day.day()) {
-            if start <= d && d <= end && d < cut {
-                return true;
-            }
-        }
-    }
-    false
+    obs.iter()
+        .filter(|o| links.contains(&o.id))
+        .any(|o| !o.legs.is_empty() && start <= o.day && o.day <= end && o.day < cut)
 }
 
 /// The day of the last leg of the observations `obs` that links `links` names, booked from

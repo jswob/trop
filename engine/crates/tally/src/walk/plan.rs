@@ -4,7 +4,7 @@
 //! hole movement from its first day, tally 2.1.8 item 77); E §5 (steps 0 and 1: dating at K,
 //! the booking cut; a hole booking a later version answers is that version's, and an
 //! explanation lists the answer's reads where its instance's own end, E §10);
-//! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs and their days; a day or a `when`
+//! L §5.14 (moves: keys, `on`, `at`, `for`, `when`, legs on their day; a day or a `when`
 //! that is a hole makes a hole movement); L §8.4 (a refused key's `where`, `when`, attribute
 //! or `for` makes a refused movement, its day and legs' places still read; tally 2.1.6);
 //! L §6.4 (a move a scenario declares books nothing before its `from`). The binding tuples are
@@ -146,12 +146,12 @@ impl Dated {
     }
 }
 
-/// The day window `w` gives a movement or a leg: none for a window of numbers (L §4.4).
+/// The day window `w` gives a movement: none for a window of numbers (L §4.4).
 ///
 /// # Errors
 ///
 /// As [`Value::text`].
-pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option<Dated>, Stop> {
+fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option<Dated>, Stop> {
     let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi) else {
         return Ok(None);
     };
@@ -235,9 +235,9 @@ pub struct Booked {
     pub cut: Day,
 }
 
-/// One leg of a booked A₀: its places, amount and unit, and its own day where it states one.
-/// A leg without its own `on` takes its instance's day, which is read at the ask's cut K,
-/// not at the booking cut, so a later K may move it (E §4.1 step 2; refcore's `body_key`).
+/// One leg of a booked A₀: its places, amount and unit. A leg is on its instance's day, which
+/// is read at the ask's cut K, not at the booking cut, so a later K may move it (E §4.1 step
+/// 2; refcore's `body_key`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BookedLeg {
     /// The leg's name.
@@ -250,8 +250,6 @@ pub struct BookedLeg {
     pub amount: Amount,
     /// Its unit.
     pub unit: Option<String>,
-    /// Its own day; none where it takes its instance's.
-    pub own_day: Option<Dated>,
 }
 
 /// Whether an instance exists: its `when` and its binding tuple's (L §5.14 `when`).
@@ -684,9 +682,7 @@ impl Engine {
     /// `upto_tag`). E §4.1, §3.2.
     pub(crate) fn list_upto(&self, mv: &MoveInfo, cut: Day) -> Option<Day> {
         let upto = self.body_upto?;
-        let whole = mv.decision
-            || mv.decl.legs.iter().any(|leg| leg.on.is_some())
-            || self.plans.contains_key(&(mv.id.clone(), cut));
+        let whole = mv.decision || self.plans.contains_key(&(mv.id.clone(), cut));
         (!whole).then_some(upto)
     }
 
@@ -715,9 +711,9 @@ impl Engine {
     }
 
     /// A move's instances for the walk being planned: all of them, or, for a walk up to a
-    /// day, a plan's dated on or before it, the others' bodies never evaluated; a decision, a
-    /// move whose legs state their own days, or one whose instances are all known already, is
-    /// taken whole (refcore's `plan_list`). E §4.1, §3.2.
+    /// day, a plan's dated on or before it, the others' bodies never evaluated; a decision, or
+    /// a move whose instances are all known already, is taken whole (refcore's `plan_list`).
+    /// E §4.1, §3.2.
     ///
     /// # Errors
     ///
@@ -958,7 +954,7 @@ impl Engine {
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
                 {
-                    self.check_booked(mv, &inst, (booking, cut), upto)?;
+                    self.check_booked(&inst, (booking, cut), upto)?;
                 }
                 inst.coll.merge(&tuple.coll);
                 if let (Some(marks), Some(mark)) = (marks.as_deref_mut(), self.trace_snap()) {
@@ -1014,17 +1010,16 @@ impl Engine {
 
     /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
     /// its booking cut, is the same under every cut that books it at booking cut `booking`,
-    /// across the asks of a run (refcore's `inv5`). Its day is read at the cut K, so a leg's
-    /// day counts only where the leg states its own (E §4.1 step 2). E §9 item 5.
+    /// across the asks of a run (refcore's `inv5`). Its day, its legs' too, is read at the cut
+    /// K, so it isn't part of A₀ (E §4.1 step 2). E §9 item 5.
     fn check_booked(
         &mut self,
-        mv: &MoveInfo,
         inst: &Inst,
         (booking, cut): (Day, Day),
         upto: Option<Day>,
     ) -> Result<(), Stop> {
         let key = (inst.id.clone(), booking, upto);
-        let legs = booked_legs(mv, &inst.legs);
+        let legs = booked_legs(&inst.legs);
         let Some(old) = self.booked.get(&key) else {
             let first = Booked {
                 exists: inst.exists.clone(),
@@ -1695,41 +1690,34 @@ fn keys_seen(m: &Reality, mv: &MoveInfo, keys: &[KeyVal], (cut, world): (Day, Wo
     true
 }
 
-/// A₀'s legs: each leg as read at its booking cut, its day kept only where it states its own
-/// `on`, since one it takes from its instance is read at the cut K (refcore's `body_key`).
-/// E §4.1 step 2, E §9 item 5.
-fn booked_legs(mv: &MoveInfo, legs: &[LegVal]) -> Vec<BookedLeg> {
+/// A₀'s legs: each leg as read at its booking cut, without its day, which is its instance's,
+/// read at the cut K (refcore's `body_key`). E §4.1 step 2, E §9 item 5.
+fn booked_legs(legs: &[LegVal]) -> Vec<BookedLeg> {
     let mut out = Vec::with_capacity(legs.len());
     for lg in legs {
-        let own = mv
-            .decl
-            .legs
-            .iter()
-            .any(|decl| decl.name == lg.name && decl.on.is_some());
         out.push(BookedLeg {
             name: lg.name.clone(),
             from: lg.from.clone(),
             to: lg.to.clone(),
             amount: lg.amount.clone(),
             unit: lg.unit.clone(),
-            own_day: own.then(|| lg.day.clone()),
         });
     }
     out
 }
 
-/// Whether `inst` is an instance of a move a scenario declares whose day, or a leg's own day,
-/// falls before the scenario's `from`: it books nothing there, so it is left out; load has
-/// refused the move where it sees that day and that the instance exists (refcore's
-/// `scen_early`). L §6.4.
+/// Whether `inst` is an instance of a move a scenario declares whose day falls before the
+/// scenario's `from`: it books nothing there, so it is left out; load has refused the move
+/// where it sees that day and that the instance exists (refcore's `scen_early`). L §6.4.
 fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
     let Some(from) = scenario_from(m, &mv.id) else {
         return false;
     };
     // a window's first day (refcore's `day_lo`)
-    let legs = inst.legs.iter().filter_map(|leg| leg.day.lo());
-    let day = inst.day.as_ref().and_then(Dated::lo);
-    day.into_iter().chain(legs).any(|d| d < from)
+    inst.day
+        .as_ref()
+        .and_then(Dated::lo)
+        .is_some_and(|d| d < from)
 }
 
 /// The `from` of the scenario whose file declares move `id`, or `None` for a move of the base

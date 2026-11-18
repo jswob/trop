@@ -336,7 +336,7 @@ pub struct MoveInfo {
     pub decl: Move,
 }
 
-/// An observed leg: its name, places, amount and own day.
+/// An observed leg: its name, places and amount; it is on its observation's day.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObsLeg {
     /// The leg's name.
@@ -349,8 +349,6 @@ pub struct ObsLeg {
     pub amount: Num,
     /// Its unit: a currency or a unit.
     pub unit: String,
-    /// Its own day.
-    pub day: Option<Day>,
 }
 
 /// What an observation fulfils.

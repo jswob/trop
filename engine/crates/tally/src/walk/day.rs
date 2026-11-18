@@ -372,12 +372,12 @@ impl Engine {
 
     /// A movement of the walk and one of its legs. E §4.2.
     fn movement_leg(&self, id: usize, mv: Mv, leg: usize) -> Result<(Inst, LegVal), Stop> {
-        let walk = self.walk(id)?;
-        let inst = match mv {
-            Mv::Plan(i) => walk.insts.get(i),
-            Mv::Run(i) => walk.runs.get(i).map(|r| &r.inst),
-        }
-        .ok_or_else(|| invariant("an act of a movement the walk lacks"))?;
+        let Mv::Plan(i) = mv;
+        let inst = self
+            .walk(id)?
+            .insts
+            .get(i)
+            .ok_or_else(|| invariant("an act of a movement the walk lacks"))?;
         let lg = inst
             .legs
             .get(leg)

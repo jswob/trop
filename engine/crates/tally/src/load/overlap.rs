@@ -546,13 +546,16 @@ fn one_id(
     Ok(())
 }
 
-/// An observation's legs at a place its version covers are dated inside the span covered
+/// An observation with a leg at a place its version covers is dated inside the span covered
 /// (refcore's `check_obs`, its end). L §5.19, §5.3.
 fn covered(m: &Reality, o: &Observation) -> Result<(), Stop> {
     let version = m
         .versions
         .get(&o.version)
         .ok_or_else(|| invariant(format!("version {} isn't built", o.version)))?;
+    let Some(day) = o.day else {
+        return Ok(());
+    };
     for (place, own) in &version.covers {
         let span = own
             .clone()
@@ -561,9 +564,6 @@ fn covered(m: &Reality, o: &Observation) -> Result<(), Stop> {
             if leg.from != *place && leg.to != *place {
                 continue;
             }
-            let Some(day) = leg.day.or(o.day) else {
-                continue;
-            };
             if span.as_ref().is_none_or(|s| !s.contains(day)) {
                 let message = format!(
                     "observation {} of {place} is dated outside the span {} covers",

@@ -5,8 +5,8 @@
 //! place's balance: zero from its lifespan's start, else `HOLE-ANCHOR` until its first
 //! reading), §8.1 (`HOLE-ANCHOR`'s questions), §8.2 (the register: what a balance rests on),
 //! §6.4 (a walk is walked in one world: the places and lifespans it sees);
-//! P §2.4 (monthly checkpoints: every place's state and the legs booked ahead, a state that
-//! didn't change shared, not copied; D2-6).
+//! P §2.4 (monthly checkpoints: every place's state, a state that didn't change shared, not
+//! copied; D2-6; tally 2.2 books no leg ahead, so a checkpoint holds none).
 //! Twin: engine/tools/refcore/walk.py (`St` with its `pbad`, `Ent`, `Log`, `apply`, `Walk.log`,
 //! `default`, `add`, `state`, `pstate`, `cum`, `unbook`, `st_value`, `anchor_question`).
 //! Invariants: a log's entries are in walk order and each holds the state after it; a state's
@@ -15,7 +15,7 @@
 //! movement's day is a hole or refused (L §8, tally 2.1.8); the register of a balance is every entry's since the last reset; a
 //! projection's walk starts each place as the walk it continues stood at its point; a main
 //! walk's checkpoint at the first of a month holds each place's state before that day, the one
-//! of the checkpoint before where it is the same, and the decision legs dated that day or later.
+//! of the checkpoint before where it is the same.
 //! PERF: P8-14 (footprint: a checkpoint shares each place state that didn't change since the
 //! one before, D2-6; the forks and the walk restart that start from checkpoints, P §2.5 and
 //! §4.2, come with later rows, so at S U-6 is measured on its cost side only); plain twin:
@@ -25,7 +25,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::agenda::{Act, Mv, Reading};
+use super::agenda::{Act, Reading};
 use super::order::{CycleItem, Run};
 use super::plan::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order, invariant};
 use super::point::{At, Step};
@@ -486,9 +486,8 @@ pub(crate) struct GapAt {
 }
 
 /// A main walk's state at the start of a month, kept for a walk to start from later: each
-/// (place, unit)'s state there, shared with the checkpoint before where it didn't change, and
-/// the decision legs booked ahead onto that day or later (refcore keeps none). P §2.4, D2-6;
-/// E §4.2 step 3.
+/// (place, unit)'s state there, shared with the checkpoint before where it didn't change
+/// (refcore keeps none). P §2.4, D2-6.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Checkpoint {
     /// Its day: the first of a month, the state before any of the day's acts.
@@ -496,8 +495,6 @@ pub struct Checkpoint {
     /// The state of every (place, unit) with an entry before the day; one with none stands as
     /// the walk opened it.
     pub states: BTreeMap<(String, String), Rc<St>>,
-    /// The legs decisions booked onto the day or later (N-6), in agenda order.
-    pub ahead: Vec<(At, Act)>,
 }
 
 /// An observation a main walk books, judged at its cut: its record's refusal, and the day of
@@ -1035,8 +1032,8 @@ impl Walk {
     }
 
     /// The checkpoint at the start of day `day`, made before any act of it: each logged
-    /// (place, unit)'s last state, the previous checkpoint's shared where it is the same, and
-    /// the decision legs on the agenda from `day` on. P §2.4, D2-6; E §4.2 step 3.
+    /// (place, unit)'s last state, the previous checkpoint's shared where it is the same.
+    /// P §2.4, D2-6.
     fn checkpoint(&self, day: Day) -> Checkpoint {
         let before = self.checkpoints.last();
         let mut states = BTreeMap::new();
@@ -1053,15 +1050,7 @@ impl Walk {
             };
             states.insert(key.clone(), st);
         }
-        let mut ahead = Vec::new();
-        for (_, acts) in self.agenda.range(day..) {
-            for (at, act) in acts {
-                if let Act::Leg(Mv::Run(_), _) = act {
-                    ahead.push((*at, act.clone()));
-                }
-            }
-        }
-        Checkpoint { day, states, ahead }
+        Checkpoint { day, states }
     }
 
     /// A place's state in one unit at checkpoint `kept`: the one it holds, else the state the
@@ -1238,11 +1227,10 @@ mod tests {
     use crate::num::Num;
     use crate::syntax::parse_reality;
     use crate::time::Day;
-    use crate::walk::{Act, At, Mv};
+    use crate::walk::At;
 
-    /// A walk from mid-January to July: rent in January, a sweep decision on 10 February whose
-    /// leg is dated 15 April, nothing in March, a wage in May, a place that never moves after
-    /// its opening.
+    /// A walk from mid-January to July: rent in January, a sweep decision on 10 February,
+    /// nothing in March or April, a wage in May, a place that never moves after its opening.
     const REALITY: &str = r#"model cp
   tally 2
   on 2025-06-01
@@ -1271,8 +1259,6 @@ input wage_day: date
 
 input sweep_day: date
 
-input late_day: date
-
 move rent: transfers
   on rent_day
   leg cash from bank to out amount pay
@@ -1284,7 +1270,7 @@ move wage: transfers
 move sweep: transfers
   on sweep_day
   reads bank
-  leg cash from bank to save amount min(pay, bal(bank)) on late_day
+  leg cash from bank to save amount min(pay, bal(bank))
 
 version facts
   cite card
@@ -1294,7 +1280,6 @@ version facts
   rent_day = 2025-01-20
   wage_day = 2025-05-05
   sweep_day = 2025-02-10
-  late_day = 2025-04-15
   opening[bank] = 1000.00 at 2025-01-15 start
   opening[save] = 0.00 at 2025-01-15 start
   opening[idle] = 5.00 at 2025-01-15 start
@@ -1385,13 +1370,12 @@ ask bank_end: bal(bank, 2025-07-10)
     }
 
     #[test]
-    fn a_place_that_did_not_move_is_shared_and_the_legs_booked_ahead_are_kept() {
+    fn a_place_that_did_not_move_is_shared() {
         let m = reality();
         let walk = walked(&m, Days::Events);
-        let (feb, mar, apr, may, jun) = (
+        let (feb, mar, may, jun) = (
             at(&walk, "2025-02-01"),
             at(&walk, "2025-03-01"),
-            at(&walk, "2025-04-01"),
             at(&walk, "2025-05-01"),
             at(&walk, "2025-06-01"),
         );
@@ -1400,31 +1384,14 @@ ask bank_end: bal(bank, 2025-07-10)
             "idle never moves after its opening"
         );
         assert!(
-            shared(feb, apr, "bank"),
-            "bank doesn't move from February to April"
+            !shared(feb, mar, "bank"),
+            "the sweep's leg moves bank on 10 February"
         );
         assert!(
-            !shared(apr, may, "bank"),
-            "the sweep's leg moves bank on 15 April"
+            shared(mar, may, "bank"),
+            "bank doesn't move from March to May"
         );
         assert!(!shared(may, jun, "bank"), "the wage moves bank in May");
-        let ahead = |c: &Checkpoint| -> Vec<String> {
-            c.ahead
-                .iter()
-                .map(|(point, act)| {
-                    assert!(matches!(act, Act::Leg(Mv::Run(_), _)), "a decision's leg");
-                    point.day.text()
-                })
-                .collect()
-        };
-        assert!(ahead(feb).is_empty(), "the sweep hasn't run on 1 February");
-        assert_eq!(
-            ahead(mar),
-            ["2025-04-15"],
-            "the sweep's leg, booked ahead (N-6)"
-        );
-        assert_eq!(ahead(apr), ["2025-04-15"], "still ahead on 1 April");
-        assert!(ahead(may).is_empty(), "booked on 15 April");
     }
 
     #[test]

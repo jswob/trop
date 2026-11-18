@@ -906,7 +906,7 @@ impl P<'_> {
         Ok(FieldValue::Expr(value?))
     }
 
-    /// `leg l from a to b amount q [on d]` (L §2.3 `leg`).
+    /// `leg l from a to b amount q` (L §2.3 `leg`).
     pub(super) fn leg(&mut self) -> Result<Leg, Stop> {
         self.expect("leg")?;
         let name = self.ident("a leg name")?;
@@ -916,17 +916,11 @@ impl P<'_> {
         let to = self.expr(Ends::Free)?;
         self.expect("amount")?;
         let amount = self.expr(Ends::Free)?;
-        let on = if self.accept("on")? {
-            Some(self.expr(Ends::Free)?)
-        } else {
-            None
-        };
         Ok(Leg {
             name,
             from,
             to,
             amount,
-            on,
             line: self.line,
         })
     }

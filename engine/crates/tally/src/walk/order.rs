@@ -16,10 +16,9 @@
 use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::agenda::{Act, Mv};
 use super::day::ends;
 use super::plan::{Amount, Dated, End, Exists, Inst, Status, invariant, kind_certainty};
-use super::point::{At, Step};
+use super::point::At;
 use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
@@ -818,20 +817,9 @@ impl Engine {
             });
         }
         let legs = run.inst.legs.clone();
-        let later_rank = walk.plan_rank(&run.inst.order)?;
         let inst = run.inst.clone();
         walk.record(run);
-        for (li, lg) in legs.iter().enumerate() {
-            if let Dated::Day(ld) = lg.day
-                && ld > t
-            {
-                let at = At {
-                    rank: later_rank,
-                    ..At::of(ld, Step::Plans)
-                };
-                self.walk_mut(id)?.at(at, Act::Leg(Mv::Run(ix), li));
-                continue;
-            }
+        for lg in &legs {
             self.book_leg(m, id, (&inst, lg), key, &reg)?;
         }
         self.book_own_obs(m, id, &inst, key)?;
@@ -956,7 +944,7 @@ impl Engine {
 
 impl super::state::Walk {
     /// Records a run: its place in the list, by its instance's id. E §4.2.
-    pub(super) fn record(&mut self, run: Run) {
+    fn record(&mut self, run: Run) {
         let ix = self.runs.len();
         self.run_ids.insert(run.inst.id.clone(), ix);
         self.runs.push(run);

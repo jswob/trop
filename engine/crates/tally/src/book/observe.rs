@@ -1052,8 +1052,8 @@ fn covering_windows(m: &Reality) -> Windows {
     out
 }
 
-/// One observation as a movement: its legs between places, each on its own day or the
-/// observation's (refcore's `ObsMv`). L §5.19.
+/// One observation as a movement: its legs between places, on the observation's day
+/// (refcore's `ObsMv`). L §5.19.
 fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
     let day = o
         .day
@@ -1071,7 +1071,7 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
             to: End::Place(lg.to.clone()),
             amount: Amount::Qty(lg.amount.clone()),
             unit: Some(lg.unit.clone()),
-            day: Dated::Day(lg.day.unwrap_or(day)),
+            day: Dated::Day(day),
             src: None,
         })
         .collect();

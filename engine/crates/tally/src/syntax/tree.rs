@@ -715,7 +715,7 @@ pub enum FieldValue {
     Expr(Expr),
 }
 
-/// A leg: `leg l from a to b amount q [on d]`.
+/// A leg: `leg l from a to b amount q`, on its movement's day (L §5.14).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Leg {
     /// The leg's name.
@@ -726,8 +726,6 @@ pub struct Leg {
     pub to: Expr,
     /// Its amount.
     pub amount: Expr,
-    /// Its own day.
-    pub on: Option<Expr>,
     /// Its line: a move's `leg` line, or the line of the row whose record holds it.
     pub line: u32,
 }

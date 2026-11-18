@@ -77,29 +77,14 @@ pub(crate) enum Held {
     New,
 }
 
-/// The acts of one day, as a plan pass put them and the walk takes them: in walk order, a
-/// decision's legs booked ahead left out, since the walk makes those (E §4.2 step 3).
-type DayActs = Vec<(At, Act)>;
-
 impl Walk {
     /// Keeps the plan's acts of day `day` as the walk takes them (`acts`, in walk order), for
     /// a later read that continues it to compare its own plan with (P §2.5). E §4.2.
     pub(crate) fn keep_walked(&mut self, day: Day, acts: &[(At, Act)]) {
-        let planned: DayActs = acts
-            .iter()
-            .filter(|(_, act)| !booked_ahead(act))
-            .cloned()
-            .collect();
-        if !planned.is_empty() {
-            self.walked.insert(day, planned);
+        if !acts.is_empty() {
+            self.walked.insert(day, acts.to_vec());
         }
     }
-}
-
-/// Whether an act is a decision's leg booked ahead onto a later day, which the walk puts on
-/// its agenda as it runs the decision, not the plan pass (E §4.2 step 3, N-6).
-fn booked_ahead(act: &Act) -> bool {
-    matches!(act, Act::Leg(Mv::Run(_), _))
 }
 
 impl Engine {
@@ -316,15 +301,10 @@ fn same_act((one, act): (&Walk, &Act), (other, like): (&Walk, &Act)) -> bool {
     }
 }
 
-/// Whether two movements are one: plan instances by their bodies; a decision's run never comes
-/// from a plan pass, so it is no plan's (E §4.1, §4.2 step 3).
+/// Whether two movements are one: plan instances by their bodies (E §4.1).
 fn same_mv((one, mv): (&Walk, Mv), (other, mv2): (&Walk, Mv)) -> bool {
-    match (mv, mv2) {
-        (Mv::Plan(at), Mv::Plan(at2)) => {
-            one.insts.get(at).is_some() && one.insts.get(at) == other.insts.get(at2)
-        }
-        (Mv::Plan(_) | Mv::Run(_), _) => false,
-    }
+    let (Mv::Plan(at), Mv::Plan(at2)) = (mv, mv2);
+    one.insts.get(at).is_some() && one.insts.get(at) == other.insts.get(at2)
 }
 
 /// Whether two leg acts of one movement carry the same hole or refusal. E §4.2.
@@ -338,10 +318,8 @@ fn same_terms(act: &Act, like: &Act) -> bool {
 }
 
 /// Kept walk `walk` continued with the read's plan `fresh`: what it walked kept, the plan's
-/// acts of the days after its last walked day taken, with the decisions' legs it booked ahead
-/// onto them after the day's plan acts, as the twin's walk puts them there as it runs; the
-/// plan's instances, decisions due and last planned day taken, and the reads that hold it
-/// now. P §2.5; E §4.2 step 3, §4.3.
+/// acts of the days after its last walked day taken; the plan's instances, decisions due and
+/// last planned day taken, and the reads that hold it now. P §2.5; E §4.2, §4.3.
 ///
 /// # Errors
 ///
@@ -351,21 +329,10 @@ fn continue_with(walk: &mut Walk, fresh: Walk) -> Result<(), Stop> {
         .done
         .ok_or_else(|| super::plan::invariant("a walk continued with no day walked"))?;
     let mut agenda = fresh.agenda;
-    let mut later = match done.next() {
+    walk.agenda = match done.next() {
         Some(first) => agenda.split_off(&first),
         None => BTreeMap::new(),
     };
-    // the plan's legs of decisions run before t (#183) are the kept walk's own too, carried
-    // below with what it booked ahead: the plan's copies would book them twice
-    for acts in later.values_mut() {
-        acts.retain(|(_, act)| !booked_ahead(act));
-    }
-    for (day, acts) in core::mem::take(&mut walk.agenda) {
-        for act in acts.into_iter().filter(|(_, act)| booked_ahead(act)) {
-            later.entry(day).or_insert_with(Vec::new).push(act);
-        }
-    }
-    walk.agenda = later;
     walk.insts = fresh.insts;
     walk.due = fresh.due;
     let (through, readers) = fresh
@@ -390,7 +357,7 @@ mod tests {
     use crate::eval::{Collected, Engine};
     use crate::model::World;
     use crate::time::Day;
-    use crate::walk::{Act, At, Mv, Progress, Projected, Step, Walk};
+    use crate::walk::{Act, At, Progress, Projected, Step, Walk};
 
     fn day(d: u8) -> Day {
         Day::from_ymd(2026, 2, d).expect("a day")
@@ -478,30 +445,26 @@ mod tests {
     }
 
     #[test]
-    fn a_decisions_leg_booked_ahead_is_the_walks_not_the_plans() {
+    fn a_continued_walk_takes_the_plans_acts_after_its_last_walked_day() {
         let mut kept = projection(5);
-        put(&mut kept, mark(2, "konto"));
-        kept.at(At::of(day(2), Step::Plans), Act::Leg(Mv::Run(0), 0));
-        kept.at(At::of(day(8), Step::Plans), Act::Leg(Mv::Run(0), 1));
+        for item in [mark(2, "konto"), mark(8, "konto")] {
+            put(&mut kept, item);
+        }
         walked_through(&mut kept, 5);
         assert_eq!(
             kept.walked.get(&day(2)).map(Vec::len),
             Some(1),
-            "the mark alone"
+            "the mark walked"
         );
         let mut fresh = projection(10);
         for item in [mark(2, "konto"), mark(9, "konto")] {
             put(&mut fresh, item);
         }
         fresh.proj.as_mut().expect("a projection").readers = 1;
-        assert!(agrees(&kept, &fresh), "the run's legs left out");
+        assert!(agrees(&kept, &fresh), "the same act on the 2nd");
         continue_with(&mut kept, fresh).expect("continued");
         let days: Vec<(Day, usize)> = kept.agenda.iter().map(|(d, a)| (*d, a.len())).collect();
-        assert_eq!(
-            days,
-            [(day(8), 1), (day(9), 1)],
-            "the days after the 5th only"
-        );
+        assert_eq!(days, [(day(9), 1)], "the plan's days after the 5th only");
         let p = kept.proj.as_ref().expect("a projection");
         assert_eq!(
             (p.through, p.readers),

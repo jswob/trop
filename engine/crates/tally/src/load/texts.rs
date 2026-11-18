@@ -341,10 +341,7 @@ pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
                         _,
                         FieldValue::Lit(_) | FieldValue::Hole(_) | FieldValue::None,
                     ) => {}
-                    Field::Leg(leg) => {
-                        out.extend([&leg.from, &leg.to, &leg.amount]);
-                        out.extend(leg.on.as_ref());
-                    }
+                    Field::Leg(leg) => out.extend([&leg.from, &leg.to, &leg.amount]),
                 }
             }
         }

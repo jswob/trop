@@ -624,7 +624,7 @@ impl Engine {
             .built
             .get(&key)
             .ok_or_else(|| invariant("a tree just built"))?;
-        if !tree.common(t, counts, last) || self.base_leg_inside(base, place, (t, last))? {
+        if !tree.common(t, counts, last) {
             return Ok(None);
         }
         // the projection's own walk refuses a read once a number passes the cap at any place
@@ -655,37 +655,6 @@ impl Engine {
         self.chain_register(m, (base, point), (place, unit), &mut met)?;
         self.absorb(&met);
         qty_value(m, &low, unit).map(Some)
-    }
-
-    /// Whether a decision that walk `base`, or a walk it continues, ran before day `t` has a
-    /// leg at `place` dated `t` through `last`, which the projection's walk books on the leg's
-    /// own day: a read that counts one is the walk's (refcore's `base_legs`; tally 2.1.8 R16,
-    /// #183). E §4.3 step 2, L §5.14.1.
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn base_leg_inside(
-        &self,
-        base: usize,
-        place: &str,
-        (t, last): (Day, Day),
-    ) -> Result<bool, Stop> {
-        for wid in self.chain(base)? {
-            for run in &self.walk(wid)?.runs {
-                let before = matches!(run.inst.day, Some(Dated::Day(d)) if d < t);
-                if !before || !matches!(run.inst.status, Status::Past | Status::Plan) {
-                    continue;
-                }
-                let inside = run.inst.legs.iter().any(|lg| {
-                    matches!(lg.day, Dated::Day(d) if d >= t && d <= last) && at_place(lg, place)
-                });
-                if inside {
-                    return Ok(true);
-                }
-            }
-        }
-        Ok(false)
     }
 
     /// The widest balance, in bits, that a projection's walk continued from `base` at `point`
@@ -816,7 +785,7 @@ impl Gathered {
             Status::Hole => self.hole(inst, day, place),
             Status::Past | Status::Plan => {
                 for lg in &inst.legs {
-                    self.leg(m, (place, unit), seen, (lg, day), &inst.coll)?;
+                    self.leg(m, (place, unit), seen, lg, &inst.coll)?;
                 }
             }
             Status::Modelled
@@ -894,16 +863,16 @@ impl Gathered {
         }
     }
 
-    /// One leg of a booked plan instance dated `day`: its ends at x summed into the tree where
-    /// the walk would book them whole (a quantity in x's unit, both ends places inside their
-    /// lifespans, neither with a sign rule), its day an act the sums don't hold otherwise.
-    /// E §4.2 steps 2 and 5, L §5.14 Legs, §5.10.
+    /// One leg of a booked plan instance, on its instance's day: its ends at x summed into the
+    /// tree where the walk would book them whole (a quantity in x's unit, both ends places
+    /// inside their lifespans, neither with a sign rule), its day an act the sums don't hold
+    /// otherwise. E §4.2 steps 2 and 5, L §5.14 Legs, §5.10.
     fn leg(
         &mut self,
         m: &Reality,
         (place, unit): (&str, &str),
         seen: (Day, World),
-        (lg, day): (&LegVal, Option<Day>),
+        lg: &LegVal,
         coll: &Collected,
     ) -> Result<(), Stop> {
         if !at_place(lg, place) {
@@ -917,12 +886,8 @@ impl Gathered {
                 self.tree.open = false;
                 return Ok(());
             }
-            Dated::Hole(_) => {
-                if let Some(first) = day {
-                    self.tree.later.insert(first);
-                }
-                return Ok(());
-            }
+            // its instance's day is a hole, which the walk holds from its start
+            Dated::Hole(_) => return Ok(()),
         };
         let q = match (&lg.amount, lg.unit.as_deref()) {
             (Amount::Qty(q), Some(u)) if u == unit => q,
@@ -935,7 +900,7 @@ impl Gathered {
         if q.is_zero() {
             return Ok(());
         }
-        if day != Some(d) || !ends_book(m, lg, d, seen) {
+        if !ends_book(m, lg, d, seen) {
             self.tree.acts.insert(d);
             return Ok(());
         }

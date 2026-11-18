@@ -1,16 +1,16 @@
 //! The plan pass's legs: each leg's two places, its day and its amount as a quantity of its unit.
-//! Spec: L §5.14 Legs (a leg's `from` and `to` a place or a hole, its amount a hole or a
-//! quantity of the kind's leg unit, `RUN-NONE`, `RUN-DOMAIN`, `RUN-NEG`), §5.10 (places of
-//! another unit are `LOAD-UNIT`, money finer than its minor unit `LOAD-UNIT`), §3.2 (a
-//! quantity's unit); E §4.1 step 3 (an instance's legs evaluated at its booking cut).
+//! Spec: L §5.14 Legs (a leg on its movement's day, its `from` and `to` a place or a hole, its
+//! amount a hole or a quantity of the kind's leg unit, `RUN-NONE`, `RUN-DOMAIN`, `RUN-NEG`),
+//! §5.10 (places of another unit are `LOAD-UNIT`, money finer than its minor unit
+//! `LOAD-UNIT`), §3.2 (a quantity's unit); E §4.1 step 3 (an instance's legs evaluated at its
+//! booking cut).
 //! Twin: engine/tools/refcore/moves.py (`eval_leg`, `leg_unit_static`, `leg_amount`).
 //! Invariants: a run-time refusal met reading a leg's amount stays with that leg; a load
 //! refusal met at run refuses the run; a hole amount's unit is the kind's leg unit where it
 //! is one, else a place's.
 
 use super::plan::{
-    Amount, Dated, End, HoleSrc, Inst, LegVal, date_of, invariant, num_err, quantity, refuse,
-    refuse_load, shown,
+    Amount, End, HoleSrc, Inst, LegVal, invariant, num_err, quantity, refuse, refuse_load, shown,
 };
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine};
@@ -33,32 +33,10 @@ impl Engine {
         let to_value = self.ev(m, &leg.to, &inst.env, ctx)?;
         let from = leg_end(m, inst, leg, from_value, "from")?;
         let to = leg_end(m, inst, leg, to_value, "to")?;
-        let day = match &leg.on {
-            None => inst
-                .day
-                .clone()
-                .ok_or_else(|| invariant("a leg of an instance with no day"))?,
-            Some(e) => {
-                let v = self.ev(m, e, &inst.env, ctx)?;
-                if v == Value::None {
-                    return Err(refuse(
-                        Run::None,
-                        format!("the day of leg {} of {} is none here", leg.name, inst.id),
-                    ));
-                }
-                if let Value::Window(w) = &v
-                    && let Some(day) = super::plan::day_window(m, w)?
-                {
-                    // a leg dated by a window no `windows each` chose a day of: a movement
-                    // dated by one, as the instance's own day (L §4.4)
-                    day
-                } else if let Value::Hole(h) = v {
-                    Dated::Hole(h)
-                } else {
-                    Dated::Day(date_of(&v)?)
-                }
-            }
-        };
+        let day = inst
+            .day
+            .clone()
+            .ok_or_else(|| invariant("a leg of an instance with no day"))?;
         let read = self.ev(m, &leg.amount, &inst.env, ctx);
         let src = matches!(read, Ok(Value::Hole(_))).then(|| {
             Box::new(HoleSrc {

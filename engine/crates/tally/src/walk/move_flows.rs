@@ -12,9 +12,7 @@
 
 use super::flows::span_last;
 use super::order::WalkAt;
-use super::plan::{
-    Amount, Dated, DayWindow, Exists, HoleSrc, Inst, LegVal, Status, invariant, qty_value,
-};
+use super::plan::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status, invariant, qty_value};
 use super::reads::refuse;
 use super::state::{LegOut, Progress};
 use crate::base::Run;
@@ -223,11 +221,10 @@ impl Engine {
                     }
                     Amount::Qty(q) => q,
                 };
-                let leg_day = lg.day.day().or(day);
                 let out = if q.is_zero() {
                     None
                 } else {
-                    self.leg_refused(m, (&i.id, &lg.name), leg_day, ctx)?
+                    self.leg_refused(m, (&i.id, &lg.name), day, ctx)?
                 };
                 if let Some(LegOut::Refused(err)) = &out {
                     return Err(Stop::Refused(err.clone()));
@@ -238,7 +235,7 @@ impl Engine {
                     // the review of group 2's fix, N-i)
                     let read = format!("flows of {}", mv.id);
                     acc.holes
-                        .push(flows_hole(mv, i, lg).unwrap_or_else(|| h.for_read(&read)));
+                        .push(flows_hole(mv, i).unwrap_or_else(|| h.for_read(&read)));
                     continue;
                 }
                 acc.add(q, lg.unit.as_ref())?;
@@ -467,12 +464,12 @@ impl Engine {
     }
 }
 
-/// The hole `flows` of move `mv` reads in leg `lg` of instance `i` where a test some of a
-/// window's days pass left it the window's hole: asked for flows of the move, of the leg's
-/// window or its instance's; none for a leg of a fixed day (refcore's `flows_move`, its
+/// The hole `flows` of move `mv` reads in a leg of instance `i` where a test some of a
+/// window's days pass left it the window's hole: asked for flows of the move, of its
+/// instance's window; none for a leg of a fixed day (refcore's `flows_move`, its
 /// `leg_refused` hole). L §4.4; tally 2.1.8 item 77.
-fn flows_hole(mv: &MoveInfo, i: &Inst, lg: &LegVal) -> Option<Hole> {
-    let ((Dated::Window(w), _) | (_, Some(Dated::Window(w)))) = (&lg.day, &i.day) else {
+fn flows_hole(mv: &MoveInfo, i: &Inst) -> Option<Hole> {
+    let Some(Dated::Window(w)) = &i.day else {
         return None;
     };
     let text = format!(

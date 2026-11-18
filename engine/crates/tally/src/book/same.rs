@@ -741,9 +741,8 @@ impl Engine {
     /// As [`Engine::obs_end_on`].
     fn books_ends_at(&mut self, m: &Reality, o: &Obs, place: &str, cut: Day) -> Result<bool, Stop> {
         for lg in &o.legs {
-            let day = lg.day.day().unwrap_or(o.day);
             for end in [&lg.from, &lg.to] {
-                if end.place() == Some(place) && !self.obs_end_on(m, o, place, day, cut)? {
+                if end.place() == Some(place) && !self.obs_end_on(m, o, place, o.day, cut)? {
                     return Ok(false);
                 }
             }
@@ -909,8 +908,8 @@ impl Engine {
         Ok(some_differ(&in_a, &in_b))
     }
 
-    /// Of places `places`, those row `o`'s own version covers on its legs' days (refcore's
-    /// `unjoined_refused`, `covered`). L §5.19 Coverage.
+    /// Of places `places`, those row `o`'s own version covers on its day, where it has a leg
+    /// (refcore's `unjoined_refused`, `covered`). L §5.19 Coverage.
     fn row_covers(
         &mut self,
         m: &Reality,
@@ -919,12 +918,12 @@ impl Engine {
         cut: Day,
     ) -> Result<BTreeSet<String>, Stop> {
         let mut out = BTreeSet::new();
-        for lg in &o.legs {
-            let day = lg.day.day().unwrap_or(o.day);
-            for p in places {
-                if self.covering(m, p, day, cut)?.contains(&o.version) {
-                    out.insert((*p).to_owned());
-                }
+        if o.legs.is_empty() {
+            return Ok(out);
+        }
+        for p in places {
+            if self.covering(m, p, o.day, cut)?.contains(&o.version) {
+                out.insert((*p).to_owned());
             }
         }
         Ok(out)
