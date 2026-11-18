@@ -18,7 +18,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, named_window, one_day};
+use super::windows::{as_read, named_window, names_only_written, one_day};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
@@ -203,15 +203,16 @@ impl Engine {
     }
 
     /// A pinned value `value` of figure `figure` named as an unknown day: a window written
-    /// there, no row's, is the unknown day of the figure pinned, its holes asked of it; one
-    /// that came from a row, or was computed from one, keeps its name and the days it carries
-    /// (refcore's `pin_value` read: a pin whose `Iv` has no origin; L §4.4 "a copy keeps the
-    /// name"; picks P30, P32).
+    /// there, which carries no name of its own, is the unknown day of the figure pinned, its
+    /// holes asked of it; one that came from a read, or was computed from one or from a
+    /// calendar's entry, keeps the names and the days it carries (refcore's `pinned_read`: a
+    /// pin whose `Iv` has no origin; L §4.4 "a copy keeps the name", "a computed value …
+    /// carries the names it was computed from"; picks P30, P32, P26).
     pub(super) fn pinned_window(value: Value, figure: &str) -> Value {
         let Value::Window(mut w) = value else {
             return value;
         };
-        if w.figure.is_some() {
+        if w.figure.is_some() || !names_only_written(&w.carry) {
             return Value::Window(w);
         }
         // a pinned window's holes are asked of the item it pins, as a row's of its row

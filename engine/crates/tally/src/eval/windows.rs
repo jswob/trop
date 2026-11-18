@@ -385,6 +385,19 @@ pub(super) fn named_window(v: Value, (id, label): (String, &str)) -> Value {
     Value::Window(w)
 }
 
+/// The unknown day a window written in the text is, its id: the window as written (refcore's
+/// `window_id` of an `Iv` with no origin). L §4.4.
+fn written_id(text: &str) -> String {
+    format!("src {text}")
+}
+
+/// Whether the unknown days `carry` holds are only windows written in the text, each named by
+/// its own text, so the value carries no name of its own: no read's, no calendar entry's
+/// (refcore's `Iv.origin is None`). L §4.4.
+pub(super) fn names_only_written(carry: &[Unknown]) -> bool {
+    carry.iter().all(|u| u.id.starts_with(&written_id("")))
+}
+
 impl Engine {
     /// `window(a, b)`: one day from a to b, not yet known (refcore's `c_window`). L §4.4, §8.4.
     pub(super) fn window_call(
@@ -422,7 +435,7 @@ impl Engine {
             read: None,
             carry: Vec::new(),
         }));
-        Ok(named_window(window, (format!("src {written}"), &written)))
+        Ok(named_window(window, (written_id(&written), &written)))
     }
 
     /// `one_of(ds)`: one of a list's days, not yet known (refcore's `c_one_of`). L §4.4, §8.4.
@@ -464,7 +477,7 @@ impl Engine {
             .ok_or_else(|| invariant("a one_of with no text"))?;
         Ok(named_window(
             Value::Window(Box::new(window)),
-            (format!("src {written}"), &written),
+            (written_id(&written), &written),
         ))
     }
 }
