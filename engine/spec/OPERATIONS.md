@@ -1,383 +1,227 @@
 # Tally: operations
 
-These are the structured edits Claude makes to a reality, and what each one returns. Together they are the MCP surface, without the MCP technology. Each operation gives:
-- its inputs;
-- its validation;
-- its errors.
-
-`LANGUAGE.md` says what a reality means, and `ENGINE.md` how it runs. This document says how a reality changes, and who may change it.
+How a caller uses the engine: its three operations, how each thing a caller does is written with them, what they leave to the store and what waits. `LANGUAGE.md` says what a text means and `ENGINE.md` how a run computes it; this document adds no meaning and no code.
 
 **Contents**
-1. The store, and the life of an amendment
-2. Add a fact (and import records)
-3. Add a law version
-4. Amend: add, advance, restate, revise
-5. Add a scenario patch
-6. End
-7. Plan
-8. Ask a question
-9. The rest of the surface
-10. Errors and warnings of the operations
+1. The surface
+2. The operations: `run`, `reprint`, `check`
+3. How each interaction is carried out
+4. What the surface leaves to the store
+5. What waits
+6. On paper: the seven changes and the kinds of card
 
 ---
 
-## 1. The store, and the life of an amendment
+## 1. The surface
 
-**The store** keeps a reality's files and their history. It is append-only: every accepted amendment is kept with its record time R, its author and its statement (spec §6.4, M-14). The reality as recorded at any R can be rebuilt and run, which answers "what did we think in March?" (N-1222, `ENGINE.md` §2).
-
-**Drafts and confirmation** (spec §6.2, C-10, DR6):
-- Claude may draft any amendment. A draft is kept in the store beside the reality, and no run of the reality reads it. A scenario run may read a draft law part, which the store loads with that scenario, with `WARN-DRAFT` on every result that reaches it (§3, §5, C-09).
-- Only `confirm`, by the household, applies an amendment to the reality, with two exceptions. A statement import applies when it passes the pipeline (§2.2): its records, stated balances, duplicate and hold restatements, and its exact matches, which apply under a rule the household confirmed once; its proposals wait for `confirm`. The store's `advance` of `on` as the calendar passes applies the same way (§4).
-- **Status lives outside the content.** The store records each file's status against the hash of its content:
-  - `draft`: written, not checked;
-  - `tested`: its gate passes (§3);
-  - `confirmed`: the household confirmed it.
-
-  Changing a file's content gives a new hash, which starts as `draft` again.
-
-**Every amendment** is:
-
-```
-amendment = { id,
-              base:      the reality hash it was written against,
-              author:    household | claude | importer | store,
-              statement: the household's words it comes from (required for scenarios, S-09),
-              kind:      add | advance | restate | revise,
-              changes:   added sections and lines, each with its file; for restate and revise, the edits,
-              reason:    required for revise }
-```
-
-**Every amendment goes through the same pipeline,** in order, and it stops at the first step that fails. Each operation below adds its own checks at step 2, so an import's `OP-CURRENCY` refuses a bank row before load, and `LOAD-UNIT` (LANGUAGE §5.18) is left for a record row the importer didn't make.
-
-| Step | Check | Error |
-|---|---|---|
-| 1. Base | `base` is the current reality. If not, the store re-applies the changes on the current reality and re-validates; a conflict is reported with both texts | `OP-BASE` |
-| 2. Shape | the changes parse as Tally (LANGUAGE §2.3) and name existing targets | `LOAD-PARSE`, `OP-TARGET` |
-| 3. Kind | an `add` adds lines only. An `advance` moves the header's `on` forward and changes nothing else. A `restate` changes no result. A `revise` touches no version (§4) | `OP-EDIT`, `OP-ADVANCE`, `OP-RESTATE` |
-| 4. Load | the reality with the amendment loads: every check of LANGUAGE §8.3 | `LOAD-*` |
-| 5. Gate | every law part the amendment touches passes its gate (§3). A law part is a `part` whose header carries `law` (LANGUAGE §6.1) | `OP-GATE` |
-| 6. Plan | the diff of outcomes is computed (§7) and returned with the draft | — |
-| 7. Confirm | the household confirms; the amendment is appended with its R. A statement import and the store's `advance` are appended without it (§1) | `OP-CONFIRM` |
-
-**Every result is typed** (spec §6.2, N-1906). It is `ok` with its data, or lists of errors, holes and warnings:
-- each error has a code (LANGUAGE §8, §10 below) and its location;
-- each hole has its question;
-- each number has its unit and a source tag.
-
-Results are small, and they have no prose: the MCP layer renders the Polish sentence from the codes and values.
-
-**Names.** Every operation names its targets by stable ids (LANGUAGE §2.5). A name that matches nothing, or more than one thing ("which account?", "which Marek?"), is `OP-TARGET` with the candidates, so the ambiguity becomes a question (A-17, N-1905).
+- **Three parties.** The **caller** (an LLM, or the app's code) writes Tally text and asks. The **engine** checks and answers. The **store** (the app's) keeps files, history, drafts, statuses and users; the engine doesn't know it exists.
+- **The engine is a pure function.** Files and a request in, printed text out. It reads no clock, keeps no state between calls and writes nothing (`ENGINE.md` §1, §11).
+- **A reality is a set of files** (`LANGUAGE.md` §6.1); **a change is a set of added files or lines** (§6.2, §6.3). The caller writes both as Tally text, and load checks them.
+- **A question is an ask** (`LANGUAGE.md` §5.18). One the reality doesn't hold is written in a file handed over with the reality's. Every number a caller reports comes from a printed result.
 
 ---
 
-## 2. Add a fact (and import records)
+## 2. The operations
 
-### 2.1 Add a fact
+Each operation is a command of the engine's binary and a call of its library (`engine/tests/INTERFACE.md` §1 to §4).
 
-The household states something true: a birth, a contract, a price paid, a choice made, a new account's opening balance (the account itself is a new place, added with `amend`, §4).
+**For all three.** A path is a file, or a directory: every `*.tally` file under it. A joint model's members are found from its `use` lines, relative to its file, each checked against its pin (`LANGUAGE.md` §6.1). The files are taken in full-path order, by code point, whatever order they are given in (`ENGINE.md` §3.1 step 1). Standard input and the environment are never read; everything prints to standard output. Exit 0 is an answer, 1 a refusal (the first line starts `refused: `), 2 a usage error.
 
-**Inputs:**
+### 2.1 `run`
 
-| Input | Required | Note |
-|---|---|---|
-| `facts` | yes | one or more `(target, keys, value)`, each target an input; a value may be `? "question"` or `-` |
-| `source` | yes | an existing source id, or a new source (id, title, location) |
-| `known` | yes | the day the household learned it; today if they just did |
-| `governs` | no | the span the facts govern; a row may carry its own |
-| `locator` | no | per fact: the page, clause or line |
-| `assumed` | no | per fact: the reason, when the household gives a figure the source doesn't |
-| `add_keys` | no | keys to add to list indexes: a person, a job, a loan |
-| `correction` | no | true when the fact fixes a record of something already true (LANGUAGE §4.5) |
-| `arrears` | no | for each pay the facts change after booking: `on D` or `none`, as for a law version (§3) |
+`tally run <path>… [--ask <id>…]`
 
-**It becomes** one new version: `cite source`, `governs`, `known`, the key additions, then the rows. One statement or one document is one version, so its facts share a source and a date and are diffed as a unit.
+- **Inputs.** The reality's files; after `--ask`, the ids of the asks to answer, a joint model's member's as `a.q`; with no `--ask`, every ask. `--pin=bytes` makes a `use` pin the sha256 of the member's file bytes, not of its canonical text.
+- **Result.** Each ask's printed result in `LANGUAGE.md` §5.18's form: values per binding and per reading, holes with their questions, per-value refusals with their codes, and under each result its register (`LANGUAGE.md` §8.1, §8.4, §8.2). The run's warnings print sorted by code, then by text (§8.5). Holes and per-value refusals are answers: exit 0.
+- **Refuses**, each as the one line, exit 1:
+  - a reality that doesn't load: `refused: LOAD-… <message>`, the first in full-path order (`LANGUAGE.md` §8.3); a member's as `refused: member <a>: …`;
+  - after load: `REQ-ASK no ask <q>`, the first unknown id in request order; `REQ-CLOCK`, a cut an ask states after `on`; `REQ-PATHS`, more than 100 000 paths for one ask (`ENGINE.md` §11).
+- **A scenario file that doesn't load** refuses that scenario and those over it; the base still answers, and each ask in such a world prints `scenario <s>: refused: …`, exit 0 (`LANGUAGE.md` §6.4).
+- **`ENGINE-INVARIANT`**, an engine fault, refuses every result that rests on the broken walk (`ENGINE.md` §9).
 
-**Validation:**
-- Every target is an input. A fact aimed at a def is refused (`OP-KIND`): a def is computed, and a stated result is a given, which needs a source that states it (§4, `add` of a given row).
-- Values have the input's type, unit and precision (`LOAD-UNIT`, `LOAD-PRECISION`).
-- `known` ≤ the model's `on` (`LOAD-KNOWN`). If the household learned it after `on`, an `advance` to that day comes first (§4): its plan shows what time passing did, and the add follows it.
-- The rows tie with no other row (`LOAD-OVERLAP`).
-- **New keys are checked against closed-world rows.** For each added key, the operation lists the reads that become holes because the default rows don't cover the new key (LANGUAGE §6.2), with their questions. Answering them is the household's next step.
-- **Back pay is listed** as for a law version (§3): every booked pay instance the version changes, with its δ, under each `arrears` line, and the instances no line covers, which become `HOLE-CHANGED` holes. The list is returned as `WARN-BACKPAY`.
+### 2.2 `reprint`
 
-**Returns:** the draft version, the plan (§7), the new holes with their questions, and the warnings.
+`tally reprint <path>…`
 
-**Errors:** `OP-TARGET`, `OP-KIND`, `OP-SOURCE` (no source given), and the `LOAD-*` codes above.
+- **Inputs.** As `run`; no asks.
+- **Result.** For each file in full-path order, `--- <path>` (a file given alone as given, a directory's files relative to it) and its canonical text (`LANGUAGE.md` §2.4). Last, `sha256 <hex>`, the reality's hash over those files (`ENGINE.md` §3.1 step 1): what a `use` line pins.
+- **Refuses** what `run`'s reading of the files refuses: a path that doesn't exist (`LOAD-PATH`), bytes that aren't UTF-8 or text that doesn't parse (`LOAD-PARSE`). A text that parses but doesn't load still reprints.
 
-### 2.2 Import records
+### 2.3 `check`
 
-The import pipeline delivers bank rows (spec §6.1). Each row carries:
-- its date, amount and currency;
-- the account;
-- the counterparty and category, as registry ids;
-- the source's own row id;
-- its record time.
+`tally check <path>…`, specified here and built at M3 (`BUILD-ORDER.md` § M3).
 
-A batch also says which account and period it covers: a statement.
-
-**It becomes** one version per statement:
-- `cite` the bank's export, `governs` the statement's period, `known` the day the statement was available, `covers` its accounts;
-- one row of the movement input per bank row (LANGUAGE §5.18);
-- the statement's closing balances as `stated` rows, each with its own `governs` on the statement's last day (`stated[konto] = 10214.55 governs 2026-03-31`, LANGUAGE §5.18).
-
-**The engine does the bookkeeping:**
-- **Ids.** The account maps to a place, through rows of the built-in input `account_place[a]`. The source row id becomes the record key, so a correction keeps the row's id.
-- **Duplicates.** A row whose id is already there with the same content is dropped. With different content, it becomes a `correction` version restating that key.
-- **Card holds.** A pending hold has its own key. When it books, the pipeline names the hold it replaces, and the booked row restates the hold's key (N-1207).
-- **Matching** (spec §6.1, P-08, P-20, P-23). For each record, the candidate instances are those of pays that:
-  1. touch the record's place, in the record's direction;
-  2. have their other end at the outside place that the record's counterparty maps to (rows of the built-in input `party_place[c]`), when that end is an outside place;
-  3. are dated within `match_days[p]` days of the record, either way (an `int`);
-  4. have an amount that differs from the record's by at most `match_amount[p]` (money of the record's place's currency).
-
-  `match_days` and `match_amount` are built-in inputs per pay. Their rows are data with a source, confirmed once by the household. A pay with no rows is matched with a window of 0 days and a tolerance of 0, and gets proposals only: its matches are proposed, never written. Then:
-  - **exact:** one candidate, and it has the record's day and amount. The link is written in the record's `explains` field, with the provenance "matched exactly by the confirmed rule";
-  - **near:** one candidate, on another day or with another amount. It is proposed, never written;
-  - **ambiguous:** two or more candidates, whether or not one has the record's day and amount. They are proposed together, for the household to choose;
-  - **none:** the record stays unexplained.
-  - **a new counterparty** (no `party_place` row) on a record with no candidate: the record is unexplained, and the import asks whether the money is still ours (a claim place) or gone (an outside place) (P-15). A candidate whose other end is the household's own place needs no mapping (criterion 2).
-
-  A proposal the household confirms becomes a `correction` version that restates the record with its link: the record was always that instance's.
-
-**Returns:** counts of rows booked, linked exactly, proposed, unexplained, duplicate and corrected; the proposals; the stated-balance check for each covered account (`ENGINE.md` §6.3).
-
-**Errors:** `OP-ACCOUNT` (an account with no place), `OP-CURRENCY` (a row in another currency than its place), `LOAD-COVERS`, and the load codes.
+- **Inputs.** As `run` (the same paths, order and members with their pins); no asks.
+- **Does** everything load does (`ENGINE.md` §3.1; `LANGUAGE.md` §8.3), every ask's own load checks included, and stops: it evaluates and walks nothing.
+- **Result.** `ok` on the first line when the base and every scenario file given load, then the warnings load decides (`WARN-UNREAD`) in `LANGUAGE.md` §8.5's order. Exit 0.
+- **Refuses.** A base that doesn't load: its one `refused: CODE message` line, as `run` prints it. A base that loads beside a scenario file that doesn't: `scenario <s>: refused: …` for each such file in full-path order, then the warnings. Exit 1 when the first line isn't `ok`.
+- **It adds no code:** every line it prints is one `run` can print.
+- **`ok` isn't a clean run.** `REQ-ASK`, `REQ-CLOCK`, holes and per-value refusals come only from `run`.
 
 ---
 
-## 3. Add a law version
+## 3. How each interaction is carried out
 
-A law changes: a new act, a new year's figures, a court's reading, a retroactive amendment.
+Each recipe is a few lines of Tally text or one command; the ids are the design map's (issue #7). Most examples run on one small model: a job `acme`, an account `konto`, an outside place `world`.
 
-**Inputs:**
+### 3.1 Asking
 
-| Input | Required | Note |
-|---|---|---|
-| `part` | yes | the law part (file) it belongs to: a `part` whose header carries `law`; a new act is a new law part |
-| `source` | yes | the act and its location: Dz.U. position, URL, paragraph |
-| `governs` | yes | the span it applies to (`applies` in the spec) |
-| `known` | yes | the day its text was made public in the form that binds: its publication in the official journal where it binds only once published, else its assent or making (LANGUAGE §4.5, decision 32; `known_from`, L-24) |
-| `enters` | when it differs from the default | the day it enters into force, where that isn't the later of `known` and the start of `governs` (LANGUAGE §5.3) |
-| `arrears` | when it reaches back | for each pay it changes after booking: `on D` or `none`; in a later version, `on D of V` or `none of V` answers back pay an earlier version V left open (LANGUAGE §5.13.3) |
-| `moves` | when it postpones or extends an earlier version | `V to SPAN` (LANGUAGE §5.3) |
-| `assumed` | when the version stands in for a text it doesn't cite | the reason, naming the text (LANGUAGE §4.5, §5.3) |
-| `rows` | no | the changed figures, each with its locator |
-| `bands` | no | each band that changes, as a whole table (LANGUAGE §5.8) |
-| `rules` | no | new rule lines, with `v` set to this version: the same label to replace a formula from this version on, or a new label with `excepts` for a new exception |
+- **ASK-2, a question not saved.** Write the ask line in a new file, and name its id in the run:
+  ```
+  part question
+    tally 2
 
-**It becomes** one version in the law part, with any rule lines added to their defs.
+  ask q_oct: bal(konto, 2026-10-31)
+  ```
+  `tally run <the reality's files> question.tally --ask q_oct`. Its id must be new (`LOAD-DUP`). A line that doesn't load refuses the whole run, so `check` it first.
+- **ASK-3, a past view, a what-if, paths, a fixed figure.** The ask's clauses (`LANGUAGE.md` §5.18): `as known D`, `in s`, `paths N seed S`, `with x = v`. `ask q_then: bal(konto, 2026-12-31) as known 2026-10-05`.
+- **ASK-4, the same pins on every ask.** Write the `with` clause on each line: `ask q_raise: bal(konto, 2026-12-31) with salary[acme, 2026-12] = 9 000.00 PLN`. The register prints each pin (`pinned:`).
+- **ASK-5, explain a number.** `ask q_why: explain bal(konto, 2026-10-31)`; `explain ref` for a cell (`ENGINE.md` §10).
+- **ASK-6, describe an item.** The text itself, canonical from `reprint`; `readers-of x` lists what reads it, `inputs-of ref` the rows a cell read.
+- **ASK-7, compare the model with the bank.** `ask q_resid: residuals konto 2026-10` prints the residual ledger by month and move (`ENGINE.md` §6.3); `explain bal(konto, 2026-10-31)` lists every movement since the anchor.
+- **ASK-10, save a question.** Keep the ask line in a file of the reality, `asks/<topic>.tally` (`LANGUAGE.md` §6.1).
+- **ASK-12, fit a parameter; replay one path.** One run per trial value, the parameter pinned by `with` (`ENGINE.md` §6.4); `path p` replays one path (`LANGUAGE.md` §5.16).
 
-**Validation:**
-- All load checks. In particular, every band table is complete (`LOAD-BAND`), and each rule's label and `excepts` exist (`LOAD-EXCEPTS`).
-- **Back pay is listed.** When `governs` starts before `known`, the operation lists every booked pay instance the version changes, with its δ, under each `arrears` line. Instances that no line covers will be `HOLE-CHANGED` holes, until a later version answers them with `arrears … of` this version. The whole list, covered instances and holes alike, is returned as `WARN-BACKPAY`, so the author sees them before confirming (§10).
-- **The gate** (DR7, C-12, C-24, L-30). A law part is read by the reality only once it is `tested`. The gate runs these steps in order, and stops at the first that fails:
-  1. **Load.** The part loads with the reality (every check of LANGUAGE §8.3).
-  2. **Sources.** Every row and every rule with a figure points at a version with a source and a locator. Rows can't exist without a version, so this checks only the locators.
-  3. **Checks.** Every `check` ask in the part passes. Two kinds are kept (L-32):
-     - **independent checks:** the law's own published examples, payslips and real returns (L-35), collected by someone who isn't the author (L-31). The author doesn't see them before the gate runs (L-33). They are the cross-check (L-34);
-     - **the author's own checks**, which add coverage but aren't evidence.
-  4. **Coverage.** Every rule of every def in the part, and every pay's amount, is reached by at least one check, and every rule wins in at least one check's `explain`. A rule no check reaches is listed, and the gate fails. Steps 4 to 6 skip rules whose value is `?`: a hole rule asserts nothing, so a part of stubs alone (a law not yet written, LANGUAGE §6.5 change 5) is `tested` at once, and every result that reaches it is a hole with its question.
-  5. **Planted errors** (mutation tests). The engine makes copies of the part, each with one planted error: a comparison flipped, `<` made `≤`, a rounding mode or unit changed (L-37), a band edge moved by one unit, an `excepts` dropped, a rule's `v` moved to the previous version. At least 80% of the copies must fail a check. The surviving ones are listed, since each shows a part of the law that nothing tests.
-  6. **Threshold table** (C-24, L-38). Every band edge and every `when` comparison on an input is evaluated just below, at and just above the edge, over the part's checks' inputs. The table is printed for review. It holds no expected answers; it shows where the law jumps.
-  7. **Status.** The part is `tested`, recorded against its hash (§1).
+### 3.2 Names and members
 
-  **A published figure that disagrees with its own law** (L-41) is a check that expects the law's figure. Its row cites the errata or a second source, and its note keeps the published figure, so the gate prints both.
+- **TXT-3, which thing was meant.** Write the name. A wrong or ambiguous one is refused at load, naming it: `refused: LOAD-KEY kotno is not a key of places`, `LOAD-NAME unknown id <x>`, `LOAD-KEY ambiguous key <key>`. The caller asks the person which one was meant.
+- **TXT-6, pin a joint model's member.** `tally reprint <the member's files>`, and put its last line's hash in the joint model's header:
+  ```
+  use a = "../base/reality.tally" sha256 "a08b16d3…"
+  ```
+  The member's items are then read as `a.konto`, its asks asked as `a.q`.
 
-  **Who writes law doesn't matter** (L-40): Claude's parts, the household's and the importer's pass the same gate. A failing gate refuses the version in the reality (`OP-GATE`). The draft may still be used in a scenario, with `WARN-DRAFT` on every result that reaches it (C-09).
+### 3.3 Changes
 
-**Returns:** the draft version, the gate's results and the threshold table, the back pay list, and the plan (§7).
+- **CHG-1, add a fact.** A version with its rows (`LANGUAGE.md` §5.3, §6.5 change 6), in a new file or at the end of one:
+  ```
+  version house_overpay_2028_05
+    cite stmt_2028_05
+    governs 2028-05
+    known 2028-05-20
+    overpay[house, 2028-05] = (amount: 10 000.00 PLN, choice: shorter) "nadpłata 10 000 zł, skrócenie okresu"
+  ```
+- **CHG-2, add a law version.** A version with `replace` rows where a figure changes, and `replace rule d.r` where a formula does (`LANGUAGE.md` §6.5 change 2).
+- **CHG-3, the back pay a change opens.** Run after a version that reaches back. Each booked instance it changed prints as a hole, `?"wage[2026-10, acme] on 2026-10-10 changed after it was paid (version raise_oct); is back pay due, and when?"`, with the register line `adjustment: wage[2026-10, acme] by 500.00 PLN on 2026-11-04 (version raise_oct), remaining 500.00 PLN`. The answer is a move that fulfils the adjustment, or one with no legs that waives it (`LANGUAGE.md` §6.5 change 3).
+- **CHG-4, what a new thing leaves unanswered.** Run after the entry. The reads at the new keys print as holes with their questions (`HOLE-UNGOVERNED`) or as `RUN-NO-RULE`; a closed-world row is restated with `replace` (`LANGUAGE.md` §6.2).
+- **CHG-5, end something.** Its lifespan, `replace jobs + [acme] lives 2020-02-01..2026-11-30`, and rows `none` where a fact stops. A leg that still moves into or out of it is refused (`RUN-LIFESPAN`).
+- **CHG-6, add structure.** New sections (kinds, places, inputs, defs, moves) in a new file (`LANGUAGE.md` §6.5 change 5).
+- **CHG-7, move `on` forward.** Rewrite the header's `on` line. A version known after `on` is refused until it moves: `refused: LOAD-KNOWN version statement_2026_10 is known after the model's on date`.
+- **CHG-11, what does this change?** Two runs, without and with the added files, the same asks; the caller compares the printed lines. Within one reality, `diff(e) in s against b` compares a scenario with its base.
 
-**Errors:** `OP-GATE`, `LOAD-ARREARS`, `LOAD-BAND`, `LOAD-EXCEPTS`, `LOAD-MOVES`, `LOAD-OVERLAP`, `LOAD-KNOWN`.
+### 3.4 Scenarios
+
+- **SCN-1, write a what-if and compare it.** A scenario file (`LANGUAGE.md` §6.4), asked in its world or against its base:
+  ```
+  scenario acme_stops over mini
+    tally 2
+    from 2026-12-01
+
+  version acme_stops_pay
+    cite s
+    governs 2026-12-01..
+    known 2026-10-19
+    salary[acme] = 0 PLN "założenie scenariusza"
+
+  ask q_diff: diff(bal(konto, 2026-12-31)) in acme_stops against mini
+  ```
+  It prints `changed bal(konto, 2026-12-31): 15 000.00 PLN against 22 000.00 PLN`.
+- **SCN-3, make a what-if real.** Copy its versions into a file of the reality with `known` the day it became real (`on` moved there if needed), and drop the scenario file or rename the copies (one version id in both is `LOAD-DUP`). An expression row is refused outside a scenario (`LOAD-SCENARIO`): write its value, read from a run in the scenario. A later `known` gives adjustments the scenario didn't (`LANGUAGE.md` §6.4).
+
+### 3.5 Bank statements
+
+- **IMP-1, a bank export as rows.** One version per statement: `covers` its place, `anchor` or `pad`, one observed row per bank row, keyed by the bank's own row id, and the closing balance as a `stated` reading (`LANGUAGE.md` §5.19):
+  ```
+  version statement_2026_10
+    cite bank_2026_10
+    governs 2026-10
+    known 2026-11-02
+    covers konto
+    anchor konto
+    bank[r1] = (on: 2026-10-10, kind: wages, leg cash from world to konto amount 7 000.00 PLN, fulfils: wage[2026-10, acme]) "line 1"
+    bank[r2] = (on: 2026-10-12, kind: transfers, leg cash from konto to world amount 120.00 PLN) "line 2"
+    stated[konto] = 7 900.00 PLN at 2026-10-31 end "saldo końcowe"
+  ```
+- **IMP-2, duplicates, corrections, card holds.** The row's key is the bank's id, so a row already written isn't written again. A correction restates the key in a later version, `replace bank[r1] = (…)`; a row that never happened, or a hold that never booked, is `replace bank[r2] = none`; a hold that books restates the hold's key. The correcting version states `covers` the place too, so the row is booked there.
+- **IMP-3, a statement's closing balance.** The `stated` reading. Every balance read after it prints `anchor: konto 2026-10-31 end, stated 7 900.00 PLN, difference 20.00 PLN`; `residuals` prints the same gap.
+- **IMP-4, match bank rows to planned movements.** The caller reads `residuals` (`expected but missing wage[2026-10, acme]`, `unexplained bank[r1]`) and the register's `open:` lines, and writes `fulfils` on the row: in the statement, or later by a `replace` of the row (IMP-2). The engine checks each link at the ask's cut (`RUN-RECORD`) and proposes none.
+
+### 3.6 Law
+
+- **LAW-1, run a law file's checks.** `check e == f` asks in the law part, each side a def or a row with its source, never a bare figure (`LOAD-LITERAL`):
+  ```
+  ask pit_check: check pit[acme, 2026-11] == pit_expected law 2026-11-01
+  ```
+  `run` answers them like any ask: `ok`, or `differs: e = …, f = …` with the difference (`LANGUAGE.md` §5.18).
 
 ---
 
-## 4. Amend: add, advance, restate, revise
+## 4. What the surface leaves to the store
 
-The general change, for anything the specific operations don't cover. Examples: a new place, a new pay, a new def, a new ask, a new rule, a given, a fix of the model's own wiring.
+Each needs a store, a user or a clock, so it is the app's. They are named so the app's builder knows what the surface leaves; none is specified here.
 
-**Inputs:** `base`, `kind`, `changes` (as in §1), `reason` (required for `revise`).
-
-**The four kinds** (LANGUAGE §6.2):
-
-| Kind | What it may change | Validation |
-|---|---|---|
-| `add` | adds sections and lines, anywhere. Removes and edits nothing | the text diff against the base has only added lines (`OP-EDIT`) |
-| `advance` | the header's `on`, forward, and nothing else: time passing. It changes results, since `on` is the default cut and the plan's start | the new `on` is later than the old (`OP-ADVANCE`), and no other line changes (`OP-EDIT`); the plan is shown: what moved from plan to past, and what the versions known by the new `on` change |
-| `restate` | edits that change no result: a note, a locator, a source's title, moving items between files, reordering | the reality is run before and after over every saved ask and the whole timeline. Every result and every movement must be equal (`OP-RESTATE`) |
-| `revise` | edits of defs, pays, places, fills, draws and asks: the model was wrong, not the world | it touches no version (`OP-EDIT`); `reason` is given (`OP-EDIT`); every law part it touches passes its gate again; the plan is shown |
-
-- A version is never edited by `revise`. A wrong fact is a `correction`. A changed law is a new version.
-- A revised law def returns to `draft` until its gate passes.
-
-**Given rows.** A row aimed at a def (LANGUAGE §5.10) is added with `add`, inside a version whose source states that result. Example: a court's figure, or a tax office's decision. The operation refuses a given whose source is the household's own assumption (`OP-GIVEN`). A guessed result is an `assumed` input row, not a given.
-
-**Returns:** the draft, the plan (§7) and, for `restate`, the proof that nothing changed. An `advance` is the store's to make: it follows the calendar, or an add whose `known` is after `on`.
-
-**Errors:** `OP-EDIT`, `OP-ADVANCE`, `OP-RESTATE`, `OP-GIVEN`, `OP-GATE`, and the load codes.
-
----
-
-## 5. Add a scenario patch
-
-The household asks "what if …" (S-01 to S-12, LANGUAGE §6.4).
-
-**Inputs:**
-
-| Input | Required | Note |
-|---|---|---|
-| `statement` | yes | the household's words. Claude never proposes a scenario (S-09, A-19, spec §4#34) |
-| `scenario` | yes | a new id, or an existing scenario to extend |
-| `from` | for a new scenario | the day from which it changes anything |
-| `over` | no | the scenario it stacks on (S-02) |
-| `changes` | yes | versions of rows (no `known`), key additions, and new sections (places, inputs, defs, pays, asks) |
-
-**It becomes** the scenario's file, or an `add` to it.
-
-**Validation:**
-- `statement` is present (`OP-STATEMENT`).
-- **The scenario rules hold** (`LOAD-SCENARIO`):
-  - no row starts before `from`;
-  - no version has `known`, `arrears` or `correction`;
-  - the stack is at most 4 deep;
-  - nothing in the reality reads the scenario's items (a rule that points at a scenario version with `v` is not a read: outside the scenario it is never a candidate, LANGUAGE §6.4).
-- A law part that is only `draft` may be used, with `WARN-DRAFT`.
-- **Linked overrides** (S-07) need no preset. A scenario that pins the price index changes whatever the model derives from it: wages, rents, limits. The plan lists what moved.
-- **Valid but wrong** (S-08): the model's own `check` asks run in the scenario, so a scenario that buys the flat while the rent goes on fails the household's check "one housing cost at a time". The failure is returned as a warning on the scenario: the check's own result, `differs: e = …, f = …` (LANGUAGE §5.16), which refuses nothing and has no code of its own.
-
-**Scenario life:**
-
-| Operation | What it does |
+| Id | The store's |
 |---|---|
-| `scenario.patch` | the above |
-| `scenario.stale` | lists `WARN-STALE`: where the reality has changed under what the scenario overrides (S-05) |
-| `scenario.promote` | turns the scenario's versions into one reality amendment, with `known` = today, `governs D..` (D the scenario's `from`) for a version with no span of its own, and the household's statement. It goes through the pipeline and needs `confirm`. The scenario file stays, or is dropped |
-| `scenario.drop` | removes the scenario file. Scenarios aren't reality, so this is allowed; the store keeps the history |
-
-Rebasing is automatic: a scenario is always read over the current reality (LANGUAGE §6.4). A target can't vanish under it, because ids and keys are never removed. A thing that ended has rows that say so.
-
-**Returns:** the scenario's file, the plan against its base (§7), the warnings, and the model's checks that fail in it (S-08).
-
-**Errors:** `OP-STATEMENT`, `LOAD-SCENARIO`, and the load codes.
-
----
-
-## 6. End
-
-Something stops: a job ends, a loan is repaid early, a rent contract ends, an account is closed, a person dies, an act is repealed.
-
-**Inputs:** `target` (a key of a list index, or an act's rule label), `end` (the first day it no longer holds), `source`, `known`.
-
-**It becomes** one version whose rows make the thing 0 or `-` from `end`.
-- The operation finds every input keyed by the target with a row open past `end`.
-- It proposes the ending row for each: 0 for money and counts, `-` for everything else, `false` for a membership or a flag.
-- Claude or the household accepts each proposed row into the draft, or changes it; the version applies only by the household's `confirm` (§1). For example, a loan's terms stay, and its balance ends by its own schedule or by a final overpayment row.
-- **For a repeal,** the operation proposes a rule with the same label, `v` set to the repealing version and value 0 or `-`, and asks about back pay as in §3.
-
-**Validation:**
-- After the version, every pay touching the target books nothing from `end`, and every place it owns can reach 0. Otherwise the operation lists what still runs (`WARN-ENDED`): the "loan that kept paying after its last instalment" (spec §3.9).
-- **A pay that data can't stop is refused** (`OP-END`): its amount and `when` read no input keyed by the target. The fix is a `revise` that gives the pay its data, such as a `when` on the target's membership. Then the end is an `add`.
-
-**Returns:** the draft version, the proposals, the plan.
-
-**Errors:** `OP-END`, `OP-TARGET`, and the load codes.
+| ASK-11 | saved analyses |
+| TXT-4 | a snapshot: the hash is `reprint`'s, the open holes `run`'s, the files and statuses the store's |
+| CHG-8 | a check that a change only adds |
+| CHG-9 | a restatement, proved by two runs that print the same |
+| CHG-10 | a revision, with its reason |
+| SCN-2 | whether the base moved under a what-if (`WARN-STALE`, `LANGUAGE.md` §8.5): a run has no file times |
+| SCN-4 | dropping a what-if |
+| LAW-3 | keeping untested law out of real answers, by statuses kept against `reprint`'s hash |
+| STO-1 | the files and their history; record time R (`ENGINE.md` §2) |
+| STO-2 | drafts, statuses, confirmation |
+| STO-3 | who wrote a change, from whose words |
+| STO-4 | two changes written against one base |
 
 ---
 
-## 7. Plan
+## 5. What waits
 
-"What does this change?" Given a draft amendment or a scenario, `plan` gives the diff of outcomes (N-1802, the brief's "plan").
+Real, and not in the first version; each with what a caller does meanwhile.
 
-**Inputs:** `amendment` (a draft id) or `scenario`; `asks` (default: every saved ask); `paths` (optional, for path statistics).
-
-**Output**, sorted by size within each part:
-1. **Movements:** added, removed and changed, by pay instance, with the first day of difference.
-2. **Balances:** per place, the first day that differs, the largest difference, and the difference at E.
-3. **Ask results:** before and after. This includes holes and refusals that appear or disappear, with their questions.
-4. **The register:** new assumptions, givens, held figures, readings and bounds.
-5. **Warnings:** new and cleared.
-6. **Sanity:** the first day anything differs, over movements and balances: the first day a movement is added, dropped or changed, or a place's end-of-day balance differs. Register entries and ask cells aren't dated here, since a keyed cell's period can start before the movements that change it; a plan with no such day passes. That day must not be before the earliest day the amendment's versions govern (a row's own span, else its version's; a version with no `governs` governs every date, LANGUAGE §5.3) or the scenario's `from` (for a scenario, `ENGINE.md` §9 checks it). An amendment that adds no version (an `advance`, a `revise`, an `add` of sections only) has no such bound: its first day is shown, unchecked.
-
-**Validation:** the same as the amendment's own pipeline, steps 1–5.
-
-**Cost:** the cone of the change only (`PERFORMANCE.md` §4). Path statistics run after the deterministic answer, or come from the cache (spec §7).
-
-**Errors:** those of the amendment.
-
----
-
-## 8. Ask a question
-
-**Inputs:**
-- an `ask`: the text of an ask (LANGUAGE §5.16), or a saved ask's id;
-- `scenario`, `as_known`, `paths`, `seed`: optional, the same as the ask's own options;
-- `save`: optional, the `asks/` file to add the ask to (below).
-
-**Validation:**
-- The ask parses and loads against the reality: `LOAD-ASKONLY`, `LOAD-FORKS`, `LOAD-ORIENT`, `LOAD-BOUND`.
-- **It can't move money.** Its grammar has no pay, so this is unrepresentable (C-19, F27).
-- An ask isn't saved unless `save` is given. Then it is an `add` to an `asks/` file.
-
-**Returns:** the printed result of LANGUAGE §5.16:
-- the values per binding and per reading, with their units;
-- the holes, with their questions;
-- the refusals, with their codes;
-- the register;
-- the warnings;
-- for paths, the statistics with their standard errors.
-
-Every number in Claude's answer comes from here (Q-04).
-
-**Saved analyses** (S-10): `analysis.save` stores an ask file, the scenarios it uses, the record time R of the reality it ran on, the result and its hash. It reopens by reading the stored result, or by re-running it on the reality as recorded at R (§1), which gives the same result. A re-run on the current reality is a new analysis.
-
-**Errors:** `REQ-ASK`, `REQ-CLOCK`, `REQ-PATHS` (`ENGINE.md` §11), and the load codes.
-
----
-
-## 9. The rest of the surface
-
-The other tools of A-21 and A-23 are thin wrappers over the operations above and the engine:
-
-| Tool | Is |
-|---|---|
-| `snapshot` | the current reality's hash, its files and their statuses, the counts of items, the open holes with their questions |
-| `catalog` | the reference card: the catalogue, LANGUAGE §2, §5 and §8, cut to about the prototype's 13k tokens; the whole contract (A-01, `BUILD-ORDER.md` M3) |
-| `describe(id)` | the item's declaration, its rows by version with sources, its rules with their versions, its questions, and what reads it |
-| `record` | §2.1 and §2.2 |
-| `confirm(id)` | step 7 of the pipeline; the household only |
-| `scenario.patch` | §5 |
-| `run` | `ENGINE.md` §1 over the saved asks |
-| `query` | §8 |
-| `explain(ref)` | LANGUAGE §5.16, `ENGINE.md` §10, for a cell, a pay instance (with its corrections and holes), a balance (every movement since its anchor) or a path value; a record's matching is `drill` |
-| `history` | the store's amendments by record time, with authors and statements |
-| `reconcile(from, to, by)` | the ask `residuals x from..to by f` for each covered place (`ENGINE.md` §6.3) |
-| `drill(line)` | one ledger line: the records and the instances side by side, matched pairs and leftovers, with dates |
-| `trial(patch)` | §7 on a draft, with the residuals before and after: mismatches fixed and mismatches created |
-
----
-
-## 10. Errors and warnings of the operations
-
-These are added to the language's catalogue (LANGUAGE §8). Every error names the amendment, the file and the line.
-
-| Code | Message | What Claude does |
+| Id | What waits | Meanwhile |
 |---|---|---|
-| `OP-BASE` | `written against <hash>, the reality is now <hash>; conflict at <item>` | re-reads the item and rewrites the change |
-| `OP-EDIT` | `an add changes line <n>`; `a revise touches version <v>`; `a revise without a reason` | rewrites it as an addition, or as a correction version, or states the reason |
-| `OP-RESTATE` | `restate changes <results>` | makes it a `revise` with a reason, or an `add` |
-| `OP-ADVANCE` | `advance moves on from <a> to <b>, not forward` | states a later day |
-| `OP-TARGET` | `<name> matches nothing` or `matches <a>, <b>` | asks the household which |
-| `OP-KIND` | `<target> is a def; a fact is aimed at an input` | adds the input, or a given with its source |
-| `OP-SOURCE` | `a fact without a source` | asks where it comes from |
-| `OP-GIVEN` | `a given from an assumption` | writes an `assumed` input row instead |
-| `OP-GATE` | `law part <p>: check <q> fails: <expected> vs <got>` | fixes the law, or uses it only in a scenario as a draft |
-| `OP-STATEMENT` | `a scenario without the household's statement` | doesn't create it |
-| `OP-CONFIRM` | `confirm by <author>` | asks the household |
-| `OP-END` | `<pay> can't be stopped by data` | revises the pay to read the target's data, then ends it |
-| `OP-ACCOUNT` | `account <a> has no place` | adds an `account_place` row |
-| `OP-CURRENCY` | `row <r> is in <cur>, its place in <cur'>` | fixes the mapping |
+| ASK-8 | the whole timeline as data | asks over `bal` and `flows` |
+| ASK-9 | answers as typed fields | the printed form, fixed to the byte |
+| TXT-5 | the reference card | `LANGUAGE.md` is the contract |
+| TXT-7 | migration to a newer tally version | `MIGRATION.md`, applied by a writer |
+| LAW-2 | a gate on a law part: coverage, planted errors, the threshold table | the law's checks are run (LAW-1) |
+| STO-5 | results kept under their hash | every call computes |
+| STO-6 | the engine kept warm between calls | every call loads |
+| VER-1 | which engine this is: the tally version and the build (`LANGUAGE.md` §9) | the store knows which binary it runs; a file that states another tally version is refused at load |
 
-| Warning | Means |
-|---|---|
-| `WARN-BACKPAY` | a version, of law (§3) or of facts (§2.1), changes booked pays; the list says which lines cover them and which become holes (§3) |
-| `WARN-DRAFT` | a result reaches a law part that isn't `tested` (scenarios only, §3) |
-| `WARN-ENDED` | after an end, something keyed by the target still moves money (§6) |
+---
+
+## 6. On paper
+
+### 6.1 The seven changes (`amendments/changes/`)
+
+Each change file holds its diff, and each is carried out in three steps:
+1. Add the change's files, and rewrite `on` to the change's `known` date where it is later.
+2. `check` the reality with them: `ok`, or the refusal to fix.
+3. `run` the household's asks without and with the change, and compare the printed lines.
+
+| # | Added | What is read off the run with it |
+|---|---|---|
+| 1 | `facts/2027.tally`: client C's entry, fee and terms; `on` 2027-01-20 | the asks' changed values; no new hole, since client C's rows are stated |
+| 2 | two law versions in `law/pl/common.tally`, one known before `on` (a late entry); `on` 2026-12-18 | the values that read the 2027 minimum and projected wage |
+| 3 | in `law/pl/business.tally`: the retroactive health version, an input and the move that waives its adjustments; `on` 2027-06-15 | the health payments the version changed, and no `HOLE-CHANGED`: the waiver fulfils their adjustments |
+| 4 | `facts/2028.tally`: Ola's birth; later the 800+ claim with the move that settles its back pay; `on` 2028-05-14, then 2028-06-02 | Ola's keys in every ask over persons; the May benefit's back pay, settled by the added move |
+| 5 | `abroad.tally` (a kind, places, inputs, moves), the stub law part `law/de/employment.tally`, `facts/2029.tally`; `on` 2029-05-01 | the holes with the stub's question, at every result that needs the German law |
+| 6 | `facts/2027.tally`: the car loan's version, later the overpayment's; `on` 2027-04-02, then 2028-01-08 | the loan's instalments and its end; the shorter term |
+| 7 | `scenarios/wife_stops.tally`; `on` stays | each ask `in wife_stops`, or `diff(e) in wife_stops against tropek`; nothing before 2027-01-15 differs |
+
+### 6.2 The kinds of visible card (`engine/tests/cases/README.md`)
+
+| Card | Added | Called | Read off |
+|---|---|---|---|
+| a value | the card's ask in an ask file | `check`, then `run --ask <q>` | the value line, with its unit |
+| a partial | the ask, marked `partial` | `run --ask <q>` | the known part and each named hole with its coefficient (`LANGUAGE.md` §5.18) |
+| a refusal | the ask | `run --ask <q>` | the hole's questions, or `refused: CODE message` at the value |
+| by-case | the ask; the reading as an axis (`LANGUAGE.md` §5.5) | `run --ask <q>` | one result per option, each with its `reading:` line |
+| a relation | the asks it relates, or a `check e == f` ask | `run`, or two runs for a metamorphic relation | `ok` or `differs:`; or the two printed results compared |
+| a random figure | the ask with its query and `paths N seed S` (`LANGUAGE.md` §5.16) | `run --ask <q>` | the statistic and its standard error |
+| a joint household | a joint model, each member pinned by `reprint`'s hash | `reprint` per member, `check`, `run --ask a.q …` | each member's answers as `a.q`, the joint model's own asks |
+| a writing passage | the passage, written as Tally text | `check`, then `reprint` | `ok` and the canonical text; it has no key |
