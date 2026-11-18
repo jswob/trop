@@ -26,7 +26,7 @@ use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, re
 use super::windows::{imprecise, interval, one_day, single, window_days};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Code, KeyVal, Reality, Value, Window};
+use crate::model::{Code, KeyVal, Reality, SamePair, Value, Window};
 use crate::num::Num;
 use crate::read::{Asked, Found, read_input, row_span};
 use crate::syntax::{Call, Expr, Postfix, Stop, Value as Written};
@@ -463,8 +463,8 @@ impl Engine {
     /// end before the edge, so its outcome is the first refusal or hole the walk meets in day
     /// order, else the edge's `RUN-LIMIT` (L §8 head R1; tally 2.1.8 R11, pick P26). Both
     /// change only where a row's span starts or ends, so the walk reads the day after `from`
-    /// and those days, in day order: of the calendar's rows and of an input a row of it reads
-    /// as a whole ([`inputs_followed`]). A refusal
+    /// and those days, in day order: of the calendar's rows, of an input a row of it reads as
+    /// a whole, of a row stated `same` as one of it (L §6.1; [`inputs_followed`]). A refusal
     /// there stands; a hole, read or added, is met first, and the edge's refusal outranks it
     /// (refcore's `edge_first`). Returns the refusal that stands. L §4.2, §7.6 item 1, §8.4.
     ///
@@ -688,7 +688,9 @@ impl Engine {
 
     /// The row calendar `name`'s read at `keys` on `day` takes, by its stable id, or `pin`
     /// where a pin gives the calendar: what names its added windows, each entry of each row
-    /// a read of its own, as the calendar's own read sees its rows (L §4.4, §4.6 step 1).
+    /// a read of its own, as the calendar's own read sees its rows; where it takes none, the
+    /// row of the calendar a `same` line states one with it, whose value the read then is
+    /// (L §4.4, §4.6 step 1, §6.1 What `same` does).
     ///
     /// # Errors
     ///
@@ -703,8 +705,18 @@ impl Engine {
         if self.pin_of(name, keys, ctx)?.is_some() {
             return Ok("pin".to_owned());
         }
-        self.calendar_own_row(m, (name, keys), ctx)?
-            .ok_or_else(|| invariant("a calendar's added window read from no row"))
+        if let Some(row) = self.calendar_own_row(m, (name, keys), ctx)? {
+            return Ok(row);
+        }
+        let Some(class) = Self::same_class(m, (name, keys), ctx)? else {
+            return Err(invariant("a calendar's added window read from no row"));
+        };
+        for (other, other_keys) in class {
+            if let Some(row) = self.calendar_own_row(m, (&other, &other_keys), ctx)? {
+                return Ok(row);
+            }
+        }
+        Err(invariant("a calendar's added window read from no row"))
     }
 
     /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id; none where
@@ -800,12 +812,22 @@ fn row_edges(m: &Reality, name: &str, ctx: Ctx, edges: &mut BTreeSet<Day>) -> Re
     Ok(())
 }
 
+/// The other side of `same` line `pair` where it is a line of rows naming input `name`.
+fn same_partner(pair: &SamePair, name: &str) -> Option<String> {
+    match pair {
+        SamePair::Rows(a, _, b, _, _) if a == name => Some(b.clone()),
+        SamePair::Rows(a, _, b, _, _) if b == name => Some(a.clone()),
+        SamePair::Rows(..) | SamePair::Moves(..) => None,
+    }
+}
+
 /// How many inputs [`inputs_followed`] gathers, one read through the next.
 const FOLLOWED: usize = 16;
 
 /// Calendar input `name` and the inputs a read of it may follow, whose rows' spans are where
-/// its reads can change: an input a row of it reads as a whole (`cq = bm.cr`, L §6.4); each
-/// once, at most [`FOLLOWED`], in the order met.
+/// its reads can change: an input a row of it reads as a whole (`cq = bm.cr`, L §6.4), the
+/// other side of a `same` line of rows that names it (L §6.1); each once, at most
+/// [`FOLLOWED`], in the order met.
 fn inputs_followed(m: &Reality, name: &str) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     let mut pending = vec![name.to_owned()];
@@ -818,6 +840,7 @@ fn inputs_followed(m: &Reality, name: &str) -> Vec<String> {
                 pending.extend(read_through(&row.value).map(str::to_owned));
             }
         }
+        pending.extend(m.sames.iter().filter_map(|pair| same_partner(pair, &next)));
         out.push(next);
     }
     out

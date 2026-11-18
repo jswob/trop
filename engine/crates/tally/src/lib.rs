@@ -283,7 +283,7 @@ pub mod book {
     pub use reading::{Pad, Seen, reading_rank};
     pub(crate) use reading::{first_readings, gap_text, instant_text, readings};
     pub use same::{Groups, kept_once, once_obs, same_differ};
-    pub(crate) use same::{Member, Waiting};
+    pub(crate) use same::{Member, Waiting, and_list, same_line_seen};
     pub(crate) use settle::settlement_move;
 }
 

@@ -23,7 +23,7 @@ use super::observe::{Obs, observed_row_seen};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, num_stop};
 use crate::hole::Hole;
-use crate::model::{KeyVal, MvRef, Reality, Value, World};
+use crate::model::{KeyVal, MvRef, Reality, SamePair, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -44,7 +44,7 @@ pub type Groups = BTreeMap<String, Vec<String>>;
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a version load didn't build.
-fn same_line_seen(
+pub(crate) fn same_line_seen(
     m: &Reality,
     version: Option<&str>,
     (cut, world): (Day, World),
@@ -84,8 +84,9 @@ fn rows_line_seen(
 
 impl Engine {
     /// Whether cut `cut` sees each `same` line of the reality, in the order written: a
-    /// version's line between two observed rows as [`rows_line_seen`] decides, any other as
-    /// [`same_line_seen`] does. L §6.1, §5.19, §4.5.
+    /// version's line between two observed rows as [`rows_line_seen`] decides, any other line
+    /// of movements as [`same_line_seen`] does, a line of rows never (its read is the row's,
+    /// `eval/read.rs`). L §6.1, §5.19, §4.5.
     ///
     /// # Errors
     ///
@@ -94,11 +95,14 @@ impl Engine {
         let world = self.timeline_world();
         let mut out = Vec::with_capacity(m.sames.len());
         for pair in &m.sames {
-            let seen = match (&pair.version, pair.observed) {
-                (Some(version), true) => {
-                    rows_line_seen(m, (&pair.left, &pair.right), version, (cut, world))?
+            let seen = match pair {
+                SamePair::Moves(left, right, Some(version), true) => {
+                    rows_line_seen(m, (left, right), version, (cut, world))?
                 }
-                (version, _) => same_line_seen(m, version.as_deref(), (cut, world))?,
+                SamePair::Moves(_, _, version, _) => {
+                    same_line_seen(m, version.as_deref(), (cut, world))?
+                }
+                SamePair::Rows(..) => false,
             };
             out.push(seen);
         }
@@ -193,13 +197,13 @@ impl Engine {
     }
 }
 
-/// The `same` lines of `m` that `seen` flags (one flag per line, as [`Engine::moves_seen`]
-/// gives them), each its two sides, in the order written. L §6.1, §4.5.
+/// The `same` lines of movements of `m` that `seen` flags (one flag per line, as
+/// [`Engine::moves_seen`] gives them), each its two sides, in the order written. L §6.1, §4.5.
 fn move_lines(m: &Reality, seen: Vec<bool>) -> Vec<(&String, &String)> {
     let mut out = Vec::new();
     for (pair, flag) in m.sames.iter().zip(seen) {
-        if flag {
-            out.push((&pair.left, &pair.right));
+        if let (SamePair::Moves(left, right, _, _), true) = (pair, flag) {
+            out.push((left, right));
         }
     }
     out

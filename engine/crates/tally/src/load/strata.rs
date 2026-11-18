@@ -26,7 +26,8 @@ use super::srows::check_srow_reads;
 use super::steps::{Loader, refuse};
 use crate::base::{Code, Load, Refusal, Warn};
 use crate::model::{
-    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, Shift, Target, Ty,
+    Domain, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, SamePair, Shift, Target,
+    Ty,
 };
 use crate::syntax::{AskBody, Field, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
@@ -731,6 +732,33 @@ fn closed_cycle(stack: &[(Node, Vec<Node>)], again: Node) -> Vec<Node> {
     cycle
 }
 
+/// The inputs read: those `read` holds, and every input a `same` line ties to one read, since
+/// rows stated `same` are read together, by every read of either (refcore's `check_graph`,
+/// its `same_row_edges`). L §6.1, §8.5 (tally 2.1.8 §4).
+fn read_with_same(m: &Reality, read: &BTreeSet<&Node>) -> BTreeSet<String> {
+    let mut inputs: BTreeSet<String> = m
+        .inputs
+        .entries()
+        .filter(|(id, _)| read.contains(&Node::new(NodeKind::Input, id)))
+        .map(|(id, _)| id.clone())
+        .collect();
+    let mut grew = true;
+    while grew {
+        grew = false;
+        for pair in &m.sames {
+            let SamePair::Rows(a, _, b, _, _) = pair else {
+                continue;
+            };
+            for (x, y) in [(a, b), (b, a)] {
+                if inputs.contains(x) && inputs.insert(y.clone()) {
+                    grew = true;
+                }
+            }
+        }
+    }
+    inputs
+}
+
 /// `input x is read by nothing` for an input that isn't built in or observed, `def d is read
 /// by nothing`, and `place p is read by nothing` for a `place` section no line names, for
 /// each nothing reads (refcore's `check_graph`, its end). L §8.5; E §3.1 step 6.
@@ -743,9 +771,10 @@ fn unread(m: &Reality, graph: &Graph) -> Vec<(Warn, String)> {
         .flat_map(BTreeMap::keys)
         .chain(&graph.parts_reads)
         .collect();
+    let inputs = read_with_same(m, &read);
     let mut out = Vec::new();
     for (id, input) in m.inputs.entries() {
-        let unread = !read.contains(&Node::new(NodeKind::Input, id));
+        let unread = !inputs.contains(id);
         if unread && !input.builtin && !input.observed {
             out.push((Warn::Unread, format!("input {id} is read by nothing")));
         }

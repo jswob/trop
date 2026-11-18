@@ -14,7 +14,7 @@ use super::ids::{
     ThingId, VersionId,
 };
 use super::index::{IndexInfo, VersionInfo};
-use super::key::Span;
+use super::key::{KeyVal, Span};
 use super::kind::{Entry, KindInfo, KindSpec, Thing};
 use super::ty::Ty;
 use super::world::{Scenarios, World};
@@ -190,8 +190,8 @@ pub struct Reality {
     /// The sites (file, line, token) of the kind tests whose narrowing a field read uses: the
     /// run evaluates them first in their conjunction (refcore's `narrow_mark`). L §5.7.
     pub narrow_tests: BTreeSet<crate::syntax::SiteKey>,
-    /// The movements stated `same`, in the order written (refcore's `same_moves`): one
-    /// movement at run. L §6.1, §5.19.
+    /// The rows and movements stated `same`, in the order written (refcore's `same_rows` and
+    /// `same_moves`): read together at run. L §6.1, §5.19.
     pub sames: Vec<SamePair>,
     /// A joint model's members, as the run may ask them (refcore's `joint_members`), or `None`
     /// for a model that is no joint model. L §6.1; E §11.
@@ -249,18 +249,34 @@ impl Joint {
     }
 }
 
-/// Two movements stated `same` (refcore's `same_moves`). L §6.1.
+/// Two rows or two movements stated `same` (refcore's `same_rows`, `same_moves`). L §6.1.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SamePair {
-    /// One side: a move instance's id, `m[k]`, or an observed row's, `x[id]`.
-    pub left: String,
-    /// The other side, as `left`.
-    pub right: String,
-    /// The version whose line states them, none in a joint model's header (L §4.5).
-    pub version: Option<String>,
-    /// Whether both sides are observed rows, a line with no day of its own (L §5.19; tally
-    /// 2.2, S-5).
-    pub observed: bool,
+pub enum SamePair {
+    /// Two rows: each input's id and keys, and the version whose line states them, none in a
+    /// joint model's header (its `known` holds for the line, L §4.5).
+    Rows(String, Vec<KeyVal>, String, Vec<KeyVal>, Option<String>),
+    /// Two movements: each instance's id, `m[k]` or an observed row's `x[id]`, the version
+    /// whose line states them, none in a joint model's header (L §4.5), and whether both
+    /// sides are observed rows, a line with no day of its own (L §5.19; tally 2.2, S-5).
+    Moves(String, String, Option<String>, bool),
+}
+
+impl SamePair {
+    /// The other side of a line of rows that names input `id`'s at `keys`, with the version
+    /// whose line it is; none where the line names other rows (L §6.1).
+    #[must_use]
+    pub fn other_row(&self, id: &str, keys: &[KeyVal]) -> Option<(&str, &[KeyVal], Option<&str>)> {
+        let SamePair::Rows(a, ka, b, kb, version) = self else {
+            return None;
+        };
+        if a == id && ka.as_slice() == keys {
+            Some((b, kb, version.as_deref()))
+        } else if b == id && kb.as_slice() == keys {
+            Some((a, ka, version.as_deref()))
+        } else {
+            None
+        }
+    }
 }
 
 impl Reality {
