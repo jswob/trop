@@ -7,7 +7,7 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2 (the cuts round: nine forms removed; groups G1 and G2)
+## tally 2.2 (the cuts round: nine forms removed; groups G1 to G3)
 
 The user's cuts of 2026-11-17 (`spec/CHANGES.md` 2.1.8 → 2.2), applied in five groups. **Group G1: 1 550 tests,
 all pass** (1 552, 3 new, 5 dropped, 2 refusals rewritten, 4 restated; `refcore_fast` byte-equal). A cut form is
@@ -38,6 +38,24 @@ refused by the grammar, `LOAD-PARSE`, with no message of its own.
   `eval2`, `resid`, `mreads.m_after_day` and `m_after_refusal`, and the walk: `after`, `after_keys`, `after_mv`,
   `after_standing`, `after_missing`, the `rbad` entry and the `after` half of `dec_win_end` (P29). The earlier
   sections' lines on a reading `after m` describe what tally 2.2 removed. The move's `after m` stays.
+- **Group G3: 1 499 tests, all pass** (1 520, 25 dropped, 4 new, 8 restated; `refcore_fast` byte-equal, its
+  layer's `model_ok` no longer reads `m.same_rows`).
+- **`known` is a day (S-2, 2.2-2).** Gone: the parser's window, the loader's window checks, `known_first`,
+  `known_last`, `known_window_id`, `known_carry` and `CARRY_TEXT`, `row_known_sid`, `evaluate.known_vis` and the
+  undecided rows of `candidates`, the undecided covers (`m_coverage_undecided`, the walk's `covhole`), observations
+  (`ObsMv.und`, `mreads`' seen-and-unseen members and `two_days`) and readings, `covered`'s hole, and
+  `ask.answer_same_undecided` (the rerun, its merge and its limit) with `EachMet.forced`. `model.visible(known, K)`
+  is a day test; `WindowUndecided` became `Undecided`, the base of `LifeHole` and `SameDiffers`, which give their
+  own holes. Earlier sections' lines on a `known` window describe what tally 2.2 removed.
+- **A same line between two observed rows (S-5, 2.2-5).** The loader marks it (`m.same_obs`); `moves.same_lines`
+  takes it where its world holds and the cut sees both rows (`obs_row_seen`, the observations' own filter), any
+  other version's line by its known as before (`model.same_seen`).
+- **same joins no rows of an input (S-8, 2.2-8).** `loader.joint_sames` refuses a row side (`a row of an input`);
+  `m.same_rows`, `same_row_edges` and `same_settle` are gone, and a joint row on a member's input is refused. Gone
+  from `evaluate`: `same_class`, `same_hole`, `read_same_row`, `class_sides`, `same_value` and the class in
+  `last_value`, `e_call_since` (`carry_latest` reads one input's rows) and `read_reading`; `edge_first` and
+  `check`'s unread warning follow no row line. Earlier sections' lines on rows stated `same` (item 40, 41, #187)
+  describe what tally 2.2 removed; rows stated `same` that are observed rows are movements and stay.
 
 ## tally 2.1.8 (the spec round after M2: 77 items, six rules)
 
