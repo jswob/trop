@@ -23,8 +23,9 @@ use super::windows::End;
 use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
-use crate::syntax::{Agg, AggFn, Bind, Expr, Stop};
+use crate::syntax::{Agg, AggFn, Bal, Bind, Expr, Stop};
 use crate::time::Day;
+use crate::walk::{RangeText, lowest_shape};
 
 /// A binding tuple: its scope, the questions that make it an unknown member, and what its
 /// movements brought when it keeps them for its own line.
@@ -172,6 +173,12 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
+        if let Some(low) = lowest_shape(agg)
+            && self.reads_lowest(ctx)
+            && let Some(v) = self.range_minimum(m, low, env, ctx)?
+        {
+            return Ok(v);
+        }
         if let AggFn::First | AggFn::Last = agg.func {
             return self.first_last(m, agg, env, ctx);
         }
@@ -190,6 +197,38 @@ impl Engine {
             return self.any_all(m, agg.func, term, &members, ctx);
         }
         self.terms_aggregate(m, agg, &members, env, ctx)
+    }
+
+    /// A `min` of `walk::lowest_shape`'s shape, its `range` and its term `read`, read as one
+    /// range minimum: its range of days read as the binding reads it, then its balances
+    /// (`walk/projection.rs`, fence F5) folded as its terms would be, a hole where any is one;
+    /// none where the aggregate reads it term by term (a range that is a hole or holds no
+    /// day, or what `lowest_balances` leaves). L §5.11, E §4.3.
+    fn range_minimum(
+        &mut self,
+        m: &Reality,
+        (range, read): (&RangeText, &Bal),
+        env: &Env,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        let Values::Known(values) = self.range_values(m, range, env, ctx)? else {
+            return Ok(None);
+        };
+        let Some(days) = first_and_last(&values) else {
+            return Ok(None);
+        };
+        let Some(balances) = self.lowest_balances(m, read, days, (env, ctx))? else {
+            return Ok(None);
+        };
+        let holes: Vec<Option<&Hole>> = balances
+            .iter()
+            .filter_map(Value::as_hole)
+            .map(Some)
+            .collect();
+        if !holes.is_empty() {
+            return hole_of(&holes).map(Some);
+        }
+        min_max(m, balances, End::Low).map(Some)
     }
 
     /// `count`, `sum`, `min`, `max`, `argmin`, `argmax` over their terms (refcore's
@@ -721,6 +760,21 @@ impl Engine {
         };
         Ok(if holds { Kept::In(None) } else { Kept::Out })
     }
+}
+
+/// The first and last of a range's days, where every value is a day with no hole of its own;
+/// none for a range of no day or of other values. L §5.6.
+fn first_and_last(values: &[(Value, Option<Hole>)]) -> Option<(Day, Day)> {
+    let mut days = values.iter().map(|value| match value {
+        (Value::Day(d), None) => Some(*d),
+        _ => None,
+    });
+    let first = days.next()??;
+    let mut last = first;
+    for d in days {
+        last = d?;
+    }
+    Some((first, last))
 }
 
 /// `count(k in ks)`: the tuples, unless one is an unknown member (L §5.11).

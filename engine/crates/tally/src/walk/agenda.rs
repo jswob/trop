@@ -358,31 +358,44 @@ pub(super) fn left_out_day(counted: &mut BTreeMap<String, Vec<Day>>, inst: &Inst
     }
 }
 
-/// The `left out:` line of each left-out move with an instance dated t through `last`, each
-/// move's days sorted, so a read finds its own by halving (refcore's `proj_regs`). Shared by
-/// the projection's walk and fence F5. L §5.14.1, §8.2; E §4.3 step 3; P §2.3.
+/// The `left out:` lines of the reads from day t through each day of `first` through `last`:
+/// for each left-out move, one line per count of its instances dated t through such a day,
+/// each move's days sorted, so a read finds its own by halving (refcore's `proj_regs`, read
+/// for each day). A balance's read is the window of one day; a `min` over days reads each.
+/// Shared by the projection's walk and fence F5. L §5.14.1, §8.2; E §4.3 step 3; P §2.3.
 ///
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` where a window's days can't be taken from a move's.
 pub(super) fn left_out_lines(
     counted: &BTreeMap<String, Vec<Day>>,
-    (t, last): (Day, Day),
+    (t, (first, last)): (Day, (Day, Day)),
 ) -> Result<Vec<String>, Stop> {
     let mut lines = Vec::new();
     for (mid, days) in counted {
         let from = days.partition_point(|d| *d < t);
+        let Some(earliest) = days.get(from) else {
+            continue;
+        };
+        // the instances through `first`, then one more count after each later day that
+        // holds any, through `last`
+        let mut through = days.partition_point(|d| *d <= first);
         let to = days.partition_point(|d| *d <= last);
-        // none where t is past `last`, as no day lies in t through `last` then
-        let inside = days
-            .get(from..to.max(from))
+        let later = days
+            .get(through..to.max(through))
             .ok_or_else(|| super::plan::invariant("a left-out move's days in a window"))?;
-        if let Some(first) = inside.first() {
-            lines.push(format!(
-                "{mid}, {} instances, first {}",
-                inside.len(),
-                first.text()
-            ));
+        let mut ends = vec![through];
+        for one_day in later.chunk_by(|a, b| a == b) {
+            through = through
+                .checked_add(one_day.len())
+                .ok_or_else(|| super::plan::invariant("a left-out move's count"))?;
+            ends.push(through);
+        }
+        // none where t is past the day, as no day lies in t through it then
+        for n in ends.iter().filter_map(|end| end.checked_sub(from)) {
+            if n > 0 {
+                lines.push(format!("{mid}, {n} instances, first {}", earliest.text()));
+            }
         }
     }
     Ok(lines)

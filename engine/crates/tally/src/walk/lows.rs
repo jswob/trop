@@ -650,7 +650,8 @@ impl Engine {
             .checked_add(&tree.lowest_change(counts, (first, last))?)
             .map_err(num_stop)?;
         let mut met = tree.register(counts, last);
-        let lines = left_out_lines(&tree.counted, (t, last))?;
+        // a `min` over the days first through last reads each day's projection (E §4.3)
+        let lines = left_out_lines(&tree.counted, (t, (first, last)))?;
         for line in lines {
             self.note("left out", line, String::new());
         }
@@ -1341,7 +1342,7 @@ version rise
             let (tree, walks, _) = read(&m, id, Lows::Tree);
             let (walk, _, _) = read(&m, id, Lows::Walk);
             assert_eq!(tree, walk, "{id}: the same value");
-            assert!(walks > 0, "{id}: the projection's walk reads it");
+            assert_eq!(walks, 1, "{id}: one projection's walk reads its days");
         }
     }
 

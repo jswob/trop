@@ -248,6 +248,7 @@ pub mod walk {
     pub(crate) use plan::{invariant, quantity};
     pub use point::{At, Step};
     pub use projection::ProjKey;
+    pub(crate) use projection::{RangeText, lowest_shape};
     pub use readings::Broke;
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
