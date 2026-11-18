@@ -17,8 +17,9 @@ mod tests {
     use tally_runner::kernel::{difference, vectors};
     use tally_runner::m2::{SPEC, VECTORS};
 
-    /// The held groups of `m2/vectors.refcore` this target tests, one `#[test]` each.
-    const GROUPS: [&str; 17] = [
+    /// The held groups of `m2/vectors.refcore` this target tests, one `#[test]` each
+    /// (`fixes-r14` went whole at tally 2.2, S-1).
+    const GROUPS: [&str; 16] = [
         "fixes-forms",
         "fixes-explain",
         "fixes-windows",
@@ -28,7 +29,6 @@ mod tests {
         "fixes-r11",
         "fixes-r12",
         "fixes-r13",
-        "fixes-r14",
         "fixes-r15",
         "fixes-r16",
         "fixes-s",
@@ -164,13 +164,6 @@ mod tests {
     #[test]
     fn m2_fixes_tally_218_r13() {
         group_holds(VECTORS, "fixes-r13");
-    }
-
-    /// tally 2.1.8's R14 (#198): at a place of unit `any` a reading, its gap, pad and ledger
-    /// are the unit's (`m2/fixes/r14/`).
-    #[test]
-    fn m2_fixes_tally_218_r14() {
-        group_holds(VECTORS, "fixes-r14");
     }
 
     /// tally 2.1.8's R15 (#199): under `partial` a hole stays a linear form only through what

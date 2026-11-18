@@ -3,12 +3,13 @@ model t
   on 2026-01-01
   start 2026-01-01
   end 2026-12-31
+  note "T; tally 2.2 (S-1): a model's place holds one unit, so brokerages is of unit one and broker, which holds EUR alone, states its unit as it enters (the spec's example, L §5.7)"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 
-kind brokerages: place any min 0
+kind brokerages: place one min 0
 
 input vd: date
 
@@ -20,7 +21,7 @@ version v
   cite s
   governs always
   known 2025-12-01
-  brokerages + [broker] lives 2026-01-01..
+  brokerages + [broker] EUR lives 2026-01-01..
   vd = 2026-06-30
   opening[konto] = 1 000.00 PLN at 2026-01-01 start
   opening[broker] = 50.00 EUR at 2026-01-01 start

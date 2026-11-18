@@ -3,13 +3,13 @@ model pw
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): eval/arith.rs:128, a sum over a window (days_between of a window; refcore: RUN-DOMAIN)"
+  note "T, M2 P60 (G6's census of run-time stops): eval/arith.rs:128, a sum over a window (days_between of a window; refcore: RUN-DOMAIN); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..

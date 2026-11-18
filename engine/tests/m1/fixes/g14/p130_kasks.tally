@@ -9,4 +9,4 @@ ask n_usd: value(eur_acc, 2026-03-31) in USD by fxs
 
 ask n_usd_last: value(eur_acc, 2026-03-31) in USD by last(fxu)
 
-ask n_safe_pln: value(safe, 2026-03-31) in PLN by fxs
+ask n_safe_pln: (value(safe_eur, 2026-03-31) in PLN by fxs) + (value(safe_pln, 2026-03-31) in PLN by fxs)

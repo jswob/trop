@@ -3,13 +3,13 @@ model pw
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: a statement known in a window, read as known on its last day, the day after and before it (book/observe.rs unseen_known: the window holds a cut before its last day only)"
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: a statement known in a window, read as known on its last day, the day after and before it (book/observe.rs unseen_known: the window holds a cut before its last day only); tally 2.2 (S-1): the kind mixed is of unit PLN, a model's place being of one unit, and its one place holds only PLN, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
 unit EUR: currency minor 0.01
 index ks = [a, b]
-kind mixed: place any signed
+kind mixed: place PLN signed
 place konto: accounts PLN lives 2026-01-01..
 place wallet: mixed lives 2026-01-01..
 place world: outside lives 1900-01-01..
