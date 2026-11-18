@@ -31,4 +31,4 @@ ask plain: bal(x, 2058-01-01)
 
 ask proj: bal(x, 2058-01-01) from 2025-01-02
 
-ask lowp: low(x, 2025-01-01 .. 2058-01-01) from 2025-01-02
+ask lowp: min(bal(x, d) from 2025-01-02 for d in 2025-01-01 .. 2058-01-01 step 1 day)

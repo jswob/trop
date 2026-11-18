@@ -56,7 +56,7 @@ enum KeysOf {
 }
 
 /// The built-in names, read as built-ins only directly before `(` (L §2.2).
-const BUILTINS: [&str; 75] = [
+const BUILTINS: [&str; 73] = [
     "sum",
     "count",
     "min",
@@ -74,8 +74,6 @@ const BUILTINS: [&str; 75] = [
     "flows",
     "bal",
     "value",
-    "low",
-    "next",
     "covered",
     "round",
     "pow",
@@ -220,15 +218,13 @@ impl P<'_> {
     }
 
     /// Marks an operand of an operator node for the reprint (L §2.4, refcore's `forced`): a
-    /// `… to u` (and, in a comparison or a membership, a converted `flows` or a `value`) is
-    /// always parenthesised, so its parentheses stay, and written bare it gets them. The
-    /// operand runs from the token at `from` to the one taken last.
+    /// `… to u` (and, in a comparison or a membership, a `value`) is always parenthesised, so
+    /// its parentheses stay, and written bare it gets them. The operand runs from the token at
+    /// `from` to the one taken last.
     fn force(&self, operand: &Expr, from: usize, under: Under) {
         let always = |expr: &Expr| {
             matches!(expr, Expr::To(..))
-                || (under == Under::Comparison
-                    && (matches!(expr, Expr::Value(_))
-                        || matches!(expr, Expr::Flows(f) if f.convert.is_some())))
+                || (under == Under::Comparison && matches!(expr, Expr::Value(_)))
         };
         if let Expr::Paren(inner) = operand {
             if always(inner) {
@@ -306,8 +302,7 @@ impl P<'_> {
             Some(tok) => {
                 tok.kind == Kind::Id
                     && [
-                        "with", "law", "as", "windows", "random", "paths", "path", "partial",
-                        "orient",
+                        "with", "law", "as", "random", "paths", "path", "partial", "orient",
                     ]
                     .contains(&tok.text.as_str())
             }
@@ -906,7 +901,7 @@ impl P<'_> {
         Ok(FieldValue::Expr(value?))
     }
 
-    /// `leg l from a to b amount q [on d]` (L §2.3 `leg`).
+    /// `leg l from a to b amount q` (L §2.3 `leg`).
     pub(super) fn leg(&mut self) -> Result<Leg, Stop> {
         self.expect("leg")?;
         let name = self.ident("a leg name")?;
@@ -916,17 +911,11 @@ impl P<'_> {
         let to = self.expr(Ends::Free)?;
         self.expect("amount")?;
         let amount = self.expr(Ends::Free)?;
-        let on = if self.accept("on")? {
-            Some(self.expr(Ends::Free)?)
-        } else {
-            None
-        };
         Ok(Leg {
             name,
             from,
             to,
             amount,
-            on,
             line: self.line,
         })
     }

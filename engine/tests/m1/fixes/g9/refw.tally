@@ -44,9 +44,9 @@ move spend[m in month]: transfers
   when start_of(m) < from_m or rent / zero > 0 DUK
   leg cash from konto to world amount rent
 
-ask w_low: low(konto, 2026-05-20 .. 2026-08-31) from 2026-05-20
+ask w_low: min(bal(konto, d) from 2026-05-20 for d in 2026-05-20 .. 2026-08-31 step 1 day)
 
-ask w_low_before: low(konto, 2026-05-20 .. 2026-07-05) from 2026-05-20
+ask w_low_before: min(bal(konto, d) from 2026-05-20 for d in 2026-05-20 .. 2026-07-05 step 1 day)
 
 ask w_bal: bal(konto, 2026-07-31) from 2026-05-20
 
@@ -54,7 +54,7 @@ ask w_bal_before: bal(konto, 2026-07-05) from 2026-05-20
 
 ask w_savings: bal(savings, 2026-07-31) from 2026-05-20
 
-ask w_low_savings: low(savings, 2026-05-20 .. 2026-08-31) from 2026-05-20
+ask w_low_savings: min(bal(savings, d) from 2026-05-20 for d in 2026-05-20 .. 2026-08-31 step 1 day)
 
 ask w_plain: bal(konto, 2026-07-31)
 

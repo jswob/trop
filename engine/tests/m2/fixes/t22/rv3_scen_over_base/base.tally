@@ -1,0 +1,37 @@
+model p1
+  tally 2
+  on 2026-04-30
+  start 2026-03-01
+  end 2026-04-30
+  note "T, tally 2.2 (#211, the third review of G3): a scenario's restatement of an observed row (none, known 02-01) stands over a later base one (v2, known 03-01): L §4.6 step 2 puts the scenario's claim above the base's whatever their known days; in_sc is (1, 950.00 PLN, 1 050.00 PLN)"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input sbank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 2000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-01-02
+  bank[a1] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "konto line"
+  sbank[b1] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "sav line"
+  same bank[a1] = sbank[b1]
+
+version v2
+  cite s
+  governs 2026-03
+  known 2026-03-01
+  replace bank[a1] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 900.00 PLN) "corrected"
+
+ask base: count(m in transfers over 2026-03), bal(sav, 2026-03-31), bal(konto, 2026-03-31)

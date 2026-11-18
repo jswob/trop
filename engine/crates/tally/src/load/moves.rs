@@ -1,8 +1,8 @@
 //! Load's checker, its moves: a leg's places, their kinds and units, its amount; a decision's balance of its own day; a settlement's unit.
-//! Spec: L §5.14 (a leg: places, amount of the leg's unit, its day), §5.10 (no leg to or from
-//! an asset), §5.7 (a leg of a unit kind), §5.14.1 (a decision reads no balance of its own day
-//! or later without a projection), §5.14.3 and §5.19 (a settlement in the adjusted leg's
-//! unit), §8.3 (`LOAD-UNIT`, `-KIND`, `-CYCLE`).
+//! Spec: L §5.14 (a leg: places, amount of the leg's unit, on its movement's day), §5.10 (no
+//! leg to or from an asset), §5.7 (a leg of a unit kind), §5.14.1 (a decision reads no balance
+//! of its own day or later without a projection), §5.14.3 and §5.19 (a settlement in the
+//! adjusted leg's unit), §8.3 (`LOAD-UNIT`, `-KIND`, `-CYCLE`).
 //! Twin: engine/tools/refcore/check3.py (`m_check_leg`, `m_check_move`, its `LOAD-CYCLE` scan
 //! of `bal(x, d)`); moves.py (`settle_sign`, its `LOAD-UNIT`, which refcore meets only when a
 //! read settles the adjustment: the spec rules it a load refusal, issue #72).
@@ -24,8 +24,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 impl Checker {
     /// A leg: its places, each a place and none an asset, of one unit, the leg's own;
-    /// its amount of the leg's unit, or of a unit of its unit kind; its own day; the leg's
-    /// static amount type returned (refcore's `m_check_leg`). L §5.14, §5.10, §5.7.
+    /// its amount of the leg's unit, or of a unit of its unit kind; the leg's static amount
+    /// type returned (refcore's `m_check_leg`). L §5.14, §5.10, §5.7.
     pub(super) fn check_leg(
         &mut self,
         m: &Reality,
@@ -128,17 +128,6 @@ impl Checker {
             || matches!(t, Ty::Dyn | Ty::Hole | Ty::Unseen))
         {
             return Err(scope.place(uerr(format!("{what} is {}", t.show()))));
-        }
-        if let Some(on) = &leg.on {
-            let dt = self.expr(m, scope, on, None, 0)?;
-            if !super::types::is_date(m, &dt) {
-                return Err(scope.place(uerr(format!(
-                    "on of leg {} of {} is {}, not a date",
-                    leg.name,
-                    mv.id,
-                    dt.show()
-                ))));
-            }
         }
         Ok(lt)
     }

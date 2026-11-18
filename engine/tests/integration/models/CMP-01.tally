@@ -218,6 +218,8 @@ def gen_benefit[f in foyer]: money EUR at start_of(income_year[f])
   note "§ 40: plafond par demi-part supplémentaire"
   rule base v qf2026 = round(cap_half * extra_halves[f], 1, half-up)
 
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * eur_pln, minor(PLN), half-up) at t.day
+
 def maint_pln[c in child]: money PLN at reader
   note "question 1: each child's maintenance at the NBP rate, half up to the grosz, as the question sets"
   rule base = round(unterhalt[c] * eur_pln, minor(PLN), half-up)
@@ -240,7 +242,7 @@ def masse: money EUR at reader
 
 def net_flow[p in person]: money PLN at reader
   note "questions 4 and 5: the person's flows in the month, in złoty: the złoty account, plus the euro account converted movement by movement at the NBP rate, half up to the grosz (LANGUAGE §5.13.3). No pay reaches it, so it may read flows (§5.13.1)."
-  rule base = flows(pln[p], flow_month) + (flows(eur[p], flow_month) in PLN at eur_pln half-up)
+  rule base = flows(pln[p], flow_month) + sum(in_pln[t] for t in transfers over flow_month where t.cash.to == eur[p]) - sum(in_pln[t] for t in transfers over flow_month where t.cash.from == eur[p])
 
 def owed_total[j in friend]: money PLN at reader
   note "(6): r j, the total friend j is owed"

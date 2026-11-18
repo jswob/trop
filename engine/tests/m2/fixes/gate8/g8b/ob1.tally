@@ -3,7 +3,7 @@ model ob1
   on 2026-04-25
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep)"
+  note "T, M2 gate 8 run 43749994847 on 205157a2: a removal known in a window the cut leaves open, three restatements known before it after it in the text; the restatement shown is the latest before the removal (book/observe.rs Latest::keep); tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day; the vector that read it as seen and unseen went with the form, and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -22,7 +22,7 @@ version v2
   cite s
   governs 2026-03
   known 2026-03-02
-  replace bank[r1] = none known window(2026-04-01, 2026-04-10) "rm"
+  replace bank[r1] = none known 2026-04-10 "rm"
 
 version v3
   cite s

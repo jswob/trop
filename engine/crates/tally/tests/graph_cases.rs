@@ -17,8 +17,8 @@ mod tests {
     use tally::syntax::{Stop, parse_reality};
 
     /// A recurrence, an aggregate, a projection a decision reaches, a plan, three decisions
-    /// ordered by a written `after` and a read of a decision's legs, `next`, and an input
-    /// and a def nothing reads.
+    /// ordered by a written `after` and a read of a decision's legs, and an input and a def
+    /// nothing reads (tally 2.2 cut `next`, which the ask `ahead` read).
     const REALITY: &str = "model g
   tally 2
   on 2026-03-01
@@ -90,7 +90,7 @@ version facts
 
 ask total_paid: total, flows(salary, 2026-01-01 .. 2026-03-31)
 
-ask ahead: bal(konto, 2026-03-31) from 2026-02-01, next(transfers, 2026-01-05)
+ask ahead: bal(konto, 2026-03-31) from 2026-02-01
 ";
 
     /// The places the refusal cases share.
@@ -221,10 +221,6 @@ place shop: ext lives 2026-01-01..
             "after top : save_it",
             "balnow move sweep",
             "edge ask ahead -> balances : bal",
-            "edge ask ahead -> move salary : next",
-            "edge ask ahead -> move save_it : next",
-            "edge ask ahead -> move sweep : next",
-            "edge ask ahead -> move top : next",
             "edge ask ahead -> place konto : any",
             "edge ask total_paid -> def total : any",
             "edge ask total_paid -> move salary : flows",
@@ -266,9 +262,6 @@ place shop: ext lives 2026-01-01..
             "fromdec moveon top",
             "leftout ask ahead : ",
             "leftout def room : save_it top",
-            "mark ask ahead : legs move save_it",
-            "mark ask ahead : legs move sweep",
-            "mark ask ahead : legs move top",
             "mark ask ahead : proj thing konto",
             "mark def room : proj thing konto",
             "mark move sweep : balnow thing save",

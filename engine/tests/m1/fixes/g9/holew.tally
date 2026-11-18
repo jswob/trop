@@ -44,15 +44,15 @@ move away[m in month]: transfers
   when start_of(m) < from_m or keep
   leg cash from other to world amount rent
 
-ask h_low: low(konto, 2026-05-20 .. 2026-08-31) from 2026-05-20
+ask h_low: min(bal(konto, d) from 2026-05-20 for d in 2026-05-20 .. 2026-08-31 step 1 day)
 
-ask h_low_before: low(konto, 2026-05-20 .. 2026-07-05) from 2026-05-20
+ask h_low_before: min(bal(konto, d) from 2026-05-20 for d in 2026-05-20 .. 2026-07-05 step 1 day)
 
 ask h_bal: bal(konto, 2026-07-31) from 2026-05-20
 
 ask h_other: bal(other, 2026-07-31) from 2026-05-20
 
-ask h_other_low: low(other, 2026-05-20 .. 2026-08-31) from 2026-05-20
+ask h_other_low: min(bal(other, d) from 2026-05-20 for d in 2026-05-20 .. 2026-08-31 step 1 day)
 
 version card_2026
   cite card

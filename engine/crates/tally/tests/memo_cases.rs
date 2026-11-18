@@ -229,39 +229,50 @@ version dated
 
 ask a: due
 
-ask b: due windows each
+ask b1: due with w = 2026-03-31
+
+ask b2: due with w = 2026-04-01
 
 ask c: flat
 
 ask p: pay.cash.amount
 
-ask pw: pay.cash.amount windows each
+ask pw1: pay.cash.amount with w = 2026-03-31
+
+ask pw2: pay.cash.amount with w = 2026-04-01
 
 ask q: calm.cash.amount
 
 ask k: bal(konto, 2026-06-01)
 "#;
 
-    /// refcore's lines for [`WINDOWS`]: `pw`'s head names no `v`, which its result never
-    /// reads (tally 2.1.8 R13, L §4.4).
-    const WINDOW_LINES: [&str; 20] = [
+    /// refcore's lines for [`WINDOWS`]: a hole names the unknown day it carries, `w`
+    /// (tally 2.2 S-4); a pinned day of `w` reads one law-date class.
+    const WINDOW_LINES: [&str; 27] = [
         "a: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of due\" (due)",
+        "  unknown day: w",
         "  cut 2026-06-30",
-        "b [w = 2026-03-29 .. 2026-03-31]: 10.00 PLN",
+        "b1: 10.00 PLN",
+        "  pinned: w = 2026-03-31",
         "  cut 2026-06-30",
-        "b [w = 2026-04-01 .. 2026-04-02]: 20.00 PLN",
+        "b2: 20.00 PLN",
+        "  pinned: w = 2026-04-01",
         "  cut 2026-06-30",
         "c: 10.00 PLN",
         "  cut 2026-06-30",
         "k: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
+        "  unknown day: w",
         "  unfulfilled: calm",
         "  unfulfilled: pay",
         "  cut 2026-06-30",
         "p: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
+        "  unknown day: w",
         "  cut 2026-06-30",
-        "pw [w = 2026-03-29 .. 2026-03-31]: 10.00 PLN",
+        "pw1: 10.00 PLN",
+        "  pinned: w = 2026-03-31",
         "  cut 2026-06-30",
-        "pw [w = 2026-04-01 .. 2026-04-02]: 20.00 PLN",
+        "pw2: 20.00 PLN",
+        "  pinned: w = 2026-04-01",
         "  cut 2026-06-30",
         "q: 10.00 PLN",
         "  cut 2026-06-30",

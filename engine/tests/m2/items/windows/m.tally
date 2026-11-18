@@ -34,13 +34,7 @@ move gift: transfers
   on wd
   leg cash from work to konto amount bonus_amt
 
-ask ab: add_business(2026-05-29, 1, cal) windows each
-ask lwf: low(konto, 2026-03-01 .. 2026-04-30) from 2026-03-01 windows each with ax = lo
-ask bw: bal(konto, 2026-04-30) windows each
 ask bw_plain: bal(konto, 2026-04-30)
-ask bx: bal(konto, 2026-04-30) with ax = hi windows each
-ask bxx: bal(konto, 2026-04-30) windows each
-
 version v
   cite card
   governs always

@@ -1,9 +1,10 @@
 //! A reading applied at its instant, and the sign rule's groups: the day's first batch, a decision's legs, the closing readings, and what each refuses.
-//! Spec: E §4.2 step 0 (readings at the start of the day), step 3 (a reading `after m`), step 4
-//! (readings at the end of the day), step 5 (the sign rule at its points; a reading's own place
-//! tested at its point; an anchor books no leg); L §5.10 (the sign rule and its three points;
-//! `RUN-PLACE`), §5.19 (`opening` always anchors), §4.6 (a reading's instant), §8.4; E §9
-//! item 2 (an opening and a refused leg in the day's worth).
+//! Spec: E §4.2 step 0 (readings at the start of the day), step 4 (readings at the end of the
+//! day), step 5 (the sign rule at its points; a reading's own place tested at its point; an
+//! anchor books no leg); L §5.10 (the sign rule and its three points; `RUN-PLACE`), §5.19
+//! (`opening` always anchors), §4.6 (a reading's instant), §4.4 (a decision dated by a
+//! window falls at its last day), §8.4; E §9 item 2 (an opening and a refused leg in the
+//! day's worth).
 //! Twin: engine/tools/refcore/walk.py (`apply_reading`, its opening; `check_batch`,
 //! `check_group`, `reading_group`, `sign_anchor`, `unbook`, `book_leg`'s groups).
 //! Invariants: a leg booked in a group is tested with the group, at the balance the group
@@ -16,25 +17,20 @@ use std::collections::BTreeSet;
 
 use super::agenda::Reading;
 use super::day::ends;
-use super::plan::{Amount, DayWindow, End, LegVal, Status, invariant, qty_value};
+use super::plan::{Amount, End, LegVal, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::Engine;
 use crate::hole::Hole;
-use crate::model::{GapRole, Reality};
+use crate::model::Reality;
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
 
-/// The sub-step of a decision's point where the readings `after` it stand: after its legs
-/// (0), the observations booked there (1) and its group's test (2) (refcore's `key[4] + 5`).
-/// E §4.2 step 3.
-const AFTER_SUB: u32 = 5;
-
 /// The logs where decision instance `mid`'s window left a hole no reading answers, each with
 /// the units its hole a reading ends goes to: the log's own, or for a place-wide log the
-/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §4.6,
+/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §5.19 Holes,
 /// E §4.2 Holes in the walk.
 fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Vec<String>)> {
     let mut fallen = Vec::new();
@@ -63,23 +59,6 @@ fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Ve
     fallen
 }
 
-/// Whether anything but decision instance `mid` touched reading `r`'s place inside `mid`'s
-/// window `w`, in its unit or every unit, so the balance after it would differ by m's day
-/// (pick P29 on #175; refcore's `dec_win_end`, its `others`). L §4.6, §4.4.
-fn touched_inside(walk: &Walk, r: &Reading, (mid, w): (&str, &DayWindow)) -> bool {
-    for unit in [r.unit.as_str(), ALL] {
-        for e in walk.entries(&r.place, unit) {
-            if (w.lo..=w.hi).contains(&e.at.day)
-                && e.mv.as_deref() != Some(mid)
-                && !matches!(e.change, Change::Unperm(_))
-            {
-                return true;
-            }
-        }
-    }
-    false
-}
-
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Broke {
@@ -92,9 +71,8 @@ pub enum Broke {
 }
 
 impl Engine {
-    /// A reading at its point, once per unit it stands for: an `opening` anchors, a `stated`
-    /// one pads or anchors by its version's gap role (refcore's `apply_reading`). E §4.2 steps
-    /// 0 and 4, E §6.1, L §5.19.
+    /// A reading at its point: an `opening` anchors, a `stated` one pads or anchors by its
+    /// version's gap role (refcore's `apply_reading`). E §4.2 steps 0 and 4, E §6.1, L §5.19.
     pub(super) fn apply_reading(
         &mut self,
         m: &Reality,
@@ -102,90 +80,23 @@ impl Engine {
         at: At,
         reading: &Reading,
     ) -> Result<(), Stop> {
-        // a hole that states no unit stands for each unit its place holds here (pick P22, #173)
-        for each in crate::book::per_unit(self.walk(id)?, reading, at) {
-            if each.input == "opening" {
-                self.walk_mut(id)?.apply_opening(m, at, &each)?;
-            } else {
-                self.apply_stated(m, id, at, &each)?;
-            }
+        if reading.input == "opening" {
+            self.walk_mut(id)?.apply_opening(m, at, reading)
+        } else {
+            self.apply_stated(m, id, at, reading)
         }
-        Ok(())
     }
 
-    /// The readings `after m` that wait on decision run `ix`, applied right after it at its
-    /// point `key`, after its group is tested, each tested as it is booked: where m is booked
-    /// before the cut, and where m is modelled past and observations booked at its point stand
-    /// in for it; where m is modelled past and nothing fulfils it, the reading's place is
-    /// refused from there (`RUN-RECORD`); none where only observations dated before S fulfil
-    /// it (a fact the walk doesn't apply), or m doesn't exist, is a hole, uncertain or refused
-    /// (refcore's `after_mv`, `run_one`'s `_after`). E §4.2 steps 3 and 5, L §4.6 Readings,
-    /// §5.10 point 2, §5.19.
-    pub(super) fn readings_after(
-        &mut self,
-        m: &Reality,
-        id: usize,
-        ix: usize,
-        key: At,
-    ) -> Result<(), Stop> {
-        let walk = self.walk(id)?;
-        if walk.after.is_empty() {
-            return Ok(());
-        }
-        let run = walk
-            .runs
-            .get(ix)
-            .ok_or_else(|| invariant("a run just made"))?;
-        let (mid, status, links, cut) = (
-            run.inst.id.clone(),
-            run.inst.status,
-            run.inst.obs.clone(),
-            walk.cut,
-        );
-        let Some(waiting) = self.walk_mut(id)?.after.remove(&mid) else {
-            return Ok(());
-        };
-        let linked = !links.is_empty();
-        let stands = linked && {
-            let obs = self.observations(m, cut)?;
-            crate::book::stands_in(obs, &links, (m.start, m.end, cut))
-        };
-        let at = key.with_sub(AFTER_SUB);
-        for r in waiting {
-            match status {
-                Status::Past => self.apply_after(m, id, at, &r)?,
-                Status::Modelled if stands => self.apply_after(m, id, at, &r)?,
-                // observations dated before S fulfil it: a fact the walk doesn't apply
-                Status::Modelled if linked => {}
-                Status::Modelled => {
-                    let why = "is modelled past and nothing fulfils it";
-                    self.after_missing(m, id, at, (&r, &mid, why))?;
-                }
-                Status::None => self.after_missing(m, id, at, (&r, &mid, "doesn't exist"))?,
-                Status::Open
-                | Status::LeftOut
-                | Status::Refused
-                | Status::Hole
-                | Status::Decision
-                | Status::Uncertain
-                | Status::Plan => {}
-            }
-        }
-        Ok(())
-    }
-
-    /// The end of the last day of decision `mid`'s window `w`, at point `at`: m has fallen,
-    /// so the hole `h` it left its places becomes each unit's, which a reading ends; a reading
-    /// `after` m before the cut then stands where nothing else touched its place inside the
-    /// window, the balance being the reading plus what is booked since, the same for every
-    /// day of the window; else the hole stays up to the place's next reading (refcore's
-    /// `dec_win_end`; pick P29 on #175). L §4.6 Readings, §4.4, E §4.2 Holes in the walk.
+    /// The end of the last day of decision `mid`'s window, at point `at`: m has fallen, so the
+    /// hole `h` it left its places becomes each unit's, which a reading ends, and stays up to
+    /// the place's next reading (refcore's `dec_win_end`; pick P29 on #175). L §5.19
+    /// Holes, §4.4, E §4.2 Holes in the walk.
     pub(super) fn window_end(
         &mut self,
         m: &Reality,
         id: usize,
         at: At,
-        (mid, w, h): (&str, &DayWindow, &Hole),
+        (mid, h): (&str, &Hole),
     ) -> Result<(), Stop> {
         let fallen = fallen_places(m, self.walk(id)?, mid);
         let walk = self.walk_mut(id)?;
@@ -200,64 +111,7 @@ impl Engine {
                 walk.add(m, &place, &each, ent)?;
             }
         }
-        if w.hi >= walk.cut {
-            return Ok(());
-        }
-        let Some(waiting) = walk.after.remove(mid) else {
-            return Ok(());
-        };
-        let mut kept = Vec::new();
-        for r in waiting {
-            if touched_inside(self.walk(id)?, &r, (mid, w)) {
-                kept.push(r);
-            } else {
-                self.apply_after(m, id, at.with_sub(1), &r)?;
-            }
-        }
-        if !kept.is_empty() {
-            self.walk_mut(id)?.after.insert(mid.to_owned(), kept);
-        }
         Ok(())
-    }
-
-    /// A reading `after m` where m doesn't exist, or is modelled past with nothing standing in
-    /// for it: `RUN-RECORD` at its place from m's point `at` on, and at the other place of a
-    /// pad, whose pad is a refused movement there (refcore's `after_missing`). L §4.6
-    /// Readings, §8.4.
-    fn after_missing(
-        &mut self,
-        m: &Reality,
-        id: usize,
-        at: At,
-        (r, mid, why): (&Reading, &str, &str),
-    ) -> Result<(), Stop> {
-        let err = Refusal::new(
-            Code::Run(Run::Record),
-            format!(
-                "reading {}[{}] {}: {mid} {why}",
-                r.input, r.place, r.instant
-            ),
-        );
-        let mut places = vec![r.place.clone()];
-        if let Some(version) = m.versions.get(&r.version)
-            && let Some((_, GapRole::Pad(other))) =
-                version.gap_roles.iter().find(|(p, _)| *p == r.place)
-        {
-            places.push(other.clone());
-        }
-        let walk = self.walk_mut(id)?;
-        for place in places {
-            walk.add(m, &place, &r.unit, Ent::new(at, Change::Bad(err.clone())))?;
-        }
-        Ok(())
-    }
-
-    /// A reading `after m` at point `at`, its point kept for its balance line (refcore's
-    /// `after_keys`). E §6.3 Grouping, L §4.6.
-    fn apply_after(&mut self, m: &Reality, id: usize, at: At, r: &Reading) -> Result<(), Stop> {
-        let key = (r.place.clone(), r.instant.clone(), r.version.clone());
-        self.walk_mut(id)?.after_at.insert(key, at);
-        self.apply_reading(m, id, at, r)
     }
 
     /// The sign rule after the day's first batch, its legs taken together (refcore's
@@ -530,35 +384,22 @@ impl Walk {
 
     /// An anchored reading's place, an opening's included, tested at the reading's point by
     /// its kind's sign rule: a number at a `min 0` or `max 0` place joins the point's group
-    /// with no leg, and the group's test refuses it there when it breaks the rule; a reading
-    /// after a decision, where no group is open, is tested as it is booked (refcore's
-    /// `sign_anchor`; tally 2.1.2). L §5.10 (point 2), §5.19; E §4.2 step 5.
+    /// with no leg, and the group's test refuses it there when it breaks the rule (refcore's
+    /// `sign_anchor`; tally 2.1.2). L §5.10 (points 1 and 3), §5.19; E §4.2 step 5.
     ///
     /// # Errors
     ///
-    /// A number error.
+    /// `ENGINE-INVARIANT` for a reading outside every group of the sign rule: a reading stands
+    /// at its day's start, in the first batch, or at its end, among the closing readings.
     pub(crate) fn sign_anchor(&mut self, m: &Reality, at: At, r: &Reading) -> Result<(), Stop> {
         let ruled = matches!(place_sign(m, &r.place), Some(Sign::Min0 | Sign::Max0));
-        let Ok(value) = &r.value else {
-            return Ok(());
-        };
-        if !ruled {
+        if r.value.is_err() || !ruled {
             return Ok(());
         }
         let key = (r.place.clone(), r.unit.clone());
-        let Some(group) = self.open_group(at) else {
-            if !breaks(m, &r.place, value) {
-                return Ok(());
-            }
-            let shown = qty_value(m, value, &r.unit)?
-                .text(m)
-                .map_err(crate::eval::num_stop)?;
-            let err = Refusal::new(
-                Code::Run(Run::Place),
-                format!("{} is {shown} after its reading at {}", r.place, r.instant),
-            );
-            return self.add(m, &r.place, &r.unit, Ent::new(at, Change::Bad(err)));
-        };
+        let group = self
+            .open_group(at)
+            .ok_or_else(|| invariant("a reading outside every group of the sign rule"))?;
         group.entry(key.clone()).or_insert_with(Vec::new);
         self.today
             .as_mut()
@@ -688,7 +529,7 @@ pub(super) fn imp_breaks(
 }
 
 /// Whether balance `v` breaks its place's sign rule (L §5.10).
-pub(crate) fn breaks(m: &Reality, place: &str, v: &Num) -> bool {
+fn breaks(m: &Reality, place: &str, v: &Num) -> bool {
     match place_sign(m, place) {
         Some(Sign::Min0) => v.is_negative(),
         Some(Sign::Max0) => !v.is_negative() && !v.is_zero(),
@@ -709,7 +550,7 @@ fn units_word(m: &Reality, place: &str) -> &'static str {
 /// `<mover> takes <place> below 0`, ` units` after it for a holding, or `above 0`: a leg
 /// the sign rule refuses where it is tested alone or with a decision's (refcore's
 /// `check_group`, `book_leg` messages). L §5.10.
-pub(crate) fn takes_text(m: &Reality, mover: &str, place: &str) -> String {
+fn takes_text(m: &Reality, mover: &str, place: &str) -> String {
     let side = match place_sign(m, place) {
         Some(Sign::Max0) => "above 0".to_owned(),
         Some(Sign::Min0 | Sign::Signed) | None => format!("below 0{}", units_word(m, place)),

@@ -26,7 +26,7 @@ input d2: date
 
 input fee: money DUK
 
-def n_after: money DUK = next(transfers, d1).cash.amount at reader
+def n_after: money DUK = (first(m in transfers over d1 ..) ties by m.day).cash.amount at reader
 
 def pay: money DUK at d1
   rule base = p_lo

@@ -37,6 +37,10 @@ version s2
   covers konto
 
 ask c1: bal(konto, 2026-03-31)
-ask c2: bal(konto, 2026-03-31) windows each
+ask c2_s1: bal(konto, 2026-03-31) with wd = 2026-03-04
+
+ask c2_s2: bal(konto, 2026-03-31) with wd = 2026-03-06
+
+ask c2_s3: bal(konto, 2026-03-31) with wd = 2026-03-09
 ask c3: bal(konto, 2026-03-31) with wd = 2026-03-07
 ask c4: bal(konto, 2026-03-31) with wd = 2026-03-04

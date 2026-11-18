@@ -33,7 +33,7 @@ move bill: transfers
 move sweep: transfers
   on sweep_day
   reads konto
-  leg cash from konto to savings amount max(0 PLN, low(konto, sweep_day .. horizon) from sweep_day - floor)
+  leg cash from konto to savings amount max(0 PLN, min(bal(konto, d) from sweep_day for d in sweep_day .. horizon step 1 day) - floor)
 
 ask b0: bal(konto, 2026-06-30)
 

@@ -45,7 +45,8 @@ STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = KV.COLUMNS + ['for']
 FOR = ({'forms', 'explain', 'windows', 'records', 'ledger', 'sweep', 'forks', '-'}  # tmp/m2/build-plan.md's G1 to G7
        | {'R%d' % n for n in range(1, 17)} | {'S%d' % n for n in range(1, 10)}  # tally 2.1.8's rules and singletons
-       | {'D', 'CUT', 'I77'})  # its follow-up items, the cut (§13) and item 77's faces
+       | {'D', 'CUT', 'I77'}  # its follow-up items, the cut (§13) and item 77's faces
+       | {'S-%d' % n for n in range(1, 10)} | {'F211'})  # tally 2.2's cuts (#211) and the fault of its plan §3
 
 
 def rows():
@@ -56,7 +57,7 @@ def rows():
         out = list(r)
     for v in out:
         if v['for'] not in FOR:
-            sys.exit('vectors.tsv: %s is for %r, not a builder group, a rule R1..R16, S1..S9, D, CUT, I77 or -' % (v['id'], v['for']))
+            sys.exit('vectors.tsv: %s is for %r, not a builder group, a rule R1..R16, S1..S9, D, CUT, I77, S-1..S-9, F211 or -' % (v['id'], v['for']))
     return out
 
 

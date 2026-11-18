@@ -257,8 +257,8 @@ pub fn lifespans(runs: &Runs) -> Result<String, String> {
 }
 
 /// No foresight in a decision (D-5, D-6, L §5.14.1): a keyed decision's instances up to j, or a
-/// decision reading `low` through its reach, are unchanged by a movement dated after them; the
-/// control, a movement before, changes them.
+/// decision reading the projection's lowest balance through its reach, are unchanged by a movement
+/// dated after them; the control, a movement before, changes them.
 pub fn foresight(runs: &Runs) -> Result<String, String> {
     let line = |v: &str| -> Result<String, String> {
         Ok(ask_line(&blocks(&answered(runs, v)?.out), "swept")?.to_owned())
@@ -372,14 +372,16 @@ pub fn steps(runs: &Runs, text: &str) -> Result<String, String> {
     }
 }
 
-/// `low(x, a .. b) from t` is the minimum over d in a..b of `bal(x, d) from t` (L §5.14.1).
+/// The projection's lowest balance, `min(bal(x, d) from t for d in a .. b step 1 day)` (L §5.14.1;
+/// `low(x, a .. b) from t` until tally 2.2, S-9), is the same minimum written with a `where` every
+/// day meets: the form an engine may recognise and the plain aggregate agree.
 pub fn low_min(runs: &Runs) -> Result<String, String> {
     let b = blocks(&answered(runs, "one")?.out);
     let (lo, mn) = (first_value(&b, "lo")?, first_value(&b, "mn")?);
     if lo == mn && cents(&lo).is_some() {
-        Ok(format!("low {lo}, the minimum over the days"))
+        Ok(format!("min {lo}, the same with a where every day meets"))
     } else {
-        Err(format!("low {lo}, the minimum over the days {mn}"))
+        Err(format!("min {lo}, a where every day meets {mn}"))
     }
 }
 

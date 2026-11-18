@@ -16,10 +16,9 @@
 use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::agenda::{Act, Mv};
 use super::day::ends;
 use super::plan::{Amount, Dated, End, Exists, Inst, Status, invariant, kind_certainty};
-use super::point::{At, Step};
+use super::point::At;
 use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};
 use crate::base::{Code, Refusal, Run as RunCode};
@@ -609,8 +608,6 @@ impl Engine {
                 &Broke::Decision(run_id),
             )?;
         }
-        // the readings after it, each tested as it is booked (E §4.2 steps 3 and 5)
-        self.readings_after(m, id, ix, key)?;
         Ok(ix)
     }
 
@@ -726,7 +723,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None))?)
+            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None)))
                 || !run.inst.obs.is_empty());
         let legless = m
             .moves
@@ -818,20 +815,9 @@ impl Engine {
             });
         }
         let legs = run.inst.legs.clone();
-        let later_rank = walk.plan_rank(&run.inst.order)?;
         let inst = run.inst.clone();
         walk.record(run);
-        for (li, lg) in legs.iter().enumerate() {
-            if let Dated::Day(ld) = lg.day
-                && ld > t
-            {
-                let at = At {
-                    rank: later_rank,
-                    ..At::of(ld, Step::Plans)
-                };
-                self.walk_mut(id)?.at(at, Act::Leg(Mv::Run(ix), li));
-                continue;
-            }
+        for lg in &legs {
             self.book_leg(m, id, (&inst, lg), key, &reg)?;
         }
         self.book_own_obs(m, id, &inst, key)?;
@@ -896,8 +882,8 @@ impl Engine {
                 if d >= t || d >= cut || d < start {
                     continue;
                 }
-                let from = self.end_booked(m, &o, &leg.from, (d, cut))?;
-                let to = self.end_booked(m, &o, &leg.to, (d, cut))?;
+                let from = self.end_booked(m, &o, &leg.from, (d, cut));
+                let to = self.end_booked(m, &o, &leg.to, (d, cut));
                 out.push(OwnLeg {
                     leg: leg.clone(),
                     from,
@@ -911,15 +897,9 @@ impl Engine {
     /// Whether observation `o` books its end `end` on day `d`: a place no version covers
     /// that day, or one `o`'s own version covers (refcore's `own_obs`, its `obs_end_on`).
     /// L §5.19 Booking an observation.
-    fn end_booked(
-        &mut self,
-        m: &Reality,
-        o: &Obs,
-        end: &End,
-        (d, cut): (Day, Day),
-    ) -> Result<bool, Stop> {
+    fn end_booked(&mut self, m: &Reality, o: &Obs, end: &End, (d, cut): (Day, Day)) -> bool {
         let Some(place) = end.place() else {
-            return Ok(false);
+            return false;
         };
         self.obs_end_on(m, o, place, d, cut)
     }
@@ -945,8 +925,9 @@ impl Engine {
             .sub
             .checked_add(1)
             .ok_or_else(|| invariant("a point past the counted subpoints"))?;
-        for wo in &own {
-            for lg in wo.obs.legs.iter().filter(|lg| lg.day.day() == Some(t)) {
+        // its observations of day t, each leg on its observation's day
+        for wo in own.iter().filter(|wo| wo.obs.day == t) {
+            for lg in &wo.obs.legs {
                 self.book_obs_now(m, id, wo, lg, key.with_sub(sub))?;
             }
         }
@@ -956,7 +937,7 @@ impl Engine {
 
 impl super::state::Walk {
     /// Records a run: its place in the list, by its instance's id. E §4.2.
-    pub(super) fn record(&mut self, run: Run) {
+    fn record(&mut self, run: Run) {
         let ix = self.runs.len();
         self.run_ids.insert(run.inst.id.clone(), ix);
         self.runs.push(run);

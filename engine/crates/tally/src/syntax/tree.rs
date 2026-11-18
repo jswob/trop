@@ -270,8 +270,6 @@ pub enum Expr {
     Value(Box<Valuation>),
     /// A query: `mean`, `share` or `quantile` (L §5.11, §5.16).
     Query(Box<Query>),
-    /// `low(x, span)` with its projection's clauses (L §5.14.1).
-    Low(Box<Low>),
     /// `crps(…)`, a forecast's score (L §5.15).
     Crps(Box<Crps>),
     /// `cdf`, `pdf` or `pmf` of a random value at a point (L §5.16).
@@ -309,17 +307,6 @@ pub struct Query {
     pub filter: Option<Expr>,
     /// A quantile's level.
     pub level: Option<Expr>,
-}
-
-/// `low(x, span)` and its projection's clauses.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Low {
-    /// The place.
-    pub place: Expr,
-    /// The span.
-    pub span: Span,
-    /// The projection's clauses.
-    pub proj: Proj,
 }
 
 /// `crps(e [weight w] for bind, y)` or `crps(e, y)` (L §2.3 `crps`).
@@ -573,15 +560,13 @@ pub struct Bal {
 pub struct Proj {
     /// `from t`.
     pub from: Option<Expr>,
-    /// `windows each`.
-    pub windows_each: bool,
     /// `random at …`.
     pub random: Option<RChoice>,
     /// `with uncertain`.
     pub uncertain: bool,
 }
 
-/// `flows(x, span [, for k]) [in CUR at fx mode]`.
+/// `flows(x, span [, for k])`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Flows {
     /// The place or move.
@@ -590,8 +575,6 @@ pub struct Flows {
     pub span: Span,
     /// `for k`.
     pub for_key: Option<Expr>,
-    /// The conversion: currency, rate and rounding mode.
-    pub convert: Option<(String, Expr, Expr)>,
 }
 
 /// `of q`: a party, a batch, or the pair.
@@ -715,7 +698,7 @@ pub enum FieldValue {
     Expr(Expr),
 }
 
-/// A leg: `leg l from a to b amount q [on d]`.
+/// A leg: `leg l from a to b amount q`, on its movement's day (L §5.14).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Leg {
     /// The leg's name.
@@ -726,8 +709,6 @@ pub struct Leg {
     pub to: Expr,
     /// Its amount.
     pub amount: Expr,
-    /// Its own day.
-    pub on: Option<Expr>,
     /// Its line: a move's `leg` line, or the line of the row whose record holds it.
     pub line: u32,
 }
@@ -785,15 +766,6 @@ pub enum Governs {
     Always,
     /// A span.
     Span(LSpan),
-}
-
-/// `known`: a day, or a window.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Known {
-    /// A day.
-    Day(Day),
-    /// `window(a, b)`.
-    Window(Day, Day),
 }
 
 /// A type (L §3.1).
@@ -1418,7 +1390,7 @@ pub enum AskBody {
     Exprs(Vec<Expr>),
     /// `residuals x span [by id]`.
     Residuals(Box<Residuals>),
-    /// `explain ref`, `explain bal(…)`, `explain low(…)` (L §5.18).
+    /// `explain ref`, `explain bal(…)` (L §5.18).
     Explain(Expr),
     /// `inputs-of ref`.
     InputsOf(Expr),
@@ -1482,8 +1454,6 @@ pub struct Ask {
     pub law: Option<Expr>,
     /// `as known e`.
     pub known: Option<Expr>,
-    /// `windows each`.
-    pub windows_each: bool,
     /// `with uncertain`.
     pub uncertain: bool,
     /// `random at …`.
@@ -1550,13 +1520,13 @@ pub enum OfRow {
     Pair(Expr, Expr),
 }
 
-/// A reading's instant (L §4.6).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Instant {
-    /// `at D [start|end]`.
-    At(Day, Option<Edge>),
-    /// `after m`.
-    After(Expr),
+/// A reading's instant, `at D [start|end]` (L §4.6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Instant {
+    /// The day.
+    pub day: Day,
+    /// The start or the end of the day; none for a reading that isn't a balance's.
+    pub edge: Option<Edge>,
 }
 
 /// The start or end of a day.
@@ -1586,7 +1556,7 @@ pub struct Row {
     /// Its own `governs`.
     pub governs: Option<Governs>,
     /// Its own `known`.
-    pub known: Option<Known>,
+    pub known: Option<Day>,
     /// Its instant.
     pub instant: Option<Instant>,
     /// Its locator.
@@ -1698,7 +1668,7 @@ pub struct Version {
     /// `governs`.
     pub governs: Option<Governs>,
     /// `known`.
-    pub known: Known,
+    pub known: Day,
     /// `enters`.
     pub enters: Option<Day>,
     /// `assumed`.

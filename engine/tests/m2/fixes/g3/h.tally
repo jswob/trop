@@ -11,9 +11,6 @@ input a: date
 input b: date
 
 ask q: a < b
-ask qw: a < b windows each
-ask qe: a == b windows each
-
 version v
   cite card
   governs always

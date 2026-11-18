@@ -3,7 +3,7 @@ model x_explain
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "T, M2 C2, G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb)"
+  note "T, M2 C2, G2: readers-of a kind through its subkind (#132: rk, rk_sub); explain of a balance whose last reading pads (e_sav), anchors (e_konto), or has a hole movement since it (e_jar) (#132); last of a reading after m, before its day (#163, #164: la_before; on and after its day refcore 2.1.7 prints a hole, L §4.6 reads the reading: not stored, a refcore case), last of a reading at a day end read past it and on it (ls, lj); explain of a def bound by the walk (#163: e_wb); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "synthetic"
 
@@ -78,7 +78,7 @@ version konto_read
   governs 2026-03
   known 2026-03-05
   anchor konto
-  stated[konto] = 10.00 PLN after save[2026-03] "saldo"
+  stated[konto] = 10.00 PLN at 2026-04-01 end "saldo"
 
 version sav_read
   cite s

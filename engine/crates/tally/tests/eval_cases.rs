@@ -1,9 +1,11 @@
 //! The builder's evaluator tests: the defs of a small reality read as refcore reads them, holes kept as holes.
 //! Spec: L §5.11 (rules, `beats`, `when`, `missing`, aggregates, `if`, Kleene logic), §5.9
 //! (bands), §7.2 (`round` and its type), §3.3 (`periodic`, `factor`), §8.1 (holes spread and
-//! never become 0), §8.2 (the register's `missing`), E §3.2 (the memo).
+//! never become 0), §8.2 (the register's `missing`), E §3.2 (the memo; a def keyed by a
+//! movement keeps its context's axes and pins, tally 2.2's 2.2-10).
 //! Twin: engine/tools/refcore/evaluate.py (`read_def`, `e_agg`, `call_band`, `c_round`,
-//! `c_missing`); each expected line is refcore's read of the same text at law 2026-02-01.
+//! `c_missing`, `movement_keyed_cone`); each expected line is refcore's read of the same text
+//! at law 2026-02-01, the fault's refcore's run of it.
 //! Invariants: reads no test, vector or answer key (R-93); the text is written here, small.
 
 #![forbid(unsafe_code)]
@@ -263,5 +265,89 @@ whole = 2
         assert_eq!(first, second, "the memo gives the same result");
         assert_eq!(engine.collected(), met, "the register is the same set");
         assert_eq!(met.entries.len(), 1, "one missing entry");
+    }
+
+    /// The plan's §3 text (`fx3.tally`): a def keyed by a movement whose amount reads an axis
+    /// and an input, summed by a helper def.
+    const KEYED_BY_MOVEMENT: &str = r#"model fx1
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask h: by_helper law 2026-06-01
+ask h2: in_pln[t] for t in transfers over 2026-03 law 2026-06-01
+ask hp: by_helper, by_helper as if {amt[yes] = 500.00 EUR} with work = yes law 2026-06-01
+"#;
+
+    #[test]
+    fn a_def_keyed_by_a_movement_keeps_the_axes_and_pins_of_its_context() {
+        // tally 2.2, 2.2-10 (pick P14): in_pln's cone records no edge to the movement its key
+        // ranges over, so its cell was trimmed of the axis and the pin the movement's amount
+        // reads, and printed under `[work = *]`; the trimming now keeps them whole
+        let given = vec![tally::Given {
+            path: "fx.tally".to_owned(),
+            bytes: Some(KEYED_BY_MOVEMENT.as_bytes().to_vec()),
+        }];
+        let request = tally::Request {
+            asks: tally::Asks::Every,
+            pin: tally::Pin::Canonical,
+            days: tally::Days::Events,
+        };
+        let answer = tally::run(given, &request).expect("an answer");
+        let heads: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(String::as_str)
+            .filter(|l| !l.starts_with(' '))
+            .collect();
+        assert_eq!(
+            heads,
+            [
+                "h [work = yes]: 400.00 PLN",
+                "h [work = no]: 1 200.00 PLN",
+                "h2 (t = in1) [work = yes]: 400.00 PLN",
+                "h2 (t = in1) [work = no]: 1 200.00 PLN",
+                "hp: (400.00 PLN, 2 000.00 PLN)",
+            ],
+            "each option of the axis, and the pin, reach the def keyed by the movement"
+        );
     }
 }

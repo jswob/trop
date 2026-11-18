@@ -94,7 +94,7 @@ impl Walk {
 
     /// The legs of the modelled-past instances at place `place` in unit `unit`, by position
     /// (the instance's, the leg's), each with its sign there (−1 out, +1 in), dated (by the
-    /// leg's day, else the instance's first) through day `d` and standing after the reading at
+    /// instance's day, a window's first) through day `d` and standing after the reading at
     /// `since` in the day walk's order (refcore's `m_bal_modelled`, its loop over
     /// `w.modelled`). E §6.2, §4.2 step 3.
     fn modelled_legs(
@@ -103,28 +103,13 @@ impl Walk {
         key: At,
         since: Option<At>,
     ) -> Result<Vec<(usize, usize, i64)>, Stop> {
-        // the m of a reading `after m` it starts from, or of an earlier one, which every later
-        // reading holds too: m's own leg is never counted after it (L §5.19; tally 2.1.8 R16,
-        // #191 Q5; pick P39 on B8 of group 3's review)
-        let mut after: Vec<&str> = Vec::new();
-        if let Some(start) = since {
-            after = self
-                .after_at
-                .iter()
-                .filter(|((p, ..), at)| p == place && **at <= start)
-                .filter_map(|((_, instant, _), _)| instant.strip_prefix("after "))
-                .collect();
-        }
         let mut out = Vec::new();
         for (ii, inst) in self.modelled.iter().enumerate() {
-            if after.contains(&inst.id.as_str()) {
+            // its legs are on its day, a window's first
+            let Some(gd) = inst.day.as_ref().and_then(Dated::lo) else {
                 continue;
-            }
-            let inst_day = inst.day.as_ref().and_then(Dated::lo);
+            };
             for (li, lg) in inst.legs.iter().enumerate() {
-                let Some(gd) = lg.day.day().or(inst_day) else {
-                    continue;
-                };
                 let in_unit = lg.unit.as_deref().is_none_or(|u| u == unit);
                 if gd > key.day || !in_unit {
                     continue;

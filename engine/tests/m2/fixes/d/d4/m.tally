@@ -26,14 +26,12 @@ version v1
   wd = window(2026-03-05, 2026-03-10) "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "w"
 
-ask l1: low(konto, 2026-03-01 .. 2026-04-30)
+ask l1: min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day)
 ask l2: min(bal(konto, d) for d in 2026-03-01 .. 2026-04-30 step 1 day)
-ask l3: low(konto, 2026-03-01 .. 2026-04-30) windows each
 ask b1: bal(konto, 2026-03-07)
 ask b2: bal(konto, 2026-03-07) >= zero
 ask b3: bal(konto, 2026-03-11)
 ask b4: min(bal(konto, 2026-03-07), zero)
-ask b5: bal(konto, 2026-03-07) windows each
 ask f1: flows(konto, 2026-03)
 ask f2: flows(konto, 2026-03-01 .. 2026-03-07)
-ask h1: low(konto, 2026-03-11 .. 2026-04-30)
+ask h1: min(bal(konto, d) for d in 2026-03-11 .. 2026-04-30 step 1 day)

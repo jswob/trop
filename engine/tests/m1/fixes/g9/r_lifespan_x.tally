@@ -39,9 +39,9 @@ ask l_into: bal(konto, 2026-06-30) from 2026-06-01
 
 ask l_before: bal(konto, 2026-06-29) from 2026-06-15
 
-ask l_low: low(konto, 2026-06-20 .. 2026-06-29) from 2026-06-20
+ask l_low: min(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-06-29 step 1 day)
 
-ask l_low_end: low(konto, 2026-06-20 .. 2026-06-30) from 2026-06-20
+ask l_low_end: min(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-06-30 step 1 day)
 
 version v
   cite card

@@ -21,12 +21,7 @@ def a2: money PLN
   rule base = amt
   rule hi beats base = amt + amt when ax == hi
 
-ask q1: e[k] < 2026-03-02 for k in kk where d[k] < 2026-03-02 windows each
-ask q2: a2 for k in kk where d[k] < 2026-03-02 windows each
-ask q3: e[k] < 2026-03-02, a2 for k in kk windows each
 ask q4: a2 for k in kk
-ask q5: e[k] < 2026-03-02, a2 for k in kk where d[k] < 2026-03-02 windows each
-
 version v
   cite card
   governs always

@@ -1,0 +1,44 @@
+model outside_any
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G2, S-1, pick P12): an outside place of unit any keeps bal(x, u, d), value and its ledger per unit; only its balance reading is refused (cut_outside_reading). Today and at 2.2 alike."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind brokers_out: place any signed outside
+place broker: brokers_out lives 1900-01-01..
+place konto: accounts PLN lives 2026-01-01..
+place eur_acc: accounts EUR lives 2026-01-01..
+input fx: num PLN/EUR
+input d1: date
+input d2: date
+input a_pln: money PLN
+input a_eur: money EUR
+
+move pay_pln: transfers
+  on d1
+  leg cash from konto to broker amount a_pln
+
+move pay_eur: transfers
+  on d2
+  leg cash from eur_acc to broker amount a_eur
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fx = 4.25 PLN/EUR "s"
+  d1 = 2026-02-10 "s"
+  d2 = 2026-02-11 "s"
+  a_pln = 100.00 PLN "s"
+  a_eur = 20.00 EUR "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  opening[eur_acc] = 50.00 EUR at 2026-01-01 start "s"
+
+ask b_pln: bal(broker, PLN, 2026-03-31)
+ask b_eur: bal(broker, EUR, 2026-03-31)
+ask val: value(broker, 2026-03-31) in PLN by fx
+ask led: residuals broker 2026-02

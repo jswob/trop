@@ -1,10 +1,10 @@
 //! The built-in calls and the reads with clauses: `bal`, `value`, `flows`, `covered`, the aggregates, `calendar`, the day sets and `price`.
-//! Spec: L §2.3 (`call`, `agg`, `AGG`, `balx`, `proj`, `wchoice`, `valuex`, `flowsx`, `MODE`,
+//! Spec: L §2.3 (`call`, `agg`, `AGG`, `balx`, `proj`, `valuex`, `flowsx`, `MODE`,
 //! `coveredx`, `calval`, `cday`, `dayset`, `price`), its parse rules 4 and 7, and its Calls
 //! (`min` and `max` with two or more plain arguments; a period word as the period argument of
 //! `periodic` and `factor`); L §2.2 (a built-in's name, read as one only directly before `(`).
 //! Twin: engine/tools/refcore/parser.py (`builtin`, `period_word_arg`, `agg`, `proj`,
-//! `wchoice`, `mode`, `calval`, `_mmdd`, `cday`, `dayset`, `price`).
+//! `mode`, `calval`, `_mmdd`, `cday`, `dayset`, `price`).
 //! Invariants: each bracket is counted by `open` as refcore counts it; a clause after a read
 //! belongs to the nearest read; the error texts are refcore's word for word.
 
@@ -36,7 +36,7 @@ fn agg_fn(word: &str) -> Option<AggFn> {
 }
 
 impl P<'_> {
-    /// A projection's clauses: `from`, `windows`, `random at`, `with uncertain`. The `from`
+    /// A projection's clauses: `from`, `random at`, `with uncertain`. The `from`
     /// term counts one depth level, so `bal(x, d) from bal(y, e) from …` is bounded by
     /// `LOAD-DEPTH` (L §2.3, tally 2.1.2).
     pub(super) fn proj(&mut self) -> Result<Proj, Stop> {
@@ -48,12 +48,6 @@ impl P<'_> {
         } else {
             None
         };
-        let windows_each = if self.accept("windows")? {
-            self.each()?;
-            true
-        } else {
-            false
-        };
         let random = if self.at("random", 0) && self.at("at", 1) {
             self.skip(2)?;
             Some(self.rchoice()?)
@@ -63,7 +57,6 @@ impl P<'_> {
         let uncertain = self.with_uncertain()?;
         Ok(Proj {
             from,
-            windows_each,
             random,
             uncertain,
         })
@@ -76,14 +69,6 @@ impl P<'_> {
             return Ok(true);
         }
         Ok(false)
-    }
-
-    /// `wchoice = "each"`.
-    pub(super) fn each(&mut self) -> Result<(), Stop> {
-        if self.at("each", 0) {
-            return self.skip(1);
-        }
-        Err(self.err("each"))
     }
 
     /// `MODE`: a rounding code's key token, or a reference.
@@ -106,7 +91,6 @@ impl P<'_> {
             return self.dist(func);
         }
         match word {
-            "low" => self.low(),
             "crps" => self.crps(),
             "cdf" => self.dist_fn(DistFnKind::Cdf),
             "pdf" => self.dist_fn(DistFnKind::Pdf),
@@ -210,7 +194,6 @@ impl P<'_> {
         let proj = if modelled {
             Proj {
                 from: None,
-                windows_each: false,
                 random: None,
                 uncertain: false,
             }
@@ -219,7 +202,6 @@ impl P<'_> {
         } else {
             Proj {
                 from: None,
-                windows_each: false,
                 random: None,
                 uncertain: self.with_uncertain()?,
             }
@@ -266,7 +248,7 @@ impl P<'_> {
         })))
     }
 
-    /// `flows(x, span [, for k]) [in CUR at fx MODE]` (L §2.3 `flowsx`, parse rule 4).
+    /// `flows(x, span [, for k])` (L §2.3 `flowsx`).
     fn flows(&mut self) -> Result<Expr, Stop> {
         self.skip(1)?;
         self.expect("(")?;
@@ -282,21 +264,10 @@ impl P<'_> {
         };
         self.expect(")")?;
         self.close()?;
-        let convert = if self.at("in", 0) && self.kind(1) == Some(&Kind::Cur) {
-            self.skip(1)?;
-            let cur = self.cur()?;
-            self.expect("at")?;
-            let rate = self.reference()?;
-            let mode = self.mode()?;
-            Some((cur, rate, mode))
-        } else {
-            None
-        };
         Ok(Expr::Flows(Box::new(Flows {
             target,
             span,
             for_key,
-            convert,
         })))
     }
 

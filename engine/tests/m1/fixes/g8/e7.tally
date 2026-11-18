@@ -82,13 +82,13 @@ move sell: unit_buys
   on sell_day
   leg units from fund to market amount n_sell
 
-ask z_rev: low(konto, 2026-03-31 .. 2026-03-01)
+ask z_rev: min(bal(konto, d) for d in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask z_revf: low(konto, 2026-03-31 .. 2026-03-01) from 2026-03-01
+ask z_revf: min(bal(konto, d) from 2026-03-01 for d in 2026-03-31 .. 2026-03-01 step 1 day)
 
 ask z_min: min(bal(konto, d) for d in 2026-03-31 .. 2026-03-01 step 1 day)
 
-ask z_rk: low(konto, hole_day .. 2026-03-01)
+ask z_rk: min(bal(konto, d) for d in hole_day .. 2026-03-01 step 1 day)
 
 version card_2026
   cite card

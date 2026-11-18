@@ -57,15 +57,13 @@ pub(super) fn instance_line(
     let body: Vec<String> = lines?.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        causes: Some(super::check::undated_causes(&body)),
         body,
         bare: false,
-
         whole: false,
         alone: false,
         met,
         laws: None,
-        carried: super::check::carried_of(&[&item]),
+        unknown: super::check::hole_days(&[&item]),
     })
 }
 
@@ -127,7 +125,7 @@ fn instance_lines(
         out.push(format!("refused: {}", err.text()));
     }
     for lg in &src.legs {
-        out.push(leg_text(m, lg, inst.day.as_ref())?);
+        out.push(leg_text(m, lg)?);
     }
     let mut attrs: Vec<&(String, Value)> = src.attrs.iter().collect();
     attrs.sort_by(|a, b| a.0.cmp(&b.0));
@@ -250,9 +248,9 @@ fn day_text(day: Option<&Dated>) -> String {
     }
 }
 
-/// A leg: its name, places and amount, and its own day where it isn't its instance's
-/// (refcore's `explain_instance`, its legs). L §5.14 Legs.
-fn leg_text(m: &Reality, lg: &LegVal, day: Option<&Dated>) -> Result<String, Stop> {
+/// A leg: its name, places and amount; its day is its instance's (refcore's
+/// `explain_instance`, its legs). L §5.14 Legs.
+fn leg_text(m: &Reality, lg: &LegVal) -> Result<String, Stop> {
     let amount = match &lg.amount {
         Amount::Qty(q) => {
             let unit = lg
@@ -264,13 +262,8 @@ fn leg_text(m: &Reality, lg: &LegVal, day: Option<&Dated>) -> Result<String, Sto
         Amount::Hole(h) => h.text(),
         Amount::Refused(r) => format!("refused: {}", r.text()),
     };
-    // a leg of an instance refused before its day has no day of its own
-    let on = match day {
-        Some(d) if *d != lg.day => format!(" on {}", day_text(Some(&lg.day))),
-        Some(_) | None => String::new(),
-    };
     Ok(format!(
-        "leg {} from {} to {} amount {amount}{on}",
+        "leg {} from {} to {} amount {amount}",
         lg.name,
         end_text(&lg.from),
         end_text(&lg.to)

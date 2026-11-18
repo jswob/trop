@@ -3,6 +3,7 @@ model pj
   on 2026-03-01
   start 2026-01-01
   end 2027-12-31
+  note "T; tally 2.2 (S-2): known is a day, so its known window is stated as the range's last day, a day after every cut it is read at that the window didn't hold, and every answer is as before"
 
 source card "invented"
 unit PLN: currency minor 0.01
@@ -10,7 +11,6 @@ unit PLN: currency minor 0.01
 input rate: money PLN
 
 ask q: rate law 2026-06-01
-ask qw: rate law 2026-06-01 windows each
 ask q27: rate law 2027-06-01
 
 version v
@@ -22,5 +22,5 @@ version v
 version v2
   cite card
   governs 2027-01-01..
-  known window(2026-02-20, 2026-03-01)
+  known 2026-03-01
   replace rate = 12.00 PLN "c"

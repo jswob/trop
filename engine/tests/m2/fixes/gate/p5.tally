@@ -56,7 +56,7 @@ ask f1: flows(groc, 2026-02), flows(groc, 2026-03), bal(konto, 2026-02-28), bal(
 ask c1: count(t in transfers over 2026-02)
 ask c2: sum(t.cash.amount for t in transfers over 2026-02)
 ask c3: count(t in transfers over 2026-04..2026-05)
-ask n1: next(transfers, 2026-02-01).day
+ask n1: (first(m in transfers over 2026-02-01 ..) ties by m.day).day
 ask fl1: flows(konto, ..2026-03-31)
 ask fl2: flows(groc, ..2026-02-28)
 ask cv1: covered(konto, ..2026-03-31)

@@ -57,9 +57,9 @@ ask am_untied: argmin(c1[k] for k in ks) ties by h[k]
 
 ask am_tied: argmin(c2[k] for k in ks) ties by h[k]
 
-ask nx: next(transfers, 2026-03-01).cash.amount
+ask nx: (first(m in transfers over 2026-03-01 ..) ties by m.day).cash.amount
 
-ask nx_unc: next(transfers, 2026-03-01).cash.amount with uncertain
+ask nx_unc: (first(m in transfers over 2026-03-01 ..) ties by m.day).cash.amount with uncertain
 
 version v
   cite s

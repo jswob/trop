@@ -11,8 +11,8 @@
 //! (`Checker.readers_of`).
 //! Invariants: an explanation prints from its trace in the order refcore prints it, each node
 //! numbered where it first prints and a cause met again referenced by its number, a row by
-//! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance, a
-//! projection and a `low` are `walked.rs`'s, a balance among the causes prints in their
+//! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance and a
+//! projection are `walked.rs`'s, a balance among the causes prints in their
 //! balance form (P63); a movement instance is `instance.rs`'s, by its move's name alone or
 //! at keys; a walk-bound def stops `NotBuilt`; rows print in
 //! the text order of their stable ids; readers by depth, each depth by id, an event kind's
@@ -23,7 +23,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::answer::unresolved_word;
 use super::check::Printed;
 use super::instance::instance_line;
-use super::walked::{Read, balance_line};
+use super::walked::balance_line;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
     Collected, Ctx, Engine, Env, Item, RuleLine, Trace, TraceKind, TracedBalance, UNSET_AXIS,
@@ -49,10 +49,7 @@ pub(super) fn explain_line(
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
     if let Expr::Bal(b) = reference {
-        return balance_line(m, (ask, Read::Bal(b), reference), engine, env, ctx);
-    }
-    if let Expr::Low(l) = reference {
-        return balance_line(m, (ask, Read::Low(l), reference), engine, env, ctx);
+        return balance_line(m, (ask, b, reference), engine, env, ctx);
     }
     match walk_form(m, reference) {
         Form::Instance => return instance_line(m, (ask, reference), engine, env, ctx),
@@ -67,7 +64,8 @@ pub(super) fn explain_line(
         unresolved_word(core::slice::from_ref(&item), place)?;
     }
     let text = head_text(m, &item)?;
-    let mut carried = super::check::carried_of(&[&item]);
+    // the line's register names the unknown days of its value's holes (L §8.2)
+    let unknown = super::check::hole_days(&[&item]);
     let trace = match engine.unpinned {
         Some(unpinned) if !ask.pins.is_empty() => outside_pins(
             m,
@@ -79,20 +77,15 @@ pub(super) fn explain_line(
         )?,
         _ => trace,
     };
-    // what the derivation prints carries its unknown days too: a window only the part outside
-    // the pins meets splits the line (L §4.4; tally 2.1.8 R13, #191 Q4)
-    crate::hole::carry_union(&mut carried, &trace.carried());
     Ok(Printed {
         text,
         body: derivation(m, &trace)?,
         bare: false,
-
         whole: false,
         alone: false,
         met,
         laws: None,
-        carried,
-        causes: Some(derivation_as(m, &trace, Laws::Left)?.join("\u{0}")),
+        unknown,
     })
 }
 
@@ -260,14 +253,12 @@ pub(super) fn inputs_line(
         text: String::new(),
         body: row_lines(m, &met)?,
         bare: true,
-
         whole: false,
         alone: false,
         met,
         laws: None,
-        // the rows rest on the value read: its unknown days (refcore's `RowSet.read`)
-        carried: super::check::carried_of(&items.iter().collect::<Vec<_>>()),
-        causes: None,
+        // the rows rest on the value read: its holes' unknown days (refcore's `RowSet.read`)
+        unknown: super::check::hole_days(&items.iter().collect::<Vec<_>>()),
     })
 }
 
@@ -558,22 +549,6 @@ fn cell_keys(trace: &Trace, at: usize) -> Result<String, Stop> {
 /// in the balance form, from the walk it read (P63); a node met again as `(<label>: see
 /// [n])`, a row by its stable id, a balance by its read. L §5.18, E §10.
 pub(super) fn derivation(m: &Reality, trace: &Trace) -> Result<Vec<String>, Stop> {
-    derivation_as(m, trace, Laws::Printed)
-}
-
-/// Whether a derivation's lines print each def cell's law date (E §10), or leave it out, as two
-/// runs of `windows each` compare their causes (refcore's `trace_key`; tally 2.1.8 R13).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Laws {
-    /// Printed, as E §10 prints a derivation.
-    Printed,
-    /// Left out.
-    Left,
-}
-
-/// [`derivation`], its law dates printed or left out as `laws` says (refcore's
-/// `explain_lines`, `trace_key`). L §5.18, E §10; tally 2.1.8 R13.
-fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
     let mut numbered: BTreeMap<usize, usize> = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
@@ -641,7 +616,7 @@ fn derivation_as(m: &Reality, trace: &Trace, laws: Laws) -> Result<Vec<String>, 
             }
         }
         let mut lines = unders.len();
-        let (head, below) = node_lines(m, trace, (at, depth), (count, laws), &mut lines)?;
+        let (head, below) = node_lines(m, trace, (at, depth), count, &mut lines)?;
         unders.resize_with(lines, Vec::new);
         out.extend(head);
         todo.extend(below.into_iter().rev());
@@ -693,7 +668,7 @@ fn node_lines(
     m: &Reality,
     trace: &Trace,
     (at, depth): (usize, usize),
-    (no, laws): (usize, Laws),
+    no: usize,
     lines: &mut usize,
 ) -> Result<(Vec<String>, Vec<Step>), Stop> {
     let node = trace.node(at)?;
@@ -720,9 +695,7 @@ fn node_lines(
         }
         TraceKind::BandRow => head.push(format!("{ind}[{no}] band row {}", node.label)),
         TraceKind::Def(law) => {
-            let law = law
-                .filter(|_| laws == Laws::Printed)
-                .map_or_else(String::new, |d| format!(", law date {}", d.text()));
+            let law = law.map_or_else(String::new, |d| format!(", law date {}", d.text()));
             head.push(format!(
                 "{ind}[{no}] {} = {}{law}",
                 node.label,

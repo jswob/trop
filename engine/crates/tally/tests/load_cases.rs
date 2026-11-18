@@ -3,7 +3,7 @@
 //! (versions), §5.7 (kinds, things, lifespans), §5.10 (places), §5.19 (observations), §8.3,
 //! §8.5 (WARN-UNREAD for a source and a place); §5.10 (priced places, `bal`, `value`), §5.14
 //! (moves and legs, `flows`), §5.19 (`observed`, `gap`, `covered`) for the checks of moves,
-//! prices and reads; §5.3 (known windows, `moves`), §4.6 (overlap and `replace`, a period
+//! prices and reads; §5.3 (`known`, `moves`), §4.6 (overlap and `replace`, a period
 //! across keys), §5.9 (band tables), §5.19 (`covers`) for the checks of versions and rows;
 //! §3.6, §5.7 (the parts clauses, the arrival and leaving rules), §5.19 (stated parts),
 //! §5.14.1 (an arrival rule's reads) for the checks of parts; §5.11 (recurrence reads and
@@ -648,15 +648,17 @@ version card_2026
                 "ask q: worth, flowed, pay.cash of konto",
                 "LOAD-FIELD of after pay.cash: a read of parts follows a leg's amount (m.leg.amount of q) (a.tally:61)",
             ),
+            // tally 2.2 cut `low` and `next` (S-9): a name before `(` that is no built-in is read
+            // as an item at its keys, and a span is no key (refcore's words at b9eb505c)
             (
                 ask,
                 "ask q: worth, flowed, low(konto, y)",
-                "LOAD-DOMAIN low over a span with an open end (a.tally:61)",
+                "LOAD-NAME unknown id low (a.tally:61)",
             ),
             (
                 ask,
                 "ask q: worth, flowed, low(konto, 2026-01-01..2026-12-31) + amt",
-                "loaded",
+                "LOAD-PARSE cannot parse: expected \")\", got .. (a.tally:61)",
             ),
             (
                 ask,
@@ -675,18 +677,13 @@ version card_2026
             ),
             (
                 ask,
-                "ask q: worth, flowed, next(konto, day)",
-                "LOAD-NAME next takes an event kind: konto (a.tally:61)",
-            ),
-            (
-                ask,
-                "ask q: worth, flowed, next(wages, amt)",
-                "LOAD-UNIT next(K, d): d is money PLN, not a date (a.tally:61)",
-            ),
-            (
-                ask,
                 "ask q: worth, flowed, next(wages, day) + amt",
-                "LOAD-UNIT key wages + money PLN (a.tally:61)",
+                "LOAD-NAME unknown id next (a.tally:61)",
+            ),
+            (
+                ask,
+                "ask q: explain low(konto, 2026-01-01 .. 2026-12-31) from 2026-01-01",
+                "LOAD-PARSE cannot parse: expected end of line, got ( (a.tally:61)",
             ),
             (
                 ask,
@@ -736,23 +733,13 @@ version card_2026
             (
                 flowed,
                 "def flowed: money PLN = flows(world, y)",
-                "LOAD-UNIT flows of world, a place of unit any: it sums no one unit; convert it (in CUR at fx mode) (a.tally:59)",
+                "LOAD-UNIT flows of world, a place of unit any: it sums no one unit (a.tally:59)",
             ),
             (flowed, "def flowed: money PLN = flows(konto, y)", "loaded"),
             (
                 flowed,
                 "def flowed: money PLN = flows(pay[q1], y)",
                 "LOAD-KEY wrong number of keys for pay (a.tally:59)",
-            ),
-            (
-                flowed,
-                "def flowed: money PLN = flows(world, y) in PLN at amt half-up",
-                "LOAD-UNIT flows in PLN at amt: the rate is money PLN (a.tally:59)",
-            ),
-            (
-                flowed,
-                "def flowed: money PLN = flows(konto_eur, y) in PLN at fx half-up",
-                "loaded",
             ),
             (
                 worth,
@@ -812,6 +799,18 @@ version card_2026
                 worth,
                 "def worth: num PLN = value(st, day) in PLN by last(flowed)",
                 "LOAD-UNIT value by flowed: a price is a num CUR/u keyed by unit, or an expression of that type with its keys (a.tally:57)",
+            ),
+            // tally 2.2, S-1: `any` is the unit of an outside kind only, and a place of unit
+            // `any` takes no balance reading (refcore's words at spec/2.2 300cda08)
+            (
+                "kind homes: place PLN min 0",
+                "kind homes: place PLN min 0\n\nkind wallets: place any signed",
+                "LOAD-PLACEKIND place kind wallets is of unit any and isn't outside (a.tally:19)",
+            ),
+            (
+                "  known 2026-01-01",
+                "  known 2026-01-01\n  anchor world\n  stated[world] = 5.00 PLN at 2026-01-31 end \"the card\"",
+                "LOAD-UNIT stated[world]: a place of unit any takes no balance reading (a.tally:68)",
             ),
         ];
         for (old, new, expected) in cases {
@@ -913,13 +912,11 @@ version bank_a
         let fy = "\n\nindex fy = year 2025..2026 from 04-06\n\ninput lim[y in fy]: num\n\n";
         let obs2 = "  bank[r1] = (on: 2026-02-11, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) \"again\"";
         let cases: Vec<(&str, String, &str)> = vec![
-            // a version known in a window, and a row's own window
-            (known, "  known window(2025-12-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "loaded"),
-            (known, "  known window(2026-02-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-DOMAIN window(a, b) with a after b (L §8.4) (a.tally:46)"),
-            (known, "  known window(2026-01-01, 2026-07-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-KNOWN version card_2026 is known after the model's on date (a.tally:46)"),
-            (rate, "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"".to_owned(), "loaded"),
-            (rate, "  rate[q2] = 2 known window(2026-01-02, 2026-07-01) \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known after the model's on date (a.tally:53)"),
-            (rate, "  rate[q2] = 2 known window(2025-12-01, 2026-02-01) \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known before its version card_2026 (a.tally:53)"),
+            // a version's and a row's `known` is a day (tally 2.2, S-2)
+            (known, "  known window(2025-12-01, 2026-01-01)\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-PARSE cannot parse: expected a day, got window (a.tally:49)"),
+            (known, "  known 2026-07-01\n  amt = 100.00 PLN \"the card\"".to_owned(), "LOAD-KNOWN version card_2026 is known after the model's on date (a.tally:46)"),
+            (rate, "  rate[q2] = 2 known 2026-07-01 \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known after the model's on date (a.tally:53)"),
+            (rate, "  rate[q2] = 2 known 2025-12-01 \"the card\"".to_owned(), "LOAD-KNOWN row rate[q2] is known before its version card_2026 (a.tally:53)"),
             // a version's moves
             (obs, format!("{obs}{later}  moves bank_a to 2026-02-01..2026-03-31"), "loaded"),
             ("  covers konto", "  moves zz to 2026-03-01..\n  covers konto".to_owned(), "LOAD-MOVES moves zz: unknown, or not known before this version (a.tally:65)"),
@@ -927,8 +924,6 @@ version bank_a
             ("  covers konto", "  moves bank_a to 2026-03\n  covers konto".to_owned(), "LOAD-MOVES moves bank_a: unknown, or not known before this version (a.tally:65)"),
             (tier, format!("{tier}{later}  moves card_2026 to 2026-02-01..\n\nversion card_d\n  cite card\n  known 2026-04-01\n  moves card_2026 to 2026-05-01..\n"), "LOAD-MOVES two moves of card_2026 known the same day (a.tally:69)"),
             ("  covers konto", "  moves card_2026 to amt\n  covers konto".to_owned(), "LOAD-PARSE cannot parse: expected a date or a period, got amt (a.tally:65)"),
-            (obs, format!("{obs}\n\nversion card_w\n  cite card\n  known window(2026-03-15, 2026-04-01)\n  moves bank_a to 2026-02-01..2026-03-31\n"), "loaded"),
-            (obs, format!("{obs}\n\nversion card_w\n  cite card\n  known window(2026-04-01, 2026-04-10)\n  moves bank_a to 2026-02-01..2026-03-31\n{later}  moves bank_a to 2026-02-01..2026-04-30"), "LOAD-MOVES two moves of bank_a known the same day (a.tally:78)"),
             // a key that is also an id
             (tiers, "index tiers = [t1, t2, amt]".to_owned(), "LOAD-KEY a key is also an id: amt (a key of tiers) (a.tally:16)"),
             ("place world: outside lives 1900-01-01..", "place world: outside lives 1900-01-01..\n\nkind persons".to_owned(), "loaded"),
@@ -1034,45 +1029,26 @@ version bank_a
         }
     }
 
-    /// A version known in a window over an opening's row is not built yet; a row's own known
-    /// window and a `moves` line, which M1 stopped on, run since M2 (picks P6, P26, P36).
+    /// A `moves` line, which M1 stopped on, runs since M2 (picks P6, P26, P36).
     #[test]
-    fn an_ask_over_a_known_window_or_a_moves_line_is_not_built_yet() {
+    fn an_ask_over_a_moves_line_runs() {
         assert_eq!(
             first_line(VERSIONS).as_deref(),
             Some("q: 200.00 PLN"),
             "refcore's first line"
         );
-        let unbuilt = [(
-            "  known 2026-01-01\n  amt",
-            "  known window(2025-12-01, 2026-01-01)\n  amt",
-        )];
-        for (old, new) in unbuilt {
-            assert!(VERSIONS.contains(old), "{old} is in the base");
-            let text = VERSIONS.replacen(old, new, 1);
-            assert_eq!(refusal(&text), "loaded", "{new} loads");
-            assert_eq!(first_line(&text), None, "{new}: M1 runs it");
-        }
-        let built = [
-            (
-                "  rate[q2] = 2 \"the card\"",
-                "  rate[q2] = 2 known window(2026-01-02, 2026-02-01) \"the card\"",
-            ),
-            (
-                "\"the statement\"\n",
-                "\"the statement\"\n\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n  moves bank_a to 2026-02-01..2026-03-31\n",
-            ),
-        ];
-        for (old, new) in built {
-            assert!(VERSIONS.contains(old), "{old} is in the base");
-            let text = VERSIONS.replacen(old, new, 1);
-            assert_eq!(refusal(&text), "loaded", "{new} loads");
-            assert_eq!(
-                first_line(&text).as_deref(),
-                Some("q: 200.00 PLN"),
-                "{new}: refcore's first line"
-            );
-        }
+        let (old, new) = (
+            "\"the statement\"\n",
+            "\"the statement\"\n\nversion card_b\n  cite card\n  governs 2026-04-01..\n  known 2026-04-01\n  moves bank_a to 2026-02-01..2026-03-31\n",
+        );
+        assert!(VERSIONS.contains(old), "{old} is in the base");
+        let text = VERSIONS.replacen(old, new, 1);
+        assert_eq!(refusal(&text), "loaded", "{new} loads");
+        assert_eq!(
+            first_line(&text).as_deref(),
+            Some("q: 200.00 PLN"),
+            "{new}: refcore's first line"
+        );
     }
 
     /// Two place kinds that keep parts, one by owner and one by batch, an arrival rule and
@@ -1762,18 +1738,8 @@ version card_2026
                 ],
                 "loaded",
             ),
-            // after-plan
-            (
-                &[
-                    (
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  stated[konto] = 400.00 PLN after pay[2026-02] \"the card\"",
-                    ),
-                    ("  known 2026-01-01", "  known 2026-01-01\n  anchor konto"),
-                ],
-                "LOAD-ORDER stated[konto] after pay[2026-02]: pay[2026-02] is a plan or an observation (a.tally:70)",
-            ),
-            // after-decision
+            // after-cut: a balance reading stands at its day's start or end; `after m` is cut
+            // (tally 2.2, S-3)
             (
                 &[
                     (
@@ -1782,21 +1748,7 @@ version card_2026
                     ),
                     ("  known 2026-01-01", "  known 2026-01-01\n  anchor konto"),
                 ],
-                "loaded",
-            ),
-            // after-obs
-            (
-                &[
-                    (
-                        "input cal: calendar",
-                        "input cal: calendar\n\ninput bank: observed",
-                    ),
-                    (
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  opening[safe] = 0 PLN after bank \"the card\"",
-                    ),
-                ],
-                "LOAD-ORDER opening[safe] after bank: bank is a plan or an observation (a.tally:71)",
+                "LOAD-PARSE cannot parse: expected end of line, got after (a.tally:70)",
             ),
             // seen-own
             (
@@ -3604,13 +3556,13 @@ version v1
         let probes: &[(Edits, &str)] = &[
             // base
             (&[], "loaded"),
-            // rows
+            // rows: a row of an input is no side (tally 2.2, S-8)
             (
                 &[(
                     "  same bank[r1] = card_bank[c1]",
                     "  same fee[a1] = fee_in[a1]",
                 )],
-                "loaded",
+                "LOAD-SAME same fee[a1] = fee_in[a1]: a row of an input and a row of an input (a.tally:57)",
             ),
             // move-row: an instance and an observed row of one model (L §6.1, tally 2.1.8,
             // the user's cut), the row named first
@@ -3643,12 +3595,12 @@ version v1
                     "  same bank[r1] = card_bank[c1]",
                     "  same fee[a1] = bank[r1]",
                 )],
-                "LOAD-SAME same fee[a1] = bank[r1]: a row and a movement (a.tally:57)",
+                "LOAD-SAME same fee[a1] = bank[r1]: a row of an input and a movement (a.tally:57)",
             ),
-            // types
+            // rows of two types: refused as rows, before their types
             (
                 &[("  same bank[r1] = card_bank[c1]", "  same fee[a1] = count")],
-                "LOAD-SAME same fee[a1] = count: rows of types money PLN and int (a.tally:57)",
+                "LOAD-SAME same fee[a1] = count: a row of an input and a row of an input (a.tally:57)",
             ),
             // place
             (

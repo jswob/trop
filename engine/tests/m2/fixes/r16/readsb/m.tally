@@ -3,7 +3,7 @@ model t
   on 2026-06-10
   start 2026-03-01
   end 2026-06-30
-  note "T, tally 2.1.8 R16 (#200): item #176, a plan whose amount reads bal(konto, d) modelled is refused at load, LOAD-READS (the planner's p5b)"
+  note "T, tally 2.1.8 R16 (#200): item #176, a plan whose amount reads bal(konto, d) modelled is refused at load, LOAD-READS (the planner's p5b); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -35,7 +35,7 @@ version st
   covers konto
   pad konto from world
   bank[o1] = (on: 2026-03-15, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
-  stated[konto] = 90.00 PLN after save[2026-03] "saldo"
+  stated[konto] = 90.00 PLN at 2026-03-15 end "saldo"
 
 
 kind tops: event certain

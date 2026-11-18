@@ -1,0 +1,35 @@
+model flows_conv_rule
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 G1 S-7 (#211, plan §5): a converted flows is cut; in a rule, flows(x, s) in PLN reads on as a membership test and the grammar stops at at (LOAD-PARSE, choice C-1 (a)). Its twin flows_conv_rule_twin.tally writes the sum over the movements of a def keyed by the movement that rounds each at its day."
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt: money EUR
+input mo: month
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount amt
+
+def total: money PLN at reader
+  rule base = flows(wallet, mo) in PLN at fx half-up
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt = 100.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask q: total law 2026-06-01

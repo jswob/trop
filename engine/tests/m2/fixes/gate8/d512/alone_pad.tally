@@ -3,7 +3,7 @@ model t
   on 2026-04-10
   start 2026-03-01
   end 2026-04-30
-  note "T, M2 gate 8 run 43690242450 on d512fe7b: a reading after a decision padded from a min 0 place that stays above 0 (walk/readings.rs tested_alone)"
+  note "T, M2 gate 8 run 43690242450 on d512fe7b: a reading after a decision padded from a min 0 place that stays above 0 (walk/readings.rs tested_alone); tally 2.2 (S-3): its reading after m is stated at the end of the day m stands on, m being the last movement there, so every answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -39,4 +39,4 @@ version rd
   governs 2026-03..2026-04
   known 2026-04-04
   pad konto from sav
-  stated[konto] = 400.00 PLN after save[2026-03] "saldo"
+  stated[konto] = 400.00 PLN at 2026-03-15 end "saldo"

@@ -17,13 +17,8 @@ def dd: date
 def ee: date
   rule base = dd
 
-ask q1: dd == ee windows each
-ask q2: x == dd with x = dd windows each
-ask q3: dd == y windows each
 ask q4: dd
 ask q5: dd == ee
-ask q6: x == ee with x = dd windows each
-
 version v
   cite card
   governs always

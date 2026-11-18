@@ -13,7 +13,9 @@ place konto: accounts PLN lives 2026-01-01..
 
 ask a: explain bal(konto, 2026-02-20)
 
-ask b: explain low(konto, 2026-02-20 .. 2026-02-25)
+ask b_day: argmin(bal(konto, d) for d in 2026-02-20 .. 2026-02-25 step 1 day) ties by d
+
+ask b: explain bal(konto, 2026-02-20)
 
 ask c: explain bal(konto, 2026-02-20 start)
 

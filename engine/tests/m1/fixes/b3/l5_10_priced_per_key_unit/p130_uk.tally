@@ -3,7 +3,7 @@ model unitkind
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
-  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit"
+  note "a place priced by a clause keyed by a kind of units (invented; MB3's unit_in): fxs[u in currencies] prices a place in EUR per its unit; tally 2.2 (S-1): a model's place holds one unit, so each place that held several is one place per unit under a kind of unit one, and a value of it is the sum over those places"
 
 source card "probe card"
 
@@ -13,7 +13,7 @@ unit EUR: currency minor 0.01
 
 unit USD: currency minor 0.01
 
-kind safes: place any signed
+kind safes: place one signed
 
 kind fxheld: place one min 0 priced fxs
 
@@ -21,7 +21,9 @@ place eur_acc: accounts EUR lives 2026-01-01..
 
 place usd_acc: accounts USD lives 2026-01-01..
 
-place safe: safes lives 2026-01-01..
+place safe_eur: safes EUR lives 2026-01-01..
+
+place safe_pln: safes PLN lives 2026-01-01..
 
 place eurcash: fxheld EUR lives 2026-01-01..
 
@@ -41,11 +43,11 @@ def fxd[u in currencies]: num PLN/u = fxs[u]
 
 move put_eur: transfers
   on put_day
-  leg cash from market to safe amount amt_eur
+  leg cash from market to safe_eur amount amt_eur
 
 move put_pln: transfers
   on put_day
-  leg cash from market to safe amount amt_pln
+  leg cash from market to safe_pln amount amt_pln
 
 version card_2026
   cite card

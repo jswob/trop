@@ -52,5 +52,3 @@ version st
   stated[jar[b]] = 30.00 PLN at 2026-03-31 end "s"
 
 ask r_for: residuals jar[k] 2026-03 for k in ks
-ask r_each: residuals konto 2026-03 windows each
-ask d_each: diff(bal(konto, 2026-04-30)) in sc against t windows each

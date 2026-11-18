@@ -59123,7 +59123,7 @@ version facts
   tier: [1000, inf) = 0.02
 
 ask swept: flows(ksweep[2025-01], 2025-01-01 .. 2025-06-30), flows(ksweep[2025-02], 2025-01-01 .. 2025-06-30), flows(ksweep[2025-03], 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-00,4:base,17:run reality.tally,1541:13:reality.tally,1518:model fl00
+,,13:foresight-low,16:foresight-low-00,4:base,17:run reality.tally,1568:13:reality.tally,1545:model fl00
   tally 2
   on 2025-03-01
   start 2025-01-01
@@ -59169,7 +59169,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59192,7 +59192,7 @@ version facts
   opening[acc_0] = 105996.12 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-00,5:later,17:run reality.tally,1808:13:reality.tally,1785:model fl00
+,,13:foresight-low,16:foresight-low-00,5:later,17:run reality.tally,1835:13:reality.tally,1812:model fl00
   tally 2
   on 2025-03-01
   start 2025-01-01
@@ -59247,7 +59247,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59272,7 +59272,7 @@ version facts
   opening[acc_1] = 2620.82 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-00,7:control,17:run reality.tally,1808:13:reality.tally,1785:model fl00
+,,13:foresight-low,16:foresight-low-00,7:control,17:run reality.tally,1835:13:reality.tally,1812:model fl00
   tally 2
   on 2025-03-01
   start 2025-01-01
@@ -59327,7 +59327,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59352,7 +59352,7 @@ version facts
   opening[acc_1] = 2620.82 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-01,4:base,17:run reality.tally,2028:13:reality.tally,2005:model fl01
+,,13:foresight-low,16:foresight-low-01,4:base,17:run reality.tally,2055:13:reality.tally,2032:model fl01
   tally 2
   on 2025-05-20
   start 2025-01-01
@@ -59413,7 +59413,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59440,7 +59440,7 @@ version facts
   opening[acc_2] = 3926.86 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-01,5:later,17:run reality.tally,2295:13:reality.tally,2272:model fl01
+,,13:foresight-low,16:foresight-low-01,5:later,17:run reality.tally,2322:13:reality.tally,2299:model fl01
   tally 2
   on 2025-05-20
   start 2025-01-01
@@ -59510,7 +59510,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59539,7 +59539,7 @@ version facts
   opening[acc_0] = 549.73 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-01,7:control,17:run reality.tally,2295:13:reality.tally,2272:model fl01
+,,13:foresight-low,16:foresight-low-01,7:control,17:run reality.tally,2322:13:reality.tally,2299:model fl01
   tally 2
   on 2025-05-20
   start 2025-01-01
@@ -59609,7 +59609,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59638,7 +59638,7 @@ version facts
   opening[acc_0] = 549.73 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-02,4:base,17:run reality.tally,2070:13:reality.tally,2047:model fl02
+,,13:foresight-low,16:foresight-low-02,4:base,17:run reality.tally,2097:13:reality.tally,2074:model fl02
   tally 2
   on 2025-05-11
   start 2025-01-01
@@ -59702,7 +59702,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59729,7 +59729,7 @@ version facts
   opening[acc_0] = 2208.11 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-02,5:later,17:run reality.tally,2337:13:reality.tally,2314:model fl02
+,,13:foresight-low,16:foresight-low-02,5:later,17:run reality.tally,2364:13:reality.tally,2341:model fl02
   tally 2
   on 2025-05-11
   start 2025-01-01
@@ -59802,7 +59802,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59831,7 +59831,7 @@ version facts
   sweep_floor = 6733.27
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-02,7:control,17:run reality.tally,2337:13:reality.tally,2314:model fl02
+,,13:foresight-low,16:foresight-low-02,7:control,17:run reality.tally,2364:13:reality.tally,2341:model fl02
   tally 2
   on 2025-05-11
   start 2025-01-01
@@ -59904,7 +59904,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59933,7 +59933,7 @@ version facts
   sweep_floor = 6733.27
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-03,4:base,17:run reality.tally,1312:13:reality.tally,1289:model fl03
+,,13:foresight-low,16:foresight-low-03,4:base,17:run reality.tally,1339:13:reality.tally,1316:model fl03
   tally 2
   on 2025-03-30
   start 2025-01-01
@@ -59972,7 +59972,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -59993,7 +59993,7 @@ version facts
   sweep_reach = 2025-05-26
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-03,5:later,17:run reality.tally,1579:13:reality.tally,1556:model fl03
+,,13:foresight-low,16:foresight-low-03,5:later,17:run reality.tally,1606:13:reality.tally,1583:model fl03
   tally 2
   on 2025-03-30
   start 2025-01-01
@@ -60041,7 +60041,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60064,7 +60064,7 @@ version facts
   sweep_reach = 2025-05-26
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-03,7:control,17:run reality.tally,1579:13:reality.tally,1556:model fl03
+,,13:foresight-low,16:foresight-low-03,7:control,17:run reality.tally,1606:13:reality.tally,1583:model fl03
   tally 2
   on 2025-03-30
   start 2025-01-01
@@ -60112,7 +60112,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60135,7 +60135,7 @@ version facts
   sweep_reach = 2025-05-26
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-04,4:base,17:run reality.tally,1632:13:reality.tally,1609:model fl04
+,,13:foresight-low,16:foresight-low-04,4:base,17:run reality.tally,1659:13:reality.tally,1636:model fl04
   tally 2
   on 2025-04-01
   start 2025-01-01
@@ -60183,7 +60183,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60207,7 +60207,7 @@ version facts
   day_mv_0 = 2025-04-29
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-04,5:later,17:run reality.tally,1899:13:reality.tally,1876:model fl04
+,,13:foresight-low,16:foresight-low-04,5:later,17:run reality.tally,1926:13:reality.tally,1903:model fl04
   tally 2
   on 2025-04-01
   start 2025-01-01
@@ -60264,7 +60264,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60290,7 +60290,7 @@ version facts
   day_mv_0 = 2025-04-29
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-04,7:control,17:run reality.tally,1899:13:reality.tally,1876:model fl04
+,,13:foresight-low,16:foresight-low-04,7:control,17:run reality.tally,1926:13:reality.tally,1903:model fl04
   tally 2
   on 2025-04-01
   start 2025-01-01
@@ -60347,7 +60347,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60373,7 +60373,7 @@ version facts
   day_mv_0 = 2025-04-29
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-05,4:base,17:run reality.tally,1806:13:reality.tally,1783:model fl05
+,,13:foresight-low,16:foresight-low-05,4:base,17:run reality.tally,1833:13:reality.tally,1810:model fl05
   tally 2
   on 2025-06-10
   start 2025-01-01
@@ -60428,7 +60428,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60453,7 +60453,7 @@ version facts
   sweep_floor = 17626.08
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-05,5:later,17:run reality.tally,2073:13:reality.tally,2050:model fl05
+,,13:foresight-low,16:foresight-low-05,5:later,17:run reality.tally,2100:13:reality.tally,2077:model fl05
   tally 2
   on 2025-06-10
   start 2025-01-01
@@ -60517,7 +60517,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60544,7 +60544,7 @@ version facts
   day_mv_x = 2025-06-20
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-05,7:control,17:run reality.tally,2073:13:reality.tally,2050:model fl05
+,,13:foresight-low,16:foresight-low-05,7:control,17:run reality.tally,2100:13:reality.tally,2077:model fl05
   tally 2
   on 2025-06-10
   start 2025-01-01
@@ -60608,7 +60608,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60635,7 +60635,7 @@ version facts
   day_mv_x = 2025-02-17
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-06,4:base,17:run reality.tally,2258:13:reality.tally,2235:model fl06
+,,13:foresight-low,16:foresight-low-06,4:base,17:run reality.tally,2285:13:reality.tally,2262:model fl06
   tally 2
   on 2025-05-13
   start 2025-01-01
@@ -60703,7 +60703,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60732,7 +60732,7 @@ version facts
   amt_mv_2 = 1899.20
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-06,5:later,17:run reality.tally,2525:13:reality.tally,2502:model fl06
+,,13:foresight-low,16:foresight-low-06,5:later,17:run reality.tally,2552:13:reality.tally,2529:model fl06
   tally 2
   on 2025-05-13
   start 2025-01-01
@@ -60809,7 +60809,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60840,7 +60840,7 @@ version facts
   day_mv_x = 2025-05-06
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-06,7:control,17:run reality.tally,2525:13:reality.tally,2502:model fl06
+,,13:foresight-low,16:foresight-low-06,7:control,17:run reality.tally,2552:13:reality.tally,2529:model fl06
   tally 2
   on 2025-05-13
   start 2025-01-01
@@ -60917,7 +60917,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -60948,7 +60948,7 @@ version facts
   day_mv_x = 2025-02-15
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-07,4:base,17:run reality.tally,1725:13:reality.tally,1702:model fl07
+,,13:foresight-low,16:foresight-low-07,4:base,17:run reality.tally,1752:13:reality.tally,1729:model fl07
   tally 2
   on 2025-03-18
   start 2025-01-01
@@ -60998,7 +60998,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61023,7 +61023,7 @@ version facts
   day_mv_1 = 2025-02-14
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-07,5:later,17:run reality.tally,1992:13:reality.tally,1969:model fl07
+,,13:foresight-low,16:foresight-low-07,5:later,17:run reality.tally,2019:13:reality.tally,1996:model fl07
   tally 2
   on 2025-03-18
   start 2025-01-01
@@ -61082,7 +61082,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61109,7 +61109,7 @@ version facts
   day_mv_1 = 2025-02-14
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-07,7:control,17:run reality.tally,1992:13:reality.tally,1969:model fl07
+,,13:foresight-low,16:foresight-low-07,7:control,17:run reality.tally,2019:13:reality.tally,1996:model fl07
   tally 2
   on 2025-03-18
   start 2025-01-01
@@ -61168,7 +61168,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61195,7 +61195,7 @@ version facts
   day_mv_1 = 2025-02-14
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-08,4:base,17:run reality.tally,2256:13:reality.tally,2233:model fl08
+,,13:foresight-low,16:foresight-low-08,4:base,17:run reality.tally,2283:13:reality.tally,2260:model fl08
   tally 2
   on 2025-05-19
   start 2025-01-01
@@ -61263,7 +61263,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61292,7 +61292,7 @@ version facts
   day_mv_0 = 2025-04-14
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-08,5:later,17:run reality.tally,2523:13:reality.tally,2500:model fl08
+,,13:foresight-low,16:foresight-low-08,5:later,17:run reality.tally,2550:13:reality.tally,2527:model fl08
   tally 2
   on 2025-05-19
   start 2025-01-01
@@ -61369,7 +61369,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61400,7 +61400,7 @@ version facts
   day_mv_1 = 2025-03-01
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-08,7:control,17:run reality.tally,2523:13:reality.tally,2500:model fl08
+,,13:foresight-low,16:foresight-low-08,7:control,17:run reality.tally,2550:13:reality.tally,2527:model fl08
   tally 2
   on 2025-05-19
   start 2025-01-01
@@ -61477,7 +61477,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61508,7 +61508,7 @@ version facts
   day_mv_1 = 2025-03-01
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-09,4:base,17:run reality.tally,1577:13:reality.tally,1554:model fl09
+,,13:foresight-low,16:foresight-low-09,4:base,17:run reality.tally,1604:13:reality.tally,1581:model fl09
   tally 2
   on 2025-04-13
   start 2025-01-01
@@ -61556,7 +61556,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61579,7 +61579,7 @@ version facts
   amt_mv_0 = 1115.03
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-09,5:later,17:run reality.tally,1844:13:reality.tally,1821:model fl09
+,,13:foresight-low,16:foresight-low-09,5:later,17:run reality.tally,1871:13:reality.tally,1848:model fl09
   tally 2
   on 2025-04-13
   start 2025-01-01
@@ -61636,7 +61636,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61661,7 +61661,7 @@ version facts
   amt_mv_0 = 1115.03
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-09,7:control,17:run reality.tally,1844:13:reality.tally,1821:model fl09
+,,13:foresight-low,16:foresight-low-09,7:control,17:run reality.tally,1871:13:reality.tally,1848:model fl09
   tally 2
   on 2025-04-13
   start 2025-01-01
@@ -61718,7 +61718,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61743,7 +61743,7 @@ version facts
   amt_mv_0 = 1115.03
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-10,4:base,17:run reality.tally,1539:13:reality.tally,1516:model fl10
+,,13:foresight-low,16:foresight-low-10,4:base,17:run reality.tally,1566:13:reality.tally,1543:model fl10
   tally 2
   on 2025-02-16
   start 2025-01-01
@@ -61789,7 +61789,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61812,7 +61812,7 @@ version facts
   opening[acc_0] = 117188.87 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-10,5:later,17:run reality.tally,1806:13:reality.tally,1783:model fl10
+,,13:foresight-low,16:foresight-low-10,5:later,17:run reality.tally,1833:13:reality.tally,1810:model fl10
   tally 2
   on 2025-02-16
   start 2025-01-01
@@ -61867,7 +61867,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61892,7 +61892,7 @@ version facts
   sweep_floor = 47734.21
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-10,7:control,17:run reality.tally,1806:13:reality.tally,1783:model fl10
+,,13:foresight-low,16:foresight-low-10,7:control,17:run reality.tally,1833:13:reality.tally,1810:model fl10
   tally 2
   on 2025-02-16
   start 2025-01-01
@@ -61947,7 +61947,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -61972,7 +61972,7 @@ version facts
   sweep_floor = 47734.21
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-11,4:base,17:run reality.tally,1633:13:reality.tally,1610:model fl11
+,,13:foresight-low,16:foresight-low-11,4:base,17:run reality.tally,1660:13:reality.tally,1637:model fl11
   tally 2
   on 2025-05-16
   start 2025-01-01
@@ -62020,7 +62020,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62044,7 +62044,7 @@ version facts
   amt_mv_1 = 541.08
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-11,5:later,17:run reality.tally,1900:13:reality.tally,1877:model fl11
+,,13:foresight-low,16:foresight-low-11,5:later,17:run reality.tally,1927:13:reality.tally,1904:model fl11
   tally 2
   on 2025-05-16
   start 2025-01-01
@@ -62101,7 +62101,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62127,7 +62127,7 @@ version facts
   amt_mv_1 = 541.08
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-11,7:control,17:run reality.tally,1900:13:reality.tally,1877:model fl11
+,,13:foresight-low,16:foresight-low-11,7:control,17:run reality.tally,1927:13:reality.tally,1904:model fl11
   tally 2
   on 2025-05-16
   start 2025-01-01
@@ -62184,7 +62184,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62210,7 +62210,7 @@ version facts
   amt_mv_1 = 541.08
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-12,4:base,17:run reality.tally,2202:13:reality.tally,2179:model fl12
+,,13:foresight-low,16:foresight-low-12,4:base,17:run reality.tally,2229:13:reality.tally,2206:model fl12
   tally 2
   on 2025-05-03
   start 2025-01-01
@@ -62278,7 +62278,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62306,7 +62306,7 @@ version facts
   day_mv_3 = 2025-05-06
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-12,5:later,17:run reality.tally,2469:13:reality.tally,2446:model fl12
+,,13:foresight-low,16:foresight-low-12,5:later,17:run reality.tally,2496:13:reality.tally,2473:model fl12
   tally 2
   on 2025-05-03
   start 2025-01-01
@@ -62383,7 +62383,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62413,7 +62413,7 @@ version facts
   opening[acc_1] = 3563.27 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-12,7:control,17:run reality.tally,2469:13:reality.tally,2446:model fl12
+,,13:foresight-low,16:foresight-low-12,7:control,17:run reality.tally,2496:13:reality.tally,2473:model fl12
   tally 2
   on 2025-05-03
   start 2025-01-01
@@ -62490,7 +62490,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62520,7 +62520,7 @@ version facts
   opening[acc_1] = 3563.27 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-13,4:base,17:run reality.tally,1404:13:reality.tally,1381:model fl13
+,,13:foresight-low,16:foresight-low-13,4:base,17:run reality.tally,1431:13:reality.tally,1408:model fl13
   tally 2
   on 2025-03-18
   start 2025-01-01
@@ -62561,7 +62561,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62583,7 +62583,7 @@ version facts
   opening[acc_0] = 101367.62 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-13,5:later,17:run reality.tally,1671:13:reality.tally,1648:model fl13
+,,13:foresight-low,16:foresight-low-13,5:later,17:run reality.tally,1698:13:reality.tally,1675:model fl13
   tally 2
   on 2025-03-18
   start 2025-01-01
@@ -62633,7 +62633,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62657,7 +62657,7 @@ version facts
   sweep_floor = 12949.47
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-13,7:control,17:run reality.tally,1671:13:reality.tally,1648:model fl13
+,,13:foresight-low,16:foresight-low-13,7:control,17:run reality.tally,1698:13:reality.tally,1675:model fl13
   tally 2
   on 2025-03-18
   start 2025-01-01
@@ -62707,7 +62707,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62731,7 +62731,7 @@ version facts
   sweep_floor = 12949.47
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-14,4:base,17:run reality.tally,2294:13:reality.tally,2271:model fl14
+,,13:foresight-low,16:foresight-low-14,4:base,17:run reality.tally,2321:13:reality.tally,2298:model fl14
   tally 2
   on 2025-04-27
   start 2025-01-01
@@ -62801,7 +62801,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_3, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_3, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62830,7 +62830,7 @@ version facts
   opening[acc_0] = 3603.95 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-14,5:later,17:run reality.tally,2561:13:reality.tally,2538:model fl14
+,,13:foresight-low,16:foresight-low-14,5:later,17:run reality.tally,2588:13:reality.tally,2565:model fl14
   tally 2
   on 2025-04-27
   start 2025-01-01
@@ -62909,7 +62909,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_3, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_3, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -62940,7 +62940,7 @@ version facts
   amt_mv_x = 31741.55
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-14,7:control,17:run reality.tally,2561:13:reality.tally,2538:model fl14
+,,13:foresight-low,16:foresight-low-14,7:control,17:run reality.tally,2588:13:reality.tally,2565:model fl14
   tally 2
   on 2025-04-27
   start 2025-01-01
@@ -63019,7 +63019,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_3, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_3, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63050,7 +63050,7 @@ version facts
   amt_mv_x = 31741.55
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-15,4:base,17:run reality.tally,1895:13:reality.tally,1872:model fl15
+,,13:foresight-low,16:foresight-low-15,4:base,17:run reality.tally,1922:13:reality.tally,1899:model fl15
   tally 2
   on 2025-03-26
   start 2025-01-01
@@ -63107,7 +63107,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63133,7 +63133,7 @@ version facts
   sweep_reach = 2025-05-25
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-15,5:later,17:run reality.tally,2162:13:reality.tally,2139:model fl15
+,,13:foresight-low,16:foresight-low-15,5:later,17:run reality.tally,2189:13:reality.tally,2166:model fl15
   tally 2
   on 2025-03-26
   start 2025-01-01
@@ -63199,7 +63199,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63227,7 +63227,7 @@ version facts
   opening[acc_2] = 105223.54 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-15,7:control,17:run reality.tally,2162:13:reality.tally,2139:model fl15
+,,13:foresight-low,16:foresight-low-15,7:control,17:run reality.tally,2189:13:reality.tally,2166:model fl15
   tally 2
   on 2025-03-26
   start 2025-01-01
@@ -63293,7 +63293,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63321,7 +63321,7 @@ version facts
   opening[acc_2] = 105223.54 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-16,4:base,17:run reality.tally,1540:13:reality.tally,1517:model fl16
+,,13:foresight-low,16:foresight-low-16,4:base,17:run reality.tally,1567:13:reality.tally,1544:model fl16
   tally 2
   on 2025-03-16
   start 2025-01-01
@@ -63367,7 +63367,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63390,7 +63390,7 @@ version facts
   opening[acc_0] = 3161.50 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-16,5:later,17:run reality.tally,1807:13:reality.tally,1784:model fl16
+,,13:foresight-low,16:foresight-low-16,5:later,17:run reality.tally,1834:13:reality.tally,1811:model fl16
   tally 2
   on 2025-03-16
   start 2025-01-01
@@ -63445,7 +63445,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63470,7 +63470,7 @@ version facts
   opening[acc_0] = 3161.50 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-16,7:control,17:run reality.tally,1807:13:reality.tally,1784:model fl16
+,,13:foresight-low,16:foresight-low-16,7:control,17:run reality.tally,1834:13:reality.tally,1811:model fl16
   tally 2
   on 2025-03-16
   start 2025-01-01
@@ -63525,7 +63525,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63550,7 +63550,7 @@ version facts
   opening[acc_0] = 3161.50 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-17,4:base,17:run reality.tally,1401:13:reality.tally,1378:model fl17
+,,13:foresight-low,16:foresight-low-17,4:base,17:run reality.tally,1428:13:reality.tally,1405:model fl17
   tally 2
   on 2025-02-17
   start 2025-01-01
@@ -63591,7 +63591,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63613,7 +63613,7 @@ version facts
   sweep_reach = 2025-03-30
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-17,5:later,17:run reality.tally,1668:13:reality.tally,1645:model fl17
+,,13:foresight-low,16:foresight-low-17,5:later,17:run reality.tally,1695:13:reality.tally,1672:model fl17
   tally 2
   on 2025-02-17
   start 2025-01-01
@@ -63663,7 +63663,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63687,7 +63687,7 @@ version facts
   amt_mv_x = 30793.12
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-17,7:control,17:run reality.tally,1668:13:reality.tally,1645:model fl17
+,,13:foresight-low,16:foresight-low-17,7:control,17:run reality.tally,1695:13:reality.tally,1672:model fl17
   tally 2
   on 2025-02-17
   start 2025-01-01
@@ -63737,7 +63737,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_0, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_0, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63761,7 +63761,7 @@ version facts
   amt_mv_x = 30793.12
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-18,4:base,17:run reality.tally,2292:13:reality.tally,2269:model fl18
+,,13:foresight-low,16:foresight-low-18,4:base,17:run reality.tally,2319:13:reality.tally,2296:model fl18
   tally 2
   on 2025-06-06
   start 2025-01-01
@@ -63831,7 +63831,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63860,7 +63860,7 @@ version facts
   sweep_reach = 2025-04-04
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-18,5:later,17:run reality.tally,2559:13:reality.tally,2536:model fl18
+,,13:foresight-low,16:foresight-low-18,5:later,17:run reality.tally,2586:13:reality.tally,2563:model fl18
   tally 2
   on 2025-06-06
   start 2025-01-01
@@ -63939,7 +63939,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -63970,7 +63970,7 @@ version facts
   opening[acc_3] = 4750.93 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-18,7:control,17:run reality.tally,2559:13:reality.tally,2536:model fl18
+,,13:foresight-low,16:foresight-low-18,7:control,17:run reality.tally,2586:13:reality.tally,2563:model fl18
   tally 2
   on 2025-06-06
   start 2025-01-01
@@ -64049,7 +64049,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64080,7 +64080,7 @@ version facts
   opening[acc_3] = 4750.93 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-19,4:base,17:run reality.tally,2202:13:reality.tally,2179:model fl19
+,,13:foresight-low,16:foresight-low-19,4:base,17:run reality.tally,2229:13:reality.tally,2206:model fl19
   tally 2
   on 2025-06-04
   start 2025-01-01
@@ -64148,7 +64148,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64176,7 +64176,7 @@ version facts
   day_mv_2 = 2025-05-23
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-19,5:later,17:run reality.tally,2469:13:reality.tally,2446:model fl19
+,,13:foresight-low,16:foresight-low-19,5:later,17:run reality.tally,2496:13:reality.tally,2473:model fl19
   tally 2
   on 2025-06-04
   start 2025-01-01
@@ -64253,7 +64253,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64283,7 +64283,7 @@ version facts
   sweep_floor = 28857.52
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-19,7:control,17:run reality.tally,2469:13:reality.tally,2446:model fl19
+,,13:foresight-low,16:foresight-low-19,7:control,17:run reality.tally,2496:13:reality.tally,2473:model fl19
   tally 2
   on 2025-06-04
   start 2025-01-01
@@ -64360,7 +64360,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64390,7 +64390,7 @@ version facts
   sweep_floor = 28857.52
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-20,4:base,17:run reality.tally,1633:13:reality.tally,1610:model fl20
+,,13:foresight-low,16:foresight-low-20,4:base,17:run reality.tally,1660:13:reality.tally,1637:model fl20
   tally 2
   on 2025-06-08
   start 2025-01-01
@@ -64438,7 +64438,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64462,7 +64462,7 @@ version facts
   sweep_reach = 2025-05-31
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-20,5:later,17:run reality.tally,1900:13:reality.tally,1877:model fl20
+,,13:foresight-low,16:foresight-low-20,5:later,17:run reality.tally,1927:13:reality.tally,1904:model fl20
   tally 2
   on 2025-06-08
   start 2025-01-01
@@ -64519,7 +64519,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64545,7 +64545,7 @@ version facts
   amt_mv_x = 33615.95
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-20,7:control,17:run reality.tally,1900:13:reality.tally,1877:model fl20
+,,13:foresight-low,16:foresight-low-20,7:control,17:run reality.tally,1927:13:reality.tally,1904:model fl20
   tally 2
   on 2025-06-08
   start 2025-01-01
@@ -64602,7 +64602,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64628,7 +64628,7 @@ version facts
   amt_mv_x = 33615.95
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-21,4:base,17:run reality.tally,1805:13:reality.tally,1782:model fl21
+,,13:foresight-low,16:foresight-low-21,4:base,17:run reality.tally,1832:13:reality.tally,1809:model fl21
   tally 2
   on 2025-04-26
   start 2025-01-01
@@ -64683,7 +64683,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64708,7 +64708,7 @@ version facts
   amt_mv_1 = 489.95
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-21,5:later,17:run reality.tally,2072:13:reality.tally,2049:model fl21
+,,13:foresight-low,16:foresight-low-21,5:later,17:run reality.tally,2099:13:reality.tally,2076:model fl21
   tally 2
   on 2025-04-26
   start 2025-01-01
@@ -64772,7 +64772,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64799,7 +64799,7 @@ version facts
   amt_mv_1 = 489.95
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-21,7:control,17:run reality.tally,2072:13:reality.tally,2049:model fl21
+,,13:foresight-low,16:foresight-low-21,7:control,17:run reality.tally,2099:13:reality.tally,2076:model fl21
   tally 2
   on 2025-04-26
   start 2025-01-01
@@ -64863,7 +64863,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_1, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_1, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64890,7 +64890,7 @@ version facts
   amt_mv_1 = 489.95
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-22,4:base,17:run reality.tally,2257:13:reality.tally,2234:model fl22
+,,13:foresight-low,16:foresight-low-22,4:base,17:run reality.tally,2284:13:reality.tally,2261:model fl22
   tally 2
   on 2025-03-06
   start 2025-01-01
@@ -64958,7 +64958,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_3, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_3, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -64987,7 +64987,7 @@ version facts
   sweep_reach = 2025-02-24
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-22,5:later,17:run reality.tally,2524:13:reality.tally,2501:model fl22
+,,13:foresight-low,16:foresight-low-22,5:later,17:run reality.tally,2551:13:reality.tally,2528:model fl22
   tally 2
   on 2025-03-06
   start 2025-01-01
@@ -65064,7 +65064,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_3, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_3, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -65095,7 +65095,7 @@ version facts
   opening[acc_1] = 141.24 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-22,7:control,17:run reality.tally,2524:13:reality.tally,2501:model fl22
+,,13:foresight-low,16:foresight-low-22,7:control,17:run reality.tally,2551:13:reality.tally,2528:model fl22
   tally 2
   on 2025-03-06
   start 2025-01-01
@@ -65172,7 +65172,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_3, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_3, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -65203,7 +65203,7 @@ version facts
   opening[acc_1] = 141.24 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-23,4:base,17:run reality.tally,2201:13:reality.tally,2178:model fl23
+,,13:foresight-low,16:foresight-low-23,4:base,17:run reality.tally,2228:13:reality.tally,2205:model fl23
   tally 2
   on 2025-03-30
   start 2025-01-01
@@ -65271,7 +65271,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -65299,7 +65299,7 @@ version facts
   opening[acc_0] = 1698.34 at 2025-01-01 start
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-23,5:later,17:run reality.tally,2468:13:reality.tally,2445:model fl23
+,,13:foresight-low,16:foresight-low-23,5:later,17:run reality.tally,2495:13:reality.tally,2472:model fl23
   tally 2
   on 2025-03-30
   start 2025-01-01
@@ -65376,7 +65376,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -65406,7 +65406,7 @@ version facts
   day_mv_3 = 2025-01-18
 
 ask swept: flows(sweep, 2025-01-01 .. 2025-06-30)
-,,13:foresight-low,16:foresight-low-23,7:control,17:run reality.tally,2468:13:reality.tally,2445:model fl23
+,,13:foresight-low,16:foresight-low-23,7:control,17:run reality.tally,2495:13:reality.tally,2472:model fl23
   tally 2
   on 2025-03-30
   start 2025-01-01
@@ -65483,7 +65483,7 @@ input sweep_day: date
 
 input sweep_reach: date
 
-def low_room: money DUK = low(acc_2, sweep_day .. sweep_reach) from sweep_day at sweep_day
+def low_room: money DUK = min(bal(acc_2, d) from sweep_day for d in sweep_day .. sweep_reach step 1 day) at sweep_day
 
 move sweep: transfers
   on sweep_day
@@ -78984,7 +78984,7 @@ version facts
 ask a_key: f_a_key[14]
 
 ask b_pos: f_b_pos[14]
-,,7:low-min,10:low-min-00,3:one,17:run reality.tally,2860:13:reality.tally,2837:model lo00
+,,7:low-min,10:low-min-00,3:one,17:run reality.tally,2909:13:reality.tally,2886:model lo00
   tally 2
   on 2025-02-02
   start 2025-01-01
@@ -79105,10 +79105,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_0, 2025-03-06 .. 2025-03-28) from 2025-02-15
+ask lo: min(bal(acc_0, d) from 2025-02-15 for d in 2025-03-06 .. 2025-03-28 step 1 day)
 
-ask mn: min(bal(acc_0, d) from 2025-02-15 for d in 2025-03-06 .. 2025-03-28 step 1 day)
-,,7:low-min,10:low-min-01,3:one,17:run reality.tally,2401:13:reality.tally,2378:model lo01
+ask mn: min(bal(acc_0, d) from 2025-02-15 for d in 2025-03-06 .. 2025-03-28 step 1 day where d >= 2025-03-06)
+,,7:low-min,10:low-min-01,3:one,17:run reality.tally,2450:13:reality.tally,2427:model lo01
   tally 2
   on 2025-04-26
   start 2025-01-01
@@ -79207,10 +79207,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-01-21 .. 2025-05-23) from 2025-01-18
+ask lo: min(bal(acc_2, d) from 2025-01-18 for d in 2025-01-21 .. 2025-05-23 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-01-18 for d in 2025-01-21 .. 2025-05-23 step 1 day)
-,,7:low-min,10:low-min-02,3:one,17:run reality.tally,3285:13:reality.tally,3262:model lo02
+ask mn: min(bal(acc_2, d) from 2025-01-18 for d in 2025-01-21 .. 2025-05-23 step 1 day where d >= 2025-01-21)
+,,7:low-min,10:low-min-02,3:one,17:run reality.tally,3334:13:reality.tally,3311:model lo02
   tally 2
   on 2025-02-01
   start 2025-01-01
@@ -79349,10 +79349,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-01-24 .. 2025-04-21) from 2025-01-05
+ask lo: min(bal(acc_2, d) from 2025-01-05 for d in 2025-01-24 .. 2025-04-21 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-01-05 for d in 2025-01-24 .. 2025-04-21 step 1 day)
-,,7:low-min,10:low-min-03,3:one,17:run reality.tally,3063:13:reality.tally,3040:model lo03
+ask mn: min(bal(acc_2, d) from 2025-01-05 for d in 2025-01-24 .. 2025-04-21 step 1 day where d >= 2025-01-24)
+,,7:low-min,10:low-min-03,3:one,17:run reality.tally,3112:13:reality.tally,3089:model lo03
   tally 2
   on 2025-04-24
   start 2025-01-01
@@ -79478,10 +79478,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_3, 2025-04-28 .. 2025-05-05) from 2025-01-01
+ask lo: min(bal(acc_3, d) from 2025-01-01 for d in 2025-04-28 .. 2025-05-05 step 1 day)
 
-ask mn: min(bal(acc_3, d) from 2025-01-01 for d in 2025-04-28 .. 2025-05-05 step 1 day)
-,,7:low-min,10:low-min-04,3:one,17:run reality.tally,2547:13:reality.tally,2524:model lo04
+ask mn: min(bal(acc_3, d) from 2025-01-01 for d in 2025-04-28 .. 2025-05-05 step 1 day where d >= 2025-04-28)
+,,7:low-min,10:low-min-04,3:one,17:run reality.tally,2596:13:reality.tally,2573:model lo04
   tally 2
   on 2025-06-11
   start 2025-01-01
@@ -79589,10 +79589,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-01-30 .. 2025-03-25) from 2025-01-05
+ask lo: min(bal(acc_1, d) from 2025-01-05 for d in 2025-01-30 .. 2025-03-25 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-01-05 for d in 2025-01-30 .. 2025-03-25 step 1 day)
-,,7:low-min,10:low-min-05,3:one,17:run reality.tally,3297:13:reality.tally,3274:model lo05
+ask mn: min(bal(acc_1, d) from 2025-01-05 for d in 2025-01-30 .. 2025-03-25 step 1 day where d >= 2025-01-30)
+,,7:low-min,10:low-min-05,3:one,17:run reality.tally,3346:13:reality.tally,3323:model lo05
   tally 2
   on 2025-06-21
   start 2025-01-01
@@ -79730,10 +79730,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-01-12 .. 2025-01-30) from 2025-01-12
+ask lo: min(bal(acc_1, d) from 2025-01-12 for d in 2025-01-12 .. 2025-01-30 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-01-12 for d in 2025-01-12 .. 2025-01-30 step 1 day)
-,,7:low-min,10:low-min-06,3:one,17:run reality.tally,3207:13:reality.tally,3184:model lo06
+ask mn: min(bal(acc_1, d) from 2025-01-12 for d in 2025-01-12 .. 2025-01-30 step 1 day where d >= 2025-01-12)
+,,7:low-min,10:low-min-06,3:one,17:run reality.tally,3256:13:reality.tally,3233:model lo06
   tally 2
   on 2025-05-10
   start 2025-01-01
@@ -79868,10 +79868,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-02-22 .. 2025-04-30) from 2025-02-14
+ask lo: min(bal(acc_1, d) from 2025-02-14 for d in 2025-02-22 .. 2025-04-30 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-02-14 for d in 2025-02-22 .. 2025-04-30 step 1 day)
-,,7:low-min,10:low-min-07,3:one,17:run reality.tally,3295:13:reality.tally,3272:model lo07
+ask mn: min(bal(acc_1, d) from 2025-02-14 for d in 2025-02-22 .. 2025-04-30 step 1 day where d >= 2025-02-22)
+,,7:low-min,10:low-min-07,3:one,17:run reality.tally,3344:13:reality.tally,3321:model lo07
   tally 2
   on 2025-06-18
   start 2025-01-01
@@ -80009,10 +80009,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-01-07 .. 2025-05-26) from 2025-01-01
+ask lo: min(bal(acc_2, d) from 2025-01-01 for d in 2025-01-07 .. 2025-05-26 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-01-01 for d in 2025-01-07 .. 2025-05-26 step 1 day)
-,,7:low-min,10:low-min-08,3:one,17:run reality.tally,3105:13:reality.tally,3082:model lo08
+ask mn: min(bal(acc_2, d) from 2025-01-01 for d in 2025-01-07 .. 2025-05-26 step 1 day where d >= 2025-01-07)
+,,7:low-min,10:low-min-08,3:one,17:run reality.tally,3154:13:reality.tally,3131:model lo08
   tally 2
   on 2025-02-25
   start 2025-01-01
@@ -80141,10 +80141,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-03-24 .. 2025-05-06) from 2025-02-17
+ask lo: min(bal(acc_1, d) from 2025-02-17 for d in 2025-03-24 .. 2025-05-06 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-02-17 for d in 2025-03-24 .. 2025-05-06 step 1 day)
-,,7:low-min,10:low-min-09,3:one,17:run reality.tally,3262:13:reality.tally,3239:model lo09
+ask mn: min(bal(acc_1, d) from 2025-02-17 for d in 2025-03-24 .. 2025-05-06 step 1 day where d >= 2025-03-24)
+,,7:low-min,10:low-min-09,3:one,17:run reality.tally,3311:13:reality.tally,3288:model lo09
   tally 2
   on 2025-06-23
   start 2025-01-01
@@ -80280,10 +80280,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_3, 2025-03-30 .. 2025-04-10) from 2025-01-15
+ask lo: min(bal(acc_3, d) from 2025-01-15 for d in 2025-03-30 .. 2025-04-10 step 1 day)
 
-ask mn: min(bal(acc_3, d) from 2025-01-15 for d in 2025-03-30 .. 2025-04-10 step 1 day)
-,,7:low-min,10:low-min-10,3:one,17:run reality.tally,3378:13:reality.tally,3355:model lo10
+ask mn: min(bal(acc_3, d) from 2025-01-15 for d in 2025-03-30 .. 2025-04-10 step 1 day where d >= 2025-03-30)
+,,7:low-min,10:low-min-10,3:one,17:run reality.tally,3427:13:reality.tally,3404:model lo10
   tally 2
   on 2025-02-11
   start 2025-01-01
@@ -80426,10 +80426,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-03-05 .. 2025-06-08) from 2025-01-09
+ask lo: min(bal(acc_1, d) from 2025-01-09 for d in 2025-03-05 .. 2025-06-08 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-01-09 for d in 2025-03-05 .. 2025-06-08 step 1 day)
-,,7:low-min,10:low-min-11,3:one,17:run reality.tally,2731:13:reality.tally,2708:model lo11
+ask mn: min(bal(acc_1, d) from 2025-01-09 for d in 2025-03-05 .. 2025-06-08 step 1 day where d >= 2025-03-05)
+,,7:low-min,10:low-min-11,3:one,17:run reality.tally,2780:13:reality.tally,2757:model lo11
   tally 2
   on 2025-04-22
   start 2025-01-01
@@ -80543,10 +80543,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-01-25 .. 2025-03-14) from 2025-01-10
+ask lo: min(bal(acc_2, d) from 2025-01-10 for d in 2025-01-25 .. 2025-03-14 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-01-10 for d in 2025-01-25 .. 2025-03-14 step 1 day)
-,,7:low-min,10:low-min-12,3:one,17:run reality.tally,2530:13:reality.tally,2507:model lo12
+ask mn: min(bal(acc_2, d) from 2025-01-10 for d in 2025-01-25 .. 2025-03-14 step 1 day where d >= 2025-01-25)
+,,7:low-min,10:low-min-12,3:one,17:run reality.tally,2579:13:reality.tally,2556:model lo12
   tally 2
   on 2025-02-03
   start 2025-01-01
@@ -80650,10 +80650,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-01-16 .. 2025-04-13) from 2025-01-08
+ask lo: min(bal(acc_2, d) from 2025-01-08 for d in 2025-01-16 .. 2025-04-13 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-01-08 for d in 2025-01-16 .. 2025-04-13 step 1 day)
-,,7:low-min,10:low-min-13,3:one,17:run reality.tally,3104:13:reality.tally,3081:model lo13
+ask mn: min(bal(acc_2, d) from 2025-01-08 for d in 2025-01-16 .. 2025-04-13 step 1 day where d >= 2025-01-16)
+,,7:low-min,10:low-min-13,3:one,17:run reality.tally,3153:13:reality.tally,3130:model lo13
   tally 2
   on 2025-04-14
   start 2025-01-01
@@ -80782,10 +80782,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-01-01 .. 2025-02-17) from 2025-01-01
+ask lo: min(bal(acc_1, d) from 2025-01-01 for d in 2025-01-01 .. 2025-02-17 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-01-01 for d in 2025-01-01 .. 2025-02-17 step 1 day)
-,,7:low-min,10:low-min-14,3:one,17:run reality.tally,3326:13:reality.tally,3303:model lo14
+ask mn: min(bal(acc_1, d) from 2025-01-01 for d in 2025-01-01 .. 2025-02-17 step 1 day where d >= 2025-01-01)
+,,7:low-min,10:low-min-14,3:one,17:run reality.tally,3375:13:reality.tally,3352:model lo14
   tally 2
   on 2025-05-11
   start 2025-01-01
@@ -80927,10 +80927,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-03-05 .. 2025-04-10) from 2025-01-25
+ask lo: min(bal(acc_1, d) from 2025-01-25 for d in 2025-03-05 .. 2025-04-10 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-01-25 for d in 2025-03-05 .. 2025-04-10 step 1 day)
-,,7:low-min,10:low-min-15,3:one,17:run reality.tally,3565:13:reality.tally,3542:model lo15
+ask mn: min(bal(acc_1, d) from 2025-01-25 for d in 2025-03-05 .. 2025-04-10 step 1 day where d >= 2025-03-05)
+,,7:low-min,10:low-min-15,3:one,17:run reality.tally,3614:13:reality.tally,3591:model lo15
   tally 2
   on 2025-03-19
   start 2025-01-01
@@ -81079,10 +81079,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_3, 2025-03-29 .. 2025-04-25) from 2025-03-10
+ask lo: min(bal(acc_3, d) from 2025-03-10 for d in 2025-03-29 .. 2025-04-25 step 1 day)
 
-ask mn: min(bal(acc_3, d) from 2025-03-10 for d in 2025-03-29 .. 2025-04-25 step 1 day)
-,,7:low-min,10:low-min-16,3:one,17:run reality.tally,2914:13:reality.tally,2891:model lo16
+ask mn: min(bal(acc_3, d) from 2025-03-10 for d in 2025-03-29 .. 2025-04-25 step 1 day where d >= 2025-03-29)
+,,7:low-min,10:low-min-16,3:one,17:run reality.tally,2963:13:reality.tally,2940:model lo16
   tally 2
   on 2025-04-13
   start 2025-01-01
@@ -81204,10 +81204,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-04-13 .. 2025-06-29) from 2025-03-16
+ask lo: min(bal(acc_2, d) from 2025-03-16 for d in 2025-04-13 .. 2025-06-29 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-03-16 for d in 2025-04-13 .. 2025-06-29 step 1 day)
-,,7:low-min,10:low-min-17,3:one,17:run reality.tally,2801:13:reality.tally,2778:model lo17
+ask mn: min(bal(acc_2, d) from 2025-03-16 for d in 2025-04-13 .. 2025-06-29 step 1 day where d >= 2025-04-13)
+,,7:low-min,10:low-min-17,3:one,17:run reality.tally,2850:13:reality.tally,2827:model lo17
   tally 2
   on 2025-02-28
   start 2025-01-01
@@ -81327,10 +81327,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-02-25 .. 2025-05-28) from 2025-02-11
+ask lo: min(bal(acc_1, d) from 2025-02-11 for d in 2025-02-25 .. 2025-05-28 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-02-11 for d in 2025-02-25 .. 2025-05-28 step 1 day)
-,,7:low-min,10:low-min-18,3:one,17:run reality.tally,3510:13:reality.tally,3487:model lo18
+ask mn: min(bal(acc_1, d) from 2025-02-11 for d in 2025-02-25 .. 2025-05-28 step 1 day where d >= 2025-02-25)
+,,7:low-min,10:low-min-18,3:one,17:run reality.tally,3559:13:reality.tally,3536:model lo18
   tally 2
   on 2025-04-15
   start 2025-01-01
@@ -81478,10 +81478,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_3, 2025-01-24 .. 2025-01-28) from 2025-01-21
+ask lo: min(bal(acc_3, d) from 2025-01-21 for d in 2025-01-24 .. 2025-01-28 step 1 day)
 
-ask mn: min(bal(acc_3, d) from 2025-01-21 for d in 2025-01-24 .. 2025-01-28 step 1 day)
-,,7:low-min,10:low-min-19,3:one,17:run reality.tally,3060:13:reality.tally,3037:model lo19
+ask mn: min(bal(acc_3, d) from 2025-01-21 for d in 2025-01-24 .. 2025-01-28 step 1 day where d >= 2025-01-24)
+,,7:low-min,10:low-min-19,3:one,17:run reality.tally,3109:13:reality.tally,3086:model lo19
   tally 2
   on 2025-05-06
   start 2025-01-01
@@ -81612,10 +81612,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_0, 2025-04-20 .. 2025-06-23) from 2025-02-23
+ask lo: min(bal(acc_0, d) from 2025-02-23 for d in 2025-04-20 .. 2025-06-23 step 1 day)
 
-ask mn: min(bal(acc_0, d) from 2025-02-23 for d in 2025-04-20 .. 2025-06-23 step 1 day)
-,,7:low-min,10:low-min-20,3:one,17:run reality.tally,3448:13:reality.tally,3425:model lo20
+ask mn: min(bal(acc_0, d) from 2025-02-23 for d in 2025-04-20 .. 2025-06-23 step 1 day where d >= 2025-04-20)
+,,7:low-min,10:low-min-20,3:one,17:run reality.tally,3497:13:reality.tally,3474:model lo20
   tally 2
   on 2025-06-24
   start 2025-01-01
@@ -81759,10 +81759,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_2, 2025-02-28 .. 2025-05-02) from 2025-01-07
+ask lo: min(bal(acc_2, d) from 2025-01-07 for d in 2025-02-28 .. 2025-05-02 step 1 day)
 
-ask mn: min(bal(acc_2, d) from 2025-01-07 for d in 2025-02-28 .. 2025-05-02 step 1 day)
-,,7:low-min,10:low-min-21,3:one,17:run reality.tally,2576:13:reality.tally,2553:model lo21
+ask mn: min(bal(acc_2, d) from 2025-01-07 for d in 2025-02-28 .. 2025-05-02 step 1 day where d >= 2025-02-28)
+,,7:low-min,10:low-min-21,3:one,17:run reality.tally,2625:13:reality.tally,2602:model lo21
   tally 2
   on 2025-02-03
   start 2025-01-01
@@ -81869,10 +81869,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_0, 2025-02-07 .. 2025-02-18) from 2025-01-07
+ask lo: min(bal(acc_0, d) from 2025-01-07 for d in 2025-02-07 .. 2025-02-18 step 1 day)
 
-ask mn: min(bal(acc_0, d) from 2025-01-07 for d in 2025-02-07 .. 2025-02-18 step 1 day)
-,,7:low-min,10:low-min-22,3:one,17:run reality.tally,3232:13:reality.tally,3209:model lo22
+ask mn: min(bal(acc_0, d) from 2025-01-07 for d in 2025-02-07 .. 2025-02-18 step 1 day where d >= 2025-02-07)
+,,7:low-min,10:low-min-22,3:one,17:run reality.tally,3281:13:reality.tally,3258:model lo22
   tally 2
   on 2025-05-14
   start 2025-01-01
@@ -82006,10 +82006,10 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_1, 2025-03-02 .. 2025-05-24) from 2025-01-30
+ask lo: min(bal(acc_1, d) from 2025-01-30 for d in 2025-03-02 .. 2025-05-24 step 1 day)
 
-ask mn: min(bal(acc_1, d) from 2025-01-30 for d in 2025-03-02 .. 2025-05-24 step 1 day)
-,,7:low-min,10:low-min-23,3:one,17:run reality.tally,2823:13:reality.tally,2800:model lo23
+ask mn: min(bal(acc_1, d) from 2025-01-30 for d in 2025-03-02 .. 2025-05-24 step 1 day where d >= 2025-03-02)
+,,7:low-min,10:low-min-23,3:one,17:run reality.tally,2872:13:reality.tally,2849:model lo23
   tally 2
   on 2025-06-07
   start 2025-01-01
@@ -82128,7 +82128,7 @@ version facts
   tier: [0, 1000) = 0.01
   tier: [1000, inf) = 0.02
 
-ask lo: low(acc_0, 2025-04-19 .. 2025-06-12) from 2025-04-16
+ask lo: min(bal(acc_0, d) from 2025-04-16 for d in 2025-04-19 .. 2025-06-12 step 1 day)
 
-ask mn: min(bal(acc_0, d) from 2025-04-16 for d in 2025-04-19 .. 2025-06-12 step 1 day)
+ask mn: min(bal(acc_0, d) from 2025-04-16 for d in 2025-04-19 .. 2025-06-12 step 1 day where d >= 2025-04-19)
 ,,

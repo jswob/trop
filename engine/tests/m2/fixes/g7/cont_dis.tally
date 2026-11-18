@@ -36,4 +36,4 @@ version v
 ask q1: bal(konto, 2026-03-31) from 2026-01-20, bal(konto, 2026-12-31) from 2026-01-20, bal(konto, 2026-05-31) from 2026-01-20
 ask q2: bal(konto, 2026-03-31) from 2026-01-20
 ask q3: bal(konto, 2026-12-31) from 2026-01-20
-ask q4: low(konto, 2026-01-20 .. 2026-12-31) from 2026-01-20, bal(konto, 2026-06-30) from 2026-01-20
+ask q4: min(bal(konto, d) from 2026-01-20 for d in 2026-01-20 .. 2026-12-31 step 1 day), bal(konto, 2026-06-30) from 2026-01-20

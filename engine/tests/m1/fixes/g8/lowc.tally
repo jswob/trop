@@ -37,7 +37,7 @@ input top_day: date
 
 input odd_day: date
 
-def floor_ahead: money PLN = low(konto, a_day .. b_day) from a_day
+def floor_ahead: money PLN = min(bal(konto, d) from a_day for d in a_day .. b_day step 1 day)
 
 def top_up: money PLN = max(0 PLN, -floor_ahead)
 
@@ -82,7 +82,7 @@ version card_2026
 
 input c_day: date
 
-def own_low: money PLN = max(0 PLN, -low(konto, c_day .. c_day))
+def own_low: money PLN = max(0 PLN, -min(bal(konto, d) for d in c_day .. c_day step 1 day))
 
 move topc: transfers
   on c_day
@@ -97,4 +97,4 @@ version card_c
 
 ask c_bal: bal(konto, 2026-05-31)
 
-ask c_low: low(konto, 2026-05-01 .. 2026-05-31)
+ask c_low: min(bal(konto, d) for d in 2026-05-01 .. 2026-05-31 step 1 day)

@@ -48,8 +48,5 @@ version v
   opening[jar[a]] = 0.00 PLN at 2026-01-01 start "s"
   opening[jar[b]] = 0.00 PLN at 2026-01-01 start "s"
 
-ask e1: diff(bal(konto, 2026-03-03)) in sd against sc windows each
-ask e4: diff(bal(jar[k], 2026-03-05) for k in ks) in sd against sc windows each
 ask e2: diff(bal(konto, 2026-03-03)) in sd against sc with dj = 2026-03-02
 ask e3: diff(bal(konto, 2026-03-03)) in sd against sc with dj = 2026-03-04
-ask e5: diff(bal(konto, 2026-03-03)) in se against sc windows each

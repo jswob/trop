@@ -131,18 +131,6 @@ pub(crate) fn text(e: &Expr) -> String {
             };
             format!("{word}({s})")
         }
-        Expr::Low(low) => {
-            let mut s = format!(
-                "low({}, {})",
-                text(&low.place),
-                super::reads::span_text(&low.span)
-            );
-            if let Some(from) = &low.proj.from {
-                s.push_str(" from ");
-                s.push_str(&text(from));
-            }
-            s
-        }
         Expr::Crps(_) => "crps".to_owned(),
         Expr::DistFn(_) => "distfn".to_owned(),
         Expr::Dist(_) => "dist".to_owned(),
@@ -150,8 +138,7 @@ pub(crate) fn text(e: &Expr) -> String {
     }
 }
 
-/// A `flows` read's text, its `for` and its conversion included (refcore's `_txt` of
-/// `flows`).
+/// A `flows` read's text, its `for` included (refcore's `_txt` of `flows`).
 fn flows_text(flows: &crate::syntax::Flows) -> String {
     let mut s = format!(
         "flows({}, {}",
@@ -163,9 +150,6 @@ fn flows_text(flows: &crate::syntax::Flows) -> String {
         s.push_str(&text(key));
     }
     s.push(')');
-    if let Some((cur, fx, mode)) = &flows.convert {
-        s = format!("{s} in {cur} at {} {}", text(fx), text(mode));
-    }
     s
 }
 
@@ -341,10 +325,7 @@ pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
                         _,
                         FieldValue::Lit(_) | FieldValue::Hole(_) | FieldValue::None,
                     ) => {}
-                    Field::Leg(leg) => {
-                        out.extend([&leg.from, &leg.to, &leg.amount]);
-                        out.extend(leg.on.as_ref());
-                    }
+                    Field::Leg(leg) => out.extend([&leg.from, &leg.to, &leg.amount]),
                 }
             }
         }
@@ -375,7 +356,6 @@ pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
         | Expr::List(_)
         | Expr::Calendar(_)
         | Expr::Query(_)
-        | Expr::Low(_)
         | Expr::Crps(_)
         | Expr::DistFn(_)
         | Expr::Dist(_)

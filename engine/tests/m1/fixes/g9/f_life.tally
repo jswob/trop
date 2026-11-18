@@ -84,12 +84,12 @@ version closed
   known 2026-05-20
   replace shops + [shop] lives 2026-01-01..2026-08-31
 
-ask l_ls: bal(konto, 2026-12-31) from 2026-06-20, bal(konto, 2026-08-31) from 2026-06-20, low(konto, 2026-06-20 .. 2026-09-03) from 2026-06-20, low(konto, 2026-07-01 .. 2026-09-04) from 2026-06-20
+ask l_ls: bal(konto, 2026-12-31) from 2026-06-20, bal(konto, 2026-08-31) from 2026-06-20, min(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day), min(bal(konto, d) from 2026-06-20 for d in 2026-07-01 .. 2026-09-04 step 1 day)
 
-ask l_sl: low(konto, 2026-06-20 .. 2026-09-03) from 2026-06-20, bal(konto, 2026-08-31) from 2026-06-20, bal(konto, 2026-12-31) from 2026-06-20, low(konto, 2026-07-01 .. 2026-09-04) from 2026-06-20
+ask l_sl: min(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day), bal(konto, 2026-08-31) from 2026-06-20, bal(konto, 2026-12-31) from 2026-06-20, min(bal(konto, d) from 2026-06-20 for d in 2026-07-01 .. 2026-09-04 step 1 day)
 
 ask l_a: bal(konto, 2026-08-31) from 2026-06-20
 
-ask l_b: low(konto, 2026-06-20 .. 2026-09-03) from 2026-06-20
+ask l_b: min(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day)
 
 ask l_sum: sum(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day), sum(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-30 step 1 day), sum(bal(konto, d) from 2026-06-20 for d in 2026-06-20 .. 2026-09-03 step 1 day)

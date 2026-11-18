@@ -33,10 +33,22 @@ version v
   opening[jar] = 0.00 PLN at 2026-01-01 start "s"
 
 ask j1: bal(jar, 2026-04-30)
-ask j2: bal(jar, 2026-04-30) windows each
+ask j2_s1: bal(jar, 2026-04-30) with wa = 2026-04-05
+
+ask j2_s2: bal(jar, 2026-04-30) with wa = 2026-04-06
+
+ask j2_s3: bal(jar, 2026-04-30) with wa = 2026-04-07
 ask f1: flows(oa, 2026-04)
-ask f2: flows(oa, 2026-04) windows each
+ask f2_s1: flows(oa, 2026-04) with wa = 2026-04-05
+
+ask f2_s2: flows(oa, 2026-04) with wa = 2026-04-06
+
+ask f2_s3: flows(oa, 2026-04) with wa = 2026-04-07
 ask p1: bal(pot, 2026-04-30)
-ask p2: bal(pot, 2026-04-30) windows each
+ask p2_s1: bal(pot, 2026-04-30) with wa = 2026-04-05
+
+ask p2_s2: bal(pot, 2026-04-30) with wa = 2026-04-06
+
+ask p2_s3: bal(pot, 2026-04-30) with wa = 2026-04-07
 ask j3: bal(jar, 2026-04-30) with wa = 2026-04-05
 ask f3: flows(oa, 2026-04) with wa = 2026-04-05

@@ -3,8 +3,8 @@
 The map of `engine/crates/`, for the owner, who audits the engine through this page, each
 file's `//!` header and the trace from code to spec (`engine/tools/trace --map`). It names
 modules and never links them. Written at milestone S (2026-11-02), brought to M0
-(2026-11-05), to M1 (2026-11-11) and to M2 (2026-11-15); updated only at a milestone
-(R-119). The spec is the
+(2026-11-05), to M1 (2026-11-11), to M2 (2026-11-15) and to tally 2.2's nine cuts
+(2026-11-18); updated only at a milestone (R-119). The spec is the
 authority: L is `spec/LANGUAGE.md`, E `spec/ENGINE.md`, P `spec/PERFORMANCE.md`. The twin of
 each file, refcore's file and functions it mirrors, is on its header's `Twin:` line; the
 load tables below repeat the main ones.
@@ -51,7 +51,7 @@ in refcore's order, and the parser and the formatter cover all of L §2.
 **What M1 changed:** at M0, the run past load was S's. At M1 it answers the household
 forecast: the asks of L §5.18 but the random ones (values, `check`, `diff`, `solve`,
 `explain`, `inputs-of`, `readers-of`); pins, `as if`, worlds and axes as layers of one
-context; the written projections (`bal(x, d) from t`, `low`, `next`, `value`, `flows`);
+context; the written projections (`bal(x, d) from t`, `value`, `flows`);
 decisions in their written order; windows and the calendar built-ins at run; `prorata`.
 Between the two, the pre-M1 run gave names one interner and tables typed ids, and split the
 longest files along the spec's steps; the map below names the parts.
@@ -62,8 +62,7 @@ E §5, §6): observations are booked at the cut as the past, readings set a plac
 their instants (an anchor or a pad), a movement written on two statements counts once
 (`same`), `bal(x, d) modelled` gives the model's own account of the days the statements
 cover, and the residual ledger lines the two up, with `residuals` asks. Prices and figures
-are read from records; `windows each` runs an ask once per sub-window of the days its
-windows can take; a `partial` line names the holes its value is linear in; `mean`, `share`
+are read from records; a `partial` line names the holes its value is linear in; `mean`, `share`
 and `quantile` take `for`; `explain` follows a def the walk reads. Last came fence F6: a
 projection's walk read again through a later day is continued instead of walked again,
 within one timeline (forks across timelines wait for issue #188, at M5b).
@@ -121,7 +120,7 @@ their typed id or their name with a checked lookup, never by indexing.
   L §2.3's depth of 8), `expr.rs` (expressions by precedence climbing: postfixes,
   references, atoms, records, legs, types), `binds.rs` (spans, bindings, `ties by`),
   `calls.rs` (the built-in calls and the reads with clauses: `bal`, `value`, `flows`,
-  `covered`, the aggregates, `calendar`, the day sets, `price`), `reads.rs` (`low`, `crps`,
+  `covered`, the aggregates, `calendar`, the day sets, `price`), `reads.rs` (`crps`,
   queries, distributions), `ask.rs` (ask lines, pins, `as if`, `solve`), `item.rs` (the
   file: header, sections, a version's items and rows; `as if` nested at most 4 deep),
   `decls.rs` (the declaring sections, `source` to `move`), `tree.rs` (the tree, one type
@@ -141,7 +140,7 @@ their steps. `calendar.rs`: business days, and the days a window added to a day 
 **The model** (`model/`): what load leaves. `reality.rs` holds the whole: the namespace,
 the `same` pairs, a joint model's members, the priced places; `ids.rs` the typed ids and
 the namespace that gives them (each name with its sort and its id); kinds and things
-(`kind.rs`), indexes and versions (`index.rs`, a version's `known` day or window), keys,
+(`kind.rs`), indexes and versions (`index.rs`, a version's `known` day), keys,
 spans and a stepped range's values as keys (`key.rs`), declarations and what versions state
 for them (`decl.rs`), units (`unit.rs`), static types (`ty.rs`), runtime values (`value.rs`;
 a window keeps the read it is the value of, so two reads of one item compare as one value),
@@ -166,7 +165,8 @@ the row index (fence F3) is opened when a budget row asks.
   and, for F6, the projection walks it keeps past their reads.
 - *The context's layers* (E §3.2, §3.3; L §5.5, §5.11, §5.18, §6.4). `context.rs`: a layer,
   the pins, wording pins and axis options in force, interned as one small id, and trimmed
-  for each def to what it can depend on. `pins.rs`: `as if` and an ask's `with` applied,
+  for each def to what it can depend on, but for a def keyed by a movement, which keeps every
+  axis and pin of its context (`trimmed`, `keyed_by_movement`). `pins.rs`: `as if` and an ask's `with` applied,
   each pin's keys, date and value, and the `pinned:` lines. `timelines.rs`: one timeline per
   cut, world and pin set the moves reach, parked and swapped at a scope's edge with the
   projection walks it keeps. `srows.rs`:
@@ -181,11 +181,15 @@ the row index (fence F3) is opened when a budget row asks.
   key list's, a kind's things alive on a day or over a span). `years.rs`: a four-digit figure
   the checker read as a year, met at run as that year. `windows.rs`: a day not yet known (a
   window) through comparisons and arithmetic, as an interval; where one value is needed, an
-  undecided interval is `HOLE-IMPRECISE`.
+  undecided interval is `HOLE-IMPRECISE`. A window a read gives carries its unknown day,
+  named by that read, into every interval and hole made of it, for the register's
+  `unknown day:`.
 - *Operations.* `arith.rs` (arithmetic and units at run), `time_arith.rs` (date, period and
   key arithmetic: a day moved by days or a duration, a period by its periods, a key by
   positions, and the difference of two; split from `arith.rs` at M2), `aggregate.rs` (`sum`,
-  `count`, `any`, `all`, the unknown members a hole `where` makes), `queries.rs` (`mean`,
+  `count`, `any`, `all`, the unknown members a hole `where` makes; a `min` of a projection
+  over days handed to the range minimum, `walk/projection.rs`'s `range_minimum`, and read
+  term by term where that leaves it), `queries.rs` (`mean`,
   `share` and `quantile` over keys with `for`: the exact average, the exact fraction, the
   type-1 quantile), `extremes.rs` (`min` to `last`, and the `ties by` that breaks a tie),
   `band.rs` (bands), `builtin.rs` (the built-ins' dispatch and the number built-ins),
@@ -201,8 +205,8 @@ the row index (fence F3) is opened when a budget row asks.
 - *Explanation.* `trace.rs`: the derivation `explain` prints, recorded while the value's
   cone is evaluated again with tracing on (E §10).
 
-**Holes** (`hole/`, K, L §8.1). `questions.rs`: a hole is its set of questions; the one
-per-operator rule. Holes are built only here (R-116).
+**Holes** (`hole/`, K, L §8.1). `questions.rs`: a hole is its set of questions, each with the
+unknown days it carries; the one per-operator rule. Holes are built only here (R-116).
 
 **Numbers** (`num/`, K, L §7). `rational.rs`: `Num`, a reduced fraction, small or big, 16
 bytes. `small.rs`: the small tier (fence F4). `big.rs`: the big tier, the one file that
@@ -215,16 +219,15 @@ largest-remainder split is written here once, for every later split that takes i
 - *The plan pass* (E §4.1). `plan.rs`: each move's instances, dated at the cut, valued at
   their booking cut, classified (past, plan, hole, uncertain), in the movement order;
   invariant 5 across asks. `tuples.rs`: a move's binding tuples, bound depth first at its law
-  date, and the tuple and places a link names. `legs.rs`: each leg's two places, its day and
-  its amount as a quantity of its unit.
+  date, and the tuple and places a link names. `legs.rs`: each leg's two places, its day (its
+  instance's) and its amount as a quantity of its unit.
 - *The day walk* (E §4.2). `agenda.rs`: the acts handed to the day walk, each at its point
   (plan instances, decisions, observations, readings, the modelled past's instances); the
   next day to step (fence F1: only days with an act); the days a hole movement may fall on.
   `point.rs`: a point of the walk's order (day, step, stratum, rank, instance). `day.rs`:
   one day: acts in order, legs booked at both ends, the close with invariants 1, 2 and 6; in
   the `fault-injection` build, the planted fault. `readings.rs` (split from `day.rs` at M2):
-  a reading applied at its instant (the day's start or end, or right after the movement it
-  is `after`), as an anchor where a statement covers the day or a pad (a movement of the
+  a reading applied at its instant (the day's start or end), as an anchor where a statement covers the day or a pad (a movement of the
   built-in place `pads`) where none does; and the sign rule's groups: the places a batch of
   legs touches tested together, a refused leg taken back at both its ends (E §4.2, §6.1;
   L §5.10). `order.rs`:
@@ -243,24 +246,26 @@ largest-remainder split is written here once, for every later split that takes i
   (E §6.2); never booked. `value.rs`: `value(x, d) in CUR [by p]`, a place's positions at
   the end of a day, each at its price, a price read from a record's field included.
 - *The written projection* (E §4.3). `projection.rs`: `bal(x, d) from t`, a walk of its own
-  from day t without its holder's dependents, and `low`, its least end-of-day balance.
-  `lows.rs`: fence F5, the same answers in the common case (no decision the projection
-  counts) read from running sums of x's counted plan legs kept in a tree; since M2 only
+  from day t without its holder's dependents; and the `min` of it over a range of days
+  (`min(bal(x, d) from t for d in a .. b step 1 day)`), its shape recognised by
+  `lowest_shape` and read as one range minimum by `range_minimum`, from F5 or one walk read
+  day by day. `lows.rs`: fence F5, the same answers in the common case (no decision the
+  projection counts) read from running sums of x's counted plan legs kept in a tree; since M2 only
   where no number on the way can pass the digit cap, the walk answering otherwise.
   `fork.rs`: fence F6 (M2): a timeline keeps its last four projection walks past their
   reads; a read of the same projection through a later day continues the kept walk from
   where it stood, if the new read's plan agrees with it on every day it walked, and walks
   anew otherwise. The twin, `Forks::Off`, gives every read a walk of its own (P §2.5).
 
-**The book** (`book/`, K, E §5, §6). `observe.rs`: observations the cut sees (a version
-known in a window that holds the cut included), coverage, links to the instances they
-fulfil. `reading.rs`: `opening` and `stated` readings, readings `after` a movement, the
-anchor and the pad; `last` and `since` of a reading. `adjust.rs`: a booked instance
+**The book** (`book/`, K, E §5, §6). `observe.rs`: observations the cut sees (each row's latest
+restatement, a scenario's first), coverage, links to the instances they fulfil.
+`reading.rs`: `opening` and `stated` readings, the anchor and the pad; `last` and `since`
+of a reading. `adjust.rs`: a booked instance
 measured again at each later version. `settle.rs`: settlements and waivers. `members.rs`:
-movements as values in bindings (a decision's movements and the pads among them); `next`;
-a movement's leg read by name. `same.rs` (M2): movements stated `same`, one movement on two
+movements as values in bindings (a decision's movements and the pads among them); a
+movement's leg read by name. `same.rs` (M2): movements stated `same`, one movement on two
 statements: counted and bound once, each end booked once, the two rows' disagreement a
-`HOLE-SAME` naming both; `RUN-RECORD` for a `same` side that doesn't exist and for two rows
+`HOLE-SAME` naming both; a line between two observed rows held at every cut that sees both; `RUN-RECORD` for a `same` side that doesn't exist and for two rows
 of one transfer left unjoined; `observed(m[k])`; one line in the ledger (L §5.19, §6.1;
 E §6.3). `ledger.rs`: the residual ledger in full: for each
 instance, adjustment and balance at a place over a span, the model's figure against the
@@ -272,10 +277,6 @@ observed one, and `unexplained` for what no plan explains (E §6.3). `ledger_ord
 - `answer.rs`: each ask's cut, law date and `with` pins (formed per binding tuple where the
   ask's own `for` names them), its binding tuples, its lines' values (a `partial` line's
   too), `check` or `solve`, and each line's register; `REQ-ASK` for an ask no world has.
-- `windows.rs` (M2): `windows each`, on an ask line or on the read that states it: the line
-  run once per combination of the days the windows it meets can take, each run in a layer
-  of its own, the results merged into maximal sub-windows; under an axis, each
-  combination's windows' lines (L §4.4, §5.5).
 - `worlds.rs`: the asks of a reality with scenarios: each ask in the world it names (`in s`,
   `diff … in s against b`, a `{scenario s}` pin); each refused scenario's line first, the
   worlds' warnings merged; before any ask is answered, a `diff` whose two worlds' axes
@@ -287,11 +288,13 @@ observed one, and `unexplained` for what no plan explains (E §6.3). `ledger_ord
 - `diff.rs`: a `diff` ask's lines, key by key changed, added, removed or unchanged.
 - `explain.rs`: `explain`'s derivation, `inputs-of`'s rows with their sources,
   `readers-of`'s readers; it dispatches `explain`'s other forms to `walked.rs` (a balance, a
-  projection, a `low`; a balance's last reading, its pads and anchors), `instance.rs` (a
+  projection; a balance's last reading, its pads and anchors), `instance.rs` (a
   movement instance: class, day, booking cut, legs, a decision's walk point and reads,
   adjustments) and `walkbound.rs` (M2: a def the walk reads, explained at each walk point
   where a decision read it, E §10).
-- `register.rs`: the register under a line, then the warnings. `residuals.rs`: a `residuals`
+- `register.rs`: the register under a line, then the warnings; `name_unknown_days`, an
+  `unknown day:` line for each unknown day a line's hole carries, by its name, called from
+  `answer.rs`, `axes.rs` and `diff.rs`. `residuals.rs`: a `residuals`
   ask's groups and lines, `by f` and over an axis's options.
 
 ## Load, pass by pass
@@ -321,7 +324,7 @@ the same sequence. Each step reads only what earlier steps built.
 | units and currencies | `load/steps.rs` | `build_units` |
 | kinds, subkinds, the prelude | `load/kinds.rs` | `build_kinds` |
 | indexes: built-in periods, lists, ranges; then the axes | `load/indexes.rs`, `load/steps.rs` | `build_indexes`, `build_range` |
-| versions: spans, `known` dates and windows, `moves`, sources | `load/spans.rs` | `model.py` `lit_period`, `lspan_to_span`, `VersionInfo` |
+| versions: spans, `known` days, `moves`, sources | `load/spans.rs` | `model.py` `lit_period`, `lspan_to_span`, `VersionInfo` |
 | things entering kinds, with their lifespans | `load/kinds.rs` | `build_entries`, `entry` |
 | declarations: inputs, defs, bands, moves, their binds, types and units | `load/decls.rs` | `build_decls` |
 | open indexes' keys, then places | `load/indexes.rs`, `load/places.rs` | `prescan_open_keys`, `build_places` |
@@ -335,7 +338,7 @@ the same sequence. Each step reads only what earlier steps built.
 | observations as real movements, their legs, attributes and what they fulfil | `load/observed.rs` | `obs_item`, `obs_fields`, `check_mv_refs` |
 | every row's value converted to its target's type (the conversion is `eval/convert.rs`, which the run shares) | `load/values.rs` | `check_rows` |
 | overlaps and `replace`; each observation one movement on a covered day | `load/overlap.rs` | `check_overlap` |
-| `same` lines of rows and movements | `load/same.rs` | `joint_sames`, `sref` |
+| `same` lines of movements, a row of an input refused | `load/same.rs` | `joint_sames`, `sref` |
 | scenario rows against `from`; lifespans a scenario changes | `load/scenarios.rs` | `check_scenarios`, `check_scenario_lifespans` |
 | band tables whole and in order | `load/bands.rs` | `check_bands` |
 
@@ -360,7 +363,7 @@ refcore's `Checker.tc`, so within one item the first refusal is refcore's.
 | bindings, a value assigned to a declared type | `load/binds.rs` | `check.py` `bind`, `assign` |
 | a move's day, legs and attributes against its kind's, and the place or read each target names | `load/targets.rs` | `check3.py` `m_check_move`, `m_read_target`, `m_place_target`, `m_move_changes` |
 | a leg's places, kinds, units and amount | `load/moves.rs` | `check3.py` `m_check_leg` |
-| `bal`, `low`, `flows`, `gap`, `observed`, `next`, projections | `load/reads.rs` | `check3.py` `m_t_bal` and its siblings |
+| `bal`, `flows`, `gap`, `observed`, projections | `load/reads.rs` | `check3.py` `m_t_bal` and its siblings |
 | priced places, `value(x, d) in CUR` | `load/prices.rs` | `check3.py` `m_check_priced`, `m_t_value` |
 | fills and `prorata` | `load/fills.rs` | `check2.py` `m_check_fill`, `m_t_prorata` |
 | distributions, queries, `crps`, `cdf`/`pdf`/`pmf` | `load/random.rs` | `check2.py` `m_tc_dist`, `m_t_query_random`, `m_check_dist_rows` |
@@ -380,7 +383,6 @@ refcore's `Checker.tc`, so within one item the first refusal is refcore's.
 | unread items (`WARN-UNREAD`) | `load/strata.rs` | `check_graph`'s end |
 | running reads, declared reads, the decisions' reach, walk-bound defs, left-out moves, the strata (`LOAD-READS`, `LOAD-ORDER`) | `load/strata.rs`, `load/parts.rs` | `check3.py` `m_check_moves_graph`, `m_strata`; `parts.py` `chk_parts_walk_bound` |
 | an arrival rule's reads of its own day | `load/parts.rs` | `parts.py` `chk_check_arrival_reads` |
-| readings `after` a plan or an observation | `load/strata.rs` | `check3.py` `m_check_after_readings` |
 | days and periods load sees; periods across keys | `load/across.rs` | `check3.py` `m_check_seen_days`, `m_check_period_keys` |
 | moves' law dates | `load/lawdates.rs` | `check3.py` `m_check_move_lawdates` |
 | the random cone, draws, queries, orientation (`LOAD-RANDOM`, `LOAD-ORIENT`, `LOAD-ASKONLY`); projections that reach a random amount | `load/cone.rs`, `load/across.rs` | `check2.py` `m_random_cone`, `m_finish_random`; `check3.py` `m_check_proj_seen` |
@@ -399,7 +401,7 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   Since pre-M1 each name is interned once (`base/symbol.rs`) and every table is found by a
   typed id of its sort, so an id of one sort can't find an item of another.
 - **Spans and versions.** A version states rows for a span of days (`governs`) and is known
-  from a date, or across a known window; a row may carry its own span and known date. Load
+  from a day; a row may carry its own span and known date. Load
   resolves every span to days, groups rows by target and keys, and refuses overlaps that no
   `replace` explains. The read rule (`read/`, S's) then picks the row at a read.
 - **Worlds.** A reality with scenarios loads several times: the base alone, then each
@@ -439,11 +441,12 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   comparison is decided when the whole interval lies on one side; a window compared with
   itself is decided because it remembers which read it is the value of; where one day is
   needed and the interval is undecided, the value is `HOLE-IMPRECISE`.
-- **The written projections** (`walk/projection.rs`, E §4.3). `bal(x, d) from t` and `low`
-  walk their own window from day t, counting what is known on t and leaving out the
-  movements that depend on x (listed `left out:`), so a decision never sees its own future.
-  In the common case fence F5 (`walk/lows.rs`) answers the same from a tree of running sums
-  (O(log n) per read, P8-5).
+- **The written projections** (`walk/projection.rs`, E §4.3). `bal(x, d) from t` walks its
+  own window from day t, counting what is known on t and leaving out the movements that
+  depend on x (listed `left out:`), so a decision never sees its own future. In the common
+  case fence F5 (`walk/lows.rs`) answers the same from a tree of running sums (O(log n) per
+  read, P8-5); since tally 2.2 the spelled `min` of such a projection over days is read as
+  one range minimum (E §4.3).
 - **Decisions in their order** (`walk/order.rs`, L §5.14.2). A day's decisions run by
   stratum, then by their written `before` and `after`, then by `ties by`; a cycle that no
   written order breaks is refused. A decision's leg read that needs the walk up to its own
@@ -488,20 +491,21 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   instance, adjustment and balance, grouped by month and move), so a cause the model doesn't
   know about (a bonus, a raise) shows as a difference on the line it touches. The hindcast
   fixtures (`tests/m2/hindcast/`) plant such causes and check they land on their line.
-- **`windows each`** (`ask/windows.rs`, L §4.4). A day not yet known is a window; `windows
-  each` runs the line once per combination of the days its windows can take, each run in a
-  layer of its own, and prints one line per maximal stretch of days with the same answer.
 - **Partial answers** (`eval/partial.rs`, L §5.18). A `partial` line whose value is a hole
   prints its known part and how much each named hole adds, where the value is linear in
   them; otherwise the plain hole.
 - **Forks within one timeline** (fence F6, `walk/fork.rs`, P §2.5). A decision that reads a
-  projection day by day (`min(bal(konto, d) from t for d in …)`) read the same walk again
-  for every day, each from its first day. A timeline now keeps its last four projection
+  projection day by day read the same walk again for every day, each from its first day.
+  Since tally 2.2 that holds for a `min(bal(konto, d) from t for d in …)` outside the
+  recognised shape (another step, a `where`, `ties by`) and under `Lows::Walk`, a `partial`
+  line or a traced read; with F5 on, the shape `… for d in a .. b step 1 day` is read as one
+  range minimum instead (`aggregate` decides by `lowest_shape` and `reads_lowest`, and
+  `range_minimum` reads F5's tree, or one walk day by day where F5 declines). A timeline now keeps its last four projection
   walks; the next read of the same projection through a later day continues the kept walk,
   once the plan pass shows the new read's acts are the same on every day already walked.
   On X's September replay (P8-14's check) the days stepped fell from 9 868 to 1 826, with
   534 walks shared and the same bytes. Forks across timelines (scenario worlds, axis
-  options, pins, `windows each` choices, `as known` cuts) aren't built: P §2.5's first
+  options, pins, `as known` cuts) aren't built: P §2.5's first
   different day, taken from the plan pass, misses a decision's amount computed in the walk
   (issue #188); they come with P8-10 at M5b.
 - **A projection's walk freed at its scope's end** (P §3.5). R7, the prototype's reality,
@@ -528,9 +532,10 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   continues, and a read of it through a later day continues that walk (F6). Balances are
   logs of change points, so `bal(x, d)` is a binary search.
 - **Checkpoints.** At each month's start a main walk keeps every place's state, shared
-  with the month before where it didn't change, and the decision legs booked ahead. They
-  are for the walk restart (P §4.2); nothing starts from one yet. M2's forks continue a kept
-  walk itself, with its readings after a movement, its `same` groups and its answered holes,
+  with the month before where it didn't change; since tally 2.2 no leg is booked ahead of
+  its movement's day, so a checkpoint holds none. They are for the walk restart (P §4.2);
+  nothing starts from one yet. M2's forks continue a kept walk itself, with its `same`
+  groups and its answered holes,
   so the checkpoints don't carry that state yet (G4's review, NB-9): whatever first starts
   from a checkpoint adds it.
 - **Holes are values,** carried by every operator by one rule, and printed with their
@@ -572,9 +577,7 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
 - **No threads yet.** The run happens on the caller's thread. The thread module comes
   with Monte Carlo (M7): scoped threads, explicit stack size, merge in task order.
 - **Absent at M2, on purpose,** each stopping "not implemented": forks across timelines
-  (#188; with P8-10 at M5b); the residual ledger's `windows each` where the set of lines
-  differs by sub-window (#186); `flows … in CUR at` a rate (M4's conversion); a past
-  decision that reads parts (L §5.14.3's one exception, M5b); a joint model's header `same`
+  (#188; with P8-10 at M5b); a past decision that reads parts (L §5.14.3's one exception, M5b); a joint model's header `same`
   (M5c). M4: the law-breadth forms. M5a:
   fills, holdings, ownership. M5b: parts and labels at run. M5c: joint models' asks and a
   member's reads at run. M6: `to u`, the transcendental calls, `cdf`/`pdf`/`pmf`/`crps` at
@@ -609,7 +612,12 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
     twin the projection's own walk (`Lows::Walk`), compared with the tree (`Lows::Tree`) on
     T's corpora by `m1_lows` and on F5's realities by `tally-cli/tests/walk_oracle.rs`. At
     M2 (G7's review) the tree answers only where no number on the way can pass the digit
-    cap, so a walk that would refuse is never answered by the tree.
+    cap, so a walk that would refuse is never answered by the tree. Since tally 2.2 its
+    entry also takes the spelled `min` of a projection over days (`walk/projection.rs`
+    `lowest_shape` and the switch `reads_lowest`, read by `range_minimum`): twin the
+    aggregate `min`, its terms read one by one (`eval/aggregate.rs`, as `Lows::Walk` reads
+    it), compared by `walk_oracle.rs` on the kernel and M1 corpora, M1's `low-min` and
+    `foresight-low` among them, under the tree and under the walk.
   - F6 the forks (`walk/fork.rs`, PERFORMANCE §2.5; P8-14 and the budget table's `F6-*`
     rows, X's repeated walks and forks' counts), wired by M2's rules step before group G7
     built it, and opened there for one timeline's repeated projection walks (pick P69;
@@ -688,7 +696,6 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
 | a scenario's world at run | `ask/worlds.rs`, `eval/srows.rs`; the timeline, `eval/timelines.rs` |
 | an ask over axes | `ask/axes.rs`, `eval/context.rs` |
 | a window's day | `eval/windows.rs`, `eval/dates.rs`, `eval/business.rs` |
-| `windows each` | `ask/windows.rs` |
 | date and key arithmetic | `eval/time_arith.rs` |
 | `mean`, `share`, `quantile` with `for` | `eval/queries.rs` |
 | a `partial` line | `eval/partial.rs` |
@@ -701,15 +708,15 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
 | a balance or a flow | `walk/reads.rs`, `walk/flows.rs`, `walk/move_flows.rs`, `walk/state.rs` |
 | `bal(x, d) modelled` | `walk/modelled.rs` |
 | `value(x, d) in CUR` | `walk/value.rs` |
-| a projection `from t`, `low` | `walk/projection.rs`, `walk/lows.rs` (F5), `walk/fork.rs` (F6) |
+| a projection `from t`, the `min` of one over days | `walk/projection.rs` (`lowest_shape`, `range_minimum`; the dispatch, `eval/aggregate.rs`), `walk/lows.rs` (F5), `walk/fork.rs` (F6) |
 | observations, readings, anchors | `book/observe.rs`, `book/reading.rs`; applied in the walk, `walk/readings.rs` |
 | the sign rule, a pad | `walk/readings.rs` |
 | movements stated `same`, `HOLE-SAME` | `book/same.rs` |
 | adjustments and settlements | `book/adjust.rs`, `book/settle.rs` |
-| movements in a binding, `next` | `book/members.rs` |
+| movements in a binding | `book/members.rs` |
 | the residual ledger | `book/ledger.rs`, its groups and order `book/ledger_order.rs`, printed by `ask/residuals.rs` |
 | `explain`, `inputs-of`, `readers-of` | `ask/explain.rs`, `ask/walked.rs`, `ask/instance.rs`, `ask/walkbound.rs`; the trace, `eval/trace.rs` |
-| the register under a line | `ask/register.rs` |
+| the register under a line, `unknown day:` | `ask/register.rs`; the days a hole carries, `hole/questions.rs`, `eval/windows.rs` |
 | an ask in a reality with scenarios | `ask/worlds.rs` |
 | rounding, money, printing a number | `num/round.rs`, `num/money.rs`, `num/text.rs` |
 | an error code's text | `base/code.rs` |

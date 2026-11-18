@@ -1,77 +1,45 @@
-//! `explain`'s forms the walk answers: a balance by its reading and the movements since, a projection by its own walk, a `low`.
+//! `explain`'s forms the walk answers: a balance by its reading and the movements since, a projection by its own walk.
 //! Spec: E §10 (`explain` of a balance: its last reading with its gap role, version, source
 //! and gap, or the opening, and every movement since, up to that day, grouped by day, with
 //! each movement's status and id; of a projection: its holder and day t, the start balance,
 //! the movements it counted with the clauses applied, the movements it left out), §6.1
 //! (readings, their gaps; a pad, an anchor), §4.2 (the walk's logs: what each entry books),
-//! §4.3 (a projection's walk), §4.1 step 3 (a movement's status); L §5.18 (the explain row;
-//! `explain low(x, span)` without `from` explains the first day its lowest balance is reached,
-//! as a balance), §5.10 (a place's balance: zero from its lifespan's start, else unknown until
-//! a reading), §5.14 (`with uncertain`), §5.14.1 (an ask's line leaves out nothing), §8.2 (the
-//! line's register is the read's).
-//! Twin: engine/tools/refcore/ask.py (`explain_balance`, `explain_low_plain`,
-//! `_explain_bal_lines`, `_explain_projection`, `_reading_text`, `_entry_text`,
-//! `_reading_text_plain`, `_amount_text`, `_by_day`).
+//! §4.3 (a projection's walk), §4.1 step 3 (a movement's status); L §5.18 (the explain row),
+//! §5.10 (a place's balance: zero from its lifespan's start, else unknown until a reading),
+//! §5.14 (`with uncertain`), §5.14.1 (an ask's line leaves out nothing), §8.2 (the line's
+//! register is the read's).
+//! Twin: engine/tools/refcore/ask.py (`explain_balance`, `_explain_bal_lines`,
+//! `_explain_projection`, `_reading_text`, `_entry_text`, `_reading_text_plain`,
+//! `_amount_text`, `_by_day`).
 //! Invariants: the lines read the walks' logs as the read left them, a projection's its plain
 //! twin's walk, never F5's tree; a line's register is its value's read alone, what the lines
 //! read brings nothing; days print in order, a day's movements in walk order; a movement's
 //! status is the walk's at its cut; a reading's row is its stable id (L §2.5).
 
-use core::cmp::Ordering;
-
 use super::answer::unresolved_word;
 use super::check::Printed;
-use super::explain::{head_text, invariant, plain_text};
+use super::explain::{head_text, invariant};
 use crate::base::Code;
 use crate::book::{gap_text, instant_text};
 use crate::eval::{Ctx, Engine, Env, Item};
-use crate::model::{GapRole, Reality, RowInstant, Value};
+use crate::model::{GapRole, Reality, Value};
 use crate::num::Num;
-use crate::syntax::{Ask, Bal, Expr, Low, Proj, Stop};
+use crate::syntax::{Ask, Bal, Expr, Instant, Stop};
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, own_unit, qty_value, quantity,
-    span_last, state_value,
+    ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, qty_value, state_value,
 };
 
-/// A balance read `explain` explains: `bal(…)`, plain or a projection, or `low(…)`.
-#[derive(Debug, Clone, Copy)]
-pub(super) enum Read<'a> {
-    /// `bal(x, d)`, `bal(x, d start)`, `bal(x, u, d)`, `bal(x, d) from t`.
-    Bal(&'a Bal),
-    /// `low(x, a .. b)`, with or without `from t`.
-    Low(&'a Low),
-}
-
-impl Read<'_> {
-    /// The read's projection clauses. L §5.14.1.
-    fn proj(&self) -> &Proj {
-        match self {
-            Read::Bal(b) => &b.proj,
-            Read::Low(l) => &l.proj,
-        }
-    }
-
-    /// The place read. L §5.10.
-    fn place(&self) -> &Expr {
-        match self {
-            Read::Bal(b) => &b.place,
-            Read::Low(l) => &l.place,
-        }
-    }
-}
-
-/// The line of `explain bal(…)` or `explain low(…)`: its value as the read gives it, then,
-/// but for a refusal or a balance of no day, its derivation: a balance's from the main walk,
-/// a projection's from its own walk, a `low` with no `from` as the balance of its first
-/// lowest day (refcore's `explain_balance`, `explain_low_plain`). L §5.18, E §10.
+/// The line of `explain bal(…)`: its value as the read gives it, then, but for a refusal or a
+/// balance of no day, its derivation: a balance's from the main walk, a projection's from its
+/// own walk (refcore's `explain_balance`). L §5.18, E §10.
 ///
 /// # Errors
 ///
 /// A load refusal met at run; `NotBuilt` for a form the walk doesn't build.
 pub(super) fn balance_line(
     m: &Reality,
-    (ask, read, reference): (&Ask, Read<'_>, &Expr),
+    (ask, read, reference): (&Ask, &Bal, &Expr),
     engine: &mut Engine,
     env: &Env,
     ctx: Ctx,
@@ -85,18 +53,13 @@ pub(super) fn balance_line(
         return Err(invariant("an explained line with other than one value"));
     };
     let text = head_text(m, &item)?;
-    let body = match (&item, read) {
-        (Item::Refused(_), _) => Vec::new(),
-        (Item::Value(_), Read::Bal(b)) if b.args.is_empty() => Vec::new(),
-        // L §5.18: a `low` without `from` explains the first day its lowest balance is reached
-        (Item::Value(Value::Hole(_)), Read::Low(l)) if l.proj.from.is_none() => Vec::new(),
-        (Item::Value(v), _) => {
+    let body = match &item {
+        Item::Refused(_) => Vec::new(),
+        Item::Value(_) if read.args.is_empty() => Vec::new(),
+        Item::Value(_) => {
             // what the lines read was read for the value already: it brings nothing more
             engine.push();
-            let lines = match read {
-                Read::Low(l) if l.proj.from.is_none() => low_lines(m, engine, l, v, (env, ctx)),
-                Read::Bal(_) | Read::Low(_) => balance_lines(m, engine, (ask, read), (env, ctx)),
-            };
+            let lines = balance_lines(m, engine, (ask, read), (env, ctx));
             engine.pop_alone();
             match lines {
                 Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
@@ -109,15 +72,13 @@ pub(super) fn balance_line(
     let body: Vec<String> = body.into_iter().map(|l| format!("  {l}")).collect();
     Ok(Printed {
         text,
-        causes: Some(super::check::undated_causes(&body)),
         body,
         bare: false,
-
         whole: false,
         alone: false,
         met,
         laws: None,
-        carried: super::check::carried_of(&[&item]),
+        unknown: super::check::hole_days(&[&item]),
     })
 }
 
@@ -126,18 +87,14 @@ pub(super) fn balance_line(
 fn place_unit(
     m: &Reality,
     engine: &mut Engine,
-    read: Read<'_>,
+    read: &Bal,
     (env, ctx): (&Env, Ctx),
 ) -> Result<Result<(String, String), String>, Stop> {
-    let place = match engine.place_arg(m, read.place(), env, ctx)? {
+    let place = match engine.place_arg(m, &read.place, env, ctx)? {
         Err(h) => return Ok(Err(format!("the place is a hole: {}", h.text()))),
         Ok(p) => p,
     };
-    let unit = match read {
-        Read::Bal(b) => engine.bal_unit(m, b, &place, env, ctx)?,
-        Read::Low(_) => Ok(own_unit(m, &place)?),
-    };
-    match unit {
+    match engine.bal_unit(m, read, &place, env, ctx)? {
         Err(h) => Ok(Err(format!("the unit is a hole: {}", h.text()))),
         Ok(u) => Ok(Ok((place, u))),
     }
@@ -150,38 +107,24 @@ fn place_unit(
 fn balance_lines(
     m: &Reality,
     engine: &mut Engine,
-    (ask, read): (&Ask, Read<'_>),
+    (ask, read): (&Ask, &Bal),
     (env, ctx): (&Env, Ctx),
 ) -> Result<Vec<String>, Stop> {
     let (place, unit) = match place_unit(m, engine, read, (env, ctx))? {
         Err(line) => return Ok(vec![line]),
         Ok(pu) => pu,
     };
-    let (first, end) = match read {
-        Read::Bal(b) => {
-            let Some(day_arg) = b.args.last() else {
-                return Ok(Vec::new());
-            };
-            let d = engine.ev(m, day_arg, env, ctx)?;
-            if matches!(d, Value::Hole(_) | Value::Window(_)) {
-                return Ok(Vec::new());
-            }
-            let Ok(end) = crate::eval::one_day(m, &d, "the day of bal")? else {
-                return Ok(Vec::new());
-            };
-            (end, end)
-        }
-        Read::Low(l) => {
-            let Ok(span) = engine.span_value(m, &l.span, env, ctx)? else {
-                return Ok(Vec::new());
-            };
-            let first = span
-                .start()
-                .ok_or_else(|| invariant("a span with no start"))?;
-            (first, span_last(m, &span)?)
-        }
+    let Some(day_arg) = read.args.last() else {
+        return Ok(Vec::new());
     };
-    if let Some(from) = &read.proj().from {
+    let d = engine.ev(m, day_arg, env, ctx)?;
+    if matches!(d, Value::Hole(_) | Value::Window(_)) {
+        return Ok(Vec::new());
+    }
+    let Ok(end) = crate::eval::one_day(m, &d, "the day of bal")? else {
+        return Ok(Vec::new());
+    };
+    if let Some(from) = &read.proj.from {
         let t = engine.ev(m, from, env, ctx)?;
         if matches!(t, Value::Hole(_)) {
             return Ok(Vec::new());
@@ -190,17 +133,15 @@ fn balance_lines(
         let Ok(t) = crate::eval::one_day(m, &t, "the day of a projection")? else {
             return Ok(Vec::new());
         };
-        let low = matches!(read, Read::Low(_)).then_some(first);
-        let unc = read.proj().uncertain || ctx.unc;
-        return projection_lines(m, engine, (ask, &place, &unit), (t, low, end), (unc, ctx));
+        let unc = read.proj.uncertain || ctx.unc;
+        return projection_lines(m, engine, (ask, &place, &unit), (t, end), (unc, ctx));
     }
-    let start = matches!(read, Read::Bal(b) if b.start);
     let id = engine.main_walk(m, ctx.cut)?;
-    if matches!(read, Read::Bal(b) if b.modelled) {
-        return modelled_lines(m, engine, id, (&place, &unit), (end, start));
+    if read.modelled {
+        return modelled_lines(m, engine, id, (&place, &unit), (end, read.start));
     }
-    let uncertain = read.proj().uncertain;
-    plain_lines(m, engine, id, (&place, &unit), (end, start, uncertain))
+    let uncertain = read.proj.uncertain;
+    plain_lines(m, engine, id, (&place, &unit), (end, read.start, uncertain))
 }
 
 /// `explain bal(x, d) modelled`: its place and day, where it starts (its last reading before
@@ -260,74 +201,6 @@ fn modelled_lines(
         rows.push((gd, format!("{}.{} (modelled): {amount}", inst.id, lg.name)));
     }
     out.extend(by_day(rows));
-    Ok(out)
-}
-
-/// `explain low(x, a .. b)` with no `from`: the lowest of the plain end-of-day balances
-/// `lowest` and the first run of days it is reached on, then the balance at that run's first
-/// day (refcore's `explain_low_plain`). L §5.18, §5.14.1; E §10.
-fn low_lines(
-    m: &Reality,
-    engine: &mut Engine,
-    l: &Low,
-    lowest: &Value,
-    (env, ctx): (&Env, Ctx),
-) -> Result<Vec<String>, Stop> {
-    let Ok((place, unit)) = place_unit(m, engine, Read::Low(l), (env, ctx))? else {
-        return Ok(Vec::new());
-    };
-    let Ok(span) = engine.span_value(m, &l.span, env, ctx)? else {
-        return Ok(Vec::new());
-    };
-    let first = span
-        .start()
-        .ok_or_else(|| invariant("a span with no start"))?;
-    let last = span_last(m, &span)?;
-    let (target, _) = quantity(m, lowest)?;
-    let id = engine.main_walk(m, ctx.cut)?;
-    let walk = engine.walk(id)?;
-    // the first run of days whose balance is the lowest, no day between them off it
-    let mut run: Option<(Day, Day)> = None;
-    let mut day = Some(first);
-    while let Some(d) = day.filter(|d| *d <= last) {
-        let st = walk.pstate(m, &place, &unit, At::end(d));
-        let on = match st.known() {
-            Some(q) => q.compare(&target).map_err(crate::eval::num_stop)? == Ordering::Equal,
-            None => false,
-        };
-        match (on, run) {
-            (true, None) => run = Some((d, d)),
-            (true, Some((a, _))) => run = Some((a, d)),
-            (false, Some(_)) => break,
-            (false, None) => {}
-        }
-        day = d.next();
-    }
-    let Some((d1, d2)) = run else {
-        return Err(Stop::NotBuilt(
-            "explain of a low whose lowest balance is on no day of its span",
-        ));
-    };
-    let through = if d2 == d1 {
-        String::new()
-    } else {
-        format!(" (through {})", d2.text())
-    };
-    let mut out = vec![format!(
-        "lowest end-of-day balance of {place} on {} .. {}: {}, on {}{through}",
-        first.text(),
-        last.text(),
-        plain_text(m, &Item::Value(lowest.clone()))?,
-        d1.text()
-    )];
-    let uncertain = l.proj.uncertain;
-    out.extend(plain_lines(
-        m,
-        engine,
-        id,
-        (&place, &unit),
-        (d1, false, uncertain),
-    )?);
     Ok(out)
 }
 
@@ -397,14 +270,13 @@ pub(crate) fn plain_lines(
 }
 
 /// A projection's derivation from its own walk, the plain twin's, never F5's tree: its place,
-/// day t and last day (a `low`'s first day `low`), its holder, its clauses, where it starts,
-/// the movements it counted by day, those it left out, and a `low`'s lowest day (refcore's
-/// `_explain_projection`). E §10, §4.3; L §5.14.1.
+/// day t and last day, its holder, its clauses, where it starts, the movements it counted by
+/// day, and those it left out (refcore's `_explain_projection`). E §10, §4.3; L §5.14.1.
 fn projection_lines(
     m: &Reality,
     engine: &mut Engine,
     (ask, place, unit): (&Ask, &str, &str),
-    (t, low, end): (Day, Option<Day>, Day),
+    (t, end): (Day, Day),
     (unc, ctx): (bool, Ctx),
 ) -> Result<Vec<String>, Stop> {
     if t < m.start {
@@ -415,19 +287,11 @@ fn projection_lines(
     }
     let id = engine.projection_walk(m, ctx, t, end)?;
     let walk = engine.walk(id)?;
-    let head = match low {
-        Some(a) => format!(
-            "projection of {place} ({unit}) from {}, lowest end-of-day balance on {} .. {}",
-            t.text(),
-            a.text(),
-            end.text()
-        ),
-        None => format!(
-            "projection of {place} ({unit}) from {} to the end of {}",
-            t.text(),
-            end.text()
-        ),
-    };
+    let head = format!(
+        "projection of {place} ({unit}) from {} to the end of {}",
+        t.text(),
+        end.text()
+    );
     let with = if unc { "with" } else { "without" };
     let opened = walk.default_state(m, place, unit);
     let start = match state_value(m, &opened, unit, &walk.anchor_question(place)) {
@@ -441,7 +305,7 @@ fn projection_lines(
             "holder: ask {} (an ask line leaves out nothing, L §5.14.1)",
             ask.id
         ),
-        format!("clauses: windows none, random none, {with} uncertain"),
+        format!("clauses: random none, {with} uncertain"),
         format!("start: {start} at the start of {}", t.text()),
     ];
     let key = At::end(end);
@@ -474,29 +338,6 @@ fn projection_lines(
         ));
     }
     out.push("left out: none".to_owned());
-    if let Some(a) = low {
-        let mut best: Option<(Day, Num)> = None;
-        let mut day = Some(a);
-        while let Some(d) = day.filter(|d| *d <= end) {
-            if let Some(q) = walk.pstate(m, place, unit, At::end(d)).known() {
-                let lower = match &best {
-                    None => true,
-                    Some((_, b)) => q.compare(b).map_err(crate::eval::num_stop)? == Ordering::Less,
-                };
-                if lower {
-                    best = Some((d, q.clone()));
-                }
-            }
-            day = d.next();
-        }
-        if let Some((d, q)) = best {
-            out.push(format!(
-                "lowest: {} at the end of {}",
-                quantity_text(m, &q, unit)?,
-                d.text()
-            ));
-        }
-    }
     Ok(out)
 }
 
@@ -628,10 +469,12 @@ fn reading_instant(m: &Reality, sid: &str) -> Result<String, Stop> {
         }
     }
     let row = found.ok_or_else(|| invariant("a reading's row load didn't build"))?;
-    match &row.instant {
-        Some(RowInstant::At(day, Some(edge))) => Ok(instant_text(*day, *edge)),
-        Some(RowInstant::After(node)) => Ok(format!("after {}", crate::load::expr_text(node))),
-        Some(RowInstant::At(_, None)) | None => Err(Stop::NotBuilt(
+    match row.instant {
+        Some(Instant {
+            day,
+            edge: Some(edge),
+        }) => Ok(instant_text(day, edge)),
+        Some(Instant { edge: None, .. }) | None => Err(Stop::NotBuilt(
             "explain of a reading at an instant other than a day's start or end",
         )),
     }
@@ -754,14 +597,14 @@ fn uncertain_rows(
     rows: &mut Vec<(Day, String)>,
 ) -> Result<(), Stop> {
     for inst in &walk.uncertain {
-        let day = inst.day.as_ref().and_then(Dated::lo);
+        // its legs are on its day, a window's first
+        let Some(gd) = inst.day.as_ref().and_then(Dated::lo) else {
+            continue;
+        };
+        if gd > end || since.is_some_and(|s| At::end(gd) <= s) {
+            continue;
+        }
         for lg in &inst.legs {
-            let Some(gd) = lg.day.day().or(day) else {
-                continue;
-            };
-            if gd > end || since.is_some_and(|s| At::end(gd) <= s) {
-                continue;
-            }
             for (side, at_end) in [(Side::Out, &lg.from), (Side::In, &lg.to)] {
                 if at_end.place() == Some(place) {
                     let amount = amount_text(m, lg, side)?;

@@ -1,0 +1,38 @@
+model kept_clock
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2 (#211, G3, S-5, critic C-11): a same line with a planned instance on a side keeps its clock: two planned moves of 100.00 PLN on one day, stated same by a version known 2026-05-01: before 200.00 PLN (as known 2026-04-01), today 100.00 PLN. The same at 2.2."
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input amt: money PLN
+
+move rent_a: transfers
+  on d1
+  leg cash from konto to world amount amt
+
+move rent_b: transfers
+  on d1
+  leg cash from konto to world amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-10 "s"
+  amt = 100.00 PLN "s"
+
+version one_rent
+  cite s
+  governs always
+  known 2026-05-01
+  same rent_a = rent_b
+
+ask before: flows(konto, 2026-03) as known 2026-04-01
+ask today: flows(konto, 2026-03)

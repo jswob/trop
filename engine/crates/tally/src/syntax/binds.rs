@@ -67,8 +67,8 @@ impl P<'_> {
         match tok.kind {
             Kind::Op => [",", ")", "]", "}"].contains(&tok.text.as_str()),
             Kind::Id => [
-                "where", "by", "for", "law", "with", "as", "windows", "random", "paths", "path",
-                "partial", "orient", "in", "from",
+                "where", "by", "for", "law", "with", "as", "random", "paths", "path", "partial",
+                "orient", "in", "from",
             ]
             .contains(&tok.text.as_str()),
             Kind::Key

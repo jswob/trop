@@ -36,17 +36,17 @@ move late[m in months]: transfers
   on add_days(start_of(m), off2)
   leg cash from old to acct amount amt
 
-ask l1: low(acct, 2026-01-01 .. 2026-03-31)
+ask l1: min(bal(acct, d) for d in 2026-01-01 .. 2026-03-31 step 1 day)
 
-ask l2: low(acct, 2026-01-01 .. 2026-12-31)
+ask l2: min(bal(acct, d) for d in 2026-01-01 .. 2026-12-31 step 1 day)
 
-ask l3: low(acct, 2026-02-01 .. 2026-02-28), low(acct, 2026-04-01 .. 2026-08-31)
+ask l3: min(bal(acct, d) for d in 2026-02-01 .. 2026-02-28 step 1 day), min(bal(acct, d) for d in 2026-04-01 .. 2026-08-31 step 1 day)
 
-ask p1: low(acct, 2026-01-01 .. 2026-03-31) from 2026-01-01
+ask p1: min(bal(acct, d) from 2026-01-01 for d in 2026-01-01 .. 2026-03-31 step 1 day)
 
-ask p2: low(acct, 2026-01-01 .. 2026-12-31) from 2026-01-01
+ask p2: min(bal(acct, d) from 2026-01-01 for d in 2026-01-01 .. 2026-12-31 step 1 day)
 
-ask p3: low(acct, 2026-04-01 .. 2026-08-31) from 2026-02-01
+ask p3: min(bal(acct, d) from 2026-02-01 for d in 2026-04-01 .. 2026-08-31 step 1 day)
 
 ask b: bal(acct, 2026-03-31), bal(sav, 2026-03-31)
 

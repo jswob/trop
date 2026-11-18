@@ -3,6 +3,7 @@ model p
   on 2026-06-30
   start 2026-01-01
   end 2026-12-31
+  note "T; tally 2.2 (S-5): a same line between two observed rows has no clock, so it sits in the version of its later row; the asks at a cut between the line's known and its rows' went (the clock was their subject), and every other answer is as before"
 
 source s "s"
 unit PLN: currency minor 0.01
@@ -38,17 +39,15 @@ version b
   known 2026-03-10
   bank[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-03]) "b1"
   card[o1] = (on: 2026-03-01, kind: pays, leg cash from work to konto amount 11.00 PLN, fulfils: pay[2026-02]) "c1"
+  same bank[o1] = card[o1]
 
 version sm
   cite s
   known 2026-03-11
-  same bank[o1] = card[o1]
 ask fp: flows(pay, 2026-03)
 ask ob: observed(pay[2026-03])
 ask c2: count(p in pays over 2026-02)
-ask k1: count(p in pays over 2026-03) as known 2026-03-10
 ask k2: count(p in pays over 2026-03) as known 2026-03-11
-ask k3: tot[2026-02] as known 2026-03-10
 ask hd: count(p in pays on dh)
 ask hs: sum(p.cash.amount for p in pays on dh)
 ask ob1: count(x in bank over 2026-03)
