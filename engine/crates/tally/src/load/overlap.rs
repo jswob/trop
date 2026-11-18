@@ -6,16 +6,15 @@
 //! Twin: engine/tools/refcore/loader.py (`check_overlap`, `_pos_rel`, `narrower`,
 //! `patterns_meet`, `key_order`, `row_layer`, `version_layer`, `check_obs`).
 //! Invariants: a row's span is its own, else its version's in force at `on`; two readings
-//! overlap only at one instant stated alike, and two `after m` instants never do (refcore's
-//! instants compare by their node); a target's rows are grouped by pattern in the order the
-//! patterns first appear, and the first pair that breaks the rule is refused at refcore's row.
+//! overlap only at one instant stated alike; a target's rows are grouped by pattern in the
+//! order the patterns first appear, and the first pair that breaks the rule is refused at
+//! refcore's row.
 
 use super::check::invariant;
 use super::steps::refuse;
 use crate::base::Load;
 use crate::model::{
-    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, RowInstant, Span, Value, World,
-    pattern_text,
+    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, Span, Value, World, pattern_text,
 };
 use crate::num::Num;
 use crate::syntax::Stop;
@@ -321,13 +320,9 @@ fn overlaps(m: &Reality, one: &Row, other: &Row) -> Result<bool, Stop> {
     })
 }
 
-/// Whether two readings state one instant: a day and its place in the day alike; an `after m`
-/// is its own (refcore compares the instants' nodes by identity).
+/// Whether two readings state one instant: a day and its place in the day alike.
 fn same_instant(a: &Row, b: &Row) -> bool {
-    match (&a.instant, &b.instant) {
-        (Some(RowInstant::At(x, ex)), Some(RowInstant::At(y, ey))) => x == y && ex == ey,
-        _ => false,
-    }
+    matches!((&a.instant, &b.instant), (Some(x), Some(y)) if x == y)
 }
 
 /// How a key stands to another at one position (refcore's `_pos_rel`).

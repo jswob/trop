@@ -240,9 +240,9 @@ fn day_val(lit: &Lit, place: &Place) -> Val {
 }
 
 /// The span component (L §2.4, round 19, GD-24): a row with no span of its own first, then a
-/// span with no start (a row governing always among them), then by start; a row read `after m`
-/// after the dated ones; an instant by its day, a day's start before its end. A rule's own
-/// span comes as `Governs::Span`; `place` is the row's or the rule's line.
+/// span with no start (a row governing always among them), then by start; an instant by its
+/// day, a day's start before its end. A rule's own span comes as `Governs::Span`; `place` is
+/// the row's or the rule's line.
 pub(super) fn span_key(gov: Option<&Governs>, instant: Option<&Instant>, place: &Place) -> Val {
     match (gov, instant) {
         (Some(Governs::Always), _) => Val::Tie(1, Vec::new()),
@@ -250,8 +250,7 @@ pub(super) fn span_key(gov: Option<&Governs>, instant: Option<&Instant>, place: 
             None => Val::Tie(1, Vec::new()),
             Some(from) => Val::Tie(2, vec![day_val(from, place)]),
         },
-        (None, Some(Instant::After(_))) => Val::Tie(3, Vec::new()),
-        (None, Some(Instant::At(day, edge))) => {
+        (None, Some(Instant { day, edge })) => {
             let at = match edge {
                 Some(super::tree::Edge::Start) => 0,
                 None => 1,

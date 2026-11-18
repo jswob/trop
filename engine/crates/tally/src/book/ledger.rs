@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::adjust::Adjustment;
 use super::ledger_order::{Group, GroupKey, abs, fig_add, fig_sub, grouped, month_group};
 use super::observe::{Obs, inst_id};
-use super::reading::{Seen, Stands, booked_amount, per_unit, reading_rank};
+use super::reading::{Seen, booked_amount, per_unit, reading_rank};
 use crate::base::{Load, Refusal};
 use crate::eval::{Ctx, Engine, Env, Rows, num_stop};
 use crate::hole::{Hole, Unknown, carry_union, spread};
@@ -278,8 +278,7 @@ impl Engine {
             add(&o.legs);
         }
         let world = self.timeline_world();
-        let after_on = self.after_days(m, m.on)?;
-        for seen in self.seen_readings(m, (m.on, world), (Rows::Unkept, &after_on))? {
+        for seen in self.seen_readings(m, (m.on, world), Rows::Unkept)? {
             if let Some(r) = &seen.reading
                 && seen.place == place
                 && r.unit != ALL
@@ -484,34 +483,15 @@ impl Engine {
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
-        let after = self.after_days(m, cut)?;
-        let walked = self.seen_readings(m, (cut, world), (Rows::Unkept, &after))?;
-        let after_on = self.after_days(m, m.on)?;
-        for mut seen in self.seen_readings(m, (m.on, world), (Rows::Unkept, &after_on))? {
+        let walked = self.seen_readings(m, (cut, world), Rows::Unkept)?;
+        for seen in self.seen_readings(m, (m.on, world), Rows::Unkept)? {
             if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }
             let Some(stated) = seen.reading.clone() else {
                 continue;
             };
-            let at = match &seen.stands {
-                Stands::Edge(edge) => reading_point(seen.day, *edge, reading_rank(&walked, &seen)?),
-                // a reading after m stands right after m, or the observations standing in
-                // for it, on the day of the last of them, where the walk applied it; none
-                // where it didn't (refcore's `after_keys`; E §6.3 Grouping, L §4.6)
-                Stands::After(_) => {
-                    let key = (
-                        stated.place.clone(),
-                        stated.instant.clone(),
-                        stated.version.clone(),
-                    );
-                    match self.walk(id)?.after_at.get(&key) {
-                        Some(at) => *at,
-                        None => continue,
-                    }
-                }
-            };
-            seen.day = at.day;
+            let at = reading_point(seen.day, seen.edge, reading_rank(&walked, &seen)?);
             if !span.contains(seen.day) {
                 continue;
             }

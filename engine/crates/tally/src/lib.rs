@@ -117,8 +117,7 @@ pub mod model {
 
     pub use decl::{
         BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
-        ObsLeg, Observation, PlaceInfo, Row, RowInstant, RowsHold, RuleVer, Table as BandTable,
-        TimePos,
+        ObsLeg, Observation, PlaceInfo, Row, RowsHold, RuleVer, Table as BandTable, TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
@@ -252,7 +251,6 @@ pub mod walk {
     pub use projection::ProjKey;
     pub(crate) use projection::own_unit;
     pub use readings::Broke;
-    pub(crate) use readings::{breaks, takes_text};
     pub(crate) use reads::state_value;
     pub(crate) use state::GapAt;
     pub use state::{
@@ -282,10 +280,8 @@ pub mod book {
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
-    pub use reading::{
-        AfterDay, AfterDays, Pad, Seen, Stands, after_missing, per_unit, reading_rank,
-    };
-    pub(crate) use reading::{gap_text, instant_text, reading_place, stands_in};
+    pub use reading::{Pad, Seen, per_unit, reading_rank};
+    pub(crate) use reading::{gap_text, instant_text, reading_place};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same::{Member, SameMet, SamePicks, Waiting, and_list};
     pub(crate) use settle::settlement_move;

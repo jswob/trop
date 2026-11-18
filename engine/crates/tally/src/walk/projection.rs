@@ -447,8 +447,7 @@ impl Engine {
         through: Day,
     ) -> Result<usize, Stop> {
         let (base, point, c) = (key.0, key.1, key.2);
-        let after = self.after_days(m, c)?;
-        let walk = self.continued(m, (base, point), (c, t, through), (&key.3, &after))?;
+        let walk = self.continued(m, (base, point), (c, t, through), &key.3)?;
         let id = self.walks.len();
         self.walks.push(walk);
         #[cfg(feature = "counters")]
@@ -494,10 +493,10 @@ impl Engine {
         m: &Reality,
         (base, point): (usize, At),
         (c, t, through): (Day, Day, Day),
-        (left_out, after): (&BTreeSet<String>, &crate::book::AfterDays),
+        left_out: &BTreeSet<String>,
     ) -> Result<Walk, Stop> {
         let world = self.walk(base)?.world;
-        let mut first_reading = self.first_readings(m, (c, world), after)?;
+        let mut first_reading = self.first_readings(m, (c, world))?;
         let from = self.walk(base)?;
         let mut states: BTreeMap<(String, String), St> = BTreeMap::new();
         for (place, unit) in from.logs.keys() {

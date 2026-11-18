@@ -10,7 +10,7 @@
 use super::check::invariant;
 use super::steps::refuse;
 use crate::base::{Code, Load, Refusal};
-use crate::model::{Entry, Reality, RowInstant, RuleVer, Span};
+use crate::model::{Entry, Reality, RuleVer, Span};
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -128,8 +128,8 @@ pub(super) fn check_scenarios(m: &Reality) -> Result<(), Stop> {
             let Some((scenario, from)) = scenario_of(m, &row.version) else {
                 continue;
             };
-            if let Some(RowInstant::At(day, _)) = &row.instant {
-                if *day < from {
+            if let Some(instant) = &row.instant {
+                if instant.day < from {
                     return Err(barred(m, &row.version, &scenario, from, id, row.line));
                 }
                 continue;

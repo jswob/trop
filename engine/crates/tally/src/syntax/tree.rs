@@ -1546,13 +1546,13 @@ pub enum OfRow {
     Pair(Expr, Expr),
 }
 
-/// A reading's instant (L §4.6).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Instant {
-    /// `at D [start|end]`.
-    At(Day, Option<Edge>),
-    /// `after m`.
-    After(Expr),
+/// A reading's instant, `at D [start|end]` (L §4.6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Instant {
+    /// The day.
+    pub day: Day,
+    /// The start or the end of the day; none for a reading that isn't a balance's.
+    pub edge: Option<Edge>,
 }
 
 /// The start or end of a day.

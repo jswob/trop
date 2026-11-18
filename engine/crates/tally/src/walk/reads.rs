@@ -17,11 +17,10 @@
 
 use std::collections::BTreeSet;
 
-use super::plan::{Amount, Dated, HoleSrc, Inst, Status, invariant, qty_value};
+use super::plan::{Amount, Dated, HoleSrc, Inst, invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::book::Stands;
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Rows};
 use crate::hole::{Hole, Linear, spread};
 use crate::model::{KeyVal, Reality, Value};
@@ -703,60 +702,6 @@ impl Engine {
         Ok(id)
     }
 
-    /// The main walk of cut `cut`, walked to its end, unless it is being walked (a read from
-    /// inside its own walk): none then. E §3.3, §4.2.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::main_walk`].
-    pub(crate) fn free_main_walk(&mut self, m: &Reality, cut: Day) -> Result<Option<usize>, Stop> {
-        let busy = self.main_walks.get(&cut);
-        if busy.is_some_and(|id| self.walking.contains(id)) {
-            return Ok(None);
-        }
-        self.main_walk(m, cut).map(Some)
-    }
-
-    /// The status of decision instance `mid`'s run in the walk a read in context `ctx` sees,
-    /// and whether observations the walk books stand in for it (none dated before S,
-    /// [`crate::book::stands_in`]): the walk it reads at, or else the main walk of its cut,
-    /// through the walks it continues; none where m hasn't run there, or where that main walk
-    /// is being walked (refcore's `after_day`, its run and its `legs`). E §4.2 step 3, L §4.6
-    /// Readings, §5.19 Before the run.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::main_walk`].
-    pub(crate) fn run_status(
-        &mut self,
-        m: &Reality,
-        mid: &str,
-        ctx: Ctx,
-    ) -> Result<Option<(Status, bool)>, Stop> {
-        let id = if let Some(at) = ctx.at {
-            at.walk
-        } else {
-            let Some(id) = self.free_main_walk(m, ctx.cut)? else {
-                return Ok(None);
-            };
-            id
-        };
-        for wid in self.chain(id)? {
-            let walk = self.walk(wid)?;
-            if let Some(ix) = walk.run_ids.get(mid) {
-                let run = walk
-                    .runs
-                    .get(*ix)
-                    .ok_or_else(|| invariant("a run by its id"))?;
-                let (status, links, cut) = (run.inst.status, run.inst.obs.clone(), walk.cut);
-                let obs = self.observations(m, cut)?;
-                let stands = crate::book::stands_in(obs, &links, (m.start, m.end, cut));
-                return Ok(Some((status, stands)));
-            }
-        }
-        Ok(None)
-    }
-
     /// The walk of the timeline of cut `cut` from S through `day`, its plan pass listing no
     /// plan's instance dated after it: what a leg read that day needs while the main walk
     /// needs a cell still being computed outside it. Kept per day, a walk to a later day
@@ -892,14 +837,10 @@ impl Engine {
     /// As [`Engine::seen_readings`].
     fn stated_on(&mut self, m: &Reality, place: &str, day: Day, cut: Day) -> Result<bool, Stop> {
         let world = self.timeline_world();
-        let after = self.after_days(m, cut)?;
-        let seen = self.seen_readings(m, (cut, world), (Rows::Unkept, &after))?;
-        Ok(seen.iter().any(|s| {
-            s.input == "stated"
-                && s.place == place
-                && s.day == day
-                && matches!(s.stands, Stands::Edge(_))
-        }))
+        let seen = self.seen_readings(m, (cut, world), Rows::Unkept)?;
+        Ok(seen
+            .iter()
+            .any(|s| s.input == "stated" && s.place == place && s.day == day))
     }
 }
 

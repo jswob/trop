@@ -376,17 +376,15 @@ fn one_unit(
     Ok(cands)
 }
 
-/// A reading row's instant as text: `2026-02-15 end`, `after save[2026-03]`, or its day
-/// (refcore's `instant_text`). L §4.6 Readings.
+/// A reading row's instant as text: `2026-02-15 end`, or its day (refcore's `instant_text`).
+/// L §4.6 Readings.
 fn instant_of(row: &crate::model::Row) -> String {
-    match &row.instant {
-        Some(crate::model::RowInstant::At(day, Some(edge))) => {
-            crate::book::instant_text(*day, *edge)
-        }
-        Some(crate::model::RowInstant::At(day, None)) => day.text(),
-        Some(crate::model::RowInstant::After(node)) => {
-            format!("after {}", crate::load::expr_text(node))
-        }
+    match row.instant {
+        Some(crate::syntax::Instant {
+            day,
+            edge: Some(edge),
+        }) => crate::book::instant_text(day, edge),
+        Some(crate::syntax::Instant { day, edge: None }) => day.text(),
         None => String::new(),
     }
 }

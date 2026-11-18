@@ -365,7 +365,7 @@ impl Engine {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Bad(err)))
             }
-            Act::WindowEnd(mid, window, h) => self.window_end(m, id, at, (&mid, &window, &h)),
+            Act::WindowEnd(mid, h) => self.window_end(m, id, at, (&mid, &h)),
             Act::Decide(..) => Err(invariant("a decision act taken as a plain act")),
         }
     }
@@ -561,7 +561,7 @@ impl Engine {
             return Ok(());
         }
         if err.is_none() && !on.is_empty() && !self.group_legs(id, at, movement, lg, &on, &unit)? {
-            // outside every group (a reading's pad after a decision): tested as it is booked
+            // outside every group: tested as it is booked
             match self
                 .walk(id)?
                 .tested_alone(m, (movement, &q), &on, &unit, at)?

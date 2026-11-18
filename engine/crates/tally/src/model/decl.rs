@@ -12,7 +12,7 @@ use super::graph::Target;
 use super::key::{KeyVal, Pat, Span};
 use super::ty::Ty;
 use crate::num::Num;
-use crate::syntax::{Bind, Def, Edge, Expr, FieldValue, Lit, Move, Place, Price, Rule, RuleValue};
+use crate::syntax::{Bind, Def, FieldValue, Instant, Lit, Move, Place, Price, Rule, RuleValue};
 use crate::syntax::{LawDate, OfRow, Value};
 use crate::time::{Day, Period};
 
@@ -53,15 +53,6 @@ pub enum TimePos {
     Multi,
 }
 
-/// A row's instant (L §4.6 Readings, §5.19).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum RowInstant {
-    /// `at D [start|end]`.
-    At(Day, Option<Edge>),
-    /// `after x`.
-    After(Expr),
-}
-
 /// A row a version states for an input, or a `given` for a def (refcore's `Row`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
@@ -83,8 +74,8 @@ pub struct Row {
     pub own_known: Option<Day>,
     /// Its own `known window(a, b)`'s last day, b (L §4.5).
     pub own_window: Option<Day>,
-    /// A reading's instant.
-    pub instant: Option<RowInstant>,
+    /// A reading's instant (L §4.6 Readings, §5.19).
+    pub instant: Option<Instant>,
     /// Its locator text.
     pub locator: Option<String>,
     /// Whether it is a `given`.
@@ -149,8 +140,6 @@ pub struct RowsHold {
     /// A row known in a window, its own or its version's: only then can a cut fall inside a
     /// row's `known` (L §4.5).
     pub known_window: bool,
-    /// A row standing `after m`, a balance reading's (L §4.6 Readings).
-    pub after: bool,
     /// A reading row at a place of unit `any` that states no unit (a hole, `none`): it stands
     /// for every unit the place holds at its instant (L §5.10; tally 2.1.8 R14).
     pub unitless: bool,

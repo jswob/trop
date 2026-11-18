@@ -900,9 +900,7 @@ impl<'a> P<'a> {
         match &tok.kind {
             Kind::Str(_) => true,
             Kind::Op | Kind::Key => tok.text == "," || tok.text == "=",
-            Kind::Id => {
-                ["known", "at", "after", "governs", "priced", "lives"].contains(&tok.text.as_str())
-            }
+            Kind::Id => ["known", "at", "governs", "priced", "lives"].contains(&tok.text.as_str()),
             Kind::Int(_)
             | Kind::Dec(_)
             | Kind::Day(_)

@@ -1,11 +1,11 @@
 //! The builder's tests of group 3's review: each review input, the lines refcore prints for the asks it names.
 //! Spec: L §5.18 (R15: `partial` follows what is linear),
-//! L §5.10 and §4.6 (R14: a place of unit `any` read unit by unit), L §4.6 Readings and §4.4
-//! (#175: a reading `after m`, its key, its window day, pick P29), L §8 (refusals outrank
-//! holes), L §5.19 (`bal … modelled`, pick P39 on B8).
-//! Twin: engine/tools/refcore (spec/2.1.8 at 75f27ca1, the sixth turn); each expected line is
-//! its run of the same text (`python3 -m refcore run`), each text an input of the review of
-//! build group 3 (`tmp/spec-2.1.8-build/review-g3/`).
+//! L §5.10 and §4.6 (R14: a place of unit `any` read unit by unit), L §4.4 (a decision's
+//! window ends at its last day, pick P29 on #175), L §8 (refusals outrank holes).
+//! Twin: engine/tools/refcore (spec/2.1.8 at 75f27ca1, the sixth turn; B5 and N-f restated at
+//! spec/2.2 300cda08, tally 2.2's S-3); each expected line is its run of the same text
+//! (`python3 -m refcore run`), each text an input of the review of build group 3
+//! (`tmp/spec-2.1.8-build/review-g3/`).
 //! Invariants: reads no test, vector or answer key (R-93); the texts are written here.
 
 #![forbid(unsafe_code)]
@@ -220,132 +220,7 @@ ask q3: quantile(z[k] for k in [a], lv)
         );
     }
 
-    /// B6 (`t14.tally`): a reading `after save[kz]`, `kz` a bare name that is no key of the list index `ks`.
-    #[test]
-    fn a_reading_after_a_key_its_index_lacks_is_load_key() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-input d_sday: date
-input d_rent: int
-input rentamt: money PLN
-
-index ks = [ka]
-move save[k in ks]: transfers
-  on d_sday
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move rent[m in months]: transfers
-  on day_of(m, d_rent)
-  leg cash from konto to world amount rentamt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  d_sday = 2026-03-15 "s"
-  d_rent = 13 "s"
-  rentamt = 30.00 PLN "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
-  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
-  stated[konto] = 550.00 PLN after save[kz] "saldo"
-
-ask b: bal(konto, 2026-03-31)
-ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
-ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
-"#;
-        holds(
-            &lines_of("t14.tally", text),
-            &[
-                "refused: LOAD-KEY stated[konto] after save[kz]: kz is not a key of ks (t14.tally:49)",
-            ],
-        );
-    }
-
-    /// B8 (`t3.tally`): `bal … modelled` starting from a plain reading later than a reading `after m`: m's leg stays out (pick P39).
-    #[test]
-    fn a_modelled_read_never_counts_m_after_a_reading_after_m() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-input d_rent: int
-input rentamt: money PLN
-
-move save[m in months]: transfers
-  on day_of(m, d_save)
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move rent[m in months]: transfers
-  on day_of(m, d_rent)
-  leg cash from konto to world amount rentamt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  d_rent = 13 "s"
-  rentamt = 30.00 PLN "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[2026-03]) "o1"
-  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
-  stated[konto] = 550.00 PLN after save[2026-03] "saldo"
-  stated[konto] = 520.00 PLN at 2026-03-14 end "saldo2"
-
-ask b: bal(konto, 2026-03-31)
-ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled, bal(konto, 2026-03-13) modelled
-"#;
-        holds(
-            &lines_of("t3.tally", text),
-            &["md: (520.00 PLN, 520.00 PLN, 520.00 PLN)"],
-        );
-    }
-
-    /// B5 (`t12.tally`): `flows` over spans after a window-day decision's window has ended: nothing moves there.
+    /// B5 (`t12.tally`): `flows` over spans after a window-day decision's window has ended: nothing moves there. Its reading stood `after save`, cut in tally 2.2 (S-3): it is stated at the month's end, refcore's lines at spec/2.2 300cda08.
     #[test]
     fn flows_after_a_window_days_end_is_decided() {
         let text = r#"model t
@@ -389,7 +264,7 @@ version st
   governs 2026-03..2026-05
   known 2026-01-02
   anchor konto
-  stated[konto] = 90.00 PLN after save "saldo"
+  stated[konto] = 90.00 PLN at 2026-03-31 end "saldo"
 
 ask b: bal(konto, 2026-03-31), bal(konto, 2026-04-30), flows(konto, 2026-04), flows(konto, 2026-04-01 .. 2026-04-10)
 "#;
@@ -759,269 +634,7 @@ ask lbx: lb
         );
     }
 
-    /// N-a (`b6_def_key.tally`): a reading `after save[pick]`, `pick` a def's name and no key of `ks`: a reading's key is a literal (L §2.5).
-    #[test]
-    fn a_reading_after_a_key_that_names_a_def_is_load_key() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-def pick: key ks = ka
-input d_save: int
-input d_sday: date
-input d_rent: int
-input rentamt: money PLN
-
-index ks = [ka]
-move save[k in ks]: transfers
-  on d_sday
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move rent[m in months]: transfers
-  on day_of(m, d_rent)
-  leg cash from konto to world amount rentamt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  d_sday = 2026-03-15 "s"
-  d_rent = 13 "s"
-  rentamt = 30.00 PLN "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
-  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
-  stated[konto] = 550.00 PLN after save[pick] "saldo"
-
-ask b: bal(konto, 2026-03-31)
-ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
-ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
-"#;
-        holds(
-            &lines_of("b6_def_key.tally", text),
-            &[
-                "refused: LOAD-KEY stated[konto] after save[pick]: pick is not a key of ks (b6_def_key.tally:50)",
-            ],
-        );
-    }
-
-    /// N-a (`p9_defkey.tally`): the same with reads of the reading: load refuses it, no read meets `RUN-RECORD`.
-    #[test]
-    fn a_reading_after_a_def_named_key_refuses_at_load_not_at_its_reads() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-input d_sday: date
-input d_rent: int
-input rentamt: money PLN
-
-index ks = [ka]
-def pick: key ks = ka
-move save[k in ks]: transfers
-  on d_sday
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move rent[m in months]: transfers
-  on day_of(m, d_rent)
-  leg cash from konto to world amount rentamt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  d_sday = 2026-03-15 "s"
-  d_rent = 13 "s"
-  rentamt = 30.00 PLN "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
-  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
-  stated[konto] = 550.00 PLN after save[pick] "saldo"
-
-ask b: bal(konto, 2026-03-31)
-ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
-ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
-"#;
-        holds(
-            &lines_of("p9_defkey.tally", text),
-            &[
-                "refused: LOAD-KEY stated[konto] after save[pick]: pick is not a key of ks (p9_defkey.tally:50)",
-            ],
-        );
-    }
-
-    /// N-b (`b6_wrongaxis.tally`): `after rent[ka]`, rent a plan keyed by months: the key is checked before the order (E §3.1).
-    #[test]
-    fn a_reading_after_a_plan_at_a_key_of_another_index_is_load_key() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-input d_sday: date
-input d_rent: int
-input rentamt: money PLN
-
-index ks = [ka]
-move save[k in ks]: transfers
-  on d_sday
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move rent[m in months]: transfers
-  on day_of(m, d_rent)
-  leg cash from konto to world amount rentamt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  d_sday = 2026-03-15 "s"
-  d_rent = 13 "s"
-  rentamt = 30.00 PLN "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
-  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
-  stated[konto] = 550.00 PLN after rent[ka] "saldo"
-
-ask b: bal(konto, 2026-03-31)
-ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
-ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
-"#;
-        holds(
-            &lines_of("b6_wrongaxis.tally", text),
-            &[
-                "refused: LOAD-KEY stated[konto] after rent[ka]: ka is not a key of months (b6_wrongaxis.tally:49)",
-            ],
-        );
-    }
-
-    /// N-b (`b6_month_out.tally`): `after rent[2027-02]`, a month outside rent's index: `LOAD-KEY` before `LOAD-ORDER` (E §3.1).
-    #[test]
-    fn a_reading_after_a_plan_at_a_month_outside_its_index_is_load_key() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input bank: observed
-input keep: money PLN
-input d_save: int
-input d_sday: date
-input d_rent: int
-input rentamt: money PLN
-
-index ks = [ka]
-move save[k in ks]: transfers
-  on d_sday
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move rent[m in months]: transfers
-  on day_of(m, d_rent)
-  leg cash from konto to world amount rentamt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = 15 "s"
-  d_sday = 2026-03-15 "s"
-  d_rent = 13 "s"
-  rentamt = 30.00 PLN "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto
-  anchor konto
-  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN, fulfils: save[ka]) "o1"
-  bank[o2] = (on: 2026-03-13, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: rent[2026-03]) "o2"
-  stated[konto] = 550.00 PLN after rent[2027-02] "saldo"
-
-ask b: bal(konto, 2026-03-31)
-ask md: bal(konto, 2026-03-14) modelled, bal(konto, 2026-03-31) modelled
-ask g: last(stated[konto], 2026-05-31), since(stated[konto], 2026-05-31)
-"#;
-        holds(
-            &lines_of("b6_month_out.tally", text),
-            &[
-                "refused: LOAD-KEY stated[konto] after rent[2027-02]: 2027-02 is not a key of months (b6_month_out.tally:49)",
-            ],
-        );
-    }
-
-    /// N-f (`k9k10.tally`): two decisions' windows ending on one day, `save[k9]` and `save[k10]` of `ks = [k9, k10]`: their ends list k9 first, keys in index order, never as text (E §4.1); refcore's lines, which list them as text.
+    /// N-f (`k9k10.tally`): two decisions' windows ending on one day, `save[k9]` and `save[k10]` of `ks = [k9, k10]`: their ends list k9 first, keys in index order, never as text (E §4.1). Its readings stood `after save[k9]` and `after save[k10]`, cut in tally 2.2 (S-3): the window ends are read through `explain`, refcore's lines at spec/2.2 300cda08.
     #[test]
     fn window_ends_at_one_point_apply_in_index_order() {
         let text = r#"model t
@@ -1053,19 +666,8 @@ version v
   opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
   opening[sav] = 0.00 PLN at 2026-03-01 start "s"
 
-version r
-  cite s
-  governs 2026-03
-  known 2026-04-02
-  covers konto, sav
-  anchor konto
-  anchor sav
-  stated[konto] = 700.00 PLN after save[k9] "after k9"
-  stated[sav] = 25.00 PLN after save[k10] "after k10"
-
 ask b: bal(konto, 2026-03-25), bal(konto, 2026-03-31), bal(sav, 2026-03-31)
 ask e: explain bal(konto, 2026-03-31)
-ask l: last(stated[konto], 2026-03-31)
 "#;
         all_of(
             &lines_of("k9k10.tally", text),
@@ -1081,9 +683,6 @@ ask l: last(stated[konto], 2026-03-31)
                 "  2026-03-25:",
                 "    save[k9]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
                 "    save[k10]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10])",
-                "  cut 2026-06-10",
-                "l: 700.00 PLN",
-                "  held: stated[konto] = 700.00 PLN (r), read for 2026-03-31",
                 "  cut 2026-06-10",
                 "warning: WARN-UNREAD place world is read by nothing",
             ],

@@ -1752,18 +1752,8 @@ version card_2026
                 ],
                 "loaded",
             ),
-            // after-plan
-            (
-                &[
-                    (
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  stated[konto] = 400.00 PLN after pay[2026-02] \"the card\"",
-                    ),
-                    ("  known 2026-01-01", "  known 2026-01-01\n  anchor konto"),
-                ],
-                "LOAD-ORDER stated[konto] after pay[2026-02]: pay[2026-02] is a plan or an observation (a.tally:70)",
-            ),
-            // after-decision
+            // after-cut: a balance reading stands at its day's start or end; `after m` is cut
+            // (tally 2.2, S-3)
             (
                 &[
                     (
@@ -1772,21 +1762,7 @@ version card_2026
                     ),
                     ("  known 2026-01-01", "  known 2026-01-01\n  anchor konto"),
                 ],
-                "loaded",
-            ),
-            // after-obs
-            (
-                &[
-                    (
-                        "input cal: calendar",
-                        "input cal: calendar\n\ninput bank: observed",
-                    ),
-                    (
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"",
-                        "  opening[safe] = 0 PLN at 2026-01-01 start \"the card\"\n  opening[safe] = 0 PLN after bank \"the card\"",
-                    ),
-                ],
-                "LOAD-ORDER opening[safe] after bank: bank is a plan or an observation (a.tally:71)",
+                "LOAD-PARSE cannot parse: expected end of line, got after (a.tally:70)",
             ),
             // seen-own
             (
