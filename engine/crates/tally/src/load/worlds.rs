@@ -20,6 +20,7 @@ use super::pins::forks_past_cap;
 use super::steps::load_among;
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Place, Reach, Refusal};
+use crate::eval::How;
 use crate::model::{Joint, Reality};
 use crate::syntax::{AskBody, Line, Stop, cannot, parse_split, split_lines};
 use std::collections::{BTreeMap, BTreeSet};
@@ -134,27 +135,32 @@ fn scenario_head(lines: &[Line], path: &str) -> Result<Option<Head>, Refusal> {
 ///
 /// The base's load refusal, a member's, or `NotBuilt` for a form a world's load doesn't build
 /// yet.
-pub fn load_run(files: &[Split], disk: &BTreeMap<&str, &[u8]>, pin: Pin) -> Result<Loaded, Stop> {
+pub fn load_run(
+    files: &[Split],
+    disk: &BTreeMap<&str, &[u8]>,
+    pin: Pin,
+    how: How,
+) -> Result<Loaded, Stop> {
     match joint_root(files) {
-        Some(root) => load_joint(files, root, disk, pin),
-        None => load_split(files, None),
+        Some(root) => load_joint(files, root, disk, (pin, how)),
+        None => load_split(files, None, how),
     }
 }
 
 /// Loads split files as one reality, or as worlds when a file is a scenario's (refcore's
 /// `run_one` and `run_worlds`, their loads), each a joint model's when `joint` holds its
-/// members. L §6.1, §6.4.
+/// members, what load evaluates computing as `how` says. L §6.1, §6.4.
 ///
 /// # Errors
 ///
 /// As [`load_run`].
-pub(super) fn load_split(files: &[Split], joint: Option<&Joint>) -> Result<Loaded, Stop> {
+pub(super) fn load_split(files: &[Split], joint: Option<&Joint>, how: How) -> Result<Loaded, Stop> {
     if files.iter().all(|file| file.head.is_none()) {
         let all: Vec<&Split> = files.iter().collect();
         let none = (BTreeSet::new(), BTreeMap::new());
-        return Ok(Loaded::One(Box::new(load_world(&all, &none, joint)?)));
+        return Ok(Loaded::One(Box::new(load_world(&all, &none, joint, how)?)));
     }
-    Ok(Loaded::Worlds(Box::new(load_worlds(files, joint)?)))
+    Ok(Loaded::Worlds(Box::new(load_worlds(files, joint, how)?)))
 }
 
 /// The run's worlds an ask may name, and the ids the scenarios' files declare, each with its
@@ -163,17 +169,22 @@ type Among = (BTreeSet<String>, BTreeMap<String, String>);
 
 /// One world's reality: its files parsed together, then loaded among the run's worlds
 /// (refcore's `load_texts`). E §3.1.
-fn load_world(files: &[&Split], among: &Among, joint: Option<&Joint>) -> Result<Reality, Stop> {
+fn load_world(
+    files: &[&Split],
+    among: &Among,
+    joint: Option<&Joint>,
+    how: How,
+) -> Result<Reality, Stop> {
     let split: Vec<(&str, &[Line])> = files
         .iter()
         .map(|file| (file.path.as_str(), file.lines.as_slice()))
         .collect();
-    load_among(parse_split(&split)?, &among.0, &among.1, joint)
+    load_among(parse_split(&split)?, (&among.0, &among.1), joint, how)
 }
 
 /// The base alone, then each scenario, by id, with the base and its stack (refcore's
 /// `run_worlds`, its loads). L §6.4, §8.3.
-fn load_worlds(files: &[Split], joint: Option<&Joint>) -> Result<Worlds, Stop> {
+fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<Worlds, Stop> {
     let base: Vec<&Split> = files.iter().filter(|file| file.head.is_none()).collect();
     let mut scenarios: BTreeMap<&str, (&Split, &Head)> = BTreeMap::new();
     let mut twice = BTreeSet::new();
@@ -192,7 +203,7 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>) -> Result<Worlds, Stop> {
         }
     }
     let mut among = (run, elsewhere);
-    let alone = match load_world(&base, &among, joint) {
+    let alone = match load_world(&base, &among, joint, how) {
         Err(Stop::Refused(refusal)) => {
             return Err(Stop::Refused(read_outside(refusal, &among.1)));
         }
@@ -215,7 +226,7 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>) -> Result<Worlds, Stop> {
                     let (under, _) = scenarios.get(over.as_str()).ok_or_else(no_stack)?;
                     world.push(under);
                 }
-                load_world(&world, &among, joint)
+                load_world(&world, &among, joint, how)
             }
         };
         match loaded {
@@ -255,6 +266,8 @@ fn cross_world_forks(w: &Worlds) -> Result<Option<Refusal>, Stop> {
         let AskBody::Diff(diff) = &ask.body else {
             continue;
         };
+        // a side that refused at load, or that refused this ask alone (no entry for it in
+        // `ask_axes`), reaches no axis: the diff refuses with that side's refusal anyway
         let sides = [&diff.world, &diff.against].map(|world| w.loaded.get(world));
         // an axis's options as the base declares it, else as the first world that reaches it
         let mut options: BTreeMap<&str, usize> = BTreeMap::new();
@@ -491,7 +504,12 @@ mod tests {
 
     fn loaded(files: &[(&str, &str)]) -> Result<Loaded, Stop> {
         let split = split_files(sources(files)).map_err(Stop::Refused)?;
-        load_run(&split, &BTreeMap::new(), Pin::Canonical)
+        load_run(
+            &split,
+            &BTreeMap::new(),
+            Pin::Canonical,
+            crate::eval::How::FENCES,
+        )
     }
 
     fn refusal(files: &[(&str, &str)]) -> String {

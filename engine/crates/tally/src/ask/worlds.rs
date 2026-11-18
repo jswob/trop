@@ -15,10 +15,11 @@
 //! (`LOAD-FORKS`, `load/worlds.rs`); any other ask whose worlds are on two stacks stops the run
 //! `NotBuilt` (refcore's cross evaluation).
 
-use super::answer::{Answered, How, Turn, answer_turns, no_ask};
+use super::answer::{Answered, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
 use crate::Asks;
 use crate::base::Warn;
+use crate::eval::How;
 use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
 use crate::oracle::Days;

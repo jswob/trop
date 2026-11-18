@@ -136,10 +136,8 @@ pub fn run_in(
     answered(given, disk, request, FENCES)
 }
 
-/// How [`run`] computes: every fence's form, the cells shared by a law date class (E §3.2),
-/// a projection's common case from F5's tree (P §2.3), a projection's walk read again
-/// continued by F6 (P §2.5).
-const FENCES: How = How::new(Memo::Classes, Lows::Tree, Forks::On);
+/// How [`run`] computes: every fence's form (P §2.3, §2.5, §3.3).
+const FENCES: How = How::FENCES;
 
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
 /// refusal, or each refused scenario's line and the warnings (L §8, §8.5). The fuzz target
@@ -149,7 +147,7 @@ const FENCES: How = How::new(Memo::Classes, Lows::Tree, Forks::On);
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
-    let report = loaded(given, &BTreeMap::new(), Pin::Canonical).map(|loaded| {
+    let report = loaded(given, &BTreeMap::new(), Pin::Canonical, FENCES).map(|loaded| {
         let lines = report_lines(&loaded);
         Answered::printed(if is_joint(&loaded) {
             joint_lines(lines)
@@ -254,7 +252,7 @@ fn answered(
     how: How,
 ) -> Result<Answer, NotImplemented> {
     let (asks, days) = (&request.asks, request.days);
-    finish(loaded(given, disk, request.pin).and_then(|loaded| {
+    finish(loaded(given, disk, request.pin, how).and_then(|loaded| {
         let mut out = match &loaded {
             Loaded::One(m) => answer(m, asks, days, how),
             Loaded::Worlds(w) => answer_worlds(w, asks, days, how),
@@ -287,11 +285,17 @@ fn joint_lines(lines: Vec<String>) -> Vec<String> {
 
 /// The run's files read, split with their scenario headers, and loaded: one reality, or its
 /// worlds, a joint model's members read from the files given, then from `disk` (refcore's
-/// `_run_texts`). E §3.1 step 1; L §8.3, §6.1, §6.4.
-fn loaded(given: Vec<Given>, disk: &BTreeMap<&str, &[u8]>, pin: Pin) -> Result<Loaded, Stop> {
+/// `_run_texts`); what load evaluates computes as `how` says. E §3.1 step 1; L §8.3, §6.1,
+/// §6.4.
+fn loaded(
+    given: Vec<Given>,
+    disk: &BTreeMap<&str, &[u8]>,
+    pin: Pin,
+    how: How,
+) -> Result<Loaded, Stop> {
     let sources = read(given).map_err(Stop::Refused)?;
     let split = split_files(sources).map_err(Stop::Refused)?;
-    load_run(&split, disk, pin)
+    load_run(&split, disk, pin, how)
 }
 
 /// The printed answer: the lines, or a refusal's one line (L §8.3); [`NotImplemented`] for a

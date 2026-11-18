@@ -29,8 +29,8 @@ use super::register::{check_register_lines, name_unknown_days, register_lines, w
 use super::residuals::residual_result;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, Item, Member, Memo, after_on, names_in, num_stop, one_day,
-    past_days, world_named,
+    Collected, Ctx, Engine, Entry, Env, How, Item, Member, Memo, after_on, names_in, num_stop,
+    one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{
@@ -94,37 +94,6 @@ struct Side {
 /// part, ` (k = a)`, and its cells or the hole its line prints; one tuple with no part where
 /// the ask binds nothing.
 type SideCells = Vec<(String, Result<Cells, String>)>;
-
-/// How a run's engines compute: keeping their cells as `memo` says, reading a written
-/// projection's common case as `lows` says and continuing a projection's walk read again as
-/// `forks` says, the fences' forms or their plain twins (E §3.2, §4.3, P §2.3, §2.5, §3.3);
-/// with the `fault-injection` feature, the fault planted in the run (INTERFACE §4).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct How {
-    /// How the engines keep their cells across law dates.
-    pub memo: Memo,
-    /// How the engines read a written projection's common case.
-    pub lows: Lows,
-    /// Whether the engines continue a projection's walk read again through a later day.
-    pub forks: Forks,
-    /// The fault planted, if any.
-    #[cfg(feature = "fault-injection")]
-    pub fault: Option<crate::walk::Fault>,
-}
-
-impl How {
-    /// The engines computing as `memo`, `lows` and `forks` say, no fault planted.
-    #[must_use]
-    pub const fn new(memo: Memo, lows: Lows, forks: Forks) -> How {
-        How {
-            memo,
-            lows,
-            forks,
-            #[cfg(feature = "fault-injection")]
-            fault: None,
-        }
-    }
-}
 
 impl Answered {
     /// Lines no ask's engine computed: a load's report (its warnings, a scenario's refusal).

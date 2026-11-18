@@ -200,7 +200,7 @@ pub mod eval {
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
     pub use stack::Item;
-    pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
+    pub use state::{Collected, Ctx, Engine, Entry, Env, How, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
@@ -308,7 +308,8 @@ pub mod ask {
     mod walked;
     mod worlds;
 
-    pub use answer::{Answered, How, answer};
+    pub use crate::eval::How;
+    pub use answer::{Answered, answer};
     pub use register::{register_lines, warning_lines};
     pub(crate) use walked::plain_lines;
     pub use worlds::{answer_worlds, report_lines};

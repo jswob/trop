@@ -109,10 +109,10 @@ impl Engine {
 
     /// [`Engine::advance_to`], what it reads the walk's own, not the reading cell's: every
     /// cell that reads the walk shares it (E §3.2, §3.3); once its plan pass is done, a
-    /// projection's walk may continue a kept one (`fork.rs`, P §2.5). A walk that failed on a day refuses
-    /// the reads that reach it, and a read through an earlier day reads the walk as it stood
-    /// there, so a read's answer is the same whichever read walked the walk first (pick P54,
-    /// #127). E §4.2, §4.3, §9 item 4; L §8.4.
+    /// projection's walk may continue a kept one (`fork.rs`, P §2.5). A walk that failed on a
+    /// day refuses the reads that reach it, and a read through an earlier day reads the walk as
+    /// it stood there, so a read's answer is the same whichever read walked the walk first
+    /// (pick P54, #127). E §4.2, §4.3, §9 item 4; L §8.4.
     fn walk_through(&mut self, m: &Reality, id: usize, last: Option<Day>) -> Result<(), Stop> {
         loop {
             let walk = self.walk(id)?;
