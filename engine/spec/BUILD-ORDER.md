@@ -152,7 +152,7 @@ The deterministic core, enough for X's forecast and its changes 1, 2, 4, 6 and 7
 
 **Properties** (gate 6): determinism; money conserved (E §9.1); net worth moves only at the boundary, a price or an anchor (§9.2); a scenario changes nothing before its `from` (§9.3); asks move no money (§9.4); things hold nothing outside their lifespans (§9.6); no foresight through declared reads and the written projection (D-5, D-6); a hole never becomes 0.
 
-**Budgets touched:** P8-5, one read of a written projection (its micro form P8-M4, measured at S, set here with `low` and F5; tally 2.1.2); P8-2's cold run at 1× on X's forecast (the 10× run is M9's, its size from T's generator, SO8-10); P8-9, equal hashes across runs with 1 worker.
+**Budgets touched:** P8-5, one read of a written projection (its micro form P8-M4, measured at S, set here with the `min` of `bal(x, d) from t` over its days and F5; tally 2.1.2); P8-2's cold run at 1× on X's forecast (the 10× run is M9's, its size from T's generator, SO8-10); P8-9, equal hashes across runs with 1 worker.
 
 ---
 
