@@ -3,8 +3,8 @@
 # Every pull request runs `engine/tools/check full`, with T's tests of every milestone
 # engine/tools/milestones.toml says gates (issue #14), as parallel jobs: `check groups`,
 # then one `engine/tools/check group <name>` job per group (R-77, 2026-11-13);
-# the nightly jobs write reports, and only mutants and the benchmarks are evidence that
-# can fail. It runs on every pull request into master: the `changes` job decides whether
+# the nightly jobs write reports, and only the benchmarks are evidence that can fail;
+# gate 8's mutants run on demand, one whole run a run (R-88, 2026-11-19). It runs on every pull request into master: the `changes` job decides whether
 # the engine's files changed, the pull-request jobs run only then, and `engine gate`
 # always reports, so it can be a required check (issue #6, 2026-11-03).
 name: Engine
@@ -13,7 +13,7 @@ on:
   pull_request:
     branches: [master]
   schedule:
-    # nightly: reports, mutants, benchmarks, other machines, advisories
+    # nightly: reports, benchmarks, other machines, advisories (mutants on demand only, R-88)
     - cron: '17 2 * * *'
     # weekly: clippy on the next Rust release
     - cron: '41 3 * * 1'
@@ -270,10 +270,11 @@ jobs:
   # as `mutants-local --next` does: each job adds its targets and keeps, through a nextest
   # filter, only the tests green in an unmutated run of them (`tools/mutants-gate next`), the
   # red ones listed in the log; the filter is in the tree's key, so the shards refuse a map
-  # made from another such run than the plan's. Push and nightly runs are unchanged
+  # made from another such run than the plan's. Since 2026-11-19 (R-88: one whole run a run,
+  # at the gate, none per group) the mutants jobs run on a dispatch alone, never nightly
   mutants-baseline:
     name: mutants baseline
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -331,7 +332,7 @@ jobs:
   # targets built with -C instrument-coverage and run once, each test with its own profile
   mutants-coverage:
     name: mutants coverage map
-    if: github.event_name != 'pull_request'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -357,12 +358,12 @@ jobs:
           name: mutants-map
           path: engine/target/mutants-map/
 
-  # nightly, the map again on another runner: the two must be equal (R-133), or a test's path
-  # depends on its run and the selection can't be trusted
+  # each whole run, the map again on another runner: the two must be equal (R-133), or a
+  # test's path depends on its run and the selection can't be trusted (nightly until 2026-11-19)
   mutants-twin-map:
-    name: mutants coverage map, twice (nightly)
+    name: mutants coverage map, twice
     needs: mutants-coverage
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

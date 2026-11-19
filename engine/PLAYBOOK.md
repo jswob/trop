@@ -145,10 +145,15 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D13. Mutation runs
 
-- **Pick:** on GitHub only. The coordinator dispatches gate 8 on each group's green commit, in the background, with `next=true` until the milestone gates; nobody waits for it, and its survivors go to that group's builder and T at their next turn. On the Mac, only a proof of one mutant, a few minutes. Never a re-run for test times.
-- **Decided:** the user, 2026-11-12: "Why on earth are we running this locally instead of on github?"; 2026-11-14: "I don't want to wait an hour for full mutation run again".
-- **Why:** M1's gate ran three mutation runs of over 3 hours, and T ran a 20-file batch for 2.5 hours on the shared Mac, which left a mutant in the tree. A per-test 20 s check went red in 4 of 5 runs on runner noise while no mutant timed out, each fix a new hour-long run, until PR #166 made it a report. The lesson holds for any check: one that guards a stand-in for what another check measures directly, and flaps, goes.
-- **Enforced:** R-88; `.github/workflows/engine.yml`; the skill's §3 and §8; `engine/CLAUDE.md` §3.
+- **Pick:** on GitHub only, one whole run for each run that changes kernel files (a milestone, a spec round), dispatched when the last group's fixes are merged, beside the gate review, so nobody waits for it at the end. A second whole run only when the score misses the floor, or when the gate's fixes change kernel files. No dispatch per group, none nightly. The floor between milestones: the score is in the gate's report and may be no more than 2 points under the last tagged milestone's (M3: 90.9 %); the final engine's gate keeps 90 %. After the run, T takes one turn at the survivors and the builder lists the rest. On the Mac, only a proof of one mutant, a few minutes. Never a re-run for test times.
+- **Decided:** the user, 2026-11-12: "Why on earth are we running this locally instead of on github?"; 2026-11-14: "I don't want to wait an hour for full mutation run again"; 2026-11-19, "Do so", to the master's proposal (one whole run per milestone, at the gate; a softer bar between milestones; R-88 quotes it).
+- **Why:**
+  - Since M1 about 40 dispatches and 60 hours on GitHub, 11 of them with no score. The gate waited 2.7 hours in M3, about 5 in M2 and most of 33 in M1. The work per run doubled in M2 (824 runner-minutes at M1's end, 1 668 at M2's, 1 680 to 1 967 in M3).
+  - What the runs found: one wrong number (#137), four dead checks, the tests thinned by tally 2.2's cuts (87.5 %), and a few hundred corner tests. M3's reviews found about 20 blocking defects for 2.7 % of the week.
+  - The shard job has 90 minutes since 4fa66bfd: GitHub shows a job's timeout as `cancelled`, and three whole runs were lost to the 45-minute cap.
+  - Local batches cost M1's gate three runs of over 3 hours and left a mutant in the tree. A check that guards a stand-in for what another measures directly, and flaps, goes: the per-test 20 s check was red in 4 of 5 runs on runner noise (PR #166).
+- **Enforced:** R-87 and R-88; `.github/workflows/engine.yml`, whose baseline and coverage jobs run on a dispatch alone (rules-selftest's clean run holds it); DONE gate 8; the skill's §3 and §8; `engine/CLAUDE.md` §3.
+- **Revisit:** if the score falls at two milestones in a row, the master raises the floor with the user.
 
 ### D14. The check loops
 

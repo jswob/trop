@@ -827,7 +827,7 @@ def ci_problems():
         # R-84, R-88, R-133 (2026-11-12): gate 8 runs through tools/mutants-gate. The baseline
         # runs T's tests (tools/milestones args); its test times are a report that never fails
         # (R-88, 2026-11-14, issue #165); the coverage map comes from the commit; 100 planned
-        # shards; the nightly's twin map
+        # shards; each whole run's twin map
         gate = {
             "R-84: the mutants baseline doesn't run `tools/mutants-gate baseline`": r"\n  mutants-baseline:\n(    [^\n]*\n|\n)*?        run: tools/mutants-gate baseline ",
             "R-88: the baseline's test-time report (`tools/mutants-gate slow`) can fail its job": r"\n        continue-on-error: true\n        working-directory: engine\n        run: tools/mutants-gate slow ",
@@ -836,7 +836,7 @@ def ci_problems():
             "R-84: the shards don't run `tools/mutants-gate shard`": r"\n        run: tools/mutants-gate shard \$\{\{ matrix.shard \}\}/100 ",
             "R-88: a shard's job isn't capped at 90 minutes": r"\n  mutants:\n(    [^\n]*\n)*?    timeout-minutes: 90\n",
             "R-88: the survivors job doesn't need all 100 shards": r'\[ "\$shards" -eq 100 \]',
-            "R-133: the nightly doesn't compare twin maps (`tools/mutants-gate same-map`)": r"\n  mutants-twin-map:\n(    [^\n]*\n|\n)*?    if: github.event_name == 'schedule'\n(    [^\n]*\n|\n)*?          tools/mutants-gate same-map ",
+            "R-133: a whole run doesn't compare twin maps (`tools/mutants-gate same-map`)": r"\n  mutants-twin-map:\n(    [^\n]*\n|\n)*?    if: github.event_name == 'workflow_dispatch'\n(    [^\n]*\n|\n)*?          tools/mutants-gate same-map ",
             # a dispatch with `next` counts the next milestone's tests green unmutated (R-88,
             # issue #167, pick P31): its baseline, list, map and shards all take `--next`
             "R-88: no dispatch input `next`": r"\n  workflow_dispatch:\n(    [^\n]*\n)*?      next:\n        description: [^\n]*\n        type: boolean\n        default: false\n",
@@ -848,6 +848,12 @@ def ci_problems():
         for problem, pattern in gate.items():
             if not re.search(pattern, text):
                 problems.append(f"{problem} (.github/workflows/engine.yml)")
+        # one whole run a run, dispatched at the gate, none per group or night (R-88, 2026-11-19,
+        # the user's "Do so"): the jobs every mutant needs run on a dispatch alone
+        for job, name in (("mutants-baseline", "mutants baseline"), ("mutants-coverage", "mutants coverage map")):
+            if not re.search(rf"\n  {job}:\n    name: {name}\n    if: github.event_name == 'workflow_dispatch'\n", text):
+                problems.append(f"R-88: the {job} job runs on more than a dispatch, so the nightly schedule runs "
+                                "the mutants jobs (.github/workflows/engine.yml)")
         # gate 8 fails on no test's time (R-88, 2026-11-14, issue #165): the job that did is gone
         if re.search(r"\n  mutants-slow-tests:\n", text):
             problems.append("R-88: a job fails gate 8 on a test's time, `mutants-slow-tests` (.github/workflows/engine.yml)")
@@ -957,8 +963,15 @@ def main():
     if args == ["--list"]:
         list_rules(cases)
         return 0
+    if args == ["--ci"]:
+        # the workflow's and check full's checks alone, as the clean run makes them (a case's)
+        problems = ci_problems()
+        for p in problems:
+            print(f"FAIL {p}")
+        print(f"rules-selftest --ci: {'red' if problems else 'green'}, {len(problems)} problem(s)")
+        return 1 if problems else 0
     if any(not re.fullmatch(r"R-\d+", a) for a in args):
-        print("usage: engine/tools/rules-selftest/run [--list | R-<n> ...]", file=sys.stderr)
+        print("usage: engine/tools/rules-selftest/run [--list | --ci | R-<n> ...]", file=sys.stderr)
         return 64
     began = time.monotonic()
     problems = completeness(cases)

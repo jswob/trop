@@ -367,3 +367,21 @@ gating = ["S", "M0", "M1", "M2", "M3"]
 gating = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8"]
 --- run
 tools/mutants-gate next zz_next.json && cat zz_next.json
+
+# R-88 as amended 2026-11-19 (the user's "Do so"): one whole mutation run a run, dispatched at
+# the gate, with no run per group and none in the nightly schedule. The jobs every mutant needs
+# run on a dispatch alone; the old condition, which let the nightly run them, fails the check
+case: nightly-runs-no-mutants
+tool: run
+exit: any
+expect: FAIL R-88: the mutants-baseline job runs on more than a dispatch, so the nightly schedule runs the mutants jobs
+--- replace ../.github/workflows/engine.yml
+  mutants-baseline:
+    name: mutants baseline
+    if: github.event_name == 'workflow_dispatch'
+--- with
+  mutants-baseline:
+    name: mutants baseline
+    if: github.event_name != 'pull_request'
+--- run
+tools/rules-selftest/run --ci
