@@ -5451,6 +5451,52 @@ ask q: bal(konto, 2026-01-31)
         }
     }
 
+    /// The gate review's B-4: a scenario's file's own ask refused alone prints its line in a
+    /// run, in its place by id, and the others answer, as `check` prints it (OPERATIONS §2.1,
+    /// §2.3; L §6.4); the run stopped `not implemented` before.
+    #[test]
+    fn a_scenario_s_ask_refused_alone_prints_its_line_at_run() {
+        let base = KEY_ON.replace(
+            "ask q: bal(konto, 2026-04-30) law cut\n",
+            "ask q_base: bal(konto, 2026-04-30) law cut\n",
+        );
+        let scenario = "scenario s over m\n  tally 2\n  from 2026-05-01\n\nask q_gone: bal(konto, 2026-05-31) in nowhere law cut\nask q_in: bal(konto, 2026-05-31) in s law cut\n";
+        let given = vec![
+            tally::Given {
+                path: "a.tally".to_owned(),
+                bytes: Some(base.as_bytes().to_vec()),
+            },
+            tally::Given {
+                path: "s.tally".to_owned(),
+                bytes: Some(scenario.as_bytes().to_vec()),
+            },
+        ];
+        let request = tally::Request::new(tally::Asks::Every);
+        let answer = tally::run(tally::Files::new(given), &request).expect("an answer");
+        let heads: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| !line.starts_with(' ') && !line.starts_with("warning:"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(heads.len(), 3, "{heads:?}");
+        assert!(
+            heads.first().is_some_and(|h| h.starts_with("q_base: ")),
+            "{heads:?}"
+        );
+        assert_eq!(
+            heads.get(1).copied(),
+            Some(
+                "q_gone: refused: LOAD-SCENARIO ask q_gone names nowhere, neither the model nor a loaded scenario (s.tally:5)"
+            ),
+            "check's line"
+        );
+        assert!(
+            heads.get(2).is_some_and(|h| h.starts_with("q_in: ")),
+            "{heads:?}"
+        );
+    }
+
     /// `flows` over a span that starts before the run's start: its hole names the target as
     /// written, keys and field too, as refcore's `fmt_node` does (L §8.1; the review of G3's
     /// turn 3, `n4.tally`).
