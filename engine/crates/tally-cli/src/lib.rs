@@ -66,8 +66,10 @@ enum Command {
     Run {
         /// The paths, in the order given.
         paths: Vec<String>,
-        /// The asks and the pin's form.
+        /// The asks.
         request: tally::Request,
+        /// How a `use` line's pin is taken.
+        pin: tally::Pin,
     },
     /// `reprint <path>…`: each file's canonical text and the reality's hash.
     Reprint {
@@ -98,22 +100,27 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output {
 }
 
 /// [`run`] with `fault` planted in the engine, its twin for the fixture of `ENGINE-INVARIANT`
-/// (INTERFACE §4, pick P8): a `run` command answered by [`tally::run_faulted`]; any other
-/// command as [`run`] answers it, since only a run walks. Only with the `fault-injection`
-/// feature.
+/// (INTERFACE §4, pick P8): a `run` command answered by [`tally::run_with_how`] with the fault
+/// in its [`tally::How`]; any other command as [`run`] answers it, since only a run walks.
+/// Only with the `fault-injection` feature.
 #[cfg(feature = "fault-injection")]
 #[must_use]
 pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output {
-    let Some(Command::Run { paths, request }) = parse(args) else {
+    let Some(Command::Run {
+        paths,
+        request,
+        pin,
+    }) = parse(args)
+    else {
         return command(args, files);
     };
-    let Ok(table) = table(files) else {
-        return bad_table();
+    let how = tally::How {
+        fault: Some(fault),
+        ..tally::How::FENCES
     };
-    let given = resolve(&paths, &table);
-    match tally::run_faulted(given, &request, fault) {
+    match engine_run((&paths, pin), &request, files, how) {
         Ok(answer) => answered(&answer),
-        Err(tally::NotImplemented) => not_implemented("run"),
+        Err(output) => output,
     }
 }
 
@@ -121,14 +128,20 @@ pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Outp
 /// or all 0 for a command that runs no engine (D4-8).
 #[cfg(feature = "counters")]
 fn counted(args: &[OsString], files: &[u8]) -> Output {
-    let Some(Command::Run { paths, request }) = parse(args) else {
+    let Some(Command::Run {
+        paths,
+        request,
+        pin,
+    }) = parse(args)
+    else {
         let mut output = command(args, files);
         output
             .stderr
             .extend_from_slice(tally::Counters::default().line().as_bytes());
         return output;
     };
-    let (mut output, counts) = match engine_run(&paths, &request, files) {
+    let (mut output, counts) = match engine_run((&paths, pin), &request, files, tally::How::FENCES)
+    {
         Ok(answer) => {
             let c = answer.counters();
             (answered(&answer), format!("{}{}", c.line(), c.defs_line()))
@@ -211,7 +224,11 @@ fn netstring(table: &mut Vec<u8>, bytes: &[u8]) {
 /// One command, read from the arguments and answered.
 fn command(args: &[OsString], files: &[u8]) -> Output {
     match parse(args) {
-        Some(Command::Run { paths, request }) => run_paths(&paths, &request, files),
+        Some(Command::Run {
+            paths,
+            request,
+            pin,
+        }) => run_paths((&paths, pin), &request, files),
         Some(Command::Reprint { paths }) => reprint_paths(&paths, files),
         None => usage(),
     }
@@ -295,34 +312,46 @@ fn run_line(words: &[&str]) -> Command {
     };
     Command::Run {
         paths,
-        request: tally::Request {
-            asks,
-            pin,
-            days: tally::Days::Events,
-        },
+        request: tally::Request::new(asks),
+        pin,
     }
 }
 
 /// `run`: the paths resolved against the table, then the engine.
-fn run_paths(paths: &[String], request: &tally::Request, files: &[u8]) -> Output {
-    match engine_run(paths, request, files) {
+fn run_paths(paths: (&[String], tally::Pin), request: &tally::Request, files: &[u8]) -> Output {
+    match engine_run(paths, request, files, tally::How::FENCES) {
         Ok(answer) => answered(&answer),
         Err(output) => output,
     }
 }
 
-/// The engine's answer for `run`, or the output of a run that gives none: a file table that
-/// isn't netstrings, or a construct the engine doesn't build yet.
+/// The engine's answer for `run`, computing as `how` says, or the output of a run that gives
+/// none: a file table that isn't netstrings, or a construct the engine doesn't build yet.
 fn engine_run(
-    paths: &[String],
+    (paths, pin): (&[String], tally::Pin),
     request: &tally::Request,
     files: &[u8],
+    how: tally::How,
 ) -> Result<tally::Answer, Output> {
+    let files = engine_files(paths, pin, files)?;
+    tally::run_with_how(files, request, how).map_err(|tally::NotImplemented| not_implemented("run"))
+}
+
+/// What the engine is given (E §1): the paths resolved against the file table, the table
+/// itself, where a joint model's members are found, and the pin's form; the output of a file
+/// table that isn't netstrings.
+fn engine_files(paths: &[String], pin: tally::Pin, files: &[u8]) -> Result<tally::Files, Output> {
     let Ok(table) = table(files) else {
         return Err(bad_table());
     };
-    let given = resolve(paths, &table);
-    tally::run_in(given, &table, request).map_err(|tally::NotImplemented| not_implemented("run"))
+    Ok(tally::Files {
+        given: resolve(paths, &table),
+        table: table
+            .iter()
+            .map(|(path, bytes)| ((*path).to_owned(), bytes.to_vec()))
+            .collect(),
+        pin,
+    })
 }
 
 /// The file table read into a map from path to bytes.

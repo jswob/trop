@@ -21,16 +21,15 @@ mod counters;
 mod invariant;
 mod oracle;
 
-#[cfg(feature = "fault-injection")]
-pub use api::run_faulted;
 pub use api::{
-    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
-    run_with_forks, run_with_how, run_with_lows, run_with_memo,
+    Answer, Asks, Files, Given, Pin, Request, Source, load_report, reprint, reprint_in, run,
+    run_with_forks, run_with_how, run_with_lows,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
 pub(crate) use counters::Unit;
+pub use eval::How;
 pub use oracle::Days;
 #[cfg(feature = "fault-injection")]
 pub use walk::Fault;

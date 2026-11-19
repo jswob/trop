@@ -14,10 +14,9 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::ask::How;
     use tally::eval::Memo;
     use tally::walk::{Forks, Lows};
-    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_how};
+    use tally::{Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
     /// T's generated realities: netstring records of law, case, variant, arguments, files.
     const KERNEL_CORPUS: &[u8] = include_bytes!("../../../tests/properties/kernel.corpus");
@@ -187,12 +186,9 @@ mod tests {
                 bytes: Some(body.to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: asks.clone(),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        match run_with_how(given, &request, How::new(Memo::Classes, lows, forks)) {
+        let request = Request::new(asks.clone());
+        let how = How::new(Memo::Classes, lows, forks);
+        match run_with_how(Files::new(given), &request, how) {
             Ok(out) => Some(out.lines().to_vec()),
             Err(NotImplemented) => None,
         }
