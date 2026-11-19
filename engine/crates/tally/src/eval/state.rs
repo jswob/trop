@@ -684,12 +684,14 @@ impl How {
         }
     }
 
-    /// An engine with an empty memo for cut `ask_cut`, computing as this says, no fault
-    /// planted: a load's engine, so a run's plain twins reach what load evaluates too (E §3.1,
-    /// R-130).
+    /// An engine with an empty memo for cut `ask_cut`, computing as this says and walking its
+    /// days, no fault planted: a load's engine, so a run's plain twins and the oracle's every
+    /// day reach what load evaluates too (E §3.1, R-130, P §2.2).
     #[must_use]
     pub(crate) fn engine(self, ask_cut: Day) -> Engine {
-        Engine::new(ask_cut).with_how((self.memo, self.lows, self.forks))
+        Engine::new(ask_cut)
+            .with_how((self.memo, self.lows, self.forks))
+            .with_days(self.days)
     }
 }
 

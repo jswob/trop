@@ -3,7 +3,7 @@
 //! value is `none` states nothing; the read rule decides who sees it), §4.6 (a reading's
 //! instant), §5.10 (`HOLE-ANCHOR`; the sign rule tests the reading's own place at the
 //! reading's point, a pad's in the point's group with its leg, an anchor's through
-//! `walk/day.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
+//! `walk/readings.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
 //! balance at its instant; a pad is a movement of `pads`, an anchor sets the balance; holes),
 //! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point);
 //! L §6.4 (the readings a walk's world sees).
