@@ -221,7 +221,8 @@ def steps(mode):
         ("test-dev", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci"], {}),
         ("test-release", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
                           "--cargo-profile", "release-test"], {}),
-        ("gating-release", gating(["--profile", "ci", "--cargo-profile", "release-test"]), {}),
+        ("gating-release", gating(["--profile", "ci", "--cargo-profile", "release-test"], part=1), {}),
+        ("gating-release-2", gating(["--profile", "ci", "--cargo-profile", "release-test"], part=2), {}),
         compiled[3],
         ("release-binary", ["cargo", "build", "--release", "--locked", "-p", "tally-cli"], {}),
         *compiled[4:9],
@@ -245,7 +246,10 @@ GROUPS = {
     "dev-gating": ["runner", "gating", "milestone-report"],
     "dev-tests": ["test-dev", "doctest"],
     "release-tests": ["test-release"],
+    # the gating targets in the release profile, in two halves (2026-11-19): each target is a
+    # binary built under fat LTO, and the one job took 14 to 16 minutes at M3's end
     "release-gating": ["gating-release"],
+    "release-gating-2": ["gating-release-2"],
     "release-binary": ["release-binary", "fault-injection-probe"],
     "fuzz": ["fuzz-build", "fuzz"],
 }
@@ -457,16 +461,20 @@ def run(argv, env, log, cwd=ENGINE):
     return r.returncode, r.stdout
 
 
-def gating(profile):
+def gating(profile, part=None):
     """R-77: every gating milestone's tests (tools/milestones.toml) fail the check like the
     default targets, beside them; while none gates, the marker and the targets' names are
-    still checked."""
+    still checked. `part` 1 or 2 takes every other target by name, from the first or the
+    second: in the release profile each target is a binary of its own under fat LTO, so the
+    build's time grows with the targets, and CI runs the halves as two jobs (2026-11-19)."""
 
     def step(env, log):
         try:
             gates, names = milestones.gating_targets(env)
         except milestones.MilestoneError as e:
             return str(e)
+        if part is not None:
+            names = names[part - 1 :: 2]
         if not names:
             log.write(f"no gating milestone has a test target (gating = {gates})\n")
             return None

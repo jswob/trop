@@ -145,7 +145,7 @@ jobs:
             fi
           done
           echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
-      # the gating milestones' tests fail it (`gating`, `gating-release`); the next one's
+      # the gating milestones' tests fail it (`gating`, `gating-release`, `-2`); the next one's
       # are reported in a line such as `milestone-report: S: 3/7 green`, never failing
       # the hash of every input of the walls' self-tests; a green run's is kept in the cache,
       # one entry per group
@@ -162,7 +162,8 @@ jobs:
       # the build outputs (issue #6), one cache per group: a pull request restores the
       # newest nightly's; the nightly builds cold and saves its own, so a stale cache can't
       # hide a failure there. rules-selftest's shards build in their own scratch target. A
-      # group split from another (dev-gating from dev-tests, 2026-11-19) falls back to that
+      # group split from another (dev-gating from dev-tests, release-gating-2 from
+      # release-gating, 2026-11-19) falls back to that
       # group's cache, the same profile's build, until a nightly saves its own
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.event_name == 'pull_request' && !startsWith(matrix.group, 'rules-selftest-')
@@ -181,7 +182,7 @@ jobs:
           key: engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-${{ github.run_id }}
           restore-keys: |
             engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group }}-
-            engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group == 'dev-gating' && 'dev-tests' || matrix.group }}-
+            engine-build-${{ runner.os }}-${{ env.NIGHTLY }}-${{ hashFiles('engine/Cargo.lock', 'engine/rust-toolchain.toml') }}-${{ matrix.group == 'dev-gating' && 'dev-tests' || matrix.group == 'release-gating-2' && 'release-gating' || matrix.group }}-
       - name: engine/tools/check group ${{ matrix.group }}
         run: engine/tools/check group ${{ matrix.group }} ${{ github.event_name != 'pull_request' && '--fresh' || '' }}
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

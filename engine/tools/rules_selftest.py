@@ -117,7 +117,7 @@ PR_STEPS = [
     "check-frozen", "spec-loadcheck", "guard-test", "rules-selftest", "check-rules", "exceptions",
     "ast-grep-test", "ast-grep-scan", "fuzz", "fuzz-build", "fault-injection-probe",
     # T's tests of every gating milestone, in both profiles (tools/milestones.toml, issue #14)
-    "gating", "gating-release",
+    "gating", "gating-release", "gating-release-2",
 ]
 
 

@@ -48,6 +48,31 @@ fn planted_red() {
 --- run
 tools/check step gating-release
 
+# the second half of the release-profile gating targets (2026-11-19): a red target that sorts
+# into it fails `gating-release-2`, CI's `release-gating-2` job
+case: gating-milestone-red-release-2
+tool: run
+expect: FAIL gating-release-2: S gates
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = []
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_zz_planted"
+path = "milestone/s_zz_planted.rs"
+test = false
+--- write tests/runner/milestone/s_zz_planted.rs
+//! Planted: a red test of milestone S that sorts last.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step gating-release-2
+
 case: next-milestone-reported-not-failing
 tool: run
 exit: any
