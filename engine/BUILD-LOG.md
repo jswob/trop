@@ -4939,3 +4939,69 @@ On `build/m3` from 43f15b04, two commits with this one. The brief is G2 of `tmp/
 - **Usage:** about 0.27 % of the week (`engine/tools/usage`) at the entry, against a budget of 1.5 %.
 - **Next:** the group's review; G3 takes step c (`run(files, request)`, the old fields and hooks gone), and the two STOP-REPORTs once ruled.
 - **Checks:** `check quick: green, 11 steps (42s)`; `check commit: green, 23 steps (123s)`, exit 0, on this commit's tree.
+
+## STOP-REPORT 2026-11-19: `run/joint` also asks `x`, the joint model's own ask, which BUILD-ORDER puts at M5c
+
+- **Kind:** a test seems wrong (its milestone): the vector asks a construct BUILD-ORDER builds at M5c.
+- **Where:** `m3/runs.vectors` `run/joint` (`m3_run_requests`): `run j.tally --ask x a.q` in `m3/check/joint`, whose `x` is `ask x: a.twice`. The stop is `ask/answer.rs` `unbuilt_at_run`, `NotBuilt("a joint model's asks at run")`.
+- **Rule or gate:** BUILD-ORDER § M5c ("a member's items read as `a.item`"; D1-7's first step: each member its own evaluation context, keyed by its pin, with its own memo and its own lazy walk); L §6.1; DONE gate 10.
+- **What happens:**
+  - After 62a7fe01 (P18), `tally run j.tally --ask a.q` prints refcore's lines, `a.q: 8 000.00 PLN` and `  cut 2026-03-01`, exit 0.
+  - `tally run j.tally --ask x a.q` prints `tally run: not implemented`, exit 69. `x` reads member `a`'s def `twice` from inside the joint model, which the engine leaves to M5c.
+  - Refcore prints `x: 8 000.00 PLN`, `  cut 2026-03-01`, then the `a.q` lines, exit 0.
+- **What I tried:** P18 is built, so the vector's `a.q` half is answered as refcore answers it (crate test `a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix`). I didn't lift the stop on a joint model's own asks. Reading a member's item in the merged reality is M5c's design, and the merged reality alone would answer without it: the member's own context, memo and walk.
+- **What I ask:** one of these.
+  - T splits the vector: `--ask a.q` alone for M3 (the two lines above, exit 0; the engine prints them now), and `x` held for M5c.
+  - Or the lead rules that a joint model's own asks reading a member's def are built in M3. Its size is unknown: it is M5c's first step.
+- **State:** green at 5fb1b955; nothing uncommitted.
+
+## 2026-11-19 M3 G3 `last`, turn 1: P19, P18, G1's review items A-1, A-3, A-6 (issue #226)
+
+On `build/m3` from ac551ad8, four commits and this one. The brief is G3 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§4 G3, §5); the picks are P18 and P19. This turn takes the part of G3 that needs no T chunk.
+- **What changed, by commit:**
+  - **3ef79d60, P19 (#232):** `load/overlap.rs` `check_obs` checks `LOAD-COVERS` only for the observations that stand in the world. A row that a higher layer's row replaces at its id is skipped, and a `none` row states no movement. Test: `load_cases.rs` `coverage_narrowed_in_a_scenario_checks_the_rows_standing_there`.
+  - **The case where the engine now refuses and refcore loads** (T holds it "for #232"): a scenario whose `moves` narrows a base statement's span and leaves a base row standing outside the new span. Probe `tmp/m3/g3/p19`:
+    - The base: version `stmt` governs 2026-01-01..2026-04-30, `covers konto`, and holds `bank[r2]` dated 2026-03-10.
+    - Scenario `keep`: `moves stmt to 2026-01-01..2026-02-28` and leaves r2 standing.
+    - The engine: `scenario keep: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)`.
+    - Refcore loads `keep` and answers `q_keep: 30.00 PLN`, booking r2.
+    - Where the scenario also removes the row (`cut`, `replace bank[r2] = none`), both load and answer `q_cut: 50.00 PLN`, as on `I:A:A-13~A1`.
+  - **c555b460, G1's review items:**
+    - A-3: `How::engine` passes the run's `days`, so an oracle run's every day reaches what load evaluates (G2's step a hadn't).
+    - A-1: `walk/fork.rs`'s docs say that F6's twin plans each read's walk through its own day, while refcore's `proj_walk` plans through E; they name spec question Q-3 of #231.
+    - A-6: `book/reading.rs`'s header names `walk/readings.rs` (`sign_anchor`) for an anchor's sign rule.
+  - **62a7fe01 and 5fb1b955, P18:** a member's ask at run, `run j.tally --ask a.q` (L §6.1; OPERATIONS §2.1), in both arms (`answer`, `answer_worlds`):
+    - Load keeps each member loaded alone, with its files and scenarios, on its joint model's reality (`Joint.alone`, `MemberAlone`, `Reality::member_alone`). This happens once load ends, so no world's load copies it.
+    - The turn builders mark a member's ask as `Turn::Member` at its place in the run's order. `ask/members.rs` (new, non-kernel) `resolve` turns each into one of two forms.
+      - A base ask of the member that names none of its scenarios becomes `Turn::OfMember`. It is answered in the member's own world, one world per member, and its lines go under the prefix.
+      - Any other ask becomes the lines of a run of the member alone with all its files (refcore's `member_alone`): `a.q: refused: …`, `scenario a.s: refused: …`, the member's warnings, the rest prefixed. A stop that run meets is kept for its turn (`Turn::Stopped`), so which result prints follows the run's order.
+    - A member of a member is `a.b.q`, found by a loop over the aliases. There is no recursion (R-16): `resolve` calls the alone run, which calls `answer_turns`, and nothing calls back.
+    - A member that is itself a joint model answers none of its own asks: they stay not built, M5c's.
+    - 5fb1b955 removes three report-only hits that 62a7fe01 left in `members.rs` (explicit lifetimes, a nested closure), which `check commit` refused. Byte-equal.
+    - Test: `ask_cases.rs` `a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix`.
+- **P18's probes against refcore** (`tmp/m3/g3/p18`, runner `tmp/m3/g3/both.sh`, `repin.sh` for the pins). Member `a` is a directory with a scenario `s1` that loads and one, `bad`, that is refused. `m` is a joint member whose member `b` has scenarios too.
+  - The same bytes on both:
+    - `a.q`, and `a.qk` (`as known`): a plain base ask.
+    - `a.q_s` (an ask of a scenario file), `a.qin` (`in s1`), `a.qd` (a diff `in s1 against ana`): each with `scenario a.bad: refused: …` and the member's `WARN-UNREAD`.
+    - `a.q_s a.q a.qin`: repeated and mixed in order.
+    - `j.tally js.tally --ask a.q_s a.q`: a joint model with its own scenario, the `answer_worlds` arm.
+    - `m.b.q`: nested and plain.
+    - `a.qd m.b.q`.
+    - `a.nope`, `m.nope`, `m.b.nope`: `REQ-ASK`.
+    - `run/joint`'s `a.q` on T's fixture.
+  - Different, by design:
+    - `m.b.qin` and `m.b.q_sb` (nested, the member alone): only the refused scenario's line differs. The engine prints `scenario m.b.bbad: refused: …`; refcore prefixes level by level and prints `m.scenario b.bbad: refused: …`. L §6.4's line is `scenario <s>: refused: …`, so the engine puts the member's whole prefix on the id. This is refcore's, for the round.
+    - `m.qm`, a joint member's own ask: the engine says not implemented, refcore answers (M5c).
+  - Seen on the way, outside this turn's code: with an outer pin and an inner pin both wrong, the engine names the outer (`LOAD-PIN n/mid.tally doesn't match its sha256 in use m`), refcore the inner (`member m: LOAD-PIN b doesn't match its sha256 in use b`). That is load's order, for T or the round.
+- **Choices in P18, for the review and the round:**
+  - A member's walk warnings in the plain form print nowhere, as refcore's sub-asker drops them. In the alone form they print with the member's lines, as refcore's `member_alone` prints them.
+  - A member's plain ask gets no `REQ-CLOCK` check, as refcore gives none. E §11 refuses the request for an ask's literal cut after `on`, but doesn't say whose `on` (the member's?): a spec question for #228.
+- **What turned green:** `milestone-report: M3: 30/31` (from 29/31): `m3_check_household_a_part_1` (`I:A:A-13~A1`).
+- **Red:** `m3_run` on `run/joint` alone (the STOP-REPORT above: `x`, M5c).
+- **Size** (`engine/crates`, ac551ad8 to this commit): 12 files, 638 in, 71 out. Of those, the library is 448 in and 71 out (P18 about 0.4 k with its docs, P19 about 30, the review items about 15) and the crate tests 190 in. The plan gave G3 0.4–1.2 k and P18 0.15–0.3 k. P18 is over: the run of a member alone and the split of the turn builders it needs.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched; report-only hits 8, as before).
+- **Open STOP-REPORTs:** the one above (`run/joint`'s `x`). G2's two are taken: P19 is fixed (3ef79d60) and P18 built (62a7fe01).
+- **Not done this turn, waiting on T or the gate:** step c of the run function (after T's step b); C3's reds; gate 8's survivors; Q9; #114. A-2 (the twin reads F6's `planned_through`) is left for the list: a move of one function between the fence and its twin, which no test needs.
+- **Usage:** about 0.52 % of the week (`engine/tools/usage`) at the entry, against a budget of 1.2 %.
+- **Next:** the group's review; G3's next turn with T's C3, step b and gate 8's survivors; the STOP-REPORT's ruling.
+- **Checks:** `check quick: green, 11 steps (133s)`; `check commit: green, 23 steps (124s)`, exit 0, at 5fb1b955's tree (this commit adds the log alone).
