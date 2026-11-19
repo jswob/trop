@@ -5118,3 +5118,45 @@ On `build/m3` from 15b59db7 (the fix turn merged with T's C3, step b and the rev
 - **What I tried:** the part of step c that leaves them compiling: `run_with_lows` and `run_with_forks` went (4110c282). `Request`'s `pin` and `days` stay, and their docs say `run` alone reads them.
 - **What I ask:** the rules role moves the two benches to `run_with_how(Files::new(given), &Request::new(asks), How::FENCES)`. That compiles today and after step c. Then the builder's next turn finishes step c (the log's Next line above).
 - **State:** d4ee15d9, green; nothing uncommitted.
+
+## 2026-11-19 M3 G3 `last`, turn 3: the review's blocking finding, step c (issue #226)
+
+On `build/m3` from 3a6c26e1 (turn 2 merged with rules step 5, 53dfdd1e: the benches on `run_with_how`, P25), two commits and this one. Turn 2's STOP-REPORT A is ruled P24 (#234: the engine prints the spec's `5 400 PLN`, and T holds `last/net_worth`); B is closed by P25. The review is `tmp/m3/review-g3b.md` (1 blocking; the 6 equivalent rows hold; 8 non-blocking).
+- **What changed, by commit:**
+  - **31e1a73d, the blocking finding:** `unit(e)` of a `none` names `e` as written, as refcore does (`m_c_unit`, `fmt_node`; L §8.4's `RUN-NONE` row).
+    - `unit(fee[2026-02])`, with that row `none`, gives `RUN-NONE fee[2026-02] is none here: a quantity`. Before, the subject was `a value`.
+    - `unit(observed(rent[2026-02]).cash.from)` gives `RUN-NONE observed(rent[2026-02]).cash.from is none here: a place`.
+    - The text is load's `expr_text`, refcore's `_txt`.
+    - `walk/reads.rs` `place_of` is now the one check of a read's place and of `unit(x)`'s (non-blocking 3). `place_arg` calls it after evaluating. As a result, a read whose place argument is `none` and isn't a bare name is now refused as refcore refuses it. Before, it stopped not built: `walk/reads.rs`'s own `expr_text` builds only a name.
+    - `quantity_typed` keeps `sample`'s stop (non-blocking 2): a class the run can't see stops, and is never read as a place.
+    - The header says `unit` gives a key (non-blocking 5).
+  - **ea83d892, step c:**
+    - `Request` is `{ asks }`, made with `Request::new(asks)`.
+    - `run(files: Files, &Request)` computes as `How::FENCES`. The pin is the files' (`Files::pin`), and the walk's days are the engine's (`How::days`).
+    - `Request`'s `pin` and `days` go (G2's N-2), and so do `as_requested` and `request_how`.
+    - Tests moved to `Request::new` and `Files::new`: the kernel files' own (`walk/agenda.rs`, `move_flows.rs`, `order.rs`, `plan.rs`), `api.rs`'s, and the crate tests. Those that step every day run through `run_with_how` with `How { days, ..How::FENCES }`.
+- **The sweep:** 103 runs against refcore (`tmp/m3/g3/sweep-t3.sh`):
+  - the review's probes (`review-g3b/u0` to `u8`, and `check u7`);
+  - turn 2's own (`g3/t2`);
+  - the fix turn's set (`review-g3a/j1`, `cov`, `g3/p18`, `p19`).
+  - It ran turn 2's binary against 31e1a73d's (`t3-before.txt`, `t3-after.txt`, `compare.py`).
+  - Results:
+    - 2 runs turn from different to the same: `u6` (`u_from`) and `u7` (`k2`).
+    - None turns from the same to different.
+    - 31 differ both before and after, all known:
+      - the P24 money (2);
+      - #233's B-2 to B-5 (13);
+      - M5c and #228 (7);
+      - #232 (9).
+  - Step c changes no byte: ea83d892's binary prints what 31e1a73d's does on all 103 (`t3-stepc.txt`).
+- **Not taken:**
+  - The review's non-blocking 4 (ARCHITECTURE names the removed entries) waits for the gate.
+  - 1 (refcore's `_uq` against the value's shape) is unconfirmed and not reproduced.
+  - 6 and 7 are T's and the round's.
+  - The spec questions (4) are the round's.
+- **Size** (`engine/crates`, 3a6c26e1 to this commit): 19 files, 151 in, 278 out. Of those, the library and the CLI are 94 in and 161 out; the tests are 57 in and 117 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none. A is ruled (P24), and B is closed (P25).
+- **Usage:** about 0.2 % of the week this turn (`engine/tools/usage`, 1.52 % over the session), against a budget of 0.6 %.
+- **Next:** G3's review of this turn; then T's kills and gate 8 on 15b59db7.
+- **Checks:** `check quick: green, 11 steps (93s)`; `check commit: green, 23 steps (125s)`, exit 0, at ea83d892's tree (this commit adds the log alone).
