@@ -5287,3 +5287,40 @@ On `build/m3` from 8fd70b7a (nothing merged since turn 5), one commit and this o
 - **Usage:** about 0.07 % of the week this turn (`engine/tools/usage`, 2.40 % over the session), against a budget of 0.4 %.
 - **Next:** the reviews of turns 5 and 6; T's vectors for #235's band and aggregate forms.
 - **Checks:** `check quick: green, 11 steps (18s)` at a9f4243b's tree with this commit's doc line and rows; `check commit: green, 23 steps (126s)`, exit 0, at the same tree (this commit adds the log, a doc line and the rows' reasons). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 G3 `last`, turn 7: the fix review's three blocking findings (issue #226)
+
+On `build/m3` from 4fe9ac25 (nothing merged since turn 6), one commit and this one. The fix review of turns 5 and 6 is `tmp/m3/review-g3ef.md`: 3 blocking and 6 non-blocking. P31 rules all three on the review's readings, which keep P30's waiting `where` equal to its law-free twin.
+- **f112e8cf, what changed:**
+  - **B-1** (`load/lawdates.rs` `read_parts`): #235's walk now reads the parts that load's shared `children` leaves out:
+    - an aggregate's bindings (range ends, `on`, span, `where`) and its `ties by`;
+    - a `flows` or `covered` span and its `for`;
+    - a projection's `from`.
+    - `children` itself is unchanged, so no other load check moves.
+    - `on max(start_of(k) for k in month where start_of(k) <= act_day)` (`c_aggwhere`) is now refused at load with `LOAD-LAWDATE move back's key a reads law-dated act_day …`. Before, it was `ENGINE-INVARIANT` at run.
+  - **B-2** (`walk/tuples.rs` `waiting_wheres`): a run refusal of the `at` leaves the tuple as it is. Its instance reads the `at` again (`inst_parts`) and is refused alone, as on the law-free path. Before, the refusal went out of `move_tuples` and refused the whole move. `a_atref` now prints its twin `at_atref`'s bytes: `q1: 0.00 PLN` (spare), and `q2` refused (konto).
+  - **B-3:** a tuple a later key's `where` refused has its waiting `where`s read too, in binding order, so a false one drops it first. `p15_refuse_free` now prints its twin's answer, where it printed `RUN-DIV`. `p16` (the earlier `where` true) still refuses `RUN-DIV`, as its twin does.
+  - **N-6:** the `//!` header names the waiting `where`.
+  - **N-1** (`load_cases.rs`):
+    - Turn 5's test now runs on a text with a raise known 2026-03-15. That gives `back` three adjustments as tuples, so kept and dropped print apart (`assert_ne!`), each against its law-free twin.
+    - `a_waiting_where_answers_as_its_law_free_twin_when_a_read_is_refused` holds B-2 and B-3.
+    - `c_aggwhere` joins the band and aggregate test.
+- **The probes against their twins** (`tmp/m3/g3/twins.py`, output `t7-twins.txt`): 87 probes in `review-g3ef`, `review-g3d` and `g3/t5`, each run on the engine and on refcore, and against its twin where one exists.
+  - None prints `ENGINE-INVARIANT`.
+  - 16 are the same bytes as their twins: `a_atref`, `b_aggwhere`, `b2_aggwhere_false`, `b4_maxwhere`, `p1`, `p2`, `p3`, `p5`, `p6`, `p7`, `p9`, `p10`, `p13`, `p14`, `p15`, `p16`. Each twin is the same as refcore.
+  - By hand: `p3b` and `p4_def` print `p1`'s bytes, and `p12` prints `p11`'s.
+  - Each line that differs from its twin, with its reason:
+    - `t5/w1`–`w5`, `w7`: the twin alone prints `WARN-UNREAD input act_day is read by nothing`. The twin drops the dated read, so it never reads `act_day`. `b3_aggwhere_lawchg` against `b3p_plain_lawchg` differs the same way, by `back_day`.
+    - `e_flowspan` and `n_noat`: the same refusal (`LOAD-READS …`, `LOAD-LAWDATE … states no at`), naming its own file.
+    - `p17_domhole` (the review's N-2): the engine adds `?"gap_day: no value"` to the answer, where the twin answers without it.
+      - A later key's domain is a hole, so the tuple never reaches its `at`, and the earlier key's waiting `where` can't be read.
+      - The review calls the hole defensible (imprecise, not wrong), under Q-1. It is the same as at 4fe9ac25.
+  - Against refcore, every dated probe differs, as P30 expects: refcore prints its #235 guard, or refuses an `at reader` def at run. Every twin, and every probe without a dated read, is refcore's bytes.
+- **The sweep:** turn 6's 157 runs (`sweep-t6.sh` and `l9` with its scenario) are unchanged (`compare.py`), and none prints `ENGINE-INVARIANT`.
+- **Not taken:** N-2, N-3, N-4 and N-5 are the review's notes for the round or T (Q-1 to Q-3).
+- **Size** (`engine/crates`, 4fe9ac25 to this commit): 3 files, 144 in, 19 out. Of those, the library is 49 in and 10 out; the tests are 95 in and 9 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.10 % of the week this turn (`engine/tools/usage`, 2.54 % over the session), against a budget of 0.5 %.
+- **Next:** the coordinator's probe of this fix against the twins and refcore (D12: no third review).
+- **Checks:** `check quick: green, 11 steps (111s)` at f112e8cf's tree; `check commit: green, 23 steps (128s)`, exit 0, at f112e8cf (this commit adds the log alone). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
