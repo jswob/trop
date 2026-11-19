@@ -463,6 +463,9 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
             "{id}: its at reads {def}, which takes its law date from its reader"
         ));
     }
+    if let Some(message) = unbound_key_lawdate(m, at, dated, mv) {
+        return Some(message);
+    }
     if mv.decl.at.is_some() {
         let read = direct.iter().find(|node| at_reads_dated(m, dated, node))?;
         return Some(format!("move {id}'s at reads law-dated {}", read.id));
@@ -485,6 +488,71 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
         }
     }
     None
+}
+
+/// The `LOAD-LAWDATE` message for a move's key read with no law date: a key whose binding is
+/// read before the `at` can be, since the `at` reads it or a key bound after it, has its
+/// domain, `on` and span read with none (refcore's `move_law`, the engine's
+/// `walk/tuples.rs` `move_law`), so a law-dated fact there is refused, not met at run (#235,
+/// P28). Its `where` is read per member, the key bound, at the `at`'s date. L §4.3 (a move's
+/// `at` dates what it reads; every chain of readers ends at a written date, P-6), §5.14 Keys.
+fn unbound_key_lawdate(
+    m: &Reality,
+    at: &AtReads,
+    dated: &LawDated,
+    mv: &MoveInfo,
+) -> Option<String> {
+    let at_expr = mv.decl.at.as_ref()?;
+    for (i, bind) in mv.binds.iter().enumerate() {
+        let Some(unbound) = mv
+            .binds
+            .iter()
+            .skip(i)
+            .find(|later| crate::eval::reads_name(at_expr, &later.var))
+        else {
+            continue;
+        };
+        let read = bind_exprs(&bind.node)
+            .into_iter()
+            .filter_map(crate::eval::names_in)
+            .flatten()
+            .find(|name| name_dated(m, at, dated, name));
+        if let Some(read) = read {
+            return Some(format!(
+                "move {}'s key {} reads law-dated {read} with no law date: its at reads {}",
+                mv.id, bind.var, unbound.var
+            ));
+        }
+    }
+    None
+}
+
+/// The expressions a binding reads before its members exist: its range's ends and step, its
+/// `on` and its span's ends. L §5.6, §5.14 Keys.
+fn bind_exprs(bind: &crate::syntax::Bind) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = Vec::new();
+    if let crate::syntax::Domain::Range(range) = &bind.domain {
+        let (from, to, step) = range.as_ref();
+        out.extend([from, to]);
+        out.extend(step);
+    }
+    out.extend(bind.on.iter());
+    if let Some(span) = &bind.over {
+        out.extend(span.from.iter().chain(span.to.iter()));
+    }
+    out
+}
+
+/// Whether a name read with no law date is a law-dated input, band or def. L §4.3.
+fn name_dated(m: &Reality, at: &AtReads, dated: &LawDated, name: &str) -> bool {
+    let kind = match m.names.kind(name) {
+        Some(crate::model::NameKind::Input) => NodeKind::Input,
+        Some(crate::model::NameKind::Band) => NodeKind::Band,
+        Some(crate::model::NameKind::Def) => NodeKind::Def,
+        Some(_) | None => return false,
+    };
+    let node = Node::new(kind, name);
+    dated_item(m, at, dated, &node).unwrap_or_else(|| input_dated(m, &node))
 }
 
 /// Whether a read in a move's `at` is of a law-dated input or band: the `at` ends every
