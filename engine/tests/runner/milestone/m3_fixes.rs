@@ -85,7 +85,11 @@ mod tests {
 
     /// #192's standing items for T (`m3/fixes/b192/`, group `b192`; T's plan §5): G1's fix
     /// N-c, `solve` over a rate and over a num with a unit; the review of P73's fix, one
-    /// projection read on falling days within a month across a refused leg and a hole.
+    /// projection read on falling days within a month across a refused leg and a hole; and
+    /// the builder's plan's rows 22, 40, 50, 51 and 52 (chunk C7): a calendar's hole, pads
+    /// across a continued walk, a settlement listed inside a walk up to a leg's day, `explain`
+    /// stopping at an answer, `HOLE-SAME` over two legs at one place (its residual line held
+    /// for #192).
     #[test]
     fn m3_fixes_backlog() {
         let (failed, of) =

@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 165] = [
+pub static TEXTS: [(&str, &str); 170] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -254,12 +254,32 @@ pub static TEXTS: [(&str, &str); 165] = [
         include_str!("../../m3/fixes/alone/b2/s.tally"),
     ),
     (
+        "m3/fixes/b192/cal_hole.tally",
+        include_str!("../../m3/fixes/b192/cal_hole.tally"),
+    ),
+    (
+        "m3/fixes/b192/chain_pads.tally",
+        include_str!("../../m3/fixes/b192/chain_pads.tally"),
+    ),
+    (
         "m3/fixes/b192/parked_prefix.tally",
         include_str!("../../m3/fixes/b192/parked_prefix.tally"),
     ),
     (
+        "m3/fixes/b192/prefix_settle.tally",
+        include_str!("../../m3/fixes/b192/prefix_settle.tally"),
+    ),
+    (
+        "m3/fixes/b192/same_two_legs.tally",
+        include_str!("../../m3/fixes/b192/same_two_legs.tally"),
+    ),
+    (
         "m3/fixes/b192/solve.tally",
         include_str!("../../m3/fixes/b192/solve.tally"),
+    ),
+    (
+        "m3/fixes/b192/trace_answers.tally",
+        include_str!("../../m3/fixes/b192/trace_answers.tally"),
     ),
     (
         "m3/fixes/g3/j/c.tally",
