@@ -1,4 +1,4 @@
-//! The engine's entry: the files a run is given and its request go in, the printed answer comes out.
+//! The engine's entry: a run's or a check's files and asks go in, the printed answer comes out.
 //! Spec: E §1 (the run function); E §3.1 step 1 (files by full path); L §8.3 (which refusal
 //! prints: every file is read before any is split, and split before any is parsed); L §6.4
 //! (a reality with scenarios runs as worlds); L §5.18 (the asks answered once the reality
@@ -17,7 +17,6 @@ use crate::base::Refusal;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
-use crate::walk::{Forks, Lows};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -89,11 +88,11 @@ impl Files {
 pub struct Request {
     /// The asks to answer.
     pub asks: Asks,
-    /// How a `use` line's pin is taken, read only by [`run`], [`run_with_lows`] and
-    /// [`run_with_forks`]; [`run_with_how`] takes [`Files::pin`].
+    /// How a `use` line's pin is taken, read only by [`run`]; [`run_with_how`] takes
+    /// [`Files::pin`]. It goes once the benches call [`run_with_how`] (step c).
     pub pin: Pin,
-    /// Which days the walk steps, read only by [`run`], [`run_with_lows`] and
-    /// [`run_with_forks`]; [`run_with_how`] takes [`How::days`].
+    /// Which days the walk steps, read only by [`run`]; [`run_with_how`] takes [`How::days`].
+    /// It goes once the benches call [`run_with_how`] (step c).
     pub days: Days,
 }
 
@@ -165,7 +164,8 @@ pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemente
     run_with_how(as_requested(given, request), request, request_how(request))
 }
 
-/// How [`run`] computes: every fence's form (P §2.3, §2.5, §3.3), the event walk's days.
+/// How [`check`] and [`load_report`] compute, and [`run`] but for the days its request names:
+/// every fence's form (P §2.3, §2.5, §3.3), the event walk's days.
 const FENCES: How = How::FENCES;
 
 /// Runs `files` on the request's asks, each ask's engine computing as `how` says, each fence's
@@ -227,49 +227,6 @@ pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
         })
     });
     finish(report)
-}
-
-/// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
-/// from fence F5's running sums, as [`run`] reads it (`Lows::Tree`), or through the
-/// projection's own walk (`Lows::Walk`), the plain twin the equivalence test compares it with
-/// (E §4.3, P §2.3). Both print the same bytes for every reality and request: a difference is
-/// a fault of the fence (R-130), which is how a test of the fence uses it.
-///
-/// # Errors
-///
-/// As [`run`].
-pub fn run_with_lows(
-    given: Vec<Given>,
-    request: &Request,
-    lows: Lows,
-) -> Result<Answer, NotImplemented> {
-    let how = How {
-        lows,
-        ..request_how(request)
-    };
-    run_with_how(as_requested(given, request), request, how)
-}
-
-/// [`run`] with each ask's engine continuing a projection's walk read again through a later
-/// day as `forks` says: from where it stood, by fence F6, as [`run`] walks (`Forks::On`), or
-/// walked anew from its first day, each read its own walk (`Forks::Off`), the plain twin the
-/// equivalence test compares it with (P §2.5, E §4.3). Both print the same bytes for every
-/// reality and request: a difference is a fault of the fence (R-130), which is how a test of
-/// the fence uses it.
-///
-/// # Errors
-///
-/// As [`run`].
-pub fn run_with_forks(
-    given: Vec<Given>,
-    request: &Request,
-    forks: Forks,
-) -> Result<Answer, NotImplemented> {
-    let how = How {
-        forks,
-        ..request_how(request)
-    };
-    run_with_how(as_requested(given, request), request, how)
 }
 
 /// The files given, no file table, a `use` pin taken as the request says.

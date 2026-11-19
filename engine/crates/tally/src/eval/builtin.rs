@@ -1,4 +1,4 @@
-//! The built-ins' dispatch and the number built-ins: `round`, `min`, `max`, `abs`, `pow`, `pos`, `missing`, `minor`, `unit`, `periodic`, `factor`.
+//! The built-ins' dispatch and the number built-ins: `round`, `min`, `pow`, `unit`, `factor`, ….
 //! Spec: L §4.2 (the dates' and calendars' built-ins, in `dates.rs` and `business.rs`; `pos`),
 //! §7.2 (`round` and the type of its result; a bare step takes the operand's unit), §5.11
 //! (`min`, `max`, `missing`), §5.10 (`unit(x)`, a key of a unit kind), §3.3 (`periodic`,

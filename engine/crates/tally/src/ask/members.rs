@@ -1,4 +1,4 @@
-//! A joint model's member's ask at run, `a.q` or `a.b.q`: answered by the member alone, its lines under the member's prefix.
+//! A member's ask at run, `a.q` or `a.b.q`: answered by the member alone, under its prefix.
 //! Spec: L §6.1 (a member's asks are asked by name in a run of the joint model, as `a.q`, and
 //! answered by the member alone; joining changes no member's answer), §6.4 (a member's
 //! scenarios: an ask its scenario files declare, or one of its base's that names one of them,
@@ -19,7 +19,7 @@
 
 use super::answer::{Turn, answer_turns_apart, reality_turns, req_clocks};
 use super::register::warning_lines;
-use super::worlds::merged_warnings;
+use super::worlds::{merged_warnings, refused_line};
 use crate::base::{Code, Refusal};
 use crate::eval::How;
 use crate::load::{Loaded, load_run, split_files};
@@ -153,7 +153,7 @@ fn alone_lines(
         Err(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
             Err(Stop::Refused(refusal))
         }
-        Err(Stop::Refused(refusal)) => Ok(vec![format!("{id}: refused: {}", refusal.text())]),
+        Err(Stop::Refused(refusal)) => Ok(vec![refused_line(id, &refusal)]),
         other => other,
     }
 }

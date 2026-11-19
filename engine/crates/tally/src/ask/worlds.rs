@@ -1,4 +1,4 @@
-//! The asks of a reality with scenarios, each in the world it names, its refused scenarios and warnings, and `check`'s lines.
+//! Scenarios' asks, each in the world it names; refused scenarios, warnings, `check`'s lines.
 //! Spec: L §6.4 (asking a scenario: `in s`, `diff … in s against b`, a `{scenario s}` pin; two
 //! scenarios over one base each declare their own asks), §5.18, §8 (a scenario's refusal
 //! refuses only that scenario and those over it), §8.5 (an item is unread only where every
@@ -124,11 +124,7 @@ fn ask_turn(
     }
     let named = worlds_named(w, ask, own, model);
     if let Some((_, refusal)) = w.refused.iter().find(|(id, _)| named.contains(*id)) {
-        return Ok(Turn::Line(format!(
-            "{}: refused: {}",
-            ask.id,
-            refusal.text()
-        )));
+        return Ok(Turn::Line(refused_line(&ask.id, refusal)));
     }
     world_turn(w, &named, (at, own), (ask, model))
 }
@@ -330,7 +326,7 @@ fn alone_asks(
             .ask_files
             .get(&ask.id)
             .ok_or_else(|| invariant("an ask refused alone with no file"))?;
-        let line = format!("{}: refused: {}", ask.id, refusal.text());
+        let line = refused_line(&ask.id, refusal);
         out.insert((ask.id.clone(), file.clone(), ask.line), line);
     }
     Ok(out)
@@ -339,6 +335,12 @@ fn alone_asks(
 /// A refused scenario's line, `scenario <s>: refused: CODE message`. L §6.4, §8.
 fn scenario_line(id: &str, refusal: &Refusal) -> String {
     format!("scenario {id}: refused: {}", refusal.text())
+}
+
+/// A refused ask's line, or a tuple's, `<head>: refused: CODE message`: one form for `run` and
+/// `check`, whose lines are the same bytes. L §8.3, §8.4.
+pub(super) fn refused_line(head: &str, refusal: &Refusal) -> String {
+    format!("{head}: refused: {}", refusal.text())
 }
 
 /// Whether `id` names an ask of a world: the base's, a loaded scenario's, or one a refused

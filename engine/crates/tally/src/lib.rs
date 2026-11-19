@@ -23,7 +23,7 @@ mod oracle;
 
 pub use api::{
     Answer, Asks, Files, Given, Pin, Request, Source, check, load_report, reprint, reprint_in, run,
-    run_with_forks, run_with_how, run_with_lows,
+    run_with_how,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;

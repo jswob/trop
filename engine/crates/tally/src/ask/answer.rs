@@ -29,6 +29,7 @@ use super::explain::{explain_line, inputs_line, readers_line};
 use super::members;
 use super::register::{check_register_lines, name_unknown_days, register_lines, warning_lines};
 use super::residuals::residual_result;
+use super::worlds::refused_line;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
     Collected, Ctx, Engine, Entry, Env, How, Item, Member, Memo, after_on, names_in, num_stop,
@@ -288,7 +289,7 @@ pub(super) fn answer_turns_apart(
                     // alone in a scenario's (refcore's `run_worlds`, `LoadAtRun`)
                     Err(Stop::Refused(r)) if *world > 0 && matches!(r.code(), Code::Load(_)) => {
                         let ask = m.asks.get(*at).ok_or_else(no_turn)?;
-                        out.push(format!("{}: refused: {}", ask.id, r.text()));
+                        out.push(refused_line(&ask.id, &r));
                     }
                     lines => out.extend(lines?),
                 }
@@ -425,7 +426,7 @@ fn crossed_tuples(
                     Ok(lines) => out.extend(lines),
                     // a run-time refusal, past S7's runs say, prints as the tuple's line (L §8.4)
                     Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
-                        out.push(format!("{head}: refused: {}", refusal.text()));
+                        out.push(refused_line(&head, &refusal));
                     }
                     Err(stop) => return Err(stop),
                 }
@@ -509,7 +510,7 @@ impl World {
     fn answer(&mut self, m: &Reality, at: usize, days: Days) -> Result<Vec<String>, Stop> {
         let ask = m.asks.get(at).ok_or_else(no_turn)?;
         if let Some(refusal) = m.asks_alone.get(&ask.id) {
-            return Ok(vec![format!("{}: refused: {}", ask.id, refusal.text())]);
+            return Ok(vec![refused_line(&ask.id, refusal)]);
         }
         if self.parts {
             return Err(Stop::NotBuilt("parts at run"));
@@ -585,7 +586,7 @@ fn answer_in(
 fn refusal_line(ask: &Ask, lines: Result<Vec<String>, Stop>) -> Result<Vec<String>, Stop> {
     match lines {
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
-            Ok(vec![format!("{}: refused: {}", ask.id, r.text())])
+            Ok(vec![refused_line(&ask.id, &r)])
         }
         other => other,
     }
@@ -1097,7 +1098,7 @@ fn tuple_asks(m: &Reality, ask: &Ask, days: Days, seen: &mut Seen) -> Result<Vec
         Ok(Ok(members)) => members,
         Ok(Err(hole)) => return Ok(vec![format!("{}: {}", ask.id, hole.text())]),
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Req(_)) => {
-            return Ok(vec![format!("{}: refused: {}", ask.id, r.text())]);
+            return Ok(vec![refused_line(&ask.id, &r)]);
         }
         Err(stop) => return Err(stop),
     };
