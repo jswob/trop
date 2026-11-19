@@ -5215,3 +5215,39 @@ On `build/m3` from 863a23ae (turn 3 merged with T's C5), two commits and this on
   - (a) the spec stands: a key's `where` is read at its tuple's `at`. The builder builds it, refcore follows at the round, and T holds a vector for the new issue.
   - (b) the spec changes so that load refuses such a key as #235's (`LOAD-LAWDATE`), and the `where` joins `bind_exprs`.
 - **State:** 7c11bc98, green. The survivors' rows and this log are committed together.
+
+## 2026-11-19 M3 G3 `last`, turn 5: P30, a `flows` hole's keys (issue #226)
+
+On `build/m3` from a223e7ca (nothing merged since turn 4), three commits and this one. STOP-REPORT C is ruled P30 (`tmp/m3/auto-picks.md`, (a)): the engine reads a key's `where` at its tuple's `at` and answers, and T holds the vector while refcore prints its guard (#235). The review of turn 3 approved it (`tmp/m3/review-g3c.md`, 0 blocking).
+- **What changed, by commit:**
+  - **cfc4ea7f, P30:** a key whose `where` reads a law-dated fact, while the move's `at` reads that key or a key bound after it, is read at its tuple's `at` (E §4.1 step 1, L §4.3). Before, the read had no law date and printed `ENGINE-INVARIANT`.
+    - Load marks those keys (`load/lawdates.rs` `dated_wheres`, kept on `MoveInfo::dated_wheres`). It walks the `where` whole and finds a law-dated input, band or def, `at reader` defs and nested ones included (`dated_read`). #235's check now reads through the same walk, so it also sees a name inside an aggregate.
+    - The walk binds such a key without its `where`, and the `where` waits on the tuple (`walk/tuples.rs` `Tuple::waiting`). Once the keys the `at` reads are bound, it is read at the tuple's law date, in binding order (`waiting_wheres`, `where_at_law`):
+      - false drops the tuple;
+      - a hole joins the tuple's existence, and a hole `at` is that hole;
+      - a window `at` reads it once per law-date class, `HOLE-IMPRECISE` where two differ, as `members_over_law` does for a member;
+      - a refusal makes a refused tuple.
+    - A `where` that reads nothing law-dated is read as before, so no existing run changes.
+    - `load_cases.rs`: `a_key_s_where_reads_law_dated_facts_at_its_tuple_s_at` checks the where that holds, the one that fails and the one whose `at` reads a later key, each against its law-free twin.
+  - **921ce409, the `flows` hole** (the review of turn 3, `n4.tally`): `flows` over a span that starts before S names its target as written, as refcore's `fmt_node` does: `(rent[2026-01])` and `(rent[2026-01].cash)`, where the engine printed `(rent)` since 582f8356 (L §8.1).
+    - The figure is load's `expr_text`. `walk/reads.rs`'s name-only `expr_text` goes: that is the review's non-blocking 1, two functions with one name. A keyed place target no longer stops not built there.
+    - `load_cases.rs`: `a_flows_hole_before_the_start_names_its_keys`.
+  - **34504894:** `dated_wheres` as a plain loop. cfc4ea7f's iterator chain had added two report-only hits that the lock doesn't hold, which `check commit`'s exceptions step caught.
+- **The probes** (`tmp/m3/g3/t5`). Each is T's `where_dated` text with one change:
+  - `w1`, `w7`: a `where` that reads `act_day` and `back_day` directly, false and true;
+  - `w2`, `w4`: an `at reader` def, false and true;
+  - `w3`: a nested `at reader` def;
+  - `w5`: a first key's `where` while the `at` reads the second key;
+  - `w6`: the binding's `on` through an `at reader` def.
+  - Each answering probe prints what refcore prints for its law-free twin (`w0`, `w8`, `w5t`), but for the twin's `WARN-UNREAD act_day`. `w6` is #235's `LOAD-LAWDATE` at load.
+  - Refcore gives `REFCORE-NOT-YET` for `w1`, `w5` and `w7`. It refuses `w2`–`w4` and `w6` at run with `LOAD-LAWDATE ask reaches an at reader def (late) without law`: its interpreter reads the `where` with no law date, the guard #235 names.
+- **The sweep:** 132 runs against refcore (`tmp/m3/g3/sweep-t5.sh`): turn 4's 118, this turn's 10 and the review's `n1`–`n4` (`review-g3c`).
+  - Of turn 4's 118, one run's lines changed: `t4/where_dated`. Its three `ENGINE-INVARIANT` cells now answer, and it still differs from refcore's `REFCORE-NOT-YET` (P30). The other 117 print what they printed.
+  - `n4` is now the same as refcore, and so are `n1`–`n3`.
+  - No run of the 132 prints `ENGINE-INVARIANT`.
+- **Size** (`engine/crates`, a223e7ca to this commit): 10 files, 282 in, 25 out. Of those, the library is 171 in and 25 out; the tests are 111 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none. C is ruled (P30).
+- **Usage:** about 0.21 % of the week this turn (`engine/tools/usage`, 2.31 % over the session), against a budget of 0.5 %.
+- **Next:** the reviews of turns 4 and 5; T's vectors for P30 and n4.
+- **Checks:** `check quick: green, 11 steps (103s)` on each commit's tree; `check commit: green, 23 steps (210s)`, exit 0, at 34504894's tree (this commit adds the log alone). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
