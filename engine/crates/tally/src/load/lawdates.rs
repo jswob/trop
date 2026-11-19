@@ -463,12 +463,12 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
             "{id}: its at reads {def}, which takes its law date from its reader"
         ));
     }
-    if let Some(message) = unbound_key_lawdate(m, at, dated, mv) {
-        return Some(message);
-    }
     if mv.decl.at.is_some() {
-        let read = direct.iter().find(|node| at_reads_dated(m, dated, node))?;
-        return Some(format!("move {id}'s at reads law-dated {}", read.id));
+        // the `at`'s own read first, as refcore names it (the review of G3's turn 4, N-3)
+        if let Some(read) = direct.iter().find(|node| at_reads_dated(m, dated, node)) {
+            return Some(format!("move {id}'s at reads law-dated {}", read.id));
+        }
+        return unbound_key_lawdate(m, at, dated, mv);
     }
     for item in [
         Node::new(NodeKind::Move, id),
@@ -494,7 +494,8 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
 /// read before the `at` can be, since the `at` reads it or a key bound after it, has its
 /// domain, `on` and span read with none (refcore's `move_law`, the engine's
 /// `walk/tuples.rs` `move_law`), so a law-dated fact there is refused, not met at run (#235,
-/// P28). Its `where` is read per member, the key bound, at the `at`'s date. L §4.3 (a move's
+/// P28). Its `where` waits instead, and is read at its tuple's `at` once every key the `at`
+/// reads is bound (P30, `dated_wheres`). L §4.3 (a move's
 /// `at` dates what it reads; every chain of readers ends at a written date, P-6), §5.14 Keys.
 fn unbound_key_lawdate(
     m: &Reality,
@@ -569,11 +570,20 @@ pub(super) fn dated_wheres(
     out
 }
 
-/// The first law-dated input, band or def expression `e` names, its parts walked whole. L §4.3.
+/// The first law-dated input, band or def expression `e` reads, its parts walked whole: a
+/// name, a call's name (a band is read as `b(x)`), an aggregate's terms (the review of G3's
+/// turn 4, B-1). L §4.3.
 fn dated_read(m: &Reality, at: &AtReads, dated: &LawDated, e: &Expr) -> Option<String> {
     let mut work = vec![e];
     while let Some(x) = work.pop() {
-        if let Expr::Name(name) = x
+        let name = if let Expr::Name(name) = x {
+            Some(name)
+        } else if let Expr::Call(call) = x {
+            Some(&call.name)
+        } else {
+            None
+        };
+        if let Some(name) = name
             && name_dated(m, at, dated, name)
         {
             return Some(name.clone());

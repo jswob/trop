@@ -5115,6 +5115,41 @@ ask q: bal(konto, 2026-04-30) law cut
         );
     }
 
+    /// #235's key read through a band's call, `on shift(0)`, and through an aggregate's term,
+    /// `on min(act_day for k in month)`: law-dated, refused at load, as the plain read is; read
+    /// with no law date before, each was `ENGINE-INVARIANT` at run (the review of G3's turn 4,
+    /// B-1, `b1_band`, `b4_agg`). L §4.3.
+    #[test]
+    fn a_key_read_through_a_band_or_an_aggregate_before_the_at_is_refused() {
+        let band = KEY_ON
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\nband shift(n: int): date\n",
+            )
+            .replace("on act_day where", "on shift(0) where")
+            .replace(
+                "  act_day = 2026-04-05\n",
+                "  act_day = 2026-04-05\n  shift: [0, inf) = 2026-04-05\n",
+            );
+        let aggregate = KEY_ON
+            .replace(
+                "unit PLN: currency minor 0.01\n",
+                "unit PLN: currency minor 0.01\n\nindex month = month 2026-01..2026-12\n",
+            )
+            .replace("on act_day where", "on min(act_day for k in month) where");
+        for (text, read) in [(&band, "shift"), (&aggregate, "act_day")] {
+            assert_eq!(refusal(text), "loaded", "{read} governs always");
+            let dated = text.replace("  governs always\n", "  governs 2026..\n");
+            assert_eq!(
+                refusal(&dated),
+                format!(
+                    "LOAD-LAWDATE move back's key a reads law-dated {read} with no law date: its at reads a (a.tally:31)"
+                ),
+                "{read} law-dated"
+            );
+        }
+    }
+
     /// The lines a run of `text` prints, every ask, but its warnings.
     fn answered(text: &str) -> Vec<String> {
         let given = vec![tally::Given {
