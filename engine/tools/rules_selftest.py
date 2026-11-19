@@ -113,7 +113,7 @@ DROPPED = {"R-17", "R-32", "R-33", "R-34", "R-35", "R-101", "R-102"}
 BY_COVERAGE = {"R-25", "R-26", "R-46"}
 # the steps R-77 asks of every pull request
 PR_STEPS = [
-    "fmt", "clippy-lib", "clippy-tests", "doc", "build", "test-dev", "test-release", "deny", "deny-tally",
+    "fmt", "clippy-lib", "clippy-tests", "doc", "build", "test-dev", "test-release", "test-release-2", "deny", "deny-tally",
     "check-frozen", "spec-loadcheck", "guard-test", "rules-selftest", "check-rules", "exceptions",
     "ast-grep-test", "ast-grep-scan", "fuzz", "fuzz-build", "fault-injection-probe",
     # T's tests of every gating milestone, in both profiles (tools/milestones.toml, issue #14)

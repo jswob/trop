@@ -219,8 +219,8 @@ def steps(mode):
         *lint[3:],
         *compiled[:3],
         ("test-dev", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci"], {}),
-        ("test-release", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
-                          "--cargo-profile", "release-test"], {}),
+        ("test-release", release_tests(1), {}),
+        ("test-release-2", release_tests(2), {}),
         ("gating-release", gating(["--profile", "ci", "--cargo-profile", "release-test"], part=1), {}),
         ("gating-release-2", gating(["--profile", "ci", "--cargo-profile", "release-test"], part=2), {}),
         compiled[3],
@@ -245,7 +245,10 @@ GROUPS = {
     # change 7, 2026-11-19): together they were CI's longest job, 16 to 22 minutes at M2's end
     "dev-gating": ["runner", "gating", "milestone-report"],
     "dev-tests": ["test-dev", "doctest"],
+    # the workspace's default targets in the release profile, in two halves (2026-11-19), as
+    # release-gating: the one job took 10 to 13 minutes
     "release-tests": ["test-release"],
+    "release-tests-2": ["test-release-2"],
     # the gating targets in the release profile, in two halves (2026-11-19): each target is a
     # binary built under fat LTO, and the one job took 14 to 16 minutes at M3's end
     "release-gating": ["gating-release"],
@@ -459,6 +462,31 @@ def run(argv, env, log, cwd=ENGINE):
     r = subprocess.run(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
     log.write(f"$ {' '.join(argv)}\n{r.stdout}\n[exit {r.returncode}]\n")
     return r.returncode, r.stdout
+
+
+def release_tests(part):
+    """R-77: the workspace's default test targets in the release profile (every target a
+    plain `cargo test` runs, milestones.default_tests), half of them: `part` 1 takes every
+    other selecting argument from the first (`--lib` with it), 2 from the second. Each
+    target is a binary of its own under fat LTO, so CI runs the halves as two jobs."""
+
+    def step(env, log):
+        try:
+            names = milestones.default_tests(env, [])[part - 1 :: 2]
+        except milestones.MilestoneError as e:
+            return str(e)
+        argv = ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
+                "--cargo-profile", "release-test", *names]
+        code, out = run(argv, env, log)
+        if code == 0:
+            return None
+        counted = milestones.tally(out)
+        if counted is None:
+            return f"the release tests (half {part}) don't run: {first_error(out)}"
+        total, passed = counted
+        return f"{total - passed} of {total} release tests are red (half {part})"
+
+    return step
 
 
 def gating(profile, part=None):

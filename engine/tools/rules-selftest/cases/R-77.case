@@ -48,6 +48,22 @@ fn planted_red() {
 --- run
 tools/check step gating-release
 
+# the second half of the workspace's default targets in the release profile (2026-11-19):
+# b_planted sorts after --lib, --bin=tally and ask_cases, so `test-release-2` (CI's
+# `release-tests-2`) runs it
+case: default-target-red-release-2
+tool: run
+expect: FAIL test-release-2: 1 of
+--- write crates/tally/tests/b_planted.rs
+//! Planted: a red default test target that sorts into the second half.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step test-release-2
+
 # the second half of the release-profile gating targets (2026-11-19): a red target that sorts
 # into it fails `gating-release-2`, CI's `release-gating-2` job
 case: gating-milestone-red-release-2

@@ -586,7 +586,7 @@ BASH = [
 
 
 # the Engine workflow's jobs that make up check full (R-77, 2026-11-13), each with a job id
-ENGINE_GROUPS = ["lint", "dev-gating", "dev-tests", "release-tests", "release-gating", "release-gating-2", "release-binary", "fuzz",
+ENGINE_GROUPS = ["lint", "dev-gating", "dev-tests", "release-tests", "release-tests-2", "release-gating", "release-gating-2", "release-binary", "fuzz",
                  "rules-selftest-1", "rules-selftest-2", "rules-selftest-3", "rules-selftest-4"]
 ENGINE_STEPS = {"check groups": "engine/tools/check groups",
                 **{f"check {g}": f"engine/tools/check group {g}" for g in ENGINE_GROUPS},
