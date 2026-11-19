@@ -5160,3 +5160,58 @@ On `build/m3` from 3a6c26e1 (turn 2 merged with rules step 5, 53dfdd1e: the benc
 - **Usage:** about 0.2 % of the week this turn (`engine/tools/usage`, 1.52 % over the session), against a budget of 0.6 %.
 - **Next:** G3's review of this turn; then T's kills and gate 8 on 15b59db7.
 - **Checks:** `check quick: green, 11 steps (93s)`; `check commit: green, 23 steps (125s)`, exit 0, at ea83d892's tree (this commit adds the log alone).
+
+## 2026-11-19 M3 G3 `last`, turn 4: #235, a cycle's points, the survivors' rows (issue #226)
+
+On `build/m3` from 863a23ae (turn 3 merged with T's C5), two commits and this one.
+- **What changed, by commit:**
+  - **0147de54, #235 (P28):** a move's key whose domain, `on` or span reads a law-dated fact while the move's `at` reads that key or a later one is refused at load, `LOAD-LAWDATE` (L §4.3: whatever reads a law-dated fact states its law date). Before, each such value was `ENGINE-INVARIANT` at run.
+    - T's probe `engine/tests/out/p-c5/lawdate_binding.tally` gives `refused: LOAD-LAWDATE move back's key a reads law-dated act_day with no law date: its at reads a (lawdate_binding.tally:50)`. Refcore still answers `REFCORE-NOT-YET` at run; T holds the vector for #235.
+    - The same text with `act_day` governing `always` loads and runs as refcore does (`load_cases.rs`, `a_key_read_before_the_move_s_at_reads_nothing_law_dated`, with its dated twin).
+    - The check is `load/lawdates.rs` `unbound_key_lawdate`. It reads a key's range ends and step, its `on` and its span. Its `where` stays out: STOP-REPORT C below.
+  - **7c11bc98, `fixes/cycle-when` (P29):** an unordered cycle's instances run at points after the act's own, as refcore does.
+    - **The reading:** E §4.2 step 3 and L §5.14.2 order a cycle's act before its instances, each read at its own walk point. Refcore's `run_group` keys the act by the first move and each instance `first|seq|move` after it. The engine's own `run_cycle` doc says the same ("each at its own point after the act's"), but it gave the act and its first instance one point (`n = seq`, the act's `n` being 0).
+    - Now an instance's point is `n = seq + 1` (`walk/point.rs` `cycle_instance`, `cycle_seq`). `explain` prints the instance's point with `seq` (`ask/instance.rs` `point_text`).
+    - `explain` of a walk-bound def now shows refcore's 3 cells and the first instance's "read at its walk point" line. `m3_fixes_review` is green.
+- **`MUTANTS-SURVIVORS.md`:** 13 rows added, 2 rejected, from T's sort (`tmp/m3/t-equivalent.md` § A2, § B2) and the two that asked my word.
+  - **Added, `R-87: equivalent:` (2):**
+    - `walk/flows.rs` `flows_place`'s guard `sums.totals.len() == 1` → `true`. T's reason is corrected: `totals` holds more than one unit only at a place of unit `any`, an outside place, and the filter after it (`pu != any`) sends that place to the plain hole either way.
+    - `book/same.rs` `and_list`'s guard `!rest.is_empty()` → `true`: every caller names two or more.
+  - **Added, `R-87: missed:` (11):**
+    - § B2's 10, a joint model's `same` (M5c): `same_ends`, `same_wait_for` ×3, `decision_books` → `Ok(false)` and `same_release` ×2 in `book/same_booking.rs`; `planned_by_id` ×3 in `book/members.rs`. A few reasons are spelled out where T's said only "as same_ends".
+    - `book/same.rs` `stated_same` → `Ok(true)`: no printed line differs. A movement no `same` line names gets `[Written, Written]` from `same_ends`, and its mask is unchanged. Only an observation whose amount is a hole, and whose version covers neither end, returns before `book_leg_ends`. That changes the counters build's leg count alone, as the `walk/fork.rs` rows do.
+  - **Rejected (2):** `book/ledger.rs` `Of::counts` (delete `!`; → `true`).
+    - T's premise, that every place holds one unit, doesn't hold for an outside place (unit `any`): `residuals world …` builds one ledger per unit, with `only = true`.
+    - Kill text: `tmp/m3/g3/t4/any/counts.tally`, two legs to `world`, one in PLN and one in EUR. Both engines print a `ledger EUR:` and a `ledger PLN:`, each with its own leg. Not proven with `mutants-local`.
+  - **`priced_position` (`walk/value.rs`), killable, texts for T:**
+    - `||` → `&&`: `tmp/m3/g3/t4/any/priced_any.tally`, an outside place priced per etf that holds etf and bond.
+    - `&&` → `||`: `tmp/m3/g3/t4/any/priced_kind.tally`, the price input keyed by a kind.
+    - Both engines print `v_market: refused: RUN-DOMAIN value(market) in PLN: market is priced in PLN/etf, not PLN/bond`. Not proven with `mutants-local`.
+- **The sweep:** 118 runs against refcore (`tmp/m3/g3/sweep-t4.sh`): turn 3's 103 and this turn's 15 (`g3/t4`).
+  - Turn 3's 103 are unchanged: 72 the same, 31 different, all known (`compare.py` against `t3-stepc.txt`).
+  - Of the 15 new runs, 12 are the same, among them `cycle_when` with its `explain` asks, `counts`, `priced_any` and `priced_kind`.
+  - 3 differ:
+    - `lawdate_binding` and `key_on_dated`: `LOAD-LAWDATE` against refcore's `REFCORE-NOT-YET`, as #235 rules.
+    - `where_dated`: STOP-REPORT C.
+- **Size** (`engine/crates`, 863a23ae to this commit): 5 files, 173 in, 7 out. Of those, the library is 110 in and 7 out; the tests are 63 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** C, below.
+- **Usage:** about 0.55 % of the week this turn (`engine/tools/usage`, 2.08 % over the session), against a budget of 0.8 %.
+- **Next:** the ruling on C; G3's review of this turn; gate 8 on 15b59db7.
+- **Checks:** `check quick: green, 11 steps (16s)`; `check commit: green, 23 steps (127s)`, exit 0, at 7c11bc98's tree with the survivors' rows. The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## STOP-REPORT 2026-11-19: a key's `where` that reads a law-dated fact, when the move's `at` reads that key
+
+- **Kind:** other (the spec is clear, and both engines differ from it)
+- **Where:** `crates/tally/src/walk/tuples.rs:166-184` (`move_law`: no law date while the `at` reads a key not yet bound, the binding's own key included; `move_tuples` reads a binding's `where` at that law date). Refcore: `moves.py` `move_tuples`, `move_law`. The probe is `tmp/m3/g3/t4/where_dated.tally`: T's `lawdate_binding` with `move back[a in adjustments over .. where a.adjusts in rents and act_day > back_day]` and `at a.day`.
+- **Rule or gate:** E §4.1 step 1: "Each binding's `where` is read for its tuple at the move's `at`". L §4.3: "A key binding's `where` … is read for each tuple at the law date the item is read at there, … a move's `at`".
+- **What happens:** `tally run where_dated.tally` exits 0 and prints `q_bal (d = 2026-04-30): (refused: ENGINE-INVARIANT unreachable: load refuses a dated read with no law date (LOAD-LAWDATE), 790.00 PLN)`. `q_early` and `q_flows` print the same. Refcore prints `refused: REFCORE-NOT-YET a read of act_day read with no law date, which L §4.3 refuses at load (LOAD-LAWDATE): an interpreter guard`. #235's crash class remains open through the `where`.
+  - By the two lines above, the `at` is `a.day` for the tuple (a), so the `where` reads `act_day` and `back_day` at the adjustment's day. `back` then has no instance (2026-04-05 > 2026-04-20 is false).
+  - Both engines read a binding's `where` at the law date of the keys bound before it, as they read its domain, so here it gets none.
+- **What I tried:** no code.
+  - Refusing it at load means adding the `where` to #235's check (`load/lawdates.rs` `bind_exprs`, one line). That contradicts the two spec lines.
+  - Reading the `where` at its tuple's `at` needs a law date per member in `walk/tuples.rs`, and in refcore's `move_tuples`. The window case (`members_over_law`) would then compare law-date classes per member. That is a design change beyond this turn's brief and budget.
+- **What I ask:** a ruling, one of:
+  - (a) the spec stands: a key's `where` is read at its tuple's `at`. The builder builds it, refcore follows at the round, and T holds a vector for the new issue.
+  - (b) the spec changes so that load refuses such a key as #235's (`LOAD-LAWDATE`), and the `where` joins `bind_exprs`.
+- **State:** 7c11bc98, green. The survivors' rows and this log are committed together.
