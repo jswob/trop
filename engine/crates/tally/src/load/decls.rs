@@ -315,6 +315,7 @@ impl Loader {
             read_targets: Vec::new(),
             changes: Vec::new(),
             self_reads: false,
+            dated_wheres: Vec::new(),
             decl: decl.clone(),
         };
         self.m.moves.push(&mut self.m.symbols, &decl.id, info)?;

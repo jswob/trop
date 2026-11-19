@@ -183,8 +183,8 @@ pub mod eval {
     mod windows;
     mod years;
 
-    pub(crate) use aggregate::Decided;
     pub use aggregate::Member;
+    pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
     pub use context::Layer;

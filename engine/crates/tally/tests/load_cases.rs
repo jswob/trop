@@ -5114,4 +5114,66 @@ ask q: bal(konto, 2026-04-30) law cut
             "act_day law-dated; refcore meets it at run (REFCORE-NOT-YET), #235"
         );
     }
+
+    /// The lines a run of `text` prints, every ask, but its warnings.
+    fn answered(text: &str) -> Vec<String> {
+        let given = vec![tally::Given {
+            path: "a.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = tally::Request::new(tally::Asks::Every);
+        let answer = tally::run(tally::Files::new(given), &request).expect("an answer");
+        answer
+            .lines()
+            .iter()
+            .filter(|line| !line.starts_with("warning:"))
+            .cloned()
+            .collect()
+    }
+
+    /// A key's `where` that reads law-dated `act_day` and `back_day` while the `at` reads the
+    /// key itself, or a key bound after it: read at its tuple's `at`, so it answers as the
+    /// same text whose `where` gives that value with no law date (P30, #235; L §4.3, E §4.1
+    /// step 1). Before, each read was `ENGINE-INVARIANT`.
+    #[test]
+    fn a_key_s_where_reads_law_dated_facts_at_its_tuple_s_at() {
+        let dated = KEY_ON
+            .replace("  governs always\n", "  governs 2026..\n")
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\ninput back_day: date\n",
+            )
+            .replace(
+                "  act_day = 2026-04-05\n",
+                "  act_day = 2026-04-05\n  back_day = 2026-04-20\n",
+            )
+            .replace("on act_day where", "over .. where");
+        let kept = dated.replace(
+            "a.adjusts in rents]",
+            "a.adjusts in rents and act_day < back_day]",
+        );
+        let dropped = dated.replace(
+            "a.adjusts in rents]",
+            "a.adjusts in rents and act_day > back_day]",
+        );
+        let later = dated.replace(
+            "back[a in adjustments over .. where a.adjusts in rents]",
+            "back[p in accounts over .. where act_day < back_day, a in adjustments over .. where a.adjusts in rents]",
+        );
+        let none = dated.replace(
+            "a.adjusts in rents]",
+            "a.adjusts in rents and a.adjusts in transfers]",
+        );
+        let reality = load_one(&kept).expect("loads");
+        let back = reality.moves.get("back").expect("back");
+        assert_eq!(back.dated_wheres, vec![0], "the where reads act_day");
+        assert_eq!(answered(&kept), answered(&dated), "the where holds");
+        assert_eq!(answered(&dropped), answered(&none), "the where fails");
+        let twin = dated.replace("back[a in", "back[p in accounts over .., a in");
+        assert_eq!(
+            answered(&later),
+            answered(&twin),
+            "the at reads a later key"
+        );
+    }
 }

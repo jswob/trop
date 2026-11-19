@@ -514,9 +514,7 @@ fn unbound_key_lawdate(
         };
         let read = bind_exprs(&bind.node)
             .into_iter()
-            .filter_map(crate::eval::names_in)
-            .flatten()
-            .find(|name| name_dated(m, at, dated, name));
+            .find_map(|e| dated_read(m, at, dated, e));
         if let Some(read) = read {
             return Some(format!(
                 "move {}'s key {} reads law-dated {read} with no law date: its at reads {}",
@@ -541,6 +539,51 @@ fn bind_exprs(bind: &crate::syntax::Bind) -> Vec<&Expr> {
         out.extend(span.from.iter().chain(span.to.iter()));
     }
     out
+}
+
+/// Each move's keys whose `where` reads a law-dated fact, by position (`MoveInfo`'s
+/// `dated_wheres`): the walk reads each at its tuple's `at`, once the keys the `at` reads are
+/// bound (P30). L §4.3 (a key binding's `where` is read for each tuple at a move's `at`),
+/// E §4.1 step 1.
+pub(super) fn dated_wheres(
+    m: &Reality,
+    walked: &Walked,
+    dated: &LawDated,
+) -> Vec<(String, Vec<usize>)> {
+    let at = &walked.at_reads;
+    let mut out = Vec::new();
+    for (id, mv) in m.moves.entries() {
+        let found: Vec<usize> = mv
+            .binds
+            .iter()
+            .enumerate()
+            .filter(|(_, bind)| {
+                bind.node
+                    .filter
+                    .as_ref()
+                    .is_some_and(|e| dated_read(m, at, dated, e).is_some())
+            })
+            .map(|(i, _)| i)
+            .collect();
+        if !found.is_empty() {
+            out.push((id.clone(), found));
+        }
+    }
+    out
+}
+
+/// The first law-dated input, band or def expression `e` names, its parts walked whole. L §4.3.
+fn dated_read(m: &Reality, at: &AtReads, dated: &LawDated, e: &Expr) -> Option<String> {
+    let mut work = vec![e];
+    while let Some(x) = work.pop() {
+        if let Expr::Name(name) = x
+            && name_dated(m, at, dated, name)
+        {
+            return Some(name.clone());
+        }
+        work.extend(all_children(x));
+    }
+    None
 }
 
 /// Whether a name read with no law date is a law-dated input, band or def. L §4.3.
