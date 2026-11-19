@@ -12,7 +12,8 @@
 //! Invariants: every member of a model is found, then every one pinned, in use order, before
 //! any loads; a member that is a joint model is a frame of a worklist, never a recursion
 //! (R-16); a member's refusal names its aliases from the run's model down; the files given are
-//! looked up before the disk's.
+//! looked up before the disk's; each member loaded alone is kept, with its files, for its asks
+//! (`a.q`), held by its joint model's reality once load ends, so no world's load copies it.
 
 use super::check::invariant;
 use super::merge::{Member, merge};
@@ -21,7 +22,7 @@ use super::worlds::{Loaded, Split, declared_asks, load_split};
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Refusal};
 use crate::eval::How;
-use crate::model::{Joint, MemberAsks, NameKind, Reality};
+use crate::model::{Joint, MemberAlone, MemberAsks, NameKind, Reality};
 use crate::syntax::{Line, Stop, parse_split, printed_hash, reprint, split_lines};
 use core::ops::Bound;
 use std::collections::{BTreeMap, BTreeSet};
@@ -65,12 +66,16 @@ struct Frame {
     worlds: BTreeSet<String>,
     /// The asks a member's scenario files declare.
     scenario_asks: BTreeSet<String>,
+    /// A member's own files, its scenario files included; none for the run's own.
+    member_files: Vec<Source>,
     /// Each member's files, in use order (taken as each loads).
     files: Vec<(String, Vec<MemberFile>)>,
     /// The members loaded alone so far, in use order.
     done: Vec<Member>,
     /// What a run may ask of each member loaded.
     asks: BTreeMap<String, MemberAsks>,
+    /// Each member loaded, as its asks are answered.
+    alone: BTreeMap<String, MemberAlone>,
 }
 
 /// What every frame of a run looks members up in before the disk: the files given, and the
@@ -86,8 +91,8 @@ struct Pool {
 
 /// A member's next step: loaded alone, or a joint model whose own members load first.
 enum Next {
-    /// Loaded alone, with its asks.
-    Alone(Member, MemberAsks),
+    /// Loaded alone, with its asks, and as they are answered.
+    Alone(Member, MemberAsks, Box<MemberAlone>),
     /// A joint model: its frame.
     Nested(Box<Frame>),
 }
@@ -213,8 +218,9 @@ pub(super) fn load_joint(
             chain.push(alias.clone());
             let found = core::mem::take(found);
             match member(alias.clone(), &found, chain, &pool, disk)? {
-                Next::Alone(done, asks) => {
+                Next::Alone(done, asks, alone) => {
                     top.asks.insert(done.alias.clone(), asks);
+                    top.alone.insert(done.alias.clone(), *alone);
                     top.done.push(done);
                 }
                 Next::Nested(frame) => stack.push(*frame),
@@ -226,14 +232,20 @@ pub(super) fn load_joint(
         };
         let merged =
             merge(&frame.jfile, &frame.own, frame.done).map_err(|s| tagged(s, &frame.chain))?;
+        // the members alone are held once load ends, so no world's load copies them
         let joint = Joint {
             members: frame.asks,
+            alone: BTreeMap::new(),
         };
         let Some(parent) = stack.last_mut() else {
-            return finish(files, merged.files, (&joint, how)).map_err(|s| tagged(s, &[]));
+            let mut loaded =
+                finish(files, merged.files, (&joint, how)).map_err(|s| tagged(s, &[]))?;
+            hold_alone(base_of(&mut loaded), frame.alone)?;
+            return Ok(loaded);
         };
-        let reality = load_lines(&merged.files, &frame.worlds, Some(&joint), how)
+        let mut reality = load_lines(&merged.files, &frame.worlds, Some(&joint), how)
             .map_err(|s| tagged(s, &frame.chain))?;
+        hold_alone(&mut reality, frame.alone)?;
         let alias = frame
             .chain
             .last()
@@ -247,6 +259,14 @@ pub(super) fn load_joint(
                 asks,
                 named: asks_named(&reality),
                 members: joint.members,
+            },
+        );
+        parent.alone.insert(
+            alias.clone(),
+            MemberAlone {
+                reality,
+                files: frame.member_files,
+                worlds: frame.worlds,
             },
         );
         parent.done.push(Member {
@@ -333,10 +353,46 @@ fn frame(chain: Vec<String>, jfile: String, own: Vec<Source>) -> Frame {
         own,
         worlds: BTreeSet::new(),
         scenario_asks: BTreeSet::new(),
+        member_files: Vec::new(),
         files: Vec::new(),
         done: Vec::new(),
         asks: BTreeMap::new(),
+        alone: BTreeMap::new(),
     }
+}
+
+/// The base reality of a run's load: the one reality, or the worlds' base.
+fn base_of(loaded: &mut Loaded) -> &mut Reality {
+    match loaded {
+        Loaded::One(m) => m,
+        Loaded::Worlds(w) => &mut w.base,
+    }
+}
+
+/// A joint model's reality holding its members loaded alone, as its members' asks are
+/// answered (L §6.1).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a reality loaded without its members.
+fn hold_alone(m: &mut Reality, alone: BTreeMap<String, MemberAlone>) -> Result<(), Stop> {
+    let joint = m
+        .joint
+        .as_mut()
+        .ok_or_else(|| invariant("a joint model loaded without its members".to_owned()))?;
+    joint.alone = alone;
+    Ok(())
+}
+
+/// A member's files as a run is given them, its path as the run named it and its text.
+fn sources(files: &[MemberFile]) -> Vec<Source> {
+    files
+        .iter()
+        .map(|f| Source {
+            path: f.path.clone(),
+            text: f.text.clone(),
+        })
+        .collect()
 }
 
 /// A joint model's frame with its members found and pinned (refcore's `joint_texts`, before
@@ -400,11 +456,13 @@ fn member(
         let mut nested = nested_frame(&base, model, chain, pool, disk)?;
         nested.worlds = worlds;
         nested.scenario_asks = scenario_asks;
+        nested.member_files = sources(files);
         return Ok(Next::Nested(Box::new(nested)));
     }
     let reality = alone(&base, &worlds, pool.how).map_err(|s| tagged(s, &chain))?;
     let mut asks = ask_ids(&reality);
     asks.extend(scenario_asks);
+    let named = asks_named(&reality);
     let mut lines = Vec::with_capacity(base.len());
     for file in &base {
         let split =
@@ -422,9 +480,14 @@ fn member(
         done,
         MemberAsks {
             asks,
-            named: asks_named(&reality),
+            named,
             members: BTreeMap::new(),
         },
+        Box::new(MemberAlone {
+            reality,
+            files: sources(files),
+            worlds,
+        }),
     ))
 }
 

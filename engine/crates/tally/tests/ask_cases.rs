@@ -1012,4 +1012,166 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
             "the last line is the hole alone"
         );
     }
+
+    /// A member that is a directory: its base, a scenario `s1` that loads and one that doesn't.
+    const MEMBER_A: [(&str, &str); 3] = [
+        (
+            "a.tally",
+            "model ana\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput pay: money PLN\n\ninput spare: num\n\ndef twice: money PLN = pay + pay at reader\n\nask q: twice law 2026-03-01\n\nask qin: twice in s1 law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  pay = 4 000.00 PLN \"the card\"\n",
+        ),
+        (
+            "bad.tally",
+            "scenario bad over ana\n  tally 2\n  from 2026-01-01\n\ndef broken: money PLN = nothing_here + pay\n\nask q_bad: broken\n",
+        ),
+        (
+            "s1.tally",
+            "scenario s1 over ana\n  tally 2\n  from 2026-01-01\n\nversion raise\n  cite card\n  governs 2026-01-01..\n  known 2026-01-02\n  replace pay = 5 000.00 PLN \"a raise\"\n\nask q_s: twice in s1 law 2026-03-01\n",
+        ),
+    ];
+
+    /// The member of a member: a directory with a scenario `sb` that loads and one that doesn't.
+    const MEMBER_B: [(&str, &str); 3] = [
+        (
+            "b.tally",
+            "model bob\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"b card\"\n\nunit PLN: currency minor 0.01\n\ninput pay: money PLN\n\ndef twice: money PLN = pay + pay at reader\n\nask q: twice law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  pay = 3 000.00 PLN \"the card\"\n",
+        ),
+        (
+            "bbad.tally",
+            "scenario bbad over bob\n  tally 2\n  from 2026-01-01\n\ndef broken: money PLN = nothing_here + pay\n",
+        ),
+        (
+            "sb.tally",
+            "scenario sb over bob\n  tally 2\n  from 2026-01-01\n\nversion lower\n  cite card\n  governs 2026-01-01..\n  known 2026-01-02\n  replace pay = 2 000.00 PLN \"a cut\"\n\nask q_sb: twice in sb law 2026-03-01\n",
+        ),
+    ];
+
+    /// A joint model's header over its `use` lines, and its own ask.
+    fn joint(id: &str, uses: &str, ask: &str) -> String {
+        format!(
+            "model {id}\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n{uses}\n{ask} law 2026-03-01\n"
+        )
+    }
+
+    /// A file given by its path.
+    fn file(path: &str, text: &str) -> Given {
+        Given {
+            path: path.to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }
+    }
+
+    /// The pin of a member's files, by their paths in its tree: the hash `reprint` prints, the
+    /// files of `disk` where its members are found.
+    fn pin(files: &[(String, String)], disk: &[(String, String)]) -> String {
+        let given = files
+            .iter()
+            .map(|(path, text)| (file(path, text), path.clone()))
+            .collect();
+        let disk: std::collections::BTreeMap<&str, &[u8]> = disk
+            .iter()
+            .map(|(path, text)| (path.as_str(), text.as_bytes()))
+            .collect();
+        let printed = tally::reprint_in(given, &disk).map(|a| a.lines().to_vec());
+        let last = printed.ok().and_then(|lines| lines.last().cloned());
+        last.and_then(|line| line.strip_prefix("sha256 ").map(str::to_owned))
+            .unwrap_or_else(|| "no hash printed".to_owned())
+    }
+
+    /// A run's lines, `None` for not implemented.
+    fn member_run(given: &[Given], ids: &[&str]) -> Option<Vec<String>> {
+        let asks = Asks::Named(ids.iter().map(|id| (*id).to_owned()).collect());
+        let files = tally::Files::new(given.to_vec());
+        let answer = tally::run_with_how(files, &Request::new(asks), tally::ask::How::FENCES);
+        answer.ok().map(|a| a.lines().to_vec())
+    }
+
+    /// A member's ask at run, `a.q`, is answered by the member alone, under its prefix: a
+    /// base ask naming no scenario of the member in the member's own world; an ask of a
+    /// member's scenario file, or a base ask naming one, by a run of the member with all its
+    /// files, whose refused scenarios and warnings print with it; a member of a member as
+    /// `m.b.q`. Expected lines are refcore's (`member_ask`, `member_alone`) on `tmp/m3/g3/p18`,
+    /// but a nested member's refused scenario: refcore prints `m.scenario b.bbad: …` level by
+    /// level, the spec's line is `scenario m.b.bbad: …` under the member's whole prefix. A
+    /// joint member's own ask is M5c's. L §6.1, §6.4; OPERATIONS §2.1; pick P18.
+    #[test]
+    fn a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix() {
+        let under = |dir: &str, member: &[(&str, &str)]| -> Vec<(String, String)> {
+            member
+                .iter()
+                .map(|(path, text)| (format!("{dir}{path}"), (*text).to_owned()))
+                .collect()
+        };
+        let a_pin = pin(&under("", &MEMBER_A), &[]);
+        let b_pin = pin(&under("", &MEMBER_B), &[]);
+        let mid = joint(
+            "mid",
+            &format!("  use b = \"b\" sha256 \"{b_pin}\""),
+            "ask qm: b.twice",
+        );
+        let mut disk = vec![("mid.tally".to_owned(), mid.clone())];
+        disk.extend(under("b/", &MEMBER_B));
+        let m_pin = pin(&[("mid.tally".to_owned(), mid.clone())], &disk);
+        let use_a = format!("  use a = \"a\" sha256 \"{a_pin}\"");
+        let mut given = vec![file("j.tally", &joint("fam", &use_a, "ask x: a.twice"))];
+        for (path, text) in MEMBER_A {
+            given.push(file(&format!("a/{path}"), text));
+        }
+        assert_eq!(
+            member_run(&given, &["a.q", "a.q_s", "a.qin"]),
+            Some(
+                [
+                    "a.q: 8 000.00 PLN",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                    "scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (a/bad.tally:5)",
+                    "a.q_s: 10 000.00 PLN",
+                    "  world: s1",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                    "warning: WARN-UNREAD input spare is read by nothing",
+                    "scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (a/bad.tally:5)",
+                    "a.qin: 10 000.00 PLN",
+                    "  world: s1",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                    "warning: WARN-UNREAD input spare is read by nothing",
+                ]
+                .map(str::to_owned)
+                .to_vec()
+            ),
+            "a member's base ask, its scenario's, its base ask naming its scenario"
+        );
+        let uses = format!("  use m = \"n/mid.tally\" sha256 \"{m_pin}\"\n{use_a}");
+        let mut nested = vec![
+            file("top.tally", &joint("top", &uses, "ask t: a.twice")),
+            file("n/mid.tally", &mid),
+        ];
+        nested.extend(given.iter().skip(1).cloned());
+        for (path, text) in MEMBER_B {
+            nested.push(file(&format!("n/b/{path}"), text));
+        }
+        assert_eq!(
+            member_run(&nested, &["m.b.q", "m.b.q_sb"]),
+            Some(
+                [
+                    "m.b.q: 6 000.00 PLN",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                    "scenario m.b.bbad: refused: LOAD-UNIT keylit and money PLN in arithmetic (n/b/bbad.tally:5)",
+                    "m.b.q_sb: 4 000.00 PLN",
+                    "  world: sb",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                ]
+                .map(str::to_owned)
+                .to_vec()
+            ),
+            "a member's member's base ask and its scenario's"
+        );
+        assert_eq!(
+            member_run(&nested, &["m.qm"]),
+            None,
+            "a joint member's own ask"
+        );
+        assert_eq!(
+            member_run(&nested, &["m.nope"]),
+            Some(vec!["refused: REQ-ASK no ask m.nope".to_owned()]),
+            "an ask no member has"
+        );
+    }
 }

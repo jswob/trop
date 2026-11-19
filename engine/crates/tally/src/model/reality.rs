@@ -202,11 +202,30 @@ pub struct Reality {
 }
 
 /// What a run knows of a joint model's members: each by its alias, the asks it may be asked
-/// as `a.q` (refcore's `joint_members`, read by `knows_ask`). L §6.1; E §11.
+/// as `a.q` (refcore's `joint_members`, read by `knows_ask`), and each loaded alone, which
+/// answers them. L §6.1; E §11.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Joint {
     /// Each member by its alias.
     pub members: BTreeMap<String, MemberAsks>,
+    /// Each member loaded alone, by its alias: held by the run's base and by a member that is
+    /// itself a joint model, once load ends; a scenario's world holds none, since a member's
+    /// ask is answered by the member alone, never in a world of the joint model's.
+    pub alone: BTreeMap<String, MemberAlone>,
+}
+
+/// A member as its asks are answered, by the member alone (refcore's `joint_members`' entry,
+/// with its `member_all` and `member_worlds`). L §6.1, §6.4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemberAlone {
+    /// Its base, the files that are no scenario's, loaded alone among its scenarios; a member
+    /// that is a joint model holds its own members in its `joint`.
+    pub reality: Reality,
+    /// Its own files, its scenario files included, each as the run named it: what a run of
+    /// the member alone is given (E §3.1 step 1).
+    pub files: Vec<crate::api::Source>,
+    /// The scenarios its files declare.
+    pub worlds: BTreeSet<String>,
 }
 
 /// A member's asks: its own (those its base answers, and those its scenario files declare),
