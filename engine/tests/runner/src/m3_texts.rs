@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 87] = [
+pub static TEXTS: [(&str, &str); 89] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -228,6 +228,14 @@ pub static TEXTS: [(&str, &str); 87] = [
     (
         "m3/fixes/a4/cycle_when.tally",
         include_str!("../../m3/fixes/a4/cycle_when.tally"),
+    ),
+    (
+        "m3/fixes/b192/parked_prefix.tally",
+        include_str!("../../m3/fixes/b192/parked_prefix.tally"),
+    ),
+    (
+        "m3/fixes/b192/solve.tally",
+        include_str!("../../m3/fixes/b192/solve.tally"),
     ),
     (
         "m3/fixes/g3/j/c.tally",

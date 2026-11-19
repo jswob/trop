@@ -1958,3 +1958,12 @@ fixes/gate8/m3_window_flows	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_f
 fixes/gate8/m3_two_readers	fixes-gate8		engine/tests/m1/fixes/gate8/m3_two_readers	engine/tests/m1/fixes/gate8/m3_two_readers/base.tally			-
 fixes/gate8/m3_ledger_days	fixes-gate8		engine/tests/m1/fixes/gate8/m3_ledger_days	engine/tests/m1/fixes/gate8/m3_ledger_days/base.tally			-
 fixes/gate8/m3_window_end	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_end	engine/tests/m1/fixes/gate8/m3_window_end/base.tally			-
+fixes/gate8/m3_g3_counts	fixes-gate8		engine/tests/m1/fixes/gate8/m3_g3_counts	engine/tests/m1/fixes/gate8/m3_g3_counts/base.tally			-
+fixes/gate8/m3_g3_a3	fixes-gate8		engine/tests/m1/fixes/gate8/m3_g3_a3	engine/tests/m1/fixes/gate8/m3_g3_a3/base.tally			-
+fixes/gate8/m3_g3_priced_any	fixes-gate8		engine/tests/m1/fixes/gate8/m3_g3_priced_any	engine/tests/m1/fixes/gate8/m3_g3_priced_any/base.tally			-
+fixes/gate8/m3_g3_priced_kind	fixes-gate8		engine/tests/m1/fixes/gate8/m3_g3_priced_kind	engine/tests/m1/fixes/gate8/m3_g3_priced_kind/base.tally			-
+fixes/gate8/m3_g3_tie	fixes-gate8		engine/tests/m1/fixes/gate8/m3_g3_tie	engine/tests/m1/fixes/gate8/m3_g3_tie/base.tally			-
+fixes/gate8/m3_just_before	fixes-gate8		engine/tests/m1/fixes/gate8/m3_just_before	engine/tests/m1/fixes/gate8/m3_just_before/base.tally			-
+fixes/gate8/m3_window_class	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_class	engine/tests/m1/fixes/gate8/m3_window_class/base.tally			-
+fixes/gate8/m3_left_out	fixes-gate8		engine/tests/m1/fixes/gate8/m3_left_out	engine/tests/m1/fixes/gate8/m3_left_out/base.tally			-
+fixes/gate8/m3_less_cov	fixes-gate8		engine/tests/m1/fixes/gate8/m3_less_cov	engine/tests/m1/fixes/gate8/m3_less_cov/base.tally			-

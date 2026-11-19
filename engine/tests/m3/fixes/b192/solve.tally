@@ -1,0 +1,40 @@
+model sr
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C6, #192's G1 N-c (L §5.18 solve): the bracket's literals and step take the unknown's type, a rate (%/year) and a num with a unit (num PLN); each on a fine grid and a coarse one, where the nearest grid point is not the root (157.14 PLN against 158 PLN on lo + 7 PLN i from -10 PLN)"
+
+source card "T's card (invented)"
+
+unit PLN: currency minor 0.01
+
+input base: money PLN
+
+input rate: rate
+
+input price: num PLN
+
+input qty: num
+
+input target: money PLN
+
+def grown: money PLN = round(base * (1 + rate * 1 year), minor(PLN), half-up)
+
+def cost: money PLN = round(qty * price, minor(PLN), half-up)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  base = 1 000.00 PLN
+  rate = 3 %/year
+  price = 2.5 PLN
+  qty = 7
+  target = 1 100.00 PLN
+
+ask g: grown, cost
+ask s_rate: solve grown == target for rate in [0 %/year, 20 %/year] to 0.0001 %/year
+ask s_rate_coarse: solve grown == target for rate in [0 %/year, 20 %/year] to 0.4 %/year
+ask s_price: solve cost == target for price in [0 PLN, 1 000 PLN] to 0.01 PLN
+ask s_price_coarse: solve cost == target for price in [-10 PLN, 403 PLN] to 7 PLN

@@ -24,5 +24,6 @@ run here; `ledger.json` is copied byte for byte from the prototype's `model/` fo
   IKE first and OKI, the ETF units, OKI's tax, net worth, FIRE), `business.tally` (block 05's side business),
   `returns.tally` (the yearly PIT-37 returns, each spouse alone by L-26) and `joint.tally`, its twin with the
   prototype's joint return. A header per horizon: `to2028.tally` and `to2031.tally` are stored
-  (`goldens/r7_*`); `to2036.tally`, `to2050.tally` (with `raise.tally`, G6) and `to2056.tally` (with
+  (`goldens/r7_*`); `to2032.tally`, the longest horizon under refcore's cap (M3 C6, #114: refcore and the engine
+  alike on it, run by hand, not stored); `to2036.tally`, `to2050.tally` (with `raise.tally`, G6) and `to2056.tally` (with
   `infl5.tally`, G10) pass refcore's 8 GB cap and wait for the user's ruling (P2, `GOLDENS.md`).

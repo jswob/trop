@@ -1,0 +1,32 @@
+model tie
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+input rent: money PLN
+
+version a
+  cite s
+  governs 2026-01..
+  known 2026-01-01
+  rent = 100.00 PLN
+
+version b
+  cite s
+  governs 2026-07..
+  known 2026-01-01
+  rent = 200.00 PLN
+
+version shorten
+  cite s
+  known 2026-02-01
+  moves a to 2026-01..2026-06
+
+ask now: rent law 2026-08-01
+
+ask early: rent law 2026-08-01 as known 2026-01-15

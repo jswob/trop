@@ -1,0 +1,74 @@
+model wc
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C6, gate 8's walk/plan.rs class_depends and walk/ends.rs window_hole_ends (E §4.1 steps 2-3, L §4.4; tally 2.1.8 item 77): a plan dated by a window that starts on the run's first day (no day before the start: its class doesn't depend on it), one dated by a window every day of which a statement covers (modelled past, not a hole), and one into a place whose life starts inside its window (its lifespan test both ways: the window's hole at both ends)"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place newacc: accounts PLN lives 2026-02-05..
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input first_day: date
+
+input covered_day: date
+
+input new_day: date
+
+input amt: money PLN
+
+move first_gift: transfers
+  on first_day
+  leg cash from world to konto2 amount amt
+
+move covered_pay: transfers
+  on covered_day
+  leg cash from konto to world amount amt
+
+move new_gift: transfers
+  on new_day
+  leg cash from world to newacc amount amt
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  first_day = window(2026-01-01, 2026-01-10) "some day in the run's first ten days"
+  covered_day = window(2026-02-03, 2026-02-08) "some day in early February"
+  new_day = window(2026-02-01, 2026-02-10) "some day early in February"
+  amt = 50.00 PLN "the amount"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[konto2] = 100.00 PLN at 2026-01-01 start
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  anchor konto
+  bank[b20260205] = (on: 2026-02-05, kind: transfers, leg cash from konto to world amount 55.00 PLN, fulfils: covered_pay) "the payment, five more"
+  stated[konto] = 945.00 PLN at 2026-02-28 end "the month's closing balance"
+
+ask q_first: bal(konto2, d) for d in [2026-01-05, 2026-01-10, 2026-01-31] law cut
+
+ask q_covered: bal(konto, d) for d in [2026-02-04, 2026-02-28] law cut
+
+ask q_new: bal(newacc, d) for d in [2026-02-07, 2026-02-10, 2026-02-28] law cut
+
+ask q_res: residuals konto 2026-02 law cut
+
+ask x_first: explain first_gift
+
+ask x_covered: explain covered_pay
+
+ask x_new: explain new_gift
