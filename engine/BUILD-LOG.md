@@ -5005,3 +5005,53 @@ On `build/m3` from ac551ad8, four commits and this one. The brief is G3 of `tmp/
 - **Usage:** about 0.52 % of the week (`engine/tools/usage`) at the entry, against a budget of 1.2 %.
 - **Next:** the group's review; G3's next turn with T's C3, step b and gate 8's survivors; the STOP-REPORT's ruling.
 - **Checks:** `check quick: green, 11 steps (133s)`; `check commit: green, 23 steps (124s)`, exit 0, at 5fb1b955's tree (this commit adds the log alone).
+
+## 2026-11-19 M3 G3 `last`, the review's fix turn: B-1 to B-5 (issue #226)
+
+On `build/m3` from 0c00c8f5 (turn 1 merged with P20's fuzz fix), two commits and this one. The review is `tmp/m3/review-g3a.md` (5 blocking, each reproduced); its probes are `tmp/m3/review-g3a/`. The rulings are P21 (`run/joint`'s `x` is M5c's, and T splits the vector, which closes turn 1's STOP-REPORT) and P22 (fix all five now; where refcore agrees with the engine, B-2 to B-5, the engine follows the spec and T holds the vectors "for #233").
+- **What changed, by commit:**
+  - **2345631f, B-1:** `load/worlds.rs` `load_worlds` refuses a scenario over a refused one with it, though its own world loads. It takes the refusal of the nearest refused scenario under it (`refused_under`). Its asks are refused with it, so `REQ-ASK` knows them and they print nothing, as `over_bad`'s don't (L §8; OPERATIONS §2.1 "refuses that scenario and those over it"). Before, `late` over `mv` removed the row `mv` leaves outside the span, so it loaded and answered `q_late: 50.00 PLN`. Test: `load_cases.rs` `coverage_narrowed_in_a_scenario_checks_the_rows_standing_there`, which gains `late` over `keep`.
+  - **cbaf147d, B-2 to B-5 and N-4:**
+    - **B-4, B-5:** `ask/answer.rs` `req_clocks` checks `REQ-CLOCK` (E §11) once, in the run's order, after `REQ-ASK` and before any ask is answered, in both arms. `answer_worlds` checked none before. It covers:
+      - a run's asks;
+      - both sides of a diff on two stacks;
+      - a member's ask in the member's own world;
+      - a member alone whose run refused the request. Such a refusal is kept as `Turn::Stopped` and raised here, in its place.
+      The request is refused, the run's one result, exit 1. `reality_turns` no longer checks `REQ-CLOCK` itself.
+    - **B-2:** the warnings stay apart until the member's prefix is on (`answer_turns_apart`). The prefix goes on every line but an indented one. In the alone form, the refused scenarios' lines are built from the member's worlds (`scenario a.s: refused: …`), not found by their text. `ask/worlds.rs` `ask_turns` gives a run's asks' turns without those lines.
+    - **B-3:** `load/joint.rs` `ask_ids` keeps a member's asks refused alone, so `Joint::knows` knows them. `members::resolve` answers one in the member's world, where it prints its refusal line.
+    - **N-4:** the member alone walks the `days` argument.
+    - Test: `ask_cases.rs` `a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix` gains three cases:
+      - `a.warning_total`, `a.qnone` (refused alone) and `a.q`;
+      - `REQ-CLOCK` on a member's ask (`a.q a.qc`);
+      - `REQ-CLOCK` on a run of the member's own files with its scenarios.
+- **B-1 to B-5:** all fixed; no STOP-REPORT.
+- **The sweep:** 88 runs over the review's probes (`j1/runs.txt` to `runs7.txt`, `cov/runs.txt` to `runs4.txt`) and turn 1's (`tmp/m3/g3/p18`, `p19`). It ran 0c00c8f5's binary against cbaf147d's, each beside refcore (`tmp/m3/g3/sweep-all.sh`, `compare.py`; outputs `sweep-before.txt`, `sweep-after.txt`).
+  - Against refcore, 59 runs are the same before and after, unchanged.
+  - 13 turn from the same to different, each one of B-2 to B-5:
+    - B-4, `REQ-CLOCK` for a member's ask (8): `j.tally --ask a.qc`, `--ask a.q a.qc`, `--ask m.b.qc`, `--ask a.q_sc`, `j.tally js.tally --ask a.qc`, `jc.tally --ask c.qc`, `--ask c.q c.qc` and `jc_late.tally --ask c.qc`.
+      - `a.q_sc` is an ask of a member's scenario file. Its member alone's run refuses the request.
+      - In `jc_late`, the joint's `on` is later than the member's. The member's `on` refuses it, since the member alone answers its asks. Whose `on` stays #228's question.
+      - Each now prints `refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01`, exit 1. Refcore prints the ask's `RUN-DOMAIN` line, exit 0.
+    - B-5, `REQ-CLOCK` in a run given scenario files (3): `a --ask qc`, `a --ask q qc` and `n/b --ask qc`. They print the same `REQ-CLOCK` line, exit 1; refcore prints the ask's `RUN-DOMAIN` line.
+    - B-2 (1): `jw.tally --ask a.warning_total a.warning_s a.q` now prints `a.warning_total: …` and `a.warning_s: …`, where refcore drops the prefix.
+    - B-3 (1): `jz.tally --ask c.qnone c.q` now prints `c.qnone: refused: LOAD-SCENARIO ask qnone names zzz, neither the model nor a loaded scenario (z/c.tally:35)`, then `c.q`, exit 0. Refcore prints `REQ-ASK no ask c.qnone`.
+  - 16 differ from refcore both before and after. 14 are unchanged, all known:
+    - M5c (4): `qj`, twice; `m.qm`; `a.q x`.
+    - #232's `keep` (7).
+    - A nested member's refused scenario line, `scenario m.b.s` against refcore's `m.scenario b.s` (3; #228, P21).
+  - The other 2 are B-1's, `run` and `check` of `cov/st`. `late` is now refused with `mv`; refcore loads both (#232).
+- **Non-blocking items:**
+  - Taken here: N-4.
+  - Left for the follow-ups:
+    - N-1 and N-2: a member's warnings, and its scenario lines repeated per alone-form ask (#228).
+    - N-5: the `OfMember` arm's length, the same shape as the `Ask` arm beside it.
+    - N-6: ARCHITECTURE's map, the lead's at the gate.
+    - N-7 and N-8: P19's "stands" by layer, for #232's text.
+  - The review's new spec question (2), a `none` on one side of a `same` pair, is #233's or the round's.
+- **Size** (`engine/crates`, 0c00c8f5 to this commit): 7 files, 277 in, 96 out. Of those, the library is 207 in and 95 out, and the crate tests 70 in.
+- **Exceptions:** +0. Report-only hits are 8, as before: `refused_under` and `alone_run` take owned and elided forms.
+- **Open STOP-REPORTs:** none. Turn 1's, `run/joint`'s `x`, is ruled by P21.
+- **Usage:** about 0.24 % of the week this turn (`engine/tools/usage`, 0.76 % over both turns), against a budget of 0.8 %.
+- **Next:** T's C3 and step b merge at this turn's end; G3's next turn takes step c, C3's reds and gate 8's survivors.
+- **Checks:** `check quick: green, 11 steps (17s)`; `check commit: green, 23 steps (132s)`, exit 0, at cbaf147d's tree (this commit adds the log alone).
