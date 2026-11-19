@@ -1,2 +1,5 @@
 id	target	issue	why
 fixes/t22/fault_paths	m2_fixes	#211	tally 2.2 G1 (plan §3): the fault's def under paths, refcore's bytes after the fix; the engine stops on paths, "not implemented" there; built at M7, where it gates
+fixture/reviews/same-id-order	m3_check	#228	M3 C3, G2 review N-1: one id refused alone in two scenario files; refcore's check orders the lines by scenario id (s1's first), P5 by full path (a/s2's first), which the engine follows; refcore fixed at the round
+fixture/reviews/twin-placed	m3_check	#228	M3 C3, G2 review N-9: a scenario declared in two files; refcore's check prints its line after c/'s, P12 places it by its first file (b/), which the engine follows; refcore fixed at the round
+fixture/reviews/narrowed	m3_check	#232	M3 C3, pick P19: a scenario's moves line narrows register_10's coverage and leaves bank[r2] standing outside it; refcore loads (ok), the engine refuses the scenario LOAD-COVERS as #232's option 1 says; text and refcore's fix at the round

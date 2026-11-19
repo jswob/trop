@@ -1,0 +1,5 @@
+scenario s1 over plain
+  tally 2
+  from 2027-01-01
+
+ask qq: doubled in nowhere_z law 2027-06-01

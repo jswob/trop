@@ -12,11 +12,11 @@ The checks M3 (the operations) must turn green, from BUILD-ORDER § M3 ("What M3
 | 2 | `check` over M0's 315 text sets | `m3/check.vectors`, the vectors named by each set's id (C1): 295 `ok` (with load's warnings where the set has them), 11 a base's refusal (row 1 of M0's and `I:M:MP-10`), 9 with refused lines: a scenario refused (`I:B:b10_v3`'s `hr2_v3`, RULE-09's `inpath`, SURF-04's `redefine`) or asks refused alone (`U:law/LAW-13/LAW-13`, `U:rand/RAND-04/RAND-04`, `U:scen/SCEN-02..04`, `I:E1:tx2_cis_explain`: a probe given without its scenario's file) | `m3_check`: one test per M0 corpus group (16 with the parts) | 10 | 0 green: the engine has no `check` (a usage error, exit 2) |
 | 3 | `check`'s line kinds the 315 don't reach | `m3/check/fixtures.tsv`, 44 fixtures (`fixture/<kind>/<name>`, § Row 3; 9 of them OPERATIONS' examples, § Row 5) | `m3_check`: one test per kind (9) | 10 | 0 green (none held since C4) |
 | 4 | `INTERFACE.md`'s `check` | §1's row and §9 | — | — | written (C1) |
-| 5 | the run function: the library's one entry and the CLI's; the request, asks and clocks; pure; stores nothing (E §1); OPERATIONS §3 and §7's examples | C2: `m3/runs.vectors` group `run` (10, § Row 5) and group `operations` (7 runs on `mini`); the library against the CLI once the builder names the entry; `m3/purity.py --engine` at the gate | `m3_run` (2 tests); `m3/purity.py` | 10 | `operations` green; `run` red on `run/joint` alone (`not implemented`); purity: 107 of 128 sampled vectors equal on the quick binary, the 21 `check` ones wait |
+| 5 | the run function: the library's one entry and the CLI's; the request, asks and clocks; pure; stores nothing (E §1); OPERATIONS §3 and §7's examples | C2: `m3/runs.vectors` group `run` (10, § Row 5) and group `operations` (7 runs on `mini`); the library against the CLI once the builder names the entry; `m3/purity.py --engine` at the gate | `m3_run` (3 tests); `m3/purity.py` | 10 | `operations` and the library law green (C3, § C3); `run` red on `run/joint` and `run/ask-before-pin` (P18, G3); purity: 107 of 128 sampled vectors equal on the quick binary at C2 |
 | 6 | the seven changes through OPERATIONS §6.1 (#224's fifth item) | C2: `m3/changes/stages.tsv`: 17 runs (`changes/run/<stage>`, the three law asks and T's def or diff asks, before and after each change) and 17 checks (`changes/check/<stage>`: each stage with its change `ok`, each without its advance `LOAD-KNOWN`), § Row 6 | `m3_changes` (2 tests), `m3_check` group `changes` | 10 | the 17 runs green; the 17 checks wait for `check` |
 | 7 | P8-1, a conversation turn | C2: X's change-7 turn (pick P6): `changes/check/c7`, `changes/run/b7`, `changes/run/c7`; their digests in `perf-digests.tsv` (§ Row 7) | `engine/tools/perf row P8-1`, once the rules step writes its `turn:` recipe | 12 | the row waits for the recipe |
-| 8 | gate 8 ≥ 90 % | C3: kill vectors from gate 8's run on `build/m3` (44411247874), `fixes/gate8/m3_*` | `m1_fixes` `fixes-gate8` (gating) | 8 | no score for tally 2.2 |
-| 9 | #192's standing items, #221's first-group items, `net_worth`'s binding (P7) | C3 | `m3_fixes` | 1, 8 | — |
+| 8 | gate 8 ≥ 90 % | C3: the 98 survivors of run 44411247874 sorted (§ C3): 24 `R-87: equivalent:` rows for G3, 1 `missed:`; kill vectors `fixes/gate8/m3_*` | `m1_fixes` `fixes-gate8` (gating) | 8 | 87.5 % on 4fa66bfd; 88.3 % once G3 lists the 24 |
+| 9 | #192's standing items, #221's first-group items, `net_worth`'s binding (P7) | C3: `m3/fixes/net_worth.tally` (group `last`); #221's three `ENGINE-INVARIANT` arms probed, none reached (`fixes/gate8/m3_readings`); #192's items not written in C3 (§ C3) | `m3_fixes` (1 test), `m1_fixes` | 1, 8 | `last` red: `unit(x)` of a bound place is `not implemented` (G3) |
 | 10 | #114's remainder | C6: one refcore run at the longest R7 horizon under 8 GB against the engine | `m2/bank/pins_long.py` | 2 | 2036, 2056 net worth held |
 
 `check`'s report line counts the `m3_…` targets' tests: `milestone-report: M3: 2/25 green (gates once M3 is tagged)` after C1 (`m3_check`'s 24 tests and the one that every group has its test; that one and `usage` pass: the engine already exits 2 on `check`); `milestone-report: M3: 5/31 green` after C2 (`m3_check` 27, `m3_changes` 2, `m3_run` 2; green: `m3_check`'s two, `m3_changes`' two, `m3_run_operations`).
@@ -83,9 +83,34 @@ The turn (pick P6): `check` of change 7's reality, `run` without it, `run` with 
 
 `check`'s digest is of refcore's `check` since C4 (the bytes the prediction gave). The same run of `perf_digests.py` re-stored P8-10's `I:A:a05_ania@c05-ania` digest, stale since tally 2.2's refcore fixes (8341b008, bec41e6b): it changed its hole lines after the file was last written (2026-11-15).
 
+## C3: gate 8, the backlog, the reviews, step b (chunk C3, 2026-11-19)
+
+**Gate 8** (run 44411247874 on 4fa66bfd, before G1: 87.5 % = 2 416 ÷ (2 416 + 494 − 150)). T mapped the 98 unlisted survivors to `build/m3` at ac551ad8. Five moved with G1's splits, none is gone, and none is now caught by a vector. The sort is `tmp/m3/t-equivalent.md`, which the coordinator copies to G3:
+- **24 `R-87: equivalent:` rows**, each with its reason. They are 18 of `walk/fork.rs` (a read that doesn't continue a kept walk walks anew as the twin does, so only the counter "walks shared" differs), `covers_all` ×3 (any covering span's end gives the same union), `seen_observations` and `observed_row_seen` `> → >=` (same-day restatements in one layer are refused at load, `LOAD-OVERLAP`: T's probe on both engines) and `Uncertain::leg` `> → >=` (the sign is ±1). With them the score is 88.3 %.
+- **1 `missed:`**: `reads_lowest` → `true`. The traced read of a projection's `min` is `not implemented` on the engine.
+- **Killable with no text yet**: `ledger.rs` `hole_days_into` ×2, `agenda.rs` field deletions ×3, `row_place` / `version_file` ×4 (the read-time tie that load pre-empts: equivalent if `choose` never meets two rows load let through, the builder's word), `answer_apart` ×5. 69 not sorted in C3.
+- **No kill text written in C3.** Each candidate T tried was pre-empted at load (the same-day restatement) or not built (explain of a projection `min`). 90 % needs k + 0.9·e ≥ 68 more.
+
+**#221's arms** (G1's typed table): `load/rows.rs` `type_readings` (a reading at no edge is `LOAD-INSTANT`; unit `any` no longer exists), `eval/read.rs` `row_value` and `ask/walked.rs` `reading_instant` (readings read directly and explained, in the base and in a scenario with its own `stated` row). None reached `ENGINE-INVARIANT`, and both engines print the same. The probe is a gating vector, `fixes/gate8/m3_readings`.
+
+**`net_worth`'s minimal text** (P7, `m3/fixes/net_worth.tally`, group `last`, `m3_fixes`): six places of four kinds and two units, an outside place, a wrapper's fund units priced in PLN. `last/net_worth` asks household X's binding; refcore prints 5 400.00, 10 400.00 and 30 400.00 PLN, and `kinds_only` 4. `last/unit-quantity`: `unit(x)` of a quantity unit's place is `RUN-DOMAIN` (net_worth's `and` keeps it unread). `last/places` asks the binding's other parts, which the engine answers. The engine stops at `unit(x)` of a bound place: `tally run: not implemented` (G3).
+
+**The reviews' vectors** (`m3_check` group `reviews`, `m3_run`):
+- `reviews/same-id-order` (G2 N-1): one id refused alone in `n1/a/s2.tally` and `n1/z/s1.tally`. The engine follows P5's path order; refcore's `check` orders by scenario id. Held for #228.
+- `reviews/twin-placed` (N-9, P12): `twin` declared in `p12/b/` and `p12/d/`, beside `p12/c/`'s refused `alpha`. The engine places it by its first file; refcore's `check` puts it after `alpha`. Held for #228.
+- `reviews/narrowed` (#232's second case, P19): a scenario's `moves register_10 to 2026-10-01..2026-10-20` leaves `bank[r2]` (10-28) standing outside. Refcore loads it (`ok`); the engine refuses `LOAD-COVERS`. Held for #232.
+- `run/ask-before-pin` (N-9): `--pin=bytes` after `--ask` is the option. Red until P18 (G3).
+- G1 A-4 (a walk-bound def read by a cycle member's `when` at a point with no recorded run): not probed in C3.
+
+**Step b** (the builder's plan §5):
+- `m1_lows`, `m2_counts` and `m2_forks` now call `run_with_how(Files, &Request::new(asks), How { lows | forks, ..How::FENCES })`, with no `run_with_lows`, `run_with_forks` or `Request` literal. All three pass. `m2_forks.rs` was generated by `tmp/m2/t/gen_forks.py`, which now differs.
+- `m3_run_the_library_prints_what_the_cli_prints`: every M3 run vector and `check` fixture through the library's entry, on files T resolves per INTERFACE §4, prints the CLI's bytes and exit, or stops where it stops. It is green.
+- INTERFACE §4's fault section now names `run_with_how`'s `How { fault, .. }`.
+
 ## Holds
 
 - None in `held.tsv` since C4. `fixture/alone/scenario-file` and `fixture/alone/same-id` were held for **#229** (the coordinator's ruling, 2026-11-18): refcore's `run` makes this load check only while answering, so it prints nothing for an ask in a loaded scenario's file that names a world not loaded, where L §6.4 and §8.3 refuse it alone. They now store refcore's `check`, which prints the spec's lines, so the engine is held to the spec. Refcore's `run` is fixed at the round (#229).
+- `fixture/reviews/same-id-order`, `fixture/reviews/twin-placed` (#228) and `fixture/reviews/narrowed` (#232), `m3_check`: § C3.
 - **To M4, by name:** every walk ask of the seven changes (load row L:10, P8-L10), and change 5's after-side runs (§ Row 6).
 
 ## Keeping master green

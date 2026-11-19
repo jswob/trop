@@ -4805,6 +4805,20 @@ question_dup.tally	m3/mini/question_dup.tally
 ,22:fixture/operations/law,10:operations,5:check,20:engine/tests/m3/mini,29:check reality.tally pit.tally,64:reality.tally	m3/mini/reality.tally
 pit.tally	m3/mini/pit.tally
 ,1:0,3:ok
+,29:fixture/reviews/same-id-order,7:reviews,5:check,21:engine/tests/m3/check,45:check model.tally n1/a/s2.tally n1/z/s1.tally,107:model.tally	m3/check/model.tally
+n1/a/s2.tally	m3/check/n1/a/s2.tally
+n1/z/s1.tally	m3/check/n1/z/s1.tally
+,1:1,218:qq: refused: LOAD-SCENARIO ask qq names nowhere_z, neither the model nor a loaded scenario (n1/z/s1.tally:5)
+qq: refused: LOAD-SCENARIO ask qq names nowhere_a, neither the model nor a loaded scenario (n1/a/s2.tally:5)
+,27:fixture/reviews/twin-placed,7:reviews,5:check,21:engine/tests/m3/check,64:check model.tally p12/b/t1.tally p12/c/lost.tally p12/d/t2.tally,154:model.tally	m3/check/model.tally
+p12/b/t1.tally	m3/check/p12/b/t1.tally
+p12/c/lost.tally	m3/check/p12/c/lost.tally
+p12/d/t2.tally	m3/check/p12/d/t2.tally
+,1:1,211:scenario alpha: refused: LOAD-SCENARIO scenario alpha is over nowhere, neither the model nor a scenario (p12/c/lost.tally:1)
+scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tally:1)
+,24:fixture/reviews/narrowed,7:reviews,5:check,28:engine/tests/m3/check/narrow,21:check m.tally s.tally,64:m.tally	m3/check/narrow/m.tally
+s.tally	m3/check/narrow/s.tally
+,1:0,3:ok
 ,16:changes/check/c1,7:changes,5:check,42:engine/tests/integration/amendments/real11,43:check c1/ ../../../m3/changes/asks/c1.tally,1065:c1/loans.tally	integration/amendments/real11/c1/loans.tally
 c1/pays.tally	integration/amendments/real11/c1/pays.tally
 c1/people.tally	integration/amendments/real11/c1/people.tally

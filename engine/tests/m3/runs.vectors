@@ -4625,4 +4625,37 @@ warning: WARN-UNREAD input unused is read by nothing
 pit.tally	m3/mini/pit.tally
 ,1:0,52:pit_check: ok
   law date 2026-11-01, cut 2026-11-05
+,18:run/ask-before-pin,3:run,3:run,27:engine/tests/m3/check/joint,37:run j_bytes.tally --ask x --pin=bytes,78:j_bytes.tally	m3/check/joint/j_bytes.tally
+a/a.tally	m3/check/joint/a/a.tally
+,1:0,33:x: 8 000.00 PLN
+  cut 2026-03-01
+,14:last/net_worth,4:last,3:run,21:engine/tests/m3/fixes,46:run net_worth.tally --ask net_worth kinds_only,41:net_worth.tally	m3/fixes/net_worth.tally
+,1:0,746:net_worth (d = 2026-01-31): 5 400.00 PLN
+  unfulfilled: wage[2026-01]
+  cut 2026-03-01
+net_worth (d = 2026-02-28): 10 400.00 PLN
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  cut 2026-03-01
+net_worth (d = 2026-06-30): 30 400.00 PLN
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  held: fund_price[2026-06] = 120 PLN/fund_unit (home), read for 2026-06
+  held: pay_dom = 10 (home), read for 2026-04-01
+  held: pay_dom = 10 (home), read for 2026-05-01
+  held: pay_dom = 10 (home), read for 2026-06-01
+  held: salary = 5 000.00 PLN (home), read for 2026-04-01
+  held: salary = 5 000.00 PLN (home), read for 2026-05-01
+  held: salary = 5 000.00 PLN (home), read for 2026-06-01
+  cut 2026-03-01
+kinds_only: 4
+  cut 2026-03-01
+,18:last/unit-quantity,4:last,3:run,21:engine/tests/m3/fixes,35:run net_worth.tally --ask over_unit,41:net_worth.tally	m3/fixes/net_worth.tally
+,1:0,128:over_unit: refused: RUN-DOMAIN unit(wunits[ike]): its unit fund_unit is a quantity unit, a key of no unit kind
+  cut 2026-03-01
+,11:last/places,4:last,3:run,21:engine/tests/m3/fixes,48:run net_worth.tally --ask over_outside over_kind,41:net_worth.tally	m3/fixes/net_worth.tally
+,1:0,63:over_outside: 6
+  cut 2026-03-01
+over_kind: 3
+  cut 2026-03-01
 ,

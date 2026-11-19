@@ -43,3 +43,6 @@ operations/worked	m3/mini/w	../reality.tally ../more.tally acme_stops.tally	OPER
 operations/name	m3/mini	reality.tally txt_name.tally	OPERATIONS §3.2 TXT-3: a name that is no id is refused at load
 operations/dup	m3/mini	reality.tally question.tally question_dup.tally	OPERATIONS §3.1 ASK-2: an ask's id must be new: LOAD-DUP
 operations/law	m3/mini	reality.tally pit.tally	OPERATIONS §3.6 LAW-1: a law part with its check ask: ok
+reviews/same-id-order	m3/check	model.tally n1/a/s2.tally n1/z/s1.tally	G2 review N-1, P5 (#228): one id refused alone in two scenario files whose path order (a/s2 first) differs from their scenarios' id order (s1 first)
+reviews/twin-placed	m3/check	model.tally p12/b/t1.tally p12/c/lost.tally p12/d/t2.tally	G2 review N-9, P12 (#228): a scenario declared in two files is placed by its first file in full-path order (b/ before c/'s refused alpha)
+reviews/narrowed	m3/check/narrow	m.tally s.tally	#232's second case, P19: a scenario's moves line narrows a register's coverage and leaves a standing observation outside it (LOAD-COVERS on the engine after G3)

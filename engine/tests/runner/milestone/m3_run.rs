@@ -10,7 +10,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally_runner::m3::{RUNS, group_failures};
+    use tally_runner::m3::{CHECK, RUNS, group_failures, library_failures};
 
     /// Holds every vector of `group` to refcore's run.
     fn runs_as_stored(group: &str) {
@@ -34,5 +34,40 @@ mod tests {
     #[test]
     fn m3_run_operations() {
         runs_as_stored("operations");
+    }
+
+    /// The run function is the library's one entry and the CLI's (E §1; M3 step b): every
+    /// `run` vector of M3 and every `check` fixture, through `run_with_how` with every fence's
+    /// form (what `run` is) or `check` on the files INTERFACE §4 resolves, prints the CLI's
+    /// lines and exit code, and stops where the CLI stops.
+    #[test]
+    fn m3_run_the_library_prints_what_the_cli_prints() {
+        let (mut failed, runs) =
+            library_failures(RUNS, &["changes", "run", "operations", "last"]).expect("runs");
+        let (more, checks) = library_failures(
+            CHECK,
+            &[
+                "ok",
+                "base",
+                "scenario",
+                "alone",
+                "sections",
+                "notclean",
+                "paths",
+                "changes",
+                "operations",
+                "reviews",
+            ],
+        )
+        .expect("checks");
+        failed.extend(more);
+        assert!(runs > 30 && checks > 60, "{runs} runs, {checks} checks");
+        assert!(
+            failed.is_empty(),
+            "{} of {} vectors differ:\n{}",
+            failed.len(),
+            runs.checked_add(checks).expect("a count"),
+            failed.join("\n")
+        );
     }
 }

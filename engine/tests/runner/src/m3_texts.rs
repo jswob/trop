@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 63] = [
+pub static TEXTS: [(&str, &str); 71] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -98,6 +98,22 @@ pub static TEXTS: [(&str, &str); 63] = [
         include_str!("../../m3/check/model.tally"),
     ),
     (
+        "m3/check/n1/a/s2.tally",
+        include_str!("../../m3/check/n1/a/s2.tally"),
+    ),
+    (
+        "m3/check/n1/z/s1.tally",
+        include_str!("../../m3/check/n1/z/s1.tally"),
+    ),
+    (
+        "m3/check/narrow/m.tally",
+        include_str!("../../m3/check/narrow/m.tally"),
+    ),
+    (
+        "m3/check/narrow/s.tally",
+        include_str!("../../m3/check/narrow/s.tally"),
+    ),
+    (
         "m3/check/nest/a/y.tally",
         include_str!("../../m3/check/nest/a/y.tally"),
     ),
@@ -112,6 +128,18 @@ pub static TEXTS: [(&str, &str); 63] = [
     (
         "m3/check/outside.tally",
         include_str!("../../m3/check/outside.tally"),
+    ),
+    (
+        "m3/check/p12/b/t1.tally",
+        include_str!("../../m3/check/p12/b/t1.tally"),
+    ),
+    (
+        "m3/check/p12/c/lost.tally",
+        include_str!("../../m3/check/p12/c/lost.tally"),
+    ),
+    (
+        "m3/check/p12/d/t2.tally",
+        include_str!("../../m3/check/p12/d/t2.tally"),
     ),
     (
         "m3/check/paths.tally",
@@ -196,6 +224,10 @@ pub static TEXTS: [(&str, &str); 63] = [
     (
         "m3/check/unread.tally",
         include_str!("../../m3/check/unread.tally"),
+    ),
+    (
+        "m3/fixes/net_worth.tally",
+        include_str!("../../m3/fixes/net_worth.tally"),
     ),
     (
         "m3/mini/acme_stops.tally",

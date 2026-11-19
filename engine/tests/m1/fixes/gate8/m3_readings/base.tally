@@ -1,0 +1,27 @@
+model p
+  tally 2
+  on 2026-11-05
+  start 2026-10-01
+  end 2026-12-31
+  note "M3 C3, #221 (load/rows.rs type_readings, eval/read.rs row_value, ask/walked.rs reading_instant): balance readings read directly and explained, in the base and in a scenario that restates the opening and adds its own stated reading; both engines print the same, no ENGINE-INVARIANT"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+version home
+  cite s
+  governs 2026-10..
+  known 2026-10-01
+  anchor konto
+  opening[konto] = 1 000.00 PLN at 2026-10-01 start "w"
+  stated[konto] = 1 000.00 PLN at 2026-10-15 end "w"
+
+ask q_open: opening[konto] law 2026-10-01
+
+ask q_stated: stated[konto] law 2026-10-15
+
+ask q_why: explain bal(konto, 2026-10-31)

@@ -83,6 +83,9 @@ FAST = 'pypy+fast'
 # predicted from refcore's `run`, which makes this load check only while answering; refcore's `check` prints the
 # spec's line (L §6.4, §8.3): the coordinator's ruling, #229 (2026-11-18)
 RULED_229 = {'fixture/alone/scenario-file', 'fixture/alone/same-id'}
+# predicted in P5's and P12's full-path order, which the engine follows; refcore's `check` orders same-id asks
+# refused alone by scenario id and places a scenario declared twice after the others: held "for #228" (held.tsv)
+RULED_228 = {'fixture/reviews/same-id-order', 'fixture/reviews/twin-placed'}
 TEXTS_RS = R.T + 'runner/src/m3_texts.rs'
 PROBE_FILE = 'engine/tests/m3/zz_m3_probe.tally'
 PROBE = 'zz_m3_probe'
@@ -467,7 +470,7 @@ def confirm(vs, pred):
                 bad.append('%s: refcore\'s check exits %s, a usage error wants 2' % (v['id'], e['rc']))
             continue
         if (e['rc'], e['out']) != (rc, whole):
-            (notes if v['id'] in RULED_229 else bad).append(
+            (notes if v['id'] in RULED_229 | RULED_228 else bad).append(
                 '%s: refcore\'s check exits %s, prints %r; the prediction exits %s: %s' % (
                     v['id'], e['rc'], e['out'][:300], rc, R.first_diff(whole, e['out'])))
         pred[v['id']] = (e['rc'], e['out'], 'check')
@@ -516,7 +519,7 @@ def main(argv):
     if '--confirm' in argv or confirmed:  # once confirmed, every write and --check runs refcore's check again
         bad, ruled = confirm(vs, pred)
         for n in ruled:
-            print('ruled (#229): ' + n)
+            print('ruled (#228, #229): ' + n)
         for n in load_at_run(vs, pred):
             print('load-at-run (#229): ' + n)
         if bad:

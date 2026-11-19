@@ -12,7 +12,7 @@ pub const HELD: &str = include_str!("../../held.tsv");
 /// The targets a row may name: the gating ones, M1's vector stores (issue #108), whose
 /// targets gate from M1's marker, M2's (issue #167), whose targets gate from M2's, and M3's
 /// (issue #226), whose targets gate from M3's.
-pub const TARGETS: [&str; 21] = [
+pub const TARGETS: [&str; 22] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -34,6 +34,7 @@ pub const TARGETS: [&str; 21] = [
     "m3_check",
     "m3_changes",
     "m3_run",
+    "m3_fixes",
 ];
 
 /// One held vector.
@@ -183,7 +184,7 @@ mod tests {
                 "m2_checks" | "m2_items" | "m2_fixes" | "m2_goldens" | "m2_hindcasts" => &m2,
                 "m2_codes" => &m2_codes,
                 "m3_check" => &m3_check,
-                "m3_changes" | "m3_run" => &m3_runs,
+                "m3_changes" | "m3_run" | "m3_fixes" => &m3_runs,
                 _ => &cases,
             };
             assert!(

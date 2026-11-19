@@ -16,3 +16,7 @@ operations/diff	m3/mini	run reality.tally acme_stops.tally --ask q_diff	-	OPERAT
 operations/worked	m3/mini/w	run ../reality.tally ../more.tally acme_stops.tally --ask q_base q_dec q_in	-	OPERATIONS §7's worked output, exit 0
 operations/statement	m3/mini	run reality.tally statement.tally more.tally --ask q_base q_dec	-	OPERATIONS §3.5 IMP-1, IMP-3: the statement's rows and its stated balance's anchor line
 operations/law	m3/mini	run reality.tally pit.tally --ask pit_check	-	OPERATIONS §3.6 LAW-1: a law file's check, answered as any ask
+run/ask-before-pin	m3/check/joint	run j_bytes.tally --ask x --pin=bytes	-	G2 review N-9, INTERFACE §1: --pin=bytes after --ask is the input option, not an ask id
+last/net_worth	m3/fixes	run net_worth.tally --ask net_worth kinds_only	-	pick P7, plan Q9: household X's net_worth binding (places over .., not outside, four kinds, unit(x) == PLN) and a fund's units priced in PLN
+last/unit-quantity	m3/fixes	run net_worth.tally --ask over_unit	-	pick P7: unit(x) of a place whose unit is a quantity unit is RUN-DOMAIN, where net_worth's and keeps it unread
+last/places	m3/fixes	run net_worth.tally --ask over_outside over_kind	-	pick P7: the binding's other parts alone (places over .., not outside; kind tests)

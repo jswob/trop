@@ -39,7 +39,8 @@
 //! `milestone/m0_properties.rs` for M0, `milestone/m1_checks.rs`, `milestone/m1_format.rs`,
 //! `milestone/m1_goldens.rs`, `milestone/m1_codes.rs`, `milestone/m1_carried.rs` and
 //! `milestone/m1_fixes.rs` and `milestone/m1_properties.rs` for M1, `milestone/m2_checks.rs`
-//! for M2, `milestone/m3_check.rs`, `milestone/m3_changes.rs` and `milestone/m3_run.rs` for M3),
+//! for M2, `milestone/m3_check.rs`, `milestone/m3_changes.rs`, `milestone/m3_run.rs` and
+//! `milestone/m3_fixes.rs` for M3),
 //! with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never

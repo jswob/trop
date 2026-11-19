@@ -1,0 +1,11 @@
+scenario narrowed over narrow
+  tally 2
+  from 2026-10-01
+
+version narrowed_coverage
+  cite s
+  governs 2026-10..
+  known 2026-11-03
+  moves register_10 to 2026-10-01..2026-10-20
+
+ask q_narrowed: bal(konto, 2026-10-31) in narrowed

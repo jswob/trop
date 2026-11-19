@@ -2,11 +2,11 @@
 //! issue #108). Every ask of T's corpora (`properties/kernel.corpus`, 312 records;
 //! `properties/m1.corpus`, 648), of every fix vector of `m1/vectors.refcore` (groups
 //! `fixes-…`) and of F5's own realities (`m1/lows/`, G9's `tally-cli/tests/lows/` copied) runs
-//! through `tally_cli::tally::run_with_lows` twice (the CLI re-exports the library, pick
-//! P59), with `Lows::Tree` (fence F5's tree of running sums, P §2.3, as `run` reads) and with
+//! through `tally_cli::tally::run_with_how` twice (the CLI re-exports the library, pick
+//! P59; the run function's one hook, M3 step b), with `Lows::Tree` (fence F5's tree of running sums, P §2.3, as `run` reads) and with
 //! `Lows::Walk` (the projection's own walk, its plain twin, E §4.3), and the two print the
 //! same lines. A difference is the fence's fault
-//! (`run_with_lows`'s doc). Since F5 answers T's projection reads, T's vectors reach the twin
+//! (`run_with_how`'s doc). Since F5 answers T's projection reads, T's vectors reach the twin
 //! only where the tree declines; this target reaches it on every read, so the twin's mutants
 //! are T's to catch (R-84 counts T's tests at gate 8; `mutants-local --next` counts this
 //! target). One test per source, and the fix vectors one per group (pick P69), so a failure
@@ -21,7 +21,7 @@ mod tests {
     use tally_cli::tally::num::Num;
     use tally_cli::tally::time::Day;
     use tally_cli::tally::walk::{Lows, RangeMinimum};
-    use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows};
+    use tally_cli::tally::{Asks, Files, Given, How, NotImplemented, Pin, Request, run_with_how};
     use tally_runner::corpus::{KERNEL_CORPUS, netstrings, records};
     use tally_runner::kernel::{Vector, vectors};
     use tally_runner::laws_m1::M1_CORPUS;
@@ -50,8 +50,8 @@ mod tests {
         ("inv_min.tally", include_str!("../../m1/lows/inv_min.tally")),
     ];
 
-    /// A command line's paths and request, as the CLI reads `run`'s words (INTERFACE §4).
-    fn request_of(args: &[String]) -> Result<(Vec<String>, Request), String> {
+    /// A command line's paths, request and pin, as the CLI reads `run`'s words (INTERFACE §4).
+    fn request_of(args: &[String]) -> Result<(Vec<String>, (Request, Pin)), String> {
         let Some((first, rest)) = args.split_first() else {
             return Err("an empty command line".to_owned());
         };
@@ -82,12 +82,7 @@ mod tests {
         } else {
             Asks::Named(asks)
         };
-        let request = Request {
-            asks,
-            pin,
-            days: Days::Events,
-        };
-        Ok((paths, request))
+        Ok((paths, (Request::new(asks), pin)))
     }
 
     /// The files the paths name, read from the file table `table` (netstring pairs).
@@ -111,7 +106,11 @@ mod tests {
     }
 
     /// The lines of one run with `lows`, or `None` where it stops not implemented.
-    fn lines(files: &[(String, Vec<u8>)], request: &Request, lows: Lows) -> Option<Vec<String>> {
+    fn lines(
+        files: &[(String, Vec<u8>)],
+        (request, pin): &(Request, Pin),
+        lows: Lows,
+    ) -> Option<Vec<String>> {
         let given = files
             .iter()
             .map(|(path, bytes)| Given {
@@ -119,7 +118,18 @@ mod tests {
                 bytes: Some(bytes.clone()),
             })
             .collect();
-        match run_with_lows(given, request, lows) {
+        let run_files = Files {
+            pin: *pin,
+            ..Files::new(given)
+        };
+        match run_with_how(
+            run_files,
+            request,
+            How {
+                lows,
+                ..How::FENCES
+            },
+        ) {
             Ok(answer) => Some(answer.lines().to_vec()),
             Err(NotImplemented) => None,
         }
@@ -127,7 +137,7 @@ mod tests {
 
     /// Runs `files` and `request` with the tree and with the twin; `Err` names the first line
     /// they differ at. `Ok(true)` where both answered, `Ok(false)` where both stopped.
-    fn same(files: &[(String, Vec<u8>)], request: &Request) -> Result<bool, String> {
+    fn same(files: &[(String, Vec<u8>)], request: &(Request, Pin)) -> Result<bool, String> {
         let tree = lines(files, request, Lows::Tree);
         let walk = lines(files, request, Lows::Walk);
         match (tree, walk) {
@@ -1292,11 +1302,7 @@ mod tests {
     /// F5's own realities, every ask of each.
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_f5s_realities() {
-        let every = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
+        let every = (Request::new(Asks::Every), Pin::Canonical);
         let pair: Vec<(String, Vec<u8>)> = LOWS
             .iter()
             .map(|(p, t)| ((*p).to_owned(), t.as_bytes().to_vec()))

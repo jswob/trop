@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m3::{check_group_failures, check_groups};
 
     /// Every group of the store, each run by a test below.
-    const GROUPS: [&str; 22] = [
+    const GROUPS: [&str; 23] = [
         "probes",
         "probe-sets",
         "models",
@@ -40,6 +40,7 @@ mod tests {
         "usage",
         "changes",
         "operations",
+        "reviews",
     ];
 
     /// Holds every vector of `group` at `part` modulo `parts` to its stored run.
@@ -233,5 +234,13 @@ mod tests {
     #[test]
     fn m3_check_operations() {
         checks_as_stored("operations");
+    }
+
+    /// The group reviews' cases (M3 C3): one id refused alone in two scenario files (P5), a
+    /// scenario declared in two files (P12), a scenario's narrowed coverage (P19); all three
+    /// held while refcore differs (#228, #232).
+    #[test]
+    fn m3_check_reviews() {
+        checks_as_stored("reviews");
     }
 }

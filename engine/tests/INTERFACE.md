@@ -56,9 +56,11 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output   // Output { stdout, stde
 ```rust
 #[cfg(feature = "fault-injection")]
 pub enum Fault { Conservation }                                    // tally: E §9 invariant 1; more only when a gate asks
-pub fn run_faulted(given: Vec<Given>, request: &Request, fault: Fault) -> Result<Answer, NotImplemented>   // tally, run's twin
-pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output                      // tally_cli, run's twin
+pub fn run_with_how(files: Files, request: &Request, how: How) -> Result<Answer, NotImplemented>   // tally: the run function's one hook; How { fault: Some(f), ..How::FENCES } plants f
+pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output                // tally_cli, run's twin
 ```
+
+Since M3's G2 (73f2b580) the library has no `run_faulted`. Its plant is a field of `How`, which `run_with_how` takes (E §1: the library's entry is the run function, and `run` is `run_with_how` with `How::FENCES`). The CLI's `run_faulted` answers a `run` command through `run_with_how` with the fault planted, and any other command as `run` answers it. T's runner calls the CLI's twin, which is unchanged (M3 step b).
 
 - **The plant (`Fault::Conservation`):** on the first day a walk books a leg whole, the day's close adds one minor unit (0.01 of the fixture's currency) to that day's conservation sum before invariant 1 is checked, once per run. A build without the feature changes nothing.
 - **The expected bytes** are refcore's under the same plant: `codes/m1_fault.py` patches refcore's close of the day in memory (no refcore file changes) and `codes/m1.py` stores the run as `codes/m1_invariant.refcore` (`decide/conservation`: the family `decide`'s answers). refcore prints it per value, at each value the walk reaches, exit 0: `q_decide: (refused: ENGINE-INVARIANT conservation: the legs booked on 2026-04-15 in PLN sum to 0.01 PLN, not 0 (E §9 invariant 1), refused: ENGINE-INVARIANT …)`. E §11's "the whole result is refused, with the evidence" is read as refcore reads it: every result that rests on the broken walk.
