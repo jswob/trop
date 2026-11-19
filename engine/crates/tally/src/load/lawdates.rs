@@ -553,18 +553,15 @@ pub(super) fn dated_wheres(
     let at = &walked.at_reads;
     let mut out = Vec::new();
     for (id, mv) in m.moves.entries() {
-        let found: Vec<usize> = mv
-            .binds
-            .iter()
-            .enumerate()
-            .filter(|(_, bind)| {
-                bind.node
-                    .filter
-                    .as_ref()
-                    .is_some_and(|e| dated_read(m, at, dated, e).is_some())
-            })
-            .map(|(i, _)| i)
-            .collect();
+        let mut found: Vec<usize> = Vec::new();
+        for (i, bind) in mv.binds.iter().enumerate() {
+            let Some(filter) = &bind.node.filter else {
+                continue;
+            };
+            if dated_read(m, at, dated, filter).is_some() {
+                found.push(i);
+            }
+        }
         if !found.is_empty() {
             out.push((id.clone(), found));
         }
