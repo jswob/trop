@@ -5055,3 +5055,66 @@ On `build/m3` from 0c00c8f5 (turn 1 merged with P20's fuzz fix), two commits and
 - **Usage:** about 0.24 % of the week this turn (`engine/tools/usage`, 0.76 % over both turns), against a budget of 0.8 %.
 - **Next:** T's C3 and step b merge at this turn's end; G3's next turn takes step c, C3's reds and gate 8's survivors.
 - **Checks:** `check quick: green, 11 steps (17s)`; `check commit: green, 23 steps (132s)`, exit 0, at cbaf147d's tree (this commit adds the log alone).
+
+## 2026-11-19 M3 G3 `last`, turn 2: `unit(x)` at run, step c's first part, gate 8's rows (issue #226)
+
+On `build/m3` from 15b59db7 (the fix turn merged with T's C3, step b and the reviews' vectors), three commits and this one.
+- **What changed, by commit:**
+  - **54e4df47, `unit(x)` at run** (plan Q9, pick P7): `eval/builtin.rs` `unit_call`, refcore's `m_c_unit` (L §5.10 Kind and unit, §8.4).
+    - Of a bound place: its unit as a key of the unit kind that holds it, `currencies` for a currency. A place of unit `any`, or of a quantity unit, is refused at the key, `RUN-DOMAIN`.
+    - Of money or a quantity: the key its value carries. A compound unit or a plain number is refused.
+  - **4110c282, step c's first part, and G2's N-4, N-7, N-8:**
+    - `run_with_lows` and `run_with_forks` go. `walk_oracle`'s lows run through `run_with_how` (`How { lows, ..How::FENCES }`).
+    - `Request`'s `pin` and `days`, and `run`'s `Vec<Given>`, stay: the benches `b1_list.rs` and `p8_m4.rs` build `Request { asks, pin, days }` and call `run(given, …)`, and the guard keeps their files from me (STOP-REPORT B below). The two fields' docs say `run` alone reads them.
+    - N-4: `ask/worlds.rs` `refused_line`, beside `scenario_line`, writes `<head>: refused: <text>` at all 8 sites: run, check, a tuple's line, a member's ask.
+    - N-7: the header lines of `api.rs`, `ask/worlds.rs`, `ask/members.rs` and `eval/builtin.rs` are within 100 characters; `api.rs`'s names `check`.
+    - N-8: `FENCES`'s doc says whom it serves, and that `run` takes its days from the request.
+  - **d4ee15d9:** the test `ask_cases.rs` `unit_of_a_place_is_its_currency_key_and_a_quantity_unit_is_refused` (refcore's lines), and the survivor rows (below).
+- **T's reds:**
+  - `last/unit-quantity`: green. `last/places` stays green.
+  - `last/net_worth`: answers now, but prints `5 400 PLN` where the vector has `5 400.00 PLN`. The spec gives the engine's: STOP-REPORT A below.
+  - `run/ask-before-pin`: it asks `x`, the joint model's own ask, M5c's (P21, as `run/joint`). The CLI part works: `run j_bytes.tally --ask a.q --pin=bytes` prints refcore's `a.q: 8 000.00 PLN`, as with `--pin=bytes` first. T splits it as `run/joint`. No code.
+- **Gate 8's rows** (4fa66bfd; T's sort, `tmp/m3/t-equivalent.md`): 26 added, 12 removed.
+  - Equivalent, 6 of T's 24, each reason read against the code:
+    - `book/observe.rs` `covers_all`, three: the old `covered_call` reason; the function was renamed.
+    - `observed_row_seen` and `seen_observations`, `>` with `>=`: two restatements of one row in one layer, known the same day, are `LOAD-OVERLAP` at load (`load/overlap.rs` `one_id`), so two ranks never tie.
+    - `walk/reads.rs` `Uncertain::leg`, `>` with `>=`: the sign is −1 or 1.
+  - Missed, the other 18 of T's 24, all `walk/fork.rs`: each mutant makes a read walk anew where the code continues the kept walk. The lines are the twin's, but the days stepped and the walks shared differ, and the `counters` build prints them. The file's precedent lists that as missed (`free_projection`, `agrees -> true`, #192: "the mutant continues where the code walks anew (days stepped)"). An equivalent row is for a mutant no test can tell apart, and a counts test can.
+  - Missed, T's section B: `walk/projection.rs` `reads_lowest`, two.
+  - Removed: the 12 rows gate 8 named stale or caught (`tmp/m3/gate8-survivors.txt`, lines 101 to 112). `Member::day`'s row had moved with G1's split to `book/same_booking.rs`; it goes from there.
+  - So the score on 4fa66bfd's survivors is 2 416 ÷ (2 760 − 6) ≈ 87.7 %, not T's 88.3 %. 90 % needs about 63 more kills.
+- **`read/rows.rs` `choose` (T's section C, third item):** yes, `choose` can be left with two rows load let through, so its 4 survivors are killable, not equivalent; no rows.
+  - Load checks two rows' overlap on the spans in force at `on` (`load/overlap.rs`, its invariants). An ask's `as known` cut before a `moves` that parts two versions sees them overlap.
+  - The text, `tmp/m3/g3/t2/tie.tally`: `input rent: money PLN`; version `a` `governs 2026-01..`, version `b` `governs 2026-07..`, both `known 2026-01-01`, `rent = 100.00 PLN` and `200.00 PLN`; version `shorten`, `known 2026-02-01`, `moves a to 2026-01..2026-06`; `ask now: rent law 2026-08-01` and `ask early: rent law 2026-08-01 as known 2026-01-15`.
+  - `--ask now` answers `200.00 PLN`. Every ask, or `--ask early`, prints `refused: LOAD-OVERLAP rows tie.tally:17 and tie.tally:23 of rent tie`, exit 1: `choose`'s line, which `row_place` and `version_file` write. Refcore prints the same.
+  - A note for the round: L §4.6's Ties refuses a tie at load "where load sees both claims' keys", and §8.3 has load refuse what it sees; both engines refuse this one at the read, in load's code.
+- **Follow-ups:** N-4, N-7 and N-8 are taken (above). N-2 waits on STOP-REPORT B. No other item on `tmp/m3/followups.md` is a line or two: A-2 moves code between a fence and its twin, and N-5 is two printers' order.
+- **Size** (`engine/crates`, 15b59db7 to this commit): 9 files, 184 in, 82 out. Of those, the library and the CLI are 130 in and 74 out, and the tests 54 in and 8 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** A (`last/net_worth`'s money) and B (step c's rest, the benches), below.
+- **Usage:** about 0.5 % of the week this turn (`engine/tools/usage`, 1.26 % over the session), against a budget of 1.2 %.
+- **Next:** the rulings on A and B. After B, step c's rest: `Request { asks }`, `run(Files, &Request)`, `as_requested` and `request_how` go, and the kernel files' own tests (`walk/agenda.rs`, `order.rs`, `move_flows.rs`, `plan.rs`) and about 25 crate-test sites move to `Request::new`.
+- **Checks:** `check commit: green, 23 steps (157s)`, exit 0, at d4ee15d9's tree (this commit adds the log alone).
+
+## STOP-REPORT 2026-11-19: `last/net_worth` wants money where L §3.2 gives a `num CUR`
+
+- **Kind:** a test seems wrong (the vector holds refcore's bytes, and the spec says otherwise)
+- **Where:** `engine/tests/m3/runs.vectors:4632` (`last/net_worth`); the engine's `eval/arith.rs` `add_sub`; refcore's `evaluate.py` `arith` (its `k == 'dyn'` branch) and `check.py` `_arith` (`n._dyn`).
+- **Rule or gate:** L §3.2: the unit rules' table ("`money CUR` with `money CUR` gives money; with `num CUR` it gives `num CUR`") and "Back to money" (a `num CUR` becomes money only through `round` or `prorata`).
+- **What happens:** `tally run net_worth.tally --ask net_worth kinds_only` prints `net_worth (d = 2026-01-31): 5 400 PLN`, and `10 400 PLN`, `30 400 PLN`, exit 0. The vector, refcore's, has `5 400.00 PLN`, and every other line is the same.
+  - The ask adds `sum(bal(x, d) … for x in places …)` to `sum(value(…) in PLN by …)`. The first is money PLN at run, but load can't see its unit (`dyn`: x is any place). The second is a `num PLN`.
+  - Refcore's `arith` makes a `dyn` result money when either operand is money. The engine takes the class from the operands: money + `num CUR` is a `num CUR`.
+  - Smallest, `tmp/m3/g3/t2/nw2.tally`: refcore prints `bal(konto, d) + value(…)` as `7 200 PLN` (ask `p_three`), but `sum(bal(x, d) for x in places over .. where x == konto) + value(…)` as `7 200.00 PLN` (ask `p_four`). The values are the same; load's view of the left operand picks the class.
+- **What I tried:** no code. The engine keeps no static type at run to copy refcore's `dyn` rule, and the spec gives a `num CUR`.
+- **What I ask:** a ruling. Either the spec stands (`5 400 PLN`): T holds the vector "for #n", and refcore's `dyn` branch keeps money only for money + money at the round. Or refcore's rule goes into L §3.2. The engine's answer is the spec's.
+- **State:** d4ee15d9, green; nothing uncommitted.
+
+## STOP-REPORT 2026-11-19: step c's `Request { asks }` breaks two benches, which are rule files
+
+- **Kind:** a rule blocks correct code (the files are the rules role's)
+- **Where:** `engine/crates/tally/benches/b1_list.rs:59-72` and `p8_m4.rs:57-62, :106, :110`: `Request { asks, pin: Pin::Canonical, days: Days::Events }`, and `run(given, &asked)` with a `Vec<Given>`.
+- **Rule or gate:** R-80, R-81 (the guard: "a rule file, protected and checksummed"); the plan's §5, step c.
+- **What happens:** with `Request { asks }` and `run(files: Files, &Request)`, the benches don't compile (`check commit`'s build step), and the guard refuses my edit to them.
+- **What I tried:** the part of step c that leaves them compiling: `run_with_lows` and `run_with_forks` went (4110c282). `Request`'s `pin` and `days` stay, and their docs say `run` alone reads them.
+- **What I ask:** the rules role moves the two benches to `run_with_how(Files::new(given), &Request::new(asks), How::FENCES)`. That compiles today and after step c. Then the builder's next turn finishes step c (the log's Next line above).
+- **State:** d4ee15d9, green; nothing uncommitted.
