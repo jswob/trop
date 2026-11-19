@@ -14,7 +14,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Days, Files, Given, How, Request, run_with_how};
 
     /// A sweep decision reading a def's projection, a decision reading its own projection, one
     /// reading a projection from an earlier day, one from a later day, a row that changes a
@@ -245,12 +245,12 @@ unc: 740.00 DUK
             path: "r.tally".to_owned(),
             bytes: Some(REALITY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
+        let how = How {
             days,
+            ..How::FENCES
         };
-        let answer = run(given, &request).expect("an answer");
+        let answer =
+            run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -370,12 +370,12 @@ swept_unc: 900.00 DUK
             path: "u.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
+        let how = How {
             days,
+            ..How::FENCES
         };
-        let answer = run(given, &request).expect("an answer");
+        let answer =
+            run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer");
         answer.lines().to_vec()
     }
 

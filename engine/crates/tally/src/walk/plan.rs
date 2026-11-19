@@ -1009,8 +1009,7 @@ pub(crate) fn class_hole(inst: &Inst, w: &DayWindow) -> Hole {
 
 #[cfg(test)]
 mod tests {
-    use crate::Days;
-    use crate::api::{Asks, Given, Pin, Request, run};
+    use crate::api::{Asks, Files, Given, Request, run};
 
     /// A plan over two bindings whose first key's `where` is refused in February (a
     /// division by zero), before its second binding.
@@ -1068,12 +1067,8 @@ version facts
             path: "later_key.tally".to_owned(),
             bytes: Some(LATER_KEY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Named(vec!["q_bal".to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Named(vec!["q_bal".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
         assert_eq!(
             answer.lines(),
             [
@@ -1238,12 +1233,11 @@ ask q_top: bal(konto, 2026-01-05) in topup
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Named(vec![ask.to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        run(given, &request).expect("an answer").lines().to_vec()
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
     }
 
     #[test]

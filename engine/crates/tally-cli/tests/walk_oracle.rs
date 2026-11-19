@@ -19,9 +19,7 @@
 mod tests {
     use tally::eval::Memo;
     use tally::walk::Lows;
-    use tally::{
-        Asks, Days, Files, Given, How, NotImplemented, Pin, Request, run_with_how, run_with_lows,
-    };
+    use tally::{Asks, Days, Files, Given, How, NotImplemented, Request, run_with_how};
 
     /// T's generated realities: netstring records of law, case, variant, arguments, files.
     const CORPUS: &str = include_str!("../../../tests/properties/kernel.corpus");
@@ -341,12 +339,11 @@ mod tests {
                 bytes: Some(body.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
+        let how = How {
+            lows,
+            ..How::FENCES
         };
-        match run_with_lows(given, &request, lows) {
+        match run_with_how(Files::new(given), &Request::new(Asks::Every), how) {
             Ok(out) => Some(out.lines().to_vec()),
             Err(NotImplemented) => None,
         }

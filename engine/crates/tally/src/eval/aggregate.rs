@@ -65,7 +65,7 @@ pub(crate) type Decided = Result<Vec<(Member, Collected, Option<Refusal>)>, (Hol
 /// What a binding's `where` says of a member: left out, or kept with the hole the `where` is
 /// where it is one. L §5.11.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) enum Kept {
+pub(crate) enum Kept {
     /// The `where` is false.
     Out,
     /// The `where` is true, or a hole.
@@ -719,7 +719,11 @@ impl Engine {
 
     /// Whether binding `bind`'s `where` keeps the member bound in `inner`, and the hole it is
     /// where it is one (refcore's `members`, its `where`). L §5.11.
-    fn where_keeps(
+    ///
+    /// # Errors
+    ///
+    /// The refusals the `where` meets; `RUN-NONE` for a `where` that is `none`.
+    pub(crate) fn where_keeps(
         &mut self,
         m: &Reality,
         bind: &Bind,

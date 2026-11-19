@@ -13,7 +13,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Files, Given, Request, run};
 
     /// The lines a run of `text`, read from `path`, prints, every ask.
     fn lines_of(path: &str, text: &str) -> Vec<String> {
@@ -21,12 +21,8 @@ mod tests {
             path: path.to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -36,12 +32,8 @@ mod tests {
             path: path.to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Named(asks.iter().map(|a| (*a).to_owned()).collect()),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Named(asks.iter().map(|a| (*a).to_owned()).collect()));
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -703,12 +695,8 @@ ask d: diff(bal(main, 2026-02-04)) in s2 against s1
             bytes: Some(text.into_bytes()),
         })
         .collect();
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
         assert_eq!(
             answer.lines(),
             [

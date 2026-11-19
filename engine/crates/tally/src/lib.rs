@@ -23,7 +23,7 @@ mod oracle;
 
 pub use api::{
     Answer, Asks, Files, Given, Pin, Request, Source, check, load_report, reprint, reprint_in, run,
-    run_with_forks, run_with_how, run_with_lows,
+    run_with_how,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
@@ -183,8 +183,8 @@ pub mod eval {
     mod windows;
     mod years;
 
-    pub(crate) use aggregate::Decided;
     pub use aggregate::Member;
+    pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name};
     pub use context::Layer;
@@ -255,7 +255,7 @@ pub mod walk {
     pub use projection::ProjKey;
     pub(crate) use projection::lowest_shape;
     pub use readings::Broke;
-    pub(crate) use reads::state_value;
+    pub(crate) use reads::{place_of, state_value};
     pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,

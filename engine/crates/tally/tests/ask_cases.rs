@@ -17,7 +17,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Days, Files, Given, How, Request, run, run_with_how};
 
     /// Inputs with rows from a version with an `assumed` reason, a row governing from a later
     /// day, a row known after an `as known` cut, holes, a division by zero.
@@ -132,12 +132,8 @@ some (m = 2026-06): ?"pay at 2026-06: no value for 2026-06" (pay[2026-06])"#;
             path: "r.tally".to_owned(),
             bytes: Some(REALITY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(asks);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -242,12 +238,12 @@ total: ?"When is the fee charged?" (fee_day)
             path: "r.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
+        let how = How {
             days,
+            ..How::FENCES
         };
-        let answer = run(given, &request).expect("an answer");
+        let answer =
+            run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -259,6 +255,55 @@ total: ?"When is the fee charged?" (fee_day)
             lines_of(MOVES, Days::Every),
             want,
             "the every-day walk's lines"
+        );
+    }
+
+    /// `unit(x)` at run (L §5.10 Kind and unit, §8.4): of a bound place, its currency as a
+    /// key of `currencies`, or refused `RUN-DOMAIN` for a quantity unit; of a balance, the
+    /// key the money carries.
+    const UNITS: &str = r#"model u
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit fund_unit "jednostka"
+
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place fund: holdings fund_unit lives 2026-01-01..
+
+version v
+  cite s
+  known 2026-01-01
+  opening[konto] = 10.00 PLN at 2026-01-01 start "w"
+  opening[konto_eur] = 2.00 EUR at 2026-01-01 start "w"
+  opening[fund] = 3 at 2026-01-01 start "w"
+
+ask in_pln: sum(1 for x in places over .. where x in accounts and unit(x) == PLN)
+
+ask of_money: unit(bal(konto_eur, 2026-01-31)) == EUR and unit(bal(konto, 2026-01-31)) == PLN
+
+ask of_fund: sum(1 for x in places over .. where unit(x) == EUR)
+"#;
+
+    #[test]
+    fn unit_of_a_place_is_its_currency_key_and_a_quantity_unit_is_refused() {
+        assert_eq!(
+            lines_of(UNITS, Days::Events),
+            [
+                "in_pln: 1",
+                "  cut 2026-03-01",
+                "of_fund: refused: RUN-DOMAIN unit(fund): its unit fund_unit is a quantity unit, a key of no unit kind",
+                "  cut 2026-03-01",
+                "of_money: true",
+                "  cut 2026-03-01",
+            ],
+            "refcore's lines"
         );
     }
 
@@ -559,12 +604,8 @@ with_gifts: refused: RUN-DIV division by zero
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -1080,8 +1121,8 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
     /// A run's lines, `None` for not implemented.
     fn member_run(given: &[Given], ids: &[&str]) -> Option<Vec<String>> {
         let asks = Asks::Named(ids.iter().map(|id| (*id).to_owned()).collect());
-        let files = tally::Files::new(given.to_vec());
-        let answer = tally::run_with_how(files, &Request::new(asks), tally::ask::How::FENCES);
+        let files = Files::new(given.to_vec());
+        let answer = run_with_how(files, &Request::new(asks), How::FENCES);
         answer.ok().map(|a| a.lines().to_vec())
     }
 

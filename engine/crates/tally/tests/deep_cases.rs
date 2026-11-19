@@ -11,7 +11,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Files, Given, Request, run};
 
     const HEAD: &str = "model deep
   tally 2
@@ -101,12 +101,8 @@ ask other: hop[75]
             path: "r.tally".to_owned(),
             bytes: Some(format!("{HEAD}{body}").into_bytes()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 

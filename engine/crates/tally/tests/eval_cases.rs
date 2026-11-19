@@ -326,12 +326,8 @@ ask hp: by_helper, by_helper as if {amt[yes] = 500.00 EUR} with work = yes law 2
             path: "fx.tally".to_owned(),
             bytes: Some(KEYED_BY_MOVEMENT.as_bytes().to_vec()),
         }];
-        let request = tally::Request {
-            asks: tally::Asks::Every,
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        let answer = tally::run(given, &request).expect("an answer");
+        let request = tally::Request::new(tally::Asks::Every);
+        let answer = tally::run(tally::Files::new(given), &request).expect("an answer");
         let heads: Vec<&str> = answer
             .lines()
             .iter()

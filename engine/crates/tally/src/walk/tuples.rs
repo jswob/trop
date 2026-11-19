@@ -13,7 +13,7 @@
 use super::instance::{Exists, join};
 use super::plan::{date_of, invariant, refuse};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Decided, Engine, Env, LawClass, Member, reads_name};
+use crate::eval::{Collected, Ctx, Decided, Engine, Env, Kept, LawClass, Member, reads_name};
 use crate::hole::{Hole, Unknown};
 use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
 use crate::syntax::Stop;
@@ -37,6 +37,9 @@ pub(super) struct Tuple {
     /// What deciding it read: its law dates, domains, members and `where`s, which go with its
     /// instance, not to the reader of the move's instances.
     pub(super) coll: Collected,
+    /// The positions of its keys whose `where` reads a law-dated fact and waits for the
+    /// tuple's `at`, which reads a key not bound when they were (L §4.3, E §4.1 step 1; P30).
+    pub(super) waiting: Vec<usize>,
 }
 
 impl Engine {
@@ -58,6 +61,7 @@ impl Engine {
             domain_hole: None,
             refused: None,
             coll: Collected::default(),
+            waiting: Vec::new(),
         }];
         while let Some(tuple) = work.pop() {
             if tuple.refused.is_some() {
@@ -83,7 +87,21 @@ impl Engine {
                 }
                 law @ (Law::Day(_) | Law::Window(..) | Law::None) => law,
             };
-            let members = match self.members_over_law(m, mv, (&bind.node, &tuple.env), &law, ctx)? {
+            // a `where` that reads a law-dated fact, while the `at` reads a key not yet bound,
+            // waits for its tuple's `at` (L §4.3, E §4.1 step 1; P30)
+            let pos = tuple.keys.len();
+            let waits = law == Law::None && mv.dated_wheres.contains(&pos);
+            let unfiltered;
+            let node = if waits {
+                unfiltered = crate::syntax::Bind {
+                    filter: None,
+                    ..bind.node.clone()
+                };
+                &unfiltered
+            } else {
+                &bind.node
+            };
+            let members = match self.members_over_law(m, mv, (node, &tuple.env), &law, ctx)? {
                 Err((h, read)) => {
                     decided.merge(&read);
                     out.push(Tuple {
@@ -101,11 +119,97 @@ impl Engine {
                 extended.coll = decided.clone();
                 extended.coll.merge(&read);
                 extended.refused = refused;
-                next.push(extended);
+                if waits {
+                    extended.waiting.push(pos);
+                }
+                next.extend(self.waiting_wheres(m, mv, extended, ctx)?);
             }
             work.extend(next.into_iter().rev());
         }
         Ok(out)
+    }
+
+    /// A tuple's waiting `where`s, read once the keys its `at` reads are bound, each at the
+    /// tuple's law date in binding order: a false one drops the tuple, a hole joins its
+    /// existence, a refused one makes it a refused tuple; the tuple as it was while the `at`
+    /// still reads a key not yet bound. L §4.3 (a key binding's `where` is read for each tuple
+    /// at the move's `at`), E §4.1 step 1 (P30).
+    fn waiting_wheres(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        mut tuple: Tuple,
+        ctx: Ctx,
+    ) -> Result<Option<Tuple>, Stop> {
+        if tuple.waiting.is_empty() || tuple.refused.is_some() {
+            return Ok(Some(tuple));
+        }
+        self.push();
+        let law = self.move_law(m, mv, &tuple.env, ctx);
+        tuple.coll.merge(&self.pop_alone());
+        let law = law?;
+        if law == Law::None {
+            return Ok(Some(tuple));
+        }
+        for pos in core::mem::take(&mut tuple.waiting) {
+            let bind = mv
+                .binds
+                .get(pos)
+                .ok_or_else(|| invariant("a waiting key's binding"))?;
+            self.push();
+            let kept = self.where_at_law(m, mv, (&bind.node, &tuple.env), &law, ctx);
+            tuple.coll.merge(&self.pop_alone());
+            match kept {
+                Ok(Kept::Out) => return Ok(None),
+                Ok(Kept::In(None)) => {}
+                Ok(Kept::In(Some(h))) => tuple.exists = join(tuple.exists, &h),
+                Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+                    tuple.refused = Some(r);
+                    return Ok(Some(tuple));
+                }
+                Err(stop) => return Err(stop),
+            }
+        }
+        Ok(Some(tuple))
+    }
+
+    /// A `where` read at a tuple's law date `law`: a hole law date makes it that hole; under a
+    /// window `at`, read once per law-date class the window holds, `HOLE-IMPRECISE` where two
+    /// differ, as a member's `where` is in `members_over_law`. L §4.3, §4.4, §5.14 Keys.
+    fn where_at_law(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (bind, env): (&crate::syntax::Bind, &Env),
+        law: &Law,
+        ctx: Ctx,
+    ) -> Result<Kept, Stop> {
+        let day = match law {
+            Law::Hole(h) => return Ok(Kept::In(Some(h.clone()))),
+            Law::None => return Err(invariant("a waiting where with no law date")),
+            Law::Day(d) => return self.where_keeps(m, bind, env, ctx.at_law(Some(*d))),
+            Law::Window(..) => law
+                .first()
+                .ok_or_else(|| invariant("a window with no day"))?,
+        };
+        let mark = self.open_law_class(day);
+        let first = self.where_keeps(m, bind, env, ctx.at_law(Some(day)));
+        let mut class = self.close_law_class(mark, day)?;
+        let first = first?;
+        if let (Kept::Out | Kept::In(None), Some(window)) = (&first, law.window()) {
+            for at in law.rest() {
+                if class.holds(*at) {
+                    continue;
+                }
+                let opened = self.open_law_class(*at);
+                let other = self.where_keeps(m, bind, env, ctx.at_law(Some(*at)));
+                class = self.close_law_class(opened, *at)?;
+                if other? != first {
+                    return Ok(Kept::In(Some(imprecise_law(window, &mv.id))));
+                }
+            }
+        }
+        Ok(first)
     }
 
     /// The members of binding `bind` in scope `env` at law date `law`: under a window `at`,
@@ -431,5 +535,6 @@ fn extend(
         domain_hole: None,
         refused: None,
         coll: tuple.coll.clone(),
+        waiting: tuple.waiting.clone(),
     })
 }

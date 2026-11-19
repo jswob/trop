@@ -1018,12 +1018,8 @@ version bank_a
             path: "a.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec!["q".to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec!["q".to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer.lines().first().cloned(),
             Err(_) => None,
         }
@@ -2068,12 +2064,8 @@ ask qt: taken[2026], rounded
             path: "a.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec![ask.to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec![ask.to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer.lines().first().cloned(),
             Err(_) => None,
         }
@@ -3091,12 +3083,8 @@ version v1
                 bytes: Some(scen.as_bytes().to_vec()),
             },
         ];
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec![ask.to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec![ask.to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer
                 .lines()
                 .iter()
@@ -3804,12 +3792,8 @@ version v1
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec![ask.to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec![ask.to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer
                 .lines()
                 .iter()
@@ -5065,6 +5049,215 @@ ask q: bal(konto, 2026-04-30)
             refusal(text),
             "LOAD-KIND a place is written by its id: none (a.tally:17)",
             "refcore's message"
+        );
+    }
+
+    /// A settlement bound over adjustments `on act_day`, its `at` reading the key: the
+    /// binding is read before the move has a law date (#235, P28; L §4.3, §5.14 Keys).
+    const KEY_ON: &str = r#"model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move back[a in adjustments on act_day where a.adjusts in rents]: transfers
+  on act_day
+  at a.day
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version day
+  cite plan
+  governs always
+  known 2026-01-01
+  act_day = 2026-04-05
+
+ask q: bal(konto, 2026-04-30) law cut
+"#;
+
+    #[test]
+    fn a_key_read_before_the_move_s_at_reads_nothing_law_dated() {
+        assert_eq!(refusal(KEY_ON), "loaded", "act_day governs always");
+        let dated = KEY_ON.replace("  governs always\n", "  governs 2026..\n");
+        assert_eq!(
+            refusal(&dated),
+            "LOAD-LAWDATE move back's key a reads law-dated act_day with no law date: its at reads a (a.tally:29)",
+            "act_day law-dated; refcore meets it at run (REFCORE-NOT-YET), #235"
+        );
+    }
+
+    /// #235's key read through a band's call, `on shift(0)`, and through an aggregate's term,
+    /// `on min(act_day for k in month)`: law-dated, refused at load, as the plain read is; read
+    /// with no law date before, each was `ENGINE-INVARIANT` at run (the review of G3's turn 4,
+    /// B-1, `b1_band`, `b4_agg`). L §4.3.
+    #[test]
+    fn a_key_read_through_a_band_or_an_aggregate_before_the_at_is_refused() {
+        let band = KEY_ON
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\nband shift(n: int): date\n",
+            )
+            .replace("on act_day where", "on shift(0) where")
+            .replace(
+                "  act_day = 2026-04-05\n",
+                "  act_day = 2026-04-05\n  shift: [0, inf) = 2026-04-05\n",
+            );
+        let aggregate = KEY_ON
+            .replace(
+                "unit PLN: currency minor 0.01\n",
+                "unit PLN: currency minor 0.01\n\nindex month = month 2026-01..2026-12\n",
+            )
+            .replace("on act_day where", "on min(act_day for k in month) where");
+        for (text, read) in [(&band, "shift"), (&aggregate, "act_day")] {
+            assert_eq!(refusal(text), "loaded", "{read} governs always");
+            let dated = text.replace("  governs always\n", "  governs 2026..\n");
+            assert_eq!(
+                refusal(&dated),
+                format!(
+                    "LOAD-LAWDATE move back's key a reads law-dated {read} with no law date: its at reads a (a.tally:31)"
+                ),
+                "{read} law-dated"
+            );
+        }
+    }
+
+    /// The lines a run of `text` prints, every ask, but its warnings.
+    fn answered(text: &str) -> Vec<String> {
+        let given = vec![tally::Given {
+            path: "a.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = tally::Request::new(tally::Asks::Every);
+        let answer = tally::run(tally::Files::new(given), &request).expect("an answer");
+        answer
+            .lines()
+            .iter()
+            .filter(|line| !line.starts_with("warning:"))
+            .cloned()
+            .collect()
+    }
+
+    /// A key's `where` that reads law-dated `act_day` and `back_day` while the `at` reads the
+    /// key itself, or a key bound after it: read at its tuple's `at`, so it answers as the
+    /// same text whose `where` gives that value with no law date (P30, #235; L §4.3, E §4.1
+    /// step 1). Before, each read was `ENGINE-INVARIANT`.
+    #[test]
+    fn a_key_s_where_reads_law_dated_facts_at_its_tuple_s_at() {
+        let dated = KEY_ON
+            .replace("  governs always\n", "  governs 2026..\n")
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\ninput back_day: date\n",
+            )
+            .replace(
+                "  act_day = 2026-04-05\n",
+                "  act_day = 2026-04-05\n  back_day = 2026-04-20\n",
+            )
+            .replace("on act_day where", "over .. where");
+        let kept = dated.replace(
+            "a.adjusts in rents]",
+            "a.adjusts in rents and act_day < back_day]",
+        );
+        let dropped = dated.replace(
+            "a.adjusts in rents]",
+            "a.adjusts in rents and act_day > back_day]",
+        );
+        let later = dated.replace(
+            "back[a in adjustments over .. where a.adjusts in rents]",
+            "back[p in accounts over .. where act_day < back_day, a in adjustments over .. where a.adjusts in rents]",
+        );
+        let none = dated.replace(
+            "a.adjusts in rents]",
+            "a.adjusts in rents and a.adjusts in transfers]",
+        );
+        let reality = load_one(&kept).expect("loads");
+        let back = reality.moves.get("back").expect("back");
+        assert_eq!(back.dated_wheres, vec![0], "the where reads act_day");
+        assert_eq!(answered(&kept), answered(&dated), "the where holds");
+        assert_eq!(answered(&dropped), answered(&none), "the where fails");
+        let twin = dated.replace("back[a in", "back[p in accounts over .., a in");
+        assert_eq!(
+            answered(&later),
+            answered(&twin),
+            "the at reads a later key"
+        );
+    }
+
+    /// `flows` over a span that starts before the run's start: its hole names the target as
+    /// written, keys and field too, as refcore's `fmt_node` does (L §8.1; the review of G3's
+    /// turn 3, `n4.tally`).
+    #[test]
+    fn a_flows_hole_before_the_start_names_its_keys() {
+        let text = "model n4
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+
+input rent_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+version base
+  cite s
+  governs always
+  known 2025-01-01
+  rent_amt = 2 800.00 PLN
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start \"w\"
+
+ask f1: flows(rent[2026-01], 2025-12-01 .. 2026-01-31)
+ask f2: flows(rent, 2025-12-01 .. 2026-01-31)
+ask f4: flows(rent[2026-01].cash, 2025-12-01 .. 2026-01-31)
+";
+        let heads: Vec<String> = answered(text)
+            .into_iter()
+            .filter(|line| line.starts_with('f'))
+            .collect();
+        assert_eq!(
+            heads,
+            [
+                "f1: ?\"before the run's start\" (rent[2026-01])",
+                "f2: ?\"before the run's start\" (rent)",
+                "f4: ?\"before the run's start\" (rent[2026-01].cash)",
+            ],
+            "refcore's lines"
         );
     }
 }

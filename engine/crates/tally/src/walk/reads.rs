@@ -168,22 +168,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Result<String, Hole>, Stop> {
         let v = self.ev(m, e, env, ctx)?;
-        if let Value::Hole(h) = v {
-            return Ok(Err(h));
-        }
-        if v == Value::None {
-            return Err(refuse(
-                Run::None,
-                format!("{} is none here: a place", expr_text(e)?),
-            ));
-        }
-        if let Value::Key(KeyVal::Thing(name)) = &v
-            && m.things.get(name).is_some_and(|t| m.is_place(t))
-        {
-            return Ok(Ok(name.clone()));
-        }
-        let shown = v.text(m).map_err(crate::eval::num_stop)?;
-        Err(refuse(Run::Domain, format!("{shown} is not a place")))
+        place_of(m, e, v)
     }
 
     /// A balance read's unit: the one written, or the place's (refcore's `bal_unit`).
@@ -925,14 +910,31 @@ pub(super) fn outside_run(m: &Reality, d: Day, figure: &str) -> Option<Hole> {
     }
 }
 
-/// A flows target's text where a message names it (refcore's `fmt_node`). L §8.4.
-pub(super) fn expr_text(e: &Expr) -> Result<String, Stop> {
-    if let Expr::Name(n) = e {
-        return Ok(n.clone());
+/// The place argument `e`, evaluated to `v`, names, or the hole it is: `none` refused naming
+/// the argument as written, a value that is no place refused naming it (refcore's
+/// `m_place_arg`, its `fmt_node`). The one check of a read's place and of `unit(x)`'s.
+/// L §5.10, §8.4 (`RUN-NONE`, `RUN-DOMAIN`).
+///
+/// # Errors
+///
+/// `RUN-NONE` for `none`, `RUN-DOMAIN` for a value that is no place.
+pub(crate) fn place_of(m: &Reality, e: &Expr, v: Value) -> Result<Result<String, Hole>, Stop> {
+    if let Value::Hole(h) = v {
+        return Ok(Err(h));
     }
-    Err(Stop::NotBuilt(
-        "the text of an expression other than a name",
-    ))
+    if v == Value::None {
+        return Err(refuse(
+            Run::None,
+            format!("{} is none here: a place", crate::load::expr_text(e)),
+        ));
+    }
+    if let Value::Key(KeyVal::Thing(name)) = &v
+        && m.things.get(name).is_some_and(|t| m.is_place(t))
+    {
+        return Ok(Ok(name.clone()));
+    }
+    let shown = v.text(m).map_err(crate::eval::num_stop)?;
+    Err(refuse(Run::Domain, format!("{shown} is not a place")))
 }
 
 /// A run-time refusal (L §8.4).

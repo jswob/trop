@@ -1,4 +1,4 @@
-//! The engine's entry: the files a run is given and its request go in, the printed answer comes out.
+//! The engine's entry: a run's or a check's files and asks go in, the printed answer comes out.
 //! Spec: E §1 (the run function); E §3.1 step 1 (files by full path); L §8.3 (which refusal
 //! prints: every file is read before any is split, and split before any is parsed); L §6.4
 //! (a reality with scenarios runs as worlds); L §5.18 (the asks answered once the reality
@@ -15,9 +15,7 @@ use crate::NotImplemented;
 use crate::ask::{Answered, How, answer, answer_worlds, check_lines, report_lines};
 use crate::base::Refusal;
 use crate::load::{Loaded, load_run, split_files};
-use crate::oracle::Days;
 use crate::syntax::Stop;
-use crate::walk::{Forks, Lows};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// One file the run is given: its path as the run names it, and its bytes, or none when the
@@ -84,28 +82,20 @@ impl Files {
 }
 
 /// What the run is asked: the asks to answer. Each ask's clocks come from the text, S and E
-/// from the header and its cut K from the ask, never from the request (E §1, §11).
+/// from the header and its cut K from the ask, never from the request (E §1, §11); how a `use`
+/// line's pin is taken is the files' ([`Files::pin`]), which days the walk steps the engine's
+/// ([`How::days`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Request {
     /// The asks to answer.
     pub asks: Asks,
-    /// How a `use` line's pin is taken, read only by [`run`], [`run_with_lows`] and
-    /// [`run_with_forks`]; [`run_with_how`] takes [`Files::pin`].
-    pub pin: Pin,
-    /// Which days the walk steps, read only by [`run`], [`run_with_lows`] and
-    /// [`run_with_forks`]; [`run_with_how`] takes [`How::days`].
-    pub days: Days,
 }
 
 impl Request {
-    /// The asks, a `use` line's pin from the canonical text, the event walk's days.
+    /// The asks.
     #[must_use]
     pub fn new(asks: Asks) -> Request {
-        Request {
-            asks,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        }
+        Request { asks }
     }
 }
 
@@ -155,17 +145,18 @@ impl Answer {
 /// Runs a reality's files on a request and answers with the printed lines: it reads the
 /// files, splits them all and reads their scenario headers (L §8.3), loads the reality, or its
 /// worlds, the base and each scenario's (L §6.4), then answers the asks (L §5.18). The files
-/// given hold the whole reality; the request's pin and days say how a `use` pin is taken and
-/// which days the walk steps.
+/// say how a `use` pin is taken and where a joint model's members are found; each ask's engine
+/// computes with every fence's form and the event walk's days ([`How::FENCES`]).
 ///
 /// # Errors
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
-pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemented> {
-    run_with_how(as_requested(given, request), request, request_how(request))
+pub fn run(files: Files, request: &Request) -> Result<Answer, NotImplemented> {
+    run_with_how(files, request, FENCES)
 }
 
-/// How [`run`] computes: every fence's form (P §2.3, §2.5, §3.3), the event walk's days.
+/// How [`run`], [`check`] and [`load_report`] compute: every fence's form (P §2.3, §2.5,
+/// §3.3) and the event walk's days.
 const FENCES: How = How::FENCES;
 
 /// Runs `files` on the request's asks, each ask's engine computing as `how` says, each fence's
@@ -227,65 +218,6 @@ pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
         })
     });
     finish(report)
-}
-
-/// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
-/// from fence F5's running sums, as [`run`] reads it (`Lows::Tree`), or through the
-/// projection's own walk (`Lows::Walk`), the plain twin the equivalence test compares it with
-/// (E §4.3, P §2.3). Both print the same bytes for every reality and request: a difference is
-/// a fault of the fence (R-130), which is how a test of the fence uses it.
-///
-/// # Errors
-///
-/// As [`run`].
-pub fn run_with_lows(
-    given: Vec<Given>,
-    request: &Request,
-    lows: Lows,
-) -> Result<Answer, NotImplemented> {
-    let how = How {
-        lows,
-        ..request_how(request)
-    };
-    run_with_how(as_requested(given, request), request, how)
-}
-
-/// [`run`] with each ask's engine continuing a projection's walk read again through a later
-/// day as `forks` says: from where it stood, by fence F6, as [`run`] walks (`Forks::On`), or
-/// walked anew from its first day, each read its own walk (`Forks::Off`), the plain twin the
-/// equivalence test compares it with (P §2.5, E §4.3). Both print the same bytes for every
-/// reality and request: a difference is a fault of the fence (R-130), which is how a test of
-/// the fence uses it.
-///
-/// # Errors
-///
-/// As [`run`].
-pub fn run_with_forks(
-    given: Vec<Given>,
-    request: &Request,
-    forks: Forks,
-) -> Result<Answer, NotImplemented> {
-    let how = How {
-        forks,
-        ..request_how(request)
-    };
-    run_with_how(as_requested(given, request), request, how)
-}
-
-/// The files given, no file table, a `use` pin taken as the request says.
-fn as_requested(given: Vec<Given>, request: &Request) -> Files {
-    Files {
-        pin: request.pin,
-        ..Files::new(given)
-    }
-}
-
-/// Every fence's form, the walk stepping the days the request says.
-fn request_how(request: &Request) -> How {
-    How {
-        days: request.days,
-        ..FENCES
-    }
 }
 
 /// Whether the run's reality is a joint model's.
@@ -445,15 +377,11 @@ fn read(mut given: Vec<Given>) -> Result<Vec<Source>, Refusal> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Answer, Asks, Given, Pin, Request, read, run};
+    use super::{Answer, Asks, Files, Given, Request, read, run};
     use crate::NotImplemented;
 
     fn every() -> Request {
-        Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: crate::Days::Events,
-        }
+        Request::new(Asks::Every)
     }
 
     fn given(files: &[(&str, Option<&[u8]>)]) -> Vec<Given> {
@@ -491,13 +419,13 @@ mod tests {
             ("b.tally", None),
         ]);
         assert_eq!(
-            line(run(missing, &every())),
+            line(run(Files::new(missing), &every())),
             "refused: LOAD-PATH b.tally doesn't exist",
             "the first missing path by full path"
         );
         let bad = given(&[("z.tally", None), ("a.tally", Some(b"\xff"))]);
         assert_eq!(
-            line(run(bad, &every())),
+            line(run(Files::new(bad), &every())),
             "refused: LOAD-PARSE cannot parse: file is not UTF-8 (a.tally)",
             "bytes that aren't UTF-8 come first by path"
         );
@@ -510,7 +438,7 @@ mod tests {
             ("b.tally", Some(b"model b\n\ttally 2\n")),
         ]);
         assert_eq!(
-            line(run(files, &every())),
+            line(run(Files::new(files), &every())),
             "refused: LOAD-PARSE cannot parse: tab (b.tally:2)",
             "b's tab is met when it is split, before a's header is parsed"
         );
@@ -520,7 +448,7 @@ mod tests {
         "model m\n  tally 2\n  on 2026-01-01\n  start 2026-01-01\n  end 2026-12-31\n";
 
     fn lines(files: Vec<Given>, request: &Request) -> Vec<String> {
-        let answer = run(files, request).expect("an answer");
+        let answer = run(Files::new(files), request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -546,21 +474,13 @@ mod tests {
             ],
             "by id"
         );
-        let named = Request {
-            asks: Asks::Named(vec!["b".to_owned()]),
-            pin: Pin::Canonical,
-            days: crate::Days::Events,
-        };
+        let named = Request::new(Asks::Named(vec!["b".to_owned()]));
         assert_eq!(
             lines(files(), &named),
             ["b: (12.50 PLN, 25.00 PLN)", "  cut 2026-01-01"],
             "named"
         );
-        let missing = Request {
-            asks: Asks::Named(vec!["b".to_owned(), "c".to_owned()]),
-            pin: Pin::Canonical,
-            days: crate::Days::Events,
-        };
+        let missing = Request::new(Asks::Named(vec!["b".to_owned(), "c".to_owned()]));
         assert_eq!(
             lines(files(), &missing),
             ["refused: REQ-ASK no ask c"],
@@ -573,18 +493,14 @@ mod tests {
         let text = format!("{MODEL}\ninput x: num\n\ninput x: num\n");
         let files = given(&[("m.tally", Some(text.as_bytes()))]);
         assert_eq!(
-            line(run(files, &every())),
+            line(run(Files::new(files), &every())),
             "refused: LOAD-DUP x is declared twice (m.tally:9)",
             "the second x"
         );
     }
 
     fn probe() -> Request {
-        Request {
-            asks: Asks::Named(vec!["zz".to_owned()]),
-            pin: Pin::Canonical,
-            days: crate::Days::Events,
-        }
+        Request::new(Asks::Named(vec!["zz".to_owned()]))
     }
 
     #[test]
@@ -595,7 +511,7 @@ mod tests {
         let scenario = "scenario s over m\n  tally 2\n  from 2026-06-01\n\nask b: fee in s\n";
         let alone = given(&[("s.tally", Some(scenario.as_bytes()))]);
         assert_eq!(
-            line(run(alone, &every())),
+            line(run(Files::new(alone), &every())),
             "refused: LOAD-HEADER 0 files have a model header; exactly one does",
             "a scenario alone: its base has no model"
         );
@@ -610,11 +526,7 @@ mod tests {
             ["refused: REQ-ASK no ask zz"],
             "after both worlds load"
         );
-        let base_ask = Request {
-            asks: Asks::Named(vec!["a".to_owned()]),
-            pin: Pin::Canonical,
-            days: crate::Days::Events,
-        };
+        let base_ask = Request::new(Asks::Named(vec!["a".to_owned()]));
         assert_eq!(
             lines(both(), &base_ask),
             ["a: 12.50 PLN", "  cut 2026-01-01"],

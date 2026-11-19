@@ -15,7 +15,7 @@
 use std::hint::black_box;
 
 use gungraun::prelude::*;
-use tally::{Answer, Asks, Days, Given, NotImplemented, Pin, Request, run};
+use tally::{Answer, Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
 /// The index's keys, k1 to k100000.
 const KEYS: u32 = 100_000;
@@ -38,17 +38,14 @@ fn reality() -> String {
     )
 }
 
-/// The run's one file and the request for its ask.
-fn setup() -> (Vec<Given>, Request) {
-    let files = vec![Given {
+/// The run's one file, no file table, a `use` pin from the canonical text, and the request
+/// for its ask.
+fn setup() -> (Files, Request) {
+    let files = Files::new(vec![Given {
         path: "list_100000.tally".to_owned(),
         bytes: Some(reality().into_bytes()),
-    }];
-    let asked = Request {
-        asks: Asks::Named(vec!["b1_sum".to_owned()]),
-        pin: Pin::Canonical,
-        days: Days::Events,
-    };
+    }]);
+    let asked = Request::new(Asks::Named(vec!["b1_sum".to_owned()]));
     (files, asked)
 }
 
@@ -64,9 +61,10 @@ fn check(answer: Result<Answer, NotImplemented>) {
 
 #[library_benchmark(teardown = check)]
 #[bench::sum(setup())]
-fn b1_list(input: (Vec<Given>, Request)) -> Result<Answer, NotImplemented> {
+fn b1_list(input: (Files, Request)) -> Result<Answer, NotImplemented> {
     let (files, asked) = black_box(input);
-    run(files, &asked)
+    // every fence on, the event walk's days
+    run_with_how(files, &asked, black_box(How::FENCES))
 }
 
 library_benchmark_group!(name = micro, benchmarks = b1_list);
