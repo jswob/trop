@@ -1,6 +1,6 @@
 7aa082f26d59ff772a7595101c4bf1f2eb727cd4e6b368a36fbf35ef8097184d  .claude/agents/engine-reviewer.md
 d6df043cff4543699a7ea0831113be0c31e7c1488b154b285cd3aec03d76c4fe  .claude/settings.json
-28b41142200a7f03f70381d2e52a6e31fe420ad113585c91fd580ef62b1dd02a  .claude/skills/engine-coordinator/SKILL.md
+b9d540519108b1fed0b194c19e60485ce0346e538e4ab29571659a49837bdda3  .claude/skills/engine-coordinator/SKILL.md
 cf608143b8a9d743fcdea51c574d7dfb778e1b39683f7ddf1b34b189a61901a0  .claude/skills/engine-rust/SKILL.md
 6e54b68835ba812dba032a9c57f12a3b4839dbe71c2dab27fb4ed416677cd8ee  .claude/skills/engine-rust/references/data-layout.md
 249525a88df403d8ad3a19c76d2c884b7271feb0b0abecd60f310bee4aa8511f  .claude/skills/engine-rust/references/evaluator-and-memo.md
