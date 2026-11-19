@@ -255,7 +255,7 @@ pub mod walk {
     pub use projection::ProjKey;
     pub(crate) use projection::lowest_shape;
     pub use readings::Broke;
-    pub(crate) use reads::state_value;
+    pub(crate) use reads::{place_of, state_value};
     pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,

@@ -1,4 +1,4 @@
-//! The built-ins' dispatch and the number built-ins: `round`, `min`, `pow`, `unit`, `factor`, ….
+//! The built-ins' dispatch, the number built-ins (`round`, `min`, `pow`, …) and `unit`, a key.
 //! Spec: L §4.2 (the dates' and calendars' built-ins, in `dates.rs` and `business.rs`; `pos`),
 //! §7.2 (`round` and the type of its result; a bare step takes the operand's unit), §5.11
 //! (`min`, `max`, `missing`), §5.10 (`unit(x)`, a key of a unit kind), §3.3 (`periodic`,
@@ -21,6 +21,7 @@ use super::state::{
 use super::ty::sample;
 use super::windows::{End, as_window, imprecise};
 use crate::base::{Load, Run};
+use crate::load::expr_text;
 use crate::model::{
     BindInfo, Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit,
     money_num, num_money,
@@ -28,6 +29,7 @@ use crate::model::{
 use crate::num::{Mode, Num, NumError};
 use crate::read::{Asked, Found, read_input};
 use crate::syntax::{Call, Expr, Key, Lit, Postfix, Stop, Value as Written};
+use crate::walk::place_of;
 
 impl Engine {
     /// A call: a band's, or a built-in's (refcore's `e_call`). L §4.2, §5.9, §5.11, §7.2.
@@ -93,10 +95,16 @@ impl Engine {
             currency_unit(m, money.currency()).map_err(num_stop)?
         } else if let Value::Number(n) = &v {
             n.unit()
-        } else if v == Value::None && quantity_typed(m, arg, env, ctx) {
-            return Err(none_here(arg, "a quantity"));
+        } else if v == Value::None && quantity_typed(m, arg, env, ctx)? {
+            return Err(refuse(
+                Run::None,
+                format!("{} is none here: a quantity", expr_text(arg)),
+            ));
         } else {
-            return place_unit_key(m, arg, &v);
+            return match place_of(m, arg, v)? {
+                Ok(place) => place_unit_key(m, &place),
+                Err(hole) => Ok(Value::Hole(hole)),
+            };
         };
         if let [(u, 1)] = unit.terms()
             && (m.currencies.contains_key(u) || m.unit_kind_keys.contains_key(u))
@@ -513,16 +521,7 @@ fn arity() -> Stop {
 /// `unit(x)` of a place: its unit as a key of the unit kind that holds it, refused where it
 /// has none, a place of unit `any` or one of a quantity unit (refcore's `m_c_unit`, its
 /// place's half). L §5.10 Kind and unit, §8.4.
-fn place_unit_key(m: &Reality, arg: &Expr, v: &Value) -> Result<Value, Stop> {
-    if *v == Value::None {
-        return Err(none_here(arg, "a place"));
-    }
-    let Value::Key(KeyVal::Thing(place)) = v else {
-        return Err(not_a_place(m, v));
-    };
-    if !m.things.get(place).is_some_and(|t| m.is_place(t)) {
-        return Err(not_a_place(m, v));
-    }
+fn place_unit_key(m: &Reality, place: &str) -> Result<Value, Stop> {
     let Some(unit) = m
         .things
         .get(place)
@@ -543,32 +542,17 @@ fn place_unit_key(m: &Reality, arg: &Expr, v: &Value) -> Result<Value, Stop> {
     ))
 }
 
-/// `v is not a place`, as a place's read refuses it (refcore's `place_arg`). L §5.10, §8.4.
-fn not_a_place(m: &Reality, v: &Value) -> Stop {
-    match v.text(m) {
-        Ok(shown) => refuse(Run::Domain, format!("{shown} is not a place")),
-        Err(error) => num_stop(error),
-    }
-}
-
 /// Whether load typed `arg` a quantity, by the sample of its type (refcore's `_uq`, which the
 /// checker sets). L §5.10 Kind and unit.
-fn quantity_typed(m: &Reality, arg: &Expr, env: &Env, ctx: Ctx) -> bool {
-    matches!(
-        sample(m, arg, env, ctx),
-        Ok(Some(Value::Money(_) | Value::Number(_)))
-    )
-}
-
-/// `x is none here: what`, a name's text where the argument is one (refcore's `fmt_node`).
-/// L §8.4.
-fn none_here(arg: &Expr, what: &str) -> Stop {
-    let text = if let Expr::Name(name) = arg {
-        name.as_str()
-    } else {
-        "a value"
-    };
-    refuse(Run::None, format!("{text} is none here: {what}"))
+///
+/// # Errors
+///
+/// The stop the sample meets: a class the run can't see stops, never guessed a place.
+fn quantity_typed(m: &Reality, arg: &Expr, env: &Env, ctx: Ctx) -> Result<bool, Stop> {
+    Ok(matches!(
+        sample(m, arg, env, ctx)?,
+        Some(Value::Money(_) | Value::Number(_))
+    ))
 }
 
 /// `round`'s step as its operand meets it: a figure written bare, with no unit and not as a
