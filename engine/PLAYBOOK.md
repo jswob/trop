@@ -111,7 +111,7 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 ### D9. Budget
 
 - **Pick:** a limit is a safety stop, never a target to save against.
-  - A brief gives the estimate with its basis, the limit, and a wind-down line one point under it. A small session gives a plan, a stop and a hard stop (1.5, 2.5 and 3 % for a study).
+  - A brief gives the estimate with its basis, the limit, and a wind-down line one point under it. A small session gives a plan, a stop and a hard stop (1.5, 2.5 and 3 % for a study). A brief for a run with Fable sessions gives the Fable meter's estimate beside the week's (D10): that meter fills about four times as fast as Fable's part of the run's figure.
   - When the plans' re-estimate passes the limit, the coordinator asks then, in one question with the numbers.
   - At the wind-down: finish the green step, push, write `RESUME.md`, ask for the new limit.
   - Approved quality work is never cut to fit.
@@ -122,11 +122,12 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D10. Measuring cost
 
-- **Pick:** `engine/tools/usage <the run's ids file>` after every chunk, logged in `progress.md`. Its figure is a share of the week (8.6 million weighted tokens to 1 %, calibrated on Opus). A Fable call counts inside it at Fable's list price beside Opus's: twice on input, output and cache writes, the same on cache reads. One ids file a run holds every session, whatever its model; a block by model shows each model's part, and Fable's tokens as Opus's and in dollars.
-- **Decided:** the user, 2026-11-15, asked how their plan limits Fable: it draws on the same weekly limit as Opus, about twice per token, and the "3 resets" they have are resets of that limit. So a run's budget and its stops count Fable.
+- **Pick:** `engine/tools/usage <the run's ids file>` after every chunk, logged in `progress.md`. Its figure is a share of the week (8.6 million weighted tokens to 1 %, calibrated on Opus). A Fable call counts inside it at Fable's list price beside Opus's: twice on input, output and cache writes, the same on cache reads. One ids file a run holds every session, whatever its model; a block by model shows each model's part, and Fable's tokens as Opus's and in dollars. After the total, two lines estimate the account's own meters: the week meter, for every model, about 1.2 times the total; and the Fable meter, a second weekly meter for Fable alone, about 4.2 times Fable's part.
+- **Why:** one clean stretch, 2026-11-17 22:00 to 2026-11-18 08:40, in which only engine sessions ran: the account's week meter rose 24 points and its Fable meter 22, against 20.2 % and 5.2 % (Fable's part) by `usage`. One stretch can't separate Opus's and Fable's weights inside the week meter.
+- **Decided:** the user, 2026-11-15: a run's budget and its stops count Fable. The two meter lines: taken by the user after M3 (2026-11-19, the brief of the process step after M3).
 - **Options:** Fable apart from the week's share, in a second ids file (the master's first practice, when the metering wasn't known); Fable in dollars only (if it billed to usage credits, as Claude Code's docs say it can).
-- **Enforced:** `usage`'s `PRICED` table; `guard-test`'s planted transcripts.
-- **Revisit:** the factor is the list-price ratio, not a reading of the plan's meter. At 2.1.8, read the week's meter (`/usage`) before and after the planner's session and compare with this tool's figure for it.
+- **Enforced:** `usage`'s `PRICED` and `METERS` tables; `guard-test`'s planted transcripts.
+- **Revisit:** the factors are one reading. Before they are trusted, a second clean one: the user's `/usage` at a run's start and end, beside `usage`'s figures for the run. With two readings, solve Opus's and Fable's weights inside the week meter, and correct both factors.
 
 ### D11. Estimating size and cost
 

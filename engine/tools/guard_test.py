@@ -1104,8 +1104,15 @@ def launch_usage_checks(root, expect, failures):
                  "all 3 sessions: about 0.58 % of the week"):
         if says not in r.stdout:
             failures.append(f"usage with a Fable session: lacks {says!r}: {r.stdout.strip()[:400]}")
-    if not r.stdout.rstrip().splitlines()[-1].startswith("all 3 sessions"):
-        failures.append(f"usage: its last line isn't the total: {r.stdout.strip()[-200:]}")
+    tail = r.stdout.rstrip().splitlines()[-3:]
+    if not tail or not tail[0].startswith("all 3 sessions"):
+        failures.append(f"usage: the total isn't the third line from the end: {r.stdout.strip()[-300:]}")
+    # the account's two meters after the total (engine/PLAYBOOK.md, D10, 2026-11-19): the
+    # week meter 1.2 times the total (0.58 %), the Fable meter 4.2 times Fable's part (0.58 %)
+    for says in ("week meter: about 0.7 % (the total times 1.2; calibrated on one stretch, 2026-11-18)",
+                 "Fable meter: about 2.4 % (claude-fable-5-2's part, 0.58 %, times 4.2; calibrated on one stretch, 2026-11-18)"):
+        if says not in tail:
+            failures.append(f"usage: its last lines lack {says!r}: {tail}")
     timeline_checks(root, expect, failures)
 
 
