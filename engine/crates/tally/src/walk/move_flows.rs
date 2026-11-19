@@ -654,8 +654,7 @@ fn window_in(w: &DayWindow, sp: &Span, last: Day) -> Option<bool> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Days;
-    use crate::api::{Asks, Given, Pin, Request, run};
+    use crate::api::{Asks, Files, Given, Request, run};
 
     /// A decision over three months whose day is refused in February (a division by zero),
     /// its flows read over January and over February.
@@ -718,12 +717,8 @@ version openings
             path: "refused_day.tally".to_owned(),
             bytes: Some(REFUSED_DAY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Named(vec!["q_fl".to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Named(vec!["q_fl".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
         assert_eq!(
             answer.lines(),
             [

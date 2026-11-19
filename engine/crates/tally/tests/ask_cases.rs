@@ -17,7 +17,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Days, Files, Given, How, Request, run, run_with_how};
 
     /// Inputs with rows from a version with an `assumed` reason, a row governing from a later
     /// day, a row known after an `as known` cut, holes, a division by zero.
@@ -132,12 +132,8 @@ some (m = 2026-06): ?"pay at 2026-06: no value for 2026-06" (pay[2026-06])"#;
             path: "r.tally".to_owned(),
             bytes: Some(REALITY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(asks);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -242,12 +238,12 @@ total: ?"When is the fee charged?" (fee_day)
             path: "r.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
+        let how = How {
             days,
+            ..How::FENCES
         };
-        let answer = run(given, &request).expect("an answer");
+        let answer =
+            run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -608,12 +604,8 @@ with_gifts: refused: RUN-DIV division by zero
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 
@@ -1129,8 +1121,8 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
     /// A run's lines, `None` for not implemented.
     fn member_run(given: &[Given], ids: &[&str]) -> Option<Vec<String>> {
         let asks = Asks::Named(ids.iter().map(|id| (*id).to_owned()).collect());
-        let files = tally::Files::new(given.to_vec());
-        let answer = tally::run_with_how(files, &Request::new(asks), tally::ask::How::FENCES);
+        let files = Files::new(given.to_vec());
+        let answer = run_with_how(files, &Request::new(asks), How::FENCES);
         answer.ok().map(|a| a.lines().to_vec())
     }
 

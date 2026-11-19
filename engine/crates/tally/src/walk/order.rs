@@ -1251,8 +1251,7 @@ fn refuse(code: RunCode, message: String) -> Stop {
 
 #[cfg(test)]
 mod tests {
-    use crate::Days;
-    use crate::api::{Asks, Given, Pin, Request, run};
+    use crate::api::{Asks, Files, Given, Request, run};
 
     /// Two decisions over three months whose key's `where` is refused in February (a
     /// division by zero): `split`'s body is answered there, `spill`'s refused too, by its
@@ -1332,12 +1331,8 @@ version openings
             path: "where.tally".to_owned(),
             bytes: Some(REFUSED_WHERE.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Named(vec!["q_bal".to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Named(vec!["q_bal".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
         let values: Vec<&str> = answer
             .lines()
             .iter()

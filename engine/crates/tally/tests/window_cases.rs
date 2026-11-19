@@ -16,7 +16,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Files, Given, Request, run};
 
     /// The lines a run of `text` prints, every ask.
     fn lines_of(text: &str) -> Vec<String> {
@@ -24,12 +24,8 @@ mod tests {
             path: "w.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
         answer.lines().to_vec()
     }
 

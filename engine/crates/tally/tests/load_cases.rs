@@ -1018,12 +1018,8 @@ version bank_a
             path: "a.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec!["q".to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec!["q".to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer.lines().first().cloned(),
             Err(_) => None,
         }
@@ -2068,12 +2064,8 @@ ask qt: taken[2026], rounded
             path: "a.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec![ask.to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec![ask.to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer.lines().first().cloned(),
             Err(_) => None,
         }
@@ -3091,12 +3083,8 @@ version v1
                 bytes: Some(scen.as_bytes().to_vec()),
             },
         ];
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec![ask.to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec![ask.to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer
                 .lines()
                 .iter()
@@ -3804,12 +3792,8 @@ version v1
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = tally::Request {
-            asks: tally::Asks::Named(vec![ask.to_owned()]),
-            pin: tally::Pin::Canonical,
-            days: tally::Days::Events,
-        };
-        match tally::run(given, &request) {
+        let request = tally::Request::new(tally::Asks::Named(vec![ask.to_owned()]));
+        match tally::run(tally::Files::new(given), &request) {
             Ok(answer) => answer
                 .lines()
                 .iter()
