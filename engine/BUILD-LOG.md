@@ -5251,3 +5251,39 @@ On `build/m3` from a223e7ca (nothing merged since turn 4), three commits and thi
 - **Usage:** about 0.21 % of the week this turn (`engine/tools/usage`, 2.31 % over the session), against a budget of 0.5 %.
 - **Next:** the reviews of turns 4 and 5; T's vectors for P30 and n4.
 - **Checks:** `check quick: green, 11 steps (103s)` on each commit's tree; `check commit: green, 23 steps (210s)`, exit 0, at 34504894's tree (this commit adds the log alone). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 G3 `last`, turn 6: the turn-4 review's blocking finding (issue #226)
+
+On `build/m3` from 8fd70b7a (nothing merged since turn 5), one commit and this one. The review of turn 4 is `tmp/m3/review-g3d.md`: 1 blocking (B-1), its two `R-87: equivalent:` rows hold, and 8 non-blocking.
+- **What changed, by commit:**
+  - **a9f4243b, B-1:** #235's check now sees a law-dated band read as a call, `on shift(0)` (`b1_band`). Before, it printed `ENGINE-INVARIANT` at run.
+    - The aggregate's term, `on min(act_day for k in month)` (`b4_agg`), was already refused at load since turn 5: `dated_read` walks the expression whole.
+    - `dated_read` now reads a call's name as a name. The one collector serves #235's key and P30's `where`, as the review asked.
+    - N-3: a move whose `at` itself reads a law-dated fact is named by that read first (`move X's at reads law-dated Y`), as refcore names it, and the key's read after.
+    - N-4: `unbound_key_lawdate`'s doc names P30's waiting `where`.
+    - `load_cases.rs`: `a_key_read_through_a_band_or_an_aggregate_before_the_at_is_refused`. It holds the twins of `b1_band` and `b4_agg`, each with the same text governing `always`, which loads.
+  - **This commit:**
+    - N-5: the doc of `At.n` (`walk/point.rs`) says what `n` is in an unordered cycle.
+    - N-2: the ten M5c `missed` rows' reasons were false, and are rewritten (`MUTANTS-SURVIVORS.md`): `same_ends`, `same_wait_for` ×3, `decision_books` → `Ok(false)`, `same_release` ×2 and `planned_by_id` ×3.
+      - They said only a joint model reaches the code. But load refuses only an observed row stated `same` as a planned instance of its own model (`load/same.rs` `row_and_instance`, `LOAD-SAME`), so two instances stated `same` in one model reach it too (L §6.1).
+      - Each now says "no text yet, for T". They stay counted, so the score is unchanged.
+- **For T:** N-6. `At::just_before` "delete field n" (and its rank and sub rows) may now be killable: since 7c11bc98, every cycle instance sits at n ≥ 1 and sub 0, so a `cycle_when`-shaped `explain` may tell them apart.
+- **Not taken:**
+  - N-1 is not reproduced (`n1_act` names `ca` on both engines) and was wrong before 7c11bc98.
+  - N-7 (`walk/order.rs`, 1 355 lines) is a report and not a line or two.
+  - N-8 is refcore's, for the round.
+  - Q-1 to Q-4 are the round's.
+- **The sweep:** 157 runs against refcore (`tmp/m3/g3/sweep-t6.sh`): turn 5's 132, the review's 24 probes (`review-g3d`), and `l9` with its scenario file.
+  - Turn 5's 132 are unchanged (`compare.py`).
+  - Against the review's own runs at a223e7ca (`review-g3d/*.eng`), two changed. `b1_band` and `b4_agg` went from `ENGINE-INVARIANT` to `LOAD-LAWDATE move back's key a reads law-dated shift` (or `act_day`) `with no law date: its at reads a` at load. Refcore prints its `REFCORE-NOT-YET … LOAD-LAWDATE` guard (#235).
+  - The other 22 are as the review ran them:
+    - the `c*` and `n1` cycles are the same bytes as refcore;
+    - `l4`, `l5`, `l6` and `l8` load and are the same as refcore;
+    - `l1`, `l2`, `l3`, `l7`, `b2`, `b3` and the `l9` scenario are `LOAD-LAWDATE`, as P28 rules.
+  - No run of the 157 prints `ENGINE-INVARIANT`.
+- **Size** (`engine/crates`, 8fd70b7a to this commit): 3 files, 56 in, 9 out. Of those, the library is 21 in and 9 out; the tests are 35 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.07 % of the week this turn (`engine/tools/usage`, 2.40 % over the session), against a budget of 0.4 %.
+- **Next:** the reviews of turns 5 and 6; T's vectors for #235's band and aggregate forms.
+- **Checks:** `check quick: green, 11 steps (18s)` at a9f4243b's tree with this commit's doc line and rows; `check commit: green, 23 steps (126s)`, exit 0, at the same tree (this commit adds the log, a doc line and the rows' reasons). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).

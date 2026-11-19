@@ -73,7 +73,9 @@ pub struct At {
     /// The act's rank inside its step: a move's place among the moves, a reading's among the
     /// readings.
     pub rank: u32,
-    /// The instance's place among its move's instances that day.
+    /// The instance's place among its move's instances that day; in an unordered cycle, 0 is
+    /// the act's own point and each instance's is its place across the cycle's moves plus 1
+    /// (`cycle_instance`).
     pub n: u32,
     /// The sub-step: an act's own entries at 0, what follows it at its point after.
     pub sub: u32,
