@@ -190,7 +190,7 @@ fn decision_head(
     out.push(format!(
         "stratum {}, walk point {}",
         mv.stratum,
-        point_text(m, walk, run)
+        point_text(m, walk, run)?
     ));
     if !run.read.is_empty() {
         let read: Vec<&str> = run.read.iter().map(String::as_str).collect();
@@ -200,9 +200,14 @@ fn decision_head(
 }
 
 /// A run's walk point as `(day, stratum s, act)`: the act its move's `move|n`, or in an
-/// unordered cycle's run `first|n|move`, `first` the cycle's first move by id (refcore's
-/// `point_text`, its points from `run_decisions` and `run_group`). E §4.2 step 3, L §5.14.2.
-fn point_text(m: &Reality, walk: &Walk, run: &Run) -> String {
+/// unordered cycle's run `first|seq|move`, `first` the cycle's first move by id and `seq`
+/// the instance's place in the run, after the act's own point (refcore's `point_text`, its
+/// points from `run_decisions` and `run_group`). E §4.2 step 3, L §5.14.2.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a cycle's instance run at the act's own point.
+fn point_text(m: &Reality, walk: &Walk, run: &Run) -> Result<String, Stop> {
     let at = run.point;
     let mv = &run.inst.move_id;
     let cycle = m
@@ -213,10 +218,19 @@ fn point_text(m: &Reality, walk: &Walk, run: &Run) -> String {
         .and_then(|g| g.first())
         .filter(|_| walk.cycles_run.contains(&(mv.clone(), at.day)));
     let act = match cycle {
-        Some(first) => format!("{first}|{:06}|{mv}", at.n),
+        Some(first) => {
+            let seq = at
+                .cycle_seq()
+                .ok_or_else(|| invariant("a cycle's instance at its act's own point"))?;
+            format!("{first}|{seq:06}|{mv}")
+        }
         None => format!("{mv}|{:06}", at.n),
     };
-    format!("({}, stratum {}, {act})", at.day.text(), at.stratum)
+    Ok(format!(
+        "({}, stratum {}, {act})",
+        at.day.text(),
+        at.stratum
+    ))
 }
 
 /// An instance's status word. E §4.1 step 3.

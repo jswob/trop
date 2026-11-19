@@ -142,7 +142,9 @@ impl Engine {
         let start = self.today(id)?.next_inst;
         for (n, item) in items.into_iter().enumerate().skip(start) {
             let n32 = u32::try_from(n).map_err(|_| invariant("an instance's rank"))?;
-            let key = At { n: n32, ..at };
+            let key = at
+                .cycle_instance(n32)
+                .ok_or_else(|| invariant("an instance's rank"))?;
             match item.refused {
                 Some(err) => {
                     self.refused_run(m, id, item.inst, key, (err, item.changes, &item.met))?;

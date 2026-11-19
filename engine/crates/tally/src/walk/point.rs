@@ -199,6 +199,25 @@ impl At {
         At { sub, ..self }
     }
 
+    /// The point of an unordered cycle's instance `seq`, from 0, run at this act: after the
+    /// act's own point, where the act reads every instance's `when` before any runs
+    /// (refcore's `run_group`: the act keyed by the cycle's first move, each instance by
+    /// `first|seq|move` after it). None past `u32`. E §4.2 step 3, §10; L §5.14.2 (Cycles).
+    #[must_use]
+    pub fn cycle_instance(self, seq: u32) -> Option<At> {
+        Some(At {
+            n: seq.checked_add(1)?,
+            ..self
+        })
+    }
+
+    /// An unordered cycle's instance's place in its run, from its point: the inverse of
+    /// [`At::cycle_instance`]; none at the act's own point. E §4.2 step 3, L §5.14.2.
+    #[must_use]
+    pub fn cycle_seq(self) -> Option<u32> {
+        self.n.checked_sub(1)
+    }
+
     /// The last point before this one in the walk's order: a balance read there sees every
     /// entry before this point and none at it, as a decision's running reads saw the walk
     /// before it booked (refcore's key less ½). The day's first point is itself. E §4.2
