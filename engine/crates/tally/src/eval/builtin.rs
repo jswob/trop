@@ -1,15 +1,15 @@
-//! The built-ins' dispatch and the number built-ins: `round`, `min` and `max`, `abs`, `pow`, `pos`, `missing`, `minor`, and a rate's `periodic` and `factor`.
+//! The built-ins' dispatch and the number built-ins: `round`, `min`, `max`, `abs`, `pow`, `pos`, `missing`, `minor`, `unit`, `periodic`, `factor`.
 //! Spec: L §4.2 (the dates' and calendars' built-ins, in `dates.rs` and `business.rs`; `pos`),
 //! §7.2 (`round` and the type of its result; a bare step takes the operand's unit), §5.11
-//! (`min`, `max`, `missing`), §3.3 (`periodic`, `factor`: exact when the power is an integer),
-//! §7.1, §7.3 (`pow` by an integer, exact; a power that isn't one needs `to u`), §4.4 (`min`
-//! and `max` of windows, `round` of one).
+//! (`min`, `max`, `missing`), §5.10 (`unit(x)`, a key of a unit kind), §3.3 (`periodic`,
+//! `factor`: exact when the power is an integer), §7.1, §7.3 (`pow` by an integer, exact; a
+//! power that isn't one needs `to u`), §4.4 (`min` and `max` of windows, `round` of one).
 //! Twin: engine/tools/refcore/evaluate.py (`e_call`, `c_min`, `c_abs`, `c_pow`,
-//! `c_minor`, `c_round`, `c_pos`, `c_missing`) and eval2.py (`m_rate_parts`,
-//! `m_periodic_real`).
+//! `c_minor`, `c_round`, `c_pos`, `c_missing`), mreads.py (`m_c_unit`) and eval2.py
+//! (`m_rate_parts`, `m_periodic_real`).
 //! Invariants: a hole argument makes the call that hole; a power by an integer is exact and
 //! its unit raised to it; a power that isn't an integer stops `NotBuilt` (the transcendental
-//! kernel is M6's).
+//! kernel is M6's); `unit` of a key of no unit kind is refused at the key, never guessed.
 
 use super::arith::int_of;
 use super::expr::hole_of;
@@ -18,6 +18,7 @@ use super::keys::Given;
 use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
+use super::ty::sample;
 use super::windows::{End, as_window, imprecise};
 use crate::base::{Load, Run};
 use crate::model::{
@@ -71,8 +72,42 @@ impl Engine {
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
             "lifespan" => self.lifespan_of(m, call, env, ctx),
             "observed" => self.observed_call(m, call, env, ctx),
+            "unit" => self.unit_call(m, call, env, ctx),
             _ => Err(Stop::NotBuilt("a built-in M1's realities don't call")),
         }
+    }
+
+    /// `unit(x)` of a place, `unit(q)` of a quantity: the unit as a key of the unit kind that
+    /// holds it, `currencies` for a currency; a key of no unit kind (a place of unit `any`, a
+    /// quantity unit, a compound unit, a plain number) is refused at the key, where load
+    /// couldn't see it (refcore's `m_c_unit`). L §5.10 Kind and unit, §8.4.
+    fn unit_call(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        let [arg] = call.args.as_slice() else {
+            return Err(arity());
+        };
+        let v = self.ev(m, arg, env, ctx)?;
+        if let Value::Hole(_) = v {
+            return Ok(v);
+        }
+        let unit = if let Value::Money(money) = &v {
+            currency_unit(m, money.currency()).map_err(num_stop)?
+        } else if let Value::Number(n) = &v {
+            n.unit()
+        } else if v == Value::None && quantity_typed(m, arg, env, ctx) {
+            return Err(none_here(arg, "a quantity"));
+        } else {
+            return place_unit_key(m, arg, &v);
+        };
+        if let [(u, 1)] = unit.terms()
+            && (m.currencies.contains_key(u) || m.unit_kind_keys.contains_key(u))
+        {
+            return Ok(Value::Key(KeyVal::Thing(u.clone())));
+        }
+        let shown = v.text(m).map_err(num_stop)?;
+        Err(refuse(
+            Run::Domain,
+            format!("unit of {shown}: a key of no unit kind"),
+        ))
     }
 
     /// `observed(m[k])`: its movement, a hole key's hole (refcore's `m_c_observed`).
@@ -473,6 +508,67 @@ impl Engine {
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.
 fn arity() -> Stop {
     invariant("a built-in called with the wrong number of arguments")
+}
+
+/// `unit(x)` of a place: its unit as a key of the unit kind that holds it, refused where it
+/// has none, a place of unit `any` or one of a quantity unit (refcore's `m_c_unit`, its
+/// place's half). L §5.10 Kind and unit, §8.4.
+fn place_unit_key(m: &Reality, arg: &Expr, v: &Value) -> Result<Value, Stop> {
+    if *v == Value::None {
+        return Err(none_here(arg, "a place"));
+    }
+    let Value::Key(KeyVal::Thing(place)) = v else {
+        return Err(not_a_place(m, v));
+    };
+    if !m.things.get(place).is_some_and(|t| m.is_place(t)) {
+        return Err(not_a_place(m, v));
+    }
+    let Some(unit) = m
+        .things
+        .get(place)
+        .and_then(|t| m.place_unit(t))
+        .filter(|u| u != "any")
+    else {
+        return Err(refuse(
+            Run::Domain,
+            format!("unit({place}) of a place of unit any: it has no one unit"),
+        ));
+    };
+    if m.currencies.contains_key(&unit) || m.unit_kind_keys.contains_key(&unit) {
+        return Ok(Value::Key(KeyVal::Thing(unit)));
+    }
+    Err(refuse(
+        Run::Domain,
+        format!("unit({place}): its unit {unit} is a quantity unit, a key of no unit kind"),
+    ))
+}
+
+/// `v is not a place`, as a place's read refuses it (refcore's `place_arg`). L §5.10, §8.4.
+fn not_a_place(m: &Reality, v: &Value) -> Stop {
+    match v.text(m) {
+        Ok(shown) => refuse(Run::Domain, format!("{shown} is not a place")),
+        Err(error) => num_stop(error),
+    }
+}
+
+/// Whether load typed `arg` a quantity, by the sample of its type (refcore's `_uq`, which the
+/// checker sets). L §5.10 Kind and unit.
+fn quantity_typed(m: &Reality, arg: &Expr, env: &Env, ctx: Ctx) -> bool {
+    matches!(
+        sample(m, arg, env, ctx),
+        Ok(Some(Value::Money(_) | Value::Number(_)))
+    )
+}
+
+/// `x is none here: what`, a name's text where the argument is one (refcore's `fmt_node`).
+/// L §8.4.
+fn none_here(arg: &Expr, what: &str) -> Stop {
+    let text = if let Expr::Name(name) = arg {
+        name.as_str()
+    } else {
+        "a value"
+    };
+    refuse(Run::None, format!("{text} is none here: {what}"))
 }
 
 /// `round`'s step as its operand meets it: a figure written bare, with no unit and not as a
