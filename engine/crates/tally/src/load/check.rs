@@ -323,6 +323,13 @@ impl Scope {
         scope
     }
 
+    /// This scope, its reads made plainly, in no mode.
+    pub(super) fn without_mode(&self) -> Scope {
+        let mut scope = self.clone();
+        scope.mode = None;
+        scope
+    }
+
     /// This scope under an aggregate's binding (refcore's `child`, which allows no figure).
     pub(super) fn in_aggregate(&self) -> Scope {
         let mut scope = self.clone();

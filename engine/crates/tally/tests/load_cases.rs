@@ -5355,6 +5355,87 @@ ask q: bal(konto, 2026-01-31)
         assert_eq!(lines, answered(&twin), "its law-free twin");
     }
 
+    /// `CAL_WHERE` with its calendar keyed by a region, `cal[region]`, the region a law-dated
+    /// input, and a reading `rd[r]` beside it.
+    fn keyed_calendar() -> String {
+        CAL_WHERE
+            .replace(
+                "index wk = day 2026-01-05..2026-01-11\n",
+                "index wk = day 2026-01-05..2026-01-11\nindex regions = [pl, de]\n",
+            )
+            .replace(
+                "input cal: calendar\n",
+                "input cal[r in regions]: calendar\ninput region: key regions\ninput d0: date\ninput rd[r in regions]: date reading\n",
+            )
+            .replace("is_business(d, cal)", "is_business(d, cal[region])")
+            .replace(
+                "  cal = calendar(weekends [sat, sun])\n",
+                "  region = pl\n  cal[pl] = calendar(weekends [sat, sun])\n  cal[de] = calendar(weekends [sun])\n",
+            )
+            .replace(
+                "  fee = 10.00 PLN\n",
+                "  fee = 10.00 PLN\n  d0 = 2026-01-02\n  rd[pl] = 2026-01-02 at 2026-01-01\n  rd[de] = 2026-01-07 at 2026-01-07\n",
+            )
+    }
+
+    /// `text` with `region` stated in the version that governs `always`: its law-free twin.
+    fn region_free(text: &str) -> String {
+        text.replace("  region = pl\n", "")
+            .replace("  fee = 10.00 PLN\n", "  fee = 10.00 PLN\n  region = pl\n")
+    }
+
+    /// The fix review's G-1: the key of a calendar a business-day function reads, or of a
+    /// read `last` or `since` makes at a stated day, is read plainly; only the read itself
+    /// needs no law date (L §4.2 "at any keys", §4.3, §4.6). With `region` law-dated: no `at`
+    /// is `LOAD-LAWDATE` (A); a key's `on` before the `at` is #235's refusal (B); a `where`
+    /// with `at d` waits and answers as its twin (C, and D through `last`); an ask's direct
+    /// read of it states `law` (the review's N-6). Each was `ENGINE-INVARIANT` at run.
+    #[test]
+    fn a_law_dated_key_of_a_calendar_or_a_stated_day_read_is_dated() {
+        let keyed = keyed_calendar();
+        assert!(
+            refusal(&keyed).starts_with("LOAD-LAWDATE pay reads law-dated facts and states no at"),
+            "A: {}",
+            refusal(&keyed)
+        );
+        assert_eq!(
+            answered(&region_free(&keyed)).first().map(String::as_str),
+            Some("q: 50.00 PLN"),
+            "A's twin"
+        );
+        let on = keyed.replace(
+            "move pay[d in wk where is_business(d, cal[region])]: transfers\n  on d\n",
+            "move pay[p in accounts on add_business(d0, 1, cal[region])]: transfers\n  on d0\n  at lifespan(p).from\n",
+        );
+        assert!(
+            refusal(&on).starts_with(
+                "LOAD-LAWDATE move pay's key p reads law-dated region with no law date: its at reads p"
+            ),
+            "B: {}",
+            refusal(&on)
+        );
+        assert_eq!(refusal(&region_free(&on)), "loaded", "B's twin");
+        let at = keyed.replace("  on d\n  leg", "  on d\n  at d\n  leg");
+        let last = at.replace("is_business(d, cal[region])", "last(rd[region], d) == d0");
+        for (text, form) in [(&at, "C"), (&last, "D")] {
+            let reality = load_one(text).expect("loads");
+            let pay = reality.moves.get("pay").expect("pay");
+            assert_eq!(pay.dated_wheres, vec![0], "{form}: the where waits");
+            assert_eq!(answered(text), answered(&region_free(text)), "{form}");
+        }
+        let ask = keyed.replace(
+            "ask q: bal(konto, 2026-01-31)",
+            "ask q: last(rd[region], d0)",
+        );
+        let ask = ask.replace("  on d\n  leg", "  on d\n  at d\n  leg");
+        assert!(
+            refusal(&ask)
+                .starts_with("LOAD-LAWDATE ask q reads law-dated region directly, without law"),
+            "N-6: {}",
+            refusal(&ask)
+        );
+    }
+
     /// The gate review's B-2: a key's `on add_business(act_day, 1, cal)` read before the `at`
     /// reads the calendar at the day it asks about, so it needs no law date (L §4.2, §4.3):
     /// the text loads, where `LOAD-LAWDATE` refused it.
