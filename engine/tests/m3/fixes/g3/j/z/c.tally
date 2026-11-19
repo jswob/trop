@@ -1,0 +1,35 @@
+model cee
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+input spare: num
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+
+
+
+
+ask qw: twice with pay = 1 000.00 PLN law 2026-03-01
+
+ask qk: twice law 2026-03-01 as known 2026-01-01
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"
+
+ask qnone: twice in zzz law 2026-03-01

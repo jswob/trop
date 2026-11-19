@@ -4819,6 +4819,15 @@ scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tal
 ,24:fixture/reviews/narrowed,7:reviews,5:check,28:engine/tests/m3/check/narrow,21:check m.tally s.tally,64:m.tally	m3/check/narrow/m.tally
 s.tally	m3/check/narrow/s.tally
 ,1:0,3:ok
+,30:fixture/reviews/stacked-covers,7:reviews,5:check,27:engine/tests/m3/fixes/g3/st,36:check base.tally late.tally mv.tally,107:base.tally	m3/fixes/g3/st/base.tally
+late.tally	m3/fixes/g3/st/late.tally
+mv.tally	m3/fixes/g3/st/mv.tally
+,1:0,3:ok
+,28:fixture/reviews/stacked-unit,7:reviews,5:check,27:engine/tests/m3/fixes/g3/st,41:check base.tally bad.tally over_bad.tally,117:base.tally	m3/fixes/g3/st/base.tally
+bad.tally	m3/fixes/g3/st/bad.tally
+over_bad.tally	m3/fixes/g3/st/over_bad.tally
+,1:1,169:scenario bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (bad.tally:5)
+scenario over_bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (bad.tally:5)
 ,16:changes/check/c1,7:changes,5:check,42:engine/tests/integration/amendments/real11,43:check c1/ ../../../m3/changes/asks/c1.tally,1065:c1/loans.tally	integration/amendments/real11/c1/loans.tally
 c1/pays.tally	integration/amendments/real11/c1/pays.tally
 c1/people.tally	integration/amendments/real11/c1/people.tally

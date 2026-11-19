@@ -1,0 +1,11 @@
+scenario mv over t
+  tally 2
+  from 2026-01-01
+
+version mv_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-03
+  moves stmt to 2026-01-01..2026-02-28
+
+ask q_mv: bal(konto, 2026-04-30) in mv

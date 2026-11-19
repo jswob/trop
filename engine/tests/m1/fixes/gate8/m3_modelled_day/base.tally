@@ -1,0 +1,65 @@
+model md
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/modelled.rs modelled_legs (E §6.2, L §5.19): bal(x, d) modelled on the days a statement covers counts each modelled-past instance's leg dated through d, the one dated d itself included, and none dated after it; the bank's own amounts differ from the plan's, so each leg counted shows"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input fee: money PLN
+
+input pay_dom: int
+
+input fee_dom: int
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move fee_pay[m in month]: transfers
+  on day_of(m, fee_dom)
+  at start_of(m)
+  leg cash from konto to world amount fee
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 PLN "the rent"
+  fee = 15.00 PLN "the fee"
+  pay_dom = 5 "the rent's day"
+  fee_dom = 20 "the fee's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3 000.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 610.00 PLN, fulfils: rent_pay[2026-01]) "the rent, ten more"
+  bank[b20260120] = (on: 2026-01-20, kind: transfers, leg cash from konto to world amount 17.00 PLN, fulfils: fee_pay[2026-01]) "the fee, two more"
+  stated[konto] = 2 373.00 PLN at 2026-01-31 end "the month's closing balance"
+
+ask q_modelled: bal(konto, d) modelled for d in [2026-01-04, 2026-01-05, 2026-01-06, 2026-01-19, 2026-01-20, 2026-01-31] law cut
+
+ask q_booked: bal(konto, d) for d in [2026-01-05, 2026-01-20, 2026-01-31] law cut

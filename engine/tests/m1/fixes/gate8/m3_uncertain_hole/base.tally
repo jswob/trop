@@ -1,0 +1,57 @@
+model uh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C5, gate 8's walk/reads.rs Uncertain::leg and uncertain_sum (L §5.14, §5.18; tally 2.1.8 R15): uncertain movements whose amounts are holes, one into konto and one out of it, read with uncertain and partial (each hole's term signed by its leg's way) and with uncertain alone (a hole, no linear sum)"
+
+source own "T's invented figures"
+
+unit PLN: currency minor 0.01
+
+kind promises: event uncertain
+  leg cash: PLN
+
+kind debts_due: event uncertain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2020-01-01..
+
+place friend: outside lives 1900-01-01..
+
+input owed[m in months]: money PLN
+
+input lent[m in months]: money PLN
+
+input dom: int
+
+move repay[m in months]: promises
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from friend to konto amount owed[m]
+
+move lend[m in months]: debts_due
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to friend amount lent[m]
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  owed = 500.00 PLN "note"
+  owed[2026-03] = ?"how much is repaid in March?" "note"
+  lent = 0.00 PLN "note"
+  lent[2026-04] = ?"how much is lent in April?" "note"
+  dom = 1 "note"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask q_in: bal(konto, 2026-03-31) with uncertain partial
+
+ask q_both: bal(konto, 2026-04-30) with uncertain partial
+
+ask q_out: bal(konto, 2026-04-30) from 2026-03-15 with uncertain partial
+
+ask q_plain: bal(konto, 2026-03-31) with uncertain
+
+ask q_plain_from: bal(konto, 2026-04-30) from 2026-02-15 with uncertain

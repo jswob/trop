@@ -1,0 +1,63 @@
+model tr
+  tally 2
+  on 2026-02-28
+  start 2026-01-01
+  end 2026-02-28
+  note "T, M3 C5, gate 8's walk/agenda.rs schedule_decision (E §4.2 step 3, E §10, L §5.14.2): two moves of one stratum due on one day each read a walk-bound def, each at its own point in the day's order (the move's rank), so explain lists both cells; a third move, of a later stratum, reads it after both booked"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar_a: accounts PLN lives 2026-01-01..
+
+place jar_b: accounts PLN lives 2026-01-01..
+
+place probe: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_day: date
+
+input put: money PLN
+
+def avail: money PLN = bal(konto) at dec_day
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+move a_put: transfers
+  on dec_day
+  reads konto
+  leg cash from world to jar_a amount if avail > put then put else 0.00 PLN
+
+move b_put: transfers
+  on dec_day
+  reads konto
+  leg cash from world to jar_b amount if avail > put then put else 0.00 PLN
+
+move c_top: transfers
+  on dec_day
+  reads konto, jar_a, jar_b
+  leg cash from world to probe amount bal(jar_a) + bal(jar_b) + avail
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_day = 2026-01-20 "the decisions' day"
+  put = 100.00 PLN "a put"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[jar_a] = 0.00 PLN at 2026-01-01 start
+  opening[jar_b] = 0.00 PLN at 2026-01-01 start
+  opening[probe] = 0.00 PLN at 2026-01-01 start
+
+ask q_avail: explain avail
+
+ask q_bal: bal(konto, 2026-01-20), bal(jar_a, 2026-01-20), bal(jar_b, 2026-01-20), bal(probe, 2026-01-20)
+
+ask q_a: explain a_put
+
+ask q_b: explain b_put
+
+ask q_c: explain c_top

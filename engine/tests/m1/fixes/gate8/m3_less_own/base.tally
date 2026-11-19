@@ -1,0 +1,69 @@
+model lo
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/reads.rs less_own_obs (E §4.2 step 3, L §5.19): a decision an observation fulfils two days early, computed less that observation at both of its leg's places: the place it runs from (konto, added back) and the place it runs to (jar, taken back); a twin reads only the place no leg of it touches"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input dec_dom: int
+
+input keep: money PLN
+
+input step: money PLN
+
+move sweep[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto, jar
+  leg cash from konto to jar amount bal(konto) - bal(jar) - keep
+
+move twin[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads other
+  leg cash from world to other amount bal(other) + step
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decisions' day of the month"
+  keep = 2 000.00 PLN "what konto keeps above the jar"
+  step = 1.00 PLN "a small step"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3 000.00 PLN at 2026-01-01 start
+  opening[jar] = 200.00 PLN at 2026-01-01 start
+  opening[other] = 10.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  bank[b20260118] = (on: 2026-01-18, kind: transfers, leg cash from konto to jar amount 700.00 PLN, fulfils: sweep[2026-01]) "the sweep, two days early"
+
+ask q_sweep: explain sweep[2026-01]
+
+ask q_twin: explain twin[2026-01]
+
+ask q_bal: bal(konto, d), bal(jar, d), bal(other, d) for d in [2026-01-19, 2026-01-20, 2026-01-31] law cut

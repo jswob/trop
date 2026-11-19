@@ -1,0 +1,6 @@
+model famc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use c = "c.tally" sha256 "4e30fd4e96924dd31a5bc852efc3520aabe4df2976202d16323f154e3f9c0067"

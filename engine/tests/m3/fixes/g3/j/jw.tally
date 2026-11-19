@@ -1,0 +1,6 @@
+model famw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "w" sha256 "7964b287ca620ddecdcf948fde85eaf4b4ddffcadeb8034aaa15256c0fd2754f"

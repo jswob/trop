@@ -1,0 +1,41 @@
+model go
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C5, gate 8's walk/reads.rs stated_on (L §5.19 gap, §8.1; tally 2.1.8 item 1): gap(x, d) on a day before the run's start is the run's hole where x has a stated reading that day, and no reading's hole where x has none that day, though x has one another day and another place has one that day"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place konto2: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+version openings
+  cite fixture
+  governs always
+  known 2025-11-01
+  opening[konto] = 1 000.00 PLN at 2025-12-01 start
+  opening[konto2] = 500.00 PLN at 2025-12-01 start
+
+version readings
+  cite fixture
+  governs always
+  known 2026-01-05
+  anchor konto
+  stated[konto] = 900.00 PLN at 2025-12-15 end "a statement before the run"
+  stated[konto] = 950.00 PLN at 2026-02-10 end "a statement in the run"
+
+ask q_read: gap(konto, 2025-12-15) law cut
+
+ask q_other_day: gap(konto, 2025-12-10) law cut
+
+ask q_other_place: gap(konto2, 2025-12-15) law cut
+
+ask q_in: gap(konto, 2026-02-10) law cut
+
+ask q_in_none: gap(konto2, 2026-02-10) law cut

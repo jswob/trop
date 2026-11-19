@@ -43,7 +43,8 @@ mod tests {
     #[test]
     fn m3_run_the_library_prints_what_the_cli_prints() {
         let (mut failed, runs) =
-            library_failures(RUNS, &["changes", "run", "operations", "last"]).expect("runs");
+            library_failures(RUNS, &["changes", "run", "operations", "last", "fixes"])
+                .expect("runs");
         let (more, checks) = library_failures(
             CHECK,
             &[

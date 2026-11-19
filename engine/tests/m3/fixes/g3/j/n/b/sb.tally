@@ -1,0 +1,11 @@
+scenario sb over bob
+  tally 2
+  from 2026-01-01
+
+version lower
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 2 000.00 PLN "a cut"
+
+ask q_sb: twice in sb law 2026-03-01

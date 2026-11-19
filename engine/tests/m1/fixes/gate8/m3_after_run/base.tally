@@ -1,0 +1,44 @@
+model ar
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/flows.rs after_run (E §2, L §5.14.3, §8.1): flows over days after the run's end count each plan instance there that exists, and not one whose when is false (May), nor one in the run"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay_dom: int
+
+input due[m in month]: bool
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  when due[m]
+  leg cash from konto to world amount rent
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 PLN "the rent"
+  pay_dom = 5 "the rent's day"
+  due = true "the rent is due"
+  due[2026-05] = false "no rent in May"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start
+
+ask q_after: flows(konto, 2026-04-01 .. 2026-06-30), flows(rent_pay, 2026-04-01 .. 2026-06-30) law cut
+
+ask q_across: flows(konto, 2026-03-01 .. 2026-05-31) law cut
+
+ask q_may: flows(konto, 2026-05-01 .. 2026-05-31) law cut
