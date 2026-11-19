@@ -1,0 +1,68 @@
+model lo2
+  tally 2
+  on 2026-01-25
+  start 2026-01-01
+  end 2026-06-30
+  note "T, M3 C6, gate 8's walk/agenda.rs left_out_lines (L §5.14.1, §8.2; E §4.3 step 3): a def's projection leaves out the movements that read the def; its min over days lists them under left out:, one count per day that holds any, two instances of one move on one day counted together"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input dom: int
+
+input pay_dom: int
+
+input reach: int
+
+input put_amt: money PLN
+
+input mark: money PLN
+
+input pay: money PLN
+
+input prio[b in box]: money PLN
+
+def room[m in month]: money PLN = min(bal(konto, d) from start_of(m) for d in start_of(m) .. add_days(start_of(m), reach) step 1 day) at start_of(m)
+
+move salary[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move put[b in box, m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto
+  ties by prio[b]
+  leg cash from konto to jar[b] amount if room[m] > mark then put_amt else 0.00 PLN
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dom = 20 "the puts' day"
+  pay_dom = 10 "the salary's day"
+  reach = 50 "the room's reach, past the next month's puts"
+  put_amt = 100.00 PLN "a put"
+  mark = 500.00 PLN "the room a put needs"
+  pay = 300.00 PLN "the salary"
+  prio[first] = 1.00 PLN "first goes first"
+  prio[second] = 2.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[jar[first]] = 0.00 PLN at 2026-01-01 start
+  opening[jar[second]] = 0.00 PLN at 2026-01-01 start
+
+ask q_room: room[m] for m in [2026-02, 2026-03]
+
+ask q_bal: bal(konto, d) for d in [2026-02-21, 2026-03-21]

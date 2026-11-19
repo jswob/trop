@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Amount, Dated, End, Exists, Inst, Order, Status};
+use super::instance::{Amount, Dated, End, Exists, Inst, Order, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -939,8 +939,7 @@ pub fn endings(m: &Reality, walk: &Walk) -> BTreeMap<Day, Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::Days;
-    use crate::api::{Asks, Given, Pin, Request, run};
+    use crate::api::{Asks, Files, Given, Request, run};
 
     /// The printed lines of ask `ask` over `files`, under the event walk.
     fn answer(files: &[(&str, &str)], ask: &str) -> Vec<String> {
@@ -951,12 +950,11 @@ mod tests {
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Named(vec![ask.to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        run(given, &request).expect("an answer").lines().to_vec()
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
     }
 
     /// The base of a scenario whose two decisions are dated on its `from` and after it.

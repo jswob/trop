@@ -14,7 +14,7 @@
 
 #[cfg(test)]
 mod tests {
-    use tally::{Asks, Days, Given, Pin, Request, run};
+    use tally::{Asks, Days, Files, Given, How, Request, run_with_how};
 
     /// Two tenants' rent, one paid; an uncertain grant paid in part; a fee whose day is a
     /// hole; a tip whose day an observation answers; an amount of 0; a January payment
@@ -263,12 +263,12 @@ saving: residuals save 2025-01 .. 2025-03
             path: "r.tally".to_owned(),
             bytes: Some(REALITY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
+        let how = How {
             days,
+            ..How::FENCES
         };
-        let answer = run(given, &request).expect("an answer");
+        let answer =
+            run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer");
         answer.lines().to_vec()
     }
 

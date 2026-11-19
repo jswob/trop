@@ -1,0 +1,17 @@
+scenario s over p
+  tally 2
+  from 2026-10-01
+
+version s_rows
+  cite s
+  governs 2026-10..
+  known 2026-10-02
+  anchor konto
+  replace opening[konto] = 2 000.00 PLN at 2026-10-01 start "s"
+  stated[konto] = 2 500.00 PLN at 2026-10-20 end "s"
+
+ask q_s_why: explain bal(konto, 2026-10-31) in s
+
+ask q_s_open: opening[konto] in s law 2026-10-01
+
+ask q_s_stated: stated[konto] in s law 2026-10-20

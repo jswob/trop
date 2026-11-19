@@ -19,7 +19,7 @@
 mod tests {
     use tally::eval::Memo;
     use tally::walk::Lows;
-    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_lows, run_with_memo};
+    use tally::{Asks, Days, Files, Given, How, NotImplemented, Request, run_with_how};
 
     /// T's generated realities: netstring records of law, case, variant, arguments, files.
     const CORPUS: &str = include_str!("../../../tests/properties/kernel.corpus");
@@ -120,12 +120,12 @@ mod tests {
                 bytes: Some(body.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
+        let how = How {
+            memo,
             days,
+            ..How::FENCES
         };
-        match run_with_memo(given, &request, memo) {
+        match run_with_how(Files::new(given), &Request::new(Asks::Every), how) {
             Ok(out) => Some(out.lines().to_vec()),
             Err(NotImplemented) => None,
         }
@@ -283,12 +283,12 @@ mod tests {
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Named(vec![ask.to_owned()]),
-            pin: Pin::Canonical,
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        let how = How {
             days,
+            ..How::FENCES
         };
-        match run_with_memo(given, &request, Memo::Classes) {
+        match run_with_how(Files::new(given), &request, how) {
             Ok(out) => Some(out.lines().to_vec()),
             Err(NotImplemented) => None,
         }
@@ -339,12 +339,11 @@ mod tests {
                 bytes: Some(body.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
+        let how = How {
+            lows,
+            ..How::FENCES
         };
-        match run_with_lows(given, &request, lows) {
+        match run_with_how(Files::new(given), &Request::new(Asks::Every), how) {
             Ok(out) => Some(out.lines().to_vec()),
             Err(NotImplemented) => None,
         }

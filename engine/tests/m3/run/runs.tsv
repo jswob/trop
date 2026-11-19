@@ -1,0 +1,70 @@
+id	cwd	args	extra	rule
+run/twice	m3/run	run ../check/model.tally two.tally --ask q_b q_b	-	E §1, OPERATIONS §7: an id asked twice is answered twice, in the request's order
+run/order	m3/run	run ../check/model.tally two.tally --ask q_b q_a	-	E §1: the results in the request's order, not the files'
+run/ask-empty	m3/run	run ../check/model.tally two.tally --ask	-	OPERATIONS §2.1: --ask with no id after it asks every ask, as with none
+run/cuts	m3/run	run ../check/model.tally two.tally --ask q_k1 q_k2	-	E §1, L §7.5: each ask its own clock K in one run
+run/unnamed	m3/run	run ../check/model.tally two.tally --ask q_a	unnamed.tally	E §1: a file the request doesn't name is not read
+run/dir	m3/run	run ../check/model.tally d/ --ask q_d	d/notes.txt	L §6.1: under a directory given, only .tally files are read
+run/joint	m3/check/joint	run j.tally --ask a.q	-	L §6.1: a member's ask, answered by the member alone (the joint model's own ask x over its members is M5c's: pick P21)
+run/covered	m3/check	run model.tally s_a_zulu.tally asks_zulu.tally --ask q_in_zulu q_zulu_own q	-	OPERATIONS §2.1: a refused scenario's line once, before every result; an ask in its world its own refusal; the file's own ask nothing, even named
+run/unknown	m3/run	frobnicate ../check/model.tally	-	usage
+run/none	m3/run		-	usage
+operations/ask	m3/mini	run reality.tally question.tally --ask q_oct	-	OPERATIONS §3.1 ASK-2: a question not saved, named in the run
+operations/asks	m3/mini	run reality.tally question.tally	-	OPERATIONS §3.1 ASK-3 to ASK-7: a past view, a pin, explain, residuals
+operations/bolt	m3/mini	run reality.tally bolt.tally more.tally --ask q_dec	-	OPERATIONS §3.3 CHG-4: what a new thing leaves unanswered prints as holes with their questions
+operations/diff	m3/mini	run reality.tally acme_stops.tally --ask q_diff	-	OPERATIONS §3.4 SCN-1's printed output
+operations/worked	m3/mini/w	run ../reality.tally ../more.tally acme_stops.tally --ask q_base q_dec q_in	-	OPERATIONS §7's worked output, exit 0
+operations/statement	m3/mini	run reality.tally statement.tally more.tally --ask q_base q_dec	-	OPERATIONS §3.5 IMP-1, IMP-3: the statement's rows and its stated balance's anchor line
+operations/law	m3/mini	run reality.tally pit.tally --ask pit_check	-	OPERATIONS §3.6 LAW-1: a law file's check, answered as any ask
+run/ask-before-pin	m3/check/joint	run j_bytes.tally --ask a.q --pin=bytes	-	G2 review N-9, INTERFACE §1: --pin=bytes after --ask is the input option, not an ask id (a member's ask: pick P21)
+last/net_worth	m3/fixes	run net_worth.tally --ask net_worth kinds_only	-	pick P7, plan Q9: household X's net_worth binding (places over .., not outside, four kinds, unit(x) == PLN) and a fund's units priced in PLN
+last/unit-quantity	m3/fixes	run net_worth.tally --ask over_unit	-	pick P7: unit(x) of a place whose unit is a quantity unit is RUN-DOMAIN, where net_worth's and keeps it unread
+last/places	m3/fixes	run net_worth.tally --ask over_outside over_kind	-	pick P7: the binding's other parts alone (places over .., not outside; kind tests)
+fixes/stacked-covers	m3/fixes/g3/st	run base.tally mv.tally late.tally --ask q q_late	-	G3 review B-1, OPERATIONS §2.1, L §8: a scenario over one refused LOAD-COVERS (P19) is refused with it, its line naming the lower one's refusal; its ask prints nothing
+fixes/stacked-unit	m3/fixes/g3/st	run base.tally bad.tally over_bad.tally --ask q q_ob	-	G3 review B-1's control: a scenario over one refused LOAD-UNIT is refused with it
+fixes/member-warning-id	m3/fixes/g3/j	run jw.tally --ask a.warning_total a.warning_s a.q	-	G3 review B-2, OPERATIONS §2.1, L §6.1: a member's ask whose id starts with warning keeps its a. prefix
+fixes/member-refused-alone	m3/fixes/g3/j	run jz.tally --ask c.qnone c.q	-	G3 review B-3, L §6.1, OPERATIONS §2.1: a member's ask refused alone prints its own line with its prefix, the rest answers, exit 0
+fixes/member-clock	m3/fixes/g3/j	run jc.tally --ask c.q c.qc	-	G3 review B-4, E §11: a member's ask whose as known is after on refuses the request REQ-CLOCK, the run's one result, exit 1
+fixes/scenario-files-clock	m3/fixes/g3/j	run n/b/ --ask q qc	-	G3 review B-5, E §11, OPERATIONS §2.1: with scenario files given, an as known after on still refuses the request REQ-CLOCK, exit 1
+fixes/cycle-when	m3/fixes/a4	run cycle_when.tally --ask q_jan q_feb q_mar q_ca q_cb q_bal	-	G1 review A-4, E §10, E §4.2 step 3, L §5.14.2: a walk-bound def read by an unordered cycle's whens is kept at the act's point, before each instance's own point (refcore's run_group), and named by its move there; the first instance reads it again at its own point
+b192/solve-units	m3/fixes/b192	run solve.tally	-	#192 (G1 fix N-c), L §5.18 solve: the bracket and step take the unknown type, a rate (%/year) and a num with a unit (num PLN), each on a fine and a coarse grid
+b192/parked-prefix	m3/fixes/b192	run parked_prefix.tally	-	#192 (the review of P73's fix, 476032fd), L §5.14.1, E §4.3: one projection read on falling days within a month, a refused leg and a hole between them, each read from the parked walk's prefix
+lawdate/b1-cal-where	m3/fixes/lawdate	run b1_cal_where.tally	-	M3 gate B-1, L §4.2, §4.3: a calendar read by is_business in a no-at key's where (the calendar governed 2026..) is no law-dated read: five weekdays paid, not seven
+lawdate/b1-month-key	m3/fixes/lawdate	run b1_month_key.tally	-	M3 gate B-1, L §4.3: a month-keyed input read at its key's month in a key's where, with no at
+lawdate/b2-add-business	m3/fixes/lawdate	run b2_add_business.tally	-	M3 gate B-2, L §4.2, §4.3: on add_business(d_open, 1, cal) in a key's on before the at loads (no LOAD-LAWDATE)
+lawdate/w-ref-self	m3/fixes/lawdate	run w_ref_self.tally	-	M3 gate (P30): a dated where that refuses itself before its dated read (one_amt / zero), read at the at
+lawdate/p-o-cal-at	m3/fixes/lawdate	run p_o_cal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a calendar by add_business, with an at
+lawdate/p-o-cal-noat	m3/fixes/lawdate	run p_o_cal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a calendar by add_business, no at
+lawdate/p-o-defcal-at	m3/fixes/lawdate	run p_o_defcal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def over the calendar, with an at
+lawdate/p-o-defcal-noat	m3/fixes/lawdate	run p_o_defcal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def over the calendar, no at
+lawdate/p-o-own-at	m3/fixes/lawdate	run p_o_own_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def with its own at (act_day at dfix), with an at
+lawdate/p-o-own-noat	m3/fixes/lawdate	run p_o_own_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def with its own at (act_day at dfix), no at
+lawdate/p-o-input-noat	m3/fixes/lawdate	run p_o_input_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a law-dated input, no at: LOAD-LAWDATE states no at
+lawdate/p-o-lawdated-noat	m3/fixes/lawdate	run p_o_lawdated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads as if {law act_day}, the date itself law-dated, no at: LOAD-LAWDATE
+lawdate/p-o-owndated-noat	m3/fixes/lawdate	run p_o_owndated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def whose own at reads a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-o-agg-noat	m3/fixes/lawdate	run p_o_agg_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a law-dated input inside an aggregate's where, no at: LOAD-LAWDATE
+lawdate/p-o-reader-noat	m3/fixes/lawdate	run p_o_reader_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads an at reader def, no at: LOAD-LAWDATE
+lawdate/p-o-reader2-noat	m3/fixes/lawdate	run p_o_reader2_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def through an at reader def, no at: LOAD-LAWDATE
+lawdate/p-w-input-noat	m3/fixes/lawdate	run p_w_input_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-w-lawdated-noat	m3/fixes/lawdate	run p_w_lawdated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads as if {law act_day}, no at: LOAD-LAWDATE
+lawdate/p-w-aggterm-noat	m3/fixes/lawdate	run p_w_aggterm_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where compares an aggregate with a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-w-owndated-noat	m3/fixes/lawdate	run p_w_owndated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def whose own at reads a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-w-reader-noat	m3/fixes/lawdate	run p_w_reader_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads an at reader def, no at: LOAD-LAWDATE
+lawdate/p-w-reader2-noat	m3/fixes/lawdate	run p_w_reader2_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def through an at reader def, no at: LOAD-LAWDATE
+lawdate/p-w-cal-at	m3/fixes/lawdate	run p_w_cal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a calendar by is_business, with an at
+lawdate/p-w-cal-noat	m3/fixes/lawdate	run p_w_cal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a calendar by is_business, no at (B-1)
+lawdate/p-w-defcal-at	m3/fixes/lawdate	run p_w_defcal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def over the calendar, with an at
+lawdate/p-w-defcal-noat	m3/fixes/lawdate	run p_w_defcal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def over the calendar, no at
+lawdate/p-w-lawlit-at	m3/fixes/lawdate	run p_w_lawlit_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads as if {law <a date governed always>}, with an at
+lawdate/p-w-lawlit-noat	m3/fixes/lawdate	run p_w_lawlit_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads as if {law <a date governed always>}, no at
+lawdate/p-w-lawreader-at	m3/fixes/lawdate	run p_w_lawreader_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads an at reader def inside as if {law <a fixed date>}, with an at
+lawdate/p-w-lawreader-noat	m3/fixes/lawdate	run p_w_lawreader_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads an at reader def inside as if {law <a fixed date>}, no at
+lawdate/p-w-own-at	m3/fixes/lawdate	run p_w_own_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def with its own at (act_day at dfix), with an at
+lawdate/p-w-own-noat	m3/fixes/lawdate	run p_w_own_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def with its own at (act_day at dfix), no at
+lawdate/p-w-pin-at	m3/fixes/lawdate	run p_w_pin_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a pinned fact (as if {x = v}), with an at
+b192/prefix-settle	m3/fixes/b192	run prefix_settle.tally --ask t b c f	-	#192 row 50 (G5 fix NB-2: settle caches keyed by cut, not by a prefix walk's day), E §5 step 5, E §4.1: a settlement bound over adjustments after a read that needs the walk up to a leg's day; then the whole walk: three adjustments, three back pays
+b192/cal-hole	m3/fixes/b192	run cal_hole.tally	-	#192 row 22 (M2 G3 review NB-4), L §4.2, §8.1: a business-day function over a calendar with no row or a hole row, in an ask, a def, explain and a key's where: each hole tagged with its calendar
+b192/same-two-legs	m3/fixes/b192	run same_two_legs.tally --ask e f k3_konto	-	#192 row 52 (G5 fix NB-4), L §5.19, §8.1: two rows stated same of a kind whose two legs leave konto, disagreeing on fee: each leg's HOLE-SAME in explain, flows and a balance
+b192/same-two-legs-residual	m3/fixes/b192	run same_two_legs.tally --ask r	-	#192 row 52 (G5 fix NB-4), L §5.19, §6.1: the same rows' residual line; the unexplained group's observed hole is the fee leg's on refcore, the cash leg's on the engine (held, #192)
+b192/trace-answers	m3/fixes/b192	run trace_answers.tally	-	#192 row 51 (G5 fix NB-3), E §10, E §5 step 1: explain over hole bookings a later version answers, the second answer refused RUN-DIV, and an explain before it
+b192/chain-pads	m3/fixes/b192	run chain_pads.tally	-	#192 row 40 (G4 fix NB-3), L §5.14.1, E §6.1: two decisions reading pads up to their own day, the second's walk continuing the first's, pads in March and April

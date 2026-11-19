@@ -19,15 +19,18 @@ doesn't assert).  Warning lines are compared only when the expect block holds
 one.  `=== expect ask1 ask2` answers only those asks.  `=== options pin=bytes` (before the files) runs the reality
 with those options (cli.run_texts): a joint model's pins taken over the member files' bytes.  `=== options reprint`
 prints each file's canonical text (L §2.4) and the files' sha256 (E §3.1 step 1) instead of running them.
-`=== options disk` writes the files into a fresh folder and runs them as the command line does (cli.command_lines,
-`run`, or `reprint` with `reprint`), given by their names in the test's order and then the names in `missing=a,b`,
-which are never written; a file named in `latin1=a,b` is written in Latin-1, so a letter past ASCII isn't UTF-8.
+`=== options disk` writes the files into a fresh folder and runs them as the command line does (cli.command, `run`,
+or `reprint` with `reprint`, or `check` with `check`), given by their names in the test's order and then the names in
+`missing=a,b`, which are never written, or by the words of `paths=a,b` in their place (a directory); the words of
+`args=a,b` come last; a file named in `latin1=a,b` is written in Latin-1, so a letter past ASCII isn't UTF-8.
+`=== options check` prints `check`'s lines (OPERATIONS §2.3) instead of running the asks, its warning lines compared
+always.  `exit=N` holds the exit code too, as cli.exit_code (or, on disk, cli.command) gives it.
 """
 import os
 import tempfile
 os.environ.setdefault("REFCORE_DEBUG", "1")
 
-from .cli import run_texts, command_lines
+from .cli import run_texts, command, exit_code
 
 HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tests')
 
@@ -75,8 +78,9 @@ def match(exp, got):
     return exp == got
 
 
-def compare(expect, got):
-    if not any(l.startswith('warning: ') for l in expect):
+def compare(expect, got, warnings=False):
+    """warnings: compare the warning lines whatever the expect block holds (`check`'s, OPERATIONS §2.3)."""
+    if not warnings and not any(l.startswith('warning: ') for l in expect):
         got = [l for l in got if not l.startswith('warning: ')]
     if '...' not in expect:
         if len(expect) != len(got):
@@ -96,10 +100,14 @@ def _cmp(ex, i, got, j):
     return j == len(got)
 
 
+def words(options, key):
+    return [n for n in options.get(key, '').split(',') if n]
+
+
 def run_on_disk(texts, ids, options):
-    """`=== options disk`: the files in a fresh folder, run from it as the command line runs paths."""
-    latin = set(n for n in options.get('latin1', '').split(',') if n)
-    missing = [n for n in options.get('missing', '').split(',') if n]
+    """`=== options disk`: the files in a fresh folder, run from it as the command line runs paths; (lines, exit)."""
+    latin = set(words(options, 'latin1'))
+    missing = words(options, 'missing')
     here = os.getcwd()
     with tempfile.TemporaryDirectory() as d:
         for n, t in texts:
@@ -107,14 +115,24 @@ def run_on_disk(texts, ids, options):
             os.makedirs(os.path.dirname(p), exist_ok=True)
             with open(p, 'wb') as fh:
                 fh.write(t.encode('latin-1' if n in latin else 'utf-8'))
-        argv = ['reprint' if 'reprint' in options else 'run'] + [n for n, t in texts] + missing
+        verb = 'reprint' if 'reprint' in options else 'check' if 'check' in options else 'run'
+        argv = [verb] + (words(options, 'paths') or [n for n, t in texts] + missing)
         if ids:
             argv += ['--ask'] + ids
+        argv += words(options, 'args')
         os.chdir(d)
         try:
-            return command_lines(argv)
+            return command(argv)
         finally:
             os.chdir(here)
+
+
+def run_one_test(texts, ids, options):
+    """(the printed lines, the exit code) of one test."""
+    if 'disk' in options:
+        return run_on_disk(texts, ids, options)
+    got = run_texts(texts, ids, options)
+    return got, exit_code('check' if 'check' in options else 'run', got)
 
 
 def run_tests(names):
@@ -124,15 +142,18 @@ def run_tests(names):
     fails = 0
     for f in files:
         texts, expect, ids, options = parse_test(os.path.join(HERE, f), with_options=True)
+        code = None
         try:
-            got = run_on_disk(texts, ids, options) if 'disk' in options else run_texts(texts, ids, options)
+            got, code = run_one_test(texts, ids, options)
         except Exception as e:  # an interpreter bug
             import traceback
             got = ['CRASH %s: %s' % (type(e).__name__, e)] + traceback.format_exc().split('\n')
-        if compare(expect, got):
+        if compare(expect, got, 'check' in options) and ('exit' not in options or str(code) == options['exit']):
             continue
         fails += 1
         print('FAIL %s' % f)
+        if 'exit' in options:
+            print('  exit: expected %s, got %s' % (options['exit'], code))
         print('  expected:')
         for l in expect:
             print('    ' + l)

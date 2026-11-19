@@ -26,7 +26,7 @@ use super::steps::refuse;
 use super::targets::place_target;
 use super::texts::text;
 use crate::base::{Code, Load, Run};
-use crate::eval::{Ctx, Engine, Env, a_day, int_of};
+use crate::eval::{Ctx, Engine, Env, How, a_day, int_of};
 use crate::model::{
     BindInfo, Domain, IndexForm, IndexInfo, KeyVal, MoveInfo, NameKind, Node, NodeKind, Reality,
     Target, Ty, Value,
@@ -77,8 +77,8 @@ pub(super) struct PeriodRead {
 /// # Errors
 ///
 /// The first such period's `LOAD-KEY`; an invariant or `NotBuilt` the fold meets.
-pub(super) fn check_period_keys(m: &Reality, reads: &[PeriodRead]) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_period_keys(m: &Reality, reads: &[PeriodRead], how: How) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for read in reads {
         let Some(index) = m.indexes.get(&read.index) else {
             continue;
@@ -147,8 +147,13 @@ fn day_names(e: &Expr) -> BTreeSet<&str> {
 ///
 /// The first such read's `LOAD-CYCLE`, at the move's line; an invariant or `NotBuilt` the
 /// fold meets.
-pub(super) fn check_seen_days(m: &Reality, reads: &[DayRead], files: &Files) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_seen_days(
+    m: &Reality,
+    reads: &[DayRead],
+    files: &Files,
+    how: How,
+) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for read in reads {
         let Some(mv) = m.moves.get(&read.id) else {
             continue;
@@ -210,8 +215,8 @@ pub(super) fn check_seen_days(m: &Reality, reads: &[DayRead], files: &Files) -> 
 ///
 /// The first such move's `LOAD-LIMIT`, the moves in the reality's order, at the move's line;
 /// an invariant or `NotBuilt` the fold meets.
-pub(super) fn check_seen_day_limits(m: &Reality, files: &Files) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_seen_day_limits(m: &Reality, files: &Files, how: How) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for (id, mv) in m.moves.entries() {
         let on = &mv.decl.on;
         if !seen_day(m, on, &mv.binds) {
@@ -278,8 +283,8 @@ fn day_limit(
 ///
 /// The first such range's `LOAD-LIMIT`, the asks in the reality's order; an invariant the
 /// range meets.
-pub(super) fn check_literal_ranges(m: &Reality, files: &Files) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_literal_ranges(m: &Reality, files: &Files, how: How) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for ask in &m.asks {
         for parts in literal_ranges(ask) {
             match engine.literal_range(m, parts) {
@@ -391,8 +396,8 @@ fn expr_binds(e: &Expr) -> Vec<&Bind> {
 ///
 /// The first such plan's `LOAD-SCHEDULE`, at its line; an invariant or `NotBuilt` the fold
 /// meets.
-pub(super) fn check_schedules(m: &Reality, files: &Files) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_schedules(m: &Reality, files: &Files, how: How) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for (id, mv) in m.moves.entries() {
         let on = bare(&mv.decl.on);
         let Expr::Call(call) = on else {
@@ -481,8 +486,8 @@ fn scheduled_day(
 ///
 /// The first such move's `LOAD-SCENARIO`, by id, at its line; an invariant or `NotBuilt` the
 /// fold meets.
-pub(super) fn check_scenario_moves(m: &Reality, files: &Files) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_scenario_moves(m: &Reality, files: &Files, how: How) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for (id, mv) in m.moves.entries() {
         let Some(scenario) = m.scenarios.of(id) else {
             continue;
@@ -562,6 +567,7 @@ pub(super) fn check_proj_seen(
     m: &Reality,
     projs: &[ProjRead],
     random: &BTreeSet<Node>,
+    how: How,
 ) -> Result<(), Stop> {
     let rmoves: Vec<&MoveInfo> = random
         .iter()
@@ -571,7 +577,7 @@ pub(super) fn check_proj_seen(
     if rmoves.is_empty() {
         return Ok(());
     }
-    let mut engine = Engine::new(m.on);
+    let mut engine = how.engine(m.on);
     for proj in projs {
         if let Some(message) = proj_reaches(&mut engine, m, proj, &rmoves)? {
             return Err(refuse(Load::Random, message, &proj.at.0, proj.at.1));

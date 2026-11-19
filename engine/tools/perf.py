@@ -17,6 +17,13 @@ resident size passes 8 GB is killed (D4-7). A fast wrong answer fails: after tim
 output's SHA-256 is compared with T's expected digest (engine/tests/perf-digests.tsv, id and
 digest per line), and a row with no digest yet is reported unjudged.
 
+A turn row (`turn:<id> <id> …`, P8-1: a conversation turn, one `check` and two `run`s, cold)
+runs vectors of M3's stores (tests/m3/check.vectors, tests/m3/runs.vectors: their cwd and
+argument words) in order, each a cold process of the release binary: a run's wall time is the
+sum of its processes' walls, its footprint the largest peak, its instructions the sum; the
+median and the warm-ups are as for one process, and each process's output is checked against
+its own vector's digest. Its line names any process that exited other than its vector's code.
+
 A micro row (`bench:<name>`, P8-M*) runs its criterion bench, crates/tally/benches/<name>.rs,
 whose id is the row's: the wall time is criterion's median (less the median of the bench id
 the row's `less` names, if any: P8-M4's run less the plain run), and the bench itself fails
@@ -51,6 +58,7 @@ TABLE = os.path.join(TOOLS, "perf-budgets.toml")
 KERNEL = os.path.join(TOOLS, "kernel.toml")
 CHECKS = os.path.join(ENGINE, "tests", "checks.tsv")
 DIGESTS = os.path.join(ENGINE, "tests", "perf-digests.tsv")
+M3_STORES = (os.path.join(ENGINE, "tests", "m3", "check.vectors"), os.path.join(ENGINE, "tests", "m3", "runs.vectors"))
 BENCHES = os.path.join(ENGINE, "crates", "tally", "benches")
 GUNGRAUN = os.path.join(TOOLS, "gungraun", "benches")
 OUT = os.path.join(ENGINE, "target", "perf")
@@ -139,7 +147,7 @@ def check_row(check_id):
 
 
 def recipe(r):
-    """(argv after the binary, cwd), as run.py runs the check, or None for a row that waits."""
+    """(argv after the binary, cwd), as run.py runs the check, or None for a row that runs no one check."""
     if not r["recipe"].startswith("check:"):
         return None
     c = check_row(r["recipe"][len("check:"):])
@@ -147,6 +155,43 @@ def recipe(r):
     files = [os.path.relpath(os.path.join(ROOT, f), cwd) for f in c["files"].split()]
     argv = ["run", *files, *c["options"].split()] + (["--ask", *c["asks"].split()] if c["asks"] else [])
     return argv, cwd
+
+
+def m3_vectors():
+    """{id: (cwd, argument words, exit code)} of M3's stores: eight netstrings a vector (id, group,
+    source, cwd, the argument words joined by single spaces, the file table, the exit code, the
+    output; tests/m3/vectors.py)."""
+    out = {}
+    for path in M3_STORES:
+        with open(path, "rb") as f:
+            b = f.read()
+        parts, i = [], 0
+        while i < len(b):
+            j = b.index(b":", i)
+            n = int(b[i:j])
+            parts.append(b[j + 1:j + 1 + n].decode("utf-8"))
+            i = j + 2 + n
+        for k in range(0, len(parts) - 7, 8):
+            out[parts[k]] = (parts[k + 3], parts[k + 4].split(" "), int(parts[k + 6]))
+    return out
+
+
+def steps(r):
+    """The processes one timed run of the row starts: [(digest id, argv after the binary, cwd,
+    expected exit code or None)], or None for a row that runs none (a bench, a test, a wait)."""
+    plan = recipe(r)
+    if plan is not None:
+        return [(r["recipe"][len("check:"):], *plan, None)]
+    if not r["recipe"].startswith("turn:"):
+        return None
+    vectors = m3_vectors()
+    out = []
+    for vid in r["recipe"][len("turn:"):].split():
+        if vid not in vectors:
+            sys.exit(f"perf: {r['id']}: {vid} is no vector of tests/m3/check.vectors or tests/m3/runs.vectors")
+        cwd, argv, code = vectors[vid]
+        out.append((vid, argv, os.path.join(ROOT, cwd), code))
+    return out
 
 
 def digests():
@@ -256,9 +301,42 @@ def criterion_wall(r, target):
     return wall - plain, f"criterion, {seconds(wall)} less {r['less']}'s {seconds(plain)}"
 
 
+def timed_turn(binary, plan):
+    """One timed run of a row: each of its processes in order (one for a check row), as
+    (wall s summed, the largest footprint, instructions summed, [(exit code, output bytes)]),
+    or None when one was killed. A footprint or count time didn't report is left out."""
+    walls, footprints, instructions, outputs = [], [], [], []
+    for _, argv, cwd, _ in plan:
+        one = timed(binary, argv, cwd)
+        if one is None:
+            return None
+        walls.append(one[0])
+        footprints += [one[1]] if one[1] is not None else []
+        instructions += [one[2]] if one[2] is not None else []
+        outputs.append((one[3], one[4]))
+    return (sum(walls), max(footprints) if footprints else None,
+            sum(instructions) if len(instructions) == len(plan) else None, outputs)
+
+
+def judged(plan, outputs):
+    """Each process's output against its digest: (misses, notes) for the row's line. One process
+    (a check row) reads as before; a turn's lines name the vector."""
+    known, misses, notes = digests(), [], []
+    for (vid, _, _, want_code), (code, output) in zip(plan, outputs):
+        who = f"{vid}: " if len(plan) > 1 else ""
+        expected = known.get(vid)
+        if want_code is not None and code != want_code:
+            notes.append(f"{who}exit {code}, its vector's {want_code}")
+        if expected is None:
+            notes.append(f"{who}unjudged: no digest in engine/tests/perf-digests.tsv yet (exit {code})")
+        elif hashlib.sha256(output).hexdigest() != expected:
+            misses.append(f"{who}WRONG: the output's digest isn't T's (exit {code}): a fast wrong answer fails")
+    return misses, notes
+
+
 def time_row(r, binary, runs, warmups):
     """One line for one row, and whether it failed (a wrong answer, or a miss after S)."""
-    plan = recipe(r)
+    plan = steps(r)
     name = r["recipe"][len("bench:"):]
     if plan is None and r["recipe"].startswith("bench:") and os.path.isfile(os.path.join(BENCHES, f"{name}.rs")):
         return criterion_row(r, name)
@@ -266,10 +344,9 @@ def time_row(r, binary, runs, warmups):
         return f"{r['id']}: {r['recipe']}, its instructions under gungraun on Linux CI", False
     if plan is None:
         return f"{r['id']}: {r['recipe']}", False
-    argv, cwd = plan
     results = []
     for _ in range(warmups + runs):
-        one = timed(binary, argv, cwd)
+        one = timed_turn(binary, plan)
         if one is None:
             return f"BUDGET {r['id']}: a run passed 8 GB or {TIMEOUT_S:.0f} s and was killed (D4-7)", True
         results.append(one)
@@ -278,7 +355,6 @@ def time_row(r, binary, runs, warmups):
     footprints = [m[1] for m in measured if m[1] is not None]
     peak = max(footprints) if footprints else None
     instructions = [m[2] for m in measured if m[2] is not None]
-    code, output = measured[-1][3], measured[-1][4]
     misses, notes = [], []
     if "wall_s" in r and wall > r["wall_s"]:
         misses.append(f"wall({r.get('workers', 1)}w): median {seconds(wall)} > {seconds(r['wall_s'])} "
@@ -291,15 +367,12 @@ def time_row(r, binary, runs, warmups):
         notes.append(f"footprint: peak {peak / 1048576:.1f} MB")
     if instructions:
         notes.append(f"instructions: median {int(statistics.median(instructions)):,}".replace(",", " "))
-    expected = digests().get(r["recipe"][len("check:"):])
-    got = hashlib.sha256(output).hexdigest()
-    if expected is None:
-        notes.append(f"unjudged: no digest in engine/tests/perf-digests.tsv yet (exit {code})")
-        wrong = False
-    else:
-        wrong = got != expected
-        if wrong:
-            misses.append(f"WRONG: the output's digest isn't T's (exit {code}): a fast wrong answer fails")
+    if len(plan) > 1:
+        notes.append(f"{len(plan)} processes a run: {' '.join(s[0] for s in plan)}")
+    wrong_lines, judged_notes = judged(plan, measured[-1][3])
+    wrong = bool(wrong_lines)
+    misses += wrong_lines
+    notes += judged_notes
     if misses:
         return f"BUDGET {r['id']} " + "; ".join(misses + notes), wrong or set_at_s()
     return f"ok {r['id']} " + "; ".join(notes) + f" ({runs} runs; budget: {budget_text(r)})", False
@@ -329,7 +402,7 @@ def cmd_time(selected, opts):
     print(fingerprint())
     if not set_at_s():
         print("perf: every number is proposed until S (tools/kernel.toml): misses are reported, not failed")
-    binary = opts["bin"] or (build() if any(recipe(r) for r in selected) else None)
+    binary = opts["bin"] or (build() if any(steps(r) for r in selected) else None)
     failed = False
     for r in selected:
         line, bad = time_row(r, binary, opts["runs"], opts["warmups"])
@@ -352,7 +425,8 @@ def cmd_counts(selected, opts):
     for r in selected:
         plan = recipe(r)
         if plan is None:
-            print(f"{r['id']}: {r['recipe']}")
+            timed_only = " (a turn of several processes, timed only)" if r["recipe"].startswith("turn:") else ""
+            print(f"{r['id']}: {r['recipe']}{timed_only}")
             continue
         argv, cwd = plan
         done = subprocess.run([binary, *argv, "--stats"], cwd=cwd, capture_output=True, timeout=TIMEOUT_S, check=False)
@@ -374,6 +448,8 @@ def cmd_counts(selected, opts):
 
 def cmd_profile(r, opts):
     plan = recipe(r)
+    if plan is None and r["recipe"].startswith("turn:"):
+        sys.exit(f"perf: {r['id']} is a turn of several processes, timed only: {r['recipe']}")
     if plan is None:
         sys.exit(f"perf: {r['id']} has nothing to run: {r['recipe']}")
     if platform.system() != "Darwin":

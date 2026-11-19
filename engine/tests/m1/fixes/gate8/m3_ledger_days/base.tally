@@ -1,0 +1,54 @@
+model ld
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's book/ledger.rs Fig::hole_days_into, Line::hole_days_into (E §6.3, L §4.4, §8.2): a residual line whose model figure is a hole carrying an unknown day (the fee's amount depends on a window) that the line's own day doesn't carry; the register names it"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input due_day: date
+
+input cutoff: date
+
+input fee_day: date
+
+input fee_a: money PLN
+
+input fee_b: money PLN
+
+move fee: transfers
+  on fee_day
+  leg cash from konto to world amount if due_day < cutoff then fee_a else fee_b
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  due_day = window(2026-01-05, 2026-01-15) "the bill came some day in mid-January"
+  cutoff = 2026-01-10 "the fee drops after this"
+  fee_day = 2026-01-20 "the fee's day"
+  fee_a = 20.00 PLN "the early fee"
+  fee_b = 30.00 PLN "the late fee"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260120] = (on: 2026-01-20, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: fee) "the fee"
+  stated[konto] = 970.00 PLN at 2026-01-31 end "the month's closing balance"
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_fee: explain fee

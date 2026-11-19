@@ -2,7 +2,7 @@
 //! `MILESTONE-M2.md`'s forks row; issue #167). Every vector of `kernel/vectors.refcore`,
 //! `m1/vectors.refcore`, `m2/vectors.refcore` and `m2/spec.vectors`, and every record of the four
 //! corpora (`properties/kernel.corpus`, `m0.corpus`, `m1.corpus`, `m2.corpus`), runs through
-//! `tally_cli::tally::run_with_forks` twice (the CLI re-exports the library, pick P59), with
+//! `tally_cli::tally::run_with_how` twice (the CLI re-exports the library, pick P59; M3 step b), with
 //! `Forks::On` (fence F6: timelines that agree up to a day walk it once, each continued from the
 //! last checkpoint before it, PERFORMANCE §2.5) and with `Forks::Off` (the unforked walk, its
 //! plain twin), and the two print the same lines. A difference is the fence's fault. A store's
@@ -19,7 +19,7 @@
 mod tests {
     use std::collections::BTreeSet;
     use tally_cli::tally::walk::Forks;
-    use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_forks};
+    use tally_cli::tally::{Asks, Files, Given, How, NotImplemented, Pin, Request, run_with_how};
     use tally_runner::corpus::{KERNEL_CORPUS, netstrings, records};
     use tally_runner::kernel::vectors;
     use tally_runner::laws_m0::M0_CORPUS;
@@ -34,7 +34,7 @@ mod tests {
 
     /// A command line's paths and request, as the CLI reads `run`'s words (INTERFACE §4); every
     /// item of the eight stores is a `run` with at most `--ask` (2026-11-15).
-    fn request_of(args: &[String]) -> Result<(Vec<String>, Request), String> {
+    fn request_of(args: &[String]) -> Result<(Vec<String>, (Request, Pin)), String> {
         let Some((first, rest)) = args.split_first() else {
             return Err("an empty command line".to_owned());
         };
@@ -67,12 +67,7 @@ mod tests {
         } else {
             Asks::Named(asks)
         };
-        let request = Request {
-            asks,
-            pin,
-            days: Days::Events,
-        };
-        Ok((paths, request))
+        Ok((paths, (Request::new(asks), pin)))
     }
 
     /// The files the paths name, read from the file table `table` (netstring pairs).
@@ -96,7 +91,11 @@ mod tests {
     }
 
     /// The lines of one run with `forks`, or `None` where it stops not implemented.
-    fn lines(files: &[(String, Vec<u8>)], request: &Request, forks: Forks) -> Option<Vec<String>> {
+    fn lines(
+        files: &[(String, Vec<u8>)],
+        (request, pin): &(Request, Pin),
+        forks: Forks,
+    ) -> Option<Vec<String>> {
         let given = files
             .iter()
             .map(|(path, bytes)| Given {
@@ -104,7 +103,18 @@ mod tests {
                 bytes: Some(bytes.clone()),
             })
             .collect();
-        match run_with_forks(given, request, forks) {
+        let run_files = Files {
+            pin: *pin,
+            ..Files::new(given)
+        };
+        match run_with_how(
+            run_files,
+            request,
+            How {
+                forks,
+                ..How::FENCES
+            },
+        ) {
             Ok(answer) => Some(answer.lines().to_vec()),
             Err(NotImplemented) => None,
         }
@@ -112,7 +122,7 @@ mod tests {
 
     /// Runs `files` and `request` with forks on and off; `Err` names the first line they
     /// differ at. `Ok(true)` where both answered, `Ok(false)` where both stopped.
-    fn same(files: &[(String, Vec<u8>)], request: &Request) -> Result<bool, String> {
+    fn same(files: &[(String, Vec<u8>)], request: &(Request, Pin)) -> Result<bool, String> {
         let on = lines(files, request, Forks::On);
         let off = lines(files, request, Forks::Off);
         match (on, off) {

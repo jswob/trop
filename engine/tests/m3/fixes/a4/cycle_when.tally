@@ -1,0 +1,73 @@
+model cyc
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, G1 review A-4 (E §10, L §5.14.2): a walk-bound def read by the whens of an unordered cycle's two decisions; both read each other's place (RUN-ORDER in January), both whens false in February (nothing ordered, nothing booked), one true in March"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place ja: accounts PLN lives 2026-01-01..
+
+place jb: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dom: int
+
+input mark[m in month]: money PLN
+
+input put: money PLN
+
+def avail[m in month]: money PLN = bal(konto) at start_of(m)
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+move ca[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto, jb
+  when avail[m] > mark[m]
+  leg cash from world to ja amount if bal(jb) > put then put else put + put
+
+move cb[m in month]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  reads konto, ja
+  when avail[m] > mark[m] + put
+  leg cash from world to jb amount if bal(ja) > put then put else put + put
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dom = 10 "the decisions' day of the month"
+  mark[2026-01] = 0.00 "both whens true: the two read each other"
+  mark[2026-02] = 5000.00 "both whens false"
+  mark[2026-03] = 999.50 "ca's when true, cb's false"
+  put = 1.00 "a small amount"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 1000 at 2026-01-01 start
+  opening[ja] = 0 at 2026-01-01 start
+  opening[jb] = 0 at 2026-01-01 start
+
+ask q_jan: explain avail[2026-01] law cut
+
+ask q_feb: explain avail[2026-02] law cut
+
+ask q_mar: explain avail[2026-03] law cut
+
+ask q_bal: bal(ja, d), bal(jb, d) for d in [2026-01-31, 2026-02-28, 2026-03-31] law cut
+
+ask q_ca: explain ca[2026-02]
+
+ask q_cb: explain cb[2026-03]

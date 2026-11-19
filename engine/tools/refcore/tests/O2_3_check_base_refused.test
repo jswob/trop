@@ -1,0 +1,29 @@
+# OPERATIONS §2.3 (M3): a base that doesn't load prints its one `refused: CODE message` line, as run prints it, "and
+# nothing more": no warning, though spare is read by nothing; exit 1. amt is declared twice (LOAD-DUP, L §8.3), so
+# run, any ask or none, prints the same line.
+=== options check exit=1
+=== model.tally
+model household
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "a model that declares an input twice (invented)"
+
+source card "a card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+input spare: money PLN
+input amt: money PLN
+
+ask q: amt law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== expect
+refused: LOAD-DUP amt is declared twice ...

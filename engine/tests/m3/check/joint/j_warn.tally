@@ -1,0 +1,9 @@
+model family
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "w/w.tally" sha256 "ffddf13614dd98526324b2fc9958c0b69e2b1f4663b5a4061bac04a395095513"
+  note "a member with an input nothing reads"
+
+ask x: a.twice

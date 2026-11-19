@@ -1,0 +1,12 @@
+part question
+  tally 2
+
+ask q_oct: bal(konto, 2026-10-31)
+
+ask q_then: bal(konto, 2026-12-31) as known 2026-10-05
+
+ask q_raise: bal(konto, 2026-12-31) with salary[acme, 2026-12] = 9 000.00 PLN
+
+ask q_why: explain bal(konto, 2026-10-30)
+
+ask q_resid: residuals konto 2026-10

@@ -1,0 +1,5 @@
+part question_again
+  tally 2
+  note "ASK-2 (OPERATIONS §3.1): an id that isn't new"
+
+ask q_oct: bal(konto, 2026-11-30)

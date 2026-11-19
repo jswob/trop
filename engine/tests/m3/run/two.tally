@@ -1,0 +1,11 @@
+part run_asks
+  tally 2
+  note "T's asks for M3's run-function vectors (E §1; invented): two ids, two knowledge cuts"
+
+ask q_a: amt law 2026-03-01
+
+ask q_b: doubled law 2026-03-01
+
+ask q_k1: doubled law 2026-03-01 as known 2026-01-15
+
+ask q_k2: amt law 2026-02-01 as known 2026-02-15

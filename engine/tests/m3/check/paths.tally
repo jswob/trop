@@ -1,0 +1,5 @@
+part paths
+  tally 2
+  note "more than 100 000 paths: run refuses the request (REQ-PATHS), load doesn't"
+
+ask q_paths: doubled law 2026-03-01 paths 100001 seed 1

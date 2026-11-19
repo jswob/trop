@@ -1,0 +1,6 @@
+scenario s over mini
+  tally 2
+  from 2026-12-01
+
+ask q_in: bal(konto, 2026-12-31) in s
+ask q_gone: bal(konto, 2026-12-31) in nowhere

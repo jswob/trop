@@ -12,7 +12,8 @@
 //! Invariants: every member of a model is found, then every one pinned, in use order, before
 //! any loads; a member that is a joint model is a frame of a worklist, never a recursion
 //! (R-16); a member's refusal names its aliases from the run's model down; the files given are
-//! looked up before the disk's.
+//! looked up before the disk's; each member loaded alone is kept, with its files, for its asks
+//! (`a.q`), held by its joint model's reality once load ends, so no world's load copies it.
 
 use super::check::invariant;
 use super::merge::{Member, merge};
@@ -20,7 +21,8 @@ use super::steps::load_among;
 use super::worlds::{Loaded, Split, declared_asks, load_split};
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Refusal};
-use crate::model::{Joint, MemberAsks, NameKind, Reality};
+use crate::eval::How;
+use crate::model::{Joint, MemberAlone, MemberAsks, NameKind, Reality};
 use crate::syntax::{Line, Stop, parse_split, printed_hash, reprint, split_lines};
 use core::ops::Bound;
 use std::collections::{BTreeMap, BTreeSet};
@@ -64,12 +66,16 @@ struct Frame {
     worlds: BTreeSet<String>,
     /// The asks a member's scenario files declare.
     scenario_asks: BTreeSet<String>,
+    /// A member's own files, its scenario files included; none for the run's own.
+    member_files: Vec<Source>,
     /// Each member's files, in use order (taken as each loads).
     files: Vec<(String, Vec<MemberFile>)>,
     /// The members loaded alone so far, in use order.
     done: Vec<Member>,
     /// What a run may ask of each member loaded.
     asks: BTreeMap<String, MemberAsks>,
+    /// Each member loaded, as its asks are answered.
+    alone: BTreeMap<String, MemberAlone>,
 }
 
 /// What every frame of a run looks members up in before the disk: the files given, and the
@@ -79,12 +85,14 @@ struct Pool {
     given: Vec<Source>,
     /// How a `use` line's pin is taken.
     pin: Pin,
+    /// How what each load evaluates computes, the run's (R-130).
+    how: How,
 }
 
 /// A member's next step: loaded alone, or a joint model whose own members load first.
 enum Next {
-    /// Loaded alone, with its asks.
-    Alone(Member, MemberAsks),
+    /// Loaded alone, with its asks, and as they are answered.
+    Alone(Member, MemberAsks, Box<MemberAlone>),
     /// A joint model: its frame.
     Nested(Box<Frame>),
 }
@@ -172,7 +180,7 @@ pub(super) fn load_joint(
     files: &[Split],
     root: usize,
     disk: &BTreeMap<&str, &[u8]>,
-    pin: Pin,
+    (pin, how): (Pin, How),
 ) -> Result<Loaded, Stop> {
     let pool = Pool {
         given: files
@@ -183,6 +191,7 @@ pub(super) fn load_joint(
             })
             .collect(),
         pin,
+        how,
     };
     let pairs: Vec<(&str, &str)> = pool
         .given
@@ -209,8 +218,9 @@ pub(super) fn load_joint(
             chain.push(alias.clone());
             let found = core::mem::take(found);
             match member(alias.clone(), &found, chain, &pool, disk)? {
-                Next::Alone(done, asks) => {
+                Next::Alone(done, asks, alone) => {
                     top.asks.insert(done.alias.clone(), asks);
+                    top.alone.insert(done.alias.clone(), *alone);
                     top.done.push(done);
                 }
                 Next::Nested(frame) => stack.push(*frame),
@@ -222,14 +232,20 @@ pub(super) fn load_joint(
         };
         let merged =
             merge(&frame.jfile, &frame.own, frame.done).map_err(|s| tagged(s, &frame.chain))?;
+        // the members alone are held once load ends, so no world's load copies them
         let joint = Joint {
             members: frame.asks,
+            alone: BTreeMap::new(),
         };
         let Some(parent) = stack.last_mut() else {
-            return finish(files, merged.files, &joint).map_err(|s| tagged(s, &[]));
+            let mut loaded =
+                finish(files, merged.files, (&joint, how)).map_err(|s| tagged(s, &[]))?;
+            hold_alone(base_of(&mut loaded), frame.alone)?;
+            return Ok(loaded);
         };
-        let reality = load_lines(&merged.files, &frame.worlds, Some(&joint))
+        let mut reality = load_lines(&merged.files, &frame.worlds, Some(&joint), how)
             .map_err(|s| tagged(s, &frame.chain))?;
+        hold_alone(&mut reality, frame.alone)?;
         let alias = frame
             .chain
             .last()
@@ -243,6 +259,14 @@ pub(super) fn load_joint(
                 asks,
                 named: asks_named(&reality),
                 members: joint.members,
+            },
+        );
+        parent.alone.insert(
+            alias.clone(),
+            MemberAlone {
+                reality,
+                files: frame.member_files,
+                worlds: frame.worlds,
             },
         );
         parent.done.push(Member {
@@ -272,9 +296,11 @@ pub(crate) fn reprint_members(
     given: &[Source],
     disk: &BTreeMap<&str, &[u8]>,
 ) -> Result<Vec<BTreeSet<String>>, Stop> {
+    // a reprint loads no member: `how` reaches nothing here
     let pool = Pool {
         given: given.to_vec(),
         pin: Pin::Canonical,
+        how: How::FENCES,
     };
     let mut members: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for source in given {
@@ -327,10 +353,46 @@ fn frame(chain: Vec<String>, jfile: String, own: Vec<Source>) -> Frame {
         own,
         worlds: BTreeSet::new(),
         scenario_asks: BTreeSet::new(),
+        member_files: Vec::new(),
         files: Vec::new(),
         done: Vec::new(),
         asks: BTreeMap::new(),
+        alone: BTreeMap::new(),
     }
+}
+
+/// The base reality of a run's load: the one reality, or the worlds' base.
+fn base_of(loaded: &mut Loaded) -> &mut Reality {
+    match loaded {
+        Loaded::One(m) => m,
+        Loaded::Worlds(w) => &mut w.base,
+    }
+}
+
+/// A joint model's reality holding its members loaded alone, as its members' asks are
+/// answered (L §6.1).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a reality loaded without its members.
+fn hold_alone(m: &mut Reality, alone: BTreeMap<String, MemberAlone>) -> Result<(), Stop> {
+    let joint = m
+        .joint
+        .as_mut()
+        .ok_or_else(|| invariant("a joint model loaded without its members".to_owned()))?;
+    joint.alone = alone;
+    Ok(())
+}
+
+/// A member's files as a run is given them, its path as the run named it and its text.
+fn sources(files: &[MemberFile]) -> Vec<Source> {
+    files
+        .iter()
+        .map(|f| Source {
+            path: f.path.clone(),
+            text: f.text.clone(),
+        })
+        .collect()
 }
 
 /// A joint model's frame with its members found and pinned (refcore's `joint_texts`, before
@@ -394,11 +456,13 @@ fn member(
         let mut nested = nested_frame(&base, model, chain, pool, disk)?;
         nested.worlds = worlds;
         nested.scenario_asks = scenario_asks;
+        nested.member_files = sources(files);
         return Ok(Next::Nested(Box::new(nested)));
     }
-    let reality = alone(&base, &worlds).map_err(|s| tagged(s, &chain))?;
+    let reality = alone(&base, &worlds, pool.how).map_err(|s| tagged(s, &chain))?;
     let mut asks = ask_ids(&reality);
     asks.extend(scenario_asks);
+    let named = asks_named(&reality);
     let mut lines = Vec::with_capacity(base.len());
     for file in &base {
         let split =
@@ -416,9 +480,14 @@ fn member(
         done,
         MemberAsks {
             asks,
-            named: asks_named(&reality),
+            named,
             members: BTreeMap::new(),
         },
+        Box::new(MemberAlone {
+            reality,
+            files: sources(files),
+            worlds,
+        }),
     ))
 }
 
@@ -463,8 +532,8 @@ fn nested_frame(
 
 /// A member that is no joint model, loaded alone (refcore's `load_texts`): its files split in
 /// the order of their full paths, then loaded in the order of their paths in its tree, among
-/// its scenarios. L §6.1, §8.3.
-fn alone(files: &[&MemberFile], worlds: &BTreeSet<String>) -> Result<Reality, Stop> {
+/// its scenarios, what it evaluates computing as `how` says. L §6.1, §8.3.
+fn alone(files: &[&MemberFile], worlds: &BTreeSet<String>, how: How) -> Result<Reality, Stop> {
     let mut order: Vec<&&MemberFile> = files.iter().collect();
     order.sort_by(|a, b| a.path.cmp(&b.path));
     let mut split: BTreeMap<&str, Vec<Line>> = BTreeMap::new();
@@ -477,28 +546,31 @@ fn alone(files: &[&MemberFile], worlds: &BTreeSet<String>) -> Result<Reality, St
             lines.push((f.path.clone(), l));
         }
     }
-    load_lines(&lines, worlds, None)
+    load_lines(&lines, worlds, None, how)
 }
 
-/// Lines loaded as one reality among `worlds` (refcore's `load_lines`). E §3.1.
+/// Lines loaded as one reality among `worlds` (refcore's `load_lines`), what it evaluates
+/// computing as `how` says. E §3.1.
 fn load_lines(
     files: &[(String, Vec<Line>)],
     worlds: &BTreeSet<String>,
     joint: Option<&Joint>,
+    how: How,
 ) -> Result<Reality, Stop> {
     let split: Vec<(&str, &[Line])> = files
         .iter()
         .map(|(path, lines)| (path.as_str(), lines.as_slice()))
         .collect();
-    load_among(parse_split(&split)?, worlds, &BTreeMap::new(), joint)
+    load_among(parse_split(&split)?, (worlds, &BTreeMap::new()), joint, how)
 }
 
 /// The run's merged lines loaded (refcore's `joint`, after `joint_texts`): one reality, or
-/// worlds when the joint model has scenario files of its own. L §6.1, §6.4.
+/// worlds when the joint model has scenario files of its own; what it evaluates computing as
+/// `how` says. L §6.1, §6.4.
 fn finish(
     given: &[Split],
     merged: Vec<(String, Vec<Line>)>,
-    joint: &Joint,
+    (joint, how): (&Joint, How),
 ) -> Result<Loaded, Stop> {
     let mut splits = Vec::with_capacity(merged.len());
     for (path, lines) in merged {
@@ -514,7 +586,7 @@ fn finish(
         }
         splits.push(split);
     }
-    load_split(&splits, Some(joint))
+    load_split(&splits, Some(joint), how)
 }
 
 /// A stop of a joint model's load named for the member it was met in, `chain` its aliases
@@ -529,14 +601,11 @@ fn tagged(stop: Stop, chain: &[String]) -> Stop {
     }
 }
 
-/// The asks a member's base answers by their ids: those not refused alone (refcore's `asks`
-/// after `asks_alone` is taken out). E §11.
+/// The asks a member's base answers by their ids, those refused alone included: such an ask
+/// exists, and the member alone prints its refusal as its line (L §6.1; E §11 `REQ-ASK` is for
+/// an ask that doesn't exist; refcore leaves them out, #233).
 fn ask_ids(m: &Reality) -> BTreeSet<String> {
-    m.asks
-        .iter()
-        .filter(|ask| !m.asks_alone.contains_key(&ask.id))
-        .map(|ask| ask.id.clone())
-        .collect()
+    m.asks.iter().map(|ask| ask.id.clone()).collect()
 }
 
 /// The asks a member's namespace holds, refused alone or not: what refcore's `lookup` on the

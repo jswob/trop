@@ -4,9 +4,9 @@
 //! Twin: none, an instrument (R-91); its instruction count is
 //! `engine/tools/gungraun/benches/p8_m4.rs`, on the same reality.
 //! Invariants: the setup is the builder's request at G7 (BUILD-LOG, 2026-11-01); the library
-//! is reached only through `tally::run`, the reality given as bytes; after timing, each ask's
-//! printed value is checked against the closed form opening + n × amount, so a fast wrong
-//! answer fails the run.
+//! is reached only through `tally::run_with_how`, every fence on and the event walk's days
+//! (`How::FENCES`), the reality given as bytes; after timing, each ask's printed value is
+//! checked against the closed form opening + n × amount, so a fast wrong answer fails the run.
 //!
 //! One place lives 33 years (12 054 days) with one plan movement a day. `P8-M4` times a whole
 //! run asking `bal(x, E) from S`, `P8-M4-plain` the same reality asking `bal(x, E)`: a run is
@@ -14,7 +14,7 @@
 
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
-use tally::{Answer, Asks, Days, Given, NotImplemented, Pin, Request, run};
+use tally::{Answer, Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
 /// The run's first day, S, and the projection's day t.
 const START: &str = "2025-01-01";
@@ -45,21 +45,17 @@ fn reality() -> String {
     )
 }
 
-/// The run's one file (built untimed).
-fn given(text: &str) -> Vec<Given> {
-    vec![Given {
+/// The run's one file, no file table, a `use` pin from the canonical text (built untimed).
+fn given(text: &str) -> Files {
+    Files::new(vec![Given {
         path: "p8m4.tally".to_owned(),
         bytes: Some(text.as_bytes().to_vec()),
-    }]
+    }])
 }
 
 /// A request for the one ask named.
 fn request(ask: &str) -> Request {
-    Request {
-        asks: Asks::Named(vec![ask.to_owned()]),
-        pin: Pin::Canonical,
-        days: Days::Events,
-    }
+    Request::new(Asks::Named(vec![ask.to_owned()]))
 }
 
 /// Minor units as the engine prints money: whole units grouped by threes with a space, two
@@ -103,11 +99,11 @@ fn timed(bench: &mut Criterion, id: &str, ask: &str) -> bool {
     bench.bench_function(id, |t| {
         t.iter_batched(
             || given(&text),
-            |files| run(black_box(files), black_box(&asked)),
+            |files| run_with_how(black_box(files), black_box(&asked), black_box(How::FENCES)),
             BatchSize::SmallInput,
         );
     });
-    right(&run(given(&text), &asked), ask)
+    right(&run_with_how(given(&text), &asked, How::FENCES), ask)
 }
 
 fn p8_m4(bench: &mut Criterion) {

@@ -1,0 +1,13 @@
+scenario s1 over ana
+  tally 2
+  from 2026-01-01
+
+version raise
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 5 000.00 PLN "a raise"
+
+ask q_s: twice in s1 law 2026-03-01
+
+ask q_sc: twice in s1 law 2026-03-01 as known 2026-06-01

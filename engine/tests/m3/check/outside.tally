@@ -1,0 +1,5 @@
+part outside
+  tally 2
+  note "an outside place nothing names (L §8.5, tally 2.1.2)"
+
+place elsewhere: outside lives 1900-01-01..

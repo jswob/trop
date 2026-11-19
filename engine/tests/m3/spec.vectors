@@ -1,0 +1,618 @@
+20:spec/lawdate/b3-mean,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,17:run b3_mean.tally,45:b3_mean.tally	m3/fixes/lawdate/b3_mean.tally
+,1:1,116:refused: LOAD-LAWDATE move back's key a reads law-dated act_day with no law date: its at reads a (b3_mean.tally:37)
+,20:spec/lawdate/b3-asif,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,17:run b3_asif.tally,45:b3_asif.tally	m3/fixes/lawdate/b3_asif.tally
+,1:1,116:refused: LOAD-LAWDATE move back's key a reads law-dated act_day with no law date: its at reads a (b3_asif.tally:37)
+,21:spec/lawdate/b3-where,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,18:run b3_where.tally,47:b3_where.tally	m3/fixes/lawdate/b3_where.tally
+,1:0,726:q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input back_day is read by nothing
+,22:spec/lawdate/g1-a-noat,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,19:run g1_a_noat.tally,49:g1_a_noat.tally	m3/fixes/lawdate/g1_a_noat.tally
+,1:1,86:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (g1_a_noat.tally:24)
+,20:spec/lawdate/g1-b-on,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,17:run g1_b_on.tally,45:g1_b_on.tally	m3/fixes/lawdate/g1_b_on.tally
+,1:1,114:refused: LOAD-LAWDATE move one's key p reads law-dated region with no law date: its at reads p (g1_b_on.tally:29)
+,20:spec/lawdate/g1-c-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,17:run g1_c_at.tally,45:g1_c_at.tally	m3/fixes/lawdate/g1_c_at.tally
+,1:0,332:q: 50.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  cut 2026-01-31
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input rd is read by nothing
+,22:spec/lawdate/g1-d-last,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,19:run g1_d_last.tally,49:g1_d_last.tally	m3/fixes/lawdate/g1_d_last.tally
+,1:0,717:q: 30.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  unfulfilled: pay[2026-01-10]
+  unfulfilled: pay[2026-01-11]
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-05
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-06
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-07
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-08
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-09
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-10
+  held: rd[pl] = 2026-01-02 (v), read for 2026-01-11
+  cut 2026-01-31
+warning: WARN-UNREAD input cal is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+,25:spec/lawdate/p-o-input-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,22:run p_o_input_at.tally,55:p_o_input_at.tally	m3/fixes/lawdate/p_o_input_at.tally
+,1:1,121:refused: LOAD-LAWDATE move shut's key p reads law-dated act_day with no law date: its at reads p (p_o_input_at.tally:34)
+,28:spec/lawdate/p-o-lawdated-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run p_o_lawdated_at.tally,61:p_o_lawdated_at.tally	m3/fixes/lawdate/p_o_lawdated_at.tally
+,1:1,124:refused: LOAD-LAWDATE move shut's key p reads law-dated act_day with no law date: its at reads p (p_o_lawdated_at.tally:34)
+,28:spec/lawdate/p-o-owndated-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run p_o_owndated_at.tally,61:p_o_owndated_at.tally	m3/fixes/lawdate/p_o_owndated_at.tally
+,1:1,125:refused: LOAD-LAWDATE move shut's key p reads law-dated owndated with no law date: its at reads p (p_o_owndated_at.tally:34)
+,23:spec/lawdate/p-o-agg-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,20:run p_o_agg_at.tally,51:p_o_agg_at.tally	m3/fixes/lawdate/p_o_agg_at.tally
+,1:1,119:refused: LOAD-LAWDATE move shut's key p reads law-dated act_day with no law date: its at reads p (p_o_agg_at.tally:34)
+,25:spec/lawdate/p-w-input-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,22:run p_w_input_at.tally,55:p_w_input_at.tally	m3/fixes/lawdate/p_w_input_at.tally
+,1:0,481:q: 60.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,27:spec/lawdate/p-w-aggterm-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run p_w_aggterm_at.tally,59:p_w_aggterm_at.tally	m3/fixes/lawdate/p_w_aggterm_at.tally
+,1:0,481:q: 60.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,28:spec/lawdate/p-w-lawdated-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run p_w_lawdated_at.tally,61:p_w_lawdated_at.tally	m3/fixes/lawdate/p_w_lawdated_at.tally
+,1:0,547:q: 50.00 PLN
+  pinned: law act_day = 2026-01-08
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,28:spec/lawdate/p-w-owndated-at,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run p_w_owndated_at.tally,61:p_w_owndated_at.tally	m3/fixes/lawdate/p_w_owndated_at.tally
+,1:0,428:q: 60.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,26:spec/lawdate/i1-atref-true,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,23:run i1_atref_true.tally,57:i1_atref_true.tally	m3/fixes/lawdate/i1_atref_true.tally
+,1:0,738:q: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: refused: RUN-NONE never in the law date of shut
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,27:spec/lawdate/i1-atref-false,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run i1_atref_false.tally,59:i1_atref_false.tally	m3/fixes/lawdate/i1_atref_false.tally
+,1:0,768:q: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 100.00 PLN
+  law date 2026-06-30, cut 2026-06-30
+q2: refused: RUN-NONE never in the law date of shut
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,28:spec/lawdate/w-hole-at-false,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run w_hole_at_false.tally,61:w_hole_at_false.tally	m3/fixes/lawdate/w_hole_at_false.tally
+,1:0,1007:q: ?"gap_day: no value" (gap_day) ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,21:spec/lawdate/w-k-true,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,18:run w_k_true.tally,47:w_k_true.tally	m3/fixes/lawdate/w_k_true.tally
+,1:0,935:q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,22:spec/lawdate/w-k-false,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,19:run w_k_false.tally,49:w_k_false.tally	m3/fixes/lawdate/w_k_false.tally
+,1:0,1089:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,24:spec/lawdate/w-ref-self2,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,21:run w_ref_self2.tally,53:w_ref_self2.tally	m3/fixes/lawdate/w_ref_self2.tally
+,1:0,984:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,28:spec/lawdate/w-two-false-ref,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run w_two_false_ref.tally,61:w_two_false_ref.tally	m3/fixes/lawdate/w_two_false_ref.tally
+,1:0,984:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,29:spec/lawdate/w-two-true-false,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,26:run w_two_true_false.tally,63:w_two_true_false.tally	m3/fixes/lawdate/w_two_true_false.tally
+,1:0,1089:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,35:spec/lawdate/w-wait-then-free-false,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,32:run w_wait_then_free_false.tally,75:w_wait_then_free_false.tally	m3/fixes/lawdate/w_wait_then_free_false.tally
+,1:0,1035:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,27:spec/lawdate/w-later-on-ref,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run w_later_on_ref.tally,59:w_later_on_ref.tally	m3/fixes/lawdate/w_later_on_ref.tally
+,1:0,1037:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,28:spec/lawdate/w-at-later-only,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run w_at_later_only.tally,61:w_at_later_only.tally	m3/fixes/lawdate/w_at_later_only.tally
+,1:0,1046:q: -4 250.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -150.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -150.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -150.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2], konto]
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2], spare]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2], konto]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2], spare]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2], konto]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2], spare]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,27:spec/lawdate/w-agg-in-where,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run w_agg_in_where.tally,59:w_agg_in_where.tally	m3/fixes/lawdate/w_agg_in_where.tally
+,1:0,939:q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input back_day is read by nothing
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,29:spec/lawdate/w-agg-in-where-f,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,26:run w_agg_in_where_f.tally,63:w_agg_in_where_f.tally	m3/fixes/lawdate/w_agg_in_where_f.tally
+,1:0,1093:q: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input back_day is read by nothing
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,27:spec/lawdate/w-hole-at-true,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run w_hole_at_true.tally,59:w_hole_at_true.tally	m3/fixes/lawdate/w_hole_at_true.tally
+,1:0,1007:q: ?"gap_day: no value" (gap_day) ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,24:spec/lawdate/w-plain-key,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,21:run w_plain_key.tally,53:w_plain_key.tally	m3/fixes/lawdate/w_plain_key.tally
+,1:0,1118:q: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: shut[konto]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,30:spec/lawdate/w-plain-key-false,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,27:run w_plain_key_false.tally,65:w_plain_key_false.tally	m3/fixes/lawdate/w_plain_key_false.tally
+,1:0,1121:q: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 100.00 PLN
+  law date 2026-06-30, cut 2026-06-30
+q2: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,25:spec/lawdate/w-unit-where,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,22:run w_unit_where.tally,55:w_unit_where.tally	m3/fixes/lawdate/w_unit_where.tally
+,1:0,661:q: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: 0.00 PLN
+  balance of spare (PLN) at the end of 2026-06-30
+  from: opening fixed:opening[spare] = 100.00 PLN, 2026-01-01 start (version fixed, source plan, locator "w")
+  2026-04-05:
+    shut[spare].cash (past): -100.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q4: PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,27:spec/lawdate/w-places-where,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run w_places_where.tally,59:w_places_where.tally	m3/fixes/lawdate/w_places_where.tally
+,1:0,1171:q: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: shut[konto]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,27:spec/lawdate/w-months-where,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,24:run w_months_where.tally,59:w_months_where.tally	m3/fixes/lawdate/w_months_where.tally
+,1:0,1844:q (d = 2026-04-30): 100.00 PLN
+  law date 2026-06-30, cut 2026-06-30
+q (d = 2026-05-31): 0.00 PLN
+  unfulfilled: shut[2026-05, spare]
+  law date 2026-06-30, cut 2026-06-30
+q (d = 2026-06-30): refused: RUN-LIFESPAN spare ends on 2026-06-30 holding -100.00 PLN
+  unfulfilled: shut[2026-05, spare]
+  unfulfilled: shut[2026-06, spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: shut[2026-05, konto]
+  law date 2026-06-30, cut 2026-06-30
+q3: 0.00 PLN
+  balance of spare (PLN) at the end of 2026-05-31
+  from: opening fixed:opening[spare] = 100.00 PLN, 2026-01-01 start (version fixed, source plan, locator "w")
+  2026-05-01:
+    shut[2026-05, spare].cash (past): -100.00 PLN
+  unfulfilled: shut[2026-05, spare]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-NEGATIVE spare is below zero from 2026-06-01
+warning: WARN-UNREAD input back_day is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,28:spec/lawdate/w-key-and-dated,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,25:run w_key_and_dated.tally,61:w_key_and_dated.tally	m3/fixes/lawdate/w_key_and_dated.tally
+,1:0,1146:q: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input back_day is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+,25:spec/lawdate/w-asks-count,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,22:run w_asks_count.tally,55:w_asks_count.tally	m3/fixes/lawdate/w_asks_count.tally
+,1:0,3809:q2: 300.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  cut 2026-06-30
+q3: -3 950.00 PLN
+  balance of konto (PLN) at the end of 2026-04-30
+  from: 0 at the start of its lifespan, 2026-01-01
+  2026-01-01:
+    rent[2026-01].cash (past): -900.00 PLN
+  2026-02-01:
+    rent[2026-02].cash (past): -900.00 PLN
+  2026-03-01:
+    rent[2026-03].cash (past): -900.00 PLN
+  2026-04-01:
+    rent[2026-04].cash (past): -950.00 PLN
+  2026-04-05:
+    back[adjustments[rent[2026-01].cash, v2]].cash (past): -100.00 PLN
+    back[adjustments[rent[2026-02].cash, v2]].cash (past): -100.00 PLN
+    back[adjustments[rent[2026-03].cash, v2]].cash (past): -100.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q4 (d = 2026-04-04): -3 650.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q4 (d = 2026-04-05): -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q4 (d = 2026-12-31): -11 550.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  unfulfilled: rent[2026-06]
+  held: rent_amt = 950.00 PLN (v2), read for 2026-07-01
+  held: rent_amt = 950.00 PLN (v2), read for 2026-08-01
+  held: rent_amt = 950.00 PLN (v2), read for 2026-09-01
+  held: rent_amt = 950.00 PLN (v2), read for 2026-10-01
+  held: rent_amt = 950.00 PLN (v2), read for 2026-11-01
+  held: rent_amt = 950.00 PLN (v2), read for 2026-12-01
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,25:spec/lawdate/w-asks-known,12:spec-lawdate,4:spec,29:engine/tests/m3/fixes/lawdate,22:run w_asks_known.tally,55:w_asks_known.tally	m3/fixes/lawdate/w_asks_known.tally
+,1:0,1814:q: -3 600.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  held: rent_amt = 900.00 PLN (v), read for 2026-04-01
+  law date 2026-03-14, cut 2026-03-14
+q2: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  held: rent_amt = 950.00 PLN (v2), read for 2026-04-01
+  law date 2026-03-15, cut 2026-03-15
+q3: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q4: residuals konto 2026-04
+  cut 2026-06-30
+q6: back, q3
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,17:spec/alone/b4-run,10:spec-alone,4:spec,27:engine/tests/m3/fixes/alone,6:run b1,129:b1/more.tally	m3/fixes/alone/b1/more.tally
+b1/reality.tally	m3/fixes/alone/b1/reality.tally
+b1/s.tally	m3/fixes/alone/b1/s.tally
+,1:0,393:q_base: 8 000.00 PLN
+  unfulfilled: wage[2026-10, acme]
+  cut 2026-11-05
+q_gone: refused: LOAD-SCENARIO ask q_gone names nowhere, neither the model nor a loaded scenario (b1/s.tally:6)
+q_in: 22 000.00 PLN
+  world: s
+  unfulfilled: wage[2026-10, acme]
+  held: pay_dom[acme] = 10 (home), read for 2026-12-01
+  held: salary[acme, 2026-12] = 7 000.00 PLN (home), read for 2026-12
+  cut 2026-11-05
+,17:spec/alone/b4-ask,10:spec-alone,4:spec,27:engine/tests/m3/fixes/alone,19:run b1 --ask q_gone,129:b1/more.tally	m3/fixes/alone/b1/more.tally
+b1/reality.tally	m3/fixes/alone/b1/reality.tally
+b1/s.tally	m3/fixes/alone/b1/s.tally
+,1:0,112:q_gone: refused: LOAD-SCENARIO ask q_gone names nowhere, neither the model nor a loaded scenario (b1/s.tally:6)
+,21:spec/alone/b4-dropped,10:spec-alone,4:spec,27:engine/tests/m3/fixes/alone,6:run b2,129:b2/more.tally	m3/fixes/alone/b2/more.tally
+b2/reality.tally	m3/fixes/alone/b2/reality.tally
+b2/s.tally	m3/fixes/alone/b2/s.tally
+,1:0,391:q_base: 8 000.00 PLN
+  unfulfilled: wage[2026-10, acme]
+  cut 2026-11-05
+q_cmp: refused: LOAD-SCENARIO ask q_cmp names dropped, neither the model nor a loaded scenario (b2/s.tally:6)
+q_in: 22 000.00 PLN
+  world: s
+  unfulfilled: wage[2026-10, acme]
+  held: pay_dom[acme] = 10 (home), read for 2026-12-01
+  held: salary[acme, 2026-12] = 7 000.00 PLN (home), read for 2026-12
+  cut 2026-11-05
+,

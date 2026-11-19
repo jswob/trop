@@ -1,0 +1,16 @@
+model tropek_r7
+  tally 2
+  on 2026-10-17
+  start 2024-01-01
+  end 2032-10-31
+  note "T, M3 C6 (issue #114's remainder, plan §5): R7 (to2028.tally's texts) to 2032-10-31, for konto and net worth on 2031-10-17 and 2032-09-17 (2032-10-17 is a hole here, after the run's end through the 15th's decision), refcore against the engine on the same text: the 2036 and 2056 pins part from the prototype past 2030, and the blocks state no figure 2031-2035. The longest horizon refcore runs within the 8 GB cap past 2031: to 2033-11-30 it passed 8.1 GB after 45 s (stopped, 2026-11-19)"
+
+index cal_year = year 2024..2032
+
+index day = day 2026-10-17..2032-10-31
+
+index month = month 2024-01..2032-10
+
+ask h_2031: bal(konto, 2031-10-17), net_worth[2031-10-17]
+
+ask h_2032: bal(konto, 2032-09-17), net_worth[2032-09-17]

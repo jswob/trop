@@ -7,8 +7,10 @@
 //! dated t through d as known on t: one walk of its window, steps 1–3), §4.1 (the plan pass
 //! hands the walk its acts by day), §4.2 (the day walk).
 //! Twin: the unforked walk, `Forks::Off`: projection.rs's `proj_walk` makes each read its own
-//! walk and `end_projection` frees it, so every read walks its window from its first day
-//! (refcore's walk.py `proj_walk`, `run_to`).
+//! walk, planned through the read's day, and `end_projection` frees it, so every read walks
+//! its window from its first day (refcore's walk.py `proj_walk`, `run_to`, walk each read
+//! anew too, but plan through E: the two part only where a plan-pass stop is dated after the
+//! read's day, which spec question Q-3 of #231 asks).
 //! Invariants: a walk is continued only where every act the read's plan pass puts on the days
 //! it walked is the act it took there, and every other plan output it walks by is the same; it
 //! keeps what it walked and takes the read's plan for the days after; any other read takes a
@@ -20,9 +22,10 @@
 //! projection read day by day, `min(bal(konto, d) from t … for d in t .. b step 1 day)`, walks
 //! its window once, each read continued from the last, where a new walk per read walks t
 //! through d for each d; at M2's G6 P8-14's check stepped 9 868 days in 605 walks; with F6,
-//! 1 826);
-//! plain twin: projection.rs (`Forks::Off`); the equivalence test:
-//! tally-cli/tests/fork_oracle.rs, and this file's tests.
+//! 1 826), a new walk planned through its read's month end (`horizon`), so that such a read
+//! plans once a month, not once a day;
+//! plain twin: projection.rs (`Forks::Off`, each read's walk planned through its own day);
+//! the equivalence test: tally-cli/tests/fork_oracle.rs, and this file's tests.
 //!
 //! The first different day of two plans of one projection, the walk through day d₁ and the
 //! read through d₂ after it, is the first day on which the acts the plans put differ: an
@@ -38,8 +41,9 @@ use super::agenda::{Act, Mv};
 use super::point::At;
 use super::state::{Progress, Walk};
 use crate::eval::Engine;
+use crate::model::Reality;
 use crate::syntax::Stop;
-use crate::time::Day;
+use crate::time::{Day, Period};
 
 /// Whether a projection's walk read again through a later day is continued from where it
 /// stood: the switch F6's equivalence test turns (P §2.5).
@@ -69,7 +73,7 @@ pub(crate) struct Parked {
 /// What a read of a projection does with the walk kept under its key (P §2.5).
 #[derive(Debug)]
 pub(crate) enum Held {
-    /// Takes it as it is: it plans through the read's last day.
+    /// Takes it as it is: it plans at least through the read's last day.
     Kept(usize),
     /// Takes a new walk, which continues this one once its plan pass agrees with it.
     Continue(Box<Walk>),
@@ -147,6 +151,11 @@ impl Engine {
     /// to be continued where it plans less far and stands between two days; freed otherwise,
     /// the read walking anew as the twin does (P §2.5, §3.5; pick P73). E §4.3.
     ///
+    /// Taken as it is, it is not checked with `agrees`: its key, `ProjKey` (the walk it
+    /// continues, its point, its cut and the moves it leaves out), names everything its plan
+    /// pass read, so within one engine, and so one timeline, the read's plan through its day
+    /// is the plan the walk already holds.
+    ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
@@ -154,8 +163,9 @@ impl Engine {
         self.parked.ids.retain(|kept| *kept != id);
         let kept = self.walk(id)?;
         if kept.plans_through() >= through {
-            // the twin walks this read's days again; here the days walked are shared
-            if kept.done.is_some_and(|walked| walked < through) {
+            // the twin walks this read's days again; here the days walked are shared, whether
+            // the read is served from the walk's log or walks on past them (P §1.1)
+            if kept.done.is_some() {
                 self.count_shared();
             }
             return Ok(Held::Kept(id));
@@ -174,6 +184,16 @@ impl Engine {
     /// continues it (P §2.5).
     pub(crate) fn wait_to_continue(&mut self, id: usize, kept: Walk) {
         self.parked.waiting.insert(id, kept);
+    }
+
+    /// Walk `id`, held under a key, planned less far than a read of that key needs: the read
+    /// takes a new walk, and a kept walk waiting for `id`'s plan pass is dropped. That pass,
+    /// cut short past the counted depth, may never run again, and nothing else would take the
+    /// kept walk; where it does run, `id` is walked from its first day, as the twin walks it
+    /// (P §2.5, §3.5).
+    pub(crate) fn outgrown(&mut self, id: usize) -> Held {
+        self.parked.waiting.remove(&id);
+        Held::New
     }
 
     /// Walk `id`'s plan pass done: the lengths of its plan's uncertain and modelled lists kept,
@@ -209,6 +229,30 @@ impl Engine {
     fn count_shared(&mut self) {
         #[cfg(feature = "counters")]
         self.counts.add(crate::Unit::WalkShared);
+    }
+
+    /// The day a new projection's walk read through day `through` is planned through: with
+    /// forks on, `horizon`'s month end, so that a projection read day by day plans once a
+    /// month and its walk is continued; the twin plans each read's walk through its own day
+    /// (refcore's `proj_walk` plans through E: spec question Q-3 of #231) (P §2.4, §2.5, §3.5;
+    /// picks P54, P73). E §4.1, §4.3.
+    pub(crate) fn planned_through(&self, m: &Reality, through: Day) -> Day {
+        match self.forks {
+            Forks::On => horizon(m, through),
+            Forks::Off => through,
+        }
+    }
+}
+
+/// The day a projection's walk read through `through` is planned through with forks on: on
+/// to the last day of that day's month (P §2.4's interval), within the run, while its walk
+/// stays within a month of its window (P §3.5, pick P54). Planned further, a walk walks no
+/// further than a read asks and books the same through it: past the window only instances
+/// the walk never reaches change (E §4.1, §4.3; pick P73).
+fn horizon(m: &Reality, through: Day) -> Day {
+    match Period::month_of(through).and_then(|month| month.end().previous()) {
+        Some(last) => last.min(m.end).max(through),
+        None => through,
     }
 }
 
@@ -352,7 +396,7 @@ fn continue_with(walk: &mut Walk, fresh: Walk) -> Result<(), Stop> {
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use super::{Forks, PARKED, agrees, continue_with};
+    use super::{Forks, Held, PARKED, agrees, continue_with};
     use crate::eval::{Collected, Engine};
     use crate::model::World;
     use crate::time::Day;
@@ -524,6 +568,37 @@ mod tests {
             !twin.is_parked(1) && twin.proj_walks.len() == 1,
             "the twin frees at once"
         );
+    }
+
+    #[test]
+    fn a_walk_its_key_outgrew_lets_the_walk_waiting_for_it_go() {
+        let mut engine = engine_with(2, Forks::On);
+        engine.wait_to_continue(1, projection(5));
+        engine.wait_to_continue(2, projection(5));
+        assert!(
+            matches!(engine.outgrown(1), Held::New),
+            "the read takes a new walk"
+        );
+        let waiting: Vec<usize> = engine.parked.waiting.keys().copied().collect();
+        assert_eq!(waiting, [2], "1's waiting walk dropped, 2's kept");
+    }
+
+    #[test]
+    fn a_new_walk_is_planned_to_its_reads_month_end_with_forks_on_only() {
+        let text = "model m\n  tally 2\n  on 2026-02-01\n  start 2026-01-01\n  end 2026-02-20\n";
+        let file = crate::syntax::parse_reality(&[crate::api::Source {
+            path: "m.tally".to_owned(),
+            text: text.to_owned(),
+        }])
+        .expect("parsed");
+        let m = crate::load::load(file).expect("loaded");
+        let on = engine_with(0, Forks::On);
+        let off = engine_with(0, Forks::Off);
+        let jan = Day::from_ymd(2026, 1, 10).expect("a day");
+        let jan_end = Day::from_ymd(2026, 1, 31).expect("a day");
+        assert_eq!(on.planned_through(&m, jan), jan_end, "on: January's end");
+        assert_eq!(on.planned_through(&m, day(5)), day(20), "on: the run's end");
+        assert_eq!(off.planned_through(&m, jan), jan, "off: the read's day");
     }
 
     #[test]

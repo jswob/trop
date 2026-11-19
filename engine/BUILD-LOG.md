@@ -4848,3 +4848,571 @@ On `build/2.2` at f6445c07 (the tree of `spec/2.2` at 99285820). On the round's 
 - **Counts:** `m2_counts_lows` and the pins r1, r7, b2_min green on their stored counts.
 - **Sizes:** this commit, 3 files, 21 out, 27 in. The round's `engine/crates` 106 files, 9 229 out, 2 127 in (the 106th, `benches/p8_5.rs`, came with the lead's merges). `crates/tally/src` 86 files, 7 366 out, 1 658 in. Kernel files 22; exceptions +0.
 - **Checks:** `check quick: green, 11 steps (74s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (115s)`, exit 0.
+
+## 2026-11-19 M3 G1 `backlog`: row 12, the three splits, #221's arms, F6's rows, the small rows (issue #226)
+
+On `build/m3` from 6ec721e9, seven commits and this one. The brief is G1 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§1's #192 table, §3, §4 G1).
+- **What changed, by commit:**
+  - **007fdd63, row 12 (a wrong error):** `load/worlds.rs` `cross_world_forks` counts a base diff's axes over the base and both its worlds at load, whatever is asked (L §5.5, "counted at load"; refcore's `cli.py` `cross_world_forks`, 2.1.8 R13). `ask/worlds.rs` `cross_forks` is gone. `run … --ask other` now refuses `LOAD-FORKS` as refcore does; probes on one stack and on two equal refcore. Test: `load_cases.rs` `a_base_diff_s_axes_over_both_worlds_are_counted_at_load_whatever_is_asked`.
+  - **01457fef, 443b773a, ba9dd8d1, the three splits (rows 10, 39; R-127):** pure moves, each with its survivor rows. `walk/instance.rs` and `walk/body.rs` come out of `walk/plan.rs`, `walk/ends.rs` out of `walk/day.rs`, `book/same_booking.rs` out of `book/same.rs`. After each, `check quick` was green and the sweep byte-equal. The advisory's R-127 list is now `eval/expr.rs`, `load/check.rs`, `load/strata.rs` and `walk/order.rs`.
+  - **4098fc4e, #221's arms (row 35):** each place's balance readings are typed at load: `model/decl.rs` `PlaceReadings` and `BalanceRow`, built by `load/rows.rs` `type_readings` into `Reality::balance_readings`. Load guarantees every part an arm stopped on (`LOAD-KEY`, `LOAD-KIND`, `LOAD-INSTANT`, `LOAD-UNIT`, `LOAD-PLACEKIND`; each probed against refcore). So `book/reading.rs`'s three `NotBuilt` arms and `ask/walked.rs`'s one are gone, and `eval/read.rs`'s arm is an `ENGINE-INVARIANT` on the table. No arm stayed, so no STOP-REPORT.
+  - **ac87622e, F6's rows 68, 69, 60, 58, 71:**
+    - Row 68: `horizon` moves into `walk/fork.rs` under F6's switch (`planned_through`); `Forks::Off` plans through the read's day, as refcore's `proj_walk` does.
+    - Row 69: `meet_parked` counts a read served from a kept walk's log as a walk shared (P §1.1). No stored `walks shared` count moved (`m2_counts` green), so no STOP-REPORT.
+    - Row 60: `outgrown` lets a waiting walk go.
+    - Rows 58 and 71: the docs.
+    - Two crate tests.
+  - **6378b7be, the small rows 1, 4, 7, 8, 15, 61, 64:**
+    - Row 1: `passes_edge` drops no error.
+    - Row 4: `explain.rs`'s header.
+    - Row 7: the walk-bound cell is kept and cloned only for an engine answering `explain` (`keep_walk_cells`).
+    - Row 8: `walkbound.rs` `reader` is an `ENGINE-INVARIANT`, not the point's text.
+    - Row 15: `cross_world_forks`' comment.
+    - Row 61: `walk_through`'s doc.
+    - Row 64: `How` moves to `eval` (`tally::ask::How` stays, re-exported), with `How::FENCES` and `How::engine`. The run's `How` goes through `load_run`, the joint and world loads, `load_among` and the `Loader` to `check_range_keys` and `load/across.rs`'s seven checks, so a run's plain twins reach what load evaluates. `check fences` is green.
+- **`moves_seen` (#221): no cache, by R-130.**
+  - No P8 row's text both runs and holds a `same` line, so no count budget can move.
+  - Measured anyway. Of the sweep's rows, 86 run a text with a `same` line; the slowest takes 6 ms.
+  - `integration/cuts/D/cut11`, whose records hold `same` lines, runs 5.1 s to `not implemented`. Its samply profile, taken on the release binary as `perf profile` takes it, gives 5 094 samples:
+    - `same_groups` 2.0 % inclusive, with `moves_seen` 0.8 % of that;
+    - `root` 0.1 %.
+  - So `book/same.rs` is under 5 % and no row is asked. The item goes to P8-10 at M5b.
+- **Gate 8's survivors (run 44411247874):** there is no `tmp/m3/gate8-survivors.txt` in the worktree at this commit, so they go to G3.
+- **The sweep:** two release binaries over 2 278 rows, cut from the kernel's, M1's, hh4's and M2's `vectors.tsv`. It ran after each split and after the arms, and once from 4098fc4e's binary to this head's. Every time: same 2 278, differ 0 (1 819 answered, 458 refused, 1 not built).
+- **Size** (`engine/crates`, 6ec721e9 to this commit): 43 files, 2 366 in, 1 968 out. Git's move detection (`--color-moved`, indentation ignored) counts 1 783 of the lines in and 1 722 of those out as moved. That leaves about 0.58 k added, 0.25 k removed and 1.75 k moved, against the plan's 0.6–1.0 k changed plus 1.5 k moved.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched). In `MUTANTS-SURVIVORS.md`, the rows moved with their functions, and `meet_parked`'s `replace < with <=` row went with its `<` (row 69).
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 1.14 % of the week (`engine/tools/usage`), against a budget of 2.5 %.
+- **Next:** the group's review; G3 takes gate 8's survivors.
+- **Checks:** `check quick: green, 11 steps (93s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (140s)`, exit 0, on this commit's tree.
+
+## STOP-REPORT 2026-11-19: `run/joint` needs a member's ask answered at run, a feature
+
+- **Kind:** other (a feature the run function's entry doesn't hold).
+- **Where:** `m3/runs.vectors` `run/joint` (`m3_run_requests`): `run j.tally --ask x a.q` in `m3/check/joint`. The stop is `ask/answer.rs` `answer` (`NotBuilt("a member's ask at run")`), and `ask/worlds.rs` `answer_worlds` has the same arm.
+- **Rule or gate:** L §6.1 ("a member's asks are asked by name in a run of the joint model, as a.q, and answered by the member alone"); DONE gate 10.
+- **What happens:** the engine prints `tally run: not implemented`, exit 69. Refcore prints `x: 8 000.00 PLN`, `  cut 2026-03-01`, `a.q: 8 000.00 PLN`, `  cut 2026-03-01`, exit 0.
+- **Why it is a feature, not the entry:** the joint model keeps only its members' ask names (`model/reality.rs` `Joint`, `MemberAsks`). Refcore answers `a.q` with the member's own loaded reality (`ask.py` `Asker.member_ask`). Where the member's ask names one of its own scenarios, or is declared in one of its scenario files, refcore runs the member alone with all its files (`member_alone`). Each line is prefixed `a.`, a nested member gives `a.b.q`, and a member's scenario line prints as `scenario a.s: …`. To build it, load keeps each member's loaded reality (or its split files) in `Joint` and `answer` runs the member's ask in it. That is new load and ask code beyond step a of the run function.
+- **What I tried:** nothing in code. The group's brief says a feature is a STOP-REPORT.
+- **What I ask:** whether member asks are built in M3 (G3, or a fix turn) or held to a later milestone with `run/joint` held for it. If built, the size is about 0.15 to 0.3 k: `Joint` gains the members' realities, plus the prefixing and both arms.
+- **State:** green at this entry's commit; nothing uncommitted.
+
+## STOP-REPORT 2026-11-19: `check` of `I:A:A-13~A1` refuses scenario `a13_jul_sale` `LOAD-COVERS`; refcore loads it
+
+- **Kind:** the spec seems silent (the engine's load and refcore's disagree, and neither looks right in general).
+- **Where:** `m3/check.vectors` `I:A:A-13~A1` (`m3_check_household_a_part_1`). The engine's check is `load/overlap.rs` `covered`; refcore's is `loader.py` l.2215–2226 with `model.py` `VersionInfo.span_at` and `in_world`.
+- **Rule or gate:** L §5.19 (a statement's coverage, `LOAD-COVERS`), §4.6 (a `moves` line), §6.4 (a scenario's layer: `replace … = none`, a version's span moved in its world); DONE gate 10.
+- **What happens:** the engine's `check` prints `scenario a13_jul_sale: refused: LOAD-COVERS observation kbank[k20240212_06] of kop_glb is dated outside the span kop_register covers (../../households/A/statements/statements.tally:1145)`, then the warnings, exit 1. Refcore's `check` prints `ok` and the warnings, exit 0. The engine's `run` of the same set stops `not implemented`, so no M0 vector compared this load before.
+- **The input:** `integration/new/A-13/a13_jul_sale.tally`. Its version `a13b_coverage` has `moves kop_register to 2023-09-12..2023-12-14`, and the scenario removes the base's rows `kbank[k20240212_06..08]` with `replace … = none`. Those rows are dated 2024-02-12, after the moved span.
+- **The two readings:**
+  - The engine checks every observation not itself `none` against its version's span as the whole stack sees it (`World::Whole`). So it sees the scenario's `moves` line and checks the base row that the scenario's `none` replaces.
+  - Refcore checks against `span_at(m.on)`. At load its `in_world` sees no scenario layer (`_WSET` is empty there), so a scenario's `moves` never narrows coverage at load. I found this by reading the code, not by a run.
+  - So on a scenario that narrows a base version's coverage past a base row it does **not** remove, the engine refuses and refcore loads. On this text, where the row **is** removed, the engine refuses and refcore loads.
+- **What I tried:** nothing in code. The fix is in load, outside `check`, and it needs a ruling on what the right check is.
+- **What I ask:** a ruling, then the fix (G3, non-kernel, ~20 lines in `covered`). Option (a), recommended: check only the observations that stand in the world (skip a row a higher layer's row at its key replaces) against the world's span. That prints `ok` here, as refcore does, and refuses a scenario whose narrowed coverage leaves a standing row outside, where refcore loads. Then a T vector for that case and refcore's fix at the round. Option (b): follow refcore, the base world's span alone at load.
+- **State:** green at this entry's commit; nothing uncommitted.
+
+## 2026-11-19 M3 G2 `check`: `check` in the library and the CLI, the run function's step a (issue #226)
+
+On `build/m3` from 43f15b04, two commits with this one. The brief is G2 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§2's rows, §4 G2, §5); the picks are P3, P4, P5, P11, P12, P13.
+- **What changed, by commit:**
+  - **73f2b580, the run function's step a (§5):**
+    - `api.rs` gains `Files` (the files given, the file table where a joint model's members are found, the pin's form) and `Request::new`.
+    - `How` gains the walk's `days`.
+    - `run_with_how(files, request, how)` is the CLI's entry and the equivalence tests' one hook. `run_in`, `run_with_memo` and the library's `run_faulted` fold into it; the CLI's `run_faulted` plants its fault through `How`.
+    - `run(given, request)`, `run_with_lows` and `run_with_forks` keep their forms, reading the request's `pin` and `days`. They stay for T's `m1_lows`, `m2_counts` and `m2_forks` until step b, and for the kernel files' own tests (`walk/agenda.rs`, `order.rs`, `move_flows.rs`, `plan.rs` call `run(given, …)`) until step c. Changing `run` to take `Files` now would touch those kernel files, so step c (G3, kernel) does it.
+    - Own tests moved: `memo_cases`, `walk_oracle`, `fork_oracle`.
+  - **This commit, `check` (OPERATIONS §2.3):**
+    - `ask/worlds.rs` `check_lines`: `ok`, or each refused scenario's line in its file's full-path order (P4), then each ask refused alone by id, then file, then line (P5). Those asks are the base's and each loaded scenario file's own; an ask in a refused world is covered by that world's line. Then load's warnings, merged as `run` merges them.
+    - `load/worlds.rs` `Worlds::files` keeps each scenario's first file in full-path order (P12). A refusal that names no file is placed by its scenario's file (P13).
+    - `api.rs` `check(files)` loads as `run` does and prints a joint model's lines through `joint_lines`.
+    - The CLI's `check <path>… [--pin=bytes]`: `--ask` anywhere is a usage error, exit 2 (P3); exit 0 only after `ok`, else 1. The usage text gains the line.
+    - Test: `tally-cli` `check_prints_ok_or_its_lines_and_takes_no_ask`.
+- **What turned green:** `milestone-report: M3: 29/31` (from 5/31). That is every `m3_check` test but one, and `m3_changes`' two and `m3_run_operations` stay green.
+- **Red:**
+  - `m3_check` on `I:A:A-13~A1` alone (STOP-REPORT above, `LOAD-COVERS` in a scenario).
+  - `m3_run` on `run/joint` alone (STOP-REPORT above, a member's ask at run, a feature).
+- **P8-1:** `ok P8-1 wall(1w): median 330.34 ms; footprint: peak 15.2 MB; instructions: median 4 484 913 243; 3 processes a run: changes/check/c7 changes/run/b7 changes/run/c7 (10 runs; budget: wall(1w) <= 2.00 s; footprint <= 1024 MB)`. Indicative; the gate measures.
+- **Size** (`engine/crates`, 43f15b04 to this commit): 9 files, 416 in, 182 out, about 0.6 k changed, against the plan's 0.45–0.75 k. No kernel file.
+- **Exceptions:** +0.
+- **Open STOP-REPORTs:** the two above.
+- **Usage:** about 0.27 % of the week (`engine/tools/usage`) at the entry, against a budget of 1.5 %.
+- **Next:** the group's review; G3 takes step c (`run(files, request)`, the old fields and hooks gone), and the two STOP-REPORTs once ruled.
+- **Checks:** `check quick: green, 11 steps (42s)`; `check commit: green, 23 steps (123s)`, exit 0, on this commit's tree.
+
+## STOP-REPORT 2026-11-19: `run/joint` also asks `x`, the joint model's own ask, which BUILD-ORDER puts at M5c
+
+- **Kind:** a test seems wrong (its milestone): the vector asks a construct BUILD-ORDER builds at M5c.
+- **Where:** `m3/runs.vectors` `run/joint` (`m3_run_requests`): `run j.tally --ask x a.q` in `m3/check/joint`, whose `x` is `ask x: a.twice`. The stop is `ask/answer.rs` `unbuilt_at_run`, `NotBuilt("a joint model's asks at run")`.
+- **Rule or gate:** BUILD-ORDER § M5c ("a member's items read as `a.item`"; D1-7's first step: each member its own evaluation context, keyed by its pin, with its own memo and its own lazy walk); L §6.1; DONE gate 10.
+- **What happens:**
+  - After 62a7fe01 (P18), `tally run j.tally --ask a.q` prints refcore's lines, `a.q: 8 000.00 PLN` and `  cut 2026-03-01`, exit 0.
+  - `tally run j.tally --ask x a.q` prints `tally run: not implemented`, exit 69. `x` reads member `a`'s def `twice` from inside the joint model, which the engine leaves to M5c.
+  - Refcore prints `x: 8 000.00 PLN`, `  cut 2026-03-01`, then the `a.q` lines, exit 0.
+- **What I tried:** P18 is built, so the vector's `a.q` half is answered as refcore answers it (crate test `a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix`). I didn't lift the stop on a joint model's own asks. Reading a member's item in the merged reality is M5c's design, and the merged reality alone would answer without it: the member's own context, memo and walk.
+- **What I ask:** one of these.
+  - T splits the vector: `--ask a.q` alone for M3 (the two lines above, exit 0; the engine prints them now), and `x` held for M5c.
+  - Or the lead rules that a joint model's own asks reading a member's def are built in M3. Its size is unknown: it is M5c's first step.
+- **State:** green at 5fb1b955; nothing uncommitted.
+
+## 2026-11-19 M3 G3 `last`, turn 1: P19, P18, G1's review items A-1, A-3, A-6 (issue #226)
+
+On `build/m3` from ac551ad8, four commits and this one. The brief is G3 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§4 G3, §5); the picks are P18 and P19. This turn takes the part of G3 that needs no T chunk.
+- **What changed, by commit:**
+  - **3ef79d60, P19 (#232):** `load/overlap.rs` `check_obs` checks `LOAD-COVERS` only for the observations that stand in the world. A row that a higher layer's row replaces at its id is skipped, and a `none` row states no movement. Test: `load_cases.rs` `coverage_narrowed_in_a_scenario_checks_the_rows_standing_there`.
+  - **The case where the engine now refuses and refcore loads** (T holds it "for #232"): a scenario whose `moves` narrows a base statement's span and leaves a base row standing outside the new span. Probe `tmp/m3/g3/p19`:
+    - The base: version `stmt` governs 2026-01-01..2026-04-30, `covers konto`, and holds `bank[r2]` dated 2026-03-10.
+    - Scenario `keep`: `moves stmt to 2026-01-01..2026-02-28` and leaves r2 standing.
+    - The engine: `scenario keep: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)`.
+    - Refcore loads `keep` and answers `q_keep: 30.00 PLN`, booking r2.
+    - Where the scenario also removes the row (`cut`, `replace bank[r2] = none`), both load and answer `q_cut: 50.00 PLN`, as on `I:A:A-13~A1`.
+  - **c555b460, G1's review items:**
+    - A-3: `How::engine` passes the run's `days`, so an oracle run's every day reaches what load evaluates (G2's step a hadn't).
+    - A-1: `walk/fork.rs`'s docs say that F6's twin plans each read's walk through its own day, while refcore's `proj_walk` plans through E; they name spec question Q-3 of #231.
+    - A-6: `book/reading.rs`'s header names `walk/readings.rs` (`sign_anchor`) for an anchor's sign rule.
+  - **62a7fe01 and 5fb1b955, P18:** a member's ask at run, `run j.tally --ask a.q` (L §6.1; OPERATIONS §2.1), in both arms (`answer`, `answer_worlds`):
+    - Load keeps each member loaded alone, with its files and scenarios, on its joint model's reality (`Joint.alone`, `MemberAlone`, `Reality::member_alone`). This happens once load ends, so no world's load copies it.
+    - The turn builders mark a member's ask as `Turn::Member` at its place in the run's order. `ask/members.rs` (new, non-kernel) `resolve` turns each into one of two forms.
+      - A base ask of the member that names none of its scenarios becomes `Turn::OfMember`. It is answered in the member's own world, one world per member, and its lines go under the prefix.
+      - Any other ask becomes the lines of a run of the member alone with all its files (refcore's `member_alone`): `a.q: refused: …`, `scenario a.s: refused: …`, the member's warnings, the rest prefixed. A stop that run meets is kept for its turn (`Turn::Stopped`), so which result prints follows the run's order.
+    - A member of a member is `a.b.q`, found by a loop over the aliases. There is no recursion (R-16): `resolve` calls the alone run, which calls `answer_turns`, and nothing calls back.
+    - A member that is itself a joint model answers none of its own asks: they stay not built, M5c's.
+    - 5fb1b955 removes three report-only hits that 62a7fe01 left in `members.rs` (explicit lifetimes, a nested closure), which `check commit` refused. Byte-equal.
+    - Test: `ask_cases.rs` `a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix`.
+- **P18's probes against refcore** (`tmp/m3/g3/p18`, runner `tmp/m3/g3/both.sh`, `repin.sh` for the pins). Member `a` is a directory with a scenario `s1` that loads and one, `bad`, that is refused. `m` is a joint member whose member `b` has scenarios too.
+  - The same bytes on both:
+    - `a.q`, and `a.qk` (`as known`): a plain base ask.
+    - `a.q_s` (an ask of a scenario file), `a.qin` (`in s1`), `a.qd` (a diff `in s1 against ana`): each with `scenario a.bad: refused: …` and the member's `WARN-UNREAD`.
+    - `a.q_s a.q a.qin`: repeated and mixed in order.
+    - `j.tally js.tally --ask a.q_s a.q`: a joint model with its own scenario, the `answer_worlds` arm.
+    - `m.b.q`: nested and plain.
+    - `a.qd m.b.q`.
+    - `a.nope`, `m.nope`, `m.b.nope`: `REQ-ASK`.
+    - `run/joint`'s `a.q` on T's fixture.
+  - Different, by design:
+    - `m.b.qin` and `m.b.q_sb` (nested, the member alone): only the refused scenario's line differs. The engine prints `scenario m.b.bbad: refused: …`; refcore prefixes level by level and prints `m.scenario b.bbad: refused: …`. L §6.4's line is `scenario <s>: refused: …`, so the engine puts the member's whole prefix on the id. This is refcore's, for the round.
+    - `m.qm`, a joint member's own ask: the engine says not implemented, refcore answers (M5c).
+  - Seen on the way, outside this turn's code: with an outer pin and an inner pin both wrong, the engine names the outer (`LOAD-PIN n/mid.tally doesn't match its sha256 in use m`), refcore the inner (`member m: LOAD-PIN b doesn't match its sha256 in use b`). That is load's order, for T or the round.
+- **Choices in P18, for the review and the round:**
+  - A member's walk warnings in the plain form print nowhere, as refcore's sub-asker drops them. In the alone form they print with the member's lines, as refcore's `member_alone` prints them.
+  - A member's plain ask gets no `REQ-CLOCK` check, as refcore gives none. E §11 refuses the request for an ask's literal cut after `on`, but doesn't say whose `on` (the member's?): a spec question for #228.
+- **What turned green:** `milestone-report: M3: 30/31` (from 29/31): `m3_check_household_a_part_1` (`I:A:A-13~A1`).
+- **Red:** `m3_run` on `run/joint` alone (the STOP-REPORT above: `x`, M5c).
+- **Size** (`engine/crates`, ac551ad8 to this commit): 12 files, 638 in, 71 out. Of those, the library is 448 in and 71 out (P18 about 0.4 k with its docs, P19 about 30, the review items about 15) and the crate tests 190 in. The plan gave G3 0.4–1.2 k and P18 0.15–0.3 k. P18 is over: the run of a member alone and the split of the turn builders it needs.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched; report-only hits 8, as before).
+- **Open STOP-REPORTs:** the one above (`run/joint`'s `x`). G2's two are taken: P19 is fixed (3ef79d60) and P18 built (62a7fe01).
+- **Not done this turn, waiting on T or the gate:** step c of the run function (after T's step b); C3's reds; gate 8's survivors; Q9; #114. A-2 (the twin reads F6's `planned_through`) is left for the list: a move of one function between the fence and its twin, which no test needs.
+- **Usage:** about 0.52 % of the week (`engine/tools/usage`) at the entry, against a budget of 1.2 %.
+- **Next:** the group's review; G3's next turn with T's C3, step b and gate 8's survivors; the STOP-REPORT's ruling.
+- **Checks:** `check quick: green, 11 steps (133s)`; `check commit: green, 23 steps (124s)`, exit 0, at 5fb1b955's tree (this commit adds the log alone).
+
+## 2026-11-19 M3 G3 `last`, the review's fix turn: B-1 to B-5 (issue #226)
+
+On `build/m3` from 0c00c8f5 (turn 1 merged with P20's fuzz fix), two commits and this one. The review is `tmp/m3/review-g3a.md` (5 blocking, each reproduced); its probes are `tmp/m3/review-g3a/`. The rulings are P21 (`run/joint`'s `x` is M5c's, and T splits the vector, which closes turn 1's STOP-REPORT) and P22 (fix all five now; where refcore agrees with the engine, B-2 to B-5, the engine follows the spec and T holds the vectors "for #233").
+- **What changed, by commit:**
+  - **2345631f, B-1:** `load/worlds.rs` `load_worlds` refuses a scenario over a refused one with it, though its own world loads. It takes the refusal of the nearest refused scenario under it (`refused_under`). Its asks are refused with it, so `REQ-ASK` knows them and they print nothing, as `over_bad`'s don't (L §8; OPERATIONS §2.1 "refuses that scenario and those over it"). Before, `late` over `mv` removed the row `mv` leaves outside the span, so it loaded and answered `q_late: 50.00 PLN`. Test: `load_cases.rs` `coverage_narrowed_in_a_scenario_checks_the_rows_standing_there`, which gains `late` over `keep`.
+  - **cbaf147d, B-2 to B-5 and N-4:**
+    - **B-4, B-5:** `ask/answer.rs` `req_clocks` checks `REQ-CLOCK` (E §11) once, in the run's order, after `REQ-ASK` and before any ask is answered, in both arms. `answer_worlds` checked none before. It covers:
+      - a run's asks;
+      - both sides of a diff on two stacks;
+      - a member's ask in the member's own world;
+      - a member alone whose run refused the request. Such a refusal is kept as `Turn::Stopped` and raised here, in its place.
+      The request is refused, the run's one result, exit 1. `reality_turns` no longer checks `REQ-CLOCK` itself.
+    - **B-2:** the warnings stay apart until the member's prefix is on (`answer_turns_apart`). The prefix goes on every line but an indented one. In the alone form, the refused scenarios' lines are built from the member's worlds (`scenario a.s: refused: …`), not found by their text. `ask/worlds.rs` `ask_turns` gives a run's asks' turns without those lines.
+    - **B-3:** `load/joint.rs` `ask_ids` keeps a member's asks refused alone, so `Joint::knows` knows them. `members::resolve` answers one in the member's world, where it prints its refusal line.
+    - **N-4:** the member alone walks the `days` argument.
+    - Test: `ask_cases.rs` `a_member_s_ask_is_answered_by_the_member_alone_under_its_prefix` gains three cases:
+      - `a.warning_total`, `a.qnone` (refused alone) and `a.q`;
+      - `REQ-CLOCK` on a member's ask (`a.q a.qc`);
+      - `REQ-CLOCK` on a run of the member's own files with its scenarios.
+- **B-1 to B-5:** all fixed; no STOP-REPORT.
+- **The sweep:** 88 runs over the review's probes (`j1/runs.txt` to `runs7.txt`, `cov/runs.txt` to `runs4.txt`) and turn 1's (`tmp/m3/g3/p18`, `p19`). It ran 0c00c8f5's binary against cbaf147d's, each beside refcore (`tmp/m3/g3/sweep-all.sh`, `compare.py`; outputs `sweep-before.txt`, `sweep-after.txt`).
+  - Against refcore, 59 runs are the same before and after, unchanged.
+  - 13 turn from the same to different, each one of B-2 to B-5:
+    - B-4, `REQ-CLOCK` for a member's ask (8): `j.tally --ask a.qc`, `--ask a.q a.qc`, `--ask m.b.qc`, `--ask a.q_sc`, `j.tally js.tally --ask a.qc`, `jc.tally --ask c.qc`, `--ask c.q c.qc` and `jc_late.tally --ask c.qc`.
+      - `a.q_sc` is an ask of a member's scenario file. Its member alone's run refuses the request.
+      - In `jc_late`, the joint's `on` is later than the member's. The member's `on` refuses it, since the member alone answers its asks. Whose `on` stays #228's question.
+      - Each now prints `refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01`, exit 1. Refcore prints the ask's `RUN-DOMAIN` line, exit 0.
+    - B-5, `REQ-CLOCK` in a run given scenario files (3): `a --ask qc`, `a --ask q qc` and `n/b --ask qc`. They print the same `REQ-CLOCK` line, exit 1; refcore prints the ask's `RUN-DOMAIN` line.
+    - B-2 (1): `jw.tally --ask a.warning_total a.warning_s a.q` now prints `a.warning_total: …` and `a.warning_s: …`, where refcore drops the prefix.
+    - B-3 (1): `jz.tally --ask c.qnone c.q` now prints `c.qnone: refused: LOAD-SCENARIO ask qnone names zzz, neither the model nor a loaded scenario (z/c.tally:35)`, then `c.q`, exit 0. Refcore prints `REQ-ASK no ask c.qnone`.
+  - 16 differ from refcore both before and after. 14 are unchanged, all known:
+    - M5c (4): `qj`, twice; `m.qm`; `a.q x`.
+    - #232's `keep` (7).
+    - A nested member's refused scenario line, `scenario m.b.s` against refcore's `m.scenario b.s` (3; #228, P21).
+  - The other 2 are B-1's, `run` and `check` of `cov/st`. `late` is now refused with `mv`; refcore loads both (#232).
+- **Non-blocking items:**
+  - Taken here: N-4.
+  - Left for the follow-ups:
+    - N-1 and N-2: a member's warnings, and its scenario lines repeated per alone-form ask (#228).
+    - N-5: the `OfMember` arm's length, the same shape as the `Ask` arm beside it.
+    - N-6: ARCHITECTURE's map, the lead's at the gate.
+    - N-7 and N-8: P19's "stands" by layer, for #232's text.
+  - The review's new spec question (2), a `none` on one side of a `same` pair, is #233's or the round's.
+- **Size** (`engine/crates`, 0c00c8f5 to this commit): 7 files, 277 in, 96 out. Of those, the library is 207 in and 95 out, and the crate tests 70 in.
+- **Exceptions:** +0. Report-only hits are 8, as before: `refused_under` and `alone_run` take owned and elided forms.
+- **Open STOP-REPORTs:** none. Turn 1's, `run/joint`'s `x`, is ruled by P21.
+- **Usage:** about 0.24 % of the week this turn (`engine/tools/usage`, 0.76 % over both turns), against a budget of 0.8 %.
+- **Next:** T's C3 and step b merge at this turn's end; G3's next turn takes step c, C3's reds and gate 8's survivors.
+- **Checks:** `check quick: green, 11 steps (17s)`; `check commit: green, 23 steps (132s)`, exit 0, at cbaf147d's tree (this commit adds the log alone).
+
+## 2026-11-19 M3 G3 `last`, turn 2: `unit(x)` at run, step c's first part, gate 8's rows (issue #226)
+
+On `build/m3` from 15b59db7 (the fix turn merged with T's C3, step b and the reviews' vectors), three commits and this one.
+- **What changed, by commit:**
+  - **54e4df47, `unit(x)` at run** (plan Q9, pick P7): `eval/builtin.rs` `unit_call`, refcore's `m_c_unit` (L §5.10 Kind and unit, §8.4).
+    - Of a bound place: its unit as a key of the unit kind that holds it, `currencies` for a currency. A place of unit `any`, or of a quantity unit, is refused at the key, `RUN-DOMAIN`.
+    - Of money or a quantity: the key its value carries. A compound unit or a plain number is refused.
+  - **4110c282, step c's first part, and G2's N-4, N-7, N-8:**
+    - `run_with_lows` and `run_with_forks` go. `walk_oracle`'s lows run through `run_with_how` (`How { lows, ..How::FENCES }`).
+    - `Request`'s `pin` and `days`, and `run`'s `Vec<Given>`, stay: the benches `b1_list.rs` and `p8_m4.rs` build `Request { asks, pin, days }` and call `run(given, …)`, and the guard keeps their files from me (STOP-REPORT B below). The two fields' docs say `run` alone reads them.
+    - N-4: `ask/worlds.rs` `refused_line`, beside `scenario_line`, writes `<head>: refused: <text>` at all 8 sites: run, check, a tuple's line, a member's ask.
+    - N-7: the header lines of `api.rs`, `ask/worlds.rs`, `ask/members.rs` and `eval/builtin.rs` are within 100 characters; `api.rs`'s names `check`.
+    - N-8: `FENCES`'s doc says whom it serves, and that `run` takes its days from the request.
+  - **d4ee15d9:** the test `ask_cases.rs` `unit_of_a_place_is_its_currency_key_and_a_quantity_unit_is_refused` (refcore's lines), and the survivor rows (below).
+- **T's reds:**
+  - `last/unit-quantity`: green. `last/places` stays green.
+  - `last/net_worth`: answers now, but prints `5 400 PLN` where the vector has `5 400.00 PLN`. The spec gives the engine's: STOP-REPORT A below.
+  - `run/ask-before-pin`: it asks `x`, the joint model's own ask, M5c's (P21, as `run/joint`). The CLI part works: `run j_bytes.tally --ask a.q --pin=bytes` prints refcore's `a.q: 8 000.00 PLN`, as with `--pin=bytes` first. T splits it as `run/joint`. No code.
+- **Gate 8's rows** (4fa66bfd; T's sort, `tmp/m3/t-equivalent.md`): 26 added, 12 removed.
+  - Equivalent, 6 of T's 24, each reason read against the code:
+    - `book/observe.rs` `covers_all`, three: the old `covered_call` reason; the function was renamed.
+    - `observed_row_seen` and `seen_observations`, `>` with `>=`: two restatements of one row in one layer, known the same day, are `LOAD-OVERLAP` at load (`load/overlap.rs` `one_id`), so two ranks never tie.
+    - `walk/reads.rs` `Uncertain::leg`, `>` with `>=`: the sign is −1 or 1.
+  - Missed, the other 18 of T's 24, all `walk/fork.rs`: each mutant makes a read walk anew where the code continues the kept walk. The lines are the twin's, but the days stepped and the walks shared differ, and the `counters` build prints them. The file's precedent lists that as missed (`free_projection`, `agrees -> true`, #192: "the mutant continues where the code walks anew (days stepped)"). An equivalent row is for a mutant no test can tell apart, and a counts test can.
+  - Missed, T's section B: `walk/projection.rs` `reads_lowest`, two.
+  - Removed: the 12 rows gate 8 named stale or caught (`tmp/m3/gate8-survivors.txt`, lines 101 to 112). `Member::day`'s row had moved with G1's split to `book/same_booking.rs`; it goes from there.
+  - So the score on 4fa66bfd's survivors is 2 416 ÷ (2 760 − 6) ≈ 87.7 %, not T's 88.3 %. 90 % needs about 63 more kills.
+- **`read/rows.rs` `choose` (T's section C, third item):** yes, `choose` can be left with two rows load let through, so its 4 survivors are killable, not equivalent; no rows.
+  - Load checks two rows' overlap on the spans in force at `on` (`load/overlap.rs`, its invariants). An ask's `as known` cut before a `moves` that parts two versions sees them overlap.
+  - The text, `tmp/m3/g3/t2/tie.tally`: `input rent: money PLN`; version `a` `governs 2026-01..`, version `b` `governs 2026-07..`, both `known 2026-01-01`, `rent = 100.00 PLN` and `200.00 PLN`; version `shorten`, `known 2026-02-01`, `moves a to 2026-01..2026-06`; `ask now: rent law 2026-08-01` and `ask early: rent law 2026-08-01 as known 2026-01-15`.
+  - `--ask now` answers `200.00 PLN`. Every ask, or `--ask early`, prints `refused: LOAD-OVERLAP rows tie.tally:17 and tie.tally:23 of rent tie`, exit 1: `choose`'s line, which `row_place` and `version_file` write. Refcore prints the same.
+  - A note for the round: L §4.6's Ties refuses a tie at load "where load sees both claims' keys", and §8.3 has load refuse what it sees; both engines refuse this one at the read, in load's code.
+- **Follow-ups:** N-4, N-7 and N-8 are taken (above). N-2 waits on STOP-REPORT B. No other item on `tmp/m3/followups.md` is a line or two: A-2 moves code between a fence and its twin, and N-5 is two printers' order.
+- **Size** (`engine/crates`, 15b59db7 to this commit): 9 files, 184 in, 82 out. Of those, the library and the CLI are 130 in and 74 out, and the tests 54 in and 8 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** A (`last/net_worth`'s money) and B (step c's rest, the benches), below.
+- **Usage:** about 0.5 % of the week this turn (`engine/tools/usage`, 1.26 % over the session), against a budget of 1.2 %.
+- **Next:** the rulings on A and B. After B, step c's rest: `Request { asks }`, `run(Files, &Request)`, `as_requested` and `request_how` go, and the kernel files' own tests (`walk/agenda.rs`, `order.rs`, `move_flows.rs`, `plan.rs`) and about 25 crate-test sites move to `Request::new`.
+- **Checks:** `check commit: green, 23 steps (157s)`, exit 0, at d4ee15d9's tree (this commit adds the log alone).
+
+## STOP-REPORT 2026-11-19: `last/net_worth` wants money where L §3.2 gives a `num CUR`
+
+- **Kind:** a test seems wrong (the vector holds refcore's bytes, and the spec says otherwise)
+- **Where:** `engine/tests/m3/runs.vectors:4632` (`last/net_worth`); the engine's `eval/arith.rs` `add_sub`; refcore's `evaluate.py` `arith` (its `k == 'dyn'` branch) and `check.py` `_arith` (`n._dyn`).
+- **Rule or gate:** L §3.2: the unit rules' table ("`money CUR` with `money CUR` gives money; with `num CUR` it gives `num CUR`") and "Back to money" (a `num CUR` becomes money only through `round` or `prorata`).
+- **What happens:** `tally run net_worth.tally --ask net_worth kinds_only` prints `net_worth (d = 2026-01-31): 5 400 PLN`, and `10 400 PLN`, `30 400 PLN`, exit 0. The vector, refcore's, has `5 400.00 PLN`, and every other line is the same.
+  - The ask adds `sum(bal(x, d) … for x in places …)` to `sum(value(…) in PLN by …)`. The first is money PLN at run, but load can't see its unit (`dyn`: x is any place). The second is a `num PLN`.
+  - Refcore's `arith` makes a `dyn` result money when either operand is money. The engine takes the class from the operands: money + `num CUR` is a `num CUR`.
+  - Smallest, `tmp/m3/g3/t2/nw2.tally`: refcore prints `bal(konto, d) + value(…)` as `7 200 PLN` (ask `p_three`), but `sum(bal(x, d) for x in places over .. where x == konto) + value(…)` as `7 200.00 PLN` (ask `p_four`). The values are the same; load's view of the left operand picks the class.
+- **What I tried:** no code. The engine keeps no static type at run to copy refcore's `dyn` rule, and the spec gives a `num CUR`.
+- **What I ask:** a ruling. Either the spec stands (`5 400 PLN`): T holds the vector "for #n", and refcore's `dyn` branch keeps money only for money + money at the round. Or refcore's rule goes into L §3.2. The engine's answer is the spec's.
+- **State:** d4ee15d9, green; nothing uncommitted.
+
+## STOP-REPORT 2026-11-19: step c's `Request { asks }` breaks two benches, which are rule files
+
+- **Kind:** a rule blocks correct code (the files are the rules role's)
+- **Where:** `engine/crates/tally/benches/b1_list.rs:59-72` and `p8_m4.rs:57-62, :106, :110`: `Request { asks, pin: Pin::Canonical, days: Days::Events }`, and `run(given, &asked)` with a `Vec<Given>`.
+- **Rule or gate:** R-80, R-81 (the guard: "a rule file, protected and checksummed"); the plan's §5, step c.
+- **What happens:** with `Request { asks }` and `run(files: Files, &Request)`, the benches don't compile (`check commit`'s build step), and the guard refuses my edit to them.
+- **What I tried:** the part of step c that leaves them compiling: `run_with_lows` and `run_with_forks` went (4110c282). `Request`'s `pin` and `days` stay, and their docs say `run` alone reads them.
+- **What I ask:** the rules role moves the two benches to `run_with_how(Files::new(given), &Request::new(asks), How::FENCES)`. That compiles today and after step c. Then the builder's next turn finishes step c (the log's Next line above).
+- **State:** d4ee15d9, green; nothing uncommitted.
+
+## 2026-11-19 M3 G3 `last`, turn 3: the review's blocking finding, step c (issue #226)
+
+On `build/m3` from 3a6c26e1 (turn 2 merged with rules step 5, 53dfdd1e: the benches on `run_with_how`, P25), two commits and this one. Turn 2's STOP-REPORT A is ruled P24 (#234: the engine prints the spec's `5 400 PLN`, and T holds `last/net_worth`); B is closed by P25. The review is `tmp/m3/review-g3b.md` (1 blocking; the 6 equivalent rows hold; 8 non-blocking).
+- **What changed, by commit:**
+  - **31e1a73d, the blocking finding:** `unit(e)` of a `none` names `e` as written, as refcore does (`m_c_unit`, `fmt_node`; L §8.4's `RUN-NONE` row).
+    - `unit(fee[2026-02])`, with that row `none`, gives `RUN-NONE fee[2026-02] is none here: a quantity`. Before, the subject was `a value`.
+    - `unit(observed(rent[2026-02]).cash.from)` gives `RUN-NONE observed(rent[2026-02]).cash.from is none here: a place`.
+    - The text is load's `expr_text`, refcore's `_txt`.
+    - `walk/reads.rs` `place_of` is now the one check of a read's place and of `unit(x)`'s (non-blocking 3). `place_arg` calls it after evaluating. As a result, a read whose place argument is `none` and isn't a bare name is now refused as refcore refuses it. Before, it stopped not built: `walk/reads.rs`'s own `expr_text` builds only a name.
+    - `quantity_typed` keeps `sample`'s stop (non-blocking 2): a class the run can't see stops, and is never read as a place.
+    - The header says `unit` gives a key (non-blocking 5).
+  - **ea83d892, step c:**
+    - `Request` is `{ asks }`, made with `Request::new(asks)`.
+    - `run(files: Files, &Request)` computes as `How::FENCES`. The pin is the files' (`Files::pin`), and the walk's days are the engine's (`How::days`).
+    - `Request`'s `pin` and `days` go (G2's N-2), and so do `as_requested` and `request_how`.
+    - Tests moved to `Request::new` and `Files::new`: the kernel files' own (`walk/agenda.rs`, `move_flows.rs`, `order.rs`, `plan.rs`), `api.rs`'s, and the crate tests. Those that step every day run through `run_with_how` with `How { days, ..How::FENCES }`.
+- **The sweep:** 103 runs against refcore (`tmp/m3/g3/sweep-t3.sh`):
+  - the review's probes (`review-g3b/u0` to `u8`, and `check u7`);
+  - turn 2's own (`g3/t2`);
+  - the fix turn's set (`review-g3a/j1`, `cov`, `g3/p18`, `p19`).
+  - It ran turn 2's binary against 31e1a73d's (`t3-before.txt`, `t3-after.txt`, `compare.py`).
+  - Results:
+    - 2 runs turn from different to the same: `u6` (`u_from`) and `u7` (`k2`).
+    - None turns from the same to different.
+    - 31 differ both before and after, all known:
+      - the P24 money (2);
+      - #233's B-2 to B-5 (13);
+      - M5c and #228 (7);
+      - #232 (9).
+  - Step c changes no byte: ea83d892's binary prints what 31e1a73d's does on all 103 (`t3-stepc.txt`).
+- **Not taken:**
+  - The review's non-blocking 4 (ARCHITECTURE names the removed entries) waits for the gate.
+  - 1 (refcore's `_uq` against the value's shape) is unconfirmed and not reproduced.
+  - 6 and 7 are T's and the round's.
+  - The spec questions (4) are the round's.
+- **Size** (`engine/crates`, 3a6c26e1 to this commit): 19 files, 151 in, 278 out. Of those, the library and the CLI are 94 in and 161 out; the tests are 57 in and 117 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none. A is ruled (P24), and B is closed (P25).
+- **Usage:** about 0.2 % of the week this turn (`engine/tools/usage`, 1.52 % over the session), against a budget of 0.6 %.
+- **Next:** G3's review of this turn; then T's kills and gate 8 on 15b59db7.
+- **Checks:** `check quick: green, 11 steps (93s)`; `check commit: green, 23 steps (125s)`, exit 0, at ea83d892's tree (this commit adds the log alone).
+
+## 2026-11-19 M3 G3 `last`, turn 4: #235, a cycle's points, the survivors' rows (issue #226)
+
+On `build/m3` from 863a23ae (turn 3 merged with T's C5), two commits and this one.
+- **What changed, by commit:**
+  - **0147de54, #235 (P28):** a move's key whose domain, `on` or span reads a law-dated fact while the move's `at` reads that key or a later one is refused at load, `LOAD-LAWDATE` (L §4.3: whatever reads a law-dated fact states its law date). Before, each such value was `ENGINE-INVARIANT` at run.
+    - T's probe `engine/tests/out/p-c5/lawdate_binding.tally` gives `refused: LOAD-LAWDATE move back's key a reads law-dated act_day with no law date: its at reads a (lawdate_binding.tally:50)`. Refcore still answers `REFCORE-NOT-YET` at run; T holds the vector for #235.
+    - The same text with `act_day` governing `always` loads and runs as refcore does (`load_cases.rs`, `a_key_read_before_the_move_s_at_reads_nothing_law_dated`, with its dated twin).
+    - The check is `load/lawdates.rs` `unbound_key_lawdate`. It reads a key's range ends and step, its `on` and its span. Its `where` stays out: STOP-REPORT C below.
+  - **7c11bc98, `fixes/cycle-when` (P29):** an unordered cycle's instances run at points after the act's own, as refcore does.
+    - **The reading:** E §4.2 step 3 and L §5.14.2 order a cycle's act before its instances, each read at its own walk point. Refcore's `run_group` keys the act by the first move and each instance `first|seq|move` after it. The engine's own `run_cycle` doc says the same ("each at its own point after the act's"), but it gave the act and its first instance one point (`n = seq`, the act's `n` being 0).
+    - Now an instance's point is `n = seq + 1` (`walk/point.rs` `cycle_instance`, `cycle_seq`). `explain` prints the instance's point with `seq` (`ask/instance.rs` `point_text`).
+    - `explain` of a walk-bound def now shows refcore's 3 cells and the first instance's "read at its walk point" line. `m3_fixes_review` is green.
+- **`MUTANTS-SURVIVORS.md`:** 13 rows added, 2 rejected, from T's sort (`tmp/m3/t-equivalent.md` § A2, § B2) and the two that asked my word.
+  - **Added, `R-87: equivalent:` (2):**
+    - `walk/flows.rs` `flows_place`'s guard `sums.totals.len() == 1` → `true`. T's reason is corrected: `totals` holds more than one unit only at a place of unit `any`, an outside place, and the filter after it (`pu != any`) sends that place to the plain hole either way.
+    - `book/same.rs` `and_list`'s guard `!rest.is_empty()` → `true`: every caller names two or more.
+  - **Added, `R-87: missed:` (11):**
+    - § B2's 10, a joint model's `same` (M5c): `same_ends`, `same_wait_for` ×3, `decision_books` → `Ok(false)` and `same_release` ×2 in `book/same_booking.rs`; `planned_by_id` ×3 in `book/members.rs`. A few reasons are spelled out where T's said only "as same_ends".
+    - `book/same.rs` `stated_same` → `Ok(true)`: no printed line differs. A movement no `same` line names gets `[Written, Written]` from `same_ends`, and its mask is unchanged. Only an observation whose amount is a hole, and whose version covers neither end, returns before `book_leg_ends`. That changes the counters build's leg count alone, as the `walk/fork.rs` rows do.
+  - **Rejected (2):** `book/ledger.rs` `Of::counts` (delete `!`; → `true`).
+    - T's premise, that every place holds one unit, doesn't hold for an outside place (unit `any`): `residuals world …` builds one ledger per unit, with `only = true`.
+    - Kill text: `tmp/m3/g3/t4/any/counts.tally`, two legs to `world`, one in PLN and one in EUR. Both engines print a `ledger EUR:` and a `ledger PLN:`, each with its own leg. Not proven with `mutants-local`.
+  - **`priced_position` (`walk/value.rs`), killable, texts for T:**
+    - `||` → `&&`: `tmp/m3/g3/t4/any/priced_any.tally`, an outside place priced per etf that holds etf and bond.
+    - `&&` → `||`: `tmp/m3/g3/t4/any/priced_kind.tally`, the price input keyed by a kind.
+    - Both engines print `v_market: refused: RUN-DOMAIN value(market) in PLN: market is priced in PLN/etf, not PLN/bond`. Not proven with `mutants-local`.
+- **The sweep:** 118 runs against refcore (`tmp/m3/g3/sweep-t4.sh`): turn 3's 103 and this turn's 15 (`g3/t4`).
+  - Turn 3's 103 are unchanged: 72 the same, 31 different, all known (`compare.py` against `t3-stepc.txt`).
+  - Of the 15 new runs, 12 are the same, among them `cycle_when` with its `explain` asks, `counts`, `priced_any` and `priced_kind`.
+  - 3 differ:
+    - `lawdate_binding` and `key_on_dated`: `LOAD-LAWDATE` against refcore's `REFCORE-NOT-YET`, as #235 rules.
+    - `where_dated`: STOP-REPORT C.
+- **Size** (`engine/crates`, 863a23ae to this commit): 5 files, 173 in, 7 out. Of those, the library is 110 in and 7 out; the tests are 63 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** C, below.
+- **Usage:** about 0.55 % of the week this turn (`engine/tools/usage`, 2.08 % over the session), against a budget of 0.8 %.
+- **Next:** the ruling on C; G3's review of this turn; gate 8 on 15b59db7.
+- **Checks:** `check quick: green, 11 steps (16s)`; `check commit: green, 23 steps (127s)`, exit 0, at 7c11bc98's tree with the survivors' rows. The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## STOP-REPORT 2026-11-19: a key's `where` that reads a law-dated fact, when the move's `at` reads that key
+
+- **Kind:** other (the spec is clear, and both engines differ from it)
+- **Where:** `crates/tally/src/walk/tuples.rs:166-184` (`move_law`: no law date while the `at` reads a key not yet bound, the binding's own key included; `move_tuples` reads a binding's `where` at that law date). Refcore: `moves.py` `move_tuples`, `move_law`. The probe is `tmp/m3/g3/t4/where_dated.tally`: T's `lawdate_binding` with `move back[a in adjustments over .. where a.adjusts in rents and act_day > back_day]` and `at a.day`.
+- **Rule or gate:** E §4.1 step 1: "Each binding's `where` is read for its tuple at the move's `at`". L §4.3: "A key binding's `where` … is read for each tuple at the law date the item is read at there, … a move's `at`".
+- **What happens:** `tally run where_dated.tally` exits 0 and prints `q_bal (d = 2026-04-30): (refused: ENGINE-INVARIANT unreachable: load refuses a dated read with no law date (LOAD-LAWDATE), 790.00 PLN)`. `q_early` and `q_flows` print the same. Refcore prints `refused: REFCORE-NOT-YET a read of act_day read with no law date, which L §4.3 refuses at load (LOAD-LAWDATE): an interpreter guard`. #235's crash class remains open through the `where`.
+  - By the two lines above, the `at` is `a.day` for the tuple (a), so the `where` reads `act_day` and `back_day` at the adjustment's day. `back` then has no instance (2026-04-05 > 2026-04-20 is false).
+  - Both engines read a binding's `where` at the law date of the keys bound before it, as they read its domain, so here it gets none.
+- **What I tried:** no code.
+  - Refusing it at load means adding the `where` to #235's check (`load/lawdates.rs` `bind_exprs`, one line). That contradicts the two spec lines.
+  - Reading the `where` at its tuple's `at` needs a law date per member in `walk/tuples.rs`, and in refcore's `move_tuples`. The window case (`members_over_law`) would then compare law-date classes per member. That is a design change beyond this turn's brief and budget.
+- **What I ask:** a ruling, one of:
+  - (a) the spec stands: a key's `where` is read at its tuple's `at`. The builder builds it, refcore follows at the round, and T holds a vector for the new issue.
+  - (b) the spec changes so that load refuses such a key as #235's (`LOAD-LAWDATE`), and the `where` joins `bind_exprs`.
+- **State:** 7c11bc98, green. The survivors' rows and this log are committed together.
+
+## 2026-11-19 M3 G3 `last`, turn 5: P30, a `flows` hole's keys (issue #226)
+
+On `build/m3` from a223e7ca (nothing merged since turn 4), three commits and this one. STOP-REPORT C is ruled P30 (`tmp/m3/auto-picks.md`, (a)): the engine reads a key's `where` at its tuple's `at` and answers, and T holds the vector while refcore prints its guard (#235). The review of turn 3 approved it (`tmp/m3/review-g3c.md`, 0 blocking).
+- **What changed, by commit:**
+  - **cfc4ea7f, P30:** a key whose `where` reads a law-dated fact, while the move's `at` reads that key or a key bound after it, is read at its tuple's `at` (E §4.1 step 1, L §4.3). Before, the read had no law date and printed `ENGINE-INVARIANT`.
+    - Load marks those keys (`load/lawdates.rs` `dated_wheres`, kept on `MoveInfo::dated_wheres`). It walks the `where` whole and finds a law-dated input, band or def, `at reader` defs and nested ones included (`dated_read`). #235's check now reads through the same walk, so it also sees a name inside an aggregate.
+    - The walk binds such a key without its `where`, and the `where` waits on the tuple (`walk/tuples.rs` `Tuple::waiting`). Once the keys the `at` reads are bound, it is read at the tuple's law date, in binding order (`waiting_wheres`, `where_at_law`):
+      - false drops the tuple;
+      - a hole joins the tuple's existence, and a hole `at` is that hole;
+      - a window `at` reads it once per law-date class, `HOLE-IMPRECISE` where two differ, as `members_over_law` does for a member;
+      - a refusal makes a refused tuple.
+    - A `where` that reads nothing law-dated is read as before, so no existing run changes.
+    - `load_cases.rs`: `a_key_s_where_reads_law_dated_facts_at_its_tuple_s_at` checks the where that holds, the one that fails and the one whose `at` reads a later key, each against its law-free twin.
+  - **921ce409, the `flows` hole** (the review of turn 3, `n4.tally`): `flows` over a span that starts before S names its target as written, as refcore's `fmt_node` does: `(rent[2026-01])` and `(rent[2026-01].cash)`, where the engine printed `(rent)` since 582f8356 (L §8.1).
+    - The figure is load's `expr_text`. `walk/reads.rs`'s name-only `expr_text` goes: that is the review's non-blocking 1, two functions with one name. A keyed place target no longer stops not built there.
+    - `load_cases.rs`: `a_flows_hole_before_the_start_names_its_keys`.
+  - **34504894:** `dated_wheres` as a plain loop. cfc4ea7f's iterator chain had added two report-only hits that the lock doesn't hold, which `check commit`'s exceptions step caught.
+- **The probes** (`tmp/m3/g3/t5`). Each is T's `where_dated` text with one change:
+  - `w1`, `w7`: a `where` that reads `act_day` and `back_day` directly, false and true;
+  - `w2`, `w4`: an `at reader` def, false and true;
+  - `w3`: a nested `at reader` def;
+  - `w5`: a first key's `where` while the `at` reads the second key;
+  - `w6`: the binding's `on` through an `at reader` def.
+  - Each answering probe prints what refcore prints for its law-free twin (`w0`, `w8`, `w5t`), but for the twin's `WARN-UNREAD act_day`. `w6` is #235's `LOAD-LAWDATE` at load.
+  - Refcore gives `REFCORE-NOT-YET` for `w1`, `w5` and `w7`. It refuses `w2`–`w4` and `w6` at run with `LOAD-LAWDATE ask reaches an at reader def (late) without law`: its interpreter reads the `where` with no law date, the guard #235 names.
+- **The sweep:** 132 runs against refcore (`tmp/m3/g3/sweep-t5.sh`): turn 4's 118, this turn's 10 and the review's `n1`–`n4` (`review-g3c`).
+  - Of turn 4's 118, one run's lines changed: `t4/where_dated`. Its three `ENGINE-INVARIANT` cells now answer, and it still differs from refcore's `REFCORE-NOT-YET` (P30). The other 117 print what they printed.
+  - `n4` is now the same as refcore, and so are `n1`–`n3`.
+  - No run of the 132 prints `ENGINE-INVARIANT`.
+- **Size** (`engine/crates`, a223e7ca to this commit): 10 files, 282 in, 25 out. Of those, the library is 171 in and 25 out; the tests are 111 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none. C is ruled (P30).
+- **Usage:** about 0.21 % of the week this turn (`engine/tools/usage`, 2.31 % over the session), against a budget of 0.5 %.
+- **Next:** the reviews of turns 4 and 5; T's vectors for P30 and n4.
+- **Checks:** `check quick: green, 11 steps (103s)` on each commit's tree; `check commit: green, 23 steps (210s)`, exit 0, at 34504894's tree (this commit adds the log alone). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 G3 `last`, turn 6: the turn-4 review's blocking finding (issue #226)
+
+On `build/m3` from 8fd70b7a (nothing merged since turn 5), one commit and this one. The review of turn 4 is `tmp/m3/review-g3d.md`: 1 blocking (B-1), its two `R-87: equivalent:` rows hold, and 8 non-blocking.
+- **What changed, by commit:**
+  - **a9f4243b, B-1:** #235's check now sees a law-dated band read as a call, `on shift(0)` (`b1_band`). Before, it printed `ENGINE-INVARIANT` at run.
+    - The aggregate's term, `on min(act_day for k in month)` (`b4_agg`), was already refused at load since turn 5: `dated_read` walks the expression whole.
+    - `dated_read` now reads a call's name as a name. The one collector serves #235's key and P30's `where`, as the review asked.
+    - N-3: a move whose `at` itself reads a law-dated fact is named by that read first (`move X's at reads law-dated Y`), as refcore names it, and the key's read after.
+    - N-4: `unbound_key_lawdate`'s doc names P30's waiting `where`.
+    - `load_cases.rs`: `a_key_read_through_a_band_or_an_aggregate_before_the_at_is_refused`. It holds the twins of `b1_band` and `b4_agg`, each with the same text governing `always`, which loads.
+  - **This commit:**
+    - N-5: the doc of `At.n` (`walk/point.rs`) says what `n` is in an unordered cycle.
+    - N-2: the ten M5c `missed` rows' reasons were false, and are rewritten (`MUTANTS-SURVIVORS.md`): `same_ends`, `same_wait_for` ×3, `decision_books` → `Ok(false)`, `same_release` ×2 and `planned_by_id` ×3.
+      - They said only a joint model reaches the code. But load refuses only an observed row stated `same` as a planned instance of its own model (`load/same.rs` `row_and_instance`, `LOAD-SAME`), so two instances stated `same` in one model reach it too (L §6.1).
+      - Each now says "no text yet, for T". They stay counted, so the score is unchanged.
+- **For T:** N-6. `At::just_before` "delete field n" (and its rank and sub rows) may now be killable: since 7c11bc98, every cycle instance sits at n ≥ 1 and sub 0, so a `cycle_when`-shaped `explain` may tell them apart.
+- **Not taken:**
+  - N-1 is not reproduced (`n1_act` names `ca` on both engines) and was wrong before 7c11bc98.
+  - N-7 (`walk/order.rs`, 1 355 lines) is a report and not a line or two.
+  - N-8 is refcore's, for the round.
+  - Q-1 to Q-4 are the round's.
+- **The sweep:** 157 runs against refcore (`tmp/m3/g3/sweep-t6.sh`): turn 5's 132, the review's 24 probes (`review-g3d`), and `l9` with its scenario file.
+  - Turn 5's 132 are unchanged (`compare.py`).
+  - Against the review's own runs at a223e7ca (`review-g3d/*.eng`), two changed. `b1_band` and `b4_agg` went from `ENGINE-INVARIANT` to `LOAD-LAWDATE move back's key a reads law-dated shift` (or `act_day`) `with no law date: its at reads a` at load. Refcore prints its `REFCORE-NOT-YET … LOAD-LAWDATE` guard (#235).
+  - The other 22 are as the review ran them:
+    - the `c*` and `n1` cycles are the same bytes as refcore;
+    - `l4`, `l5`, `l6` and `l8` load and are the same as refcore;
+    - `l1`, `l2`, `l3`, `l7`, `b2`, `b3` and the `l9` scenario are `LOAD-LAWDATE`, as P28 rules.
+  - No run of the 157 prints `ENGINE-INVARIANT`.
+- **Size** (`engine/crates`, 8fd70b7a to this commit): 3 files, 56 in, 9 out. Of those, the library is 21 in and 9 out; the tests are 35 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.07 % of the week this turn (`engine/tools/usage`, 2.40 % over the session), against a budget of 0.4 %.
+- **Next:** the reviews of turns 5 and 6; T's vectors for #235's band and aggregate forms.
+- **Checks:** `check quick: green, 11 steps (18s)` at a9f4243b's tree with this commit's doc line and rows; `check commit: green, 23 steps (126s)`, exit 0, at the same tree (this commit adds the log, a doc line and the rows' reasons). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 G3 `last`, turn 7: the fix review's three blocking findings (issue #226)
+
+On `build/m3` from 4fe9ac25 (nothing merged since turn 6), one commit and this one. The fix review of turns 5 and 6 is `tmp/m3/review-g3ef.md`: 3 blocking and 6 non-blocking. P31 rules all three on the review's readings, which keep P30's waiting `where` equal to its law-free twin.
+- **f112e8cf, what changed:**
+  - **B-1** (`load/lawdates.rs` `read_parts`): #235's walk now reads the parts that load's shared `children` leaves out:
+    - an aggregate's bindings (range ends, `on`, span, `where`) and its `ties by`;
+    - a `flows` or `covered` span and its `for`;
+    - a projection's `from`.
+    - `children` itself is unchanged, so no other load check moves.
+    - `on max(start_of(k) for k in month where start_of(k) <= act_day)` (`c_aggwhere`) is now refused at load with `LOAD-LAWDATE move back's key a reads law-dated act_day …`. Before, it was `ENGINE-INVARIANT` at run.
+  - **B-2** (`walk/tuples.rs` `waiting_wheres`): a run refusal of the `at` leaves the tuple as it is. Its instance reads the `at` again (`inst_parts`) and is refused alone, as on the law-free path. Before, the refusal went out of `move_tuples` and refused the whole move. `a_atref` now prints its twin `at_atref`'s bytes: `q1: 0.00 PLN` (spare), and `q2` refused (konto).
+  - **B-3:** a tuple a later key's `where` refused has its waiting `where`s read too, in binding order, so a false one drops it first. `p15_refuse_free` now prints its twin's answer, where it printed `RUN-DIV`. `p16` (the earlier `where` true) still refuses `RUN-DIV`, as its twin does.
+  - **N-6:** the `//!` header names the waiting `where`.
+  - **N-1** (`load_cases.rs`):
+    - Turn 5's test now runs on a text with a raise known 2026-03-15. That gives `back` three adjustments as tuples, so kept and dropped print apart (`assert_ne!`), each against its law-free twin.
+    - `a_waiting_where_answers_as_its_law_free_twin_when_a_read_is_refused` holds B-2 and B-3.
+    - `c_aggwhere` joins the band and aggregate test.
+- **The probes against their twins** (`tmp/m3/g3/twins.py`, output `t7-twins.txt`): 87 probes in `review-g3ef`, `review-g3d` and `g3/t5`, each run on the engine and on refcore, and against its twin where one exists.
+  - None prints `ENGINE-INVARIANT`.
+  - 16 are the same bytes as their twins: `a_atref`, `b_aggwhere`, `b2_aggwhere_false`, `b4_maxwhere`, `p1`, `p2`, `p3`, `p5`, `p6`, `p7`, `p9`, `p10`, `p13`, `p14`, `p15`, `p16`. Each twin is the same as refcore.
+  - By hand: `p3b` and `p4_def` print `p1`'s bytes, and `p12` prints `p11`'s.
+  - Each line that differs from its twin, with its reason:
+    - `t5/w1`–`w5`, `w7`: the twin alone prints `WARN-UNREAD input act_day is read by nothing`. The twin drops the dated read, so it never reads `act_day`. `b3_aggwhere_lawchg` against `b3p_plain_lawchg` differs the same way, by `back_day`.
+    - `e_flowspan` and `n_noat`: the same refusal (`LOAD-READS …`, `LOAD-LAWDATE … states no at`), naming its own file.
+    - `p17_domhole` (the review's N-2): the engine adds `?"gap_day: no value"` to the answer, where the twin answers without it.
+      - A later key's domain is a hole, so the tuple never reaches its `at`, and the earlier key's waiting `where` can't be read.
+      - The review calls the hole defensible (imprecise, not wrong), under Q-1. It is the same as at 4fe9ac25.
+  - Against refcore, every dated probe differs, as P30 expects: refcore prints its #235 guard, or refuses an `at reader` def at run. Every twin, and every probe without a dated read, is refcore's bytes.
+- **The sweep:** turn 6's 157 runs (`sweep-t6.sh` and `l9` with its scenario) are unchanged (`compare.py`), and none prints `ENGINE-INVARIANT`.
+- **Not taken:** N-2, N-3, N-4 and N-5 are the review's notes for the round or T (Q-1 to Q-3).
+- **Size** (`engine/crates`, 4fe9ac25 to this commit): 3 files, 144 in, 19 out. Of those, the library is 49 in and 10 out; the tests are 95 in and 9 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.10 % of the week this turn (`engine/tools/usage`, 2.54 % over the session), against a budget of 0.5 %.
+- **Next:** the coordinator's probe of this fix against the twins and refcore (D12: no third review).
+- **Checks:** `check quick: green, 11 steps (111s)` at f112e8cf's tree; `check commit: green, 23 steps (128s)`, exit 0, at f112e8cf (this commit adds the log alone). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 gate fix: the gate review's B-1 to B-4, items 2, 4 and 13 (issue #226)
+
+On `build/m3-gatefix` from 7450ac73 (56d59941 and the rules' map), a fresh builder, two commits and this one. The review is `tmp/m3/gate-review.md`; P32 rules all four blocking findings fixed here. The review's N-5 reading (load refuses a marked key with no `at` first) was not leaned on.
+- **How the marking decides now.** One rule, `move_read_dated` (`load/lawdates.rs`), over the reads load's checker typed, each with its relation. A read needs the move's law date when it reads at the law date at all and its target is law-dated:
+  - not dated: a binding, `flows`, `observed` or a balance (the timeline); a day the reader states (`last`, `since`, a price); a calendar read by a business-day function (`Rel::Calendar`, L §4.2); a pin's target; a read inside `as if {law D}` (`Rel::LawPin`);
+  - dated: a band with a table outside `always`; a def that is law-dated, takes its reader's law date, or whose `at` reads a law-dated fact; an input not lawless nor read at its own period key.
+  - The move's no-`at` check, #235's key check (`unbound_key_lawdate`) and P30's waiting `where` (`dated_wheres`) all ask it. Load's checker tapes each key's reads as it types them (`load/binds.rs` `move_key`, `load/check.rs` `KeyReads`): the domain, `on` and span apart from the `where`. No expression is walked a second time, so no part can be left out (B-3's class).
+  - A key's `where` is marked only where the move has an `at` that reads that key or a later one. Whether the `at` reads a key is `reads_var` (`eval/bindings.rs`, an exhaustive match over every form), the same for load and the walk's `move_law`.
+- **fddd428a, the marking:**
+  - **B-1:** `pay[d in wk where is_business(d, cal)]` with no `at` no longer waits: `q: 50.00 PLN`, refcore's and its twin's bytes (was `30.00 PLN`). The agent's `as if {law dd}` form in a no-`at` move (`gatefix/p/b1_asif2`, `b1_asif3`) is now refcore's bytes too (was `-3 950.00 PLN`, and no `pinned:` line).
+  - **B-2:** `on add_business(d_open, 1, cal)` loads and answers as refcore (`q1: 0.00 PLN`, `q`/`q2` `RUN-NONE never in the law date of shut`).
+  - **B-3:** `on if mean(one for k in month where start_of(k) <= act_day) > 0 …` and `on (d0 as if {law act_day})` are `LOAD-LAWDATE move back's key a reads law-dated act_day …` at load (`check` refuses them too); `b3_where` waits and prints its law-free twin's bytes.
+  - **Item 4:** `at max(start_of(k) for k in month)` reads no key, so the move has its law date before binding and the key's dated `on` is read at it (`gatefix/p/i4_aggat` = its twin). Refcore's `move_law` counts any variable, the aggregate's own `k` too, and guards (#235).
+  - **Item 13:** kept refused, by L §4.3 ("every chain of readers ends where a law date is written"), as refcore's run refuses it. The message no longer says "law-dated" for a def that reads nothing law-dated: `move shut's key p reaches rd, which takes its law date from its reader, with no law date: its at reads p`. The brief read it as over-marking. The spec's `at reader` rule refuses the chain whatever the def reads, so I didn't make it load; the round may say otherwise (#235).
+  - **The walk:** a marked key always waits. `law != None` there is `ENGINE-INVARIANT`, as is a tuple that has every key bound and a `where` still unread, instead of keeping it in silence. A refused `at` clears the waiting `where`: its instance is refused, P31's Q-3.
+  - **Items 1, 15, 2:** with the `at` refused or a hole, no law date exists to read the `where` at. Reading it once per law-date class over all time would answer as the twin only where the dated facts have a row at every law date; the gate's probes have none before 2026, and the exact memo would read every day of the calendar. So the refused instance (item 1) and the `at`'s hole (item 15) stand, and the `//!` header (item 2) now says exactly when a waiting `where` equals its twin. For #235.
+  - The message of `review-g3d/b2_if` now names `a_flag`, the first dated read in typing order, where the name walk named `act_day`.
+- **209cc544, B-4:** `ask_turn` (`ask/worlds.rs`) prints a loaded scenario's file's own ask refused alone as its line, in its place by id, and the rest answers, exit 0, as `check` prints it.
+  - The probes: `b1` (`q_gone`), `b2` (`q_cmp`), `j/top.tally --ask a.q_gone a.q_u`. Refcore's run prints nothing for it (#229).
+  - `j/a`, `jp/a` and `jt/a` alone now reach their scenario file's `as known 2026-07-01` and refuse `REQ-CLOCK` whole (P22, #233), where they stopped at B-4.
+- **Tests** (`load_cases.rs`, a twin each): `a_calendar_read_in_a_key_s_where_needs_no_law_date`, `a_key_s_business_day_read_before_the_at_needs_no_law_date`, `a_key_read_in_a_query_s_binding_or_a_law_pin_before_the_at_is_refused` (with the `as if {law d0}` inner read that loads), `an_at_that_reads_no_key_dates_the_key_and_an_at_reader_def_is_named`, `a_scenario_s_ask_refused_alone_prints_its_line_at_run`.
+- **The sweep** (`tmp/m3/gatefix/sweep.py`, output `sweep.txt`, `sweep.json`): 246 targets, every `.tally` file and directory under `tmp/m3/gate-review/`, build-m3's `review-g3d/` and `review-g3ef/` (with their `.scen` pairs), and `gatefix/p/`. Each was run (`run`, `check`) on this engine and on 56d59941's binary, and `run` on refcore.
+  - No `ENGINE-INVARIANT`. No target differs from refcore that was the same at 56d59941. Four now print refcore's bytes that didn't: `b1_dated`, `b2_cal`, `b1_asif2`, `b1_asif3`.
+  - 17 changed from 56d59941, each above: B-1 to B-4, items 4 and 13, `b2_if`'s and `l3_reader`'s messages (`l3_reader` reaches an `at reader` def), and `j/a`, `jp/a`, `jt/a`.
+  - **The twins** (`gate-review/w/gen7.py`, `gatefix/gen7.txt`): 21 of 23 print their law-free twin's bytes. `def_keyed`'s twin is refused by refcore (P30's known difference). `hole_at_false` adds the `at`'s hole (item 15). My `b3_where` and `i4_aggat` print their twins' bytes too.
+  - **Against refcore, 83 targets differ, each for one of these reasons** (none new; `sweep.json` holds every line):
+    - 12 refuse `LOAD-LAWDATE` at load where refcore prints its `REFCORE-NOT-YET` guard at run (#235, P28). Among them are `b3_mean`, `b3_asif`, `i4_aggat_key`, `ownat_dated_on.d`, and `review-g3d`'s `b1_band`, `b2_if`, `b3_max`, `b4_agg` and the `l*` texts.
+    - 60 answer where refcore prints a guard. Most are a waiting `where` or a dated key read at its `at` (P30, item 4): `b3_where`, `i4_aggat`, the dated `w/` and `win/` texts, `review-g3ef`'s dated `p*`, `a_atref`, the `*aggwhere*` texts, and `j/a`'s asks.
+    - Of those 60, four are older, refcore's own guards: `b3p_plain_lawchg` and `p14t` (on another dated read), `rd/w_snone` (item 14, refcore's `AttributeError`) and `sw` (item 11).
+    - `reader_on.d`, `reader_on.t` and `l3_reader`: a key reaching an `at reader` def, refused at load. Refcore's run refuses the same text `LOAD-LAWDATE ask reaches an at reader def`.
+    - `def_keyed.d`, `def_keyed.t` and `p4_def`: a waiting `where` through an `at reader` def answers, where refcore refuses at run (P30's known difference).
+    - `b1` and `b2`: an ask refused alone, printed (#229).
+    - `ck` (and `j/a`, `jp/a`, `jt/a` in the guard group): `REQ-CLOCK` whole, where refcore gives `RUN-DOMAIN` per ask (#233).
+    - `sx` stops `not implemented` (item 11). `jf/a` is the review's, unchanged (#228).
+  - **`check` against `run`** (the gate's `seam.py` on the same roots, `gatefix/seam.txt`): no text where `check` prints `ok` and `run` refuses at load.
+    - `sw` and `sx` stop `not implemented` (the review's item 11, older than M3).
+    - `n/mid/a` is flagged by `seam.py`'s pattern alone: it counts the `scenario sc: refused: LOAD-SCENARIO` line as an ask's. Both commands print refcore's bytes there.
+- **Not taken:** items 1 and 15 as above (for #235). The rest's items 3, 5 to 12 and 14 to 16 are outside the brief. Item 3, a tuple refused by a later key's `where` before the `at`'s keys are bound, still leaves as a refused instance with its `where` unread; the header names that case. Only a tuple with every key bound, not refused and still waiting is now an invariant.
+- **Size** (`engine/crates`, 7450ac73 to this commit): 9 files, 611 in, 142 out. Of those, the library is 412 in and 142 out; the tests are 199 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.5 % of the week (`engine/tools/usage`: 0.48 % before this commit), against a budget of 1.2 %.
+- **For T:** a vector for each B form. B-4's `run` vector is held "for #229" while refcore prints nothing. Item 4's and `b3_where`'s are held "for #235".
+- **Checks:** `check quick: green, 11 steps` on each commit's tree. `check commit: green, 23 steps (199s)`, exit 0, at 209cc544's tree with this log; this commit adds the log alone.
+
+## 2026-11-19 M3 gate fix, turn 2: the fix review's G-1 (issue #226)
+
+On `build/m3-gatefix` from beb93424, one commit and this one. The fix review is `tmp/m3/review-gatefix.md`: B-2, B-3 and B-4 fixed, 1 blocking (G-1, B-1's keyed form), ruled P33. By D12 this is the last fix; the coordinator checks it with probes.
+- **ad876e72, G-1:** a read's mode now covers the read alone, not its keys.
+  - `cal_arg`, `since` and `last` type their read under `Rel::Calendar` or `Rel::Explicit`, and the mode reached the read's keys as well. In `cal[region]` or `rd[region]`, a law-dated `region` was therefore taped as exempt, and the walk read it with no law date.
+  - Now `load/keyed.rs` `key_pos`, through which every key position is typed, types its key in the scope without a `Calendar` or `Explicit` mode (`Scope::without_mode`). A law pin's mode stays: under `as if {law D}` every read is made at D, keys included.
+  - So the one rule, `move_read_dated`, sees the key's read with its own relation, as L §4.2 ("at any keys"), §4.3 and §4.6 say.
+  - Last turn's entry said "no part can be left out" of the marking. That held for the reads load types, not for the relation each carries (the review's N-5). The relation is now the read's own wherever a key is typed.
+- **The review's texts** (`tmp/m3/review-gatefix/g1/`):
+  - **A** (`where is_business(d, cal[region])`, no `at`): `refused: LOAD-LAWDATE pay reads law-dated facts and states no at`, and `check` prints the same.
+  - **B** (a key's `on add_business(d0, 1, cal[region])` before the `at`): `refused: LOAD-LAWDATE move one's key p reads law-dated region with no law date: its at reads p`.
+  - **C** (A with `at d`): `q: 50.00 PLN`, its law-free twin's bytes, and the twin is refcore's.
+  - **D** (`where last(rd[region], d) == d0`, `at d`): `q: 30.00 PLN`, the same.
+  - Each of the four was `ENGINE-INVARIANT` with `check` `ok`. Refcore prints its #235 guard on the dated texts.
+- **N-6:** `ask q: last(rd[region], d0)` is now `LOAD-LAWDATE ask q reads law-dated region directly, without law` at load (L §4.3), where it was `ENGINE-INVARIANT` on both binaries.
+- **Every exempted argument, probed** (`tmp/m3/gatefix/g1/gen.py`, `out.txt`): 32 probes, each dated and with its law-free twin.
+  - The arguments are the calendar of `is_business`, `add_business`, `last_business` and `schedule`, and the read of `last` and `since`. Each key is a law-dated input (`region`) or an `at reader` def in the key (`rg = region at reader`).
+  - In a key's `where` with `at d`, the `where` waits and the text prints its twin's bytes.
+  - With no `at`: `LOAD-LAWDATE … states no at`.
+  - In a key's `on` before the `at`: #235's refusal, "reads law-dated region" or "reaches rg, which takes its law date from its reader".
+  - None prints `ENGINE-INVARIANT`, and none has `check` `ok` where `run` refuses at load.
+  - Every `region` twin is refcore's bytes but `o_last_region.t`, which stops `not implemented` (the review's N-2). The `rg` twins differ from refcore as P30's `at reader` texts do: refcore refuses the ask at run.
+- **Test** (`load_cases.rs`): `a_law_dated_key_of_a_calendar_or_a_stated_day_read_is_dated`, with A to D and N-6, each against its twin.
+- **Not taken:**
+  - N-1 (a fill's own reads on a move's tape): for #235. Taping only the move's edges would drop `on_alone`'s right refusal until a fill is judged as a node, which is more than a line or two.
+  - N-2 (a key's `on` with an aggregate, `as if`, a fill or `last` stops at run): older, for the follow-ups.
+  - N-3 (is a pinned read law-dated?) and N-4 (#228): spec questions.
+  - N-5's fourth walk (`expr_parts`): a refactor, for the follow-ups.
+- **The sweep** (`tmp/m3/gatefix/sweep2.txt`, `sweep2.json`, `compare2.txt`): 559 targets. They are turn 1's 246, the review's probes (`tmp/m3/review-gatefix/`: `p/`, `v/`, `sc/`, `f/`, `i4/`, `inv/`, `g1/`) and `gatefix/g1/`. Each ran `run` and `check` on this engine and on 56d59941's binary, and `run` on refcore.
+  - No `ENGINE-INVARIANT`, and no text where `check` prints `ok` and `run` refuses at load.
+  - No target differs from refcore that was the same at 56d59941.
+  - 466 targets have a beb93424 output: turn 1's sweep, or the review's `out/*.new.*`. Of those, only A to D changed.
+  - 28 runs stop `not implemented`. 24 stop on 56d59941's binary too (the review's N-2 and the gate's item 11).
+  - The other four (`review-gatefix/p/o_lawlit_at.d`, `o_lawreader_at.d`, `o_lawreader_at.t`, and `gatefix/g1/o_last_region.t`) are N-2's stop. 56d59941's name walk refused them wrongly (a read inside `as if {law D}`, or `last`'s read), so they now load and reach that stop. beb93424 already did the same for the review's three.
+  - Every other refcore difference has its reason from turn 1's entry:
+    - #235's guard where the engine refuses at load or answers (P28, P30, item 4, and now G-1's A to D);
+    - `at reader` defs (P30, item 13);
+    - #229 and #233;
+    - items 11 and 14;
+    - #228.
+- **Size** (`engine/crates`, beb93424 to this commit): 3 files, 98 in, 0 out. Of those, the library is 17 in; the tests are 81 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.25 % of the week this turn (`engine/tools/usage`, 0.71 % over the session before this commit), against a budget of 0.4 %.
+- **For T:** a vector for each of A to D and N-6, held "for #235" while refcore prints its guard.
+- **Checks:** `check quick: green, 11 steps (81s)` at ad876e72's tree. `check commit: green, 23 steps (136s)`, exit 0, at ad876e72's tree with this log; this commit adds the log alone.

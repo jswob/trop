@@ -1,25 +1,28 @@
-//! The asks of a reality with scenarios: each ask in the world it names, an ask whose
-//! scenario was refused printed refused with it, the worlds' warnings merged.
+//! Scenarios' asks, each in the world it names; refused scenarios, warnings, `check`'s lines.
 //! Spec: L §6.4 (asking a scenario: `in s`, `diff … in s against b`, a `{scenario s}` pin; two
 //! scenarios over one base each declare their own asks), §5.18, §8 (a scenario's refusal
 //! refuses only that scenario and those over it), §8.5 (an item is unread only where every
-//! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3).
+//! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3); OPERATIONS §2.3
+//! (`check`).
 //! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, its
-//! `unread_everywhere` and `asif_worlds`).
-//! Invariants: every id the run names is checked before any ask is answered; the refused
-//! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask
+//! `unread_everywhere` and `asif_worlds`; `check_worlds`) and ask.py (`Asker.load_check`).
+//! Invariants: every id the run names is checked before any ask is answered; `run`'s refused
+//! scenarios print first, by id, `check`'s by their files' full paths; `check`'s asks refused
+//! alone go by id, then file, then line; the asks go by id, then by world, the base's first; an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
 //! others, each world under it seen with the layers over it hidden; the base's diff whose two
 //! worlds are on two stacks is answered side by side, each side in the reality holding its
-//! stack (refcore's `cross_stack_diff`), refused `LOAD-FORKS` before any ask is answered where
-//! the axes both sides reach pass 64 combinations; any other ask whose worlds are on two stacks stops
-//! the run `NotBuilt` (refcore's cross evaluation).
+//! stack (refcore's `cross_stack_diff`); its axes over both worlds were counted at load
+//! (`LOAD-FORKS`, `load/worlds.rs`); any other ask whose worlds are on two stacks stops the run
+//! `NotBuilt` (refcore's cross evaluation).
 
-use super::answer::{Answered, How, Turn, answer_turns, no_ask};
+use super::answer::{Answered, Turn, answer_turns, no_ask, req_clocks};
+use super::members;
 use super::register::warning_lines;
 use crate::Asks;
-use crate::base::{Code, Load, Place, Refusal, Warn};
-use crate::load::{Loaded, Worlds, forks_past_cap};
+use crate::base::{Refusal, Warn};
+use crate::eval::How;
+use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
 use crate::oracle::Days;
 use crate::syntax::{Ask, AskBody, PinForm, Stop};
@@ -27,23 +30,44 @@ use crate::walk::invariant;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The lines a run of a reality with scenarios prints (refcore's `run_worlds`, its asks): each
-/// refused scenario's line, then each ask's lines in the world it names, then the warnings.
-/// L §6.4, §5.18, §8.5.
+/// refused scenario's line, then each ask's lines in the world it names, a joint model's
+/// member's answered by the member alone, then the warnings. L §6.4, §6.1, §5.18, §8.5.
 ///
 /// # Errors
 ///
-/// `REQ-ASK` for the first id the run names that no world's ask has (E §11); `NotBuilt` for an
-/// ask evaluated in two worlds, a load refusal met at run, and a construct not built yet.
+/// `REQ-ASK` for the first id the run names that no world's ask has, then `REQ-CLOCK` for the
+/// first ask whose literal cut is after `on` (E §11); `NotBuilt` for an ask evaluated in two
+/// worlds, a load refusal met at run, and a construct not built yet.
 pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
+    let mut turns: Vec<Turn> = w
+        .refused
+        .iter()
+        .map(|(id, r)| Turn::Line(scenario_line(id, r)))
+        .collect();
+    turns.extend(members::resolve(&w.base, ask_turns(w, asks)?, (days, how))?);
+    let realities = realities(w);
+    req_clocks(&realities, &turns)?;
+    answer_turns(&realities, &turns, merged_warnings(w), days, how)
+}
+
+/// The worlds' realities as a run's turns count them: the base's first, then each loaded
+/// scenario's by id.
+pub(super) fn realities(w: &Worlds) -> Vec<&Reality> {
+    core::iter::once(&w.base).chain(w.loaded.values()).collect()
+}
+
+/// The turns of a run of a reality with scenarios, after its refused scenarios' lines: each
+/// ask in the world it names, by id then world, or in the order the run names them, a
+/// member's ask (`a.q`) as `Turn::Member` (refcore's `run_worlds`, its `order`). L §6.4, §6.1.
+///
+/// # Errors
+///
+/// `REQ-ASK` for the first id the run names that no world's ask has (E §11).
+pub(super) fn ask_turns(w: &Worlds, asks: &Asks) -> Result<Vec<Turn>, Stop> {
     if let Asks::Named(ids) = asks
         && let Some(id) = ids.iter().find(|id| !knows(w, id))
     {
         return Err(Stop::Refused(no_ask(id)));
-    }
-    if let Asks::Named(ids) = asks
-        && ids.iter().any(|id| member_ask(w, id))
-    {
-        return Err(Stop::NotBuilt("a member's ask at run"));
     }
     let model = w.base.header.id.as_str();
     // the base's asks from the base, a scenario's from its own reality, by (id, world)
@@ -58,39 +82,61 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<An
             }
         }
     }
-    let mut order = Vec::new();
+    let mut turns = Vec::new();
     match asks {
-        Asks::Every => order.extend(keyed.iter()),
+        Asks::Every => {
+            for ((_, world), (at, ask)) in &keyed {
+                turns.push(ask_turn(w, (*at, world), (ask, model))?);
+            }
+        }
         Asks::Named(ids) => {
             for id in ids {
-                order.extend(keyed.iter().filter(|((ask, _), _)| *ask == id.as_str()));
+                if member_ask(w, id) {
+                    // answered by the member alone, where the run names it (L §6.1)
+                    turns.push(Turn::Member(id.clone()));
+                    continue;
+                }
+                for ((_, world), (at, ask)) in keyed.iter().filter(|((a, _), _)| *a == id.as_str())
+                {
+                    turns.push(ask_turn(w, (*at, world), (ask, model))?);
+                }
             }
         }
     }
-    let mut turns: Vec<Turn> = w
-        .refused
-        .iter()
-        .map(|(id, r)| Turn::Line(format!("scenario {id}: refused: {}", r.text())))
-        .collect();
-    for ((_, world), (at, ask)) in order {
-        if let Some(base_at) = at.filter(|_| w.base.asks_alone.contains_key(&ask.id)) {
-            turns.push(Turn::Ask(0, base_at));
-            continue;
-        }
-        let named = worlds_named(w, ask, world, model);
-        if let Some((_, refusal)) = w.refused.iter().find(|(id, _)| named.contains(*id)) {
-            turns.push(Turn::Line(format!(
-                "{}: refused: {}",
-                ask.id,
-                refusal.text()
-            )));
-            continue;
-        }
-        turns.push(world_turn(w, &named, (*at, world), (ask, model))?);
+    Ok(turns)
+}
+
+/// The turn of an ask in the world `own` (`""` for the base's): an ask refused alone, the
+/// base's or a loaded scenario's file's own, prints its line; an ask in a refused scenario's
+/// world prints that refusal; any other is answered in the deepest world it names (refcore's
+/// `run_worlds`, its loop over `order`). L §6.4, §8; OPERATIONS §2.1 (an ask refused alone).
+///
+/// # Errors
+///
+/// As [`world_turn`].
+fn ask_turn(
+    w: &Worlds,
+    (at, own): (Option<usize>, &str),
+    (ask, model): (&Ask, &str),
+) -> Result<Turn, Stop> {
+    if let Some(base_at) = at.filter(|_| w.base.asks_alone.contains_key(&ask.id)) {
+        return Ok(Turn::Ask(0, base_at));
     }
-    // the base's reality first, then each loaded scenario's by id, as `world_turn` counts them
-    let realities: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
-    answer_turns(&realities, &turns, merged_warnings(w), days, how)
+    // a scenario's file's own ask refused alone prints its line, as `check` does
+    // (OPERATIONS §2.1, §2.3; the gate review's B-4)
+    let alone = w
+        .loaded
+        .get(own)
+        .filter(|reality| reality.scenarios.of(&ask.id) == Some(own))
+        .and_then(|reality| reality.asks_alone.get(&ask.id));
+    if let Some(refusal) = alone {
+        return Ok(Turn::Line(refused_line(&ask.id, refusal)));
+    }
+    let named = worlds_named(w, ask, own, model);
+    if let Some((_, refusal)) = w.refused.iter().find(|(id, _)| named.contains(*id)) {
+        return Ok(Turn::Line(refused_line(&ask.id, refusal)));
+    }
+    world_turn(w, &named, (at, own), (ask, model))
 }
 
 /// The turn of an ask: the base's ask at `at` in the base when it names no world besides the
@@ -145,12 +191,10 @@ fn world_turn(
 ///
 /// # Errors
 ///
-/// `LOAD-FORKS` where the axes both sides reach pass 64 combinations: the diff's cone is both
-/// worlds' (L §5.5 Refusals; pick P17); `NotBuilt` where the reality holding a side's stack
-/// holds no ask `id` (refcore's own limit there).
+/// `NotBuilt` where the reality holding a side's stack holds no ask `id` (refcore's own limit
+/// there). The axes both sides reach were counted at load (`load/worlds.rs`).
 fn cross_turn(w: &Worlds, id: &str, sides: [&String; 2], model: &str) -> Result<Turn, Stop> {
     let mut out = Vec::with_capacity(sides.len());
-    let mut options: BTreeMap<&str, usize> = BTreeMap::new();
     for world in sides {
         let (place, reality) = if world == model {
             (0, &w.base)
@@ -178,43 +222,13 @@ fn cross_turn(w: &Worlds, id: &str, sides: [&String; 2], model: &str) -> Result<
                 "a diff whose worlds sit on different stacks, asked where one is not loaded",
             ));
         };
-        for axis in reality.graph.ask_axes.get(id).into_iter().flatten() {
-            let declared = reality
-                .axes
-                .get(axis)
-                .ok_or_else(|| invariant("an axis load didn't build"))?;
-            options.insert(axis, declared.options.len());
-        }
         out.push((place, at, world.clone()));
-    }
-    let counts: Vec<usize> = options.into_values().collect();
-    if let Some(message) = forks_past_cap(id, &counts)? {
-        return Err(Stop::Refused(cross_forks(w, id, message)?));
     }
     let mut out = out.into_iter();
     let (Some(ours), Some(theirs), None) = (out.next(), out.next(), out.next()) else {
         return Err(invariant("a diff with other than two sides"));
     };
     Ok(Turn::Cross([ours, theirs]))
-}
-
-/// `LOAD-FORKS` with `message` at the base's ask `id`'s file and line, as load puts it.
-/// L §5.5, §8.3.
-fn cross_forks(w: &Worlds, id: &str, message: String) -> Result<Refusal, Stop> {
-    let ask = w
-        .base
-        .asks
-        .iter()
-        .find(|ask| ask.id == id)
-        .ok_or_else(|| invariant("a diff's ask the base lacks"))?;
-    let file = w
-        .base
-        .graph
-        .ask_files
-        .get(id)
-        .ok_or_else(|| invariant("an ask with no file"))?;
-    let place = Place::Line(file.clone(), ask.line);
-    Ok(Refusal::at(Code::Load(Load::Forks), message, place))
 }
 
 /// Whether world `world` is a loaded scenario whose stack holds every world of `named`
@@ -247,12 +261,96 @@ pub fn report_lines(loaded: &Loaded) -> Vec<String> {
             let mut lines: Vec<String> = w
                 .refused
                 .iter()
-                .map(|(id, r)| format!("scenario {id}: refused: {}", r.text()))
+                .map(|(id, r)| scenario_line(id, r))
                 .collect();
             lines.extend(warning_lines(&merged_warnings(w)));
             lines
         }
     }
+}
+
+/// The lines `check` prints for a run's files that load (OPERATIONS §2.3; refcore's
+/// `load_check`, `check_worlds`): each refused scenario's line in the full-path order of its
+/// file (pick P4), then each ask refused alone, by id, then its file's full path, then its
+/// line (pick P5), the base's and each loaded scenario file's own; `ok` alone first when there
+/// is neither; then load's warnings, as `run` prints them. An ask in a refused scenario's
+/// world is covered by that scenario's line. L §6.4, §8.3, §8.5.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an ask refused alone that its reality places in no file, or a
+/// refused scenario with no file.
+pub fn check_lines(loaded: &Loaded) -> Result<Vec<String>, Stop> {
+    let (mut lines, alone, warnings) = match loaded {
+        Loaded::One(m) => (Vec::new(), alone_asks(m, None)?, m.warnings.clone()),
+        Loaded::Worlds(w) => {
+            let mut refused = Vec::with_capacity(w.refused.len());
+            for (id, refusal) in &w.refused {
+                let file = w
+                    .files
+                    .get(id)
+                    .ok_or_else(|| invariant("a refused scenario with no file"))?;
+                refused.push((file, id, refusal));
+            }
+            refused.sort_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
+            let lines = refused
+                .into_iter()
+                .map(|(_, id, refusal)| scenario_line(id, refusal))
+                .collect();
+            let mut alone = alone_asks(&w.base, None)?;
+            for (id, reality) in &w.loaded {
+                alone.extend(alone_asks(reality, Some(id))?);
+            }
+            (lines, alone, merged_warnings(w))
+        }
+    };
+    lines.extend(alone.into_values());
+    if lines.is_empty() {
+        lines.push("ok".to_owned());
+    }
+    lines.extend(warning_lines(&warnings));
+    Ok(lines)
+}
+
+/// The asks of `m` refused alone that its world's own file states, the base's for none, each
+/// keyed by its id, its file's full path and its line, with the line it prints (refcore's
+/// `alone_line`). L §6.4, §8.3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for such an ask that `m` places in no file.
+fn alone_asks(
+    m: &Reality,
+    world: Option<&str>,
+) -> Result<BTreeMap<(String, String, u32), String>, Stop> {
+    let mut out = BTreeMap::new();
+    for ask in &m.asks {
+        let Some(refusal) = m.asks_alone.get(&ask.id) else {
+            continue;
+        };
+        if m.scenarios.of(&ask.id) != world {
+            continue;
+        }
+        let file = m
+            .graph
+            .ask_files
+            .get(&ask.id)
+            .ok_or_else(|| invariant("an ask refused alone with no file"))?;
+        let line = refused_line(&ask.id, refusal);
+        out.insert((ask.id.clone(), file.clone(), ask.line), line);
+    }
+    Ok(out)
+}
+
+/// A refused scenario's line, `scenario <s>: refused: CODE message`. L §6.4, §8.
+fn scenario_line(id: &str, refusal: &Refusal) -> String {
+    format!("scenario {id}: refused: {}", refusal.text())
+}
+
+/// A refused ask's line, or a tuple's, `<head>: refused: CODE message`: one form for `run` and
+/// `check`, whose lines are the same bytes. L §8.3, §8.4.
+pub(super) fn refused_line(head: &str, refusal: &Refusal) -> String {
+    format!("{head}: refused: {}", refusal.text())
 }
 
 /// Whether `id` names an ask of a world: the base's, a loaded scenario's, or one a refused
@@ -308,7 +406,7 @@ fn worlds_named(w: &Worlds, ask: &Ask, own: &str, model: &str) -> BTreeSet<Strin
 /// The worlds' warnings, the base's first, then each loaded scenario's by id, each once; an
 /// unread item kept only where every world that declares it leaves it unread (refcore's
 /// `run_worlds`, `unread_everywhere`). L §8.5.
-fn merged_warnings(w: &Worlds) -> Vec<(Warn, String)> {
+pub(super) fn merged_warnings(w: &Worlds) -> Vec<(Warn, String)> {
     let worlds: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
     let mut merged: Vec<(Warn, String)> = Vec::new();
     for reality in &worlds {

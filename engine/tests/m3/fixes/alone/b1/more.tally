@@ -1,0 +1,4 @@
+part more
+  tally 2
+
+ask q_base: bal(konto, 2026-10-31)

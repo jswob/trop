@@ -3,7 +3,7 @@
 //! value is `none` states nothing; the read rule decides who sees it), §4.6 (a reading's
 //! instant), §5.10 (`HOLE-ANCHOR`; the sign rule tests the reading's own place at the
 //! reading's point, a pad's in the point's group with its leg, an anchor's through
-//! `walk/day.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
+//! `walk/readings.rs`; tally 2.1.2); E §6.1 (Readings: the gap is the reading less the booked
 //! balance at its instant; a pad is a movement of `pads`, an anchor sets the balance; holes),
 //! §4.2 step 0 and step 4 (where readings apply), step 5 (the sign rule at a reading's point);
 //! L §6.4 (the readings a walk's world sees).
@@ -20,10 +20,10 @@ use std::collections::BTreeMap;
 use crate::base::{Code, Load, Refusal};
 use crate::eval::{Collected, Engine, Entry, Rows};
 use crate::hole::{Hole, spread};
-use crate::model::{GapRole, Reality, World};
+use crate::model::{BalanceRow, GapRole, PlaceReadings, Reality, World};
 use crate::num::Num;
 use crate::read::row_known;
-use crate::syntax::{Edge, Instant, Stop};
+use crate::syntax::{Edge, Stop};
 use crate::time::Day;
 use crate::walk::{
     Amount, At, Change, Dated, End, Ends, Ent, GapAt, LegVal, Reading, St, invariant, qty_value,
@@ -56,9 +56,9 @@ pub struct Pad {
     pub coll: Collected,
 }
 
-/// A reading row kept as the latest of its key: when it became known, its day and edge, the
-/// row (L §5.19).
-type Kept = (Day, Day, Edge, crate::model::Row);
+/// A reading row kept as the latest of its key: when it became known, and the row with its
+/// day and edge (L §5.19).
+type Kept = (Day, BalanceRow);
 
 /// The readings cut `cut` sees in world `world`: each `opening` and `stated` row known by
 /// the cut, of a version the world sees, a restated one replaced as `replace` says (a
@@ -69,7 +69,7 @@ type Kept = (Day, Day, Edge, crate::model::Row);
 ///
 /// # Errors
 ///
-/// A row load left without its version; `NotBuilt` for a reading at a day with no edge.
+/// A row load left without its version.
 pub(crate) fn readings(
     m: &Reality,
     (cut, world): (Day, World),
@@ -77,46 +77,32 @@ pub(crate) fn readings(
 ) -> Result<Vec<Seen>, Stop> {
     // a reading row is keyed by its place, instant and input; its unit is its place's (L §4.6,
     // §5.10)
-    let mut cands: BTreeMap<(String, String, String), Vec<Kept>> = BTreeMap::new();
-    for input in ["opening", "stated"] {
-        let Some(info) = m.inputs.get(input) else {
-            continue;
-        };
-        for row in &info.rows {
-            if !m.scenarios.sees(world, Some(&row.version)) {
+    let mut cands: BTreeMap<(&str, String, &str), (&PlaceReadings, Vec<Kept>)> = BTreeMap::new();
+    for (place, of_place) in &m.balance_readings {
+        for balance in &of_place.rows {
+            if !m.scenarios.sees(world, Some(&balance.row.version)) {
                 continue;
             }
-            let known_on = row_known(m, row)?;
+            let known_on = row_known(m, &balance.row)?;
             if known_on > cut {
                 continue;
             }
-            let Some(crate::model::Pat::Key(crate::model::KeyVal::Thing(place))) =
-                row.pattern.first()
-            else {
-                return Err(Stop::NotBuilt("a reading of a place not named"));
-            };
-            let Some(Instant {
-                day,
-                edge: Some(edge),
-            }) = row.instant
-            else {
-                return Err(Stop::NotBuilt(
-                    "a reading at an instant other than a day's start or end",
-                ));
-            };
-            let key = (place.clone(), instant_text(day, edge), input.to_owned());
+            let instant = instant_text(balance.day, balance.edge);
+            let key = (place.as_str(), instant, balance.input.as_str());
             cands
                 .entry(key)
-                .or_insert_with(Vec::new)
-                .push((known_on, day, edge, row.clone()));
+                .or_insert_with(|| (of_place, Vec::new()))
+                .1
+                .push((known_on, balance.clone()));
         }
     }
     let mut out = Vec::with_capacity(cands.len());
-    for ((place, instant, input), rows_at) in cands {
-        let Some((_, day, edge, row)) = standing(m, rows_at) else {
+    for ((place, instant, input), (of_place, rows_at)) in cands {
+        let Some((_, balance)) = standing(m, rows_at) else {
             continue;
         };
-        let mut reading = reading_of(m, (&input, &place, &instant), &row)?;
+        let row = &balance.row;
+        let mut reading = reading_of(m, (input, place, &instant), of_place, row)?;
         // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
         if rows == Rows::Kept
             && let Some(r) = &mut reading
@@ -125,10 +111,10 @@ pub(crate) fn readings(
                 .note_row(&row.sid, &row.version, row.locator.as_ref());
         }
         out.push(Seen {
-            day,
-            edge,
-            place,
-            input,
+            day: balance.day,
+            edge: balance.edge,
+            place: place.to_owned(),
+            input: input.to_owned(),
             reading,
         });
     }
@@ -140,8 +126,8 @@ pub(crate) fn readings(
 /// its replacement, as `read/rows.rs` `unreplaced` weighs other rows). L §4.6 step 2, §6.4.
 fn standing(m: &Reality, rows_at: Vec<Kept>) -> Option<Kept> {
     let mut best: Option<usize> = None;
-    for (at, (known, .., row)) in rows_at.iter().enumerate() {
-        if replaced(m, &rows_at, (*known, row)) {
+    for (at, (known, balance)) in rows_at.iter().enumerate() {
+        if replaced(m, &rows_at, (*known, &balance.row)) {
             continue;
         }
         let later = best
@@ -159,7 +145,8 @@ fn standing(m: &Reality, rows_at: Vec<Kept>) -> Option<Kept> {
 /// one of its own layer known after it. L §4.6 step 2, §6.4.
 fn replaced(m: &Reality, rows_at: &[Kept], (known, row): (Day, &crate::model::Row)) -> bool {
     let layer = m.scenarios.layer(Some(&row.version));
-    for (k, .., other) in rows_at {
+    for (k, balance) in rows_at {
+        let other = &balance.row;
         if !other.replace {
             continue;
         }
@@ -231,16 +218,14 @@ pub(crate) fn instant_text(day: Day, edge: Edge) -> String {
 fn reading_of(
     m: &Reality,
     (input, place, instant): (&str, &str, &str),
+    of_place: &PlaceReadings,
     row: &crate::model::Row,
 ) -> Result<Option<Reading>, Stop> {
     if row.value == crate::syntax::Value::None {
         return Ok(None);
     }
     let figure = format!("{input}[{place}]");
-    let Some((unit, ty)) = m.reading_ty(place).map_err(crate::eval::num_stop)? else {
-        return Err(Stop::NotBuilt("a reading of a place with no unit"));
-    };
-    let value = match crate::eval::convert_row(m, &row.value, &ty)? {
+    let value = match crate::eval::convert_row(m, &row.value, &of_place.ty)? {
         Err(text) => Err(Hole::asked(&text, &figure)),
         Ok(crate::model::Value::None) => return Ok(None),
         Ok(v) => Ok(crate::walk::quantity(m, &v)?.0),
@@ -257,7 +242,7 @@ fn reading_of(
     Ok(Some(Reading {
         input: input.to_owned(),
         place: place.to_owned(),
-        unit,
+        unit: of_place.unit.clone(),
         value,
         coll,
         version: row.version.clone(),

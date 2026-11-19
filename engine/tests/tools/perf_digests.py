@@ -10,6 +10,10 @@ run.py's run_one (plain refcore, its 90 s budget, the watchdog). Never an engine
     ... --table PATH                                                     -> the rows of another budget table (a
                                                                             rules branch's, before it is merged)
 One line per check: rows that time the same check (F6-c7 and P8-2, F6-X and P8-14) share its digest.
+
+A row whose recipe is `turn:<id> <id> …` (P8-1, a conversation turn: a `check` and two `run`s, M3) names vectors of
+M3's stores (m3/check.vectors, m3/runs.vectors), each refcore's bytes already (m3/vectors.py); each id gets one line,
+the digest of its stored output.
 """
 import hashlib
 import os
@@ -23,21 +27,50 @@ import run as R  # noqa: E402
 
 TABLE = R.ROOT + 'engine/tools/perf-budgets.toml'
 OUT = T + 'perf-digests.tsv'
+M3_STORES = (T + 'm3/check.vectors', T + 'm3/runs.vectors')
 
 
-def rows(table):
+def rows(table, kind='check:'):
     with open(table, 'rb') as f:
         out, seen = [], set()
         for r in tomllib.load(f)['row']:
-            if r['recipe'].startswith('check:') and r['recipe'] not in seen:
+            if r['recipe'].startswith(kind) and r['recipe'] not in seen:
                 seen.add(r['recipe'])
                 out.append(r)
         return out
 
 
+def m3_outputs():
+    """{id: stored output} of M3's stores: eight netstrings a vector, the output last (m3/vectors.py)."""
+    out = {}
+    for path in M3_STORES:
+        b, parts, i = open(path, 'rb').read(), [], 0
+        while i < len(b):
+            j = b.index(b':', i)
+            n = int(b[i:j])
+            parts.append(b[j + 1:j + 1 + n])
+            i = j + 2 + n
+        for k in range(0, len(parts), 8):
+            out[parts[k].decode('utf-8')] = parts[k + 7]
+    return out
+
+
+def turn_lines(table):
+    """One line per vector a `turn:` recipe names: the sha256 of its stored output (refcore's bytes)."""
+    lines, outs = {}, None
+    for r in rows(table, 'turn:'):
+        outs = m3_outputs() if outs is None else outs
+        for vid in r['recipe'][len('turn:'):].split():
+            if vid not in outs:
+                sys.exit('%s: %s is no vector of m3/check.vectors or m3/runs.vectors' % (r['id'], vid))
+            lines[vid] = '%s\t%s' % (vid, hashlib.sha256(outs[vid]).hexdigest())
+    return lines
+
+
 def text(jobs, table=TABLE):
     by = {c['id']: c for c in R.load_checks()}
     rs = rows(table)
+    turns = turn_lines(table)
     R.need_watchdog()
     rc_hash = R.refcore_hash()
     cs = [by[r['recipe'][len('check:'):]] for r in rs]
@@ -45,11 +78,12 @@ def text(jobs, table=TABLE):
         res = list(ex.map(lambda c: R.run_one(c, 'pypy', R.BUDGET, False, rc_hash, R.T + 'cache'), cs))
     lines = ['# T\'s expected output digests for the P8 rows that run a check (engine/tools/perf; tools/perf_digests.py).',
              '# id<TAB>sha256 of refcore\'s output (stdout then stderr) for the check\'s command line, from refcore\'s run.']
-    for r, c, e in sorted(zip(rs, cs, res), key=lambda x: x[1]['id']):
+    body = dict(turns)
+    for r, c, e in zip(rs, cs, res):
         if e['over'] or e['rc'] is None or e['rc'] < 0:
             sys.exit('%s (%s): refcore didn\'t finish it in %g s; no digest' % (c['id'], r['id'], R.BUDGET))
-        lines.append('%s\t%s' % (c['id'], hashlib.sha256(e['out'].encode('utf-8', 'surrogateescape')).hexdigest()))
-    return '\n'.join(lines) + '\n'
+        body[c['id']] = '%s\t%s' % (c['id'], hashlib.sha256(e['out'].encode('utf-8', 'surrogateescape')).hexdigest())
+    return '\n'.join(lines + [body[k] for k in sorted(body)]) + '\n'
 
 
 def main(argv):

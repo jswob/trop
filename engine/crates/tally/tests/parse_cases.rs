@@ -8,7 +8,7 @@
 #[cfg(test)]
 mod tests {
     use tally::syntax::{Ask, AskBody, Expr, ItemForm, RuleValue, Section, Value, parse_reality};
-    use tally::{Asks, Days, Given, NotImplemented, Pin, Request, Source, parse, run};
+    use tally::{Asks, Files, Given, NotImplemented, Request, Source, parse, run};
 
     /// The smallest model header: lines 1 to 5.
     const HEADER: &str =
@@ -68,11 +68,7 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
 ";
 
     fn every() -> Request {
-        Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        }
+        Request::new(Asks::Every)
     }
 
     /// The run of one file `a.tally` holding `text`.
@@ -81,7 +77,7 @@ ask early: flows(out_0, 2025-01-01 .. 2025-03-31), bal(acc_0, 2025-03-31) as kno
             path: "a.tally".to_owned(),
             bytes: Some(text.as_bytes().to_vec()),
         }];
-        run(given, &every()).map(|answer| answer.lines().to_vec())
+        run(Files::new(given), &every()).map(|answer| answer.lines().to_vec())
     }
 
     /// A section's kind, by name.

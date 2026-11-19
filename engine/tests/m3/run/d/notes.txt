@@ -1,0 +1,1 @@
+Not a Tally text: a file under a directory given whose name does not end .tally is never read (L §6.1).

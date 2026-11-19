@@ -3,15 +3,17 @@
 //! forks print the same lines on and off by design (`m2_forks`), so a mutant that only shares
 //! fewer walks, or walks again what a kept walk had walked, is told apart by the work counters
 //! alone (R-51, BUILDER §13.2): the counters build's `Answer::counters`, the line `--stats`
-//! prints. Each ask of the fixed inputs below runs through `tally_cli::tally::run_with_forks`
+//! prints. Each ask of the fixed inputs below runs through `tally_cli::tally::run_with_how` (M3 step b)
 //! with `Forks::On` (as `run` walks) and `Forks::Off` (each read its own walk), and its counts
 //! are these exactly: days stepped, days with an act, walks, walks shared, legs booked, def
 //! hits and misses (P §1.1's units). The inputs: `m2/counts/days_c.tally` (G7's `days.tally`
 //! with the builder's R1, a projection read day by day across a month's end; R2, one read twice
 //! through a day; R3, five projections and four across a month's end; R6, a decision on walked
 //! days), `m2/counts/r4.tally` (R4, a decision due twice reading one projection from a fixed
-//! day, a place first booked between the runs; R7, a hole and a refused leg on walked days) and
-//! M1's `m1/lows/` (T5, the reads F5's tree answers). A count the engine changes on purpose (a
+//! day, a place first booked between the runs; R7, a hole and a refused leg on walked days),
+//! `m2/counts/unc.tally` (M3 C6, pick P26: `days_c`'s reads taken `with uncertain`, so they go
+//! through the projection's walk, not F5's tree) and M1's `m1/lows/` (T5, the reads F5's tree
+//! answers). A count the engine changes on purpose (a
 //! faster walk) is re-pinned by T, never by the builder. `test = false` and
 //! `required-features = ["counters"]`, as `m1_invariant` takes the fault: no other build of the
 //! runner has the counters.
@@ -21,7 +23,7 @@
 #[cfg(test)]
 mod tests {
     use tally_cli::tally::walk::Forks;
-    use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_forks};
+    use tally_cli::tally::{Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
     /// R1, R2, R3, R6 (the builder's names): G7's days with the counts' asks.
     const DAYS: [(&str, &str); 1] =
@@ -51,6 +53,10 @@ mod tests {
         include_str!("../../m2/fixes/gate8/g8c/b2.tally"),
     )];
 
+    /// `days_c`'s model with its projection reads taken `with uncertain` (M3 C6, pick P26):
+    /// each goes through the projection's walk, F6, not F5's tree, so a kept walk is continued
+    /// (`walk/fork.rs`: `agrees`, `same_days`, `continue_planned`).
+    const UNC: [(&str, &str); 1] = [("unc.tally", include_str!("../../m2/counts/unc.tally"))];
     /// The counters a line holds, in the `--stats` line's words.
     const KEPT: [&str; 7] = [
         "days_stepped",
@@ -72,12 +78,15 @@ mod tests {
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let line = match run_with_forks(given, &request, forks) {
+        let request = Request::new(asks);
+        let line = match run_with_how(
+            Files::new(given),
+            &request,
+            How {
+                forks,
+                ..How::FENCES
+            },
+        ) {
             Ok(answer) => answer.counters().line(),
             Err(NotImplemented) => return "stopped".to_owned(),
         };
@@ -128,6 +137,24 @@ mod tests {
         "r3: on days_stepped=572 nonempty_days=468 walks=132 walks_shared=0 legs_booked=468 def_hits=202 def_misses=172; off days_stepped=572 nonempty_days=468 walks=132 walks_shared=0 legs_booked=468 def_hits=202 def_misses=172\n",
         "r3f: on days_stepped=136 nonempty_days=124 walks=18 walks_shared=88 legs_booked=124 def_hits=180 def_misses=56; off days_stepped=472 nonempty_days=394 walks=106 walks_shared=0 legs_booked=394 def_hits=180 def_misses=144\n",
         "rm: on days_stepped=72 nonempty_days=72 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40; off days_stepped=72 nonempty_days=72 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40\n",
+    );
+
+    /// `unc`'s asks (u1 day by day across a month's end, u2 one read twice through a day, u3f
+    /// four projections across a month's end, um the sweep's room, u4 one read on rising days
+    /// across two month ends, whose later reads continue the parked walk: `continue_planned`),
+    /// at M3 C6 (2026-11-19, the engine of 4fe9ac25).
+    #[test]
+    fn m2_counts_uncertain() {
+        let got = table(&UNC, &["u1", "u2", "u3f", "um", "u4"], false);
+        assert_eq!(got, UNC_COUNTS, "the counts of m2/counts/unc.tally");
+    }
+
+    const UNC_COUNTS: &str = concat!(
+        "u1: on days_stepped=144 nonempty_days=144 walks=34 walks_shared=82 legs_booked=144 def_hits=114 def_misses=38; off days_stepped=424 nonempty_days=424 walks=148 walks_shared=0 legs_booked=424 def_hits=114 def_misses=70\n",
+        "u2: on days_stepped=140 nonempty_days=138 walks=32 walks_shared=6 legs_booked=137 def_hits=136 def_misses=40; off days_stepped=160 nonempty_days=152 walks=40 walks_shared=0 legs_booked=151 def_hits=136 def_misses=42\n",
+        "u3f: on days_stepped=740 nonempty_days=656 walks=240 walks_shared=42 legs_booked=656 def_hits=180 def_misses=144; off days_stepped=824 nonempty_days=710 walks=282 walks_shared=0 legs_booked=710 def_hits=180 def_misses=144\n",
+        "um: on days_stepped=132 nonempty_days=132 walks=32 walks_shared=0 legs_booked=132 def_hits=114 def_misses=40; off days_stepped=132 nonempty_days=132 walks=32 walks_shared=0 legs_booked=132 def_hits=114 def_misses=40\n",
+        "u4: on days_stepped=144 nonempty_days=142 walks=36 walks_shared=4 legs_booked=141 def_hits=136 def_misses=40; off days_stepped=162 nonempty_days=156 walks=38 walks_shared=0 legs_booked=155 def_hits=136 def_misses=42\n",
     );
 
     /// R4 (`r4`, `r4j`) and R7 (`r7`), at 2026-11-15 (fc79eff9).

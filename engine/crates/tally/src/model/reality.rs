@@ -7,7 +7,7 @@
 //! lifespan under a cut is its latest entry the cut and the read's world see, a `replace` line
 //! winning (L §6.4: a scenario's entry is seen in its world and those over it).
 
-use super::decl::{BandInfo, DefInfo, Domain, InputInfo, MoveInfo, PlaceInfo};
+use super::decl::{BandInfo, DefInfo, Domain, InputInfo, MoveInfo, PlaceInfo, PlaceReadings};
 use super::graph::Graph;
 use super::ids::{
     AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Names, PlaceId, SourceId,
@@ -149,6 +149,9 @@ pub struct Reality {
     pub indexes: Table<IndexId, IndexInfo>,
     /// The inputs.
     pub inputs: Table<InputId, InputInfo>,
+    /// Each place's balance readings, typed at load from the `opening` and `stated` rows
+    /// (L §5.19, §4.6 Readings, §5.10).
+    pub balance_readings: BTreeMap<String, PlaceReadings>,
     /// The defs.
     pub defs: Table<DefId, DefInfo>,
     /// The bands.
@@ -199,11 +202,30 @@ pub struct Reality {
 }
 
 /// What a run knows of a joint model's members: each by its alias, the asks it may be asked
-/// as `a.q` (refcore's `joint_members`, read by `knows_ask`). L §6.1; E §11.
+/// as `a.q` (refcore's `joint_members`, read by `knows_ask`), and each loaded alone, which
+/// answers them. L §6.1; E §11.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Joint {
     /// Each member by its alias.
     pub members: BTreeMap<String, MemberAsks>,
+    /// Each member loaded alone, by its alias: held by the run's base and by a member that is
+    /// itself a joint model, once load ends; a scenario's world holds none, since a member's
+    /// ask is answered by the member alone, never in a world of the joint model's.
+    pub alone: BTreeMap<String, MemberAlone>,
+}
+
+/// A member as its asks are answered, by the member alone (refcore's `joint_members`' entry,
+/// with its `member_all` and `member_worlds`). L §6.1, §6.4.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MemberAlone {
+    /// Its base, the files that are no scenario's, loaded alone among its scenarios; a member
+    /// that is a joint model holds its own members in its `joint`.
+    pub reality: Reality,
+    /// Its own files, its scenario files included, each as the run named it: what a run of
+    /// the member alone is given (E §3.1 step 1).
+    pub files: Vec<crate::api::Source>,
+    /// The scenarios its files declare.
+    pub worlds: BTreeSet<String>,
 }
 
 /// A member's asks: its own (those its base answers, and those its scenario files declare),
@@ -264,6 +286,18 @@ pub struct SamePair {
 }
 
 impl Reality {
+    /// The member `aliases` name, from this joint model down, loaded alone; `None` where an
+    /// alias names no member. L §6.1.
+    #[must_use]
+    pub fn member_alone(&self, aliases: &[String]) -> Option<&MemberAlone> {
+        let (first, rest) = aliases.split_first()?;
+        let mut member = self.joint.as_ref()?.alone.get(first)?;
+        for alias in rest {
+            member = member.reality.joint.as_ref()?.alone.get(alias)?;
+        }
+        Some(member)
+    }
+
     /// An id as a sort key in id order: a row's version prefix (`v:`) first, then the item's
     /// name by code point, then each key by its position in its index, a list, range or
     /// built-in index keeping its own order (`pay[9]` before `pay[10]`; on `[zz, aa, mm]` zz

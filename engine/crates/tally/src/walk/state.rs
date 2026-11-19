@@ -26,8 +26,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use super::agenda::Act;
+use super::instance::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order};
 use super::order::{CycleItem, Run};
-use super::plan::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order, invariant};
+use super::plan::invariant;
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
 use crate::eval::{Collected, Entry};

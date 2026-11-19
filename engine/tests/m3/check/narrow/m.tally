@@ -1,0 +1,32 @@
+model narrow
+  tally 2
+  on 2026-11-05
+  start 2026-10-01
+  end 2026-12-31
+  note "T's base for #232's second case (invented): a register covering konto in October with two bank rows, one on 10-10 and one on 10-28"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+version home
+  cite s
+  governs 2026-10..
+  known 2026-10-01
+  opening[konto] = 1 000.00 PLN at 2026-10-01 start "wyciąg"
+
+version register_10
+  cite s
+  governs 2026-10
+  known 2026-11-02
+  covers konto
+  bank[r1] = (on: 2026-10-10, kind: transfers, leg cash from world to konto amount 500.00 PLN) "line 1"
+  bank[r2] = (on: 2026-10-28, kind: transfers, leg cash from konto to world amount 120.00 PLN) "line 2"
+
+ask q: bal(konto, 2026-10-31)

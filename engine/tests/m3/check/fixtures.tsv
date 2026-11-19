@@ -1,0 +1,50 @@
+id	cwd	args	rule
+ok/clean	m3/check	model.tally	§2.3: everything given loads: `ok` alone
+ok/unread	m3/check	model.tally unread.tally	§2.3, L §8.5: `ok`, then WARN-UNREAD for a source, an input, a def and a place, sorted by code then text
+ok/outside	m3/check	model.tally outside.tally	L §8.5 (tally 2.1.2): an outside place nothing names warns too
+ok/scenario	m3/check	model.tally s_fine.tally	§2.3: a scenario that loads: `ok`
+ok/joint	m3/check/joint	j.tally	§2.3, L §6.1: a joint model and its member load: `ok`
+ok/joint-unread	m3/check/joint	j_warn.tally	§2.3, L §6.1: a member's unread input warns as run prints it (Q6)
+base/dup	m3/check	model.tally dup.tally	§2.3: a base that doesn't load: its one refused line, nothing more (LOAD-DUP)
+base/path	m3/check	model.tally nope.tally	§2.3, INTERFACE §2: a path that names nothing (LOAD-PATH)
+base/no-path	m3/check		§2.3 "inputs as run's": no path at all, as run (LOAD-HEADER)
+base/scenario-read	m3/check	model.tally s_i_extra.tally reads_scen.tally	L §6.4: a base item reading a scenario's item refuses the base (LOAD-SCENARIO)
+base/beside-scenario	m3/check	model.tally dup.tally s_a_zulu.tally	§2.3: a base refusal outranks a refused scenario: its line alone
+base/member	m3/check/joint	j_bad.tally	§2.3, INTERFACE §2: a member that doesn't load: refused: member a: …
+base/pin	m3/check/joint	j_bytes.tally	E §3.1 step 1: a pin by bytes read as canonical: LOAD-PIN
+paths/pin-bytes	m3/check/joint	j_bytes.tally --pin=bytes	OPERATIONS §2.1 inputs: --pin=bytes takes the pin by bytes: `ok`
+scenario/one	m3/check	model.tally s_a_zulu.tally	§2.3: a refused scenario's line; its own ask prints nothing; exit 1
+scenario/path-order	m3/check	model.tally s_b_alpha.tally s_a_zulu.tally	§2.3 (P4, #228): two refused scenarios in their files' full-path order (zulu's file first), not by id
+scenario/over-refused	m3/check	model.tally s_a_zulu.tally s_c_upper.tally	L §8, E §11: a scenario over a refused one is refused too (Q4)
+scenario/over-nothing	m3/check	model.tally s_d_lost.tally	L §6.4: over names neither the model nor a scenario (LOAD-SCENARIO)
+scenario/cycle	m3/check	model.tally s_e_cy1.tally s_e_cy2.tally	L §6.4: an over cycle (LOAD-SCENARIO)
+scenario/deep	m3/check	model.tally s_f_d1.tally s_f_d2.tally s_f_d3.tally s_f_d4.tally s_f_d5.tally	L §6.4: a stack deeper than 4 (LOAD-SCENARIO)
+scenario/twice	m3/check	model.tally s_g_twin1.tally s_g_twin2.tally	L §6.4: one scenario declared twice (LOAD-SCENARIO)
+alone/plain	m3/check	model.tally alone.tally	§2.3: asks refused alone, by id (q_aa before q_zz, against the file's order); exit 1
+alone/forms	m3/check	model.tally alone_forms.tally	L §6.4: a world not loaded named by diff's against, a scenario pin, as if
+alone/with-scenario	m3/check	model.tally s_fine.tally alone.tally	§2.3: asks refused alone beside a scenario that loads
+alone/scenario-file	m3/check	model.tally s_h_other.tally	§2.3: asks in a loaded scenario's file naming worlds not loaded
+alone/same-id	m3/check	model.tally s_j_third.tally s_h_other.tally	§2.3 (P5, #228): one id refused alone in two scenarios' files: by id, then the file's full path
+alone/covered	m3/check	model.tally s_a_zulu.tally asks_zulu.tally	§2.3: an ask in a refused scenario's world is covered by its scenario's line
+sections/all	m3/check	model.tally unread.tally s_a_zulu.tally alone.tally	§2.3: the scenario lines, then the asks refused alone, then the warnings; exit 1
+notclean/clock	m3/check	model.tally clock.tally	§2.3: `ok` isn't a clean run: run refuses REQ-CLOCK
+notclean/hole	m3/check	model.tally hole.tally	§2.3: `ok` isn't a clean run: run answers a hole
+notclean/pervalue	m3/check	model.tally pervalue.tally	§2.3: `ok` isn't a clean run: run refuses a value
+notclean/paths	m3/check	model.tally paths.tally	§2.3: `ok` isn't a clean run: run refuses REQ-PATHS
+paths/nested	m3/check	nest	OPERATIONS §2, E §3.1 step 1: a directory's files by full path: the first refusal by full path (nest/a/y.tally)
+paths/household	../spec/amendments	household/	#226's example: the household as a directory
+usage/ask	m3/check	model.tally --ask q	P3 (#228): check takes no ask: a usage error, exit 2 (its words are the engine's)
+operations/question	m3/mini	reality.tally question.tally	OPERATIONS §3.1, §7: the small model and §3.1's asks load: ok
+operations/bolt	m3/mini	reality.tally question.tally bolt.tally	OPERATIONS §3.3 CHG-1: a fact added in a new file: ok
+operations/scenario	m3/mini	reality.tally acme_stops.tally	OPERATIONS §3.4 SCN-1: a scenario with no replace over a keyless row: ok
+operations/statement	m3/mini	reality.tally statement.tally	OPERATIONS §3.5 IMP-1: a statement as rows: ok
+operations/known	m3/mini	early/reality.tally statement.tally	OPERATIONS §3.3 CHG-7: the statement before on moves: LOAD-KNOWN (statement.tally:6)
+operations/worked	m3/mini/w	../reality.tally ../more.tally acme_stops.tally	OPERATIONS §7's worked output: the scenario's LOAD-REPLACE line, the unread input's warning; exit 1
+operations/name	m3/mini	reality.tally txt_name.tally	OPERATIONS §3.2 TXT-3: a name that is no id is refused at load
+operations/dup	m3/mini	reality.tally question.tally question_dup.tally	OPERATIONS §3.1 ASK-2: an ask's id must be new: LOAD-DUP
+operations/law	m3/mini	reality.tally pit.tally	OPERATIONS §3.6 LAW-1: a law part with its check ask: ok
+reviews/same-id-order	m3/check	model.tally n1/a/s2.tally n1/z/s1.tally	G2 review N-1, P5 (#228): one id refused alone in two scenario files whose path order (a/s2 first) differs from their scenarios' id order (s1 first)
+reviews/twin-placed	m3/check	model.tally p12/b/t1.tally p12/c/lost.tally p12/d/t2.tally	G2 review N-9, P12 (#228): a scenario declared in two files is placed by its first file in full-path order (b/ before c/'s refused alpha)
+reviews/narrowed	m3/check/narrow	m.tally s.tally	#232's second case, P19: a scenario's moves line narrows a register's coverage and leaves a standing observation outside it (LOAD-COVERS on the engine after G3)
+reviews/stacked-covers	m3/fixes/g3/st	base.tally late.tally mv.tally	G3 review B-1, OPERATIONS §2.1, L §8 (#232): a scenario over one refused LOAD-COVERS (P19) is refused with it, after it
+reviews/stacked-unit	m3/fixes/g3/st	base.tally bad.tally over_bad.tally	G3 review B-1's control: a scenario over one refused LOAD-UNIT is refused with it

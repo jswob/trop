@@ -1,0 +1,76 @@
+model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+input back_day: date
+
+input zero: int
+
+input one_amt: money PLN
+
+input gap_day: date
+
+input d_open: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move shut[p in accounts on d_open where act_day > back_day]: transfers
+  on act_day
+  at lifespan(p).to
+  leg cash from p to landlord amount back_amt
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version v2
+  cite plan
+  governs 2026..
+  known 2026-03-15
+  replace rent_amt = 950.00 PLN "raise"
+
+version day
+  cite plan
+  governs always
+  known 2026-01-01
+  act_day = 2026-04-05
+  back_day = 2026-04-20
+
+version fixed
+  cite plan
+  governs always
+  known 2026-01-01
+  zero = 0
+  one_amt = 1.00 PLN
+  d_open = 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "w"
+
+ask q: bal(spare, 2026-06-30) law cut
+ask q2: bal(konto, 2026-05-31) law cut

@@ -1,0 +1,5 @@
+part clock
+  tally 2
+  note "an ask whose cut is after on: run refuses the request (REQ-CLOCK), load doesn't"
+
+ask q_clock: doubled law 2026-03-01 as known 2026-06-01

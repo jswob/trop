@@ -1,11 +1,13 @@
 //! The `tally` command as a function, `run(args, files) -> Output`, which the binary and T's
 //! runner both call.
 //! Spec: E §1 (the run function); L §8.3 (`LOAD-PATH`, and `LOAD-PARSE` for bytes);
-//! engine/tests/INTERFACE.md §1–§4 (commands, reading, output, the file table).
+//! engine/tests/INTERFACE.md §1–§4, §9 (commands, reading, output, the file table, `check`);
+//! OPERATIONS §2.3 (`check`).
 //! Twin: engine/tools/refcore/cli.py (`main`, `command_lines`, `run_paths`),
 //! engine/tools/refcore/loader.py (`collect`) and joint.py (`use_member_files`).
 //! Invariants: pure, no I/O (R-39); everything is printed to standard output; the exit is 0
-//! answered, 1 refused, 2 usage, 74 a failed write, never 101 (a panic) or 134 (an abort).
+//! answered, 1 refused, 2 usage, 74 a failed write, never 101 (a panic) or 134 (an abort);
+//! `check` exits 0 only when its first line is `ok`, else 1.
 //!
 //! The file table is netstrings (`<decimal length>:<bytes>,`), a path then its bytes, pair
 //! after pair (INTERFACE §4). A path in the arguments is a key of the table, or a directory
@@ -20,7 +22,7 @@ use std::collections::BTreeMap;
 use std::ffi::OsString;
 
 /// The library, re-exported for T's runner and nothing else: the fence test `m1_lows` calls
-/// `tally_cli::tally::run_with_lows` to run each record under both of F5's forms (pick P57),
+/// `tally_cli::tally::run_with_how` to run each record under both of F5's forms (pick P57),
 /// with no dependency of its own on `tally` (pick P59).
 pub use tally;
 
@@ -48,6 +50,7 @@ pub const EXIT_IO: u8 = 74;
 
 /// The usage text, printed to standard output with [`EXIT_USAGE`].
 const USAGE: &str = "usage: tally run <path>... [--pin=bytes] [--ask <id>...]\n       \
+                     tally check <path>... [--pin=bytes]\n       \
                      tally reprint <path>...\n";
 
 /// One file of the reality as the binary reads it: its path as the run names it, and its bytes.
@@ -66,8 +69,17 @@ enum Command {
     Run {
         /// The paths, in the order given.
         paths: Vec<String>,
-        /// The asks and the pin's form.
+        /// The asks.
         request: tally::Request,
+        /// How a `use` line's pin is taken.
+        pin: tally::Pin,
+    },
+    /// `check <path>… [--pin=bytes]`: what load prints, no ask answered (OPERATIONS §2.3).
+    Check {
+        /// The paths, in the order given.
+        paths: Vec<String>,
+        /// How a `use` line's pin is taken.
+        pin: tally::Pin,
     },
     /// `reprint <path>…`: each file's canonical text and the reality's hash.
     Reprint {
@@ -98,22 +110,27 @@ pub fn run(args: &[OsString], files: &[u8]) -> Output {
 }
 
 /// [`run`] with `fault` planted in the engine, its twin for the fixture of `ENGINE-INVARIANT`
-/// (INTERFACE §4, pick P8): a `run` command answered by [`tally::run_faulted`]; any other
-/// command as [`run`] answers it, since only a run walks. Only with the `fault-injection`
-/// feature.
+/// (INTERFACE §4, pick P8): a `run` command answered by [`tally::run_with_how`] with the fault
+/// in its [`tally::How`]; any other command as [`run`] answers it, since only a run walks.
+/// Only with the `fault-injection` feature.
 #[cfg(feature = "fault-injection")]
 #[must_use]
 pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Output {
-    let Some(Command::Run { paths, request }) = parse(args) else {
+    let Some(Command::Run {
+        paths,
+        request,
+        pin,
+    }) = parse(args)
+    else {
         return command(args, files);
     };
-    let Ok(table) = table(files) else {
-        return bad_table();
+    let how = tally::How {
+        fault: Some(fault),
+        ..tally::How::FENCES
     };
-    let given = resolve(&paths, &table);
-    match tally::run_faulted(given, &request, fault) {
+    match engine_run((&paths, pin), &request, files, how) {
         Ok(answer) => answered(&answer),
-        Err(tally::NotImplemented) => not_implemented("run"),
+        Err(output) => output,
     }
 }
 
@@ -121,14 +138,20 @@ pub fn run_faulted(args: &[OsString], files: &[u8], fault: tally::Fault) -> Outp
 /// or all 0 for a command that runs no engine (D4-8).
 #[cfg(feature = "counters")]
 fn counted(args: &[OsString], files: &[u8]) -> Output {
-    let Some(Command::Run { paths, request }) = parse(args) else {
+    let Some(Command::Run {
+        paths,
+        request,
+        pin,
+    }) = parse(args)
+    else {
         let mut output = command(args, files);
         output
             .stderr
             .extend_from_slice(tally::Counters::default().line().as_bytes());
         return output;
     };
-    let (mut output, counts) = match engine_run(&paths, &request, files) {
+    let (mut output, counts) = match engine_run((&paths, pin), &request, files, tally::How::FENCES)
+    {
         Ok(answer) => {
             let c = answer.counters();
             (answered(&answer), format!("{}{}", c.line(), c.defs_line()))
@@ -144,7 +167,9 @@ fn counted(args: &[OsString], files: &[u8]) -> Output {
 #[must_use]
 pub fn paths(args: &[OsString]) -> Vec<String> {
     match parse(args) {
-        Some(Command::Run { paths, .. } | Command::Reprint { paths }) => paths,
+        Some(
+            Command::Run { paths, .. } | Command::Check { paths, .. } | Command::Reprint { paths },
+        ) => paths,
         None => Vec::new(),
     }
 }
@@ -211,9 +236,32 @@ fn netstring(table: &mut Vec<u8>, bytes: &[u8]) {
 /// One command, read from the arguments and answered.
 fn command(args: &[OsString], files: &[u8]) -> Output {
     match parse(args) {
-        Some(Command::Run { paths, request }) => run_paths(&paths, &request, files),
+        Some(Command::Run {
+            paths,
+            request,
+            pin,
+        }) => run_paths((&paths, pin), &request, files),
+        Some(Command::Check { paths, pin }) => check_paths(&paths, pin, files),
         Some(Command::Reprint { paths }) => reprint_paths(&paths, files),
         None => usage(),
+    }
+}
+
+/// `check` (OPERATIONS §2.3): the paths resolved against the table as `run` resolves them,
+/// then load alone; exit 0 only when the first line is `ok`, else 1.
+fn check_paths(paths: &[String], pin: tally::Pin, files: &[u8]) -> Output {
+    let files = match engine_files(paths, pin, files) {
+        Ok(files) => files,
+        Err(output) => return output,
+    };
+    match tally::check(files) {
+        Ok(answer) => {
+            let mut output = answered(&answer);
+            let ok = answer.lines().first().is_some_and(|line| line == "ok");
+            output.code = if ok { EXIT_ANSWERED } else { EXIT_REFUSED };
+            output
+        }
+        Err(tally::NotImplemented) => not_implemented("check"),
     }
 }
 
@@ -253,16 +301,44 @@ fn bad_table() -> Output {
 
 /// The command line as refcore's `command_lines` reads it: after `run`, every word before
 /// `--ask` that isn't `--pin=…` is a path, every word after it an ask id, and `--pin=…` may
-/// stand anywhere. None for any other command, or a word that isn't UTF-8.
+/// stand anywhere; after `check`, the same with no `--ask`. None for any other command, a
+/// `check` given an ask (pick P3), or a word that isn't UTF-8.
 fn parse(args: &[OsString]) -> Option<Command> {
     let words: Vec<&str> = args.iter().map(|arg| arg.to_str()).collect::<Option<_>>()?;
     let (first, rest) = words.split_first()?;
     match *first {
         "run" => Some(run_line(rest)),
+        "check" => check_line(rest),
         "reprint" => Some(Command::Reprint {
             paths: rest.iter().map(|word| (*word).to_owned()).collect(),
         }),
         _ => None,
+    }
+}
+
+/// The words after `check`: its paths and `--pin=…`; none with `--ask`, a usage error
+/// (OPERATIONS §2.3, pick P3).
+fn check_line(words: &[&str]) -> Option<Command> {
+    let mut paths = Vec::new();
+    let mut pin = tally::Pin::Canonical;
+    for word in words {
+        if *word == "--ask" {
+            return None;
+        }
+        match word.strip_prefix("--pin=") {
+            Some(form) => pin = pin_form(form),
+            None => paths.push((*word).to_owned()),
+        }
+    }
+    Some(Command::Check { paths, pin })
+}
+
+/// The pin's form a `--pin=` word names: refcore acts only on `bytes` (INTERFACE §8, gap I-4).
+fn pin_form(form: &str) -> tally::Pin {
+    if form == "bytes" {
+        tally::Pin::Bytes
+    } else {
+        tally::Pin::Canonical
     }
 }
 
@@ -276,12 +352,7 @@ fn run_line(words: &[&str]) -> Command {
         if *word == "--ask" {
             after_ask = true;
         } else if let Some(form) = word.strip_prefix("--pin=") {
-            // refcore acts only on `bytes` (INTERFACE §8, gap I-4)
-            pin = if form == "bytes" {
-                tally::Pin::Bytes
-            } else {
-                tally::Pin::Canonical
-            };
+            pin = pin_form(form);
         } else if after_ask {
             asks.push((*word).to_owned());
         } else {
@@ -295,34 +366,46 @@ fn run_line(words: &[&str]) -> Command {
     };
     Command::Run {
         paths,
-        request: tally::Request {
-            asks,
-            pin,
-            days: tally::Days::Events,
-        },
+        request: tally::Request::new(asks),
+        pin,
     }
 }
 
 /// `run`: the paths resolved against the table, then the engine.
-fn run_paths(paths: &[String], request: &tally::Request, files: &[u8]) -> Output {
-    match engine_run(paths, request, files) {
+fn run_paths(paths: (&[String], tally::Pin), request: &tally::Request, files: &[u8]) -> Output {
+    match engine_run(paths, request, files, tally::How::FENCES) {
         Ok(answer) => answered(&answer),
         Err(output) => output,
     }
 }
 
-/// The engine's answer for `run`, or the output of a run that gives none: a file table that
-/// isn't netstrings, or a construct the engine doesn't build yet.
+/// The engine's answer for `run`, computing as `how` says, or the output of a run that gives
+/// none: a file table that isn't netstrings, or a construct the engine doesn't build yet.
 fn engine_run(
-    paths: &[String],
+    (paths, pin): (&[String], tally::Pin),
     request: &tally::Request,
     files: &[u8],
+    how: tally::How,
 ) -> Result<tally::Answer, Output> {
+    let files = engine_files(paths, pin, files)?;
+    tally::run_with_how(files, request, how).map_err(|tally::NotImplemented| not_implemented("run"))
+}
+
+/// What the engine is given (E §1): the paths resolved against the file table, the table
+/// itself, where a joint model's members are found, and the pin's form; the output of a file
+/// table that isn't netstrings.
+fn engine_files(paths: &[String], pin: tally::Pin, files: &[u8]) -> Result<tally::Files, Output> {
     let Ok(table) = table(files) else {
         return Err(bad_table());
     };
-    let given = resolve(paths, &table);
-    tally::run_in(given, &table, request).map_err(|tally::NotImplemented| not_implemented("run"))
+    Ok(tally::Files {
+        given: resolve(paths, &table),
+        table: table
+            .iter()
+            .map(|(path, bytes)| ((*path).to_owned(), bytes.to_vec()))
+            .collect(),
+        pin,
+    })
 }
 
 /// The file table read into a map from path to bytes.
@@ -603,6 +686,45 @@ mod tests {
             run(&args(&["run"]), b"1:a").code,
             EXIT_USAGE,
             "a table that isn't netstrings"
+        );
+    }
+
+    #[test]
+    fn check_prints_ok_or_its_lines_and_takes_no_ask() {
+        let alone = [MODEL, b"\nask q: 1 in nowhere\n"].concat();
+        assert_eq!(
+            out(&["check", "m.tally"], &[("m.tally", MODEL)]),
+            ("ok\n".to_owned(), super::EXIT_ANSWERED),
+            "everything loads"
+        );
+        assert_eq!(
+            out(&["check", "m.tally", "--pin=bytes"], &[("m.tally", &alone)]),
+            (
+                "q: refused: LOAD-SCENARIO ask q names nowhere, neither the model nor a loaded \
+                 scenario (m.tally:7)\n"
+                    .to_owned(),
+                EXIT_REFUSED
+            ),
+            "an ask refused alone: exit 1"
+        );
+        assert_eq!(
+            out(&["check", "nope.tally"], &[]),
+            (
+                "refused: LOAD-PATH nope.tally doesn't exist\n".to_owned(),
+                EXIT_REFUSED
+            ),
+            "a base's refusal"
+        );
+        for words in [
+            &["check", "m.tally", "--ask", "q"][..],
+            &["check", "--ask", "m.tally"],
+        ] {
+            assert_eq!(out(words, &[]).1, EXIT_USAGE, "{words:?}: pick P3");
+        }
+        assert_eq!(
+            paths(&args(&["check", "a", "--pin=bytes", "b"])),
+            ["a", "b"],
+            "check takes paths"
         );
     }
 

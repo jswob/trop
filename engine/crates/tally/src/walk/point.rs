@@ -73,7 +73,9 @@ pub struct At {
     /// The act's rank inside its step: a move's place among the moves, a reading's among the
     /// readings.
     pub rank: u32,
-    /// The instance's place among its move's instances that day.
+    /// The instance's place among its move's instances that day; in an unordered cycle, 0 is
+    /// the act's own point and each instance's is its place across the cycle's moves plus 1
+    /// (`cycle_instance`).
     pub n: u32,
     /// The sub-step: an act's own entries at 0, what follows it at its point after.
     pub sub: u32,
@@ -197,6 +199,25 @@ impl At {
     #[must_use]
     pub fn with_sub(self, sub: u32) -> At {
         At { sub, ..self }
+    }
+
+    /// The point of an unordered cycle's instance `seq`, from 0, run at this act: after the
+    /// act's own point, where the act reads every instance's `when` before any runs
+    /// (refcore's `run_group`: the act keyed by the cycle's first move, each instance by
+    /// `first|seq|move` after it). None past `u32`. E §4.2 step 3, §10; L §5.14.2 (Cycles).
+    #[must_use]
+    pub fn cycle_instance(self, seq: u32) -> Option<At> {
+        Some(At {
+            n: seq.checked_add(1)?,
+            ..self
+        })
+    }
+
+    /// An unordered cycle's instance's place in its run, from its point: the inverse of
+    /// [`At::cycle_instance`]; none at the act's own point. E §4.2 step 3, L §5.14.2.
+    #[must_use]
+    pub fn cycle_seq(self) -> Option<u32> {
+        self.n.checked_sub(1)
     }
 
     /// The last point before this one in the walk's order: a balance read there sees every

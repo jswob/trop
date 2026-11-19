@@ -7,9 +7,10 @@
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
 //! registers while it counts; a read of a projection's walk reads the walks it continues
 //! through the point each continues from.
-use super::plan::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status, invariant, qty_value};
+use super::instance::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status};
+use super::plan::{invariant, qty_value};
 use super::point::At;
-use super::reads::{Sees, expr_text, refuse};
+use super::reads::{Sees, refuse};
 use super::state::{ALL, Change, Ent, Walk};
 use crate::base::Run;
 use crate::eval::{Collected, Ctx, Engine, Env};
@@ -42,11 +43,9 @@ impl Engine {
             Some((name, posts)) => m.moves.get(name).map(|mv| (mv, posts)),
             None => None,
         };
+        // the hole names the target as written, its keys and field too (L §8.1)
         if sp.start().is_none_or(|s| s < m.start) {
-            let figure = match named {
-                Some((mv, _)) => mv.id.clone(),
-                None => expr_text(&f.target)?,
-            };
+            let figure = crate::load::expr_text(&f.target);
             return Ok(Value::Hole(Hole::before_run(&figure)));
         }
         // `, for k`: only the movements for period k (L §5.14.3); a hole k is the line's

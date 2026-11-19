@@ -1,0 +1,14 @@
+part statements_2026_10
+  tally 2
+
+source bank_2026_10 "Wyciąg z konta, październik 2026"
+
+version statement_2026_10
+  cite bank_2026_10
+  governs 2026-10
+  known 2026-11-02
+  covers konto
+  anchor konto
+  bank[r1] = (on: 2026-10-10, kind: wages, leg cash from world to konto amount 7 000.00 PLN, fulfils: wage[2026-10, acme]) "line 1"
+  bank[r2] = (on: 2026-10-12, kind: transfers, leg cash from konto to world amount 120.00 PLN) "line 2"
+  stated[konto] = 7 900.00 PLN at 2026-10-31 end "saldo końcowe"

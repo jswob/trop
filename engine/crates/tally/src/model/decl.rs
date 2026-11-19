@@ -1,16 +1,20 @@
 //! Declarations and what versions state for them: inputs and their rows, defs and their rules, bands, places, moves, observations.
 //! Spec: L §5.6 (key binds), §5.8 (inputs), §5.9 (bands), §5.10 (places), §5.11 (defs and
-//! rules), §5.14 (moves), §5.19 (observations), §4.6 (rows: pattern, span, known, instant).
+//! rules), §5.14 (moves), §5.19 (observations; balance readings, typed per place), §4.6 (rows:
+//! pattern, span, known, instant).
 //! Twin: engine/tools/refcore/model.py (`BindInfo`, `InputInfo`, `RuleVer`, `DefInfo`,
 //! `Table`, `BandRow`, `BandInfo`, `PlaceInfo`, `MoveInfo`, `ObsRow`, `Row`).
 //! Invariants: a row's pattern has one position per key bind of its target; a rule's
-//! versions are kept in the order versions state them.
+//! versions are kept in the order versions state them; a balance reading's row names its
+//! place, a day's start or end, and its place's one unit.
 
 use super::graph::Target;
 use super::key::{KeyVal, Pat, Span};
 use super::ty::Ty;
 use crate::num::Num;
-use crate::syntax::{Bind, Def, FieldValue, Instant, Lit, Move, Place, Price, Rule, RuleValue};
+use crate::syntax::{
+    Bind, Def, Edge, FieldValue, Instant, Lit, Move, Place, Price, Rule, RuleValue,
+};
 use crate::syntax::{LawDate, OfRow, Value};
 use crate::time::{Day, Period};
 
@@ -85,6 +89,34 @@ pub struct Row {
     /// `of q`: a stated part of a balance reading, kept beside the readings and never a total
     /// (refcore's `row.of`). L §5.19.
     pub of: Option<OfRow>,
+}
+
+/// A place's balance readings, typed at load: the unit and type a reading of it states, and
+/// its `opening` and `stated` rows, each with its day and edge. Load refuses a reading that
+/// names no place, one at a place of unit `any`, and one at no start or end of a day, and a
+/// place of the model holds one unit (L §5.19, §4.6 Readings, §5.10; tally 2.2, S-1, S-3).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlaceReadings {
+    /// The place's unit.
+    pub unit: String,
+    /// A reading's type: money in a currency, else a quantity of the unit.
+    pub ty: Ty,
+    /// Its rows: the `opening` rows, then the `stated` rows, each in the order written.
+    pub rows: Vec<BalanceRow>,
+}
+
+/// A balance reading's row with its input and its instant, a day's start or end (L §4.6
+/// Readings, §5.19).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BalanceRow {
+    /// Its input: `opening` or `stated`.
+    pub input: String,
+    /// Its day.
+    pub day: Day,
+    /// The start or the end of its day.
+    pub edge: Edge,
+    /// The row.
+    pub row: Row,
 }
 
 /// An input (refcore's `InputInfo`).
@@ -297,6 +329,9 @@ pub struct MoveInfo {
     pub changes: Vec<Target>,
     /// Whether it is a decision that reads a place it changes itself.
     pub self_reads: bool,
+    /// The positions of its keys whose `where` reads a law-dated fact, as load's law-date
+    /// check finds them: each is read at its tuple's `at` (L §4.3, E §4.1 step 1; P30).
+    pub dated_wheres: Vec<usize>,
     /// The section as written.
     pub decl: Move,
 }

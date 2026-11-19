@@ -17,7 +17,8 @@ use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::day::ends;
-use super::plan::{Amount, Dated, End, Exists, Inst, Status, invariant, kind_certainty};
+use super::instance::{Amount, Dated, End, Exists, Inst, Status};
+use super::plan::{invariant, kind_certainty};
 use super::point::At;
 use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};
@@ -141,7 +142,9 @@ impl Engine {
         let start = self.today(id)?.next_inst;
         for (n, item) in items.into_iter().enumerate().skip(start) {
             let n32 = u32::try_from(n).map_err(|_| invariant("an instance's rank"))?;
-            let key = At { n: n32, ..at };
+            let key = at
+                .cycle_instance(n32)
+                .ok_or_else(|| invariant("an instance's rank"))?;
             match item.refused {
                 Some(err) => {
                     self.refused_run(m, id, item.inst, key, (err, item.changes, &item.met))?;
@@ -1250,8 +1253,7 @@ fn refuse(code: RunCode, message: String) -> Stop {
 
 #[cfg(test)]
 mod tests {
-    use crate::Days;
-    use crate::api::{Asks, Given, Pin, Request, run};
+    use crate::api::{Asks, Files, Given, Request, run};
 
     /// Two decisions over three months whose key's `where` is refused in February (a
     /// division by zero): `split`'s body is answered there, `spill`'s refused too, by its
@@ -1331,12 +1333,8 @@ version openings
             path: "where.tally".to_owned(),
             bytes: Some(REFUSED_WHERE.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Named(vec!["q_bal".to_owned()]),
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let answer = run(given, &request).expect("an answer");
+        let request = Request::new(Asks::Named(vec!["q_bal".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
         let values: Vec<&str> = answer
             .lines()
             .iter()

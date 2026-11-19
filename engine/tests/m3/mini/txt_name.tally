@@ -1,0 +1,5 @@
+part names
+  tally 2
+  note "TXT-3 (OPERATIONS §3.2): a name that is no id"
+
+ask q_kotno: bal(kotno, 2026-10-31)

@@ -49,7 +49,8 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{left_out_day, left_out_lines, one_more_left_out};
-use super::plan::{Amount, Dated, End, Exists, Inst, LegVal, Status, invariant, qty_value};
+use super::instance::{Amount, Dated, End, Exists, Inst, LegVal, Status};
+use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::readings::place_sign;
 use super::state::St;

@@ -19,7 +19,7 @@ use super::across::{
 };
 use super::check::{Files, ShiftRead, walk};
 use super::cone::{check_path_lines, finish_random};
-use super::lawdates::{check_lawdates, check_move_lawdates};
+use super::lawdates::{check_lawdates, check_move_lawdates, dated_wheres};
 use super::parts::{arrival_reads, parts_walk_bound};
 use super::pins::{ask_files, check_forks};
 use super::srows::check_srow_reads;
@@ -89,11 +89,16 @@ impl Loader {
         self.m.graph = graph;
         self.strata()?;
         arrival_reads(&self.m, &self.m.graph, &files)?;
-        check_seen_days(&self.m, &walked.day_reads, &files)?;
-        check_seen_day_limits(&self.m, &files)?;
-        check_literal_ranges(&self.m, &files)?;
-        check_period_keys(&self.m, &walked.periods)?;
+        check_seen_days(&self.m, &walked.day_reads, &files, self.how)?;
+        check_seen_day_limits(&self.m, &files, self.how)?;
+        check_literal_ranges(&self.m, &files, self.how)?;
+        check_period_keys(&self.m, &walked.periods, self.how)?;
         check_move_lawdates(&self.m, &walked, &dated, &files)?;
+        for (id, keys) in dated_wheres(&self.m, &walked, &dated) {
+            if let Some(mv) = self.m.moves.get_mut(&id) {
+                mv.dated_wheres = keys;
+            }
+        }
         let random = finish_random(
             &self.m,
             &walked.queries,
@@ -101,10 +106,10 @@ impl Loader {
             &walked.draws,
             &files,
         )?;
-        check_proj_seen(&self.m, &walked.projs, &random)?;
+        check_proj_seen(&self.m, &walked.projs, &random, self.how)?;
         check_srow_reads(&self.m, &walked.srows, &walked.read_order)?;
-        check_schedules(&self.m, &files)?;
-        check_scenario_moves(&self.m, &files)?;
+        check_schedules(&self.m, &files, self.how)?;
+        check_scenario_moves(&self.m, &files, self.how)?;
         check_path_lines(&self.m, &walked.queries, &files)
     }
 

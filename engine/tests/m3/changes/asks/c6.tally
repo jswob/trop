@@ -1,0 +1,5 @@
+part m3_asks_c6
+  tally 2
+  note "T's def-level asks for change 6: the car loan's schedule by instalment (OPERATIONS §6.1 step 3, ASK-2)"
+
+ask c6_loan: annuity[car], instalment[car, k], principal_part[car, k], overpay_paid[car, k] for k in [1, 8, 9, 10, 40, 41, 47, 48] law cut

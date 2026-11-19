@@ -1,0 +1,48 @@
+model trace_answers
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+  note "T, M3 C7, #192 row 51 (G5 fix NB-3, trace_answers' stop keeps the answered list): explain over hole bookings a later version answers, the second answer refused RUN-DIV, and an explain before it"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+index mo = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+input amt[m in mo]: money PLN
+input dv[m in mo]: num
+
+move pay[m in mo]: transfers
+  on start_of(m)
+  leg cash from konto to shop amount round(amt[m] / dv[m], minor(PLN), down)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[2026-01] = 10.00 PLN
+  amt[2026-02] = ?"how much in February?"
+  amt[2026-03] = ?"how much in March?"
+  dv[2026-01] = 1
+  dv[2026-02] = 1
+  dv[2026-03] = 1
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+version ans
+  cite s
+  governs always
+  known 2026-04-10
+  replace amt[2026-02] = 20.00 PLN
+  replace amt[2026-03] = 30.00 PLN
+  replace dv[2026-03] = 0
+
+ask e: explain bal(konto, 2026-03-31)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(pay, 2026-01-01 .. 2026-03-31)
+ask e2: explain bal(konto, 2026-02-28)
+ask k: bal(konto, 2026-03-31) as known 2026-04-09

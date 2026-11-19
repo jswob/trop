@@ -21,16 +21,15 @@ mod counters;
 mod invariant;
 mod oracle;
 
-#[cfg(feature = "fault-injection")]
-pub use api::run_faulted;
 pub use api::{
-    Answer, Asks, Given, Pin, Request, Source, load_report, reprint, reprint_in, run, run_in,
-    run_with_forks, run_with_how, run_with_lows, run_with_memo,
+    Answer, Asks, Files, Given, Pin, Request, Source, check, load_report, reprint, reprint_in, run,
+    run_with_how,
 };
 #[cfg(feature = "counters")]
 pub use counters::Counters;
 #[cfg(feature = "counters")]
 pub(crate) use counters::Unit;
+pub use eval::How;
 pub use oracle::Days;
 #[cfg(feature = "fault-injection")]
 pub use walk::Fault;
@@ -116,8 +115,9 @@ pub mod model {
     mod world;
 
     pub use decl::{
-        BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo, MoveInfo,
-        ObsLeg, Observation, PlaceInfo, Row, RuleVer, Table as BandTable, TimePos,
+        BalanceRow, BandEnd, BandInfo, BandRow, BindInfo, DefInfo, Domain, Fulfils, InputInfo,
+        MoveInfo, ObsLeg, Observation, PlaceInfo, PlaceReadings, Row, RuleVer, Table as BandTable,
+        TimePos,
     };
     pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
@@ -128,8 +128,8 @@ pub mod model {
     pub use key::{KeyVal, Pat, RangeValue, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
-        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
-        price_fields, price_id,
+        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAlone, MemberAsks, NameKind, Priced, Reality,
+        SamePair, price_fields, price_id,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
@@ -183,10 +183,10 @@ pub mod eval {
     mod windows;
     mod years;
 
-    pub(crate) use aggregate::Decided;
     pub use aggregate::Member;
+    pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
-    pub(crate) use bindings::{names_in, order_text, reads_name};
+    pub(crate) use bindings::{names_in, order_text, reads_name, reads_var};
     pub use context::Layer;
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
@@ -199,7 +199,7 @@ pub mod eval {
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
     pub use stack::Item;
-    pub use state::{Collected, Ctx, Engine, Entry, Env, RowSeen, Rows};
+    pub use state::{Collected, Ctx, Engine, Entry, Env, How, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use time_arith::periods_of;
     pub(crate) use timelines::combinations;
@@ -216,9 +216,12 @@ pub mod eval {
 /// (gate 8); the module's code is its files under `walk/`.
 pub mod walk {
     mod agenda;
+    mod body;
     mod day;
+    mod ends;
     mod flows;
     mod fork;
+    mod instance;
     mod legs;
     mod lows;
     mod modelled;
@@ -239,19 +242,20 @@ pub mod walk {
     pub use day::Fault;
     pub use fork::Forks;
     pub(crate) use fork::Parked;
+    pub use instance::{
+        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, Depends, End, Exists, Inst, LegVal,
+        Order, Seed, Status, Term,
+    };
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
     pub use order::{Run, WalkAt};
-    pub use plan::{
-        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, Depends, End, Exists, Inst, LegVal,
-        Order, Seed, Status, Term, kind_certainty, qty_value,
-    };
     pub(crate) use plan::{invariant, quantity};
+    pub use plan::{kind_certainty, qty_value};
     pub use point::{At, Step};
     pub use projection::ProjKey;
     pub(crate) use projection::lowest_shape;
     pub use readings::Broke;
-    pub(crate) use reads::state_value;
+    pub(crate) use reads::{place_of, state_value};
     pub(crate) use state::GapAt;
     pub use state::{
         ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,
@@ -272,6 +276,7 @@ pub mod book {
     mod observe;
     mod reading;
     mod same;
+    mod same_booking;
     mod settle;
 
     pub(crate) use adjust::hole_booked_before;
@@ -283,7 +288,7 @@ pub mod book {
     pub use reading::{Pad, Seen, reading_rank};
     pub(crate) use reading::{first_readings, gap_text, instant_text, readings};
     pub use same::{Groups, kept_once, once_obs, same_differ};
-    pub(crate) use same::{Member, Waiting};
+    pub(crate) use same_booking::{Member, Waiting};
     pub(crate) use settle::settlement_move;
 }
 
@@ -296,16 +301,18 @@ pub mod ask {
     mod diff;
     mod explain;
     mod instance;
+    mod members;
     mod register;
     mod residuals;
     mod walkbound;
     mod walked;
     mod worlds;
 
-    pub use answer::{Answered, How, answer};
+    pub use crate::eval::How;
+    pub use answer::{Answered, answer};
     pub use register::{register_lines, warning_lines};
     pub(crate) use walked::plain_lines;
-    pub use worlds::{answer_worlds, report_lines};
+    pub use worlds::{answer_worlds, check_lines, report_lines};
 }
 
 /// Load (E §3.1 steps 1–4): the run's files split and told into worlds, the base and each
@@ -360,7 +367,7 @@ pub mod load {
     pub(crate) use joint::reprint_members;
     pub use keys::index_key_of;
     pub(crate) use keys::literal_end;
-    pub(crate) use pins::{forks_past_cap, reach_axes};
+    pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
     pub(crate) use texts::{children as expr_children, post_text, text as expr_text};

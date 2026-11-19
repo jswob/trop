@@ -1,0 +1,26 @@
+part pit_rules
+  tally 2
+  law
+
+source pit_act "Ustawa o PIT, art. 27"
+source pit_example "Przykład z objaśnień ministra finansów"
+
+input pit_rate: num
+input pit_expected: money PLN
+
+def pit[j in jobs, m in months]: money PLN at start_of(m)
+  rule base = round(salary[j, m] * pit_rate, 1 PLN, half-up)
+
+version pit_2026
+  cite pit_act
+  governs 2026..
+  known 2026-01-01
+  pit_rate = 12 % "art. 27 ust. 1"
+
+version pit_2026_example
+  cite pit_example
+  governs always
+  known 2026-01-01
+  pit_expected = 840.00 PLN "przykład 1"
+
+ask pit_check: check pit[acme, 2026-11] == pit_expected law 2026-11-01
