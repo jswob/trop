@@ -202,6 +202,11 @@ def steps(mode):
         ("special-casing", tool("special-casing"), {}),
         ("spec-loadcheck-selftest", ["python3", "-I", "-B", "spec/tools/loadcheck.py", "--selftest"], {}),
         ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py", *spec_realities()], {}),
+        # the fuzz targets compile against today's library, so a signature change can't break
+        # them unseen until CI's fuzz job (M3's pick P20, 2026-11-19); compile only, on the
+        # stable toolchain, in a target of its own
+        ("fuzz-build", ["cargo", "check", "--locked", "--manifest-path", "fuzz/Cargo.toml", "--bins",
+                        "--target-dir", "target/fuzz-build"], {}),
     ]
     if mode in ("quick", "commit"):
         quick = [*lint, ("tests", tests(mode), {}), ("milestone-report", milestone_report(["--cargo-profile", "quick"]), {})]
@@ -235,11 +240,14 @@ GROUPS = {
     "lint": ["fmt", "clippy-lib", "clippy-tests", "doc", "build", "gungraun-build", "exceptions", "check-frozen",
              "check-rules", "headers", "trace", "ast-grep-scan", "ast-grep-test", "deny", "deny-tally", "tree-probe",
              "special-casing", "spec-loadcheck-selftest", "spec-loadcheck", "guard-test"],
-    "dev-tests": ["runner", "gating", "milestone-report", "test-dev", "doctest"],
+    # the gating targets apart from the workspace's dev tests (the process study after M2,
+    # change 7, 2026-11-19): together they were CI's longest job, 16 to 22 minutes at M2's end
+    "dev-gating": ["runner", "gating", "milestone-report"],
+    "dev-tests": ["test-dev", "doctest"],
     "release-tests": ["test-release"],
     "release-gating": ["gating-release"],
     "release-binary": ["release-binary", "fault-injection-probe"],
-    "fuzz": ["fuzz"],
+    "fuzz": ["fuzz-build", "fuzz"],
 }
 SHARDED = "rules-selftest"
 # the shards beside the last, by rule, balanced on CI's per-case times (the check-speed

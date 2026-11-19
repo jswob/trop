@@ -115,7 +115,7 @@ BY_COVERAGE = {"R-25", "R-26", "R-46"}
 PR_STEPS = [
     "fmt", "clippy-lib", "clippy-tests", "doc", "build", "test-dev", "test-release", "deny", "deny-tally",
     "check-frozen", "spec-loadcheck", "guard-test", "rules-selftest", "check-rules", "exceptions",
-    "ast-grep-test", "ast-grep-scan", "fuzz", "fault-injection-probe",
+    "ast-grep-test", "ast-grep-scan", "fuzz", "fuzz-build", "fault-injection-probe",
     # T's tests of every gating milestone, in both profiles (tools/milestones.toml, issue #14)
     "gating", "gating-release",
 ]
@@ -975,9 +975,10 @@ def main():
         print(f"FAIL setup: the scratch repository: {e}")
         return 1
     with open(os.path.join(LOGS, "clean.log"), "w", encoding="utf-8") as log:
-        # the engine's crates and the gungraun benches' (R-77's gungraun case builds them):
-        # a CI shard runs alone, with no earlier step that fetched them (2026-11-13)
-        for manifest in ([], ["--manifest-path", "tools/gungraun/Cargo.toml"]):
+        # the engine's crates, the gungraun benches' and the fuzz targets' (R-77's gungraun
+        # and fuzz-build cases build them): a CI shard runs alone, with no earlier step that
+        # fetched them (2026-11-13; the fuzz targets' since 2026-11-19)
+        for manifest in ([], ["--manifest-path", "tools/gungraun/Cargo.toml"], ["--manifest-path", "fuzz/Cargo.toml"]):
             fetched = run(["cargo", "fetch", "--locked", *manifest], log, env(fetching=False) | {"CARGO_NET_OFFLINE": "false"})
             if fetched.returncode != 0:
                 print(f"FAIL setup: cargo fetch --locked {' '.join(manifest)} failed (see target/rules-selftest/logs/clean.log)")

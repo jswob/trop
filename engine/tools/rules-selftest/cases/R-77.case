@@ -122,6 +122,18 @@ const PLANTED: u8 = "a mismatched type";
 --- run
 tools/check step gungraun-build
 
+# The fuzz targets compile in `check commit` and in CI's fuzz job before they run (M3's pick
+# P20, 2026-11-19: a rules step's edit broke one, and only CI's fuzz job saw it)
+case: fuzz-target-broken
+tool: run
+expect: FAIL fuzz-build: error[E0308]
+--- append fuzz/fuzz_targets/load.rs
+
+/// Planted: a fuzz target that no longer compiles against the library, as P20's did.
+const PLANTED: u8 = "a mismatched type";
+--- run
+tools/check step fuzz-build
+
 # The logged red (the review after S, 2026-11-03, issue #8): commit-check takes a
 # commit's `Logged-Red:` lines only from T's re-run commit, followed on the branch by a
 # commit to engine/crates/. Each case commits in the scratch and takes the commits back.
@@ -267,6 +279,30 @@ expect: no matrix: 0 bytes
 tools/check groups
 tools/check groups --matrix > zz_matrix.txt || echo "no matrix: $(wc -c < zz_matrix.txt | tr -d ' ') bytes"
 
+# R-77 as amended 2026-11-19 (the process study after M2, change 7): T's gating targets run in
+# a job of their own, `dev-gating`, apart from the workspace's dev tests in `dev-tests`; the
+# two are two jobs of the matrix, and a gating step dropped from its group fails `groups`.
+case: groups-dev-gating-apart
+tool: run
+exit: any
+expect: dev-gating: runner gating milestone-report
+expect: dev-tests: test-dev doctest
+expect: "dev-gating", "dev-tests"
+--- run
+tools/check groups
+tools/check groups --matrix 2>/dev/null
+
+case: groups-dev-gating-dropped
+tool: run
+exit: any
+expect: FAIL groups: the step gating is in no group
+--- replace tools/check.py
+    "dev-gating": ["runner", "gating", "milestone-report"],
+--- with
+    "dev-gating": ["runner", "milestone-report"],
+--- run
+tools/check groups
+
 case: groups-step-twice
 tool: run
 expect: FAIL groups: the step fuzz is in 2 groups
@@ -281,8 +317,8 @@ case: groups-unknown-step
 tool: run
 expect: FAIL groups: the group step tests isn't a step of full
 --- replace tools/check.py
-    "fuzz": ["fuzz"],
+    "fuzz": ["fuzz-build", "fuzz"],
 --- with
-    "fuzz": ["fuzz", "tests"],
+    "fuzz": ["fuzz-build", "fuzz", "tests"],
 --- run
 tools/check groups

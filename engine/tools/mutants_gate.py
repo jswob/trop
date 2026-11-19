@@ -786,10 +786,23 @@ def slow_report(times, past):
 def make_next(out):
     """`next OUT`: the next milestone's tests unmutated, as `mutants-local --next` runs them
     (its next_targets); OUT gets the cargo arguments that add them and the nextest filter that
-    keeps those green there, with the green and the red. 1 when they can't be told."""
+    keeps those green there, with the green and the red. 1 when they can't be told. When the
+    next milestone has no test target yet (M3 on 2026-11-18, run 44408839033: the baseline
+    failed), OUT adds nothing, so the run counts the gating set as one without `next` does,
+    and a notice says so."""
     import mutants_local  # noqa: PLC0415  it imports this tool, so it is imported here, when used
 
     env = run_env()
+    try:
+        m, names = milestones.next_milestone(env)
+    except milestones.MilestoneError as e:
+        print(f"FAIL mutants-gate: next: {e}", file=sys.stderr)
+        return 1
+    if not names:
+        dump_json(out, {"milestone": m, "extra": [], "expr": None, "green": [], "red": []})
+        print(f"::notice title=R-88::{m or 'no milestone'} has no test target yet, so this dispatch with next "
+              "counts the gating set alone, as one without next does")
+        return 0
     added = mutants_local.next_targets(env)
     if added is None:
         return 1
