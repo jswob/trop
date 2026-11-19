@@ -5176,4 +5176,53 @@ ask q: bal(konto, 2026-04-30) law cut
             "the at reads a later key"
         );
     }
+
+    /// `flows` over a span that starts before the run's start: its hole names the target as
+    /// written, keys and field too, as refcore's `fmt_node` does (L §8.1; the review of G3's
+    /// turn 3, `n4.tally`).
+    #[test]
+    fn a_flows_hole_before_the_start_names_its_keys() {
+        let text = "model n4
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"s\"
+unit PLN: currency minor 0.01
+
+input rent_amt: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+
+move rent[m in months]: transfers
+  on start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+version base
+  cite s
+  governs always
+  known 2025-01-01
+  rent_amt = 2 800.00 PLN
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start \"w\"
+
+ask f1: flows(rent[2026-01], 2025-12-01 .. 2026-01-31)
+ask f2: flows(rent, 2025-12-01 .. 2026-01-31)
+ask f4: flows(rent[2026-01].cash, 2025-12-01 .. 2026-01-31)
+";
+        let heads: Vec<String> = answered(text)
+            .into_iter()
+            .filter(|line| line.starts_with('f'))
+            .collect();
+        assert_eq!(
+            heads,
+            [
+                "f1: ?\"before the run's start\" (rent[2026-01])",
+                "f2: ?\"before the run's start\" (rent)",
+                "f4: ?\"before the run's start\" (rent[2026-01].cash)",
+            ],
+            "refcore's lines"
+        );
+    }
 }

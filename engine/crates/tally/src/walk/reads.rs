@@ -937,16 +937,6 @@ pub(crate) fn place_of(m: &Reality, e: &Expr, v: Value) -> Result<Result<String,
     Err(refuse(Run::Domain, format!("{shown} is not a place")))
 }
 
-/// A flows target's text where a message names it (refcore's `fmt_node`). L §8.4.
-pub(super) fn expr_text(e: &Expr) -> Result<String, Stop> {
-    if let Expr::Name(n) = e {
-        return Ok(n.clone());
-    }
-    Err(Stop::NotBuilt(
-        "the text of an expression other than a name",
-    ))
-}
-
 /// A run-time refusal (L §8.4).
 pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
