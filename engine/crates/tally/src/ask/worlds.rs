@@ -1,13 +1,14 @@
-//! The asks of a reality with scenarios: each ask in the world it names, an ask whose
-//! scenario was refused printed refused with it, the worlds' warnings merged.
+//! The asks of a reality with scenarios, each in the world it names, its refused scenarios and warnings, and `check`'s lines.
 //! Spec: L §6.4 (asking a scenario: `in s`, `diff … in s against b`, a `{scenario s}` pin; two
 //! scenarios over one base each declare their own asks), §5.18, §8 (a scenario's refusal
 //! refuses only that scenario and those over it), §8.5 (an item is unread only where every
-//! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3).
+//! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3); OPERATIONS §2.3
+//! (`check`).
 //! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, its
-//! `unread_everywhere` and `asif_worlds`).
-//! Invariants: every id the run names is checked before any ask is answered; the refused
-//! scenarios print first, by id; the asks go by id, then by world, the base's first; an ask
+//! `unread_everywhere` and `asif_worlds`; `check_worlds`) and ask.py (`Asker.load_check`).
+//! Invariants: every id the run names is checked before any ask is answered; `run`'s refused
+//! scenarios print first, by id, `check`'s by their files' full paths; `check`'s asks refused
+//! alone go by id, then file, then line; the asks go by id, then by world, the base's first; an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
 //! others, each world under it seen with the layers over it hidden; the base's diff whose two
 //! worlds are on two stacks is answered side by side, each side in the reality holding its
@@ -18,7 +19,7 @@
 use super::answer::{Answered, Turn, answer_turns, no_ask};
 use super::register::warning_lines;
 use crate::Asks;
-use crate::base::Warn;
+use crate::base::{Refusal, Warn};
 use crate::eval::How;
 use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
@@ -71,7 +72,7 @@ pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<An
     let mut turns: Vec<Turn> = w
         .refused
         .iter()
-        .map(|(id, r)| Turn::Line(format!("scenario {id}: refused: {}", r.text())))
+        .map(|(id, r)| Turn::Line(scenario_line(id, r)))
         .collect();
     for ((_, world), (at, ask)) in order {
         if let Some(base_at) = at.filter(|_| w.base.asks_alone.contains_key(&ask.id)) {
@@ -216,12 +217,90 @@ pub fn report_lines(loaded: &Loaded) -> Vec<String> {
             let mut lines: Vec<String> = w
                 .refused
                 .iter()
-                .map(|(id, r)| format!("scenario {id}: refused: {}", r.text()))
+                .map(|(id, r)| scenario_line(id, r))
                 .collect();
             lines.extend(warning_lines(&merged_warnings(w)));
             lines
         }
     }
+}
+
+/// The lines `check` prints for a run's files that load (OPERATIONS §2.3; refcore's
+/// `load_check`, `check_worlds`): each refused scenario's line in the full-path order of its
+/// file (pick P4), then each ask refused alone, by id, then its file's full path, then its
+/// line (pick P5), the base's and each loaded scenario file's own; `ok` alone first when there
+/// is neither; then load's warnings, as `run` prints them. An ask in a refused scenario's
+/// world is covered by that scenario's line. L §6.4, §8.3, §8.5.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an ask refused alone that its reality places in no file, or a
+/// refused scenario with no file.
+pub fn check_lines(loaded: &Loaded) -> Result<Vec<String>, Stop> {
+    let (mut lines, alone, warnings) = match loaded {
+        Loaded::One(m) => (Vec::new(), alone_asks(m, None)?, m.warnings.clone()),
+        Loaded::Worlds(w) => {
+            let mut refused = Vec::with_capacity(w.refused.len());
+            for (id, refusal) in &w.refused {
+                let file = w
+                    .files
+                    .get(id)
+                    .ok_or_else(|| invariant("a refused scenario with no file"))?;
+                refused.push((file, id, refusal));
+            }
+            refused.sort_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
+            let lines = refused
+                .into_iter()
+                .map(|(_, id, refusal)| scenario_line(id, refusal))
+                .collect();
+            let mut alone = alone_asks(&w.base, None)?;
+            for (id, reality) in &w.loaded {
+                alone.extend(alone_asks(reality, Some(id))?);
+            }
+            (lines, alone, merged_warnings(w))
+        }
+    };
+    lines.extend(alone.into_values());
+    if lines.is_empty() {
+        lines.push("ok".to_owned());
+    }
+    lines.extend(warning_lines(&warnings));
+    Ok(lines)
+}
+
+/// The asks of `m` refused alone that its world's own file states, the base's for none, each
+/// keyed by its id, its file's full path and its line, with the line it prints (refcore's
+/// `alone_line`). L §6.4, §8.3.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for such an ask that `m` places in no file.
+fn alone_asks(
+    m: &Reality,
+    world: Option<&str>,
+) -> Result<BTreeMap<(String, String, u32), String>, Stop> {
+    let mut out = BTreeMap::new();
+    for ask in &m.asks {
+        let Some(refusal) = m.asks_alone.get(&ask.id) else {
+            continue;
+        };
+        if m.scenarios.of(&ask.id) != world {
+            continue;
+        }
+        let file = m
+            .graph
+            .ask_files
+            .get(&ask.id)
+            .ok_or_else(|| invariant("an ask refused alone with no file"))?;
+        let line = format!("{}: refused: {}", ask.id, refusal.text());
+        out.insert((ask.id.clone(), file.clone(), ask.line), line);
+    }
+    Ok(out)
+}
+
+/// A refused scenario's line, `scenario <s>: refused: CODE message`. L §6.4, §8.
+fn scenario_line(id: &str, refusal: &Refusal) -> String {
+    format!("scenario {id}: refused: {}", refusal.text())
 }
 
 /// Whether `id` names an ask of a world: the base's, a loaded scenario's, or one a refused

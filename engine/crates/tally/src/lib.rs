@@ -22,7 +22,7 @@ mod invariant;
 mod oracle;
 
 pub use api::{
-    Answer, Asks, Files, Given, Pin, Request, Source, load_report, reprint, reprint_in, run,
+    Answer, Asks, Files, Given, Pin, Request, Source, check, load_report, reprint, reprint_in, run,
     run_with_forks, run_with_how, run_with_lows,
 };
 #[cfg(feature = "counters")]
@@ -311,7 +311,7 @@ pub mod ask {
     pub use answer::{Answered, answer};
     pub use register::{register_lines, warning_lines};
     pub(crate) use walked::plain_lines;
-    pub use worlds::{answer_worlds, report_lines};
+    pub use worlds::{answer_worlds, check_lines, report_lines};
 }
 
 /// Load (E §3.1 steps 1–4): the run's files split and told into worlds, the base and each

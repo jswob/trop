@@ -3,15 +3,16 @@
 //! prints: every file is read before any is split, and split before any is parsed); L §6.4
 //! (a reality with scenarios runs as worlds); L §5.18 (the asks answered once the reality
 //! loads); E §11 (`REQ-ASK`); L §6.1 (a joint model's members read from the files given, then
-//! from the file table; its lines printed with each member's prefix and its dot).
+//! from the file table; its lines printed with each member's prefix and its dot); OPERATIONS
+//! §2.3 (`check`: load alone, no ask answered).
 //! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `_run_texts`, `run_one`,
-//! `by_path`, `joint`'s `shown`).
+//! `by_path`, `joint`'s `shown`, `_run_texts`'s `check`).
 //! Invariants: reads no clock, environment or file (R-38, R-39); takes the files in the order
 //! of their full paths by code point, whatever order they come in (R-40); never decodes lossily
 //! (R-49).
 
 use crate::NotImplemented;
-use crate::ask::{Answered, How, answer, answer_worlds, report_lines};
+use crate::ask::{Answered, How, answer, answer_worlds, check_lines, report_lines};
 use crate::base::Refusal;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
@@ -187,6 +188,25 @@ pub fn run_with_how(files: Files, request: &Request, how: How) -> Result<Answer,
             out.lines = joint_lines(out.lines);
         }
         Ok(out)
+    }))
+}
+
+/// `check` (OPERATIONS §2.3): loads `files` as [`run`] loads them, every ask's own checks
+/// included, and evaluates and walks nothing; prints `ok`, or a base's one refusal, or each
+/// refused scenario's line and each ask refused alone, then load's warnings (E §3.1; L §6.4,
+/// §8.3, §8.5).
+///
+/// # Errors
+///
+/// [`NotImplemented`] for a construct the engine's load doesn't build yet.
+pub fn check(files: Files) -> Result<Answer, NotImplemented> {
+    finish(loaded(files, FENCES).and_then(|loaded| {
+        let lines = check_lines(&loaded)?;
+        Ok(Answered::printed(if is_joint(&loaded) {
+            joint_lines(lines)
+        } else {
+            lines
+        }))
     }))
 }
 

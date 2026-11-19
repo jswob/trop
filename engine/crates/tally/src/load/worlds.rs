@@ -81,6 +81,9 @@ pub struct Worlds {
     /// The asks the refused scenarios' files declare: they exist, refused with their scenario
     /// (E §11 `REQ-ASK`).
     pub refused_asks: BTreeSet<String>,
+    /// Each scenario's file, the first in full-path order where two declare it: where `check`
+    /// places its line (OPERATIONS §2.3; pick P12).
+    pub files: BTreeMap<String, String>,
 }
 
 /// Splits each file in the order given, the read step's by full path, and reads its scenario
@@ -188,10 +191,15 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
     let base: Vec<&Split> = files.iter().filter(|file| file.head.is_none()).collect();
     let mut scenarios: BTreeMap<&str, (&Split, &Head)> = BTreeMap::new();
     let mut twice = BTreeSet::new();
+    let mut first: BTreeMap<String, String> = BTreeMap::new();
     for file in files {
-        if let Some(head) = &file.head
-            && scenarios.insert(&head.id, (file, head)).is_some()
-        {
+        let Some(head) = &file.head else {
+            continue;
+        };
+        first
+            .entry(head.id.clone())
+            .or_insert_with(|| file.path.clone());
+        if scenarios.insert(&head.id, (file, head)).is_some() {
             twice.insert(head.id.as_str());
         }
     }
@@ -216,6 +224,7 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
         loaded: BTreeMap::new(),
         refused: BTreeMap::new(),
         refused_asks: BTreeSet::new(),
+        files: first,
     };
     for (id, (file, head)) in &scenarios {
         let loaded = match stack(file, head, &scenarios, &twice, &model) {
