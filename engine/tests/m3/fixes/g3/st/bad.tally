@@ -1,0 +1,5 @@
+scenario bad over t
+  tally 2
+  from 2026-01-01
+
+def broken: money PLN = nothing_here + 1 PLN

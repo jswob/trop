@@ -1947,3 +1947,14 @@ fixes/gate8/m2_g8c_b1f	fixes-gate8		engine/tests/m2/fixes/gate8/g8c	engine/tests
 r11/where_hole_day	fixes-r11		engine/tests/m1/fixes/r11/bind	engine/tests/m1/fixes/r11/bind/m.tally	c_where s_where c_hole c_known		R11
 r11/expr_stays	fixes-r11		engine/tests/m1/fixes/r11/bind	engine/tests/m1/fixes/r11/bind/m.tally	e_and e_if e_sum e_or h_and h_if h_sum h_or		R11
 fixes/gate8/m3_readings	fixes-gate8		engine/tests/m1/fixes/gate8/m3_readings	engine/tests/m1/fixes/gate8/m3_readings/base.tally engine/tests/m1/fixes/gate8/m3_readings/scen.tally			-
+fixes/gate8/m3_answer_apart	fixes-gate8		engine/tests/m1/fixes/gate8/m3_answer_apart	engine/tests/m1/fixes/gate8/m3_answer_apart/base.tally			-
+fixes/gate8/m3_uncertain_hole	fixes-gate8		engine/tests/m1/fixes/gate8/m3_uncertain_hole	engine/tests/m1/fixes/gate8/m3_uncertain_hole/base.tally			-
+fixes/gate8/m3_gap_outside	fixes-gate8		engine/tests/m1/fixes/gate8/m3_gap_outside	engine/tests/m1/fixes/gate8/m3_gap_outside/base.tally			-
+fixes/gate8/m3_less_own	fixes-gate8		engine/tests/m1/fixes/gate8/m3_less_own	engine/tests/m1/fixes/gate8/m3_less_own/base.tally			-
+fixes/gate8/m3_own_earlier	fixes-gate8		engine/tests/m1/fixes/gate8/m3_own_earlier	engine/tests/m1/fixes/gate8/m3_own_earlier/base.tally			-
+fixes/gate8/m3_modelled_day	fixes-gate8		engine/tests/m1/fixes/gate8/m3_modelled_day	engine/tests/m1/fixes/gate8/m3_modelled_day/base.tally			-
+fixes/gate8/m3_after_run	fixes-gate8		engine/tests/m1/fixes/gate8/m3_after_run	engine/tests/m1/fixes/gate8/m3_after_run/base.tally			-
+fixes/gate8/m3_window_flows	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_flows	engine/tests/m1/fixes/gate8/m3_window_flows/base.tally			-
+fixes/gate8/m3_two_readers	fixes-gate8		engine/tests/m1/fixes/gate8/m3_two_readers	engine/tests/m1/fixes/gate8/m3_two_readers/base.tally			-
+fixes/gate8/m3_ledger_days	fixes-gate8		engine/tests/m1/fixes/gate8/m3_ledger_days	engine/tests/m1/fixes/gate8/m3_ledger_days/base.tally			-
+fixes/gate8/m3_window_end	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_end	engine/tests/m1/fixes/gate8/m3_window_end/base.tally			-

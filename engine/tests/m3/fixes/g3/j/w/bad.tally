@@ -1,0 +1,7 @@
+scenario bad over ana
+  tally 2
+  from 2026-01-01
+
+def broken: money PLN = nothing_here + pay
+
+ask q_bad: broken

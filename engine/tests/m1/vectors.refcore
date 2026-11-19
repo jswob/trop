@@ -232295,4 +232295,1066 @@ q_why: 1 000.00 PLN
   anchor: konto 2026-10-15 end, stated 1 000.00 PLN, difference 0.00 PLN
   cut 2026-11-05
 warning: WARN-UNREAD place world is read by nothing
+,27:fixes/gate8/m3_answer_apart,11:fixes-gate8,14:run base.tally,2584:10:base.tally,2564:model answer_apart
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C5, gate 8's book/adjust.rs answer_apart (E §5 step 1, L §5.14.3; tally 2.1.8 §4, item 28): a settlement bound over adjustments whose amount is a hole at its day, before the cut, which a later version answers, as any instance's hole booking is; beside it a settlement whose stated amount a later version changes, which is never measured"
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+kind fees: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input fee_amt: money PLN
+
+input dom: int
+
+input act_day: date
+
+input back_day: date
+
+input back_amt: money PLN
+
+input fee_back_amt: money PLN
+
+move rent[m in months]: rents
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move fee[m in months]: fees
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto2 to landlord amount fee_amt
+
+move back[a in adjustments on act_day where a.adjusts in rents]: transfers
+  on back_day
+  at a.day
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+move fee_back[a in adjustments on act_day where a.adjusts in fees]: transfers
+  on back_day
+  at a.day
+  leg cash from konto2 to landlord amount fee_back_amt
+  fulfils a
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  fee_amt = 50.00 PLN
+  dom = 10
+  act_day = 2026-04-05 governs always
+  back_day = 2026-04-20 governs always
+  back_amt = ?"how much rent was paid back for March?"
+  fee_back_amt = 10.00 PLN
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto2] = 1 000.00 PLN at 2026-01-01 start
+
+version raise
+  cite act
+  governs 2026-03
+  known 2026-04-05
+  replace rent_amt = 1 000.00 PLN
+  replace fee_amt = 60.00 PLN
+
+version answer
+  cite act
+  governs 2026..
+  known 2026-05-02
+  replace back_amt = 100.00 PLN
+  replace fee_back_amt = 25.00 PLN
+
+ask q_bal: bal(konto, d), bal(konto2, d) for d in [2026-04-19, 2026-04-30, 2026-05-31] law cut
+
+ask q_flows: flows(back, 2026-04-01 .. 2026-05-31), flows(fee_back, 2026-04-01 .. 2026-05-31), flows(rent, 2026-03-01 .. 2026-05-31), flows(fee, 2026-03-01 .. 2026-05-31) law cut
+
+ask q_early: bal(konto, 2026-04-30), bal(konto2, 2026-04-30) law cut as known 2026-05-01
+
+ask q_changes: a.change for a in adjustments over .. law cut
+,,1:0,2511:q_bal (d = 2026-04-19): (1 400.00 PLN, 800.00 PLN)
+  unfulfilled: fee[2026-01]
+  unfulfilled: fee[2026-02]
+  unfulfilled: fee[2026-03]
+  unfulfilled: fee[2026-04]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q_bal (d = 2026-04-30): (1 300.00 PLN, 790.00 PLN)
+  unfulfilled: back[adjustments[rent[2026-03].cash, raise]]
+  unfulfilled: fee[2026-01]
+  unfulfilled: fee[2026-02]
+  unfulfilled: fee[2026-03]
+  unfulfilled: fee[2026-04]
+  unfulfilled: fee_back[adjustments[fee[2026-03].cash, raise]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q_bal (d = 2026-05-31): (400.00 PLN, 740.00 PLN)
+  unfulfilled: back[adjustments[rent[2026-03].cash, raise]]
+  unfulfilled: fee[2026-01]
+  unfulfilled: fee[2026-02]
+  unfulfilled: fee[2026-03]
+  unfulfilled: fee[2026-04]
+  unfulfilled: fee[2026-05]
+  unfulfilled: fee_back[adjustments[fee[2026-03].cash, raise]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+q_changes (a = adjustments[fee[2026-03].cash, raise]): 10.00 PLN
+  law date 2026-06-30, cut 2026-06-30
+q_changes (a = adjustments[rent[2026-03].cash, raise]): 100.00 PLN
+  law date 2026-06-30, cut 2026-06-30
+q_early: (?"how much rent was paid back for March?" (back_amt), 790.00 PLN)
+  adjustment: rent[2026-03] by 100.00 PLN on 2026-04-05 (version raise), remaining ?"how much rent was paid back for March?" (back_amt)
+  unfulfilled: back[adjustments[rent[2026-03].cash, raise]]
+  unfulfilled: fee[2026-01]
+  unfulfilled: fee[2026-02]
+  unfulfilled: fee[2026-03]
+  unfulfilled: fee[2026-04]
+  unfulfilled: fee_back[adjustments[fee[2026-03].cash, raise]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-05-01, cut 2026-05-01
+q_flows: (100.00 PLN, 10.00 PLN, 2 800.00 PLN, 160.00 PLN)
+  unfulfilled: back[adjustments[rent[2026-03].cash, raise]]
+  unfulfilled: fee[2026-03]
+  unfulfilled: fee[2026-04]
+  unfulfilled: fee[2026-05]
+  unfulfilled: fee_back[adjustments[fee[2026-03].cash, raise]]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-06-10
+,29:fixes/gate8/m3_uncertain_hole,11:fixes-gate8,14:run base.tally,1601:10:base.tally,1581:model uh
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C5, gate 8's walk/reads.rs Uncertain::leg and uncertain_sum (L §5.14, §5.18; tally 2.1.8 R15): uncertain movements whose amounts are holes, one into konto and one out of it, read with uncertain and partial (each hole's term signed by its leg's way) and with uncertain alone (a hole, no linear sum)"
+
+source own "T's invented figures"
+
+unit PLN: currency minor 0.01
+
+kind promises: event uncertain
+  leg cash: PLN
+
+kind debts_due: event uncertain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2020-01-01..
+
+place friend: outside lives 1900-01-01..
+
+input owed[m in months]: money PLN
+
+input lent[m in months]: money PLN
+
+input dom: int
+
+move repay[m in months]: promises
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from friend to konto amount owed[m]
+
+move lend[m in months]: debts_due
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to friend amount lent[m]
+
+version v
+  cite own
+  governs 2026..
+  known 2026-01-01
+  owed = 500.00 PLN "note"
+  owed[2026-03] = ?"how much is repaid in March?" "note"
+  lent = 0.00 PLN "note"
+  lent[2026-04] = ?"how much is lent in April?" "note"
+  dom = 1 "note"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "statement"
+
+ask q_in: bal(konto, 2026-03-31) with uncertain partial
+
+ask q_both: bal(konto, 2026-04-30) with uncertain partial
+
+ask q_out: bal(konto, 2026-04-30) from 2026-03-15 with uncertain partial
+
+ask q_plain: bal(konto, 2026-03-31) with uncertain
+
+ask q_plain_from: bal(konto, 2026-04-30) from 2026-02-15 with uncertain
+,,1:0,3032:q_both: 2 500.00 PLN + -1 × ?"how much is lent in April?" (lent[2026-04]) + 1 × ?"how much is repaid in March?" (owed[2026-03])
+  uncertain: lend[2026-01]
+  uncertain: lend[2026-02]
+  uncertain: lend[2026-03]
+  uncertain: lend[2026-04]
+  uncertain: repay[2026-01]
+  uncertain: repay[2026-02]
+  uncertain: repay[2026-03]
+  uncertain: repay[2026-04]
+  held: dom = 1 (v), read for 2026-02-01
+  held: dom = 1 (v), read for 2026-03-01
+  held: dom = 1 (v), read for 2026-04-01
+  held: lent[2026-02] = 0.00 PLN (v), read for 2026-02
+  held: lent[2026-03] = 0.00 PLN (v), read for 2026-03
+  held: lent[2026-04] = ?"how much is lent in April?" (lent[2026-04]) (v), read for 2026-04
+  held: owed[2026-02] = 500.00 PLN (v), read for 2026-02
+  held: owed[2026-03] = ?"how much is repaid in March?" (owed[2026-03]) (v), read for 2026-03
+  held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
+  cut 2026-01-01
+q_in: 2 000.00 PLN + 1 × ?"how much is repaid in March?" (owed[2026-03])
+  uncertain: lend[2026-01]
+  uncertain: lend[2026-02]
+  uncertain: lend[2026-03]
+  uncertain: repay[2026-01]
+  uncertain: repay[2026-02]
+  uncertain: repay[2026-03]
+  held: dom = 1 (v), read for 2026-02-01
+  held: dom = 1 (v), read for 2026-03-01
+  held: lent[2026-02] = 0.00 PLN (v), read for 2026-02
+  held: lent[2026-03] = 0.00 PLN (v), read for 2026-03
+  held: owed[2026-02] = 500.00 PLN (v), read for 2026-02
+  held: owed[2026-03] = ?"how much is repaid in March?" (owed[2026-03]) (v), read for 2026-03
+  cut 2026-01-01
+q_out: 1 500.00 PLN + -1 × ?"how much is lent in April?" (lent[2026-04])
+  uncertain: lend[2026-04]
+  uncertain: repay[2026-04]
+  held: dom = 1 (v), read for 2026-04-01
+  held: lent[2026-04] = ?"how much is lent in April?" (lent[2026-04]) (v), read for 2026-04
+  held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
+  cut 2026-01-01
+q_plain: ?"how much is repaid in March?" (owed[2026-03])
+  uncertain: lend[2026-01]
+  uncertain: lend[2026-02]
+  uncertain: lend[2026-03]
+  uncertain: repay[2026-01]
+  uncertain: repay[2026-02]
+  uncertain: repay[2026-03]
+  held: dom = 1 (v), read for 2026-02-01
+  held: dom = 1 (v), read for 2026-03-01
+  held: lent[2026-02] = 0.00 PLN (v), read for 2026-02
+  held: lent[2026-03] = 0.00 PLN (v), read for 2026-03
+  held: owed[2026-02] = 500.00 PLN (v), read for 2026-02
+  held: owed[2026-03] = ?"how much is repaid in March?" (owed[2026-03]) (v), read for 2026-03
+  cut 2026-01-01
+q_plain_from: ?"how much is lent in April?" (lent[2026-04]) ?"how much is repaid in March?" (owed[2026-03])
+  uncertain: lend[2026-03]
+  uncertain: lend[2026-04]
+  uncertain: repay[2026-03]
+  uncertain: repay[2026-04]
+  held: dom = 1 (v), read for 2026-03-01
+  held: dom = 1 (v), read for 2026-04-01
+  held: lent[2026-03] = 0.00 PLN (v), read for 2026-03
+  held: lent[2026-04] = ?"how much is lent in April?" (lent[2026-04]) (v), read for 2026-04
+  held: owed[2026-03] = ?"how much is repaid in March?" (owed[2026-03]) (v), read for 2026-03
+  held: owed[2026-04] = 500.00 PLN (v), read for 2026-04
+  cut 2026-01-01
+,26:fixes/gate8/m3_gap_outside,11:fixes-gate8,14:run base.tally,1250:10:base.tally,1230:model go
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C5, gate 8's walk/reads.rs stated_on (L §5.19 gap, §8.1; tally 2.1.8 item 1): gap(x, d) on a day before the run's start is the run's hole where x has a stated reading that day, and no reading's hole where x has none that day, though x has one another day and another place has one that day"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place konto2: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+version openings
+  cite fixture
+  governs always
+  known 2025-11-01
+  opening[konto] = 1 000.00 PLN at 2025-12-01 start
+  opening[konto2] = 500.00 PLN at 2025-12-01 start
+
+version readings
+  cite fixture
+  governs always
+  known 2026-01-05
+  anchor konto
+  stated[konto] = 900.00 PLN at 2025-12-15 end "a statement before the run"
+  stated[konto] = 950.00 PLN at 2026-02-10 end "a statement in the run"
+
+ask q_read: gap(konto, 2025-12-15) law cut
+
+ask q_other_day: gap(konto, 2025-12-10) law cut
+
+ask q_other_place: gap(konto2, 2025-12-15) law cut
+
+ask q_in: gap(konto, 2026-02-10) law cut
+
+ask q_in_none: gap(konto2, 2026-02-10) law cut
+,,1:0,530:q_in: -50.00 PLN
+  law date 2026-03-31, cut 2026-03-31
+q_in_none: ?"stated[konto2] has no reading at 2026-02-10" (stated[konto2])
+  law date 2026-03-31, cut 2026-03-31
+q_other_day: ?"stated[konto] has no reading at 2025-12-10" (stated[konto])
+  law date 2026-03-31, cut 2026-03-31
+q_other_place: ?"stated[konto2] has no reading at 2025-12-15" (stated[konto2])
+  law date 2026-03-31, cut 2026-03-31
+q_read: ?"before the run's start" (konto)
+  law date 2026-03-31, cut 2026-03-31
+warning: WARN-UNREAD place world is read by nothing
+,23:fixes/gate8/m3_less_own,11:fixes-gate8,14:run base.tally,1946:10:base.tally,1926:model lo
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/reads.rs less_own_obs (E §4.2 step 3, L §5.19): a decision an observation fulfils two days early, computed less that observation at both of its leg's places: the place it runs from (konto, added back) and the place it runs to (jar, taken back); a twin reads only the place no leg of it touches"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input dec_dom: int
+
+input keep: money PLN
+
+input step: money PLN
+
+move sweep[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto, jar
+  leg cash from konto to jar amount bal(konto) - bal(jar) - keep
+
+move twin[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads other
+  leg cash from world to other amount bal(other) + step
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decisions' day of the month"
+  keep = 2 000.00 PLN "what konto keeps above the jar"
+  step = 1.00 PLN "a small step"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3 000.00 PLN at 2026-01-01 start
+  opening[jar] = 200.00 PLN at 2026-01-01 start
+  opening[other] = 10.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  bank[b20260118] = (on: 2026-01-18, kind: transfers, leg cash from konto to jar amount 700.00 PLN, fulfils: sweep[2026-01]) "the sweep, two days early"
+
+ask q_sweep: explain sweep[2026-01]
+
+ask q_twin: explain twin[2026-01]
+
+ask q_bal: bal(konto, d), bal(jar, d), bal(other, d) for d in [2026-01-19, 2026-01-20, 2026-01-31] law cut
+,,1:0,809:q_bal (d = 2026-01-19): (2 300.00 PLN, 900.00 PLN, 10.00 PLN)
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-01-20): (2 300.00 PLN, 900.00 PLN, 21.00 PLN)
+  unfulfilled: twin[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_bal (d = 2026-01-31): (2 300.00 PLN, 900.00 PLN, 21.00 PLN)
+  unfulfilled: twin[2026-01]
+  law date 2026-02-15, cut 2026-02-15
+q_sweep: sweep[2026-01]
+  decision, day 2026-01-20, status modelled
+  stratum 1, walk point (2026-01-20, stratum 1, sweep|000000)
+  read at its walk point: jar, konto
+  leg cash from konto to jar amount 800.00 PLN
+  cut 2026-02-15
+q_twin: twin[2026-01]
+  decision, day 2026-01-20, status past
+  stratum 1, walk point (2026-01-20, stratum 1, twin|000000)
+  read at its walk point: other
+  leg cash from world to other amount 11.00 PLN
+  cut 2026-02-15
+,26:fixes/gate8/m3_own_earlier,11:fixes-gate8,14:run base.tally,2243:10:base.tally,2223:model oe
+  tally 2
+  on 2026-03-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/order.rs own_earlier_obs (E §4.2 step 3, L §5.19): a decision computed less its own observation dated on the run's first day (January), and not less one dated on its own day, booked after it runs (February)"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input dec_dom: int
+
+input keep: money PLN
+
+input step: money PLN
+
+move sweep[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads konto, jar
+  leg cash from konto to jar amount bal(konto) - bal(jar) - keep
+
+move twin[m in month]: transfers
+  on day_of(m, dec_dom)
+  at start_of(m)
+  reads other
+  leg cash from world to other amount bal(other) + step
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_dom = 20 "the decisions' day of the month"
+  keep = 2 000.00 PLN "what konto keeps above the jar"
+  step = 1.00 PLN "a small step"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3 000.00 PLN at 2026-01-01 start
+  opening[jar] = 200.00 PLN at 2026-01-01 start
+  opening[other] = 10.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  bank[b20260101] = (on: 2026-01-01, kind: transfers, leg cash from konto to jar amount 700.00 PLN, fulfils: sweep[2026-01]) "the sweep, on the run's first day"
+
+ask q_sweep: explain sweep[2026-01]
+
+ask q_twin: explain twin[2026-01]
+
+ask q_bal: bal(konto, d), bal(jar, d), bal(other, d) for d in [2026-01-19, 2026-01-20, 2026-01-31] law cut
+
+version bank_feb
+  cite fixture
+  governs 2026-02
+  known 2026-03-02
+  covers konto
+  bank[b20260220] = (on: 2026-02-20, kind: transfers, leg cash from konto to jar amount 650.00 PLN, fulfils: sweep[2026-02]) "the sweep, on its own day"
+
+ask q_sweep_feb: explain sweep[2026-02]
+
+ask q_bal_feb: bal(konto, d), bal(jar, d) for d in [2026-02-19, 2026-02-20, 2026-02-28] law cut
+,,1:0,1392:q_bal (d = 2026-01-19): (2 300.00 PLN, 900.00 PLN, 10.00 PLN)
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-01-20): (2 300.00 PLN, 900.00 PLN, 21.00 PLN)
+  unfulfilled: twin[2026-01]
+  law date 2026-03-15, cut 2026-03-15
+q_bal (d = 2026-01-31): (2 300.00 PLN, 900.00 PLN, 21.00 PLN)
+  unfulfilled: twin[2026-01]
+  law date 2026-03-15, cut 2026-03-15
+q_bal_feb (d = 2026-02-19): (2 300.00 PLN, 900.00 PLN)
+  law date 2026-03-15, cut 2026-03-15
+q_bal_feb (d = 2026-02-20): (1 650.00 PLN, 1 550.00 PLN)
+  law date 2026-03-15, cut 2026-03-15
+q_bal_feb (d = 2026-02-28): (1 650.00 PLN, 1 550.00 PLN)
+  law date 2026-03-15, cut 2026-03-15
+q_sweep: sweep[2026-01]
+  decision, day 2026-01-20, status modelled
+  stratum 1, walk point (2026-01-20, stratum 1, sweep|000000)
+  read at its walk point: jar, konto
+  leg cash from konto to jar amount 800.00 PLN
+  cut 2026-03-15
+q_sweep_feb: sweep[2026-02]
+  decision, day 2026-02-20, status modelled
+  stratum 1, walk point (2026-02-20, stratum 1, sweep|000000)
+  read at its walk point: jar, konto
+  leg cash from konto to jar amount refused: RUN-NEG negative amount -600.00 PLN for leg cash of sweep[2026-02]
+  cut 2026-03-15
+q_twin: twin[2026-01]
+  decision, day 2026-01-20, status past
+  stratum 1, walk point (2026-01-20, stratum 1, twin|000000)
+  read at its walk point: other
+  leg cash from world to other amount 11.00 PLN
+  cut 2026-03-15
+,27:fixes/gate8/m3_modelled_day,11:fixes-gate8,14:run base.tally,1962:10:base.tally,1942:model md
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/modelled.rs modelled_legs (E §6.2, L §5.19): bal(x, d) modelled on the days a statement covers counts each modelled-past instance's leg dated through d, the one dated d itself included, and none dated after it; the bank's own amounts differ from the plan's, so each leg counted shows"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input rent: money PLN
+
+input fee: money PLN
+
+input pay_dom: int
+
+input fee_dom: int
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move fee_pay[m in month]: transfers
+  on day_of(m, fee_dom)
+  at start_of(m)
+  leg cash from konto to world amount fee
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 PLN "the rent"
+  fee = 15.00 PLN "the fee"
+  pay_dom = 5 "the rent's day"
+  fee_dom = 20 "the fee's day"
+
+version openings
+  cite fixture
+  governs always
+  known 2025-12-31
+  opening[konto] = 3 000.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260105] = (on: 2026-01-05, kind: transfers, leg cash from konto to world amount 610.00 PLN, fulfils: rent_pay[2026-01]) "the rent, ten more"
+  bank[b20260120] = (on: 2026-01-20, kind: transfers, leg cash from konto to world amount 17.00 PLN, fulfils: fee_pay[2026-01]) "the fee, two more"
+  stated[konto] = 2 373.00 PLN at 2026-01-31 end "the month's closing balance"
+
+ask q_modelled: bal(konto, d) modelled for d in [2026-01-04, 2026-01-05, 2026-01-06, 2026-01-19, 2026-01-20, 2026-01-31] law cut
+
+ask q_booked: bal(konto, d) for d in [2026-01-05, 2026-01-20, 2026-01-31] law cut
+,,1:0,787:q_booked (d = 2026-01-05): 2 390.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_booked (d = 2026-01-20): 2 373.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_booked (d = 2026-01-31): 2 373.00 PLN
+  anchor: konto 2026-01-31 end, stated 2 373.00 PLN, difference 0.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_modelled (d = 2026-01-04): 3 000.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_modelled (d = 2026-01-05): 2 400.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_modelled (d = 2026-01-06): 2 400.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_modelled (d = 2026-01-19): 2 400.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_modelled (d = 2026-01-20): 2 385.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+q_modelled (d = 2026-01-31): 2 385.00 PLN
+  law date 2026-02-15, cut 2026-02-15
+,24:fixes/gate8/m3_after_run,11:fixes-gate8,14:run base.tally,1197:10:base.tally,1177:model ar
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/flows.rs after_run (E §2, L §5.14.3, §8.1): flows over days after the run's end count each plan instance there that exists, and not one whose when is false (May), nor one in the run"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input rent: money PLN
+
+input pay_dom: int
+
+input due[m in month]: bool
+
+move rent_pay[m in month]: transfers
+  on day_of(m, pay_dom)
+  at start_of(m)
+  when due[m]
+  leg cash from konto to world amount rent
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  rent = 600.00 PLN "the rent"
+  pay_dom = 5 "the rent's day"
+  due = true "the rent is due"
+  due[2026-05] = false "no rent in May"
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start
+
+ask q_after: flows(konto, 2026-04-01 .. 2026-06-30), flows(rent_pay, 2026-04-01 .. 2026-06-30) law cut
+
+ask q_across: flows(konto, 2026-03-01 .. 2026-05-31) law cut
+
+ask q_may: flows(konto, 2026-05-01 .. 2026-05-31) law cut
+,,1:0,226:q_across: -1 200.00 PLN
+  unfulfilled: rent_pay[2026-03]
+  law date 2026-03-31, cut 2026-03-31
+q_after: (-1 200.00 PLN, 1 200.00 PLN)
+  law date 2026-03-31, cut 2026-03-31
+q_may: 0.00 PLN
+  law date 2026-03-31, cut 2026-03-31
+,27:fixes/gate8/m3_window_flows,11:fixes-gate8,14:run base.tally,3162:10:base.tally,3142:model wf
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/flows.rs Sums::place_log (L §4.4, §5.14.3; P29): flows over a span after windows opened: one window closed before the span is decided (its movement dated before it), one that crosses the span's start is its hole, a refused movement dated by a window that closed before the span leaves it alone, and movements whose days are holes: a hole in every span, the one whose amount is refused too; a move's flows over a window (flows_hole's question, walk/move_flows.rs), and a user's question whose words end ' for a balance', kept as written (hole/questions.rs Asked::for_read)"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto_b: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input early_day: date
+
+input cross_day: date
+
+input bad_day: date
+
+input when_day: date
+
+input bad_when_day: date
+
+input early_amt: money PLN
+
+input cross_amt: money PLN
+
+input base_amt: money PLN
+
+input parts: num
+
+input odd_amt: money PLN
+
+input odd_day: date
+
+move early: transfers
+  on early_day
+  leg cash from world to konto amount early_amt
+
+move cross: transfers
+  on cross_day
+  leg cash from world to konto amount cross_amt
+
+move maybe: transfers
+  on when_day
+  leg cash from world to konto amount cross_amt
+
+move bad_maybe: transfers
+  on bad_when_day
+  leg cash from world to konto_b amount round(base_amt / parts, minor(PLN), half-up)
+
+move odd: transfers
+  on odd_day
+  leg cash from world to konto amount odd_amt
+
+move bad: transfers
+  on bad_day
+  leg cash from world to konto_b amount round(base_amt / parts, minor(PLN), half-up)
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  early_day = window(2026-02-01, 2026-02-10) "some day early in February"
+  cross_day = window(2026-02-10, 2026-02-20) "some day in mid-February"
+  bad_day = window(2026-02-01, 2026-02-12) "some day early in February"
+  when_day = ?"when is the maybe paid?" "unknown"
+  bad_when_day = ?"when is the bad one paid?" "unknown"
+  early_amt = 100.00 PLN "the early payment"
+  cross_amt = 50.00 PLN "the crossing payment"
+  base_amt = 90.00 PLN "the base"
+  parts = 0 "no parts: a division by zero"
+  odd_amt = ?"how much is kept for a balance" "a question whose words end as a window's do"
+  odd_day = 2026-02-16 "the odd payment's day"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[konto_b] = 1 000.00 PLN at 2026-01-01 start
+
+ask q_mid: flows(konto, 2026-02-15 .. 2026-02-28) law cut
+
+ask q_after_early: flows(konto, 2026-02-11 .. 2026-02-28) law cut
+
+ask q_late: flows(konto, 2026-02-21 .. 2026-02-28) law cut
+
+ask q_whole: flows(konto, 2026-02-01 .. 2026-02-28) law cut
+
+ask q_bad: flows(konto_b, 2026-02-15 .. 2026-02-28) law cut
+
+ask q_bad_late: flows(konto_b, 2026-02-21 .. 2026-02-28) law cut
+
+ask q_move: flows(cross, 2026-02-15 .. 2026-02-28) law cut
+
+ask q_move_whole: flows(early, 2026-02-01 .. 2026-02-28), flows(early, 2026-02-05 .. 2026-02-28) law cut
+
+ask q_odd: flows(odd, 2026-02-01 .. 2026-02-28) law cut
+,,1:0,1466:q_after_early: ?"date within window(2026-02-10, 2026-02-20) not precise enough for flows of konto" (cross) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
+  unknown day: cross_day
+  unfulfilled: odd
+  law date 2026-03-31, cut 2026-03-31
+q_bad: ?"when is the bad one paid?" (bad_when_day)
+  law date 2026-03-31, cut 2026-03-31
+q_bad_late: ?"when is the bad one paid?" (bad_when_day)
+  law date 2026-03-31, cut 2026-03-31
+q_late: ?"when is the maybe paid?" (when_day)
+  law date 2026-03-31, cut 2026-03-31
+q_mid: ?"date within window(2026-02-10, 2026-02-20) not precise enough for flows of konto" (cross) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
+  unknown day: cross_day
+  unfulfilled: odd
+  law date 2026-03-31, cut 2026-03-31
+q_move: ?"date within window(2026-02-10, 2026-02-20) not precise enough for flows of cross" (cross)
+  unknown day: cross_day
+  law date 2026-03-31, cut 2026-03-31
+q_move_whole: (100.00 PLN, ?"date within window(2026-02-01, 2026-02-10) not precise enough for flows of early" (early))
+  unknown day: early_day
+  unfulfilled: early
+  law date 2026-03-31, cut 2026-03-31
+q_odd: ?"how much is kept for a balance" (odd_amt)
+  unfulfilled: odd
+  law date 2026-03-31, cut 2026-03-31
+q_whole: ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
+  unfulfilled: cross
+  unfulfilled: early
+  unfulfilled: odd
+  law date 2026-03-31, cut 2026-03-31
+,26:fixes/gate8/m3_two_readers,11:fixes-gate8,14:run base.tally,1801:10:base.tally,1781:model tr
+  tally 2
+  on 2026-02-28
+  start 2026-01-01
+  end 2026-02-28
+  note "T, M3 C5, gate 8's walk/agenda.rs schedule_decision (E §4.2 step 3, E §10, L §5.14.2): two moves of one stratum due on one day each read a walk-bound def, each at its own point in the day's order (the move's rank), so explain lists both cells; a third move, of a later stratum, reads it after both booked"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar_a: accounts PLN lives 2026-01-01..
+
+place jar_b: accounts PLN lives 2026-01-01..
+
+place probe: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input dec_day: date
+
+input put: money PLN
+
+def avail: money PLN = bal(konto) at dec_day
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+move a_put: transfers
+  on dec_day
+  reads konto
+  leg cash from world to jar_a amount if avail > put then put else 0.00 PLN
+
+move b_put: transfers
+  on dec_day
+  reads konto
+  leg cash from world to jar_b amount if avail > put then put else 0.00 PLN
+
+move c_top: transfers
+  on dec_day
+  reads konto, jar_a, jar_b
+  leg cash from world to probe amount bal(jar_a) + bal(jar_b) + avail
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_day = 2026-01-20 "the decisions' day"
+  put = 100.00 PLN "a put"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[jar_a] = 0.00 PLN at 2026-01-01 start
+  opening[jar_b] = 0.00 PLN at 2026-01-01 start
+  opening[probe] = 0.00 PLN at 2026-01-01 start
+
+ask q_avail: explain avail
+
+ask q_bal: bal(konto, 2026-01-20), bal(jar_a, 2026-01-20), bal(jar_b, 2026-01-20), bal(probe, 2026-01-20)
+
+ask q_a: explain a_put
+
+ask q_b: explain b_put
+
+ask q_c: explain c_top
+,,1:0,2079:q_a: a_put
+  decision, day 2026-01-20, status past
+  stratum 1, walk point (2026-01-20, stratum 1, a_put|000000)
+  read at its walk point: konto
+  leg cash from world to jar_a amount 100.00 PLN
+  cut 2026-02-28
+q_avail: walk-bound, read at 3 walk points
+  avail at (2026-01-20, stratum 1, a_put): 1 000.00 PLN
+      [1] row facts:dec_day = 2026-01-20
+          version facts, source fixture, "T's fixture (invented values)", locator "the decisions' day", governs always, known 2025-12-01
+      [2] avail = 1 000.00 PLN, law date 2026-01-20
+          rule base: won
+            [3] running read bal(konto) = 1 000.00 PLN, the balance up to this point of 2026-01-20
+  avail at (2026-01-20, stratum 1, b_put): 1 000.00 PLN
+      [1] row facts:dec_day = 2026-01-20
+          version facts, source fixture, "T's fixture (invented values)", locator "the decisions' day", governs always, known 2025-12-01
+      [2] avail = 1 000.00 PLN, law date 2026-01-20
+          rule base: won
+            [3] running read bal(konto) = 1 000.00 PLN, the balance up to this point of 2026-01-20
+  avail at (2026-01-20, stratum 2, c_top): 1 000.00 PLN
+      [1] row facts:dec_day = 2026-01-20
+          version facts, source fixture, "T's fixture (invented values)", locator "the decisions' day", governs always, known 2025-12-01
+      [2] avail = 1 000.00 PLN, law date 2026-01-20
+          rule base: won
+            [3] running read bal(konto) = 1 000.00 PLN, the balance up to this point of 2026-01-20
+  cut 2026-02-28
+q_b: b_put
+  decision, day 2026-01-20, status past
+  stratum 1, walk point (2026-01-20, stratum 1, b_put|000000)
+  read at its walk point: konto
+  leg cash from world to jar_b amount 100.00 PLN
+  cut 2026-02-28
+q_bal: (1 000.00 PLN, 100.00 PLN, 100.00 PLN, 1 200.00 PLN)
+  unfulfilled: a_put
+  unfulfilled: b_put
+  unfulfilled: c_top
+  cut 2026-02-28
+q_c: c_top
+  decision, day 2026-01-20, status past
+  stratum 2, walk point (2026-01-20, stratum 2, c_top|000000)
+  read at its walk point: jar_a, jar_b, konto
+  leg cash from world to probe amount 1 200.00 PLN
+  cut 2026-02-28
+,26:fixes/gate8/m3_ledger_days,11:fixes-gate8,14:run base.tally,1514:10:base.tally,1494:model ld
+  tally 2
+  on 2026-02-15
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's book/ledger.rs Fig::hole_days_into, Line::hole_days_into (E §6.3, L §4.4, §8.2): a residual line whose model figure is a hole carrying an unknown day (the fee's amount depends on a window) that the line's own day doesn't carry; the register names it"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+input due_day: date
+
+input cutoff: date
+
+input fee_day: date
+
+input fee_a: money PLN
+
+input fee_b: money PLN
+
+move fee: transfers
+  on fee_day
+  leg cash from konto to world amount if due_day < cutoff then fee_a else fee_b
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  due_day = window(2026-01-05, 2026-01-15) "the bill came some day in mid-January"
+  cutoff = 2026-01-10 "the fee drops after this"
+  fee_day = 2026-01-20 "the fee's day"
+  fee_a = 20.00 PLN "the early fee"
+  fee_b = 30.00 PLN "the late fee"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+
+version bank_jan
+  cite fixture
+  governs 2026-01
+  known 2026-02-02
+  covers konto
+  anchor konto
+  bank[b20260120] = (on: 2026-01-20, kind: transfers, leg cash from konto to world amount 30.00 PLN, fulfils: fee) "the fee"
+  stated[konto] = 970.00 PLN at 2026-01-31 end "the month's closing balance"
+
+ask q_res: residuals konto 2026-01 law cut
+
+ask q_fee: explain fee
+,,1:0,1941:q_fee: fee
+  plan, day 2026-01-20, booking cut 2026-01-20, status modelled
+  leg cash from konto to world amount ?"date within window(2026-01-05, 2026-01-15) not precise enough for due_day < cutoff" (due_day)
+  derivation at 2026-01-20:
+    [1] row facts:fee_day = 2026-01-20
+        version facts, source fixture, "T's fixture (invented values)", locator "the fee's day", governs always, known 2025-12-01
+    [2] row facts:due_day = window(2026-01-05, 2026-01-15)
+        version facts, source fixture, "T's fixture (invented values)", locator "the bill came some day in mid-January", governs always, known 2025-12-01
+    [3] row facts:cutoff = 2026-01-10
+        version facts, source fixture, "T's fixture (invented values)", locator "the fee drops after this", governs always, known 2025-12-01
+    [4] row facts:fee_a = 20.00 PLN
+        version facts, source fixture, "T's fixture (invented values)", locator "the early fee", governs always, known 2025-12-01
+    [5] row facts:fee_b = 30.00 PLN
+        version facts, source fixture, "T's fixture (invented values)", locator "the late fee", governs always, known 2025-12-01
+  cut 2026-02-15
+q_res: residuals konto 2026-01
+  2026-01 move fee: model ?"date within window(2026-01-05, 2026-01-15) not precise enough for due_day < cutoff" (due_day), observed -30.00 PLN, difference ?"date within window(2026-01-05, 2026-01-15) not precise enough for due_day < cutoff" (due_day)
+    matched fee on 2026-01-20: model ?"date within window(2026-01-05, 2026-01-15) not precise enough for due_day < cutoff" (due_day), observed -30.00 PLN, difference ?"date within window(2026-01-05, 2026-01-15) not precise enough for due_day < cutoff" (due_day), timing +0 days
+  2026-01 balance: model 970.00 PLN, observed 970.00 PLN, difference 0.00 PLN
+    balance konto 2026-01-31 end (anchored): booked 970.00 PLN, stated 970.00 PLN, gap 0.00 PLN
+  unknown day: due_day
+  law date 2026-02-15, cut 2026-02-15
+,25:fixes/gate8/m3_window_end,11:fixes-gate8,14:run base.tally,1839:10:base.tally,1819:model we
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-03-31
+  note "T, M3 C5, gate 8's walk/agenda.rs schedule_decision, a window-dated decision's end (E §4.1, §4.2, L §4.4; pick P29 on #175): the window's hole ends after the day's closing readings of its last day (stratum 2), and two such decisions' ends on one day apply by move id; a reading at the end of the last day and one the day after"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input save_day: date
+
+input spend_day: date
+
+input put: money PLN
+
+move save: transfers
+  on save_day
+  reads konto
+  leg cash from konto to jar amount if bal(konto) > put then put else 0.00 PLN
+
+move spend: transfers
+  on spend_day
+  reads jar
+  leg cash from jar to world amount if bal(jar) > put then put else 0.00 PLN
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  save_day = window(2026-02-01, 2026-02-10) "some day early in February"
+  spend_day = window(2026-02-05, 2026-02-10) "some day in the first third of February"
+  put = 100.00 PLN "a put"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[jar] = 500.00 PLN at 2026-01-01 start
+
+version readings
+  cite fixture
+  governs always
+  known 2026-03-01
+  anchor konto
+  anchor jar
+  stated[konto] = 900.00 PLN at 2026-02-10 end "counted at the window's last day's end"
+  stated[jar] = 500.00 PLN at 2026-02-11 end "counted the day after"
+
+ask q_bal: bal(konto, d), bal(jar, d) for d in [2026-02-09, 2026-02-10, 2026-02-11, 2026-02-28] law cut
+
+ask q_gap: gap(konto, 2026-02-10), gap(jar, 2026-02-11) law cut
+
+ask q_flows: flows(konto, 2026-02-11 .. 2026-02-28), flows(jar, 2026-02-11 .. 2026-02-28) law cut
+,,1:0,2565:q_bal (d = 2026-02-09): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+  unknown day: save_day
+  unknown day: spend_day
+  law date 2026-03-31, cut 2026-03-31
+q_bal (d = 2026-02-10): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+  unknown day: save_day
+  unknown day: spend_day
+  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
+  law date 2026-03-31, cut 2026-03-31
+q_bal (d = 2026-02-11): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), 500.00 PLN)
+  unknown day: save_day
+  anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend)
+  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
+  law date 2026-03-31, cut 2026-03-31
+q_bal (d = 2026-02-28): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), 500.00 PLN)
+  unknown day: save_day
+  anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend)
+  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
+  law date 2026-03-31, cut 2026-03-31
+q_flows: (0.00 PLN, 0.00 PLN)
+  law date 2026-03-31, cut 2026-03-31
+q_gap: (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+  unknown day: save_day
+  unknown day: spend_day
+  law date 2026-03-31, cut 2026-03-31
 ,

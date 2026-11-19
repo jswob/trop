@@ -1,0 +1,5 @@
+scenario over_bad over bad
+  tally 2
+  from 2026-01-01
+
+ask q_ob: bal(konto, 2026-04-30) in over_bad

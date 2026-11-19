@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 71] = [
+pub static TEXTS: [(&str, &str); 87] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -224,6 +224,70 @@ pub static TEXTS: [(&str, &str); 71] = [
     (
         "m3/check/unread.tally",
         include_str!("../../m3/check/unread.tally"),
+    ),
+    (
+        "m3/fixes/a4/cycle_when.tally",
+        include_str!("../../m3/fixes/a4/cycle_when.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/c.tally",
+        include_str!("../../m3/fixes/g3/j/c.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/jc.tally",
+        include_str!("../../m3/fixes/g3/j/jc.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/jw.tally",
+        include_str!("../../m3/fixes/g3/j/jw.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/jz.tally",
+        include_str!("../../m3/fixes/g3/j/jz.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/n/b/b.tally",
+        include_str!("../../m3/fixes/g3/j/n/b/b.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/n/b/sb.tally",
+        include_str!("../../m3/fixes/g3/j/n/b/sb.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/w/a.tally",
+        include_str!("../../m3/fixes/g3/j/w/a.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/w/bad.tally",
+        include_str!("../../m3/fixes/g3/j/w/bad.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/w/s1.tally",
+        include_str!("../../m3/fixes/g3/j/w/s1.tally"),
+    ),
+    (
+        "m3/fixes/g3/j/z/c.tally",
+        include_str!("../../m3/fixes/g3/j/z/c.tally"),
+    ),
+    (
+        "m3/fixes/g3/st/bad.tally",
+        include_str!("../../m3/fixes/g3/st/bad.tally"),
+    ),
+    (
+        "m3/fixes/g3/st/base.tally",
+        include_str!("../../m3/fixes/g3/st/base.tally"),
+    ),
+    (
+        "m3/fixes/g3/st/late.tally",
+        include_str!("../../m3/fixes/g3/st/late.tally"),
+    ),
+    (
+        "m3/fixes/g3/st/mv.tally",
+        include_str!("../../m3/fixes/g3/st/mv.tally"),
+    ),
+    (
+        "m3/fixes/g3/st/over_bad.tally",
+        include_str!("../../m3/fixes/g3/st/over_bad.tally"),
     ),
     (
         "m3/fixes/net_worth.tally",

@@ -1,0 +1,6 @@
+model famz
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use c = "z/c.tally" sha256 "235dbf1f086762c2c3a59d08af4985e0421237bca1b3ce1f1d0ed7baf324d974"

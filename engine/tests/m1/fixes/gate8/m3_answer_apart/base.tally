@@ -1,0 +1,96 @@
+model answer_apart
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C5, gate 8's book/adjust.rs answer_apart (E §5 step 1, L §5.14.3; tally 2.1.8 §4, item 28): a settlement bound over adjustments whose amount is a hole at its day, before the cut, which a later version answers, as any instance's hole booking is; beside it a settlement whose stated amount a later version changes, which is never measured"
+
+source plan "T's invented plan"
+
+source act "T's invented act"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+kind fees: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place konto2: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input fee_amt: money PLN
+
+input dom: int
+
+input act_day: date
+
+input back_day: date
+
+input back_amt: money PLN
+
+input fee_back_amt: money PLN
+
+move rent[m in months]: rents
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move fee[m in months]: fees
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from konto2 to landlord amount fee_amt
+
+move back[a in adjustments on act_day where a.adjusts in rents]: transfers
+  on back_day
+  at a.day
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+move fee_back[a in adjustments on act_day where a.adjusts in fees]: transfers
+  on back_day
+  at a.day
+  leg cash from konto2 to landlord amount fee_back_amt
+  fulfils a
+
+version plan_2026
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  fee_amt = 50.00 PLN
+  dom = 10
+  act_day = 2026-04-05 governs always
+  back_day = 2026-04-20 governs always
+  back_amt = ?"how much rent was paid back for March?"
+  fee_back_amt = 10.00 PLN
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start
+  opening[konto2] = 1 000.00 PLN at 2026-01-01 start
+
+version raise
+  cite act
+  governs 2026-03
+  known 2026-04-05
+  replace rent_amt = 1 000.00 PLN
+  replace fee_amt = 60.00 PLN
+
+version answer
+  cite act
+  governs 2026..
+  known 2026-05-02
+  replace back_amt = 100.00 PLN
+  replace fee_back_amt = 25.00 PLN
+
+ask q_bal: bal(konto, d), bal(konto2, d) for d in [2026-04-19, 2026-04-30, 2026-05-31] law cut
+
+ask q_flows: flows(back, 2026-04-01 .. 2026-05-31), flows(fee_back, 2026-04-01 .. 2026-05-31), flows(rent, 2026-03-01 .. 2026-05-31), flows(fee, 2026-03-01 .. 2026-05-31) law cut
+
+ask q_early: bal(konto, 2026-04-30), bal(konto2, 2026-04-30) law cut as known 2026-05-01
+
+ask q_changes: a.change for a in adjustments over .. law cut

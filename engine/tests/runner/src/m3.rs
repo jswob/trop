@@ -359,7 +359,7 @@ mod tests {
         for v in &vs {
             assert!(ids.insert(v.id.as_str()), "{}: twice", v.id);
             assert!(
-                ["changes", "run", "operations", "last"].contains(&v.group.as_str()),
+                ["changes", "run", "operations", "last", "fixes"].contains(&v.group.as_str()),
                 "{}",
                 v.id
             );

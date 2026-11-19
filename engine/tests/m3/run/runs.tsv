@@ -5,7 +5,7 @@ run/ask-empty	m3/run	run ../check/model.tally two.tally --ask	-	OPERATIONS §2.1
 run/cuts	m3/run	run ../check/model.tally two.tally --ask q_k1 q_k2	-	E §1, L §7.5: each ask its own clock K in one run
 run/unnamed	m3/run	run ../check/model.tally two.tally --ask q_a	unnamed.tally	E §1: a file the request doesn't name is not read
 run/dir	m3/run	run ../check/model.tally d/ --ask q_d	d/notes.txt	L §6.1: under a directory given, only .tally files are read
-run/joint	m3/check/joint	run j.tally --ask x a.q	-	L §6.1: a member's ask beside the joint model's own
+run/joint	m3/check/joint	run j.tally --ask a.q	-	L §6.1: a member's ask, answered by the member alone (the joint model's own ask x over its members is M5c's: pick P21)
 run/covered	m3/check	run model.tally s_a_zulu.tally asks_zulu.tally --ask q_in_zulu q_zulu_own q	-	OPERATIONS §2.1: a refused scenario's line once, before every result; an ask in its world its own refusal; the file's own ask nothing, even named
 run/unknown	m3/run	frobnicate ../check/model.tally	-	usage
 run/none	m3/run		-	usage
@@ -16,7 +16,14 @@ operations/diff	m3/mini	run reality.tally acme_stops.tally --ask q_diff	-	OPERAT
 operations/worked	m3/mini/w	run ../reality.tally ../more.tally acme_stops.tally --ask q_base q_dec q_in	-	OPERATIONS §7's worked output, exit 0
 operations/statement	m3/mini	run reality.tally statement.tally more.tally --ask q_base q_dec	-	OPERATIONS §3.5 IMP-1, IMP-3: the statement's rows and its stated balance's anchor line
 operations/law	m3/mini	run reality.tally pit.tally --ask pit_check	-	OPERATIONS §3.6 LAW-1: a law file's check, answered as any ask
-run/ask-before-pin	m3/check/joint	run j_bytes.tally --ask x --pin=bytes	-	G2 review N-9, INTERFACE §1: --pin=bytes after --ask is the input option, not an ask id
+run/ask-before-pin	m3/check/joint	run j_bytes.tally --ask a.q --pin=bytes	-	G2 review N-9, INTERFACE §1: --pin=bytes after --ask is the input option, not an ask id (a member's ask: pick P21)
 last/net_worth	m3/fixes	run net_worth.tally --ask net_worth kinds_only	-	pick P7, plan Q9: household X's net_worth binding (places over .., not outside, four kinds, unit(x) == PLN) and a fund's units priced in PLN
 last/unit-quantity	m3/fixes	run net_worth.tally --ask over_unit	-	pick P7: unit(x) of a place whose unit is a quantity unit is RUN-DOMAIN, where net_worth's and keeps it unread
 last/places	m3/fixes	run net_worth.tally --ask over_outside over_kind	-	pick P7: the binding's other parts alone (places over .., not outside; kind tests)
+fixes/stacked-covers	m3/fixes/g3/st	run base.tally mv.tally late.tally --ask q q_late	-	G3 review B-1, OPERATIONS §2.1, L §8: a scenario over one refused LOAD-COVERS (P19) is refused with it, its line naming the lower one's refusal; its ask prints nothing
+fixes/stacked-unit	m3/fixes/g3/st	run base.tally bad.tally over_bad.tally --ask q q_ob	-	G3 review B-1's control: a scenario over one refused LOAD-UNIT is refused with it
+fixes/member-warning-id	m3/fixes/g3/j	run jw.tally --ask a.warning_total a.warning_s a.q	-	G3 review B-2, OPERATIONS §2.1, L §6.1: a member's ask whose id starts with warning keeps its a. prefix
+fixes/member-refused-alone	m3/fixes/g3/j	run jz.tally --ask c.qnone c.q	-	G3 review B-3, L §6.1, OPERATIONS §2.1: a member's ask refused alone prints its own line with its prefix, the rest answers, exit 0
+fixes/member-clock	m3/fixes/g3/j	run jc.tally --ask c.q c.qc	-	G3 review B-4, E §11: a member's ask whose as known is after on refuses the request REQ-CLOCK, the run's one result, exit 1
+fixes/scenario-files-clock	m3/fixes/g3/j	run n/b/ --ask q qc	-	G3 review B-5, E §11, OPERATIONS §2.1: with scenario files given, an as known after on still refuses the request REQ-CLOCK, exit 1
+fixes/cycle-when	m3/fixes/a4	run cycle_when.tally --ask q_jan q_feb q_mar q_ca q_cb q_bal	-	G1 review A-4, E §10, E §4.2 step 3, L §5.14.2: a walk-bound def read by an unordered cycle's whens is kept at the act's point, before each instance's own point (refcore's run_group), and named by its move there; the first instance reads it again at its own point

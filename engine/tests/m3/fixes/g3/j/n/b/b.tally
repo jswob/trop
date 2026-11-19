@@ -1,0 +1,23 @@
+model bob
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "b card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+ask qc: twice law 2026-03-01 as known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 3 000.00 PLN "the card"
