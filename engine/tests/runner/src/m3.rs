@@ -13,7 +13,11 @@
 //! `run`, `milestone/m3_run.rs`), refcore's run of each, stored in `m3/runs.vectors` in the same
 //! eight netstrings, the argument words as given.
 //!
-//! - [`CHECK`] and [`RUNS`]: the stored vectors, read by [`check_vectors`];
+//! The spec's answers (chunk C7): where refcore prints its guard (`REFCORE-NOT-YET`, never a
+//! target) or answers otherwise, `m3/spec.vectors` holds the spec's bytes (a law-free twin's
+//! run, or the spec's line), refcore's beside them in `m3/spec.tsv`.
+//!
+//! - [`CHECK`], [`RUNS`] and [`SPEC`]: the stored vectors, read by [`check_vectors`];
 //! - [`texts`]: M0's embedded texts and the fixtures' ([`TEXTS`]);
 //! - [`check_failure`]: how the engine's run of a vector fails, if it does;
 //! - [`check_group_failures`], [`group_failures`]: every failure of one group of a store.
@@ -34,6 +38,11 @@ pub const CHECK: &[u8] = include_bytes!("../../m3/check.vectors");
 
 /// `m3/runs.vectors`: the `run` vectors, in the same eight netstrings (`m3/vectors.py`).
 pub const RUNS: &[u8] = include_bytes!("../../m3/runs.vectors");
+
+/// `m3/spec.vectors`: the spec's answers where refcore prints its guard or answers otherwise
+/// (`m3/spec.tsv`, each row's section named, refcore's bytes beside it; `source` `spec`), in the
+/// same eight netstrings (`m3/vectors.py`, chunk C7: #235, #229).
+pub const SPEC: &[u8] = include_bytes!("../../m3/spec.vectors");
 
 /// The exit code of a usage error (`INTERFACE.md` §1, pick P3).
 const USAGE: u8 = 2;
@@ -328,7 +337,7 @@ pub fn check_groups() -> Result<BTreeSet<String>, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{CHECK, RUNS, check_vectors, texts};
+    use super::{CHECK, RUNS, SPEC, check_vectors, texts};
     use std::collections::BTreeSet;
 
     #[test]
@@ -349,8 +358,8 @@ mod tests {
         }
     }
 
-    /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes` and
-    /// `b192`, `run` first but for a usage error,
+    /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes`, `b192`
+    /// and `lawdate`, `run` first but for a usage error,
     /// every text embedded.
     #[test]
     fn the_runs_store_reads_and_every_text_is_embedded() {
@@ -360,8 +369,16 @@ mod tests {
         for v in &vs {
             assert!(ids.insert(v.id.as_str()), "{}: twice", v.id);
             assert!(
-                ["changes", "run", "operations", "last", "fixes", "b192"]
-                    .contains(&v.group.as_str()),
+                [
+                    "changes",
+                    "run",
+                    "operations",
+                    "last",
+                    "fixes",
+                    "b192",
+                    "lawdate"
+                ]
+                .contains(&v.group.as_str()),
                 "{}",
                 v.id
             );
@@ -370,6 +387,36 @@ mod tests {
                 "{}",
                 v.id
             );
+            for f in &v.table {
+                assert!(texts.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
+            }
+        }
+    }
+
+    /// The spec store: ids once and none of the runs store's, groups `spec-lawdate` and
+    /// `spec-alone`, `source` `spec`, `run` first, no `REFCORE-NOT-YET` (INTERFACE §3), every
+    /// text embedded.
+    #[test]
+    fn the_spec_store_reads_and_every_text_is_embedded() {
+        let runs: BTreeSet<String> = check_vectors(RUNS)
+            .expect("m3/runs.vectors reads")
+            .into_iter()
+            .map(|v| v.id)
+            .collect();
+        let vs = check_vectors(SPEC).expect("m3/spec.vectors reads");
+        let texts = texts();
+        let mut ids = BTreeSet::new();
+        for v in &vs {
+            assert!(ids.insert(v.id.as_str()), "{}: twice", v.id);
+            assert!(!runs.contains(&v.id), "{}: in the runs store too", v.id);
+            assert!(
+                ["spec-lawdate", "spec-alone"].contains(&v.group.as_str()),
+                "{}",
+                v.id
+            );
+            assert_eq!(v.source, "spec", "{}", v.id);
+            assert_eq!(v.args.first().map(String::as_str), Some("run"), "{}", v.id);
+            assert!(!v.run.out.contains("REFCORE-NOT-YET"), "{}", v.id);
             for f in &v.table {
                 assert!(texts.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
             }

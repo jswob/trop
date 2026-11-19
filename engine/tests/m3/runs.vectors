@@ -4801,4 +4801,324 @@ fall_j (d = 2026-01-19): 0.00 DUK
   cut 2026-04-15
 fall_j (d = 2026-02-19): refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01]
   cut 2026-04-15
+,20:lawdate/b1-cal-where,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run b1_cal_where.tally,55:b1_cal_where.tally	m3/fixes/lawdate/b1_cal_where.tally
+,1:0,185:q: 50.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  cut 2026-01-31
+,20:lawdate/b1-month-key,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run b1_month_key.tally,55:b1_month_key.tally	m3/fixes/lawdate/b1_month_key.tally
+,1:0,114:q: 70.00 PLN
+  unfulfilled: pay[2026-01]
+  unfulfilled: pay[2026-02]
+  unfulfilled: pay[2026-03]
+  cut 2026-06-30
+,23:lawdate/b2-add-business,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,25:run b2_add_business.tally,61:b2_add_business.tally	m3/fixes/lawdate/b2_add_business.tally
+,1:0,1161:q: refused: RUN-NONE never in the law date of shut
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+q1: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: refused: RUN-NONE never in the law date of shut
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input act_day is read by nothing
+warning: WARN-UNREAD input back_day is read by nothing
+,18:lawdate/w-ref-self,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,20:run w_ref_self.tally,51:w_ref_self.tally	m3/fixes/lawdate/w_ref_self.tally
+,1:0,676:q: refused: RUN-DIV division by zero
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
+warning: WARN-UNREAD input d_open is read by nothing
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD place spare is read by nothing
+,18:lawdate/p-o-cal-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,20:run p_o_cal_at.tally,51:p_o_cal_at.tally	m3/fixes/lawdate/p_o_cal_at.tally
+,1:0,421:q: refused: RUN-NONE never in the law date of shut
+  cut 2026-01-31
+q2: 90.00 PLN
+  unfulfilled: shut[spare]
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,20:lawdate/p-o-cal-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run p_o_cal_noat.tally,55:p_o_cal_noat.tally	m3/fixes/lawdate/p_o_cal_noat.tally
+,1:0,410:q: 90.00 PLN
+  unfulfilled: shut[konto]
+  cut 2026-01-31
+q2: 90.00 PLN
+  unfulfilled: shut[spare]
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,21:lawdate/p-o-defcal-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,23:run p_o_defcal_at.tally,57:p_o_defcal_at.tally	m3/fixes/lawdate/p_o_defcal_at.tally
+,1:0,374:q: refused: RUN-NONE never in the law date of shut
+  cut 2026-01-31
+q2: 90.00 PLN
+  unfulfilled: shut[spare]
+  cut 2026-01-31
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,23:lawdate/p-o-defcal-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,25:run p_o_defcal_noat.tally,61:p_o_defcal_noat.tally	m3/fixes/lawdate/p_o_defcal_noat.tally
+,1:0,363:q: 90.00 PLN
+  unfulfilled: shut[konto]
+  cut 2026-01-31
+q2: 90.00 PLN
+  unfulfilled: shut[spare]
+  cut 2026-01-31
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,18:lawdate/p-o-own-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,20:run p_o_own_at.tally,51:p_o_own_at.tally	m3/fixes/lawdate/p_o_own_at.tally
+,1:0,373:q: refused: RUN-NONE never in the law date of shut
+  cut 2026-01-31
+q2: 90.00 PLN
+  unfulfilled: shut[spare]
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,20:lawdate/p-o-own-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run p_o_own_noat.tally,55:p_o_own_noat.tally	m3/fixes/lawdate/p_o_own_noat.tally
+,1:0,362:q: 90.00 PLN
+  unfulfilled: shut[konto]
+  cut 2026-01-31
+q2: 90.00 PLN
+  unfulfilled: shut[spare]
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,22:lawdate/p-o-input-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,24:run p_o_input_noat.tally,59:p_o_input_noat.tally	m3/fixes/lawdate/p_o_input_noat.tally
+,1:1,92:refused: LOAD-LAWDATE shut reads law-dated facts and states no at (p_o_input_noat.tally:34)
+,25:lawdate/p-o-lawdated-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,27:run p_o_lawdated_noat.tally,65:p_o_lawdated_noat.tally	m3/fixes/lawdate/p_o_lawdated_noat.tally
+,1:1,95:refused: LOAD-LAWDATE shut reads law-dated facts and states no at (p_o_lawdated_noat.tally:34)
+,25:lawdate/p-o-owndated-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,27:run p_o_owndated_noat.tally,65:p_o_owndated_noat.tally	m3/fixes/lawdate/p_o_owndated_noat.tally
+,1:1,95:refused: LOAD-LAWDATE shut reads law-dated facts and states no at (p_o_owndated_noat.tally:34)
+,20:lawdate/p-o-agg-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run p_o_agg_noat.tally,55:p_o_agg_noat.tally	m3/fixes/lawdate/p_o_agg_noat.tally
+,1:1,90:refused: LOAD-LAWDATE shut reads law-dated facts and states no at (p_o_agg_noat.tally:34)
+,23:lawdate/p-o-reader-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,25:run p_o_reader_noat.tally,61:p_o_reader_noat.tally	m3/fixes/lawdate/p_o_reader_noat.tally
+,1:1,93:refused: LOAD-LAWDATE shut reads law-dated facts and states no at (p_o_reader_noat.tally:34)
+,24:lawdate/p-o-reader2-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,26:run p_o_reader2_noat.tally,63:p_o_reader2_noat.tally	m3/fixes/lawdate/p_o_reader2_noat.tally
+,1:1,94:refused: LOAD-LAWDATE shut reads law-dated facts and states no at (p_o_reader2_noat.tally:34)
+,22:lawdate/p-w-input-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,24:run p_w_input_noat.tally,59:p_w_input_noat.tally	m3/fixes/lawdate/p_w_input_noat.tally
+,1:1,91:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (p_w_input_noat.tally:34)
+,25:lawdate/p-w-lawdated-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,27:run p_w_lawdated_noat.tally,65:p_w_lawdated_noat.tally	m3/fixes/lawdate/p_w_lawdated_noat.tally
+,1:1,94:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (p_w_lawdated_noat.tally:34)
+,24:lawdate/p-w-aggterm-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,26:run p_w_aggterm_noat.tally,63:p_w_aggterm_noat.tally	m3/fixes/lawdate/p_w_aggterm_noat.tally
+,1:1,93:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (p_w_aggterm_noat.tally:34)
+,25:lawdate/p-w-owndated-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,27:run p_w_owndated_noat.tally,65:p_w_owndated_noat.tally	m3/fixes/lawdate/p_w_owndated_noat.tally
+,1:1,94:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (p_w_owndated_noat.tally:34)
+,23:lawdate/p-w-reader-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,25:run p_w_reader_noat.tally,61:p_w_reader_noat.tally	m3/fixes/lawdate/p_w_reader_noat.tally
+,1:1,92:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (p_w_reader_noat.tally:34)
+,24:lawdate/p-w-reader2-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,26:run p_w_reader2_noat.tally,63:p_w_reader2_noat.tally	m3/fixes/lawdate/p_w_reader2_noat.tally
+,1:1,93:refused: LOAD-LAWDATE pay reads law-dated facts and states no at (p_w_reader2_noat.tally:34)
+,18:lawdate/p-w-cal-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,20:run p_w_cal_at.tally,51:p_w_cal_at.tally	m3/fixes/lawdate/p_w_cal_at.tally
+,1:0,512:q: 50.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,20:lawdate/p-w-cal-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run p_w_cal_noat.tally,55:p_w_cal_noat.tally	m3/fixes/lawdate/p_w_cal_noat.tally
+,1:0,512:q: 50.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,21:lawdate/p-w-defcal-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,23:run p_w_defcal_at.tally,57:p_w_defcal_at.tally	m3/fixes/lawdate/p_w_defcal_at.tally
+,1:0,527:q: 30.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  unfulfilled: pay[2026-01-10]
+  unfulfilled: pay[2026-01-11]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,23:lawdate/p-w-defcal-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,25:run p_w_defcal_noat.tally,61:p_w_defcal_noat.tally	m3/fixes/lawdate/p_w_defcal_noat.tally
+,1:0,527:q: 30.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  unfulfilled: pay[2026-01-10]
+  unfulfilled: pay[2026-01-11]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,21:lawdate/p-w-lawlit-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,23:run p_w_lawlit_at.tally,57:p_w_lawlit_at.tally	m3/fixes/lawdate/p_w_lawlit_at.tally
+,1:0,513:q: 60.00 PLN
+  pinned: law dfix = 2026-01-01
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,23:lawdate/p-w-lawlit-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,25:run p_w_lawlit_noat.tally,61:p_w_lawlit_noat.tally	m3/fixes/lawdate/p_w_lawlit_noat.tally
+,1:0,513:q: 60.00 PLN
+  pinned: law dfix = 2026-01-01
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,24:lawdate/p-w-lawreader-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,26:run p_w_lawreader_at.tally,63:p_w_lawreader_at.tally	m3/fixes/lawdate/p_w_lawreader_at.tally
+,1:0,513:q: 60.00 PLN
+  pinned: law dfix = 2026-01-01
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,26:lawdate/p-w-lawreader-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,28:run p_w_lawreader_noat.tally,67:p_w_lawreader_noat.tally	m3/fixes/lawdate/p_w_lawreader_noat.tally
+,1:0,513:q: 60.00 PLN
+  pinned: law dfix = 2026-01-01
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,18:lawdate/p-w-own-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,20:run p_w_own_at.tally,51:p_w_own_at.tally	m3/fixes/lawdate/p_w_own_at.tally
+,1:0,433:q: 60.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,20:lawdate/p-w-own-noat,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,22:run p_w_own_noat.tally,55:p_w_own_noat.tally	m3/fixes/lawdate/p_w_own_noat.tally
+,1:0,433:q: 60.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input dpin is read by nothing
+warning: WARN-UNREAD input n is read by nothing
+,18:lawdate/p-w-pin-at,7:lawdate,3:run,29:engine/tests/m3/fixes/lawdate,20:run p_w_pin_at.tally,51:p_w_pin_at.tally	m3/fixes/lawdate/p_w_pin_at.tally
+,1:0,430:q: 70.00 PLN
+  pinned: act_day = 2026-01-07
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  cut 2026-01-31
+q2: 100.00 PLN
+  cut 2026-01-31
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def own is read by nothing
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def rd2 is read by nothing
+warning: WARN-UNREAD input n is read by nothing
 ,

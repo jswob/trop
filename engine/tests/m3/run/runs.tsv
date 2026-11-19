@@ -29,3 +29,36 @@ fixes/scenario-files-clock	m3/fixes/g3/j	run n/b/ --ask q qc	-	G3 review B-5, E 
 fixes/cycle-when	m3/fixes/a4	run cycle_when.tally --ask q_jan q_feb q_mar q_ca q_cb q_bal	-	G1 review A-4, E §10, E §4.2 step 3, L §5.14.2: a walk-bound def read by an unordered cycle's whens is kept at the act's point, before each instance's own point (refcore's run_group), and named by its move there; the first instance reads it again at its own point
 b192/solve-units	m3/fixes/b192	run solve.tally	-	#192 (G1 fix N-c), L §5.18 solve: the bracket and step take the unknown type, a rate (%/year) and a num with a unit (num PLN), each on a fine and a coarse grid
 b192/parked-prefix	m3/fixes/b192	run parked_prefix.tally	-	#192 (the review of P73's fix, 476032fd), L §5.14.1, E §4.3: one projection read on falling days within a month, a refused leg and a hole between them, each read from the parked walk's prefix
+lawdate/b1-cal-where	m3/fixes/lawdate	run b1_cal_where.tally	-	M3 gate B-1, L §4.2, §4.3: a calendar read by is_business in a no-at key's where (the calendar governed 2026..) is no law-dated read: five weekdays paid, not seven
+lawdate/b1-month-key	m3/fixes/lawdate	run b1_month_key.tally	-	M3 gate B-1, L §4.3: a month-keyed input read at its key's month in a key's where, with no at
+lawdate/b2-add-business	m3/fixes/lawdate	run b2_add_business.tally	-	M3 gate B-2, L §4.2, §4.3: on add_business(d_open, 1, cal) in a key's on before the at loads (no LOAD-LAWDATE)
+lawdate/w-ref-self	m3/fixes/lawdate	run w_ref_self.tally	-	M3 gate (P30): a dated where that refuses itself before its dated read (one_amt / zero), read at the at
+lawdate/p-o-cal-at	m3/fixes/lawdate	run p_o_cal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a calendar by add_business, with an at
+lawdate/p-o-cal-noat	m3/fixes/lawdate	run p_o_cal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a calendar by add_business, no at
+lawdate/p-o-defcal-at	m3/fixes/lawdate	run p_o_defcal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def over the calendar, with an at
+lawdate/p-o-defcal-noat	m3/fixes/lawdate	run p_o_defcal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def over the calendar, no at
+lawdate/p-o-own-at	m3/fixes/lawdate	run p_o_own_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def with its own at (act_day at dfix), with an at
+lawdate/p-o-own-noat	m3/fixes/lawdate	run p_o_own_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def with its own at (act_day at dfix), no at
+lawdate/p-o-input-noat	m3/fixes/lawdate	run p_o_input_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a law-dated input, no at: LOAD-LAWDATE states no at
+lawdate/p-o-lawdated-noat	m3/fixes/lawdate	run p_o_lawdated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads as if {law act_day}, the date itself law-dated, no at: LOAD-LAWDATE
+lawdate/p-o-owndated-noat	m3/fixes/lawdate	run p_o_owndated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def whose own at reads a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-o-agg-noat	m3/fixes/lawdate	run p_o_agg_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a law-dated input inside an aggregate's where, no at: LOAD-LAWDATE
+lawdate/p-o-reader-noat	m3/fixes/lawdate	run p_o_reader_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads an at reader def, no at: LOAD-LAWDATE
+lawdate/p-o-reader2-noat	m3/fixes/lawdate	run p_o_reader2_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's on reads a def through an at reader def, no at: LOAD-LAWDATE
+lawdate/p-w-input-noat	m3/fixes/lawdate	run p_w_input_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-w-lawdated-noat	m3/fixes/lawdate	run p_w_lawdated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads as if {law act_day}, no at: LOAD-LAWDATE
+lawdate/p-w-aggterm-noat	m3/fixes/lawdate	run p_w_aggterm_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where compares an aggregate with a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-w-owndated-noat	m3/fixes/lawdate	run p_w_owndated_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def whose own at reads a law-dated input, no at: LOAD-LAWDATE
+lawdate/p-w-reader-noat	m3/fixes/lawdate	run p_w_reader_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads an at reader def, no at: LOAD-LAWDATE
+lawdate/p-w-reader2-noat	m3/fixes/lawdate	run p_w_reader2_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def through an at reader def, no at: LOAD-LAWDATE
+lawdate/p-w-cal-at	m3/fixes/lawdate	run p_w_cal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a calendar by is_business, with an at
+lawdate/p-w-cal-noat	m3/fixes/lawdate	run p_w_cal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a calendar by is_business, no at (B-1)
+lawdate/p-w-defcal-at	m3/fixes/lawdate	run p_w_defcal_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def over the calendar, with an at
+lawdate/p-w-defcal-noat	m3/fixes/lawdate	run p_w_defcal_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def over the calendar, no at
+lawdate/p-w-lawlit-at	m3/fixes/lawdate	run p_w_lawlit_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads as if {law <a date governed always>}, with an at
+lawdate/p-w-lawlit-noat	m3/fixes/lawdate	run p_w_lawlit_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads as if {law <a date governed always>}, no at
+lawdate/p-w-lawreader-at	m3/fixes/lawdate	run p_w_lawreader_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads an at reader def inside as if {law <a fixed date>}, with an at
+lawdate/p-w-lawreader-noat	m3/fixes/lawdate	run p_w_lawreader_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads an at reader def inside as if {law <a fixed date>}, no at
+lawdate/p-w-own-at	m3/fixes/lawdate	run p_w_own_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def with its own at (act_day at dfix), with an at
+lawdate/p-w-own-noat	m3/fixes/lawdate	run p_w_own_noat.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a def with its own at (act_day at dfix), no at
+lawdate/p-w-pin-at	m3/fixes/lawdate	run p_w_pin_at.tally	-	M3 gate fix (L §4.2, §4.3, E §4.1 step 1): a key's where reads a pinned fact (as if {x = v}), with an at

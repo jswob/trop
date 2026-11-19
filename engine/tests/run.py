@@ -711,7 +711,8 @@ def self_test(checks):
             p = subprocess.run([sys.executable, '-I', '-B', T + script] + flag, capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 8s. M3's vectors (issue #226): m3/check.vectors is m3/vectors.py's prediction from refcore's run, tied, and
-        # m3/runs.vectors refcore's runs; m3/purity.py's sample reads (it runs the engine only with --engine)
+        # m3/runs.vectors refcore's runs, m3/spec.vectors m3/spec.tsv's spec answers, tied to refcore's runs of their twins
+        # and of themselves; m3/purity.py's sample reads (it runs the engine only with --engine)
         for script in ('m3/vectors.py', 'm3/purity.py'):
             p = subprocess.run([sys.executable, '-I', '-B', T + script, '--check'], capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])

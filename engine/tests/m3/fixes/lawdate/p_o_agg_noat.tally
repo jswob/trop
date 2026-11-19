@@ -1,0 +1,60 @@
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..2026-01-20
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+
+input fee: money PLN
+input cal: calendar
+input act_day: date
+input gap: date
+input n: int
+input d0: date
+input dfix: date
+input dpin: date
+
+band lim(x: int): int
+
+def rd: date = act_day at reader
+def rd2: date = rd at reader
+def own: date = act_day at dfix
+def owndated: date = act_day at gap
+def nb: date = add_business(d0, 1, cal)
+
+move shut[p in accounts on max(x for x in wk where x <= act_day)]: transfers
+  on d0
+  leg cash from p to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  d0 = 2026-01-09
+  dfix = 2026-01-01
+  dpin = 2026-01-07
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+  opening[spare] = 100.00 PLN at 2026-01-01 start "w"
+
+version c
+  cite s
+  governs 2026..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun])
+  act_day = 2026-01-08
+  gap = 2026-01-02
+  n = 2
+  lim: [0, inf) = 2
+
+ask q: bal(konto, 2026-01-31)
+ask q2: bal(spare, 2026-01-19)
