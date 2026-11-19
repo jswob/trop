@@ -262,6 +262,16 @@ impl Checker {
         domain: &Domain,
         depth: u32,
     ) -> Result<Option<KeyVal>, Stop> {
+        // the key is read plainly: a calendar read at each day asked, or a read at a day the
+        // reader states, is that read's own, not its keys' (L §4.2 "at any keys", §4.3, §4.6;
+        // the gate fix review's G-1)
+        let plain;
+        let scope = if matches!(scope.mode, Some(Rel::Calendar | Rel::Explicit)) {
+            plain = scope.without_mode();
+            &plain
+        } else {
+            scope
+        };
         let kn = written.unbracketed();
         if let (Domain::Axis(axis), Expr::Name(name)) = (domain, kn)
             && !scope.is_var(name)

@@ -39,9 +39,11 @@ impl Checker {
             file,
             decl.line,
         );
+        let mut keys = Vec::with_capacity(mv.binds.len());
         for bind in &mv.binds {
-            self.bind(m, &mut scope, &bind.node, 0)?;
+            keys.push(self.move_key(m, &mut scope, &bind.node)?);
         }
+        self.key_reads.insert(mv.id.clone(), keys);
         scope.keyvars = mv.binds.iter().map(|bind| bind.var.clone()).collect();
         let day = scope.for_item(Node::new(NodeKind::MoveOn, &mv.id));
         self.edge(&scope.item, day.item.clone(), Rel::Any);

@@ -186,7 +186,7 @@ pub mod eval {
     pub use aggregate::Member;
     pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
-    pub(crate) use bindings::{names_in, order_text, reads_name};
+    pub(crate) use bindings::{names_in, order_text, reads_name, reads_var};
     pub use context::Layer;
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};

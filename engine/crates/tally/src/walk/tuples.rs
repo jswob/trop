@@ -2,18 +2,26 @@
 //! Spec: E §4.1 steps 1 and 2 (enumerate a move's binding tuples at the cut, each binding read
 //! at the move's law date with the keys bound before it); L §5.14 Keys (a member whose `where`
 //! is a hole is a hole tuple; one whose `where` is refused ends its tuple there, a refused one;
-//! tally 2.1.6), §4.3 (a move's law date by its `at`); L §5.19 Links (the tuple of a move at
-//! its keys under a cut, its `when` read at the cut, and the places its legs give).
+//! tally 2.1.6), §4.3 (a move's law date by its `at`; a key's `where` that reads a law-dated
+//! fact, while the `at` reads a key not yet bound, waits for the tuple's `at` and is read
+//! there, in binding order: P30, P31); L §5.19 Links (the tuple of a move at its keys under a
+//! cut, its `when` read at the cut, and the places its legs give).
 //! Twin: engine/tools/refcore/moves.py (`move_tuples` with its `go`, `move_law`,
-//! `link_tuple`, `link_places`).
+//! `link_tuple`, `link_places`); refcore guards a waiting `where` (#235).
 //! Invariants: tuples come in binding order, depth first; what deciding a tuple read goes with
 //! its instance, never to the reader of the move's instances; a link whose `when` is a hole or
-//! refused is taken as existing and judged where its instance is.
+//! refused is taken as existing and judged where its instance is; a key's `where` waits only
+//! where load marked it (`MoveInfo::dated_wheres`: the move has an `at` that reads that key or
+//! a later one), and is read at its tuple's law date once the `at`'s keys are bound, giving
+//! there what its law-free twin gives; where no law date can be had (the `at` refused or a
+//! hole, a later key's domain a hole or its `where` refused first) it is left unread and the
+//! tuple stands with that refusal or hole (P31's Q-3; the gate review's items 1, 15); a tuple
+//! with every key bound never leaves with it unread.
 
 use super::instance::{Exists, join};
 use super::plan::{date_of, invariant, refuse};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Ctx, Decided, Engine, Env, Kept, LawClass, Member, reads_name};
+use crate::eval::{Collected, Ctx, Decided, Engine, Env, Kept, LawClass, Member, reads_var};
 use crate::hole::{Hole, Unknown};
 use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
 use crate::syntax::Stop;
@@ -69,6 +77,13 @@ impl Engine {
                 continue;
             }
             let Some(bind) = mv.binds.get(tuple.keys.len()) else {
+                // every key bound, so the `at` has its keys: a `where` still waiting was
+                // never read, which no answer may take as true (R-27)
+                if !tuple.waiting.is_empty() {
+                    return Err(invariant(
+                        "a waiting where left unread with every key bound",
+                    ));
+                }
                 out.push(tuple);
                 continue;
             };
@@ -90,7 +105,11 @@ impl Engine {
             // a `where` that reads a law-dated fact, while the `at` reads a key not yet bound,
             // waits for its tuple's `at` (L §4.3, E §4.1 step 1; P30)
             let pos = tuple.keys.len();
-            let waits = law == Law::None && mv.dated_wheres.contains(&pos);
+            let waits = mv.dated_wheres.contains(&pos);
+            if waits && law != Law::None {
+                // load marks a key only where the `at` reads it or a key bound after it
+                return Err(invariant("a waiting where with its law date known"));
+            }
             let unfiltered;
             let node = if waits {
                 unfiltered = crate::syntax::Bind {
@@ -130,10 +149,12 @@ impl Engine {
     }
 
     /// A tuple's waiting `where`s, read once the keys its `at` reads are bound, each at the
-    /// tuple's law date in binding order: a false one drops the tuple, a hole joins its
-    /// existence, a refused one makes it a refused tuple; the tuple as it was while the `at`
-    /// still reads a key not yet bound. L §4.3 (a key binding's `where` is read for each tuple
-    /// at the move's `at`), E §4.1 step 1 (P30).
+    /// tuple's law date in binding order, before a later key's refused `where`: a false one
+    /// drops the tuple, a hole joins its existence, a refused one makes it a refused tuple. The
+    /// tuple as it was while the `at` still reads a key not yet bound, or where the `at` is
+    /// refused: its instance then reads the `at` again and is refused alone, as on the path of
+    /// a `where` that reads nothing law-dated. L §4.3 (a key binding's `where` is read for each
+    /// tuple at the move's `at`), E §4.1 steps 1 and 2 (P30, P31).
     fn waiting_wheres(
         &mut self,
         m: &Reality,
@@ -141,13 +162,22 @@ impl Engine {
         mut tuple: Tuple,
         ctx: Ctx,
     ) -> Result<Option<Tuple>, Stop> {
-        if tuple.waiting.is_empty() || tuple.refused.is_some() {
+        if tuple.waiting.is_empty() {
             return Ok(Some(tuple));
         }
         self.push();
         let law = self.move_law(m, mv, &tuple.env, ctx);
         tuple.coll.merge(&self.pop_alone());
-        let law = law?;
+        let law = match law {
+            Ok(law) => law,
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+                // no law date to read the `where` at: the instance reads the `at` again and
+                // is refused alone, as a refused `at` is on the law-free path (P31, Q-3)
+                tuple.waiting.clear();
+                return Ok(Some(tuple));
+            }
+            Err(stop) => return Err(stop),
+        };
         if law == Law::None {
             return Ok(Some(tuple));
         }
@@ -268,7 +298,8 @@ impl Engine {
     }
 
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
-    /// not yet bound (refcore's `move_law`). L §4.3, §5.14.
+    /// not yet bound, by the same walk load marks the keys by (`reads_var`; refcore's
+    /// `move_law` counts any variable, an aggregate's own too). L §4.3, §5.14.
     pub(super) fn move_law(
         &mut self,
         m: &Reality,
@@ -282,7 +313,7 @@ impl Engine {
         if mv
             .binds
             .iter()
-            .any(|b| env.get(&b.var).is_none() && reads_name(at, &b.var))
+            .any(|b| env.get(&b.var).is_none() && reads_var(at, &b.var))
         {
             return Ok(Law::None);
         }

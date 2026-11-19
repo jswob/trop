@@ -5287,3 +5287,132 @@ On `build/m3` from 8fd70b7a (nothing merged since turn 5), one commit and this o
 - **Usage:** about 0.07 % of the week this turn (`engine/tools/usage`, 2.40 % over the session), against a budget of 0.4 %.
 - **Next:** the reviews of turns 5 and 6; T's vectors for #235's band and aggregate forms.
 - **Checks:** `check quick: green, 11 steps (18s)` at a9f4243b's tree with this commit's doc line and rows; `check commit: green, 23 steps (126s)`, exit 0, at the same tree (this commit adds the log, a doc line and the rows' reasons). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 G3 `last`, turn 7: the fix review's three blocking findings (issue #226)
+
+On `build/m3` from 4fe9ac25 (nothing merged since turn 6), one commit and this one. The fix review of turns 5 and 6 is `tmp/m3/review-g3ef.md`: 3 blocking and 6 non-blocking. P31 rules all three on the review's readings, which keep P30's waiting `where` equal to its law-free twin.
+- **f112e8cf, what changed:**
+  - **B-1** (`load/lawdates.rs` `read_parts`): #235's walk now reads the parts that load's shared `children` leaves out:
+    - an aggregate's bindings (range ends, `on`, span, `where`) and its `ties by`;
+    - a `flows` or `covered` span and its `for`;
+    - a projection's `from`.
+    - `children` itself is unchanged, so no other load check moves.
+    - `on max(start_of(k) for k in month where start_of(k) <= act_day)` (`c_aggwhere`) is now refused at load with `LOAD-LAWDATE move back's key a reads law-dated act_day …`. Before, it was `ENGINE-INVARIANT` at run.
+  - **B-2** (`walk/tuples.rs` `waiting_wheres`): a run refusal of the `at` leaves the tuple as it is. Its instance reads the `at` again (`inst_parts`) and is refused alone, as on the law-free path. Before, the refusal went out of `move_tuples` and refused the whole move. `a_atref` now prints its twin `at_atref`'s bytes: `q1: 0.00 PLN` (spare), and `q2` refused (konto).
+  - **B-3:** a tuple a later key's `where` refused has its waiting `where`s read too, in binding order, so a false one drops it first. `p15_refuse_free` now prints its twin's answer, where it printed `RUN-DIV`. `p16` (the earlier `where` true) still refuses `RUN-DIV`, as its twin does.
+  - **N-6:** the `//!` header names the waiting `where`.
+  - **N-1** (`load_cases.rs`):
+    - Turn 5's test now runs on a text with a raise known 2026-03-15. That gives `back` three adjustments as tuples, so kept and dropped print apart (`assert_ne!`), each against its law-free twin.
+    - `a_waiting_where_answers_as_its_law_free_twin_when_a_read_is_refused` holds B-2 and B-3.
+    - `c_aggwhere` joins the band and aggregate test.
+- **The probes against their twins** (`tmp/m3/g3/twins.py`, output `t7-twins.txt`): 87 probes in `review-g3ef`, `review-g3d` and `g3/t5`, each run on the engine and on refcore, and against its twin where one exists.
+  - None prints `ENGINE-INVARIANT`.
+  - 16 are the same bytes as their twins: `a_atref`, `b_aggwhere`, `b2_aggwhere_false`, `b4_maxwhere`, `p1`, `p2`, `p3`, `p5`, `p6`, `p7`, `p9`, `p10`, `p13`, `p14`, `p15`, `p16`. Each twin is the same as refcore.
+  - By hand: `p3b` and `p4_def` print `p1`'s bytes, and `p12` prints `p11`'s.
+  - Each line that differs from its twin, with its reason:
+    - `t5/w1`–`w5`, `w7`: the twin alone prints `WARN-UNREAD input act_day is read by nothing`. The twin drops the dated read, so it never reads `act_day`. `b3_aggwhere_lawchg` against `b3p_plain_lawchg` differs the same way, by `back_day`.
+    - `e_flowspan` and `n_noat`: the same refusal (`LOAD-READS …`, `LOAD-LAWDATE … states no at`), naming its own file.
+    - `p17_domhole` (the review's N-2): the engine adds `?"gap_day: no value"` to the answer, where the twin answers without it.
+      - A later key's domain is a hole, so the tuple never reaches its `at`, and the earlier key's waiting `where` can't be read.
+      - The review calls the hole defensible (imprecise, not wrong), under Q-1. It is the same as at 4fe9ac25.
+  - Against refcore, every dated probe differs, as P30 expects: refcore prints its #235 guard, or refuses an `at reader` def at run. Every twin, and every probe without a dated read, is refcore's bytes.
+- **The sweep:** turn 6's 157 runs (`sweep-t6.sh` and `l9` with its scenario) are unchanged (`compare.py`), and none prints `ENGINE-INVARIANT`.
+- **Not taken:** N-2, N-3, N-4 and N-5 are the review's notes for the round or T (Q-1 to Q-3).
+- **Size** (`engine/crates`, 4fe9ac25 to this commit): 3 files, 144 in, 19 out. Of those, the library is 49 in and 10 out; the tests are 95 in and 9 out.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.10 % of the week this turn (`engine/tools/usage`, 2.54 % over the session), against a budget of 0.5 %.
+- **Next:** the coordinator's probe of this fix against the twins and refcore (D12: no third review).
+- **Checks:** `check quick: green, 11 steps (111s)` at f112e8cf's tree; `check commit: green, 23 steps (128s)`, exit 0, at f112e8cf (this commit adds the log alone). The milestone report is `M3: 34/35`; the one red is `last/net_worth`, which T holds (P24).
+
+## 2026-11-19 M3 gate fix: the gate review's B-1 to B-4, items 2, 4 and 13 (issue #226)
+
+On `build/m3-gatefix` from 7450ac73 (56d59941 and the rules' map), a fresh builder, two commits and this one. The review is `tmp/m3/gate-review.md`; P32 rules all four blocking findings fixed here. The review's N-5 reading (load refuses a marked key with no `at` first) was not leaned on.
+- **How the marking decides now.** One rule, `move_read_dated` (`load/lawdates.rs`), over the reads load's checker typed, each with its relation. A read needs the move's law date when it reads at the law date at all and its target is law-dated:
+  - not dated: a binding, `flows`, `observed` or a balance (the timeline); a day the reader states (`last`, `since`, a price); a calendar read by a business-day function (`Rel::Calendar`, L §4.2); a pin's target; a read inside `as if {law D}` (`Rel::LawPin`);
+  - dated: a band with a table outside `always`; a def that is law-dated, takes its reader's law date, or whose `at` reads a law-dated fact; an input not lawless nor read at its own period key.
+  - The move's no-`at` check, #235's key check (`unbound_key_lawdate`) and P30's waiting `where` (`dated_wheres`) all ask it. Load's checker tapes each key's reads as it types them (`load/binds.rs` `move_key`, `load/check.rs` `KeyReads`): the domain, `on` and span apart from the `where`. No expression is walked a second time, so no part can be left out (B-3's class).
+  - A key's `where` is marked only where the move has an `at` that reads that key or a later one. Whether the `at` reads a key is `reads_var` (`eval/bindings.rs`, an exhaustive match over every form), the same for load and the walk's `move_law`.
+- **fddd428a, the marking:**
+  - **B-1:** `pay[d in wk where is_business(d, cal)]` with no `at` no longer waits: `q: 50.00 PLN`, refcore's and its twin's bytes (was `30.00 PLN`). The agent's `as if {law dd}` form in a no-`at` move (`gatefix/p/b1_asif2`, `b1_asif3`) is now refcore's bytes too (was `-3 950.00 PLN`, and no `pinned:` line).
+  - **B-2:** `on add_business(d_open, 1, cal)` loads and answers as refcore (`q1: 0.00 PLN`, `q`/`q2` `RUN-NONE never in the law date of shut`).
+  - **B-3:** `on if mean(one for k in month where start_of(k) <= act_day) > 0 …` and `on (d0 as if {law act_day})` are `LOAD-LAWDATE move back's key a reads law-dated act_day …` at load (`check` refuses them too); `b3_where` waits and prints its law-free twin's bytes.
+  - **Item 4:** `at max(start_of(k) for k in month)` reads no key, so the move has its law date before binding and the key's dated `on` is read at it (`gatefix/p/i4_aggat` = its twin). Refcore's `move_law` counts any variable, the aggregate's own `k` too, and guards (#235).
+  - **Item 13:** kept refused, by L §4.3 ("every chain of readers ends where a law date is written"), as refcore's run refuses it. The message no longer says "law-dated" for a def that reads nothing law-dated: `move shut's key p reaches rd, which takes its law date from its reader, with no law date: its at reads p`. The brief read it as over-marking. The spec's `at reader` rule refuses the chain whatever the def reads, so I didn't make it load; the round may say otherwise (#235).
+  - **The walk:** a marked key always waits. `law != None` there is `ENGINE-INVARIANT`, as is a tuple that has every key bound and a `where` still unread, instead of keeping it in silence. A refused `at` clears the waiting `where`: its instance is refused, P31's Q-3.
+  - **Items 1, 15, 2:** with the `at` refused or a hole, no law date exists to read the `where` at. Reading it once per law-date class over all time would answer as the twin only where the dated facts have a row at every law date; the gate's probes have none before 2026, and the exact memo would read every day of the calendar. So the refused instance (item 1) and the `at`'s hole (item 15) stand, and the `//!` header (item 2) now says exactly when a waiting `where` equals its twin. For #235.
+  - The message of `review-g3d/b2_if` now names `a_flag`, the first dated read in typing order, where the name walk named `act_day`.
+- **209cc544, B-4:** `ask_turn` (`ask/worlds.rs`) prints a loaded scenario's file's own ask refused alone as its line, in its place by id, and the rest answers, exit 0, as `check` prints it.
+  - The probes: `b1` (`q_gone`), `b2` (`q_cmp`), `j/top.tally --ask a.q_gone a.q_u`. Refcore's run prints nothing for it (#229).
+  - `j/a`, `jp/a` and `jt/a` alone now reach their scenario file's `as known 2026-07-01` and refuse `REQ-CLOCK` whole (P22, #233), where they stopped at B-4.
+- **Tests** (`load_cases.rs`, a twin each): `a_calendar_read_in_a_key_s_where_needs_no_law_date`, `a_key_s_business_day_read_before_the_at_needs_no_law_date`, `a_key_read_in_a_query_s_binding_or_a_law_pin_before_the_at_is_refused` (with the `as if {law d0}` inner read that loads), `an_at_that_reads_no_key_dates_the_key_and_an_at_reader_def_is_named`, `a_scenario_s_ask_refused_alone_prints_its_line_at_run`.
+- **The sweep** (`tmp/m3/gatefix/sweep.py`, output `sweep.txt`, `sweep.json`): 246 targets, every `.tally` file and directory under `tmp/m3/gate-review/`, build-m3's `review-g3d/` and `review-g3ef/` (with their `.scen` pairs), and `gatefix/p/`. Each was run (`run`, `check`) on this engine and on 56d59941's binary, and `run` on refcore.
+  - No `ENGINE-INVARIANT`. No target differs from refcore that was the same at 56d59941. Four now print refcore's bytes that didn't: `b1_dated`, `b2_cal`, `b1_asif2`, `b1_asif3`.
+  - 17 changed from 56d59941, each above: B-1 to B-4, items 4 and 13, `b2_if`'s and `l3_reader`'s messages (`l3_reader` reaches an `at reader` def), and `j/a`, `jp/a`, `jt/a`.
+  - **The twins** (`gate-review/w/gen7.py`, `gatefix/gen7.txt`): 21 of 23 print their law-free twin's bytes. `def_keyed`'s twin is refused by refcore (P30's known difference). `hole_at_false` adds the `at`'s hole (item 15). My `b3_where` and `i4_aggat` print their twins' bytes too.
+  - **Against refcore, 83 targets differ, each for one of these reasons** (none new; `sweep.json` holds every line):
+    - 12 refuse `LOAD-LAWDATE` at load where refcore prints its `REFCORE-NOT-YET` guard at run (#235, P28). Among them are `b3_mean`, `b3_asif`, `i4_aggat_key`, `ownat_dated_on.d`, and `review-g3d`'s `b1_band`, `b2_if`, `b3_max`, `b4_agg` and the `l*` texts.
+    - 60 answer where refcore prints a guard. Most are a waiting `where` or a dated key read at its `at` (P30, item 4): `b3_where`, `i4_aggat`, the dated `w/` and `win/` texts, `review-g3ef`'s dated `p*`, `a_atref`, the `*aggwhere*` texts, and `j/a`'s asks.
+    - Of those 60, four are older, refcore's own guards: `b3p_plain_lawchg` and `p14t` (on another dated read), `rd/w_snone` (item 14, refcore's `AttributeError`) and `sw` (item 11).
+    - `reader_on.d`, `reader_on.t` and `l3_reader`: a key reaching an `at reader` def, refused at load. Refcore's run refuses the same text `LOAD-LAWDATE ask reaches an at reader def`.
+    - `def_keyed.d`, `def_keyed.t` and `p4_def`: a waiting `where` through an `at reader` def answers, where refcore refuses at run (P30's known difference).
+    - `b1` and `b2`: an ask refused alone, printed (#229).
+    - `ck` (and `j/a`, `jp/a`, `jt/a` in the guard group): `REQ-CLOCK` whole, where refcore gives `RUN-DOMAIN` per ask (#233).
+    - `sx` stops `not implemented` (item 11). `jf/a` is the review's, unchanged (#228).
+  - **`check` against `run`** (the gate's `seam.py` on the same roots, `gatefix/seam.txt`): no text where `check` prints `ok` and `run` refuses at load.
+    - `sw` and `sx` stop `not implemented` (the review's item 11, older than M3).
+    - `n/mid/a` is flagged by `seam.py`'s pattern alone: it counts the `scenario sc: refused: LOAD-SCENARIO` line as an ask's. Both commands print refcore's bytes there.
+- **Not taken:** items 1 and 15 as above (for #235). The rest's items 3, 5 to 12 and 14 to 16 are outside the brief. Item 3, a tuple refused by a later key's `where` before the `at`'s keys are bound, still leaves as a refused instance with its `where` unread; the header names that case. Only a tuple with every key bound, not refused and still waiting is now an invariant.
+- **Size** (`engine/crates`, 7450ac73 to this commit): 9 files, 611 in, 142 out. Of those, the library is 412 in and 142 out; the tests are 199 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.5 % of the week (`engine/tools/usage`: 0.48 % before this commit), against a budget of 1.2 %.
+- **For T:** a vector for each B form. B-4's `run` vector is held "for #229" while refcore prints nothing. Item 4's and `b3_where`'s are held "for #235".
+- **Checks:** `check quick: green, 11 steps` on each commit's tree. `check commit: green, 23 steps (199s)`, exit 0, at 209cc544's tree with this log; this commit adds the log alone.
+
+## 2026-11-19 M3 gate fix, turn 2: the fix review's G-1 (issue #226)
+
+On `build/m3-gatefix` from beb93424, one commit and this one. The fix review is `tmp/m3/review-gatefix.md`: B-2, B-3 and B-4 fixed, 1 blocking (G-1, B-1's keyed form), ruled P33. By D12 this is the last fix; the coordinator checks it with probes.
+- **ad876e72, G-1:** a read's mode now covers the read alone, not its keys.
+  - `cal_arg`, `since` and `last` type their read under `Rel::Calendar` or `Rel::Explicit`, and the mode reached the read's keys as well. In `cal[region]` or `rd[region]`, a law-dated `region` was therefore taped as exempt, and the walk read it with no law date.
+  - Now `load/keyed.rs` `key_pos`, through which every key position is typed, types its key in the scope without a `Calendar` or `Explicit` mode (`Scope::without_mode`). A law pin's mode stays: under `as if {law D}` every read is made at D, keys included.
+  - So the one rule, `move_read_dated`, sees the key's read with its own relation, as L §4.2 ("at any keys"), §4.3 and §4.6 say.
+  - Last turn's entry said "no part can be left out" of the marking. That held for the reads load types, not for the relation each carries (the review's N-5). The relation is now the read's own wherever a key is typed.
+- **The review's texts** (`tmp/m3/review-gatefix/g1/`):
+  - **A** (`where is_business(d, cal[region])`, no `at`): `refused: LOAD-LAWDATE pay reads law-dated facts and states no at`, and `check` prints the same.
+  - **B** (a key's `on add_business(d0, 1, cal[region])` before the `at`): `refused: LOAD-LAWDATE move one's key p reads law-dated region with no law date: its at reads p`.
+  - **C** (A with `at d`): `q: 50.00 PLN`, its law-free twin's bytes, and the twin is refcore's.
+  - **D** (`where last(rd[region], d) == d0`, `at d`): `q: 30.00 PLN`, the same.
+  - Each of the four was `ENGINE-INVARIANT` with `check` `ok`. Refcore prints its #235 guard on the dated texts.
+- **N-6:** `ask q: last(rd[region], d0)` is now `LOAD-LAWDATE ask q reads law-dated region directly, without law` at load (L §4.3), where it was `ENGINE-INVARIANT` on both binaries.
+- **Every exempted argument, probed** (`tmp/m3/gatefix/g1/gen.py`, `out.txt`): 32 probes, each dated and with its law-free twin.
+  - The arguments are the calendar of `is_business`, `add_business`, `last_business` and `schedule`, and the read of `last` and `since`. Each key is a law-dated input (`region`) or an `at reader` def in the key (`rg = region at reader`).
+  - In a key's `where` with `at d`, the `where` waits and the text prints its twin's bytes.
+  - With no `at`: `LOAD-LAWDATE … states no at`.
+  - In a key's `on` before the `at`: #235's refusal, "reads law-dated region" or "reaches rg, which takes its law date from its reader".
+  - None prints `ENGINE-INVARIANT`, and none has `check` `ok` where `run` refuses at load.
+  - Every `region` twin is refcore's bytes but `o_last_region.t`, which stops `not implemented` (the review's N-2). The `rg` twins differ from refcore as P30's `at reader` texts do: refcore refuses the ask at run.
+- **Test** (`load_cases.rs`): `a_law_dated_key_of_a_calendar_or_a_stated_day_read_is_dated`, with A to D and N-6, each against its twin.
+- **Not taken:**
+  - N-1 (a fill's own reads on a move's tape): for #235. Taping only the move's edges would drop `on_alone`'s right refusal until a fill is judged as a node, which is more than a line or two.
+  - N-2 (a key's `on` with an aggregate, `as if`, a fill or `last` stops at run): older, for the follow-ups.
+  - N-3 (is a pinned read law-dated?) and N-4 (#228): spec questions.
+  - N-5's fourth walk (`expr_parts`): a refactor, for the follow-ups.
+- **The sweep** (`tmp/m3/gatefix/sweep2.txt`, `sweep2.json`, `compare2.txt`): 559 targets. They are turn 1's 246, the review's probes (`tmp/m3/review-gatefix/`: `p/`, `v/`, `sc/`, `f/`, `i4/`, `inv/`, `g1/`) and `gatefix/g1/`. Each ran `run` and `check` on this engine and on 56d59941's binary, and `run` on refcore.
+  - No `ENGINE-INVARIANT`, and no text where `check` prints `ok` and `run` refuses at load.
+  - No target differs from refcore that was the same at 56d59941.
+  - 466 targets have a beb93424 output: turn 1's sweep, or the review's `out/*.new.*`. Of those, only A to D changed.
+  - 28 runs stop `not implemented`. 24 stop on 56d59941's binary too (the review's N-2 and the gate's item 11).
+  - The other four (`review-gatefix/p/o_lawlit_at.d`, `o_lawreader_at.d`, `o_lawreader_at.t`, and `gatefix/g1/o_last_region.t`) are N-2's stop. 56d59941's name walk refused them wrongly (a read inside `as if {law D}`, or `last`'s read), so they now load and reach that stop. beb93424 already did the same for the review's three.
+  - Every other refcore difference has its reason from turn 1's entry:
+    - #235's guard where the engine refuses at load or answers (P28, P30, item 4, and now G-1's A to D);
+    - `at reader` defs (P30, item 13);
+    - #229 and #233;
+    - items 11 and 14;
+    - #228.
+- **Size** (`engine/crates`, beb93424 to this commit): 3 files, 98 in, 0 out. Of those, the library is 17 in; the tests are 81 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.25 % of the week this turn (`engine/tools/usage`, 0.71 % over the session before this commit), against a budget of 0.4 %.
+- **For T:** a vector for each of A to D and N-6, held "for #235" while refcore prints its guard.
+- **Checks:** `check quick: green, 11 steps (81s)` at ad876e72's tree. `check commit: green, 23 steps (136s)`, exit 0, at ad876e72's tree with this log; this commit adds the log alone.
