@@ -20,7 +20,8 @@ use super::years::span_year;
 use crate::hole::Hole;
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
-    Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, Postfix, Span as SpanText, Stop,
+    Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, OfQ, Pin, PinForm, Postfix, RChoice,
+    Span as SpanText, Step, Stop,
 };
 use crate::time::{Day, Period};
 use std::collections::BTreeSet;
@@ -559,6 +560,199 @@ fn field_expr(f: &Field) -> Option<&Expr> {
 pub(super) fn span_reads(sp: &SpanText, name: &str) -> bool {
     sp.from.as_ref().is_some_and(|e| reads_name(e, name))
         || sp.to.as_ref().is_some_and(|e| reads_name(e, name))
+}
+
+/// Whether expression `e` reads the variable `var`, every part of every form walked: an
+/// aggregate's term, bindings and `ties by`, a pin's, a span's, a projection's. No binding
+/// takes a name in scope (L §2.5), so a name `var` anywhere in `e` is that variable. Load's
+/// `LOAD-LAWDATE` on a move's key and the walk's `move_law` both decide by it, so a move whose
+/// `at` reads no key has its law date before its keys are bound. L §4.3 (a move's `at` dates
+/// what it reads, its keys' among them), §5.14 Keys.
+pub(crate) fn reads_var(e: &Expr, var: &str) -> bool {
+    let mut work: Vec<&Expr> = vec![e];
+    while let Some(x) = work.pop() {
+        if matches!(x, Expr::Name(n) if n == var) {
+            return true;
+        }
+        work.extend(expr_parts(x));
+    }
+    false
+}
+
+/// Every expression `e` holds directly, by an exhaustive match, so that no form's part is
+/// left unwalked. L §2.3 (the expressions), §5.6 (bindings), §5.11 (pins).
+fn expr_parts(e: &Expr) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = Vec::new();
+    match e {
+        Expr::Lit(_)
+        | Expr::Str(_)
+        | Expr::Name(_)
+        | Expr::None
+        | Expr::Never
+        | Expr::Cut
+        | Expr::List(_)
+        | Expr::Calendar(_) => {}
+        Expr::If(parts) => out.extend(parts.iter()),
+        Expr::Or(terms) | Expr::And(terms) => out.extend(terms.iter()),
+        Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => out.push(y),
+        Expr::Cmp(c) => out.extend([&c.0, &c.2]),
+        Expr::In(i) => {
+            out.extend([&i.member, &i.set]);
+            out.extend(i.on.iter());
+        }
+        Expr::Sum(first, rest) => {
+            out.push(first);
+            out.extend(rest.iter().map(|(_, y)| y));
+        }
+        Expr::Prod(first, rest) => {
+            out.push(first);
+            out.extend(rest.iter().map(|(_, y)| y));
+        }
+        Expr::Post(base, posts) => {
+            out.push(base);
+            out.extend(posts.iter().flat_map(post_exprs));
+        }
+        Expr::Call(call) => {
+            out.extend(call.args.iter());
+            out.extend(key_expr(call.band_key.as_ref()));
+        }
+        Expr::LegOf(base, of) => {
+            out.push(base);
+            out.extend(of_exprs(of));
+        }
+        Expr::To(base, step) => {
+            out.push(base);
+            out.extend(step_expr(step));
+        }
+        Expr::Record(fields) => out.extend(fields.iter().flat_map(field_exprs)),
+        Expr::Agg(agg) => {
+            out.extend(agg.term.iter());
+            out.extend(agg.binds.iter().flat_map(bind_parts));
+            out.extend(agg.ties.iter().flatten());
+        }
+        Expr::Last(pair) => out.extend([&pair.0, &pair.1]),
+        Expr::Bal(bal) => {
+            out.push(&bal.place);
+            out.extend(bal.args.iter());
+            out.extend(bal.proj.from.iter());
+            if let Some(RChoice::Quantile(q)) = &bal.proj.random {
+                out.push(q);
+            }
+            out.extend(bal.of.iter().flat_map(of_exprs));
+        }
+        Expr::Flows(flows) => {
+            out.push(&flows.target);
+            out.extend(span_parts(&flows.span));
+            out.extend(flows.for_key.iter());
+        }
+        Expr::Covered(pair) => {
+            out.push(&pair.0);
+            out.extend(span_parts(&pair.1));
+        }
+        Expr::Value(v) => {
+            out.extend([&v.place, &v.day]);
+            out.extend(v.by.iter().map(|price| &price.input));
+            out.extend(v.of.iter().flat_map(of_exprs));
+        }
+        Expr::Query(q) => {
+            out.push(&q.arg);
+            out.extend(q.binds.iter().flatten().flat_map(bind_parts));
+            out.extend(q.filter.iter());
+            out.extend(q.level.iter());
+        }
+        Expr::Crps(c) => {
+            out.extend([&c.forecast, &c.outcome]);
+            out.extend(c.weight.iter());
+            out.extend(c.bind.iter().flat_map(bind_parts));
+        }
+        Expr::DistFn(f) => out.extend([&f.value, &f.at]),
+        Expr::Dist(d) => {
+            out.extend(d.args.iter());
+            out.extend(d.term.iter());
+            out.extend(d.bind.iter().flat_map(bind_parts));
+        }
+        Expr::Prorata(p) => {
+            out.extend([&p.total, &p.weight, &p.key]);
+            out.extend(p.binds.iter().flat_map(bind_parts));
+            out.extend(step_expr(&p.unit));
+            out.extend(p.mode.iter());
+            out.extend(p.ties.iter().flatten());
+        }
+        Expr::AsIf(inner, pins) => {
+            out.push(inner);
+            out.extend(pins.iter().flat_map(pin_exprs));
+        }
+    }
+    out
+}
+
+/// A key position's expression, if it is one (not `*`).
+fn key_expr(key: Option<&Key>) -> Option<&Expr> {
+    if let Some(Key::Expr(e)) = key {
+        return Some(e);
+    }
+    None
+}
+
+/// The expressions of an `of`: one read, or a pair.
+fn of_exprs(of: &OfQ) -> Vec<&Expr> {
+    match of {
+        OfQ::Ref(e) => vec![e],
+        OfQ::Pair(a, b) => vec![a, b],
+    }
+}
+
+/// A step's expression, where it is read from one.
+fn step_expr(step: &Step) -> Option<&Expr> {
+    match step {
+        Step::Ref(e) => Some(e),
+        Step::Number(_) | Step::Minor(_) => None,
+    }
+}
+
+/// A record field's expressions: a named field's value, a leg's places and amount.
+fn field_exprs(f: &Field) -> Vec<&Expr> {
+    match f {
+        Field::Named(_, FieldValue::Expr(e)) => vec![e],
+        Field::Named(_, FieldValue::Lit(_) | FieldValue::Hole(_) | FieldValue::None) => Vec::new(),
+        Field::Leg(leg) => vec![&leg.from, &leg.to, &leg.amount],
+    }
+}
+
+/// A span's ends.
+fn span_parts(span: &SpanText) -> Vec<&Expr> {
+    span.from.iter().chain(span.to.iter()).collect()
+}
+
+/// A binding's expressions: its range's ends and step, its `on`, its span and its `where`.
+fn bind_parts(bind: &Bind) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = Vec::new();
+    if let Over::Range(range) = &bind.domain {
+        out.extend([&range.0, &range.1]);
+        out.extend(range.2.iter());
+    }
+    out.extend(bind.on.iter());
+    out.extend(bind.over.iter().flat_map(span_parts));
+    out.extend(bind.filter.iter());
+    out
+}
+
+/// A pin's expressions: its law, knowledge or wording date, or its target's keys and value.
+fn pin_exprs(pin: &Pin) -> Vec<&Expr> {
+    match &pin.form {
+        PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => vec![e],
+        PinForm::Scenario(_) => Vec::new(),
+        PinForm::Set { target, value, .. } => {
+            let mut out: Vec<&Expr> = target
+                .keys
+                .iter()
+                .flatten()
+                .filter_map(|k| key_expr(Some(k)))
+                .collect();
+            out.push(value);
+            out
+        }
+    }
 }
 
 #[cfg(test)]

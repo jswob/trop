@@ -106,10 +106,10 @@ pub(super) fn ask_turns(w: &Worlds, asks: &Asks) -> Result<Vec<Turn>, Stop> {
     Ok(turns)
 }
 
-/// The turn of an ask in the world `own` (`""` for the base's): the base's ask refused alone
-/// prints its line; an ask in a refused scenario's world prints that refusal; any other is
-/// answered in the deepest world it names (refcore's `run_worlds`, its loop over `order`).
-/// L §6.4, §8.
+/// The turn of an ask in the world `own` (`""` for the base's): an ask refused alone, the
+/// base's or a loaded scenario's file's own, prints its line; an ask in a refused scenario's
+/// world prints that refusal; any other is answered in the deepest world it names (refcore's
+/// `run_worlds`, its loop over `order`). L §6.4, §8; OPERATIONS §2.1 (an ask refused alone).
 ///
 /// # Errors
 ///
@@ -121,6 +121,16 @@ fn ask_turn(
 ) -> Result<Turn, Stop> {
     if let Some(base_at) = at.filter(|_| w.base.asks_alone.contains_key(&ask.id)) {
         return Ok(Turn::Ask(0, base_at));
+    }
+    // a scenario's file's own ask refused alone prints its line, as `check` does
+    // (OPERATIONS §2.1, §2.3; the gate review's B-4)
+    let alone = w
+        .loaded
+        .get(own)
+        .filter(|reality| reality.scenarios.of(&ask.id) == Some(own))
+        .and_then(|reality| reality.asks_alone.get(&ask.id));
+    if let Some(refusal) = alone {
+        return Ok(Turn::Line(refused_line(&ask.id, refusal)));
     }
     let named = worlds_named(w, ask, own, model);
     if let Some((_, refusal)) = w.refused.iter().find(|(id, _)| named.contains(*id)) {
