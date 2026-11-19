@@ -71,7 +71,7 @@ pub(super) fn walk_bound_line(
             "  {figure} at ({}, stratum {}, {}): {}",
             point.day.text(),
             point.stratum,
-            reader(engine.walk(main)?, *point),
+            reader(engine.walk(main)?, *point)?,
             plain_text(m, &value)?
         ));
         // the state just before the reader's own booking at its point, as the decision read
@@ -134,17 +134,23 @@ fn traced_at(
 
 /// The decision that read a cell at `point`: the instance the walk ran there, else its move
 /// (refcore's `byp`, else `dec_head`). E §10, §4.2 step 3.
-fn reader(walk: &Walk, point: At) -> String {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a point no decision's act ran at: a cell is kept only where a
+/// decision's act read it, and every instance of that act is run there, refused or not.
+fn reader(walk: &Walk, point: At) -> Result<String, Stop> {
     let at_act = |r: &&crate::walk::Run| {
         (r.point.day, r.point.stratum, r.point.rank) == (point.day, point.stratum, point.rank)
     };
     if let Some(run) = walk.runs.iter().find(|r| r.point == point) {
-        return run.inst.id.clone();
+        return Ok(run.inst.id.clone());
     }
     walk.runs
         .iter()
         .find(at_act)
-        .map_or_else(|| point.text(), |r| r.inst.move_id.clone())
+        .map(|r| r.inst.move_id.clone())
+        .ok_or_else(|| invariant("a walk-bound cell kept at no decision's act"))
 }
 
 /// The def a reference names and its keys as written: a name alone, or at keys (refcore's

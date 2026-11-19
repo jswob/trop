@@ -17,7 +17,8 @@ use core::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::day::ends;
-use super::plan::{Amount, Dated, End, Exists, Inst, Status, invariant, kind_certainty};
+use super::instance::{Amount, Dated, End, Exists, Inst, Status};
+use super::plan::{invariant, kind_certainty};
 use super::point::At;
 use super::readings::Broke;
 use super::state::{ALL, Change, Ent, Group, OwnLeg, Taken, WalkObs};

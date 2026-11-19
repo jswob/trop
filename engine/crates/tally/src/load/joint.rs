@@ -20,6 +20,7 @@ use super::steps::load_among;
 use super::worlds::{Loaded, Split, declared_asks, load_split};
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Refusal};
+use crate::eval::How;
 use crate::model::{Joint, MemberAsks, NameKind, Reality};
 use crate::syntax::{Line, Stop, parse_split, printed_hash, reprint, split_lines};
 use core::ops::Bound;
@@ -79,6 +80,8 @@ struct Pool {
     given: Vec<Source>,
     /// How a `use` line's pin is taken.
     pin: Pin,
+    /// How what each load evaluates computes, the run's (R-130).
+    how: How,
 }
 
 /// A member's next step: loaded alone, or a joint model whose own members load first.
@@ -172,7 +175,7 @@ pub(super) fn load_joint(
     files: &[Split],
     root: usize,
     disk: &BTreeMap<&str, &[u8]>,
-    pin: Pin,
+    (pin, how): (Pin, How),
 ) -> Result<Loaded, Stop> {
     let pool = Pool {
         given: files
@@ -183,6 +186,7 @@ pub(super) fn load_joint(
             })
             .collect(),
         pin,
+        how,
     };
     let pairs: Vec<(&str, &str)> = pool
         .given
@@ -226,9 +230,9 @@ pub(super) fn load_joint(
             members: frame.asks,
         };
         let Some(parent) = stack.last_mut() else {
-            return finish(files, merged.files, &joint).map_err(|s| tagged(s, &[]));
+            return finish(files, merged.files, (&joint, how)).map_err(|s| tagged(s, &[]));
         };
-        let reality = load_lines(&merged.files, &frame.worlds, Some(&joint))
+        let reality = load_lines(&merged.files, &frame.worlds, Some(&joint), how)
             .map_err(|s| tagged(s, &frame.chain))?;
         let alias = frame
             .chain
@@ -272,9 +276,11 @@ pub(crate) fn reprint_members(
     given: &[Source],
     disk: &BTreeMap<&str, &[u8]>,
 ) -> Result<Vec<BTreeSet<String>>, Stop> {
+    // a reprint loads no member: `how` reaches nothing here
     let pool = Pool {
         given: given.to_vec(),
         pin: Pin::Canonical,
+        how: How::FENCES,
     };
     let mut members: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for source in given {
@@ -396,7 +402,7 @@ fn member(
         nested.scenario_asks = scenario_asks;
         return Ok(Next::Nested(Box::new(nested)));
     }
-    let reality = alone(&base, &worlds).map_err(|s| tagged(s, &chain))?;
+    let reality = alone(&base, &worlds, pool.how).map_err(|s| tagged(s, &chain))?;
     let mut asks = ask_ids(&reality);
     asks.extend(scenario_asks);
     let mut lines = Vec::with_capacity(base.len());
@@ -463,8 +469,8 @@ fn nested_frame(
 
 /// A member that is no joint model, loaded alone (refcore's `load_texts`): its files split in
 /// the order of their full paths, then loaded in the order of their paths in its tree, among
-/// its scenarios. L §6.1, §8.3.
-fn alone(files: &[&MemberFile], worlds: &BTreeSet<String>) -> Result<Reality, Stop> {
+/// its scenarios, what it evaluates computing as `how` says. L §6.1, §8.3.
+fn alone(files: &[&MemberFile], worlds: &BTreeSet<String>, how: How) -> Result<Reality, Stop> {
     let mut order: Vec<&&MemberFile> = files.iter().collect();
     order.sort_by(|a, b| a.path.cmp(&b.path));
     let mut split: BTreeMap<&str, Vec<Line>> = BTreeMap::new();
@@ -477,28 +483,31 @@ fn alone(files: &[&MemberFile], worlds: &BTreeSet<String>) -> Result<Reality, St
             lines.push((f.path.clone(), l));
         }
     }
-    load_lines(&lines, worlds, None)
+    load_lines(&lines, worlds, None, how)
 }
 
-/// Lines loaded as one reality among `worlds` (refcore's `load_lines`). E §3.1.
+/// Lines loaded as one reality among `worlds` (refcore's `load_lines`), what it evaluates
+/// computing as `how` says. E §3.1.
 fn load_lines(
     files: &[(String, Vec<Line>)],
     worlds: &BTreeSet<String>,
     joint: Option<&Joint>,
+    how: How,
 ) -> Result<Reality, Stop> {
     let split: Vec<(&str, &[Line])> = files
         .iter()
         .map(|(path, lines)| (path.as_str(), lines.as_slice()))
         .collect();
-    load_among(parse_split(&split)?, worlds, &BTreeMap::new(), joint)
+    load_among(parse_split(&split)?, (worlds, &BTreeMap::new()), joint, how)
 }
 
 /// The run's merged lines loaded (refcore's `joint`, after `joint_texts`): one reality, or
-/// worlds when the joint model has scenario files of its own. L §6.1, §6.4.
+/// worlds when the joint model has scenario files of its own; what it evaluates computing as
+/// `how` says. L §6.1, §6.4.
 fn finish(
     given: &[Split],
     merged: Vec<(String, Vec<Line>)>,
-    joint: &Joint,
+    (joint, how): (&Joint, How),
 ) -> Result<Loaded, Stop> {
     let mut splits = Vec::with_capacity(merged.len());
     for (path, lines) in merged {
@@ -514,7 +523,7 @@ fn finish(
         }
         splits.push(split);
     }
-    load_split(&splits, Some(joint))
+    load_split(&splits, Some(joint), how)
 }
 
 /// A stop of a joint model's load named for the member it was met in, `chain` its aliases

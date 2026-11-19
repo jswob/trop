@@ -782,17 +782,15 @@ fn row_value(
     (input, row, keys): (&InputInfo, &Row, &[KeyVal]),
     figure: &str,
 ) -> Result<Value, Stop> {
-    let reading;
     let ty = match (&input.ty, input.reading, row.pattern.first()) {
         (Some(ty), ..) => ty,
-        // a balance reading's value is a quantity in its place's unit (L §4.6 Readings, §5.19)
-        (None, true, Some(Pat::Key(KeyVal::Thing(place)))) => {
-            reading = m.reading_ty(place).map_err(num_stop)?;
-            match &reading {
-                Some((_, ty)) => ty,
-                None => return Err(Stop::NotBuilt("the value of a reading of no unit")),
-            }
-        }
+        // a balance reading's value is a quantity in its place's unit, typed at load (L §4.6
+        // Readings, §5.19)
+        (None, true, Some(Pat::Key(KeyVal::Thing(place)))) => m
+            .balance_readings
+            .get(place)
+            .map(|of_place| &of_place.ty)
+            .ok_or_else(|| invariant("a balance reading load didn't type"))?,
         (None, ..) => return Err(Stop::NotBuilt("the value of an observed row")),
     };
     let of = ConvertFor::row(&input.unit_factor, ty, &input.binds, &row.pattern);

@@ -586,6 +586,9 @@ pub struct Engine {
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// Each walk-bound def's cells a decision read at its point of a main walk (E §10).
     pub(crate) walk_cells: WalkCells,
+    /// Whether the walks keep those cells: an engine answering `explain`, the one ask that
+    /// prints them (E §10; `ask/walkbound.rs`).
+    pub(crate) keep_walk_cells: bool,
     /// Whether `explain` reads a walk-bound def's cell again at a walk point, a read the walk
     /// didn't make, so not kept in `walk_cells` (refcore's `_explaining_wb`). E §10.
     pub(crate) rereading: bool,
@@ -637,6 +640,59 @@ pub struct Engine {
     pub(crate) counts: crate::Counters,
 }
 
+/// How a run's engines compute: keeping their cells as `memo` says, reading a written
+/// projection's common case as `lows` says and continuing a projection's walk read again as
+/// `forks` says, the fences' forms or their plain twins (E §3.2, §4.3, P §2.3, §2.5, §3.3),
+/// and walking `days`, the event walk's or the oracle's every day (P §2.2); with the
+/// `fault-injection` feature, the fault planted in the run (INTERFACE §4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct How {
+    /// How the engines keep their cells across law dates.
+    pub memo: Memo,
+    /// Which days the walks step: the event walk's, or the oracle's every day.
+    pub days: Days,
+    /// How the engines read a written projection's common case.
+    pub lows: crate::walk::Lows,
+    /// Whether the engines continue a projection's walk read again through a later day.
+    pub forks: crate::walk::Forks,
+    /// The fault planted, if any.
+    #[cfg(feature = "fault-injection")]
+    pub fault: Option<crate::walk::Fault>,
+}
+
+impl How {
+    /// How `run` computes: every fence's form, the cells shared by a law date class (E §3.2),
+    /// a projection's common case from F5's tree (P §2.3), a projection's walk read again
+    /// continued by F6 (P §2.5), the event walk's days (P §2.2).
+    pub const FENCES: How = How::new(
+        Memo::Classes,
+        crate::walk::Lows::Tree,
+        crate::walk::Forks::On,
+    );
+
+    /// The engines computing as `memo`, `lows` and `forks` say, walking the event walk's days,
+    /// no fault planted.
+    #[must_use]
+    pub const fn new(memo: Memo, lows: crate::walk::Lows, forks: crate::walk::Forks) -> How {
+        How {
+            memo,
+            days: Days::Events,
+            lows,
+            forks,
+            #[cfg(feature = "fault-injection")]
+            fault: None,
+        }
+    }
+
+    /// An engine with an empty memo for cut `ask_cut`, computing as this says, no fault
+    /// planted: a load's engine, so a run's plain twins reach what load evaluates too (E §3.1,
+    /// R-130).
+    #[must_use]
+    pub(crate) fn engine(self, ask_cut: Day) -> Engine {
+        Engine::new(ask_cut).with_how((self.memo, self.lows, self.forks))
+    }
+}
+
 impl Engine {
     /// An engine with an empty memo, for an ask whose cut is `ask_cut`, walking the event
     /// walk's days.
@@ -686,6 +742,7 @@ impl Engine {
             booked: BTreeMap::new(),
             signatures: BTreeMap::new(),
             walk_cells: WalkCells::new(),
+            keep_walk_cells: false,
             rereading: false,
             each_refused: BTreeMap::new(),
             calendar_pass: None,
@@ -765,6 +822,7 @@ impl Engine {
                 | AskBody::Solve(_)
                 | AskBody::Diff(_) => Rows::Unkept,
             },
+            keep_walk_cells: matches!(ask.body, AskBody::Explain(_)),
             ..self
         }
     }

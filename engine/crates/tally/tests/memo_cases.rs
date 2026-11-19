@@ -14,7 +14,7 @@
 #[cfg(test)]
 mod tests {
     use tally::eval::Memo;
-    use tally::{Answer, Asks, Days, Given, Pin, Request, run_with_memo};
+    use tally::{Answer, Asks, Files, Given, How, Request, run_with_how};
 
     /// Defs read `at reader` from six law dates: two before any row (a hole naming its day),
     /// two in 2026 (one class), two in 2027, past the ask's cut (`held` naming the day, a rule
@@ -149,12 +149,11 @@ ask t: taxed_at[i] for i in [1, 2, 3, 4, 5, 6]
             path: "r.tally".to_owned(),
             bytes: Some(REALITY.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
+        let how = How {
+            memo,
+            ..How::FENCES
         };
-        run_with_memo(given, &request, memo).expect("an answer")
+        run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer")
     }
 
     #[test]
@@ -284,12 +283,11 @@ ask k: bal(konto, 2026-06-01)
             path: "w.tally".to_owned(),
             bytes: Some(WINDOWS.as_bytes().to_vec()),
         }];
-        let request = Request {
-            asks: Asks::Every,
-            pin: Pin::Canonical,
-            days: Days::Events,
+        let how = How {
+            memo,
+            ..How::FENCES
         };
-        run_with_memo(given, &request, memo).expect("an answer")
+        run_with_how(Files::new(given), &Request::new(Asks::Every), how).expect("an answer")
     }
 
     #[test]

@@ -832,10 +832,10 @@ fn passes_edge(from: Day, step: i64, count: Option<u64>) -> bool {
     } else {
         i64::from(from.number()).checked_sub(1)
     };
-    let room = room.and_then(|days| u64::try_from(days).ok());
-    match (count, room) {
+    // a day past the edge has no room to count
+    match (count, room.filter(|days| *days >= 0)) {
         (None, _) => true,
-        (Some(n), Some(days)) => n > days,
+        (Some(n), Some(days)) => i128::from(n) > i128::from(days),
         (Some(_), None) => false,
     }
 }

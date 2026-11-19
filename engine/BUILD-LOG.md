@@ -4848,3 +4848,94 @@ On `build/2.2` at f6445c07 (the tree of `spec/2.2` at 99285820). On the round's 
 - **Counts:** `m2_counts_lows` and the pins r1, r7, b2_min green on their stored counts.
 - **Sizes:** this commit, 3 files, 21 out, 27 in. The round's `engine/crates` 106 files, 9 229 out, 2 127 in (the 106th, `benches/p8_5.rs`, came with the lead's merges). `crates/tally/src` 86 files, 7 366 out, 1 658 in. Kernel files 22; exceptions +0.
 - **Checks:** `check quick: green, 11 steps (74s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (115s)`, exit 0.
+
+## 2026-11-19 M3 G1 `backlog`: row 12, the three splits, #221's arms, F6's rows, the small rows (issue #226)
+
+On `build/m3` from 6ec721e9, seven commits and this one. The brief is G1 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§1's #192 table, §3, §4 G1).
+- **What changed, by commit:**
+  - **007fdd63, row 12 (a wrong error):** `load/worlds.rs` `cross_world_forks` counts a base diff's axes over the base and both its worlds at load, whatever is asked (L §5.5, "counted at load"; refcore's `cli.py` `cross_world_forks`, 2.1.8 R13). `ask/worlds.rs` `cross_forks` is gone. `run … --ask other` now refuses `LOAD-FORKS` as refcore does; probes on one stack and on two equal refcore. Test: `load_cases.rs` `a_base_diff_s_axes_over_both_worlds_are_counted_at_load_whatever_is_asked`.
+  - **01457fef, 443b773a, ba9dd8d1, the three splits (rows 10, 39; R-127):** pure moves, each with its survivor rows. `walk/instance.rs` and `walk/body.rs` come out of `walk/plan.rs`, `walk/ends.rs` out of `walk/day.rs`, `book/same_booking.rs` out of `book/same.rs`. After each, `check quick` was green and the sweep byte-equal. The advisory's R-127 list is now `eval/expr.rs`, `load/check.rs`, `load/strata.rs` and `walk/order.rs`.
+  - **4098fc4e, #221's arms (row 35):** each place's balance readings are typed at load: `model/decl.rs` `PlaceReadings` and `BalanceRow`, built by `load/rows.rs` `type_readings` into `Reality::balance_readings`. Load guarantees every part an arm stopped on (`LOAD-KEY`, `LOAD-KIND`, `LOAD-INSTANT`, `LOAD-UNIT`, `LOAD-PLACEKIND`; each probed against refcore). So `book/reading.rs`'s three `NotBuilt` arms and `ask/walked.rs`'s one are gone, and `eval/read.rs`'s arm is an `ENGINE-INVARIANT` on the table. No arm stayed, so no STOP-REPORT.
+  - **ac87622e, F6's rows 68, 69, 60, 58, 71:**
+    - Row 68: `horizon` moves into `walk/fork.rs` under F6's switch (`planned_through`); `Forks::Off` plans through the read's day, as refcore's `proj_walk` does.
+    - Row 69: `meet_parked` counts a read served from a kept walk's log as a walk shared (P §1.1). No stored `walks shared` count moved (`m2_counts` green), so no STOP-REPORT.
+    - Row 60: `outgrown` lets a waiting walk go.
+    - Rows 58 and 71: the docs.
+    - Two crate tests.
+  - **6378b7be, the small rows 1, 4, 7, 8, 15, 61, 64:**
+    - Row 1: `passes_edge` drops no error.
+    - Row 4: `explain.rs`'s header.
+    - Row 7: the walk-bound cell is kept and cloned only for an engine answering `explain` (`keep_walk_cells`).
+    - Row 8: `walkbound.rs` `reader` is an `ENGINE-INVARIANT`, not the point's text.
+    - Row 15: `cross_world_forks`' comment.
+    - Row 61: `walk_through`'s doc.
+    - Row 64: `How` moves to `eval` (`tally::ask::How` stays, re-exported), with `How::FENCES` and `How::engine`. The run's `How` goes through `load_run`, the joint and world loads, `load_among` and the `Loader` to `check_range_keys` and `load/across.rs`'s seven checks, so a run's plain twins reach what load evaluates. `check fences` is green.
+- **`moves_seen` (#221): no cache, by R-130.**
+  - No P8 row's text both runs and holds a `same` line, so no count budget can move.
+  - Measured anyway. Of the sweep's rows, 86 run a text with a `same` line; the slowest takes 6 ms.
+  - `integration/cuts/D/cut11`, whose records hold `same` lines, runs 5.1 s to `not implemented`. Its samply profile, taken on the release binary as `perf profile` takes it, gives 5 094 samples:
+    - `same_groups` 2.0 % inclusive, with `moves_seen` 0.8 % of that;
+    - `root` 0.1 %.
+  - So `book/same.rs` is under 5 % and no row is asked. The item goes to P8-10 at M5b.
+- **Gate 8's survivors (run 44411247874):** there is no `tmp/m3/gate8-survivors.txt` in the worktree at this commit, so they go to G3.
+- **The sweep:** two release binaries over 2 278 rows, cut from the kernel's, M1's, hh4's and M2's `vectors.tsv`. It ran after each split and after the arms, and once from 4098fc4e's binary to this head's. Every time: same 2 278, differ 0 (1 819 answered, 458 refused, 1 not built).
+- **Size** (`engine/crates`, 6ec721e9 to this commit): 43 files, 2 366 in, 1 968 out. Git's move detection (`--color-moved`, indentation ignored) counts 1 783 of the lines in and 1 722 of those out as moved. That leaves about 0.58 k added, 0.25 k removed and 1.75 k moved, against the plan's 0.6–1.0 k changed plus 1.5 k moved.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched). In `MUTANTS-SURVIVORS.md`, the rows moved with their functions, and `meet_parked`'s `replace < with <=` row went with its `<` (row 69).
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 1.14 % of the week (`engine/tools/usage`), against a budget of 2.5 %.
+- **Next:** the group's review; G3 takes gate 8's survivors.
+- **Checks:** `check quick: green, 11 steps (93s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (140s)`, exit 0, on this commit's tree.
+
+## STOP-REPORT 2026-11-19: `run/joint` needs a member's ask answered at run, a feature
+
+- **Kind:** other (a feature the run function's entry doesn't hold).
+- **Where:** `m3/runs.vectors` `run/joint` (`m3_run_requests`): `run j.tally --ask x a.q` in `m3/check/joint`. The stop is `ask/answer.rs` `answer` (`NotBuilt("a member's ask at run")`), and `ask/worlds.rs` `answer_worlds` has the same arm.
+- **Rule or gate:** L §6.1 ("a member's asks are asked by name in a run of the joint model, as a.q, and answered by the member alone"); DONE gate 10.
+- **What happens:** the engine prints `tally run: not implemented`, exit 69. Refcore prints `x: 8 000.00 PLN`, `  cut 2026-03-01`, `a.q: 8 000.00 PLN`, `  cut 2026-03-01`, exit 0.
+- **Why it is a feature, not the entry:** the joint model keeps only its members' ask names (`model/reality.rs` `Joint`, `MemberAsks`). Refcore answers `a.q` with the member's own loaded reality (`ask.py` `Asker.member_ask`). Where the member's ask names one of its own scenarios, or is declared in one of its scenario files, refcore runs the member alone with all its files (`member_alone`). Each line is prefixed `a.`, a nested member gives `a.b.q`, and a member's scenario line prints as `scenario a.s: …`. To build it, load keeps each member's loaded reality (or its split files) in `Joint` and `answer` runs the member's ask in it. That is new load and ask code beyond step a of the run function.
+- **What I tried:** nothing in code. The group's brief says a feature is a STOP-REPORT.
+- **What I ask:** whether member asks are built in M3 (G3, or a fix turn) or held to a later milestone with `run/joint` held for it. If built, the size is about 0.15 to 0.3 k: `Joint` gains the members' realities, plus the prefixing and both arms.
+- **State:** green at this entry's commit; nothing uncommitted.
+
+## STOP-REPORT 2026-11-19: `check` of `I:A:A-13~A1` refuses scenario `a13_jul_sale` `LOAD-COVERS`; refcore loads it
+
+- **Kind:** the spec seems silent (the engine's load and refcore's disagree, and neither looks right in general).
+- **Where:** `m3/check.vectors` `I:A:A-13~A1` (`m3_check_household_a_part_1`). The engine's check is `load/overlap.rs` `covered`; refcore's is `loader.py` l.2215–2226 with `model.py` `VersionInfo.span_at` and `in_world`.
+- **Rule or gate:** L §5.19 (a statement's coverage, `LOAD-COVERS`), §4.6 (a `moves` line), §6.4 (a scenario's layer: `replace … = none`, a version's span moved in its world); DONE gate 10.
+- **What happens:** the engine's `check` prints `scenario a13_jul_sale: refused: LOAD-COVERS observation kbank[k20240212_06] of kop_glb is dated outside the span kop_register covers (../../households/A/statements/statements.tally:1145)`, then the warnings, exit 1. Refcore's `check` prints `ok` and the warnings, exit 0. The engine's `run` of the same set stops `not implemented`, so no M0 vector compared this load before.
+- **The input:** `integration/new/A-13/a13_jul_sale.tally`. Its version `a13b_coverage` has `moves kop_register to 2023-09-12..2023-12-14`, and the scenario removes the base's rows `kbank[k20240212_06..08]` with `replace … = none`. Those rows are dated 2024-02-12, after the moved span.
+- **The two readings:**
+  - The engine checks every observation not itself `none` against its version's span as the whole stack sees it (`World::Whole`). So it sees the scenario's `moves` line and checks the base row that the scenario's `none` replaces.
+  - Refcore checks against `span_at(m.on)`. At load its `in_world` sees no scenario layer (`_WSET` is empty there), so a scenario's `moves` never narrows coverage at load. I found this by reading the code, not by a run.
+  - So on a scenario that narrows a base version's coverage past a base row it does **not** remove, the engine refuses and refcore loads. On this text, where the row **is** removed, the engine refuses and refcore loads.
+- **What I tried:** nothing in code. The fix is in load, outside `check`, and it needs a ruling on what the right check is.
+- **What I ask:** a ruling, then the fix (G3, non-kernel, ~20 lines in `covered`). Option (a), recommended: check only the observations that stand in the world (skip a row a higher layer's row at its key replaces) against the world's span. That prints `ok` here, as refcore does, and refuses a scenario whose narrowed coverage leaves a standing row outside, where refcore loads. Then a T vector for that case and refcore's fix at the round. Option (b): follow refcore, the base world's span alone at load.
+- **State:** green at this entry's commit; nothing uncommitted.
+
+## 2026-11-19 M3 G2 `check`: `check` in the library and the CLI, the run function's step a (issue #226)
+
+On `build/m3` from 43f15b04, two commits with this one. The brief is G2 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§2's rows, §4 G2, §5); the picks are P3, P4, P5, P11, P12, P13.
+- **What changed, by commit:**
+  - **73f2b580, the run function's step a (§5):**
+    - `api.rs` gains `Files` (the files given, the file table where a joint model's members are found, the pin's form) and `Request::new`.
+    - `How` gains the walk's `days`.
+    - `run_with_how(files, request, how)` is the CLI's entry and the equivalence tests' one hook. `run_in`, `run_with_memo` and the library's `run_faulted` fold into it; the CLI's `run_faulted` plants its fault through `How`.
+    - `run(given, request)`, `run_with_lows` and `run_with_forks` keep their forms, reading the request's `pin` and `days`. They stay for T's `m1_lows`, `m2_counts` and `m2_forks` until step b, and for the kernel files' own tests (`walk/agenda.rs`, `order.rs`, `move_flows.rs`, `plan.rs` call `run(given, …)`) until step c. Changing `run` to take `Files` now would touch those kernel files, so step c (G3, kernel) does it.
+    - Own tests moved: `memo_cases`, `walk_oracle`, `fork_oracle`.
+  - **This commit, `check` (OPERATIONS §2.3):**
+    - `ask/worlds.rs` `check_lines`: `ok`, or each refused scenario's line in its file's full-path order (P4), then each ask refused alone by id, then file, then line (P5). Those asks are the base's and each loaded scenario file's own; an ask in a refused world is covered by that world's line. Then load's warnings, merged as `run` merges them.
+    - `load/worlds.rs` `Worlds::files` keeps each scenario's first file in full-path order (P12). A refusal that names no file is placed by its scenario's file (P13).
+    - `api.rs` `check(files)` loads as `run` does and prints a joint model's lines through `joint_lines`.
+    - The CLI's `check <path>… [--pin=bytes]`: `--ask` anywhere is a usage error, exit 2 (P3); exit 0 only after `ok`, else 1. The usage text gains the line.
+    - Test: `tally-cli` `check_prints_ok_or_its_lines_and_takes_no_ask`.
+- **What turned green:** `milestone-report: M3: 29/31` (from 5/31). That is every `m3_check` test but one, and `m3_changes`' two and `m3_run_operations` stay green.
+- **Red:**
+  - `m3_check` on `I:A:A-13~A1` alone (STOP-REPORT above, `LOAD-COVERS` in a scenario).
+  - `m3_run` on `run/joint` alone (STOP-REPORT above, a member's ask at run, a feature).
+- **P8-1:** `ok P8-1 wall(1w): median 330.34 ms; footprint: peak 15.2 MB; instructions: median 4 484 913 243; 3 processes a run: changes/check/c7 changes/run/b7 changes/run/c7 (10 runs; budget: wall(1w) <= 2.00 s; footprint <= 1024 MB)`. Indicative; the gate measures.
+- **Size** (`engine/crates`, 43f15b04 to this commit): 9 files, 416 in, 182 out, about 0.6 k changed, against the plan's 0.45–0.75 k. No kernel file.
+- **Exceptions:** +0.
+- **Open STOP-REPORTs:** the two above.
+- **Usage:** about 0.27 % of the week (`engine/tools/usage`) at the entry, against a budget of 1.5 %.
+- **Next:** the group's review; G3 takes step c (`run(files, request)`, the old fields and hooks gone), and the two STOP-REPORTs once ruled.
+- **Checks:** `check quick: green, 11 steps (42s)`; `check commit: green, 23 steps (123s)`, exit 0, on this commit's tree.

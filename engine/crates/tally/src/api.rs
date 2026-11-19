@@ -3,17 +3,17 @@
 //! prints: every file is read before any is split, and split before any is parsed); L §6.4
 //! (a reality with scenarios runs as worlds); L §5.18 (the asks answered once the reality
 //! loads); E §11 (`REQ-ASK`); L §6.1 (a joint model's members read from the files given, then
-//! from the file table; its lines printed with each member's prefix and its dot).
+//! from the file table; its lines printed with each member's prefix and its dot); OPERATIONS
+//! §2.3 (`check`: load alone, no ask answered).
 //! Twin: engine/tools/refcore/cli.py (`read_files`, `run_texts`, `_run_texts`, `run_one`,
-//! `by_path`, `joint`'s `shown`).
+//! `by_path`, `joint`'s `shown`, `_run_texts`'s `check`).
 //! Invariants: reads no clock, environment or file (R-38, R-39); takes the files in the order
 //! of their full paths by code point, whatever order they come in (R-40); never decodes lossily
 //! (R-49).
 
 use crate::NotImplemented;
-use crate::ask::{Answered, How, answer, answer_worlds, report_lines};
+use crate::ask::{Answered, How, answer, answer_worlds, check_lines, report_lines};
 use crate::base::Refusal;
-use crate::eval::Memo;
 use crate::load::{Loaded, load_run, split_files};
 use crate::oracle::Days;
 use crate::syntax::Stop;
@@ -57,15 +57,56 @@ pub enum Pin {
     Bytes,
 }
 
-/// What the run is asked: the asks to answer and the pin's form.
+/// What a run is given (E §1; E §3.1 step 1): the reality's files, the file table where a
+/// joint model's members not among them are found (INTERFACE §2, §4), and how a `use` line's
+/// pin is taken.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Files {
+    /// The files given, each as the run names it.
+    pub given: Vec<Given>,
+    /// The file table: every file the run may read, by path, a joint model's members among
+    /// them; empty when the files given hold the whole reality.
+    pub table: BTreeMap<String, Vec<u8>>,
+    /// How a `use` line's pin is taken.
+    pub pin: Pin,
+}
+
+impl Files {
+    /// The files given, no file table, a `use` line's pin taken from the canonical text.
+    #[must_use]
+    pub fn new(given: Vec<Given>) -> Files {
+        Files {
+            given,
+            table: BTreeMap::new(),
+            pin: Pin::Canonical,
+        }
+    }
+}
+
+/// What the run is asked: the asks to answer. Each ask's clocks come from the text, S and E
+/// from the header and its cut K from the ask, never from the request (E §1, §11).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Request {
     /// The asks to answer.
     pub asks: Asks,
-    /// How a `use` line's pin is taken.
+    /// How a `use` line's pin is taken, read only by [`run`], [`run_with_lows`] and
+    /// [`run_with_forks`]; [`run_with_how`] takes [`Files::pin`].
     pub pin: Pin,
-    /// Which days the walk steps: the event walk, or the oracle's every day (P §2.2).
+    /// Which days the walk steps, read only by [`run`], [`run_with_lows`] and
+    /// [`run_with_forks`]; [`run_with_how`] takes [`How::days`].
     pub days: Days,
+}
+
+impl Request {
+    /// The asks, a `use` line's pin from the canonical text, the event walk's days.
+    #[must_use]
+    pub fn new(asks: Asks) -> Request {
+        Request {
+            asks,
+            pin: Pin::Canonical,
+            days: Days::Events,
+        }
+    }
 }
 
 /// The printed answer of a run: its lines, without their line ends.
@@ -113,33 +154,61 @@ impl Answer {
 
 /// Runs a reality's files on a request and answers with the printed lines: it reads the
 /// files, splits them all and reads their scenario headers (L §8.3), loads the reality, or its
-/// worlds, the base and each scenario's (L §6.4), then answers the asks (L §5.18).
+/// worlds, the base and each scenario's (L §6.4), then answers the asks (L §5.18). The files
+/// given hold the whole reality; the request's pin and days say how a `use` pin is taken and
+/// which days the walk steps.
 ///
 /// # Errors
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn run(given: Vec<Given>, request: &Request) -> Result<Answer, NotImplemented> {
-    run_with_memo(given, request, Memo::Classes)
+    run_with_how(as_requested(given, request), request, request_how(request))
 }
 
-/// [`run`] with the file table's files, `disk`, where a joint model's members not among the
-/// files given are read (E §3.1 step 1; INTERFACE §2, §4): the CLI's entry.
+/// How [`run`] computes: every fence's form (P §2.3, §2.5, §3.3), the event walk's days.
+const FENCES: How = How::FENCES;
+
+/// Runs `files` on the request's asks, each ask's engine computing as `how` says, each fence's
+/// form or its plain twin and the walk's days: the CLI's entry, and the one hook of the
+/// equivalence tests (E §1, §3.2, §4.3; P §2.2, §2.3, §2.5, §3.3; R-130). With the
+/// `fault-injection` feature, `how` may plant a fault, which only an engine bug meets
+/// (E §9, §11; INTERFACE §4).
 ///
 /// # Errors
 ///
 /// As [`run`].
-pub fn run_in(
-    given: Vec<Given>,
-    disk: &BTreeMap<&str, &[u8]>,
-    request: &Request,
-) -> Result<Answer, NotImplemented> {
-    answered(given, disk, request, FENCES)
+pub fn run_with_how(files: Files, request: &Request, how: How) -> Result<Answer, NotImplemented> {
+    let asks = &request.asks;
+    finish(loaded(files, how).and_then(|loaded| {
+        let mut out = match &loaded {
+            Loaded::One(m) => answer(m, asks, how.days, how),
+            Loaded::Worlds(w) => answer_worlds(w, asks, how.days, how),
+        }?;
+        if is_joint(&loaded) {
+            out.lines = joint_lines(out.lines);
+        }
+        Ok(out)
+    }))
 }
 
-/// How [`run`] computes: every fence's form, the cells shared by a law date class (E §3.2),
-/// a projection's common case from F5's tree (P §2.3), a projection's walk read again
-/// continued by F6 (P §2.5).
-const FENCES: How = How::new(Memo::Classes, Lows::Tree, Forks::On);
+/// `check` (OPERATIONS §2.3): loads `files` as [`run`] loads them, every ask's own checks
+/// included, and evaluates and walks nothing; prints `ok`, or a base's one refusal, or each
+/// refused scenario's line and each ask refused alone, then load's warnings (E §3.1; L §6.4,
+/// §8.3, §8.5).
+///
+/// # Errors
+///
+/// [`NotImplemented`] for a construct the engine's load doesn't build yet.
+pub fn check(files: Files) -> Result<Answer, NotImplemented> {
+    finish(loaded(files, FENCES).and_then(|loaded| {
+        let lines = check_lines(&loaded)?;
+        Ok(Answered::printed(if is_joint(&loaded) {
+            joint_lines(lines)
+        } else {
+            lines
+        }))
+    }))
+}
 
 /// Loads a reality's files and answers with what load prints when no ask is answered: its one
 /// refusal, or each refused scenario's line and the warnings (L §8, §8.5). The fuzz target
@@ -149,7 +218,7 @@ const FENCES: How = How::new(Memo::Classes, Lows::Tree, Forks::On);
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
-    let report = loaded(given, &BTreeMap::new(), Pin::Canonical).map(|loaded| {
+    let report = loaded(Files::new(given), FENCES).map(|loaded| {
         let lines = report_lines(&loaded);
         Answered::printed(if is_joint(&loaded) {
             joint_lines(lines)
@@ -158,21 +227,6 @@ pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
         })
     });
     finish(report)
-}
-
-/// [`run`] with each ask's memo keeping its cells as `memo` says: shared by a law date class,
-/// as [`run`] keeps them, or at each exact law date, the plain twin the equivalence test
-/// compares it with (E §3.2, P §3.3).
-///
-/// # Errors
-///
-/// As [`run`].
-pub fn run_with_memo(
-    given: Vec<Given>,
-    request: &Request,
-    memo: Memo,
-) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, How { memo, ..FENCES })
 }
 
 /// [`run`] with each ask's engine reading a written projection's common case as `lows` says:
@@ -189,7 +243,11 @@ pub fn run_with_lows(
     request: &Request,
     lows: Lows,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, How { lows, ..FENCES })
+    let how = How {
+        lows,
+        ..request_how(request)
+    };
+    run_with_how(as_requested(given, request), request, how)
 }
 
 /// [`run`] with each ask's engine continuing a projection's walk read again through a later
@@ -207,63 +265,27 @@ pub fn run_with_forks(
     request: &Request,
     forks: Forks,
 ) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, How { forks, ..FENCES })
-}
-
-/// [`run`] with each ask's engine computing as `how` says, each fence's form or its plain
-/// twin: what an equivalence test uses to turn two fences together (E §3.2, §4.3; P §2.3,
-/// §2.5, §3.3; R-130).
-///
-/// # Errors
-///
-/// As [`run`].
-pub fn run_with_how(
-    given: Vec<Given>,
-    request: &Request,
-    how: How,
-) -> Result<Answer, NotImplemented> {
-    answered(given, &BTreeMap::new(), request, how)
-}
-
-/// [`run`] with `fault` planted, its twin for the fixture of `ENGINE-INVARIANT`, which only an
-/// engine bug prints (E §9, §11; INTERFACE §4, pick P8): the same answer but where the fault
-/// breaks an invariant. Only with the `fault-injection` feature.
-///
-/// # Errors
-///
-/// As [`run`].
-#[cfg(feature = "fault-injection")]
-pub fn run_faulted(
-    given: Vec<Given>,
-    request: &Request,
-    fault: crate::walk::Fault,
-) -> Result<Answer, NotImplemented> {
     let how = How {
-        fault: Some(fault),
-        ..FENCES
+        forks,
+        ..request_how(request)
     };
-    answered(given, &BTreeMap::new(), request, how)
+    run_with_how(as_requested(given, request), request, how)
 }
 
-/// The run's answer, its members read from the files given, then from `disk`; a joint model's
-/// lines printed with each member's prefix and its dot (refcore's `_run_texts` and `joint`).
-fn answered(
-    given: Vec<Given>,
-    disk: &BTreeMap<&str, &[u8]>,
-    request: &Request,
-    how: How,
-) -> Result<Answer, NotImplemented> {
-    let (asks, days) = (&request.asks, request.days);
-    finish(loaded(given, disk, request.pin).and_then(|loaded| {
-        let mut out = match &loaded {
-            Loaded::One(m) => answer(m, asks, days, how),
-            Loaded::Worlds(w) => answer_worlds(w, asks, days, how),
-        }?;
-        if is_joint(&loaded) {
-            out.lines = joint_lines(out.lines);
-        }
-        Ok(out)
-    }))
+/// The files given, no file table, a `use` pin taken as the request says.
+fn as_requested(given: Vec<Given>, request: &Request) -> Files {
+    Files {
+        pin: request.pin,
+        ..Files::new(given)
+    }
+}
+
+/// Every fence's form, the walk stepping the days the request says.
+fn request_how(request: &Request) -> How {
+    How {
+        days: request.days,
+        ..FENCES
+    }
 }
 
 /// Whether the run's reality is a joint model's.
@@ -286,12 +308,18 @@ fn joint_lines(lines: Vec<String>) -> Vec<String> {
 }
 
 /// The run's files read, split with their scenario headers, and loaded: one reality, or its
-/// worlds, a joint model's members read from the files given, then from `disk` (refcore's
-/// `_run_texts`). E §3.1 step 1; L §8.3, §6.1, §6.4.
-fn loaded(given: Vec<Given>, disk: &BTreeMap<&str, &[u8]>, pin: Pin) -> Result<Loaded, Stop> {
+/// worlds, a joint model's members read from the files given, then from the file table
+/// (refcore's `_run_texts`); what load evaluates computes as `how` says. E §3.1 step 1; L §8.3,
+/// §6.1, §6.4.
+fn loaded(files: Files, how: How) -> Result<Loaded, Stop> {
+    let Files { given, table, pin } = files;
+    let disk: BTreeMap<&str, &[u8]> = table
+        .iter()
+        .map(|(path, bytes)| (path.as_str(), bytes.as_slice()))
+        .collect();
     let sources = read(given).map_err(Stop::Refused)?;
     let split = split_files(sources).map_err(Stop::Refused)?;
-    load_run(&split, disk, pin)
+    load_run(&split, &disk, pin, how)
 }
 
 /// The printed answer: the lines, or a refusal's one line (L §8.3); [`NotImplemented`] for a

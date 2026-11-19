@@ -15,7 +15,8 @@
 //! a refused `with uncertain` keeps the register it met before the refusal, as refcore
 //! registers while it counts.
 
-use super::plan::{Amount, Dated, HoleSrc, Inst, invariant, qty_value};
+use super::instance::{Amount, Dated, HoleSrc, Inst};
+use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
@@ -853,7 +854,12 @@ impl Uncertain {
 
     /// One uncertain movement's leg at `place`: `uncertain:` in the register, its amount
     /// signed by its direction (refcore's `with_uncertain`, a leg). L §5.14.
-    fn leg(&mut self, place: &str, movement: &Inst, leg: &super::plan::LegVal) -> Result<(), Stop> {
+    fn leg(
+        &mut self,
+        place: &str,
+        movement: &Inst,
+        leg: &super::instance::LegVal,
+    ) -> Result<(), Stop> {
         for (end, sign) in [(&leg.from, -1_i64), (&leg.to, 1_i64)] {
             if end.place() != Some(place) {
                 continue;

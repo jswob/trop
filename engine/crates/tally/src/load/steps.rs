@@ -11,6 +11,7 @@ use super::check::invariant;
 use super::keys::{RangeKey, check_range_keys};
 use super::same::SameLine;
 use crate::base::{Code, Interner, Load, Place as At, Refusal, Run, Table, Warn};
+use crate::eval::How;
 use crate::model::{Graph, Joint, Names, PERIODS, Reality, Scenarios, UnitError};
 use crate::num::{Num, NumError};
 use crate::syntax::{File, HeaderKind, Lit, Section, Stop, UnitForm};
@@ -30,6 +31,9 @@ pub(super) struct Loader {
     /// The keys rows write at a stepped range's position, checked once load is done
     /// (refcore's `range_lits`).
     pub(super) range_keys: Vec<RangeKey>,
+    /// How the engines load's checks evaluate with compute: the run's, so its plain twins
+    /// reach them too (R-130).
+    pub(super) how: How,
 }
 
 /// A load refusal at a line of a file. L §8.3.
@@ -58,31 +62,38 @@ pub(super) fn num_stop(error: NumError) -> Stop {
     Stop::Refused(Refusal::new(code, message.to_owned()))
 }
 
-/// The reality the files state (refcore's `Loader.build`, its constructive steps). E §3.1.
+/// The reality the files state (refcore's `Loader.build`, its constructive steps), what it
+/// evaluates computing as `run` does. E §3.1.
 ///
 /// # Errors
 ///
 /// A load refusal construction meets, or `NotBuilt` for a form S doesn't build.
 pub fn load(files: Vec<File>) -> Result<Reality, Stop> {
-    load_among(files, &BTreeSet::new(), &BTreeMap::new(), None)
+    load_among(
+        files,
+        (&BTreeSet::new(), &BTreeMap::new()),
+        None,
+        How::FENCES,
+    )
 }
 
 /// The reality the files state, loaded among the run's other worlds `worlds` (the scenarios
 /// of a run with scenarios, which an ask of the base may name) (refcore's `load_texts` with
 /// its `worlds`); `elsewhere`, for the base of a run with scenarios, the ids their files
 /// declare, each with its scenario; `joint`, for a joint model's merged files, its members (the
-/// asks a run may name `a.q`). E §3.1; L §6.1, §6.4.
+/// asks a run may name `a.q`); what it evaluates computing as `how` says. E §3.1; L §6.1,
+/// §6.4.
 ///
 /// # Errors
 ///
 /// As [`load`].
 pub(super) fn load_among(
     files: Vec<File>,
-    worlds: &BTreeSet<String>,
-    elsewhere: &BTreeMap<String, String>,
+    (worlds, elsewhere): (&BTreeSet<String>, &BTreeMap<String, String>),
     joint: Option<&Joint>,
+    how: How,
 ) -> Result<Reality, Stop> {
-    let mut loader = Loader::new(files, joint)?;
+    let mut loader = Loader::new(files, joint, how)?;
     loader.m.all_worlds.clone_from(worlds);
     loader.m.elsewhere.clone_from(elsewhere);
     loader
@@ -107,6 +118,7 @@ pub(super) fn load_among(
     loader.build_items()?;
     loader.check_rows()?;
     loader.finish_rows();
+    loader.type_readings()?;
     super::overlap::check_obs(&loader.m)?;
     loader.check_sames()?;
     super::scenarios::check_scenarios(&loader.m)?;
@@ -121,15 +133,16 @@ pub(super) fn load_among(
     }
     loader.collect_asks();
     loader.build_graph()?;
-    check_range_keys(&loader.m, &loader.range_keys)?;
+    check_range_keys(&loader.m, &loader.range_keys, loader.how)?;
     Ok(loader.m)
 }
 
 impl Loader {
     /// The one model header, the files' tally version, the scenarios, and an empty reality under
     /// them, a joint model's header `same` lines first among the `same` lines (refcore's
-    /// `Loader.build`, pass 1, and `joint_sames`' header pairs). L §6.1, §6.4.
-    fn new(files: Vec<File>, joint: Option<&Joint>) -> Result<Loader, Stop> {
+    /// `Loader.build`, pass 1, and `joint_sames`' header pairs); its checks' engines
+    /// computing as `how` says. L §6.1, §6.4.
+    fn new(files: Vec<File>, joint: Option<&Joint>, how: How) -> Result<Loader, Stop> {
         let models: Vec<&File> = files
             .iter()
             .filter(|f| f.header.kind == HeaderKind::Model)
@@ -199,6 +212,7 @@ impl Loader {
                 things: Table::new(),
                 indexes: Table::new(),
                 inputs: Table::new(),
+                balance_readings: BTreeMap::new(),
                 defs: Table::new(),
                 bands: Table::new(),
                 places: Table::new(),
@@ -222,6 +236,7 @@ impl Loader {
             currency_order: Vec::new(),
             same_lines: header_sames,
             range_keys: Vec::new(),
+            how,
         })
     }
 

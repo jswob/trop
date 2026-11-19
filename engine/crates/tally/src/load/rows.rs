@@ -1,13 +1,17 @@
 //! Load's version items: `covers` and gap roles, rows of inputs and `given`s of defs, band rows, and replaced rules.
 //! Spec: L §4.5 (a row's own `known`), §4.6 (rows: pattern, `*`, key ranges, own `governs`,
 //! readings' instants), §5.3 (`covers`, `pad`, `anchor`, LOAD-GOVERNS), §5.9 (band tables),
-//! §5.11 step 2 (`replace rule`), §2.5 (stable ids).
+//! §5.11 step 2 (`replace rule`), §2.5 (stable ids), §5.19 and §5.10 (each place's balance
+//! readings, typed: its unit, and each row's day and edge).
 //! Twin: engine/tools/refcore/loader.py (`build_items`, `target`, `rule_item`, `band_item`,
-//! `band_end`, `row_item`, `check_rows`' stable ids).
+//! `band_end`, `row_item`, `check_rows`' stable ids, `place_value`); moves.py (`m_readings`,
+//! its place and instant).
 //! Invariants: a row's pattern has one position per key bind of its target; a band's table is
 //! one per (version, key); a row's stable id is `version:target[keys]`, its own span or instant
-//! added where two rows of a version share a pattern.
+//! added where two rows of a version share a pattern; the balance readings are typed only
+//! after their rows are checked and their stable ids set.
 
+use super::check::invariant;
 use super::keys::{KeyLit, RangeKey, key_order, not_a_range_value, range_key_of};
 use super::places::Written;
 use super::same::SameLine;
@@ -16,8 +20,8 @@ use super::steps::{Loader, refuse};
 use super::worlds::no_version;
 use crate::base::Load;
 use crate::model::{
-    BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat, Row, RuleVer, Value,
-    pattern_text,
+    BalanceRow, BandRow, BandTable, Domain, GapRole, IndexForm, KeyVal, NameKind, Pat,
+    PlaceReadings, Row, RuleVer, Value, pattern_text,
 };
 use crate::syntax::{
     BandRow as WrittenBand, Gap, Instant, Item, ItemForm, Row as WrittenRow, RowKey, Rule, Section,
@@ -25,6 +29,7 @@ use crate::syntax::{
 };
 use crate::time::Day;
 use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 
 impl Loader {
     /// Each version's covers, gap roles and items (refcore's `build_items`). L §5.3.
@@ -552,6 +557,72 @@ impl Loader {
         for (_, def) in self.m.defs.entries_mut() {
             set_sids(&def.id, &mut def.givens);
         }
+    }
+
+    /// Each place's balance readings, typed: its unit and type, and its `opening` and
+    /// `stated` rows with their day and edge, in the order written. `row_item` has refused a
+    /// reading at no start or end of a day, and `check_rows` one that names no place or a
+    /// place of unit `any` (refcore's `m_readings`, `place_value`). L §5.19, §4.6 Readings,
+    /// §5.10.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a reading those checks let by; a number error of the unit.
+    pub(super) fn type_readings(&mut self) -> Result<(), Stop> {
+        let mut typed: BTreeMap<String, PlaceReadings> = BTreeMap::new();
+        for input in ["opening", "stated"] {
+            let checked = self
+                .m
+                .inputs
+                .get(input)
+                .filter(|i| i.builtin && !i.observed);
+            let Some(info) = checked else {
+                continue;
+            };
+            for row in &info.rows {
+                let Some(Pat::Key(KeyVal::Thing(place))) = row.pattern.first() else {
+                    return Err(invariant(format!("a row of {input} names no place")));
+                };
+                let Some(Instant {
+                    day,
+                    edge: Some(edge),
+                }) = row.instant
+                else {
+                    return Err(invariant(format!(
+                        "a row of {input}[{place}] at no day's start or end"
+                    )));
+                };
+                let of_place = match typed.entry(place.clone()) {
+                    Entry::Occupied(found) => found.into_mut(),
+                    Entry::Vacant(slot) => slot.insert(self.place_readings(place)?),
+                };
+                of_place.rows.push(BalanceRow {
+                    input: input.to_owned(),
+                    day,
+                    edge,
+                    row: row.clone(),
+                });
+            }
+        }
+        self.m.balance_readings = typed;
+        Ok(())
+    }
+
+    /// Place `place`'s readings, none yet, with the unit and type a reading of it states: a
+    /// place of the model holds one unit (refcore's `place_value`). L §5.10, §4.6 Readings.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a place with no unit; a number error of the unit.
+    fn place_readings(&self, place: &str) -> Result<PlaceReadings, Stop> {
+        let typed = self.m.reading_ty(place).map_err(super::steps::num_stop)?;
+        let (unit, ty) =
+            typed.ok_or_else(|| invariant(format!("a reading of {place}, which has no unit")))?;
+        Ok(PlaceReadings {
+            unit,
+            ty,
+            rows: Vec::new(),
+        })
     }
 }
 

@@ -11,8 +11,9 @@
 //! in it too, and a decision run there counts in its `flows`; a place's flows are `flows.rs`'s.
 
 use super::flows::span_last;
+use super::instance::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status};
 use super::order::WalkAt;
-use super::plan::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status, invariant, qty_value};
+use super::plan::{invariant, qty_value};
 use super::reads::refuse;
 use super::state::{LegOut, Progress};
 use crate::base::Run;

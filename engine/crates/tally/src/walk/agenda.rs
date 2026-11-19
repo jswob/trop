@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::plan::{Amount, Dated, End, Exists, Inst, Order, Status};
+use super::instance::{Amount, Dated, End, Exists, Inst, Order, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;

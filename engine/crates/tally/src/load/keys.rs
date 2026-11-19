@@ -10,7 +10,7 @@
 use super::steps::{Loader, refuse};
 use super::texts::text;
 use crate::base::Load;
-use crate::eval::Engine;
+use crate::eval::How;
 use crate::model::{BindInfo, Domain, IndexForm, IndexInfo, KeyVal, NameKind, Reality};
 use crate::syntax::{Domain as Written, Expr, Key, Lit, Postfix, RowKey, Stop};
 use crate::time::{Day, PeriodKind};
@@ -242,8 +242,8 @@ pub(crate) fn literal_end(e: &Expr) -> bool {
 /// # Errors
 ///
 /// That `LOAD-KEY`; `NotBuilt` for a range of numbers not integers; an invariant.
-pub(super) fn check_range_keys(m: &Reality, keys: &[RangeKey]) -> Result<(), Stop> {
-    let mut engine = Engine::new(m.on);
+pub(super) fn check_range_keys(m: &Reality, keys: &[RangeKey], how: How) -> Result<(), Stop> {
+    let mut engine = how.engine(m.on);
     for written in keys {
         if let Some(message) = engine.range_key_missing(m, &written.range, &written.key)? {
             let (file, line) = &written.at;

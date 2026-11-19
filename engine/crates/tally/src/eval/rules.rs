@@ -57,7 +57,8 @@ impl Engine {
 
     /// Keeps walk-bound def `def`'s cell at `keys` where a decision read it at its point of
     /// a main walk, its value or refusal, for `explain` to print (refcore's `read_def`, its
-    /// `walk_cells`). E §10, §3.2.
+    /// `walk_cells`); an engine answering another ask keeps none, so copies none. E §10,
+    /// §3.2.
     ///
     /// # Errors
     ///
@@ -73,7 +74,8 @@ impl Engine {
         let Some(at) = ctx.at else {
             return Ok(());
         };
-        if self.rereading
+        if !self.keep_walk_cells
+            || self.rereading
             || !m.graph.walk_bound.contains(&def.id)
             || self.walk(at.walk)?.proj.is_some()
         {

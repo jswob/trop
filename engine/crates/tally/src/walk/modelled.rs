@@ -12,7 +12,8 @@
 //! stands before it); a hole entry or leg makes it a hole with every question met; a refused
 //! entry or leg refuses it. `explain` lists what the value counts (`Counted`).
 
-use super::plan::{Amount, Dated, Inst, LegVal, invariant, qty_value};
+use super::instance::{Amount, Dated, Inst, LegVal};
+use super::plan::{invariant, qty_value};
 use super::point::{At, Step};
 use super::state::{Change, Ent, Walk};
 use crate::eval::Engine;

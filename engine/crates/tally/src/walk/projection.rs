@@ -36,7 +36,7 @@ use crate::hole::Hole;
 use crate::model::{Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Agg, AggFn, Bal, Domain, Expr, Lit, Stop};
-use crate::time::{Day, Period};
+use crate::time::Day;
 
 /// A projection's walk by what makes it: the walk it continues, the point it starts after,
 /// its cut, the moves it leaves out (refcore's `proj_walk` key).
@@ -361,13 +361,14 @@ impl Engine {
         let found = match held {
             Some(id) if self.is_parked(id) => self.meet_parked(id, through)?,
             Some(id) if self.walk(id)?.plans_through() >= through => Held::Kept(id),
-            Some(_) | None => Held::New,
+            Some(id) => self.outgrown(id),
+            None => Held::New,
         };
         let id = match found {
             Held::Kept(id) => id,
-            Held::New => self.new_proj_walk(m, key, t, horizon(m, through))?,
+            Held::New => self.new_proj_walk(m, key, t, self.planned_through(m, through))?,
             Held::Continue(kept) => {
-                let id = self.new_proj_walk(m, key, t, horizon(m, through))?;
+                let id = self.new_proj_walk(m, key, t, self.planned_through(m, through))?;
                 self.wait_to_continue(id, *kept);
                 id
             }
@@ -571,19 +572,6 @@ fn first_and_last(values: &[(Value, Option<Hole>)]) -> Option<(Day, Day)> {
         last = d?;
     }
     Some((first, last))
-}
-
-/// The day a projection's walk read through `through` is planned through: on to the last day
-/// of that day's month (P §2.4's interval), within the run, so that a projection read day by
-/// day plans once a month, not once a read, while its walk stays within a month of its window
-/// (P §3.5, pick P54). Planned further, a walk walks no further than a read asks and books
-/// the same through it: past the window only instances the walk never reaches change (E §4.1,
-/// §4.3; pick P73).
-fn horizon(m: &Reality, through: Day) -> Day {
-    match Period::month_of(through).and_then(|month| month.end().previous()) {
-        Some(last) => last.min(m.end).max(through),
-        None => through,
-    }
 }
 
 /// A place's own unit, for a read that names none: `LOAD-UNIT` for a place of unit `any`

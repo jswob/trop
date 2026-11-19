@@ -10,7 +10,8 @@
 //! its instance, never to the reader of the move's instances; a link whose `when` is a hole or
 //! refused is taken as existing and judged where its instance is.
 
-use super::plan::{Exists, date_of, invariant, join, refuse};
+use super::instance::{Exists, join};
+use super::plan::{date_of, invariant, refuse};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Decided, Engine, Env, LawClass, Member, reads_name};
 use crate::hole::{Hole, Unknown};

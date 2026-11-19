@@ -12,10 +12,10 @@
 //! Invariants: an explanation prints from its trace in the order refcore prints it, each node
 //! numbered where it first prints and a cause met again referenced by its number, a row by
 //! its stable id, a balance by its read; nothing recurses (a worklist, R-16); a balance and a
-//! projection are `walked.rs`'s, a balance among the causes prints in their
-//! balance form (P63); a movement instance is `instance.rs`'s, by its move's name alone or
-//! at keys; a walk-bound def stops `NotBuilt`; rows print in
-//! the text order of their stable ids; readers by depth, each depth by id, an event kind's
+//! projection are `walked.rs`'s, a balance among the causes prints in their balance form
+//! (P63); a movement instance is `instance.rs`'s, by its move's name alone or at keys; a
+//! walk-bound def is `walkbound.rs`'s, at each walk point that read it; rows print in the
+//! text order of their stable ids; readers by depth, each depth by id, an event kind's
 //! bindings first (P63).
 
 use std::collections::{BTreeMap, BTreeSet};
