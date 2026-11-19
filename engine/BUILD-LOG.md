@@ -5369,3 +5369,50 @@ On `build/m3-gatefix` from 7450ac73 (56d59941 and the rules' map), a fresh build
 - **Usage:** about 0.5 % of the week (`engine/tools/usage`: 0.48 % before this commit), against a budget of 1.2 %.
 - **For T:** a vector for each B form. B-4's `run` vector is held "for #229" while refcore prints nothing. Item 4's and `b3_where`'s are held "for #235".
 - **Checks:** `check quick: green, 11 steps` on each commit's tree. `check commit: green, 23 steps (199s)`, exit 0, at 209cc544's tree with this log; this commit adds the log alone.
+
+## 2026-11-19 M3 gate fix, turn 2: the fix review's G-1 (issue #226)
+
+On `build/m3-gatefix` from beb93424, one commit and this one. The fix review is `tmp/m3/review-gatefix.md`: B-2, B-3 and B-4 fixed, 1 blocking (G-1, B-1's keyed form), ruled P33. By D12 this is the last fix; the coordinator checks it with probes.
+- **ad876e72, G-1:** a read's mode now covers the read alone, not its keys.
+  - `cal_arg`, `since` and `last` type their read under `Rel::Calendar` or `Rel::Explicit`, and the mode reached the read's keys as well. In `cal[region]` or `rd[region]`, a law-dated `region` was therefore taped as exempt, and the walk read it with no law date.
+  - Now `load/keyed.rs` `key_pos`, through which every key position is typed, types its key in the scope without a `Calendar` or `Explicit` mode (`Scope::without_mode`). A law pin's mode stays: under `as if {law D}` every read is made at D, keys included.
+  - So the one rule, `move_read_dated`, sees the key's read with its own relation, as L §4.2 ("at any keys"), §4.3 and §4.6 say.
+  - Last turn's entry said "no part can be left out" of the marking. That held for the reads load types, not for the relation each carries (the review's N-5). The relation is now the read's own wherever a key is typed.
+- **The review's texts** (`tmp/m3/review-gatefix/g1/`):
+  - **A** (`where is_business(d, cal[region])`, no `at`): `refused: LOAD-LAWDATE pay reads law-dated facts and states no at`, and `check` prints the same.
+  - **B** (a key's `on add_business(d0, 1, cal[region])` before the `at`): `refused: LOAD-LAWDATE move one's key p reads law-dated region with no law date: its at reads p`.
+  - **C** (A with `at d`): `q: 50.00 PLN`, its law-free twin's bytes, and the twin is refcore's.
+  - **D** (`where last(rd[region], d) == d0`, `at d`): `q: 30.00 PLN`, the same.
+  - Each of the four was `ENGINE-INVARIANT` with `check` `ok`. Refcore prints its #235 guard on the dated texts.
+- **N-6:** `ask q: last(rd[region], d0)` is now `LOAD-LAWDATE ask q reads law-dated region directly, without law` at load (L §4.3), where it was `ENGINE-INVARIANT` on both binaries.
+- **Every exempted argument, probed** (`tmp/m3/gatefix/g1/gen.py`, `out.txt`): 32 probes, each dated and with its law-free twin.
+  - The arguments are the calendar of `is_business`, `add_business`, `last_business` and `schedule`, and the read of `last` and `since`. Each key is a law-dated input (`region`) or an `at reader` def in the key (`rg = region at reader`).
+  - In a key's `where` with `at d`, the `where` waits and the text prints its twin's bytes.
+  - With no `at`: `LOAD-LAWDATE … states no at`.
+  - In a key's `on` before the `at`: #235's refusal, "reads law-dated region" or "reaches rg, which takes its law date from its reader".
+  - None prints `ENGINE-INVARIANT`, and none has `check` `ok` where `run` refuses at load.
+  - Every `region` twin is refcore's bytes but `o_last_region.t`, which stops `not implemented` (the review's N-2). The `rg` twins differ from refcore as P30's `at reader` texts do: refcore refuses the ask at run.
+- **Test** (`load_cases.rs`): `a_law_dated_key_of_a_calendar_or_a_stated_day_read_is_dated`, with A to D and N-6, each against its twin.
+- **Not taken:**
+  - N-1 (a fill's own reads on a move's tape): for #235. Taping only the move's edges would drop `on_alone`'s right refusal until a fill is judged as a node, which is more than a line or two.
+  - N-2 (a key's `on` with an aggregate, `as if`, a fill or `last` stops at run): older, for the follow-ups.
+  - N-3 (is a pinned read law-dated?) and N-4 (#228): spec questions.
+  - N-5's fourth walk (`expr_parts`): a refactor, for the follow-ups.
+- **The sweep** (`tmp/m3/gatefix/sweep2.txt`, `sweep2.json`, `compare2.txt`): 559 targets. They are turn 1's 246, the review's probes (`tmp/m3/review-gatefix/`: `p/`, `v/`, `sc/`, `f/`, `i4/`, `inv/`, `g1/`) and `gatefix/g1/`. Each ran `run` and `check` on this engine and on 56d59941's binary, and `run` on refcore.
+  - No `ENGINE-INVARIANT`, and no text where `check` prints `ok` and `run` refuses at load.
+  - No target differs from refcore that was the same at 56d59941.
+  - 466 targets have a beb93424 output: turn 1's sweep, or the review's `out/*.new.*`. Of those, only A to D changed.
+  - 28 runs stop `not implemented`. 24 stop on 56d59941's binary too (the review's N-2 and the gate's item 11).
+  - The other four (`review-gatefix/p/o_lawlit_at.d`, `o_lawreader_at.d`, `o_lawreader_at.t`, and `gatefix/g1/o_last_region.t`) are N-2's stop. 56d59941's name walk refused them wrongly (a read inside `as if {law D}`, or `last`'s read), so they now load and reach that stop. beb93424 already did the same for the review's three.
+  - Every other refcore difference has its reason from turn 1's entry:
+    - #235's guard where the engine refuses at load or answers (P28, P30, item 4, and now G-1's A to D);
+    - `at reader` defs (P30, item 13);
+    - #229 and #233;
+    - items 11 and 14;
+    - #228.
+- **Size** (`engine/crates`, beb93424 to this commit): 3 files, 98 in, 0 out. Of those, the library is 17 in; the tests are 81 in.
+- **Exceptions:** +0. Report-only hits are 8, as before.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.25 % of the week this turn (`engine/tools/usage`, 0.71 % over the session before this commit), against a budget of 0.4 %.
+- **For T:** a vector for each of A to D and N-6, held "for #235" while refcore prints its guard.
+- **Checks:** `check quick: green, 11 steps (81s)` at ad876e72's tree. `check commit: green, 23 steps (136s)`, exit 0, at ad876e72's tree with this log; this commit adds the log alone.
