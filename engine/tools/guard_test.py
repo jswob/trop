@@ -1106,6 +1106,75 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"usage with a Fable session: lacks {says!r}: {r.stdout.strip()[:400]}")
     if not r.stdout.rstrip().splitlines()[-1].startswith("all 3 sessions"):
         failures.append(f"usage: its last line isn't the total: {r.stdout.strip()[-200:]}")
+    timeline_checks(root, expect, failures)
+
+
+def timeline_checks(root, expect, failures):
+    """timeline on planted transcripts (the process study after M2, change 6; 2026-11-19): a
+    builder's build turn with a red and a green check quick, its fix turn, a group review in
+    the gap between them, a last line still being written; then an entry of an unknown
+    type and a line that isn't JSON, each of which must stop it."""
+    projects = os.path.join(root, "engine", "target", "projects-timeline")
+    run = os.path.join(root, "engine", "target", "run-timeline")
+    for d in (os.path.join(projects, "p1"), run):
+        os.makedirs(d, exist_ok=True)
+    d, e, f, g = ("44444444-4444-4444-8444-444444444444", "55555555-5555-4555-8555-555555555555",
+                  "66666666-6666-4666-8666-666666666666", "77777777-7777-4777-8777-777777777777")
+
+    def at(hhmmss):
+        return f"2026-11-01T{hhmmss}.000Z"
+
+    def prompt(t, text):
+        return {"type": "user", "timestamp": at(t), "uuid": f"u{t}", "message": {"role": "user", "content": text}}
+
+    def call(t, mid, command=None):
+        content = [{"type": "tool_use", "id": f"tu{mid}", "name": "Bash", "input": {"command": command}}] if command else []
+        return {"type": "assistant", "timestamp": at(t), "uuid": f"a{t}",
+                "message": {"id": mid, "model": "claude-opus-5-5", "content": content,
+                            "usage": {"input_tokens": 86000, "output_tokens": 0}}}
+
+    def result(t, mid, text):
+        return {"type": "user", "timestamp": at(t), "uuid": f"r{t}",
+                "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": f"tu{mid}", "content": text}]}}
+
+    builder = [prompt("10:00:00", "# run, builder group G1 (fresh session)\nBuild it."),
+               call("10:00:10", "m1", "engine/tools/check quick"),
+               result("10:01:50", "m1", "FAIL clippy-lib\ncheck quick: red at clippy-lib, stopped after 2 of 11 steps"),
+               call("10:02:00", "m2", "engine/tools/check quick 2>&1 | tail -3"),
+               result("10:02:50", "m2", "check quick: green, 11 steps (50s)"),
+               {"type": "ai-title", "title": "x"}, call("10:10:00", "m3"),
+               prompt("10:40:00", "# run, G1: the review's fixes (resume, gate 8 after)"), call("10:45:00", "m4")]
+    review = [prompt("10:12:00", "# run, review of builder group G1 (fresh session, its own worktree)"), call("10:30:00", "m5")]
+    for sid, lines, tail in ((d, builder, '{"type": "assistant", "timest'), (e, review, "")):
+        with open(os.path.join(projects, "p1", sid + ".jsonl"), "w", encoding="utf-8") as fh:
+            fh.write("".join(json.dumps(x) + "\n" for x in lines) + tail)
+    ids = os.path.join(run, "ids.txt")
+    with open(ids, "w", encoding="utf-8") as fh:
+        fh.write(f"{d} build builder claude-opus-5-5\n{e} lead\n")
+    tool = os.path.join(root, "engine/tools/timeline")
+    r = subprocess.run([tool, ids, "--projects", projects], capture_output=True, text=True, check=False)
+    expect("timeline of a planted run", r.returncode, 0, r.stderr)
+    # 10 min of build with 150 s in checks; a 5 min fix; check quick 100 s red and 50 s green;
+    # the gap 10:10 to 10:40 with the group review's 18 min; 0.01 % a call
+    for says in ("timeline: 2 sessions (0 with no transcript)", "| build | 1 | 0.2 | 0.0 (25%) | 0.03 |",
+                 "| fix | 1 | 0.1 | 0.0 (0%) | 0.01 |", "| `check quick` | 2 | 75 | 1 | 2 |", "| 30 | group-review 18 |",
+                 "| builder: build | 1 | 0.03 |", "| group-review | 1 | 0.01 |", "| all | 2 | 0.05 | 100 % |"):
+        if says not in r.stdout:
+            failures.append(f"timeline: lacks {says!r}: {r.stdout.strip()[:1500]}")
+    for sid, text, says in ((f, '{"type": "brand-new-kind", "timestamp": "2026-11-01T10:00:00Z"}\n',
+                             "an entry of type 'brand-new-kind' this tool doesn't know"),
+                            (g, '{"type": "user", "timestamp": "2026-11-01T10:00:00Z", "message": {"content": "hi"}}\n'
+                                'not json\n{"type": "user"}\n', "not JSON")):
+        with open(os.path.join(projects, "p1", sid + ".jsonl"), "w", encoding="utf-8") as fh:
+            fh.write(text)
+        with open(ids, "a", encoding="utf-8") as fh:
+            fh.write(f"{sid} tests\n")
+        r = subprocess.run([tool, ids, "--projects", projects], capture_output=True, text=True, check=False)
+        expect(f"timeline refuses a transcript with {says}", r.returncode, 1, r.stderr)
+        if says not in r.stderr or "format changed" not in r.stderr:
+            failures.append(f"timeline: refuses without saying {says!r}: {r.stderr.strip()[:300]}")
+        with open(ids, "w", encoding="utf-8") as fh:
+            fh.write(f"{d} build builder claude-opus-5-5\n{e} lead\n")
 
 
 # nextest's log of check quick's `tests` step, two of three tests red (R-83, issue #108):
@@ -1151,7 +1220,7 @@ def setup(root):
         os.makedirs(os.path.join(root, d), exist_ok=True)
     # check.py and milestones.py for merge-pr, which reads CI's groups from check (R-77, 2026-11-13)
     for name in ("guard", "guard.py", "stop-check", "stop_check.py", "merge-pr", "merge_pr.py", "worktree-done", "worktree_done.py",
-                 "session-start", "launch", "launch.py", "usage", "usage.py",
+                 "session-start", "launch", "launch.py", "usage", "usage.py", "timeline", "timeline.py",
                  "commit-check", "commit_check.py", "check_frozen.py", "check.py", "milestones.py"):
         shutil.copy2(os.path.join(TOOLS, name), os.path.join(root, "engine/tools", name))
     files = {

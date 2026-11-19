@@ -490,6 +490,7 @@ GUARD_TEST_FILES = ["engine/tools/guard-test", "engine/tools/guard_test.py", "en
                     # the coordinator's tools, the hook's pointer, and the playbook whose job table
                     # guard-test holds equal to launch's (2026-11-15)
                     "engine/tools/launch", "engine/tools/launch.py", "engine/tools/usage", "engine/tools/usage.py",
+                    "engine/tools/timeline", "engine/tools/timeline.py",
                     "engine/tools/session-start", "engine/PLAYBOOK.md"]
 GUARD_TEST_VERSIONS = [["python3", "--version"], ["git", "--version"]]
 # rules-selftest builds, lints and plants into a copy of the engine with these tools

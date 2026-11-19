@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Where a run's hours and its cost went, from its transcripts (the process study after M2, change 6):
+# engine/tools/timeline IDS-FILE ... [--projects DIR]
+d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+exec python3 -I -B "$d/timeline.py" "$@"

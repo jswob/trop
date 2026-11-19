@@ -36,7 +36,7 @@ The session's **job** fixes its model and effort (the playbook's table, D2 and D
 It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, then starts `claude -p … --output-format json` detached with `TALLY_ROLE`, `CARGO_BUILD_JOBS=6`, `NEXTEST_TEST_THREADS=6`, `CARGO_INCREMENTAL=0` and `nice -n 10`. It refuses under 30 GB free and warns when two heavy jobs already run. `--dry-run` shows the command. The answer lands in `tmp/<run>/out/<id>.<n>.json` (`.result` is the session's last message); watch for it with Monitor, never sit idle on it.
 
 - **One sub-session at a time,** unless the brief allows two; never more than two heavy jobs on the Mac (yours included).
-- **Every start message** names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role, the job and the effort; what to read first; the step and where it ends ("until a green commit": a builder's last commit of its group on `check full`, its commits inside the group on `check fast`); "end your turn with N lines: …" (what you need back); and these rules, verbatim:
+- **Every start message** opens with a heading line, `# <run>, <what>`, whose words `engine/tools/timeline` reads for a builder's turn: `plan only`, `builder group <g> (fresh session)`, `the review's fixes`, `the last fix`, `the gate`. It names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role, the job and the effort; what to read first; the step and where it ends ("until a green commit": a builder's last commit of its group on `check full`, its commits inside the group on `check fast`); "end your turn with N lines: …" (what you need back); and these rules, verbatim:
   - the seal (§9);
   - no agents, subagents or forks (the gate's single `engine-reviewer` agent excepted, told to spawn none);
   - never install anything: take a path that needs none, or say it's blocked;
@@ -100,7 +100,8 @@ Before a budget stop, a wait on the user, or the end of a turn that leaves work:
 4. the full mutation run on the final commit: `gh workflow run engine.yml --ref <branch> -f mutants-only=true` (gate 8 alone, about an hour; R-88, 2026-11-12), after the marker commit and without `next`: the record run counts the gating set (R-88, 2026-11-15), the survivors job green (gate 8). The baseline's notices of T tests over 20 s are information: never re-run gate 8, and never have T split a test, for test times alone (R-88, 2026-11-14);
 5. the timing run on the reference Mac when the milestone has P8 rows (`engine/tools/perf milestone M<n>`), the Mac otherwise idle;
 6. the milestone report `engine/perf/M<n>.md` (R-129) and `engine/ARCHITECTURE.md` (R-119);
-7. the milestone into `gating` (`engine/tools/milestones.toml`) as the branch's last commit, in a rules step, when the brief says so.
+7. the run's timeline: `engine/tools/timeline tmp/<run>/ids.txt`, its four tables pasted into the gate's report beside the cost (the playbook's D14); a loop whose median passed its target is a follow-up issue;
+8. the milestone into `gating` (`engine/tools/milestones.toml`) as the branch's last commit, in a rules step, when the brief says so.
 
 **The pull request:** title the outcome (`M1: household forecasts run`), description from `engine/templates/pr.md` through `gh pr create --body-file` (draft from the first push, ready at the gate). Its six sections and the folded For sessions block are checked by CI's `pr body` job; after editing the description, re-run that job. One `Closes #n` per line. `merge-pr` refuses `build/*` and every rule-file change, so the user merges those.
 
