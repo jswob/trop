@@ -14,8 +14,8 @@
 //! whose minor unit is 0.01: 1.25 a day in, and every seventh day 9.00 out instead, so a
 //! window's running sum dips below zero and the read adds the dip. Each timed read is the
 //! range minimum of `min(bal(x, e) from d for e in d .. E step 1 day)` for the next day d in
-//! turn, as G9's profile read them (`low_all`): three halvings over the days and two queries
-//! of the tree.
+//! turn, as M1's G9 profile read them (BUILD-LOG, P56): three halvings over the days
+//! (`counts`, `first`, `last`) and two queries of the tree.
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;

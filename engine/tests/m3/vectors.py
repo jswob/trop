@@ -34,8 +34,23 @@ the whole output. `source` is `run` (predicted from refcore's `run`, above), `ru
 the prediction byte for byte and stores its bytes with `check`). runner/src/m3_texts.rs embeds the fixtures' texts
 (M0's sets read m0_texts.rs and m0_spec_texts.rs), so the tests read no file (INTERFACE.md §4).
 
-    python3 -I -B engine/tests/m3/vectors.py              -> writes m3/check.vectors, runner/src/m3_texts.rs
-    python3 -I -B engine/tests/m3/vectors.py --check      -> exit 1 if either isn't what refcore's runs give
+**The seven changes** (OPERATIONS §6.1, MILESTONE-M3.md row 6): m3/changes/stages.tsv names each stage's files (from
+engine/tests/integration/amendments/real11, the household's own files by path, T's few texts under m3/changes/): a
+`b` stage is the household with only its `on` line moved (§6.1 step 1), a `c` stage the household with the change, a
+`k` stage the change without its advance (load refuses it LOAD-KNOWN). A stage with a `check` kind is a `check`
+vector (`changes/check/<stage>`, group `changes`, predicted as above, its kind asserted); a stage with asks is a `run`
+vector (`changes/run/<stage>`, in m3/runs.vectors). Before anything is stored, every real11 file a stage names is
+asserted to be the spec household's (`engine/spec/amendments/household`) but the change's own lines (`equivalence`).
+
+**The run function** (E §1, MILESTONE-M3.md row 5): m3/run/runs.tsv, one row per vector (`run/<name>`, group `run`):
+its command line, and `extra`, files put in the table that no argument names (never read).
+
+m3/runs.vectors holds each run vector in check.vectors' eight netstrings, the argument words as given (`run` first, or
+a usage error's): refcore's run (refcore_fast on PyPy, byte-equal to refcore by construction, run.py's `pypy+fast`: X's
+law asks take 1-2 s there), `source` `run`, or `rule` for a usage error (refcore must exit 2; the bytes not stored).
+
+    python3 -I -B engine/tests/m3/vectors.py              -> writes m3/check.vectors, m3/runs.vectors, m3_texts.rs
+    python3 -I -B engine/tests/m3/vectors.py --check      -> exit 1 if any isn't what refcore's runs give
     python3 -I -B engine/tests/m3/vectors.py --show GLOB  -> the predicted output of the vectors whose id matches
     python3 -I -B engine/tests/m3/vectors.py --confirm    -> refcore's `check` on every vector, tied, stored (C4)
 """
@@ -56,7 +71,18 @@ M0 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(M0)
 
 STORE = os.path.join(HERE, 'check.vectors')
+RUNS = os.path.join(HERE, 'runs.vectors')
 FIXTURES = os.path.join(HERE, 'check', 'fixtures.tsv')
+STAGES = os.path.join(HERE, 'changes', 'stages.tsv')
+RUN_ROWS = os.path.join(HERE, 'run', 'runs.tsv')
+REAL11 = 'engine/tests/integration/amendments/real11'
+HOUSEHOLD = 'engine/spec/amendments/household/'
+# the files a change edits (its diff's lines are its own); every other real11 file is the household's but `on`
+CHANGED = {'c2/law/pl/common.tally', 'c3/law/pl/business.tally', 'c7/asks/core.tally'}
+FAST = 'pypy+fast'
+# predicted from refcore's `run`, which makes this load check only while answering; refcore's `check` prints the
+# spec's line (L §6.4, §8.3): the coordinator's ruling, #229 (2026-11-18)
+RULED_229 = {'fixture/alone/scenario-file', 'fixture/alone/same-id'}
 TEXTS_RS = R.T + 'runner/src/m3_texts.rs'
 PROBE_FILE = 'engine/tests/m3/zz_m3_probe.tally'
 PROBE = 'zz_m3_probe'
@@ -141,9 +167,102 @@ def vectors():
             args = r['args'].split()
             out.append({'id': 'fixture/' + r['id'], 'group': r['id'].split('/')[0], 'cwd': cwd, 'args': args,
                         'table': table_of(r['id'], cwd, args), 'checks': [], 'rule': r['rule']})
+    for s in stage_rows():
+        if s['check'] != '-':
+            args = s['files'].split()
+            out.append({'id': 'changes/check/' + s['stage'], 'group': 'changes', 'cwd': REAL11, 'args': args,
+                        'table': table_of(s['stage'], REAL11, args), 'checks': [], 'kind': s['check']})
     ids = [v['id'] for v in out]
     if len(set(ids)) != len(ids):
         sys.exit('two vectors share an id')
+    return out
+
+
+def tsv(path, columns):
+    with open(path, encoding='utf-8', newline='') as f:
+        r = csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
+        if r.fieldnames != columns:
+            sys.exit('%s: the columns are %s, not %s' % (path, r.fieldnames, columns))
+        return list(r)
+
+
+def stage_rows():
+    """m3/changes/stages.tsv: stage, the asks its run asks (`-`: no run), its check's kind (`ok`, `known`, `-`), files."""
+    rows = tsv(STAGES, ['stage', 'run', 'check', 'files'])
+    for s in rows:
+        if s['check'] not in ('ok', 'known', '-') or (s['run'] == '-' and s['check'] == '-'):
+            sys.exit('stages.tsv: %s: a check kind ok, known or -, and a run or a check' % s['stage'])
+    return rows
+
+
+def equivalence():
+    """Every real11 file a stage names is the spec household's, but the change's own: a file of its change (absent from
+    the household, or in CHANGED), or reality.tally with its `on` line moved; T's stage-a texts are the first lines
+    of their stage-b files, and T's headers the household's with `on` moved."""
+    def lines(repo):
+        return open(R.ROOT + repo, encoding='utf-8').read().split('\n')
+
+    def on_moved(a, b):
+        return len(a) == len(b) and [i for i, (x, y) in enumerate(zip(a, b)) if x != y] in ([], [2]) and \
+            b[2].startswith('  on ')
+    bad = []
+    for s in stage_rows():
+        for _, repo in table_of(s['stage'], REAL11, s['files'].split()):
+            rel = repo[len(REAL11) + 1:] if repo.startswith(REAL11 + '/') else None
+            if rel is None:
+                continue
+            house = HOUSEHOLD + rel.split('/', 1)[1]
+            if rel in CHANGED or not os.path.exists(R.ROOT + house):
+                continue
+            if rel.endswith('/reality.tally') and rel.count('/') == 1:
+                ok = on_moved(lines(house), lines(repo))
+            else:
+                ok = lines(house) == lines(repo)
+            if not ok:
+                bad.append('%s: %s is not the household\'s %s' % (s['stage'], rel, house))
+    for mine, theirs in (('c4a/facts/2028.tally', 'c4/facts/2028.tally'), ('c6a/facts/2027.tally', 'c6/facts/2027.tally')):
+        a, b = lines(PREFIX + 'm3/changes/' + mine), lines(REAL11 + '/' + theirs)
+        if a[:-1] != b[:len(a) - 1]:
+            bad.append('m3/changes/%s is not the first lines of %s' % (mine, theirs))
+    for d in ('on-2028-05-14', 'on-2027-04-02'):
+        if not on_moved(lines(HOUSEHOLD + 'reality.tally'), lines(PREFIX + 'm3/changes/%s/reality.tally' % d)) or \
+                lines(PREFIX + 'm3/changes/%s/reality.tally' % d)[2] != '  on ' + d[3:]:
+            bad.append('m3/changes/%s/reality.tally is not the household\'s with on %s' % (d, d[3:]))
+    if bad:
+        sys.exit('\n'.join(bad))
+
+
+def run_vectors():
+    """The seven changes' runs (stages with asks), then m3/run/runs.tsv's, each {id, group, cwd, args, table, rule,
+    runtime}."""
+    out = []
+    for s in stage_rows():
+        if s['run'] != '-':
+            files = s['files'].split()
+            out.append({'id': 'changes/run/' + s['stage'], 'group': 'changes', 'cwd': REAL11,
+                        'args': ['run'] + files + ['--ask'] + s['run'].split(),
+                        'table': table_of(s['stage'], REAL11, files), 'rule': ''})
+    for r in tsv(RUN_ROWS, ['id', 'cwd', 'args', 'extra', 'rule']):
+        cwd = os.path.normpath(PREFIX + r['cwd'])
+        args = r['args'].split()
+        table = table_of(r['id'], cwd, args[1:]) + [
+            (k, os.path.normpath(os.path.join(cwd, k))) for k in r['extra'].split() if k != '-']
+        out.append({'id': r['id'], 'group': r['id'].split('/')[0], 'cwd': cwd, 'args': args, 'table': table,
+                    'rule': r['rule'] if r['rule'] == 'usage' else ''})
+    return out
+
+
+def runs_of(rvs):
+    """Refcore's run of each run vector: {id: (exit, output, source)}; a usage error must exit 2, its words not kept."""
+    res = refcore([run_check(v, v['args']) for v in rvs], FAST)
+    out = {}
+    for v, e in zip(rvs, res):
+        if v['rule']:
+            if e['rc'] != 2:
+                sys.exit('%s: refcore exits %s on a usage error, not 2' % (v['id'], e['rc']))
+            out[v['id']] = (2, '', 'rule')
+        else:
+            out[v['id']] = (e['rc'], e['out'], 'run')
     return out
 
 
@@ -159,11 +278,11 @@ def run_check(v, words, table=None):
             'note': '', 'baseline_s': '', 'files': ' '.join(repo for _, repo in table), 'options': ' '.join(words)}
 
 
-def refcore(checks):
+def refcore(checks, runtime='pypy'):
     rc_hash = R.refcore_hash()
 
     def one(c):
-        e = R.run_one(c, 'pypy', R.BUDGET, False, rc_hash, R.T + 'cache')
+        e = R.run_one(c, runtime, R.BUDGET, False, rc_hash, R.T + 'cache')
         if e['over'] or e['rc'] is None or e['rc'] < 0:
             sys.exit('%s: over the budget or killed on refcore (%s)' % (c['id'], c['options'][:120]))
         if 'REFCORE-NOT-YET' in e['out'] or 'Traceback' in e['out']:
@@ -294,13 +413,23 @@ def stored_sources():
     return {parts[k + 2].decode('utf-8') for k in range(0, len(parts), 8)}
 
 
-def stored(vs, pred):
+def stored(vs, pred, command=('check',)):
     def ns(x):
         return M0.ns(x)
     return b''.join(ns(v['id']) + ns(v['group']) + ns(pred[v['id']][2]) + ns(v['cwd']) +
-                    ns(' '.join(['check'] + v['args'])) +
+                    ns(' '.join(list(command) + v['args'])) +
                     ns(''.join('%s\t%s\n' % (k, under_tests(repo)) for k, repo in v['table'])) +
                     ns(str(pred[v['id']][0])) + ns(pred[v['id']][1]) for v in vs)
+
+
+def kinds(vs, pred):
+    """A stage's check kind holds: `ok` prints `ok` first, `known` load's one LOAD-KNOWN refusal."""
+    for v in vs:
+        rc, whole, _ = pred[v['id']]
+        if v.get('kind') == 'ok' and not whole.startswith('ok\n'):
+            sys.exit('%s: the stage should load (`ok`), the prediction is %r' % (v['id'], whole[:300]))
+        if v.get('kind') == 'known' and not (rc == 1 and whole.startswith('refused: LOAD-KNOWN ')):
+            sys.exit('%s: the stage without its advance should be refused LOAD-KNOWN, not %r' % (v['id'], whole[:300]))
 
 
 def texts_rs(vs):
@@ -308,7 +437,7 @@ def texts_rs(vs):
     engine/tests/, sorted (rustfmt's layout, as m0_texts.rs)."""
     m0 = open(M0.TEXTS_RS, encoding='utf-8').read() + open(R.T + 'runner/src/m0_spec_texts.rs', encoding='utf-8').read()
     paths = sorted({under_tests(repo) for v in vs for _, repo in v['table']} - set(re.findall(r'"([^"]+)",\n', m0)))
-    out = ['//! The texts M3\'s `check` vectors name (`m3/check.vectors`) that `m0_texts.rs` and',
+    out = ['//! The texts M3\'s vectors name (`m3/check.vectors`, `m3/runs.vectors`) that `m0_texts.rs` and',
            '//! `m0_spec_texts.rs` don\'t, by their path under `engine/tests/`, sorted: generated by',
            '//! `m3/vectors.py` (its `--check` holds this file to it), so the tests read no file',
            '//! (`INTERFACE.md` §4). Never edited by hand.',
@@ -316,15 +445,21 @@ def texts_rs(vs):
            '/// Each text: its path under `engine/tests/` and its content.',
            'pub static TEXTS: [(&str, &str); %d] = [' % len(paths)]
     for p in paths:
-        out += ['    (', '        "%s",' % p, '        include_str!("../../%s"),' % p, '    ),']
+        inner = '"%s", include_str!("../../%s")' % (p, p)
+        if len(inner) <= 60:  # rustfmt's width for a tuple on one line (fn_call_width)
+            out.append('    (%s),' % inner)
+        else:
+            out += ['    (', '        "%s",' % p, '        include_str!("../../%s"),' % p, '    ),']
     out.append('];')
     return '\n'.join(out) + '\n'
 
 
 def confirm(vs, pred):
-    """C4: refcore's own `check` on every vector, held to the prediction byte for byte; the store with its bytes."""
+    """C4: refcore's own `check` on every vector, held to the prediction byte for byte; the store with its bytes.
+    Returns the differences and the notes: a vector of RULED_229 may differ (refcore's `run`, which predicted it, makes
+    that load check only while answering; its `check` prints the spec's line: #229), its difference a note."""
     res = refcore([run_check(v, ['check'] + v['args']) for v in vs])
-    bad = []
+    bad, notes = [], []
     for v, e in zip(vs, res):
         rc, whole, src = pred[v['id']]
         if src == 'rule':
@@ -332,24 +467,45 @@ def confirm(vs, pred):
                 bad.append('%s: refcore\'s check exits %s, a usage error wants 2' % (v['id'], e['rc']))
             continue
         if (e['rc'], e['out']) != (rc, whole):
-            bad.append('%s: refcore\'s check exits %s, prints %r; the prediction exits %s: %s' % (
-                v['id'], e['rc'], e['out'][:300], rc, R.first_diff(whole, e['out'])))
+            (notes if v['id'] in RULED_229 else bad).append(
+                '%s: refcore\'s check exits %s, prints %r; the prediction exits %s: %s' % (
+                    v['id'], e['rc'], e['out'][:300], rc, R.first_diff(whole, e['out'])))
         pred[v['id']] = (e['rc'], e['out'], 'check')
-    return bad
+    return bad, notes
+
+
+def load_at_run(vs, pred):
+    """The sets `check` answers `ok` whose stored run (a baseline of checks.tsv) prints a LOAD- refusal: refcore finds
+    those codes only while evaluating (`ask.LoadAtRun`, #229), so `check`'s `ok` there holds only beside that run's
+    vector (the coordinator's word, 2026-11-18). One line per (vector, check)."""
+    out = []
+    for v in vs:
+        if not pred[v['id']][1].startswith('ok\n'):
+            continue
+        for c in v['checks']:
+            b = M0.baseline(c)
+            m = re.search(r'^(?:[a-z][a-z0-9_.]*: )?refused: LOAD-[A-Z]+.*$', b or '', re.M)
+            if m:
+                out.append('%s: %s prints %s' % (v['id'], c['id'], m.group(0)[:160]))
+    return out
 
 
 def main(argv):
     R.need_watchdog()
-    vs = vectors()
+    equivalence()
+    vs, rvs = vectors(), run_vectors()
     if '--show' in argv:
         glob = argv[argv.index('--show') + 1] if argv.index('--show') + 1 < len(argv) else '*'
         vs = [v for v in vs if fnmatch.fnmatchcase(v['id'], glob)]
-        pred = predict(vs)
-        for v in vs:
+        rvs = [v for v in rvs if fnmatch.fnmatchcase(v['id'], glob)]
+        pred = dict(predict(vs), **runs_of(rvs))
+        for v in vs + rvs:
             rc, whole, src = pred[v['id']]
             print('=== %s (exit %s, %s)\n%s' % (v['id'], rc, src, whole), end='')
         return 0
     pred = predict(vs)
+    kinds(vs, pred)
+    runs = runs_of(rvs)
     bad, notes = tie(vs, pred)
     for n in notes:
         print('note: ' + n)
@@ -357,13 +513,17 @@ def main(argv):
         print('\n'.join('FAIL ' + b for b in bad))
         sys.exit('%d predictions fail their tie to checks.tsv\'s stored outputs: a STOP-REPORT, not a vector' % len(bad))
     confirmed = os.path.exists(STORE) and 'check' in stored_sources()
-    if '--confirm' in argv or ('--check' in argv and confirmed):
-        bad = confirm(vs, pred)
+    if '--confirm' in argv or confirmed:  # once confirmed, every write and --check runs refcore's check again
+        bad, ruled = confirm(vs, pred)
+        for n in ruled:
+            print('ruled (#229): ' + n)
+        for n in load_at_run(vs, pred):
+            print('load-at-run (#229): ' + n)
         if bad:
             print('\n'.join('FAIL ' + b for b in bad))
             sys.exit('%d vectors: refcore\'s check differs from what its run predicts: a STOP-REPORT, not a vector'
                      % len(bad))
-    data, rs = stored(vs, pred), texts_rs(vs)
+    data, rdata, rs = stored(vs, pred), stored(rvs, runs, ()), texts_rs(vs + rvs)
     counts = {}
     for v in vs:
         first = pred[v['id']][1].split('\n', 1)[0]
@@ -374,17 +534,23 @@ def main(argv):
     if '--check' in argv:
         old = open(STORE, 'rb').read() if os.path.exists(STORE) else b''
         olds = open(TEXTS_RS, encoding='utf-8').read() if os.path.exists(TEXTS_RS) else ''
-        if old != data or olds != rs:
-            print('m3/check.vectors or runner/src/m3_texts.rs is not what refcore\'s runs give: run m3/vectors.py')
+        oldr = open(RUNS, 'rb').read() if os.path.exists(RUNS) else b''
+        if old != data or olds != rs or oldr != rdata:
+            print('m3/check.vectors, m3/runs.vectors or runner/src/m3_texts.rs is not what refcore\'s runs give: run '
+                  'm3/vectors.py')
             return 1
-        print('m3/check.vectors: %d vectors (%s), each predicted from refcore\'s run and tied' % (len(vs), summary))
+        print('m3/check.vectors: %d vectors (%s), each %s; m3/runs.vectors: %d vectors, refcore\'s runs' % (
+            len(vs), summary, 'refcore\'s check, tied to its run\'s prediction' if confirmed else
+            'predicted from refcore\'s run and tied', len(rvs)))
         return 0
     with open(STORE, 'wb') as f:
         f.write(data)
+    with open(RUNS, 'wb') as f:
+        f.write(rdata)
     with open(TEXTS_RS, 'w', encoding='utf-8', newline='') as f:
         f.write(rs)
-    print('m3/check.vectors: %d vectors written (%s); runner/src/m3_texts.rs: %d texts' % (
-        len(vs), summary, rs.count('include_str!')))
+    print('m3/check.vectors: %d vectors written (%s); m3/runs.vectors: %d; runner/src/m3_texts.rs: %d texts' % (
+        len(vs), summary, len(rvs), rs.count('include_str!')))
     return 0
 
 

@@ -12,7 +12,7 @@ pub const HELD: &str = include_str!("../../held.tsv");
 /// The targets a row may name: the gating ones, M1's vector stores (issue #108), whose
 /// targets gate from M1's marker, M2's (issue #167), whose targets gate from M2's, and M3's
 /// (issue #226), whose targets gate from M3's.
-pub const TARGETS: [&str; 19] = [
+pub const TARGETS: [&str; 21] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -32,6 +32,8 @@ pub const TARGETS: [&str; 19] = [
     "m2_hindcasts",
     "m2_properties",
     "m3_check",
+    "m3_changes",
+    "m3_run",
 ];
 
 /// One held vector.
@@ -90,7 +92,7 @@ mod tests {
     use crate::m0::{FORMAT, LOAD, format_vectors, load_vectors};
     use crate::m1::VECTORS as M1_VECTORS;
     use crate::m2::VECTORS as M2_VECTORS;
-    use crate::m3::{CHECK, check_vectors};
+    use crate::m3::{CHECK, RUNS, check_vectors};
     use std::collections::BTreeSet;
 
     /// Every row reads, names its id once, and names a vector its target's store holds, so a
@@ -163,6 +165,11 @@ mod tests {
             .into_iter()
             .map(|v| v.id)
             .collect();
+        let m3_runs: BTreeSet<String> = check_vectors(RUNS)
+            .expect("m3 runs")
+            .into_iter()
+            .map(|v| v.id)
+            .collect();
         for h in &rs {
             let store = match h.target.as_str() {
                 "s_kernel" => &kernel,
@@ -176,6 +183,7 @@ mod tests {
                 "m2_checks" | "m2_items" | "m2_fixes" | "m2_goldens" | "m2_hindcasts" => &m2,
                 "m2_codes" => &m2_codes,
                 "m3_check" => &m3_check,
+                "m3_changes" | "m3_run" => &m3_runs,
                 _ => &cases,
             };
             assert!(

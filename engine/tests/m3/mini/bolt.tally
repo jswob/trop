@@ -1,0 +1,9 @@
+part facts_bolt
+  tally 2
+
+version bolt_job
+  cite s
+  governs 2026-11..
+  known 2026-11-03
+  jobs + [bolt] lives 2026-11-01..
+  pay_dom[bolt] = 12 "umowa, § 5"

@@ -1,0 +1,10 @@
+part more
+  tally 2
+
+input unused: int
+
+ask q_base: bal(konto, 2026-10-31)
+
+ask q_dec: bal(konto, 2026-12-31)
+
+ask q_in: bal(konto, 2026-12-31) in acme_stops

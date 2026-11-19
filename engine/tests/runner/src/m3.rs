@@ -4,14 +4,19 @@
 //! and on the fixtures of `m3/check/`, one per line kind the sets don't reach, stored in
 //! `m3/check.vectors`. Each vector's exit code and whole output were predicted from refcore's
 //! `run` (the load probe, a probe ask refused alone that prints load's lines and warnings, and
-//! the asks refused alone: pick P8), until refcore's own `check` confirms them byte for byte
-//! (chunk C4; the vector's `source` then reads `check`). A usage error's words are the
+//! the asks refused alone: pick P8), until refcore's own `check` confirmed them byte for byte
+//! (chunk C4, 2026-11-19: each `source` now reads `check`). A usage error's words are the
 //! engine's (`INTERFACE.md` §1): its vectors (`source` `rule`) hold the exit code alone.
 //!
-//! - [`CHECK`]: the stored vectors, read by [`check_vectors`];
+//! `run` (rows 5 and 6): the seven changes' realities before and after (`m3/changes/stages.tsv`,
+//! group `changes`, `milestone/m3_changes.rs`) and the run function's vectors (`m3/run/`, group
+//! `run`, `milestone/m3_run.rs`), refcore's run of each, stored in `m3/runs.vectors` in the same
+//! eight netstrings, the argument words as given.
+//!
+//! - [`CHECK`] and [`RUNS`]: the stored vectors, read by [`check_vectors`];
 //! - [`texts`]: M0's embedded texts and the fixtures' ([`TEXTS`]);
-//! - [`check_failure`]: how the engine's `check` of a vector fails, if it does;
-//! - [`check_group_failures`]: every failure of one group, for `milestone/m3_check.rs`.
+//! - [`check_failure`]: how the engine's run of a vector fails, if it does;
+//! - [`check_group_failures`], [`group_failures`]: every failure of one group of a store.
 
 use crate::corpus::{Run, groups, netstrings, text};
 use crate::engine::run_args;
@@ -24,6 +29,9 @@ use std::collections::{BTreeMap, BTreeSet};
 /// `m3/check.vectors`: eight netstrings per vector (`m3/vectors.py`).
 pub const CHECK: &[u8] = include_bytes!("../../m3/check.vectors");
 
+/// `m3/runs.vectors`: the `run` vectors, in the same eight netstrings (`m3/vectors.py`).
+pub const RUNS: &[u8] = include_bytes!("../../m3/runs.vectors");
+
 /// The exit code of a usage error (`INTERFACE.md` §1, pick P3).
 const USAGE: u8 = 2;
 
@@ -34,9 +42,10 @@ pub struct CheckVector {
     pub id: String,
     /// The test that runs it: an M0 corpus group, or a fixture's kind.
     pub group: String,
-    /// Where its bytes come from: `run` (predicted), `rule` (a usage error) or `check`.
+    /// Where its bytes come from: `check` (refcore's `check`, since chunk C4), `run` (refcore's
+    /// run: a `run` vector, or a `check` vector's prediction before C4) or `rule` (a usage error).
     pub source: String,
-    /// The words after the program name, `check` first.
+    /// The words after the program name: `check` or `run` first, or a usage error's (none at all).
     pub args: Vec<String>,
     /// The files the run may read.
     pub table: Vec<TableFile>,
@@ -69,7 +78,11 @@ pub fn check_vectors(bytes: &[u8]) -> Result<Vec<CheckVector>, String> {
         out.push(CheckVector {
             group: text(group)?,
             source: text(source)?,
-            args: text(args)?.split(' ').map(str::to_owned).collect(),
+            args: text(args)?
+                .split(' ')
+                .filter(|w| !w.is_empty())
+                .map(str::to_owned)
+                .collect(),
             table,
             run: Run {
                 out: text(whole)?,
@@ -111,18 +124,20 @@ pub fn check_failure(v: &CheckVector, texts: &BTreeMap<&str, &str>) -> Option<St
     difference(&v.run, &got).map(|d| format!("{}: {d}", v.id))
 }
 
-/// Every vector of `group` whose place in it is `part` modulo `parts` that the engine fails,
-/// each with why (a vector `held.tsv` holds for `m3_check` left out), and how many vectors
-/// that part holds: a slow group runs as several tests, together every vector (pick P70).
+/// Every vector of `group` in `store` whose place in the group is `part` modulo `parts` that
+/// the engine fails, each with why (a vector `held.tsv` holds for `target` left out), and how
+/// many vectors that part holds: a slow group runs as several tests, together every vector
+/// (pick P70).
 ///
 /// # Errors
 ///
 /// A store that doesn't read, or a part with no vector.
-pub fn check_group_failures(
+pub fn group_failures(
+    (store, target): (&[u8], &str),
     group: &str,
     (part, parts): (usize, usize),
 ) -> Result<(Vec<String>, usize), String> {
-    let vs = check_vectors(CHECK)?;
+    let vs = check_vectors(store)?;
     let texts = texts();
     let mine: Vec<&CheckVector> = vs
         .iter()
@@ -132,14 +147,26 @@ pub fn check_group_failures(
         .map(|(_, v)| v)
         .collect();
     if mine.is_empty() {
-        return Err(format!("m3/check.vectors holds no vector of {group}"));
+        return Err(format!("{target}'s store holds no vector of {group}"));
     }
     let failed = mine
         .iter()
-        .filter(|v| !is_held("m3_check", &v.id))
+        .filter(|v| !is_held(target, &v.id))
         .filter_map(|v| check_failure(v, &texts))
         .collect();
     Ok((failed, mine.len()))
+}
+
+/// [`group_failures`] of `m3/check.vectors`, for `milestone/m3_check.rs`.
+///
+/// # Errors
+///
+/// A store that doesn't read, or a part with no vector.
+pub fn check_group_failures(
+    group: &str,
+    part: (usize, usize),
+) -> Result<(Vec<String>, usize), String> {
+    group_failures((CHECK, "m3_check"), group, part)
 }
 
 /// The groups of `m3/check.vectors`.
@@ -153,7 +180,8 @@ pub fn check_groups() -> Result<BTreeSet<String>, String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{CHECK, check_vectors, texts};
+    use super::{CHECK, RUNS, check_vectors, texts};
+    use std::collections::BTreeSet;
 
     #[test]
     fn the_store_reads_and_every_text_is_embedded() {
@@ -164,6 +192,31 @@ mod tests {
             assert_eq!(
                 v.args.first().map(String::as_str),
                 Some("check"),
+                "{}",
+                v.id
+            );
+            for f in &v.table {
+                assert!(texts.contains_key(f.path.as_str()), "{}: {}", v.id, f.path);
+            }
+        }
+    }
+
+    /// The runs store: ids once, groups `changes` and `run`, `run` first but for a usage error,
+    /// every text embedded.
+    #[test]
+    fn the_runs_store_reads_and_every_text_is_embedded() {
+        let vs = check_vectors(RUNS).expect("m3/runs.vectors reads");
+        let texts = texts();
+        let mut ids = BTreeSet::new();
+        for v in &vs {
+            assert!(ids.insert(v.id.as_str()), "{}: twice", v.id);
+            assert!(
+                ["changes", "run", "operations"].contains(&v.group.as_str()),
+                "{}",
+                v.id
+            );
+            assert!(
+                v.source == "rule" || v.args.first().map(String::as_str) == Some("run"),
                 "{}",
                 v.id
             );

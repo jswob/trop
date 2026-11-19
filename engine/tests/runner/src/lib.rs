@@ -28,8 +28,8 @@
 //! - [`m2`]: milestone M2's vectors, refcore's whole output for each (`m2/vectors.refcore`,
 //!   issue #167);
 //! - [`m3`]: milestone M3's `check` vectors (`m3/check.vectors`, issue #226), predicted from
-//!   refcore's `run` until refcore's `check` confirms them, with [`m3_texts`], the fixtures'
-//!   texts;
+//!   refcore's `run` until refcore's `check` confirms them, and its `run` vectors (the seven
+//!   changes, the run function: `m3/runs.vectors`), with [`m3_texts`], their texts;
 //! - [`engine`]: a run on the engine, in process;
 //! - [`held`]: the gating vectors T holds "for #n" (`held.tsv`), which the targets leave out.
 //!
@@ -39,7 +39,7 @@
 //! `milestone/m0_properties.rs` for M0, `milestone/m1_checks.rs`, `milestone/m1_format.rs`,
 //! `milestone/m1_goldens.rs`, `milestone/m1_codes.rs`, `milestone/m1_carried.rs` and
 //! `milestone/m1_fixes.rs` and `milestone/m1_properties.rs` for M1, `milestone/m2_checks.rs`
-//! for M2, `milestone/m3_check.rs` for M3),
+//! for M2, `milestone/m3_check.rs`, `milestone/m3_changes.rs` and `milestone/m3_run.rs` for M3),
 //! with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never

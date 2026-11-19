@@ -71,7 +71,7 @@ MAX_JOBS = 4
 BUDGET = 90.0  # the hard budget per run (the user's rule, 4.5f; 60 s before)
 SLOW = 60.0  # the soft line: a check past it is slow
 SLOW_RUNS = 3  # slow in this many uncached runs in a row: a candidate for load or reduction
-TESTS_LINE = '1483 tests, 1483 passed, 0 failed'  # refcore for tally 2.2 at its tag (8341b008, #211); 1479 at its pin (b9eb505c); 1550 at G1's pin (892601d1); 1552 for tally 2.1.8 at its final tag (51712a8f); 1551 at 21c79026; 1539 at its earlier tag (T's re-run); 1365 on 2.1.7 (the spec round of 10 rules, after P40 and P41; 1356 after P36, 1345 before); 1251 on 2.1.6 (after T's re-run: P29-P31); 1243 at 2.1.6's first close; 1170 on 2.1.5 (issue #84); 1168 on 2.1.4 (issue #80); 1165 on 2.1.3 (issues #58, #59, #60); 1152 on 2.1.2 (the spec round); 1124 on 2.1.1 (issue #13); 1115 on 2.1 after 7c's fixes, 1105 at tally-2.1 (7b), 950 on 2.0
+TESTS_LINE = '1500 tests, 1500 passed, 0 failed'  # refcore with M3's check at its pin (f62929bd, #226: 17 O2_3_check tests); 1483 for tally 2.2 at its tag (8341b008, #211); 1479 at its pin (b9eb505c); 1550 at G1's pin (892601d1); 1552 for tally 2.1.8 at its final tag (51712a8f); 1551 at 21c79026; 1539 at its earlier tag (T's re-run); 1365 on 2.1.7 (the spec round of 10 rules, after P40 and P41; 1356 after P36, 1345 before); 1251 on 2.1.6 (after T's re-run: P29-P31); 1243 at 2.1.6's first close; 1170 on 2.1.5 (issue #84); 1168 on 2.1.4 (issue #80); 1165 on 2.1.3 (issues #58, #59, #60); 1152 on 2.1.2 (the spec round); 1124 on 2.1.1 (issue #13); 1115 on 2.1 after 7c's fixes, 1105 at tally-2.1 (7b), 950 on 2.0
 LAYERS = ('interpreter', 'unit', 'integration')
 LEFT_OUT = re.compile(r'^\s+left out: ')
 VERDICTS = ('same', 'differ', 'over', 'killed', 'error', 'known', 'fixed', 'ran')
@@ -710,9 +710,11 @@ def self_test(checks):
         for script, flag in (('m2/hindcast/gen.py', ['--check']), ('m2/hindcast/judge.py', [])):
             p = subprocess.run([sys.executable, '-I', '-B', T + script] + flag, capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
-        # 8s. M3's check vectors (issue #226): m3/check.vectors is m3/vectors.py's prediction from refcore's run, tied
-        p = subprocess.run([sys.executable, '-I', '-B', T + 'm3/vectors.py', '--check'], capture_output=True, text=True)
-        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8s. M3's vectors (issue #226): m3/check.vectors is m3/vectors.py's prediction from refcore's run, tied, and
+        # m3/runs.vectors refcore's runs; m3/purity.py's sample reads (it runs the engine only with --engine)
+        for script in ('m3/vectors.py', 'm3/purity.py'):
+            p = subprocess.run([sys.executable, '-I', '-B', T + script, '--check'], capture_output=True, text=True)
+            say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

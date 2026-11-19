@@ -1,0 +1,27 @@
+stage	run	check	files
+b1	wife_net social_and_health pit37 c1_revenue	-	c1/asks/core.tally c1/facts/2026.tally c1/law/pl/ c1/loans.tally c1/pays.tally c1/people.tally c1/places.tally c1/records/ c1/reality.tally ../../../m3/changes/asks/c1.tally
+c1	wife_net social_and_health pit37 c1_revenue	ok	c1/ ../../../m3/changes/asks/c1.tally
+k1	-	known	c1/asks/core.tally c1/facts/2026.tally c1/law/pl/ c1/loans.tally c1/pays.tally c1/people.tally c1/places.tally c1/records/ c1/facts/2027.tally ../../../../spec/amendments/household/reality.tally
+b2	wife_net social_and_health pit37 c2_wages	-	c2/asks/core.tally c2/facts/2026.tally c2/law/pl/benefits.tally c2/law/pl/business.tally ../../../../spec/amendments/household/law/pl/common.tally c2/law/pl/employment.tally c2/law/pl/wrappers.tally c2/loans.tally c2/pays.tally c2/people.tally c2/places.tally c2/records/ c2/reality.tally ../../../m3/changes/asks/c2.tally
+c2	wife_net social_and_health pit37 c2_wages	ok	c2/ ../../../m3/changes/asks/c2.tally
+k2	-	known	c2/asks/core.tally c2/facts/ c2/law/ c2/loans.tally c2/pays.tally c2/people.tally c2/places.tally c2/records/ ../../../../spec/amendments/household/reality.tally
+b3	wife_net social_and_health pit37 c3_health	-	c3/asks/core.tally c3/facts/2026.tally c3/law/pl/benefits.tally ../../../../spec/amendments/household/law/pl/business.tally c3/law/pl/common.tally c3/law/pl/employment.tally c3/law/pl/wrappers.tally c3/loans.tally c3/pays.tally c3/people.tally c3/places.tally c3/records/ c3/reality.tally ../../../m3/changes/asks/c3.tally
+c3	wife_net social_and_health pit37 c3_health	ok	c3/ ../../../m3/changes/asks/c3.tally
+k3	-	known	c3/asks/core.tally c3/facts/ c3/law/ c3/loans.tally c3/pays.tally c3/people.tally c3/places.tally c3/records/ ../../../../spec/amendments/household/reality.tally
+b4a	wife_net social_and_health pit37	-	c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ ../../../m3/changes/on-2028-05-14/reality.tally
+c4a	wife_net social_and_health pit37	ok	c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ ../../../m3/changes/on-2028-05-14/reality.tally ../../../m3/changes/c4a/facts/2028.tally
+k4a	-	known	c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ ../../../m3/changes/c4a/facts/2028.tally ../../../../spec/amendments/household/reality.tally
+b4b	wife_net social_and_health pit37	-	c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ c4/reality.tally ../../../m3/changes/c4a/facts/2028.tally
+c4b	wife_net social_and_health pit37	ok	c4/
+k4b	-	known	c4/asks/core.tally c4/facts/2026.tally c4/law/pl/ c4/loans.tally c4/pays.tally c4/people.tally c4/places.tally c4/records/ c4/asks/ola.tally c4/facts/2028.tally ../../../m3/changes/on-2028-05-14/reality.tally
+b5	wife_net social_and_health pit37	-	c5/asks/core.tally c5/facts/2026.tally c5/law/pl/ c5/loans.tally c5/pays.tally c5/people.tally c5/places.tally c5/records/ c5/reality.tally
+c5	-	ok	c5/
+k5	-	known	c5/abroad.tally c5/asks/core.tally c5/facts/ c5/law/ c5/loans.tally c5/pays.tally c5/people.tally c5/places.tally c5/records/ ../../../../spec/amendments/household/reality.tally
+b6a	wife_net social_and_health pit37	-	c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ ../../../m3/changes/on-2027-04-02/reality.tally
+c6a	wife_net social_and_health pit37 c6_loan	ok	c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ ../../../m3/changes/on-2027-04-02/reality.tally ../../../m3/changes/c6a/facts/2027.tally ../../../m3/changes/asks/c6.tally
+k6a	-	known	c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ ../../../m3/changes/c6a/facts/2027.tally ../../../../spec/amendments/household/reality.tally
+b6b	wife_net social_and_health pit37 c6_loan	-	c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ c6/reality.tally ../../../m3/changes/c6a/facts/2027.tally ../../../m3/changes/asks/c6.tally
+c6b	wife_net social_and_health pit37 c6_loan	ok	c6/ ../../../m3/changes/asks/c6.tally
+k6b	-	known	c6/asks/core.tally c6/facts/2026.tally c6/law/pl/ c6/loans.tally c6/pays.tally c6/people.tally c6/places.tally c6/records/ c6/facts/2027.tally ../../../m3/changes/on-2027-04-02/reality.tally
+b7	wife_net social_and_health pit37	-	../../../../spec/amendments/household/
+c7	wife_net social_and_health pit37 c7_wife_diff c7_social_diff c7_health_diff c7_pit37_diff	ok	c7/ ../../../m3/changes/asks/c7.tally

@@ -1,6 +1,6 @@
 # T's expected output digests for the P8 rows that run a check (engine/tools/perf; tools/perf_digests.py).
 # id<TAB>sha256 of refcore's output (stdout then stderr) for the check's command line, from refcore's run.
-I:A:a05_ania@c05-ania	b94616203f2a6cb86d202876d81e10ec8373825a9f33974fabc34ebe00616271
+I:A:a05_ania@c05-ania	c96ee3ce6303abf5658473ab67cc8a2660d07fdc94725fb1e42bfb4cbcf217c2
 I:E1:tx2_mtg_day	c3d7b2469f7e0b44f881b8bb82801aefe973cf4790651f51a5a70cee795ea704
 I:E2:E2-01~e2_01a	4a17684f242dc25686d0f92fd8c1a893eb74f035608ffde198aacb3b81af56d7
 I:E2:E2-01~e2_01b	6c687fe1f0a9758bdfc72de823398e80e4fe1815c40230f768590f51958f19c3
@@ -14,3 +14,6 @@ I:X:pit37@v3_fast	ca49f476c9bbb9dedcbb9772cdc9e1b9e407c6545af89cd5c9d445cfa3550b
 I:X:pit37@v4_fast	94ced8cc4db28aac5b705b1fc75b50dd596194b866ab19660301b0daa2a94614
 I:X:replay_september@b_r1	c18c2d076686e2184db54f9d74936667f95bb7817998bec652b4cb3667ab469d
 U:set/pairs/PTY-05+OWN-12/ania	6c6766bf608a9000cc48cefda90e5612cf1c9d7db3b9475297c69f789afabdf5
+changes/check/c7	dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22
+changes/run/b7	135a25c2f3b37b08a2965ac77cbe979fb80a728fc0b742d1e36779556476ef31
+changes/run/c7	2074832b3cad4473df88b3ce90ab9e4462facbb47e9cd51b639526db4c05b0d7

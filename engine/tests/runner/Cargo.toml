@@ -212,3 +212,16 @@ required-features = ["counters"]
 name = "m3_check"
 path = "milestone/m3_check.rs"
 test = false
+
+# M3: the seven changes before and after (OPERATIONS.md §6.1, m3/changes/stages.tsv) and the run
+# function through the CLI (ENGINE.md §1, m3/run/), refcore's runs in m3/runs.vectors;
+# MILESTONE-M3.md rows 5 and 6; `test = false` until M3 gates.
+[[test]]
+name = "m3_changes"
+path = "milestone/m3_changes.rs"
+test = false
+
+[[test]]
+name = "m3_run"
+path = "milestone/m3_run.rs"
+test = false
