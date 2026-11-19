@@ -30,7 +30,8 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 | `paper-check`  | spec  | `claude-fable-5-2` | high   | before a big milestone: its features against the existing ones, on paper   |
 | `coordinator`  | lead  | `claude-opus-5-5`  | high   | a milestone's or a rules run's coordinator                                 |
 | `round-lead`   | lead  | `claude-fable-5-2` | high   | a spec round's coordinator: it rules the factoring                         |
-| `group-review` | lead  | `claude-opus-5-5`  | high   | `engine-reviewer` on one builder group's diff, and on its fix              |
+| `group-review` | lead  | `claude-fable-5-2` | high   | `engine-reviewer` on one builder group's diff, by the gate review's method |
+| `fix-review`   | lead  | `claude-opus-5-5`  | high   | `engine-reviewer` on a fix alone: what the fix brought in                  |
 | `gate`         | lead  | `claude-opus-5-5`  | xhigh  | the gate's procedure: evidence, fuzz, the mutation run, timing, the report |
 | `gate-review`  | lead  | `claude-fable-5-2` | high   | the gate's one review of the whole diff                                    |
 
@@ -45,31 +46,32 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D2. Which model runs which job
 
-- **Pick:** Claude Fable 5.2 for the judgment a whole run builds on: a spec round's lead, planner and critic, the paper check, the gate's whole-diff review, a study. Claude Opus 5.5 for volume and procedure: builders, T, milestone coordinators, group reviews, the spec writer, rules steps, the gate's procedure.
-- **Options:** all Opus (how we ran until 2026-11-15); Fable everywhere (twice the price per token on the building and testing that are most of a run's tokens); Fable for group reviews too (open, see Revisit).
+- **Pick:** Claude Fable 5.2 for the judgment a whole run builds on: a spec round's lead, planner and critic, the paper check, a builder group's review, the gate's whole-diff review, a study. Claude Opus 5.5 for volume and procedure: builders, T, milestone coordinators, a fix's review, the spec writer, rules steps, the gate's procedure.
+- **Options:** all Opus (how we ran until 2026-11-15); Fable everywhere (twice the price per token on the building and testing that are most of a run's tokens); fix reviews on Fable too (they find what a fix brought in, 11 of M2's 38 defects, and stay on Opus).
 - **Why:**
   - Anthropic: "If you're unsure which model to use, start with Claude Opus 5.5 for most workloads", and "Use Claude Fable 5.2 for demanding reasoning and long-horizon agentic work, or when your evals on Claude Opus 5.5 at higher effort still fall short." Fable costs $8 / $40 per million tokens in and out, Opus $4 / $20; cache reads are $0.20 on both.
   - Where Opus at xhigh fell short for us is judgment. 2.1.7's plan drew 23 findings from its critic, 8 of them blocking, and its patch left 14 forms where refcore didn't follow the new rules' own text (PR #157). Size plans ran 2 to 4 times low (D11). In M2 the share of spec questions an existing rule settles fell from 87 % to 71 % (PR #168).
   - Volume is where the tokens go: builders were 15.2 of M0's 26.4 % (PR #70), and their code doesn't compound the way a spec rule does.
   - So the round's planner no longer writes its own patch: the planner (Fable) factors, the lead rules, and a fresh spec writer (Opus) writes text and refcore from the ruled plan.
-- **Decided:** the user, 2026-11-15, on the master's proposal: "I like what you said let's incorporate this". The job names and `study` are this file's.
+  - Group reviews: M2's Fable gate review found 9 blocking defects Opus reviews had passed, each inside one group's diff; M3's reviews already crossed forms, and its gate review still found 3 in passed code (PR #227). The model matters, not only the method.
+- **Decided:** the user, 2026-11-15, on the master's proposal: "I like what you said let's incorporate this". The job names and `study` are this file's. Group reviews on Fable, fix reviews on Opus in a job of their own: the user, 2026-11-19, "Yes to changes 5, 6 and 7, go ahead".
 - **Enforced:** `launch`'s `JOBS`; it refuses a model id outside its `MODELS`. A coordinator the user starts by hand takes the model from its brief's start command.
 - **Revisit:**
-  - At M3's start, from M2's gate, the first on Fable: if the gate review finds a blocking defect in code that a group review and its fix review passed, group reviews move to Fable for M3 (about 0.4 % a review becomes about 0.8 %).
-  - After 2.1.8: its critic's findings, T's STOP-REPORTs against the patch, and the words added per question, beside 2.1.7's (23 and 8; 14; about 4).
+  - At M4's gate: group reviews on Fable stay if the gate review finds at most one blocking defect in code a group review and its fix review passed (M2 9, M3 3); with more, read each review's "forms crossed" against the gate's findings. Measure a Fable group review's cost (about 0.4 % on Opus).
+  - 2.1.8 (PR #209): its critic found 15, 9 blocking (2.1.7: 23 and 8); refcore missed the new rules' text about 50 times (14); the words per question fell below zero (about 4). Next look: the round after M3.
 
 ### D3. Effort per job
 
-- **Pick:** builders, T and the gate at xhigh; every other job at high; every Fable job at high. `launch` always passes the effort.
+- **Pick:** builders, T and the gate at xhigh, but a builder group that changes no kernel file at high (`--effort high`, logged as this entry's pick); every other job at high; every Fable job at high. `launch` always passes the effort.
 - **Options:** builders at high; Fable at xhigh.
 - **Why:**
   - Anthropic's effort page: "Start with `high`. Most of the gain in capability is already present at `high`", and "Step up to `xhigh` for your hardest long-running coding and agentic work, where you've measured a gain".
-  - Builders and T have run at xhigh since S, and no run compared it with high: the choice is unmeasured. It stays because reviews still find 2 to 5 blocking defects a group at xhigh (M2, groups 1 to 6).
+  - Builders and T have run at xhigh since S. M3 tested high on one group (PR #227): G2, `check`, plain code, 0.6 k lines at 0.5 % per 1 000 with 0 blocking findings in its review and at the gate; G1 at xhigh 1.4 % per 1 000, 0 blocking; G3, kernel code at xhigh, about 1.2 % per 1 000, 10 blocking in its reviews and 3 at the gate. High held for plain code; the kernel wasn't tested.
   - Fable at high: its prompting page says xhigh "raised scores slightly … and used many more tokens", and that at xhigh and max it reviews its own work with subagents, which D8 forbids.
   - Always passed, because defaults differ: the API's is high for Fable 5.2 and medium for Opus 5.5, and Claude Code's own default for each couldn't be confirmed.
 - **Decided:** the retro after M0 (the user's "Accept", 2026-11-05) for the Opus jobs; the master and this file, 2026-11-15, for Fable.
 - **Enforced:** `launch`'s `JOBS`; an override prints a note to log as a pick.
-- **Revisit:** at M3, one group that isn't kernel code runs its builder at high. Compare blocking findings and cost per 1 000 lines with its neighbours (§4). High stays if the findings don't rise.
+- **Revisit:** at M4, one kernel group's builder runs at high. Compare blocking findings and cost per 1 000 lines with its xhigh neighbours (§4); high takes kernel groups too if the findings don't rise.
 
 ### D4. The shape of a brief
 
@@ -77,7 +79,7 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 - **Why:** M0's coordinator worked from a 2 500-word brief and wrote 57 prompt files, 27 000 words, by hand, relearning lessons on the way (the retro after M0, blocker 4).
 - **Decided:** the retro's decision 4 (2026-11-05); the Fable column of §3 is this file's, 2026-11-15, and unmeasured.
 - **Enforced:** the template; the skill's list of what every start message names.
-- **Revisit:** after 2.1.8, the first round briefed for Fable.
+- **Revisit:** 2.1.8, the first round briefed for Fable (PR #209), ruled 77 items with six rules, but its estimate left out the review loops and its limit went from 28 to 40 % (D11). Next look: the round after M3.
 
 ### D5. Who decides
 
@@ -89,7 +91,7 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 - **Pick:** the user starts a coordinator in a terminal with the brief's command, so they can watch it. A coordinator starts role sessions headless with `engine/tools/launch`. The master launches a coordinator headless only while the user is away, and relays its questions. Every prompt sent is saved in the run's `notes/`. A resume says what changed since the session's last turn, then the next step.
 - **Options:** a role per folder (rejected 2026-10-31: it brings back several checkouts); everything headless (the user had a headless T killed on 2026-10-31 to watch it instead).
-- **Why:** the role is set by whoever launches, never by the session, or a session could make itself `rules`. Anthropic, on resuming Fable: "say exactly what you want rather than sending a simple 'continue.'"
+- **Why:** the role is set by whoever launches, never by the session, or a session could make itself `rules`. Anthropic, on resuming Fable: "say exactly what you want rather than sending a simple 'continue.'" A headless session stays open while a background process it started runs (a memory watchdog held tally 2.2's spec writer 35 minutes, #221), so every start message has it stop its own; and its `result` can be a one-line afterthought, so the report is the transcript's last long message.
 - **Enforced:** `launch` (only the lead and app work run it; it fixes the session id first and writes the ids file); the guard refuses a nested `claude` run anywhere else (R-81).
 
 ### D7. What runs beside what
@@ -109,7 +111,7 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 ### D9. Budget
 
 - **Pick:** a limit is a safety stop, never a target to save against.
-  - A brief gives the estimate with its basis, the limit, and a wind-down line one point under it. A small session gives a plan, a stop and a hard stop (1.5, 2.5 and 3 % for a study).
+  - A brief gives the estimate with its basis, the limit, and a wind-down line one point under it. A small session gives a plan, a stop and a hard stop (1.5, 2.5 and 3 % for a study). A brief for a run with Fable sessions gives the Fable meter's estimate beside the week's (D10): that meter fills about four times as fast as Fable's part of the run's figure.
   - When the plans' re-estimate passes the limit, the coordinator asks then, in one question with the numbers.
   - At the wind-down: finish the green step, push, write `RESUME.md`, ask for the new limit.
   - Approved quality work is never cut to fit.
@@ -120,39 +122,46 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D10. Measuring cost
 
-- **Pick:** `engine/tools/usage <the run's ids file>` after every chunk, logged in `progress.md`. Its figure is a share of the week (8.6 million weighted tokens to 1 %, calibrated on Opus). A Fable call counts inside it at Fable's list price beside Opus's: twice on input, output and cache writes, the same on cache reads. One ids file a run holds every session, whatever its model; a block by model shows each model's part, and Fable's tokens as Opus's and in dollars.
-- **Decided:** the user, 2026-11-15, asked how their plan limits Fable: it draws on the same weekly limit as Opus, about twice per token, and the "3 resets" they have are resets of that limit. So a run's budget and its stops count Fable.
+- **Pick:** `engine/tools/usage <the run's ids file>` after every chunk, logged in `progress.md`. Its figure is a share of the week (8.6 million weighted tokens to 1 %, calibrated on Opus). A Fable call counts inside it at Fable's list price beside Opus's: twice on input, output and cache writes, the same on cache reads. One ids file a run holds every session, whatever its model; a block by model shows each model's part, and Fable's tokens as Opus's and in dollars. After the total, two lines estimate the account's own meters: the week meter, for every model, about 1.2 times the total; and the Fable meter, a second weekly meter for Fable alone, about 4.2 times Fable's part.
+- **Why:** one clean stretch, 2026-11-17 22:00 to 2026-11-18 08:40, in which only engine sessions ran: the account's week meter rose 24 points and its Fable meter 22, against 20.2 % and 5.2 % (Fable's part) by `usage`. One stretch can't separate Opus's and Fable's weights inside the week meter.
+- **Decided:** the user, 2026-11-15: a run's budget and its stops count Fable. The two meter lines: taken by the user after M3 (2026-11-19, the brief of the process step after M3).
 - **Options:** Fable apart from the week's share, in a second ids file (the master's first practice, when the metering wasn't known); Fable in dollars only (if it billed to usage credits, as Claude Code's docs say it can).
-- **Enforced:** `usage`'s `PRICED` table; `guard-test`'s planted transcripts.
-- **Revisit:** the factor is the list-price ratio, not a reading of the plan's meter. At 2.1.8, read the week's meter (`/usage`) before and after the planner's session and compare with this tool's figure for it.
+- **Enforced:** `usage`'s `PRICED` and `METERS` tables; `guard-test`'s planted transcripts.
+- **Revisit:** the factors are one reading. Before they are trusted, a second clean one: the user's `/usage` at a run's start and end, beside `usage`'s figures for the run. With two readings, solve Opus's and Fable's weights inside the week meter, and correct both factors.
 
 ### D11. Estimating size and cost
 
 - **Pick:** a group's size comes from the measured lines of the nearest group already built (BUILD-LOG's size lines), its cost from the last run's measured rates (§4). Never from refcore's length, never from a fresh guess. The overrun is reported after each group.
-- **Why:** M0's plan priced a builder at 0.22 % per 1 000 lines, and it measured 0.6. M1's plan expected 10 600 lines, and M1 built 24 000 (PR #110). 2.1.7's planner said 880 engine lines, and the builder changed 2 800 (PR #157). Under this rule, M2's first four groups landed at 0.86, 0.63, 0.9 and 1.2 times their plan (PR #168).
+- **Why:** M0's plan priced a builder at 0.22 % per 1 000 lines, and it measured 0.6. M1's plan expected 10 600 lines, and M1 built 24 000 (PR #110). 2.1.7's planner said 880 engine lines, and the builder changed 2 800 (PR #157). Under this rule, M2's first four groups landed at 0.86, 0.63, 0.9 and 1.2 times their plan (PR #168). In 2.1.8 each group's review loop cost about as much as the group, and the estimate hadn't counted it (#208): a plan prices the loop with its group.
 - **Decided:** the retro's blocker 8 (2026-11-05); the nearest-group rule is the M2 brief's, 2026-11-14.
 - **Enforced:** the template's §5; the skill's §3 and §5.
 
 ### D12. The review loop
 
-- **Pick:** after each builder group, a fresh session reviews that group's diff with `engine-reviewer`, in its own worktree, writing nothing. Blocking findings go back to the group's builder. One review of the fix follows, which blocks only on a defect the fix introduced. A last fix is checked by the coordinator's own probes against refcore. There is no third review. The gate reviews the whole diff once.
-- **Why:** M0 reviewed only at the gate: 5.1 % and 8 hours, in rounds of 6, 1, 3 and 0 blocking findings. Since then, fix reviews keep finding defects the fixes brought in: M1's groups 2, 3, 5 and 7 (2, 2, 1, 2), 2.1.7 (2), M2's groups 2, 3, 4 and 6 (2, 3, 1, 3). So the fix review stays, and a builder sweeps the engine against refcore over the probe files before each fix commit: every line that turns from same to different is explained.
-- **Decided:** the retro's decision 1 (2026-11-05); the bound, M1's pick P37.
+- **Pick:** after each builder group, a fresh session reviews that group's diff with `engine-reviewer`, in its own worktree, writing nothing but its probes. It puts the group's new forms through each form already built, on both engines, on texts of about ten lines, and reads the spec where the two agree. Blocking findings go back to the group's builder. One review of the fix follows, which blocks only on a defect the fix introduced. A last fix is checked by the coordinator's own probes against refcore. There is no third review. The gate reviews the whole diff once.
+- **Why:** M0 reviewed only at the gate: 5.1 % and 8 hours, in rounds of 6, 1, 3 and 0 blocking findings. Since then, fix reviews keep finding defects the fixes brought in: M1's groups 2, 3, 5 and 7 (2, 2, 1, 2), 2.1.7 (2), M2's groups 2, 3, 4 and 6 (2, 3, 1, 3). So the fix review stays, and a builder sweeps the engine against refcore over the probe files before each fix commit: every line that turns from same to different is explained. Refcore and the engine can be wrong alike (eight of nine findings in one 2.1.8 review, #208): matching them doesn't stand in for reading the spec.
+- **When to stop patching:** when a fix review finds a blocking defect in a form the last fix mended, the coordinator rules the one statement that decides every case of it, and the next fix builds that (M3's #235 drew findings from four reviews in a row until the gate's fix did, PR #227). A fix at a fault's cause gives way to the narrow fix when it moves another answer (tally 2.2's moved three, #221).
+- **Decided:** the retro's decision 1 (2026-11-05); the bound, M1's pick P37; the method, the user's "Yes to changes 5, 6 and 7, go ahead" (2026-11-19), on the process study after M2.
 - **Enforced:** the skill's §3 and §8; `.claude/agents/engine-reviewer.md`.
 
 ### D13. Mutation runs
 
-- **Pick:** on GitHub only. The coordinator dispatches gate 8 on each group's green commit, in the background, with `next=true` until the milestone gates; nobody waits for it, and its survivors go to that group's builder and T at their next turn. On the Mac, only a proof of one mutant, a few minutes. Never a re-run for test times.
-- **Decided:** the user, 2026-11-12: "Why on earth are we running this locally instead of on github?"; 2026-11-14: "I don't want to wait an hour for full mutation run again".
-- **Why:** M1's gate ran three mutation runs of over 3 hours, and T ran a 20-file batch for 2.5 hours on the shared Mac, which left a mutant in the tree. A per-test 20 s check went red in 4 of 5 runs on runner noise while no mutant timed out, each fix a new hour-long run, until PR #166 made it a report. The lesson holds for any check: one that guards a stand-in for what another check measures directly, and flaps, goes.
-- **Enforced:** R-88; `.github/workflows/engine.yml`; the skill's §3 and §8; `engine/CLAUDE.md` §3.
+- **Pick:** on GitHub only, one whole run for each run that changes kernel files (a milestone, a spec round), dispatched when the last group's fixes are merged, beside the gate review, so nobody waits for it at the end. A second whole run only when the score misses the floor, or when the gate's fixes change kernel files. No dispatch per group, none nightly. The floor between milestones: the score is in the gate's report and may be no more than 2 points under the last tagged milestone's (M3: 90.9 %); the final engine's gate keeps 90 %. After the run, T takes one turn at the survivors and the builder lists the rest. On the Mac, only a proof of one mutant, a few minutes. Never a re-run for test times.
+- **Decided:** the user, 2026-11-12: "Why on earth are we running this locally instead of on github?"; 2026-11-14: "I don't want to wait an hour for full mutation run again"; 2026-11-19, "Do so", to the master's proposal (one whole run per milestone, at the gate; a softer bar between milestones; R-88 quotes it).
+- **Why:**
+  - Since M1 about 40 dispatches and 60 hours on GitHub, 11 of them with no score. The gate waited 2.7 hours in M3, about 5 in M2 and most of 33 in M1. The work per run doubled in M2 (824 runner-minutes at M1's end, 1 668 at M2's, 1 680 to 1 967 in M3).
+  - What the runs found: one wrong number (#137), four dead checks, the tests thinned by tally 2.2's cuts (87.5 %), and a few hundred corner tests. M3's reviews found about 20 blocking defects for 2.7 % of the week.
+  - The shard job has 90 minutes since 4fa66bfd: GitHub shows a job's timeout as `cancelled`, and three whole runs were lost to the 45-minute cap.
+  - Local batches cost M1's gate three runs of over 3 hours and left a mutant in the tree. A check that guards a stand-in for what another measures directly, and flaps, goes: the per-test 20 s check was red in 4 of 5 runs on runner noise (PR #166).
+- **Enforced:** R-87 and R-88; `.github/workflows/engine.yml`, whose baseline and coverage jobs run on a dispatch alone (rules-selftest's clean run holds it); DONE gate 8; the skill's §3 and §8; `engine/CLAUDE.md` §3.
+- **Revisit:** if the score falls at two milestones in a row, the master raises the floor with the user.
 
 ### D14. The check loops
 
-- **Pick:** `check quick` after an edit, `check commit` before a commit, the full check on GitHub for every push. The two local checks stop at the first red step and say which steps didn't run. `quick` runs the lints, the unit tests and the next milestone's report; `commit` adds T's gating vectors and the fences' equivalence suites, which `quick` leaves out. Targets: `quick` 45 s, `commit` 3 min, a pull request's CI 12 min with no gate-8 run beside it. A check's time is a requirement with a target, reported at every gate beside the cost. A change to a tool or to CI is proven by its selftest case and the pull request's own CI.
+- **Pick:** `check quick` after an edit, `check commit` before a commit, the full check on GitHub for every push. The two local checks stop at the first red step and say which steps didn't run. `quick` runs the lints, the unit tests and the next milestone's report; `commit` adds T's gating vectors and the fences' equivalence suites, which `quick` leaves out. Targets: `quick` 45 s, `commit` 3 min, a pull request's CI 12 min with no gate-8 run beside it. A check's time is a requirement with a target: `engine/tools/timeline` prints each loop's median and its red-run minutes at every gate, beside the cost. A change to a tool or to CI is proven by its selftest case and the pull request's own CI.
 - **Decided:** the user, 2026-11-11: "it's impossible to develop anything with checks so slow." The stop, the suites out of `quick` and T's vectors in `commit`: the user, 2026-11-16, "I agree to chagnes 1,2 and 3", on the process study after M2.
 - **Why:** at M1 the local full check took 15 to 47 minutes and builders waited 54 % of their active time. PR #139 brought the loops to 32 s, 59 s and 8.5 minutes. In M2 the loops grew back unseen: `quick` ran at a median 109 s over 189 runs and builders spent 7.4 of 32.5 hours in checks; 65 red runs failed on a lint and still ran every test; three fence suites were 97 % of `quick`'s test time, and no local check ran T's vectors (pick P53).
-- **Enforced:** `engine/tools/check`'s modes, `check fences` for a builder on a fence, and `engine/tools/milestones.toml`'s `quick_leaves_out`; R-77 and R-82, with R-82's selftest cases; the Stop hook.
+- **Enforced:** `engine/tools/check`'s modes, `check fences` for a builder on a fence, and `engine/tools/milestones.toml`'s `quick_leaves_out`; R-77 and R-82, with R-82's selftest cases; the Stop hook; `timeline`'s tables in the gate's report (the skill's §8; the user, 2026-11-19: "Yes to changes 5, 6 and 7, go ahead").
 
 ### D15. Spec questions and spec rounds
 
@@ -160,14 +169,15 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 - **Pick, the round:** factoring before any text. Questions are grouped into classes, each given one rule in a named solved form. A rule passes only if it decides 3 or more items across 2 or more features with no exception, replaces case text and adds no construct. A fresh read-only critic tries to break the plan, and the planner answers once. The round closes whole: spec, refcore, tests and engine agree when it merges. The spec, counted in words, doesn't grow.
 - **Decided:** the user, 2026-11-10: "we should think about general rules our engine could follow so we hit a lot of birds with one stone"; 2026-11-13: "I just don't want spec rounds to produce more edge cases. The point is that they make spec simpler and cleaner."
 - **Why:** M0's three mid-build patches cost the builder about 3.5 hours of waiting, six steps each. 2.1.6 ruled case by case: 1 918 words for 24 issues. 2.1.7 factored: 361 words for 84 questions. M2's first patch took 10 minutes to write and 60 to re-run the stored baselines, and G4's builder waited 86 minutes for it.
-- **Tripwires for 2.1.8** (the master, 2026-11-15): M2's new questions fold into about 5 rules and the spec gets no longer, or the language is simplified before M4; a paper check before M5.
+- **The tripwire for 2.1.8** (the master, 2026-11-15: about 5 rules and no longer a spec, or the language simplified before M4) was met, and the engine still built about 8 300 lines against a plan of 4 900 (PR #209). The user had the language simplified before M3: nine cuts, tally 2.2 (2026-11-17). A **cuts round** removes the forms the user picks from a simplification review, whole, in the spec, refcore, the tests and the engine; removing costs about two fifths of building (§4). Still to come: a paper check before M5.
+- **Lessons (#221):** when the spec writer runs ahead of T, one pin and one proof serve the groups that follow. After a spec edit, a fresh reader takes the whole document: in tally 2.2 one found 16 leftovers that the edit tables, the critic, the writer's greps and three reviews had passed.
 - **Enforced:** the skill's §4; the round's brief; the word counts in the pull request's "How it was checked".
 
 ### D16. Git
 
 - **Pick:** one session, one role, one branch, one pull request into `master`. Sessions push and open pull requests; the user merges; Claude tags after the merge. Merge commits, never a squash or a rebase. A dependent pull request is stacked: built on its parent, base `master`, its body starting "Stacked on #X: merge that first". A wrong commit already pushed gets a new branch, not a force-push. Nothing under `tmp/` is tracked. No AI attribution anywhere. One `Closes #n` per line.
 - **Decided:** the user, 2026-10-31 ("I could do merging but you should create tags") and 2026-11-01: "Instead of merging PR's on your own just make sure they are green and stack the ones that depnd on others."
-- **Why, the newest lessons:** in M2, T pushed a commit whose scope `commit-check` refuses, then one with a 73-character subject, because its check ran through a pipe that hid the exit code (picks P56, P64). Read a check's own exit code.
+- **Why, the newest lessons:** in M2, T pushed a commit whose scope `commit-check` refuses, then one with a 73-character subject, because its check ran through a pipe that hid the exit code (picks P56, P64). Read a check's own exit code. In 2.1.8 the local spec tag, one for every worktree, moved while T worked elsewhere and turned T's check-frozen red for a night: move it only between turns. And `commit-check` wants an engine commit after T's last logged-red commit, so a round where the two work side by side ends on the builder's closing commit (#208).
 - **Enforced:** the guard (R-132, and `commit-check` before every push, R-100); `merge-pr`; `worktree-done`; CI's job that fails on a tracked `tmp/` file.
 
 ### D17. Hand-offs and compaction
@@ -185,7 +195,7 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 - **Pick:** two heavy jobs at most, niced, across every session. Each process within 8 GB. 30 GB of disk free before a launch. The user's own processes are never stopped, and stopping them is never suggested: shrink the engine's side. A session stops only a process whose pid it started, never by a name pattern.
 - **Decided:** the user, 2026-10-31: "could we limit it so we don't cross 60%?"; 2026-11-06: "Why would I stop it, it's my work".
-- **Why:** on 2026-10-27 one run reached 83 GB and filled the disk with swap. A full disk lost M0 a builder turn. In M2 a spec session's `pkill -f` killed the rules step running beside it (2026-11-15).
+- **Why:** on 2026-10-27 one run reached 83 GB and filled the disk with swap. A full disk lost M0 a builder turn. In M2 a spec session's `pkill -f` killed the rules step running beside it (2026-11-15). "Keep refcore runs to one process at a time" was read as one job and cost tally 2.2 an hour: the rule is one heavy command at a time, at the suite's own job count (#221).
 - **Enforced:** `launch` (the 30 GB floor, the job counts, `nice`, the warning at two heavy jobs); the watchdog `engine/tests/tools/memcap.py`; the skill's §9. The kill rule is a prompt line.
 
 ### D19. Talking to the user
@@ -244,12 +254,17 @@ Measured sizes, in words: M1's brief 2 247, 2.1.7's 2 978, M2's 2 291; a rules s
 
 ## 4. The numbers a plan uses
 
-| Run             | Cost, % of the week | Changed lines in `engine/crates` | % per 1 000 lines | Note                                                 |
-| --------------- | ------------------- | -------------------------------- | ----------------- | ---------------------------------------------------- |
-| M0 (PR #70)     | 26.4                | 32 800 added                     | about 1.05        | the builder alone 0.6; the gate about 20 % on top    |
-| M1 (PR #110)    | 49.9                | 24 000                           | 2.1               | three limit raises; gate 8's method changed mid-gate |
-| 2.1.7 (PR #157) | 20.2                | 2 800                            | not comparable    | 84 questions, 10 rules; the planner 6.5 of it        |
-| M2 (PR #168)    | 37.6                | 17 300                           | 2.2               | 1.66 after group 5; the Fable gate review 1.2 of it  |
+| Run                   | Cost, % of the week | Changed lines in `engine/crates` | % per 1 000 lines | Note                                                                                    |
+| --------------------- | ------------------- | -------------------------------- | ----------------- | --------------------------------------------------------------------------------------- |
+| M0 (PR #70)           | 26.4                | 32 800 added                     | about 1.05        | the builder alone 0.6; the gate about 20 % on top                                       |
+| M1 (PR #110)          | 49.9                | 24 000                           | 2.1               | three limit raises; gate 8's method changed mid-gate                                    |
+| 2.1.7 (PR #157)       | 20.2                | 2 800                            | not comparable    | 84 questions, 10 rules; the planner 6.5 of it                                           |
+| M2 (PR #168)          | 37.6                | 17 300                           | 2.2               | 1.66 after group 5; the Fable gate review 1.2 of it                                     |
+| 2.1.8 (PR #209)       | 34.3                | 6 211, and about 3 000 of fixes  | not comparable    | 77 items, 6 rules; each review loop cost about its group                                |
+| Simplification review | 1.96                | none                             |                   | a Fable study: 10 proposals, 9 taken                                                    |
+| 2.2 (PR #215)         | 22.6                | 9 229 out, 2 127 in              | 0.82 all-in       | builders 0.79 per 1 000 removed, 1.01 with reviews; T 0.82 per 100 texts                |
+| Operations (PR #225)  | 1.88                | none                             |                   | `OPERATIONS.md` rewritten                                                               |
+| M3 (PR #227)          | 14.7                | +5 070 −2 560                    | 1.9               | 12.5 h: T 3.9, builders 5.3, reviews 2.7, gate 0.8, rules and spec 0.6, coordinator 1.4 |
 
 - **One session:** a group's builder 1 to 3 %; a group review about 0.4 %; a fix review 0.15 to 0.4 %; a turn of T 0.5 to 1.4 %; a study or a rules session 0.25 to 1.1 %.
 - **A group's builder and review together,** M2: 0.85 to 1.85 % per 1 000 lines; the highest was a small group of corner cases.
@@ -261,4 +276,4 @@ Measured sizes, in words: M1's brief 2 247, 2.1.7's 2 978, M2's 2 291; a rules s
 - **Anthropic, read 2026-11-15** on `platform.claude.com/docs/en/`: `models/fable-5-2/overview`, `models/fable-5-2/whats-new-fable-5-2`, `models/fable-5-2/migration-guide` (its second half only as a summary), `about-claude/models/overview`, `build-with-claude/effort`, `build-with-claude/prompt-engineering/prompting-claude-fable-5-2`.
 - **Claude Code, read 2026-11-15** on `code.claude.com/docs/en/`: `model-config`, `cli-reference`, `headless`, `sub-agents`, `skills`, `costs`, `settings`. The installed version is 2.1.325; its binary names `claude-fable-5-2` and `claude-opus-5-5`.
 - **Not confirmed:** Claude Code's default effort for each model; how a Pro or Max plan meters Fable, and what a "reset" is; whether `--max-budget-usd` and `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` behave as their docs say on our runs; any guidance from Anthropic on emphasis words, examples, or step scripts against goals for Fable.
-- **Ours:** PR #70 (M0) and the retro after it, PR #92 (the process round), #110 (M1), #139 (the check loops), #157 (2.1.7), #166 (the slow-test check), #168 (M2).
+- **Ours:** PR #70 (M0) and the retro after it, PR #92 (the process round), #110 (M1), #139 (the check loops), #157 (2.1.7), #166 (the slow-test check), #168 (M2), #194 (the process study after M2), #209 (2.1.8), #215 (2.2), #225 (operations), #227 (M3); issues #208 and #221 (the rounds' process notes).

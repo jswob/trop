@@ -48,6 +48,47 @@ fn planted_red() {
 --- run
 tools/check step gating-release
 
+# the second half of the workspace's default targets in the release profile (2026-11-19):
+# b_planted sorts after --lib, --bin=tally and ask_cases, so `test-release-2` (CI's
+# `release-tests-2`) runs it
+case: default-target-red-release-2
+tool: run
+expect: FAIL test-release-2: 1 of
+--- write crates/tally/tests/b_planted.rs
+//! Planted: a red default test target that sorts into the second half.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step test-release-2
+
+# the second half of the release-profile gating targets (2026-11-19): a red target that sorts
+# into it fails `gating-release-2`, CI's `release-gating-2` job
+case: gating-milestone-red-release-2
+tool: run
+expect: FAIL gating-release-2: S gates
+--- write tools/milestones.toml
+milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
+gating = ["S"]
+mutants_leave_out = []
+--- append tests/runner/Cargo.toml
+
+[[test]]
+name = "s_zz_planted"
+path = "milestone/s_zz_planted.rs"
+test = false
+--- write tests/runner/milestone/s_zz_planted.rs
+//! Planted: a red test of milestone S that sorts last.
+
+#[test]
+fn planted_red() {
+    assert!(core::hint::black_box(false), "planted");
+}
+--- run
+tools/check step gating-release-2
+
 case: next-milestone-reported-not-failing
 tool: run
 exit: any
@@ -121,6 +162,18 @@ expect: FAIL gungraun-build: error[E0308]
 const PLANTED: u8 = "a mismatched type";
 --- run
 tools/check step gungraun-build
+
+# The fuzz targets compile in `check commit` and in CI's fuzz job before they run (M3's pick
+# P20, 2026-11-19: a rules step's edit broke one, and only CI's fuzz job saw it)
+case: fuzz-target-broken
+tool: run
+expect: FAIL fuzz-build: error[E0308]
+--- append fuzz/fuzz_targets/load.rs
+
+/// Planted: a fuzz target that no longer compiles against the library, as P20's did.
+const PLANTED: u8 = "a mismatched type";
+--- run
+tools/check step fuzz-build
 
 # The logged red (the review after S, 2026-11-03, issue #8): commit-check takes a
 # commit's `Logged-Red:` lines only from T's re-run commit, followed on the branch by a
@@ -267,6 +320,30 @@ expect: no matrix: 0 bytes
 tools/check groups
 tools/check groups --matrix > zz_matrix.txt || echo "no matrix: $(wc -c < zz_matrix.txt | tr -d ' ') bytes"
 
+# R-77 as amended 2026-11-19 (the process study after M2, change 7): T's gating targets run in
+# a job of their own, `dev-gating`, apart from the workspace's dev tests in `dev-tests`; the
+# two are two jobs of the matrix, and a gating step dropped from its group fails `groups`.
+case: groups-dev-gating-apart
+tool: run
+exit: any
+expect: dev-gating: runner gating milestone-report
+expect: dev-tests: test-dev doctest
+expect: "dev-gating", "dev-tests"
+--- run
+tools/check groups
+tools/check groups --matrix 2>/dev/null
+
+case: groups-dev-gating-dropped
+tool: run
+exit: any
+expect: FAIL groups: the step gating is in no group
+--- replace tools/check.py
+    "dev-gating": ["runner", "gating", "milestone-report"],
+--- with
+    "dev-gating": ["runner", "milestone-report"],
+--- run
+tools/check groups
+
 case: groups-step-twice
 tool: run
 expect: FAIL groups: the step fuzz is in 2 groups
@@ -281,8 +358,8 @@ case: groups-unknown-step
 tool: run
 expect: FAIL groups: the group step tests isn't a step of full
 --- replace tools/check.py
-    "fuzz": ["fuzz"],
+    "fuzz": ["fuzz-build", "fuzz"],
 --- with
-    "fuzz": ["fuzz", "tests"],
+    "fuzz": ["fuzz-build", "fuzz", "tests"],
 --- run
 tools/check groups

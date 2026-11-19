@@ -12,11 +12,16 @@ or 2 (1 h), and 8.6 M weighted tokens to 1 % of the week.
 
 Those weights are Opus's, and so is the calibration. A call on another model in PRICED
 counts at that model's list price beside Opus 5.5's (Fable 5.2: twice on input, output and
-cache writes, the same on cache reads; platform.claude.com, 2026-11-15), since Fable draws
-on the same weekly limit (the user, 2026-11-15; engine/PLAYBOOK.md, D10). When a session
+cache writes, the same on cache reads; platform.claude.com, 2026-11-15), since a run's
+budget counts Fable (the user, 2026-11-15; engine/PLAYBOOK.md, D10). When a session
 ran on another model than Opus, a `by model:` block splits the total by the model each
 call names, with what a priced model's tokens would be as Opus's and their dollars at list
 price. A model with no price here counts as Opus, and its line says so.
+
+After the total, two lines estimate the account's own two weekly meters (`/usage`), which
+this tool's figure isn't: the week meter, for every model, and the Fable meter, for Fable
+alone. Each is a factor in METERS times the tool's figure for what that meter counts, read
+on one clean stretch (2026-11-18; engine/PLAYBOOK.md, D10), and each line says so.
 """
 
 import glob
@@ -34,6 +39,13 @@ PRICED = {
     OPUS: ((1, 1), (4, 20, 0.20, 5, 8)),
     "claude-fable-5-2": ((2, 1), (8, 40, 0.20, 10, 16)),
 }
+# meter: (the model it counts, None for every model; its reading over this tool's figure).
+# One clean stretch, 2026-11-17 22:00 to 2026-11-18 08:40, only engine sessions running:
+# the week meter rose 24 points and the Fable meter 22, against this tool's 20.2 % in all
+# and 5.2 % for Fable's part (engine/PLAYBOOK.md, D10). One stretch can't separate Opus's
+# and Fable's weights inside the week meter; a second reading is D10's Revisit.
+METERS = {"week meter": (None, 1.2), "Fable meter": ("claude-fable-5-2", 4.2)}
+CALIBRATED = "calibrated on one stretch, 2026-11-18"
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 
@@ -93,6 +105,16 @@ def by_model(calls):
     return lines
 
 
+def meters(calls):
+    """The two meter lines: each meter's estimate from this tool's figure for what it counts."""
+    lines = []
+    for meter, (model, factor) in METERS.items():
+        part = sum(weighted(u) for u in calls.values() if model is None or u.get("model") == model) / PER_PERCENT
+        what = "the total" if model is None else f"{model}'s part, {part:.2f} %,"
+        lines.append(f"{meter}: about {part * factor:.1f} % ({what} times {factor:g}; {CALIBRATED})")
+    return lines
+
+
 def calls_of(session, bases):
     calls = {}
     for b in bases:
@@ -137,6 +159,8 @@ def main(argv):
     for line in by_model(seen):
         print(line)
     print(f"all {len(sessions)} sessions: about {grand / PER_PERCENT:.2f} % of the week")
+    for line in meters(seen):
+        print(line)
     return 0
 
 

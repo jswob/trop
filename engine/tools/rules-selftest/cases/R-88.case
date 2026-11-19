@@ -352,3 +352,36 @@ python3 -I -B zz_reuse.py again
 printf '\n// planted after the first run\n' >> crates/tally/src/lib.rs
 python3 -I -B zz_reuse.py "after an edit"
 python3 -I -B zz_reuse.py "another target" --test=planted-too
+
+# R-88 (M3's dispatch 44408839033, 2026-11-18): a dispatch with `next` while the next milestone
+# has no test target adds nothing, so it counts the gating set as a run without `next` does,
+# and says so in one notice; its baseline no longer fails
+case: next-with-no-test-target-counts-the-gating-set
+tool: run
+exit: any
+expect: ::notice title=R-88::M9 has no test target yet, so this dispatch with next counts the gating set alone
+expect: "extra": []
+--- replace tools/milestones.toml
+gating = ["S", "M0", "M1", "M2", "M3"]
+--- with
+gating = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8"]
+--- run
+tools/mutants-gate next zz_next.json && cat zz_next.json
+
+# R-88 as amended 2026-11-19 (the user's "Do so"): one whole mutation run a run, dispatched at
+# the gate, with no run per group and none in the nightly schedule. The jobs every mutant needs
+# run on a dispatch alone; the old condition, which let the nightly run them, fails the check
+case: nightly-runs-no-mutants
+tool: run
+exit: any
+expect: FAIL R-88: the mutants-baseline job runs on more than a dispatch, so the nightly schedule runs the mutants jobs
+--- replace ../.github/workflows/engine.yml
+  mutants-baseline:
+    name: mutants baseline
+    if: github.event_name == 'workflow_dispatch'
+--- with
+  mutants-baseline:
+    name: mutants baseline
+    if: github.event_name != 'pull_request'
+--- run
+tools/rules-selftest/run --ci

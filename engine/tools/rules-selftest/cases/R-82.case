@@ -336,7 +336,7 @@ exit: any
 expect: quick: FAIL fmt
 expect: quick: check quick: red at fmt, stopped after 1 of 11 steps
 expect: not run: clippy-lib clippy-tests exceptions check-frozen check-rules headers trace ast-grep-scan tests milestone-report (`check full` and CI run every step)
-expect: commit: check commit: red at fmt, stopped after 1 of 23 steps
+expect: commit: check commit: red at fmt, stopped after 1 of 24 steps
 expect: quick: no test log
 expect: commit: no test log
 expect: quick: nothing kept in the memo
@@ -478,3 +478,13 @@ for t in sorted((set(gated) | suites) - commit - quick):
     print(f"no local mode runs {t}")
 --- run
 python3 -I -B zz_selected.py
+
+# R-82 as amended 2026-11-19 (M3's pick P20): `check commit` builds the fuzz targets, so a
+# group's last local check sees what CI's fuzz job would; `check quick` doesn't
+case: commit-builds-the-fuzz-targets
+tool: run
+exit: any
+expect: commit builds the fuzz targets, quick doesn't
+--- run
+tools/check list > zz_list.txt
+grep -q '^commit: .* fuzz-build' zz_list.txt && ! grep -q '^quick: .* fuzz-build' zz_list.txt && echo "commit builds the fuzz targets, quick doesn't"

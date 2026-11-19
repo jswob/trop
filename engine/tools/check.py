@@ -202,6 +202,11 @@ def steps(mode):
         ("special-casing", tool("special-casing"), {}),
         ("spec-loadcheck-selftest", ["python3", "-I", "-B", "spec/tools/loadcheck.py", "--selftest"], {}),
         ("spec-loadcheck", ["python3", "-I", "-B", "spec/tools/loadcheck.py", *spec_realities()], {}),
+        # the fuzz targets compile against today's library, so a signature change can't break
+        # them unseen until CI's fuzz job (M3's pick P20, 2026-11-19); compile only, on the
+        # stable toolchain, in a target of its own
+        ("fuzz-build", ["cargo", "check", "--locked", "--manifest-path", "fuzz/Cargo.toml", "--bins",
+                        "--target-dir", "target/fuzz-build"], {}),
     ]
     if mode in ("quick", "commit"):
         quick = [*lint, ("tests", tests(mode), {}), ("milestone-report", milestone_report(["--cargo-profile", "quick"]), {})]
@@ -214,9 +219,10 @@ def steps(mode):
         *lint[3:],
         *compiled[:3],
         ("test-dev", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci"], {}),
-        ("test-release", ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
-                          "--cargo-profile", "release-test"], {}),
-        ("gating-release", gating(["--profile", "ci", "--cargo-profile", "release-test"]), {}),
+        ("test-release", release_tests(1), {}),
+        ("test-release-2", release_tests(2), {}),
+        ("gating-release", gating(["--profile", "ci", "--cargo-profile", "release-test"], part=1), {}),
+        ("gating-release-2", gating(["--profile", "ci", "--cargo-profile", "release-test"], part=2), {}),
         compiled[3],
         ("release-binary", ["cargo", "build", "--release", "--locked", "-p", "tally-cli"], {}),
         *compiled[4:9],
@@ -235,11 +241,20 @@ GROUPS = {
     "lint": ["fmt", "clippy-lib", "clippy-tests", "doc", "build", "gungraun-build", "exceptions", "check-frozen",
              "check-rules", "headers", "trace", "ast-grep-scan", "ast-grep-test", "deny", "deny-tally", "tree-probe",
              "special-casing", "spec-loadcheck-selftest", "spec-loadcheck", "guard-test"],
-    "dev-tests": ["runner", "gating", "milestone-report", "test-dev", "doctest"],
+    # the gating targets apart from the workspace's dev tests (the process study after M2,
+    # change 7, 2026-11-19): together they were CI's longest job, 16 to 22 minutes at M2's end
+    "dev-gating": ["runner", "gating", "milestone-report"],
+    "dev-tests": ["test-dev", "doctest"],
+    # the workspace's default targets in the release profile, in two halves (2026-11-19), as
+    # release-gating: the one job took 10 to 13 minutes
     "release-tests": ["test-release"],
+    "release-tests-2": ["test-release-2"],
+    # the gating targets in the release profile, in two halves (2026-11-19): each target is a
+    # binary built under fat LTO, and the one job took 14 to 16 minutes at M3's end
     "release-gating": ["gating-release"],
+    "release-gating-2": ["gating-release-2"],
     "release-binary": ["release-binary", "fault-injection-probe"],
-    "fuzz": ["fuzz"],
+    "fuzz": ["fuzz-build", "fuzz"],
 }
 SHARDED = "rules-selftest"
 # the shards beside the last, by rule, balanced on CI's per-case times (the check-speed
@@ -449,16 +464,45 @@ def run(argv, env, log, cwd=ENGINE):
     return r.returncode, r.stdout
 
 
-def gating(profile):
+def release_tests(part):
+    """R-77: the workspace's default test targets in the release profile (every target a
+    plain `cargo test` runs, milestones.default_tests), half of them: `part` 1 takes every
+    other selecting argument from the first (`--lib` with it), 2 from the second. Each
+    target is a binary of its own under fat LTO, so CI runs the halves as two jobs."""
+
+    def step(env, log):
+        try:
+            names = milestones.default_tests(env, [])[part - 1 :: 2]
+        except milestones.MilestoneError as e:
+            return str(e)
+        argv = ["cargo", "nextest", "run", "--workspace", "--all-features", "--locked", "--profile", "ci",
+                "--cargo-profile", "release-test", *names]
+        code, out = run(argv, env, log)
+        if code == 0:
+            return None
+        counted = milestones.tally(out)
+        if counted is None:
+            return f"the release tests (half {part}) don't run: {first_error(out)}"
+        total, passed = counted
+        return f"{total - passed} of {total} release tests are red (half {part})"
+
+    return step
+
+
+def gating(profile, part=None):
     """R-77: every gating milestone's tests (tools/milestones.toml) fail the check like the
     default targets, beside them; while none gates, the marker and the targets' names are
-    still checked."""
+    still checked. `part` 1 or 2 takes every other target by name, from the first or the
+    second: in the release profile each target is a binary of its own under fat LTO, so the
+    build's time grows with the targets, and CI runs the halves as two jobs (2026-11-19)."""
 
     def step(env, log):
         try:
             gates, names = milestones.gating_targets(env)
         except milestones.MilestoneError as e:
             return str(e)
+        if part is not None:
+            names = names[part - 1 :: 2]
         if not names:
             log.write(f"no gating milestone has a test target (gating = {gates})\n")
             return None
@@ -490,6 +534,7 @@ GUARD_TEST_FILES = ["engine/tools/guard-test", "engine/tools/guard_test.py", "en
                     # the coordinator's tools, the hook's pointer, and the playbook whose job table
                     # guard-test holds equal to launch's (2026-11-15)
                     "engine/tools/launch", "engine/tools/launch.py", "engine/tools/usage", "engine/tools/usage.py",
+                    "engine/tools/timeline", "engine/tools/timeline.py",
                     "engine/tools/session-start", "engine/PLAYBOOK.md"]
 GUARD_TEST_VERSIONS = [["python3", "--version"], ["git", "--version"]]
 # rules-selftest builds, lints and plants into a copy of the engine with these tools
