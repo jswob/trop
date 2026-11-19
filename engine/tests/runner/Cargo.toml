@@ -225,3 +225,10 @@ test = false
 name = "m3_run"
 path = "milestone/m3_run.rs"
 test = false
+
+# M3: the backlog's vectors for the last builder group (pick P7: net_worth's binding), refcore's
+# runs in m3/runs.vectors group `last`; MILESTONE-M3.md row 9; `test = false` until M3 gates.
+[[test]]
+name = "m3_fixes"
+path = "milestone/m3_fixes.rs"
+test = false

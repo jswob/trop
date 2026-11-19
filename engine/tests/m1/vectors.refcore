@@ -232227,4 +232227,72 @@ h_sum: 0
   cut 2026-10-20
 h_or: true
   cut 2026-10-20
+,23:fixes/gate8/m3_readings,11:fixes-gate8,25:run base.tally scen.tally,1238:10:base.tally,807:model p
+  tally 2
+  on 2026-11-05
+  start 2026-10-01
+  end 2026-12-31
+  note "M3 C3, #221 (load/rows.rs type_readings, eval/read.rs row_value, ask/walked.rs reading_instant): balance readings read directly and explained, in the base and in a scenario that restates the opening and adds its own stated reading; both engines print the same, no ENGINE-INVARIANT"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+version home
+  cite s
+  governs 2026-10..
+  known 2026-10-01
+  anchor konto
+  opening[konto] = 1 000.00 PLN at 2026-10-01 start "w"
+  stated[konto] = 1 000.00 PLN at 2026-10-15 end "w"
+
+ask q_open: opening[konto] law 2026-10-01
+
+ask q_stated: stated[konto] law 2026-10-15
+
+ask q_why: explain bal(konto, 2026-10-31)
+,10:scen.tally,393:scenario s over p
+  tally 2
+  from 2026-10-01
+
+version s_rows
+  cite s
+  governs 2026-10..
+  known 2026-10-02
+  anchor konto
+  replace opening[konto] = 2 000.00 PLN at 2026-10-01 start "s"
+  stated[konto] = 2 500.00 PLN at 2026-10-20 end "s"
+
+ask q_s_why: explain bal(konto, 2026-10-31) in s
+
+ask q_s_open: opening[konto] in s law 2026-10-01
+
+ask q_s_stated: stated[konto] in s law 2026-10-20
+,,1:0,959:q_open: 1 000.00 PLN
+  law date 2026-10-01, cut 2026-11-05
+q_s_open: 2 000.00 PLN
+  world: s
+  law date 2026-10-01, cut 2026-11-05
+q_s_stated: 2 500.00 PLN
+  world: s
+  law date 2026-10-20, cut 2026-11-05
+q_s_why: 2 500.00 PLN
+  balance of konto (PLN) at the end of 2026-10-31
+  from: anchor s_rows:stated[konto] = 2 500.00 PLN, 2026-10-20 end (version s_rows, source s, locator "s"), gap role anchor, gap 1 500.00 PLN
+  no movement
+  world: s
+  anchor: konto 2026-10-20 end, stated 2 500.00 PLN, difference 1 500.00 PLN
+  cut 2026-11-05
+q_stated: 1 000.00 PLN
+  law date 2026-10-15, cut 2026-11-05
+q_why: 1 000.00 PLN
+  balance of konto (PLN) at the end of 2026-10-31
+  from: anchor home:stated[konto] = 1 000.00 PLN, 2026-10-15 end (version home, source s, locator "w"), gap role anchor, gap 0.00 PLN
+  no movement
+  anchor: konto 2026-10-15 end, stated 1 000.00 PLN, difference 0.00 PLN
+  cut 2026-11-05
+warning: WARN-UNREAD place world is read by nothing
 ,

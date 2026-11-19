@@ -25,6 +25,9 @@ use crate::kernel::difference;
 use crate::m0::{self, TableFile};
 use crate::m3_texts::TEXTS;
 use std::collections::{BTreeMap, BTreeSet};
+use tally_cli::tally::{
+    Asks, Files, Given, How, NotImplemented, Pin, Request, check, run_with_how,
+};
 
 /// `m3/check.vectors`: eight netstrings per vector (`m3/vectors.py`).
 pub const CHECK: &[u8] = include_bytes!("../../m3/check.vectors");
@@ -169,6 +172,151 @@ pub fn check_group_failures(
     group_failures((CHECK, "m3_check"), group, part)
 }
 
+/// The exit code the CLI gives a command past the part of the engine built so far.
+const NOT_IMPLEMENTED: u8 = 69;
+
+/// A `run` or `check` command line's words after the command, as INTERFACE §1 reads them: its
+/// paths (the words before `--ask` that aren't `--pin=`), its asks (every ask when none is
+/// named) and its pin.
+fn request_words(rest: &[String]) -> (Vec<String>, Asks, Pin) {
+    let (mut paths, mut asks, mut pin, mut after_ask) =
+        (Vec::new(), Vec::new(), Pin::Canonical, false);
+    for word in rest {
+        if word == "--ask" {
+            after_ask = true;
+        } else if let Some(form) = word.strip_prefix("--pin=") {
+            pin = if form == "bytes" {
+                Pin::Bytes
+            } else {
+                Pin::Canonical
+            };
+        } else if after_ask {
+            asks.push(word.clone());
+        } else {
+            paths.push(word.clone());
+        }
+    }
+    let asks = if asks.is_empty() {
+        Asks::Every
+    } else {
+        Asks::Named(asks)
+    };
+    (paths, asks, pin)
+}
+
+/// The library's files for `paths` against the file table `table`, INTERFACE §4's reading,
+/// written here apart from the CLI's: a key is that file; a directory is every key under it
+/// that ends `.tally`, in path order; anything else names nothing (`LOAD-PATH`).
+fn library_files(paths: &[String], table: BTreeMap<String, Vec<u8>>, pin: Pin) -> Files {
+    let mut given = Vec::new();
+    for path in paths {
+        if let Some(bytes) = table.get(path) {
+            given.push(Given {
+                path: path.clone(),
+                bytes: Some(bytes.clone()),
+            });
+            continue;
+        }
+        let dir = if path.ends_with('/') {
+            path.clone()
+        } else {
+            format!("{path}/")
+        };
+        let under: Vec<Given> = table
+            .iter()
+            .filter(|(key, _)| {
+                key.starts_with(dir.as_str())
+                    && key.rsplit_once('.').is_some_and(|(_, ext)| ext == "tally")
+            })
+            .map(|(key, bytes)| Given {
+                path: key.clone(),
+                bytes: Some(bytes.clone()),
+            })
+            .collect();
+        if under.is_empty() {
+            given.push(Given {
+                path: path.clone(),
+                bytes: None,
+            });
+        }
+        given.extend(under);
+    }
+    Files { given, table, pin }
+}
+
+/// How the library's entry (E §1: `run_with_how` with every fence's form, which `run` is, or
+/// `check`) fails to print what the CLI prints for `v`'s command line, or `None`: the same
+/// lines, and the exit code the CLI gives them (`check`: 0 only after `ok`; `run`: 1 for a
+/// refused run), or both stopping not implemented. A usage error (`rule`) reaches no entry.
+#[must_use]
+pub fn library_failure(v: &CheckVector, texts: &BTreeMap<&str, &str>) -> Option<String> {
+    let (Some((command, rest)), false) = (v.args.split_first(), v.source == "rule") else {
+        return None;
+    };
+    let mut table = BTreeMap::new();
+    for f in &v.table {
+        let Some(text) = texts.get(f.path.as_str()) else {
+            return Some(format!("{}: {} has no embedded text", v.id, f.path));
+        };
+        table.insert(f.key.clone(), text.as_bytes().to_vec());
+    }
+    let packed = match m0::table(&v.id, &v.table, texts) {
+        Ok(t) => t,
+        Err(e) => return Some(e),
+    };
+    let cli = run_args(&v.args, &packed);
+    let (paths, asks, pin) = request_words(rest);
+    let files = library_files(&paths, table, pin);
+    let answer = match command.as_str() {
+        "run" => run_with_how(files, &Request::new(asks), How::FENCES),
+        "check" => check(files),
+        _ => return Some(format!("{}: neither run nor check", v.id)),
+    };
+    let lib = match answer {
+        Ok(a) => {
+            let mut out = String::new();
+            for line in a.lines() {
+                out.push_str(line);
+                out.push('\n');
+            }
+            let refused = if command == "check" {
+                a.lines().first().map(String::as_str) != Some("ok")
+            } else {
+                a.is_refused()
+            };
+            Run {
+                out,
+                code: u8::from(refused),
+            }
+        }
+        Err(NotImplemented) => Run {
+            out: cli.out.clone(),
+            code: NOT_IMPLEMENTED,
+        },
+    };
+    difference(&cli, &lib).map(|d| format!("{}: the CLI against the library: {d}", v.id))
+}
+
+/// Every vector of `store` whose group is one of `groups` where the library's entry fails to
+/// print the CLI's lines ([`library_failure`]), and how many it ran.
+///
+/// # Errors
+///
+/// A store that doesn't read.
+pub fn library_failures(store: &[u8], groups: &[&str]) -> Result<(Vec<String>, usize), String> {
+    let vs = check_vectors(store)?;
+    let texts = texts();
+    let mine: Vec<&CheckVector> = vs
+        .iter()
+        .filter(|v| groups.contains(&v.group.as_str()))
+        .collect();
+    let failed = mine
+        .iter()
+        .filter_map(|v| library_failure(v, &texts))
+        .collect();
+    Ok((failed, mine.len()))
+}
+
 /// The groups of `m3/check.vectors`.
 ///
 /// # Errors
@@ -211,7 +359,7 @@ mod tests {
         for v in &vs {
             assert!(ids.insert(v.id.as_str()), "{}: twice", v.id);
             assert!(
-                ["changes", "run", "operations"].contains(&v.group.as_str()),
+                ["changes", "run", "operations", "last"].contains(&v.group.as_str()),
                 "{}",
                 v.id
             );

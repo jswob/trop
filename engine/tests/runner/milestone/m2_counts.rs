@@ -3,7 +3,7 @@
 //! forks print the same lines on and off by design (`m2_forks`), so a mutant that only shares
 //! fewer walks, or walks again what a kept walk had walked, is told apart by the work counters
 //! alone (R-51, BUILDER §13.2): the counters build's `Answer::counters`, the line `--stats`
-//! prints. Each ask of the fixed inputs below runs through `tally_cli::tally::run_with_forks`
+//! prints. Each ask of the fixed inputs below runs through `tally_cli::tally::run_with_how` (M3 step b)
 //! with `Forks::On` (as `run` walks) and `Forks::Off` (each read its own walk), and its counts
 //! are these exactly: days stepped, days with an act, walks, walks shared, legs booked, def
 //! hits and misses (P §1.1's units). The inputs: `m2/counts/days_c.tally` (G7's `days.tally`
@@ -21,7 +21,7 @@
 #[cfg(test)]
 mod tests {
     use tally_cli::tally::walk::Forks;
-    use tally_cli::tally::{Asks, Days, Given, NotImplemented, Pin, Request, run_with_forks};
+    use tally_cli::tally::{Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
     /// R1, R2, R3, R6 (the builder's names): G7's days with the counts' asks.
     const DAYS: [(&str, &str); 1] =
@@ -72,12 +72,15 @@ mod tests {
                 bytes: Some(text.as_bytes().to_vec()),
             })
             .collect();
-        let request = Request {
-            asks,
-            pin: Pin::Canonical,
-            days: Days::Events,
-        };
-        let line = match run_with_forks(given, &request, forks) {
+        let request = Request::new(asks);
+        let line = match run_with_how(
+            Files::new(given),
+            &request,
+            How {
+                forks,
+                ..How::FENCES
+            },
+        ) {
             Ok(answer) => answer.counters().line(),
             Err(NotImplemented) => return "stopped".to_owned(),
         };
