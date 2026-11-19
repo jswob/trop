@@ -216,7 +216,7 @@ pub(crate) fn answer_turns(
         match turn {
             Turn::OfMember(aliases, at) => {
                 let base = realities.first().ok_or_else(no_turn)?;
-                let m = members::member_reality(base, aliases)?;
+                let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
                 let gathered = member_worlds
                     .entry(aliases.as_slice())
                     .or_insert_with(|| World::of(m, how));

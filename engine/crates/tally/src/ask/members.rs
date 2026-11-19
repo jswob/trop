@@ -40,40 +40,24 @@ pub(super) fn resolve(base: &Reality, turns: Vec<Turn>, how: How) -> Result<Vec<
             out.push(turn);
             continue;
         };
-        let (aliases, member, own) = found(base, &id)?;
+        let (aliases, own) = found(base, &id)?;
+        let member = base.member_alone(&aliases).ok_or_else(unknown)?;
         let m = &member.reality;
         let at = m
             .asks
             .iter()
-            .position(|ask| ask.id == own && !m.asks_alone.contains_key(own));
-        match at.and_then(|at| m.asks.get(at).map(|ask| (at, ask))) {
-            Some((at, ask)) if !names_world(member, ask) => {
+            .position(|ask| ask.id == own && !m.asks_alone.contains_key(&own));
+        match (at, at.and_then(|at| m.asks.get(at))) {
+            (Some(at), Some(ask)) if !names_world(member, ask) => {
                 out.push(Turn::OfMember(aliases, at));
             }
-            _ => match alone_lines(member, (&id, &aliases, own), how) {
+            _ => match alone_lines(member, (&id, &aliases, &own), how) {
                 Ok(lines) => out.extend(lines.into_iter().map(Turn::Line)),
                 Err(stop) => out.push(Turn::Stopped(stop)),
             },
         }
     }
     Ok(out)
-}
-
-/// The reality of the member `aliases` name, from the run's model down, loaded alone. L §6.1.
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for an alias no member of its joint model has.
-pub(super) fn member_reality<'m>(
-    base: &'m Reality,
-    aliases: &[String],
-) -> Result<&'m Reality, Stop> {
-    let mut m = base;
-    for alias in aliases {
-        let member = m.joint.as_ref().and_then(|joint| joint.alone.get(alias));
-        m = &member.ok_or_else(unknown)?.reality;
-    }
-    Ok(m)
 }
 
 /// A member's lines under its prefix, its aliases each with its dot (`a.b.`), but an indented
@@ -92,17 +76,14 @@ pub(super) fn prefixed(aliases: &[String], lines: Vec<String>) -> Vec<String> {
         .collect()
 }
 
-/// The member a member's ask `id` names, its aliases from the run's model down, and the
+/// The aliases, from the run's model down, of the member a member's ask `id` names, and the
 /// ask's own id there (refcore's `member_ask`, its descent: a member's own ask, else one of its
 /// members' when it is a joint model). L §6.1.
 ///
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for an id no member's asks hold: the run's check knew it.
-fn found<'m, 'i>(
-    base: &'m Reality,
-    id: &'i str,
-) -> Result<(Vec<String>, &'m MemberAlone, &'i str), Stop> {
+fn found(base: &Reality, id: &str) -> Result<(Vec<String>, String), Stop> {
     let mut m = base;
     let mut aliases = Vec::new();
     let mut rest = id;
@@ -113,7 +94,7 @@ fn found<'m, 'i>(
         };
         aliases.push(alias.to_owned());
         if asks.asks.contains(own) {
-            return Ok((aliases, member, own));
+            return Ok((aliases, own.to_owned()));
         }
         m = &member.reality;
         rest = own;

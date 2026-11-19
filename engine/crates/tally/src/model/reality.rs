@@ -286,6 +286,18 @@ pub struct SamePair {
 }
 
 impl Reality {
+    /// The member `aliases` name, from this joint model down, loaded alone; `None` where an
+    /// alias names no member. L §6.1.
+    #[must_use]
+    pub fn member_alone(&self, aliases: &[String]) -> Option<&MemberAlone> {
+        let (first, rest) = aliases.split_first()?;
+        let mut member = self.joint.as_ref()?.alone.get(first)?;
+        for alias in rest {
+            member = member.reality.joint.as_ref()?.alone.get(alias)?;
+        }
+        Some(member)
+    }
+
     /// An id as a sort key in id order: a row's version prefix (`v:`) first, then the item's
     /// name by code point, then each key by its position in its index, a list, range or
     /// built-in index keeping its own order (`pay[9]` before `pay[10]`; on `[zz, aa, mm]` zz
