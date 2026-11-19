@@ -4848,3 +4848,40 @@ On `build/2.2` at f6445c07 (the tree of `spec/2.2` at 99285820). On the round's 
 - **Counts:** `m2_counts_lows` and the pins r1, r7, b2_min green on their stored counts.
 - **Sizes:** this commit, 3 files, 21 out, 27 in. The round's `engine/crates` 106 files, 9 229 out, 2 127 in (the 106th, `benches/p8_5.rs`, came with the lead's merges). `crates/tally/src` 86 files, 7 366 out, 1 658 in. Kernel files 22; exceptions +0.
 - **Checks:** `check quick: green, 11 steps (74s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (115s)`, exit 0.
+
+## 2026-11-19 M3 G1 `backlog`: row 12, the three splits, #221's arms, F6's rows, the small rows (issue #226)
+
+On `build/m3` from 6ec721e9, seven commits and this one. The brief is G1 of `tmp/active/m3-brief.md`; the plan is `tmp/m3/build-plan.md` (§1's #192 table, §3, §4 G1).
+- **What changed, by commit:**
+  - **007fdd63, row 12 (a wrong error):** `load/worlds.rs` `cross_world_forks` counts a base diff's axes over the base and both its worlds at load, whatever is asked (L §5.5, "counted at load"; refcore's `cli.py` `cross_world_forks`, 2.1.8 R13). `ask/worlds.rs` `cross_forks` is gone. `run … --ask other` now refuses `LOAD-FORKS` as refcore does; probes on one stack and on two equal refcore. Test: `load_cases.rs` `a_base_diff_s_axes_over_both_worlds_are_counted_at_load_whatever_is_asked`.
+  - **01457fef, 443b773a, ba9dd8d1, the three splits (rows 10, 39; R-127):** pure moves, each with its survivor rows. `walk/instance.rs` and `walk/body.rs` come out of `walk/plan.rs`, `walk/ends.rs` out of `walk/day.rs`, `book/same_booking.rs` out of `book/same.rs`. After each, `check quick` was green and the sweep byte-equal. The advisory's R-127 list is now `eval/expr.rs`, `load/check.rs`, `load/strata.rs` and `walk/order.rs`.
+  - **4098fc4e, #221's arms (row 35):** each place's balance readings are typed at load: `model/decl.rs` `PlaceReadings` and `BalanceRow`, built by `load/rows.rs` `type_readings` into `Reality::balance_readings`. Load guarantees every part an arm stopped on (`LOAD-KEY`, `LOAD-KIND`, `LOAD-INSTANT`, `LOAD-UNIT`, `LOAD-PLACEKIND`; each probed against refcore). So `book/reading.rs`'s three `NotBuilt` arms and `ask/walked.rs`'s one are gone, and `eval/read.rs`'s arm is an `ENGINE-INVARIANT` on the table. No arm stayed, so no STOP-REPORT.
+  - **ac87622e, F6's rows 68, 69, 60, 58, 71:**
+    - Row 68: `horizon` moves into `walk/fork.rs` under F6's switch (`planned_through`); `Forks::Off` plans through the read's day, as refcore's `proj_walk` does.
+    - Row 69: `meet_parked` counts a read served from a kept walk's log as a walk shared (P §1.1). No stored `walks shared` count moved (`m2_counts` green), so no STOP-REPORT.
+    - Row 60: `outgrown` lets a waiting walk go.
+    - Rows 58 and 71: the docs.
+    - Two crate tests.
+  - **6378b7be, the small rows 1, 4, 7, 8, 15, 61, 64:**
+    - Row 1: `passes_edge` drops no error.
+    - Row 4: `explain.rs`'s header.
+    - Row 7: the walk-bound cell is kept and cloned only for an engine answering `explain` (`keep_walk_cells`).
+    - Row 8: `walkbound.rs` `reader` is an `ENGINE-INVARIANT`, not the point's text.
+    - Row 15: `cross_world_forks`' comment.
+    - Row 61: `walk_through`'s doc.
+    - Row 64: `How` moves to `eval` (`tally::ask::How` stays, re-exported), with `How::FENCES` and `How::engine`. The run's `How` goes through `load_run`, the joint and world loads, `load_among` and the `Loader` to `check_range_keys` and `load/across.rs`'s seven checks, so a run's plain twins reach what load evaluates. `check fences` is green.
+- **`moves_seen` (#221): no cache, by R-130.**
+  - No P8 row's text both runs and holds a `same` line, so no count budget can move.
+  - Measured anyway. Of the sweep's rows, 86 run a text with a `same` line; the slowest takes 6 ms.
+  - `integration/cuts/D/cut11`, whose records hold `same` lines, runs 5.1 s to `not implemented`. Its samply profile, taken on the release binary as `perf profile` takes it, gives 5 094 samples:
+    - `same_groups` 2.0 % inclusive, with `moves_seen` 0.8 % of that;
+    - `root` 0.1 %.
+  - So `book/same.rs` is under 5 % and no row is asked. The item goes to P8-10 at M5b.
+- **Gate 8's survivors (run 44411247874):** there is no `tmp/m3/gate8-survivors.txt` in the worktree at this commit, so they go to G3.
+- **The sweep:** two release binaries over 2 278 rows, cut from the kernel's, M1's, hh4's and M2's `vectors.tsv`. It ran after each split and after the arms, and once from 4098fc4e's binary to this head's. Every time: same 2 278, differ 0 (1 819 answered, 458 refused, 1 not built).
+- **Size** (`engine/crates`, 6ec721e9 to this commit): 43 files, 2 366 in, 1 968 out. Git's move detection (`--color-moved`, indentation ignored) counts 1 783 of the lines in and 1 722 of those out as moved. That leaves about 0.58 k added, 0.25 k removed and 1.75 k moved, against the plan's 0.6–1.0 k changed plus 1.5 k moved.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched). In `MUTANTS-SURVIVORS.md`, the rows moved with their functions, and `meet_parked`'s `replace < with <=` row went with its `<` (row 69).
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 1.14 % of the week (`engine/tools/usage`), against a budget of 2.5 %.
+- **Next:** the group's review; G3 takes gate 8's survivors.
+- **Checks:** `check quick: green, 11 steps (93s)`; `check fences: green, 1 step (25s)`; `check commit: green, 23 steps (140s)`, exit 0, on this commit's tree.
