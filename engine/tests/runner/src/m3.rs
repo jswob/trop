@@ -349,7 +349,8 @@ mod tests {
         }
     }
 
-    /// The runs store: ids once, groups `changes` and `run`, `run` first but for a usage error,
+    /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes` and
+    /// `b192`, `run` first but for a usage error,
     /// every text embedded.
     #[test]
     fn the_runs_store_reads_and_every_text_is_embedded() {
@@ -359,7 +360,8 @@ mod tests {
         for v in &vs {
             assert!(ids.insert(v.id.as_str()), "{}: twice", v.id);
             assert!(
-                ["changes", "run", "operations", "last", "fixes"].contains(&v.group.as_str()),
+                ["changes", "run", "operations", "last", "fixes", "b192"]
+                    .contains(&v.group.as_str()),
                 "{}",
                 v.id
             );

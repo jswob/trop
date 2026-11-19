@@ -1,0 +1,90 @@
+model p73
+  tally 2
+  on 2026-04-15
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C6, #192 (the review of P73's fix, 476032fd): one projection read on falling days within a month, a refused leg between them (neg, jar on each 21st): each later read takes the parked walk's prefix, refused at jar from the 21st, known before it; r4's model (m2/counts/r4.tally)"
+
+source card "invented for F6's counts"
+
+unit DUK: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+place konto: accounts DUK lives 2026-01-01..
+
+place jar: accounts DUK lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input pay: money DUK
+
+input rent: money DUK
+
+input floor: money DUK
+
+input share: num
+
+input reach: int
+
+input dec_off: int
+
+input dec_from: date
+
+input dec_last: date
+
+input jar_day: date
+
+input tip: money DUK
+
+move salary[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount pay
+
+move rent_pay[m in month]: transfers
+  on add_days(start_of(m), dec_off)
+  at start_of(m)
+  leg cash from konto to world amount rent
+
+move stock: transfers
+  on jar_day
+  at jar_day
+  leg cash from world to jar amount rent
+
+move dec[m in month]: transfers
+  on add_days(start_of(m), dec_off)
+  at start_of(m)
+  when start_of(m) < dec_last
+  reads konto
+  leg cash from konto to world amount round(max(0, bal(konto, add_days(start_of(m), reach)) from dec_from - floor) * share, minor(DUK), down)
+
+move tips[m in month]: transfers
+  on add_days(start_of(m), reach)
+  at start_of(m)
+  leg cash from world to konto amount tip
+
+move neg[m in month]: transfers
+  on add_days(start_of(m), reach)
+  at start_of(m)
+  leg cash from jar to world amount rent - pay
+
+ask fall: bal(konto, d), bal(jar, d) from 2026-01-02 for d in [2026-01-28, 2026-01-22, 2026-01-21, 2026-01-20, 2026-01-14, 2026-01-03]
+ask fall_j: bal(jar, d) from 2026-01-02 for d in [2026-02-25, 2026-01-25, 2026-01-19, 2026-02-19]
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 1000.00
+  rent = 300.00
+  floor = 200.00
+  share = 0.5
+  reach = 20
+  dec_off = 14
+  dec_from = 2026-01-10
+  dec_last = 2026-03-01
+  jar_day = 2026-02-01
+  tip = ?"the tip, not yet known"
+  opening[konto] = 500.00 at 2026-01-01 start
+  opening[jar] = 0.00 at 2026-01-01 start

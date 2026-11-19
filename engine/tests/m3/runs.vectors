@@ -4748,4 +4748,57 @@ q_bal (d = 2026-02-28): (refused: RUN-ORDER decisions ca and cb read each other 
   law date 2026-03-31, cut 2026-03-31
 q_bal (d = 2026-03-31): (refused: RUN-ORDER decisions ca and cb read each other on 2026-01-10, refused: RUN-ORDER decisions ca and cb read each other on 2026-01-10)
   law date 2026-03-31, cut 2026-03-31
+,16:b192/solve-units,4:b192,3:run,26:engine/tests/m3/fixes/b192,15:run solve.tally,38:solve.tally	m3/fixes/b192/solve.tally
+,1:0,201:g: (1 030.00 PLN, 17.50 PLN)
+  cut 2026-03-01
+s_price: 157.14 PLN
+  cut 2026-03-01
+s_price_coarse: 158 PLN
+  cut 2026-03-01
+s_rate: 0.1 /year
+  cut 2026-03-01
+s_rate_coarse: 0.1 /year
+  cut 2026-03-01
+,18:b192/parked-prefix,4:b192,3:run,26:engine/tests/m3/fixes/b192,23:run parked_prefix.tally,54:parked_prefix.tally	m3/fixes/b192/parked_prefix.tally
+,1:0,1765:fall (d = 2026-01-28): (?"the tip, not yet known" (tip), refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01])
+  unfulfilled: dec[2026-01]
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: tips[2026-01]
+  left out: dec, 1 instances, first 2026-01-15
+  cut 2026-04-15
+fall (d = 2026-01-22): (?"the tip, not yet known" (tip), refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01])
+  unfulfilled: dec[2026-01]
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: tips[2026-01]
+  left out: dec, 1 instances, first 2026-01-15
+  cut 2026-04-15
+fall (d = 2026-01-21): (?"the tip, not yet known" (tip), refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01])
+  unfulfilled: dec[2026-01]
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  unfulfilled: tips[2026-01]
+  left out: dec, 1 instances, first 2026-01-15
+  cut 2026-04-15
+fall (d = 2026-01-20): (?"the tip, not yet known" (tip), 0.00 DUK)
+  unfulfilled: dec[2026-01]
+  unfulfilled: rent_pay[2026-01]
+  unfulfilled: salary[2026-01]
+  left out: dec, 1 instances, first 2026-01-15
+  cut 2026-04-15
+fall (d = 2026-01-14): (1 500.00 DUK, 0.00 DUK)
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+fall (d = 2026-01-03): (1 500.00 DUK, 0.00 DUK)
+  unfulfilled: salary[2026-01]
+  cut 2026-04-15
+fall_j (d = 2026-02-25): refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01]
+  cut 2026-04-15
+fall_j (d = 2026-01-25): refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01]
+  cut 2026-04-15
+fall_j (d = 2026-01-19): 0.00 DUK
+  cut 2026-04-15
+fall_j (d = 2026-02-19): refused: RUN-NEG negative amount -700.00 DUK for leg cash of neg[2026-01]
+  cut 2026-04-15
 ,

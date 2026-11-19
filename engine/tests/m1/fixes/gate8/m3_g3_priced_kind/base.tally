@@ -1,0 +1,39 @@
+model p
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-12-31
+  note "G3: an outside place priced per etf holds positions in etf and bond, which only the run knows (walk/value.rs priced_position)"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind funds: unit
+
+kind fund_buys: event certain
+  leg units: funds
+
+input fund: observed
+input px[u in funds]: num PLN/etf
+
+place market: outside priced px lives 2026-01-01..
+place ike: holdings etf lives 2026-01-01..
+place ike2: holdings bond lives 2026-01-01..
+
+version units
+  cite s
+  governs always
+  known 2025-01-01
+  funds + [etf] lives 2020-01-01..
+  funds + [bond] lives 2020-01-01..
+  px[etf] = 100 PLN/etf
+  px[bond] = 50 PLN/etf
+
+version register
+  cite s
+  governs 2026-02
+  known 2026-03-05
+  covers ike, ike2
+  fund[r1] = (on: 2026-02-02, kind: fund_buys, leg units from market to ike amount 2 etf) "r1"
+  fund[r2] = (on: 2026-02-03, kind: fund_buys, leg units from market to ike2 amount 3 bond) "r2"
+
+ask v_market: value(market, 2026-02-28) in PLN

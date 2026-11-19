@@ -1,0 +1,31 @@
+model t
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "G3: an outside place's per-unit residual ledger counts only its unit's legs (book/ledger.rs Of::counts)"
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[konto_eur] = 500.00 EUR at 2026-03-01 start "s"
+
+version sta
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto, konto_eur
+  bank[x1] = (on: 2026-03-05, kind: transfers, leg cash from konto to world amount 30.00 PLN) "x1"
+  bank[x2] = (on: 2026-03-06, kind: transfers, leg cash from konto_eur to world amount 7.00 EUR) "x2"
+
+ask l_w: residuals world 2026-03

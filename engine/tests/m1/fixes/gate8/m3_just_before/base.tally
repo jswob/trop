@@ -1,0 +1,75 @@
+model jb
+  tally 2
+  on 2026-02-28
+  start 2026-01-01
+  end 2026-02-28
+  note "T, M3 C6, gate 8's walk/point.rs At::just_before (E §10, E §4.2 step 3; the G3 turn-4 review's N-6): explain re-reads a walk-bound def's cell just before its point, so its running read holds every leg booked before the point and none of its own: put's second instance (n 1) after the first's leg, and b_put (rank after a_put, written before) after a_put's"
+
+source fixture "T's fixture (invented values)"
+
+unit PLN: currency minor 0.01
+
+index box = [first, second]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place jar[b in box]: accounts PLN lives 2026-01-01..
+
+place jar_a: accounts PLN lives 2026-01-01..
+
+place jar_b: accounts PLN lives 2026-01-01..
+
+input dec_day: date
+
+input late_day: date
+
+input put_amt: money PLN
+
+input mark: money PLN
+
+input prio[b in box]: money PLN
+
+def avail: money PLN = bal(konto) at dec_day
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+def avail_late: money PLN = bal(konto) at late_day
+  note "walk-bound: konto's running balance wherever a decision reads it"
+
+move put[b in box]: transfers
+  on dec_day
+  reads konto
+  ties by prio[b]
+  leg cash from konto to jar[b] amount if avail > mark then put_amt else 0.00 PLN
+
+move a_put: transfers
+  on late_day
+  reads konto
+  before b_put
+  leg cash from konto to jar_a amount if avail_late > mark then put_amt else 0.00 PLN
+
+move b_put: transfers
+  on late_day
+  reads konto
+  leg cash from konto to jar_b amount if avail_late > mark then put_amt else 0.00 PLN
+
+version facts
+  cite fixture
+  governs always
+  known 2025-12-01
+  dec_day = 2026-01-20 "the first decisions' day"
+  late_day = 2026-02-10 "the second decisions' day"
+  put_amt = 100.00 PLN "a put"
+  mark = 500.00 PLN "put while konto holds more"
+  prio[first] = 1.00 PLN "first goes first"
+  prio[second] = 2.00 PLN
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start
+  opening[jar[first]] = 0.00 PLN at 2026-01-01 start
+  opening[jar[second]] = 0.00 PLN at 2026-01-01 start
+  opening[jar_a] = 0.00 PLN at 2026-01-01 start
+  opening[jar_b] = 0.00 PLN at 2026-01-01 start
+
+ask q_avail: explain avail
+
+ask q_late: explain avail_late
+
+ask q_bal: bal(konto, d) for d in [2026-01-20, 2026-02-10]
