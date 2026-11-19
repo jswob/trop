@@ -50,7 +50,9 @@ OPUS, FABLE = "claude-opus-5-5", "claude-fable-5-2"
 MODELS = (OPUS, FABLE)
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 # job: (role, model, effort), as engine/PLAYBOOK.md's table (D2, D3) has it: Fable for the
-# judgment a whole run builds on, Opus for the volume. Fable stays at high: Anthropic's
+# judgment a whole run builds on and for a group's review (since 2026-11-19: M2's and M3's
+# gate reviews found blocking defects in code group reviews had passed), Opus for the
+# volume and for a fix's review. Fable stays at high: Anthropic's
 # guidance starts there, and at xhigh it reviews its own work with subagents.
 JOBS = {
     "builder": ("build", OPUS, "xhigh"),
@@ -63,7 +65,8 @@ JOBS = {
     "paper-check": ("spec", FABLE, "high"),
     "coordinator": ("lead", OPUS, "high"),
     "round-lead": ("lead", FABLE, "high"),
-    "group-review": ("lead", OPUS, "high"),
+    "group-review": ("lead", FABLE, "high"),
+    "fix-review": ("lead", OPUS, "high"),
     "gate": ("lead", OPUS, "xhigh"),
     "gate-review": ("lead", FABLE, "high"),
 }

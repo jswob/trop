@@ -33,7 +33,8 @@ Then the user pastes: "You are the <run> coordinator. Your brief is tmp/active/<
 | ----------------- | -------------------- | ------------------------ | ------------------------------------------------------------------- |
 | T                 | `tests`              | tests, Opus, xhigh       | the tests first; for each group's review, the fixes as tests        |
 | the builder       | `builder`            | build, Opus, xhigh       | its plan; one fresh session per group                               |
-| the group review  | `group-review`       | lead, Opus, high         | `engine-reviewer` on each group's diff                              |
+| the group review  | `group-review`       | lead, Fable, high        | `engine-reviewer` on each group's diff, crossing its forms          |
+| the fix review    | `fix-review`         | lead, Opus, high         | `engine-reviewer` on each fix alone                                 |
 | rules steps       | `rules-step`         | rules, Opus, high        | fuzz targets, benches, the kernel list, `gating`                    |
 | the gate          | `gate`               | lead, Opus, xhigh, fresh | the evidence, fuzz, mutants, timing, the report                     |
 | the gate's review | `gate-review`        | lead, Fable, high, fresh | the one review of the whole diff                                    |

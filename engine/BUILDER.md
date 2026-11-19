@@ -277,7 +277,7 @@ The outline:
 
 ## 12. The review checklist (A5 §5.4)
 
-A fresh-context, read-only reviewer (Read, Grep, Glob, read-only Bash), given the diff range, the plan and the spec sections. It reports only gaps in correctness or the stated requirements, to `engine/reviews/<milestone>.md`. _Since 2026-10-30:_ it is the `engine-reviewer` subagent, which loads the skill `engine-rust` (D6-5), and item 9 below is the readability section (D5-5).
+A fresh-context reviewer (Read, Grep, Glob, Bash), writing nothing but its probe texts, given the diff range, the plan and the spec sections. It reports only gaps in correctness or the stated requirements, to the file its caller names. _Since 2026-11-19 (the process study after M2, change 5):_ it puts the diff's new forms through the forms already built on both engines, on texts of about ten lines, and reads the spec where the two agree. _Since 2026-10-30:_ it is the `engine-reviewer` subagent, which loads the skill `engine-rust` (D6-5), and item 9 below is the readability section (D5-5).
 
 1. Traceability: each plan item maps to code and green vectors; each cited spec section says what the code does; nothing outside the milestone changed.
 2. Passing by the wrong means: literal-scan hits; branches on names, paths or ask texts; reads of `engine/tests/`; `cfg(test)` or `debug_assertions` behaviour; output assembled from expected strings; guard-log entries outside the allow-list.

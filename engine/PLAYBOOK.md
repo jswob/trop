@@ -30,7 +30,8 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 | `paper-check`  | spec  | `claude-fable-5-2` | high   | before a big milestone: its features against the existing ones, on paper   |
 | `coordinator`  | lead  | `claude-opus-5-5`  | high   | a milestone's or a rules run's coordinator                                 |
 | `round-lead`   | lead  | `claude-fable-5-2` | high   | a spec round's coordinator: it rules the factoring                         |
-| `group-review` | lead  | `claude-opus-5-5`  | high   | `engine-reviewer` on one builder group's diff, and on its fix              |
+| `group-review` | lead  | `claude-fable-5-2` | high   | `engine-reviewer` on one builder group's diff, by the gate review's method |
+| `fix-review`   | lead  | `claude-opus-5-5`  | high   | `engine-reviewer` on a fix alone: what the fix brought in                  |
 | `gate`         | lead  | `claude-opus-5-5`  | xhigh  | the gate's procedure: evidence, fuzz, the mutation run, timing, the report |
 | `gate-review`  | lead  | `claude-fable-5-2` | high   | the gate's one review of the whole diff                                    |
 
@@ -45,18 +46,19 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D2. Which model runs which job
 
-- **Pick:** Claude Fable 5.2 for the judgment a whole run builds on: a spec round's lead, planner and critic, the paper check, the gate's whole-diff review, a study. Claude Opus 5.5 for volume and procedure: builders, T, milestone coordinators, group reviews, the spec writer, rules steps, the gate's procedure.
-- **Options:** all Opus (how we ran until 2026-11-15); Fable everywhere (twice the price per token on the building and testing that are most of a run's tokens); Fable for group reviews too (open, see Revisit).
+- **Pick:** Claude Fable 5.2 for the judgment a whole run builds on: a spec round's lead, planner and critic, the paper check, a builder group's review, the gate's whole-diff review, a study. Claude Opus 5.5 for volume and procedure: builders, T, milestone coordinators, a fix's review, the spec writer, rules steps, the gate's procedure.
+- **Options:** all Opus (how we ran until 2026-11-15); Fable everywhere (twice the price per token on the building and testing that are most of a run's tokens); fix reviews on Fable too (they find what a fix brought in, 11 of M2's 38 defects, and stay on Opus).
 - **Why:**
   - Anthropic: "If you're unsure which model to use, start with Claude Opus 5.5 for most workloads", and "Use Claude Fable 5.2 for demanding reasoning and long-horizon agentic work, or when your evals on Claude Opus 5.5 at higher effort still fall short." Fable costs $8 / $40 per million tokens in and out, Opus $4 / $20; cache reads are $0.20 on both.
   - Where Opus at xhigh fell short for us is judgment. 2.1.7's plan drew 23 findings from its critic, 8 of them blocking, and its patch left 14 forms where refcore didn't follow the new rules' own text (PR #157). Size plans ran 2 to 4 times low (D11). In M2 the share of spec questions an existing rule settles fell from 87 % to 71 % (PR #168).
   - Volume is where the tokens go: builders were 15.2 of M0's 26.4 % (PR #70), and their code doesn't compound the way a spec rule does.
   - So the round's planner no longer writes its own patch: the planner (Fable) factors, the lead rules, and a fresh spec writer (Opus) writes text and refcore from the ruled plan.
-- **Decided:** the user, 2026-11-15, on the master's proposal: "I like what you said let's incorporate this". The job names and `study` are this file's.
+  - Group reviews: M2's Fable gate review found 9 blocking defects that Opus group and fix reviews had passed, each inside one group's diff (the process study after M2, §5). M3's reviews already crossed forms on both engines, and its Fable gate review still found 4, 3 of them in code Opus reviews or the coordinator's probes had passed (PR #227): so the model matters, not only the method.
+- **Decided:** the user, 2026-11-15, on the master's proposal: "I like what you said let's incorporate this". The job names and `study` are this file's. Group reviews on Fable, fix reviews on Opus in a job of their own: the user, 2026-11-19, "Yes to changes 5, 6 and 7, go ahead".
 - **Enforced:** `launch`'s `JOBS`; it refuses a model id outside its `MODELS`. A coordinator the user starts by hand takes the model from its brief's start command.
 - **Revisit:**
-  - At M3's start, from M2's gate, the first on Fable: if the gate review finds a blocking defect in code that a group review and its fix review passed, group reviews move to Fable for M3 (about 0.4 % a review becomes about 0.8 %).
-  - After 2.1.8: its critic's findings, T's STOP-REPORTs against the patch, and the words added per question, beside 2.1.7's (23 and 8; 14; about 4).
+  - At M4's gate: group reviews on Fable stay if the gate review finds at most one blocking defect in code a group review and its fix review passed (M2 9, M3 3). With more, the model isn't what lets them through: the next process step reads each review's "forms crossed" against the gate's findings. A group review costs about 0.4 % on Opus; measure it on Fable at M4.
+  - 2.1.8, read 2026-11-17 (PR #209): its critic found 15, 9 blocking (2.1.7: 23 and 8); refcore missed the new rules' own text about 50 times after its first close (14); the words added per question fell below zero (about 4). The critic on Fable earns its place; the misses moved from the plan to refcore's close, which T's twin check now catches. Next look: the round after M3.
 
 ### D3. Effort per job
 
@@ -135,9 +137,9 @@ A **run** is one coordinator, one pull request: a milestone (M2), a spec round (
 
 ### D12. The review loop
 
-- **Pick:** after each builder group, a fresh session reviews that group's diff with `engine-reviewer`, in its own worktree, writing nothing. Blocking findings go back to the group's builder. One review of the fix follows, which blocks only on a defect the fix introduced. A last fix is checked by the coordinator's own probes against refcore. There is no third review. The gate reviews the whole diff once.
+- **Pick:** after each builder group, a fresh session reviews that group's diff with `engine-reviewer`, in its own worktree, writing nothing but its probes. It puts the group's new forms through each form already built, on both engines, on texts of about ten lines, and reads the spec where the two agree. Blocking findings go back to the group's builder. One review of the fix follows, which blocks only on a defect the fix introduced. A last fix is checked by the coordinator's own probes against refcore. There is no third review. The gate reviews the whole diff once.
 - **Why:** M0 reviewed only at the gate: 5.1 % and 8 hours, in rounds of 6, 1, 3 and 0 blocking findings. Since then, fix reviews keep finding defects the fixes brought in: M1's groups 2, 3, 5 and 7 (2, 2, 1, 2), 2.1.7 (2), M2's groups 2, 3, 4 and 6 (2, 3, 1, 3). So the fix review stays, and a builder sweeps the engine against refcore over the probe files before each fix commit: every line that turns from same to different is explained.
-- **Decided:** the retro's decision 1 (2026-11-05); the bound, M1's pick P37.
+- **Decided:** the retro's decision 1 (2026-11-05); the bound, M1's pick P37; the method, the user's "Yes to changes 5, 6 and 7, go ahead" (2026-11-19), on the process study after M2.
 - **Enforced:** the skill's §3 and §8; `.claude/agents/engine-reviewer.md`.
 
 ### D13. Mutation runs
