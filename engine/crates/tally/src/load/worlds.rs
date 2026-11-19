@@ -226,9 +226,12 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
         refused_asks: BTreeSet::new(),
         files: first,
     };
+    // each loaded scenario's stack, itself first, then those under it, nearest first
+    let mut stacks: BTreeMap<&str, Vec<String>> = BTreeMap::new();
     for (id, (file, head)) in &scenarios {
-        let loaded = match stack(file, head, &scenarios, &twice, &model) {
-            Err(refusal) => Err(Stop::Refused(refusal)),
+        let chain = stack(file, head, &scenarios, &twice, &model);
+        let loaded = match &chain {
+            Err(refusal) => Err(Stop::Refused(refusal.clone())),
             Ok(chain) => {
                 let mut world = base.clone();
                 for over in chain.iter().rev() {
@@ -241,6 +244,9 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
         match loaded {
             Ok(reality) => {
                 worlds.loaded.insert((*id).to_owned(), reality);
+                if let Ok(chain) = chain {
+                    stacks.insert(id, chain);
+                }
             }
             Err(Stop::Refused(refusal)) => {
                 worlds.refused_asks.extend(declared_asks(&file.text));
@@ -248,6 +254,23 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
             }
             Err(stop @ (Stop::NotBuilt(_) | Stop::Deep)) => return Err(stop),
         }
+    }
+    // a scenario over a refused one is refused with it, though its own world loads (L §8;
+    // OPERATIONS §2.1 "refuses that scenario and those over it"): a `moves` that narrows a
+    // statement checks only the rows standing in each world (pick P19), so `late`, which removes
+    // the row `mv` leaves outside, loads where `mv` doesn't
+    let mut over_refused = Vec::new();
+    for (id, chain) in &stacks {
+        if let Some(refusal) = refused_under(chain, &worlds.refused) {
+            over_refused.push((*id, refusal));
+        }
+    }
+    for (id, refusal) in over_refused {
+        worlds.loaded.remove(id);
+        if let Some((file, _)) = scenarios.get(id) {
+            worlds.refused_asks.extend(declared_asks(&file.text));
+        }
+        worlds.refused.insert(id.to_owned(), refusal);
     }
     if let Some(refusal) = cross_world_forks(&worlds)? {
         return Err(Stop::Refused(refusal));
@@ -348,6 +371,17 @@ fn stack(
         ));
     }
     Ok(chain)
+}
+
+/// The refusal of the nearest scenario under the top of `chain` that was refused, if any:
+/// `chain` is a stack, its top first. L §8, §6.4.
+fn refused_under(chain: &[String], refused: &BTreeMap<String, Refusal>) -> Option<Refusal> {
+    for under in chain.iter().skip(1) {
+        if let Some(refusal) = refused.get(under) {
+            return Some(refusal.clone());
+        }
+    }
+    None
 }
 
 /// `LOAD-SCENARIO` at a scenario's header line. L §6.4, §8.3.

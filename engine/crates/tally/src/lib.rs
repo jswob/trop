@@ -128,8 +128,8 @@ pub mod model {
     pub use key::{KeyVal, Pat, RangeValue, Span, pattern_text};
     pub use kind::{Entry, KindInfo, KindSpec, Labels, PRELUDE_KINDS, PlaceKeys, Thing, prelude};
     pub use reality::{
-        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAsks, NameKind, Priced, Reality, SamePair,
-        price_fields, price_id,
+        BUILTIN_INDEXES, BUILTIN_INPUTS, Joint, MemberAlone, MemberAsks, NameKind, Priced, Reality,
+        SamePair, price_fields, price_id,
     };
     pub use ty::{CodeKind, PeriodWord, Shown, Ty};
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
@@ -301,6 +301,7 @@ pub mod ask {
     mod diff;
     mod explain;
     mod instance;
+    mod members;
     mod register;
     mod residuals;
     mod walkbound;

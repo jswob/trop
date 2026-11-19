@@ -4972,6 +4972,71 @@ version v1
         assert_eq!(load_lines(&one_stack, "other"), expected, "one stack");
     }
 
+    /// A scenario's `moves` narrows what a base statement covers: only the observations that
+    /// stand in its world are checked against that span. A base row the scenario replaces
+    /// with `none` doesn't stand, so `cut` loads, as refcore does (`I:A:A-13~A1`); a base row
+    /// left standing outside the narrowed span refuses `keep` alone, where refcore checks the
+    /// base's span and loads (pick P19, #232). L §5.19, §6.4; probes `tmp/m3/g3/p19`.
+    #[test]
+    fn coverage_narrowed_in_a_scenario_checks_the_rows_standing_there() {
+        const BASE: &str = "model t\n  tally 2\n  on 2026-04-30\n  start 2026-01-01\n  end 2026-06-30\n\nsource s \"s\"\nunit PLN: currency minor 0.01\nplace konto: accounts PLN lives 2025-01-01..\nplace shop: accounts PLN lives 2025-01-01..\ninput bank: observed\n\nversion open\n  cite s\n  governs always\n  known 2026-01-01\n  opening[konto] = 100.00 PLN at 2026-01-01 start \"s\"\n\nversion stmt\n  cite s\n  governs 2026-01-01..2026-04-30\n  known 2026-01-02\n  covers konto\n  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) \"a\"\n  bank[r2] = (on: 2026-03-10, kind: transfers, leg cash from konto to shop amount 20.00 PLN) \"b\"\n\nask q: bal(konto, 2026-04-30)\n";
+        let scenario = |id: &str, removes: &str| {
+            format!(
+                "scenario {id} over t\n  tally 2\n  from 2026-01-01\n\nversion {id}_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-03\n  moves stmt to 2026-01-01..2026-02-28\n{removes}"
+            )
+        };
+        let files = [
+            ("base.tally", BASE.to_owned()),
+            (
+                "cut.tally",
+                scenario("cut", "  replace bank[r2] = none \"gone\"\n"),
+            ),
+            ("keep.tally", scenario("keep", "")),
+        ];
+        assert_eq!(
+            load_lines(&files, "q"),
+            "scenario keep: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)",
+            "the row standing in keep's world"
+        );
+        // `late` over `keep` removes the row, so its own world loads; it is refused with `keep`
+        // (L §8; OPERATIONS §2.1 "refuses that scenario and those over it"; the review of G3's
+        // B-1, `tmp/m3/review-g3a/cov/st`)
+        let late = "scenario late over keep\n  tally 2\n  from 2026-01-01\n\nversion late_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-04\n  replace bank[r2] = none \"gone\"\n\nask q_late: bal(konto, 2026-04-30) in late\n";
+        let stacked = [
+            ("base.tally", BASE.to_owned()),
+            ("keep.tally", scenario("keep", "")),
+            ("late.tally", late.to_owned()),
+        ];
+        let refused = "refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)";
+        assert_eq!(
+            load_lines(&stacked, "q"),
+            format!("scenario keep: {refused}\nscenario late: {refused}"),
+            "a scenario over a refused one"
+        );
+        let given = stacked
+            .iter()
+            .map(|(path, text)| tally::Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let asks = tally::Asks::Named(vec!["q_late".to_owned()]);
+        let answer = tally::run_with_how(
+            tally::Files::new(given),
+            &tally::Request::new(asks),
+            tally::ask::How::FENCES,
+        );
+        // its own ask prints nothing, as a refused scenario's does (`cov/st/over_bad`'s `q_ob`)
+        assert_eq!(
+            answer.ok().map(|a| a.lines().to_vec()),
+            Some(vec![
+                format!("scenario keep: {refused}"),
+                format!("scenario late: {refused}"),
+            ]),
+            "its ask, refused with it"
+        );
+    }
+
     /// `none` written for a place in an observed row's leg is named as written (refcore's
     /// `place_ref`, its `ref.k`; the review of group 2's N4). L §5.10.
     #[test]

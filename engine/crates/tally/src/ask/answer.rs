@@ -17,7 +17,8 @@
 //! checked before any ask is answered; each ask has its own engine and memo; a load refusal met
 //! at run refuses the run in the base's world and the ask alone in a scenario's (refcore's
 //! `LoadAtRun`); every construct not built yet stops the run `NotBuilt` at the ask that meets
-//! it, never a guessed line.
+//! it, never a guessed line; a joint model's member's ask, `a.q`, is answered by the member
+//! alone at its place in the run's order (`members.rs`).
 
 use std::collections::BTreeMap;
 
@@ -25,6 +26,7 @@ use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line, hole_days};
 use super::diff::{Cells, cells_lines, crossed, diff_cells, diff_result};
 use super::explain::{explain_line, inputs_line, readers_line};
+use super::members;
 use super::register::{check_register_lines, name_unknown_days, register_lines, warning_lines};
 use super::residuals::residual_result;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
@@ -120,18 +122,38 @@ pub(crate) enum Turn {
     Cross([(usize, usize, String); 2]),
     /// A line, printed as it is.
     Line(String),
+    /// A member's ask the run names, `a.q` or `a.b.q`, before `members::resolve` turns it
+    /// into the turns that answer it (L §6.1).
+    Member(String),
+    /// The ask at this place of the asks of the member these aliases name, from the run's
+    /// model down, answered by that member alone, its lines under its prefix (L §6.1).
+    OfMember(Vec<String>, usize),
+    /// A stop met where the member alone answered its ask, which stops the run at this turn.
+    Stopped(Stop),
 }
 
 /// The lines a run prints for its asks: each ask's lines, the asks in id order or in the order
-/// the run names them, then the run's warnings (refcore's `Asker.run`), each ask's engine
-/// walking `days`, keeping its cells as `memo` says and reading a projection's common case
-/// as `lows` says. L §5.18, §8.5.
+/// the run names them, a joint model's member's answered by the member alone, then the run's
+/// warnings (refcore's `Asker.run`), each ask's engine walking `days`, keeping its cells as
+/// `memo` says and reading a projection's common case as `lows` says. L §5.18, §6.1, §8.5.
 ///
 /// # Errors
 ///
 /// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
 /// (E §11); a load refusal met at run; `NotBuilt` for a construct not built yet.
 pub fn answer(m: &Reality, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
+    let turns = members::resolve(m, reality_turns(m, asks)?, (days, how))?;
+    req_clocks(&[m], &turns)?;
+    answer_turns(&[m], &turns, m.warnings.clone(), days, how)
+}
+
+/// The turns of a reality with no scenario file: its asks in id order, or in the order the
+/// run names them, a member's ask (`a.q`) as `Turn::Member`. E §11 (`REQ-ASK`).
+///
+/// # Errors
+///
+/// `REQ-ASK` for the first ask the run names that the reality lacks.
+pub(super) fn reality_turns(m: &Reality, asks: &Asks) -> Result<Vec<Turn>, Stop> {
     let turns = match asks {
         Asks::Every => {
             let mut all: Vec<(&str, usize)> = m
@@ -145,26 +167,56 @@ pub fn answer(m: &Reality, asks: &Asks, days: Days, how: How) -> Result<Answered
         }
         Asks::Named(ids) => {
             let mut named = Vec::with_capacity(ids.len());
-            let mut member = false;
             for id in ids {
                 match m.asks.iter().position(|ask| ask.id == *id) {
                     Some(at) => named.push(Turn::Ask(0, at)),
-                    None if m.joint.as_ref().is_some_and(|j| j.knows(id)) => member = true,
+                    None if m.joint.as_ref().is_some_and(|j| j.knows(id)) => {
+                        named.push(Turn::Member(id.clone()));
+                    }
                     None => return Err(Stop::Refused(no_ask(id))),
                 }
-            }
-            if member {
-                return Err(Stop::NotBuilt("a member's ask at run"));
             }
             named
         }
     };
-    for turn in &turns {
-        if let Turn::Ask(_, at) = turn {
-            req_clock(m, m.asks.get(*at).ok_or_else(no_turn)?)?;
+    Ok(turns)
+}
+
+/// `REQ-CLOCK` before any ask is answered, in the run's order: the first ask whose literal cut
+/// is after its model's `on` refuses the request (E §11), whether it is an ask of the run's
+/// realities (`realities`, the base's first), a side of a diff on two stacks, a member's ask
+/// answered in the member's world, or one whose member alone refused the request.
+///
+/// # Errors
+///
+/// `REQ-CLOCK`, or the member alone's request refusal, as the run's one result.
+pub(super) fn req_clocks(realities: &[&Reality], turns: &[Turn]) -> Result<(), Stop> {
+    let base = realities.first().ok_or_else(no_turn)?;
+    for turn in turns {
+        match turn {
+            Turn::Ask(world, at) => req_clock_at(realities, *world, *at)?,
+            Turn::Cross(sides) => {
+                for (world, at, _) in sides {
+                    req_clock_at(realities, *world, *at)?;
+                }
+            }
+            Turn::OfMember(aliases, at) => {
+                let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
+                req_clock(m, m.asks.get(*at).ok_or_else(no_turn)?)?;
+            }
+            Turn::Stopped(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
+                return Err(Stop::Refused(refusal.clone()));
+            }
+            Turn::Line(_) | Turn::Member(_) | Turn::Stopped(_) => {}
         }
     }
-    answer_turns(&[m], &turns, m.warnings.clone(), days, how)
+    Ok(())
+}
+
+/// `REQ-CLOCK` for the ask at `at` of the reality at `world` among `realities`. E §11.
+fn req_clock_at(realities: &[&Reality], world: usize, at: usize) -> Result<(), Stop> {
+    let m = realities.get(world).ok_or_else(no_turn)?;
+    req_clock(m, m.asks.get(at).ok_or_else(no_turn)?)
 }
 
 /// `REQ-ASK no ask <q>`: the request names an ask that doesn't exist. E §11 (tally 2.1.3).
@@ -187,12 +239,47 @@ pub(crate) fn answer_turns(
     days: Days,
     how: How,
 ) -> Result<Answered, Stop> {
+    let (mut answered, warned) = answer_turns_apart(realities, turns, warnings, days, how)?;
+    answered.lines.extend(warning_lines(&warned));
+    Ok(answered)
+}
+
+/// The lines of `turns` in order, as [`answer_turns`] prints them, and apart from them the
+/// warnings it prints after them: `warnings`, then the walks' own, each once. L §5.18, §8.5.
+///
+/// # Errors
+///
+/// As [`answer_turns`].
+pub(super) fn answer_turns_apart(
+    realities: &[&Reality],
+    turns: &[Turn],
+    warnings: Vec<(Warn, String)>,
+    days: Days,
+    how: How,
+) -> Result<(Answered, Vec<(Warn, String)>), Stop> {
     let mut out = Vec::new();
     // each world's asks share what their engines gather, apart from another world's
-    // (refcore's one `Asker` per world)
+    // (refcore's one `Asker` per world); each member's, by its aliases, likewise
     let mut worlds: Vec<World> = realities.iter().map(|m| World::of(m, how)).collect();
+    let mut member_worlds: BTreeMap<&[String], World> = BTreeMap::new();
     for turn in turns {
         match turn {
+            Turn::OfMember(aliases, at) => {
+                let base = realities.first().ok_or_else(no_turn)?;
+                let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
+                let gathered = member_worlds
+                    .entry(aliases.as_slice())
+                    .or_insert_with(|| World::of(m, how));
+                #[cfg(feature = "fault-injection")]
+                if worlds.iter().any(|w| w.seen.plant.is_none()) {
+                    gathered.seen.plant = None;
+                }
+                // a load refusal met at run refuses the run, as in the base's world
+                let lines = gathered.answer(m, *at, days)?;
+                out.extend(members::prefixed(aliases, lines));
+            }
+            Turn::Member(_) => return Err(invariant("a member's ask the run didn't resolve")),
+            Turn::Stopped(stop) => return Err(stop.clone()),
             Turn::Ask(world, at) => {
                 let m = realities.get(*world).ok_or_else(no_turn)?;
                 let gathered = worlds.get_mut(*world).ok_or_else(no_turn)?;
@@ -211,13 +298,18 @@ pub(crate) fn answer_turns(
         }
         // the fault is planted once per run, whichever world's walk met its day
         #[cfg(feature = "fault-injection")]
-        if worlds.iter().any(|w| w.seen.plant.is_none()) {
-            for w in &mut worlds {
+        if worlds
+            .iter()
+            .chain(member_worlds.values())
+            .any(|w| w.seen.plant.is_none())
+        {
+            for w in worlds.iter_mut().chain(member_worlds.values_mut()) {
                 w.seen.plant = None;
             }
         }
     }
-    // the realities' warnings, then each world's walks' own, the base's first, each once
+    // the realities' warnings, then each world's walks' own, the base's first, each once; a
+    // member's walks warn only where the member runs alone (refcore's `Asker.member_ask`)
     let mut warned = warnings;
     for world in &worlds {
         for w in &world.seen.warnings {
@@ -226,18 +318,18 @@ pub(crate) fn answer_turns(
             }
         }
     }
-    out.extend(warning_lines(&warned));
     #[cfg(feature = "counters")]
     let mut counts = crate::Counters::default();
     #[cfg(feature = "counters")]
-    for world in &worlds {
+    for world in worlds.iter().chain(member_worlds.values()) {
         counts.merge(&world.seen.counts);
     }
-    Ok(Answered {
+    let answered = Answered {
         lines: out,
         #[cfg(feature = "counters")]
         counts,
-    })
+    };
+    Ok((answered, warned))
 }
 
 /// The lines of a diff whose two worlds sit on two stacks of scenarios: each side answered by

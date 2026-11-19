@@ -26,7 +26,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use tally::base::Code;
 use tally::load::{load_run, split_files};
 use tally::syntax::Stop;
-use tally::{Given, NotImplemented, Pin, Source};
+use tally::{Given, How, NotImplemented, Pin, Source};
 
 /// Whether `NotImplemented` passes (counted). M0 leaves 76 load stops "not built" on purpose,
 /// each listed with the milestone or issue that builds it in BUILD-LOG's "M0 built" entry
@@ -93,8 +93,8 @@ fn assert_report(lines: &[String]) {
 }
 
 /// The stop a `NotImplemented` input reached: its files read and split as `load_report` reads
-/// them (every piece is UTF-8 here, or load would have refused it), then loaded, and the
-/// `Stop` that load returns named. `unnamed` if the second load doesn't stop the same way.
+/// them (every piece is UTF-8 here, or load would have refused it), then loaded computing as
+/// `load_report` computes (`How::FENCES`), and the `Stop` that load returns named. `unnamed` if the second load doesn't stop the same way.
 fn stop_of(data: &[u8]) -> &'static str {
     let mut sources = Vec::new();
     for file in files(data) {
@@ -106,7 +106,7 @@ fn stop_of(data: &[u8]) -> &'static str {
     let Ok(split) = split_files(sources) else {
         return "unnamed";
     };
-    match load_run(&split, &BTreeMap::new(), Pin::Canonical) {
+    match load_run(&split, &BTreeMap::new(), Pin::Canonical, How::FENCES) {
         Err(Stop::NotBuilt(what)) => what,
         Err(Stop::Deep) => "a def past the counted depth",
         Ok(_) | Err(Stop::Refused(_)) => "unnamed",

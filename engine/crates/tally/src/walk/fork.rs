@@ -8,7 +8,9 @@
 //! hands the walk its acts by day), §4.2 (the day walk).
 //! Twin: the unforked walk, `Forks::Off`: projection.rs's `proj_walk` makes each read its own
 //! walk, planned through the read's day, and `end_projection` frees it, so every read walks
-//! its window from its first day (refcore's walk.py `proj_walk`, `run_to`).
+//! its window from its first day (refcore's walk.py `proj_walk`, `run_to`, walk each read
+//! anew too, but plan through E: the two part only where a plan-pass stop is dated after the
+//! read's day, which spec question Q-3 of #231 asks).
 //! Invariants: a walk is continued only where every act the read's plan pass puts on the days
 //! it walked is the act it took there, and every other plan output it walks by is the same; it
 //! keeps what it walked and takes the read's plan for the days after; any other read takes a
@@ -231,8 +233,9 @@ impl Engine {
 
     /// The day a new projection's walk read through day `through` is planned through: with
     /// forks on, `horizon`'s month end, so that a projection read day by day plans once a
-    /// month and its walk is continued; the twin plans each read's walk through its own day,
-    /// as refcore's `proj_walk` does (P §2.4, §2.5, §3.5; picks P54, P73). E §4.1, §4.3.
+    /// month and its walk is continued; the twin plans each read's walk through its own day
+    /// (refcore's `proj_walk` plans through E: spec question Q-3 of #231) (P §2.4, §2.5, §3.5;
+    /// picks P54, P73). E §4.1, §4.3.
     pub(crate) fn planned_through(&self, m: &Reality, through: Day) -> Day {
         match self.forks {
             Forks::On => horizon(m, through),

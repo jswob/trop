@@ -8,7 +8,9 @@
 //! Invariants: a row's span is its own, else its version's in force at `on`; two readings
 //! overlap only at one instant stated alike; a target's rows are grouped by pattern in the
 //! order the patterns first appear, and the first pair that breaks the rule is refused at
-//! refcore's row.
+//! refcore's row; only an observation that stands in the world, at its id's top layer, is
+//! checked against the span its version covers there (pick P19, #232; refcore checks every row
+//! against the base's span).
 
 use super::check::invariant;
 use super::steps::refuse;
@@ -20,6 +22,7 @@ use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
 use core::cmp::Ordering;
+use std::collections::BTreeMap;
 
 /// What a balance reading's value groups by (refcore's `r.val` in `check_overlap`): the unit
 /// of its quantity, a hole, or `none`, which states no balance.
@@ -440,8 +443,10 @@ fn rank_cmp(a: &Rank, b: &Rank) -> Option<Ordering> {
 }
 
 /// Every observed input's rows (refcore's `check_obs`): each id once, restated only by a
-/// later row that says `replace` (a scenario's above its base's), and each observation of a
-/// covered place dated inside the span its version covers. L §5.19, §4.6 step 2.
+/// later row that says `replace` (a scenario's above its base's), and each observation that
+/// stands in the world, of a covered place, dated inside the span its version covers there.
+/// A row a higher layer's row replaces at its id doesn't stand, and a `none` row states no
+/// movement (pick P19, #232). L §5.19, §4.6 step 2, §6.4.
 ///
 /// # Errors
 ///
@@ -457,6 +462,8 @@ pub(super) fn check_obs(m: &Reality) -> Result<(), Stop> {
                 keys.push(&o.key);
             }
         }
+        // each id's top layer: its rows there stand, a lower layer's are replaced
+        let mut top: BTreeMap<&str, usize> = BTreeMap::new();
         for key in keys {
             let mut rows = Vec::new();
             for o in input.observations.iter().filter(|o| o.key == key) {
@@ -464,9 +471,17 @@ pub(super) fn check_obs(m: &Reality) -> Result<(), Stop> {
             }
             rows.sort_by_key(|(l, k, _)| (*l, *k));
             one_id(m, qid, key, &rows)?;
+            if let Some((l, _, _)) = rows.last() {
+                top.insert(key, *l);
+            }
         }
-        for o in input.observations.iter().filter(|o| !o.removed) {
-            covered(m, o)?;
+        for o in &input.observations {
+            let stands = top
+                .get(o.key.as_str())
+                .is_some_and(|l| layer(m, &o.version) == *l);
+            if stands && !o.removed {
+                covered(m, o)?;
+            }
         }
     }
     Ok(())
