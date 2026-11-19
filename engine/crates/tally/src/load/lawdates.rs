@@ -589,8 +589,38 @@ fn dated_read(m: &Reality, at: &AtReads, dated: &LawDated, e: &Expr) -> Option<S
             return Some(name.clone());
         }
         work.extend(all_children(x));
+        work.extend(read_parts(x));
     }
     None
+}
+
+/// The parts of `e` a read evaluates that `all_children` leaves out: an aggregate's bindings
+/// (their range ends, `on`, span and `where`) and its `ties by`, a `flows` or `covered` span
+/// and its `for`, a projection's `from` (the fix review of G3's turns 5 and 6, B-1). L §4.3.
+fn read_parts(e: &Expr) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = Vec::new();
+    let span = if let Expr::Agg(agg) = e {
+        for bind in &agg.binds {
+            out.extend(bind_exprs(bind));
+            out.extend(bind.filter.as_ref());
+        }
+        out.extend(agg.ties.iter().flatten());
+        None
+    } else if let Expr::Flows(flows) = e {
+        out.extend(flows.for_key.as_ref());
+        Some(&flows.span)
+    } else if let Expr::Covered(pair) = e {
+        Some(&pair.1)
+    } else if let Expr::Bal(bal) = e {
+        out.extend(bal.proj.from.as_ref());
+        None
+    } else {
+        None
+    };
+    if let Some(span) = span {
+        out.extend(span.from.iter().chain(span.to.iter()));
+    }
+    out
 }
 
 /// Whether a name read with no law date is a law-dated input, band or def. L §4.3.

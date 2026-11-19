@@ -2,13 +2,16 @@
 //! Spec: E §4.1 steps 1 and 2 (enumerate a move's binding tuples at the cut, each binding read
 //! at the move's law date with the keys bound before it); L §5.14 Keys (a member whose `where`
 //! is a hole is a hole tuple; one whose `where` is refused ends its tuple there, a refused one;
-//! tally 2.1.6), §4.3 (a move's law date by its `at`); L §5.19 Links (the tuple of a move at
-//! its keys under a cut, its `when` read at the cut, and the places its legs give).
+//! tally 2.1.6), §4.3 (a move's law date by its `at`; a key's `where` that reads a law-dated
+//! fact, while the `at` reads a key not yet bound, waits for the tuple's `at` and is read
+//! there, in binding order: P30, P31); L §5.19 Links (the tuple of a move at its keys under a
+//! cut, its `when` read at the cut, and the places its legs give).
 //! Twin: engine/tools/refcore/moves.py (`move_tuples` with its `go`, `move_law`,
-//! `link_tuple`, `link_places`).
+//! `link_tuple`, `link_places`); refcore guards a waiting `where` (#235).
 //! Invariants: tuples come in binding order, depth first; what deciding a tuple read goes with
 //! its instance, never to the reader of the move's instances; a link whose `when` is a hole or
-//! refused is taken as existing and judged where its instance is.
+//! refused is taken as existing and judged where its instance is; a waiting `where` gives what
+//! its law-free twin gives.
 
 use super::instance::{Exists, join};
 use super::plan::{date_of, invariant, refuse};
@@ -130,10 +133,12 @@ impl Engine {
     }
 
     /// A tuple's waiting `where`s, read once the keys its `at` reads are bound, each at the
-    /// tuple's law date in binding order: a false one drops the tuple, a hole joins its
-    /// existence, a refused one makes it a refused tuple; the tuple as it was while the `at`
-    /// still reads a key not yet bound. L §4.3 (a key binding's `where` is read for each tuple
-    /// at the move's `at`), E §4.1 step 1 (P30).
+    /// tuple's law date in binding order, before a later key's refused `where`: a false one
+    /// drops the tuple, a hole joins its existence, a refused one makes it a refused tuple. The
+    /// tuple as it was while the `at` still reads a key not yet bound, or where the `at` is
+    /// refused: its instance then reads the `at` again and is refused alone, as on the path of
+    /// a `where` that reads nothing law-dated. L §4.3 (a key binding's `where` is read for each
+    /// tuple at the move's `at`), E §4.1 steps 1 and 2 (P30, P31).
     fn waiting_wheres(
         &mut self,
         m: &Reality,
@@ -141,13 +146,17 @@ impl Engine {
         mut tuple: Tuple,
         ctx: Ctx,
     ) -> Result<Option<Tuple>, Stop> {
-        if tuple.waiting.is_empty() || tuple.refused.is_some() {
+        if tuple.waiting.is_empty() {
             return Ok(Some(tuple));
         }
         self.push();
         let law = self.move_law(m, mv, &tuple.env, ctx);
         tuple.coll.merge(&self.pop_alone());
-        let law = law?;
+        let law = match law {
+            Ok(law) => law,
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(Some(tuple)),
+            Err(stop) => return Err(stop),
+        };
         if law == Law::None {
             return Ok(Some(tuple));
         }

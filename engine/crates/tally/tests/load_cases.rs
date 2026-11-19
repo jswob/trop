@@ -5137,7 +5137,16 @@ ask q: bal(konto, 2026-04-30) law cut
                 "unit PLN: currency minor 0.01\n\nindex month = month 2026-01..2026-12\n",
             )
             .replace("on act_day where", "on min(act_day for k in month) where");
-        for (text, read) in [(&band, "shift"), (&aggregate, "act_day")] {
+        // the read in the aggregate's own `where` (the fix review of G3's turns 5 and 6, B-1)
+        let binding = aggregate.replace(
+            "on min(act_day for k in month) where",
+            "on max(start_of(k) for k in month where start_of(k) <= act_day) where",
+        );
+        for (text, read) in [
+            (&band, "shift"),
+            (&aggregate, "act_day"),
+            (&binding, "act_day"),
+        ] {
             assert_eq!(refusal(text), "loaded", "{read} governs always");
             let dated = text.replace("  governs always\n", "  governs 2026..\n");
             assert_eq!(
@@ -5166,13 +5175,20 @@ ask q: bal(konto, 2026-04-30) law cut
             .collect()
     }
 
-    /// A key's `where` that reads law-dated `act_day` and `back_day` while the `at` reads the
-    /// key itself, or a key bound after it: read at its tuple's `at`, so it answers as the
-    /// same text whose `where` gives that value with no law date (P30, #235; L §4.3, E §4.1
-    /// step 1). Before, each read was `ENGINE-INVARIANT`.
-    #[test]
-    fn a_key_s_where_reads_law_dated_facts_at_its_tuple_s_at() {
-        let dated = KEY_ON
+    /// `text` with its `day` version governing `always`: the same facts on every day of the
+    /// run, read with no law date (a law-free twin).
+    fn law_free(text: &str) -> String {
+        text.replace(
+            "version day\n  cite plan\n  governs 2026..",
+            "version day\n  cite plan\n  governs always",
+        )
+    }
+
+    /// `KEY_ON` with `back_day`, its `day` version dated, `back` bound over every adjustment,
+    /// and a raise known 2026-03-15, so that three adjustments are `back`'s tuples (the fix
+    /// review of G3's turns 5 and 6, N-1, its `p1_kept`).
+    fn adjusted() -> String {
+        KEY_ON
             .replace("  governs always\n", "  governs 2026..\n")
             .replace(
                 "input act_day: date\n",
@@ -5182,7 +5198,71 @@ ask q: bal(konto, 2026-04-30) law cut
                 "  act_day = 2026-04-05\n",
                 "  act_day = 2026-04-05\n  back_day = 2026-04-20\n",
             )
-            .replace("on act_day where", "over .. where");
+            .replace("on act_day where", "over .. where")
+            .replace(
+                "version day\n",
+                "version v2\n  cite plan\n  governs 2026..\n  known 2026-03-15\n  replace rent_amt = 950.00 PLN \"raise\"\n\nversion day\n",
+            )
+    }
+
+    /// A refused `at` on a tuple whose `where` waits refuses that instance alone, as its twin's
+    /// does (the fix review's B-2, `a_atref`); a false waiting `where` drops its tuple before a
+    /// later key's refused `where` is read, in binding order (B-3, `p15_refuse_free`). P31.
+    #[test]
+    fn a_waiting_where_answers_as_its_law_free_twin_when_a_read_is_refused() {
+        let free = adjusted()
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\ninput zero: int\n\ninput one_amt: money PLN\n",
+            )
+            .replace(
+                "back[a in adjustments over .. where a.adjusts in rents]",
+                "back[a in adjustments over .. where a.adjusts in rents and act_day > back_day, b in adjustments over .. where b.adjusts == a.adjusts and one_amt / zero > one_amt]",
+            )
+            .replace("  at a.day\n", "  at b.day\n")
+            .replace(
+                "ask q:",
+                "version fixed\n  cite plan\n  governs always\n  known 2026-01-01\n  zero = 0\n  one_amt = 1.00 PLN\n\nask q:",
+            );
+        let lines = answered(&free);
+        assert_eq!(lines, answered(&law_free(&free)), "B-3");
+        assert!(
+            lines.iter().all(|line| !line.contains("refused")),
+            "{lines:?}"
+        );
+        let shut = adjusted()
+            .replace(
+                "place konto: accounts PLN lives 2026-01-01..\n",
+                "place konto: accounts PLN lives 2026-01-01..\n\nplace spare: accounts PLN lives 2026-01-01..2026-06-30\n",
+            )
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\ninput d_open: date\n\ninput d_shut: date\n",
+            )
+            .replace(
+                "move back[",
+                "move shut[p in accounts on d_open where act_day < back_day]: transfers\n  on d_shut\n  at lifespan(p).to\n  leg cash from p to landlord amount back_amt\n\nmove back[",
+            )
+            .replace(
+                "ask q:",
+                "version fixed\n  cite plan\n  governs always\n  known 2026-01-01\n  d_open = 2026-01-01\n  d_shut = 2026-06-15\n  opening[spare] = 100.00 PLN at 2026-01-01 start \"w\"\n\nask q1: bal(spare, 2026-06-30) law cut\n\nask q2: bal(konto, 2026-05-31) law cut\n\nask q:",
+            );
+        let shut_lines = answered(&shut);
+        assert_eq!(shut_lines, answered(&law_free(&shut)), "B-2");
+        assert!(
+            shut_lines.iter().any(|line| line == "q1: 0.00 PLN"),
+            "{shut_lines:?}"
+        );
+    }
+
+    /// A key's `where` that reads law-dated `act_day` and `back_day` while the `at` reads the
+    /// key itself, or a key bound after it: read at its tuple's `at`, so it answers as the
+    /// same text whose `where` gives that value with no law date (P30, #235; L §4.3, E §4.1
+    /// step 1). Before, each read was `ENGINE-INVARIANT`. Three adjustments are its tuples,
+    /// so a kept `where` and a dropped one print apart (the fix review's N-1).
+    #[test]
+    fn a_key_s_where_reads_law_dated_facts_at_its_tuple_s_at() {
+        let dated = adjusted();
         let kept = dated.replace(
             "a.adjusts in rents]",
             "a.adjusts in rents and act_day < back_day]",
@@ -5204,6 +5284,12 @@ ask q: bal(konto, 2026-04-30) law cut
         assert_eq!(back.dated_wheres, vec![0], "the where reads act_day");
         assert_eq!(answered(&kept), answered(&dated), "the where holds");
         assert_eq!(answered(&dropped), answered(&none), "the where fails");
+        assert_ne!(answered(&kept), answered(&dropped), "back's tuples print");
+        assert_eq!(
+            answered(&kept),
+            answered(&law_free(&kept)),
+            "its law-free twin"
+        );
         let twin = dated.replace("back[a in", "back[p in accounts over .., a in");
         assert_eq!(
             answered(&later),
