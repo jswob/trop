@@ -15,7 +15,7 @@
 use std::hint::black_box;
 
 use gungraun::prelude::*;
-use tally::{Answer, Asks, Days, Given, NotImplemented, Pin, Request, run};
+use tally::{Answer, Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
 /// The run's first day, S, and the projection's day t.
 const START: &str = "2025-01-01";
@@ -46,17 +46,14 @@ fn reality() -> String {
     )
 }
 
-/// The run's one file and a request for the one ask named.
-fn setup(ask: &str) -> (Vec<Given>, Request) {
-    let files = vec![Given {
+/// The run's one file, no file table, a `use` pin from the canonical text, and a request for
+/// the one ask named.
+fn setup(ask: &str) -> (Files, Request) {
+    let files = Files::new(vec![Given {
         path: "p8m4.tally".to_owned(),
         bytes: Some(reality().into_bytes()),
-    }];
-    let asked = Request {
-        asks: Asks::Named(vec![ask.to_owned()]),
-        pin: Pin::Canonical,
-        days: Days::Events,
-    };
+    }]);
+    let asked = Request::new(Asks::Named(vec![ask.to_owned()]));
     (files, asked)
 }
 
@@ -103,9 +100,10 @@ fn check(result: (Request, Result<Answer, NotImplemented>)) {
 #[library_benchmark(teardown = check)]
 #[bench::projection(setup("proj"))]
 #[bench::plain(setup("plain"))]
-fn p8_m4(input: (Vec<Given>, Request)) -> (Request, Result<Answer, NotImplemented>) {
+fn p8_m4(input: (Files, Request)) -> (Request, Result<Answer, NotImplemented>) {
     let (files, asked) = black_box(input);
-    let answer = run(files, &asked);
+    // every fence on, the event walk's days
+    let answer = run_with_how(files, &asked, black_box(How::FENCES));
     (asked, answer)
 }
 

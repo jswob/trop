@@ -5,8 +5,9 @@
 //! `engine/tools/gungraun/benches/b1_list.rs`, on the same reality.
 //! Invariants: the reality is T's vector `carried/big/b1_sum` (`engine/tests/m1/carried/big/
 //! list_100000.tally.gen`, its keys expanded as the runner expands `@keys k 1 100000@`); the
-//! library is reached only through `tally::run`, the reality given as bytes; after timing, the
-//! ask's printed lines are checked against T's stored answer, so a fast wrong answer fails.
+//! library is reached only through `tally::run_with_how`, every fence on and the event walk's
+//! days (`How::FENCES`), the reality given as bytes; after timing, the ask's printed lines
+//! are checked against T's stored answer, so a fast wrong answer fails.
 //!
 //! The row exists because no counter sees a lookup's steps (G4's review, G4-b; pick P11): a
 //! sum over 100 000 keys, each weighted by one row, read through the index's lookup once per
@@ -15,7 +16,7 @@
 
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
-use tally::{Answer, Asks, Days, Given, NotImplemented, Pin, Request, run};
+use tally::{Answer, Asks, Files, Given, How, NotImplemented, Request, run_with_how};
 
 /// The index's keys, k1 to k100000.
 const KEYS: u32 = 100_000;
@@ -38,12 +39,12 @@ fn reality() -> String {
     )
 }
 
-/// The run's one file (built untimed).
-fn given(text: &str) -> Vec<Given> {
-    vec![Given {
+/// The run's one file, no file table, a `use` pin from the canonical text (built untimed).
+fn given(text: &str) -> Files {
+    Files::new(vec![Given {
         path: "list_100000.tally".to_owned(),
         bytes: Some(text.as_bytes().to_vec()),
-    }]
+    }])
 }
 
 /// T's stored answer (`m1/vectors.refcore`, `carried/big/b1_sum`).
@@ -56,20 +57,16 @@ fn right(answer: &Result<Answer, NotImplemented>) -> bool {
 
 fn b1(bench: &mut Criterion) {
     let text = reality();
-    let asked = Request {
-        asks: Asks::Named(vec!["b1_sum".to_owned()]),
-        pin: Pin::Canonical,
-        days: Days::Events,
-    };
+    let asked = Request::new(Asks::Named(vec!["b1_sum".to_owned()]));
     bench.bench_function("B1", |t| {
         t.iter_batched(
             || given(&text),
-            |files| run(black_box(files), black_box(&asked)),
+            |files| run_with_how(black_box(files), black_box(&asked), black_box(How::FENCES)),
             BatchSize::SmallInput,
         );
     });
     assert!(
-        right(&run(given(&text), &asked)),
+        right(&run_with_how(given(&text), &asked, How::FENCES)),
         "B1: a fast wrong answer fails"
     );
 }
