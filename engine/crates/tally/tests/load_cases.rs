@@ -4998,6 +4998,43 @@ version v1
             "scenario keep: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)",
             "the row standing in keep's world"
         );
+        // `late` over `keep` removes the row, so its own world loads; it is refused with `keep`
+        // (L §8; OPERATIONS §2.1 "refuses that scenario and those over it"; the review of G3's
+        // B-1, `tmp/m3/review-g3a/cov/st`)
+        let late = "scenario late over keep\n  tally 2\n  from 2026-01-01\n\nversion late_v\n  cite s\n  governs 2026-01-01..\n  known 2026-01-04\n  replace bank[r2] = none \"gone\"\n\nask q_late: bal(konto, 2026-04-30) in late\n";
+        let stacked = [
+            ("base.tally", BASE.to_owned()),
+            ("keep.tally", scenario("keep", "")),
+            ("late.tally", late.to_owned()),
+        ];
+        let refused = "refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)";
+        assert_eq!(
+            load_lines(&stacked, "q"),
+            format!("scenario keep: {refused}\nscenario late: {refused}"),
+            "a scenario over a refused one"
+        );
+        let given = stacked
+            .iter()
+            .map(|(path, text)| tally::Given {
+                path: (*path).to_owned(),
+                bytes: Some(text.as_bytes().to_vec()),
+            })
+            .collect();
+        let asks = tally::Asks::Named(vec!["q_late".to_owned()]);
+        let answer = tally::run_with_how(
+            tally::Files::new(given),
+            &tally::Request::new(asks),
+            tally::ask::How::FENCES,
+        );
+        // its own ask prints nothing, as a refused scenario's does (`cov/st/over_bad`'s `q_ob`)
+        assert_eq!(
+            answer.ok().map(|a| a.lines().to_vec()),
+            Some(vec![
+                format!("scenario keep: {refused}"),
+                format!("scenario late: {refused}"),
+            ]),
+            "its ask, refused with it"
+        );
     }
 
     /// `none` written for a place in an observed row's leg is named as written (refcore's
