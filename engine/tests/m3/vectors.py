@@ -49,7 +49,19 @@ m3/runs.vectors holds each run vector in check.vectors' eight netstrings, the ar
 a usage error's): refcore's run (refcore_fast on PyPy, byte-equal to refcore by construction, run.py's `pypy+fast`: X's
 law asks take 1-2 s there), `source` `run`, or `rule` for a usage error (refcore must exit 2; the bytes not stored).
 
-    python3 -I -B engine/tests/m3/vectors.py              -> writes m3/check.vectors, m3/runs.vectors, m3_texts.rs
+**The spec's answers** (chunk C7; #235, #229): where refcore prints its guard (`REFCORE-NOT-YET`, never a stored
+output: INTERFACE.md §3) or answers otherwise and the spec decides, m3/spec.tsv holds the spec's answer, one vector per
+row, M2's `spec/…` form: `id` (`spec/<group>/<name>`, group `spec-<group>`), `cwd`, `args`, `twin`, `code`, `out`,
+`refcore_code`, `refcore`, `section`. A row with a `twin` (a law-free twin's file, in the row's folder) takes its bytes
+from refcore's run of the twin (the twin's name read as the row's: P30, L §4.3, E §4.1 step 1); its `code` and `out`
+are `-`. Any other row states its `code` and `out` (`\\n` a new line), read against `section`. `refcore_code` and
+`refcore` are refcore's own run of the row, kept beside it and run again on every write and `--check`: a row whose
+refcore bytes move is the round's fix, and the row moves to m3/runs.vectors. A row of #229 (`section` names it) must
+be refcore's bytes with the asks refused alone added (refcore's `run` prints nothing for them). Stored in
+m3/spec.vectors, check.vectors' eight netstrings, `source` `spec`.
+
+    python3 -I -B engine/tests/m3/vectors.py              -> writes m3/check.vectors, m3/runs.vectors, m3/spec.vectors,
+                                                             m3_texts.rs
     python3 -I -B engine/tests/m3/vectors.py --check      -> exit 1 if any isn't what refcore's runs give
     python3 -I -B engine/tests/m3/vectors.py --show GLOB  -> the predicted output of the vectors whose id matches
     python3 -I -B engine/tests/m3/vectors.py --confirm    -> refcore's `check` on every vector, tied, stored (C4)
@@ -75,6 +87,9 @@ RUNS = os.path.join(HERE, 'runs.vectors')
 FIXTURES = os.path.join(HERE, 'check', 'fixtures.tsv')
 STAGES = os.path.join(HERE, 'changes', 'stages.tsv')
 RUN_ROWS = os.path.join(HERE, 'run', 'runs.tsv')
+SPEC_ROWS = os.path.join(HERE, 'spec.tsv')
+SPEC_STORE = os.path.join(HERE, 'spec.vectors')
+SPEC_COLUMNS = ['id', 'cwd', 'args', 'twin', 'code', 'out', 'refcore_code', 'refcore', 'section']
 REAL11 = 'engine/tests/integration/amendments/real11'
 HOUSEHOLD = 'engine/spec/amendments/household/'
 # the files a change edits (its diff's lines are its own); every other real11 file is the household's but `on`
@@ -252,6 +267,82 @@ def run_vectors():
             (k, os.path.normpath(os.path.join(cwd, k))) for k in r['extra'].split() if k != '-']
         out.append({'id': r['id'], 'group': r['id'].split('/')[0], 'cwd': cwd, 'args': args, 'table': table,
                     'rule': r['rule'] if r['rule'] == 'usage' else ''})
+    return out
+
+
+def unescape(s):
+    """A spec.tsv cell's text: `\\n` a new line, `\\\\` a backslash (m2/spec.py's form)."""
+    out, i = [], 0
+    while i < len(s):
+        if s[i] == '\\' and i + 1 < len(s):
+            out.append({'n': '\n', '\\': '\\'}.get(s[i + 1], '\\' + s[i + 1]))
+            i += 2
+        else:
+            out.append(s[i])
+            i += 1
+    return ''.join(out)
+
+
+def spec_vectors():
+    """m3/spec.tsv's rows, each {id, group, cwd, args, table, twin, code, out, refcore_code, refcore, section}."""
+    out = []
+    for r in tsv(SPEC_ROWS, SPEC_COLUMNS):
+        parts = r['id'].split('/')
+        if len(parts) != 3 or parts[0] != 'spec' or not r['section']:
+            sys.exit('spec.tsv: %s is no spec/<group>/<name> with a section' % r['id'])
+        if (r['twin'] == '-') == (r['out'] == '-'):
+            sys.exit('spec.tsv: %s names a twin or states its out, not both' % r['id'])
+        cwd = os.path.normpath(PREFIX + r['cwd'])
+        args = r['args'].split()
+        out.append(dict(r, group='spec-' + parts[1], cwd=cwd, args=args, table=table_of(r['id'], cwd, args[1:]),
+                        out=unescape(r['out']), refcore=unescape(r['refcore'])))
+    if len({v['id'] for v in out}) != len(out):
+        sys.exit('spec.tsv: two rows share an id')
+    return out
+
+
+def refcore_any(checks):
+    """refcore's run of each check as it is, its guard included (`refcore` exits on one): [{rc, out}]."""
+    rc_hash = R.refcore_hash()
+
+    def one(c):
+        e = R.run_one(c, FAST, R.BUDGET, False, rc_hash, R.T + 'cache')
+        if e['over'] or e['rc'] is None or e['rc'] < 0 or 'Traceback' in e['out']:
+            sys.exit('%s: over the budget, killed or crashed on refcore' % c['id'])
+        return e
+    with ThreadPoolExecutor(JOBS) as ex:
+        return list(ex.map(one, checks))
+
+
+def spec_of(svs):
+    """The spec's answer of each spec.tsv row, {id: (exit, output, 'spec')}, after its ties: refcore's run of the row is
+    its `refcore` cells; a twin row's answer is refcore's run of its twin, the twin's name read as the row's (the twin
+    must print no REFCORE-NOT-YET); a #229 row's output less its asks refused alone is refcore's."""
+    def twin_args(v):
+        dated = [a for a in v['args'][1:] if not a.startswith('--')][0]
+        return [v['twin'] if a == dated else a for a in v['args']], dated
+    rows = refcore_any([run_check(v, v['args']) for v in svs])
+    twins = [v for v in svs if v['twin'] != '-']
+    trun = refcore_any([run_check(v, twin_args(v)[0], table_of(v['id'], v['cwd'], twin_args(v)[0][1:]))
+                        for v in twins])
+    by_twin = {v['id']: e for v, e in zip(twins, trun)}
+    out, bad = {}, []
+    for v, e in zip(svs, rows):
+        if (str(e['rc']), e['out']) != (v['refcore_code'], v['refcore']):
+            bad.append('%s: refcore\'s run moved (exit %s): %r' % (v['id'], e['rc'], e['out'][:300]))
+        if v['twin'] != '-':
+            t = by_twin[v['id']]
+            if 'REFCORE-NOT-YET' in t['out']:
+                bad.append('%s: refcore guards the twin %s' % (v['id'], v['twin']))
+            out[v['id']] = (t['rc'], t['out'].replace(v['twin'], twin_args(v)[1]), 'spec')
+        else:
+            out[v['id']] = (int(v['code']), v['out'], 'spec')
+        if '#229' in v['section']:
+            less = ''.join(l for l in out[v['id']][1].splitlines(True) if not ALONE.match(l.rstrip('\n')))
+            if less != v['refcore'] or less == out[v['id']][1]:
+                bad.append('%s: the answer less its asks refused alone isn\'t refcore\'s run' % v['id'])
+    if bad:
+        sys.exit('\n'.join('FAIL ' + b for b in bad) + '\nm3/spec.tsv\'s ties fail')
     return out
 
 
@@ -440,8 +531,8 @@ def texts_rs(vs):
     engine/tests/, sorted (rustfmt's layout, as m0_texts.rs)."""
     m0 = open(M0.TEXTS_RS, encoding='utf-8').read() + open(R.T + 'runner/src/m0_spec_texts.rs', encoding='utf-8').read()
     paths = sorted({under_tests(repo) for v in vs for _, repo in v['table']} - set(re.findall(r'"([^"]+)",\n', m0)))
-    out = ['//! The texts M3\'s vectors name (`m3/check.vectors`, `m3/runs.vectors`) that `m0_texts.rs` and',
-           '//! `m0_spec_texts.rs` don\'t, by their path under `engine/tests/`, sorted: generated by',
+    out = ['//! The texts M3\'s vectors name (`m3/check.vectors`, `m3/runs.vectors`, `m3/spec.vectors`) that',
+           '//! `m0_texts.rs` and `m0_spec_texts.rs` don\'t, by their path under `engine/tests/`, sorted: generated by',
            '//! `m3/vectors.py` (its `--check` holds this file to it), so the tests read no file',
            '//! (`INTERFACE.md` §4). Never edited by hand.',
            '',
@@ -496,19 +587,24 @@ def load_at_run(vs, pred):
 def main(argv):
     R.need_watchdog()
     equivalence()
-    vs, rvs = vectors(), run_vectors()
+    vs, rvs, svs = vectors(), run_vectors(), spec_vectors()
+    if len({v['id'] for v in vs + rvs + svs}) != len(vs + rvs + svs):
+        sys.exit('two vectors of m3\'s stores share an id')
     if '--show' in argv:
         glob = argv[argv.index('--show') + 1] if argv.index('--show') + 1 < len(argv) else '*'
         vs = [v for v in vs if fnmatch.fnmatchcase(v['id'], glob)]
         rvs = [v for v in rvs if fnmatch.fnmatchcase(v['id'], glob)]
+        svs = [v for v in svs if fnmatch.fnmatchcase(v['id'], glob)]
         pred = dict(predict(vs), **runs_of(rvs))
-        for v in vs + rvs:
+        pred.update(spec_of(svs))
+        for v in vs + rvs + svs:
             rc, whole, src = pred[v['id']]
             print('=== %s (exit %s, %s)\n%s' % (v['id'], rc, src, whole), end='')
         return 0
     pred = predict(vs)
     kinds(vs, pred)
     runs = runs_of(rvs)
+    specs = spec_of(svs)
     bad, notes = tie(vs, pred)
     for n in notes:
         print('note: ' + n)
@@ -526,7 +622,8 @@ def main(argv):
             print('\n'.join('FAIL ' + b for b in bad))
             sys.exit('%d vectors: refcore\'s check differs from what its run predicts: a STOP-REPORT, not a vector'
                      % len(bad))
-    data, rdata, rs = stored(vs, pred), stored(rvs, runs, ()), texts_rs(vs + rvs)
+    data, rdata, rs = stored(vs, pred), stored(rvs, runs, ()), texts_rs(vs + rvs + svs)
+    sdata = stored(svs, specs, ())
     counts = {}
     for v in vs:
         first = pred[v['id']][1].split('\n', 1)[0]
@@ -538,22 +635,26 @@ def main(argv):
         old = open(STORE, 'rb').read() if os.path.exists(STORE) else b''
         olds = open(TEXTS_RS, encoding='utf-8').read() if os.path.exists(TEXTS_RS) else ''
         oldr = open(RUNS, 'rb').read() if os.path.exists(RUNS) else b''
-        if old != data or olds != rs or oldr != rdata:
-            print('m3/check.vectors, m3/runs.vectors or runner/src/m3_texts.rs is not what refcore\'s runs give: run '
-                  'm3/vectors.py')
+        oldp = open(SPEC_STORE, 'rb').read() if os.path.exists(SPEC_STORE) else b''
+        if old != data or olds != rs or oldr != rdata or oldp != sdata:
+            print('m3/check.vectors, m3/runs.vectors, m3/spec.vectors or runner/src/m3_texts.rs is not what refcore\'s '
+                  'runs and m3/spec.tsv give: run m3/vectors.py')
             return 1
-        print('m3/check.vectors: %d vectors (%s), each %s; m3/runs.vectors: %d vectors, refcore\'s runs' % (
-            len(vs), summary, 'refcore\'s check, tied to its run\'s prediction' if confirmed else
-            'predicted from refcore\'s run and tied', len(rvs)))
+        print('m3/check.vectors: %d vectors (%s), each %s; m3/runs.vectors: %d vectors, refcore\'s runs; '
+              'm3/spec.vectors: %d, the spec\'s answers, tied' % (
+                  len(vs), summary, 'refcore\'s check, tied to its run\'s prediction' if confirmed else
+                  'predicted from refcore\'s run and tied', len(rvs), len(svs)))
         return 0
     with open(STORE, 'wb') as f:
         f.write(data)
     with open(RUNS, 'wb') as f:
         f.write(rdata)
+    with open(SPEC_STORE, 'wb') as f:
+        f.write(sdata)
     with open(TEXTS_RS, 'w', encoding='utf-8', newline='') as f:
         f.write(rs)
-    print('m3/check.vectors: %d vectors written (%s); m3/runs.vectors: %d; runner/src/m3_texts.rs: %d texts' % (
-        len(vs), summary, len(rvs), rs.count('include_str!')))
+    print('m3/check.vectors: %d vectors written (%s); m3/runs.vectors: %d; m3/spec.vectors: %d; '
+          'runner/src/m3_texts.rs: %d texts' % (len(vs), summary, len(rvs), len(svs), rs.count('include_str!')))
     return 0
 
 

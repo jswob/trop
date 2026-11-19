@@ -1,0 +1,40 @@
+model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+input fee: money PLN
+input due[m in months]: bool
+
+move pay[m in months where due[m]]: transfers
+  on start_of(m)
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+version c
+  cite s
+  governs 2026-01..2026-03
+  known 2026-01-01
+  due = true
+
+version c2
+  cite s
+  governs 2026-04..
+  known 2026-01-01
+  due = false
+
+ask q: bal(konto, 2026-06-30)

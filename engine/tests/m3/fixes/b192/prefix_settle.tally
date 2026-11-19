@@ -1,0 +1,85 @@
+model prefix_settle
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M3 C7, #192 row 50 (G5 fix NB-2, settle caches keyed without upto): t reads p, whose sum over ovs legs needs the walk up to a leg's day while apay's when reads p; zback, bound over adjustments, is listed after; then b, c and f read the whole walk: three adjustments, three back pays"
+
+source card "c"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+kind ovs: event certain
+  leg cash: PLN
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input q[m in months]: money PLN
+
+input base: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place bank: outside lives 1900-01-01..
+
+def p[m in months]: money PLN = if pos(m) == 1 then base else p[m - 1] - sum(o.cash.amount for o in ovs over m)
+
+move op[m in months]: ovs
+  on start_of(m)
+  leg cash from bank to konto amount q[m]
+
+move apay[m in months]: transfers
+  on end_of(m)
+  when p[m] > 0 PLN
+  leg cash from konto to bank amount p[m]
+
+move rent[m in months]: rents
+  on start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move zback[a in adjustments over .. where a.adjusts in rents]: transfers
+  on a.day
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+ask t: p[m] for m in [2026-02, 2026-07]
+
+ask b: bal(konto, 2026-12-31)
+
+ask c: count(a in adjustments over .. where a.adjusts in rents)
+
+ask f: flows(zback, 2026-01-01 .. 2026-12-31)
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  base = 1000.00 PLN "c"
+  rent_amt = 900.00 PLN "c"
+  back_amt = 50.00 PLN "c"
+  q[2026-01] = 10.00 PLN "c"
+  q[2026-02] = 20.00 PLN "c"
+  q[2026-03] = 30.00 PLN "c"
+  q[2026-04] = 40.00 PLN "c"
+  q[2026-05] = 50.00 PLN "c"
+  q[2026-06] = 60.00 PLN "c"
+  q[2026-07] = 70.00 PLN "c"
+  q[2026-08] = 70.00 PLN "c"
+  q[2026-09] = 70.00 PLN "c"
+  q[2026-10] = 70.00 PLN "c"
+  q[2026-11] = 70.00 PLN "c"
+  q[2026-12] = 70.00 PLN "c"
+  opening[konto] = 20000.00 PLN at 2026-01-01 start "c"
+
+version v2
+  cite card
+  governs always
+  known 2026-03-15
+  replace rent_amt = 950.00 PLN "raise"

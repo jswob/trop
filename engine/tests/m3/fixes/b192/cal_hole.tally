@@ -1,0 +1,47 @@
+model cal_hole
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+  note "T, M3 C7, #192 row 22 (M2 G3 review NB-4): a business-day function over a calendar with no row, and over one whose row is a hole, in an ask, a def, explain and a key's where: each hole tagged with its calendar"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+
+input fee: money PLN
+input cal: calendar
+input hcal: calendar
+input d0: date
+
+def nb: date = add_business(d0, 1, cal)
+
+move pay[d in wk where is_business(d, cal)]: transfers
+  on d
+  leg cash from konto to shop amount fee
+
+move pay2[d in wk where is_business(d, hcal)]: transfers
+  on d
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  d0 = 2026-01-05
+  hcal = ?"which calendar"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+ask qp: add_business(2026-01-05, 1, cal)
+ask qb: is_business(2026-01-05, cal)
+ask qh: add_business(2026-01-05, 1, hcal)
+ask qhb: is_business(2026-01-05, hcal)
+ask qn: nb
+ask qs: explain nb
+ask q: bal(konto, 2026-01-31)

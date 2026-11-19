@@ -3,14 +3,56 @@
 //! places over every key, not outside, of four kinds, in PLN by `unit(x)`, and `unit()` of a
 //! quantity unit's place (`RUN-DOMAIN`); the G3 review's fixes as runs (`m3/fixes/g3/`); and
 //! #192's standing items (`m3/fixes/b192/`). Each held to refcore's run (`m3/runs.vectors`,
-//! groups `last`, `fixes` and `b192`), byte for byte.
-//! `test = false` until M3 is tagged (`engine/tools/milestones.toml`).
+//! groups `last`, `fixes` and `b192`), byte for byte. The M3 gate's fixes (chunk C7,
+//! `m3/fixes/lawdate/`, `m3/fixes/alone/`): a move's law-dated reads (#235) where refcore
+//! answers (group `lawdate`), and the spec's answers where refcore prints its guard or, for a
+//! scenario file's ask refused alone, nothing (`m3/spec.vectors`, groups `spec-lawdate` and
+//! `spec-alone`; refcore's bytes beside each row in `m3/spec.tsv`).
+//! Gating since M3's marker (`engine/tools/milestones.toml`).
 
 #![forbid(unsafe_code)]
 
 #[cfg(test)]
 mod tests {
-    use tally_runner::m3::{RUNS, group_failures};
+    use tally_runner::m3::{RUNS, SPEC, group_failures};
+
+    /// Every vector of `group` in `store` but the held ones prints its stored bytes.
+    fn group_holds(store: &[u8], group: &str) {
+        let (failed, of) =
+            group_failures((store, "m3_fixes"), group, (0, 1)).expect("the store reads");
+        assert!(
+            failed.is_empty(),
+            "{} of {of} vectors of {group} fail:\n{}",
+            failed.len(),
+            failed.join("\n")
+        );
+    }
+
+    /// A move's law-dated reads where refcore answers (the M3 gate's B-1, B-2, the fix review's
+    /// probes): a calendar read by a business-day function and a def with its own `at` need no
+    /// law date, with or without the move's `at`; a law-dated read in a move with no `at` is
+    /// `LOAD-LAWDATE … states no at` (L §4.2, §4.3).
+    #[test]
+    fn m3_fixes_lawdate() {
+        group_holds(RUNS, "lawdate");
+    }
+
+    /// The spec's answers for #235 (refcore prints its guard): a law-dated read in a key's `on`
+    /// before the `at` is `LOAD-LAWDATE` at load (B-3, G-1 B, P28); a key's `where` waiting for its
+    /// tuple's `at` answers as its law-free twin (P30, P31, B-3, G-1 C and D); a calendar's
+    /// law-dated key in a move with no `at` is `LOAD-LAWDATE` (G-1 A). The gate review's items 1
+    /// and 15 are held for #235.
+    #[test]
+    fn m3_fixes_spec_lawdate() {
+        group_holds(SPEC, "spec-lawdate");
+    }
+
+    /// The spec's answer for #229 (B-4): `run` prints a scenario file's ask refused alone in its
+    /// place, as `check` does (OPERATIONS §2.1, §2.3); refcore's run prints nothing for it.
+    #[test]
+    fn m3_fixes_spec_alone() {
+        group_holds(SPEC, "spec-alone");
+    }
 
     #[test]
     fn m3_fixes_last() {
@@ -43,7 +85,11 @@ mod tests {
 
     /// #192's standing items for T (`m3/fixes/b192/`, group `b192`; T's plan §5): G1's fix
     /// N-c, `solve` over a rate and over a num with a unit; the review of P73's fix, one
-    /// projection read on falling days within a month across a refused leg and a hole.
+    /// projection read on falling days within a month across a refused leg and a hole; and
+    /// the builder's plan's rows 22, 40, 50, 51 and 52 (chunk C7): a calendar's hole, pads
+    /// across a continued walk, a settlement listed inside a walk up to a leg's day, `explain`
+    /// stopping at an answer, `HOLE-SAME` over two legs at one place (its residual line held
+    /// for #192).
     #[test]
     fn m3_fixes_backlog() {
         let (failed, of) =
