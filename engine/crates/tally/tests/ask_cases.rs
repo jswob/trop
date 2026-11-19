@@ -262,6 +262,55 @@ total: ?"When is the fee charged?" (fee_day)
         );
     }
 
+    /// `unit(x)` at run (L §5.10 Kind and unit, §8.4): of a bound place, its currency as a
+    /// key of `currencies`, or refused `RUN-DOMAIN` for a quantity unit; of a balance, the
+    /// key the money carries.
+    const UNITS: &str = r#"model u
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit fund_unit "jednostka"
+
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place fund: holdings fund_unit lives 2026-01-01..
+
+version v
+  cite s
+  known 2026-01-01
+  opening[konto] = 10.00 PLN at 2026-01-01 start "w"
+  opening[konto_eur] = 2.00 EUR at 2026-01-01 start "w"
+  opening[fund] = 3 at 2026-01-01 start "w"
+
+ask in_pln: sum(1 for x in places over .. where x in accounts and unit(x) == PLN)
+
+ask of_money: unit(bal(konto_eur, 2026-01-31)) == EUR and unit(bal(konto, 2026-01-31)) == PLN
+
+ask of_fund: sum(1 for x in places over .. where unit(x) == EUR)
+"#;
+
+    #[test]
+    fn unit_of_a_place_is_its_currency_key_and_a_quantity_unit_is_refused() {
+        assert_eq!(
+            lines_of(UNITS, Days::Events),
+            [
+                "in_pln: 1",
+                "  cut 2026-03-01",
+                "of_fund: refused: RUN-DOMAIN unit(fund): its unit fund_unit is a quantity unit, a key of no unit kind",
+                "  cut 2026-03-01",
+                "of_money: true",
+                "  cut 2026-03-01",
+            ],
+            "refcore's lines"
+        );
+    }
+
     /// Dated memberships of a kind tested `on` a day: a day, a hole, `never`, and `none` (a
     /// date input read at a key outside its thing's lifespan, with no row).
     const MEMBERSHIP: &str = r#"model mt
