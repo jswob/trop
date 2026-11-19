@@ -10,10 +10,12 @@
 //! Invariants: bands and defs only ever turn law-dated, to their least fixed point, each
 //! pass over them in declaration order as refcore's; a read made only at a day the reader
 //! states (a price, `last`, `since`) or of a calendar at each day asked dates nothing; an
-//! ask's reads are taken in the order it first made them; every search is a loop over an
-//! explicit stack (R-16).
+//! ask's reads are taken in the order it first made them; a move's reads, its keys' among
+//! them, are judged by one rule (`move_read_dated`) on the reads load typed, each with its
+//! relation, never on an expression walked again; every search is a loop over an explicit
+//! stack (R-16).
 
-use super::check::{Files, Walked, invariant};
+use super::check::{Files, KeyReads, Walked, invariant};
 use super::cone::all_children;
 use super::steps::refuse;
 use crate::base::{Code, Load, Refusal};
@@ -468,21 +470,14 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
         if let Some(read) = direct.iter().find(|node| at_reads_dated(m, dated, node)) {
             return Some(format!("move {id}'s at reads law-dated {}", read.id));
         }
-        return unbound_key_lawdate(m, at, dated, mv);
+        return unbound_key_lawdate(m, walked, dated, mv);
     }
     for item in [
         Node::new(NodeKind::Move, id),
         Node::new(NodeKind::MoveOn, id),
     ] {
         for (target, rels) in m.graph.reads(&item).into_iter().flatten() {
-            if !dating_move(rels) {
-                continue;
-            }
-            let found = match dated_item(m, at, dated, target) {
-                Some(found) => found,
-                None => input_dated(m, target),
-            };
-            if found {
+            if move_read_dated(m, at, dated, (target, rels)) {
                 return Some(format!("{id} reads law-dated facts and states no at"));
             }
         }
@@ -490,62 +485,92 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
     None
 }
 
-/// The `LOAD-LAWDATE` message for a move's key read with no law date: a key whose binding is
-/// read before the `at` can be, since the `at` reads it or a key bound after it, has its
-/// domain, `on` and span read with none (refcore's `move_law`, the engine's
-/// `walk/tuples.rs` `move_law`), so a law-dated fact there is refused, not met at run (#235,
-/// P28). Its `where` waits instead, and is read at its tuple's `at` once every key the `at`
-/// reads is bound (P30, `dated_wheres`). L §4.3 (a move's
-/// `at` dates what it reads; every chain of readers ends at a written date, P-6), §5.14 Keys.
-fn unbound_key_lawdate(
+/// Whether a move's read of `target` with `rels` reads a law-dated fact, and so needs the
+/// move's law date: a read made at the law date at all (not a binding, `flows`, `observed`
+/// or a balance, which read the timeline; not at a day the reader states, a calendar at each
+/// day asked, a pin's target, nor a read inside `as if {law D}`), of a law-dated band, of a
+/// def that is law-dated or takes its reader's law date, or of a law-dated input (refcore's
+/// `m_check_move_lawdates`). The one rule a move's checks decide by: its reads with no `at`,
+/// a key's reads before its `at` (#235) and a key's `where` that waits for it (P30), each
+/// read as load typed it, with its relation. L §4.3 (whatever reads a law-dated fact states
+/// its law date; the two reads that aren't law-dated), §4.2 (a calendar read needs none).
+fn move_read_dated(
     m: &Reality,
     at: &AtReads,
     dated: &LawDated,
+    (target, rels): (&Node, &[Rel]),
+) -> bool {
+    dating_move(rels) && dated_item(m, at, dated, target).unwrap_or_else(|| input_dated(m, target))
+}
+
+/// The first read of `reads` that needs the move's law date, by [`move_read_dated`].
+fn first_dated(m: &Reality, at: &AtReads, dated: &LawDated, reads: &[(Node, Rel)]) -> Option<Node> {
+    reads
+        .iter()
+        .find(|(target, rel)| move_read_dated(m, at, dated, (target, core::slice::from_ref(rel))))
+        .map(|(target, _)| target.clone())
+}
+
+/// The first of a move's keys from position `pos` on that the move's `at` reads: while it is
+/// unbound the move has no law date (the walk's `move_law`, by the same `reads_var`).
+/// L §4.3, §5.14.
+fn at_reads_key(mv: &MoveInfo, pos: usize) -> Option<&str> {
+    let at_expr = mv.decl.at.as_ref()?;
+    mv.binds
+        .iter()
+        .skip(pos)
+        .find(|later| crate::eval::reads_var(at_expr, &later.var))
+        .map(|later| later.var.as_str())
+}
+
+/// The `LOAD-LAWDATE` message for a move's key read with no law date: a key whose binding is
+/// read before the `at` can be, since the `at` reads it or a key bound after it, has its
+/// domain, `on` and span read with none (refcore's `move_law`, the engine's
+/// `walk/tuples.rs` `move_law`), so a read there that needs a law date
+/// ([`move_read_dated`]) is refused, not met at run (#235, P28). A def that takes its
+/// reader's law date is named so: the chain of its readers ends at no written date (L §4.3
+/// `at reader`). Its `where` waits instead, and is read at its tuple's `at` once every key the
+/// `at` reads is bound (P30, [`dated_wheres`]). L §4.3 (a move's `at` dates what it reads;
+/// every chain of readers ends at a written date, P-6), §5.14 Keys.
+fn unbound_key_lawdate(
+    m: &Reality,
+    walked: &Walked,
+    dated: &LawDated,
     mv: &MoveInfo,
 ) -> Option<String> {
-    let at_expr = mv.decl.at.as_ref()?;
-    for (i, bind) in mv.binds.iter().enumerate() {
-        let Some(unbound) = mv
-            .binds
-            .iter()
-            .skip(i)
-            .find(|later| crate::eval::reads_name(at_expr, &later.var))
-        else {
+    let at = &walked.at_reads;
+    let keys = walked.key_reads.get(&mv.id)?;
+    for (i, (bind, reads)) in mv.binds.iter().zip(keys).enumerate() {
+        let unbound = at_reads_key(mv, i)?;
+        let Some(read) = first_dated(m, at, dated, &reads.binding) else {
             continue;
         };
-        let read = bind_exprs(&bind.node)
-            .into_iter()
-            .find_map(|e| dated_read(m, at, dated, e));
-        if let Some(read) = read {
-            return Some(format!(
-                "move {}'s key {} reads law-dated {read} with no law date: its at reads {}",
-                mv.id, bind.var, unbound.var
-            ));
-        }
+        let reader = read.kind == NodeKind::Def
+            && m.defs
+                .get(&read.id)
+                .is_some_and(|def| def.at == Some(LawDate::Reader));
+        let what = if reader {
+            format!(
+                "reaches {}, which takes its law date from its reader,",
+                read.id
+            )
+        } else {
+            format!("reads law-dated {}", read.id)
+        };
+        return Some(format!(
+            "move {}'s key {} {what} with no law date: its at reads {unbound}",
+            mv.id, bind.var
+        ));
     }
     None
 }
 
-/// The expressions a binding reads before its members exist: its range's ends and step, its
-/// `on` and its span's ends. L §5.6, §5.14 Keys.
-fn bind_exprs(bind: &crate::syntax::Bind) -> Vec<&Expr> {
-    let mut out: Vec<&Expr> = Vec::new();
-    if let crate::syntax::Domain::Range(range) = &bind.domain {
-        let (from, to, step) = range.as_ref();
-        out.extend([from, to]);
-        out.extend(step);
-    }
-    out.extend(bind.on.iter());
-    if let Some(span) = &bind.over {
-        out.extend(span.from.iter().chain(span.to.iter()));
-    }
-    out
-}
-
-/// Each move's keys whose `where` reads a law-dated fact, by position (`MoveInfo`'s
-/// `dated_wheres`): the walk reads each at its tuple's `at`, once the keys the `at` reads are
-/// bound (P30). L §4.3 (a key binding's `where` is read for each tuple at a move's `at`),
-/// E §4.1 step 1.
+/// Each move's keys whose `where` waits for the move's `at` (`MoveInfo`'s `dated_wheres`), by
+/// position: the `at` reads that key or one bound after it, and the `where` makes a read that
+/// needs a law date ([`move_read_dated`]). The walk reads each at its tuple's `at` once the
+/// keys the `at` reads are bound (P30). A move with no `at` has none: [`move_lawdate`] refuses
+/// its law-dated reads. L §4.3 (a key binding's `where` is read for each tuple at a move's
+/// `at`), E §4.1 step 1.
 pub(super) fn dated_wheres(
     m: &Reality,
     walked: &Walked,
@@ -555,11 +580,12 @@ pub(super) fn dated_wheres(
     let mut out = Vec::new();
     for (id, mv) in m.moves.entries() {
         let mut found: Vec<usize> = Vec::new();
-        for (i, bind) in mv.binds.iter().enumerate() {
-            let Some(filter) = &bind.node.filter else {
-                continue;
-            };
-            if dated_read(m, at, dated, filter).is_some() {
+        let keys: &[KeyReads] = walked.key_reads.get(id).map_or(&[], Vec::as_slice);
+        for (i, reads) in keys.iter().enumerate() {
+            if at_reads_key(mv, i).is_none() {
+                break;
+            }
+            if first_dated(m, at, dated, &reads.filter).is_some() {
                 found.push(i);
             }
         }
@@ -568,71 +594,6 @@ pub(super) fn dated_wheres(
         }
     }
     out
-}
-
-/// The first law-dated input, band or def expression `e` reads, its parts walked whole: a
-/// name, a call's name (a band is read as `b(x)`), an aggregate's terms (the review of G3's
-/// turn 4, B-1). L §4.3.
-fn dated_read(m: &Reality, at: &AtReads, dated: &LawDated, e: &Expr) -> Option<String> {
-    let mut work = vec![e];
-    while let Some(x) = work.pop() {
-        let name = if let Expr::Name(name) = x {
-            Some(name)
-        } else if let Expr::Call(call) = x {
-            Some(&call.name)
-        } else {
-            None
-        };
-        if let Some(name) = name
-            && name_dated(m, at, dated, name)
-        {
-            return Some(name.clone());
-        }
-        work.extend(all_children(x));
-        work.extend(read_parts(x));
-    }
-    None
-}
-
-/// The parts of `e` a read evaluates that `all_children` leaves out: an aggregate's bindings
-/// (their range ends, `on`, span and `where`) and its `ties by`, a `flows` or `covered` span
-/// and its `for`, a projection's `from` (the fix review of G3's turns 5 and 6, B-1). L §4.3.
-fn read_parts(e: &Expr) -> Vec<&Expr> {
-    let mut out: Vec<&Expr> = Vec::new();
-    let span = if let Expr::Agg(agg) = e {
-        for bind in &agg.binds {
-            out.extend(bind_exprs(bind));
-            out.extend(bind.filter.as_ref());
-        }
-        out.extend(agg.ties.iter().flatten());
-        None
-    } else if let Expr::Flows(flows) = e {
-        out.extend(flows.for_key.as_ref());
-        Some(&flows.span)
-    } else if let Expr::Covered(pair) = e {
-        Some(&pair.1)
-    } else if let Expr::Bal(bal) = e {
-        out.extend(bal.proj.from.as_ref());
-        None
-    } else {
-        None
-    };
-    if let Some(span) = span {
-        out.extend(span.from.iter().chain(span.to.iter()));
-    }
-    out
-}
-
-/// Whether a name read with no law date is a law-dated input, band or def. L §4.3.
-fn name_dated(m: &Reality, at: &AtReads, dated: &LawDated, name: &str) -> bool {
-    let kind = match m.names.kind(name) {
-        Some(crate::model::NameKind::Input) => NodeKind::Input,
-        Some(crate::model::NameKind::Band) => NodeKind::Band,
-        Some(crate::model::NameKind::Def) => NodeKind::Def,
-        Some(_) | None => return false,
-    };
-    let node = Node::new(kind, name);
-    dated_item(m, at, dated, &node).unwrap_or_else(|| input_dated(m, &node))
 }
 
 /// Whether a read in a move's `at` is of a law-dated input or band: the `at` ends every

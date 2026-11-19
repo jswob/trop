@@ -12,7 +12,7 @@
 //! Invariants: the checks run in refcore's order, each refusal with no place (the walk puts
 //! it at its line); a type `Unseen` is assigned to anything and its range refuses nothing.
 
-use super::check::{Checker, Scope, Stands, VarDom};
+use super::check::{Checker, KeyReads, Scope, Stands, VarDom, invariant};
 use super::ops::unify;
 use super::steps::num_stop;
 use super::texts::{span_text, text};
@@ -214,6 +214,54 @@ impl Checker {
         key_bind: BindAs,
         depth: u32,
     ) -> Typed {
+        let Some(ty) = self.bind_domain(m, scope, bind, key_bind, depth)? else {
+            return Ok(Ty::Unseen);
+        };
+        self.bind_where(m, scope, bind, depth)?;
+        Ok(ty)
+    }
+
+    /// A move's key binding, as [`Checker::bind`], with what its domain, `on` and span read
+    /// and what its `where` reads kept apart, each read with its relation, for the law-date
+    /// checks (`lawdates.rs`): a key read before the move's `at` can be has no law date
+    /// (L §4.3, §5.14 Keys; #235, P28, P30).
+    ///
+    /// # Errors
+    ///
+    /// The binding's refusal, as [`Checker::bind`]'s.
+    pub(super) fn move_key(
+        &mut self,
+        m: &Reality,
+        scope: &mut Scope,
+        bind: &Bind,
+    ) -> Result<KeyReads, Stop> {
+        self.tape = Some(Vec::new());
+        let typed = self.bind_domain(m, scope, bind, BindAs::Plain, 0);
+        let binding = self.tape.replace(Vec::new());
+        let checked = match typed {
+            Ok(Some(_)) => self.bind_where(m, scope, bind, 0),
+            Ok(None) => Ok(()),
+            Err(stop) => Err(stop),
+        };
+        let filter = self.tape.take();
+        checked?;
+        let (Some(binding), Some(filter)) = (binding, filter) else {
+            return Err(invariant("a key's reads taped with no tape".to_owned()));
+        };
+        Ok(KeyReads { binding, filter })
+    }
+
+    /// A binding's checks, what it ranges over, its `on` and its span, its variable put in
+    /// scope; its type, or none where its range gives none to check (refcore's `bind`).
+    /// L §5.6, §5.19.
+    fn bind_domain(
+        &mut self,
+        m: &Reality,
+        scope: &mut Scope,
+        bind: &Bind,
+        key_bind: BindAs,
+        depth: u32,
+    ) -> Result<Option<Ty>, Stop> {
         if scope.is_var(&bind.var) {
             return Err(scope.place(bound_twice(&bind.var)));
         }
@@ -244,7 +292,7 @@ impl Checker {
             }
             Over::Range => {
                 let Written::Range(range) = &bind.domain else {
-                    return Ok(Ty::Unseen);
+                    return Ok(None);
                 };
                 (self.range_type(m, scope, range, depth)?, VarDom::Range)
             }
@@ -272,6 +320,17 @@ impl Checker {
             alive_clause("over", &over_what).map_err(|stop| scope.place(stop))?;
         }
         scope.vars.insert(bind.var.clone(), var);
+        Ok(Some(ty))
+    }
+
+    /// A binding's `where`, a bool, its variable in scope (refcore's `bind_finish`). L §5.6.
+    fn bind_where(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        bind: &Bind,
+        depth: u32,
+    ) -> Result<(), Stop> {
         if let Some(filter) = &bind.filter {
             let t = self.expr(m, scope, filter, None, depth)?;
             if !is_bool(&t) {
@@ -279,7 +338,7 @@ impl Checker {
                 return Err(scope.place(uerr(message)));
             }
         }
-        Ok(ty)
+        Ok(())
     }
 
     /// A binding over an event kind reads every move of it or a subkind, and every observed

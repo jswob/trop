@@ -5298,6 +5298,159 @@ ask q: bal(konto, 2026-04-30) law cut
         );
     }
 
+    /// The gate review's B-1: a key's `where` that reads a calendar through `is_business`,
+    /// in a move with no `at`, reads the row governing the day it asks about, so it needs no
+    /// law date (L §4.2, §4.3): it doesn't wait, and it is read. Before, it waited for an
+    /// `at` the move hasn't, and the Saturday and Sunday were paid: `30.00 PLN`.
+    const CAL_WHERE: &str = r#"model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+
+input fee: money PLN
+input cal: calendar
+
+move pay[d in wk where is_business(d, cal)]: transfers
+  on d
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+version c
+  cite s
+  governs 2026..
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun])
+
+ask q: bal(konto, 2026-01-31)
+"#;
+
+    #[test]
+    fn a_calendar_read_in_a_key_s_where_needs_no_law_date() {
+        let reality = load_one(CAL_WHERE).expect("loads");
+        let pay = reality.moves.get("pay").expect("pay");
+        assert!(pay.dated_wheres.is_empty(), "nothing waits");
+        let lines = answered(CAL_WHERE);
+        assert_eq!(
+            lines.first().map(String::as_str),
+            Some("q: 50.00 PLN"),
+            "five weekdays paid"
+        );
+        let twin = CAL_WHERE.replace("  governs 2026..\n", "  governs always\n");
+        assert_eq!(lines, answered(&twin), "its law-free twin");
+    }
+
+    /// The gate review's B-2: a key's `on add_business(act_day, 1, cal)` read before the `at`
+    /// reads the calendar at the day it asks about, so it needs no law date (L §4.2, §4.3):
+    /// the text loads, where `LOAD-LAWDATE` refused it.
+    #[test]
+    fn a_key_s_business_day_read_before_the_at_needs_no_law_date() {
+        let text = KEY_ON
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\ninput cal: calendar\n",
+            )
+            .replace("on act_day where", "on add_business(act_day, 1, cal) where")
+            .replace(
+                "ask q:",
+                "version calv\n  cite plan\n  governs 2026..\n  known 2026-01-01\n  cal = calendar(weekends [sat, sun])\n\nask q:",
+            );
+        assert_eq!(refusal(&text), "loaded", "cal read at the day asked");
+    }
+
+    /// The gate review's B-3: #235's check sees every read load typed in a key's `on`, a
+    /// query's binding's `where` and an `as if {law D}`'s law date among them; each was
+    /// `ENGINE-INVARIANT` at run. The `as if`'s inner read is made at D, so it needs none.
+    /// L §4.3, §5.11.
+    #[test]
+    fn a_key_read_in_a_query_s_binding_or_a_law_pin_before_the_at_is_refused() {
+        let text = KEY_ON
+            .replace(
+                "unit PLN: currency minor 0.01\n",
+                "unit PLN: currency minor 0.01\n\nindex month = month 2026-01..2026-12\n",
+            )
+            .replace(
+                "input act_day: date\n",
+                "input act_day: date\n\ninput d0: date\n\ninput d1: date\n\ninput one: num\n",
+            )
+            .replace(
+                "  act_day = 2026-04-05\n",
+                "  act_day = 2026-04-05\n  d0 = 2026-03-15\n  d1 = 2026-03-16\n  one = 1\n",
+            );
+        let mean = text.replace(
+            "on act_day where",
+            "on if mean(one for k in month where start_of(k) <= act_day) > 0 then d0 else d1 where",
+        );
+        let pin = text.replace("on act_day where", "on (d0 as if {law act_day}) where");
+        for form in [&mean, &pin] {
+            assert_eq!(refusal(form), "loaded", "act_day governs always");
+            let dated = form.replace("  governs always\n", "  governs 2026..\n");
+            assert_eq!(
+                refusal(&dated),
+                "LOAD-LAWDATE move back's key a reads law-dated act_day with no law date: its at reads a (a.tally:37)",
+                "act_day law-dated"
+            );
+        }
+        let inner = text
+            .replace("on act_day where", "on (act_day as if {law d0}) where")
+            .replace("  governs always\n", "  governs 2026..\n");
+        let inner = inner.replace("  d0 = 2026-03-15\n  d1 = 2026-03-16\n  one = 1\n", "");
+        let inner = inner.replace(
+            "ask q:",
+            "version fx\n  cite plan\n  governs always\n  known 2026-01-01\n  d0 = 2026-03-15\n  d1 = 2026-03-16\n  one = 1\n\nask q:",
+        );
+        assert_eq!(refusal(&inner), "loaded", "act_day read at d0");
+    }
+
+    /// The gate review's item 4: an `at` whose aggregate reads no key gives the move its law
+    /// date before the keys are bound (`reads_var`, load's and the walk's), so the key's
+    /// law-dated `on` is read at it and the text answers as its law-free twin; item 13: a key
+    /// that reaches an `at reader` def before the `at` is named as such, law-dated or not
+    /// (L §4.3: its chain of readers ends at no written date).
+    #[test]
+    fn an_at_that_reads_no_key_dates_the_key_and_an_at_reader_def_is_named() {
+        let aggregate = KEY_ON
+            .replace(
+                "unit PLN: currency minor 0.01\n",
+                "unit PLN: currency minor 0.01\n\nindex month = month 2026-01..2026-12\n",
+            )
+            .replace("  at a.day\n", "  at max(start_of(k) for k in month)\n");
+        let dated = aggregate.replace("  governs always\n", "  governs 2026..\n");
+        assert_eq!(refusal(&dated), "loaded", "the at reads no key");
+        assert_eq!(answered(&dated), answered(&aggregate), "its law-free twin");
+        let reader = KEY_ON
+            .replace(
+                "move back[",
+                "def rd: date = act_day at reader\n\nmove back[",
+            )
+            .replace("on act_day where", "on rd where");
+        for text in [
+            reader.clone(),
+            reader.replace("  governs always\n", "  governs 2026..\n"),
+        ] {
+            assert_eq!(
+                refusal(&text),
+                "LOAD-LAWDATE move back's key a reaches rd, which takes its law date from its reader, with no law date: its at reads a (a.tally:31)",
+                "an at reader def"
+            );
+        }
+    }
+
     /// `flows` over a span that starts before the run's start: its hole names the target as
     /// written, keys and field too, as refcore's `fmt_node` does (L §8.1; the review of G3's
     /// turn 3, `n4.tally`).

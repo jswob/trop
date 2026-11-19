@@ -453,6 +453,8 @@ pub(super) struct Walked {
     /// Each ask's reads in the order first made (refcore's edges, a dict in insertion
     /// order).
     pub(super) ask_reads: BTreeMap<String, Vec<Node>>,
+    /// Each move's keys' reads, in binding order. L §4.3, §5.14 Keys.
+    pub(super) key_reads: BTreeMap<String, Vec<KeyReads>>,
     /// The decisions' plain balance reads, in the order typed.
     pub(super) day_reads: Vec<DayRead>,
     /// The key literals reads write at stepped ranges of literal ends, in the order typed.
@@ -485,6 +487,18 @@ pub(super) struct Walked {
     pub(super) list_keys: BTreeMap<(String, u32, usize), String>,
     /// The sites of the kind tests whose narrowing a field read used. L §5.7.
     pub(super) narrow_used: BTreeSet<SiteKey>,
+}
+
+/// What a move's key binding reads, each read with its relation in the order made: its
+/// domain, `on` and span, read with the keys bound before it, and its `where`, read for each
+/// tuple (L §4.3, §5.14 Keys): the law-date checks decide from these which reads need a law
+/// date (`lawdates.rs`).
+#[derive(Debug, Clone, Default)]
+pub(super) struct KeyReads {
+    /// The domain's, `on`'s and span's reads.
+    pub(super) binding: Vec<(Node, Rel)>,
+    /// The `where`'s reads.
+    pub(super) filter: Vec<(Node, Rel)>,
 }
 
 /// A leg as load sees it: its kind's leg unit, and each end's literal place, if it is one,
@@ -548,6 +562,10 @@ pub(super) struct Checker {
     pub(super) direct: Option<Vec<Node>>,
     /// Each ask's reads in the order first made.
     ask_reads: BTreeMap<String, Vec<Node>>,
+    /// Each move's keys' reads, in binding order.
+    pub(super) key_reads: BTreeMap<String, Vec<KeyReads>>,
+    /// The reads made, each with its relation, while a move's key is typed (`move_key`).
+    pub(super) tape: Option<Vec<(Node, Rel)>>,
     /// Each ask whose line can hold a key literal no position resolves, with its line.
     unresolved: BTreeMap<String, At>,
     /// The decisions' plain balance reads.
@@ -682,6 +700,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         at_reads: checker.at_reads,
         move_at: checker.move_at,
         ask_reads: checker.ask_reads,
+        key_reads: checker.key_reads,
         unresolved: checker.unresolved,
         day_reads: checker.day_reads,
         range_keys: checker.range_keys,
@@ -818,7 +837,7 @@ impl Checker {
     }
 
     /// `reader` reads `target` with `rel`; an ask's reads, and a def's, a fill's, a band's and
-    /// a scenario row's, are kept in the order first made.
+    /// a scenario row's, are kept in the order first made, and a move's key's on its tape.
     pub(super) fn edge(&mut self, reader: &Node, target: Node, rel: Rel) {
         let first = !self
             .graph
@@ -829,6 +848,9 @@ impl Checker {
                 .entry(reader.clone())
                 .or_insert_with(Vec::new)
                 .push(target.clone());
+        }
+        if let Some(tape) = &mut self.tape {
+            tape.push((target.clone(), rel.clone()));
         }
         if reader.kind == NodeKind::Ask {
             let reads = self
