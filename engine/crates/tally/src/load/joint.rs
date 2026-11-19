@@ -601,14 +601,11 @@ fn tagged(stop: Stop, chain: &[String]) -> Stop {
     }
 }
 
-/// The asks a member's base answers by their ids: those not refused alone (refcore's `asks`
-/// after `asks_alone` is taken out). E §11.
+/// The asks a member's base answers by their ids, those refused alone included: such an ask
+/// exists, and the member alone prints its refusal as its line (L §6.1; E §11 `REQ-ASK` is for
+/// an ask that doesn't exist; refcore leaves them out, #233).
 fn ask_ids(m: &Reality) -> BTreeSet<String> {
-    m.asks
-        .iter()
-        .filter(|ask| !m.asks_alone.contains_key(&ask.id))
-        .map(|ask| ask.id.clone())
-        .collect()
+    m.asks.iter().map(|ask| ask.id.clone()).collect()
 }
 
 /// The asks a member's namespace holds, refused alone or not: what refcore's `lookup` on the

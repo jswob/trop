@@ -1017,7 +1017,7 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
     const MEMBER_A: [(&str, &str); 3] = [
         (
             "a.tally",
-            "model ana\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput pay: money PLN\n\ninput spare: num\n\ndef twice: money PLN = pay + pay at reader\n\nask q: twice law 2026-03-01\n\nask qin: twice in s1 law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  pay = 4 000.00 PLN \"the card\"\n",
+            "model ana\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2026-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput pay: money PLN\n\ninput spare: num\n\ndef twice: money PLN = pay + pay at reader\n\nask q: twice law 2026-03-01\n\nask qin: twice in s1 law 2026-03-01\n\nask qnone: twice in zzz law 2026-03-01\n\nask qc: twice law 2026-03-01 as known 2026-06-01\n\nask warning_total: twice law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  pay = 4 000.00 PLN \"the card\"\n",
         ),
         (
             "bad.tally",
@@ -1137,6 +1137,38 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
                 .to_vec()
             ),
             "a member's base ask, its scenario's, its base ask naming its scenario"
+        );
+        // an ask whose id starts `warning` takes the prefix too, and an ask the member refuses
+        // alone prints its line while the rest answers (the review of G3's B-2 and B-3; refcore
+        // drops the prefix and refuses `REQ-ASK`, #233)
+        assert_eq!(
+            member_run(&given, &["a.warning_total", "a.qnone", "a.q"]),
+            Some(
+                [
+                    "a.warning_total: 8 000.00 PLN",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                    "a.qnone: refused: LOAD-SCENARIO ask qnone names zzz, neither the model nor a loaded scenario (a/a.tally:21)",
+                    "a.q: 8 000.00 PLN",
+                    "  law date 2026-03-01, cut 2026-03-01",
+                ]
+                .map(str::to_owned)
+                .to_vec()
+            ),
+            "a member's ask named `warning…`, and one refused alone"
+        );
+        // `REQ-CLOCK` refuses the request, the run's one result: for a member's ask (B-4) and in
+        // a run given scenario files (B-5); refcore prints the ask's `RUN-DOMAIN` line (#233)
+        let clock = "refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01";
+        assert_eq!(
+            member_run(&given, &["a.q", "a.qc"]),
+            Some(vec![clock.to_owned()]),
+            "a member's ask whose cut is after its on"
+        );
+        let member_files: Vec<Given> = given.iter().skip(1).cloned().collect();
+        assert_eq!(
+            member_run(&member_files, &["q", "qc"]),
+            Some(vec![clock.to_owned()]),
+            "an ask of a run given scenario files, its cut after on"
         );
         let uses = format!("  use m = \"n/mid.tally\" sha256 \"{m_pin}\"\n{use_a}");
         let mut nested = vec![
