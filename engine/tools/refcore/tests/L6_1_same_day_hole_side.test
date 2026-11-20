@@ -35,7 +35,7 @@ ask c0: count(m in transfers over 2026-03)
 ask f1: flows(in1, 2026-03)
 ask b31: bal(konto, 2026-03-31)
 === expect
-b31: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2) ?"when did in2 land" (d2)
+b31: ?"when did in2 land" (d2)
   cut 2026-01-01
 c0: ?"when did in2 land" (d2)
   cut 2026-01-01

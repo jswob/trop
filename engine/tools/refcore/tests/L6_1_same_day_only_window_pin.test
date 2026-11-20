@@ -1,6 +1,6 @@
 # tally 2.2.1 P43 S1 (L §4.4 l.669, §6.1 l.1797): the day of movements stated same, one comparison of the days each side
 # can take: a day pinned to a window against a day: the balance books it once (review g2fix same/s1_dayonly);
-# two days that differ stay HOLE-SAME after both (P43, n2).
+# two days that differ stay HOLE-SAME after both (P43, n2); unpinned, after the window too, the window's hole (P45 d).
 === s1_dayonly.tally
 model s1
   tally 2
@@ -42,8 +42,9 @@ b4: 500.00 PLN
   cut 2026-01-01
 b31: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-09: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
   cut 2026-01-01
-pw: 600.00 PLN
+pw: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in2)
   pinned: d2 = window(2026-03-05, 2026-03-07)
+  unknown day: d2
   cut 2026-01-01
 pq: 600.00 PLN
   pinned: d2 = 2026-03-05

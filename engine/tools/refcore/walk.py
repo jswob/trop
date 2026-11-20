@@ -1402,11 +1402,31 @@ class Walk:
                     # the booking takes the reads' comparison of days (tally 2.2.1 P43 S1): agreed (a one-day window
                     # against its day) or undecided, the movement is booked once, by its first window side in id
                     # order, so a balance carries the window's hole and no HOLE-SAME of equal amounts (F9)
+                    hs = [t for t in touch if isinstance(t[1].day, Hole)]
+                    if hs:
+                        # a side whose day is a hole gives its question and no HOLE-SAME of equal amounts beside it
+                        # (tally 2.2.1 P45 (e)): the movement is booked once, by that side
+                        first = min(hs, key=lambda t: _ido(self.m, t[0].id))
+                        out.append(None if first[0] is mv else 'skip')
+                        continue
                     dc = same_days([g.day for o, g, sj in touch])
-                    if dc != 'differ':
+                    if dc is None:
                         ws = [t for t in touch if isinstance(t[1].day, Iv)] or touch
                         first = min(ws, key=lambda t: _ido(self.m, t[0].id))
                         out.append(None if first[0] is mv else 'skip')
+                        continue
+                    if dc != 'differ':
+                        # undecided: which balance holds depends on the day the window leaves open, also after the
+                        # window's end, since a pin on days that disagree gives HOLE-SAME (P43, a decided
+                        # disagreement stays the hole; P45 (d)): the window's hole of each undecided side, labelled so
+                        from .joint import shown as _sh
+                        from .evaluate import carry_hole as _ch
+                        qs = []
+                        for k in dc:
+                            o, g = touch[k][0], touch[k][1]
+                            qs.append(_ch(Hole([('date within %s not precise enough for a balance' %
+                                                 g.day.window_text(), _sh(o.id))]), g.day))
+                        out.append(merge(*qs) if len(qs) > 1 else qs[0])
                         continue
                 if agree:
                     # L §6.1 (round 14): "it is booked once, at the point in the day's order of the latest of them"

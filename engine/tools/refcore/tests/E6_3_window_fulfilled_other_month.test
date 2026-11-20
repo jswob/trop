@@ -73,8 +73,6 @@ ask apr: residuals konto 2026-04
 ask both: residuals konto 2026-03 .. 2026-04
 === expect mar apr
 mar: residuals konto 2026-03
-  2026-03 move pay_2: model 100.00 PLN, observed 60.00 PLN, difference -40.00 PLN
-    matched pay_2 on 2026-03-30: model 100.00 PLN, observed 60.00 PLN, difference -40.00 PLN, timing +0 days
   2026-03 move pay_d: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
     matched pay_d on 2026-03-22: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +2 days
   2026-03 move pay_l: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN

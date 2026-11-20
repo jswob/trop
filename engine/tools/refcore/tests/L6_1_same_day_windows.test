@@ -57,5 +57,7 @@ oneday (m = in1): window(2026-03-06, 2026-03-06)
 oneday_b: 600.00 PLN
   pinned: d1 = window(2026-03-06, 2026-03-06)
   cut 2026-01-01
-b31: 600.00 PLN
+b31: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in1) ?"date within window(2026-03-06, 2026-03-09) not precise enough for a balance" (in2)
+  unknown day: d1
+  unknown day: d2
   cut 2026-01-01

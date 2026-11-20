@@ -35,7 +35,8 @@ ask dy: m.day for m in transfers over 2026-03
 ask b5: bal(konto, 2026-03-05)
 ask b31: bal(konto, 2026-03-31)
 === expect
-b31: 600.00 PLN
+b31: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in2)
+  unknown day: d2
   cut 2026-01-01
 b5: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in2)
   unknown day: d2
