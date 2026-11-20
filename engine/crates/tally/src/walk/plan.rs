@@ -799,6 +799,9 @@ impl Engine {
         if matches!(v, Value::Never | Value::None) {
             return Ok(false);
         }
+        // a window written in its own `on`, which no cell holds, is named by its movement
+        // (L §8.2 `unknown day:`, "where no cell does, its movement"; R21 on #241)
+        let v = crate::eval::held_by(v, (format!("move {}", inst.id), &inst.id));
         let day = match v {
             Value::Hole(h) => Dated::Hole(h),
             // a window: one day not yet known (L §4.4)

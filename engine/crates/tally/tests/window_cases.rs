@@ -471,7 +471,7 @@ ask q6: small
 ask q7: n2
 "#;
 
-    const TWO_WINDOWS_LINES: &str = r#"q4: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a)
+    const TWO_WINDOWS_LINES: &str = r#"q4: ?"date within window(2026-03-01, 2026-03-03) not precise enough for a print" (a) ?"date within window(2026-03-02, 2026-03-04) not precise enough for a print" (b)
   unknown day: a
   unknown day: b
   cut 2026-01-01
@@ -738,7 +738,7 @@ ask n2: two
                 "  cut 2026-04-30",
                 "n1: 0",
                 "  cut 2026-04-30",
-                "n2: ?\"date within window(2026-03-04, 2026-03-10) not precise enough for a print\" (wa)",
+                "n2: ?\"date within window(2026-03-04, 2026-03-10) not precise enough for a print\" (wa) ?\"date within window(2026-03-04, 9999-12-31) not precise enough for a print\" (wd)",
                 "  unknown day: wa",
                 "  unknown day: wd",
                 "  cut 2026-04-30",

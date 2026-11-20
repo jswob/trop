@@ -51,13 +51,15 @@ pub(crate) struct CalendarPass {
     met: MetWindows,
 }
 
-/// The unknown day of added window `id`, named `added <entry>` (refcore's `added_carry`).
-/// L §4.4, §8.2 `unknown day:`.
+/// The unknown day of added window `id`, named `added <entry> of <calendar>`: two calendars'
+/// equal entries are two days, two lines (refcore's `added_carry`). L §4.4, §8.2 `unknown
+/// day:` (R21 on #241).
 fn added_unknown(id: &WindowId) -> crate::hole::Unknown {
     let (name, entry, text, row) = id;
     crate::hole::Unknown {
         id: format!("calendar {name}#{entry} {row}"),
-        label: format!("added {text}"),
+        label: format!("added {text} of {name}"),
+        text: text.clone(),
     }
 }
 

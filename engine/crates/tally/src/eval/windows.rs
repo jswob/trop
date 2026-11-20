@@ -26,15 +26,20 @@ use crate::syntax::{Call, CmpOp, Stop};
 use crate::time::{Day, PeriodKind};
 
 /// The hole of window `w` met where one value is needed, by `what`: `?"date within <w> not
-/// precise enough for <what>" (<its read>)` (refcore's `imprecise`). L §4.4, §8.1.
+/// precise enough for <what>" (<its read>)`, one question per unknown day where it rests on
+/// two or more, each asked of the day's own name (refcore's `imprecise`, `imprecise_hole`).
+/// L §4.4, §8.1 (R21 on #241).
 ///
 /// # Errors
 ///
 /// A number error printing the window.
 pub(super) fn imprecise(m: &Reality, w: &Window, what: &str) -> Result<Hole, Stop> {
     let window = w.question_text(m).map_err(num_stop)?;
-    let text = format!("date within {window} not precise enough for {what}");
-    Ok(Hole::asked(&text, w.figure()).carrying(&w.carry))
+    Ok(crate::hole::imprecise(
+        (&window, what),
+        w.figure(),
+        (&w.carry, None),
+    ))
 }
 
 /// The window of a value, if it is one.
@@ -721,14 +726,38 @@ pub(super) fn named_window(v: Value, (id, label): (String, &str)) -> Value {
     let Value::Window(mut w) = v else {
         return v;
     };
-    if !matches!(w.lo, Value::Day(_)) {
+    let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi) else {
         return Value::Window(w);
-    }
+    };
+    // its question names the window as written, else by its days (refcore's `window_text`)
+    let text = match &w.src {
+        Some(src) => src.clone(),
+        None => format!("window({}, {})", lo.text(), hi.text()),
+    };
     w.carry = vec![Unknown {
         id,
         label: label.to_owned(),
+        text,
     }];
     Value::Window(w)
+}
+
+/// Value `value`, a window no cell holds or copies yet (written in the text, or computed from
+/// windows written there), as the cell `figure` that holds it, its unknown day `id` named by
+/// that cell and its holes asked of it; a window that came from a read, or was computed from
+/// one or from a calendar's entry, keeps the names and the days it carries; any other value is
+/// itself (refcore's `named`, `pinned_read`, a move's `on`). L §4.4 ("a copy keeps the name",
+/// "a computed value … carries the names it was computed from"), §8.2 `unknown day:` (R21:
+/// "the cell a caller pins, wherever a cell holds or copies the day"; P30, P32, P26).
+pub(crate) fn held_by(value: Value, (id, figure): (String, &str)) -> Value {
+    let Value::Window(mut w) = value else {
+        return value;
+    };
+    if w.figure.is_some() || !names_only_written(&w.carry) {
+        return Value::Window(w);
+    }
+    w.figure = Some(figure.to_owned());
+    named_window(Value::Window(w), (id, figure))
 }
 
 /// The unknown day a window written in the text is, its id: the window as written (refcore's

@@ -988,14 +988,13 @@ pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
 }
 
 /// The hole an interval that is no window of days prints as, where a print needs its one
-/// value: `?"date within <w> not precise enough for a print" (<its read>)` (refcore's
-/// `fmt_value` of an `Iv`). L §4.4 l.669, §8.1.
+/// value: `?"date within <w> not precise enough for a print" (<its read>)`, one question per
+/// unknown day where it rests on two or more (refcore's `fmt_value` of an `Iv`,
+/// `imprecise_hole`). L §4.4 l.669, §8.1 (R21 on #241).
 pub(super) fn print_hole(m: &Reality, w: &Window) -> Result<String, Stop> {
     let window = w.question_text(m).map_err(num_stop)?;
-    let text = format!("date within {window} not precise enough for a print");
-    Ok(crate::hole::Hole::asked(&text, w.figure())
-        .carrying(&w.carry)
-        .text())
+    let hole = crate::hole::imprecise((&window, "a print"), w.figure(), (&w.carry, None));
+    Ok(hole.text())
 }
 
 /// Whether a list holds an entry computed from a window that is no window of days, in a list

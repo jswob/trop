@@ -71,15 +71,44 @@ pub struct Hole {
 }
 
 /// An unknown day a value or a hole carries: its identity (the read that gave it, or a
-/// calendar's entry) and the name the register's `unknown day:` line prints (refcore's
-/// `window_id`). L §4.4, §8.2.
+/// calendar's entry), the name the register's `unknown day:` line prints and its window's
+/// own text, which its question names (refcore's `window_id`). L §4.4, §8.2.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unknown {
     /// Its identity.
     pub id: String,
-    /// Its name: the cell as its read names it (`wd`, `held_from[b]`), `added <entry>`, or
-    /// the window's own text.
+    /// Its name: the cell a caller pins as its read names it (`wd`, `held_from[b]`),
+    /// `added <entry> of <calendar>`, its movement, or the window's own text (R21 on #241).
     pub label: String,
+    /// Its window's own text (`window(2026-03-05, 2026-03-07)`).
+    pub text: String,
+}
+
+/// `HOLE-IMPRECISE`'s hole: `date within <window> not precise enough for <what>`, asked of
+/// `figure`, carrying the unknown days `carry`; where they are two or more, one question per
+/// unknown day, each naming its own window, asked of `label` where one is given, else of the
+/// day's own name, and carrying that day alone (refcore's `imprecise_hole`). L §8.1
+/// (`HOLE-IMPRECISE`: "one question per unknown day", R21 on #241), §4.4.
+#[must_use]
+pub fn imprecise(
+    (window, what): (&str, &str),
+    figure: &str,
+    (carry, label): (&[Unknown], Option<&str>),
+) -> Hole {
+    let mut out: Option<Hole> = None;
+    if let [_, _, ..] = carry {
+        for day in carry {
+            let text = format!("date within {} not precise enough for {what}", day.text);
+            let one = Hole::asked(&text, label.unwrap_or(&day.label))
+                .carrying(core::slice::from_ref(day));
+            out = spread(&[out.as_ref(), Some(&one)]);
+        }
+    }
+    if let Some(per_day) = out {
+        return per_day;
+    }
+    let text = format!("date within {window} not precise enough for {what}");
+    Hole::asked(&text, figure).carrying(carry)
 }
 
 /// `into` with each unknown day of `more` it lacks added at its end, in order (refcore's
