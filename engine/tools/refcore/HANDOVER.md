@@ -7,6 +7,22 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W11: P45's three points, cause H (issue #241; 1 648 tests)
+
+- **P45 (d)** (`walk.consol`): undecided days of sides stated `same` with equal amounts book, at each side, the
+  window's hole of each undecided side ("not precise enough for a balance", labelled by its side), also after the
+  window's end; agreed days (a one-day window against its day) still book once.
+- **P45 (e)**: a side whose day is a hole books the movement, by that side, and nothing else: its question alone.
+- **P45 (f)** (`resid.m_residuals`): a window an observation fulfils takes its last fulfilling observation's day
+  even across two months; only a window nothing fulfils is the `?` group.
+- **208.R2** (`ask._tuple_law`): read per tuple on every form, in the tuples' loop and `binds_over_axes`, each
+  line's register at its tuple's law date.
+- **231.R1** (`check` records `a._pinned_axes`; `ask.explain_pins`): outside the pins, every tuple of the pinned
+  axes the cone reaches, in id order, options as declared. Not tried with `in s` on a scenario's own axis.
+- **231.Q10, not built:** `run_group` keys a cycle's instances `dec_text(g[0], …)`, the group's first move by id
+  whether or not it is due that day; no text at this tip shows an output it changes. The tests session's text
+  is the place to start.
+
 ## tally 2.2.1, group W10: the day of same sides, the register per fact (P43; issue #241; 1 644 tests)
 
 - **S1** (`moves.same_days`, `same_obs_differ`; `walk.consol`; `mreads.same_in_span`): one comparison of the days
