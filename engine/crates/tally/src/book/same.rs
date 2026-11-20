@@ -332,17 +332,117 @@ pub(crate) enum Fact {
     Leg(String),
 }
 
-/// How the days of a class's legs compare: agreed, two that can't be one day (`HOLE-SAME`'s
-/// figures), or a window a comparison doesn't decide (L §4.4, "a comparison is decided when it
-/// holds for every day its operands can take, a window taken with its own name once"; Q1,
-/// P36 on #241).
-enum Days {
-    /// Every day agrees, or a side's day is a hole, which holes the read itself.
-    Agree,
-    /// Two can't be one day: each side's day as it prints.
+/// How the days of the sides of a movement stated `same` compare, each side stating the days
+/// its day can take: a day, one; a window or a `one_of`, its days, under its name; a hole,
+/// unknown (L §4.4, "a comparison is decided when it holds for every day its operands can
+/// take"; S1, P43 on #241).
+pub(crate) enum DayCmp {
+    /// A side's day is a hole: the read carries its question, every such side's.
+    Hole(Hole),
+    /// No day is common to every side: each side's day as it prints (`HOLE-SAME`'s figures).
     Differ(Vec<String>),
-    /// A window holds the other side's day and more: the comparison's hole.
-    Undecided(Hole),
+    /// Every side one day and all equal, or one named window on every side.
+    Agree,
+    /// Otherwise: each unknown day once, with the first side in id order that states it.
+    Undecided(Vec<(String, DayWindow)>),
+}
+
+/// The days of the sides `sides` (in id order) compared: [`DayCmp`]. One window's name on
+/// every side is one day; two names are two unknowns, even with equal intervals; a window of
+/// one day is that day (L §4.4, §6.1; S1, P43 on #241).
+pub(crate) fn compare_days(sides: &[(&str, &Dated)]) -> DayCmp {
+    let holes: Vec<&Hole> = sides
+        .iter()
+        .filter_map(|(_, d)| match d {
+            Dated::Hole(h) => Some(h),
+            Dated::Day(_) | Dated::Window(_) => None,
+        })
+        .collect();
+    if !holes.is_empty() {
+        let merged: Vec<Option<&Hole>> = holes.into_iter().map(Some).collect();
+        if let Some(h) = spread(&merged) {
+            return DayCmp::Hole(h);
+        }
+    }
+    if !common_day(sides) {
+        return DayCmp::Differ(sides.iter().map(|(_, d)| day_shown(d)).collect());
+    }
+    let one_window = match sides.split_first() {
+        Some(((_, Dated::Window(first)), rest)) => rest
+            .iter()
+            .all(|(_, d)| matches!(d, Dated::Window(w) if w.value == first.value)),
+        Some(_) | None => false,
+    };
+    let mut unknown: Vec<(String, DayWindow)> = Vec::new();
+    for (id, d) in sides {
+        if let Dated::Window(w) = d
+            && !one_day(w)
+            && !unknown.iter().any(|(_, u)| u.value == w.value)
+        {
+            unknown.push(((*id).to_owned(), w.clone()));
+        }
+    }
+    if one_window || unknown.is_empty() {
+        return DayCmp::Agree;
+    }
+    DayCmp::Undecided(unknown)
+}
+
+/// Whether window `w` can take one day only. L §4.4 ("a window of one day is that day").
+fn one_day(w: &DayWindow) -> bool {
+    match &w.value.days {
+        Some(days) => days.len() == 1,
+        None => w.lo == w.hi,
+    }
+}
+
+/// Whether some day is one every side can take: inside every side's first and last day, and
+/// one of every `one_of`'s days. L §4.4.
+fn common_day(sides: &[(&str, &Dated)]) -> bool {
+    let (mut lo, mut hi) = (None::<Day>, None::<Day>);
+    let mut lists: Vec<&[Day]> = Vec::new();
+    for (_, d) in sides {
+        let (Some(a), Some(b)) = (d.lo(), d.hi()) else {
+            continue;
+        };
+        lo = Some(lo.map_or(a, |l| l.max(a)));
+        hi = Some(hi.map_or(b, |h| h.min(b)));
+        if let Dated::Window(w) = d
+            && let Some(days) = &w.value.days
+        {
+            lists.push(days);
+        }
+    }
+    let (Some(lo), Some(hi)) = (lo, hi) else {
+        return true;
+    };
+    if lo > hi {
+        return false;
+    }
+    let Some((first, rest)) = lists.split_first() else {
+        return true;
+    };
+    for d in first.iter().filter(|d| lo <= **d && **d <= hi) {
+        if rest.iter().all(|l| l.contains(d)) {
+            return true;
+        }
+    }
+    false
+}
+
+/// The comparison's hole for undecided days: one question per unknown day, `date within <w>
+/// not precise enough for <what>`, each labelled by its own side and carrying its window's
+/// unknown days (L §4.4, §8.1 "one question per unknown day"; S1, P43 on #241).
+pub(crate) fn undecided_hole(unknown: &[(String, DayWindow)], what: &str) -> Option<Hole> {
+    let holes: Vec<Hole> = unknown
+        .iter()
+        .map(|(id, w)| {
+            let text = format!("date within {} not precise enough for {what}", w.question);
+            Hole::asked(&text, id).carrying(&w.value.carry)
+        })
+        .collect();
+    let refs: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
+    spread(&refs)
 }
 
 /// [`same_differ`] over sides, each an id, a day where it is one and legs ([`obs_side`],
@@ -388,10 +488,15 @@ pub(crate) fn sides_differ(
             // a leg's amount is its fact: the days are another (Q1, Q3)
             continue;
         } else {
-            match days_differ(&class, &ids) {
-                Days::Differ(figures) => (format!("the day of {}", mine.name), figures),
-                Days::Undecided(hole) => return Ok(Some(hole)),
-                Days::Agree => continue,
+            let sides: Vec<(&str, &Dated)> = class.iter().map(|(id, lg)| (*id, &lg.day)).collect();
+            match compare_days(&sides) {
+                DayCmp::Differ(figures) => (format!("the day of {}", mine.name), figures),
+                DayCmp::Hole(hole) => return Ok(Some(hole)),
+                DayCmp::Undecided(unknown) => {
+                    let what = format!("the day of {}", and_list(&ids));
+                    return Ok(undecided_hole(&unknown, &what));
+                }
+                DayCmp::Agree => continue,
             }
         };
         let parts: Vec<String> = figures
@@ -450,47 +555,6 @@ fn amounts_differ(m: &Reality, class: &[(&str, &LegVal)]) -> Result<Option<Vec<S
 /// An amount in its unit as L §2.4 prints it. L §2.4 Values.
 pub(super) fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Stop> {
     qty_value(m, amount, unit)?.text(m).map_err(num_stop)
-}
-
-/// The legs' days as they print where every one is a day and they don't all agree. L §5.19.
-/// Each compared with the first: two days, a day a window holds, two windows that overlap;
-/// one window's name on both sides is one day, and a hole day agrees, holing the read itself
-/// (L §4.4; Q1, P36 on #241).
-fn days_differ(class: &[(&str, &LegVal)], ids: &[String]) -> Days {
-    let Some(((first_id, first), rest)) = class.split_first() else {
-        return Days::Agree;
-    };
-    let mut differ = false;
-    let mut open: Option<(&str, &DayWindow)> = None;
-    for (id, lg) in rest {
-        match (&first.day, &lg.day) {
-            (Dated::Hole(_), _) | (_, Dated::Hole(_)) => {}
-            (Dated::Day(a), Dated::Day(b)) => differ |= a != b,
-            (Dated::Window(a), Dated::Window(b)) if a.value == b.value => {}
-            (Dated::Window(w), Dated::Day(d)) | (Dated::Day(d), Dated::Window(w))
-                if *d < w.lo || *d > w.hi =>
-            {
-                differ = true;
-            }
-            (Dated::Window(a), Dated::Window(b)) if a.hi < b.lo || b.hi < a.lo => differ = true,
-            (Dated::Window(w), _) => open = open.or(Some((first_id, w))),
-            (_, Dated::Window(w)) => open = open.or(Some((id, w))),
-        }
-    }
-    if differ {
-        return Days::Differ(class.iter().map(|(_, lg)| day_shown(&lg.day)).collect());
-    }
-    match open {
-        Some((id, w)) => {
-            let text = format!(
-                "date within {} not precise enough for the day of {}",
-                w.question,
-                and_list(ids)
-            );
-            Days::Undecided(Hole::asked(&text, id).carrying(&w.value.carry))
-        }
-        None => Days::Agree,
-    }
 }
 
 /// A leg's day as `HOLE-SAME` prints it: the day, or the window. L §2.4, §8.1.
