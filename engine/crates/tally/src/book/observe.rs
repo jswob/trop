@@ -609,11 +609,13 @@ impl Engine {
     }
 
     /// `WARN-LEGS`: two observations of different versions that fulfil one instance and
-    /// disagree on a leg's amount (refcore's `prepare`, its links). E §6.1.
+    /// disagree on a leg's amount (refcore's `prepare`, its links); and two observed rows
+    /// stated `same` that disagree, where no row of their group fulfils an instance, the
+    /// movement named by its first row (L §5.19, l.1717; tally 2.2.1's 219.2). E §6.1.
     ///
     /// # Errors
     ///
-    /// As [`Engine::obs_links_for`].
+    /// As [`Engine::obs_links_for`] and [`Engine::same_groups`].
     pub(crate) fn disagreeing_links(
         &mut self,
         m: &Reality,
@@ -626,6 +628,7 @@ impl Engine {
             }
         }
         let mut out = Vec::new();
+        let mut linked: BTreeSet<String> = BTreeSet::new();
         for tid in targets {
             let good = self.obs_links_for(m, &tid, cut)?;
             let mut all: Vec<Obs> = Vec::new();
@@ -634,13 +637,52 @@ impl Engine {
                     all.push(o.clone());
                 }
             }
+            linked.extend(good);
             let mut rest = all.as_slice();
             while let [a, tail @ ..] = rest {
                 rest = tail;
                 pairs_warned(m, &tid, a, tail, &mut out)?;
             }
         }
+        self.same_rows_warned(m, cut, &linked, &mut out)?;
         Ok(out)
+    }
+
+    /// `WARN-LEGS` for each `same` group of observed rows none of which is among `linked`,
+    /// those that fulfil an instance: its rows in id order, pair by pair, the movement named
+    /// by its first (refcore's `prepare`; tally 2.2.1's 219.2). L §5.19 One movement on two
+    /// statements, l.1717; E §6.1.
+    fn same_rows_warned(
+        &mut self,
+        m: &Reality,
+        cut: Day,
+        linked: &BTreeSet<String>,
+        out: &mut Vec<(Warn, String)>,
+    ) -> Result<(), Stop> {
+        let groups = self.same_groups(m, cut)?;
+        let mut seen: BTreeSet<&[String]> = BTreeSet::new();
+        for group in groups.values() {
+            if !seen.insert(group.as_slice()) || group.iter().any(|y| linked.contains(y)) {
+                continue;
+            }
+            // the group's rows the cut sees, in its order: the order of their ids
+            let mut rows: Vec<Obs> = Vec::new();
+            for o in self.observations(m, cut)? {
+                if group.contains(&o.id) {
+                    rows.push(o.clone());
+                }
+            }
+            rows.sort_by_cached_key(|o| m.id_order(&o.id));
+            let Some(first) = rows.first() else {
+                continue;
+            };
+            let mut rest = rows.as_slice();
+            while let [a, tail @ ..] = rest {
+                rest = tail;
+                pairs_warned(m, &first.id, a, tail, out)?;
+            }
+        }
+        Ok(())
     }
 }
 
