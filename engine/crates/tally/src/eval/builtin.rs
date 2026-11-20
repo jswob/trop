@@ -184,10 +184,27 @@ impl Engine {
                 return Err(refuse(Run::None, "a value is none here: round".to_owned()));
             }
         }
-        if let Value::Window(w) = &x {
+        if let Some(w) = as_window(&x).filter(|w| w.of_days()) {
+            // a window of days, which no round takes (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "round")?));
         }
-        round_values(m, &x, &bare_step(call.args.get(1), u), &mode)
+        let step = bare_step(call.args.get(1), u);
+        // monotone in x: its ends stand for its values, the interval of its rounded values
+        // (L §4.4 l.668; P25, P30, N2)
+        let tuples = match value_choices(m, ("round", Shape::Monotone), &[&x])? {
+            // a window of one value is that value (F3)
+            Choices::Plain => return round_values(m, single(&x), &step, &mode),
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => tuples,
+        };
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [at_x] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(round_values(m, at_x, &step, &mode));
+        }
+        values_interval(m, "round", outs, &[&x])
     }
 
     /// `min(a, b, …)`, `max(a, b, …)`: a bare figure takes the unit of an argument with one;
