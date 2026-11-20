@@ -422,7 +422,9 @@ impl Engine {
             let seed = Seed {
                 env: inst.env.clone(),
                 keys: inst.keys.clone(),
-                exists: Exists::Yes,
+                // its keys' `where` is read at K, so a hole it leaves is no version's to
+                // answer (E §4.1 step 1; refcore's `exists0`, #236)
+                exists: (*inst.exists0).clone(),
                 at_cut: Some(c),
                 upto: None,
             };

@@ -510,6 +510,10 @@ pub struct Inst {
     /// Where its class depends on its window's day: a hole movement from the window's first
     /// day, its day kept (refcore's `class_q`, `class_member`; tally 2.1.8 item 77).
     pub depends: Option<Depends>,
+    /// Its tuple's existence, its keys' `where` read at the ask's cut K (E §4.1 step 1): a hole
+    /// it leaves, a window `at` whose law-date classes disagree, is no later version's to
+    /// answer, so a re-measure starts from it (refcore's `exists0`; #236).
+    pub exists0: Box<Exists>,
 }
 
 /// Why a window-dated instance's class (E §4.1 step 3) is one on some of the window's days
@@ -560,6 +564,7 @@ impl Inst {
             },
             answered: None,
             depends: None,
+            exists0: Box::new(Exists::Yes),
         }
     }
 }

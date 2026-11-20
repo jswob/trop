@@ -653,6 +653,15 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 Exists::Unknown(h) => Some(h.clone()),
                 Exists::Yes | Exists::No => None,
             };
+            if let (Some(h), Some(window)) = (&qs, inst.law.window()) {
+                // an existence a window `at`'s law-date classes leave open: a refusal only the
+                // days it exists on, or those it doesn't, would give doesn't outrank its hole
+                // (L §4.4 l.671; refcore's `UNCERTAIN`, #236)
+                let class = super::tuples::imprecise_law(window, &inst.move_id);
+                if h.shares(&class) {
+                    walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
+                }
+            }
             if inst.depends.is_some()
                 && let Some(Dated::Window(w)) = &inst.day
             {

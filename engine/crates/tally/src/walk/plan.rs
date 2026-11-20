@@ -129,7 +129,7 @@ impl Engine {
             let seed = Seed {
                 env: inst.env.clone(),
                 keys: inst.keys.clone(),
-                exists: Exists::Yes,
+                exists: (*inst.exists0).clone(),
                 at_cut: Some(*at),
                 upto: None,
             };
@@ -559,6 +559,7 @@ impl Engine {
         tctx: Ctx,
     ) -> Result<Option<Inst>, Stop> {
         let mut inst = Inst::new(mv, seed.keys.clone(), seed.env.clone());
+        inst.exists0 = Box::new(seed.exists.clone());
         self.push();
         let made = match self.inst_parts(m, mv, &mut inst, tctx, seed) {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
