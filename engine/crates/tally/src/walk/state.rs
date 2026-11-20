@@ -388,6 +388,11 @@ pub struct Walk {
     pub(crate) left_out_at: BTreeMap<String, BTreeSet<String>>,
     /// The adjustments with a remainder, per place, from their day (L §8.2 `adjustment:`).
     pub(crate) adj_regs: BTreeMap<String, Vec<(Day, Entry)>>,
+    /// The pins that decided the day of each plan leg it books on a day, by each place the leg
+    /// names: a balance there before that day doesn't count the leg, so they are in its read
+    /// set (L §8.2 One read set, "a day outside the span"; tally 2.2.1's 221.1); a leg whose
+    /// day took no pin has none.
+    pub(crate) later_pins: BTreeMap<String, Vec<(Day, Collected)>>,
     /// The legs the walk refused, by (movement, leg) (E §4.2 step 5).
     pub(crate) bad_legs: BTreeMap<(String, String), Refusal>,
     /// The legs a test some of a window's days pass left the window's hole, by (movement,
@@ -626,6 +631,7 @@ impl Walk {
             left_out: BTreeMap::new(),
             left_out_at: BTreeMap::new(),
             adj_regs: BTreeMap::new(),
+            later_pins: BTreeMap::new(),
             bad_legs: BTreeMap::new(),
             hole_legs: BTreeMap::new(),
             pend_at: BTreeMap::new(),
@@ -880,6 +886,33 @@ impl Walk {
             Some(c) => c.clone(),
             None => Collected::default(),
         }
+    }
+
+    /// The pins leg `movement` (its movement and leg names) took where it is booked at
+    /// `places` in `unit`, from its entries' reads: what a refusal of it rests on (L §8.2 One
+    /// read set; tally 2.2.1's 208.2); none where it took no pin.
+    #[must_use]
+    pub fn booked_pins(
+        &self,
+        places: Vec<&str>,
+        unit: &str,
+        movement: (&str, &str),
+    ) -> Option<Collected> {
+        let mut read = Collected::default();
+        for place in places {
+            let Some(log) = self.logs.get(&(place.to_owned(), unit.to_owned())) else {
+                continue;
+            };
+            for e in &log.ents {
+                let booked = matches!(e.change, Change::Delta(_))
+                    && e.mv.as_deref() == Some(movement.0)
+                    && e.leg.as_deref() == Some(movement.1);
+                if booked && let Some(c) = &e.coll {
+                    read.merge(c);
+                }
+            }
+        }
+        super::ends::pins_read(&read)
     }
 
     /// Takes back a leg the sign rule refuses: its entries at `place` that `holds` matches are

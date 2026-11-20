@@ -857,22 +857,6 @@ pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected
     kept
 }
 
-/// The ask's pins of a cell, `pinned`, that a line whose every value is refused takes: a
-/// refusal carries no read set of its own, so what it rests on took each pin, but one its
-/// read set `line` records as met under an inner or narrower claim of its cell (`pin met`: an
-/// `as if`'s pin, a `solve`'s variable; the innermost claim wins, L §4.6) (refcore's
-/// `print_line`, its `refused`; tally 2.1.8 §4, #161). L §8.2 One read set.
-fn refused_pins(pinned: &Collected, line: &Collected) -> Collected {
-    let mut kept = Collected::default();
-    for e in &pinned.entries {
-        let cell = pinned.entries.contains(&pin_entry("pin cell", &e.text));
-        if e.word == "pinned" && cell && !line.entries.contains(&pin_entry("pin met", &e.text)) {
-            kept.entries.insert(e.clone());
-        }
-    }
-    kept
-}
-
 /// The register entry `word` of pin `text`, as a read set notes it (L §8.2).
 fn pin_entry(word: &'static str, text: &str) -> Entry {
     Entry {
@@ -896,14 +880,11 @@ pub(super) fn form_line(
 ) -> Result<Printed, Stop> {
     match &ask.body {
         AskBody::Exprs(exprs) => {
-            let (items, mut met) = engine.line(m, exprs, env, ctx)?;
+            // a refused line lists what it read like a value: a pin nothing read isn't listed
+            // (L §8.2 l.2248, One read set; 208.2 on #241)
+            let (items, met) = engine.line(m, exprs, env, ctx)?;
             if let Some(place) = m.asks_unresolved.get(&ask.id) {
                 unresolved_word(&items, place)?;
-            }
-            if !items.is_empty() && items.iter().all(|i| matches!(i, Item::Refused(_))) {
-                // a refused line rests on what refused it, which took the ask's pins
-                let taken = refused_pins(pinned, &met);
-                met.merge(&taken);
             }
             let unknown = hole_days(&items.iter().collect::<Vec<_>>());
             Ok(Printed {

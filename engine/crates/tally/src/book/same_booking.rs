@@ -477,7 +477,8 @@ impl Engine {
                     Code::Run(Run::Record),
                     format!("same {mover} = {run_id}: {run_id} doesn't exist"),
                 );
-                self.walk_mut(id)?.leg_bad(m, &mover, &lg, &err, point)?;
+                self.walk_mut(id)?
+                    .leg_bad(m, (&mover, &lg, &coll), &err, point)?;
                 continue;
             }
             let end = if side == 0 { &lg.from } else { &lg.to };

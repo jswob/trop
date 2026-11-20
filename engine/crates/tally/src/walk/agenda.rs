@@ -693,7 +693,10 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         Status::Past | Status::Plan => {
             for (leg, lg) in inst.legs.iter().enumerate() {
                 match &lg.day {
-                    Dated::Day(d) if *d >= start => walk.at(point(*d), Act::Leg(mv, leg)),
+                    Dated::Day(d) if *d >= start => {
+                        note_later_pins(walk, lg, *d, &inst.day_coll);
+                        walk.at(point(*d), Act::Leg(mv, leg));
+                    }
                     Dated::Day(_) => {}
                     // a leg of amount 0 books nothing on any day of its window: no hole (E §4.1
                     // step 2: "but for a leg of amount 0"; #214)
@@ -716,6 +719,27 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         | Status::Modelled => {}
     }
     Ok(())
+}
+
+/// The pins that decided plan leg `lg`'s day `day`, `day_coll` what reading its day met, kept
+/// at each place it names: a balance there before `day` doesn't count the leg, and lists them
+/// (refcore's `sched_leg`, `later_by_place`). L §8.2 One read set (tally 2.2.1's 221.1).
+fn note_later_pins(walk: &mut Walk, lg: &LegVal, day: Day, day_coll: &Collected) {
+    let mut pins = Collected::default();
+    for e in &day_coll.entries {
+        if e.word == "pinned" {
+            pins.entries.insert(e.clone());
+        }
+    }
+    if pins.entries.is_empty() {
+        return;
+    }
+    for p in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
+        walk.later_pins
+            .entry(p.to_owned())
+            .or_insert_with(Vec::new)
+            .push((day, pins.clone()));
+    }
 }
 
 /// Whether leg `lg` has a known amount of 0, which books nothing on whichever day (refcore's

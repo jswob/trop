@@ -459,6 +459,13 @@ impl Engine {
                 met.entries.insert(entry.clone());
             }
         }
+        // a plan leg dated after the day isn't counted: the pins that decided its day are in
+        // the balance's read set (L §8.2 One read set; 221.1 on #241)
+        for (day, pins) in walk.later_pins.get(place).into_iter().flatten() {
+            if *day > at.day {
+                met.merge(pins);
+            }
+        }
         self.chain_register(m, (id, at), (place, unit), &mut met)?;
         self.absorb(&met);
         state_value(m, &st, unit, &anchor)

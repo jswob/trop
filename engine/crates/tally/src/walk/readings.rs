@@ -22,7 +22,7 @@ use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::Engine;
+use crate::eval::{Collected, Engine};
 use crate::hole::Hole;
 use crate::model::Reality;
 use crate::num::Num;
@@ -194,12 +194,16 @@ impl Engine {
                     continue;
                 }
                 walk.bad_legs.insert(key, err.clone());
+                // the refusal rests on what booked the leg: the pins its movement took stay
+                // listed under it (L §8.2 One read set, l.2248; 208.2)
+                let pins = walk.booked_pins(ends(leg), &unit, (mv, &leg.name));
                 for p in ends(leg) {
                     walk.take_back(m, p, &unit, (mv, leg), taken)?;
                 }
                 for p in ends(leg) {
                     let mut ent = Ent::new(at, Change::Bad(err.clone()));
                     ent.mv = Some(mv.clone());
+                    ent.coll.clone_from(&pins);
                     walk.add(m, p, &unit, ent)?;
                 }
             }
@@ -314,7 +318,8 @@ impl Walk {
     }
 
     /// A leg refused as it is booked: kept among the refused legs, and its places refused
-    /// from `at` by it (refcore's `bad_legs`, `book_leg`'s refusal). E §4.2 step 5.
+    /// from `at` by it, with the pins its movement's evaluation `read` took (refcore's
+    /// `bad_legs`, `book_leg`'s refusal, `add`; L §8.2 One read set, 208.2). E §4.2 step 5.
     ///
     /// # Errors
     ///
@@ -322,16 +327,18 @@ impl Walk {
     pub(crate) fn refuse_leg(
         &mut self,
         m: &Reality,
-        (movement, lg): (&str, &LegVal),
+        (movement, lg, read): (&str, &LegVal, &Collected),
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
         self.bad_legs
             .insert((movement.to_owned(), lg.name.clone()), err.clone());
         let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+        let pins = super::ends::pins_read(read);
         for p in ends(lg) {
             let mut ent = Ent::new(at, Change::Bad(err.clone()));
             ent.mv = Some(movement.to_owned());
+            ent.coll.clone_from(&pins);
             self.add(m, p, &unit, ent)?;
         }
         Ok(())

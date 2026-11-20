@@ -198,10 +198,11 @@ impl Engine {
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 continue;
             }
+            acc.met.merge(&i.coll);
+            // a refused result lists what it read like a value (L §8.2 One read set; 208.2)
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
             }
-            acc.met.merge(&i.coll);
             if let Exists::Unknown(h) = &i.exists {
                 acc.holes.push(h.clone());
                 continue;
