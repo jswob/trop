@@ -112,7 +112,9 @@ mod tests {
     }
 
     /// tally 2.2.1's builder group G1 (#241): the window group's vectors, refcore's bytes;
-    /// 221.C3 names both windows since the second pin (R21, the names: G3).
+    /// 221.C3 names both windows since the second pin (R21, the names: G3). `rv-*`: the first
+    /// review's findings as G1's fix and the writer's W7 mend them (B1 to B3, B5, N2, N4 to N6,
+    /// N8, N9, P25, P26), each with its pinned days.
     #[test]
     fn m3_fixes_t221_g1() {
         group_holds(RUNS, "t221-g1");

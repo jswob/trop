@@ -1,0 +1,32 @@
+model b3
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input w: date
+input wl: date
+input d0: date
+input d1: date
+input de: date
+input n2: num
+input n100: num
+input m1: num
+input mm: month
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  wl = window(2026-01-01, 2027-06-01) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  de = 2025-12-30 "c"
+  n2 = 2 "c"
+  n100 = 100 "c"
+  m1 = -1 "c"
+  mm = 2026-02 "c"
+ask dvc: days_between(d1, w) / days_between(d0, w) > n100
+ask dvc_a: days_between(d1, w) / days_between(d0, w) > n100 with w = 2026-03-10
+ask dvc_b: days_between(d1, w) / days_between(d0, w) > n100 with w = 2026-03-11
+ask dvc_c: days_between(d1, w) / days_between(d0, w) > n100 with w = 2026-03-12

@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 245] = [
+pub static TEXTS: [(&str, &str); 256] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -884,6 +884,50 @@ pub static TEXTS: [(&str, &str); 245] = [
     (
         "m3/fixes/t221/rs2/sc.tally",
         include_str!("../../m3/fixes/t221/rs2/sc.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/b1_pow.tally",
+        include_str!("../../m3/fixes/t221/rv1/b1_pow.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/b2_dayof.tally",
+        include_str!("../../m3/fixes/t221/rv1/b2_dayof.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/b3_div.tally",
+        include_str!("../../m3/fixes/t221/rv1/b3_div.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/bk_20260321.tally",
+        include_str!("../../m3/fixes/t221/rv1/bk_20260321.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/c1.tally",
+        include_str!("../../m3/fixes/t221/rv1/c1.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/e2.tally",
+        include_str!("../../m3/fixes/t221/rv1/e2.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/inv_b.tally",
+        include_str!("../../m3/fixes/t221/rv1/inv_b.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/p25_round.tally",
+        include_str!("../../m3/fixes/t221/rv1/p25_round.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/so.tally",
+        include_str!("../../m3/fixes/t221/rv1/so.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/w1_base.tally",
+        include_str!("../../m3/fixes/t221/rv1/w1_base.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv1/w1_sc.tally",
+        include_str!("../../m3/fixes/t221/rv1/w1_sc.tally"),
     ),
     (
         "m3/fixes/t221/s5/hs_disagree.tally",

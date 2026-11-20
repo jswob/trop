@@ -1,0 +1,80 @@
+model e2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+input w: date
+input w1: date
+input wl: date
+input d0: date
+input d1: date
+input n2: num
+input n3: num
+input n100: num
+input m1: num
+input k1: num
+input mm: month
+input de: date
+input mar: date
+input step0: num
+input n18: num
+input n20: num
+input n5: num
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  w1 = window(2026-03-10, 2026-03-10) "c"
+  wl = window(2026-01-01, 2027-06-01) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  n2 = 2 "c"
+  n3 = 3 "c"
+  n100 = 100 "c"
+  m1 = -1 "c"
+  k1 = 1 "c"
+  mm = 2026-02 "c"
+  de = 2025-12-30 "c"
+  mar = 2026-03-01 "c"
+  step0 = 0 "c"
+  n18 = 18 "c"
+  n20 = 20 "c"
+  n5 = 5 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+ask r_agree: round(days_between(d1, w) / n100, 1, half-up)
+ask r_agree_a: round(days_between(d1, w) / n100, 1, half-up) with w = 2026-03-10
+ask r_agree_b: round(days_between(d1, w) / n100, 1, half-up) with w = 2026-03-11
+ask r_agree_c: round(days_between(d1, w) / n100, 1, half-up) with w = 2026-03-12
+ask r_cmp: round(days_between(d1, w) / n3, 1, half-up) > k1
+ask r_cmp_a: round(days_between(d1, w) / n3, 1, half-up) > k1 with w = 2026-03-10
+ask r_cmp_c: round(days_between(d1, w) / n3, 1, half-up) > k1 with w = 2026-03-12
+ask r_ref: round(days_between(d1, w) / n100, step0, half-up)
+ask r_ref_a: round(days_between(d1, w) / n100, step0, half-up) with w = 2026-03-10
+ask pl: pow(m1, days_between(de, wl))
+ask pl_a: pow(m1, days_between(de, wl)) with wl = 2026-01-01
+ask pl_b: pow(m1, days_between(de, wl)) with wl = 2026-01-02
+ask pl_c: pow(m1, days_between(de, wl)) with wl = 2027-06-01
+ask pl_cmp: pow(m1, days_between(de, wl)) > 0
+ask dofh: day_of(mm, days_between(d1, w) / n2)
+ask dofh_a: day_of(mm, days_between(d1, w) / n2) with w = 2026-03-10
+ask dofh_b: day_of(mm, days_between(d1, w) / n2) with w = 2026-03-11
+ask adh: add_days(d1, days_between(d1, w) / n2)
+ask adh_b: add_days(d1, days_between(d1, w) / n2) with w = 2026-03-11
+ask dvc: days_between(d1, w) / days_between(d0, w) > n100
+ask dvc_a: days_between(d1, w) / days_between(d0, w) > n100 with w = 2026-03-10
+ask dvc_b: days_between(d1, w) / days_between(d0, w) > n100 with w = 2026-03-11
+ask dvc_c: days_between(d1, w) / days_between(d0, w) > n100 with w = 2026-03-12
+ask dv1: n2 / days_between(d0, w) > n3
+ask dv1_b: n2 / days_between(d0, w) > n3 with w = 2026-03-11
+ask dve: n2 / days_between(w, d0 + 1 day)
+ask dve_a: n2 / days_between(w, d0 + 1 day) with w = 2026-03-10
+ask dve_c: n2 / days_between(w, d0 + 1 day) with w = 2026-03-12
+ask dvw2: days_between(d1, w) / days_between(w, d0 + 1 day)
+ask ovw: overlap_days(w, w, month_of(mar))
+ask ovw_a: overlap_days(w, w, month_of(mar)) with w = 2026-03-10
+ask dbw: days_between(w, w)
+ask dbw_c: days_between(w, w) == 0
