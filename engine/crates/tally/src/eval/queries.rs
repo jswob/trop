@@ -2,7 +2,8 @@
 //! Spec: L §5.11 (aggregates over keys: `mean(t for b)` the exact average, `share(c for b)` the
 //! exact fraction of bindings where c holds, `quantile(t for b, q)` type 1, the smallest term
 //! with at least q·n terms at or below it; over no keys `RUN-EMPTY`; a hole if any term or
-//! `where` is; a term that is `none` refused, `RUN-NONE`), §8.1 (holes spread), §8.4. Without
+//! `where` is; a term that is `none` refused, `RUN-NONE`), §4.4 l.669 (a term that is an
+//! undecided interval is `HOLE-IMPRECISE`), §8.1 (holes spread), §8.4. Without
 //! `for` a query reads a random value (L §5.16, M7's).
 //! Twin: engine/tools/refcore/evaluate.py (`e_query`, its arm with `for`).
 //! Invariants: the terms are read in binding order, every one, as refcore reads them; a hole
@@ -11,7 +12,7 @@
 //! counts the true terms over all of them; `quantile` sorts the terms by value, equals kept
 //! in binding order, and takes the first whose rank reaches q·n, the last when none does.
 
-use super::aggregate::Brings;
+use super::aggregate::{Brings, window_term_hole};
 use super::arith::{Op, Test, arith, compare};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, not_typed, num_stop, refuse};
@@ -58,6 +59,12 @@ impl Engine {
             }
             if t == Value::None {
                 return Err(refuse(Run::None, format!("a term of {word} is none here")));
+            }
+            if let Value::Window(w) = &t {
+                // an undecided interval is no term's one value: the hole, as `sum`'s
+                // (L §4.4 l.669; P27 on #241)
+                holes.push(window_term_hole(m, w, word)?);
+                continue;
             }
             terms.push(t);
         }
