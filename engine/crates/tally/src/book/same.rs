@@ -31,7 +31,7 @@ use crate::model::{KeyVal, MvRef, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, LegVal, invariant, qty_value};
+use crate::walk::{Amount, Dated, End, Inst, LegVal, invariant, qty_value};
 
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
@@ -284,6 +284,19 @@ pub fn kept_once(
     out
 }
 
+/// An observed row as `HOLE-SAME` reads one side of a movement stated `same`: its id, its
+/// day, its legs (L §5.19 One movement on two statements, §8.1).
+pub(crate) fn obs_side(o: &Obs) -> (&str, Option<Day>, &[LegVal]) {
+    (&o.id, Some(o.day), &o.legs)
+}
+
+/// A planned instance as `HOLE-SAME` reads one side of a movement stated `same`: its id as
+/// the register names it (`in1`, `in2[k]`), its day where it is one, its legs (L §6.1, §8.1;
+/// tally 2.2.1's 219.1).
+pub(crate) fn inst_side(i: &Inst) -> (&str, Option<Day>, &[LegVal]) {
+    (&i.id, i.day.as_ref().and_then(Dated::day), &i.legs)
+}
+
 /// Where row `row` and the rows `others` stated `same` with it disagree on a leg's amount
 /// or day (on leg `leg` alone, where given), the disagreement's hole in L §8.1's form,
 /// naming every row of the class that states the leg, in id order; none where they agree or
@@ -298,13 +311,32 @@ pub fn same_differ(
     others: &[&Obs],
     leg: Option<&str>,
 ) -> Result<Option<Hole>, Stop> {
-    for mine in &row.legs {
+    let others: Vec<(&str, Option<Day>, &[LegVal])> = others.iter().map(|o| obs_side(o)).collect();
+    sides_differ(m, obs_side(row), &others, leg)
+}
+
+/// [`same_differ`] over sides, each an id, a day where it is one and legs ([`obs_side`],
+/// [`inst_side`]), a planned one named by its instance (tally 2.2.1's 219.1): where side
+/// `row` and the sides `others` stated `same` with it disagree on a leg's amount or day (on
+/// leg `leg` alone, where given), the disagreement's hole naming every side of the class that
+/// states the leg, in id order (refcore's `same_obs_differ`). L §5.19, §6.1, §8.1.
+///
+/// # Errors
+///
+/// A number error printing an amount or a day.
+pub(crate) fn sides_differ(
+    m: &Reality,
+    (row_id, row_day, legs): (&str, Option<Day>, &[LegVal]),
+    others: &[(&str, Option<Day>, &[LegVal])],
+    leg: Option<&str>,
+) -> Result<Option<Hole>, Stop> {
+    for mine in legs {
         if leg.is_some_and(|name| mine.name != name) {
             continue;
         }
-        let mut class: Vec<(&Obs, &LegVal)> = vec![(row, mine)];
-        for other in others {
-            for theirs in other.legs.iter().filter(|lg| lg.name == mine.name) {
+        let mut class: Vec<(&str, &LegVal)> = vec![(row_id, mine)];
+        for (other, _, their_legs) in others {
+            for theirs in their_legs.iter().filter(|lg| lg.name == mine.name) {
                 class.push((other, theirs));
             }
         }
@@ -312,7 +344,7 @@ pub fn same_differ(
             continue;
         }
         // the rows in id order (L §8.1 HOLE-SAME, §2.5; P50)
-        class.sort_by_cached_key(|(o, _)| m.id_order(&o.id));
+        class.sort_by_cached_key(|(o, _)| m.id_order(o));
         let (what, figures) = if let Some(figures) = amounts_differ(m, &class)? {
             (format!("the amount of {}", mine.name), figures)
         } else if let Some(figures) = days_differ(&class) {
@@ -320,17 +352,19 @@ pub fn same_differ(
         } else {
             continue;
         };
-        let ids: Vec<String> = class.iter().map(|(o, _)| o.id.clone()).collect();
+        let ids: Vec<String> = class.iter().map(|(o, _)| (*o).to_owned()).collect();
         let parts: Vec<String> = figures
             .iter()
             .zip(&ids)
             .map(|(figure, id)| format!("{figure} ({id})"))
             .collect();
-        let day = mine.day.day().unwrap_or(row.day);
+        let day = match mine.day.day().or(row_day) {
+            Some(day) => day.text(),
+            None => mine.day.value().text(m).map_err(num_stop)?,
+        };
         let text = format!(
-            "{} are one, but {what} differs on {}: {}",
+            "{} are one, but {what} differs on {day}: {}",
             and_list(&ids),
-            day.text(),
             and_list(&parts)
         );
         return Ok(Some(Hole::asked(&text, &ids.join(", "))));
@@ -351,7 +385,7 @@ pub(crate) fn and_list(items: &[String]) -> String {
 
 /// The legs' amounts as they print where every one is a number and they don't all agree
 /// (refcore's `vkey` compare). L §5.19.
-fn amounts_differ(m: &Reality, class: &[(&Obs, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
+fn amounts_differ(m: &Reality, class: &[(&str, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
     let mut figures: Vec<(&Num, &str)> = Vec::with_capacity(class.len());
     for (_, lg) in class {
         let Amount::Qty(amount) = &lg.amount else {
@@ -378,7 +412,7 @@ pub(super) fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Sto
 }
 
 /// The legs' days as they print where every one is a day and they don't all agree. L §5.19.
-fn days_differ(class: &[(&Obs, &LegVal)]) -> Option<Vec<String>> {
+fn days_differ(class: &[(&str, &LegVal)]) -> Option<Vec<String>> {
     let mut days = Vec::with_capacity(class.len());
     for (_, lg) in class {
         let Dated::Day(day) = &lg.day else {

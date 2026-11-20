@@ -18,7 +18,7 @@ use std::collections::BTreeSet;
 use super::adjust::Adjustment;
 use super::observe::Obs;
 use super::reading::Pad;
-use super::same::{Groups, and_list, kept_once, same_differ};
+use super::same::{Groups, and_list, inst_side, kept_once, obs_side, sides_differ};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -698,9 +698,9 @@ impl Engine {
             }
             Moving::Adj(_) | Moving::Pad(..) => {}
         }
-        if let Moving::Obs(o) = &src
-            && (name == "day" || is_leg)
-            && let Some(h) = self.same_rows_hole(m, o, (name != "day").then_some(name), ctx.cut)?
+        if (name == "day" || is_leg)
+            && let Some(h) =
+                self.same_rows_hole(m, &src, (name != "day").then_some(name), ctx.cut)?
         {
             return Ok(Value::Hole(h));
         }
@@ -780,30 +780,49 @@ impl Engine {
         Ok(insts.iter().find(|i| i.id == id).cloned().map(Moving::Plan))
     }
 
-    /// The `HOLE-SAME` of observed row `o` where the other observed rows of its `same` group
-    /// disagree with it on a leg's amount or day (on leg `leg` alone, where given): a read of
-    /// the movement away from its places (refcore's `same_rows_hole`). L §5.19 One movement
-    /// on two statements, §6.1, §8.1.
+    /// The `HOLE-SAME` of movement `x`, an observed row or a planned instance, where the other
+    /// members of its `same` group disagree with it on a leg's amount or day (on leg `leg`
+    /// alone, where given): a read of the movement away from its places, "by every read of
+    /// either" (refcore's `same_rows_hole`; tally 2.2.1's 219.1 for a planned side). L §5.19
+    /// One movement on two statements, §6.1, §8.1.
     fn same_rows_hole(
         &mut self,
         m: &Reality,
-        o: &Obs,
+        x: &Moving,
         leg: Option<&str>,
         cut: Day,
     ) -> Result<Option<Hole>, Stop> {
+        let row = match x {
+            Moving::Obs(o) => obs_side(o),
+            Moving::Plan(i) => inst_side(i),
+            Moving::Adj(_) | Moving::Pad(..) => return Ok(None),
+        };
         let groups = self.same_groups(m, cut)?;
-        let Some(group) = groups.get(&o.id) else {
+        let Some(group) = groups.get(row.0) else {
             return Ok(None);
         };
-        let all = self.observations(m, cut)?;
-        let mut others: Vec<&Obs> = Vec::new();
-        for y in group.iter().filter(|y| **y != o.id) {
-            others.extend(all.iter().find(|x| x.id == *y));
+        // each other member, an observed row, else a planned instance at the cut
+        let mut members: Vec<Moving> = Vec::new();
+        for y in group.iter().filter(|y| y.as_str() != row.0) {
+            let all = self.observations(m, cut)?;
+            if let Some(o) = all.iter().find(|o| o.id == *y) {
+                members.push(Moving::Obs(o.clone()));
+            } else if let Some(p) = self.planned_by_id(m, y, cut)? {
+                members.push(p);
+            }
+        }
+        let mut others: Vec<(&str, Option<Day>, &[LegVal])> = Vec::new();
+        for member in &members {
+            match member {
+                Moving::Obs(o) => others.push(obs_side(o)),
+                Moving::Plan(i) => others.push(inst_side(i)),
+                Moving::Adj(_) | Moving::Pad(..) => {}
+            }
         }
         if others.is_empty() {
             return Ok(None);
         }
-        same_differ(m, o, &others, leg)
+        sides_differ(m, row, &others, leg)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none
