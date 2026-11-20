@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 202] = [
+pub static TEXTS: [(&str, &str); 212] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -650,8 +650,32 @@ pub static TEXTS: [(&str, &str); 202] = [
         include_str!("../../m3/fixes/t221/cells/sc.tally"),
     ),
     (
+        "m3/fixes/t221/cov/cov.tally",
+        include_str!("../../m3/fixes/t221/cov/cov.tally"),
+    ),
+    (
+        "m3/fixes/t221/from/base.tally",
+        include_str!("../../m3/fixes/t221/from/base.tally"),
+    ),
+    (
+        "m3/fixes/t221/from/sc.tally",
+        include_str!("../../m3/fixes/t221/from/sc.tally"),
+    ),
+    (
+        "m3/fixes/t221/from/sc_after.tally",
+        include_str!("../../m3/fixes/t221/from/sc_after.tally"),
+    ),
+    (
+        "m3/fixes/t221/from/sc_before.tally",
+        include_str!("../../m3/fixes/t221/from/sc_before.tally"),
+    ),
+    (
         "m3/fixes/t221/fx/fx.tally",
         include_str!("../../m3/fixes/t221/fx/fx.tally"),
+    ),
+    (
+        "m3/fixes/t221/fx/fx2.tally",
+        include_str!("../../m3/fixes/t221/fx/fx2.tally"),
     ),
     (
         "m3/fixes/t221/j/a/a.tally",
@@ -746,12 +770,28 @@ pub static TEXTS: [(&str, &str); 202] = [
         include_str!("../../m3/fixes/t221/o216/o4_leg_a.tally"),
     ),
     (
+        "m3/fixes/t221/p25/p25_list.tally",
+        include_str!("../../m3/fixes/t221/p25/p25_list.tally"),
+    ),
+    (
         "m3/fixes/t221/rd4/rd4.tally",
         include_str!("../../m3/fixes/t221/rd4/rd4.tally"),
     ),
     (
         "m3/fixes/t221/sign/sign.tally",
         include_str!("../../m3/fixes/t221/sign/sign.tally"),
+    ),
+    (
+        "m3/fixes/t221/w218/a1_window_end.tally",
+        include_str!("../../m3/fixes/t221/w218/a1_window_end.tally"),
+    ),
+    (
+        "m3/fixes/t221/win/w1_differs_nowait.tally",
+        include_str!("../../m3/fixes/t221/win/w1_differs_nowait.tally"),
+    ),
+    (
+        "m3/fixes/t221/win/w4_agree_false_nowait.tally",
+        include_str!("../../m3/fixes/t221/win/w4_agree_false_nowait.tally"),
     ),
     (
         "m3/mini/acme_stops.tally",

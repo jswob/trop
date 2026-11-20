@@ -42,3 +42,4 @@ ask f1: bal(konto, 2026-03-31)
 ask f2: flows(conv, 2026-03), flows(convm, 2026-03)
 ask f3: bal(konto, 2026-03-31) with w = 2026-03-11
 ask fday: flows(conv, 2026-03)
+ask fmonth: flows(convm, 2026-03)

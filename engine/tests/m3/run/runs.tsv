@@ -92,4 +92,17 @@ t221-gd/221-10-agg-window	m3/fixes/t221/new	run tb.tally --ask a221_10	-	tally 2
 t221-gd/233-8-twin	m3/fixes/t221/new	run tb.tally --ask c233_8t	-	tally 2.2.1 (#241) S-233.8's twin: as known after on refuses the request REQ-CLOCK
 t221-gd/233-c-load-words	m3/fixes/t221/new	run u233c.tally	-	tally 2.2.1 (#241) 233.c: unit of a number, refused at load in load's words
 t221-g1/221-C3-arith	m3/fixes/t221/arith2	run arith2.tally	-	tally 2.2.1 (#241) 221.C3, L §4.4: + of two computed windows is their interval, a hole only where one value is needed (held for G1)
+t221-g1/214-zero-leg	m3/fixes/t221/misc	run m1.tally --ask zerowin	-	tally 2.2.1 (#241) 214.1, L §5.14, E §4.1: a window-dated leg of amount 0 books nothing and leaves no hole
+t221-g1/214-one-day	m3/fixes/t221/misc	run m1.tally --ask oneday	-	tally 2.2.1 (#241) 214.1, L §4.4 l.669: a window of one day is that day, also after it ends
+t221-g1/218-window-end	m3/fixes/t221/w218	run a1_window_end.tally	-	tally 2.2.1 (#241) 218.1, L §5.19, E §4.2 step 4: a reading at the end of a window's last day; the window has ended before it
+t221-g1/220-1-covered-end	m3/fixes/t221/cov	run cov.tally --ask v1 v2 v3	-	tally 2.2.1 (#241) 220.1, E §4.1 step 2: a planned movement on a window across a covered span's end is the hole where the other class reaches
+t221-g1/230-4-undone	m3/fixes/t221/misc2	run m2.tally --ask undone undone_f u06 u10 u15	-	tally 2.2.1 (#241) 230.Q4, E §5 step 1: a version known inside the window, undone inside it, leaves the amount HOLE-IMPRECISE
+t221-g1/236-1-differs-nowait	m3/fixes/t221/win	run w1_differs_nowait.tally	-	tally 2.2.1 (#241) 236.1, L §4.3, §5.14: a window at whose key's where holds in one law-date class only is the hole (the form that needs no wait; the waiting form comes with W1)
+t221-g1/236-1-agree-false-nowait	m3/fixes/t221/win	run w4_agree_false_nowait.tally	-	tally 2.2.1 (#241) 236.1: a key's where false in the first class and true in the second
+t221-g1/221-C2-list	m3/fixes/t221/p25	run p25_list.tally	-	tally 2.2.1 (#241) 221.C2, L §4.4 l.669: a computed interval inside a list is a hole where one value is needed
+t221-g1/window-key-month	m3/fixes/t221/fx	run fx.tally --ask fmonth f1 f3	-	tally 2.2.1 (#241) S-window-key (option A): a month's key holding the whole window is read, 800.00 PLN
+t221-g1/window-key-two-months	m3/fixes/t221/fx	run fx2.tally	-	tally 2.2.1 (#241) S-window-key: a window across two months read at a month's key is HOLE-IMPRECISE
+t221-g1/from-across	m3/fixes/t221/from	run base.tally sc.tally --ask s_after s_d28 s_d02	-	tally 2.2.1 (#241) S-from, L §6.4: a scenario's move on a window across its from is the hole from D on
+t221-g1/from-after	m3/fixes/t221/from	run base.tally sc_after.tally	-	tally 2.2.1 (#241) S-from's twin: a window wholly after from books as written
+t221-g1/from-before	m3/fixes/t221/from	run base.tally sc_before.tally	-	tally 2.2.1 (#241) S-from's twin: a window wholly before from is left out
 t221-rc/221-10-mean-quantile	m3/fixes/t221/new	run agg2.tally	-	tally 2.2.1 (#241) 221.10, L §4.4 l.669: window terms of mean and quantile are the hole

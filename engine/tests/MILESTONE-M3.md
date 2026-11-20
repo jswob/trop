@@ -196,3 +196,37 @@ T's plan for the round (the lead's copy, `tmp/spec-2.2.1/t-plan.md`), chunk C1, 
 - **221.C3** (`t221-g1/221-C3-arith`, `m3_fixes_t221_g1`): refcore's bytes, where the engine holes at `+`. It is held for #241 in `held.tsv` until the builder's G1, because a `Logged-Red:` commit can't be pushed before a builder commit (R-77).
 - `fixes/t22/fault_paths` is re-held to M7 by name.
 - `baselines/session5-visible/` is retired; its seconds are `defs/session5-seconds.tsv`.
+
+## tally 2.2.1, chunk C2: the windows (#241, 2026-11-20)
+
+On refcore at the window group's pin (bcc49686). Every store was re-run (P23), each script at its own job count, niced.
+
+**Vectors** (`m3/fixes/t221/`):
+- Group `t221-g1`, 13 runs, red on the engine until the builder's G1:
+  - 214.1: `214-zero-leg`, `214-one-day`.
+  - 218.1: `218-window-end`.
+  - 220.1: `220-1-covered-end`.
+  - 230.Q4: `230-4-undone`.
+  - 236.1: `236-1-differs-nowait`, `236-1-agree-false-nowait`.
+  - 221.C2: `221-C2-list`.
+  - S-window-key: `window-key-month`, `window-key-two-months`.
+  - S-from: `from-across`, `from-after`, `from-before`.
+
+  Three of them (`window-key-two-months`, `from-after`, `from-before`) already print refcore's bytes on the engine. They hold the twins G1 must keep.
+- `t221-rc/221-10-mean-quantile` is held for M4 (`held.tsv`): the engine has no `mean` or `quantile` before M4.
+- Five `later/` texts: M5a's 221.R2 and S-213 with its two twins; M7's S-212.
+- 221.R3 (P22): m1 `fixes/g13` `r_agent_w_{c1,c3,c5,f1,f2,f3}` and `rf_w_{w01,w11,w13}` move from `m1/spec.tsv` to `vectors.tsv`, `for` t221-G1. Their bytes are refcore's, and they match the writer's probe lines.
+
+**The proof: what moved, by item.** Nothing else moved.
+
+| Item | Records |
+|---|---|
+| 218.1 | m1 `fixes/gate8/m3_window_end` (the holes after the window's last day become 900.00 PLN; the `unknown day: save_day` lines go) |
+| 214.1 | m2 `fixes/rv/g4f_zero_leg`, `g4f_zero_leg_life` (the hole becomes 0.00 PLN); I:M:CMP-01's baseline (+1 `WARN-NEGATIVE` line, in C2's first commit) |
+| 221.C2 | m2 `fixes/t22/list_window_name` (`[window(4, 6), 1]` becomes the window's hole) |
+| 221.R3 | the 9 m1 rows above (spec rows released) |
+| R:all | 1 514 passed |
+
+- m1 1 977 records, m2 296, kernel 166, codes m0 252, m1 38, m2 9, m0 load, m3 check 383, runs 124, spec 40, later 13, hh4 75. Integration 479: 395 same, 84 not run. Unit 154: 153 same, 1 ran.
+- `m1/spec.tsv` keeps 10 rows (e1 and e2 still crash refcore). `m2/spec.tsv` keeps 9: `num_list_key` still prints the object 207.4 mends at W5.
+- **The STOP-REPORT** (GAPS.md, C2): refcore at the pin passes 8 GB on m2's five R7 goldens. The cause is S-212's context per projected instance. Their records stay as stored, and `m2/vectors.py --check` is red on them alone until the writer's mend.

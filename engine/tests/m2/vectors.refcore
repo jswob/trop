@@ -112806,8 +112806,7 @@ version v
   w_zer = window(2026-04-15, 2026-04-25) "s"
   zero = 0.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-,,1:0,592:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
-  unknown day: w_zer
+,,1:0,495:bz: 0.00 PLN
   cut 2026-08-01
 fe: 0.00 PLN
   cut 2026-08-01
@@ -112853,8 +112852,7 @@ version v
   w_zer = window(2026-04-15, 2026-04-25) "s"
   zero = 0.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-,,1:0,622:bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
-  unknown day: w_zer
+,,1:0,525:bz: 0.00 PLN
   cut 2026-08-01
 fe: 0.00 PLN
   cut 2026-08-01
@@ -115310,7 +115308,8 @@ version v
 ask a: [gap, 1]
 ask b: gap
 ask t: gap, 1
-,,1:0,279:a: [window(4, 6), 1]
+,,1:0,364:a: [?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1]
+  unknown day: w
   cut 2026-01-01
 b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w)
   unknown day: w

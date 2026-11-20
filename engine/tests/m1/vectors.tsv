@@ -1967,3 +1967,12 @@ fixes/gate8/m3_just_before	fixes-gate8		engine/tests/m1/fixes/gate8/m3_just_befo
 fixes/gate8/m3_window_class	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_class	engine/tests/m1/fixes/gate8/m3_window_class/base.tally			-
 fixes/gate8/m3_left_out	fixes-gate8		engine/tests/m1/fixes/gate8/m3_left_out	engine/tests/m1/fixes/gate8/m3_left_out/base.tally			-
 fixes/gate8/m3_less_cov	fixes-gate8		engine/tests/m1/fixes/gate8/m3_less_cov	engine/tests/m1/fixes/gate8/m3_less_cov/base.tally			-
+fixes/g13/r_agent_w_model_with_r_agent_w_c1_c1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_c1.tally	c1		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_c3_c3	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_c3.tally	c3		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_c5_c5	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_c5.tally	c5		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_f1_f1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_f1.tally	f1		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_f2_f2	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_f2.tally	f2		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_f3_f3	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_f3.tally	f3		t221-G1
+fixes/g13/rf_w_model_with_rf_w_w01_w01	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w01.tally	w01		t221-G1
+fixes/g13/rf_w_model_with_rf_w_w11_w11	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w11.tally	w11		t221-G1
+fixes/g13/rf_w_model_with_rf_w_w13_w13	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w13.tally	w13		t221-G1

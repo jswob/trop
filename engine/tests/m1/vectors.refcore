@@ -233332,22 +233332,20 @@ ask q_bal: bal(konto, d), bal(jar, d) for d in [2026-02-09, 2026-02-10, 2026-02-
 ask q_gap: gap(konto, 2026-02-10), gap(jar, 2026-02-11) law cut
 
 ask q_flows: flows(konto, 2026-02-11 .. 2026-02-28), flows(jar, 2026-02-11 .. 2026-02-28) law cut
-,,1:0,2565:q_bal (d = 2026-02-09): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+,,1:0,2274:q_bal (d = 2026-02-09): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
   unknown day: save_day
   unknown day: spend_day
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-10): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+q_bal (d = 2026-02-10): (900.00 PLN, ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
   unknown day: save_day
   unknown day: spend_day
   anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-11): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), 500.00 PLN)
-  unknown day: save_day
+q_bal (d = 2026-02-11): (900.00 PLN, 500.00 PLN)
   anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend)
   anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-28): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), 500.00 PLN)
-  unknown day: save_day
+q_bal (d = 2026-02-28): (900.00 PLN, 500.00 PLN)
   anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend)
   anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
   law date 2026-03-31, cut 2026-03-31
@@ -234011,4 +234009,591 @@ q_twin: twin[2026-01]
   read at its walk point: other
   leg cash from world to other amount 11.00 PLN
   cut 2026-02-15
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c1_c1,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_c1.tally --ask c1,867:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c1.tally,44:part c1
+  tally 2
+
+
+ask c1: abs(age(w, d2))
+,,1:0,467:c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c3_c3,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_c3.tally --ask c3,871:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c3.tally,48:part c3
+  tally 2
+
+
+ask c3: pow(age(w, d2), n2)
+,,1:0,418:c3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_c5_c5,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_c5.tally --ask c5,872:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_c5.tally,49:part c5
+  tally 2
+
+
+ask c5: abs(age(w, d2) - n5)
+,,1:0,467:c5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_f1_f1,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_f1.tally --ask f1,878:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_f1.tally,55:part f1
+  tally 2
+
+
+ask f1: add_months(d1, age(w, d2))
+,,1:0,400:f1: window(2026-01-01, 2026-02-01)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_f2_f2,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_f2.tally --ask f2,871:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_f2.tally,48:part f2
+  tally 2
+
+
+ask f2: pow(n5, age(w, d2))
+,,1:0,467:f2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,46:fixes/g13/r_agent_w_model_with_r_agent_w_f3_f3,9:fixes-g13,53:run r_agent_w_model.tally r_agent_w_f3.tally --ask f3,876:21:r_agent_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,18:r_agent_w_f3.tally,53:part f3
+  tally 2
+
+
+ask f3: add_days(d1, age(w, d2))
+,,1:0,400:f3: window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w01_w01,9:fixes-g13,45:run rf_w_model.tally rf_w_w01.tally --ask w01,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w01.tally,57:part w01
+  tally 2
+
+ask w01: day_of(2026-03, age(w, d2))
+,,1:0,467:w01: ?"date within window(2026-03-03, 2026-03-20) not precise enough for day_of" (w)
+  unknown day: w
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w11_w11,9:fixes-g13,45:run rf_w_model.tally rf_w_w11.tally --ask w11,871:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w11.tally,57:part w11
+  tally 2
+
+ask w11: pow(age(w, d2), age(w, d2))
+,,1:0,468:w11: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,38:fixes/g13/rf_w_model_with_rf_w_w13_w13,9:fixes-g13,45:run rf_w_model.tally rf_w_w13.tally --ask w13,868:16:rf_w_model.tally,767:model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+,14:rf_w_w13.tally,54:part w13
+  tally 2
+
+ask w13: add_years(w, age(w, d2))
+,,1:0,401:w13: window(2026-03-03, 2027-03-20)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
 ,
