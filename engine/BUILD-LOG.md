@@ -5631,3 +5631,79 @@ The oracle is the writer's unpinned refcore (`tmp/spec-2.2.1-build/refcore-w6/`)
 - **What I tried:** a narrower 206.1 (`proj_base` only, as the plan says). It already is that. The moved records are exactly the inputs that function's rule reaches.
 - **What I ask:** the lead to rule whether these 16 ids are the pin's (re-stored with the rest of G2's), or whether either change goes back. Each change is its own commit and reverts alone.
 - **State:** this commit, after 06024c06; `check quick` green; nothing uncommitted; not pushed.
+
+## 2026-11-20 tally 2.2.1 G1, the review's fix: B1 to B5, N1, N2, N4 to N6, N8, N9 (issue #241)
+
+The review is `tmp/spec-2.2.1/review-g1.md` (5 blocking, 9 non-blocking), its probes `tmp/spec-2.2.1/review/g1/`, the rulings `picks-g1-review.md` (P30 to P32). Branch `build/2.2.1`, after G2's eb4dde9d. Seven commits and this one, in the brief's order. None is pushed: G2's 30 ids are still red beside `round`'s 2, so the branch waits for the pin.
+
+The sweep (`tmp/spec-2.2.1-build/g1fix/sweep.sh`) runs the review's 46 texts, the scenario pairs and G1's own probes, once per item (`sweep/s0` … `s7`), and once on the writer's unpinned refcore (`refcore-w7`, `sweep/w7`), a cross-check only. `cmp.py` counts the changed asks between two stages; `red.py` lists `check commit`'s red ids and those outside the lists (`g2-red.txt`, G2's 30; `round-red.txt`, the 2 g13 rows).
+
+- **b93db811, B5:** `walk/plan.rs` `make_instances_held` and `check_booked`, `walk/instance.rs` `Bookings`. A window's booked amount is keyed and checked under every booking cut its body joins up to K (`booking_cuts`), not under the first cut alone.
+  - `inv_b` `now`: `refused: ENGINE-INVARIANT a booked plan amount changed: pay booked at 2026-03-05 differs between the cuts 2026-03-07 and 2026-06-10 …` → `?"date within window(2026-03-05, 2026-03-20) not precise enough for the booking cut of pay" (pay)`, what `--ask now` alone prints (230.Q4's hole). `k07: 600.00 PLN` stays.
+  - `inv_a` (checked, as the brief asks) `k10`: the same `ENGINE-INVARIANT` → the same hole. That one predates the diff.
+  - Sweep: 7 asks, each an `ENGINE-INVARIANT` line becoming its ask-alone answer: `inv_a` `k10`, `k21`, `now`; `inv_b` `now`; `w1_sc` `k0429`, `k0430`, `k0501` (`500.00 PLN`).
+  - No `check commit` of its own: it changes only `ENGINE-INVARIANT` lines, which no stored record holds; P30's run, next, shows none moved.
+- **07664c0e, P30 (B1, B2, B3, N5, N6, N9):** one function every operator and built-in goes through: `eval/windows.rs` `value_choices`, with `whole_values` (the whole numbers in turn, up to 100 000 values), `interval_ends`, `one_window`, `day_tuples`, `values_interval`; `window_arith` and the new `arith_values`. `Window.whole` (`model/value.rs`) marks an interval of whole values. Callers: `eval/builtin.rs` `abs`, `pow`; `eval/dates.rs` `day_of`, `moved_by`, `lifted`, `apply` (`start_of`, `end_of` of a period). Sweep of the forms: `+ - * /`, the comparisons, `abs`, `pow`, `day_of`, `add_*`, `start_of`/`end_of`, `overlap_days`, `days_between` and the aggregates' terms, each over one window, two windows and one window named twice.
+  - **B1** `b1_pow` (pins 01-01 `1`, 01-02 `-1`): `pl: 1` → `?"date within window(2026-01-01, 2027-06-01) not precise enough for a print" (wl)`; `pl_cmp: true` → the hole "for pow(m1, days_between(de, wl)) > 0".
+  - **B2** `b2_dayof` (pins `RUN-NOT-INT`, `2026-02-05`, `RUN-NOT-INT`): `dofh: refused: RUN-NOT-INT 4.5 is not an integer` → `?"… not precise enough for day_of" (w)`. `e2` `adh` the same, "for add_days".
+  - **B3** `b3_div` (pins `false`, `RUN-DIV`, `false`): `dvc: false` → `?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w)`. `e2` `dvw2`: `refused: RUN-DIV` → the same hole.
+  - **N5** `so` (`wx` across two months): `so`, `eo`, `so_c`: `refused: ENGINE-INVARIANT a value of a type its place doesn't take …` → `window(2026-02-01, 2026-03-01)`, `window(2026-03-01, 2026-04-01)`, and the hole "for start_of(month_of(wx)) <= wx".
+  - **N6** `e2` `dv1` (pin 03-11 `RUN-DIV`): `false` → the hole "for arithmetic"; `dve` (pin 03-10 `1`): `refused: RUN-DIV` → the same hole.
+  - **N9** `e2` `ovw` (every pin `1`): the hole "for a print" → `1`. `ovw_a: 1` and `dbw: 0` stay.
+  - Sweep: 23 asks, every one equal to refcore-w7's (`b1` pl, pl_cmp; `b2` dofh; `b3` dvc; `e1` adh, div0, div0c, divw, dofh, pow_long2; `e2` adh, dofh, dv1, dvc, dve, dvw2, ovw, pl, pl_cmp; `e4` so; `so` eo, so, so_c).
+  - Red after it (`commit-2.txt`): 30, all G2's; outside the lists: 0.
+- **66ea4d94, B4 (P31):** `walk/state.rs` (`Ent.own`; `apply_ent` keeps an own refusal beside an open window test), `walk/ends.rs` `leg_bad_own`, `walk/agenda.rs` (`Act::GlobalOwn`), `walk/day.rs` (a refused amount, leg or change of a plan, an observation or an adjustment is the movement's own). A refusal none of whose reads meets a value under the window's hole stands (l.2217); one that depends on the day's class is still the hole (l.671).
+  - `ot_base` + `ot_sc` `b0531` (pins 04-29, 05-01, 05-03 all `RUN-DIV`): `?"date within window(2026-04-28, 2026-05-03) not precise enough for a balance" (px)` → `refused: RUN-DIV division by zero`. `ex` the same.
+  - `ot2` `b0531` (the base twin): the hole → `refused: RUN-DIV division by zero`, as its pins `p0227`, `p0302`.
+  - Sweep: 3 asks, those. Red after it (`commit-3.txt`): 30, all G2's; outside: 0.
+- **fcbb91ff, N1 and N8 (P32):** `walk/state.rs` (`St.reopen`, set at a reset from the pending window holes, `at_reading`), `hole/questions.rs` `of_windows`. A reading's instant is an edge of the window: at the instant the stated balance, then the hole (l.1726).
+  - **N8** `c2` `a20260402` (every pin `700.00 PLN`): the hole → `700.00 PLN`. `c1` and `c3` `a20260402` the same.
+  - **N1** `c2` `a20260403` (pins 700.00, 700.00, 800.00): `800.00 PLN`, a wrong number in silence → `?"date within window(2026-04-01, 2026-04-03) not precise enough for a balance" (pay_x)`. `c3` the same.
+  - Sweep: 8 asks: `c1` a20260402; `c2`, `c3` a20260402, a20260403, a20260405 (`800.00 PLN` → the hole, its pins 700/700/800); `jm_m` `own` (the tuple's `800.00 PLN` → the same hole).
+  - Red after it (`commit-4.txt`): 30, all G2's; outside: 0.
+- **65eaf920, `round` (P25, N2):** `eval/builtin.rs` `round` through `value_choices` (`bare_step` per tuple, `round_values`, `values_interval`). Closes the turn-2 STOP-REPORT "`round` over a window gives its interval only by moving two stored records".
+  - **N2** `e2`: `r_agree` (pins `0`): the hole "for round" → `0`; `r_cmp` (pins `true`) → `true`; `r_ref` (every day `RUN-DOMAIN`) → `refused: RUN-DOMAIN round with a step 0 that is not positive`.
+  - Sweep: 13 asks: `e1` r_agree, r_cmp; `e2` r_agree, r_cmp, r_ref; `g_round` and `p25_round` r1 (`0`), r2, r3 (the hole "for a print"), r4 (`true`). All equal to refcore-w7's.
+  - Red after it (`commit-5.txt`): 32: G2's 30 and m1 `fixes/g13/r_agent_w_model_with_r_agent_w_c2`, `rf_w_model_with_rf_w_w15` (`round` → "for a print"), its whole list; outside: 0.
+- **8494c41b, N4:** `book/adjust.rs` `measure_move` takes a window's last day as the booking day; `Adjustment.inst_on` holds the window's text for the question (refcore-w7's).
+  - `bk_20260321` `a20260331` (every pin the `HOLE-CHANGED` question and `adjustment: pay by 50.00 PLN on 2026-03-21`): `600.00 PLN` → `?"pay on window(2026-03-05, 2026-03-20) changed after it was paid (version a1); is back pay due, and when?" (pay)` with `adjustment: pay by 50.00 PLN on 2026-03-21 (version a1), remaining 50.00 PLN`. `fl`: `100.00 PLN` → the same question.
+  - Under the stop rule: 24 lines, one file. Sweep: those 2 asks. Red after it (`commit-6.txt`): 32, the same; outside: 0.
+- **N3:** not built. STOP-REPORT below.
+- **f996d955, a scenario's decision before `from`:** `walk/agenda.rs` `hole_days`, `schedule_decision` and the new `note_left_out_at`.
+  - Which is right: L §6.4 l.1867 leaves out every move the scenario declares dated before D, and a decision is a move; L §8.2's `left out:` line (l.2266) lists what was left out; E §9 item 5 has no exception for decisions. A movement already printed its line, so the decision's missing line was the wrong one.
+  - `fr_d_20260503` `e`: values unchanged, `left out: mx, 1 instances, first 2026-04-29` joins.
+  - Sweep: 19 asks, each a `left out:` line joining with no value changed: `d1_sc` 10, `fr_d_20260502` 2, `fr_d_20260503` 4, `g_dfrom` 3. refcore-w7 prints none of them: an intended difference.
+  - Red after it (`commit-7.txt`): 32, the same; outside: 0.
+- **N7:** no change, as ruled.
+- **Choices taken from refcore-w7 where the ruling leaves one:** the 100 000-value limit on whole numbers; `abs` at the ends and 0, `pow` at the ends for a fixed exponent and value by value for a window exponent; the movement's own refusal is a plan's, an observation's or an adjustment's; whole intervals through `Window.whole`; N4's question names the window.
+- **Where the engine still differs from refcore-w7** (68 asks over 15 files at s7):
+  - intended: the decisions' `left out:` lines (`d1_sc`, `fr_d_*`, `g_dfrom`); 236.1, P25's `overlap_days` and P26 (turn 2's list: `g_w1d`, `g_w4`, `g_dfrom`);
+  - N3 (`d2` 6, part of `d1_sc`);
+  - a hole over two windows named by the first window, where refcore-w7 names both or the other (`e3` oo, ov_ab, ov_ok, plus, plus2; `g_arith2` z1, z2; `g_round`, `p25_round` o1, o2): it predates this turn;
+  - already different at s0, G2's areas and others: `g_m1`, `g_m2`, `jt`, `sm`.
+- **Stored ids moved:** only `round`'s two above. G2's 30 stay red, as at eb4dde9d.
+- **Size** (`git diff --stat eb4dde9d..HEAD -- engine/crates`): 15 files, 605 in and 195 out (net +410). By commit: B5 15/7, P30 393/164, B4 62/12, N1/N8 68/2, `round` 19/2, N4 20/4, left out 28/4. By area: `eval` 408/166, `walk` 145/25, `hole` 28/0, `book` 20/4, `model` 4/0. All library. Over G1 (turn 1, turn 2 and this): 1 413 in, 431 out (net +982), against the plan's 0.55 to 0.9 k.
+- **Kernel files:** `walk/plan.rs`, `state.rs`, `ends.rs`, `agenda.rs`, `day.rs`, `instance.rs`; `book/adjust.rs`. `check fences` green after B4 (26 s) and at the end (42 s).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` byte-equal to eb4dde9d's).
+- **Single-mutant proofs:** none. The gate's one gate-8 run covers the group.
+- **Open STOP-REPORTs:** N3 (below). Turn 2's `round` is closed by 65eaf920; G2's count stays open.
+- **Usage:** about 1.93 % of the week before this commit (`engine/tools/usage tmp/spec-2.2.1-build/g1-ids.txt`), 0.66 % this turn, against about 1.2 %.
+- **Time:** about 55 min from 20:16 local. Checks about 25 min of it: `check commit` 7 runs of 72 to 114 s, `check quick` about 9 runs of 80 to 95 s, `check fences` twice.
+- **Checks at f996d955's tree:**
+  - `check commit: red at tests, stopped after 10 of 24 steps (114s)`: 32 red ids, G2's 30 and `round`'s 2, none outside. The 14 steps after `tests` (doc, build, deny, special-casing and the rest) didn't run in any of this turn's `check commit` runs.
+  - `check fences: green, 1 step (42s)`.
+  - `commit-check` found two subjects over 72 characters (P30's and N4's). Before any push, the six commits after b93db811 were committed again on their own trees (each tree checked equal) with the two subjects shortened; the ids above are the new ones.
+- **Waiting for the pin:** on `round`'s two m1 g13 rows and G2's 30.
+
+## STOP-REPORT 2026-11-20: N3, a decision dated by a window counts in `flows`, `count`, `sum` only by a per-day read past the stop rule's size
+
+- **Kind:** other: a ruled change (`picks-g1-review.md` l.13, "N3 … each its own commit under the stop rule") wider than the stop rule's 60 lines
+- **Where:** `review/g1/d2.tally`, `d1_sc.tally`; E §4.1 step 2 ("counts in `flows(x, span)` when the window lies inside the span"); the engine's `walk/move_flows.rs` (flows of a movement) and the aggregates' binding over `transfers`, which don't take a decision's window instance as a member
+- **Rule or gate:** the brief's stop rule (wider than about 60 lines, or moving a stored record)
+- **What happens:** `d2` (decision `dx` on `w = window(2026-04-29, 2026-05-02)`, 100.00 PLN):
+  - engine: `cn: 0`, `cn4: 0`, `cn45: 0`, `fl: 0.00 PLN`, `sm: 0`; `fl5` the hole "for flows of dx". Every pin gives `fl` 100.00 PLN and `cn45` 1.
+  - refcore-w7: `cn`, `cn4`, `sm` the hole "for a binding over dx" (w); `cn45: 1`; `fl: 100.00 PLN`; `fl5` the hole, named by `w`.
+  - refcore-w7 gets there by reading the ask line once per day of the window under that day's pin (its `ask.one` re-read and `mreads`' per-day binding member), with the hole where the days differ.
+- **What I tried:** reading both paths. The engine has no per-day re-read of an ask line: a decision's window instance would have to become a binding member and a flows term per day, with its own pin, through the walk's agenda, `move_flows` and the aggregates. That is well past 60 lines, so no code was written.
+- **What I ask:** the lead to rule N3's size (its own group, or a later round), and whether the engine reads it per day as refcore-w7 does or by the window's pieces (inside, across, outside the span) as E §4.1 step 2's sentence reads.
+- **State:** this commit, after f996d955; `check quick` green; nothing uncommitted; not pushed.
