@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::instance::{Amount, Dated, End, Exists, Inst, Order, Piece, Status};
+use super::instance::{Amount, Dated, End, Exists, Inst, LegVal, Order, Piece, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -680,7 +680,13 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 .as_ref()
                 .and_then(Dated::lo)
                 .map_or(start, |d| d.max(start));
-            for leg in 0..inst.legs.len() {
+            let known = !matches!(inst.exists, Exists::Unknown(_));
+            for (leg, lg) in inst.legs.iter().enumerate() {
+                if known && zero_leg(lg) {
+                    // a leg of amount 0 of a movement that exists books nothing on any day
+                    // (L §5.14; refcore's `sched_leg_hole`; #214)
+                    continue;
+                }
                 walk.at(point(day), Act::LegHole(mv, leg, qs.clone()));
             }
         }
@@ -689,6 +695,9 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 match &lg.day {
                     Dated::Day(d) if *d >= start => walk.at(point(*d), Act::Leg(mv, leg)),
                     Dated::Day(_) => {}
+                    // a leg of amount 0 books nothing on any day of its window: no hole (E §4.1
+                    // step 2: "but for a leg of amount 0"; #214)
+                    Dated::Window(_) if zero_leg(lg) => {}
                     Dated::Window(w) => {
                         // imprecise from its first day, booked at its last (refcore's
                         // `sched_leg`)
@@ -707,6 +716,12 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         | Status::Modelled => {}
     }
     Ok(())
+}
+
+/// Whether leg `lg` has a known amount of 0, which books nothing on whichever day (refcore's
+/// `zero_leg`). L §5.14 ("an amount of 0 books nothing"), E §4.1 step 2.
+fn zero_leg(lg: &LegVal) -> bool {
+    matches!(&lg.amount, Amount::Qty(q) if q.is_zero())
 }
 
 /// The hole of window-dated plan instance `inst`, movement `mv` at rank `rank`, whose class
@@ -729,6 +744,10 @@ fn schedule_booked_hole(
         ..At::of(first, Step::Plans)
     };
     for (leg, lg) in inst.legs.iter().enumerate() {
+        if zero_leg(lg) {
+            // a leg of amount 0 books nothing on any day (E §4.1 step 2; #214)
+            continue;
+        }
         if first >= booked.last || matches!(lg.amount, Amount::Refused(_)) {
             walk.at(point, Act::LegHole(mv, leg, qs.cloned()));
             continue;
