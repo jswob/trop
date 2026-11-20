@@ -733,6 +733,10 @@ class Checker:
             return
         if kind not in ('input', 'def'):
             raise LoadError('LOAD-ASIF', 'pin on %s, which is not an input, a def or an axis' % name, p.loc)
+        if kind == 'input' and qual is None and info.id in ('opening', 'stated'):
+            # a pin has no instant, and a balance reading anchors the walk at its own (L §8.3 LOAD-INSTANT; S-231.Q2):
+            # a what-if balance is a scenario's row
+            raise LoadError('LOAD-INSTANT', 'a pin of balance reading %s states no instant' % info.id, p.loc)
         p.pkind = kind
         p.info = info
         binds = info.binds

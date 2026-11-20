@@ -720,13 +720,27 @@ class Asker:
                             lines.append((key, st))
                             continue
                         lines.append((key, self.one(eng, e, env, wctx)))
-                else:
+                elif self.declared_in_world(e):
+                    # what only the scenario declares is `added` (L §5.18's diff row; tally 2.2.1, #231): a world
+                    # that doesn't declare an item the expression reads has no line for it
                     lines.append((_txt(e), self.one(eng, e, dict(base), wctx)))
             finally:
                 eng.stack.pop()
                 set_world(old)
             res[w] = lines
         return res, coll, ctx, getattr(e, '_t', None)
+
+    def declared_in_world(self, e):
+        """Whether every item e names is declared in the world being evaluated (L §6.4: an item declared in a
+        scenario file exists only in that scenario and those over it)."""
+        from .node import walk as nodes
+        from .moves import item_in_world
+        for n in nodes(e):
+            if n.k == 'name':
+                hit = self.m.lookup(n.id)
+                if hit is not None and not item_in_world(hit[1]):
+                    return False
+        return True
 
     def diff_lines(self, a, res, ctx, t):
         """A cell's result, the set of its lines (L §5.18): `added` (only in S), `removed` (only in B), `changed` with
@@ -1105,8 +1119,7 @@ class Asker:
         for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
             # a refusal carries no read set of its own: what it rests on took the pin unless an inner claim met it
             # (item 9 of the follow-up; the stored m1 vectors)
-            if not refused or ('pin met', e[1]) in ln.coll.reg:
-                coll.reg.discard(e)
+            coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws,
                                                           hole_days(ln.each_vals if ln.each_vals is not None else vals)))

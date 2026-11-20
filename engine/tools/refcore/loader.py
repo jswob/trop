@@ -149,7 +149,8 @@ class Loader:
         if len(tallies) != 1:
             raise LoadError('LOAD-VERSION', 'files declare different tally versions')
         if tallies != {2}:
-            raise NotYet('tally %d (this interpreter runs tally 2)' % list(tallies)[0])
+            # L §8.3 LOAD-VERSION (S-224a): files that agree on a version the engine doesn't run
+            raise LoadError('LOAD-VERSION', 'tally %d: this engine runs tally 2' % list(tallies)[0])
         h = models[0].header
         m.header = h
         m.S, m.E, m.on = h.start, h.end, h.on

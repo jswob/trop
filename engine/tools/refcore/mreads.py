@@ -294,6 +294,9 @@ def m_mv_field(self, n, env, ctx):
         self.cur.merge(src.day_coll)
     elif src.coll is not None:
         self.cur.merge(src.coll)
+    for r in getattr(src, 'reg', None) or ():
+        # a binding that counts a pad lists it (L §8.2's `pad:` row; tally 2.2.1, #237)
+        self.reg(r)
     if getattr(src, 'err', None) is not None and not identity:
         # a refused adjustment refuses its change and its remainder, never its identity, so a binding's `where` that
         # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
@@ -327,7 +330,7 @@ def m_mv_field(self, n, env, ctx):
                     c = w.cum(log, at[-1])
                     if c is not None:
                         self.cur.axes |= c.axes
-    if what in ('day', 'leg') and isinstance(src, ObsMv):
+    if what in ('day', 'leg') and isinstance(src, (ObsMv, Inst)):
         # L §5.19 One movement on two statements: where rows stated same disagree on an amount or a day, "a read of
         # the movement away from its places (its leg's amount ... through a binding) is the disagreement's hole,
         # HOLE-SAME, naming both rows"
@@ -407,6 +410,11 @@ def m_same_rows_hole(self, o, leg, ctx):
     if not g:
         return None
     idx = dict((x.id, x) for x in self.observations(ctx))
+    if any(y not in idx for y in g):
+        # a planned side: its instance (L §6.1, §8.1 HOLE-SAME `<row or instance>`; #219)
+        for i in self.plan_insts(ctx):
+            if i.id in g:
+                idx.setdefault(i.id, i)
     others = [idx[y] for y in g if y != o.id and y in idx]
     return same_obs_differ(o, others, leg, m=self.m) if others else None
 
@@ -921,6 +929,11 @@ def m_read_state(self, w, place, unit, key):
             self.reg(('left out', '%s, %d instances, first %s' % (mid, n, day_text(first))))
         ww = ww.base
     self.joint_left_out(w, place, key)
+    for ld, dc in getattr(w, 'later_by_place', {}).get(place, ()):
+        if ld > d:
+            for r in dc.reg:
+                if r[0] == 'pinned':
+                    self.reg(r)
     v = w.st_value(st, place, unit)
     if isinstance(v, TallyError):
         raise v
@@ -1827,10 +1840,11 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                     u = unit_of_value(a)
                     seen_units.add(u)
             continue
+        if i.coll is not None:
+            # a refused result lists what it read like a value (L §8.2 One read set; tally 2.2.1, #208)
+            self.cur.merge(i.coll)
         if st == 'refused' or i.err is not None:
             raise i.err
-        if i.coll is not None:
-            self.cur.merge(i.coll)
         if isinstance(i.exists, Hole):
             holes.append(i.exists)
             continue

@@ -317,6 +317,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 # R13, L §4.4)
                 lines[-1].carry_day = i.day
             continue
+        if isinstance(i.day, Iv):
+            # an observation that fulfils the movement fixes its day (L §4.4, §5.19): a window's is the last one's,
+            # as for a window not inside one month (E §6.3 Grouping; tally 2.2.1, #221)
+            dd = max(o.day for o in os)
         ob = None
         for o in os:
             ob = _add(ob, obs_flow(o))

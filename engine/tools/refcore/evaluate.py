@@ -3329,6 +3329,12 @@ class Engine:
         except (TallyError, HoleSignal):
             pass
 
+    def level_none(self, q, n):
+        """A quantile's level that is none is refused, beside hole terms too: refusals outrank holes (L §8, §8.4
+        RUN-NONE; #208, 208.10)."""
+        if q is NONE:
+            raise refuse('RUN-NONE', '%s is none here: the level of quantile' % _ntxt(n.q))
+
     def window_term(self, t, fn):
         """A term a window leaves open: an aggregate other than min, max, argmin and argmax needs one value of it
         (L §4.4; tally 2.1.8 §4, #169-e; #221, 221.10), so it is the window's hole, named by the day it comes from."""
@@ -3677,6 +3683,7 @@ class Engine:
             # a level that is refused refuses before the hole terms: refusals outrank holes (L §8; tally 2.1.8 R16(c),
             # #171; B7 of group 3's review)
             q = self.ev(n.q, env, ctx)
+            self.level_none(q, n)
             if not isinstance(q, Hole) and (q.q <= 0 or q.q > 1):
                 from .values import fmt_q
                 raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
@@ -3696,6 +3703,7 @@ class Engine:
             nn = Num(len(terms), (), isint=True)
             return Num(acc.q / len(terms), acc.u, enc=enc_arith('/', acc, nn, 1) if acc.enc is not None else None)
         q = self.ev(n.q, env, ctx)
+        self.level_none(q, n)
         if isinstance(q, Hole):
             return q
         if q.q <= 0 or q.q > 1:

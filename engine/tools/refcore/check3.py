@@ -1626,6 +1626,10 @@ def m_strata(self):
         for w, other in mi.decl.order:
             hit = m.lookup(other, mi.regime)
             b = hit[1].id
+            if b == a:
+                # L §8.3 LOAD-ORDER (S-221.9): instances of one move go by its ties by (§5.14.2)
+                raise LoadError('LOAD-ORDER', "%s before %s: a move isn't ordered against itself" % (a, a),
+                                mi.decl.loc)
             if b not in after:
                 if w == 'before':
                     # L §5.14.2 (round 19, GD-11, C4-1): "It orders a decision only against another decision: plans

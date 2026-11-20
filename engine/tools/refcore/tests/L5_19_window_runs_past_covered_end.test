@@ -4,6 +4,8 @@
 # end states konto there (v0, 595.00 PLN) and its pad is 0.00 PLN on every day; the window runs past the reading, so
 # bal(konto, 2026-04-05) is the hole naming w2 (v1), 595.00 PLN pinned to 03-31 (v2). tally 2.2 asked coverage day by
 # day and let the reading end the hole: v1 595.00 PLN, the pad a hole (the 2.2 review's p4/cov.tally).
+# tally 2.2.1 (#220, 220.2), L §8.2 One read set: v2 lists pinned: w2 and open: pay_x, the reads that decided
+# pay_x doesn't count, past the reading's pad.
 === cov.tally
 model g4_cov
   tally 2
@@ -71,5 +73,7 @@ v1: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a balanc
   pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 0.00 PLN
   cut 2026-04-20
 v2: 595.00 PLN
+  pinned: w2 = 2026-03-31
   pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 0.00 PLN
+  open: pay_x
   cut 2026-04-20

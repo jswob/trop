@@ -7,6 +7,23 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W6: the load's refusals, the register (issue #241; 1 529 tests)
+
+- **Three refusals at load:** `tally <N>` the files agree on but 2 (`LOAD-VERSION`, `loader.build`; S-224a), a move
+  `before` itself (`LOAD-ORDER`, `check3`; S-221.9), a pin of `opening` or `stated` (`LOAD-INSTANT`, `check.pin`;
+  S-231.Q2). `RUN-NONE` names the level of `quantile` (`evaluate.level_none`; 208.10).
+- **The register.** A refusal entry of the walk carries the pins of the movement it refuses (`Walk.add`), so a refused
+  line lists the pins its reads took and no other (208.2); `flows` merges an instance's reads before its refusal
+  (208.5); a balance before a planned leg's day lists that day's pins (`later_by_place`; 221.1); a pad's reset keeps
+  the open instances' reads (`Walk.open_kept`; 220.2); a field read of a pad lists the pad (`pad.reg`; 237.1).
+- **Smaller mends.** `WARN-LEGS` for rows stated `same` that fulfil nothing, named by the first row (`legs_warn`;
+  219.2); `HOLE-SAME` for an observed row stated same as a planned instance (`same_rows_hole`; 219.1); a matched line
+  of a window-dated instance is on its last observation's day (`resid`; 221.5); a projection from a day before the
+  start of the one it is read in starts in the walk that one continues (`proj_walk`; 206.1); `diff` of an item only
+  the scenario declares is `added` (`ask.declared_in_world`; 231.R2, a def; a place is another group's).
+- Each refcore half is narrow (the plan's rulings §11): the walk's register gains pins and `open:` only, never the
+  `held:` lines of a later movement's day.
+
 ## tally 2.2.1, group W4: the windows (issue #241; 1 514 tests)
 
 - **One function splits a window** (`moves.window_pieces`): the first day of each piece where a test of the day can

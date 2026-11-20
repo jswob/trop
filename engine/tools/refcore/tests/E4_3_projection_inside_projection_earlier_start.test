@@ -1,0 +1,78 @@
+# tally 2.2.1 (#206, 206.1), E §4.3 step 1: a projection's walk "continues the walk it starts from: a read in it of
+# days before its start takes those days from that walk": P = bal(konto, 2026-03-31) from 2026-03-02 holds late,
+# whose Q = bal(konto, 2026-03-31) from 2026-03-01 starts in the main walk (0.00) and counts ab1 once: late 4 000.00,
+# P 5 000.00 DUK. tally 2.2 started Q from P's own start, counting ab1 twice: 4 000.00 (the planner's 206/p2.tally).
+=== p2.tally
+model p
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "probe"
+unit DUK: currency minor 0.01
+place konto: accounts DUK lives 2026-01-01..
+place world: outside lives 2026-01-01..
+input floor: money DUK
+input a1: money DUK
+input a2: money DUK
+input a3: money DUK
+input a4: money DUK
+input a5: money DUK
+input a6: money DUK
+input d_jan: date
+input d_t: date
+input d_late: date
+input d_10: date
+input d_12: date
+input d_15: date
+input d_to: date
+input d_20: date
+input d_25: date
+input d_6: date
+move ab1: transfers
+  on d_t
+  leg cash from world to konto amount a3
+move late: transfers
+  on d_late
+  reads konto
+  leg cash from world to konto amount max(0 DUK, floor - bal(konto, d_to) from d_t)
+ask a: bal(konto, 2026-03-31), bal(konto, 2026-03-05)
+ask b: bal(konto, 2026-03-31) from 2026-02-01, bal(konto, 2026-03-31) from 2026-03-01, bal(konto, 2026-03-31) from 2026-03-02
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  floor = 5000.00 DUK "c"
+  a1 = 100.00 DUK "c"
+  a2 = 10.00 DUK "c"
+  a3 = 1000.00 DUK "c"
+  a4 = 20.00 DUK "c"
+  a5 = 3.00 DUK "c"
+  a6 = 7.00 DUK "c"
+  d_jan = 2026-01-15 "c"
+  d_t = 2026-03-01 "c"
+  d_late = 2026-03-05 "c"
+  d_10 = 2026-03-10 "c"
+  d_12 = 2026-03-12 "c"
+  d_15 = 2026-03-15 "c"
+  d_to = 2026-03-31 "c"
+  d_20 = 2026-03-20 "c"
+  d_25 = 2026-03-25 "c"
+  d_6 = 2026-03-06 "c"
+  opening[konto] = 0.00 DUK at 2026-01-01 start "c"
+=== expect b
+b: (5 000.00 DUK, 5 000.00 DUK, 5 000.00 DUK)
+  left out: late, 1 instances, first 2026-03-05
+  cut 2026-01-01
+warning: WARN-UNREAD input a1 is read by nothing
+warning: WARN-UNREAD input a2 is read by nothing
+warning: WARN-UNREAD input a4 is read by nothing
+warning: WARN-UNREAD input a5 is read by nothing
+warning: WARN-UNREAD input a6 is read by nothing
+warning: WARN-UNREAD input d_10 is read by nothing
+warning: WARN-UNREAD input d_12 is read by nothing
+warning: WARN-UNREAD input d_15 is read by nothing
+warning: WARN-UNREAD input d_20 is read by nothing
+warning: WARN-UNREAD input d_25 is read by nothing
+warning: WARN-UNREAD input d_6 is read by nothing
+warning: WARN-UNREAD input d_jan is read by nothing

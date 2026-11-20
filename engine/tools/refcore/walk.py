@@ -248,6 +248,7 @@ class Walk:
         self.adj_regs = {}
         self.leftout_regs = {}
         self.leftout_by_place = {}
+        self.later_by_place = {}
         self.decday = {}
         self.uncertain = []
         self.reads = None
@@ -387,6 +388,13 @@ class Walk:
 
     def add(self, place, unit, e):
         lg = self.log(place, unit)
+        if e.kind == 'bad' and e.coll is None and getattr(e.mv, 'coll', None) is not None:
+            # a refusal rests on the reads that refused it: the movement's pins are listed under it, a pin nothing it
+            # read isn't (L §8.2 One read set; tally 2.2.1, #208)
+            pins = [r for r in e.mv.coll.reg if r[0] in ('pinned', 'pin met')]
+            if pins:
+                e.coll = _coll()
+                e.coll.reg.update(pins)
         prev = lg.ents[-1].st if lg.ents else self.default(place, unit)
         e.st = apply(prev, e, len(lg.ents))
         lg.ents.append(e)
@@ -479,15 +487,7 @@ class Walk:
             # stated same as one that fulfils it is one of them, its fulfils "stated on either row" (L §5.19)
             groups = same_groups(m, ctx)
             obs_by_id = None
-            for tid in sorted(links):
-                os = list(links[tid])
-                for o in links[tid]:
-                    for x in groups.get(o.id, ()):
-                        if x != o.id and all(y.id != x for y in os):
-                            if obs_by_id is None:
-                                obs_by_id = dict((y.id, y) for y in eng.observations(ctx))
-                            if x in obs_by_id:
-                                os.append(obs_by_id[x])
+            def legs_warn(name, os):
                 for a_i in range(len(os)):
                     for b_i in range(a_i + 1, len(os)):
                         oa, ob = os[a_i], os[b_i]
@@ -501,10 +501,35 @@ class Walk:
                         lb = {g.name: g.amount for g in ob.legs}
                         if any(n in lb and vkey(la[n]) != vkey(lb[n]) for n in la if not isinstance(la[n], Hole)):
                             txt = 'the two observations of %s disagree: %s (%s) and %s (%s)' % (
-                                tid, oa.id, ', '.join(fmt(la[n]) for n in sorted(la)), ob.id,
+                                name, oa.id, ', '.join(fmt(la[n]) for n in sorted(la)), ob.id,
                                 ', '.join(fmt(lb[n]) for n in sorted(lb)))
                             if ('WARN-LEGS', txt) not in self.warnings:
                                 self.warnings.append(('WARN-LEGS', txt))
+            linked = set()
+            for tid in sorted(links):
+                os = list(links[tid])
+                for o in links[tid]:
+                    for x in groups.get(o.id, ()):
+                        if x != o.id and all(y.id != x for y in os):
+                            if obs_by_id is None:
+                                obs_by_id = dict((y.id, y) for y in eng.observations(ctx))
+                            if x in obs_by_id:
+                                os.append(obs_by_id[x])
+                linked.update(o.id for o in os)
+                legs_warn(tid, os)
+            # two observed rows stated same that disagree warn with no instance they fulfil (L §5.19; tally 2.2.1,
+            # #219): the movement is named by its first row in id order
+            seen_g = set()
+            for x in sorted(groups):
+                g = groups[x]
+                if id(g) in seen_g or any(y in linked for y in g):
+                    continue
+                seen_g.add(id(g))
+                if obs_by_id is None:
+                    obs_by_id = dict((y.id, y) for y in eng.observations(ctx))
+                os = [obs_by_id[y] for y in g if y in obs_by_id]
+                if len(os) > 1:
+                    legs_warn(os[0].id, os)
         # a decision stating `before m` of a plan m runs ahead of m's legs on its days: "the decision then reads the
         # balance before m" (L §5.14.2 A written order outside a cycle, SF-15). Those legs are booked right after it.
         self.defer = {}
@@ -731,6 +756,12 @@ class Walk:
         if isinstance(d, datetime.date):
             if d < self.start:
                 return
+            if phase == 2 and getattr(i, 'day_coll', None) is not None:
+                # a balance before the leg's day doesn't count it: the reads that decided its day are in that
+                # balance's read set (L §8.2 One read set: "a day outside the span"; tally 2.2.1, #221)
+                for p in (lg.frm, lg.to):
+                    if isinstance(p, Thing):
+                        self.later_by_place.setdefault(p.name, []).append((d, i.day_coll))
             dk = getattr(self, 'defer', {}).get(i.move.id, {}).get(d.toordinal()) if phase == 2 else None
             if dk is not None:
                 # after the decision that states `before` it (L §5.14.2)
@@ -1714,6 +1745,7 @@ class Walk:
         self.pads.append(pad)
         txt = 'pad: %s %s, %s of %s' % (place, it, pad.id, gtext(gap))
         reg = (('pad', txt[len('pad: '):]),)
+        pad.reg = reg
         lg = pad.legs[0]
         # the other side: an ordinary leg
         yi = 0 if frm.name == y.name else 1
@@ -1742,13 +1774,33 @@ class Walk:
             self.cons[unit] = self.cons.get(unit, 0) + gap.q
         self.add(place, unit, Ent(key[:4] + (key[4] + 1,), 'reset',
                                   val=rv if not isinstance(rv, Hole) else qty(0, unit),
-                                  qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c, reg=reg,
+                                  qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=self.open_kept(
+                                      place, unit, key, c), reg=reg,
                                   mv=pad, flow=flow, note='pad', row=r))
         if grp is None and (pad.id, lg.name) in self.bad_legs and isinstance(rv, Num) and \
                 self.sign_breaks(place, rv.q):
             # the balance the reading states breaks its place's sign rule: refused from there to the place's next
             # reading, as an anchor's is (L §5.10, E §4.2 step 5; tally 2.1.8 R11), not ended by its own reading
             self.add(place, unit, Ent(key[:4] + (key[4] + 1,), 'bad', err=self.bad_legs[(pad.id, lg.name)], mv=pad))
+
+    def open_kept(self, place, unit, key, c):
+        """The reads a pad's reading rests on, with each open instance's since the place's last reset: the pad's
+        size is the gap a movement left unbooked leaves, so what decided it doesn't count stays in the read set
+        after the reading (L §8.2 One read set, the `open:` row; tally 2.2.1, #220)."""
+        out = None
+        for u in (unit, '*'):
+            st, lg, i = self.state(place, u, key)
+            if lg is None or i < 0:
+                continue
+            for e in lg.ents[max(st.rst, 0):i + 1]:
+                if e.kind == 'mark' and any(r[0] == 'open' for r in e.reg):
+                    if out is None:
+                        out = _coll()
+                        out.merge(c)
+                    if e.coll is not None:
+                        out.merge(e.coll)
+                    out.reg.update(e.reg)
+        return c if out is None else out
 
     def booked_coll(self, place, unit, key):
         """The register of a place's booked balance at an instant (as a balance read gathers it, mreads.read_state)."""
@@ -2412,6 +2464,10 @@ def m_proj_walk(self, ctx, t, leftout, clauses):
     elif base is not None and ctx.wp is not None:
         if t > kday(ctx.wp):
             raise refuse('RUN-FUTURE', 'a decision on %s reads a projection from %s, after its day' % (kday(ctx.wp), t))
+        while base.proj and base.base is not None and t < base.start:
+            # a projection from a day before the start of the one it is read in: that walk "continues the walk it
+            # starts from", and its days before its start are that walk's (E §4.3 step 1; tally 2.2.1, #206)
+            base = base.base
         point = K_start(t)
     else:
         base = self.main_walk(ctx.but(cut=K0))
