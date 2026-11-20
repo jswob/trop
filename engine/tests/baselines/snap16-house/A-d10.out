@@ -1,7 +1,7 @@
 mca_a10_bal [px_round = *]: (?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01]), refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
   assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
-  unknown day: window(2026-01-01, 2026-01-31)
+  unknown day: cards[2026-01]
   anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
   unfulfilled: so_pay[nursery, 2026-01]
   unfulfilled: so_pay[rent, 2026-01]
@@ -16,7 +16,7 @@ mca_a10_explain [px_round = *]: ?"date within window(2026-01-01, 2026-01-31) not
   2026-01-05:
     so_pay[nursery, 2026-01].cash (past): -1 250.00 DUK
   assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
-  unknown day: window(2026-01-01, 2026-01-31)
+  unknown day: cards[2026-01]
   anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
   unfulfilled: so_pay[nursery, 2026-01]
   unfulfilled: so_pay[rent, 2026-01]

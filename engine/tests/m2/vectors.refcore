@@ -1,6 +1,6 @@
-20:I:X:wife_net@c3_fast,12:checks-green,382:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask wife_net,50351:25:real11/c3/asks/core.tally,1264:part asks_core
+20:I:X:wife_net@c3_fast,12:checks-green,382:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask wife_net,50377:25:real11/c3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -409,11 +409,11 @@ version health_ryczalt_2027
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
   health_waive_on = 2027-06-15 governs always "tytuł ustawy"
-,29:real11/c3/law/pl/common.tally,4896:part pl_common
+,29:real11/c3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -1142,9 +1142,9 @@ wife_net (m = 2027-01): 5 101.67 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
   law date 2027-06-15, cut 2027-06-15
-,29:I:X:social_and_health@c3_fast,12:checks-green,391:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask social_and_health,50351:25:real11/c3/asks/core.tally,1264:part asks_core
+,29:I:X:social_and_health@c3_fast,12:checks-green,391:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask social_and_health,50377:25:real11/c3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -1553,11 +1553,11 @@ version health_ryczalt_2027
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
   health_waive_on = 2027-06-15 governs always "tytuł ustawy"
-,29:real11/c3/law/pl/common.tally,4896:part pl_common
+,29:real11/c3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -2324,9 +2324,9 @@ social_and_health (m = 2028-09): (2 083.99 PLN, 808.52 PLN)
   held: zus_rate[sickness] = 0.0245 (sus_rates_2026), read for 2028-09-01
   held: zus_stage[2028-09] = standard (dg_2026), read for 2028-09
   law date 2027-06-15, cut 2027-06-15
-,17:I:X:pit37@c3_fast,12:checks-green,379:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask pit37,50351:25:real11/c3/asks/core.tally,1264:part asks_core
+,17:I:X:pit37@c3_fast,12:checks-green,379:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask pit37,50377:25:real11/c3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -2735,11 +2735,11 @@ version health_ryczalt_2027
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
   health_waive_on = 2027-06-15 governs always "tytuł ustawy"
-,29:real11/c3/law/pl/common.tally,4896:part pl_common
+,29:real11/c3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -3646,9 +3646,9 @@ pit37 (p = wife, y = 2028): -2.00 PLN
   held: salary[wife_acme, 2028-12] = 7 000.00 PLN (home_2026), read for 2028-12
   held: wage_growth = 0.04 (wage_fc_2026), read for 2028-01-01
   law date 2027-06-15, cut 2027-06-15
-,20:I:X:wife_net@v3_fast,12:checks-green,382:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask wife_net,50113:25:real11/v3/asks/core.tally,1264:part asks_core
+,20:I:X:wife_net@v3_fast,12:checks-green,382:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask wife_net,50139:25:real11/v3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -4050,11 +4050,11 @@ version health_ryczalt_2027
   governs 2027..
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
-,29:real11/v3/law/pl/common.tally,4896:part pl_common
+,29:real11/v3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -4783,9 +4783,9 @@ wife_net (m = 2027-01): 5 101.67 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
   law date 2027-06-15, cut 2027-06-15
-,29:I:X:social_and_health@v3_fast,12:checks-green,391:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask social_and_health,50113:25:real11/v3/asks/core.tally,1264:part asks_core
+,29:I:X:social_and_health@v3_fast,12:checks-green,391:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask social_and_health,50139:25:real11/v3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -5187,11 +5187,11 @@ version health_ryczalt_2027
   governs 2027..
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
-,29:real11/v3/law/pl/common.tally,4896:part pl_common
+,29:real11/v3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -5958,9 +5958,9 @@ social_and_health (m = 2028-09): (2 083.99 PLN, 808.52 PLN)
   held: zus_rate[sickness] = 0.0245 (sus_rates_2026), read for 2028-09-01
   held: zus_stage[2028-09] = standard (dg_2026), read for 2028-09
   law date 2027-06-15, cut 2027-06-15
-,17:I:X:pit37@v3_fast,12:checks-green,379:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask pit37,50113:25:real11/v3/asks/core.tally,1264:part asks_core
+,17:I:X:pit37@v3_fast,12:checks-green,379:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask pit37,50139:25:real11/v3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -6362,11 +6362,11 @@ version health_ryczalt_2027
   governs 2027..
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
-,29:real11/v3/law/pl/common.tally,4896:part pl_common
+,29:real11/v3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -115317,4 +115317,35 @@ b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" 
 t: (?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1)
   unknown day: w
   cut 2026-01-01
+,21:spec/p60/num_list_key,11:fixes-sweep,30:run num_list_key.tally --ask q,642:18:num_list_key.tally,615:model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/tuples.rs:403, a move keyed by a list of numbers not integers"
+
+source s "s"
+unit PLN: currency minor 0.01
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dm: date
+
+move ml[x in [1.5, 2]]: transfers
+  on dm
+  leg cash from world to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dm = 2026-03-31 "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(sav, 2026-06-30)
+,,1:0,74:q: 20.00 PLN
+  unfulfilled: ml[1.5]
+  unfulfilled: ml[2]
+  cut 2026-04-25
 ,

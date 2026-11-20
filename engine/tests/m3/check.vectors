@@ -4808,21 +4808,22 @@ pit.tally	m3/mini/pit.tally
 ,29:fixture/reviews/same-id-order,7:reviews,5:check,21:engine/tests/m3/check,45:check model.tally n1/a/s2.tally n1/z/s1.tally,107:model.tally	m3/check/model.tally
 n1/a/s2.tally	m3/check/n1/a/s2.tally
 n1/z/s1.tally	m3/check/n1/z/s1.tally
-,1:1,218:qq: refused: LOAD-SCENARIO ask qq names nowhere_z, neither the model nor a loaded scenario (n1/z/s1.tally:5)
-qq: refused: LOAD-SCENARIO ask qq names nowhere_a, neither the model nor a loaded scenario (n1/a/s2.tally:5)
+,1:1,218:qq: refused: LOAD-SCENARIO ask qq names nowhere_a, neither the model nor a loaded scenario (n1/a/s2.tally:5)
+qq: refused: LOAD-SCENARIO ask qq names nowhere_z, neither the model nor a loaded scenario (n1/z/s1.tally:5)
 ,27:fixture/reviews/twin-placed,7:reviews,5:check,21:engine/tests/m3/check,64:check model.tally p12/b/t1.tally p12/c/lost.tally p12/d/t2.tally,154:model.tally	m3/check/model.tally
 p12/b/t1.tally	m3/check/p12/b/t1.tally
 p12/c/lost.tally	m3/check/p12/c/lost.tally
 p12/d/t2.tally	m3/check/p12/d/t2.tally
-,1:1,211:scenario alpha: refused: LOAD-SCENARIO scenario alpha is over nowhere, neither the model nor a scenario (p12/c/lost.tally:1)
-scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tally:1)
+,1:1,211:scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tally:1)
+scenario alpha: refused: LOAD-SCENARIO scenario alpha is over nowhere, neither the model nor a scenario (p12/c/lost.tally:1)
 ,24:fixture/reviews/narrowed,7:reviews,5:check,28:engine/tests/m3/check/narrow,21:check m.tally s.tally,64:m.tally	m3/check/narrow/m.tally
 s.tally	m3/check/narrow/s.tally
-,1:0,3:ok
+,1:1,128:scenario narrowed: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span register_10 covers (m.tally:30)
 ,30:fixture/reviews/stacked-covers,7:reviews,5:check,27:engine/tests/m3/fixes/g3/st,36:check base.tally late.tally mv.tally,107:base.tally	m3/fixes/g3/st/base.tally
 late.tally	m3/fixes/g3/st/late.tally
 mv.tally	m3/fixes/g3/st/mv.tally
-,1:0,3:ok
+,1:1,238:scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+scenario mv: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
 ,28:fixture/reviews/stacked-unit,7:reviews,5:check,27:engine/tests/m3/fixes/g3/st,41:check base.tally bad.tally over_bad.tally,117:base.tally	m3/fixes/g3/st/base.tally
 bad.tally	m3/fixes/g3/st/bad.tally
 over_bad.tally	m3/fixes/g3/st/over_bad.tally

@@ -100,7 +100,7 @@ tx2_owes_explain: 9 227.29 DUK
                   rule hr1: won
                     [43] row hr1:ord_dom = 5
                         version hr1, source house_rules, "Household B's house rules B-HR1 – B-HR6 (tmp/cases/B/house-rules.md)", locator "B-HR1 .2: on the 5th of each month, the next business day where the 5th isn't one", governs always, known 2022-03-18
-                    [44] row hol_2022:holidays = calendar(weekends [sat, sun])
+                    [44] row hol_2022:holidays = calendar(weekends [sat, sun], added [2022-01-01, 2022-01-06, 2022-04-18, 2022-05-01, 2022-05-03, 2022-08-15, 2022-11-01, 2022-11-11, 2022-12-25, 2022-12-26])
                         version hol_2022, source gazette, "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)", locator "GEN-1 v1 .2; Spring Day: gazette.csv line 1591 HOL-SPRING-2022", governs 2022-01-01..2022-12-31, known 2021-10-14
                   rule no_calendar: not applicable
                     (hol_2022:holidays: see [44])
@@ -167,7 +167,7 @@ tx2_owes_explain: 9 227.29 DUK
               [57] ord_day[2023-01] = 2023-01-05, law date 2023-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [58] row hol_2023:holidays = calendar(weekends [sat, sun])
+                    [58] row hol_2023:holidays = calendar(weekends [sat, sun], added [2023-01-01, 2023-01-06, 2023-04-10, 2023-05-01, 2023-05-03, 2023-08-15, 2023-11-01, 2023-11-11, 2023-12-25, 2023-12-26])
                         version hol_2023, source gazette, "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)", locator "GEN-1 v1 .2; Spring Day: gazette.csv line 1592 HOL-SPRING-2023", governs 2023-01-01..2023-12-31, known 2022-10-13
                   rule no_calendar: not applicable
                     (hol_2023:holidays: see [58])
@@ -240,7 +240,7 @@ tx2_owes_explain: 9 227.29 DUK
               [70] ord_day[2024-01] = 2024-01-05, law date 2024-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [71] row hol_2024:holidays = calendar(weekends [sat, sun])
+                    [71] row hol_2024:holidays = calendar(weekends [sat, sun], added [2024-01-01, 2024-01-06, 2024-04-01, 2024-05-01, 2024-05-03, 2024-08-15, 2024-11-01, 2024-11-11, 2024-12-25, 2024-12-26])
                         version hol_2024, source gazette, "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)", locator "GEN-1 v1 .2; Spring Day: gazette.csv line 1593 HOL-SPRING-2024", governs 2024-01-01..2024-12-31, known 2023-10-12
                   rule no_calendar: not applicable
                     (hol_2024:holidays: see [71])
@@ -313,7 +313,7 @@ tx2_owes_explain: 9 227.29 DUK
               [83] ord_day[2025-01] = 2025-01-07, law date 2025-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [84] row hol_2025:holidays = calendar(weekends [sat, sun])
+                    [84] row hol_2025:holidays = calendar(weekends [sat, sun], added [2025-01-01, 2025-01-06, 2025-04-21, 2025-05-01, 2025-05-03, 2025-06-23, 2025-08-15, 2025-11-01, 2025-11-11, 2025-12-25, 2025-12-26])
                         version hol_2025, source gazette, "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)", locator "GEN-1 v2 .2 (v1 .2 and 23 June); Spring Day: gazette.csv line 1594 HOL-SPRING-2025", governs 2025-01-01..2025-12-31, known 2024-10-10
                   rule no_calendar: not applicable
                     (hol_2025:holidays: see [84])
@@ -388,7 +388,7 @@ tx2_owes_explain: 9 227.29 DUK
               [97] ord_day[2026-01] = 2026-01-05, law date 2026-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [98] row hol_2026:holidays = calendar(weekends [sat, sun])
+                    [98] row hol_2026:holidays = calendar(weekends [sat, sun], added [2026-01-01, 2026-01-06, 2026-04-06, 2026-05-01, 2026-05-03, 2026-06-23, 2026-08-15, 2026-11-01, 2026-11-11, 2026-12-25, 2026-12-26])
                         version hol_2026, source gazette, "Official Gazette of Lenia, notices of figures (tmp/cases/law/gazette.csv)", locator "GEN-1 v2 .2 (v1 .2 and 23 June); Spring Day: gazette.csv line 1595 HOL-SPRING-2026", governs 2026-01-01..2026-12-31, known 2025-10-16
                   rule no_calendar: not applicable
                     (hol_2026:holidays: see [98])
@@ -461,7 +461,7 @@ tx2_owes_explain: 9 227.29 DUK
               [110] ord_day[2027-01] = 2027-01-05, law date 2027-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [111] row holidays_2027_2029:holidays 2027-01-01..2027-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26])
+                    [111] row holidays_2027_2029:holidays 2027-01-01..2027-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26])])
                         version holidays_2027_2029, source gen_1, "General Provisions Act, GEN-1 Business days and public holidays (tmp/cases/law/acts.md)", locator "GEN-1 v2 .2, .3", governs 2027-01-01..2027-12-31, known 2024-06-18
                   rule no_calendar: not applicable
                     (holidays_2027_2029:holidays 2027-01-01..2027-12-31: see [111])
@@ -534,7 +534,7 @@ tx2_owes_explain: 9 227.29 DUK
               [123] ord_day[2028-01] = 2028-01-05, law date 2028-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [124] row holidays_2027_2029:holidays 2028-01-01..2028-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26])
+                    [124] row holidays_2027_2029:holidays 2028-01-01..2028-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2028-04-03, 2028-04-10, 2028-04-17, 2028-04-24])])
                         version holidays_2027_2029, source gen_1, "General Provisions Act, GEN-1 Business days and public holidays (tmp/cases/law/acts.md)", locator "GEN-1 v2 .2, .3", governs 2028-01-01..2028-12-31, known 2024-06-18
                   rule no_calendar: not applicable
                     (holidays_2027_2029:holidays 2028-01-01..2028-12-31: see [124])
@@ -771,7 +771,7 @@ tx2_mtg_day: (window(2027-04-05, 2027-04-06), 2027-04-05, 36 326.10 DUK, 18 700.
 tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for flows of cis" (gap_card_pays), 14 652.96 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
-  unknown day: window(2025-11-14, 2025-11-30)
+  unknown day: gap_card_pays
   anchor: cis 2025-06-30 end, stated 14 652.96 DUK, difference 0.00 DUK
   anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
   anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR

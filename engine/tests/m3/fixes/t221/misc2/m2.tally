@@ -24,7 +24,6 @@ move pay: transfers
 move top: transfers
   on d_top
   reads konto
-  before top
   leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
 version v
   cite s

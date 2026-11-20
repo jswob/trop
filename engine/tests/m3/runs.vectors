@@ -4659,10 +4659,9 @@ over_kind: 3
 ,20:fixes/stacked-covers,5:fixes,3:run,27:engine/tests/m3/fixes/g3/st,49:run base.tally mv.tally late.tally --ask q q_late,107:base.tally	m3/fixes/g3/st/base.tally
 mv.tally	m3/fixes/g3/st/mv.tally
 late.tally	m3/fixes/g3/st/late.tally
-,1:0,79:q: 30.00 PLN
-  cut 2026-04-30
-q_late: 50.00 PLN
-  world: late
+,1:0,268:scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+scenario mv: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+q: 30.00 PLN
   cut 2026-04-30
 ,18:fixes/stacked-unit,5:fixes,3:run,27:engine/tests/m3/fixes/g3/st,52:run base.tally bad.tally over_bad.tally --ask q q_ob,117:base.tally	m3/fixes/g3/st/base.tally
 bad.tally	m3/fixes/g3/st/bad.tally
@@ -4686,17 +4685,15 @@ a.q: 8 000.00 PLN
   law date 2026-03-01, cut 2026-03-01
 ,26:fixes/member-refused-alone,5:fixes,3:run,26:engine/tests/m3/fixes/g3/j,30:run jz.tally --ask c.qnone c.q,66:jz.tally	m3/fixes/g3/j/jz.tally
 z/c.tally	m3/fixes/g3/j/z/c.tally
-,1:1,32:refused: REQ-ASK no ask c.qnone
+,1:0,164:c.qnone: refused: LOAD-SCENARIO ask qnone names zzz, neither the model nor a loaded scenario (z/c.tally:35)
+c.q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01
 ,18:fixes/member-clock,5:fixes,3:run,26:engine/tests/m3/fixes/g3/j,27:run jc.tally --ask c.q c.qc,62:jc.tally	m3/fixes/g3/j/jc.tally
 c.tally	m3/fixes/g3/j/c.tally
-,1:0,134:c.q: 8 000.00 PLN
-  law date 2026-03-01, cut 2026-03-01
-c.qc: refused: RUN-DOMAIN known 2026-06-01 is after the model's on 2026-03-01
+,1:1,74:refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
 ,26:fixes/scenario-files-clock,5:fixes,3:run,26:engine/tests/m3/fixes/g3/j,19:run n/b/ --ask q qc,78:n/b/b.tally	m3/fixes/g3/j/n/b/b.tally
 n/b/sb.tally	m3/fixes/g3/j/n/b/sb.tally
-,1:0,130:q: 6 000.00 PLN
-  law date 2026-03-01, cut 2026-03-01
-qc: refused: RUN-DOMAIN known 2026-06-01 is after the model's on 2026-03-01
+,1:1,74:refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
 ,16:fixes/cycle-when,5:fixes,3:run,24:engine/tests/m3/fixes/a4,60:run cycle_when.tally --ask q_jan q_feb q_mar q_ca q_cb q_bal,46:cycle_when.tally	m3/fixes/a4/cycle_when.tally
 ,1:0,2948:q_jan: walk-bound, read at 1 walk point
   avail[2026-01] at (2026-01-10, stratum 1, ca): 1 000.00 PLN

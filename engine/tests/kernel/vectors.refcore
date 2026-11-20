@@ -1501,7 +1501,7 @@ q_se: (24 328.00 USD, 24 328.00 USD, 22 467.00 USD, 22 467.00 USD, 22 467.00 USD
   assumed: the case lists no entry for Schedule SE line 8c (wages, Form 8919), and the scenario has no Form 8919 (entry[bse_08c])
   assumed: the case's W-2 transcription lists no box 7 (social security tips) (w2_box7)
   law date 2025-12-31, cut 2026-10-18
-,22:I:X:konto_balance@b_r1,6:checks,399:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask konto_balance,48764:25:cut11/b_r1/asks/cut.tally,203:part asks_core
+,22:I:X:konto_balance@b_r1,6:checks,399:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask konto_balance,48771:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
@@ -1877,11 +1877,11 @@ version vat_2026
   governs 2026..
   known 2025-12-31
   vat_rate = 0.23 "art. 146ef ust. 1"
-,30:cut11/b_r1/law/pl/common.tally,4896:part pl_common
+,30:cut11/b_r1/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -2653,7 +2653,7 @@ version mbank_2026_09
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place gotowka is read by nothing
-,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48764:25:cut11/b_r1/asks/cut.tally,203:part asks_core
+,25:I:X:replay_september@b_r1,6:checks,402:run cut11/b_r1/asks/cut.tally cut11/b_r1/facts/2026.tally cut11/b_r1/law/pl/benefits.tally cut11/b_r1/law/pl/business.tally cut11/b_r1/law/pl/common.tally cut11/b_r1/law/pl/employment.tally cut11/b_r1/law/pl/wrappers.tally cut11/b_r1/loans.tally cut11/b_r1/pays.tally cut11/b_r1/people.tally cut11/b_r1/places.tally cut11/b_r1/reality.tally cut11/b_r1/records/mbank/2026-09.tally --ask replay_september,48771:25:cut11/b_r1/asks/cut.tally,203:part asks_core
   tally 2
 
 ask konto_balance: bal(konto, d) with uncertain, bal(konto, d) with uncertain - vat_owed[d] for d in [2026-10-31] law cut
@@ -3029,11 +3029,11 @@ version vat_2026
   governs 2026..
   known 2025-12-31
   vat_rate = 0.23 "art. 146ef ust. 1"
-,30:cut11/b_r1/law/pl/common.tally,4896:part pl_common
+,30:cut11/b_r1/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -3827,7 +3827,7 @@ version mbank_2026_09
 warning: WARN-NEGATIVE konto is below zero from 2026-03-01
 warning: WARN-NEGATIVE konto is below zero from 2026-03-17
 warning: WARN-UNREAD place gotowka is read by nothing
-,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48653:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
+,26:I:X:replay_september@b_r1s,6:checks,415:run cut11/b_r1s/asks/cut.tally cut11/b_r1s/facts/2026.tally cut11/b_r1s/law/pl/benefits.tally cut11/b_r1s/law/pl/business.tally cut11/b_r1s/law/pl/common.tally cut11/b_r1s/law/pl/employment.tally cut11/b_r1s/law/pl/wrappers.tally cut11/b_r1s/loans.tally cut11/b_r1s/pays.tally cut11/b_r1s/people.tally cut11/b_r1s/places.tally cut11/b_r1s/reality.tally cut11/b_r1s/records/mbank/2026-09.tally --ask replay_september,48660:26:cut11/b_r1s/asks/cut.tally,80:part asks_core
   tally 2
 
 ask replay_september: residuals konto 2026-09 law cut
@@ -4201,11 +4201,11 @@ version vat_2026
   governs 2026..
   known 2025-12-31
   vat_rate = 0.23 "art. 146ef ust. 1"
-,31:cut11/b_r1s/law/pl/common.tally,4896:part pl_common
+,31:cut11/b_r1s/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
