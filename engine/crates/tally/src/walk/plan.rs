@@ -468,7 +468,12 @@ impl Engine {
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
                 {
-                    self.check_booked(&inst, (booking, cut), upto)?;
+                    // a window's body joins one booking cut per piece up to K (E §5 step 1)
+                    let cuts = match &inst.day {
+                        Some(Dated::Window(w)) => booking_cuts(m, w, tctx.cut)?,
+                        Some(Dated::Day(_) | Dated::Hole(_)) | None => vec![booking],
+                    };
+                    self.check_booked(&inst, (booking, &cuts, cut), upto)?;
                 }
                 inst.coll.merge(&tuple.coll);
                 if let (Some(marks), Some(mark)) = (marks.as_deref_mut(), self.trace_snap()) {
@@ -523,16 +528,19 @@ impl Engine {
     }
 
     /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
-    /// its booking cut, is the same under every cut that books it at booking cut `booking`,
-    /// across the asks of a run (refcore's `inv5`). Its day, its legs' too, is read at the cut
-    /// K, so it isn't part of A₀ (E §4.1 step 2). E §9 item 5.
+    /// its booking cuts, is the same under every cut that books it at the same cuts `cuts`
+    /// (`booking` the first), across the asks of a run (refcore's `inv5`). A window's body joins
+    /// one cut per piece up to K, so it is compared under that set of cuts, not its first alone:
+    /// asks at two cuts in one run give what each gives alone (L §8, l.2215; B5 of G1's review).
+    /// Its day, its legs' too, is read at the cut K, so it isn't part of A₀ (E §4.1 step 2).
+    /// E §9 item 5.
     fn check_booked(
         &mut self,
         inst: &Inst,
-        (booking, cut): (Day, Day),
+        (booking, cuts, cut): (Day, &[Day], Day),
         upto: Option<Day>,
     ) -> Result<(), Stop> {
-        let key = (inst.id.clone(), booking, upto);
+        let key = (inst.id.clone(), cuts.to_vec(), upto);
         let legs = booked_legs(&inst.legs);
         let Some(old) = self.booked.get(&key) else {
             let first = Booked {

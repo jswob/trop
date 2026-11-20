@@ -251,7 +251,7 @@ pub struct HoleSrc {
 /// day stops at): a walk up to a day books its partial plan list while cells outside it are
 /// still being computed, so its A₀ are checked against its own kind only, never against the
 /// whole walk's (E §9 item 5, §3.2, §4.1; refcore's `inv5` keys by the timeline).
-pub type Bookings = BTreeMap<(String, Day, Option<Day>), Booked>;
+pub type Bookings = BTreeMap<(String, Vec<Day>, Option<Day>), Booked>;
 
 /// A booked plan instance's amount A₀, its existence and legs as read at its booking cut,
 /// with the cut that first booked it: what every later cut that books it at the same booking
