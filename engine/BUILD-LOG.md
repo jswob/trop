@@ -5801,3 +5801,95 @@ The sweep (`tmp/spec-2.2.1-build/g2fix/sweep.sh`) runs every review text (`agent
   - `check commit: red at tests, stopped after 10 of 24 steps (140s)`: 32 of 1126 tests, the 61 ids above, none outside the lists.
   - `check fences: green, 1 step (23s)`.
 - **Waiting for the re-store:** the 61 ids (P33's 16 records among them), `day_rows` after B5's line.
+
+- 2026-11-20T22:13:25Z CONFIG-CHANGE BLOCKED: source skills /Users/jswob/.claude-personal/skills/synced/eea50a48-ef05-45fd-a077-2f30fee77fdd_b08d67ee-f5da-4e8a-8360-24723a436a14/google-workspace/SKILL.md (R-81)
+
+## 2026-11-20 tally 2.2.1 G1, the last fix: F1, F2, F4 to F8 (issue #241)
+
+The fix review is `tmp/spec-2.2.1/review-g1fix.md` (blocking 7); its 45 texts are in `review/g1fix/`; the ruling is `picks-g1-fixreview.md` (P41, one statement per form). The branch is at c2f8b3da: the second pin and its re-store merged, G2's review fix after my last turn. Five commits, one per item in the brief's order, and this one. Not pushed: `check commit` is red only on ids waiting for the last pin and on the tests session's logged-red vectors.
+
+- **The kept list:** `check commit` before any change, 50 red ids (`g1fix/red-f0.txt`): G2's review fix's register ids (its last entry) and the tests session's logged-red ids for G3 and G4. One is G1's own, `fixes/g13/rf_w_model_with_rf_w_w15`. The engine is right on it by its pins, so it gets a STOP-REPORT below, not a change.
+- **The sweep** (`g1fix/sweep.sh`): every text of `review/g1/` (46 and the pairs), `review/g1fix/` (45, `n3_sc` over `n3a`), G1's own probes, `probes/n3` and `probes/w15`: 105 runs per stage. `t0` is before any change, `t1` to `t5` after each item; `t0p` is the pinned refcore on the same texts. Every changed line below is its item's own; no other ask moved.
+- **Every finding's probe line, before (t0), after (t5) and on the pinned refcore:** `g1fix/lines.md`, one row per ask, the same rows as below.
+
+**e231c21b, item 1, F4** (`book/members.rs` `instance_by_id`). A field read of a decision's instance no walk ran, dated by a window, goes where its membership goes: the line read per day, or `HOLE-IMPRECISE` naming the window. It never stops the run with `LOAD-FIELD`.
+- `lf_where`: the run `refused: LOAD-FIELD cash is not a field of dx`, exit 1 → `plain: 500.00 PLN`, `sm_where (q = 1)` and `(q = 2)` `?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)`. The pinned refcore gives `sm_where: refused: REFCORE-NOT-YET …`.
+- `lf_min`: `LOAD-FIELD … dz` → `plain: 500.00 PLN`, `sm` the hole of dz (w3), and after item 5 `sm: 200.00 PLN` (= refcore).
+- `lf_one`: → `plain: 500.00 PLN`, `sm: 100.00 PLN` (= refcore), `sm_where` the hole (w).
+- `n3_two`: the run's `LOAD-FIELD … dz` → every ask prints (its values are item 5's).
+- Sweep: 27 asks in these 4 texts. Red after it: 50, none outside.
+
+**5e35ab47, item 2, F1 and F8** (`eval/windows.rs` `value_choices`, `values_interval`, new `imprecise_all`, `whole_values`).
+- A monotone operation is read at its interval's ends (and 0 where a number's interval crosses it), whatever the interval's size.
+- Only an operation that isn't (a zero divisor, `pow` over its exponent, `day_of`, `add_*`) takes the whole numbers in turn, up to 100 000, and is the hole beyond them.
+- A hole either function makes carries every operand window's unknown days.
+- `whole_values` loses its `.ok()` (the review's note n7).
+- F1, every pinned pair `true`:
+  - `cap` `past`: `?"… window(2026-01-01, 2026-10-27) … for arithmetic" (wa)` → `true`; `near` stays `true`.
+  - `big` `big_add`, `big_sub`, `big_abs`, `big_pow`, `big_round`: the hole for arithmetic, `abs`, `pow`, `round` (wl) → `true`; `big_add_p` stays `true`.
+  - The pinned refcore holes all six.
+- F8: `ops` `div0some`, `div0some_c`, and `ops_ak` `ak_div`, `div0some`, `div0some_c` keep their question `?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w)`. `unknown day: w2` joins `unknown day: w` (pins: w2 = 03-20 the interval naming w, 03-21 `RUN-DIV`). The question count stays one: one question per window is R21's (G3).
+- `b1_pow` `pl` and `pl_cmp` (B1) stay the hole.
+- Sweep: 11 asks. Red after it: 50, none outside.
+
+**02c384ae, item 3, F2** (`walk/state.rs` `St.held`, `apply`'s reset, `apply_ent`). A reading moves the windows still pending at it to `held`, and every later reading reopens them too, until their booking at the window's last day. Pins: 04-01 and 04-02 `750.00 PLN`, 04-03 `850.00 PLN`. The pinned refcore gives 850.00 on each.
+- `rtwo_min` `a20260403`: `850.00 PLN` → `?"date within window(2026-04-01, 2026-04-03) not precise enough for a balance" (pay_x)`.
+- `rtwo_pad` `a20260403`: the same.
+- `rtwo` `a20260403`, `a20260405`: `850.00 PLN` → the hole of `window(2026-03-31, 2026-04-03)`.
+- `rtwo_ak` `a20260403`, `k11`: the same as `rtwo_min`.
+- At each reading's own instant the stated balance stands: `rtwo` `a20260401: 700.00 PLN`, `a20260402: 750.00 PLN`, unchanged. One-reading texts (`c1`, `c2`, `c3`, `rfirst`, `rlast`, `rstart`) didn't move.
+- Sweep: 6 asks. Red after it: 50, none outside.
+
+**73c8593a, item 4, F6** (`walk/day.rs` `book_leg`, `book_leg_ends`; `walk/ends.rs` new `reads_under_window`; `walk/readings.rs` new `refuse_leg_own`, `refuse_leg_as`). A refusal stands beside a window's hole when nothing it rests on is under the hole:
+- A lifespan's refusal rests on no balance.
+- A decision's stands unless a place its `reads` names holds a window's question at its point. A keyed or computed place counts as under the hole; a movement read is no place.
+- The sign rule's refusal stays the hole.
+- Pins: `RUN-DIV` (rf_dec), `RUN-LIFESPAN` (rf_life, rf_life_ak).
+- `rf_dec` `b`: `?"… window(2026-02-27, 2026-03-03) … for a balance" (px)` → `refused: RUN-DIV division by zero`.
+- `rf_life` `b`, and `rf_life_ak` `b`, `k0301`, `k0520`: the hole → `refused: RUN-LIFESPAN intodead.cash moves into or out of dead outside its lifespan`.
+- `rf_dec2` (reads konto, under the hole), `rf_sign`, `rf_sign2`: as before, the hole.
+- The builder's own `group4_cases` restatement of `d77/lifespan` changes with the ruling. It is renamed `a_lifespan_refusal_after_a_window_lifespan_test_stands`, and `b` is now `refused: RUN-LIFESPAN into_shut.cash …`. T's stored `d77/lifespan` didn't move.
+- Sweep: 5 asks. Red after it: 50, none outside.
+
+**da0bcc64, item 5, F5 and F7** (`eval/stack.rs` `window_met`, `line_per_day`, `each_day`, `WindowReads::PerDay(n)`, `WINDOW_NEST`; `walk/move_flows.rs` `decision_runs`; `book/members.rs` `decided_members`, `instance_by_id`, `unrun_window`, which was `window_member`).
+- A window-dated decision met under another window's day is read per day of its own window, inside that day's layer, to a counted depth of 8.
+- The days' holes merge, so the hole names the window on which they differ.
+- Everywhere else a flows, a binding or a field read of such a decision is `HOLE-IMPRECISE` naming the window: inside a decision's walk, a `for` domain, `explain`. It is never 0 and never `RUN-ORDER`.
+- F7 (= the pinned refcore):
+  - `n3_second`: `cn` the hole of dz (w3) → `2`; `two` → `200.00 PLN`; `cn_apr` the hole of dz (w3) → `?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)`.
+  - `n3_two_b` the same three. `n3_two` the same, and `sm` → `200.00 PLN`.
+- F5 (pins 600.00 PLN; the pinned refcore prints 500.00 PLN and 0.00 PLN):
+  - `n3_walk` `b2`: `500.00 PLN` → `?"date within window(2026-04-29, 2026-05-02) not precise enough for flows of dx" (w)`; `fy`: `0.00 PLN` → the same hole.
+  - `n3_walk_cnt` `b2`: `500.00 PLN` → the hole "for a binding over dx" (w).
+  - This is the hole P41 names as both interpreters' shared limit, for M4.
+- Sweep: 14 asks. Red after it: 50, none outside.
+
+- **Sweep, in all:** 63 asks changed from t0 to t5 (27, 11, 6, 5, 14), each its item's own.
+- **Against the pinned refcore at t5, my findings' asks:**
+  - equal on F4's `plain`, `lf_min` `sm` and `lf_one` `sm`, and on F7's;
+  - different, by the ruling, on F1, F2, F5, F6 and F8's register line, where the writer mends refcore;
+  - the rest of the 179 asks the base differed on are G2's `pinned:` lines and the earlier lists' intended differences.
+- **Red ids:** 50 before the first change, 50 after each item, the same list; none outside it.
+- **Size** (`git diff --stat c2f8b3da..HEAD -- engine/crates`): 9 files, 218 in and 74 out (net +144). By commit: F4 9/2, F1+F8 37/18, F2 20/4, F6 87/10, F5+F7 68/43. Library 210/66, builder test 8/8. Kernel files: `walk/state.rs`, `day.rs`, `ends.rs`, `readings.rs`, `move_flows.rs`.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` byte-equal to c2f8b3da's).
+- **What the ruling left open:**
+  - F5's hole where every pin gives 600.00 PLN (inside a walk), listed for M4.
+  - The question per window in a hole over two windows (R21, G3's).
+  - The keyed or computed window (n8).
+  - `w15`'s record (STOP-REPORT below).
+- **Usage:** about 2.81 % of the week before this commit (0.44 % this turn, against 0.8 %).
+- **Time:** about 35 min from 22:53 local. Checks about 15 min of it: `check commit` six times (73 to 101 s), `check quick` seven times, one of them red at clippy (`drain`), one red at a builder test; `check fences` once.
+- **Checks at da0bcc64's tree:**
+  - `check quick: green, 11 steps (79s)`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (73s)`: the kept 50, none outside.
+  - `check fences: green, 1 step (25s)`.
+
+## STOP-REPORT 2026-11-20: `fixes/g13/rf_w_model_with_rf_w_w15` holds the pinned refcore's `RUN-DOMAIN`, where every pinned day gives a value
+
+- **Kind:** a test seems wrong (a stored record of P25's `round`)
+- **Where:** m1 `fixes/g13/rf_w_model_with_rf_w_w15`, `ask w15: round(age(w, d2) * 1.00 PLN, 0.01 PLN, down)`, `w = window(2026-03-03, 2026-03-20)`; L §4.4 l.668; P25, P30
+- **Rule or gate:** DONE gate 10
+- **What happens:** `check commit`'s line 3, refcore `w15: refused: RUN-DOMAIN round: the step 0.01 PLN and 0 have different units`, the engine `w15: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)`. Copied to `g1fix/probes/w15` with pins: `w = 2026-03-03` gives `1.00 PLN` and `w = 2026-03-20` gives `0.00 PLN`, on both interpreters. The days differ and none refuses, so by l.668 the value is the interval `[0.00 PLN, 1.00 PLN]`, which the print holes. The refusal's words say the pinned refcore's interval lost its low end's unit (`0`, not `0.00 PLN`) before `round`.
+- **What I tried:** nothing in the code: the engine's line is the one the pins give.
+- **What I ask:** the record re-stored with the hole for a print once refcore's interval keeps the unit, or held until then. It stays on the kept list.
+- **State:** this commit, after da0bcc64; `check quick` green; nothing uncommitted; not pushed.
