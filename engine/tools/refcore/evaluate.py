@@ -4744,6 +4744,16 @@ def member_moves(m, b, x):
     return owns(ow, move_owner(x))
 
 
+class WinDay(Exception):
+    """A decision dated by a window met by a flows or a binding over a span its window reaches (E §4.1 step 2): the
+    walk books it on no one day, so the line is read once per day of its window (ask.one; tally 2.2.1 P30, P32, N3)."""
+
+    def __init__(self, iv, use):
+        Exception.__init__(self, use)
+        self.iv = iv
+        self.use = use
+
+
 class HoleSignal(Exception):
     """Raised inside a read to return a hole at once (an imprecise visibility)."""
 

@@ -16,7 +16,8 @@ import datetime
 import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
-from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on, new_ask
+from .evaluate import (Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on, new_ask,
+                       WinDay, PinVal, imprecise_hole)
 from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
@@ -949,6 +950,40 @@ class Asker:
             if is_load(err):
                 raise LoadAtRun(err)
             return err
+        except WinDay as wd:
+            return self.window_days(eng, e, env, ctx, line, wd)
+
+    def window_days(self, eng, e, env, ctx, line, wd):
+        """A line that meets a decision dated by a window, read once per day of the window, the cell its day is read
+        from pinned to that day (E §4.1 step 2: it counts in flows when the window lies inside the span; L §4.4 l.668:
+        the window's days in turn; tally 2.2.1 P30, N3): one value when they agree, the refusal when every day refuses,
+        else the window's hole. A window no cell names is its hole."""
+        import datetime
+        iv = wd.iv
+        nm = iv.name
+        if nm is not None and nm[0] == 'row' and '[' not in nm[2]:
+            item, keys = nm[2], None
+        elif nm is not None and nm[0] == 'pin':
+            item, keys = nm[1], (nm[2] or None)
+        else:
+            return imprecise_hole(iv, wd.use)
+        days = sorted(iv.days) if iv.days is not None else [
+            iv.lo + datetime.timedelta(days=k) for k in range((iv.hi - iv.lo).days + 1)]
+        layer = 1 + max((p.layer for p in ctx.pins), default=0)
+        outs = []
+        for d in days:
+            pv = PinVal('solve', item, keys, (), d, '', layer)
+            c2 = ctx.but(pins=tuple(sorted(list(ctx.pins) + [pv], key=lambda p: repr(p.key()))))
+            outs.append(self.one(eng, e, env, c2, line))
+        errs = [r for r in outs if isinstance(r, TallyError)]
+        if errs:
+            return errs[0] if len(errs) == len(outs) else imprecise_hole(iv, wd.use)
+        holes = [r for r in outs if isinstance(r, Hole)]
+        if holes:
+            return merge(*holes)
+        if len(set(repr(vkey(r)) for r in outs)) == 1:
+            return outs[0]
+        return imprecise_hole(iv, wd.use)
 
     def one_solve(self, eng, a, env, ctx):
         try:

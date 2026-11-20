@@ -1,0 +1,89 @@
+# tally 2.2.1 P32, N3 through a scenario's from (P26's path, the review's d1_sc): the decision on a window across
+# from is left out on 04-29 and 04-30 and counted from 05-01, so cn, fl and sm are the hole, the pins differing.
+# tally 2.2 printed 0 and 0.00 PLN.
+=== d1_base.tally
+model d1b
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = window(2026-04-29, 2026-05-02) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+ask base: bal(konto, 2026-05-31)
+=== d1_sc.tally
+scenario sc over d1b
+  tally 2
+  from 2026-05-01
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+ask ex: explain bal(konto, 2026-05-31) in sc
+ask cn: count(m in transfers over 2026-05) in sc
+ask fl: flows(dx, 2026-04 .. 2026-05) in sc
+ask a20260430: bal(konto, 2026-04-30) in sc
+ask a20260430_p20260429: bal(konto, 2026-04-30) in sc with w = 2026-04-29
+ask a20260430_p20260430: bal(konto, 2026-04-30) in sc with w = 2026-04-30
+ask a20260430_p20260501: bal(konto, 2026-04-30) in sc with w = 2026-05-01
+ask a20260430_p20260502: bal(konto, 2026-04-30) in sc with w = 2026-05-02
+ask a20260501: bal(konto, 2026-05-01) in sc
+ask a20260501_p20260429: bal(konto, 2026-05-01) in sc with w = 2026-04-29
+ask a20260501_p20260430: bal(konto, 2026-05-01) in sc with w = 2026-04-30
+ask a20260501_p20260501: bal(konto, 2026-05-01) in sc with w = 2026-05-01
+ask a20260501_p20260502: bal(konto, 2026-05-01) in sc with w = 2026-05-02
+ask a20260502: bal(konto, 2026-05-02) in sc
+ask a20260502_p20260429: bal(konto, 2026-05-02) in sc with w = 2026-04-29
+ask a20260502_p20260430: bal(konto, 2026-05-02) in sc with w = 2026-04-30
+ask a20260502_p20260501: bal(konto, 2026-05-02) in sc with w = 2026-05-01
+ask a20260502_p20260502: bal(konto, 2026-05-02) in sc with w = 2026-05-02
+ask a20260503: bal(konto, 2026-05-03) in sc
+ask a20260503_p20260429: bal(konto, 2026-05-03) in sc with w = 2026-04-29
+ask a20260503_p20260430: bal(konto, 2026-05-03) in sc with w = 2026-04-30
+ask a20260503_p20260501: bal(konto, 2026-05-03) in sc with w = 2026-05-01
+ask a20260503_p20260502: bal(konto, 2026-05-03) in sc with w = 2026-05-02
+ask a20260531: bal(konto, 2026-05-31) in sc
+ask a20260531_p20260429: bal(konto, 2026-05-31) in sc with w = 2026-04-29
+ask a20260531_p20260430: bal(konto, 2026-05-31) in sc with w = 2026-04-30
+ask a20260531_p20260501: bal(konto, 2026-05-31) in sc with w = 2026-05-01
+ask a20260531_p20260502: bal(konto, 2026-05-31) in sc with w = 2026-05-02
+ask cn_p0430: count(m in transfers over 2026-05) in sc with w = 2026-04-30
+ask cn_p0501: count(m in transfers over 2026-05) in sc with w = 2026-05-01
+ask fl_p0430: flows(dx, 2026-04 .. 2026-05) in sc with w = 2026-04-30
+ask fl_p0501: flows(dx, 2026-04 .. 2026-05) in sc with w = 2026-05-01
+ask sm: sum(m.cash.amount for m in transfers over 2026-05) in sc
+ask sm_p0501: sum(m.cash.amount for m in transfers over 2026-05) in sc with w = 2026-05-01
+=== expect cn fl sm cn_p0430 cn_p0501
+cn: ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+  unknown day: w
+  world: sc
+  unfulfilled: dx
+  cut 2026-06-10
+fl: ?"date within window(2026-04-29, 2026-05-02) not precise enough for flows of dx" (w)
+  unknown day: w
+  world: sc
+  unfulfilled: dx
+  cut 2026-06-10
+sm: ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+  unknown day: w
+  world: sc
+  unfulfilled: dx
+  cut 2026-06-10
+cn_p0430: 0
+  world: sc
+  cut 2026-06-10
+cn_p0501: 1
+  pinned: w = 2026-05-01
+  world: sc
+  unfulfilled: dx
+  cut 2026-06-10

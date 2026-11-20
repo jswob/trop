@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
-from .evaluate import member_owns, member_moves, move_owner, carry_hole
+from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay
 from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey, day_text)
@@ -611,6 +611,10 @@ def m_movements_of(self, dom, ctx, owner=None):
                     ww = getattr(ww, 'base', None)
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
+                if r is None and isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date) and \
+                        i.exists is not False and ctx.walk is None:
+                    # a decision dated by a window: a binding over its kind reads its days in turn (E §4.1 step 2; N3)
+                    raise WinDay(i.day, 'a binding over %s' % q)
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
                     continue
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
@@ -1745,6 +1749,11 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 run = ww.decs.get(i.id)
                 ww = ww.base
             if run is None:
+                d = i.day
+                if isinstance(d, Iv) and isinstance(d.lo, datetime.date) and i.exists is not False and \
+                        ctx.walk is None and not ((sp.end is not None and d.lo > last) or d.hi < sp.start):
+                    # a decision dated by a window the span reaches: its days in turn (E §4.1 step 2; N3)
+                    raise WinDay(d, 'flows of %s' % mi.id)
                 if isinstance(i.day, datetime.date) and i.day > m.E and i.exists is not False:
                     # a decision instance after E: never walked, so its amount is a hole flows counts (E §2 Movements
                     # outside [S, E], HOLE-POSTRUN; tally 2.1.7 S1, #93), as a place's flows does (flows_post_e)

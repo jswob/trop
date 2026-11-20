@@ -7,7 +7,7 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 553 tests)
+## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 555 tests)
 
 - **P30, one statement for an operation over an interval** (L §4.4 l.667 to l.671). `lift_values` is the one
   mechanism; `lift` is its monotone form (`mono=True`). It takes each value in turn where it can: the whole numbers
@@ -33,6 +33,11 @@ interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may cra
 - **N4 (P32), a window's adjustment.** `m_adjust_move_compute` measures a windowed instance from its window's last
   day: a version known after it makes the adjustment, every day being paid by then (E §5 step 2); one known inside it
   is the booking cut's hole, as before. The HOLE-CHANGED question names the window (`values.day_text`).
+- **N3 (P32), a decision dated by a window in `flows`, `count`, `sum`.** The walk books it on no one day, so a
+  `flows` or a binding that meets it (outside a walk) signals `WinDay`, and `ask.one` reads the line once per day of
+  the window, the cell its day is read from pinned to that day (`window_days`, an inner `solve` pin that prints
+  nothing): one value where the days agree (`cn45` 1, `fl` 100.00 PLN), the refusal where every day refuses, else the
+  window's hole; a window no cell names is its hole.
 
 ## tally 2.2.1, group W5: the names (issue #241; 1 538 tests)
 
