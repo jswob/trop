@@ -517,8 +517,9 @@ pub struct Inst {
 /// `window_class_depends`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Depends {
-    /// Inside the run on some days, before its start on the rest.
-    Start,
+    /// Inside the run on some days, before its start or its scenario's `from` on the rest:
+    /// the first day it may book, the first day of the first piece that isn't out (L §6.4).
+    Start(Day),
     /// Modelled past on some days, booked on the rest: whether it is a binding's member
     /// depends on the day too.
     Covered,

@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::instance::{Amount, Dated, End, Exists, Inst, Order, Status};
+use super::instance::{Amount, Dated, Depends, End, Exists, Inst, Order, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -661,12 +661,14 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
                 qs = spread(&[qs.as_ref(), Some(&class)]);
             }
-            // its legs on its day, a window's first (refcore's `sched_leg_hole`)
-            let day = inst
-                .day
-                .as_ref()
-                .and_then(Dated::lo)
-                .map_or(start, |d| d.max(start));
+            // its legs on its day, a window's first, or the first day it may book where its
+            // window starts before the run or its scenario's `from` (refcore's
+            // `sched_leg_hole`; L §6.4: nothing before `from` changes)
+            let first = match inst.depends {
+                Some(Depends::Start(first)) => Some(first),
+                Some(Depends::Covered) | None => inst.day.as_ref().and_then(Dated::lo),
+            };
+            let day = first.map_or(start, |d| d.max(start));
             for leg in 0..inst.legs.len() {
                 walk.at(point(day), Act::LegHole(mv, leg, qs.clone()));
             }

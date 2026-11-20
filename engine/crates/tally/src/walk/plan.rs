@@ -325,25 +325,37 @@ impl Engine {
             return Ok(None);
         }
         // the edges where a class can change: the run's start, the cut (no day from K on is
-        // modelled) and the ends of a covered span at a place of its legs (L §5.19 Coverage)
+        // modelled), its scenario's `from` (L §6.4) and the ends of a covered span at a place
+        // of its legs (L §5.19 Coverage)
+        let from = scenario_from(m, &inst.move_id);
         let mut edges = vec![m.start, cut];
+        edges.extend(from);
         self.covered_edges(m, inst, cut, &mut edges);
         let mut classes = Vec::new();
         for piece in window_pieces(w, &edges)? {
-            classes.push(self.day_class(m, inst, cut, piece.first));
+            classes.push((piece, self.day_class(m, inst, (cut, from), piece.first)));
         }
-        let some = |class: DayClass| classes.contains(&class);
-        if some(DayClass::Out) && (some(DayClass::Modelled) || some(DayClass::Booked)) {
-            return Ok(Some(Depends::Start));
+        let kinds: Vec<DayClass> = classes.iter().map(|(_, c)| *c).collect();
+        let first_in = classes.iter().find(|(_, c)| *c != DayClass::Out);
+        if let (true, Some((piece, _))) = (kinds.contains(&DayClass::Out), first_in) {
+            return Ok(Some(Depends::Start(piece.first)));
         }
-        Ok((some(DayClass::Modelled) && some(DayClass::Booked)).then_some(Depends::Covered))
+        let mixed = kinds.contains(&DayClass::Modelled) && kinds.contains(&DayClass::Booked);
+        Ok(mixed.then_some(Depends::Covered))
     }
 
     /// The class plan instance `inst` takes on day `day` of its window, at cut `cut`: out
-    /// before the run's start, modelled past on a day before K where a version covers a place
-    /// of its legs, booked otherwise (refcore's `day_class`). E §4.1 step 3, L §5.19.
-    fn day_class(&mut self, m: &Reality, inst: &Inst, cut: Day, day: Day) -> DayClass {
-        if day < m.start {
+    /// before the run's start or before the `from` of the scenario that declares its move,
+    /// modelled past on a day before K where a version covers a place of its legs, booked
+    /// otherwise (refcore's `day_class`). E §4.1 step 3, L §5.19, §6.4.
+    fn day_class(
+        &mut self,
+        m: &Reality,
+        inst: &Inst,
+        (cut, from): (Day, Option<Day>),
+        day: Day,
+    ) -> DayClass {
+        if day < m.start || from.is_some_and(|f| day < f) {
             return DayClass::Out;
         }
         if day < cut && self.touches_covered(m, inst, (cut, Some(day))) {
@@ -943,15 +955,16 @@ fn booked_legs(legs: &[LegVal]) -> Vec<BookedLeg> {
 
 /// Whether `inst` is an instance of a move a scenario declares whose day falls before the
 /// scenario's `from`: it books nothing there, so it is left out; load has refused the move
-/// where it sees that day and that the instance exists (refcore's `scen_early`). L §6.4.
+/// where it sees that day and that the instance exists (refcore's `scen_early`). A window
+/// falls before `from` when its last day does; one across `from` is L §4.4's, its class
+/// depending on the day (`class_depends`; S-from). L §6.4.
 fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
     let Some(from) = scenario_from(m, &mv.id) else {
         return false;
     };
-    // a window's first day (refcore's `day_lo`)
     inst.day
         .as_ref()
-        .and_then(Dated::lo)
+        .and_then(Dated::hi)
         .is_some_and(|d| d < from)
 }
 
