@@ -658,7 +658,8 @@ class Checker:
             self.tc(e, dsc)
         elif f == 'residuals':
             r, sp, by = a.resid
-            t = self.tc(r, sc)
+            # any place, however it entered: a key a version's entry adds, as bal reads it (L §5.18; 222.1, 221.R1)
+            t = self.tc(r, sc, expect=T.key('places'))
             if not self.is_place_type(t):
                 raise uerr('residuals of %s, not a place' % T.show(t), a.loc)
             self.span(sp, sc)

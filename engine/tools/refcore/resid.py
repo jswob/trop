@@ -10,7 +10,7 @@ import datetime
 from fractions import Fraction
 
 from .errors import TallyError, Refusal, Unspecified, at_run
-from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
+from .values import Num, Hole, Thing, Text, Key, Iv, NONE, fmt, fmt_hole
 from .dates import month_period
 from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups, same_pairs
 from .walk import K_start, K_end, kday
@@ -426,6 +426,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             continue
         key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
         val = r.val
+        if val is NONE:
+            # a reading `replace … = none` removes: no reading, so no line (L §5.19; 236.2)
+            continue
         if isinstance(val, tuple) and val[0] == 'hole':
             stated = Hole([(val[1], 'stated[%s]' % place)])
         else:
