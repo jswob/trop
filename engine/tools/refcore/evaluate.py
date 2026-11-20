@@ -3178,7 +3178,14 @@ class Engine:
             if b.where is not None and defer is not None:
                 d2 = defer + [b.where]
             elif b.where is not None:
-                w = self.ev(b.where, e2, ctx)
+                try:
+                    w = self.ev(b.where, e2, ctx)
+                except WinDay as wd:
+                    if regs is None:
+                        raise
+                    # an ask's for domain is no line's own value: a window-dated decision it meets is the window's
+                    # hole, per tuple, never a stop (tally 2.2.1 P41, F5 and n3)
+                    w = imprecise_hole(wd.iv, wd.use)
                 if w is False:
                     continue
                 if w is NONE:
@@ -3806,12 +3813,16 @@ class Engine:
             w = ivs[0]
             return self.per_day(w, lambda d: fn(*[d if isinstance(v, Iv) else v for v in vals]), what)
         import itertools
+        # a hole it makes names every window its operands carry (L l.667; tally 2.2.1 P41, F8)
+        hw = ivs[0] if len(ivs) == 1 else Iv(ivs[0].lo, ivs[0].hi, ivs[0].days, ivs[0].src, origin=ivs[0].origin,
+                                              carry=carry_union(*ivs))
         opts = []
         size = 1
         for v in vals:
             if not isinstance(v, Iv):
                 opts.append([v])
-            elif isinstance(v.lo, Num) and whole_valued(v):
+            elif isinstance(v.lo, Num) and whole_valued(v) and not mono:
+                # only an operation that isn't monotone takes the whole numbers in turn, up to the cap (P41, F1)
                 size *= int(v.hi.q - v.lo.q) + 1
                 opts.append(None if size > LIFT_CAP else [Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
             elif mono:
@@ -3821,7 +3832,7 @@ class Engine:
                 opts.append(None)
         if any(o is None for o in opts):
             # its values can't be taken in turn and it isn't monotone in them: not decided for the whole interval
-            raise self.imprecise(ivs[0], what)
+            raise self.imprecise(hw, what)
         outs, errs = [], []
         for c in itertools.product(*opts):
             try:
@@ -3835,7 +3846,7 @@ class Engine:
         if errs and not outs:
             raise errs[0]
         if errs:
-            raise self.imprecise(ivs[0], what)
+            raise self.imprecise(hw, what)
         if any(isinstance(r, Iv) for r in outs):
             outs = [x for r in outs for x in ((r.lo, r.hi) if isinstance(r, Iv) else (r,))]
         return self.interval_of(outs, ivs[0], carry_union(*ivs))

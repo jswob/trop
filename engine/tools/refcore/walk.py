@@ -184,7 +184,9 @@ def apply(st, e, idx):
             imp = frozenset().union(*(x[1] for x in st.imp))
             UNCERTAIN.update(imp)
             e.reopen = imp | wins
-            return St(e.val, frozenset(e.qs) | imp, st.perm, (), st.pbad, idx, st.pbad)
+            # the window stays pending past the reading, so a second reading inside it is an edge too, whatever
+            # their number (tally 2.2.1 P41, F2); its last-day booking ends it (apply 'delta')
+            return St(e.val, frozenset(e.qs) | imp, st.perm, st.imp, st.pbad, idx, st.pbad)
         return St(e.val, frozenset(e.qs), st.perm, st.imp, st.pbad, idx, st.pbad)
     if k == 'init':
         s = e.val
@@ -434,7 +436,7 @@ class Walk:
         if e.reopen and key[0] == e.key[0] and (key[1] >= 4 if e.key[1] == 4 else key[1] == e.key[1]):
             # the reading's own instant: the stated balance, every day of a window that runs past it agreeing (P32)
             st = e.st
-            return St(st.val, st.hole - e.reopen, st.perm - e.reopen, st.imp, st.bad, st.rst, st.pbad), lg, i
+            return St(st.val, st.hole - e.reopen, st.perm - e.reopen, (), st.bad, st.rst, st.pbad), lg, i
         return e.st, lg, i
 
     def pstate(self, place, unit, key, raw=False):
@@ -1630,9 +1632,12 @@ class Walk:
             # "the place's balance is refused from that point ... and so is every read of the refused leg itself
             # (flows of its move over a span that holds it)" (E §4.2 step 5, round 10)
             self.bad_legs[(mv.id, lg.name)] = err
+            # a lifespan's refusal reads no balance, so it stands beside a window's hole; the sign rule's reads the
+            # balance and stays the hole (tally 2.2.1 P41, F6)
+            life = 'own' if getattr(err, 'code', None) == 'RUN-LIFESPAN' else None
             for p, s, on in sides:
                 if isinstance(p, Thing):
-                    self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv))
+                    self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv, note=life))
             return
         # conservation (E §9 invariant 1): a leg booked whole adds its two ends; a pad's other end is its reading's
         # reset; an observed leg booked end by end from two statements is the WARN-LEGS case (E §6.1), left out; so is
@@ -2041,6 +2046,23 @@ class Walk:
                 break
         return changes, reads, moves
 
+    def dec_refusal_stands(self, inst, key):
+        """Whether a decision's refusal stands beside a window's hole: unless a place it names in `reads` is under the
+        hole, it reads no value there, so every day gives it (tally 2.2.1 P41, F6; L §8 refusals outrank holes)."""
+        d = kday(key)
+        try:
+            reads = self.inst_places(inst, d)[1]
+        except TallyError:
+            return False
+        if reads is None:
+            return False
+        for pn in reads:
+            for (pl, u) in [k for k in self.logs if k[0] == pn]:
+                st = self.pstate(pl, u, key, raw=True)
+                if st.imp or (st.hole & UNCERTAIN) or any(q[0].startswith('date within ') for q in st.hole | st.perm):
+                    return False
+        return True
+
     def run_group(self, g, d, key):
         """The instances of an unordered cycle's decisions due on d (E §4.2 step 3): an instance whose `when` is false
         orders nothing; one that reads a place another changes that day runs after it, and one that reads another's
@@ -2289,12 +2311,13 @@ class Walk:
         run.obs = eng.obs_links_for(inst.id, self.tctx)
         if run.err is not None:
             known = [lg for lg in run.legs if isinstance(lg.frm, Thing) or isinstance(lg.to, Thing)]
+            own = self.dec_refusal_stands(inst, key)
             if known:
                 for lg in known:
-                    self.leg_bad(run, lg, run.err, key)
+                    self.leg_bad(run, lg, run.err, key, own=own)
             elif mi.legs:
                 # a leg whose place can't be read could book anywhere: every place (L §8.4)
-                self.add('*', '*', Ent(key, 'bad', err=run.err))
+                self.add('*', '*', Ent(key, 'bad', err=run.err, note='own' if own else None))
             self.same_release(run, key)
             return run
         if run.exists is False:
@@ -2336,7 +2359,9 @@ class Walk:
         # an instance stated same as an observation was observed: the group is one movement (L §6.1)
         reg = (('unfulfilled', run.id),) if (t < self.K and not run.obs and not self.same_observed(run)) else ()
         for lg in run.legs:
-            self.book_leg(run, lg, key, reg=reg, coll=run.coll)
+            # a refused amount stands beside a window's hole unless a place in its reads is under it (P41, F6)
+            own = isinstance(lg.amount, TallyError) and self.dec_refusal_stands(inst, key)
+            self.book_leg(run, lg, key, reg=reg, coll=run.coll, own=own)
         self.book_own_obs(run, key)
         self.same_release(run, key)
         return run

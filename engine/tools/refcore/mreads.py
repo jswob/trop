@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
-from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay
+from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay, imprecise_hole
 from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey, day_text)
@@ -646,7 +646,12 @@ def m_movements_of(self, dom, ctx, owner=None):
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
                 if r is None and isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date) and \
-                        i.exists is not False and ctx.walk is None:
+                        i.exists is not False:
+                    if ctx.walk is not None:
+                        # inside a walk no line's days are taken in turn: a member the window's hole, never left out
+                        # (span_members; tally 2.2.1 P41, F5)
+                        out.append(i)
+                        continue
                     # a decision dated by a window: a binding over its kind reads its days in turn (E §4.1 step 2; N3)
                     raise WinDay(i.day, 'a binding over %s' % q)
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
@@ -834,7 +839,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             outside = (sp.end is not None and d.lo >= sp.end) or (sp.start is not None and d.hi < sp.start)
             if outside:
                 continue
-            if not inside:
+            if ctx.walk is not None and isinstance(x, Inst) and getattr(x.move, 'decision', False):
+                # a window-dated decision met inside a walk (movements_of): the window's hole (P41, F5)
+                st = imprecise_hole(d, 'a binding over %s' % b._dom[1])
+            elif not inside:
                 st = carry_hole(Hole([('date within %s not precise enough for a binding over %s' % (
                     d.window_text(), b._dom[1]), x.id)]), d)
         elif isinstance(d, datetime.date):
@@ -1796,6 +1804,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             k = self.to_key(v, cv, b.dom, kn) if not isinstance(v, Mv) else v
             keys.append(vkey(k))
     last = sp.end - ONE_DAY if sp.end is not None else m.E
+    pre_holes = []
     if mi.decision:
         w = ctx.walk
         limit = None
@@ -1822,7 +1831,12 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             if run is None:
                 d = i.day
                 if isinstance(d, Iv) and isinstance(d.lo, datetime.date) and i.exists is not False and \
-                        ctx.walk is None and not ((sp.end is not None and d.lo > last) or d.hi < sp.start):
+                        not ((sp.end is not None and d.lo > last) or d.hi < sp.start):
+                    if ctx.walk is not None:
+                        # inside a walk no line's days are taken in turn: the window's hole, never 0 (tally 2.2.1
+                        # P41, F5)
+                        pre_holes.append(imprecise_hole(d, 'flows of %s' % mi.id))
+                        continue
                     # a decision dated by a window the span reaches: its days in turn (E §4.1 step 2; N3)
                     raise WinDay(d, 'flows of %s' % mi.id)
                 if isinstance(i.day, datetime.date) and i.day > m.E and i.exists is not False:
@@ -1845,7 +1859,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     else:
         insts = self.move_instances(mi, ctx)
     total = None
-    holes = []
+    holes = list(pre_holes)
     u = None
     seen_units = set()
     for i in insts:

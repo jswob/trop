@@ -1,0 +1,55 @@
+# tally 2.2.1 P41, the fix review's F2 (P32, L §5.19 l.1726): every reading inside a window is an edge, whatever their
+# number: after the second, the hole as far as the window reaches; pins 750.00, 750.00, 850.00 (review g1fix
+# rtwo_min). Before W8: 850.00 PLN in silence.
+=== rtwo_min.tally
+model rtwo_min
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+input pay: money PLN
+input w2: date
+move pay_x: transfers
+  on w2
+  leg cash from world to konto amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  w2 = window(2026-04-01, 2026-04-03) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+version st2
+  cite card
+  governs 2026-04
+  known 2026-04-10
+  anchor konto
+  stated[konto] = 700.00 PLN at 2026-04-01 end "s1"
+  stated[konto] = 750.00 PLN at 2026-04-02 end "s2"
+ask a20260403: bal(konto, 2026-04-03)
+ask a20260403_p20260401: bal(konto, 2026-04-03) with w2 = 2026-04-01
+ask a20260403_p20260402: bal(konto, 2026-04-03) with w2 = 2026-04-02
+ask a20260403_p20260403: bal(konto, 2026-04-03) with w2 = 2026-04-03
+=== expect
+a20260403: ?"date within window(2026-04-01, 2026-04-03) not precise enough for a balance" (pay_x)
+  unknown day: w2
+  anchor: konto 2026-04-02 end, stated 750.00 PLN, difference ?"date within window(2026-04-01, 2026-04-03) not precise enough for a balance" (pay_x)
+  unfulfilled: pay_x
+  cut 2026-04-20
+a20260403_p20260401: 750.00 PLN
+  anchor: konto 2026-04-02 end, stated 750.00 PLN, difference 50.00 PLN
+  cut 2026-04-20
+a20260403_p20260402: 750.00 PLN
+  anchor: konto 2026-04-02 end, stated 750.00 PLN, difference -50.00 PLN
+  cut 2026-04-20
+a20260403_p20260403: 850.00 PLN
+  pinned: w2 = 2026-04-03
+  anchor: konto 2026-04-02 end, stated 750.00 PLN, difference 50.00 PLN
+  unfulfilled: pay_x
+  cut 2026-04-20
+warning: WARN-UNREAD place unexplained is read by nothing

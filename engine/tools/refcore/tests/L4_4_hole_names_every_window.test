@@ -1,0 +1,105 @@
+# tally 2.2.1 P41, the fix review's F8 (L l.667, l.671): a hole an operation makes names every window its operands carry:
+# div0some, x / (y - n20), refused on one day of w2 only: both w and w2 (review g1fix ops). Before W8: w alone.
+=== ops.tally
+model a1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input w: date
+input w2: date
+input wl: date
+input wl2: date
+input d0: date
+input d1: date
+input de: date
+input n0: num
+input n2: num
+input n3: num
+input n4: num
+input n8: num
+input n9: num
+input n10: num
+input n20: num
+input n27: num
+input n33: num
+input n100: num
+input n171: num
+input n1000: num
+input m1: num
+input m7: num
+input m8: num
+input m100: num
+input m1x: num
+input mm: month
+input md: month
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  w2 = window(2026-03-20, 2026-03-21) "c"
+  wl = window(2026-01-01, 2027-06-01) "c"
+  wl2 = window(2026-01-01, 2026-12-31) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  de = 2025-12-30 "c"
+  n0 = 0 "c"
+  n2 = 2 "c"
+  n3 = 3 "c"
+  n4 = 4 "c"
+  n8 = 8 "c"
+  n9 = 9 "c"
+  n10 = 10 "c"
+  n20 = 20 "c"
+  n27 = 27 "c"
+  n33 = 33 "c"
+  n100 = 100 "c"
+  n171 = 171 "c"
+  n1000 = 1000 "c"
+  m1 = -1 "c"
+  m7 = -7 "c"
+  m8 = -8 "c"
+  m100 = -100 "c"
+  m1x = -1 "c"
+  mm = 2026-02 "c"
+  md = 2026-03 "c"
+def x: num = days_between(d1, w)
+def y: num = days_between(d1, w2)
+ask add2: x + y > n27
+ask sub2: x - y < m7
+ask mul2: x * y >= n171
+ask div2: x / y < 1
+ask add1: x + n2 > n10
+ask sub1: n20 - x >= n9
+ask mul1: x * n3 <= n33
+ask div1: x / n2 > n4
+ask mul0: x * y * n0
+ask div0all: x / (y * n0)
+ask div0some: x / (y - n20)
+ask div0some_c: x / (y - n20) > m100
+ask divsome_p20: x / (y - n20) with w2 = 2026-03-20
+ask divsome_p21: x / (y - n20) with w2 = 2026-03-21
+ask neg: -x < m8
+ask xx: x - x
+ask xx_c: x - x == n0
+ask ww: days_between(w, w) + days_between(w2, w2)
+ask frac_round: round(x / n3, 1, half-up)
+ask frac_round_c: round(x / n3, 1, half-up) >= n3
+=== expect div0some
+div0some: ?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w) ?"date within window(2026-03-20, 2026-03-21) not precise enough for arithmetic" (w2)
+  unknown day: w
+  unknown day: w2
+  cut 2026-01-01
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input de is read by nothing
+warning: WARN-UNREAD input m1 is read by nothing
+warning: WARN-UNREAD input m1x is read by nothing
+warning: WARN-UNREAD input md is read by nothing
+warning: WARN-UNREAD input mm is read by nothing
+warning: WARN-UNREAD input n100 is read by nothing
+warning: WARN-UNREAD input n1000 is read by nothing
+warning: WARN-UNREAD input n8 is read by nothing
+warning: WARN-UNREAD input wl is read by nothing
+warning: WARN-UNREAD input wl2 is read by nothing
