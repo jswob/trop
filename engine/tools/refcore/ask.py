@@ -820,6 +820,10 @@ class Asker:
                     mem = [(env, st) for env, st in mem
                            if not any(isinstance(env.get(b.var), Thing) and env[b.var].name in m.places and
                                       not item_in_world(m.places[env[b.var].name]) for b in bs)]
+                    if not self.declared_in_world(e):
+                        # a line whose expression names a thing this world doesn't declare: none of its tuples has a
+                        # line here, so each is `added` (L §5.18's diff row; tally 2.2.1 P37, Q6)
+                        mem = []
                     for env, st in mem:
                         if isinstance(st, tuple) and st[0] == 'domainhole':
                             lines.append((_txt(e), st[1]))

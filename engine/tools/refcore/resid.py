@@ -147,10 +147,17 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # the instances an observation (as known on `on`) fulfils: compared all the same on a day no statement covers,
     # their matched line on the instance's day (E §6.3)
     ful_ids = set()
+    # the last day of the observations that fulfil each instance, in any span: a window-dated instance's day once
+    # an observation fixes it (L §4.4 l.665, in every ledger; tally 2.2.1 P37, N7)
+    ful_last = {}
     for o in self.observations(octx):
         f = o.fulfils
-        if isinstance(f, tuple) and f[0] == 'inst' and self_touch(o.legs, place) and in_span(o.day):
-            ful_ids.add('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
+        if isinstance(f, tuple) and f[0] == 'inst' and self_touch(o.legs, place):
+            tid = '%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1]
+            if isinstance(o.day, datetime.date):
+                ful_last[tid] = max(ful_last.get(tid, o.day), o.day)
+            if in_span(o.day):
+                ful_ids.add(tid)
     def may_touch(i):
         # tally 2.1.7 R1, R2 (SR-1): a refused instance refuses the ledger exactly where a hole one would be a line of
         # it: a place its legs give, or any place where its legs' places couldn't be read (L §8.4)
@@ -182,6 +189,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 undated.append(i)
                 continue
             dd = day_lo(d)
+            if isinstance(d, Iv) and i.id in ful_last:
+                # the month of the observation holds the line; the window's holds nothing of it (P37, N7)
+                dd = ful_last[i.id]
             if not in_span(dd) or (not covered(dd) and i.id not in ful_ids):
                 continue
             if not touches(i):
@@ -240,7 +250,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                             if g in kept_groups:
                                 skip = True
                             else:
-                                hole_at[o.id] = cs[si]
+                                # a row with two legs at x: the hole carries both legs' questions (L §8.1;
+                                # tally 2.2.1 P36, N6), not the last leg's
+                                hole_at[o.id] = cs[si] if o.id not in hole_at else merge(hole_at[o.id], cs[si])
             if not skip and o.id in hole_at:
                 kept_groups.add(tuple(pairs[o.id][0]))
             if not skip:

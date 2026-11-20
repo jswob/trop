@@ -509,7 +509,9 @@ class Walk:
                 for a_i in range(len(os)):
                     for b_i in range(a_i + 1, len(os)):
                         oa, ob = os[a_i], os[b_i]
-                        if oa.row.version is ob.row.version:
+                        if oa.row.version is ob.row.version and ob.id not in groups.get(oa.id, ()):
+                            # two rows of one version stated same warn too (L §5.19 l.1717, "the sentence names no
+                            # version"; tally 2.2.1 P36, B5); unjoined rows of one version are pieces of a payment
                             continue
                         from .moves import id_order
                         if id_order(self.m, ob.id) < id_order(self.m, oa.id):
@@ -517,12 +519,20 @@ class Walk:
                             oa, ob = ob, oa
                         la = {g.name: g.amount for g in oa.legs}
                         lb = {g.name: g.amount for g in ob.legs}
-                        if any(n in lb and vkey(la[n]) != vkey(lb[n]) for n in la if not isinstance(la[n], Hole)):
-                            txt = 'the two observations of %s disagree: %s (%s) and %s (%s)' % (
-                                name, oa.id, ', '.join(fmt(la[n]) for n in sorted(la)), ob.id,
-                                ', '.join(fmt(lb[n]) for n in sorted(lb)))
-                            if ('WARN-LEGS', txt) not in self.warnings:
-                                self.warnings.append(('WARN-LEGS', txt))
+                        da = {g.name: g.day for g in oa.legs}
+                        db = {g.name: g.day for g in ob.legs}
+                        if not any(n in lb and vkey(la[n]) != vkey(lb[n]) for n in la if not isinstance(la[n], Hole)):
+                            # a disagreement on a day alone warns too, naming the days (L §5.19 l.1717, "an amount or
+                            # a day"; tally 2.2.1 P36, B5 and Q7)
+                            if not any(n in db and vkey(da[n]) != vkey(db[n]) for n in da
+                                       if not isinstance(da[n], Hole)):
+                                continue
+                            la, lb = da, db
+                        txt = 'the two observations of %s disagree: %s (%s) and %s (%s)' % (
+                            name, oa.id, ', '.join(fmt(la[n]) for n in sorted(la)), ob.id,
+                            ', '.join(fmt(lb[n]) for n in sorted(lb)))
+                        if ('WARN-LEGS', txt) not in self.warnings:
+                            self.warnings.append(('WARN-LEGS', txt))
             linked = set()
             for tid in sorted(links):
                 os = list(links[tid])
@@ -630,7 +640,7 @@ class Walk:
                     if eng.before_scen_from(i, d):
                         # a scenario's move books nothing before its from (L §6.4): left out
                         if not self.proj:
-                            self.note_leftout(i)
+                            self.note_leftout(i, scen=True)
                         continue
                     if d < S or d > self.end:
                         if not self.proj and (d < m.S or d > m.E):
@@ -652,7 +662,7 @@ class Walk:
                     if frm is not None and d.hi < frm:
                         # a scenario's move books nothing before its from (L §6.4): a window before it is left out
                         if not self.proj:
-                            self.note_leftout(i)
+                            self.note_leftout(i, scen=True)
                         continue
                     q = carry_hole(Hole([('date within %s not precise enough for the day of %s' % (
                         d.window_text(), i.id), i.id)]), d)
@@ -764,7 +774,7 @@ class Walk:
                     u = lg.unit or self.m.place_unit(self.m.things[p.name])
                     self.at((d.toordinal(), 2, 0, plan_key(i), 0), 'decided', (p.name, u, i.coll))
 
-    def note_leftout(self, i):
+    def note_leftout(self, i, scen=False):
         mid = i.move.id
         n, first = self.leftout_regs.get(mid, (0, None))
         d = day_lo(i.day)
@@ -776,13 +786,16 @@ class Walk:
         if first is None or (isinstance(d, datetime.date) and (not known or d < first)):
             first = d
         self.leftout_regs[mid] = (n + 1, first)
-        for lg in i.legs:
-            for p in (lg.frm, lg.to):
-                if isinstance(p, Thing):
-                    self.leftout_by_place.setdefault(p.name, set()).add(mid)
-                    if getattr(i, 'day_coll', None) is not None:
-                        # the reads that left it out are in every read set that lists it (L §8.2; tally 2.2.1 P35)
-                        self.later_by_place.setdefault(p.name, []).append((None, i.day_coll))
+        places = [p.name for lg in i.legs for p in (lg.frm, lg.to) if isinstance(p, Thing)]
+        if scen and not i.legs and getattr(i.move, 'decision', False):
+            # a decision left out never runs, so its legs are the places they name: a scenario's decision before its
+            # from is left out like any move (L §6.4; tally 2.2.1 P39)
+            places = self.dec_places(i, self.tctx)
+        for pn in places:
+            self.leftout_by_place.setdefault(pn, set()).add(mid)
+            if getattr(i, 'day_coll', None) is not None:
+                # the reads that left it out are in every read set that lists it (L §8.2; tally 2.2.1 P35)
+                self.later_by_place.setdefault(pn, []).append((None, i.day_coll))
 
     def note_post_e(self, i, d):
         """An instance dated after E: never booked, counted by flows (E §2 Movements outside [S, E]; tally 2.1.7 S1,
