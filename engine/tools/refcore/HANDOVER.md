@@ -7,6 +7,19 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W3: coverage on the rows that stand; `residuals` (issue #241; 1 582 tests)
+
+- **S-223.** `Loader.check_correction_covers`: a `replace` of an observation row that books (not `= none`) in a
+  version that doesn't cover, on the row's day, a place of its legs that the replaced row's version covers is
+  `LOAD-COVERS replace <r> of <x>: <version> doesn't cover <x> on <d>`.
+- **S-232.** `Loader.check_covers_standing` replaces the one test at `on` in the base's world: per world (the base,
+  then each scenario's chain, `set_world`) and per key, a row stands from its `known` until a row above it by
+  (layer, known) in that world is known; it is checked against its version's covers span at each cut of that stretch
+  (its own `known` and the known dates of the moves the world sees, `VersionInfo.span_at`). A dropped row stands for
+  nothing. The message is the old one; a lower scenario's refusal refuses those over it with its message.
+- **Cause D.** `residuals` types its place as `bal` does (`expect=T.key('places')`), so an entered account is a place
+  (222.1); a stated reading a `replace … = none` removes has no ledger line (`resid.py`, 236.2).
+
 ## tally 2.2.1, group W2: the lines at the run's own level (issue #241; 1 573 tests)
 
 - **R20, one mechanism.** A member's ask is answered by the member (`Asker.member_ask`, `member_alone`); its run-level
