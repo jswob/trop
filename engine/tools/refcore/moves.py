@@ -831,7 +831,11 @@ def m_inv5(self, inst, tctx, upto=None):
     read of day d reads the walk's prefix through d; G10, G16)."""
     reg = self.m.__dict__.setdefault('_inv5', {})
     wk = self.wkey(tctx)
-    k = (inst.id, inst.cut, upto, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
+    # a windowed instance's body joins every booking cut of its window up to K, so it is compared under that set of
+    # cuts, not its first alone: asks at two cuts in one run give what each gives alone (L §8 order never changes a
+    # result; tally 2.2.1, the first engine review's B5)
+    cuts = getattr(inst, 'cuts', None) or (inst.cut,)
+    k = (inst.id, cuts, upto, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
     v = body_key((inst.exists, inst.legs, None, None, None))
     old = reg.get(k)
     if old is None:
@@ -938,6 +942,8 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             else:
                 cuts = [K]
             inst.cut = cuts[0]
+            # every booking cut its body joins: invariant 5 compares bodies booked at the same cuts (B5)
+            inst.cuts = tuple(cuts)
             seen = [self.keys_seen(mi, keys, c) for c in cuts]
             if not any(seen):
                 # a key entered after the booking cut: the instance didn't exist then, A0 = 0 (E §5 steps 1-3)
