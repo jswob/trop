@@ -217,7 +217,7 @@ Each needs a store, a user or a clock, so it is the app's; named here, specified
 | CHG-8 | a check that a change only adds |
 | CHG-9 | a restatement, proved by two runs that print the same |
 | CHG-10 | a revision, with its reason |
-| SCN-2 | whether the base moved under a what-if (`WARN-STALE`, `LANGUAGE.md` §8.5) |
+| SCN-2 | whether the base moved under a what-if (`LANGUAGE.md` §6.4) |
 | SCN-4 | dropping a what-if |
 | LAW-3 | keeping untested law out of real answers |
 | STO-1 | the files and their history; record time R (`ENGINE.md` §2) |
