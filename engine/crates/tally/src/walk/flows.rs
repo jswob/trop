@@ -43,9 +43,10 @@ impl Engine {
             Some((name, posts)) => m.moves.get(name).map(|mv| (mv, posts)),
             None => None,
         };
-        // the hole names the target as written, its keys and field too (L §8.1)
+        // the hole names the target as written, its keys and field too, each key a binding
+        // gave by its value (L §8.1; 235.6 on #241)
         if sp.start().is_none_or(|s| s < m.start) {
-            let figure = crate::load::expr_text(&f.target);
+            let figure = crate::eval::written_bound(m, &f.target, env)?;
             return Ok(Value::Hole(Hole::before_run(&figure)));
         }
         // `, for k`: only the movements for period k (L §5.14.3); a hole k is the line's
