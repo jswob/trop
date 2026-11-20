@@ -586,9 +586,9 @@ class Asker:
             after_on(m, K)
         eng.ask_K = K
         law = None
-        # a diff's law that reads its ask-level for is read per tuple (L §5.18: every clause stands on every form;
-        # item 17 of the fourth turn), in diff_binds
-        self._tuple_law = a.law if (a.law is not None and a.form == 'diff' and law_reads_binds(a)) else None
+        # a law that reads its ask-level for is read per tuple (L §5.18: every clause stands on every form; item 17 of
+        # the fourth turn; on every form, not only diff: tally 2.2.1, 208.R2), in diff_binds and the tuples' loop
+        self._tuple_law = a.law if (a.law is not None and law_reads_binds(a)) else None
         if a.law is not None and self._tuple_law is None:
             v = eng.ev(a.law, {}, Ctx(None, K))
             if isinstance(v, Hole):
@@ -666,15 +666,23 @@ class Asker:
             if wh is not None:
                 out.append('%s%s: %s' % (a.id, env_text, fmt_value(wh)))
                 continue
+            tctx = ctx
+            if getattr(self, '_tuple_law', None) is not None:
+                # the tuple's law date (208.R2, as diff_binds): a hole makes its line that hole
+                v = eng.ev(self._tuple_law, env, Ctx(None, ctx.cut))
+                if isinstance(v, Hole):
+                    out.append('%s%s: %s' % (a.id, env_text, fmt_value(v)))
+                    continue
+                tctx = ctx.but(law=eng.date_of(v, 'the law of an ask'))
             results = {}
             for c in combos:
-                cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
+                cctx = tctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
                 results[c] = self.evaluate(eng, a, env, cctx)
             lines = self.group(a, axes, combos, results)
             for ln in lines:
                 for rc in tregs.get(id(env), ()):
                     ln.coll.merge(rc)
-                out.extend(self.print_line(a, env_text, ln, pins_coll, ctx))
+                out.extend(self.print_line(a, env_text, ln, pins_coll, tctx))
         return out
 
     def binds_over_axes(self, eng, a, ctx, pins_coll, pinned_axes, axes, combos):
@@ -710,16 +718,24 @@ class Asker:
             if key in wholes:
                 out.append('%s%s: %s' % (a.id, env_text, fmt_value(merge(*wholes[key]))))
                 continue
+            tctx = ctx
+            if getattr(self, '_tuple_law', None) is not None:
+                # the tuple's law date (208.R2, as diff_binds): a hole makes its line that hole
+                v = eng.ev(self._tuple_law, env, Ctx(None, ctx.cut))
+                if isinstance(v, Hole):
+                    out.append('%s%s: %s' % (a.id, env_text, fmt_value(v)))
+                    continue
+                tctx = ctx.but(law=eng.date_of(v, 'the law of an ask'))
             results = {}
             for c in cs:
-                cctx = ctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
+                cctx = tctx.but(axes=tuple(sorted(list(pinned_axes.items()) + list(c))))
                 cenv, rg = envs[c]
                 results[c] = self.evaluate(eng, a, cenv, cctx)
                 # what the tuple's members brought in that combination (an unfulfilled instance it binds, L §8.2)
                 for rc in rg:
                     results[c].coll.merge(rc)
             for ln in self.group(a, axes, cs, results):
-                out.extend(self.print_line(a, env_text, ln, pins_coll, ctx))
+                out.extend(self.print_line(a, env_text, ln, pins_coll, tctx))
         return out
 
     # -- diff (L §5.18, §6.4) -------------------------------------------------------------------------
@@ -1476,7 +1492,17 @@ class Asker:
         pinned = set(p.axis for p in a.pins if getattr(p, 'pkind', None) == 'axis')
         octx = self._outside_ctx.but(axes=tuple((ax, o) for ax, o in ctx.axes if ax not in pinned))
 
+        # the pinned axes the line's cone reaches, fanned out in the order of their ids, each over its options as
+        # declared: the tuples whatever one derivation stops before reading (L §5.18; tally 2.2.1, 231.R1)
+        cone = list(getattr(a, '_pinned_axes', ()) or ())
+
         def outside_of(oc, fixed):
+            nxt = next((ax for ax in cone if ax not in dict(fixed)), None)
+            if nxt is not None:
+                nodes = []
+                for o in self.m.axes[nxt].options:
+                    nodes += outside_of(oc.but(axes=tuple(sorted(oc.axes + ((nxt, o),)))), fixed + ((nxt, o),))
+                return nodes
             # outside the pins, an axis the ask pinned is read as every other line reads an axis: the derivation fans
             # out over the options of each one it reads, in declaration order (L §5.5 Fan-out; tally 2.1.7 R8, T's
             # SR-10); 2.1.7's first refcore stopped at its guard

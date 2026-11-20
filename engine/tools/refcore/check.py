@@ -3265,6 +3265,7 @@ class Checker:
             if n > 64:
                 raise LoadError('LOAD-FORKS', 'ask %s reaches %d axis combinations; the cap is 64' % (a.id, n), a.loc)
             a._axes = sorted(axes - pinned)
+            a._pinned_axes = sorted(axes & pinned)
         # unread items (L §8.5)
         read = set()
         for r, ts in E.items():
