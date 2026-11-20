@@ -5893,3 +5893,72 @@ The fix review is `tmp/spec-2.2.1/review-g1fix.md` (blocking 7); its 45 texts ar
 - **What I tried:** nothing in the code: the engine's line is the one the pins give.
 - **What I ask:** the record re-stored with the hole for a print once refcore's interval keeps the unit, or held until then. It stays on the kept list.
 - **State:** this commit, after da0bcc64; `check quick` green; nothing uncommitted; not pushed.
+
+## 2026-11-21 tally 2.2.1 G2, the last fix: F1 to F10, P42 (issue #241)
+
+The fix review is `tmp/spec-2.2.1/review-g2fix.md` (blocking 10), its probes `review/g2fix/`; the lead's side-by-side runs are `lead-probes/g2*-engine-vs-w8.txt`; the ruling is `picks-g2-fixreview.md` (P42, P43: S1 to S7). Branch `build/2.2.1` after G1's 257e5551. Seven commits and this one, one per statement in the brief's order, and a last narrow one for S3. Not pushed: the branch waits for the last pin's re-store.
+
+- **The sweep** (`tmp/spec-2.2.1-build/g2last/sweep.py`): cmp.py's pairing and comparison over `review/g2/agent/{dif,hs,led,min,pad,qf,reg,s219,warn}`, `review/g2/lead` and `review/g2fix/{dif,led,reg,same,warn}`, 69 texts (`p206` left out: it times out). refcore-w8 ran once (`ref/`, it doesn't move); the engine after each item (`eng-0` … `eng-7`); `cmp-<n>.txt` is the engine against refcore-w8, `filt-<n>.txt` filt.py's view, `odiff.py` an ordered diff of the same (filt's line sets can't see a register line that also appears elsewhere in the file). The lead's own `cmp.py` on the final engine gives the same count: same 43, differs 26 (`lead-cmp-final.txt`).
+- **The kept list:** `check commit` before any change, 51 red ids (`g2last/red-0.txt`).
+
+**169a3962, item 1, S6 (F1, F2):** `book/ledger.rs` `ledger_model` (`last_within` goes). The day of a window-dated instance its observations fulfil is the last of their days as known on the model's `on` (not the ask's cut), the same in every ledger; its line stands in that day's month only.
+- F1 `led/l3_one_row_known`: `apr_k`: no line → `2026-04 move pay_w: model 100.00 PLN, observed 100.00 PLN` and `matched pay_w on 2026-04-02 … timing +0 days`; `mar_k`: `expected but missing pay_w on 2026-03-05` → nothing.
+- F2 `led/l1_two_months`: `mar` and `mar_k`: `matched pay_w on 2026-03-06: model 100.00 PLN, observed 60.00 PLN` → nothing; `apr` (observed 40.00 on 04-02) and `both` (one line on 04-02, 100 against 100) stay. Both texts now equal refcore-w8.
+- n4 `review/g2/agent/led/l1`, `l2` `mar`: `pay_2` (`window(2026-03-28, 2026-04-03)`) loses its March line; it stands in April only. refcore-w8 still prints March's: its move (S6, n4).
+- Sweep: 12 lines in 4 texts. Red after: 51, the list.
+
+**0b7cd7c5, item 2, S1 (F3, F4, F5, F9):** `book/same.rs` `compare_days`, `DayCmp`, `common_day`, `one_day`, `undecided_hole` (`days_differ` and `Days` go); `sides_differ` uses it for the day; `book/same_booking.rs` `same_end` uses it for the booking. Each side states the days its day can take; a hole side gives its question; no day common to every side, `HOLE-SAME`; one day all equal, one named window on every side, or a one-day window against its day, agreed; else one question per unknown day, each labelled by its own side (`… for the day of <sides>`, `… for a balance` at the booking).
+- F3: `same/s3_chain_window` `dy`: `?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of in1, in2 and in3" (in1)` → `?"in1, in2 and in3 are one, but the day of cash differs on window(2026-03-05, 2026-03-07): window(2026-03-05, 2026-03-07) (in1), 2026-03-05 (in2) and 2026-03-07 (in3)" (in1, in2, in3)`. `s4_windows` `oneof`: the window's question → `?"in1 and in2 are one, but the day of cash differs on one_of([2026-03-05, 2026-03-09]): one_of([2026-03-05, 2026-03-09]) (in1) and 2026-03-07 (in2)"`.
+- F4: `s4` `w2`: one question (in1) → two, `window(2026-03-05, 2026-03-07)` (in1) and `window(2026-03-06, 2026-03-09)` (in2), `unknown day: d1`, `d2`. `s3` `dy_w2`: three, (in1), (in2), (in3), `unknown day: d1`, `d2`, `d3`. `s4` `eqnamed`: two unknowns of one text, which the hole module prints as one question labelled `(in1, in2)`, with `unknown day: d1` and `d2`.
+- F5: `same/s5_hole_day` `dy`: `2026-03-05` → `?"when did in2 land" (d2)`; `c0`: `1`, `f1`: `100.00 PLN`, `s0`: `100.00 PLN` → the same hole; `b31`: `HOLE-SAME` of `100.00 PLN (in1) and 100.00 PLN (in2)` and the hole → the hole alone.
+- F9: `review/g2/agent/min/b3` `b5`, `b31`: the window's hole and `?"… the leg at konto differs on 2026-03-05: 100.00 PLN (in1) and 100.00 PLN (in2)"` → `?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in2)` alone. The same for `same/s1_dayonly` `pw`, `s4` `b31` (n3's `differs on : ` goes with it), `hs/h5` `blc`, `blm`, `ex`, `fl` and `h5b`'s fee leg.
+- n1: `s4` `oneday`: the window's question → `window(2026-03-06, 2026-03-06)`. `oneday_b` keeps the walk's own one-day-window hole (n1, older in kind) without the `HOLE-SAME`.
+- Sweep: 70 lines in 7 texts (`b3`, `h5`, `h5b`, `s1`, `s3`, `s4`, `s5`), each S1's. Red after: 51, the list.
+
+**801fde87, item 3, S2 and P42 (F7):** `walk/move_flows.rs` `count_move` reads the sides' amounts only (`Fact::Amounts`, or the one leg's); the day decides membership alone (`same_member_hole`). `book/members.rs` `same_member_hole` holds every other side's day reads whatever the membership gives. `mv_field` and the new `same_leg_record`: a leg whose amount the sides disagree on is a record with its own `from` and `to`, its `amount` and `day` the hole.
+- P42 `fl1`: `hs/h2`, `h9` `fl1`: `HOLE-SAME` on the day → `100.00 PLN`; `h5` `fl1`: the window's hole → `100.00 PLN` (= refcore-w8).
+- P42 `tos`: `hs/h1`, `h5b`, `h6`, `h6b`, `h7` `tos`: `HOLE-SAME` on the amount → `wallet` (= refcore-w8).
+- F7: `same/s2_leg_reads` `cnt_d2`: `1` with no line → `1` with `pinned: d2 = 2026-03-20`.
+- `hs/h5` `cnt5` stays the window's hole. Its span is `2026-03-05 .. 2026-03-05`; `in2`'s window runs to 03-07, so the days fall on both sides of the span's end, which S2's sentence makes the day's hole. The brief's example says `1`, as refcore-w8 prints (it reads `in1`'s day alone). For the lead.
+- Sweep: 18 lines in 9 texts. Red after: 51, the list.
+
+**05efd7ab, item 4, S3 (F6):** `walk/body.rs` keeps each leg's reads by name around `eval_leg` (`Body.leg_reads`, `Inst.leg_reads`, set in `walk/plan.rs` and `walk/order.rs`); `book/members.rs` `same_hole` absorbs the other side's reads of the fact read (`reads_of_fact`: the day's, one leg's, every leg's, else all).
+- F6: `same/s2_leg_reads` `fee_a2` and `fl_fee`: `1.00 PLN` with `pinned: a2 = 130.00 PLN` → `1.00 PLN` without.
+- Sweep: 2 lines in 1 text. Red after: 51, the list.
+
+**cb07e59b, item 5, S4 (F8):** `walk/state.rs` `Noted` (`Out`, `From`), `note_decided`, `uncounted_in`; `walk/agenda.rs` `schedule_decided` notes a non-existing instance from its day; `walk/move_flows.rs` `count_move` merges its reads only where its day is on or before the span's last.
+- F8: `reg/r2_when_before` `f_before`, `f_fl`, `f_flm` and `reg/r1_when` `a_before`: `pinned: on_ = false` → gone. `r2` now equals refcore-w8.
+- Sweep: 4 lines in 2 texts. Red after: 51, the list.
+
+**388a106c, item 6, S5 (F10):** `walk/flows.rs` `place_log` meets a mark dated in the span; `walk/move_flows.rs` `count_standing_in` takes an open modelled instance's reads beside its `open:`.
+- F10: `reg/r3_covered` `f1: 30.00 PLN` → with `pinned: w = 2026-03-12` and `open: pw`, as `c1` (the balance); `f2: 0.00 PLN, open: pw` → with `pinned: w = 2026-03-12`. `review/g2/agent/pad/r6` `v10` (`flows(konto, 2026-03)`, covered): gains `pinned: w5 = 2026-03-20` and `open: pay_y`.
+- Sweep: 5 lines in 2 texts.
+- Red after: 52. New: m1 `fixes/gate8/m2_rt_l6_1_same_observed_contrast_nosame`, `q: flows(acc, 2024)` gains `open: gift`. That is S5's own kind: on a copy, `bal(acc, 2024-12-31)` lists `open: gift` on both interpreters, and refcore-w8's `q` doesn't. Its record waits for refcore's S5 and the re-store.
+
+**88c7fdf4, S3's last read:** the end's ordered diff showed `hs/h10` `f2d` (`flows(in2, 2026-03-05 .. 2026-03-05)` with `a2 = 100.00 PLN, d2 = 2026-03-09`) listing `pinned: a2` beside the day's `HOLE-SAME`: `count_move` took the row's whole read set there. It takes the row's day reads, as `span_members` does. `pinned: a2 = 100.00 PLN` → gone; `pinned: d2` stays. Sweep: 1 line. Red after: 52, the same.
+
+- **S7:** no change; `dif/d1` `q_entx` stays `added pay[ola]: 20.00 PLN` (refcore-w8: `changed … against refused`).
+- **Where the engine and refcore-w8 still differ** (26 texts at the end; whose move, by the ruling):
+  - the leg's name alone, G3's (237.2): `hs/h1`, `h3`, `h8`, `lead/w1_one_version`;
+  - the order of two questions in one line (fee before cash), which follows the leg's name, G3's (P42): `hs/h2`, `h6`, `h6b`, `h7`, `h9` (`blc`, `blm`, `ex`, `fl`, `pinb`), `same/s2_leg_reads` `bal_d2`, `same/s6_two_legs_both`;
+  - S1 at the booking, refcore's: `min/b3` `b5`, `b31`; `same/s1_dayonly` `pw`; `s4` `b31`, `oneday_b`; `hs/h5` `blc`, `blm`, `ex`; `h5b`'s fee leg. refcore-w8 keeps the `HOLE-SAME` of equal amounts;
+  - S1's words, labels and one question per unknown day, refcore's (P42): `min/b3` `dy`, `h5`/`h5b` `dys` (`for the day of in1 and in2` (in2) against `for the day of cash` (in1, in2)); `s3` `dy_w2`; `s4` `w2`, `eqnamed`;
+  - the object address in refcore's `HOLE-SAME`, refcore's: `s3` `dy`, `dy_disj`; `s4` `oneof`;
+  - S1's hole side, refcore's: `same/s5_hole_day` `dy`, `c0`, `f1`, `s0`, `b31`;
+  - S6, refcore's (n4): `review/g2/agent/led/l1`, `l2` `pay_2`'s March line;
+  - S5, refcore's: `reg/r3_covered` `f1`, `f2`; `pad/r6` `v10`;
+  - S3 and S2, refcore's: `same/s2_leg_reads` `fee_a2`, `fl_fee`, `day_a2` (refcore lists `pinned: a2` beside a day or a fee read) and `cnt_d2` (refcore lists no `pinned: d2`); `hs/h10` `c5`, `c9`, `dp` (refcore lists `pinned: a2`) and `f2d` (the engine lists `pinned: d2`, refcore nothing). P43 names the engine on S3; refcore-w8 doesn't follow it yet;
+  - P35's form, refcore's: `reg/r1_when` `f_mv`, `f_pl` (`flows` over the movement's own month, `on_ = false`): the engine lists `pinned: on_ = false` as the balance `a_after` does; S4 removes it only before the movement's day;
+  - S7, refcore's: `dif/d1` `q_entx`;
+  - open for the lead: `hs/h5`, `h5b` `cnt5` (above); `hs/h5`, `h5b` `fl` (`flows(wallet, 2026-03)`): the engine prints the booking's window hole `for a balance`, refcore-w8 the `HOLE-SAME` of equal amounts. Whether S2's membership reaches a place's flows (then a value) is not in the ruling's words;
+  - not G2's: `qf/q1` (`RUN-NONE a value is none here` against `lvl is none here`, the same as the kept list's `spec/g1/qn` and `rules/none`).
+- **Red ids:** before 51; after items 1 to 5, 51 (the same list); after item 6 and the S3 read, 52: the list and `m2_rt_l6_1_same_observed_contrast_nosame` (S5's kind, above). None outside.
+- **Size** (`git diff --stat 257e5551..HEAD -- engine/crates`): 12 files, 303 in, 120 out. By commit: S6 12/24, S1 138/58, S2 51/20, S3 50/7, S4 43/9, S5 7/1, S3's read 2/1. By file: `book/same.rs` 127/60, `book/members.rs` 56/8, `walk/state.rs` 35/6, `walk/body.rs` 26/2, `book/same_booking.rs` 19/3, `walk/move_flows.rs` 16/14, `book/ledger.rs` 12/24, the rest 13/3. All library.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched; two report-only hits met on the way, a nested closure in `common_day` and an `or_default` in `imprecise_body`, were written another way).
+- **Open STOP-REPORTs:** none of G2's. Open for the lead: `cnt5`, a place's `flows` under S2, the S3/S2 register rows refcore-w8 doesn't follow, `r1_when`'s `f_mv`/`f_pl`.
+- **Usage:** about 2.82 % of the week before this entry (`engine/tools/usage tmp/spec-2.2.1-build/g2-ids.txt`), about 0.53 % this turn, against about 1.2 %.
+- **Time:** about 45 min from 23:25 local. Checks and sweeps about 28 min of it: `check commit` 10 runs (55 to 144 s; two stopped in 2 s at the exceptions report), `check quick` about 12, `check fences` once, 8 engine sweeps and one refcore run (about 25 s each).
+- **Checks at 88c7fdf4's tree:**
+  - `check quick: green, 11 steps` (77 s before the memo).
+  - `check commit: red at tests, stopped after 10 of 24 steps (76s)`: the 52 ids above, none outside.
+  - `check fences: green, 1 step (24s)`.
