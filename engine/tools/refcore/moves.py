@@ -524,9 +524,12 @@ def m_move_law(self, mi, env, ctx):
     if at is None:
         return None
     from .node import walk as nwalk
+    keyvars = set(b.var for b in mi.binds)
     for x in nwalk(at):
         r = getattr(x, '_r', None)
-        if x.k == 'name' and r and r[0] == 'var' and r[1] not in env:
+        # the law date stands after the last key it names (L §4.3, R18 clause 2); a variable an aggregate in the at
+        # binds is no key
+        if x.k == 'name' and r and r[0] == 'var' and r[1] in keyvars and r[1] not in env:
             return None
     v = self.ev(at, env, ctx.but(law=None))
     if isinstance(v, Hole):
@@ -558,8 +561,9 @@ def m_move_tuples(self, mi, ctx):
     """The binding tuples of a move at the cut (E §4.1 step 1): (env, keys, status, coll), status True, a Hole (an
     unknown member) or ('domainhole', Hole); coll what deciding that tuple read."""
     out = []
+    waits_at = getattr(mi, 'dated_wheres', ())
 
-    def go(i, env, keys, st, coll):
+    def go(i, env, keys, st, coll, waiting=()):
         if i == len(mi.binds):
             out.append((env, keys, st, coll))
             return
@@ -592,11 +596,28 @@ def m_move_tuples(self, mi, ctx):
         if isinstance(res, Hole):
             out.append((env, keys, ('domainhole', res), cd))
             return
+        waits = b.where is not None and i in waits_at
+
+        def refused(e2, err, cw, wt):
+            # binding order (L §4.3, R18 clause 2; 235.5): an earlier where that waits is read first, once the at
+            # has its keys; a false one drops the tuple, a refused one is the tuple's refusal
+            if wt:
+                self.stack.append(cw)
+                try:
+                    got = self.waiting_wheres(mi, wt, e2, ctx)
+                finally:
+                    self.stack.pop()
+                if got is False:
+                    return
+                if isinstance(got, TallyError):
+                    err = got
+            out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', err), cw))
+
         for v, s in res:
             e2 = dict(env)
             e2[b.var] = v
             if isinstance(s, TallyError):
-                out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', s), cd))
+                refused(e2, s, cd, waiting + ((i,) if waits else ()))
                 continue
             s2 = st
             if isinstance(s, Hole):
@@ -607,7 +628,12 @@ def m_move_tuples(self, mi, ctx):
                 mc = pc.get(v.id if isinstance(v, Mv) else getattr(v, 'name', None))
                 if mc is not None:
                     cw.merge(mc)
-            if b.where is not None:
+            wt = waiting
+            if waits:
+                # L §4.3 (tally 2.2.1 R18 clause 2): a where that needs the law date while the at reads a key not yet
+                # bound waits for its tuple's at, and is read there in binding order
+                wt = waiting + (i,)
+            elif b.where is not None:
                 self.stack.append(cw)
                 try:
                     w = self.ev(b.where, e2, bctx)
@@ -624,7 +650,7 @@ def m_move_tuples(self, mi, ctx):
                     # refuses the whole plan pass
                     if isinstance(e, LoadError) or load_now(e):
                         raise
-                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', e), cw))
+                    refused(e2, e, cw, wt)
                     continue
                 finally:
                     self.stack.pop()
@@ -634,9 +660,63 @@ def m_move_tuples(self, mi, ctx):
                     raise refuse('RUN-NONE', 'a where is none here')
                 if isinstance(w, Hole):
                     s2 = w if s2 is True else merge(s2, w)
-            go(i + 1, e2, keys + [v], s2, cw)
+            if wt:
+                self.stack.append(cw)
+                try:
+                    got = self.waiting_wheres(mi, wt, e2, ctx)
+                finally:
+                    self.stack.pop()
+                if got is False:
+                    continue
+                if isinstance(got, TallyError):
+                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', got), cw))
+                    continue
+                wt, h = got
+                if h is not None:
+                    s2 = h if s2 is True else merge(s2, h)
+            go(i + 1, e2, keys + [v], s2, cw, wt)
     go(0, {}, [], True, _coll())
     return out
+
+
+def m_waiting_wheres(self, mi, waiting, env, ctx):
+    """A tuple's waiting wheres, read once the keys its at reads are bound, each at the tuple's law date in binding
+    order (L §4.3, tally 2.2.1 R18 clauses 2 and 3; E §4.1 step 1): False where one is false (the tuple dropped); a
+    refusal where one is refused (a refused tuple); else (still waiting, a hole or None). A hole at makes the tuple
+    that hole; a refused at leaves them unread, and the instance reads the at again and is refused alone."""
+    try:
+        law = self.move_law(mi, env, ctx)
+    except TallyError as e:
+        if isinstance(e, LoadError) or load_now(e):
+            raise
+        return ((), None)
+    if law is None:
+        return (waiting, None)
+    hole = None
+    for pos in waiting:
+        if isinstance(law, Hole):
+            hole = law if hole is None else merge(hole, law)
+            continue
+        b = mi.binds[pos].node
+        lds = law_days(law)
+        try:
+            w = self.ev(b.where, env, ctx.but(law=lds[0]))
+            if len(lds) > 1 and not isinstance(w, Hole):
+                for dd in lds[1:]:
+                    if vkey_opt(self.ev(b.where, env, ctx.but(law=dd))) != vkey_opt(w):
+                        w = imprecise_law(law, mi.id)
+                        break
+        except TallyError as e:
+            if isinstance(e, LoadError) or load_now(e):
+                raise
+            return e
+        if w is False:
+            return False
+        if w is NONE:
+            raise refuse('RUN-NONE', 'a where is none here')
+        if isinstance(w, Hole):
+            hole = w if hole is None else merge(hole, w)
+    return ((), hole)
 
 
 def m_upto_tag(self):

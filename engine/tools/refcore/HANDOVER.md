@@ -7,6 +7,23 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W1: a move's keys bind in order (R18; issue #241; 1 597 tests)
+
+- **Load.** `Checker.edge` records a move's key reads with their relations while `check_move` types each binding
+  (`mi.key_reads`: the binding's, then its `where`'s). `check_move_keys_lawdate`: for a key the `at` names, or one
+  before it, a read of the binding that `move_read_dated` judges dated is `LOAD-LAWDATE move <m>'s key <k> reads
+  law-dated <x> with no law date: its at reads <k'>` (`reaches <d>, which takes its law date from its reader,` for an
+  `at reader` def); such a key's dated `where` waits (`mi.dated_wheres`). `move_read_dated` is the one test of a
+  move's reads, as the engine's. A read's keys are typed without the read's own mode (`read`, clause 1): `region`
+  in `cal[region]` or `last(rd[region], d)` is read at the law date.
+- **Walk.** `move_tuples` binds keys in order; a waiting `where` is read by `waiting_wheres` at the tuple's `at`
+  once its keys are bound, in binding order, before a later key's refusal (235.5): false drops, a hole joins, a
+  refusal refuses; a hole `at` makes the tuple its hole, a refused one leaves them unread (the instance refuses
+  alone). `move_law` counts only the move's keys (an aggregate's variable in the `at` is none). The
+  `REFCORE-NOT-YET … an interpreter guard` of `LAWGUARD` is no longer met on m3's 37 `spec/lawdate` texts.
+- **Left:** 235.9, a key that reads a fill whose terms are law-dated: refcore still prints the guard
+  (`review-probes/gatefix/f/`); the plan gives it to the engine at M5a.
+
 ## tally 2.2.1, group W3: coverage on the rows that stand; `residuals` (issue #241; 1 582 tests)
 
 - **S-223.** `Loader.check_correction_covers`: a `replace` of an observation row that books (not `= none`) in a

@@ -142,6 +142,10 @@ class Checker:
     def edge(self, sc, target, rel='any'):
         r = sc.item
         self.edges.setdefault(r, {}).setdefault(target, set()).add(rel)
+        cap = getattr(self, '_kcap', None)
+        if cap is not None:
+            # a move's key: its reads with their relations, the binding's apart from its where's (L §4.3 R18)
+            cap[cap[2]].append((target, rel))
 
     def run(self):
         m = self.m
@@ -1336,10 +1340,16 @@ class Checker:
             return T.key('events')
         convs = []
         env = {}
+        ksc = sc
+        if sc.readmode is not None:
+            # a read's keys are judged on their own (L §4.3, tally 2.2.1 R18 clause 1): `region` in cal[region] is
+            # read at the law date, though the calendar is read at each day asked
+            ksc = sc.child()
+            ksc.readmode = None
         for kn, b in zip(keys, binds):
             if kn.k == 'star':
                 raise LoadError('LOAD-PARSE', 'cannot parse: * stands only in a pin', kn.loc)
-            c = self.key_pos(kn, b.dom, sc)
+            c = self.key_pos(kn, b.dom, ksc)
             convs.append(c)
             if c[0] == 'lit':
                 env[b.var] = key_text(c[1])
@@ -2493,6 +2503,9 @@ class Checker:
         sc.vars[b.var] = v
         b._var = v
         if b.where is not None:
+            cap = getattr(self, '_kcap', None)
+            if cap is not None and cap[3] is b:
+                cap[2] = 1
             t = self.tc(b.where, sc)
             if not self.is_bool(t):
                 raise uerr('where of a binding is %s, not bool' % T.show(t), b.loc)

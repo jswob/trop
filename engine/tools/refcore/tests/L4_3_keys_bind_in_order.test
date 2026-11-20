@@ -1,0 +1,64 @@
+# tally 2.2.1 R18 (L §4.3: a move binds its keys in the order written; a read that states its own day needs no law
+# date; the engine's move_read_dated):
+# 235.3: [m in months, a in adjustments on act_day] with at start_of(m): m is bound before the at, a after
+# it, so a's on is read at the at: it loads (review-probes/g3d/l6_two_ok). A guard: tally 2.2 so too.
+=== l6_two_ok.tally
+model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-12
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move back[m in month, a in adjustments on act_day where a.adjusts in rents]: transfers
+  on act_day
+  at start_of(m)
+  when month_of(act_day) == m
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version day
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  act_day = 2026-04-05
+
+ask q: bal(konto, 2026-04-30) law cut
+=== expect
+q: -3 600.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE konto is below zero from 2026-01-01
