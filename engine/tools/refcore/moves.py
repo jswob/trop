@@ -901,6 +901,10 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 return None
             if isinstance(day, Period) and day.kind == 'day':
                 day = day.start
+            if isinstance(day, Iv) and day.origin is None and day.carry is None and isinstance(day.lo, datetime.date):
+                # a window written in the move's own `on`, which no cell holds: its movement names the unknown day
+                # (L §8.2 `unknown day:`, "where no cell does, its movement"; tally 2.2.1 R21)
+                day = Iv(day.lo, day.hi, day.days, day.src, origin=('move ' + inst.id, inst.id), name=day.name)
             if day is END:
                 # L §7.6 item 1 (tally 2.1.6, issue #89): the end of time is no day, so a movement dated there is
                 # refused at its key (LOAD-LIMIT where load sees its day, check3.check_seen_day_limits)

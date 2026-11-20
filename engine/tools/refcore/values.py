@@ -471,12 +471,26 @@ def fmt(v):
             if v.yfrom is not None:
                 s += ' from %d' % v.yfrom
             parts.append(s)
+        if v.added:
+            # a calendar prints with its added list (L §2.4; tally 2.2.1, 221.6)
+            parts.append('added [%s]' % ', '.join(fmt_added(a) for a in v.added))
         return 'calendar(%s)' % ', '.join(parts)
     if v is None:
         return '-'
     if type(v).__name__ == 'Dist':
         return v.text()
     return repr(v)
+
+
+def fmt_added(a):
+    """A calendar's added entry as written (L §2.4): a day, a window, one_of, a hole."""
+    if a[0] == 'day':
+        return fmt(a[1])
+    if a[0] == 'window':
+        return 'window(%s, %s)' % (fmt(a[1]), fmt(a[2]))
+    if a[0] == 'oneof':
+        return 'one_of([%s])' % ', '.join(fmt(d) for d in sorted(a[1]))
+    return '?"%s"' % a[1]
 
 
 def bound_of(v):

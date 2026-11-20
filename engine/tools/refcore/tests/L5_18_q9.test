@@ -10,6 +10,8 @@
 # tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 # tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
 # carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
+# tally 2.2.1 R21 (L §8.2 `unknown day:`): the name is the cell a caller pins, `added <entry> of <calendar>`, else
+# the movement; tally 2.2 printed the window's text or `added <entry>`.
 === m.tally
 model t
   tally 2
@@ -51,10 +53,10 @@ ask q9: min(bal(konto, d) from 2026-07-01 for d in 2026-07-01 .. 2026-08-31 step
 ask q9b: min(bal(konto, d) from 2026-07-01 for d in 2026-07-01 .. 2026-08-31 step 1 day) law 2026-07-01
 === expect
 q9: ?"date within window(2026-07-15, 2026-07-20) not precise enough for a balance" (pay[2026-07]) ?"date within window(2026-08-15, 2026-08-20) not precise enough for a balance" (pay[2026-08])
-  unknown day: window(2026-07-15, 2026-07-20)
-  unknown day: window(2026-08-15, 2026-08-20)
+  unknown day: pay[2026-07]
+  unknown day: pay[2026-08]
   law date 2026-07-01, cut 2026-07-01
 q9b: ?"date within window(2026-07-15, 2026-07-20) not precise enough for a balance" (pay[2026-07]) ?"date within window(2026-08-15, 2026-08-20) not precise enough for a balance" (pay[2026-08])
-  unknown day: window(2026-07-15, 2026-07-20)
-  unknown day: window(2026-08-15, 2026-08-20)
+  unknown day: pay[2026-07]
+  unknown day: pay[2026-08]
   law date 2026-07-01, cut 2026-07-01

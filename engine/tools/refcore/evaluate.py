@@ -1236,7 +1236,8 @@ class Engine:
         """A pin's value as the read of the cell it pins: a window written there is an unknown day named by that
         read, as an input's, a def's or a `last` read names it (L §4.4: a copy keeps the name, a pin whose value is
         the read; §8.2 `unknown day:`; P30; tally 2.2, pick P26)."""
-        if isinstance(pv, Iv) and pv.origin is None and isinstance(pv.lo, datetime.date):
+        if isinstance(pv, Iv) and pv.origin is None and pv.carry is None and isinstance(pv.lo, datetime.date):
+            # a computed window keeps the names it was computed from (L §4.4 l.667; tally 2.2.1, 221.C1)
             org = self.origin(info, keys)
             return Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
                       name=('pin', info.id, tuple(_kv(k) for k in keys)))
@@ -1602,14 +1603,25 @@ class Engine:
         it copies; a computed window, which has none, takes the def's cell, its keys and the law date, cut and pins it
         depends on (E §3.2: the context trimmed to the def's cone), so two reads of one cell are one value and a pin the
         def doesn't read doesn't rename it (F8)."""
-        if not isinstance(v, Iv) or v.name is not None:
+        if not isinstance(v, Iv):
             return v
+        if v.origin is None and v.carry is None and isinstance(v.lo, datetime.date):
+            # a window no cell holds yet (written in the rule, or an observed row's field, which no pin reaches): the
+            # def's cell is the one a caller pins (L §8.2 `unknown day:`; tally 2.2.1 R21, 221.4)
+            cell = info.id + ('[%s]' % ', '.join(key_text(k) for k in keys) if keys else '')
+            org = ('def ' + cell, cell)
+            if v.name is not None:
+                return Iv(v.lo, v.hi, v.days, v.src, origin=org, name=v.name, carry=None)
+        else:
+            org = v.origin
+            if v.name is not None:
+                return v
         cone = self.def_cone(info.id)
         pins = ctx.pins if cone is None else tuple(q for q in ctx.pins if getattr(q, 'item', None) in cone)
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
               ctx.axes, ctx.world, ctx.path)
         # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
-        return Iv(v.lo, v.hi, v.days, v.src, origin=v.origin, name=nm, carry=getattr(v, 'carry', None))
+        return Iv(v.lo, v.hi, v.days, v.src, origin=org, name=nm, carry=getattr(v, 'carry', None))
 
     def def_cone(self, qid):
         """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
@@ -2119,6 +2131,9 @@ class Engine:
     def e_bin(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
         b = self.ev(n.r, env, ctx)
+        if (a is NONE or b is NONE) and getattr(n, 'op', None) in ('+', '-', '*', '/') and NEVER not in (a, b):
+            # RUN-NONE names the read that gave none (L §8.4's row, `<x>[k] is none here: …`; tally 2.2.1, 233.7)
+            raise refuse('RUN-NONE', '%s is none here: arithmetic' % env_txt(n.l if a is NONE else n.r, env))
         return self.binop(n, a, b, ctx)
 
     def binop(self, n, a, b, ctx):
@@ -2285,8 +2300,7 @@ class Engine:
         return arith(n.op, a, b, n._t, n.l._t, n.r._t)
 
     def imprecise(self, v, use):
-        return HoleSignal(carry_hole(Hole([('date within %s not precise enough for %s' % (v.window_text(), use),
-                                            v.origin[1] if v.origin else '')]), v))
+        return HoleSignal(imprecise_hole(v, use))
 
     def e_not(self, n, env, ctx):
         v = self.ev(n.e, env, ctx)
@@ -2487,8 +2501,7 @@ class Engine:
             if disjoint:
                 return op == '!='
         w = a if isinstance(a, Iv) else b
-        return carry_hole(Hole([('date within %s not precise enough for %s' % (
-            w.window_text(), _ntxt(n) if n else 'a comparison'), w.origin[1] if w.origin else '')]), w)
+        return imprecise_hole(w, _ntxt(n) if n else 'a comparison')
 
     def e_in(self, n, env, ctx):
         x = self.ev(n.l, env, ctx)
@@ -4533,8 +4546,9 @@ def added_carry(k, days):
     """The unknown day of a calendar's added entry k = (calendar, text, index), as window_id names it."""
     cal, wt, ai = k
     name, _sep, at = cal.partition(' @')
-    return (('row', 'calendar %s#%d%s' % (name, ai, (' @' + at) if at else ''), 'added %s' % wt), 'added %s' % wt,
-            list(days))
+    # `added <entry> of <calendar>` (L §8.2 `unknown day:`; tally 2.2.1 R21): two calendars' equal entries are two lines
+    return (('row', 'calendar %s#%d%s' % (name, ai, (' @' + at) if at else ''), 'added %s' % wt),
+            'added %s of %s' % (wt, name), list(days), wt)
 
 
 def iv_carry(v):
@@ -4609,8 +4623,19 @@ def window_id(v):
     else:
         days = [v.lo + datetime.timedelta(days=i) for i in range((v.hi - v.lo).days + 1)]
     if v.origin:
-        return ('row',) + tuple(str(x) for x in v.origin), str(v.origin[1]), days
-    return ('src', v.src), str(v.src), days
+        return ('row',) + tuple(str(x) for x in v.origin), str(v.origin[1]), days, v.window_text()
+    return ('src', v.src), str(v.src), days, v.window_text()
+
+
+def imprecise_hole(v, use, label=None):
+    """The HOLE-IMPRECISE of a window value v for a use: "one question per unknown day" (L §8.4's row; tally 2.2.1
+    R21), each naming its own window and carrying its own day; a read's own window is one question, as before."""
+    ws = iv_carry(v)
+    if len(ws) > 1:
+        return merge(*[carry_hole(Hole([('date within %s not precise enough for %s' % (w[3], use),
+                                         label if label is not None else w[1])]), ids=(w,)) for w in ws])
+    lab = label if label is not None else (v.origin[1] if v.origin else '')
+    return carry_hole(Hole([('date within %s not precise enough for %s' % (v.window_text(), use), lab)]), v)
 
 
 def _tfmt(v):
@@ -5159,6 +5184,21 @@ def _ntxt(n):
         return _txt(n)
     except Exception:
         return n.k
+
+
+def env_txt(n, env):
+    """The expression n as written, each variable a binding gave in env printed as its key's value (L §8.1: "with the
+    item and keys each came from"; tally 2.2.1, 235.6): `rent[2026-02]`, never `rent[m]`."""
+    from .node import walk as nodes
+    hit = [x for x in nodes(n) if x.k == 'name' and getattr(x, 'id', None) in (env or {})]
+    old = [x.id for x in hit]
+    try:
+        for x in hit:
+            x.id = key_text(env[x.id])
+        return _ntxt(n)
+    finally:
+        for x, i in zip(hit, old):
+            x.id = i
 
 
 from . import eval2 as _eval2  # noqa: E402

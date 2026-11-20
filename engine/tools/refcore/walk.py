@@ -17,7 +17,7 @@ from .moves import item_in_world, order_key, same_groups
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import key_text, SameDiffers, in_world
 from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
-from .evaluate import carry_hole
+from .evaluate import carry_hole, imprecise_hole
 from .moves import Leg, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, instant_text, merge
 
 EMPTY = frozenset()
@@ -773,8 +773,8 @@ class Walk:
                 # a leg of amount 0 books nothing on any day of its window: no hole (E §4.1 step 2; #214)
                 return
             wid = '%s.%s' % (i.id, lg.name)
-            q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
-            carry_hole(Hole(q), d)
+            # one question per unknown day the day carries (L §8.4 HOLE-IMPRECISE; tally 2.2.1 R21)
+            q = frozenset(imprecise_hole(d, 'a balance', label=i.id).qs)
             if isinstance(lg.amount, Hole):
                 # every question the balance rests on is printed (L §8.1): the amount's too
                 q = q | frozenset(lg.amount.qs)
@@ -1300,7 +1300,10 @@ class Walk:
                 for o in others:
                     if getattr(o, 'status', None) == 'modelled' and not getattr(o, 'decision', False):
                         continue
-                    for g in o.legs:
+                    # a row with a leg of this one's name is one fact with it: that leg alone is compared (HOLE-SAME's
+                    # row, "one fact, each row once"; tally 2.2.1, 237.2)
+                    named = [g for g in o.legs if g.name == lg.name]
+                    for g in (named or o.legs):
                         for sj, q in enumerate((g.frm, g.to)):
                             if isinstance(q, Thing) and q.name == p.name and (g.unit or '*') == (lg.unit or '*'):
                                 if isinstance(o, ObsMv):
@@ -1337,8 +1340,10 @@ class Walk:
                 days = sorted(set(g.day for o, g, sj in touch if isinstance(g.day, datetime.date)))
                 parts = and_list('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
                                               shown(o.id)) for o, g, sj in touch)
-                q = '%s are one, but the leg at %s differs on %s: %s' % (
-                    names, shown(p.name), ', '.join(str(d) for d in days), parts)
+                what = ('leg %s' % lg.name) if all(g.name == lg.name for o, g, sj in touch) else \
+                    ('the leg at %s' % shown(p.name))
+                q = '%s are one, but %s differs on %s: %s' % (
+                    names, what, ', '.join(str(d) for d in days), parts)
                 out.append(Hole([(q, ', '.join(shown(t[0].id) for t in touch))]))
             return tuple(out)
         if J is None:

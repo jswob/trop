@@ -1415,7 +1415,9 @@ def m_e_flows(self, n, env, ctx):
     if isinstance(sp, Hole):
         return sp
     if sp.start is None or sp.start < self.m.S:
-        return Hole([('before the run\'s start', fmt_node(n.ref))])
+        # the read with its keys' values (L §8.1; tally 2.2.1, 235.6)
+        from .evaluate import env_txt
+        return Hole([('before the run\'s start', env_txt(n.ref, env))])
     fk = None
     if n.forkey is not None:
         fk = self.ev(n.forkey, env, ctx)
@@ -2298,9 +2300,12 @@ def m_c_unit(self, n, env, ctx):
         if v is NONE:
             raise refuse('RUN-NONE', '%s is none here: a quantity' % fmt_node(n.args[0]))
         us = list(getattr(v, 'u', None) or ())
-        if not isinstance(v, Num) or len(us) != 1 or us[0][1] != 1 or \
-                (us[0][0] not in CURRENCIES and us[0][0] not in self.m.unit_kind_keys):
-            raise refuse('RUN-DOMAIN', 'unit of %s: a key of no unit kind' % fmt(v))
+        # in load's words (L §8.4 R-load, 2.1.7's R5; tally 2.2.1, 233.c)
+        if not isinstance(v, Num) or len(us) != 1 or us[0][1] != 1:
+            raise refuse('RUN-DOMAIN', 'unit of %s: a plain number or a compound unit is a key of no unit kind'
+                         % fmt(v))
+        if us[0][0] not in CURRENCIES and us[0][0] not in self.m.unit_kind_keys:
+            raise refuse('RUN-DOMAIN', 'unit of %s: %s is a quantity unit, a key of no unit kind' % (fmt(v), us[0][0]))
         return Thing(us[0][0])
     p = self.place_arg(n.args[0], env, ctx)
     if isinstance(p, Hole):

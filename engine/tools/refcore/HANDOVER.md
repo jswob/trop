@@ -7,6 +7,22 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W5: the names (issue #241; 1 538 tests)
+
+- **R21, an unknown day's name.** A carry entry is (id, label, days, the window's text) (`window_id`,
+  `added_carry`, whose label is `added <entry> of <calendar>`). A def's fresh window takes the def's cell as its
+  origin (`Engine.named`: an observed row's field copied by a def is `held_from[bank[g1]]`); a window written in a
+  move's `on` takes its movement (`moves`, after the day is computed); a pin keeps a computed window's names
+  (`pinned_read`). `imprecise_hole` makes one question per carried day (comparisons, `imprecise`, a print, a leg's
+  balance in `sched_leg`).
+- **The naming rows.** `env_txt` prints an expression with each bound variable as its key's value: `RUN-NONE` in
+  arithmetic names the read (`e_bin`; 233.7), a `flows` before S names `pay[2026-01].cash` (235.6). A list key prints
+  as written (`model.key_text`; 207.4); a calendar prints its `added` list (`values.fmt_added`; 221.6); `unit(q)` at
+  run speaks load's words (233.c); HOLE-SAME at a place compares a leg with the other rows' leg of its name, `leg fee`
+  (`walk`; 237.2); `diff`'s binding leaves out a place another world declares (231.R2, a place).
+- Not done: 234.1 (a `dyn` sum's money; every narrow form moved sums of balances), 221.8 and 230.Q-5a (joint texts
+  not in the inputs), 233.d (refcore prints the row's text already), H's 208.R2, 231.R1, 231.Q10 (not run).
+
 ## tally 2.2.1, group W6: the load's refusals, the register (issue #241; 1 529 tests)
 
 - **Three refusals at load:** `tally <N>` the files agree on but 2 (`LOAD-VERSION`, `loader.build`; S-224a), a move

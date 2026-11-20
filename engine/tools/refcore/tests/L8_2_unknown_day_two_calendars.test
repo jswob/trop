@@ -1,0 +1,37 @@
+# tally 2.2.1 R21 (#221, 221.3), L §8.2 `unknown day:`: "`added <entry> of <calendar>` for a calendar's entry": two
+# calendars with equal added entries print two lines. tally 2.2 printed one line, `added one_of([…])`.
+=== cal2.tally
+model cal2
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input cal: calendar
+input cal2: calendar
+input from_day: date
+move pay_cal: transfers
+  on add_business(from_day, 1, cal)
+  leg cash from world to sav amount pay
+move pay_cal2: transfers
+  on add_business(from_day, 1, cal2)
+  leg cash from world to sav amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  cal2 = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  from_day = 2026-06-19 "c"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "c"
+ask q1: bal(sav, 2026-06-22)
+=== expect
+q1: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_cal, pay_cal2)
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal2
+  cut 2026-01-10

@@ -241,8 +241,8 @@ def fmt_value(v, partial=False, t=None):
     if isinstance(v, Iv):
         if isinstance(v.lo, datetime.date):
             return fmt(v)
-        return fmt_hole(Hole([('date within %s not precise enough for a print' % v.window_text(),
-                               v.origin[1] if v.origin else '')]))
+        from .evaluate import imprecise_hole
+        return fmt_hole(imprecise_hole(v, 'a print'))
     if isinstance(v, (OutKey,)):
         return 'refused: RUN-KEY %s is outside %s' % (v.text, v.index)
     if isinstance(v, ListKey):
@@ -710,6 +710,12 @@ class Asker:
                 lines = []
                 if bs:
                     mem = list(eng.members(bs, dict(base), wctx))
+                    # a thing only another world declares is no member here: what only S declares is `added` (L §5.18's
+                    # diff row, §6.4; tally 2.2.1, 231.R2)
+                    from .moves import item_in_world
+                    mem = [(env, st) for env, st in mem
+                           if not any(isinstance(env.get(b.var), Thing) and env[b.var].name in m.places and
+                                      not item_in_world(m.places[env[b.var].name]) for b in bs)]
                     for env, st in mem:
                         if isinstance(st, tuple) and st[0] == 'domainhole':
                             lines.append((_txt(e), st[1]))

@@ -4,6 +4,7 @@
 # precise enough for a print`, made where the answer is printed: its unknown days are named like any hole's, each
 # once, sorted with the rest (q1, q2: dx is computed from w and v; q3 beside a window value). A window value that
 # prints as a window is no hole and names none (q4).
+# tally 2.2.1 R21 (L §8.4 HOLE-IMPRECISE): one question per unknown day; tally 2.2 named the first window only.
 === m.tally
 model ph
   tally 2
@@ -34,7 +35,7 @@ ask q4: w
 q1: ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
   unknown day: w
   cut 2026-06-30
-q2: ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
+q2: ?"date within window(1990-03-10, 1990-03-20) not precise enough for a print" (v) ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
   unknown day: v
   unknown day: w
   cut 2026-06-30
