@@ -421,6 +421,21 @@ impl Collected {
         }
     }
 
+    /// What of these reads decides whether a movement counts where it isn't counted (a
+    /// refused one, a day outside a read's span, left out, covered, a false `when`): its pins,
+    /// `solve`'s and its assumptions; never a `held:` value of its day (L §8.2 One read set,
+    /// one statement for every form and outcome: P35 on #241).
+    #[must_use]
+    pub(crate) fn deciding(&self) -> Collected {
+        let mut out = Collected::default();
+        for e in &self.entries {
+            if matches!(e.word, "pinned" | "pin met" | "assumed") {
+                out.entries.insert(e.clone());
+            }
+        }
+        out
+    }
+
     /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
     pub(crate) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
         self.rows.insert(

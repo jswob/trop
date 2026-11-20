@@ -131,12 +131,15 @@ impl Engine {
             Some(k) => Some(self.movements_for(m, k, &chain, ctx)?),
             None => None,
         };
+        // a movement the span doesn't count: what decided it is in the read set, whatever the
+        // outcome (L §8.2 One read set; P35 on #241)
+        let met = self.walk(id)?.uncounted_in(place, (start, last));
         let mut sums = Sums {
             span: (start, last),
             totals: BTreeMap::new(),
             holes: Vec::new(),
             legs: Vec::new(),
-            met: Collected::default(),
+            met,
             keep,
         };
         for (wid, cut) in &chain {
@@ -399,6 +402,7 @@ impl Sums {
             }
             match &e.change {
                 Change::Bad(r) | Change::PermBad(r) if e.at >= lo || e.at == first => {
+                    self.meet(e);
                     return Err(Stop::Refused(r.clone()));
                 }
                 Change::Perm(h) | Change::Hole(h) => {
@@ -457,7 +461,10 @@ impl Sums {
                     Change::Unperm(h) => open.retain(|o| o != h),
                     // a refused movement whose day is a hole or refused may fall in the span,
                     // as a hole day's (tally 2.1.8, R11)
-                    Change::PermBad(r) if e.at <= limit => return Err(Stop::Refused(r.clone())),
+                    Change::PermBad(r) if e.at <= limit => {
+                        self.meet(e);
+                        return Err(Stop::Refused(r.clone()));
+                    }
                     Change::Perm(_)
                     | Change::PermBad(_)
                     | Change::Bad(_)
@@ -475,6 +482,8 @@ impl Sums {
                 continue;
             }
             if let Change::Bad(r) | Change::PermBad(r) = &e.change {
+                // a refused result lists what it read like a value (L §8.2; B1 on #241)
+                self.meet(e);
                 return Err(Stop::Refused(r.clone()));
             }
             if self.other_period(e) {
@@ -489,10 +498,7 @@ impl Sums {
                 Change::Bad(r) | Change::PermBad(r) => return Err(Stop::Refused(r.clone())),
                 Change::Hole(h) | Change::Perm(h) => {
                     self.holes.push(h.clone());
-                    self.met.entries.extend(e.reg.iter().cloned());
-                    if let Some(c) = &e.coll {
-                        self.met.merge(c);
-                    }
+                    self.meet(e);
                 }
                 Change::Delta(f) => match &e.window {
                     // a window that crosses the span is its hole, below (L §4.4)
@@ -535,10 +541,10 @@ impl Sums {
             if !out && !into {
                 continue;
             }
+            self.met.merge(&i.coll);
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
             }
-            self.met.merge(&i.coll);
             if let Exists::Unknown(h) = &i.exists {
                 self.holes.push(h.clone());
                 continue;
@@ -575,14 +581,20 @@ impl Sums {
         Ok(())
     }
 
-    /// One booked flow of the span counted: its register, and its quantity added to its unit's
-    /// total, or its hole kept (refcore's `flows_place_walk`, its `delta` and `reset` kinds).
-    /// L §5.14.3, §8.2.
-    fn count(&mut self, e: &Ent, unit: &str, flow: Result<&Num, &Hole>) -> Result<(), Stop> {
+    /// An entry the span meets, its register and its reads into the read set, whatever it
+    /// gives: a flow, a hole or a refusal (L §8.2 One read set; P35 on #241).
+    fn meet(&mut self, e: &Ent) {
         self.met.entries.extend(e.reg.iter().cloned());
         if let Some(c) = &e.coll {
             self.met.merge(c);
         }
+    }
+
+    /// One booked flow of the span counted: its register, and its quantity added to its unit's
+    /// total, or its hole kept (refcore's `flows_place_walk`, its `delta` and `reset` kinds).
+    /// L §5.14.3, §8.2.
+    fn count(&mut self, e: &Ent, unit: &str, flow: Result<&Num, &Hole>) -> Result<(), Stop> {
+        self.meet(e);
         match flow {
             Ok(f) => {
                 let sum = self.totals.entry(unit.to_owned()).or_insert_with(Num::zero);

@@ -398,11 +398,12 @@ pub struct Walk {
     pub(crate) left_out_at: BTreeMap<String, BTreeSet<String>>,
     /// The adjustments with a remainder, per place, from their day (L §8.2 `adjustment:`).
     pub(crate) adj_regs: BTreeMap<String, Vec<(Day, Entry)>>,
-    /// The pins that decided the day of each plan leg it books on a day, by each place the leg
-    /// names: a balance there before that day doesn't count the leg, so they are in its read
-    /// set (L §8.2 One read set, "a day outside the span"; tally 2.2.1's 221.1); a leg whose
-    /// day took no pin has none.
-    pub(crate) later_pins: BTreeMap<String, Vec<(Day, Collected)>>,
+    /// The movements that don't count where a read of a place reaches, by each place their
+    /// legs name: the day a leg is on, none where no day of the walk holds it (left out, past
+    /// a projection's plans, a false `when`), and what decided it ([`Collected::deciding`]).
+    /// A read of the place over a span that leaves the day out lists them: a balance, `flows`
+    /// (L §8.2 One read set, "a day outside the span"; P35 on #241).
+    pub(crate) uncounted: BTreeMap<String, Vec<(Option<Day>, Collected)>>,
     /// The legs the walk refused, by (movement, leg) (E §4.2 step 5).
     pub(crate) bad_legs: BTreeMap<(String, String), Refusal>,
     /// The legs a test some of a window's days pass left the window's hole, by (movement,
@@ -641,7 +642,7 @@ impl Walk {
             left_out: BTreeMap::new(),
             left_out_at: BTreeMap::new(),
             adj_regs: BTreeMap::new(),
-            later_pins: BTreeMap::new(),
+            uncounted: BTreeMap::new(),
             bad_legs: BTreeMap::new(),
             hole_legs: BTreeMap::new(),
             pend_at: BTreeMap::new(),
@@ -953,6 +954,51 @@ impl Walk {
             }
         }
         super::ends::pins_read(&read)
+    }
+
+    /// What the walk's refusals of movement `movement` rest on: its `bad` entries' reads, at
+    /// every place (L §8.2 One read set, a refusal's like a value's; B1 on #241).
+    #[must_use]
+    pub(crate) fn refused_reads(&self, movement: &str) -> Collected {
+        let mut out = Collected::default();
+        for log in self.logs.values() {
+            for e in &log.ents {
+                let refused =
+                    matches!(e.change, Change::Bad(_)) && e.mv.as_deref() == Some(movement);
+                if refused && let Some(c) = &e.coll {
+                    out.merge(c);
+                }
+            }
+        }
+        out
+    }
+
+    /// Notes a movement that doesn't count at `places` on `day` (none: on no day of the walk),
+    /// with `read`'s deciding entries, none kept where it has none (P35 on #241). L §8.2.
+    pub(crate) fn note_uncounted(&mut self, places: &[&str], day: Option<Day>, read: &Collected) {
+        let deciding = read.deciding();
+        if deciding.entries.is_empty() {
+            return;
+        }
+        for p in places {
+            self.uncounted
+                .entry((*p).to_owned())
+                .or_insert_with(Vec::new)
+                .push((day, deciding.clone()));
+        }
+    }
+
+    /// What decided that a movement at `place` doesn't count over the days `first` to `last`:
+    /// each one noted on a day outside them or on none (P35 on #241). L §8.2 One read set.
+    #[must_use]
+    pub(crate) fn uncounted_in(&self, place: &str, (first, last): (Day, Day)) -> Collected {
+        let mut out = Collected::default();
+        for (day, read) in self.uncounted.get(place).into_iter().flatten() {
+            if day.is_none_or(|d| d < first || d > last) {
+                out.merge(read);
+            }
+        }
+        out
     }
 
     /// Takes back a leg the sign rule refuses: its entries at `place` that `holds` matches are

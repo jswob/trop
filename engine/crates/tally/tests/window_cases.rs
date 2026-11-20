@@ -304,8 +304,9 @@ p1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balanc
     /// -150.00 after. The plain line is the window's hole; a pin prints each day's own
     /// refusal. `g1`'s question is the read's, "for flows of ob" (the review of group 2's
     /// fix, N-i), where refcore at 2f019698 still asks "for a balance". `g7`, `ob`'s flows,
-    /// reads no `oa`, so the pin of `oa`'s day isn't listed under its refusal (tally 2.2.1's
-    /// 208.2, L §8.2 One read set; the writer's refcore prints the same).
+    /// is refused by `pot`'s test, whose -160.00 read `oa` on its pinned day, so the pin is
+    /// listed under its refusal like a value's (L §8.2 One read set; tally 2.2.1's P35, B1 of
+    /// G2's review).
     const BOTH_BREAK: &str = r#"model t
   tally 2
   on 2026-01-01
@@ -364,6 +365,7 @@ g6: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans
   pinned: wa = 2026-04-05
   cut 2026-01-01
 g7: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-05
   cut 2026-01-01
 warning: WARN-UNREAD input amt is read by nothing"#;
 

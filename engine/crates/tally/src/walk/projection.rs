@@ -315,7 +315,16 @@ impl Engine {
         if let Some(at) = ctx.at {
             self.note_read(at.walk, place, Sees::AtPoint)?;
         }
-        self.common_low(m, (place, unit), window, base, &left_out)
+        let value = self.common_low(m, (place, unit), window, base, &left_out)?;
+        if value.is_some() {
+            // a movement after the first day read isn't counted: what decided it is read from
+            // the walk the projection starts in, as its own walk lists it (L §8.2 One read
+            // set, "a day outside the span"; B3 on #241)
+            let walk = self.walk(base.1)?;
+            let met = walk.uncounted_in(place, (walk.start, window.1.0));
+            self.absorb(&met);
+        }
+        Ok(value)
     }
 
     /// Where the projection from day `t` starts: the main walk at the start of t, or the

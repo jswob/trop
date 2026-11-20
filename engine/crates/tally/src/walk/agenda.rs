@@ -279,8 +279,11 @@ impl Engine {
             // a day before its scenario's from: left out, listed at the places its legs name
             // as a move's instance is (L §6.4 l.1867, §8.2)
             let early = matches!((&inst.day, from), (Some(Dated::Day(d)), Some(f)) if *d < f);
+            // a day a pin or an assumption decided: a read its span leaves out lists them at
+            // the places its legs name (L §8.2 One read set; N1 on #241)
+            let decided = !inst.day_coll.deciding().entries.is_empty();
             if inst.exists != Exists::No
-                && (early || matches!(inst.day, Some(Dated::Hole(_) | Dated::Window(_))))
+                && (early || decided || matches!(inst.day, Some(Dated::Hole(_) | Dated::Window(_))))
             {
                 out.push((inst.id.clone(), self.hole_places(m, mv, inst, cut)?));
             }
@@ -576,6 +579,9 @@ fn schedule_decided(
         rank: walk.plan_rank(&inst.order)?,
         ..At::of(day, Step::Plans)
     };
+    // it counts on no day: a read before its day lists what decided it too (P35 on #241)
+    let named: Vec<&str> = places.iter().map(|(p, _)| p.as_str()).collect();
+    walk.note_uncounted(&named, None, &inst.coll);
     for (place, unit) in places {
         walk.at(at, Act::Mark(place, unit, None, inst.coll.clone()));
     }
@@ -602,8 +608,14 @@ fn outside_window(walk: &Walk, inst: &Inst) -> bool {
 fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     let rank = walk.plan_rank(&inst.order)?;
     match inst.status {
-        Status::LeftOut => return note_left_out(walk, &inst),
-        Status::Modelled => return schedule_modelled(walk, inst),
+        Status::LeftOut => {
+            note_never(walk, &inst, &inst.day_coll);
+            return note_left_out(walk, &inst);
+        }
+        Status::Modelled => {
+            note_uncounted(walk, &inst, &inst.day_coll);
+            return schedule_modelled(walk, inst);
+        }
         Status::None | Status::Decision | Status::Open => return Ok(()),
         Status::Uncertain => {
             walk.uncertain.push(inst);
@@ -612,6 +624,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         Status::Refused | Status::Hole | Status::Past | Status::Plan => {}
     }
     if walk.proj.is_some() && outside_window(walk, &inst) {
+        note_uncounted(walk, &inst, &inst.day_coll);
         return Ok(());
     }
     let ix = walk.insts.len();
@@ -698,12 +711,11 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
             }
         }
         Status::Past | Status::Plan => {
+            // a read whose span leaves a leg's day out doesn't count it (221.1)
+            note_uncounted(walk, &inst, &inst.day_coll);
             for (leg, lg) in inst.legs.iter().enumerate() {
                 match &lg.day {
-                    Dated::Day(d) if *d >= start => {
-                        note_later_pins(walk, lg, *d, &inst.day_coll);
-                        walk.at(point(*d), Act::Leg(mv, leg));
-                    }
+                    Dated::Day(d) if *d >= start => walk.at(point(*d), Act::Leg(mv, leg)),
                     Dated::Day(_) => {}
                     // a leg of amount 0 books nothing on any day of its window: no hole (E §4.1
                     // step 2: "but for a leg of amount 0"; #214)
@@ -728,25 +740,45 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     Ok(())
 }
 
-/// The pins that decided plan leg `lg`'s day `day`, `day_coll` what reading its day met, kept
-/// at each place it names: a balance there before `day` doesn't count the leg, and lists them
-/// (refcore's `sched_leg`, `later_by_place`). L §8.2 One read set (tally 2.2.1's 221.1).
-fn note_later_pins(walk: &mut Walk, lg: &LegVal, day: Day, day_coll: &Collected) {
-    let mut pins = Collected::default();
-    for e in &day_coll.entries {
-        if e.word == "pinned" {
-            pins.entries.insert(e.clone());
+/// What decided instance `inst`'s legs don't count where a read leaves their day out, kept at
+/// each place they name, each leg on its day (a window's first; a hole day holes the read
+/// itself), with what its day read, `read` (refcore's `sched_leg`, `later_by_place`). With
+/// [`note_never`], one place for every way a movement comes not to count. L §8.2 One read set
+/// (221.1, N1, B3 and P35 on #241).
+fn note_uncounted(walk: &mut Walk, inst: &Inst, read: &Collected) {
+    for lg in &inst.legs {
+        if let Some(day) = lg.day.lo() {
+            walk.note_uncounted(&leg_places(lg), Some(day), read);
         }
     }
-    if pins.entries.is_empty() {
+}
+
+/// What decided instance `inst` counts on no day of the walk (left out, before a scenario's
+/// `from`), kept at each place its legs name, with what its day read, `read`. L §8.2 One read
+/// set (N1 and P35 on #241).
+fn note_never(walk: &mut Walk, inst: &Inst, read: &Collected) {
+    for lg in &inst.legs {
+        walk.note_uncounted(&leg_places(lg), None, read);
+    }
+}
+
+/// What decided a decision's instance doesn't count, on `day` (none: on no day of the walk),
+/// kept at the places its legs name as [`Engine::hole_days`] read them; none where they
+/// weren't read (L §8.2 One read set; N1 on #241).
+fn note_decision(walk: &mut Walk, places: Option<&HolePlaces>, day: Option<Day>, read: &Collected) {
+    let Some(Some(set)) = places else {
         return;
-    }
-    for p in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
-        walk.later_pins
-            .entry(p.to_owned())
-            .or_insert_with(Vec::new)
-            .push((day, pins.clone()));
-    }
+    };
+    let named: Vec<&str> = set.iter().map(String::as_str).collect();
+    walk.note_uncounted(&named, day, read);
+}
+
+/// The places leg `lg` names, its from and its to. E §4.1 step 2.
+fn leg_places(lg: &LegVal) -> Vec<&str> {
+    [&lg.from, &lg.to]
+        .into_iter()
+        .filter_map(End::place)
+        .collect()
 }
 
 /// Whether leg `lg` has a known amount of 0, which books nothing on whichever day (refcore's
@@ -826,10 +858,13 @@ fn schedule_decision(
                 // a scenario's move books nothing before its from (L §6.4): left out, at the
                 // places its legs name
                 if walk.proj.is_none() {
+                    note_decision(walk, places.as_ref(), None, &inst.day_coll);
                     note_left_out_at(walk, &inst, places.flatten())?;
                 }
                 return Ok(());
             }
+            // a read whose span leaves its day out doesn't count it (N1 on #241)
+            note_decision(walk, places.as_ref(), Some(d), &inst.day_coll);
             if d < walk.start || d > walk.plans_through() {
                 if walk.proj.is_none() && (d < m.start || d > m.end) {
                     note_left_out(walk, &inst)?;

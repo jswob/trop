@@ -180,11 +180,18 @@ impl Engine {
         for (place, unit, nv, legs) in bad {
             let words = self.refusal_words(m, id, broke, (&place, &unit), &legs, &nv)?;
             let err = Refusal::new(Code::Run(Run::Place), words);
+            // the test read the place's balance: what decided it is the refusal's read set,
+            // like a value's (L §8.2 One read set; B1 on #241)
+            let tested = match self.walk(id)?.state(m, &place, &unit, at).1 {
+                Some(i) => self.walk_mut(id)?.cum(&place, &unit, i).deciding(),
+                None => Collected::default(),
+            };
             if legs.is_empty() {
                 // an anchored place with no leg of the group at it: refused from here, with
                 // its reading's message (L §8.4; tally 2.1.2)
-                self.walk_mut(id)?
-                    .add(m, &place, &unit, Ent::new(at, Change::Bad(err)))?;
+                let mut ent = Ent::new(at, Change::Bad(err));
+                ent.coll = (!tested.entries.is_empty()).then_some(tested);
+                self.walk_mut(id)?.add(m, &place, &unit, ent)?;
                 continue;
             }
             for (mv, leg) in &legs {
@@ -196,7 +203,11 @@ impl Engine {
                 walk.bad_legs.insert(key, err.clone());
                 // the refusal rests on what booked the leg: the pins its movement took stay
                 // listed under it (L §8.2 One read set, l.2248; 208.2)
-                let pins = walk.booked_pins(ends(leg), &unit, (mv, &leg.name));
+                let mut read = tested.clone();
+                if let Some(own) = walk.booked_pins(ends(leg), &unit, (mv, &leg.name)) {
+                    read.merge(&own);
+                }
+                let pins = (!read.entries.is_empty()).then_some(read);
                 for p in ends(leg) {
                     walk.take_back(m, p, &unit, (mv, leg), taken)?;
                 }

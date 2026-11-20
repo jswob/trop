@@ -339,8 +339,13 @@ impl Engine {
                     r.instant,
                     gap_text(m, &gap, &r.unit)?
                 );
+                // an anchor's difference is carried like every entry: what decided an open
+                // instance doesn't count stays read past it, as past a pad (N5 on #241)
+                let mut kept = r.coll.clone();
+                self.walk(id)?
+                    .open_kept(m, (&r.place, &r.unit), at, &mut kept);
                 let mut ent = Ent::new(at, Change::Reset { val, qs });
-                ent.coll = Some(r.coll.clone());
+                ent.coll = Some(kept);
                 ent.reg = vec![Entry {
                     word: "anchor",
                     text,

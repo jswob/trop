@@ -234,6 +234,15 @@ impl Engine {
         })
     }
 
+    /// A planned movement a binding's span leaves out: what decided its day is the binding's
+    /// read ([`Collected::deciding`]; L §8.2 One read set, "a day outside the span"; P35 on
+    /// #241).
+    fn no_member(&mut self, x: &Moving) {
+        if let Moving::Plan(i) = x {
+            self.absorb(&i.day_coll.deciding());
+        }
+    }
+
     /// The movements of the domain dated in span `sp`, an instance and the observations that
     /// fulfil it counted once, each with what it brings to a reader (refcore's
     /// `span_members`). L §5.19 Bindings, §5.14, §8.2.
@@ -265,12 +274,18 @@ impl Engine {
                 }
                 Some(Dated::Hole(h)) => Some(h),
                 Some(Dated::Day(d)) if sp.contains(d) => None,
-                Some(Dated::Day(_)) => continue,
+                Some(Dated::Day(_)) => {
+                    self.no_member(&x);
+                    continue;
+                }
                 // a window inside the span is a member, one outside it isn't, one across its
                 // edge may be (refcore's `span_members`; L §4.4)
                 Some(Dated::Window(w)) => match window_member(&w, sp) {
                     Some(true) => None,
-                    Some(false) => continue,
+                    Some(false) => {
+                        self.no_member(&x);
+                        continue;
+                    }
                     None => {
                         let text = format!(
                             "date within {} not precise enough for a binding over {}",
@@ -329,7 +344,11 @@ impl Engine {
                 }
                 Moving::Obs(o) => coll.merge(&o.coll),
                 Moving::Adj(a) => coll.merge(&a.coll),
-                Moving::Pad(p, _) => coll.merge(&p.coll),
+                // a binding that counts a pad lists it (L §8.2, the `pad:` row; N3 on #241)
+                Moving::Pad(p, _) => {
+                    coll.merge(&p.coll);
+                    coll.merge(&p.reg);
+                }
             }
             let day = x
                 .day()
@@ -456,13 +475,7 @@ impl Engine {
                 match i.status {
                     // the binding read its day to leave it out: the pins that day took are
                     // the binding's reads too (L §8.2 One read set; tally 2.1.8 §4, #161)
-                    Status::None | Status::Modelled => pins.extend(
-                        i.coll
-                            .entries
-                            .iter()
-                            .filter(|e| e.word == "pinned")
-                            .cloned(),
-                    ),
+                    Status::None | Status::Modelled => pins.extend(i.coll.deciding().entries),
                     Status::Uncertain if !ctx.unc => {}
                     Status::Uncertain
                     | Status::Open
@@ -842,10 +855,18 @@ impl Engine {
             }
         }
         let mut others: Vec<(&str, Option<Day>, &[LegVal])> = Vec::new();
+        // a fact of movements stated same is read from both sides together: each side's
+        // reads are the read's, its day's for a day (L §6.1, §8.2; B2 on #241)
         for member in &members {
             match member {
-                Moving::Obs(o) => others.push(obs_side(o)),
-                Moving::Plan(i) => others.push(inst_side(i)),
+                Moving::Obs(o) => {
+                    self.absorb(&o.coll);
+                    others.push(obs_side(o));
+                }
+                Moving::Plan(i) => {
+                    self.absorb(if leg.is_none() { &i.day_coll } else { &i.coll });
+                    others.push(inst_side(i));
+                }
                 Moving::Adj(_) | Moving::Pad(..) => {}
             }
         }

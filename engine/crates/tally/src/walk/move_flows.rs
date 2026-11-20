@@ -134,7 +134,13 @@ impl Engine {
             if !i.keys.starts_with(want) {
                 continue;
             }
-            if matches!(i.status, Status::None | Status::Uncertain) {
+            // a movement the span doesn't count: what decided it is in the read set (L §8.2
+            // One read set; P35 on #241)
+            if i.status == Status::None {
+                acc.met.merge(&i.coll.deciding());
+                continue;
+            }
+            if i.status == Status::Uncertain {
                 continue;
             }
             let day = match &i.day {
@@ -143,12 +149,18 @@ impl Engine {
                     continue;
                 }
                 Some(Dated::Day(d)) if sp.contains(*d) => Some(*d),
-                Some(Dated::Day(_)) => continue,
+                Some(Dated::Day(_)) => {
+                    acc.met.merge(&i.day_coll.deciding());
+                    continue;
+                }
                 // a window inside the span counts, one outside it doesn't, one across its
                 // edge may fall either side (refcore's `flows_move`; L §4.4)
                 Some(Dated::Window(w)) => match window_in(w, sp, last) {
                     Some(true) => None,
-                    Some(false) => continue,
+                    Some(false) => {
+                        acc.met.merge(&i.day_coll.deciding());
+                        continue;
+                    }
                     None => {
                         let text = format!(
                             "date within {} not precise enough for flows of {}",
@@ -466,11 +478,18 @@ impl Engine {
     /// else the hole a test some of a window's days pass left it: a projection's walk keeps
     /// what the walks it continues have refused so far (refcore's `leg_refused`, its loop over
     /// `w.base`). E §4.2 step 5, §4.3 step 1; tally 2.1.8 item 77.
-    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<LegOut>, Stop> {
+    fn chain_refusal(
+        &mut self,
+        id: usize,
+        wanted: &(String, String),
+    ) -> Result<Option<LegOut>, Stop> {
         for wid in self.chain(id)? {
             let walk = self.walk(wid)?;
             if let Some(refusal) = walk.bad_legs.get(wanted) {
-                return Ok(Some(LegOut::Refused(refusal.clone())));
+                // the refusal is read with what it rests on (L §8.2; B1 on #241)
+                let (refusal, read) = (refusal.clone(), walk.refused_reads(&wanted.0));
+                self.absorb(&read);
+                return Ok(Some(LegOut::Refused(refusal)));
             }
             if let Some(hole) = walk.hole_legs.get(wanted) {
                 return Ok(Some(LegOut::Hole(hole.clone())));

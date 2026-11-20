@@ -354,17 +354,12 @@ impl Walk {
     }
 }
 
-/// The pins a refused leg's movement took, `read` what its evaluation met: a refusal rests on
-/// the reads that refused it, so its places' entry lists them, and a pin nothing it read isn't
-/// (refcore's `add`, a `bad` entry's `mv.coll`); none where it took no pin. L §8.2 One read
-/// set (tally 2.2.1's 208.2).
+/// What decided a refused leg's movement, `read` what its evaluation met: a refusal rests on
+/// the reads that refused it, so its places' entry lists them like a value's, its pins and
+/// its assumptions, and a pin nothing it read isn't (refcore's `add`, a `bad` entry's
+/// `mv.coll`); none where it took none. L §8.2 One read set (208.2, N2 and P35 on #241).
 pub(super) fn pins_read(read: &Collected) -> Option<Collected> {
-    let mut pins = Collected::default();
-    for e in &read.entries {
-        if e.word == "pinned" || e.word == "pin met" {
-            pins.entries.insert(e.clone());
-        }
-    }
+    let pins = read.deciding();
     (!pins.entries.is_empty()).then_some(pins)
 }
 
