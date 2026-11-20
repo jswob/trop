@@ -7,7 +7,7 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
-## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 547 tests)
+## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 552 tests)
 
 - **P30, one statement for an operation over an interval** (L §4.4 l.667 to l.671). `lift_values` is the one
   mechanism; `lift` is its monotone form (`mono=True`). It takes each value in turn where it can: the whole numbers
@@ -22,6 +22,14 @@ interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may cra
 - **B5, invariant 5 under a window's cuts.** A windowed instance's body joins every booking cut of its window up to K
   (`inst.cuts`), so `m_inv5` compares bodies under that set, not the first cut alone: asks at two cuts in one run
   give what each gives alone (L l.2215).
+- **B4 (P31), a refusal beside a window's hole.** A plain movement's or an observation's own refusal (a leg's refused
+  amount, a refused instance, a refused adjustment) reads nothing the walk books (L §5.14.2), so it is given on
+  every day and stands after a class hole (`Ent.note == 'own'`: `leg_bad(own=True)`, `global_own`, `placebad_own`);
+  a refusal a decision's or a check's reads give (the sign rule, a lifespan, a decision's run) stays the hole.
+- **N1 and N8 (P32), a reading inside a window.** A reading met while a window's legs are pending at its place (`imp`,
+  or a window's question in `perm`) states the balance at its own instant; from the next instant the balance is the
+  window's hole up to the next reading (`apply`'s reset, `Ent.reopen`; `Walk.state` gives the reading's own instant
+  without it).
 
 ## tally 2.2.1, group W5: the names (issue #241; 1 538 tests)
 

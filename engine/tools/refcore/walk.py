@@ -123,11 +123,12 @@ class LeftHole(Hole):
 
 class Ent:
     __slots__ = ('key', 'kind', 'val', 'qs', 'err', 'wid', 'mv', 'flow', 'reg', 'coll', 'st', 'win', 'note', 'sgn',
-                 'leg', 'row')
+                 'leg', 'row', 'reopen')
 
     def __init__(self, key, kind, val=None, qs=EMPTY, err=None, wid=None, mv=None, flow=None, reg=(), coll=None,
                  win=None, note=None, sgn=None, leg=None, row=None):
         self.row = row          # a reading's row (its stated parts, L §5.19, tally 2.1)
+        self.reopen = EMPTY     # a reading's: the questions of the windows that run past it (apply's reset)
         self.sgn = sgn          # a hole leg's direction at the place (-1 out, +1 in) and the leg: a partial ask line
         self.leg = leg          # reads the balance as its known part plus the leg's holes (mreads.m_partial_bal)
         self.key = key
@@ -175,6 +176,15 @@ def apply(st, e, idx):
     if k == 'reset':
         # a reading ends a dated refusal as it ends a hole (L §8 Refusals outrank holes, tally 2.1.8 R11): what is
         # left is the refusal of a movement that may fall after any reading, as perm is for holes
+        wins = frozenset(q for q in st.perm if q[0].startswith('date within '))
+        if st.imp or wins:
+            # a window that runs past the reading: the reading states the balance at its instant, and from the next
+            # instant the movement may still fall, so the balance is its hole up to the next reading (L §5.19 l.1726,
+            # E §4.1 step 2; tally 2.2.1 P32, N1 and N8). Walk.state gives the reading's own instant without it
+            imp = frozenset().union(*(x[1] for x in st.imp))
+            UNCERTAIN.update(imp)
+            e.reopen = imp | wins
+            return St(e.val, frozenset(e.qs) | imp, st.perm, (), st.pbad, idx, st.pbad)
         return St(e.val, frozenset(e.qs), st.perm, st.imp, st.pbad, idx, st.pbad)
     if k == 'init':
         s = e.val
@@ -205,9 +215,11 @@ def apply(st, e, idx):
         oth = oth.name if isinstance(oth, Thing) else None
         return St(st.val, st.hole, st.perm, st.imp + ((e.wid, e.qs, amt, oth),), st.bad, st.rst, st.pbad)
     if k == 'bad':
-        if st.bad is None and st.hole & UNCERTAIN:
+        if st.bad is None and st.hole & UNCERTAIN and e.note != 'own':
             # a refusal reaching a place after a test some of a window's days pass doesn't outrank that hole: which
-            # comes first is what the window leaves open (L §4.4 "for a refusal that only some of its days give")
+            # comes first is what the window leaves open (L §4.4 "for a refusal that only some of its days give").
+            # A movement's own refusal reads no value under the hole (a plain movement makes no running reads, L
+            # §5.14.2), so every day gives it and it stands (L §8 refusals outrank holes; tally 2.2.1 P31, B4)
             return st
         return St(st.val, st.hole, st.perm, st.imp, st.bad or e.err, st.rst, st.pbad)
     if k == 'pbad':
@@ -417,7 +429,12 @@ class Walk:
         i = bisect.bisect_right(lg.keys, key) - 1
         if i < 0:
             return self.default(place, unit), lg, -1
-        return lg.ents[i].st, lg, i
+        e = lg.ents[i]
+        if e.reopen and key[0] == e.key[0] and (key[1] >= 4 if e.key[1] == 4 else key[1] == e.key[1]):
+            # the reading's own instant: the stated balance, every day of a window that runs past it agreeing (P32)
+            st = e.st
+            return St(st.val, st.hole - e.reopen, st.perm - e.reopen, st.imp, st.bad, st.rst, st.pbad), lg, i
+        return e.st, lg, i
 
     def pstate(self, place, unit, key, raw=False):
         """The state of a place's position in a unit at an instant, with what holds for all its units and for the
@@ -839,7 +856,7 @@ class Walk:
             for lg in known:
                 self.at((d.toordinal(), 2, 0, plan_key(i), 0), 'legbad', (i, lg, i.err))
         else:
-            self.at(K_before(d), 'global_bad', i.err)
+            self.at(K_before(d), 'global_own', i.err)
 
     def sched_adj(self, a):
         if a.err is not None:
@@ -847,7 +864,7 @@ class Walk:
             # unsettled one makes them the HOLE-CHANGED hole (L §5.14.3 Detection, L §8.4 a refusal outranks a hole)
             for p in (a.leg.frm, a.leg.to):
                 if isinstance(p, Thing):
-                    self.at(K_before(max(a.day, self.start)), 'placebad', (p.name, a.err, a))
+                    self.at(K_before(max(a.day, self.start)), 'placebad_own', (p.name, a.err, a))
             return
         r = a.remainder()
         txt = None
@@ -1153,7 +1170,7 @@ class Walk:
             reg = ()
             if i.status == 'past' and not i.obs and not self.same_observed(i):
                 reg = (('unfulfilled', i.id),)
-            self.book_leg(i, lg, key, reg=reg, coll=i.coll)
+            self.book_leg(i, lg, key, reg=reg, coll=i.coll, own=True)
         elif kind == 'imp_on':
             i, lg, wid, q = obj
             reg = ()
@@ -1168,7 +1185,7 @@ class Walk:
             if isinstance(lg.amount, Hole):
                 q |= lg.amount.qs
             if isinstance(lg.amount, TallyError):
-                self.leg_bad(i, lg, lg.amount, key)
+                self.leg_bad(i, lg, lg.amount, key, own=True)
                 return
             for p in (lg.frm, lg.to):
                 if isinstance(p, Thing):
@@ -1178,7 +1195,7 @@ class Walk:
             i, lg, err = obj
             # a refused movement whose day is a hole or refused may fall after any reading, so no reading ends its
             # refusal (tally 2.1.8 R11; its hole twin is sched_hole's perm)
-            self.leg_bad(i, lg, err, key, 'pbad' if day_lo(i.day) is None else 'bad')
+            self.leg_bad(i, lg, err, key, 'pbad' if day_lo(i.day) is None else 'bad', own=True)
         elif kind == 'perm':
             i, lg, qs = obj
             for p in (lg.frm, lg.to):
@@ -1200,20 +1217,20 @@ class Walk:
             self.add(place, '*', Ent(key, 'perm', qs=qs, mv=i, coll=i.coll, flow=Hole(qs)))
         elif kind == 'global_hole':
             self.add('*', '*', Ent(key, 'perm', qs=frozenset(obj.qs)))
-        elif kind == 'global_bad':
-            self.add('*', '*', Ent(key, 'bad', err=obj))
-        elif kind == 'placebad':
+        elif kind in ('global_bad', 'global_own'):
+            self.add('*', '*', Ent(key, 'bad', err=obj, note='own' if kind == 'global_own' else None))
+        elif kind in ('placebad', 'placebad_own'):
             place, err, i = obj
-            self.add(place, '*', Ent(key, 'bad', err=err, mv=i))
+            self.add(place, '*', Ent(key, 'bad', err=err, mv=i, note='own' if kind == 'placebad_own' else None))
 
-    def leg_bad(self, mv, lg, err, key, kind='bad'):
+    def leg_bad(self, mv, lg, err, key, kind='bad', own=False):
         """A refused leg refuses its places from key; a leg whose amount is refused has no unit of its own, so it is
         kept at its place's unit, where the place's next reading ends it (tally 2.1.8 R11), or at every unit of a
         place of unit any."""
         for p in (lg.frm, lg.to):
             if isinstance(p, Thing):
                 u = lg.unit or (self.m.place_unit(self.m.things[p.name]) if p.name in self.m.things else None)
-                self.add(p.name, u or '*', Ent(key, kind, err=err, mv=mv))
+                self.add(p.name, u or '*', Ent(key, kind, err=err, mv=mv, note='own' if own else None))
 
     # -- same lines and consolidation (L §6.1, §5.19 SF-25) -----------------------------------------------------
     def same_pairs(self):
@@ -1450,12 +1467,13 @@ class Walk:
         name = getattr(getattr(mv, 'move', None), 'id', None) or getattr(mv, 'id', '?')
         return '%s on %s reads %s' % (name, day, ', '.join(sorted(items)))
 
-    def book_leg(self, mv, lg, key, reg=(), coll=None, ends=(True, True)):
-        """Book a leg's two ends (or the ends asked for); RUN-LIFESPAN, RUN-PLACE refuse it from that point."""
+    def book_leg(self, mv, lg, key, reg=(), coll=None, ends=(True, True), own=False):
+        """Book a leg's two ends (or the ends asked for); RUN-LIFESPAN, RUN-PLACE refuse it from that point. own: a
+        plain movement's or an observation's leg, whose refused amount reads nothing the walk books (P31)."""
         m = self.m
         amt = lg.amount
         if isinstance(amt, TallyError):
-            self.leg_bad(mv, lg, amt, key)
+            self.leg_bad(mv, lg, amt, key, own=own)
             return
         bf = self.before_from(mv, lg, coll)
         if bf is not None:
@@ -1648,13 +1666,13 @@ class Walk:
         eng = self.eng
         d = lg.day
         if o.err is not None:
-            self.leg_bad(o, lg, o.err, key)
+            self.leg_bad(o, lg, o.err, key, own=True)
         else:
             # every observation is booked on its own day (L §5.19, E §4.2 step 1): each end of each leg from the
             # observation of the version that covers its place that day, an end no version covers from this one
             # (E §6.1)
             ends = tuple(self.obs_end_on(o, p, d) for p in (lg.frm, lg.to))
-            self.book_leg(o, lg, key, coll=o.coll, ends=ends)
+            self.book_leg(o, lg, key, coll=o.coll, ends=ends, own=True)
 
     def obs_end_on(self, o, p, d, ctx=None):
         """Whether observation o books its end at place p on day d (L §5.19 Booking an observation): "from the
