@@ -108,16 +108,22 @@ impl Engine {
                 Err(hole) => Ok(Value::Hole(hole)),
             };
         };
-        if let [(u, 1)] = unit.terms()
+        let single = match unit.terms() {
+            [(u, 1)] => Some(u),
+            _ => None,
+        };
+        if let Some(u) = single
             && (m.currencies.contains_key(u) || m.unit_kind_keys.contains_key(u))
         {
             return Ok(Value::Key(KeyVal::Thing(u.clone())));
         }
+        // refused in load's words (L §8.4, 2.1.7's R5; 233.c on #241)
+        let why = match single {
+            Some(u) => format!("{u} is a quantity unit, a key of no unit kind"),
+            None => "a plain number or a compound unit is a key of no unit kind".to_owned(),
+        };
         let shown = v.text(m).map_err(num_stop)?;
-        Err(refuse(
-            Run::Domain,
-            format!("unit of {shown}: a key of no unit kind"),
-        ))
+        Err(refuse(Run::Domain, format!("unit of {shown}: {why}")))
     }
 
     /// `observed(m[k])`: its movement, a hole key's hole (refcore's `m_c_observed`).
