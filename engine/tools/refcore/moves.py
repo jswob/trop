@@ -918,8 +918,10 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 # amount that reads the cell being evaluated made the answer depend on the order of the terms)
                 return None
             pr = tctx.rnd
-            if pr is not None and pr[0] == 'proj' and isinstance(day_lo(day), datetime.date):
-                # a projection reads the instance's random amounts by its day (L §5.16, §5.14.1; #212)
+            if pr is not None and pr[0] == 'proj' and isinstance(day_lo(day), datetime.date) and \
+                    mi.id in getattr(self.m, 'random_moves', ()):
+                # a projection reads the instance's random amounts by its day (L §5.16, §5.14.1; #212); a move the
+                # random cone doesn't hold reads none, and keeps the projection's own context (its cells shared)
                 tctx = tctx.but(rnd=pr[:5] + (day_lo(day),))
             if at_cut is not None:
                 cuts = [at_cut]
