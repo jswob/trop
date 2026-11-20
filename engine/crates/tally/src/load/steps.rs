@@ -172,11 +172,12 @@ impl Loader {
             .header
             .sames
             .iter()
-            .map(|(left, right)| SameLine {
+            .map(|(left, right, line)| SameLine {
                 left: left.clone(),
                 right: right.clone(),
                 file: model.path.clone(),
-                line: model.header.line,
+                // the line of the `same`, which a refusal names (L §8.3; 221.8 on #241)
+                line: *line,
                 version: None,
             })
             .collect();

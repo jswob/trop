@@ -316,14 +316,18 @@ fn header_lines(p: &P<'_>, header: &mut Header, body: &[Line]) -> Result<(), Sto
         seen.insert(word);
         pos = k;
         let mut q = p.under(line);
-        header_line(header, word, &mut q)?;
+        header_line(header, (word, line.number), &mut q)?;
         q.end()?;
     }
     Ok(())
 }
 
-/// One header line's value.
-fn header_line(header: &mut Header, word: &str, q: &mut P<'_>) -> Result<(), Stop> {
+/// One header line's value; `number` is its line, which a `same` line keeps.
+fn header_line(
+    header: &mut Header,
+    (word, number): (&str, u32),
+    q: &mut P<'_>,
+) -> Result<(), Stop> {
     match word {
         "tally" => header.tally = q.integer()?,
         "on" => header.on = Some(q.day()?),
@@ -343,7 +347,7 @@ fn header_line(header: &mut Header, word: &str, q: &mut P<'_>) -> Result<(), Sto
             let left = q.same_ref()?;
             q.expect("=")?;
             let right = q.same_ref()?;
-            header.sames.push((left, right));
+            header.sames.push((left, right, number));
         }
         _ => header.notes.push(q.string()?),
     }
