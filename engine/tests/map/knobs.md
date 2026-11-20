@@ -7,7 +7,7 @@ Session 4.5b, 2026-10-29. Paper only: no `refcore` run. The one run made: `keys_
 - **Every row of `engine/tests/load/benchmarks.md`.** Row 7 doesn't exist.
 - **Every stored CPython time over 240 s:**
   - `snap16-light`: LH-16-light 347 s. LH-17-mc-light (144 s) and LH-15-light (121 s) are under 240 s.
-  - `engine/tests/baselines/session5-visible`:
+  - session 5's runs (`engine/tests/defs/session5-seconds.tsv`, its outputs retired at tally 2.2.1):
     - B-b12_det 906 s and B-b12_p3 852 s, both stopped (rc −15);
     - B-cs_b09_b11 1 301 s;
     - E1-02-B 597 s.

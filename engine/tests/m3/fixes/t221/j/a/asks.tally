@@ -1,0 +1,7 @@
+part asks
+  tally 2
+
+ask q_u: unit(konto) == PLN, unit(bal(konto, 2026-04-30))
+ask q_n: count(x in places over .. where x in accounts and unit(x) == PLN)
+ask q_base_gone: bal(konto, 2026-04-30) in nowhere2 law cut
+ask warning_x: bal(spare, 2026-01-31) law cut

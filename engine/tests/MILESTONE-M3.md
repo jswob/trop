@@ -188,3 +188,11 @@ Left unsorted for C6: `walk/readings.rs` ×3 (a decision window's fallen places;
 ## Keeping master green
 
 As at S, M0, M1 and M2: every `m3_…` target has `test = false` and runs only as `check`'s report until M3 is in `engine/tools/milestones.toml`'s `gating`, which the rules step adds in `build/m3`'s commit before its gate.
+
+## tally 2.2.1, chunk C1 (#241, 2026-11-20)
+
+T's plan for the round (the lead's copy, `tmp/spec-2.2.1/t-plan.md`), chunk C1, on today's refcore and engine:
+- **Guards** (`m3/fixes/t221/`, group `t221-gd`): 24 runs (`m3_fixes_t221_guards`) and 2 checks (`m3_check_t221_guards`). They are answers the round leaves as they are, each the same on both engines, which its changes must not move: S-208.3, 208.4, 208.6, S-216's five, 228.Q12 (C-14 option A), S-231.Q4, S-window-key's day key, the sign rule, a binding over a span the window crosses, S-231.Q2's twin, 235.8, R18's cell 1, 231.Q6, S-230.Q5b, S-233.5, 229.2, 221.10, S-233.8's twin, and 233.c's load words.
+- **221.C3** (`t221-g1/221-C3-arith`, `m3_fixes_t221_g1`): refcore's bytes, where the engine holes at `+`. It is held for #241 in `held.tsv` until the builder's G1, because a `Logged-Red:` commit can't be pushed before a builder commit (R-77).
+- `fixes/t22/fault_paths` is re-held to M7 by name.
+- `baselines/session5-visible/` is retired; its seconds are `defs/session5-seconds.tsv`.

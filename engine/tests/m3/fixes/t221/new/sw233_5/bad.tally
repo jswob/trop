@@ -1,0 +1,7 @@
+scenario bad over base
+  tally 2
+  from 2026-03-01
+
+def broken: money PLN = nothing_here + pay
+
+ask q_bad: broken

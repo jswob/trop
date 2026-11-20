@@ -358,8 +358,8 @@ mod tests {
         }
     }
 
-    /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes`, `b192`
-    /// and `lawdate`, `run` first but for a usage error,
+    /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes`, `b192`,
+    /// `lawdate` and tally 2.2.1's `t221-gd`, `t221-g1`, `run` first but for a usage error,
     /// every text embedded.
     #[test]
     fn the_runs_store_reads_and_every_text_is_embedded() {
@@ -376,7 +376,9 @@ mod tests {
                     "last",
                     "fixes",
                     "b192",
-                    "lawdate"
+                    "lawdate",
+                    "t221-gd",
+                    "t221-g1"
                 ]
                 .contains(&v.group.as_str()),
                 "{}",

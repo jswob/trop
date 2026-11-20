@@ -1,0 +1,48 @@
+model s231_6
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+input bank: observed
+input card: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "a1"
+
+version st2
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  card[b1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "b1"
+  same bank[a1] = card[b1]
+
+version fix
+  cite s
+  governs 2026-03
+  known 2026-04-10
+  replace card[b1] = none "gone"
+
+ask q6: bal(konto, 2026-03-31), bal(sav, 2026-03-31)
+ask q6k: bal(konto, 2026-03-31), bal(sav, 2026-03-31) as known 2026-04-05

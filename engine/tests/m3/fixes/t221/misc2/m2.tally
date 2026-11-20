@@ -1,0 +1,65 @@
+model m2
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input zero: num
+input w: date
+input lvl: num
+input hx[k in ks]: num
+input keep: money PLN
+input d_at: date
+input d_top: date
+move pay: transfers
+  on w
+  at d_at
+  leg cash from world to konto amount amt
+move top: transfers
+  on d_top
+  reads konto
+  before top
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  zero = 0 "s"
+  d_at = 2026-03-01 "s"
+  d_top = 2026-04-10 "s"
+  keep = 100.00 PLN "s"
+  lvl = none "s"
+  hx[k1] = 1 "s"
+  hx[k2] = ?"hx2?" "s"
+  hx[k3] = 3 "s"
+  w = window(2026-03-05, 2026-03-20) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+version a0
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+version a1
+  cite s
+  governs 2026..
+  known 2026-03-08
+  replace amt = 150.00 PLN "s"
+version a2
+  cite s
+  governs 2026..
+  known 2026-03-12
+  replace amt = 100.00 PLN "s"
+ask undone: bal(konto, 2026-03-31)
+ask undone_f: flows(pay, 2026-03)
+ask u06: bal(konto, 2026-03-31) with w = 2026-03-06
+ask u10: bal(konto, 2026-03-31) with w = 2026-03-10
+ask u15: bal(konto, 2026-03-31) with w = 2026-03-15
+ask qn: quantile(hx[k] for k in ks, lvl)
+ask qh: quantile(hx[k] for k in ks, 0.5)

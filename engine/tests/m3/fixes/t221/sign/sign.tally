@@ -1,0 +1,41 @@
+model c_sign
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place sav: claims PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input amt: money PLN
+
+input dx: date
+
+move out_w: transfers
+  on w
+  leg cash from sav to world amount amt
+
+move in_x: transfers
+  on dx
+  leg cash from world to sav amount amt
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "c"
+  dx = 2026-03-15 "c"
+  w = window(2026-03-10, 2026-03-20) "c"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "c"
+
+ask s1: bal(sav, 2026-03-31)
+ask s2: bal(sav, 2026-03-31) with w = 2026-03-12
+ask s3: bal(sav, 2026-03-31) with w = 2026-03-16
+ask s4: bal(sav, 2026-03-09), bal(sav, 2026-03-12), bal(sav, 2026-03-21)

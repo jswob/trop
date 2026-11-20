@@ -1,0 +1,25 @@
+model pa
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "fix review probe: + of two computed windows (older)."
+
+source s "s"
+
+input w: date
+
+input w2: date
+
+input d0: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-05, 2026-03-07) "s"
+  w2 = window(2026-03-10, 2026-03-12) "s"
+  d0 = 2026-03-01 "s"
+
+ask z1: days_between(w2, w) + days_between(d0, w) > 0
+ask z2: days_between(w2, w) + days_between(d0, w)

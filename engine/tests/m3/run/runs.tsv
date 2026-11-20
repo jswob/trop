@@ -68,3 +68,27 @@ b192/same-two-legs	m3/fixes/b192	run same_two_legs.tally --ask e f k3_konto	-	#1
 b192/same-two-legs-residual	m3/fixes/b192	run same_two_legs.tally --ask r	-	#192 row 52 (G5 fix NB-4), L §5.19, §6.1: the same rows' residual line; the unexplained group's observed hole is the fee leg's on refcore, the cash leg's on the engine (held, #192)
 b192/trace-answers	m3/fixes/b192	run trace_answers.tally	-	#192 row 51 (G5 fix NB-3), E §10, E §5 step 1: explain over hole bookings a later version answers, the second answer refused RUN-DIV, and an explain before it
 b192/chain-pads	m3/fixes/b192	run chain_pads.tally	-	#192 row 40 (G4 fix NB-3), L §5.14.1, E §6.1: two decisions reading pads up to their own day, the second's walk continuing the first's, pads in March and April
+t221-gd/208-3-diff-alike	m3/fixes/t221/misc2	run m2.tally sc.tally --ask d_ref d_hole d_all	-	tally 2.2.1 (#241) 208.3, S-208.3: a diff line refused, or a hole, alike in both worlds is unchanged
+t221-gd/208-4-count	m3/fixes/t221/b2pin	run b2_pin.tally --ask a1 a2 a3	-	tally 2.2.1 (#241) 208.4, L §8, §8.4: count reads existence beside sums refused RUN-RECORD
+t221-gd/208-6-gap-after	m3/fixes/t221/misc	run m1.tally --ask gap_after last_after	-	tally 2.2.1 (#241) 208.6, L §4.5: gap after the cut is no reading, last reads the row
+t221-gd/216-o0	m3/fixes/t221/o216	run o0.tally	-	tally 2.2.1 (#241) S-216: a def keyed by a movement, its key an argument; a day's order (RUN-ORDER)
+t221-gd/216-o1	m3/fixes/t221/o216	run o1_key_a.tally	-	tally 2.2.1 (#241) S-216: in_pln[a], LOAD-READS raised at the reader's key
+t221-gd/216-o2	m3/fixes/t221/o216	run o2_sum_helper.tally	-	tally 2.2.1 (#241) S-216: a sum through a keyed helper, LOAD-READS
+t221-gd/216-o3	m3/fixes/t221/o216	run o3_sum_inline.tally	-	tally 2.2.1 (#241) S-216: the inline sum, LOAD-READS
+t221-gd/216-o4	m3/fixes/t221/o216	run o4_leg_a.tally	-	tally 2.2.1 (#241) S-216: a.cash.amount, LOAD-READS
+t221-gd/228-12-run	m3/fixes/t221/j	run top.tally	-	tally 2.2.1 (#241) 228.Q12, R20 (C-14 option A): a joint model's run with no ask prints no member's lines, exit 0
+t221-gd/231-4-axis	m3/fixes/t221/ax	run reality.tally sa.tally --ask qa	-	tally 2.2.1 (#241) S-231.Q4: a scenario declares an axis and fans out
+t221-gd/window-key-day	m3/fixes/t221/fx	run fx.tally --ask fday	-	tally 2.2.1 (#241) S-window-key (option A): a day's key read at a window is HOLE-IMPRECISE
+t221-gd/sign-rule	m3/fixes/t221/sign	run sign.tally	-	tally 2.2.1 (#241) E §4.1's sign rule (answer C-2): a min 0 place, a window-dated outflow, a dated inflow
+t221-gd/cells-cnt	m3/fixes/t221/cells	run base.tally sc.tally --ask cnt	-	tally 2.2.1 (#241) L §4.4: a binding over a span the window crosses is the hole
+t221-gd/231-2-pin-plain	m3/fixes/t221/rd4	run rd4.tally	-	tally 2.2.1 (#241) S-231.Q2's twin: a pin of a plain reading is its value at every instant
+t221-gd/235-8-pinned-read	m3/fixes/t221/new	run p235_8.tally	-	tally 2.2.1 (#241) 235.8, R18: a pinned read is law-dated as its item is (LOAD-LAWDATE)
+t221-gd/r18-c1-ask-binding	m3/fixes/t221/new	run r18c1.tally	-	tally 2.2.1 (#241) R18's cell 1: an ask's own binding reads a law-dated input: LOAD-LAWDATE
+t221-gd/231-6-none-one-row	m3/fixes/t221/new	run s231_6.tally	-	tally 2.2.1 (#241) 231.Q6, L §5.19: none on one row of a same pair; the other books where its statement covers
+t221-gd/230-5b-pieces	m3/fixes/t221/new	run s230_5b.tally	-	tally 2.2.1 (#241) S-230.Q5b: pieces of one payment in two versions, not stated same, warn nothing
+t221-gd/233-5-clock-refused-world	m3/fixes/t221/new/sw233_5	run base.tally bad.tally	-	tally 2.2.1 (#241) S-233.5: a base ask in a refused scenario's world, as known after on: its line, no REQ-CLOCK
+t221-gd/229-2-literal-key	m3/fixes/t221/new/k229_2	run base.tally sc.tally --ask q	-	tally 2.2.1 (#241) 229.2, L §8.3: a scenario file's literal key no index holds is load's, its ask not asked
+t221-gd/221-10-agg-window	m3/fixes/t221/new	run tb.tally --ask a221_10	-	tally 2.2.1 (#241) 221.10, L §4.4: window terms of count, any, all, sum and min
+t221-gd/233-8-twin	m3/fixes/t221/new	run tb.tally --ask c233_8t	-	tally 2.2.1 (#241) S-233.8's twin: as known after on refuses the request REQ-CLOCK
+t221-gd/233-c-load-words	m3/fixes/t221/new	run u233c.tally	-	tally 2.2.1 (#241) 233.c: unit of a number, refused at load in load's words
+t221-g1/221-C3-arith	m3/fixes/t221/arith2	run arith2.tally	-	tally 2.2.1 (#241) 221.C3, L §4.4: + of two computed windows is their interval, a hole only where one value is needed (held for G1)

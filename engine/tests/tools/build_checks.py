@@ -208,12 +208,13 @@ count = {}
 for H, name, old, cwd, files, asks, opts, nr in runs:
     for a in asks:
         count[(H, a)] = count.get((H, a), 0) + 1
-vis_s = {}  # a run's seconds on CPython 3.14 this morning (session 5, its copies of the inputs), where stored
-for f in glob.glob(ROOT + SNAP + 'session5-visible/*.out'):
-    t = [l for l in open(f, encoding='utf-8') if l.startswith('# rc ')]
-    m = re.search(r', (\d+) s,', t[-1]) if t else None
-    if m:
-        vis_s[os.path.basename(f)[:-4]] = m.group(1)
+# a run's seconds on CPython 3.14 in session 5 (its copies of the inputs), where stored: the `# rc` lines of its
+# outputs, kept as a table since tally 2.2.1 retired the outputs (baselines/session5-visible/, read by no check)
+vis_s = {}
+with open(ROOT + CHK + 'session5-seconds.tsv', encoding='utf-8') as f:
+    for line in f.read().splitlines()[1:]:
+        run, secs = line.split('\t')
+        vis_s[run] = secs
 for H, name, old, cwd, files, asks, opts, nr in runs:
     for a in asks:
         cid = 'I:%s:%s' % (H, a) + ('@' + name.split('-', 1)[1] if count[(H, a)] > 1 else '')

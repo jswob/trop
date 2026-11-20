@@ -48,3 +48,5 @@ reviews/twin-placed	m3/check	model.tally p12/b/t1.tally p12/c/lost.tally p12/d/t
 reviews/narrowed	m3/check/narrow	m.tally s.tally	#232's second case, P19: a scenario's moves line narrows a register's coverage and leaves a standing observation outside it (LOAD-COVERS on the engine after G3)
 reviews/stacked-covers	m3/fixes/g3/st	base.tally late.tally mv.tally	G3 review B-1, OPERATIONS §2.1, L §8 (#232): a scenario over one refused LOAD-COVERS (P19) is refused with it, after it
 reviews/stacked-unit	m3/fixes/g3/st	base.tally bad.tally over_bad.tally	G3 review B-1's control: a scenario over one refused LOAD-UNIT is refused with it
+t221-gd/228-12-joint-check	m3/fixes/t221/j	top.tally	tally 2.2.1 (#241) 228.Q12, R20 (C-14 option A): a joint model's check is ok; a member's scenarios show at check of the member
+t221-gd/229-2-literal-check	m3/fixes/t221/new/k229_2	base.tally sc.tally	tally 2.2.1 (#241) 229.2, L §8.3: the scenario refused LOAD-KEY at load

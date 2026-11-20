@@ -5321,4 +5321,166 @@ sv: 350.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
   unfulfilled: save[2026-04]
   cut 2026-05-31
+,24:t221-gd/208-3-diff-alike,7:t221-gd,3:run,32:engine/tests/m3/fixes/t221/misc2,46:run m2.tally sc.tally --ask d_ref d_hole d_all,76:m2.tally	m3/fixes/t221/misc2/m2.tally
+sc.tally	m3/fixes/t221/misc2/sc.tally
+,1:0,413:d_ref: diff in sc against m2: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: m2
+  world: sc
+  law date 2026-06-01, cut 2026-06-10
+d_hole: diff in sc against m2: 0 changed, 0 added, 0 removed, 1 unchanged
+  world: m2
+  world: sc
+  cut 2026-06-10
+d_all: diff in sc against m2: 0 changed, 0 added, 0 removed, 3 unchanged
+  world: m2
+  world: sc
+  cut 2026-06-10
+warning: WARN-UNREAD input sx is read by nothing
+,19:t221-gd/208-4-count,7:t221-gd,3:run,32:engine/tests/m3/fixes/t221/b2pin,31:run b2_pin.tally --ask a1 a2 a3,46:b2_pin.tally	m3/fixes/t221/b2pin/b2_pin.tally
+,1:0,313:a1: refused: RUN-RECORD bank[o1] and card[o1] are stated same and fulfil pay[2026-03] and pay[2026-02]
+  cut 2026-06-30
+a2: 1
+  pinned: flag = 0
+  cut 2026-06-30
+a3: refused: RUN-RECORD observation bank[o1] fulfils pay[2026-03], which doesn't exist or doesn't touch its places
+  pinned: flag = 0
+  cut 2026-06-30
+,23:t221-gd/208-6-gap-after,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/misc,39:run m1.tally --ask gap_after last_after,37:m1.tally	m3/fixes/t221/misc/m1.tally
+,1:0,290:gap_after: ?"stated[konto] has no reading at 2026-06-20" (stated[konto])
+  cut 2026-06-10
+last_after: 900.00 PLN
+  held: stated[konto] = 900.00 PLN (st), read for 2026-06-25
+  cut 2026-06-10
+warning: WARN-UNREAD input hx is read by nothing
+warning: WARN-UNREAD input lvl is read by nothing
+,14:t221-gd/216-o0,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,12:run o0.tally,37:o0.tally	m3/fixes/t221/o216/o0.tally
+,1:0,837:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+i1 [work = yes]:
+  v:amt[yes] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
+  v:fx (source s "s", locator "s")
+  reading: work = yes
+  law date 2026-06-01, cut 2026-06-10
+i1 [work = no]:
+  v:amt[no] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
+  v:fx (source s "s", locator "s")
+  reading: work = no
+  law date 2026-06-01, cut 2026-06-10
+i2 [work = *]:
+  v:mo (source s "s", locator "s")
+  law date 2026-06-01, cut 2026-06-10
+r1: b, by_helper, by_inline, i1, i2
+r2: by_helper, by_inline, i2
+r3: pay, in1, b, by_helper, by_inline, i1, i2
+r4: b, by_inline, in_pln, by_helper, i1, i2
+ra: by_helper, by_inline, i2
+warning: WARN-UNREAD def by_inline is read by nothing
+,14:t221-gd/216-o1,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,18:run o1_key_a.tally,49:o1_key_a.tally	m3/fixes/t221/o216/o1_key_a.tally
+,1:1,100:refused: LOAD-READS b reaches a running read or projection of a without reads a (o1_key_a.tally:41)
+,14:t221-gd/216-o2,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,23:run o2_sum_helper.tally,59:o2_sum_helper.tally	m3/fixes/t221/o216/o2_sum_helper.tally
+,1:1,105:refused: LOAD-READS b reaches a running read or projection of a without reads a (o2_sum_helper.tally:41)
+,14:t221-gd/216-o3,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,23:run o3_sum_inline.tally,59:o3_sum_inline.tally	m3/fixes/t221/o216/o3_sum_inline.tally
+,1:1,105:refused: LOAD-READS b reaches a running read or projection of a without reads a (o3_sum_inline.tally:41)
+,14:t221-gd/216-o4,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,18:run o4_leg_a.tally,49:o4_leg_a.tally	m3/fixes/t221/o216/o4_leg_a.tally
+,1:1,100:refused: LOAD-READS b reaches a running read or projection of a without reads a (o4_leg_a.tally:41)
+,18:t221-gd/228-12-run,7:t221-gd,3:run,28:engine/tests/m3/fixes/t221/j,13:run top.tally,152:top.tally	m3/fixes/t221/j/top.tally
+a/a.tally	m3/fixes/t221/j/a/a.tally
+a/asks.tally	m3/fixes/t221/j/a/asks.tally
+a/sc.tally	m3/fixes/t221/j/a/sc.tally
+,1:0,0:,18:t221-gd/231-4-axis,7:t221-gd,3:run,29:engine/tests/m3/fixes/t221/ax,35:run reality.tally sa.tally --ask qa,80:reality.tally	m3/fixes/t221/ax/reality.tally
+sa.tally	m3/fixes/t221/ax/sa.tally
+,1:0,190:qa [cut_reading = floor]: 1.00 PLN
+  world: sa
+  reading: cut_reading = floor
+  cut 2026-11-05
+qa [cut_reading = exact]: 2.00 PLN
+  world: sa
+  reading: cut_reading = exact
+  cut 2026-11-05
+,22:t221-gd/window-key-day,7:t221-gd,3:run,29:engine/tests/m3/fixes/t221/fx,23:run fx.tally --ask fday,35:fx.tally	m3/fixes/t221/fx/fx.tally
+,1:0,119:fday: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a key" (w)
+  unknown day: w
+  cut 2026-01-01
+,17:t221-gd/sign-rule,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/sign,14:run sign.tally,41:sign.tally	m3/fixes/t221/sign/sign.tally
+,1:0,542:s1: ?"date within window(2026-03-10, 2026-03-20) not precise enough for a balance" (out_w)
+  unknown day: w
+  cut 2026-01-01
+s2: refused: RUN-PLACE sav is -100.00 PLN after the day's observations and plans of 2026-03-12
+  pinned: w = 2026-03-12
+  cut 2026-01-01
+s3: 0.00 PLN
+  pinned: w = 2026-03-16
+  cut 2026-01-01
+s4: (0.00 PLN, ?"date within window(2026-03-10, 2026-03-20) not precise enough for a balance" (out_w), ?"date within window(2026-03-10, 2026-03-20) not precise enough for a balance" (out_w))
+  unknown day: w
+  cut 2026-01-01
+,17:t221-gd/cells-cnt,7:t221-gd,3:run,32:engine/tests/m3/fixes/t221/cells,33:run base.tally sc.tally --ask cnt,80:base.tally	m3/fixes/t221/cells/base.tally
+sc.tally	m3/fixes/t221/cells/sc.tally
+,1:0,175:cnt: ?"date within window(2026-03-28, 2026-04-02) not precise enough for a binding over transfers" (pa)
+  unknown day: wa
+  unfulfilled: pa
+  unfulfilled: pb
+  cut 2026-06-10
+,23:t221-gd/231-2-pin-plain,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/rd4,13:run rd4.tally,38:rd4.tally	m3/fixes/t221/rd4/rd4.tally
+,1:0,220:r1: 5
+  pinned: quote = 5
+  law date 2026-03-10, cut 2026-06-30
+r2: 5
+  pinned: quote = 5
+  law date 2026-03-11, cut 2026-06-30
+r3: 5
+  pinned: quote = 5
+  cut 2026-06-30
+r4: (5, 10)
+  pinned: quote = 5
+  cut 2026-06-30
+,25:t221-gd/235-8-pinned-read,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,16:run p235_8.tally,44:p235_8.tally	m3/fixes/t221/new/p235_8.tally
+,1:1,90:refused: LOAD-LAWDATE ask p1 reads law-dated pick directly, without law (p235_8.tally:22)
+,26:t221-gd/r18-c1-ask-binding,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,15:run r18c1.tally,42:r18c1.tally	m3/fixes/t221/new/r18c1.tally
+,1:1,88:refused: LOAD-LAWDATE ask q reads law-dated pick directly, without law (r18c1.tally:33)
+,26:t221-gd/231-6-none-one-row,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,16:run s231_6.tally,44:s231_6.tally	m3/fixes/t221/new/s231_6.tally
+,1:0,143:q6: (900.00 PLN, 0.00 PLN)
+  cut 2026-06-10
+q6k: (900.00 PLN, 100.00 PLN)
+  cut 2026-04-05
+warning: WARN-UNREAD place world is read by nothing
+,21:t221-gd/230-5b-pieces,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,17:run s230_5b.tally,46:s230_5b.tally	m3/fixes/t221/new/s230_5b.tally
+,1:0,99:q5b: (940.00 PLN, 100.00 PLN)
+  cut 2026-06-10
+warning: WARN-UNREAD place world is read by nothing
+,33:t221-gd/233-5-clock-refused-world,7:t221-gd,3:run,38:engine/tests/m3/fixes/t221/new/sw233_5,24:run base.tally bad.tally,94:base.tally	m3/fixes/t221/new/sw233_5/base.tally
+bad.tally	m3/fixes/t221/new/sw233_5/bad.tally
+,1:0,312:scenario bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (bad.tally:5)
+q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-06-10
+qx: refused: LOAD-UNIT keylit and money PLN in arithmetic (bad.tally:5)
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,25:t221-gd/229-2-literal-key,7:t221-gd,3:run,37:engine/tests/m3/fixes/t221/new/k229_2,31:run base.tally sc.tally --ask q,90:base.tally	m3/fixes/t221/new/k229_2/base.tally
+sc.tally	m3/fixes/t221/new/k229_2/sc.tally
+,1:0,225:scenario sc: refused: LOAD-KEY k9 is not a key of ks (sc.tally:16)
+q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-06-10
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,25:t221-gd/221-10-agg-window,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,26:run tb.tally --ask a221_10,36:tb.tally	m3/fixes/t221/new/tb.tally
+,1:0,376:a221_10: (?"date within window(2026-03-05, 2026-03-07) not precise enough for wd[k] > 2026-03-06" (wd[k1]), true, ?"date within window(2026-03-05, 2026-03-07) not precise enough for wd[k] > 2026-03-06" (wd[k1]), ?"date within window(2026-03-05, 2026-03-07) not precise enough for a term of sum" (wd[k1]), window(2026-03-05, 2026-03-07))
+  unknown day: wd[k1]
+  cut 2026-06-10
+,18:t221-gd/233-8-twin,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,26:run tb.tally --ask c233_8t,36:tb.tally	m3/fixes/t221/new/tb.tally
+,1:1,74:refused: REQ-CLOCK as known 2027-01-01 is after the model's on 2026-06-10
+,24:t221-gd/233-c-load-words,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,15:run u233c.tally,42:u233c.tally	m3/fixes/t221/new/u233c.tally
+,1:1,108:refused: LOAD-UNIT unit of num: a plain number or a compound unit is a key of no unit kind (u233c.tally:22)
+,20:t221-g1/221-C3-arith,7:t221-g1,3:run,33:engine/tests/m3/fixes/t221/arith2,16:run arith2.tally,47:arith2.tally	m3/fixes/t221/arith2/arith2.tally
+,1:0,314:z1: ?"date within window(2026-03-10, 2026-03-12) not precise enough for days_between(w2, w) + days_between(d0, w) > 0" (w2)
+  unknown day: w
+  unknown day: w2
+  cut 2026-01-01
+z2: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w2)
+  unknown day: w
+  unknown day: w2
+  cut 2026-01-01
 ,
