@@ -161,6 +161,11 @@ def add_q(a, b, sign=1):
     return Num(a.q + sign * b.q, a.u)
 
 
+def zero_leg(lg):
+    """A leg of known amount 0, which books nothing on whichever day (L §5.14; E §4.1 step 2)."""
+    return isinstance(lg.amount, Num) and lg.amount.q == 0
+
+
 # the questions of the holes a test of a window-dated movement leaves open (E §4.1 step 2; tally 2.1.8 item 77)
 UNCERTAIN = set()
 
@@ -591,7 +596,8 @@ class Walk:
                         d.window_text(), i.id), i.id)]), d)
                     self.dec_hole(i, K_before(max(d.lo, S)), q, ctx)
                     if d.hi <= self.end:
-                        self.at((d.hi.toordinal(), 4, 2, i.id, 0), 'dec_win_end', (i, frozenset(q.qs)))
+                        # a window whose last day is t has ended before t's closing readings (E §4.2 step 4; #218)
+                        self.at((d.hi.toordinal(), 4, 0, i.id, 0), 'dec_win_end', (i, frozenset(q.qs)))
                 elif isinstance(d, Hole):
                     self.dec_hole(i, K_before(S), d, ctx)
                 elif isinstance(i.err, RandomLine) and ctx.path is None:
@@ -725,6 +731,9 @@ class Walk:
                 return
             self.at((d.toordinal(), phase, 0, osort, 0), 'leg', (i, lg))
         elif isinstance(d, Iv) and isinstance(d.lo, datetime.date):
+            if zero_leg(lg):
+                # a leg of amount 0 books nothing on any day of its window: no hole (E §4.1 step 2; #214)
+                return
             wid = '%s.%s' % (i.id, lg.name)
             q = frozenset([('date within %s not precise enough for a balance' % d.window_text(), i.id)])
             carry_hole(Hole(q), d)
@@ -746,14 +755,35 @@ class Walk:
                 self.at(K_before(self.start), 'global_hole', d)
             return
         qs = frozenset(i.exists.qs) if isinstance(i.exists, Hole) else EMPTY
+        # an existence a window leaves open (a window at whose law-date classes disagree, #236): a refusal only the
+        # days it exists on would give doesn't outrank its hole (L §4.4)
+        UNCERTAIN.update(q for q in qs if q[0].startswith('date within '))
         if getattr(i, 'class_q', None):
-            # a window whose days take different classes (moves.m_window_class_depends)
+            # a window whose days take different classes (moves.m_window_class_depends): the hole reaches as far as
+            # the class that books would, from its first day; one that may fall after a reading still does, up to
+            # the last day it may fall on (L §5.19 Holes, E §4.1 step 2; #220)
             qs = qs | i.class_q
             UNCERTAIN.update(i.class_q)
+            bk = getattr(i, 'booked', None)
+            if bk is False:
+                return
+            if bk is not None:
+                a, b = max(bk[0], self.start), bk[1]
+                for lg in i.legs:
+                    if a < b and not isinstance(lg.amount, TallyError) and not zero_leg(lg):
+                        q = qs | frozenset(lg.amount.qs) if isinstance(lg.amount, Hole) else qs
+                        self.at((a.toordinal(), 2, 0, plan_key(i), 0), 'perm', (i, lg, q))
+                        if b <= self.end:
+                            self.at((b.toordinal(), 4, 0, i.id, 0), 'dec_win_end', (i, q))
+                    elif not zero_leg(lg):
+                        self.at((a.toordinal(), 2, 0, plan_key(i), 0), 'legq', (i, lg, qs))
+                return
         for lg in i.legs:
             self.sched_leg_hole(i, lg, qs)
 
     def sched_leg_hole(self, i, lg, qs):
+        if zero_leg(lg) and not isinstance(i.exists, Hole):
+            return
         d = lg.day if isinstance(lg.day, datetime.date) else day_lo(i.day)
         if d is None or d < self.start:
             d = self.start

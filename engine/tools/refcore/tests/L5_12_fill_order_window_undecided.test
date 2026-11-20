@@ -2,6 +2,9 @@
 # §5.12 Sort: "An order that can't be decided (a hole) is refused (RUN-ORDER)"; L §8.4 RUN-ORDER `fill <f>: the order
 # of <arc> is a hole`. Two lots dated by overlapping windows (2027-02-01 .. 2027-02-28, 2027-02-10 .. 2027-03-15):
 # the fill's sort can't order them, and every take is refused (the arc named is the one the sort met).
+# tally 2.2.1 (#213, S-213; L §5.12 step 2: "but where only a window leaves it open it is HOLE-IMPRECISE (§4.4)"): the
+# order is the windows' hole, not RUN-ORDER: on the days they differ the takes are 1, 0, 0, 1, on a day both lots share
+# the tie changes a take (RUN-TIE), a refusal only some days give; every take is the hole naming both days.
 === m.tally
 model m
   tally 2
@@ -28,11 +31,19 @@ version v
   day[x2] = window(2027-02-10, 2027-03-15)
 ask t: f.taken[l, c] for l in lots over .., c in lots over ..
 === expect
-t (l = lot[x1], c = lot[x1]): refused: RUN-ORDER fill f: the order of the arc ...
+t (l = lot[x1], c = lot[x1]): ?"date within window(2027-02-10, 2027-03-15) not precise enough for the order of fill f" (day[x2])
+  unknown day: day[x1]
+  unknown day: day[x2]
   cut 2027-01-01
-t (l = lot[x1], c = lot[x2]): refused: RUN-ORDER fill f: the order of the arc ...
+t (l = lot[x1], c = lot[x2]): ?"date within window(2027-02-10, 2027-03-15) not precise enough for the order of fill f" (day[x2])
+  unknown day: day[x1]
+  unknown day: day[x2]
   cut 2027-01-01
-t (l = lot[x2], c = lot[x1]): refused: RUN-ORDER fill f: the order of the arc ...
+t (l = lot[x2], c = lot[x1]): ?"date within window(2027-02-10, 2027-03-15) not precise enough for the order of fill f" (day[x2])
+  unknown day: day[x1]
+  unknown day: day[x2]
   cut 2027-01-01
-t (l = lot[x2], c = lot[x2]): refused: RUN-ORDER fill f: the order of the arc ...
+t (l = lot[x2], c = lot[x2]): ?"date within window(2027-02-10, 2027-03-15) not precise enough for the order of fill f" (day[x2])
+  unknown day: day[x1]
+  unknown day: day[x2]
   cut 2027-01-01

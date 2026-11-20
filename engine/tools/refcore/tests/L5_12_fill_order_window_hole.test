@@ -1,0 +1,94 @@
+# tally 2.2.1 (#213, S-213), L §5.12 step 2: "An order that can't be decided (a hole) is refused (RUN-ORDER), but
+# where only a window leaves it open it is HOLE-IMPRECISE (§4.4): no day of the window gives the refusal". buy_a is
+# dated d_a = window(2026-02-01, 2026-02-28), buy_b 2026-02-10: under fifo the arcs' order depends on d_a, and pinned
+# days give 1 000.00 or 1 200.00 PLN, so the takes and the cost are the hole naming d_a. tally 2.2 refused them
+# (RUN-ORDER fill matched: the order of the arc (buy_b; sell) is a hole) (the planner's 213/f1.tally).
+=== f1.tally
+model f1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+kind funds: unit
+kind trades: event certain
+  leg units: funds
+  leg cash: PLN
+  attr seq: int
+kind purchases: trades
+kind sales: trades
+kind pockets: place one min 0
+axis method
+  fifo "first in, first out"
+  lifo "last in, first out"
+place konto: accounts PLN lives 2026-01-01..
+place market: outside lives 1900-01-01..
+input d_a: date
+input d_b: date
+input d_s: date
+input n_a: num fa
+input p_a: money PLN
+input p_b: money PLN
+input p_s: money PLN
+
+move buy_a: purchases
+  on d_a
+  attr seq = 1
+  leg units from market to pocket amount n_a
+  leg cash from konto to market amount p_a
+
+move buy_b: purchases
+  on d_b
+  attr seq = 1 + 1
+  leg units from market to pocket amount n_a
+  leg cash from konto to market amount p_b
+
+move sell: sales
+  on d_s
+  attr seq = 1 + 1 + 1
+  leg units from pocket to market amount n_a
+  leg cash from market to konto amount p_s
+
+fill matched
+  supply b.units.amount for b in purchases over ..
+  demand x.units.amount for x in sales over ..
+  arc b.day <= x.day
+  order (if method == fifo then days_between(d_s, b.day) else days_between(b.day, d_s)) ties by (b.seq, x.seq)
+
+def cost[x in sales]: money PLN = round(sum(matched.taken[b, x] * b.cash.amount / b.units.amount for b in purchases over ..), minor(PLN), half-even) at x.day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  funds + [fa] lives 2020-01-01..
+  pockets + [pocket] fa lives 2026-01-01..
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pocket] = 0 fa at 2026-01-01 start "s"
+  d_a = window(2026-02-01, 2026-02-28) "s"
+  d_b = 2026-02-10 "s"
+  d_s = 2026-03-10 "s"
+  n_a = 10 fa "s"
+  p_a = 1000.00 PLN "s"
+  p_b = 1200.00 PLN "s"
+  p_s = 1500.00 PLN "s"
+
+ask c: cost[x] for x in sales over ..
+ask c_fifo: cost[x] for x in sales over .. with method = fifo
+ask t: matched.taken[b, x] for b in purchases over .., x in sales over ..
+=== expect
+c (x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+  unknown day: d_a
+  cut 2026-01-01
+c_fifo (x = sell): ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+  pinned: method = fifo
+  unknown day: d_a
+  cut 2026-01-01
+t (b = buy_a, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+  unknown day: d_a
+  cut 2026-01-01
+t (b = buy_b, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+  unknown day: d_a
+  cut 2026-01-01
