@@ -887,6 +887,7 @@ impl Engine {
         }
         inst.exists = body.exists;
         inst.legs = body.legs;
+        inst.leg_reads = body.leg_reads;
         inst.attrs = body.attrs;
         inst.for_period = body.for_period;
         inst.fulfils = body.fulfils;

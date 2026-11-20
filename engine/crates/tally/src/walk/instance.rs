@@ -502,6 +502,8 @@ pub struct Inst {
     pub fulfils: Option<Value>,
     /// What reading its day met (refcore's `day_coll`): what a read of its `day` brings.
     pub day_coll: Collected,
+    /// What reading each leg met, by the leg's name (S3, P43 on #241).
+    pub leg_reads: BTreeMap<String, Collected>,
     /// Its place in the movement order.
     pub order: Order,
     /// For a hole booking a later version answered: the cut that version is known from and
@@ -568,6 +570,7 @@ impl Inst {
             obs: Vec::new(),
             fulfils: None,
             day_coll: Collected::default(),
+            leg_reads: BTreeMap::new(),
             order: Order {
                 day: None,
                 stratum: mv.stratum,

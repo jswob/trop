@@ -917,11 +917,7 @@ impl Engine {
                     others.push(obs_side(o));
                 }
                 Moving::Plan(i) => {
-                    self.absorb(if *fact == Fact::Day {
-                        &i.day_coll
-                    } else {
-                        &i.coll
-                    });
+                    self.absorb(&reads_of_fact(i, fact));
                     others.push(inst_side(i));
                 }
                 Moving::Adj(_) | Moving::Pad(..) => {}
@@ -1228,6 +1224,24 @@ fn leg_record(m: &Reality, lg: &LegVal) -> Result<Value, Stop> {
         ),
         ("day".to_owned(), day),
     ]))
+}
+
+/// What instance `i` read for fact `fact` of a movement stated `same`: its day's reads, one
+/// leg's, every leg's, or all it read; a leg whose reads no evaluation kept gives all (L §8.2
+/// One read set; S3, P43 on #241).
+fn reads_of_fact(i: &Inst, fact: &Fact) -> Collected {
+    match fact {
+        Fact::Day => i.day_coll.clone(),
+        Fact::Leg(name) => i.leg_reads.get(name).unwrap_or(&i.coll).clone(),
+        Fact::Amounts if !i.leg_reads.is_empty() => {
+            let mut out = Collected::default();
+            for reads in i.leg_reads.values() {
+                out.merge(reads);
+            }
+            out
+        }
+        Fact::Amounts | Fact::Any => i.coll.clone(),
+    }
 }
 
 /// A leg of a movement stated `same` whose sides disagree on its amount, as a record: its
