@@ -18,7 +18,7 @@ use std::collections::BTreeSet;
 use super::adjust::Adjustment;
 use super::observe::Obs;
 use super::reading::Pad;
-use super::same::{Groups, and_list, inst_side, kept_once, obs_side, sides_differ};
+use super::same::{Fact, Groups, and_list, inst_side, kept_once, obs_side, sides_differ};
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
@@ -262,6 +262,19 @@ impl Engine {
                 && rests_in(&x, sp)
             {
                 return Err(Stop::Refused(e));
+            }
+            // a movement stated same is read from both sides: where their days fall on both
+            // sides of the span, whether it is a member is their day's hole (N4, P36 on #241)
+            let side = match &x {
+                Moving::Plan(i) => Some(inst_side(i)),
+                Moving::Obs(o) => Some(obs_side(o)),
+                Moving::Adj(_) | Moving::Pad(..) => None,
+            };
+            if let Some(row) = side
+                && let Some(h) = self.same_member_hole(m, row, (x.day().as_ref(), sp, ctx.cut))?
+            {
+                out.push((x, Some(h)));
+                continue;
             }
             let mut st = match x.day() {
                 None => {
@@ -840,6 +853,29 @@ impl Engine {
             Moving::Plan(i) => inst_side(i),
             Moving::Adj(_) | Moving::Pad(..) => return Ok(None),
         };
+        // per fact: a day read takes the day alone, a leg's its amount (Q3, P36 on #241)
+        let fact = match leg {
+            Some(name) => Fact::Leg(name.to_owned()),
+            None => Fact::Day,
+        };
+        self.same_hole(m, row, &fact, cut)
+    }
+
+    /// The `HOLE-SAME` of side `row` (an id, a day where it is one, legs) on fact `fact`, where
+    /// the other members of its `same` group disagree with it, each side's reads of the fact
+    /// taken; the hole of a window the comparison doesn't decide (refcore's `same_rows_hole`;
+    /// tally 2.2.1's 219.1, B2, N4, Q1, Q3). L §6.1, §8.1, §8.2, §4.4.
+    ///
+    /// # Errors
+    ///
+    /// A number error printing an amount; a refusal reading the group or a member.
+    pub(crate) fn same_hole(
+        &mut self,
+        m: &Reality,
+        row: (&str, Option<Day>, &[LegVal]),
+        fact: &Fact,
+        cut: Day,
+    ) -> Result<Option<Hole>, Stop> {
         let groups = self.same_groups(m, cut)?;
         let Some(group) = groups.get(row.0) else {
             return Ok(None);
@@ -864,7 +900,11 @@ impl Engine {
                     others.push(obs_side(o));
                 }
                 Moving::Plan(i) => {
-                    self.absorb(if leg.is_none() { &i.day_coll } else { &i.coll });
+                    self.absorb(if *fact == Fact::Day {
+                        &i.day_coll
+                    } else {
+                        &i.coll
+                    });
                     others.push(inst_side(i));
                 }
                 Moving::Adj(_) | Moving::Pad(..) => {}
@@ -873,7 +913,40 @@ impl Engine {
         if others.is_empty() {
             return Ok(None);
         }
-        sides_differ(m, row, &others, leg)
+        sides_differ(m, row, &others, fact)
+    }
+
+    /// Whether span `sp` holds side `row` of a movement stated `same`, `day` its own day: none
+    /// where every side's day is in the span or none is; else their day's hole, `HOLE-SAME` or
+    /// a window's the comparison doesn't decide, never one side's day (L §6.1, §5.19 Bindings;
+    /// N4, P36 on #241).
+    ///
+    /// # Errors
+    ///
+    /// A refusal reading the group or a member.
+    pub(crate) fn same_member_hole(
+        &mut self,
+        m: &Reality,
+        row: (&str, Option<Day>, &[LegVal]),
+        (day, sp, cut): (Option<&Dated>, &Span, Day),
+    ) -> Result<Option<Hole>, Stop> {
+        let groups = self.same_groups(m, cut)?;
+        let Some(group) = groups.get(row.0) else {
+            return Ok(None);
+        };
+        let mut inside = vec![day_in(day, sp)];
+        for y in group.iter().filter(|y| y.as_str() != row.0) {
+            let all = self.observations(m, cut)?;
+            if let Some(o) = all.iter().find(|o| o.id == *y) {
+                inside.push(day_in(Some(&Dated::Day(o.day)), sp));
+            } else if let Some(Moving::Plan(p)) = self.planned_by_id(m, y, cut)? {
+                inside.push(day_in(p.day.as_ref(), sp));
+            }
+        }
+        if inside.iter().all(|b| *b == Some(true)) || inside.iter().all(|b| *b == Some(false)) {
+            return Ok(None);
+        }
+        self.same_hole(m, row, &Fact::Day, cut)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none
@@ -1159,6 +1232,16 @@ pub(super) fn row_key(o: &Obs) -> &str {
         .and_then(|r| r.strip_prefix('['))
         .and_then(|r| r.strip_suffix(']'))
         .unwrap_or(&o.id)
+}
+
+/// Whether span `sp` holds a movement on `day`: a day in it or not, a window as
+/// [`window_member`] takes it; none for a hole day or none. L §4.4, §5.19 Bindings.
+fn day_in(day: Option<&Dated>, sp: &Span) -> Option<bool> {
+    match day? {
+        Dated::Day(d) => Some(sp.contains(*d)),
+        Dated::Window(w) => window_member(w, sp),
+        Dated::Hole(_) => None,
+    }
 }
 
 /// Whether a movement dated by window `w` is a member of a binding over span `sp`: true

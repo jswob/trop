@@ -17,7 +17,7 @@ use super::plan::{invariant, qty_value};
 use super::reads::refuse;
 use super::state::{LegOut, Progress};
 use crate::base::Run;
-use crate::book::{Obs, once_obs, same_differ};
+use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
@@ -143,6 +143,14 @@ impl Engine {
             if i.status == Status::Uncertain {
                 continue;
             }
+            // a movement stated same whose sides' days fall on both sides of the span (N4)
+            if let Some(h) =
+                self.same_member_hole(m, inst_side(i), (i.day.as_ref(), sp, ctx.cut))?
+            {
+                acc.met.merge(&i.coll);
+                acc.holes.push(h);
+                continue;
+            }
             let day = match &i.day {
                 Some(Dated::Hole(h)) => {
                     acc.holes.push(h.clone());
@@ -225,6 +233,23 @@ impl Engine {
                     text: i.id.clone(),
                     figure: String::new(),
                 });
+            }
+            // flows of a movement stated same reads it from both sides: where they disagree it
+            // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241)
+            // per fact: one leg's flows read its amount and the day (Q3)
+            let facts = match leg {
+                Some(name) => vec![Fact::Leg(name.to_owned()), Fact::Day],
+                None => vec![Fact::Any],
+            };
+            let mut same = None;
+            for fact in &facts {
+                if same.is_none() {
+                    same = self.same_hole(m, inst_side(i), fact, ctx.cut)?;
+                }
+            }
+            if let Some(h) = same {
+                acc.holes.push(h);
+                continue;
             }
             for lg in i.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
                 let q = match &lg.amount {

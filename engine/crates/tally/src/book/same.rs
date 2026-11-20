@@ -26,12 +26,12 @@ use super::observe::{Obs, observed_row_seen};
 use super::same_booking::{EndBook, Member};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Ctx, Engine, num_stop};
-use crate::hole::Hole;
+use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MvRef, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, Inst, LegVal, invariant, qty_value};
+use crate::walk::{Amount, Dated, DayWindow, End, Inst, LegVal, invariant, qty_value};
 
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
@@ -312,7 +312,37 @@ pub fn same_differ(
     leg: Option<&str>,
 ) -> Result<Option<Hole>, Stop> {
     let others: Vec<(&str, Option<Day>, &[LegVal])> = others.iter().map(|o| obs_side(o)).collect();
-    sides_differ(m, obs_side(row), &others, leg)
+    let fact = match leg {
+        Some(name) => Fact::Leg(name.to_owned()),
+        None => Fact::Any,
+    };
+    sides_differ(m, obs_side(row), &others, &fact)
+}
+
+/// The fact of movements stated `same` a read takes: any of their legs' amounts and days, the
+/// day alone, or one leg's amount and day. `HOLE-SAME` is per fact: a read of a fact the sides
+/// agree on is its value (L §6.1, "a fact on which they disagree"; Q3, P36 on #241).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Fact {
+    /// Every leg's amount and day: a booking, `flows`, a binding's count.
+    Any,
+    /// The day alone: a read of `m.day`.
+    Day,
+    /// The amount and day of the leg named.
+    Leg(String),
+}
+
+/// How the days of a class's legs compare: agreed, two that can't be one day (`HOLE-SAME`'s
+/// figures), or a window a comparison doesn't decide (L §4.4, "a comparison is decided when it
+/// holds for every day its operands can take, a window taken with its own name once"; Q1,
+/// P36 on #241).
+enum Days {
+    /// Every day agrees, or a side's day is a hole, which holes the read itself.
+    Agree,
+    /// Two can't be one day: each side's day as it prints.
+    Differ(Vec<String>),
+    /// A window holds the other side's day and more: the comparison's hole.
+    Undecided(Hole),
 }
 
 /// [`same_differ`] over sides, each an id, a day where it is one and legs ([`obs_side`],
@@ -328,10 +358,12 @@ pub(crate) fn sides_differ(
     m: &Reality,
     (row_id, row_day, legs): (&str, Option<Day>, &[LegVal]),
     others: &[(&str, Option<Day>, &[LegVal])],
-    leg: Option<&str>,
+    fact: &Fact,
 ) -> Result<Option<Hole>, Stop> {
     for mine in legs {
-        if leg.is_some_and(|name| mine.name != name) {
+        if let Fact::Leg(name) = fact
+            && mine.name != *name
+        {
             continue;
         }
         let mut class: Vec<(&str, &LegVal)> = vec![(row_id, mine)];
@@ -345,14 +377,23 @@ pub(crate) fn sides_differ(
         }
         // the rows in id order (L §8.1 HOLE-SAME, §2.5; P50)
         class.sort_by_cached_key(|(o, _)| m.id_order(o));
-        let (what, figures) = if let Some(figures) = amounts_differ(m, &class)? {
-            (format!("the amount of {}", mine.name), figures)
-        } else if let Some(figures) = days_differ(&class) {
-            (format!("the day of {}", mine.name), figures)
-        } else {
-            continue;
-        };
         let ids: Vec<String> = class.iter().map(|(o, _)| (*o).to_owned()).collect();
+        let amounts = match fact {
+            Fact::Day => None,
+            Fact::Any | Fact::Leg(_) => amounts_differ(m, &class)?,
+        };
+        let (what, figures) = if let Some(figures) = amounts {
+            (format!("the amount of {}", mine.name), figures)
+        } else if matches!(fact, Fact::Leg(_)) {
+            // a leg's amount is its fact: the days are another (Q1, Q3)
+            continue;
+        } else {
+            match days_differ(&class, &ids) {
+                Days::Differ(figures) => (format!("the day of {}", mine.name), figures),
+                Days::Undecided(hole) => return Ok(Some(hole)),
+                Days::Agree => continue,
+            }
+        };
         let parts: Vec<String> = figures
             .iter()
             .zip(&ids)
@@ -412,18 +453,53 @@ pub(super) fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Sto
 }
 
 /// The legs' days as they print where every one is a day and they don't all agree. L §5.19.
-fn days_differ(class: &[(&str, &LegVal)]) -> Option<Vec<String>> {
-    let mut days = Vec::with_capacity(class.len());
-    for (_, lg) in class {
-        let Dated::Day(day) = &lg.day else {
-            return None;
-        };
-        days.push(*day);
+/// Each compared with the first: two days, a day a window holds, two windows that overlap;
+/// one window's name on both sides is one day, and a hole day agrees, holing the read itself
+/// (L §4.4; Q1, P36 on #241).
+fn days_differ(class: &[(&str, &LegVal)], ids: &[String]) -> Days {
+    let Some(((first_id, first), rest)) = class.split_first() else {
+        return Days::Agree;
+    };
+    let mut differ = false;
+    let mut open: Option<(&str, &DayWindow)> = None;
+    for (id, lg) in rest {
+        match (&first.day, &lg.day) {
+            (Dated::Hole(_), _) | (_, Dated::Hole(_)) => {}
+            (Dated::Day(a), Dated::Day(b)) => differ |= a != b,
+            (Dated::Window(a), Dated::Window(b)) if a.value == b.value => {}
+            (Dated::Window(w), Dated::Day(d)) | (Dated::Day(d), Dated::Window(w))
+                if *d < w.lo || *d > w.hi =>
+            {
+                differ = true;
+            }
+            (Dated::Window(a), Dated::Window(b)) if a.hi < b.lo || b.hi < a.lo => differ = true,
+            (Dated::Window(w), _) => open = open.or(Some((first_id, w))),
+            (_, Dated::Window(w)) => open = open.or(Some((id, w))),
+        }
     }
-    if days.iter().all(|d| Some(d) == days.first()) {
-        return None;
+    if differ {
+        return Days::Differ(class.iter().map(|(_, lg)| day_shown(&lg.day)).collect());
     }
-    Some(days.into_iter().map(Day::text).collect())
+    match open {
+        Some((id, w)) => {
+            let text = format!(
+                "date within {} not precise enough for the day of {}",
+                w.question,
+                and_list(ids)
+            );
+            Days::Undecided(Hole::asked(&text, id).carrying(&w.value.carry))
+        }
+        None => Days::Agree,
+    }
+}
+
+/// A leg's day as `HOLE-SAME` prints it: the day, or the window. L §2.4, §8.1.
+fn day_shown(day: &Dated) -> String {
+    match day {
+        Dated::Day(d) => d.text(),
+        Dated::Window(w) => w.shown.clone(),
+        Dated::Hole(_) => "?".to_owned(),
+    }
 }
 
 /// One leg of a realised movement as its rows build it (refcore's `m_c_observed`, a leg).
@@ -691,6 +767,10 @@ impl Engine {
         place: &str,
     ) -> Result<EndBook, Stop> {
         let mover = Member::Obs(o.clone());
+        // a row with two legs at the place carries both legs' questions (L §8.1, a hole
+        // "carries the questions of every operand"; N6, P36 on #241)
+        let mut holes: Vec<Hole> = Vec::new();
+        let mut skip = false;
         for lg in &o.legs {
             let books = match self.same_ends(m, id, (&mover, lg)) {
                 Ok(books) => books,
@@ -701,12 +781,21 @@ impl Engine {
                 if end.place() != Some(place) {
                     continue;
                 }
-                if let EndBook::Skip | EndBook::Hole(_) = book {
-                    return Ok(book);
+                match book {
+                    EndBook::Hole(h) => holes.push(h),
+                    EndBook::Skip => skip = true,
+                    EndBook::Wait(_) | EndBook::Written => {}
                 }
             }
         }
-        Ok(EndBook::Written)
+        if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            return Ok(EndBook::Hole(h));
+        }
+        Ok(if skip {
+            EndBook::Skip
+        } else {
+            EndBook::Written
+        })
     }
 
     /// Of the observations `good` whose links to instance `tid` stand, those two unjoined

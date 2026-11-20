@@ -334,13 +334,20 @@ impl Engine {
                 // a plan instance modelled past is never booked (L §5.19 Coverage)
                 continue;
             }
+            let mut theirs = Vec::new();
             for (li, sj) in self.touching(m, id, o, (p, lg.unit.as_deref()))? {
                 let g = o
                     .legs()
                     .get(li)
                     .ok_or_else(|| invariant("a leg the member lacks"))?;
-                touch.push((o, g, sj));
+                theirs.push((g, sj));
             }
+            // each leg is compared with the other side's of its name, where it states one: two
+            // movements that agree in full leave no hole (L §6.1; N6, P36 on #241)
+            if theirs.iter().any(|(g, _)| g.name == lg.name) {
+                theirs.retain(|(g, _)| g.name == lg.name);
+            }
+            touch.extend(theirs.into_iter().map(|(g, sj)| (o, g, sj)));
         }
         let mut movers: Vec<&str> = touch.iter().map(|(x, _, _)| x.id()).collect();
         movers.dedup();
