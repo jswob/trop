@@ -592,9 +592,16 @@ class Walk:
                         self.at((d.toordinal(), 3, mi.stratum, qid, 0), 'decday', (mi, d))
                     self.decday[k].append(i)
                 elif isinstance(d, Iv) and isinstance(d.lo, datetime.date):
+                    frm = eng.scen_from(i)
+                    if frm is not None and d.hi < frm:
+                        # a scenario's move books nothing before its from (L §6.4): a window before it is left out
+                        if not self.proj:
+                            self.note_leftout(i)
+                        continue
                     q = carry_hole(Hole([('date within %s not precise enough for the day of %s' % (
                         d.window_text(), i.id), i.id)]), d)
-                    self.dec_hole(i, K_before(max(d.lo, S)), q, ctx)
+                    # across the from, the hole starts there: nothing before it changes (L §6.4, §4.4; P26)
+                    self.dec_hole(i, K_before(max(d.lo, S, frm or S)), q, ctx)
                     if d.hi <= self.end:
                         # a window whose last day is t has ended before t's closing readings (E §4.2 step 4; #218)
                         self.at((d.hi.toordinal(), 4, 0, i.id, 0), 'dec_win_end', (i, frozenset(q.qs)))

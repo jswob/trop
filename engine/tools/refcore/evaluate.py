@@ -3780,7 +3780,9 @@ class Engine:
             if v in ivs and isinstance(v.lo, Num) and v.lo.isint and v.hi.isint and v.hi.q - v.lo.q <= 400:
                 opts.append([Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
             elif v in ivs:
-                opts.append([v.lo, v.hi])
+                # its two ends, and 0 where the interval crosses it (abs, an even pow: L §4.4 l.668, P25)
+                opts.append([v.lo, v.hi] + ([zero_like(v.lo)] if isinstance(v.lo, Num) and v.lo.q < 0 < v.hi.q
+                                            else []))
             else:
                 opts.append([v])
         outs, errs = [], []
@@ -3964,8 +3966,8 @@ class Engine:
         a = self.as_date_or_iv(a, 'overlap_days')
         b = self.as_date_or_iv(b, 'overlap_days')
         p = self.period_arg(k, 'overlap_days')
-        if isinstance(a, Iv) and isinstance(b, Iv):
-            raise self.imprecise(a, 'overlap_days of two windows')
+        # monotone in each window, so the interval of its values from their ends, two windows too (L §4.4 l.668;
+        # P25)
         return self.lift(lambda x, y: Int(overlap_days(x, y, p)), a, b)
 
     def c_age(self, n, env, ctx):
@@ -4105,7 +4107,11 @@ class Engine:
         self.no_none(u, 'round')
         self.no_none(mode, 'round')
         if isinstance(x, Iv):
-            raise self.imprecise(x, 'round')
+            # round is monotone in x: the interval of its values (L §4.4 l.668; P25)
+            return self.lift_values('round', lambda xv: self.round_one(n, xv, u, mode), x)
+        return self.round_one(n, x, u, mode)
+
+    def round_one(self, n, x, u, mode):
         if not isinstance(mode, Code) or mode.kind != 'rounding':
             raise refuse('LOAD-UNIT', 'round: the mode is %s' % fmt(mode))
         if u.q <= 0:
@@ -4763,6 +4769,15 @@ def band_x(x, m=None):
         from .loader import order_key
         return order_key(x, m)
     raise refuse('LOAD-UNIT', 'a band argument %s' % fmt(x))
+
+
+def zero_like(x):
+    """0 in x's type and unit."""
+    import copy
+    z = copy.copy(x)
+    z.q = Fraction(0)
+    z.enc = None
+    return z
 
 
 def one_day(v):

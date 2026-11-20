@@ -165,6 +165,10 @@ def m_trans_call(self, n, vals, to, ctx, env=None):
         return h
     for v in vals:
         self.no_none(v, name)
+    from .values import Iv
+    if any(isinstance(v, Iv) for v in vals):
+        # an argument computed from a window: the interval of its values (L §4.4 l.668; P25)
+        return self.lift_values(name, lambda *vs: self.trans_call(n, list(vs), to, ctx, env), *vals)
     idx = [i for i, v in enumerate(vals) if isinstance(v, Num)]
 
     def at(qs):
