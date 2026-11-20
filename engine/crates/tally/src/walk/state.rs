@@ -857,6 +857,36 @@ impl Walk {
         }
     }
 
+    /// What a pad's reset at `at` keeps beside its reading's reads: each open instance's
+    /// since the place's last reset, in its unit and in every unit, with its `open:` line, for
+    /// the gap a movement left unbooked is the pad's size (refcore's `open_kept`; L §8.2 One
+    /// read set, the `open:` row; 220.2 on #241). E §6.1.
+    pub(crate) fn open_kept(
+        &self,
+        m: &Reality,
+        (place, unit): (&str, &str),
+        at: At,
+        into: &mut Collected,
+    ) {
+        for u in [unit, ALL] {
+            let Some(log) = self.logs.get(&(place.to_owned(), u.to_owned())) else {
+                continue;
+            };
+            let (st, _) = self.state(m, place, u, at);
+            for (j, e) in log.ents.iter().enumerate().take_while(|(_, e)| e.at <= at) {
+                let before_reset = st.rst.is_some_and(|r| j < r);
+                let open = e.reg.iter().any(|r| r.word == "open");
+                if before_reset || !matches!(e.change, Change::Mark) || !open {
+                    continue;
+                }
+                if let Some(c) = &e.coll {
+                    into.merge(c);
+                }
+                into.entries.extend(e.reg.iter().cloned());
+            }
+        }
+    }
+
     /// The register of a place's log through entry `i`: every entry's since the last reset,
     /// the movement's evaluation and the entry's own (refcore's `cum`). L §8.2.
     pub fn cum(&mut self, place: &str, unit: &str, i: usize) -> Collected {

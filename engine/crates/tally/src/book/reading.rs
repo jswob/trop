@@ -54,6 +54,8 @@ pub struct Pad {
     pub leg: LegVal,
     /// What its amount rests on: the booked balance's register and the reading's.
     pub coll: Collected,
+    /// Its own `pad:` line, which a field read of it lists (L §8.2, the `pad:` row; 237.1).
+    pub reg: Collected,
 }
 
 /// A reading row kept as the latest of its key: when it became known, and the row with its
@@ -349,9 +351,7 @@ impl Engine {
                 anchored.sign_anchor(m, at, r)
             }
             GapRole::Pad(other) => {
-                let pad = make_pad(r, &other, &gap, (bc, at))?;
-                // a member of a binding over pads from its point (L §5.14.1)
-                self.walk_mut(id)?.pads.push((pad.clone(), at));
+                let mut pad = make_pad(r, &other, &gap, (bc, at))?;
                 let text = format!(
                     "{} {}, {} of {}",
                     r.place,
@@ -364,6 +364,9 @@ impl Engine {
                     text,
                     figure: String::new(),
                 }];
+                pad.reg.entries.extend(reg.iter().cloned());
+                // a member of a binding over pads from its point (L §5.14.1)
+                self.walk_mut(id)?.pads.push((pad.clone(), at));
                 let ends = Ends {
                     from: pad.leg.from.place() == Some(other.as_str()),
                     to: pad.leg.to.place() == Some(other.as_str()),
@@ -394,8 +397,11 @@ impl Engine {
                     .sub
                     .checked_add(1)
                     .ok_or_else(|| invariant("a reading's point"))?;
+                // what decided an open instance doesn't count stays read past the reset (220.2)
+                let mut kept = r.coll.clone();
+                padded.open_kept(m, (&r.place, &r.unit), at, &mut kept);
                 let mut ent = Ent::new(at.with_sub(sub), Change::Reset { val, qs });
-                ent.coll = Some(r.coll.clone());
+                ent.coll = Some(kept);
                 ent.reg = reg;
                 ent.mv = Some(pad.id.clone());
                 // the reading's end of the pad, which `flows` of the place counts: the gap, a
@@ -468,6 +474,7 @@ fn make_pad(
             src: None,
         },
         coll,
+        reg: Collected::default(),
     })
 }
 

@@ -683,7 +683,11 @@ impl Engine {
             (Moving::Plan(i), "day") => self.absorb(&i.day_coll),
             (Moving::Plan(i), _) => self.absorb(&i.coll),
             (Moving::Obs(o), _) => self.absorb(&o.coll),
-            (Moving::Pad(p, _), _) => self.absorb(&p.coll),
+            // a binding that counts a pad lists it (L §8.2, the `pad:` row; 237.1 on #241)
+            (Moving::Pad(p, _), _) => {
+                self.absorb(&p.coll);
+                self.absorb(&p.reg);
+            }
         }
         match &src {
             Moving::Plan(i) => {
