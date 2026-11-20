@@ -14,7 +14,7 @@
 use std::collections::BTreeSet;
 
 use super::observe::Obs;
-use super::same::{and_list, shown};
+use super::same::{DayCmp, and_list, compare_days, shown, undecided_hole};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine, Entry, num_stop};
 use crate::hole::Hole;
@@ -354,10 +354,26 @@ impl Engine {
         if movers.len() < 2 {
             return Ok(EndBook::Written);
         }
-        let agree = touch
+        let amounts_agree = touch
             .iter()
             .skip(1)
-            .all(|(_, g, sj)| *sj == side && g.amount == lg.amount && g.day == lg.day);
+            .all(|(_, g, sj)| *sj == side && g.amount == lg.amount);
+        // the days by the one comparison of S1: a hole day's question, the undecided days'
+        // questions for a balance and no `HOLE-SAME` of equal amounts (P43 on #241)
+        let mut sides: Vec<(&str, &Dated)> =
+            touch.iter().map(|(x, g, _)| (x.id(), &g.day)).collect();
+        sides.sort_by_cached_key(|(x, _)| m.id_order(x));
+        let agree = match compare_days(&sides) {
+            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h)),
+            DayCmp::Undecided(unknown) if amounts_agree => {
+                return Ok(match undecided_hole(&unknown, "a balance") {
+                    Some(h) => EndBook::Hole(h),
+                    None => EndBook::Written,
+                });
+            }
+            DayCmp::Agree => amounts_agree,
+            DayCmp::Differ(_) | DayCmp::Hole(_) | DayCmp::Undecided(_) => false,
+        };
         if agree {
             let mut latest: Option<(Option<At>, &str)> = None;
             for (x, g, _) in &touch {

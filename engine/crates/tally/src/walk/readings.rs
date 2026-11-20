@@ -342,12 +342,42 @@ impl Walk {
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
+        let like = Ent::new(at, Change::Bad(err.clone()));
+        self.refuse_leg_as(m, (movement, lg, read), (err, &like))
+    }
+
+    /// [`Walk::refuse_leg`] of a refusal that rests on nothing under a window's hole, a
+    /// lifespan's, which stands beside one (P31 said whole, P41; F6). L §8 l.2217.
+    ///
+    /// # Errors
+    ///
+    /// As [`Walk::add`].
+    pub(crate) fn refuse_leg_own(
+        &mut self,
+        m: &Reality,
+        (movement, lg, read): (&str, &LegVal, &Collected),
+        err: &Refusal,
+        at: At,
+    ) -> Result<(), Stop> {
+        let mut like = Ent::new(at, Change::Bad(err.clone()));
+        like.own = true;
+        self.refuse_leg_as(m, (movement, lg, read), (err, &like))
+    }
+
+    /// A leg refused as it is booked, its entry at each end made from `like` (refcore's
+    /// `bad_legs`, `add`). E §4.2 step 5.
+    fn refuse_leg_as(
+        &mut self,
+        m: &Reality,
+        (movement, lg, read): (&str, &LegVal, &Collected),
+        (err, like): (&Refusal, &Ent),
+    ) -> Result<(), Stop> {
         self.bad_legs
             .insert((movement.to_owned(), lg.name.clone()), err.clone());
         let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
         let pins = super::ends::pins_read(read);
         for p in ends(lg) {
-            let mut ent = Ent::new(at, Change::Bad(err.clone()));
+            let mut ent = like.clone();
             ent.mv = Some(movement.to_owned());
             ent.coll.clone_from(&pins);
             self.add(m, p, &unit, ent)?;

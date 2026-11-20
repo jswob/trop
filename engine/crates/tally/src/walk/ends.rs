@@ -22,7 +22,7 @@ use super::state::{ALL, Change, Ent, HoleLeg, Walk};
 use crate::base::Refusal;
 use crate::eval::Collected;
 use crate::hole::{Hole, spread};
-use crate::model::Reality;
+use crate::model::{MoveInfo, Reality, Target};
 use crate::syntax::Stop;
 
 impl Walk {
@@ -58,6 +58,35 @@ impl Walk {
         let mut ent = Ent::new(at, Change::Bad(err.clone()));
         ent.own = true;
         self.leg_refused(m, (movement, lg, read), &ent)
+    }
+
+    /// Whether decision `mv`'s refusal at `at` may rest on a value under a window's hole: a
+    /// place its `reads` names whose balance there holds a window's question, or a place it
+    /// names by a key or an expression, taken as under it; movements it reads are no place
+    /// (P31 said whole, P41: "a decision's, unless a place it names in `reads` is under the
+    /// hole"; F6). L §8 l.2217, §4.4 l.671.
+    pub(crate) fn reads_under_window(&self, m: &Reality, mv: &MoveInfo, at: At) -> bool {
+        for target in &mv.read_targets {
+            let place = match target {
+                Target::Thing(p) => p,
+                Target::PlaceSec(_) | Target::Unknown => return true,
+                Target::Move(_) | Target::Kind(_) => continue,
+            };
+            let Some(thing) = m.things.get(place) else {
+                return true;
+            };
+            let unit = m.place_unit(thing).unwrap_or_else(|| ALL.to_owned());
+            let st = self.pstate(m, place, &unit, at);
+            if st
+                .questions(None)
+                .as_ref()
+                .and_then(Hole::of_windows)
+                .is_some()
+            {
+                return true;
+            }
+        }
+        false
     }
 
     /// A refused leg's entry `like`, a dated refusal or one no reading ends, at each place it

@@ -579,9 +579,10 @@ fn schedule_decided(
         rank: walk.plan_rank(&inst.order)?,
         ..At::of(day, Step::Plans)
     };
-    // it counts on no day: a read before its day lists what decided it too (P35 on #241)
+    // a read whose prefix reaches its day lists what decided it, whatever the line's form;
+    // one that ends before it never met it (P35, S4 on #241)
     let named: Vec<&str> = places.iter().map(|(p, _)| p.as_str()).collect();
-    walk.note_uncounted(&named, None, &inst.coll);
+    walk.note_decided(&named, day, &inst.coll);
     for (place, unit) in places {
         walk.at(at, Act::Mark(place, unit, None, inst.coll.clone()));
     }

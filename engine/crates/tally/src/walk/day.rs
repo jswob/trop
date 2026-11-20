@@ -424,6 +424,17 @@ impl Engine {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
         }
         let coll = &inst.coll;
+        if let Amount::Refused(r) = &lg.amount
+            && let Some(mv) = m.moves.get(&inst.move_id).filter(|mv| mv.decision)
+        {
+            // a decision's refusal stands beside a window's hole unless a place it reads is
+            // under the hole (P31 said whole, P41; F6)
+            let walk = self.walk_mut(id)?;
+            if walk.reads_under_window(m, mv, at) {
+                return walk.leg_bad(m, (&inst.id, lg, coll), r, at);
+            }
+            return walk.leg_bad_own(m, (&inst.id, lg, coll), r, at);
+        }
         let mut mask = Ends::both();
         if self.stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
@@ -509,6 +520,9 @@ impl Engine {
         let sides = [(&lg.from, -1_i64, mask.from), (&lg.to, 1_i64, mask.to)];
         let mut on: Vec<(String, i64)> = Vec::new();
         let mut err = None;
+        // a lifespan's refusal rests on no balance, so it stands beside a window's hole; the
+        // sign rule's reads the balance (P31 said whole, P41; F6)
+        let mut rests_on_none = false;
         let (mut kept, mut dropped) = (false, !(mask.from && mask.to));
         for (end, sign, on_end) in sides {
             if !on_end {
@@ -549,6 +563,7 @@ impl Engine {
                         lg.name
                     ),
                 ));
+                rests_on_none = true;
                 break;
             }
             kept = true;
@@ -578,6 +593,9 @@ impl Engine {
         }
         let walk = self.walk_mut(id)?;
         if let Some(e) = err {
+            if rests_on_none {
+                return walk.refuse_leg_own(m, (movement, lg, coll), &e, at);
+            }
             return walk.refuse_leg(m, (movement, lg, coll), &e, at);
         }
         let whole = !dropped || mask.whole;

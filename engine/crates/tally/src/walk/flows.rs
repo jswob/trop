@@ -512,7 +512,10 @@ impl Sums {
                     Some(Amount::Hole(h)) => self.count(e, unit, Err(h))?,
                     Some(Amount::Refused(_)) | None => {}
                 },
-                Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
+                // a mark in the span (an open instance, one that doesn't exist): what a balance
+                // lists of it, `flows` lists (S5, P43 on #241; L §8.2 One read set)
+                Change::Mark => self.meet(e),
+                Change::ImpOn(_) | Change::Unperm(_) => {}
             }
         }
         self.holes.extend(open);

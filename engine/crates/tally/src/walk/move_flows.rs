@@ -137,7 +137,11 @@ impl Engine {
             // a movement the span doesn't count: what decided it is in the read set (L §8.2
             // One read set; P35 on #241)
             if i.status == Status::None {
-                acc.met.merge(&i.coll.deciding());
+                // a read of day t reads its prefix through t: one dated after the span's last
+                // day was never met (E §4.2; S4, P43 on #241)
+                if i.day.as_ref().and_then(Dated::lo).is_none_or(|d| d <= last) {
+                    acc.met.merge(&i.coll.deciding());
+                }
                 continue;
             }
             if i.status == Status::Uncertain {
@@ -147,7 +151,8 @@ impl Engine {
             if let Some(h) =
                 self.same_member_hole(m, inst_side(i), (i.day.as_ref(), sp, ctx.cut))?
             {
-                acc.met.merge(&i.coll);
+                // the day's hole holds the day's reads, not the amounts' (S3, P43 on #241)
+                acc.met.merge(&i.day_coll);
                 acc.holes.push(h);
                 continue;
             }
@@ -235,19 +240,13 @@ impl Engine {
                 });
             }
             // flows of a movement stated same reads it from both sides: where they disagree it
-            // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241)
-            // per fact: one leg's flows read its amount and the day (Q3)
-            let facts = match leg {
-                Some(name) => vec![Fact::Leg(name.to_owned()), Fact::Day],
-                None => vec![Fact::Any],
+            // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241); the day only for
+            // membership, above, so the amounts answer (S2, P42, P43 on #241)
+            let fact = match leg {
+                Some(name) => Fact::Leg(name.to_owned()),
+                None => Fact::Amounts,
             };
-            let mut same = None;
-            for fact in &facts {
-                if same.is_none() {
-                    same = self.same_hole(m, inst_side(i), fact, ctx.cut)?;
-                }
-            }
-            if let Some(h) = same {
+            if let Some(h) = self.same_hole(m, inst_side(i), &fact, ctx.cut)? {
                 acc.holes.push(h);
                 continue;
             }
@@ -313,6 +312,9 @@ impl Engine {
                 text: i.id.clone(),
                 figure: String::new(),
             });
+            // what the balance lists of it: its reads, as its mark carries them (S5, P43 on
+            // #241; L §8.2 One read set)
+            acc.met.merge(&i.coll);
         }
         let groups = self.same_groups(m, cut)?;
         for (first, rest) in once_obs(&groups, &obs) {
@@ -369,10 +371,11 @@ impl Engine {
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
     /// running walk's and the walks' it continues, before its point; an instance whose day is
     /// a hole counted as that hole, and one whose day is refused as its refusal, in any span
-    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; outside a decision,
-    /// one dated by a window no walk ran that span `sp` (its last day `last`) reaches, read
-    /// per day of it ([`Engine::window_met`]) (refcore's `flows_move`, its decisions).
-    /// L §5.14.1, §5.14.3, E §4.3, §4.1 step 2.
+    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; one dated by a window
+    /// no walk ran that span `sp` (its last day `last`) reaches, read per day of it at an ask
+    /// line's own read, else the window's hole, inside a decision too ([`Engine::window_met`])
+    /// (refcore's `flows_move`, its decisions; P41, F5). L §5.14.1, §5.14.3, E §4.3, §4.1
+    /// step 2.
     fn decision_runs(
         &mut self,
         m: &Reality,
@@ -401,7 +404,7 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
-                if let (None, Some(Dated::Window(w))) = (ctx.at, &i.day)
+                if let Some(Dated::Window(w)) = &i.day
                     && i.exists != Exists::No
                     && window_in(w, sp, last) != Some(false)
                 {

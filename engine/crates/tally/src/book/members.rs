@@ -558,7 +558,7 @@ impl Engine {
         for mv in decided {
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(self.window_member(m, mv, inst, ctx)?);
+                    out.extend(self.unrun_window(m, mv, inst)?);
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -581,18 +581,17 @@ impl Engine {
         Ok(out)
     }
 
-    /// Decision `mv`'s instance `inst` that no walk ran, read outside a decision: dated by a
-    /// window, a member whose day is the window's hole, or the line read per day of the window
-    /// ([`Engine::window_met`]); else none (E §4.1 step 2; tally 2.2.1 N3; refcore's
-    /// `movements_of`, its `WinDay`).
-    fn window_member(
+    /// Decision `mv`'s instance `inst` that no walk ran: dated by a window, a member whose day
+    /// is the window's hole, or the line read per day of the window ([`Engine::window_met`]),
+    /// inside a decision's walk too, where it is the hole, never left out; else none (E §4.1
+    /// step 2; tally 2.2.1 N3, P41 F5; refcore's `movements_of`, its `WinDay`).
+    fn unrun_window(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
         inst: &Inst,
-        ctx: Ctx,
     ) -> Result<Option<Moving>, Stop> {
-        let (None, Some(Dated::Window(w))) = (ctx.at, &inst.day) else {
+        let Some(Dated::Window(w)) = &inst.day else {
             return Ok(None);
         };
         if inst.exists == Exists::No {
@@ -653,7 +652,9 @@ impl Engine {
     /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
     /// decision, in its walk or one it continues, `RUN-ORDER` where it hasn't run yet; else in
     /// the main walk of the read's timeline, or the instance as planned where that walk didn't
-    /// run it (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2.
+    /// run it, one dated by a window as a binding's member is ([`Engine::unrun_window`])
+    /// (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2, E §4.1
+    /// step 2.
     fn instance_by_id(
         &mut self,
         m: &Reality,
@@ -678,11 +679,17 @@ impl Engine {
         };
         match self.chain_run(walk, id)? {
             Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),
-            None if running => Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::Order),
-                format!("decision {id} is read before it has run"),
-            ))),
-            None => Ok(Some(Moving::Plan(inst))),
+            // dated by a window no walk ran: its fields are the window's, read per day or its
+            // hole, as its membership is, inside a decision's walk too (E §4.1 step 2; tally
+            // 2.2.1 F4, F5, P41)
+            None => match self.unrun_window(m, mv, &inst)? {
+                Some(held) => Ok(Some(held)),
+                None if running => Err(Stop::Refused(Refusal::new(
+                    Code::Run(Run::Order),
+                    format!("decision {id} is read before it has run"),
+                ))),
+                None => Ok(Some(Moving::Plan(inst))),
+            },
         }
     }
 
@@ -758,7 +765,17 @@ impl Engine {
             && let Some(h) =
                 self.same_rows_hole(m, &src, (name != "day").then_some(name), ctx.cut)?
         {
-            return Ok(Value::Hole(h));
+            // per fact: a leg whose amount the sides disagree on is a record whose amount and
+            // day are that hole, its `from` and `to` their own (P42, P43 on #241)
+            let legs: &[LegVal] = match &src {
+                Moving::Plan(i) => &i.legs,
+                Moving::Obs(o) => &o.legs,
+                Moving::Adj(_) | Moving::Pad(..) => &[],
+            };
+            return Ok(match legs.iter().find(|lg| lg.name == name) {
+                Some(lg) if is_leg => same_leg_record(lg, &h),
+                Some(_) | None => Value::Hole(h),
+            });
         }
         match name {
             "day" => Ok(match src.day() {
@@ -900,11 +917,7 @@ impl Engine {
                     others.push(obs_side(o));
                 }
                 Moving::Plan(i) => {
-                    self.absorb(if *fact == Fact::Day {
-                        &i.day_coll
-                    } else {
-                        &i.coll
-                    });
+                    self.absorb(&reads_of_fact(i, fact));
                     others.push(inst_side(i));
                 }
                 Moving::Adj(_) | Moving::Pad(..) => {}
@@ -935,11 +948,19 @@ impl Engine {
             return Ok(None);
         };
         let mut inside = vec![day_in(day, sp)];
+        // the read holds every side's day reads, whatever the membership gives, so their pins
+        // are listed (S2, F7, P43 on #241)
         for y in group.iter().filter(|y| y.as_str() != row.0) {
             let all = self.observations(m, cut)?;
-            if let Some(o) = all.iter().find(|o| o.id == *y) {
-                inside.push(day_in(Some(&Dated::Day(o.day)), sp));
+            let row_of = all
+                .iter()
+                .find(|o| o.id == *y)
+                .map(|o| (o.coll.clone(), o.day));
+            if let Some((coll, row_day)) = row_of {
+                self.absorb(&coll);
+                inside.push(day_in(Some(&Dated::Day(row_day)), sp));
             } else if let Some(Moving::Plan(p)) = self.planned_by_id(m, y, cut)? {
+                self.absorb(&p.day_coll);
                 inside.push(day_in(p.day.as_ref(), sp));
             }
         }
@@ -1203,6 +1224,40 @@ fn leg_record(m: &Reality, lg: &LegVal) -> Result<Value, Stop> {
         ),
         ("day".to_owned(), day),
     ]))
+}
+
+/// What instance `i` read for fact `fact` of a movement stated `same`: its day's reads, one
+/// leg's, every leg's, or all it read; a leg whose reads no evaluation kept gives all (L §8.2
+/// One read set; S3, P43 on #241).
+fn reads_of_fact(i: &Inst, fact: &Fact) -> Collected {
+    match fact {
+        Fact::Day => i.day_coll.clone(),
+        Fact::Leg(name) => i.leg_reads.get(name).unwrap_or(&i.coll).clone(),
+        Fact::Amounts if !i.leg_reads.is_empty() => {
+            let mut out = Collected::default();
+            for reads in i.leg_reads.values() {
+                out.merge(reads);
+            }
+            out
+        }
+        Fact::Amounts | Fact::Any => i.coll.clone(),
+    }
+}
+
+/// A leg of a movement stated `same` whose sides disagree on its amount, as a record: its
+/// `from` and `to` its own, its `amount` and `day` the disagreement's hole (L §5.14, §6.1
+/// `HOLE-SAME` per fact; P42 on #241).
+fn same_leg_record(lg: &LegVal, same: &Hole) -> Value {
+    let end = |e: &End| match e {
+        End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
+        End::Hole(h) => Value::Hole(h.clone()),
+    };
+    Value::Record(vec![
+        ("from".to_owned(), end(&lg.from)),
+        ("to".to_owned(), end(&lg.to)),
+        ("amount".to_owned(), Value::Hole(same.clone())),
+        ("day".to_owned(), Value::Hole(same.clone())),
+    ])
 }
 
 /// An amount as a value: a quantity of its unit, or its hole. L §5.14.

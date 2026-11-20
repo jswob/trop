@@ -670,6 +670,7 @@ impl Engine {
             Ok(b) => {
                 run.inst.exists = b.exists;
                 run.inst.legs = b.legs;
+                run.inst.leg_reads = b.leg_reads;
                 run.inst.attrs = b.attrs;
                 run.inst.for_period = b.for_period;
                 run.inst.fulfils = b.fulfils;

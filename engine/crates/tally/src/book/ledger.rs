@@ -356,25 +356,25 @@ impl Engine {
         for mv in moves {
             insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());
         }
-        // an observation that fulfils a window-dated instance fixes its day, in every ledger:
-        // the month of each observation the cut sees holds it, on the last of the span's, and
-        // a span that holds none of them holds nothing of it (L §4.4, §5.19; N7, P37 on #241)
-        let mut fixed: BTreeMap<String, Vec<Day>> = BTreeMap::new();
-        for o in self.observations(m, cut)? {
+        // the observations that fulfil a window-dated instance fix its day: the last of their
+        // days as known on the model's `on`, the same in every ledger whatever its span or the
+        // ask's cut; its line stands in that day's month only (E §6.3, L §5.19; S6, P43 on #241)
+        let mut fixed: BTreeMap<String, Day> = BTreeMap::new();
+        for o in self.observations(m, m.on)? {
             if let Some(t) = o.target_id() {
-                fixed.entry(t).or_insert_with(Vec::new).push(o.day);
+                let last = fixed.entry(t).or_insert(o.day);
+                *last = (*last).max(o.day);
             }
         }
         for inst in insts {
             let exists = !matches!(inst.status, Status::None | Status::LeftOut);
-            let fixed_days = match &inst.day {
-                Some(Dated::Window(_)) if exists => fixed.get(&inst.id),
+            let fixed_day = match &inst.day {
+                Some(Dated::Window(_)) if exists => fixed.get(&inst.id).copied(),
                 Some(_) | None => None,
             };
-            let in_span = fixed_days.map(|days| last_within(days, span));
-            let day = match in_span {
-                Some(Some(last)) => Some(last),
-                Some(None) => continue,
+            let day = match fixed_day {
+                Some(last) if span.contains(last) => Some(last),
+                Some(_) => continue,
                 None => match model_day(&inst, span)? {
                     Modelled::Skip => continue,
                     Modelled::Undated => None,
@@ -594,18 +594,6 @@ fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
         None if inst.status == Status::Refused => Ok(Modelled::Undated),
         None => Err(invariant("an instance with no day, not refused")),
     }
-}
-
-/// The last of the days an instance's observations fix that falls in the span: the day its
-/// line stands on in that ledger, or none when the span holds none of them. L §4.4, E §6.3.
-fn last_within(days: &[Day], span: &Span) -> Option<Day> {
-    let mut last: Option<Day> = None;
-    for d in days {
-        if span.contains(*d) {
-            last = Some(last.map_or(*d, |l| l.max(*d)));
-        }
-    }
-    last
 }
 
 /// The observations that fulfil each instance and each adjustment, in the observations'
