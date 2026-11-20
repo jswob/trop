@@ -15,7 +15,8 @@ from .lexer import split_lines
 from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, VersionInfo, KindInfo,
                     Entry, ThingInfo, IndexInfo, AxisInfo, BindInfo, Row, InputInfo, RuleVer, DefInfo, Table,
                     BandRow, BandInfo, PRELUDE_PLACE, BUILTIN_INPUTS, BUILTIN_INDEXES, PRELUDE_KINDS,
-                    BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow)
+                    BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow, in_world,
+                    set_world)
 from .node import Node
 from .parser import parse_file, prescan_units, BUILTINS, KEYWORDS, PERIOD_WORDS
 from .values import (range_key, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES,
@@ -149,7 +150,8 @@ class Loader:
         if len(tallies) != 1:
             raise LoadError('LOAD-VERSION', 'files declare different tally versions')
         if tallies != {2}:
-            raise NotYet('tally %d (this interpreter runs tally 2)' % list(tallies)[0])
+            # L §8.3 LOAD-VERSION (S-224a): files that agree on a version the engine doesn't run
+            raise LoadError('LOAD-VERSION', 'tally %d: this engine runs tally 2' % list(tallies)[0])
         h = models[0].header
         m.header = h
         m.S, m.E, m.on = h.start, h.end, h.on
@@ -2212,17 +2214,74 @@ class Loader:
                     if not o.replace:
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at [%s], neither replacing the '
                                         'other' % (os_[i - 1].loc, o.loc, qid, key), o.loc)
-            for o in getattr(inf, 'obs', []):
-                if o.removed:
-                    continue
-                v = o.version
-                for th, sp in getattr(v, 'covers', []):
-                    span = sp if sp is not None else v.span_at(m.on)
-                    for ln in o.legs:
-                        if th.name in (ln[1].name, ln[2].name):
-                            if span is None or not span.contains(o.day):
-                                raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
-                                                % (o.sid, th.name, v.id), o.loc)
+                    if not o.removed:
+                        self.check_correction_covers(o, os_[i - 1])
+            self.check_covers_standing(inf, by)
+
+    def check_covers_standing(self, inf, by):
+        """L §5.19, E §3.1 step 9 (tally 2.2.1 S-232): a covered place's observations lie inside the span their version
+        covers, checked on the rows that stand, per world and cut class (LOAD-COVERS). In a world, a key's row stands
+        from its known until a row above it in (layer, known) is known; the span is the one in force at each cut of
+        that stretch (its moves' known dates)."""
+        m = self.m
+        over = getattr(m, 'scenario_over', {}) or {}
+        worlds = [frozenset()]
+        for sid in sorted(over):
+            ch, w = set(), sid
+            while w is not None:
+                ch.add(w)
+                w = over.get(w)
+            worlds.append(frozenset(ch))
+        bad = {}
+        old = set_world(frozenset())
+        try:
+            for ws in worlds:
+                set_world(ws)
+                for os_ in by.values():
+                    seen = [o for o in os_ if in_world(o.version)]
+                    for i, o in enumerate(seen):
+                        if o.removed or id(o) in bad:
+                            continue
+                        end = min((p.known for p in seen[i + 1:]), default=None)
+                        if end is not None and end <= o.known:
+                            continue
+                        v = o.version
+                        cuts = [o.known] + sorted(set(mv.known for mv, _ in v.moved_by if in_world(mv) and
+                                                      mv.known > o.known and (end is None or mv.known < end)))
+                        for th, sp in getattr(v, 'covers', []):
+                            if not any(th.name in (ln[1].name, ln[2].name) for ln in o.legs):
+                                continue
+                            for c in (cuts[:1] if sp is not None else cuts):
+                                span = sp if sp is not None else v.span_at(c)
+                                if span is None or not span.contains(o.day):
+                                    bad.setdefault(id(o), th.name)
+                                    break
+        finally:
+            set_world(old)
+        for o in getattr(inf, 'obs', []):
+            if id(o) in bad:
+                raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
+                                % (o.sid, bad[id(o)], o.version.id), o.loc)
+
+    def check_correction_covers(self, o, prev):
+        """L §5.19 (tally 2.2.1 S-223): a correction in a version that doesn't cover, on the row's day, a place of its
+        legs that the replaced row's version covers is refused (LOAD-COVERS); a dropped row (`= none`) books nothing
+        and needs no covers (the caller's test)."""
+        m = self.m
+
+        def covers(v, name, d):
+            for th, sp in getattr(v, 'covers', []):
+                span = sp if sp is not None else v.span_at(m.on)
+                if th.name == name and span is not None and isinstance(d, datetime.date) and span.contains(d):
+                    return True
+            return False
+        places = set()
+        for ln in o.legs:
+            places |= set(p.name for p in (ln[1], ln[2]) if hasattr(p, 'name'))
+        for name in sorted(places):
+            if covers(prev.version, name, o.day) and not covers(o.version, name, o.day):
+                raise LoadError('LOAD-COVERS', 'replace %s of %s: %s doesn\'t cover %s on %s' % (
+                    o.sid, name, o.version.id, name, o.day), o.loc)
 
     def check_overlap(self, inf, rows):
         m = self.m

@@ -1,16 +1,16 @@
 # Change 2: a law change for the coming year (the 2027 figures)
 
-**Statement:** none is needed. This is a law version (OPERATIONS §3), drafted by Claude from two publications.
+**Statement:** none is needed. This is a law version (OPERATIONS §3.6), drafted by Claude from two publications.
 1. The minimum wage regulation for 2027, published by 15 September 2026.
 2. The projected average wage for 2027, announced in December 2026.
 
 **The figures are illustrative.** The base was written knowing 2026 only, and these two are the 2027 rows it projected.
 
-**Operation:** add a law version, twice. **Kind:** two amendments: an `advance` of `on` to 2026-12-18 (OPERATIONS §4), then one `add` of both versions. As a single `add` the change would be refused (`OP-EDIT`), since it edits the `on` line.
+**Operation:** add a law version, twice (OPERATIONS §3.3, CHG-2). `on` moves to 2026-12-18 first (CHG-7), then both versions are added. With `on` left at 2026-10-19 the change is refused: `LOAD-KNOWN version proj_wage_2027 is known after the model's on date`.
 
 **Known dates:**
 - **Minimum wage:** known 2026-09-12. That is before the base's `on`, so the base simply didn't record it: a late entry, not a back-dated change. It governs 2027 only, and no booked instance reads it, so there is no back pay to state.
-- **Projected wage:** known 2026-12-18. `on` advances to it first.
+- **Projected wage:** known 2026-12-18. `on` moves to it first.
 
 ## Diff
 

@@ -56,8 +56,6 @@ Each change is written against the household alone.
 - In this household the advance alone changes no value, because no version is known between the two dates; it turns plan into past, moves every register's cut line, and drops the `held` entries read for the months it passes. The kind was undefined: gap **L10**, resolved in D6 as a fourth change kind, `advance`, which may only move `on` forward and which runs the plan (LANGUAGE §6.2).
 - Each diff shows the edited `on` line: that line is the `advance`. The rest of the diff, added lines only, is the `add`.
 
-**The operation words.** The table's *Operation* column, each change file's **Operation** line and its pointers (`OPERATIONS §2.1`, `§7`, `OP-EDIT`, `WARN-BACKPAY`, `plan`) name tally 1.0.1's operations, the text of `OPERATIONS.md` at the tag `tally-2.2`. With today's surface each change is its added files, `check`, and two runs compared (OPERATIONS §6.1); a back pay list is the run's `adjustment:` lines and `HOLE-CHANGED` holes (OPERATIONS §3.3, CHG-3).
-
 **Expected outputs.** `expected/` holds, for each change, every asked cell before and after, the first day anything differs, the warnings, holes and register, and the variants named there. Each was derived by two evaluators blind to each other and settled by the lead (`expected/README.md`). Where a change file's words and its expected file differ, the expected file holds.
 
 **The gap ids.** The L and J ids (the last column above, and each file's "Depends on") name rows of the design log the spec was written from. The spec doesn't define them: each is resolved in the spec's own text, and that text is what the changes rest on.

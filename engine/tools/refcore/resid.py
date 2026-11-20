@@ -10,7 +10,7 @@ import datetime
 from fractions import Fraction
 
 from .errors import TallyError, Refusal, Unspecified, at_run
-from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
+from .values import Num, Hole, Thing, Text, Key, Iv, NONE, fmt, fmt_hole
 from .dates import month_period
 from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups, same_pairs
 from .walk import K_start, K_end, kday
@@ -317,6 +317,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 # R13, L §4.4)
                 lines[-1].carry_day = i.day
             continue
+        if isinstance(i.day, Iv):
+            # an observation that fulfils the movement fixes its day (L §4.4, §5.19): a window's is the last one's,
+            # as for a window not inside one month (E §6.3 Grouping; tally 2.2.1, #221)
+            dd = max(o.day for o in os)
         ob = None
         for o in os:
             ob = _add(ob, obs_flow(o))
@@ -422,6 +426,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             continue
         key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
         val = r.val
+        if val is NONE:
+            # a reading `replace … = none` removes: no reading, so no line (L §5.19; 236.2)
+            continue
         if isinstance(val, tuple) and val[0] == 'hole':
             stated = Hole([(val[1], 'stated[%s]' % place)])
         else:

@@ -1,0 +1,98 @@
+# tally 2.2.1 R18 (L §4.3: a move binds its keys in the order written; a read that states its own day needs no law
+# date; the engine's move_read_dated):
+# 235.7: a refused at on a tuple whose where waits: a refused instance (P31; m3/fixes/lawdate/i1_atref_true).
+# tally 2.2: the guard.
+=== i1_atref_true.tally
+model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+input back_day: date
+
+input zero: int
+
+input one_amt: money PLN
+
+input gap_day: date
+
+input d_open: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move shut[p in accounts on d_open where act_day < back_day]: transfers
+  on act_day
+  at lifespan(p).to
+  leg cash from p to landlord amount back_amt
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version v2
+  cite plan
+  governs 2026..
+  known 2026-03-15
+  replace rent_amt = 950.00 PLN "raise"
+
+version day
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  act_day = 2026-04-05
+  back_day = 2026-04-20
+
+version fixed
+  cite plan
+  governs always
+  known 2026-01-01
+  zero = 0
+  one_amt = 1.00 PLN
+  d_open = 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "w"
+
+ask q: bal(spare, 2026-06-30) law cut
+ask q2: bal(konto, 2026-05-31) law cut
+=== expect
+q: 0.00 PLN
+  unfulfilled: shut[spare]
+  law date 2026-06-30, cut 2026-06-30
+q2: refused: RUN-NONE never in the law date of shut
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  unfulfilled: rent[2026-05]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing

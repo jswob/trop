@@ -1,0 +1,48 @@
+# tally 2.2.1 (#219, 219.1), L §6.1 and §5.19: a read of the movement away from the places that book it is
+# HOLE-SAME, naming both rows, for an observed row stated same as a planned instance too: in1 and in2 disagree on the
+# amount of cash (100.00 and 120.00 PLN). tally 2.2 tested only two observed rows (the review's s5/hs_disagree.tally).
+=== hs.tally
+model hs
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input a1: money PLN
+input a2: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d1
+  leg cash from world to wallet amount a2
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 120.00 PLN "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+
+ask today: bal(wallet, 2026-03-31)
+ask before: bal(wallet, 2026-03-31) as known 2026-04-01
+ask amt: sum(m.cash.amount for m in transfers over 2026-03)
+ask f: flows(wallet, 2026-03)
+=== expect amt
+amt: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
+  unfulfilled: in1
+  cut 2026-06-10

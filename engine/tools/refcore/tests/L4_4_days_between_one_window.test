@@ -3,6 +3,7 @@
 # and windows each prints it plain (z2); two windows stay the hole (z3). 4651a48f printed z1 as the hole.
 # tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
 # carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
+# tally 2.2.1 R21 (L §8.4 HOLE-IMPRECISE): one question per unknown day; tally 2.2 named the first window only.
 === m.tally
 model t
   tally 2
@@ -51,7 +52,7 @@ z1: 0
   cut 2026-01-01
 z2: 0
   cut 2026-01-01
-z3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a print" (wa)
+z3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a print" (wa) ?"date within window(2026-04-07, 2026-04-12) not precise enough for a print" (wb)
   unknown day: wa
   unknown day: wb
   cut 2026-01-01

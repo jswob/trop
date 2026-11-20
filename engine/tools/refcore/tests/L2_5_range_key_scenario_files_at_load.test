@@ -1,0 +1,39 @@
+# tally 2.2.1, 229.2 (L §8.3, §8.4 R-load; OPERATIONS §2.1): the literal-key check is load's in a reality with scenario
+# files too: the base's r[2026-01-09] at a range stepped by 7 days from 2026-01-01 refuses the run, LOAD-KEY, before any
+# ask, as check does. tally 2.2 made it only inside an answered ask, so qx in sx printed its scenario's line instead.
+=== options exit=1
+=== m.tally
+model t
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input r[d in 2026-01-01 .. 2026-12-31 step 7 days]: int
+input k: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r[2026-01-09] = 1 "s"
+  r[*] = 0 "s"
+  k = 5 "s"
+
+ask q: k
+=== sx.tally
+scenario sx over t
+  tally 2
+  from 2026-01-01
+
+version vx
+  cite s
+  governs 2026-01-01..
+  known 2026-01-02
+  replace k = 6 "s"
+
+ask qx: k in sx
+=== expect qx
+refused: LOAD-KEY 2026-01-09 is not a value of 2026-01-01 .. 2026-12-31 step 7 day (m.tally:16)

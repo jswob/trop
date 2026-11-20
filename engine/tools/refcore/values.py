@@ -203,10 +203,12 @@ class Iv:
     cell, a calendar's added entry), kept by a copy, None for a computed value,
     so only a copy is the same unknown (a window compared with its own name is
     decided).  `carry` is the unknown days it was computed from, in the order the line's reads met them (tally
-    2.1.8 R13, L §4.4): None for a read, which carries its own (evaluate.iv_carry)."""
-    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name', 'carry')
+    2.1.8 R13, L §4.4): None for a read, which carries its own (evaluate.iv_carry).  `whole`: every value it can hold is a
+    whole number, though its type isn't int (`days_between(d, w) + 18`; tally 2.2.1 P30: its values are taken in
+    turn)."""
+    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name', 'carry', 'whole')
 
-    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None, carry=None):
+    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None, carry=None, whole=False):
         self.lo = lo
         self.hi = hi
         self.days = days
@@ -214,6 +216,7 @@ class Iv:
         self.origin = origin
         self.name = name
         self.carry = carry
+        self.whole = whole
 
     def key(self):
         return ('iv', vkey(self.lo), vkey(self.hi), tuple(sorted(self.days)) if self.days else None)
@@ -222,6 +225,11 @@ class Iv:
         if self.src:
             return self.src
         return 'window(%s, %s)' % (fmt(self.lo), fmt(self.hi))
+
+
+def day_text(d):
+    """A movement's day in a question: a date, or a window's text (N4: a windowed instance's HOLE-CHANGED)."""
+    return d.window_text() if isinstance(d, Iv) else d
 
 
 class Cal:
@@ -471,12 +479,26 @@ def fmt(v):
             if v.yfrom is not None:
                 s += ' from %d' % v.yfrom
             parts.append(s)
+        if v.added:
+            # a calendar prints with its added list (L §2.4; tally 2.2.1, 221.6)
+            parts.append('added [%s]' % ', '.join(fmt_added(a) for a in v.added))
         return 'calendar(%s)' % ', '.join(parts)
     if v is None:
         return '-'
     if type(v).__name__ == 'Dist':
         return v.text()
     return repr(v)
+
+
+def fmt_added(a):
+    """A calendar's added entry as written (L §2.4): a day, a window, one_of, a hole."""
+    if a[0] == 'day':
+        return fmt(a[1])
+    if a[0] == 'window':
+        return 'window(%s, %s)' % (fmt(a[1]), fmt(a[2]))
+    if a[0] == 'oneof':
+        return 'one_of([%s])' % ', '.join(fmt(d) for d in sorted(a[1]))
+    return '?"%s"' % a[1]
 
 
 def bound_of(v):

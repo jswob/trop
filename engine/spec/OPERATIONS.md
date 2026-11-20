@@ -25,7 +25,7 @@ How a caller uses the engine: its three operations, how each thing a caller does
 
 Each operation is a command of the engine's binary and a call of its library (`engine/tests/INTERFACE.md` §1 to §4). None adds a code: each prints only those of `LANGUAGE.md` §8 and `ENGINE.md` §11.
 
-**For all three.** A path is a file, or a directory: every `*.tally` file under it. A joint model's members are found from its `use` lines, relative to its file, each checked against its pin (`LANGUAGE.md` §6.1). Files are taken in full-path order by code point (`ENGINE.md` §3.1 step 1). Nothing but the arguments and the files is read; everything prints to standard output. `run` and `reprint` exit 0 for an answer, 1 for a refusal (the first line starts `refused: `), 2 for a usage error; `check`'s exit is its own (§2.3).
+**For all three.** A path is a file, or a directory: every `*.tally` file under it. A joint model's members are found from its `use` lines, relative to its file, each checked against its pin (`LANGUAGE.md` §6.1). Files are taken in full-path order by code point (`ENGINE.md` §3.1 step 1). Everything prints to standard output. `run` and `reprint` exit 0 for an answer, 1 for a refusal (the first line starts `refused: `), 2 for a usage error (no command, or an option, a word that starts with `--`, that the command doesn't take); `check`'s exit is its own (§2.3).
 
 ### 2.1 `run`
 
@@ -38,8 +38,8 @@ Each operation is a command of the engine's binary and a call of its library (`e
   - after load: `REQ-ASK no ask <q>`, the first unknown id in request order; `REQ-CLOCK`, a cut an ask states after `on`; `REQ-PATHS`, more than 100 000 paths for one ask (`ENGINE.md` §11).
 
   `ENGINE-INVARIANT`, an engine fault, refuses every result that rests on the broken walk (`ENGINE.md` §9): report it.
-- **A scenario file that doesn't load** refuses that scenario and those over it; the base answers, exit 0 (`LANGUAGE.md` §6.4). Its line `scenario <s>: refused: CODE message` prints once, before every result, whatever is asked; each ask in its world prints `<q>: refused: CODE message`; the file's own asks print nothing, even when named.
-- **An ask refused alone:** one that names a scenario whose file isn't given prints `<q>: refused: LOAD-SCENARIO ask <q> names <s>, neither the model nor a loaded scenario`, and the rest answers, exit 0.
+- **A scenario file that doesn't load** refuses that scenario and those over it, with its message; the base answers, exit 0 (`LANGUAGE.md` §6.4). Its line `scenario <s>: refused: CODE message` prints once, before every result, in §2.3's order, whatever is asked; each ask in its world prints `<q>: refused: CODE message`; the file's own asks print nothing, even when named.
+- **An ask refused alone:** one that names a scenario whose file isn't given prints its line, `<q>: refused: LOAD-SCENARIO …` (`LANGUAGE.md` §8.3), and the rest answers, exit 0.
 
 ### 2.2 `reprint`
 
@@ -51,16 +51,16 @@ Each operation is a command of the engine's binary and a call of its library (`e
 
 ### 2.3 `check`
 
-`tally check <path>…`, built at M3 (`BUILD-ORDER.md` § M3).
+`tally check <path>… [--pin=bytes]`
 
 - **Inputs** as `run`'s, no asks. It **does** everything load does, every ask's own checks included (`ENGINE.md` §3.1; `LANGUAGE.md` §8.3), and evaluates and walks nothing.
 - **Result**, its lines in this order:
   - `ok` alone on the first line when everything given loads;
   - else a base that doesn't load: its one `refused: CODE message` line, as `run` prints it, and nothing more;
-  - or, with a base that loads: each refused scenario file's `scenario <s>: refused: …` line in full-path order, then each ask refused alone as `<q>: refused: …`, by id (today `LOAD-SCENARIO`; an ask in a refused scenario's world is covered by its scenario's line);
+  - or, with a base that loads: each refused scenario's `scenario <s>: refused: …` line in the full-path order of the files that declare them (one declared twice, by its first), then each ask refused alone as `<q>: refused: …`, by id, then full path, then line (today `LOAD-SCENARIO`; an ask in a refused scenario's world is covered by its scenario's line);
   - then the warnings load decides (`WARN-UNREAD`), in `LANGUAGE.md` §8.5's order.
-- **Exit**, its own rule: 0 only when the first line is `ok`, else 1; 2 for a usage error. `engine/tests/INTERFACE.md` gains it at M3.
-- **When.** `check` is for a change the caller is about to keep; a question handed over for one run needs none, as `run` refuses with the same line.
+- **Exit**, its own rule: 0 only when the first line is `ok`, else 1; 2 for a usage error.
+- **When.** Before a caller keeps a change; a question handed over for one run needs none.
 - **`ok` isn't a clean run.** `REQ-ASK`, `REQ-CLOCK`, holes and per-value refusals come only from `run`.
 
 ---
@@ -167,7 +167,7 @@ Each recipe is a few lines of Tally text or one command. Every example runs on t
     bank[r2] = (on: 2026-10-12, kind: transfers, leg cash from konto to world amount 120.00 PLN) "line 2"
     stated[konto] = 7 900.00 PLN at 2026-10-31 end "saldo końcowe"
   ```
-- **IMP-2, duplicates, corrections, card holds.** The key is the bank's row id, so a row already written isn't written again. A correction restates the key in a later version that also `covers` the place (else the row isn't booked there): `replace bank[r1] = (…)`; a row that never happened, or a hold that never booked, `replace bank[r2] = none`; a hold that books restates the hold's key.
+- **IMP-2, duplicates, corrections, card holds.** The key is the bank's row id, so a row already written isn't written again. A correction restates the key in a later version that also `covers` the place (`LOAD-COVERS` otherwise): `replace bank[r1] = (…)`; a row that never happened, or a hold that never booked, `replace bank[r2] = none`; a hold that books restates the hold's key.
 - **IMP-3, a statement's closing balance.** The `stated` reading. Every balance read after it prints `anchor: konto 2026-10-31 end, stated 7 900.00 PLN, difference 20.00 PLN`; `residuals` prints the same gap.
 - **IMP-4, match bank rows to planned movements.** The caller reads `residuals` (`expected but missing wage[2026-10, acme]`, `unexplained bank[r1]`) and the register's `open:` lines, and writes `fulfils` on the row: in the statement, or later by a `replace` of the row (IMP-2). The engine checks each link at the ask's cut (`RUN-RECORD`) and proposes none.
 
@@ -217,7 +217,7 @@ Each needs a store, a user or a clock, so it is the app's; named here, specified
 | CHG-8 | a check that a change only adds |
 | CHG-9 | a restatement, proved by two runs that print the same |
 | CHG-10 | a revision, with its reason |
-| SCN-2 | whether the base moved under a what-if (`WARN-STALE`, `LANGUAGE.md` §8.5) |
+| SCN-2 | whether the base moved under a what-if (`LANGUAGE.md` §6.4) |
 | SCN-4 | dropping a what-if |
 | LAW-3 | keeping untested law out of real answers |
 | STO-1 | the files and their history; record time R (`ENGINE.md` §2) |

@@ -1,0 +1,75 @@
+# tally 2.2.1 R18 (L §4.3: a move binds its keys in the order written; a read that states its own day needs no law
+# date; the engine's move_read_dated):
+# clause 2: an at that names no key (at max(x for x in wk)) is read before the first key, which its
+# where reads at it (review-probes/gatefix/i4/aggat.d). tally 2.2: the guard, x taken for a key.
+=== aggat.d.tally
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+index pl = [a, b]
+
+input fee: money PLN
+input cal: calendar
+input act_day: date
+input gap: date
+input dfix: date
+input dlate: date
+
+band lim(x: int): int
+
+def rd: date = act_day at reader
+def rd2: date = rd at reader
+def owndated: date = act_day at gap
+def via: bool = rd2 >= dfix at reader
+
+move pay[d in wk where d <= act_day]: transfers
+  on d
+  at max(x for x in wk)
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  dfix = 2026-01-01
+  dlate = 2026-01-09
+  gap = 2026-01-09
+  cal = calendar(weekends [sat, sun])
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+version c
+  cite s
+  governs 2026-01-01..2026-01-07
+  known 2026-01-01
+  act_day = 2026-01-08
+  lim: [0, inf) = 2
+
+version c2
+  cite s
+  governs 2026-01-08..
+  known 2026-01-01
+  act_day = 2026-01-06
+  lim: [0, inf) = 0
+
+ask q: bal(konto, 2026-01-31)
+=== expect
+q: 80.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  cut 2026-01-31
+warning: WARN-UNREAD def owndated is read by nothing
+warning: WARN-UNREAD def via is read by nothing
+warning: WARN-UNREAD input cal is read by nothing
+warning: WARN-UNREAD input dlate is read by nothing

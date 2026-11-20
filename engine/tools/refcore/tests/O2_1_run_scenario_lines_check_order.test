@@ -1,0 +1,42 @@
+# tally 2.2.1 R20 clause 1 (OPERATIONS §2.1; P4 reopened): run prints the refused scenarios' lines in check's order, by
+# first file: twin before alpha; then the results. tally 2.2 printed them by scenario id.
+=== model.tally
+model plain
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M3's check fixtures (invented): it loads clean with no warning; each fixture of fixtures.tsv adds files to it"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== p12/b/t1.tally
+scenario twin over plain
+  tally 2
+  from 2027-01-01
+=== p12/c/lost.tally
+scenario alpha over nowhere
+  tally 2
+  from 2027-01-01
+=== p12/d/t2.tally
+scenario twin over plain
+  tally 2
+  from 2027-01-01
+=== expect
+scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tally:1)
+scenario alpha: refused: LOAD-SCENARIO scenario alpha is over nowhere, neither the model nor a scenario (p12/c/lost.tally:1)
+q: 200.00 PLN
+  law date 2026-03-01, cut 2026-03-01

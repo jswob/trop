@@ -3,7 +3,7 @@
 # (known 2026-03-12) 100.00 PLN again, so the booking cut gives 100.00, 150.00 and 100.00 PLN on the window's three
 # pieces: the amount is the window's hole (undone, undone_f), where pinned days give HOLE-CHANGED holes (u06) or
 # 600.00 PLN (u15). tally 2.2 compared the booking cut at the window's two ends only: 600.00 PLN in silence (the
-# planner's misc2/m2.tally).
+# planner's misc2/m2.tally, less its `before top`, which S-221.9 refuses).
 === m2.tally
 model m2
   tally 2
@@ -27,7 +27,6 @@ move pay: transfers
 move top: transfers
   on d_top
   reads konto
-  before top
   leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
 version v
   cite s

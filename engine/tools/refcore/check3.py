@@ -349,9 +349,15 @@ def m_check_move(self, mi):
     kid = mi.kind
     sc = check.Scope(self, ('move', mi.id), mi.regime, 'def')
     sc.covered_spans = set()
+    mi.key_reads = []
     for bi in mi.binds:
         bn = bi.node
-        v = self.bind(bn, sc)
+        self._kcap = [[], [], 0, bn]
+        try:
+            v = self.bind(bn, sc)
+        finally:
+            mi.key_reads.append((self._kcap[0], self._kcap[1]))
+            self._kcap = None
         if bn._dom[0] == 'kind' and bn.on is None and bn.over is None:
             raise LoadError('LOAD-ALIVE', 'binding over %s needs on or over (a move\'s keys)' % bn._dom[1], s.loc)
         bi.dom = bn._dom if bn._dom[0] != 'event' else ('kind', bn._dom[1])
@@ -1626,6 +1632,10 @@ def m_strata(self):
         for w, other in mi.decl.order:
             hit = m.lookup(other, mi.regime)
             b = hit[1].id
+            if b == a:
+                # L §8.3 LOAD-ORDER (S-221.9): instances of one move go by its ties by (§5.14.2)
+                raise LoadError('LOAD-ORDER', "%s before %s: a move isn't ordered against itself" % (a, a),
+                                mi.decl.loc)
             if b not in after:
                 if w == 'before':
                     # L §5.14.2 (round 19, GD-11, C4-1): "It orders a decision only against another decision: plans
@@ -1756,24 +1766,58 @@ def m_check_move_lawdates(self):
                         dated = r[2]
                 if dated is not None:
                     raise LoadError('LOAD-LAWDATE', "move %s's at reads law-dated %s" % (qid, dated), mi.decl.loc)
+            self.check_move_keys_lawdate(mi)
             continue
         for item in (('move', qid), ('moveon', qid)):
             for t, rels in E.get(item, {}).items():
-                if not (rels - skip):
-                    continue
-                dated = False
-                if t[0] == 'band':
-                    # a band whose every table governs always, and whose rows read nothing law-dated, isn't
-                    # law-dated (L §4.3; MC-X-F12)
-                    dated = self.banddated.get(t[1], True)
-                elif t[0] == 'input':
-                    inf = m.inputs.get(t[1])
-                    dated = inf is not None and not inf.observed and not inf.builtin and not inf.undated_read()
-                elif t[0] == 'def':
-                    d = m.defs[t[1]]
-                    dated = self.needs_reader_law(t[1]) or (d.at is None and self.lawdated.get(t[1]))
-                if dated:
+                if self.move_read_dated(t, rels - skip):
                     raise LoadError('LOAD-LAWDATE', '%s reads law-dated facts and states no at' % qid, mi.decl.loc)
+
+
+MOVE_SKIP = frozenset(('pin', 'calendar', 'explicit', 'lawpin', 'bind', 'flows', 'observed', 'leg', 'bal'))
+
+
+def m_move_read_dated(self, t, rels):
+    """Whether a move's read of t with rels needs the move's law date (L §4.3): a read made at the law date (rels,
+    the dating ones), of a law-dated band, input, or def (one that takes its reader's law date, or states no at and
+    is law-dated). The one test of a move's reads with no at, a key's reads before its at, and a waiting where."""
+    m = self.m
+    if not rels:
+        return False
+    if t[0] == 'band':
+        # a band whose every table governs always, and whose rows read nothing law-dated, isn't law-dated (L §4.3;
+        # MC-X-F12)
+        return self.banddated.get(t[1], True)
+    if t[0] == 'input':
+        inf = m.inputs.get(t[1])
+        return inf is not None and not inf.observed and not inf.builtin and not inf.undated_read()
+    if t[0] == 'def':
+        d = m.defs[t[1]]
+        return bool(self.needs_reader_law(t[1]) or (d.at is None and self.lawdated.get(t[1])))
+    return False
+
+
+def m_check_move_keys_lawdate(self, mi):
+    """L §4.3 (tally 2.2.1 R18 clause 2): a move binds its keys in the order written; the domain (`on`, `over`, a
+    range's ends) of a key its `at` names, or of one before it, is read before the `at`, so it makes no read that needs
+    a law date (LOAD-LAWDATE); such a key's `where` that needs one waits for the tuple's `at` (mi.dated_wheres)."""
+    from .mreads import reads_var
+    at = mi.decl.at
+    mi.dated_wheres = set()
+    for i, (bi, (breads, wreads)) in enumerate(zip(mi.binds, mi.key_reads)):
+        later = [b.var for b in mi.binds[i:] if reads_var(at, b.var)]
+        if not later:
+            break
+        for t, rel in breads:
+            if self.move_read_dated(t, {rel} - MOVE_SKIP):
+                if t[0] == 'def' and self.m.defs[t[1]].at is not None and self.m.defs[t[1]].at.k == 'law_reader':
+                    what = 'reaches %s, which takes its law date from its reader,' % t[1]
+                else:
+                    what = 'reads law-dated %s' % t[1]
+                raise LoadError('LOAD-LAWDATE', "move %s's key %s %s with no law date: its at reads %s" % (
+                    mi.id, bi.var, what, later[0]), mi.decl.loc)
+        if any(self.move_read_dated(t, {rel} - MOVE_SKIP) for t, rel in wreads):
+            mi.dated_wheres.add(i)
 
 
 def m_unit_of_quantity(self, n, t):

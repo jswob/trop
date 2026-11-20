@@ -1,0 +1,70 @@
+# tally 2.2.1 (#221, 221.1), L §8.2 One read set: "the reads that decided that a movement doesn't count (a false
+# when, a day outside the span)": pay pinned to 2026-03-06 falls after the read day, 2026-03-05, so p_after lists
+# pinned: w = 2026-03-06. tally 2.2 printed no line (the planner's misc/m1.tally).
+=== m1.tally
+model m1
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input zero: num
+input w: date
+input w1: date
+input w0: date
+input spare: num
+input lvl: num
+input hx: num
+move pay: transfers
+  on w
+  leg cash from world to konto amount amt
+move one: transfers
+  on w1
+  leg cash from world to sav amount 0 PLN
+move nul: transfers
+  on w0
+  leg cash from world to sav amount amt - amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  zero = 0 "s"
+  spare = 3 "s"
+  lvl = none "s"
+  hx = ?"hx?" "s"
+  w = window(2026-03-05, 2026-03-07) "s"
+  w1 = window(2026-03-10, 2026-03-10) "s"
+  w0 = window(2026-03-12, 2026-03-14) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+version st
+  cite s
+  governs 2026-07
+  known 2026-01-02
+  anchor konto
+  stated[konto] = 900.00 PLN at 2026-06-20 end "saldo"
+ask p_after: bal(konto, 2026-03-05) with w = 2026-03-06
+ask p_in: bal(konto, 2026-03-06) with w = 2026-03-06
+ask oneday: bal(sav, 2026-03-31)
+ask zerowin: bal(sav, 2026-03-13)
+ask refpin: amt / zero with spare = 5
+ask refnopin: amt / zero
+ask gap_after: gap(konto, 2026-06-20)
+ask last_after: last(stated[konto], 2026-06-25)
+ask two: w < w0, w == w0, days_between(w, w0)
+=== expect p_after p_in
+p_after: 500.00 PLN
+  pinned: w = 2026-03-06
+  cut 2026-06-10
+p_in: 600.00 PLN
+  pinned: w = 2026-03-06
+  unfulfilled: pay
+  cut 2026-06-10
+warning: WARN-UNREAD input hx is read by nothing
+warning: WARN-UNREAD input lvl is read by nothing

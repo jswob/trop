@@ -2,7 +2,7 @@
 
 **Statement (household):** "Od lipca 2029 żona pracuje w Berlinie, 5 200 euro brutto miesięcznie, i tam się przeprowadza. Ja zostaję w Krakowie z firmą. Pracę w Acme kończy z końcem czerwca. Euro wymieniamy na złote co miesiąc."
 
-**Operation:** amend (OPERATIONS §4) with new sections, plus add a fact (§2.1) with `add_keys`. **Kind:** two amendments: an `advance` of `on` to 2029-05-01 (OPERATIONS §4), then one `add` of the new sections and versions. As one `add` the change would be refused (`OP-EDIT`), since it edits the `on` line. **Known:** 2029-05-01.
+**Operation:** new sections in new files (OPERATIONS §3.3, CHG-6), plus a fact (CHG-1). `on` moves to 2029-05-01 first (CHG-7), then the sections and versions are added; with `on` left at 2026-10-19 they are refused (`LOAD-KNOWN`). **Known:** 2029-05-01.
 
 ## Diff
 
@@ -123,7 +123,7 @@ There are no new holes from the key itself. The new place `konto_eur` has its li
 
 The expected outputs, cell by cell, are in `amendments/expected/5-job-abroad.md`, with the diff as first written as a variant.
 
-**First day anything differs:** 2029-07-25, when the first German wage reaches `konto_eur` (a hole, below). That is not before the earliest `governs`, 2026-01 (`salary[wife_berlin] = 0` and `salary_eur = 0`), so the sanity check holds.
+**First day anything differs**, from two runs' asks of each place's balance by day (OPERATIONS §3.3, CHG-11): 2029-07-25, when the first German wage reaches `konto_eur` (a hole, below). That is not before the earliest `governs`, 2026-01 (`salary[wife_berlin] = 0` and `salary_eur = 0`).
 - On 2029-07-15 the rule of the 15th measures room up to 2029-08-14, and `room[2029-07]` is unchanged. Its window doesn't reach the hole on `konto` from 2029-07-28: that comes from the exchange, a state pay, and tally 1.0.1's `plan_low` left state pays out. (Under tally 2 the projection counts `fx`, a decision that doesn't read `room` (LANGUAGE §5.14.1), so `room[2029-07]` meets that hole; `amendments/expected/5-job-abroad.md` keeps the 1.0.1 answer, and `regress/maps/m2/cells.md` lists the step.)
 - The missing wage of 2029-08-10 is in that window but doesn't move its minimum, which stays 0 on day t: client A's June pay lands on 2029-07-16 (07-14 is a Saturday), so every later day sits above it.
 - The June wage, paid 2029-07-10, is unchanged.

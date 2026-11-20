@@ -7,6 +7,8 @@
 # no instance: 0.00. dec2, a decision whose 2027-04 day is the same hole and which reads a place nothing else books:
 # flows(dec2, 2025) is the hole as bal(konto6) is (snap15 counted its 2025 instances, 1 200.00, the fault of household
 # B's mtg_pay, TX2-F2).
+# tally 2.2.1 R21 (L §8.2 `unknown day:`): the name is the cell a caller pins, `added <entry> of <calendar>`, else
+# the movement; tally 2.2 printed the window's text or `added <entry>`.
 === m.tally
 model holiday2027
   tally 2
@@ -79,7 +81,7 @@ version card_rows
   opening[konto7] = 0.00 DUK at 2025-01-01 start "card"
 === expect
 q_dec2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12])
+  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
   unfulfilled: dec2[2025-01]
   unfulfilled: dec2[2025-02]
   unfulfilled: dec2[2025-03]
@@ -94,13 +96,13 @@ q_dec2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough f
   unfulfilled: dec2[2025-12]
   law date 2025-12-31, cut 2026-01-15
 q_hand_when_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12])
+  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
   law date 2025-12-31, cut 2026-01-15
 q_konto2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12])
+  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
   law date 2025-12-31, cut 2026-01-15
 q_konto6_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12])
+  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
   unfulfilled: dec2[2025-01]
   unfulfilled: dec2[2025-02]
   unfulfilled: dec2[2025-03]

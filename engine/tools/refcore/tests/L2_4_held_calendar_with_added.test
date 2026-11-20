@@ -1,0 +1,85 @@
+# tally 2.2.1 (#221, 221.6), L §2.4: a calendar prints with its added list: the scenario's calendar is held as
+# calendar(weekends [sat, sun], added [2026-06-24]). tally 2.2 dropped the list (the 2.2 review's p3, m and c24).
+=== m.tally
+model g4_p3
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-12-31
+  note "G4 review probe: a calendar's added window, one scenario per choice; a diff over two worlds; a lifespan's end inside a window."
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+place short: accounts PLN lives 2026-01-01..2026-03-06
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input w: date
+
+input cal: calendar
+
+input from_day: date
+
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+
+move pay_cal: transfers
+  on add_business(from_day, 1, cal)
+  leg cash from world to sav amount pay
+
+move to_short: transfers
+  on w
+  leg cash from world to short amount pay
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  w = window(2026-03-05, 2026-03-07) "c"
+  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  from_day = 2026-06-19 "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "c"
+  opening[short] = 0.00 PLN at 2026-01-01 start "c"
+
+ask q1: bal(sav, 2026-06-22)
+ask q2: bal(sav, 2026-06-22) in c22
+ask q3: bal(sav, 2026-06-22) in c24
+ask q4: diff(bal(sav, 2026-06-22)) in c22 against g4_p3
+ask q5: diff(bal(konto, 2026-03-06)) in c22 against g4_p3
+ask q6: diff(bal(konto, 2026-03-20)) in c22 against g4_p3
+ask q7: bal(short, 2026-03-05)
+ask q8: bal(short, 2026-03-05) with w = 2026-03-05
+ask q9: bal(short, 2026-03-05) with w = 2026-03-07
+ask q10: explain bal(sav, 2026-06-22)
+ask q11: diff(bal(konto, 2026-03-06)) in cw against g4_p3
+ask q12: diff(bal(konto, 2026-03-06)) in cw against g4_p3 with w = 2026-03-05
+ask q13: add_business(from_day, 1, cal)
+ask q14: is_business(2026-06-23, cal)
+=== c24.tally
+scenario c24 over g4_p3
+  tally 2
+  from 2026-01-01
+
+version c24_v
+  cite card
+  governs 2026-01-01..
+  known 2026-01-01
+  replace cal = calendar(weekends [sat, sun], added [2026-06-24]) "s"
+=== expect q3
+q3: 100.00 PLN
+  world: c24
+  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-20
+  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-21
+  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-22
+  cut 2026-01-10
