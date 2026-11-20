@@ -279,8 +279,8 @@ pub mod book {
     mod same_booking;
     mod settle;
 
-    pub(crate) use adjust::hole_booked_before;
     pub use adjust::{Adjustment, Measured, Settled};
+    pub(crate) use adjust::{hole_booked_before, known_dates};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};

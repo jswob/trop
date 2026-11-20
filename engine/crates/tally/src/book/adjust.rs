@@ -861,7 +861,7 @@ pub(crate) fn is_hole_booking(inst: &Inst) -> bool {
 
 /// The days versions became known, each with the versions known then: versions' `known`,
 /// rows' own (refcore's `known_dates`). E §5 step 2.
-fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
+pub(crate) fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
     let mut by: BTreeMap<Day, BTreeSet<String>> = BTreeMap::new();
     for (_, v) in m.versions.entries() {
         by.entry(v.known)

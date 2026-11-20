@@ -801,48 +801,53 @@ impl Engine {
             // first day falls after it (refcore's `eval_inst`, `upto`; L §4.4)
             return Ok(false);
         }
-        // the booking cut min(t, K); a window's at its first day and its last (refcore's
-        // `cuts`)
-        let (cut, last) = match (seed.at_cut, day.lo(), day.hi()) {
-            (Some(c), _, _) => (c, c),
-            (None, Some(lo), Some(hi)) => (lo.min(tctx.cut), hi.min(tctx.cut)),
-            (None, _, _) => (tctx.cut, tctx.cut),
+        // the booking cut min(t, K); a window's one per piece its versions' known dates cut it
+        // into (refcore's `cuts`, `window_pieces`; E §5 step 1)
+        let cuts = match (seed.at_cut, &day) {
+            (Some(c), _) => vec![c],
+            (None, Dated::Window(w)) => booking_cuts(m, w, tctx.cut)?,
+            (None, _) => vec![day.lo().map_or(tctx.cut, |d| d.min(tctx.cut))],
         };
-        inst.cut = Some(cut);
+        let [cut, later @ ..] = cuts.as_slice() else {
+            return Err(invariant("an instance with no booking cut"));
+        };
+        inst.cut = Some(*cut);
         let world = self.timeline_world();
-        let first = keys_seen(m, mv, &inst.keys, (cut, world));
-        let seen = if last == cut {
-            (first, first)
-        } else {
-            (first, keys_seen(m, mv, &inst.keys, (last, world)))
-        };
-        if seen == (false, false) {
+        let seen: Vec<bool> = cuts
+            .iter()
+            .map(|c| keys_seen(m, mv, &inst.keys, (*c, world)))
+            .collect();
+        if !seen.contains(&true) {
             inst.exists = Exists::No;
             return Ok(true);
         }
         // at a booking cut that doesn't see its keys the instance has no body (E §5 steps 1–3)
-        let mut body = if seen.0 {
-            self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?
-        } else {
-            no_body()
-        };
-        if let (Dated::Window(w), true) = (&day, last != cut) {
+        let mut bodies = Vec::with_capacity(cuts.len());
+        for (c, s) in cuts.iter().zip(&seen) {
+            bodies.push(if *s {
+                self.body_over_law(m, mv, inst, self.timeline_ctx(None, *c))?
+            } else {
+                no_body()
+            });
+        }
+        let mut bodies = bodies.into_iter();
+        let mut body = bodies
+            .next()
+            .ok_or_else(|| invariant("an instance with no body"))?;
+        if let (Dated::Window(w), false) = (&day, later.is_empty()) {
             // a version known inside the window of a windowed instance (L §5.14.3): each
-            // part is the window's hole where the two booking cuts differ, so a key added or
-            // dropped inside the window leaves its existence and its legs to the day
-            // (refcore's `agreed_body`; L §4.4, tally 2.1.8 #169-e)
+            // part is the window's hole where two of its booking cuts differ, so a key added
+            // or dropped, or an amount changed and undone, inside the window leaves its
+            // existence and its legs to the day (refcore's `agreed_body`; L §4.4, tally 2.1.8
+            // #169-e; #230)
             let text = format!(
                 "date within {} not precise enough for the booking cut of {}",
                 w.question, inst.id
             );
             let hole = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
-            let other = if seen.1 {
-                self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?
-            } else {
-                no_body()
-            };
-            if !same_body(&body, &other) {
-                body = imprecise_body(body, &other, &hole);
+            let differ: Vec<_> = bodies.filter(|other| !same_body(&body, other)).collect();
+            for other in &differ {
+                body = imprecise_body(body, other, &hole);
             }
         }
         inst.exists = body.exists;
@@ -852,6 +857,29 @@ impl Engine {
         inst.fulfils = body.fulfils;
         Ok(true)
     }
+}
+
+/// The booking cuts of an instance dated by window `w` at the ask's cut `cut`: min(d, K) for
+/// the first day d of each piece the days versions became known cut the window into, in order,
+/// each once (refcore's `cuts` over `window_pieces`). E §5 step 1 ("one known inside the window
+/// leaves the amounts `HOLE-IMPRECISE` where it changes them"), L §4.4.
+///
+/// # Errors
+///
+/// As [`window_pieces`].
+fn booking_cuts(m: &Reality, w: &DayWindow, cut: Day) -> Result<Vec<Day>, Stop> {
+    let edges: Vec<Day> = crate::book::known_dates(m)
+        .into_iter()
+        .map(|(known, _)| known)
+        .collect();
+    let mut cuts: Vec<Day> = Vec::new();
+    for piece in window_pieces(w, &edges)? {
+        let c = piece.first.min(cut);
+        if !cuts.contains(&c) {
+            cuts.push(c);
+        }
+    }
+    Ok(cuts)
 }
 
 /// The class a window-dated plan instance takes on one day of its window (E §4.1 step 3;
