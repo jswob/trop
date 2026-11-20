@@ -20,7 +20,7 @@ use crate::num::Num;
 use crate::syntax::{Expr, Stop};
 use crate::time::Day;
 use core::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// A leg's end: a place by name, or a hole, a place nobody has told us (L §5.14 Legs).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -157,6 +157,44 @@ pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option
         shown,
         value,
     })))
+}
+
+/// A piece of a window a movement falls on: the days from `first` to `last`, on which every
+/// test of its day the plan pass makes comes out one way (E §4.1 step 2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct Piece {
+    /// Its first day, where it is read.
+    pub(super) first: Day,
+    /// Its last day.
+    pub(super) last: Day,
+}
+
+/// Window `w` cut where a test of its day can change: each of `edges` inside it, an edge being
+/// the first day of a piece (the run's start, the cut, a covered span's first day or the day
+/// after its last, …), so each piece is read once, at its first day, never day by day
+/// (refcore's `window_pieces`). E §4.1 step 2, L §4.4 ("One rule for every window a line
+/// meets").
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an edge with no day before it.
+pub(super) fn window_pieces(w: &DayWindow, edges: &[Day]) -> Result<Vec<Piece>, Stop> {
+    let starts: BTreeSet<Day> = edges
+        .iter()
+        .copied()
+        .filter(|e| w.lo < *e && *e <= w.hi)
+        .collect();
+    let mut out = Vec::with_capacity(starts.len());
+    let mut first = w.lo;
+    for next in starts {
+        let last = next
+            .previous()
+            .ok_or_else(|| invariant("a window's edge with no day before it"))?;
+        out.push(Piece { first, last });
+        first = next;
+    }
+    out.push(Piece { first, last: w.hi });
+    Ok(out)
 }
 
 /// A leg of an instance, evaluated (refcore's `Leg`).

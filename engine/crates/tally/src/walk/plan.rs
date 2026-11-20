@@ -20,7 +20,7 @@
 use super::body::{imprecise_body, no_body, same_body};
 use super::instance::{
     Amount, Booked, BookedLeg, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Seed, Status,
-    day_window, inst_order,
+    day_window, inst_order, window_pieces,
 };
 use super::tuples::{Law, Tuple};
 use crate::base::{Code, Load, Refusal, Run};
@@ -305,12 +305,13 @@ impl Engine {
 
     /// Whether plan instance `inst`, dated by a window, takes its class one way on some of
     /// the window's days and another on the rest, at cut `cut`: inside the run or before its
-    /// start, and modelled past or booked, each day of the window asked (refcore's
-    /// `window_class_depends`). E §4.1 steps 2–3, L §4.4; tally 2.1.8 item 77.
+    /// start, and modelled past or booked, each piece of the window read once, at its first
+    /// day (refcore's `window_class_depends`, `window_pieces`, `day_class`). E §4.1 steps 2–3,
+    /// L §4.4; tally 2.1.8 item 77.
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT` for a day past the calendar.
+    /// As [`window_pieces`].
     fn class_depends(
         &mut self,
         m: &Reality,
@@ -323,34 +324,49 @@ impl Engine {
         if w.lo == w.hi {
             return Ok(None);
         }
-        if w.lo < m.start && m.start <= w.hi {
+        // the edges where a class can change: the run's start, the cut (no day from K on is
+        // modelled) and the ends of a covered span at a place of its legs (L §5.19 Coverage)
+        let mut edges = vec![m.start, cut];
+        self.covered_edges(m, inst, cut, &mut edges);
+        let mut classes = Vec::new();
+        for piece in window_pieces(w, &edges)? {
+            classes.push(self.day_class(m, inst, cut, piece.first));
+        }
+        let some = |class: DayClass| classes.contains(&class);
+        if some(DayClass::Out) && (some(DayClass::Modelled) || some(DayClass::Booked)) {
             return Ok(Some(Depends::Start));
         }
-        if w.lo >= cut {
-            return Ok(None);
+        Ok((some(DayClass::Modelled) && some(DayClass::Booked)).then_some(Depends::Covered))
+    }
+
+    /// The class plan instance `inst` takes on day `day` of its window, at cut `cut`: out
+    /// before the run's start, modelled past on a day before K where a version covers a place
+    /// of its legs, booked otherwise (refcore's `day_class`). E §4.1 step 3, L §5.19.
+    fn day_class(&mut self, m: &Reality, inst: &Inst, cut: Day, day: Day) -> DayClass {
+        if day < m.start {
+            return DayClass::Out;
         }
-        // every day asked: coverage may change inside the window (E §4.1 step 2). No day from
-        // K on is modelled, and the answer is known at the first two days that disagree, so
-        // the days asked stop there: at most the days from the window's first to K, however
-        // far the window reaches (to 9999-12-31)
-        let (mut some, mut every) = (false, true);
-        let mut d = w.lo;
-        loop {
-            if d >= cut {
-                every = false;
-                break;
-            }
-            let modelled = self.touches_covered(m, inst, (cut, Some(d)));
-            some = some || modelled;
-            every = every && modelled;
-            if (some && !every) || d >= w.hi {
-                break;
-            }
-            d = d
-                .next()
-                .ok_or_else(|| invariant("a window's day past the calendar"))?;
+        if day < cut && self.touches_covered(m, inst, (cut, Some(day))) {
+            return DayClass::Modelled;
         }
-        Ok((some && !every).then_some(Depends::Covered))
+        DayClass::Booked
+    }
+
+    /// The edges of the covered spans at the places of `inst`'s legs at cut `cut`, each span's
+    /// first day and the day after its last, added to `edges`: where whether a day is covered
+    /// can change (refcore's `window_pieces`, its coverage). L §5.19 Coverage, E §4.1 step 2.
+    fn covered_edges(&mut self, m: &Reality, inst: &Inst, cut: Day, edges: &mut Vec<Day>) {
+        for leg in &inst.legs {
+            for place in [&leg.from, &leg.to].into_iter().filter_map(End::place) {
+                let Some(spans) = self.coverage(m, cut).spans.get(place) else {
+                    continue;
+                };
+                for (span, _) in spans {
+                    edges.extend(span.start());
+                    edges.extend(span.end());
+                }
+            }
+        }
     }
 
     /// Whether one of the observations `obs` that fulfil an instance is applied at cut `cut`:
@@ -836,6 +852,18 @@ impl Engine {
         inst.fulfils = body.fulfils;
         Ok(true)
     }
+}
+
+/// The class a window-dated plan instance takes on one day of its window (E §4.1 step 3;
+/// refcore's `day_class`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DayClass {
+    /// Dated before the run's start: left out.
+    Out,
+    /// Modelled past: a covered day before K.
+    Modelled,
+    /// Booked.
+    Booked,
 }
 
 /// Whether the keys of an instance were there at cut `cut` in world `world`: an index's key
