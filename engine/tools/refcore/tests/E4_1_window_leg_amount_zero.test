@@ -1,0 +1,42 @@
+# tally 2.2.1 (#214, 214.1), E §4.1 step 2: a window-dated movement "makes bal(x, d) a hole for d inside the window,
+# but for a leg of amount 0" (L §5.14: "an amount of 0 books nothing"); L §4.4: "a window of one day is that day". one
+# (amount 0 PLN, a window of one day) and nul (amount amt - amt) book nothing on any day, so sav is 0.00 PLN inside
+# both windows and after them, with no hole and no unknown day. tally 2.2 gave the hole naming w0 and w1 on every day
+# after the windows began (the planner's misc/m1.tally, asks oneday and zerowin).
+=== m.tally
+model m1
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w1: date
+input w0: date
+move one: transfers
+  on w1
+  leg cash from world to sav amount 0 PLN
+move nul: transfers
+  on w0
+  leg cash from world to sav amount amt - amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w1 = window(2026-03-10, 2026-03-10) "s"
+  w0 = window(2026-03-12, 2026-03-14) "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+ask oneday: bal(sav, 2026-03-31)
+ask zerowin: bal(sav, 2026-03-13)
+ask inday: bal(sav, 2026-03-10)
+=== expect
+inday: 0.00 PLN
+  cut 2026-06-10
+oneday: 0.00 PLN
+  cut 2026-06-10
+zerowin: 0.00 PLN
+  cut 2026-06-10

@@ -1,0 +1,85 @@
+# tally 2.2.1 (S-from), L §6.4 "an instance whose day falls before D is left out", and L §4.4 for a window across
+# D: extra is dated window(2026-04-28, 2026-05-03) in a scenario from 2026-05-01, so it books nothing on the window's
+# days before D and books on those from D: s_after is the hole naming w (pinned days give 750.00 and 850.00 PLN, s_d28
+# and s_d02), nothing before from changes. tally 2.2 left extra out by its window's first day: 750.00 PLN. cnt (a
+# binding over a span the window crosses, in the base) stays the hole: the round's guard (the planner's cells/).
+=== base.tally
+model cb
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input sp: month
+input bank: observed
+move pa: transfers
+  on wa
+  leg cash from world to konto amount amt
+move pb: transfers
+  on wb
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  sp = 2026-03 "s"
+  w = window(2026-04-28, 2026-05-03) "s"
+  wa = window(2026-03-28, 2026-04-02) "s"
+  wb = window(2026-03-10, 2026-03-12) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-05
+  anchor konto
+  stated[konto] = 640.00 PLN at 2026-03-20 end "saldo"
+version fix
+  cite s
+  governs 2026-03
+  known 2026-04-08
+  anchor konto
+  replace stated[konto] = 650.00 PLN at 2026-03-20 end "saldo, poprawione"
+ask cnt: count(m in transfers over sp)
+=== sc.tally
+scenario sc over cb
+  tally 2
+  from 2026-05-01
+move extra: transfers
+  on w
+  leg cash from world to konto amount amt
+ask s_after: bal(konto, 2026-05-31) in sc
+ask s_d28: bal(konto, 2026-05-31) in sc with w = 2026-04-29
+ask s_d02: bal(konto, 2026-05-31) in sc with w = 2026-05-02
+=== expect
+cnt: ?"date within window(2026-03-28, 2026-04-02) not precise enough for a binding over transfers" (pa)
+  unknown day: wa
+  unfulfilled: pa
+  unfulfilled: pb
+  cut 2026-06-10
+s_after: ?"date within window(2026-04-28, 2026-05-03) not precise enough for a balance" (extra)
+  unknown day: w
+  world: sc
+  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
+  unfulfilled: pa
+  cut 2026-06-10
+s_d02: 850.00 PLN
+  pinned: w = 2026-05-02
+  world: sc
+  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
+  unfulfilled: extra
+  unfulfilled: pa
+  cut 2026-06-10
+s_d28: 750.00 PLN
+  world: sc
+  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
+  unfulfilled: pa
+  left out: extra, 1 instances, first 2026-04-29
+  cut 2026-06-10
