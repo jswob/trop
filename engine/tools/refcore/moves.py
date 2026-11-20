@@ -55,9 +55,10 @@ def _coll():
 # -- records ---------------------------------------------------------------------------------------------------
 
 class Leg:
-    __slots__ = ('name', 'frm', 'to', 'amount', 'unit', 'day', 'src')
+    __slots__ = ('name', 'frm', 'to', 'amount', 'unit', 'day', 'src', 'coll')
 
     def __init__(self, name, frm, to, amount, unit, day, src=None):
+        self.coll = None      # what reading its amount read, where known: a read of that fact alone (P43 S3)
         self.src = src        # (amount expression, env, context) of a hole amount: a partial ask line reads it again
         #                       for the holes it is linear in (L §5.18 Partial answers; mreads.m_partial_bal)
         self.name = name
@@ -1177,6 +1178,7 @@ def m_eval_leg(self, inst, ln, d, env, ctx, day):
         if m.things[p.name].base in m.kinds['assets'].subtree(m):
             raise LoadError('LOAD-KIND', 'a leg to or from an asset (%s of %s)' % (ln.name, inst.id))
     unit = None
+    lc = self.push()
     try:
         amt = self.ev(ln.amount, env, ctx)
         if isinstance(amt, Hole):
@@ -1193,7 +1195,12 @@ def m_eval_leg(self, inst, ln, d, env, ctx, day):
         if load_now(e):
             raise
         amt = e
-    return Leg(ln.name, frm, to, amt, unit, day, (ln.amount, env, ctx) if isinstance(amt, Hole) else None)
+    finally:
+        self.stack.pop()
+        self.cur.merge(lc)
+    leg = Leg(ln.name, frm, to, amt, unit, day, (ln.amount, env, ctx) if isinstance(amt, Hole) else None)
+    leg.coll = lc
+    return leg
 
 
 def m_leg_unit_static(self, d, frm, to):
@@ -1591,39 +1598,46 @@ def once_obs(m, obs, ctx):
     return out
 
 
+def day_set(x):
+    """The days a side's statement of a day can take (P43 S1): a day, one; a window or one_of, its days; else None."""
+    if isinstance(x, datetime.date):
+        return {x}
+    if isinstance(x, Iv) and x.days:
+        return set(x.days)
+    if isinstance(x, Iv) and isinstance(x.lo, datetime.date) and isinstance(x.hi, datetime.date):
+        return set(x.lo + datetime.timedelta(days=k) for k in range((x.hi - x.lo).days + 1))
+    return None
+
+
 def same_days(xs):
-    """Whether days rows stated same give agree (L §4.4 l.669, tally 2.2.1 P36 Q1: a comparison): None where they do
-    (one day, or one window's name on every side), 'differ' where no day is in all of them, else the windows that
-    leave it undecided."""
+    """Whether the days sides stated same give agree, the one comparison every read and the booking take (L §4.4
+    l.669; tally 2.2.1 P43 S1): None where they do (every side one day and all equal, a one-day window against its
+    day, or one named window on every side), 'differ' where no day is common to every side, else the indexes of the
+    sides whose windows leave it undecided."""
     named = set(x.name for x in xs if isinstance(x, Iv))
     if all(isinstance(x, Iv) for x in xs) and len(named) == 1 and None not in named:
         return None
-    sets = []
-    for x in xs:
-        if isinstance(x, datetime.date):
-            sets.append({x})
-        elif isinstance(x, Iv) and x.days:
-            sets.append(set(x.days))
-        elif isinstance(x, Iv) and isinstance(x.lo, datetime.date) and isinstance(x.hi, datetime.date):
-            sets.append(set(x.lo + datetime.timedelta(days=k) for k in range((x.hi - x.lo).days + 1)))
-        else:
-            return 'differ' if len(set(vkey(y) for y in xs)) > 1 else None
-    common = set.intersection(*sets)
-    if not common:
+    sets = [day_set(x) for x in xs]
+    if any(z is None for z in sets):
+        return 'differ' if len(set(vkey(y) for y in xs)) > 1 else None
+    if not set.intersection(*sets):
         return 'differ'
     if all(len(z) == 1 for z in sets):
         return None
-    return [x for x, z in zip(xs, sets) if len(z) > 1]
+    return [k for k, z in enumerate(sets) if len(z) > 1]
 
 
 def same_obs_differ(a, others, leg=None, m=None, fact=None):
     """Where rows stated same disagree on a leg's amount or day (L §5.19: "a read of the movement away from its places
     (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
     naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read; fact, where
-    given ('amount' or 'day'), the one fact read: HOLE-SAME is per fact (tally 2.2.1 P36, Q3). Two days agree as a
-    comparison does: undecided is HOLE-IMPRECISE naming the window (Q1)."""
+    given ('amount' or 'day'), the one fact read: HOLE-SAME is per fact (tally 2.2.1 P36, Q3). The day by P43 S1:
+    a side's hole day is the read's hole; a decided disagreement HOLE-SAME "differs on <the first side's day as
+    stated>"; undecided, HOLE-IMPRECISE "for the day of <side> and <side>", one question per unknown day, each
+    labelled by its own side."""
     from .joint import shown
     from .evaluate import carry_hole
+    from .values import day_text
     for g in a.legs:
         if leg is not None and g.name != leg:
             continue
@@ -1636,20 +1650,34 @@ def same_obs_differ(a, others, leg=None, m=None, fact=None):
             if fact is not None and not what.startswith('the %s ' % fact):
                 continue
             xs = [get(h) for o, h in mem]
+            day = what.startswith('the day ')
             if any(isinstance(x, Hole) for x in xs):
+                if day:
+                    # a side whose day is a hole: the read carries that hole's question (P43 S1 a)
+                    return merge(*[x for x in xs if isinstance(x, Hole)])
                 continue
-            if what.startswith('the day '):
+            if day:
                 cmp = same_days(xs)
                 if cmp is None:
                     continue
                 if cmp != 'differ':
-                    # undecided: it depends on where in the window the day falls (L §4.4 l.669, P36 Q1)
-                    w = cmp[0]
-                    return carry_hole(Hole([('date within %s not precise enough for %s' % (
-                        w.window_text(), what), ', '.join(shown(o.id) for o, h in mem))]), *cmp)
-            elif len(set(vkey(x) for x in xs)) == 1:
-                continue
-            d = g.day if isinstance(g.day, datetime.date) else a.day
+                    # undecided: one question per unknown day, each labelled by its own side (P43 S1 d, P42)
+                    sides = and_list(shown(o.id) for o, h in mem)
+                    qs, seen = [], set()
+                    for k in cmp:
+                        w = xs[k]
+                        nm = repr(w.name) if w.name is not None else id(w)
+                        if nm in seen:
+                            continue
+                        seen.add(nm)
+                        qs.append(carry_hole(Hole([('date within %s not precise enough for the day of %s' % (
+                            w.window_text(), sides), shown(mem[k][0].id))]), w))
+                    return merge(*qs)
+                d = day_text(xs[0])
+            else:
+                if len(set(vkey(x) for x in xs)) == 1:
+                    continue
+                d = day_text(g.day if isinstance(g.day, datetime.date) else a.day)
             # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
             q = '%s are one, but %s differs on %s: %s' % (
                 and_list(shown(o.id) for o, h in mem), what, d,

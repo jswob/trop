@@ -47,4 +47,5 @@ version plan
   g_amt = 5000.00 "plan"
 === expect
 q: 5 000.00 DUK
+  open: gift
   cut 2026-10-25

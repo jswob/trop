@@ -14,7 +14,7 @@ from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey, day_text)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
-                    same_groups, same_lines, once_obs, same_obs_differ)
+                    same_groups, same_lines, once_obs, same_obs_differ, day_set)
 from .walk import K_end, K_start, K_before, kday, add_q, St, dec_move
 
 
@@ -431,25 +431,56 @@ def m_same_others(self, o, ctx):
 
 def m_same_in_span(self, x, sp, ctx):
     """Whether a movement of a group stated same is in span sp, read from every side (L §6.1 l.1797, "by every read of
-    either"; tally 2.2.1 P36, N4): None where its sides' days agree on it (x's own day decides), else the day's
-    HOLE-SAME, which holds every side's reads."""
+    either"; tally 2.2.1 P43 S2): the day is read for membership only. None where every day every side can take lies
+    inside the span, or every one outside (x's own day decides; the other facts answer), else the day's hole by S1.
+    Either way the read holds every side's day reads."""
     others = self.same_others(x, ctx)
     if not others:
         return None
+    for y in others:
+        self.same_fact_reads(y, None, 'day')
     days = [x.day] + [y.day for y in others]
-    if not all(isinstance(d, datetime.date) for d in days) or len(set(sp.contains(d) for d in days)) == 1:
+    if any(isinstance(d, Hole) for d in days):
+        return self.same_rows_hole(x, None, ctx, 'day')
+    sets = [day_set(d) for d in days]
+    if any(z is None for z in sets):
         return None
-    return self.same_rows_hole(x, None, ctx, 'day')
+    ins = set(sp.contains(d) for z in sets for d in z)
+    if len(ins) == 1:
+        return None
+    h = self.same_rows_hole(x, None, ctx, 'day')
+    if h is None:
+        # one window on every side, across the span's end: that window's hole (L §4.4)
+        w = next(d for d in days if isinstance(d, Iv))
+        h = imprecise_hole(w, 'the day of %s' % x.id)
+    return h
+
+
+def m_same_fact_reads(self, y, leg, fact):
+    """What another side gave for the one fact read (tally 2.2.1 P43 S3, the register per fact): its day's reads, its
+    leg's amount's, or, for a read of the whole movement, all it read."""
+    if self.cur is None:
+        return
+    c = None
+    if fact == 'day':
+        c = getattr(y, 'day_coll', None)
+    elif fact == 'amount':
+        lg = next((g for g in getattr(y, 'legs', ()) if g.name == leg), None)
+        c = getattr(lg, 'coll', None) if lg is not None else None
+    if c is None and (fact is None or not isinstance(y, Inst)):
+        c = getattr(y, 'coll', None)
+    if c is not None:
+        self.cur.merge(c)
 
 
 def m_same_rows_hole(self, o, leg, ctx, fact=None):
     """The HOLE-SAME of an observed row whose same group's other observed rows disagree with it on a leg's amount or
     day (on leg alone, where given; on fact alone, 'amount' or 'day', where given), else None (L §5.19, L §8.1's form;
-    moves.same_obs_differ). The read is of both sides: it holds the other rows' reads (L §8.2; tally 2.2.1 P35, B2)."""
+    moves.same_obs_differ). The read is of both sides: it holds the other rows' reads for that fact (L §8.2; tally
+    2.2.1 P35, B2; P43 S3)."""
     others = self.same_others(o, ctx)
     for x in others:
-        if getattr(x, 'coll', None) is not None and self.cur is not None:
-            self.cur.merge(x.coll)
+        self.same_fact_reads(x, leg, fact)
     return same_obs_differ(o, others, leg, m=self.m, fact=fact) if others else None
 
 
@@ -1453,7 +1484,7 @@ def m_bal_modelled(self, place, unit, d, ctx, start=False):
             raise e.err
         if e.kind == 'delta':
             q += e.flow.q
-        elif e.kind in ('hole', 'perm'):
+        elif e.kind in ('hole', 'perm') and e.qs:
             hs.append(Hole(e.qs))
         if e.coll is not None:
             self.cur.merge(e.coll)
@@ -1743,6 +1774,16 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
                 continue
             if other_for(e) or (fk is not None and e.kind == 'reset'):
                 continue
+            if e.kind == 'hole' and not e.qs:
+                # a window side counted by another, ended here (Walk.book_leg): nothing to count
+                continue
+            if e.kind == 'mark':
+                # a covered movement nothing fulfils: flows lists what the balance lists (P35; tally 2.2.1 P43 S5)
+                for r in e.reg:
+                    self.reg(r)
+                if e.coll is not None:
+                    self.cur.merge(e.coll)
+                continue
             if e.kind in ('hole', 'perm'):
                 lh = self.leg_lin(e.leg, e.sgn, e.qs) if ctx.partial and e.kind == 'hole' else None
                 holes.append(_reask(Hole(e.qs, lh if lh is not None else False), 'flows of %s' % place))
@@ -1924,6 +1965,9 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 raise bad
             if not obs:
                 self.reg(('open', i.id))
+                if i.coll is not None:
+                    # what decided it, as the balance's open: entry carries it (P35; tally 2.2.1 P43 S5)
+                    self.cur.merge(i.coll)
             # rows stated same are one movement, counted once by flows, their disagreement a HOLE-SAME (L §5.19)
             for o, others in once_obs(m, obs, ctx):
                 for x in [o] + others:

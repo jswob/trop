@@ -36,6 +36,6 @@ ask b31: bal(konto, 2026-03-31)
 === expect s0 dy
 s0: 100.00 PLN
   cut 2026-01-01
-dy (m = in1): ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of cash" (in1, in2)
+dy (m = in1): ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of in1 and in2" (in2)
   unknown day: d2
   cut 2026-01-01

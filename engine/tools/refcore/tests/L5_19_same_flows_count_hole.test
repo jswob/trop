@@ -71,18 +71,16 @@ f1q: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00
   pinned: a2 = 130.00 PLN
   unfulfilled: in1
   cut 2026-06-10
-f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-09: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   cut 2026-06-10
 c: 1
   unfulfilled: in1
   cut 2026-06-10
 c5: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
-  pinned: a2 = 100.00 PLN
   pinned: d2 = 2026-03-09
   unfulfilled: in1
   cut 2026-06-10
 c9: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
-  pinned: a2 = 100.00 PLN
   pinned: d2 = 2026-03-09
   unfulfilled: in1
   cut 2026-06-10

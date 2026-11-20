@@ -1743,11 +1743,17 @@ class Engine:
             raise refuse('LOAD-LABEL', 'rule %s already exists in %s' % (label, info.id))
         return vers[0]
 
-    def beats_order(self, info, labels):
+    def beats_order(self, info, labels, live=None):
+        """L §5.11 step 3's order: a rule after those that beat it, by label among the rest; the beats of the rules
+        in force (a replaced rule's own, tally 2.2.1 S-231.Q1a), else the def's."""
         done = []
         left = set(labels)
+        if live is not None:
+            beaters = dict((l, set(o for o in labels if l in live[o].node.beats)) for l in labels)
+        else:
+            beaters = info.beaters
         while left:
-            ready = sorted(l for l in left if not (info.beaters.get(l, set()) & left))
+            ready = sorted(l for l in left if not (beaters.get(l, set()) & left))
             if not ready:
                 raise LoadError('LOAD-CYCLE', 'a beats cycle in %s' % info.id)
             for l in ready:
@@ -1781,7 +1787,7 @@ class Engine:
             rv = self.rule_in_force(info, lab, d, ctx)
             if rv is not None:
                 live[lab] = rv
-        order = self.beats_order(info, list(live))
+        order = self.beats_order(info, list(live), live)
         applicable = []
         unknown = {}
         state = {}
@@ -3824,7 +3830,8 @@ class Engine:
             elif isinstance(v.lo, Num) and whole_valued(v) and not mono:
                 # only an operation that isn't monotone takes the whole numbers in turn, up to the cap (P41, F1)
                 size *= int(v.hi.q - v.lo.q) + 1
-                opts.append(None if size > LIFT_CAP else [Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
+                # each whole number in its own unit: 0 PLN stays money (the builder's w15; tally 2.2.1 W10)
+                opts.append(None if size > LIFT_CAP else [num_at(v.lo, k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
             elif mono:
                 opts.append([v.lo, v.hi] + ([zero_like(v.lo)] if isinstance(v.lo, Num) and v.lo.q < 0 < v.hi.q
                                             else []))
@@ -4858,6 +4865,17 @@ def zero_like(x):
 
 # the values an operation takes in turn before an interval is the hole (P30: not a fallback to the ends)
 LIFT_CAP = 100000
+
+
+def num_at(x, k):
+    """The whole number k in x's type and unit (an int stays an Int)."""
+    if not x.u and not x.money and getattr(x, 'isint', False):
+        return Int(k)
+    import copy
+    z = copy.copy(x)
+    z.q = Fraction(k)
+    z.enc = None
+    return z
 
 
 def whole_valued(v):

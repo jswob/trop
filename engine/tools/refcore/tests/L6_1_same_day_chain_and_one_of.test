@@ -1,0 +1,62 @@
+# tally 2.2.1 P43 S1 (L §4.4 l.669, §6.1 l.1797): the day of movements stated same, one comparison of the days each side
+# can take: no day common to every side is HOLE-SAME "differs on <the first side's day as stated>", a window
+# printed as its text (review g2fix same/s3_chain_window dy, dy_disj; s4_windows oneof). Before W10: a Python
+# object's address in the message.
+=== s3_chain_window.tally
+model s3
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input d1: date
+input d2: date
+input d3: date
+move in1: transfers
+  on d1
+  leg cash from world to konto amount a1
+move in2: transfers
+  on d2
+  leg cash from world to konto amount a1
+move in3: transfers
+  on d3
+  leg cash from world to konto amount a1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  d1 = window(2026-03-05, 2026-03-07) "s"
+  d2 = 2026-03-05 "s"
+  d3 = 2026-03-07 "s"
+  same in1 = in2
+  same in2 = in3
+ask dy: m.day for m in transfers over 2026-03
+ask dy_w2: m.day for m in transfers over 2026-03 with d2 = window(2026-03-06, 2026-03-09), d3 = window(2026-03-04, 2026-03-06)
+ask dy_same: m.day for m in transfers over 2026-03 with d2 = d1, d3 = d1
+ask dy_disj: m.day for m in transfers over 2026-03 with d2 = window(2026-03-10, 2026-03-12), d3 = window(2026-03-10, 2026-03-12)
+ask s0: sum(m.cash.amount for m in transfers over 2026-03)
+ask c0: count(m in transfers over 2026-03)
+=== expect dy dy_disj dy_same dy_w2
+dy (m = in1): ?"in1, in2 and in3 are one, but the day of cash differs on window(2026-03-05, 2026-03-07): window(2026-03-05, 2026-03-07) (in1), 2026-03-05 (in2) and 2026-03-07 (in3)" (in1, in2, in3)
+  cut 2026-01-01
+dy_disj (m = in1): ?"in1, in2 and in3 are one, but the day of cash differs on window(2026-03-05, 2026-03-07): window(2026-03-05, 2026-03-07) (in1), window(2026-03-10, 2026-03-12) (in2) and window(2026-03-10, 2026-03-12) (in3)" (in1, in2, in3)
+  pinned: d2 = window(2026-03-10, 2026-03-12)
+  pinned: d3 = window(2026-03-10, 2026-03-12)
+  cut 2026-01-01
+dy_same (m = in1): window(2026-03-05, 2026-03-07)
+  pinned: d2 = window(2026-03-05, 2026-03-07)
+  pinned: d3 = window(2026-03-05, 2026-03-07)
+  cut 2026-01-01
+dy_w2 (m = in1): ?"date within window(2026-03-04, 2026-03-06) not precise enough for the day of in1, in2 and in3" (in3) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of in1, in2 and in3" (in1) ?"date within window(2026-03-06, 2026-03-09) not precise enough for the day of in1, in2 and in3" (in2)
+  pinned: d2 = window(2026-03-06, 2026-03-09)
+  pinned: d3 = window(2026-03-04, 2026-03-06)
+  unknown day: d1
+  unknown day: d2
+  unknown day: d3
+  cut 2026-01-01

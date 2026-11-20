@@ -1397,6 +1397,17 @@ class Walk:
                     continue
                 agree = all(sj == si and vkey(g.amount) == vkey(lg.amount) and g.day == lg.day
                             for o, g, sj in touch[1:])
+                from .moves import same_days, id_order as _ido
+                if not agree and all(sj == si and vkey(g.amount) == vkey(lg.amount) for o, g, sj in touch[1:]):
+                    # the booking takes the reads' comparison of days (tally 2.2.1 P43 S1): agreed (a one-day window
+                    # against its day) or undecided, the movement is booked once, by its first window side in id
+                    # order, so a balance carries the window's hole and no HOLE-SAME of equal amounts (F9)
+                    dc = same_days([g.day for o, g, sj in touch])
+                    if dc != 'differ':
+                        ws = [t for t in touch if isinstance(t[1].day, Iv)] or touch
+                        first = min(ws, key=lambda t: _ido(self.m, t[0].id))
+                        out.append(None if first[0] is mv else 'skip')
+                        continue
                 if agree:
                     # L §6.1 (round 14): "it is booked once, at the point in the day's order of the latest of them"
                     latest = max(touch, key=lambda t: same_book_key(t[0], t[1]))
@@ -1540,6 +1551,10 @@ class Walk:
             for si, (p, c) in enumerate(zip((lg.frm, lg.to), cs)):
                 if c == 'skip':
                     ends[si] = False
+                    if isinstance(lg.day, Iv) and isinstance(p, Thing):
+                        # a window side counted by another ends its window here, booking nothing (P43 S1, F9)
+                        u0 = lg.unit or self.m.place_unit(self.m.things[p.name]) or '*'
+                        self.add(p.name, u0, Ent(key, 'hole', qs=EMPTY, wid='%s.%s' % (mv.id, lg.name)))
                 elif isinstance(c, tuple) and c[0] == 'wait':
                     if ends[si]:
                         self.__dict__.setdefault('same_waiting', {}).setdefault(c[1].id, []).append(

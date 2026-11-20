@@ -849,11 +849,17 @@ class Asker:
         scenario file exists only in that scenario and those over it)."""
         from .node import walk as nodes
         from .moves import item_in_world
+        from .model import in_world
         for n in nodes(e):
             if n.k == 'name':
                 hit = self.m.lookup(n.id)
                 if hit is not None and not item_in_world(hit[1]):
                     return False
+            t = self.m.things.get(getattr(n, 'id', None)) if isinstance(getattr(n, 'id', None), str) else None
+            if t is not None and getattr(t, 'entries', None) and \
+                    not any(x.version is None or in_world(x.version) for x in t.entries):
+                # a kind's entry only another world states: what only S states is `added` (tally 2.2.1 P43 S7)
+                return False
         return True
 
     def diff_lines(self, a, res, ctx, t):

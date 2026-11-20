@@ -1,0 +1,47 @@
+# tally 2.2.1 P43 S1 (L §4.4 l.669, §6.1 l.1797): the day of movements stated same, one comparison of the days each side
+# can take: the booking takes the same comparison: undecided with equal amounts, the balance carries the
+# window's hole and no HOLE-SAME (review g2 agent/min/b3; g2fix same/s1_dayonly pw). Before W10: a HOLE-SAME
+# quoting two equal amounts beside it.
+=== b3.tally
+model b3
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  on d1
+  leg cash from world to konto amount a1
+move in2: transfers
+  on d2
+  leg cash from world to konto amount a1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = window(2026-03-05, 2026-03-07) "s"
+  same in1 = in2
+ask s0: sum(m.cash.amount for m in transfers over 2026-03)
+ask dy: m.day for m in transfers over 2026-03
+ask b5: bal(konto, 2026-03-05)
+ask b31: bal(konto, 2026-03-31)
+=== expect
+b31: 600.00 PLN
+  cut 2026-01-01
+b5: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in2)
+  unknown day: d2
+  cut 2026-01-01
+dy (m = in1): ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of in1 and in2" (in2)
+  unknown day: d2
+  cut 2026-01-01
+s0: 100.00 PLN
+  cut 2026-01-01
