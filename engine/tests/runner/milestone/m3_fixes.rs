@@ -101,4 +101,28 @@ mod tests {
             failed.join("\n")
         );
     }
+
+    /// tally 2.2.1's guards (#241, T's plan §1): answers the round leaves as they are, which
+    /// its window, register, naming and run-line changes must not move (S-208.3, 208.4, 208.6,
+    /// S-216, 228.Q12, S-231.Q4, S-window-key's day key, the sign rule, 235.8, R18's cell 1,
+    /// 231.Q6, S-230.Q5b, S-233.5, 229.2, 221.10, S-233.8's twin, 233.c's load words).
+    #[test]
+    fn m3_fixes_t221_guards() {
+        group_holds(RUNS, "t221-gd");
+    }
+
+    /// tally 2.2.1's builder group G1 (#241): the window group's vectors, refcore's bytes;
+    /// 221.C3 held for G1 (`held.tsv`) until the engine follows L §4.4 l.668.
+    #[test]
+    fn m3_fixes_t221_g1() {
+        group_holds(RUNS, "t221-g1");
+    }
+
+    /// tally 2.2.1's refcore-alone vectors (#241): refcore's mends, which the engine prints on
+    /// arrival; 221.10's `mean` and `quantile` over a window term held for M4 (`held.tsv`),
+    /// where the aggregates are built.
+    #[test]
+    fn m3_fixes_t221_refcore() {
+        group_holds(RUNS, "t221-rc");
+    }
 }

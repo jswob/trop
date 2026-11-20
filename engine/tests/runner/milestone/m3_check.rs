@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m3::{check_group_failures, check_groups};
 
     /// Every group of the store, each run by a test below.
-    const GROUPS: [&str; 23] = [
+    const GROUPS: [&str; 24] = [
         "probes",
         "probe-sets",
         "models",
@@ -41,6 +41,7 @@ mod tests {
         "changes",
         "operations",
         "reviews",
+        "t221-gd",
     ];
 
     /// Holds every vector of `group` at `part` modulo `parts` to its stored run.
@@ -242,5 +243,12 @@ mod tests {
     #[test]
     fn m3_check_reviews() {
         checks_as_stored("reviews");
+    }
+
+    /// tally 2.2.1's guards (#241, T's plan §1): a joint model's `check` holds no member's
+    /// scenario lines (228.Q12, R20 option A); a scenario file's literal key is load's (229.2).
+    #[test]
+    fn m3_check_t221_guards() {
+        checks_as_stored("t221-gd");
     }
 }

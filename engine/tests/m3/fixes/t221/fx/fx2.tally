@@ -1,0 +1,41 @@
+model c_fx2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input eur: num
+
+input fx[d in days]: num PLN
+
+input fxm[m in months]: num PLN
+
+move conv: transfers
+  on w
+  leg cash from world to konto amount round(eur * fx[w], minor(PLN), half-up)
+
+move convm: transfers
+  on w
+  leg cash from world to konto amount round(eur * fxm[w], minor(PLN), half-up)
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  eur = 100 "c"
+  w = window(2026-03-30, 2026-04-02) "c"
+  fx[2026-03-01..2026-03-31] = 4 PLN "c"
+  fxm[2026-03..2026-04] = 4 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+
+ask ftwo: flows(convm, 2026-03-01 .. 2026-04-30)

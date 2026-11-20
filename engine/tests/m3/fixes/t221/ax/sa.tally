@@ -1,0 +1,23 @@
+scenario sa over mini
+  tally 2
+  from 2026-12-01
+
+axis cut_reading
+  floor "rounds down"
+  exact "no rounding"
+
+input bump: money PLN
+
+def extra: money PLN
+  rule lo = bump when cut_reading == floor
+  rule hi = bump + bump when cut_reading == exact
+
+version c
+  cite s
+  governs always
+  known 2026-10-19
+  bump = 1.00 PLN "x"
+
+ask qa: extra in sa
+ask qd: diff(extra) in sa against mini
+ask qb: bal(konto, 2026-12-31) in sa
