@@ -679,11 +679,42 @@ impl Engine {
             let mut rest = rows.as_slice();
             while let [a, tail @ ..] = rest {
                 rest = tail;
-                pairs_warned(m, &first.id, a, tail, out)?;
+                same_pairs_warned(m, &first.id, a, tail, out)?;
             }
         }
         Ok(())
     }
+}
+
+/// `WARN-LEGS` for row `a` against each later row of its `same` group that disagrees with it
+/// on an amount or a day, in one version or two: what each states of the fact they disagree
+/// on, the amounts, or the days where only the days differ; each warning once (L §5.19
+/// l.1717, §8.5; B5, Q7, P36 on #241).
+fn same_pairs_warned(
+    m: &Reality,
+    name: &str,
+    a: &Obs,
+    later: &[Obs],
+    out: &mut Vec<(Warn, String)>,
+) -> Result<(), Stop> {
+    for b in later {
+        let (fa, fb) = if disagree(a, b) {
+            (amounts(m, a)?, amounts(m, b)?)
+        } else if a.day != b.day {
+            (a.day.text(), b.day.text())
+        } else {
+            continue;
+        };
+        let text = format!(
+            "the two observations of {name} disagree: {} ({fa}) and {} ({fb})",
+            a.id, b.id
+        );
+        let w = (Warn::Legs, text);
+        if !out.contains(&w) {
+            out.push(w);
+        }
+    }
+    Ok(())
 }
 
 /// `WARN-LEGS` for observation `a` against each later one of another version that fulfils
