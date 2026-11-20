@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 256] = [
+pub static TEXTS: [(&str, &str); 285] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -638,6 +638,10 @@ pub static TEXTS: [(&str, &str); 256] = [
         include_str!("../../m3/fixes/t221/ax/sa.tally"),
     ),
     (
+        "m3/fixes/t221/b2mix/b2mix.tally",
+        include_str!("../../m3/fixes/t221/b2mix/b2mix.tally"),
+    ),
+    (
         "m3/fixes/t221/b2pin/b2_pin.tally",
         include_str!("../../m3/fixes/t221/b2pin/b2_pin.tally"),
     ),
@@ -656,6 +660,14 @@ pub static TEXTS: [(&str, &str); 256] = [
     (
         "m3/fixes/t221/cov/cov.tally",
         include_str!("../../m3/fixes/t221/cov/cov.tally"),
+    ),
+    (
+        "m3/fixes/t221/cutcov/base.tally",
+        include_str!("../../m3/fixes/t221/cutcov/base.tally"),
+    ),
+    (
+        "m3/fixes/t221/cutcov/late.tally",
+        include_str!("../../m3/fixes/t221/cutcov/late.tally"),
     ),
     (
         "m3/fixes/t221/cyc/cyc.tally",
@@ -680,6 +692,14 @@ pub static TEXTS: [(&str, &str); 256] = [
     (
         "m3/fixes/t221/entered/reality.tally",
         include_str!("../../m3/fixes/t221/entered/reality.tally"),
+    ),
+    (
+        "m3/fixes/t221/f1/f1_flows.scen",
+        include_str!("../../m3/fixes/t221/f1/f1_flows.scen"),
+    ),
+    (
+        "m3/fixes/t221/f1/f1_flows.tally",
+        include_str!("../../m3/fixes/t221/f1/f1_flows.tally"),
     ),
     (
         "m3/fixes/t221/from/base.tally",
@@ -722,6 +742,18 @@ pub static TEXTS: [(&str, &str); 256] = [
         include_str!("../../m3/fixes/t221/g3ef/p17t_domhole.tally"),
     ),
     (
+        "m3/fixes/t221/g3t/cal221_3.tally",
+        include_str!("../../m3/fixes/t221/g3t/cal221_3.tally"),
+    ),
+    (
+        "m3/fixes/t221/g3t/s230_5a.tally",
+        include_str!("../../m3/fixes/t221/g3t/s230_5a.tally"),
+    ),
+    (
+        "m3/fixes/t221/g4top/m2.tally",
+        include_str!("../../m3/fixes/t221/g4top/m2.tally"),
+    ),
+    (
         "m3/fixes/t221/j/a/a.tally",
         include_str!("../../m3/fixes/t221/j/a/a.tally"),
     ),
@@ -738,12 +770,56 @@ pub static TEXTS: [(&str, &str); 256] = [
         include_str!("../../m3/fixes/t221/j/top.tally"),
     ),
     (
+        "m3/fixes/t221/jw/a/a.tally",
+        include_str!("../../m3/fixes/t221/jw/a/a.tally"),
+    ),
+    (
+        "m3/fixes/t221/jw/a/asks.tally",
+        include_str!("../../m3/fixes/t221/jw/a/asks.tally"),
+    ),
+    (
+        "m3/fixes/t221/jw/a/sc.tally",
+        include_str!("../../m3/fixes/t221/jw/a/sc.tally"),
+    ),
+    (
+        "m3/fixes/t221/jw/b/a.tally",
+        include_str!("../../m3/fixes/t221/jw/b/a.tally"),
+    ),
+    (
+        "m3/fixes/t221/jw/b/asks.tally",
+        include_str!("../../m3/fixes/t221/jw/b/asks.tally"),
+    ),
+    (
+        "m3/fixes/t221/jw/b/sc.tally",
+        include_str!("../../m3/fixes/t221/jw/b/sc.tally"),
+    ),
+    (
+        "m3/fixes/t221/jw/top.tally",
+        include_str!("../../m3/fixes/t221/jw/top.tally"),
+    ),
+    (
         "m3/fixes/t221/ld/reader_on.d.tally",
         include_str!("../../m3/fixes/t221/ld/reader_on.d.tally"),
     ),
     (
         "m3/fixes/t221/ld/reader_on.t.tally",
         include_str!("../../m3/fixes/t221/ld/reader_on.t.tally"),
+    ),
+    (
+        "m3/fixes/t221/mini5/asks.tally",
+        include_str!("../../m3/fixes/t221/mini5/asks.tally"),
+    ),
+    (
+        "m3/fixes/t221/mini5/fix.tally",
+        include_str!("../../m3/fixes/t221/mini5/fix.tally"),
+    ),
+    (
+        "m3/fixes/t221/mini5/reality.tally",
+        include_str!("../../m3/fixes/t221/mini5/reality.tally"),
+    ),
+    (
+        "m3/fixes/t221/mini5/statement.tally",
+        include_str!("../../m3/fixes/t221/mini5/statement.tally"),
     ),
     (
         "m3/fixes/t221/misc/m1.tally",
@@ -838,6 +914,10 @@ pub static TEXTS: [(&str, &str); 256] = [
         include_str!("../../m3/fixes/t221/o216/o4_leg_a.tally"),
     ),
     (
+        "m3/fixes/t221/onwin/onwin.tally",
+        include_str!("../../m3/fixes/t221/onwin/onwin.tally"),
+    ),
+    (
         "m3/fixes/t221/p206/p2.tally",
         include_str!("../../m3/fixes/t221/p206/p2.tally"),
     ),
@@ -848,6 +928,34 @@ pub static TEXTS: [(&str, &str); 256] = [
     (
         "m3/fixes/t221/p25/p25_list.tally",
         include_str!("../../m3/fixes/t221/p25/p25_list.tally"),
+    ),
+    (
+        "m3/fixes/t221/p3/c22.tally",
+        include_str!("../../m3/fixes/t221/p3/c22.tally"),
+    ),
+    (
+        "m3/fixes/t221/p3/c24.tally",
+        include_str!("../../m3/fixes/t221/p3/c24.tally"),
+    ),
+    (
+        "m3/fixes/t221/p3/cw.tally",
+        include_str!("../../m3/fixes/t221/p3/cw.tally"),
+    ),
+    (
+        "m3/fixes/t221/p3/m.tally",
+        include_str!("../../m3/fixes/t221/p3/m.tally"),
+    ),
+    (
+        "m3/fixes/t221/q2dir/a/s2.tally",
+        include_str!("../../m3/fixes/t221/q2dir/a/s2.tally"),
+    ),
+    (
+        "m3/fixes/t221/q2dir/base.tally",
+        include_str!("../../m3/fixes/t221/q2dir/base.tally"),
+    ),
+    (
+        "m3/fixes/t221/q2dir/z/s1.tally",
+        include_str!("../../m3/fixes/t221/q2dir/z/s1.tally"),
     ),
     (
         "m3/fixes/t221/q5/a/ok.tally",
@@ -884,6 +992,10 @@ pub static TEXTS: [(&str, &str); 256] = [
     (
         "m3/fixes/t221/rs2/sc.tally",
         include_str!("../../m3/fixes/t221/rs2/sc.tally"),
+    ),
+    (
+        "m3/fixes/t221/rs5/b.tally",
+        include_str!("../../m3/fixes/t221/rs5/b.tally"),
     ),
     (
         "m3/fixes/t221/rv1/b1_pow.tally",
@@ -956,6 +1068,10 @@ pub static TEXTS: [(&str, &str); 256] = [
     (
         "m3/fixes/t221/sw/s3.tally",
         include_str!("../../m3/fixes/t221/sw/s3.tally"),
+    ),
+    (
+        "m3/fixes/t221/u0/u0_etf_literal.tally",
+        include_str!("../../m3/fixes/t221/u0/u0_etf_literal.tally"),
     ),
     (
         "m3/fixes/t221/w218/a1_window_end.tally",

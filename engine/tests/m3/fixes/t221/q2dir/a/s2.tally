@@ -1,0 +1,5 @@
+scenario s2 over base
+  tally 2
+  from 2026-03-01
+
+ask q2: missing_two in s2

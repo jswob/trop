@@ -280,3 +280,12 @@ On the build branch merged at 7e4ae092 (G1, G1's fix, G2, G2's fix) and refcore 
 
 - **12 vectors, `t221-g1/rv-*`,** from the review's own probe texts (`m3/fixes/t221/rv1/`), each ask beside its pinned days: B1 (`pow` over 517 days), B2 (`day_of`, a refusal only the ends give), B3 (two windows' quotient), B5 (two cuts in one run, no `ENGINE-INVARIANT`), N2 (`round`, P25), N4 (a version known after the window), N5 (`month_of` across two months), N6 (one window's divisor), N8 (a reading's own day, P32), N9 (one name in two arguments), P25's `abs` and `pow` across 0, P26 (a scenario's move across `from`). Refcore's bytes, green on this engine.
 - **Not yet (P41):** B4 and its kin, N1, N3, intervals over 100 000 values. P26's `p0430` (a pin that leaves `px` out prints `pinned:` on the engine since G2's review fix) waits for the last pin.
+
+## tally 2.2.1, chunks C5 and C6: G3's and G4's vectors, red until built (#241, 2026-11-20)
+
+Refcore's bytes at the second pin; one local commit with a `Logged-Red:` line per id (R-77: no engine commit follows it yet).
+
+- **G3, the names (9):** `t221-g3` 221-2-two-windows, 221-3-two-calendars, 221-4-def-window, 221-6-held-calendar, 221-C1-min-window, 235-6-bound-key, r21-c1-move-on, r21-c2-two-moves; `t221-g2/208-10-quantile-none` (233.7's name). Not written: 221.8 (the writer's W8 calls it a guard both interpreters print, after the pin), 233.7's own text (its three stored records carry it), 233.c's run form (the load words are `t221-gd/233-c-load-words`).
+- **G4 (15):** `t221-g4` 221-9-before-self, 223-replace-covers and its check, 228-2-run-path-order, 228-5-no-file-run, 228-11-member-warnings, 231-2-pin-balance, the check 232-per-cut, 233-8-known-paren, and S-usage's six `usage-*` (exit 2). Green on arrival: `t221-rc/230-5a-same-order`, `233-a-unit-literal`.
+- **Not yet written:** `reprint-pin-bytes` (the runs store takes only `run` rows and usage errors), 228.Q10's member `on`, and the four form fixtures (`LOAD-ORDER`, `LOAD-COVERS`, `LOAD-INSTANT`, `LOAD-VERSION`, `codes/m0`).
+- **`INTERFACE.md` §1:** S-usage's words (an option the command doesn't take is exit 2; `reprint` takes `--pin=bytes`); gap I-4 closed. **`MILESTONE-M0.md` row 5:** re-stated from `xref_check.py --gate M0` at tally 2.2.1: 101 codes, 54 `LOAD-*`, 268 forms (175 `LOAD-*`, 20 with no output). **The catalogue:** `map/codes.tsv` as `xref_check.py` writes it (no row moved in this chunk; `WARN-STALE` left at C3).

@@ -4847,6 +4847,14 @@ z/c1.tally	m3/fixes/t221/q5/z/c1.tally
 scenario c1: refused: LOAD-SCENARIO over cycle or deeper than 4 (scenario c1) (z/c1.tally:1)
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
+,40:fixture/t221-g4/223-replace-covers-check,7:t221-g4,5:check,32:engine/tests/m3/fixes/t221/mini5,56:check reality.tally statement.tally fix.tally asks.tally,182:reality.tally	m3/fixes/t221/mini5/reality.tally
+statement.tally	m3/fixes/t221/mini5/statement.tally
+fix.tally	m3/fixes/t221/mini5/fix.tally
+asks.tally	m3/fixes/t221/mini5/asks.tally
+,1:1,118:refused: LOAD-COVERS replace bank[r1] of konto: statement_2026_10_fix doesn't cover konto on 2026-10-10 (fix.tally:8)
+,27:fixture/t221-g4/232-per-cut,7:t221-g4,5:check,33:engine/tests/m3/fixes/t221/cutcov,27:check base.tally late.tally,86:base.tally	m3/fixes/t221/cutcov/base.tally
+late.tally	m3/fixes/t221/cutcov/late.tally
+,1:1,120:scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
 ,16:changes/check/c1,7:changes,5:check,42:engine/tests/integration/amendments/real11,43:check c1/ ../../../m3/changes/asks/c1.tally,1065:c1/loans.tally	integration/amendments/real11/c1/loans.tally
 c1/pays.tally	integration/amendments/real11/c1/pays.tally
 c1/people.tally	integration/amendments/real11/c1/people.tally

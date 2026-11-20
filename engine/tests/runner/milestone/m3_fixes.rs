@@ -128,6 +128,20 @@ mod tests {
         group_holds(RUNS, "t221-g2");
     }
 
+    /// tally 2.2.1's builder group G3 (#241): the names (R21's cells, 221.2 to 221.6, 221.C1,
+    /// 235.6), refcore's bytes; red until G3.
+    #[test]
+    fn m3_fixes_t221_g3() {
+        group_holds(RUNS, "t221-g3");
+    }
+
+    /// tally 2.2.1's builder group G4 (#241): the run's lines and load refusals (S-221.9, S-223,
+    /// 228.Q5's run, 228.Q11, S-231.Q2), refcore's bytes; red until G4.
+    #[test]
+    fn m3_fixes_t221_g4() {
+        group_holds(RUNS, "t221-g4");
+    }
+
     /// tally 2.2.1's refcore-alone vectors (#241): refcore's mends, which the engine prints on
     /// arrival; 221.10's `mean` and `quantile` over a window term take it as the hole (P27).
     #[test]

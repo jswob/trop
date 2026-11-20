@@ -6280,4 +6280,243 @@ p0503: 650.00 PLN
   world: sc
   unfulfilled: px
   cut 2026-06-10
-,
+,28:t221-g2/208-10-quantile-none,7:t221-g2,3:run,32:engine/tests/m3/fixes/t221/misc2,21:run m2.tally --ask qn,38:m2.tally	m3/fixes/t221/misc2/m2.tally
+,1:0,130:qn: refused: RUN-NONE lvl is none here: the level of quantile
+  cut 2026-06-10
+warning: WARN-UNREAD input zero is read by nothing
+,25:t221-g3/221-2-two-windows,7:t221-g3,3:run,31:engine/tests/m3/fixes/t221/misc,22:run m1.tally --ask two,37:m1.tally	m3/fixes/t221/misc/m1.tally
+,1:0,334:two: (true, false, ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w) ?"date within window(2026-03-12, 2026-03-14) not precise enough for a print" (w0))
+  unknown day: w
+  unknown day: w0
+  cut 2026-06-10
+warning: WARN-UNREAD input hx is read by nothing
+warning: WARN-UNREAD input lvl is read by nothing
+,27:t221-g3/221-3-two-calendars,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/g3t,18:run cal221_3.tally,48:cal221_3.tally	m3/fixes/t221/g3t/cal221_3.tally
+,1:0,465:c3: ?"date within one_of([2026-06-22, 2026-06-24]) not precise enough for is_business(2026-06-22, cal1)" (cal1) ?"date within one_of([2026-06-22, 2026-06-24]) not precise enough for is_business(2026-06-24, cal2)" (cal2)
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal1
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal2
+  cut 2026-06-10
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,24:t221-g3/221-4-def-window,7:t221-g3,3:run,32:engine/tests/m3/fixes/t221/onwin,24:run onwin.tally --ask o2,44:onwin.tally	m3/fixes/t221/onwin/onwin.tally
+,1:0,131:o2: ?"date within window(2026-03-27, 2026-03-31) not precise enough for flows of bonus" (bonus)
+  unknown day: wr
+  cut 2026-01-01
+,27:t221-g3/221-6-held-calendar,7:t221-g3,3:run,29:engine/tests/m3/fixes/t221/p3,60:run m.tally c22.tally c24.tally cw.tally --ask q2 q4 q13 q14,142:m.tally	m3/fixes/t221/p3/m.tally
+c22.tally	m3/fixes/t221/p3/c22.tally
+c24.tally	m3/fixes/t221/p3/c24.tally
+cw.tally	m3/fixes/t221/p3/cw.tally
+,1:0,534:scenario cw: refused: LOAD-LAWDATE pay_w reads law-dated facts and states no at (m.tally:28)
+q2: 0.00 PLN
+  world: c22
+  cut 2026-01-10
+q4: diff in c22 against g4_p3: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed bal(sav, 2026-06-22): 0.00 PLN against ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_cal)
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
+  world: c22
+  world: g4_p3
+  cut 2026-01-10
+q13: window(2026-06-22, 2026-06-23)
+  cut 2026-01-10
+q14: true
+  cut 2026-01-10
+,25:t221-g3/221-C1-min-window,7:t221-g3,3:run,32:engine/tests/m3/fixes/t221/b2mix,27:run b2mix.tally --ask qa qb,44:b2mix.tally	m3/fixes/t221/b2mix/b2mix.tally
+,1:0,606:qa: ?"date within window(2026-03-04, 2026-03-08) not precise enough for a balance" (pay_x) ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_x)
+  pinned: x = window(2026-03-04, 2026-03-07)
+  unknown day: w
+  unknown day: window(2026-03-04, 2026-03-08)
+  cut 2026-01-01
+qb: ?"date within window(2026-03-04, 2026-03-08) not precise enough for a balance" (pay_x) ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_x)
+  pinned: x = window(2026-03-04, 2026-03-07)
+  unknown day: w
+  unknown day: window(2026-03-04, 2026-03-08)
+  cut 2026-01-01
+,23:t221-g3/235-6-bound-key,7:t221-g3,3:run,29:engine/tests/m3/fixes/t221/f1,32:run f1_flows.tally f1_flows.scen,92:f1_flows.tally	m3/fixes/t221/f1/f1_flows.tally
+f1_flows.scen	m3/fixes/t221/f1/f1_flows.scen
+,1:0,4764:fb: ?"before the run's start" (rent[2026-01], rent[2026-02], rent[2026-03], rent[2026-04], rent[2026-05], rent[2026-06], rent[2026-07], rent[2026-08], rent[2026-09], rent[2026-10], rent[2026-11], rent[2026-12])
+  law date 2026-03-10, cut 2026-03-10
+fi:
+  base:d0 (source s "s")
+  base:d1 (source s "s")
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-01): ?"before the run's start" (rent[2026-01])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-02): ?"before the run's start" (rent[2026-02])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-03): ?"before the run's start" (rent[2026-03])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-04): ?"before the run's start" (rent[2026-04])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-05): ?"before the run's start" (rent[2026-05])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-06): ?"before the run's start" (rent[2026-06])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-07): ?"before the run's start" (rent[2026-07])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-08): ?"before the run's start" (rent[2026-08])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-09): ?"before the run's start" (rent[2026-09])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-10): ?"before the run's start" (rent[2026-10])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-11): ?"before the run's start" (rent[2026-11])
+  law date 2026-03-10, cut 2026-03-10
+fk (m = 2026-12): ?"before the run's start" (rent[2026-12])
+  law date 2026-03-10, cut 2026-03-10
+fs: diff in sc against n4: 12 changed, 0 added, 0 removed, 0 unchanged
+  changed (m = 2026-01): 2 800.00 PLN against ?"before the run's start" (rent[2026-01])
+  changed (m = 2026-02): 0.00 PLN against ?"before the run's start" (rent[2026-02])
+  changed (m = 2026-03): 0.00 PLN against ?"before the run's start" (rent[2026-03])
+  changed (m = 2026-04): 0.00 PLN against ?"before the run's start" (rent[2026-04])
+  changed (m = 2026-05): 0.00 PLN against ?"before the run's start" (rent[2026-05])
+  changed (m = 2026-06): 0.00 PLN against ?"before the run's start" (rent[2026-06])
+  changed (m = 2026-07): 0.00 PLN against ?"before the run's start" (rent[2026-07])
+  changed (m = 2026-08): 0.00 PLN against ?"before the run's start" (rent[2026-08])
+  changed (m = 2026-09): 0.00 PLN against ?"before the run's start" (rent[2026-09])
+  changed (m = 2026-10): 0.00 PLN against ?"before the run's start" (rent[2026-10])
+  changed (m = 2026-11): 0.00 PLN against ?"before the run's start" (rent[2026-11])
+  changed (m = 2026-12): 0.00 PLN against ?"before the run's start" (rent[2026-12])
+  world: n4
+  world: sc
+  unfulfilled: rent[2026-01]
+  law date 2026-03-10, cut 2026-03-10
+fs2: diff in sc against n4: 12 changed, 0 added, 0 removed, 0 unchanged
+  changed (m = 2026-01): 2 800.00 PLN against ?"before the run's start" (rent[2026-01])
+  changed (m = 2026-02): 0.00 PLN against ?"before the run's start" (rent[2026-02])
+  changed (m = 2026-03): 0.00 PLN against ?"before the run's start" (rent[2026-03])
+  changed (m = 2026-04): 0.00 PLN against ?"before the run's start" (rent[2026-04])
+  changed (m = 2026-05): 0.00 PLN against ?"before the run's start" (rent[2026-05])
+  changed (m = 2026-06): 0.00 PLN against ?"before the run's start" (rent[2026-06])
+  changed (m = 2026-07): 0.00 PLN against ?"before the run's start" (rent[2026-07])
+  changed (m = 2026-08): 0.00 PLN against ?"before the run's start" (rent[2026-08])
+  changed (m = 2026-09): 0.00 PLN against ?"before the run's start" (rent[2026-09])
+  changed (m = 2026-10): 0.00 PLN against ?"before the run's start" (rent[2026-10])
+  changed (m = 2026-11): 0.00 PLN against ?"before the run's start" (rent[2026-11])
+  changed (m = 2026-12): 0.00 PLN against ?"before the run's start" (rent[2026-12])
+  world: n4
+  world: sc
+  unfulfilled: rent[2026-01]
+  law date 2026-03-10, cut 2026-03-10
+fx: ?"before the run's start" (rent[2026-01].cash)
+  [1] early_c[2026-01] = ?"before the run's start" (rent[2026-01].cash), law date 2026-03-10
+      rule base: won
+        [2] row base:d0 = 2025-12-01
+            version base, source s, "s", governs always, known 2025-01-01
+        [3] row base:d1 = 2026-01-31
+            version base, source s, "s", governs always, known 2025-01-01
+  law date 2026-03-10, cut 2026-03-10
+fx2: ?"before the run's start" (rent[2026-02])
+  [1] early[2026-02] = ?"before the run's start" (rent[2026-02]), law date 2026-03-10
+      rule base: won
+        [2] row base:d0 = 2025-12-01
+            version base, source s, "s", governs always, known 2025-01-01
+        [3] row base:d1 = 2026-01-31
+            version base, source s, "s", governs always, known 2025-01-01
+  law date 2026-03-10, cut 2026-03-10
+warning: WARN-NEGATIVE konto is below zero from 2026-02-01
+,22:t221-g3/r21-c1-move-on,7:t221-g3,3:run,32:engine/tests/m3/fixes/t221/onwin,24:run onwin.tally --ask o1,44:onwin.tally	m3/fixes/t221/onwin/onwin.tally
+,1:0,137:o1: ?"date within window(2026-03-27, 2026-03-31) not precise enough for flows of salary" (salary)
+  unknown day: salary
+  cut 2026-01-01
+,24:t221-g3/r21-c2-two-moves,7:t221-g3,3:run,32:engine/tests/m3/fixes/t221/onwin,24:run onwin.tally --ask o3,44:onwin.tally	m3/fixes/t221/onwin/onwin.tally
+,1:0,156:o3: ?"date within window(2026-03-27, 2026-03-31) not precise enough for a balance" (bonus, salary)
+  unknown day: salary
+  unknown day: wr
+  cut 2026-01-01
+,25:t221-g4/221-9-before-self,7:t221-g4,3:run,32:engine/tests/m3/fixes/t221/g4top,12:run m2.tally,38:m2.tally	m3/fixes/t221/g4top/m2.tally
+,1:1,86:refused: LOAD-ORDER top before top: a move isn't ordered against itself (m2.tally:24)
+,26:t221-g4/223-replace-covers,7:t221-g4,3:run,32:engine/tests/m3/fixes/t221/mini5,72:run reality.tally statement.tally fix.tally asks.tally --ask q_mid q_oct,182:reality.tally	m3/fixes/t221/mini5/reality.tally
+statement.tally	m3/fixes/t221/mini5/statement.tally
+fix.tally	m3/fixes/t221/mini5/fix.tally
+asks.tally	m3/fixes/t221/mini5/asks.tally
+,1:1,118:refused: LOAD-COVERS replace bank[r1] of konto: statement_2026_10_fix doesn't cover konto on 2026-10-10 (fix.tally:8)
+,25:t221-g4/228-5-no-file-run,7:t221-g4,3:run,29:engine/tests/m3/fixes/t221/q5,47:run base.tally a/ok.tally m/c2.tally z/c1.tally,156:base.tally	m3/fixes/t221/q5/base.tally
+a/ok.tally	m3/fixes/t221/q5/a/ok.tally
+m/c2.tally	m3/fixes/t221/q5/m/c2.tally
+z/c1.tally	m3/fixes/t221/q5/z/c1.tally
+,1:0,413:scenario c2: refused: LOAD-SCENARIO over cycle or deeper than 4 (scenario c2) (m/c2.tally:1)
+scenario c1: refused: LOAD-SCENARIO over cycle or deeper than 4 (scenario c1) (z/c1.tally:1)
+q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-06-10
+q_ok: 8 000.00 PLN
+  world: ok
+  law date 2026-03-01, cut 2026-06-10
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,30:t221-g4/228-11-member-warnings,7:t221-g4,3:run,29:engine/tests/m3/fixes/t221/jw,41:run top.tally --ask a.q b.q a.q_sc b.q_sc,275:top.tally	m3/fixes/t221/jw/top.tally
+a/a.tally	m3/fixes/t221/jw/a/a.tally
+a/asks.tally	m3/fixes/t221/jw/a/asks.tally
+a/sc.tally	m3/fixes/t221/jw/a/sc.tally
+b/a.tally	m3/fixes/t221/jw/b/a.tally
+b/asks.tally	m3/fixes/t221/jw/b/asks.tally
+b/sc.tally	m3/fixes/t221/jw/b/sc.tally
+,1:0,2916:a.q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+b.q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+a.q_sc: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  world: sc
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+b.q_sc: ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
+  world: sc
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE a.konto is below zero from 2026-01-01
+warning: WARN-NEGATIVE b.konto is below zero from 2026-01-01
+,25:t221-g4/231-2-pin-balance,7:t221-g4,3:run,30:engine/tests/m3/fixes/t221/rs5,20:run b.tally --ask q5,34:b.tally	m3/fixes/t221/rs5/b.tally
+,1:1,86:refused: LOAD-INSTANT a pin of balance reading opening states no instant (b.tally:12)
+,25:t221-rc/230-5a-same-order,7:t221-rc,3:run,30:engine/tests/m3/fixes/t221/g3t,17:run s230_5a.tally,46:s230_5a.tally	m3/fixes/t221/g3t/s230_5a.tally
+,1:1,147:refused: LOAD-SAME same bank[o1] = save[2026-03]: an observed row and a planned instance of one model; state fulfils on the row (s230_5a.tally:37)
+,26:t221-rc/233-a-unit-literal,7:t221-rc,3:run,29:engine/tests/m3/fixes/t221/u0,24:run u0_etf_literal.tally,59:u0_etf_literal.tally	m3/fixes/t221/u0/u0_etf_literal.tally
+,1:1,87:refused: LOAD-KEY ambiguous key etf: nothing names its index (u0_etf_literal.tally:52)
+,28:t221-g4/228-2-run-path-order,7:t221-g4,3:run,26:engine/tests/m3/fixes/t221,9:run q2dir,144:q2dir/base.tally	m3/fixes/t221/q2dir/base.tally
+q2dir/a/s2.tally	m3/fixes/t221/q2dir/a/s2.tally
+q2dir/z/s1.tally	m3/fixes/t221/q2dir/z/s1.tally
+,1:0,314:scenario s2: refused: LOAD-KEY ambiguous key missing_two (q2dir/a/s2.tally:5)
+scenario s1: refused: LOAD-KEY ambiguous key missing_one (q2dir/z/s1.tally:5)
+q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-06-10
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,25:t221-g4/233-8-known-paren,7:t221-g4,3:run,30:engine/tests/m3/fixes/t221/new,25:run tb.tally --ask c233_8,36:tb.tally	m3/fixes/t221/new/tb.tally
+,1:1,74:refused: REQ-CLOCK as known 2027-01-01 is after the model's on 2026-06-10
+,21:t221-g4/usage-run-foo,7:t221-g4,4:rule,31:engine/tests/m3/fixes/t221/p206,18:run p2.tally --foo,37:p2.tally	m3/fixes/t221/p206/p2.tally
+,1:2,0:,23:t221-g4/usage-check-foo,7:t221-g4,4:rule,31:engine/tests/m3/fixes/t221/p206,20:check p2.tally --foo,37:p2.tally	m3/fixes/t221/p206/p2.tally
+,1:2,0:,25:t221-g4/usage-reprint-ask,7:t221-g4,4:rule,31:engine/tests/m3/fixes/t221/p206,24:reprint p2.tally --ask b,37:p2.tally	m3/fixes/t221/p206/p2.tally
+,1:2,0:,29:t221-g4/usage-reprint-pin-zzz,7:t221-g4,4:rule,31:engine/tests/m3/fixes/t221/p206,26:reprint p2.tally --pin=zzz,37:p2.tally	m3/fixes/t221/p206/p2.tally
+,1:2,0:,25:t221-g4/usage-run-ask-foo,7:t221-g4,4:rule,31:engine/tests/m3/fixes/t221/p206,22:run p2.tally --ask=foo,37:p2.tally	m3/fixes/t221/p206/p2.tally
+,1:2,0:,25:t221-g4/usage-run-pin-zzz,7:t221-g4,4:rule,31:engine/tests/m3/fixes/t221/p206,22:run p2.tally --pin=zzz,37:p2.tally	m3/fixes/t221/p206/p2.tally
+,1:2,0:,

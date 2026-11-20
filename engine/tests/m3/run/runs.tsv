@@ -145,3 +145,27 @@ t221-g1/rv-n8-reading-day	m3/fixes/t221/rv1	run c1.tally --ask a20260402 a202604
 t221-g1/rv-n9-overlap	m3/fixes/t221/rv1	run e2.tally --ask ovw ovw_a dbw dbw_c	-	tally 2.2.1 (#241) the first review's N9, l.668-669: one name in both arguments is taken once: overlap_days(w, w, k) 1, days_between(w, w) 0; pinned 03-10 1
 t221-g1/rv-p25-abs-pow	m3/fixes/t221/rv1	run p25_round.tally --ask a1 p1	-	tally 2.2.1 (#241) P25: abs and pow of an interval across 0 are the hole for a print (not monotone there)
 t221-g1/rv-p26-from	m3/fixes/t221/rv1	run w1_base.tally w1_sc.tally --ask b0430 b0501 b0531 p0501 p0503	-	tally 2.2.1 (#241) P26: a scenario's move on a window across from: 04-30 500.00 PLN, from 05-01 the hole; pinned 05-01 the HOLE-CHANGED question, 05-03 650.00 PLN
+t221-g2/208-10-quantile-none	m3/fixes/t221/misc2	run m2.tally --ask qn	-	tally 2.2.1 (#241) 208.10, L §8 l.2217: a none level of quantile is RUN-NONE
+t221-g3/221-2-two-windows	m3/fixes/t221/misc	run m1.tally --ask two	-	tally 2.2.1 (#241) 221.2, R21 cl.2: one HOLE-IMPRECISE question per unknown day, both windows
+t221-g3/221-3-two-calendars	m3/fixes/t221/g3t	run cal221_3.tally	-	tally 2.2.1 (#241) 221.3, R21 cl.1: two calendars' equal added entries, each named with its calendar
+t221-g3/221-4-def-window	m3/fixes/t221/onwin	run onwin.tally --ask o2	-	tally 2.2.1 (#241) 221.4, R21 cl.1: a def's window is named by its cell (wr)
+t221-g3/221-6-held-calendar	m3/fixes/t221/p3	run m.tally c22.tally c24.tally cw.tally --ask q2 q4 q13 q14	-	tally 2.2.1 (#241) 221.6, L §2.4: an added entry named with its calendar (of cal)
+t221-g3/221-C1-min-window	m3/fixes/t221/b2mix	run b2mix.tally --ask qa qb	-	tally 2.2.1 (#241) 221.C1, L §4.4 l.667: min of a window and w, both orders: both names, one question per unknown day (R21)
+t221-g3/235-6-bound-key	m3/fixes/t221/f1	run f1_flows.tally f1_flows.scen	-	tally 2.2.1 (#241) 235.6, L §8.1: a key's value under a binding names the hole's reader
+t221-g3/r21-c1-move-on	m3/fixes/t221/onwin	run onwin.tally --ask o1	-	tally 2.2.1 (#241) R21's cell 1: a move's own window is named by its movement (salary)
+t221-g3/r21-c2-two-moves	m3/fixes/t221/onwin	run onwin.tally --ask o3	-	tally 2.2.1 (#241) R21's cell 2: two moves of equal windows, one balance, each named
+t221-g4/221-9-before-self	m3/fixes/t221/g4top	run m2.tally	-	tally 2.2.1 (#241) S-221.9: a move ordered before itself is refused LOAD-ORDER
+t221-g4/223-replace-covers	m3/fixes/t221/mini5	run reality.tally statement.tally fix.tally asks.tally --ask q_mid q_oct	-	tally 2.2.1 (#241) S-223: a replace whose statement doesn't cover the row's day is refused LOAD-COVERS
+t221-g4/228-5-no-file-run	m3/fixes/t221/q5	run base.tally a/ok.tally m/c2.tally z/c1.tally	-	tally 2.2.1 (#241) 228.Q5, R20 cl.2 (P13): at run too, a refusal naming no file of its own is placed by its header's file
+t221-g4/228-11-member-warnings	m3/fixes/t221/jw	run top.tally --ask a.q b.q a.q_sc b.q_sc	-	tally 2.2.1 (#241) 228.Q11, R20 cl.3: each member's warnings, named by member, after the answers
+t221-g4/231-2-pin-balance	m3/fixes/t221/rs5	run b.tally --ask q5	-	tally 2.2.1 (#241) S-231.Q2: a pin of a balance reading states no instant: LOAD-INSTANT
+t221-rc/230-5a-same-order	m3/fixes/t221/g3t	run s230_5a.tally	-	tally 2.2.1 (#241) 230.Q-5a, 2.1.7 R9: a same of an observed row and a planned instance is refused LOAD-SAME
+t221-rc/233-a-unit-literal	m3/fixes/t221/u0	run u0_etf_literal.tally	-	tally 2.2.1 (#241) 233.a, R10: a literal key no index names is refused LOAD-KEY
+t221-g4/228-2-run-path-order	m3/fixes/t221	run q2dir	-	tally 2.2.1 (#241) 228.Q2, R20 cl.1: a run's refused scenario lines in their files' path order (a/s2 before z/s1), no ask
+t221-g4/233-8-known-paren	m3/fixes/t221/new	run tb.tally --ask c233_8	-	tally 2.2.1 (#241) S-233.8: as known (2027-01-01) after on refuses the request REQ-CLOCK, as its twin t221-gd/233-8-twin does
+t221-g4/usage-run-foo	m3/fixes/t221/p206	run p2.tally --foo	-	usage
+t221-g4/usage-check-foo	m3/fixes/t221/p206	check p2.tally --foo	-	usage
+t221-g4/usage-reprint-ask	m3/fixes/t221/p206	reprint p2.tally --ask b	-	usage
+t221-g4/usage-reprint-pin-zzz	m3/fixes/t221/p206	reprint p2.tally --pin=zzz	-	usage
+t221-g4/usage-run-ask-foo	m3/fixes/t221/p206	run p2.tally --ask=foo	-	usage
+t221-g4/usage-run-pin-zzz	m3/fixes/t221/p206	run p2.tally --pin=zzz	-	usage

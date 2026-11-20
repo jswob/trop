@@ -1,0 +1,7 @@
+model fam
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a" sha256 "5d4defbda7fa73fc94d8a6fd7ed2f2e3e41fef6a8d1d6b48741838fccf6ac56c"
+  use b = "b" sha256 "5d4defbda7fa73fc94d8a6fd7ed2f2e3e41fef6a8d1d6b48741838fccf6ac56c"
