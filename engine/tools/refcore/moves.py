@@ -2020,9 +2020,16 @@ def m_adjust_move_compute(self, mi, ctx):
             st = self.status(i, ctx)
             if st not in ('past', 'hole', 'none'):
                 continue
-            if not isinstance(i.day, datetime.date) or i.day >= K:
+            if isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date):
+                # a window: every day of it is paid by a version known after its last day, which makes its
+                # adjustment (E §5 step 2; tally 2.2.1 P32, N4); one known inside it is the booking cut's hole
+                t = i.day.hi
+                if t >= K:
+                    continue
+            elif not isinstance(i.day, datetime.date) or i.day >= K:
                 continue
-            t = i.day
+            else:
+                t = i.day
             ans = getattr(i, 'answered', None)
             # a hole booking a version answered is measured from that version's known on (E §5 step 1, answer_booking)
             steps = [(c, vs) for c, vs in kds if t < c <= K and (ans is None or c > ans[0])]

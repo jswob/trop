@@ -12,7 +12,7 @@ from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_no
 from .evaluate import member_owns, member_moves, move_owner, carry_hole
 from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
-                     fmt_hole, vkey)
+                     fmt_hole, vkey, day_text)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
                     same_groups, same_lines, once_obs, same_obs_differ)
 from .walk import K_end, K_start, K_before, kday, add_q, St, dec_move
@@ -1903,7 +1903,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 continue
             if not a.settled and last >= a.day:
                 holes.append(Hole([('%s on %s changed after it was paid (version %s); is back pay due, and when?' % (
-                    a.inst.id, a.inst.day, ', '.join(a.vids)), a.inst.id)]))
+                    a.inst.id, day_text(a.inst.day), ', '.join(a.vids)), a.inst.id)]))
                 continue
             rem = a.remainder()
             if rem is not None and not (isinstance(rem, Num) and rem.q == 0) and last >= a.day:

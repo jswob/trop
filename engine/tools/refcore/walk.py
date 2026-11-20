@@ -16,7 +16,7 @@ from .dates import ONE_DAY, next_day
 from .moves import item_in_world, order_key, same_groups
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, RandomLine
 from .model import key_text, SameDiffers, in_world
-from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey
+from .values import Num, Money, Hole, Thing, Mv, Iv, Rec, Text, NONE, CURRENCIES, fmt, fmt_hole, vkey, day_text
 from .evaluate import carry_hole, imprecise_hole
 from .moves import Leg, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, instant_text, merge
 
@@ -878,7 +878,7 @@ class Walk:
                 ends.append(p)
         if not a.settled:
             q = frozenset([('%s on %s changed after it was paid (version %s); is back pay due, and when?' % (
-                a.inst.id, a.inst.day, ', '.join(a.vids)), a.inst.id)])
+                a.inst.id, day_text(a.inst.day), ', '.join(a.vids)), a.inst.id)])
             d = max(a.day, self.start)
             for p in ends:
                 self.at(K_before(d), 'changed', (p.name, a.leg.unit, q, a))

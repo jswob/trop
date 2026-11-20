@@ -227,6 +227,11 @@ class Iv:
         return 'window(%s, %s)' % (fmt(self.lo), fmt(self.hi))
 
 
+def day_text(d):
+    """A movement's day in a question: a date, or a window's text (N4: a windowed instance's HOLE-CHANGED)."""
+    return d.window_text() if isinstance(d, Iv) else d
+
+
 class Cal:
     """A calendar; `at` is the place of the row that states it, so each row's added entries are unknown days of
     their own (L §4.4: each entry of a list is a read of its own; tally 2.1.8 R13)."""
