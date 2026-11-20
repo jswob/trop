@@ -45,7 +45,7 @@ impl Engine {
         };
         let last = span_last(m, sp)?;
         let insts = if mv.decision {
-            std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
+            std::rc::Rc::new(self.decision_runs(m, mv, (sp, last), ctx)?)
         } else {
             self.move_instances(m, mv, ctx.cut)?
         };
@@ -332,13 +332,15 @@ impl Engine {
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
     /// running walk's and the walks' it continues, before its point; an instance whose day is
     /// a hole counted as that hole, and one whose day is refused as its refusal, in any span
-    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run (refcore's
-    /// `flows_move`, its decisions). L §5.14.1, §5.14.3, E §4.3.
+    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; outside a decision,
+    /// one dated by a window no walk ran that span `sp` (its last day `last`) reaches, read
+    /// per day of it ([`Engine::window_met`]) (refcore's `flows_move`, its decisions).
+    /// L §5.14.1, §5.14.3, E §4.3, §4.1 step 2.
     fn decision_runs(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        last: Day,
+        (sp, last): (&Span, Day),
         ctx: Ctx,
     ) -> Result<Vec<Inst>, Stop> {
         let (id, limit) = match ctx.at {
@@ -362,6 +364,18 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
+                if let (None, Some(Dated::Window(w))) = (ctx.at, &i.day)
+                    && i.exists != Exists::No
+                    && window_in(w, sp, last) != Some(false)
+                {
+                    // dated by a window no walk books on one day, which the span reaches:
+                    // what it counts is read per day of the window (E §4.1 step 2; N3)
+                    let what = format!("flows of {}", mv.id);
+                    let mut held = i.clone();
+                    held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
+                    out.push(held);
+                    continue;
+                }
                 // an instance no walk ran: its day a hole, or after the run's end (E §2)
                 let unwalked = match i.day {
                     Some(Dated::Day(d)) => d > m.end,

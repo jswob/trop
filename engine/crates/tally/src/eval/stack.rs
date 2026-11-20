@@ -1,25 +1,33 @@
 //! The outermost reads: a read whose chain of def cells passes the counted depth is replayed once the work stack has computed the cells it waited on.
 //! Spec: E §3.2 (evaluation is demand-driven; a recurrence needs no deep stack); L §5.11 (a
-//! chain that returns to a cell still being evaluated is refused at that key, `RUN-CYCLE`).
+//! chain that returns to a cell still being evaluated is refused at that key, `RUN-CYCLE`);
+//! E §4.1 step 2 (a decision dated by a window counts in `flows` when the window lies inside
+//! the span: the line read again per day of it, L §4.4 l.668–671).
 //! Twin: engine/tools/refcore/evaluate.py (`def_cell`); refcore recurses on a 512 MB thread
-//! (cli.py `big_stack`), where the engine counts its depth and keeps a work stack (BUILDER §4).
+//! (cli.py `big_stack`), where the engine counts its depth and keeps a work stack (BUILDER §4);
+//! ask.py (`one`, `window_days`).
 //! Invariants: the depth is counted, never measured (R-16); a cell on the work stack is
 //! computed with the cells that unwound above it still in progress, so a cycle through it
 //! meets the `RUN-CYCLE` plain recursion meets; every task the replay finishes adds its cell
 //! to the memo, so the replay ends; a read inside another read never replays, the outermost
-//! does, and ends with no cell in progress.
+//! does, and ends with no cell in progress; a line read per day of a window reads no other
+//! window per day, and no cell keeps the stop that started it.
 
 use super::aggregate::{Brings, Member};
+use super::context::WINDOW_DAYS;
 use super::keys::Given;
 use super::memo::{CellId, CellKey};
 use super::pins::Pinning;
 use super::rules::key_env;
 use super::state::{Collected, Ctx, Engine, Env, invariant};
+use super::windows::{imprecise, window_days};
 use crate::base::{Code, Refusal};
 use crate::book::Ledger;
-use crate::hole::Hole;
-use crate::model::{DefInfo, KeyVal, Reality, Value};
+use crate::hole::{Hole, spread};
+use crate::model::{DefInfo, KeyVal, Reality, Value, Window};
+use crate::read::origin;
 use crate::syntax::{Bind, Expr, Pin, Residuals, Stop};
+use crate::time::Day;
 
 /// One value of an ask's line: a value, or the run-time refusal it met, which the line prints
 /// in its place (refcore's `one`). L §5.18.
@@ -47,12 +55,27 @@ struct Mark {
 impl Engine {
     /// The value of expression `e` read from outside the evaluator, as an ask's line reads it:
     /// a chain of def cells past the counted depth is computed from the work stack, then the
-    /// read starts again, its earlier cells now in the memo. E §3.2.
+    /// read starts again, its earlier cells now in the memo; a read that met a decision dated
+    /// by a window, read again per day of it ([`Engine::line_per_day`]). E §3.2, §4.1 step 2.
     ///
     /// # Errors
     ///
     /// The refusals of L §8.4 the expression meets; `NotBuilt` for a node S doesn't build.
     pub fn value(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+        if self.window_reads != WindowReads::Off || !self.outermost() {
+            return self.value_read(m, e, env, ctx);
+        }
+        self.window_reads = WindowReads::Line;
+        let read = self.value_read(m, e, env, ctx);
+        self.window_reads = WindowReads::Off;
+        match read {
+            Err(Stop::NotBuilt(why)) if why == WINDOW_DAYS => self.line_per_day(m, e, (env, ctx)),
+            other => other,
+        }
+    }
+
+    /// [`Engine::value`]'s read, once: the work stack's replay past the counted depth. E §3.2.
+    fn value_read(&mut self, m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let mark = self.mark();
         loop {
             match self.ev(m, e, env, ctx) {
@@ -241,9 +264,15 @@ impl Engine {
     fn mark(&self) -> Mark {
         Mark {
             collectors: self.stack.len(),
-            outermost: self.depth == 0 && self.active.is_empty() && self.work.is_empty(),
+            outermost: self.outermost(),
             trace: self.trace_mark(),
         }
+    }
+
+    /// Whether a read begun now is the outermost: no def cell open, none in progress and no
+    /// task waiting (R-16).
+    fn outermost(&self) -> bool {
+        self.depth == 0 && self.active.is_empty() && self.work.is_empty()
     }
 
     /// Keeps cell `key`, which unwound past the counted depth, in progress under the task
@@ -317,5 +346,150 @@ impl Engine {
             return Err(invariant("a cell left in progress after the replay"));
         }
         Ok(())
+    }
+}
+
+/// Where a read that meets a decision dated by a window stands (E §4.1 step 2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum WindowReads {
+    /// Outside an ask line's own read: the read gives the window's hole.
+    Off,
+    /// An ask line's outermost read: it stops (`WINDOW_DAYS`), and the line is read per day.
+    Line,
+    /// The line read on one of a window's days: another window met gives its hole.
+    PerDay,
+}
+
+/// A decision's window an ask line's read met, with what met it: `flows of <move>` or `a
+/// binding over <move>` (refcore's `WinDay`). E §4.1 step 2.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct WindowDay {
+    /// The window, as a read of the decision's day gives it.
+    window: Box<Window>,
+    /// What met it, which its hole names.
+    what: String,
+}
+
+impl Engine {
+    /// A decision's window `w`, which no walk books on one day, met by `what`, a `flows` or a
+    /// binding over a span it may reach, read outside a decision's walk: at an ask line's own
+    /// read, outside the walks and the work stack's replay, the stop that reads the line per
+    /// day, the window kept; anywhere else its hole (E §4.1 step 2; refcore's `WinDay`, met
+    /// where `ctx.walk is None`).
+    ///
+    /// # Errors
+    ///
+    /// `WINDOW_DAYS`, the line's read to start again per day.
+    pub(crate) fn window_met(
+        &mut self,
+        m: &Reality,
+        w: &Window,
+        what: String,
+    ) -> Result<Hole, Stop> {
+        if self.window_reads == WindowReads::Line && self.walking.is_empty() && self.work.is_empty()
+        {
+            self.window_day = Some(WindowDay {
+                window: Box::new(w.clone()),
+                what,
+            });
+            return Err(Stop::NotBuilt(WINDOW_DAYS));
+        }
+        imprecise(m, w, &what)
+    }
+
+    /// Line value `e`, whose read met a decision dated by a window: read again once per day of
+    /// the window, the cell its day is read from pinned to that day and listed nowhere. One
+    /// value where every day gives it; the refusal where every day refuses; the days' holes
+    /// where one gives a hole; else the window's hole, as for a window no such cell names
+    /// (E §4.1 step 2: it counts in `flows(x, span)` when the window lies inside the span;
+    /// L §4.4 l.668–671; tally 2.2.1 N3, P39; refcore's `window_days`).
+    fn line_per_day(
+        &mut self,
+        m: &Reality,
+        e: &Expr,
+        (env, ctx): (&Env, Ctx),
+    ) -> Result<Value, Stop> {
+        let met = self
+            .window_day
+            .take()
+            .ok_or_else(|| invariant("a line read per day with no window met"))?;
+        let Some(target) = self.pin_target(&met.window, ctx)? else {
+            return Ok(Value::Hole(imprecise(m, &met.window, &met.what)?));
+        };
+        let days = window_days(&met.window)?;
+        self.window_reads = WindowReads::PerDay;
+        let outs = self.each_day(m, (e, env, ctx), (&target.0, &target.1), &days);
+        self.window_reads = WindowReads::Off;
+        let outs = outs?;
+        let refused: Vec<&Refusal> = outs.iter().filter_map(|o| o.as_ref().err()).collect();
+        if let Some(first) = refused.first() {
+            if refused.len() == outs.len() {
+                return Err(Stop::Refused((*first).clone()));
+            }
+            return Ok(Value::Hole(imprecise(m, &met.window, &met.what)?));
+        }
+        let values: Vec<&Value> = outs.iter().filter_map(|o| o.as_ref().ok()).collect();
+        let holes: Vec<Option<&Hole>> = values.iter().map(|v| v.as_hole()).collect();
+        if let Some(hole) = spread(&holes) {
+            return Ok(Value::Hole(hole));
+        }
+        match values.split_first() {
+            Some((first, rest)) if rest.iter().all(|v| v == first) => Ok((*first).clone()),
+            Some(_) | None => Ok(Value::Hole(imprecise(m, &met.window, &met.what)?)),
+        }
+    }
+
+    /// Line value `e` read on each of `days`, `item` at `keys` pinned to the day by a pin no
+    /// register lists, in a layer of its own freed after the read (refcore's `window_days`,
+    /// its `PinVal('solve', …)`); a run-time refusal stands as that day's value. L §5.18.
+    fn each_day(
+        &mut self,
+        m: &Reality,
+        (e, env, ctx): (&Expr, &Env, Ctx),
+        (item, keys): (&str, &[KeyVal]),
+        days: &[Day],
+    ) -> Result<Vec<Result<Value, Refusal>>, Stop> {
+        let mut outs = Vec::with_capacity(days.len());
+        for day in days {
+            let step = self.solve_step((item, keys), Value::Day(*day), ctx)?;
+            self.open_layer(m, step)?;
+            let read = self.value_read(m, e, env, step);
+            self.end_layer(step.layer, read.as_ref().err())?;
+            match read {
+                Ok(v) => outs.push(Ok(v)),
+                Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => outs.push(Err(r)),
+                Err(stop) => return Err(stop),
+            }
+        }
+        Ok(outs)
+    }
+
+    /// The cell window `w` is read from, which a pin can set day by day: a row read of an item
+    /// at no keys, or a pin of a cell; none for a window no one such cell names, computed or
+    /// written (refcore's `window_days`, its `('row', …)` and `('pin', …)` names). L §4.4.
+    fn pin_target(&self, w: &Window, ctx: Ctx) -> Result<Option<(String, Vec<KeyVal>)>, Stop> {
+        let [named] = w.carry.as_slice() else {
+            return Ok(None);
+        };
+        if named.id.starts_with("row ") {
+            return Ok(w
+                .read
+                .as_ref()
+                .filter(|r| r.keys.is_empty() && r.item == named.label)
+                .map(|r| (r.item.clone(), Vec::new())));
+        }
+        if !named.id.starts_with("pin ") {
+            return Ok(None);
+        }
+        let data = self.layer_data(ctx.layer)?;
+        for p in data.pins.iter().filter(|p| !p.solve && p.fields.is_empty()) {
+            let Some(keys) = p.keys.iter().cloned().collect::<Option<Vec<KeyVal>>>() else {
+                continue;
+            };
+            if origin(&p.item, &keys) == named.label {
+                return Ok(Some((p.item.clone(), keys)));
+            }
+        }
+        Ok(None)
     }
 }

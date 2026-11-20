@@ -510,9 +510,11 @@ impl Engine {
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
     /// as the walk ran them: inside a decision, its walk's and those it continues', the ones
-    /// before its point; else the main walk's of the read's timeline. One that doesn't exist
-    /// or is modelled past is no member, nor is an uncertain one without `with uncertain`
-    /// (refcore's `movements_of`, its decisions). L §5.14.1 Running reads, §5.19 Bindings.
+    /// before its point; else the main walk's of the read's timeline, and an instance dated by
+    /// a window no walk ran, read per day of it ([`Engine::window_met`]). One that doesn't
+    /// exist or is modelled past is no member, nor is an uncertain one without `with
+    /// uncertain` (refcore's `movements_of`, its decisions). L §5.14.1 Running reads, §5.19
+    /// Bindings, E §4.1 step 2.
     fn decided_members(
         &mut self,
         m: &Reality,
@@ -530,6 +532,7 @@ impl Engine {
         for mv in decided {
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
+                    out.extend(self.window_member(m, mv, inst, ctx)?);
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -550,6 +553,29 @@ impl Engine {
             }
         }
         Ok(out)
+    }
+
+    /// Decision `mv`'s instance `inst` that no walk ran, read outside a decision: dated by a
+    /// window, a member whose day is the window's hole, or the line read per day of the window
+    /// ([`Engine::window_met`]); else none (E §4.1 step 2; tally 2.2.1 N3; refcore's
+    /// `movements_of`, its `WinDay`).
+    fn window_member(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        ctx: Ctx,
+    ) -> Result<Option<Moving>, Stop> {
+        let (None, Some(Dated::Window(w))) = (ctx.at, &inst.day) else {
+            return Ok(None);
+        };
+        if inst.exists == Exists::No {
+            return Ok(None);
+        }
+        let what = format!("a binding over {}", mv.id);
+        let mut held = inst.clone();
+        held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
+        Ok(Some(Moving::Plan(held)))
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
