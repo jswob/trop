@@ -535,11 +535,17 @@ impl Engine {
                 .checked_add(1)
                 .ok_or_else(|| invariant("a point past the counted subpoints"))?,
         );
+        let cut = self.walk(id)?.cut;
         for (mover, lg, side, reg, coll) in pending {
             if none {
+                // the line named as written, its sides in the text's order (2.1.7's R9;
+                // 230.Q-5a on #241)
+                let (left, right) = self
+                    .first_line(m, &run_id, cut)?
+                    .unwrap_or_else(|| (mover.clone(), run_id.clone()));
                 let err = Refusal::new(
                     Code::Run(Run::Record),
-                    format!("same {mover} = {run_id}: {run_id} doesn't exist"),
+                    format!("same {left} = {right}: {run_id} doesn't exist"),
                 );
                 self.walk_mut(id)?
                     .leg_bad(m, (&mover, &lg, &coll), &err, point)?;
