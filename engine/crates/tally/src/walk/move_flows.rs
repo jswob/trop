@@ -235,19 +235,13 @@ impl Engine {
                 });
             }
             // flows of a movement stated same reads it from both sides: where they disagree it
-            // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241)
-            // per fact: one leg's flows read its amount and the day (Q3)
-            let facts = match leg {
-                Some(name) => vec![Fact::Leg(name.to_owned()), Fact::Day],
-                None => vec![Fact::Any],
+            // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241); the day only for
+            // membership, above, so the amounts answer (S2, P42, P43 on #241)
+            let fact = match leg {
+                Some(name) => Fact::Leg(name.to_owned()),
+                None => Fact::Amounts,
             };
-            let mut same = None;
-            for fact in &facts {
-                if same.is_none() {
-                    same = self.same_hole(m, inst_side(i), fact, ctx.cut)?;
-                }
-            }
-            if let Some(h) = same {
+            if let Some(h) = self.same_hole(m, inst_side(i), &fact, ctx.cut)? {
                 acc.holes.push(h);
                 continue;
             }

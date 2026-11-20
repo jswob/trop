@@ -765,7 +765,17 @@ impl Engine {
             && let Some(h) =
                 self.same_rows_hole(m, &src, (name != "day").then_some(name), ctx.cut)?
         {
-            return Ok(Value::Hole(h));
+            // per fact: a leg whose amount the sides disagree on is a record whose amount and
+            // day are that hole, its `from` and `to` their own (P42, P43 on #241)
+            let legs: &[LegVal] = match &src {
+                Moving::Plan(i) => &i.legs,
+                Moving::Obs(o) => &o.legs,
+                Moving::Adj(_) | Moving::Pad(..) => &[],
+            };
+            return Ok(match legs.iter().find(|lg| lg.name == name) {
+                Some(lg) if is_leg => same_leg_record(lg, &h),
+                Some(_) | None => Value::Hole(h),
+            });
         }
         match name {
             "day" => Ok(match src.day() {
@@ -942,11 +952,19 @@ impl Engine {
             return Ok(None);
         };
         let mut inside = vec![day_in(day, sp)];
+        // the read holds every side's day reads, whatever the membership gives, so their pins
+        // are listed (S2, F7, P43 on #241)
         for y in group.iter().filter(|y| y.as_str() != row.0) {
             let all = self.observations(m, cut)?;
-            if let Some(o) = all.iter().find(|o| o.id == *y) {
-                inside.push(day_in(Some(&Dated::Day(o.day)), sp));
+            let row_of = all
+                .iter()
+                .find(|o| o.id == *y)
+                .map(|o| (o.coll.clone(), o.day));
+            if let Some((coll, row_day)) = row_of {
+                self.absorb(&coll);
+                inside.push(day_in(Some(&Dated::Day(row_day)), sp));
             } else if let Some(Moving::Plan(p)) = self.planned_by_id(m, y, cut)? {
+                self.absorb(&p.day_coll);
                 inside.push(day_in(p.day.as_ref(), sp));
             }
         }
@@ -1210,6 +1228,22 @@ fn leg_record(m: &Reality, lg: &LegVal) -> Result<Value, Stop> {
         ),
         ("day".to_owned(), day),
     ]))
+}
+
+/// A leg of a movement stated `same` whose sides disagree on its amount, as a record: its
+/// `from` and `to` its own, its `amount` and `day` the disagreement's hole (L §5.14, §6.1
+/// `HOLE-SAME` per fact; P42 on #241).
+fn same_leg_record(lg: &LegVal, same: &Hole) -> Value {
+    let end = |e: &End| match e {
+        End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
+        End::Hole(h) => Value::Hole(h.clone()),
+    };
+    Value::Record(vec![
+        ("from".to_owned(), end(&lg.from)),
+        ("to".to_owned(), end(&lg.to)),
+        ("amount".to_owned(), Value::Hole(same.clone())),
+        ("day".to_owned(), Value::Hole(same.clone())),
+    ])
 }
 
 /// An amount as a value: a quantity of its unit, or its hole. L §5.14.

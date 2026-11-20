@@ -324,9 +324,12 @@ pub fn same_differ(
 /// agree on is its value (L §6.1, "a fact on which they disagree"; Q3, P36 on #241).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Fact {
-    /// Every leg's amount and day: a booking, `flows`, a binding's count.
+    /// Every leg's amount and day: two observed rows' booking and warnings.
     Any,
-    /// The day alone: a read of `m.day`.
+    /// Every leg's amount, the day read for membership only: `flows` of a movement over a
+    /// span (S2, P43 on #241).
+    Amounts,
+    /// The day alone: a read of `m.day`, a membership.
     Day,
     /// The amount and day of the leg named.
     Leg(String),
@@ -480,12 +483,12 @@ pub(crate) fn sides_differ(
         let ids: Vec<String> = class.iter().map(|(o, _)| (*o).to_owned()).collect();
         let amounts = match fact {
             Fact::Day => None,
-            Fact::Any | Fact::Leg(_) => amounts_differ(m, &class)?,
+            Fact::Any | Fact::Amounts | Fact::Leg(_) => amounts_differ(m, &class)?,
         };
         let (what, figures) = if let Some(figures) = amounts {
             (format!("the amount of {}", mine.name), figures)
-        } else if matches!(fact, Fact::Leg(_)) {
-            // a leg's amount is its fact: the days are another (Q1, Q3)
+        } else if matches!(fact, Fact::Leg(_) | Fact::Amounts) {
+            // a leg's amount is its fact: the days are another (Q1, Q3, S2)
             continue;
         } else {
             let sides: Vec<(&str, &Dated)> = class.iter().map(|(id, lg)| (*id, &lg.day)).collect();
