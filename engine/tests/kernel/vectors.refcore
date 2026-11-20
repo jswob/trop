@@ -10932,7 +10932,7 @@ version bank_5
   governs 2026-01
   known 2026-02-05
   covers k5
-,,1:0,6343:q_bal (d = 2026-01-09): (2 430.00 PLN, 970.00 PLN, 0.00 PLN)
+,,1:0,6355:q_bal (d = 2026-01-09): (2 430.00 PLN, 970.00 PLN, 0.00 PLN)
   pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
   open: tip[t01]
   open: tip[t02]
@@ -10972,6 +10972,7 @@ q_bal (d = 2026-01-28): (2 433.00 PLN, 990.00 PLN, 15.00 PLN)
 q_bal_early: (2 340.00 PLN, 970.00 PLN)
   pad: konto 2026-01-09 end, pads:bank_k:konto@2026-01-09 end of 30.00 PLN
   pad: konto 2026-01-20 end, pads:bank_k:konto@2026-01-20 end of 0.00 PLN
+  open: fee
   open: tip[t01]
   open: tip[t02]
   open: tip[t03]
