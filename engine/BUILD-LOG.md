@@ -5492,3 +5492,54 @@ On `build/2.2.1` from 90973211 (master e629c26a with the writer's group), eleven
 - **What I tried:** nothing: the aggregate's term over a window is outside G1's list.
 - **What I ask:** which group takes it, or is it held to a later milestone (plan §6)?
 - **State:** 039dbeb4, green on `check quick`; nothing uncommitted but this log.
+
+## 2026-11-20 tally 2.2.1 G1, turn 2: the three rulings, and the group's close (issue #241)
+
+C2 is merged at 1e561f79: the `t221-g1` vectors, the re-stored window records (the 12 ids above, and CMP-01's baseline with its `WARN-NEGATIVE` line), and the held `t221-rc/221-10-mean-quantile`. Its 22 `Logged-Red:` ids are green. The lead ruled the three STOP-REPORTs above as picks P25 to P27 on #241. This turn makes three commits and this one, which is the group's last.
+- **Before any change,** on the merged tree: `check commit: green, 24 steps (147s)`.
+- **95bc23cc, P25 (closes "`round` over a window"):** `eval/dates.rs` `overlap`. `overlap_days` of two windows is the interval at the corners of their ends, through `lifted`, as l.668 names it among the monotone built-ins. Refcore gives the hole "overlap_days of two windows".
+  - Refcore holes at a built-in's own name only for `round` and `overlap_days` (`evaluate.py`'s `self.imprecise(…, '<name>')`). The engine also held `day_of`, `pow`, `abs` and `day_count`'s `add_*` over a window of days, which no number takes, so those stay holes.
+  - `abs` and an even `pow` of an interval across 0 hold 0, as P22 built them.
+  - **`round` stopped:** under `value_choices` and `values_interval` (over `x` and `u`), `check commit` went red on two stored records: m1 `fixes/g13/r_agent_w_model_with_r_agent_w_c2` and `fixes/g13/rf_w_model_with_rf_w_w15`. Each went from `?"… not precise enough for round" (w)` to `?"… not precise enough for a print" (w)`. By the ruling, a stored record stops the change: `round` was taken back out before the commit (amended, never pushed) and still holes "for round". STOP-REPORT below.
+  - `check commit` after it: `green, 24 steps (131s)`. Moved: none.
+- **2cd492db, P26 (closes "S-from for decisions"):** `walk/agenda.rs` `schedule_decision`.
+  - A scenario's decision whose window crosses `from` makes its hole from `from`, so a day before it keeps the base's value (L §6.4 l.1863, l.671).
+  - A window wholly before `from` is left out, as its day would be.
+  - `check commit` after it: `green, 24 steps (130s)`. Moved: none.
+- **066b8b90, P27 (closes "`L4_4_window_aggregate_terms`"):** `eval/queries.rs` `key_query` and `eval/aggregate.rs`'s new `window_term_hole`. That is `sum`'s window-term hole, moved into a function both share. A term of `mean` or `quantile` that is an undecided interval is the hole "for a term of mean" or "of quantile" (L §4.4 l.669).
+  - The stop rested on nothing a later milestone builds: before this, the engine fell through to adding windows.
+  - Refcore's `L4_4_window_aggregate_terms` is byte-equal now. The held `t221-rc/221-10-mean-quantile` (`m3/fixes/t221/new/agg2.tally`) prints its stored bytes, exit 0. The hold is the tests session's to release.
+  - `check commit` after it: `green, 24 steps (133s)`. Moved: none.
+- **Probes,** engine beside the pinned refcore:
+  - P25, `g1/probes/p25/round.tally` (`g1/p25-end.txt`):
+    - `o1` (March, a ∈ 10–12 Mar, b ∈ 30 Mar–2 Apr, 19 to 22 days) and `o2` (April, 0 to 2) print `?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w)` with both `unknown day:` lines. `o3` (February) prints `0`. Refcore holes all three "for overlap_days of two windows".
+    - `a1`: `abs(days_between(d0, w) / n3)` is the interval [0, 1/3], so the hole "for a print"; refcore prints `1/3`. `p1` is the same with `pow`: [0, 1/9], where refcore prints `1/9`.
+    - `r1`–`r4` hole "for round" on both.
+  - P26, `g1/probes/dfrom`:
+    - `d_apr: 750.00 PLN`, with no `unknown day:` line. Refcore holes it for `dy` and `dx`.
+    - `d_may`: `?"date within window(2026-04-28, 2026-05-03) not precise enough for the day of dx" (dx)`, `unknown day: w`. Refcore also names `dy`.
+    - `d_pin: 850.00 PLN`. Refcore holes it for `dy`.
+  - P27: `L4_4_window_aggregate_terms`' `m`, `q`, `sm` and `x` are SAME (`m: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a term of mean" (w)`).
+  - Every other turn-1 probe (`g1/probes.sh`, `g1/evalprobes.sh`; `probes-end2.txt`, `evalprobes-end2.txt`) prints what it did at 039dbeb4. So does every refcore test in `g1/rt-names.txt`.
+  - Of those, four stop `not implemented` on the engine, as at 90973211: `L5_12_fill_order_window_hole`, `L5_12_fill_order_window_undecided`, `L5_16_projection_random_amount_by_day`, `L5_19_observed_attribute_window`.
+- **Where the engine differs from the pinned refcore on purpose** (for the review):
+  1. 236.1: `gp/win/w1_differs.tally` and `w4_agree_false.tally` (`q`, `q2`, `qe`) hole "for the law date of shut", where refcore refuses `REFCORE-NOT-YET` (#235's guard).
+  2. P25: `overlap_days` of two windows gives the interval (`round.tally` `o1`–`o3`). The hole of P22's `abs` and `pow` over an interval across 0 holds 0 (`a1`, `p1`). Refcore holes the first and prints one end for the second.
+  3. P26: a scenario's decision on a window across `from` holes from `from`, and one wholly before `from` is left out (`dfrom` `d_apr`, `d_may`, `d_pin`). Refcore holes from the window's first day and keeps the earlier window.
+  - No stored record and no T vector reads one of these; the writer's next group mends refcore, and the tests session writes their vectors then.
+- **Size over the group** (`git diff --stat 90973211..HEAD -- engine/crates`): 16 files, 808 in and 236 out (net +572), against the plan's 0.55 to 0.9 k. This turn: 4 files, 46 in, 15 out. By area: `eval` 398/116, `walk` 310/82, `ask` 79/21, `model` 15/13, `book` 5/3, `lib.rs` 1/1. All of it is library. Kernel files: turn 1's five, `walk/agenda.rs` again this turn.
+- **Exceptions:** +0 (the lock is byte-equal to 90973211's); report-only hits are 8.
+- **Single-mutant proofs:** none; the gate's one gate-8 run covers the group.
+- **Open STOP-REPORTs:** one, `round` over a window (below). The turn-1 three are closed by P25 to P27.
+- **Usage:** about 1.21 % of the week before this commit (0.13 % this turn), against 0.4 %.
+- **Checks:** at 066b8b90's tree, `check quick: green, 11 steps (79s)` and `check commit: green, 24 steps (133s)`. This commit adds the log alone.
+
+## STOP-REPORT 2026-11-20: `round` over a window gives its interval only by moving two stored records
+
+- **Kind:** other: a ruled change whose "what may move" holds a stored record, which the ruling says stops it
+- **Where:** `eval/builtin.rs` `round`; L §4.4 l.668; P25 on #241; m1 `fixes/g13/r_agent_w_model_with_r_agent_w_c2`, `fixes/g13/rf_w_model_with_rf_w_w15`
+- **Rule or gate:** P25 ("if `check commit` shows one, it stops this change"); DONE gate 10
+- **What happens:** with `round` read through `value_choices` (over `x` and `u`) and `values_interval(m, "round", …)`, `bare_step` applied per tuple, `check commit` is red at tests: `m1_fixes_g13_reads_ranges_and_sites`, "2 of 355 vectors of fixes-g13 differ from refcore". `c2:` and `w15:` change from `?"date within window(2026-03-03, 2026-03-20) not precise enough for round" (w)` to `?"… not precise enough for a print" (w)`. Their `round` is of an interval whose values differ, so the value is the interval and the print holes it.
+- **What I tried:** the change above, then taking it back out. Nothing else fits: the records hold refcore's bytes.
+- **What I ask:** the two records re-stored with "for a print" once refcore's `round` follows P25 (or held for P25), and then `round` under `values_interval`, the dozen lines tried here.
+- **State:** this commit, after 066b8b90; `check commit` green; nothing uncommitted.
