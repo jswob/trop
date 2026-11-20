@@ -79,12 +79,14 @@ d_apr: 750.00 PLN
   world: sc
   anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
   unfulfilled: pa
+  left out: dy, 1 instances, first 2026-04-10
   cut 2026-06-10
 d_may: ?"date within window(2026-04-28, 2026-05-03) not precise enough for the day of dx" (dx)
   unknown day: w
   world: sc
   anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
   unfulfilled: pa
+  left out: dy, 1 instances, first 2026-04-10
   cut 2026-06-10
 d_pin: 850.00 PLN
   pinned: w = 2026-05-02
@@ -92,4 +94,5 @@ d_pin: 850.00 PLN
   anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
   unfulfilled: dx
   unfulfilled: pa
+  left out: dy, 1 instances, first 2026-04-10
   cut 2026-06-10

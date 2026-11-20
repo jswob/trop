@@ -375,6 +375,13 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
         if err is not None:
             errs[sid] = err
             del realities[sid]
+    # a scenario file that doesn't load refuses that scenario and those over it, with its message (OPERATIONS §2.1;
+    # tally 2.2.1, 236.3: a scenario's own refusal, LOAD-WORLD among them, is found loading its own stack only)
+    for sid in sorted(k for k in realities if k is not None):
+        below = [c for c in chains.get(sid, ())[1:] if c in errs]
+        if below:
+            errs[sid] = errs[below[0]]
+            del realities[sid]
     if check:
         return check_worlds(scen, realities, errs, first)
     if ids:

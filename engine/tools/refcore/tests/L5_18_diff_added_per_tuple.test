@@ -1,0 +1,64 @@
+# tally 2.2.1 P37, Q6 (L §5.18's diff row): a line whose expression names a thing the base doesn't declare
+# is added, per tuple of its binding: qb (a def only sc declares) and qpb (a place only sc declares) (review
+# g2 min/b5 with sc/b5). Before W8: changed against the base's hole, and 0.00 PLN.
+=== b5.tally
+model b5
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+ask kk: bal(konto, 2026-03-31)
+=== b5.tally
+scenario sc over b5
+  tally 2
+  from 2026-01-01
+place pot: accounts PLN lives 2026-01-01..
+input sx: money PLN
+def extra: money PLN
+  rule base = sx
+version scv
+  cite s
+  governs always
+  known 2026-01-01
+  sx = 1.00 PLN "s"
+version scv2
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  opening[pot] = 7.00 PLN at 2026-01-01 start "s"
+ask qd: diff(extra) in sc against b5
+ask qp: diff(bal(pot, 2026-03-31)) in sc against b5
+ask qb: diff(extra * k for k in [1, 2]) in sc against b5
+ask qpb: diff(bal(pot, d) for d in [2026-03-31]) in sc against b5
+=== expect qd qp qb qpb
+qd: diff in sc against b5: 0 changed, 1 added, 0 removed, 0 unchanged
+  added extra: 1.00 PLN
+  world: b5
+  world: sc
+  cut 2026-01-01
+qp: diff in sc against b5: 0 changed, 1 added, 0 removed, 0 unchanged
+  added bal(pot, 2026-03-31): 7.00 PLN
+  world: b5
+  world: sc
+  cut 2026-01-01
+qb: diff in sc against b5: 0 changed, 2 added, 0 removed, 0 unchanged
+  added (k = 1): 1.00 PLN
+  added (k = 2): 2.00 PLN
+  world: b5
+  world: sc
+  cut 2026-01-01
+qpb: diff in sc against b5: 0 changed, 1 added, 0 removed, 0 unchanged
+  added (d = 2026-03-31): 7.00 PLN
+  world: b5
+  world: sc
+  cut 2026-01-01
+warning: WARN-UNREAD place world is read by nothing

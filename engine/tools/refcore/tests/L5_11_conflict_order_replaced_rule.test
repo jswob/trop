@@ -1,0 +1,100 @@
+# tally 2.2.1 S-231.Q1a (L §5.11 l.1131: of the candidates "the first two in step 3's order"): step 3 orders by
+# the beats of the rules in force, so a replaced rule that beats nothing comes by label: rules bx and bz
+# (review-probes g2/p4b, the engine's bytes). Before W10: bz and bx.
+=== base.tally
+model fk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+axis x
+  x1 "1"
+  x2 "2"
+  x3 "3"
+
+axis y
+  y1 "1"
+  y2 "2"
+  y3 "3"
+
+axis z
+  z1 "1"
+  z2 "2"
+  z3 "3"
+
+axis w
+  w1 "1"
+  w2 "2"
+  w3 "3"
+
+input flag: bool
+input f: int
+
+def d: int at reader
+  rule base = 1
+  rule bx beats base = 0 when x == x2 and y == y2
+  rule bz beats base, bx = 1 when flag
+
+def e: int at reader
+  rule base = f
+
+ask ex: explain d law 2026-06-01
+ask ex2: d in sa law 2026-06-01
+
+ask exs: explain d in sa with x = x1, y = y1, z = z2 law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flag = false
+  f = 5
+=== sa.tally
+scenario sa over fk
+  tally 2
+  from 2026-01-01
+
+version sa_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace rule d.bz = 1 when z == z2
+=== expect ex2
+ex2 [x = x1 | x3, y = *, z = z1 | z3]: 1
+  world: sa
+  reading: x = x1 | x3
+  reading: z = z1 | z3
+  law date 2026-06-01, cut 2026-06-30
+ex2 [x = x1 | x3, y = *, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  world: sa
+  reading: x = x1 | x3
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+ex2 [x = x2, y = y1 | y3, z = z1 | z3]: 1
+  world: sa
+  reading: x = x2
+  reading: y = y1 | y3
+  reading: z = z1 | z3
+  law date 2026-06-01, cut 2026-06-30
+ex2 [x = x2, y = y1 | y3, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  world: sa
+  reading: x = x2
+  reading: y = y1 | y3
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+ex2 [x = x2, y = y2, z = z1 | z3]: 0
+  world: sa
+  reading: x = x2
+  reading: y = y2
+  reading: z = z1 | z3
+  law date 2026-06-01, cut 2026-06-30
+ex2 [x = x2, y = y2, z = z2]: refused: RUN-CONFLICT rules bx and bz both win for d on 2026-06-01
+  world: sa
+  reading: x = x2
+  reading: y = y2
+  reading: z = z2
+  law date 2026-06-01, cut 2026-06-30
+warning: WARN-UNREAD def e is read by nothing

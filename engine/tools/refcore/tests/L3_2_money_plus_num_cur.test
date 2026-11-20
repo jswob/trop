@@ -1,0 +1,80 @@
+# tally 2.2.1, 234.1 (L §3.2's table: "money CUR with num CUR gives num CUR"): a sum over places of unit
+# known only at run plus value(...) in PLN, a num PLN, is num PLN: 5 400 PLN, the engine's bytes (m3/fixes/
+# net_worth). Before W8: 5 400.00 PLN, money.
+=== net_worth.tally
+model nw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "M3 (pick P7, plan Q9): household X's net_worth binding on a small model: the places over every key, not outside, of the four kinds, in PLN, by kind tests and unit(x) == PLN; plus a fund's units priced in PLN"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit fund_unit "jednostka funduszu"
+
+index wrapper = [ike]
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place portfel: cash PLN lives 2026-01-01..
+place zwrot: claims PLN lives 2026-01-01..
+place kredyt: debts PLN lives 2026-01-01..
+place wunits[w in wrapper]: holdings fund_unit lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input salary: money PLN
+input pay_dom: int
+input fund_price[m in months]: num PLN/fund_unit
+
+move wage[m in months]: wages
+  on day_of(m, pay_dom)
+  at start_of(m)
+  leg cash from world to konto amount salary
+
+version home
+  cite s
+  governs 2026-01..
+  known 2026-01-01
+  salary = 5 000.00 PLN "umowa"
+  pay_dom = 10 "umowa"
+  fund_price = 120 PLN/fund_unit "kurs"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "wyciąg"
+  opening[konto_eur] = 200.00 EUR at 2026-01-01 start "wyciąg"
+  opening[portfel] = 300.00 PLN at 2026-01-01 start "gotówka"
+  opening[zwrot] = 400.00 PLN at 2026-01-01 start "zwrot podatku"
+  opening[kredyt] = -2 500.00 PLN at 2026-01-01 start "umowa kredytu"
+  opening[wunits[ike]] = 10 at 2026-01-01 start "rejestr"
+
+ask net_worth: sum(bal(x, d) with uncertain for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN)) + sum(value(wunits[w], d) in PLN by fund_price[month_of(d)] for w in wrapper) for d in [2026-01-31, 2026-02-28, 2026-06-30]
+
+ask kinds_only: sum(1 for x in places over .. where not x in outside and ((x in accounts or x in cash or x in claims or x in debts) and unit(x) == PLN))
+
+ask over_outside: sum(1 for x in places over .. where not x in outside)
+
+ask over_unit: sum(1 for x in places over .. where unit(x) == PLN)
+
+ask over_kind: sum(1 for x in places over .. where x in accounts or x in cash)
+=== expect net_worth
+net_worth (d = 2026-01-31): 5 400 PLN
+  unfulfilled: wage[2026-01]
+  cut 2026-03-01
+net_worth (d = 2026-02-28): 10 400 PLN
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  cut 2026-03-01
+net_worth (d = 2026-06-30): 30 400 PLN
+  unfulfilled: wage[2026-01]
+  unfulfilled: wage[2026-02]
+  held: fund_price[2026-06] = 120 PLN/fund_unit (home), read for 2026-06
+  held: pay_dom = 10 (home), read for 2026-04-01
+  held: pay_dom = 10 (home), read for 2026-05-01
+  held: pay_dom = 10 (home), read for 2026-06-01
+  held: salary = 5 000.00 PLN (home), read for 2026-04-01
+  held: salary = 5 000.00 PLN (home), read for 2026-05-01
+  held: salary = 5 000.00 PLN (home), read for 2026-06-01
+  cut 2026-03-01

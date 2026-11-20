@@ -1,0 +1,157 @@
+# tally 2.2.1, 231.R1 (L §5.18): explain with pins lists the derivation outside them per tuple of the
+# pinned axes its cone reaches, in the order of their ids, each over its options as declared, whatever one
+# derivation stops before reading. Before W11: the order the derivation met them, [x = x2] alone.
+=== r1.tally
+model r1
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "made up"
+
+unit PLN: currency minor 0.01
+
+axis z
+  z1 "one"
+  z2 "two"
+
+axis x
+  x1 "one"
+  x2 "two"
+
+input p: money PLN
+
+input twice: int
+
+input asked_on: date
+
+def f: money PLN at asked_on
+  rule base = p
+  rule zr beats base = p * twice when z == z2
+  rule xr beats zr, base = p * twice * twice when x == x2
+
+ask e_both: explain f with z = z1, x = x1 law 2026-06-01
+
+ask e_one: explain f with x = x1 law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p = 10.00 PLN "the card"
+  twice = 2 "the card"
+  asked_on = 2026-06-01 "the card"
+=== expect e_both e_one
+e_both: 10.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin x = x1
+    [3] pin z = z1
+  [4] inside the pins: 10.00 PLN
+    [5] row v:asked_on = 2026-06-01
+        version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+    [6] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          [7] row v:p = 10.00 PLN
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+        rule xr: not applicable
+        rule zr: not applicable
+  [8] outside the pins [x = x1, z = z1]: 10.00 PLN
+    (v:asked_on: see [5])
+    [9] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          (v:p: see [7])
+        rule xr: not applicable
+        rule zr: not applicable
+  [10] outside the pins [x = x1, z = z2]: 20.00 PLN
+    (v:asked_on: see [5])
+    [11] f = 20.00 PLN, law date 2026-06-01
+        rule base: beaten by zr
+        rule xr: not applicable
+        rule zr: won
+          (v:p: see [7])
+          [12] row v:twice = 2
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+  [13] outside the pins [x = x2, z = z1]: 40.00 PLN
+    (v:asked_on: see [5])
+    [14] f = 40.00 PLN, law date 2026-06-01
+        rule base: beaten by xr
+        rule xr: won
+          (v:p: see [7])
+          (v:twice: see [12])
+        rule zr: beaten by xr
+  [15] outside the pins [x = x2, z = z2]: 40.00 PLN
+    (v:asked_on: see [5])
+    [16] f = 40.00 PLN, law date 2026-06-01
+        rule base: beaten by xr
+        rule xr: won
+          (v:p: see [7])
+          (v:twice: see [12])
+        rule zr: beaten by xr
+  pinned: x = x1
+  pinned: z = z1
+  law date 2026-06-01, cut 2026-03-01
+e_one [z = z1]: 10.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin x = x1
+  [3] inside the pins: 10.00 PLN
+    [4] row v:asked_on = 2026-06-01
+        version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+    [5] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          [6] row v:p = 10.00 PLN
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+        rule xr: not applicable
+        rule zr: not applicable
+  [7] outside the pins [x = x1]: 10.00 PLN
+    (v:asked_on: see [4])
+    [8] f = 10.00 PLN, law date 2026-06-01
+        rule base: won
+          (v:p: see [6])
+        rule xr: not applicable
+        rule zr: not applicable
+  [9] outside the pins [x = x2]: 40.00 PLN
+    (v:asked_on: see [4])
+    [10] f = 40.00 PLN, law date 2026-06-01
+        rule base: beaten by xr
+        rule xr: won
+          (v:p: see [6])
+          [11] row v:twice = 2
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+        rule zr: beaten by xr
+  pinned: x = x1
+  reading: z = z1
+  law date 2026-06-01, cut 2026-03-01
+e_one [z = z2]: 20.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin x = x1
+  [3] inside the pins: 20.00 PLN
+    [4] row v:asked_on = 2026-06-01
+        version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+    [5] f = 20.00 PLN, law date 2026-06-01
+        rule base: beaten by zr
+        rule xr: not applicable
+        rule zr: won
+          [6] row v:p = 10.00 PLN
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+          [7] row v:twice = 2
+              version v, source s, "made up", locator "the card", governs always, known 2026-01-01
+  [8] outside the pins [x = x1]: 20.00 PLN
+    (v:asked_on: see [4])
+    [9] f = 20.00 PLN, law date 2026-06-01
+        rule base: beaten by zr
+        rule xr: not applicable
+        rule zr: won
+          (v:p: see [6])
+          (v:twice: see [7])
+  [10] outside the pins [x = x2]: 40.00 PLN
+    (v:asked_on: see [4])
+    [11] f = 40.00 PLN, law date 2026-06-01
+        rule base: beaten by xr
+        rule xr: won
+          (v:p: see [6])
+          (v:twice: see [7])
+        rule zr: beaten by xr
+  pinned: x = x1
+  reading: z = z2
+  law date 2026-06-01, cut 2026-03-01

@@ -1,0 +1,41 @@
+# tally 2.2.1 P36 (L §6.1 l.1797, facts of movements stated same "read from both sides together, by every read"): Q1, a day
+# against a window that holds it is a comparison: undecided, HOLE-IMPRECISE naming the window; the amounts agree,
+# so s0 is 100.00 PLN (review g2 min/b3). Before W8: HOLE-SAME for both.
+=== b3.tally
+model b3
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  on d1
+  leg cash from world to konto amount a1
+move in2: transfers
+  on d2
+  leg cash from world to konto amount a1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = window(2026-03-05, 2026-03-07) "s"
+  same in1 = in2
+ask s0: sum(m.cash.amount for m in transfers over 2026-03)
+ask dy: m.day for m in transfers over 2026-03
+ask b5: bal(konto, 2026-03-05)
+ask b31: bal(konto, 2026-03-31)
+=== expect s0 dy
+s0: 100.00 PLN
+  cut 2026-01-01
+dy (m = in1): ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of in1 and in2" (in2)
+  unknown day: d2
+  cut 2026-01-01

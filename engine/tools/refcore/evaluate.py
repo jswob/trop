@@ -1743,11 +1743,17 @@ class Engine:
             raise refuse('LOAD-LABEL', 'rule %s already exists in %s' % (label, info.id))
         return vers[0]
 
-    def beats_order(self, info, labels):
+    def beats_order(self, info, labels, live=None):
+        """L §5.11 step 3's order: a rule after those that beat it, by label among the rest; the beats of the rules
+        in force (a replaced rule's own, tally 2.2.1 S-231.Q1a), else the def's."""
         done = []
         left = set(labels)
+        if live is not None:
+            beaters = dict((l, set(o for o in labels if l in live[o].node.beats)) for l in labels)
+        else:
+            beaters = info.beaters
         while left:
-            ready = sorted(l for l in left if not (info.beaters.get(l, set()) & left))
+            ready = sorted(l for l in left if not (beaters.get(l, set()) & left))
             if not ready:
                 raise LoadError('LOAD-CYCLE', 'a beats cycle in %s' % info.id)
             for l in ready:
@@ -1781,7 +1787,7 @@ class Engine:
             rv = self.rule_in_force(info, lab, d, ctx)
             if rv is not None:
                 live[lab] = rv
-        order = self.beats_order(info, list(live))
+        order = self.beats_order(info, list(live), live)
         applicable = []
         unknown = {}
         state = {}
@@ -3178,7 +3184,14 @@ class Engine:
             if b.where is not None and defer is not None:
                 d2 = defer + [b.where]
             elif b.where is not None:
-                w = self.ev(b.where, e2, ctx)
+                try:
+                    w = self.ev(b.where, e2, ctx)
+                except WinDay as wd:
+                    if regs is None:
+                        raise
+                    # an ask's for domain is no line's own value: a window-dated decision it meets is the window's
+                    # hole, per tuple, never a stop (tally 2.2.1 P41, F5 and n3)
+                    w = imprecise_hole(wd.iv, wd.use)
                 if w is False:
                     continue
                 if w is NONE:
@@ -3806,14 +3819,19 @@ class Engine:
             w = ivs[0]
             return self.per_day(w, lambda d: fn(*[d if isinstance(v, Iv) else v for v in vals]), what)
         import itertools
+        # a hole it makes names every window its operands carry (L l.667; tally 2.2.1 P41, F8)
+        hw = ivs[0] if len(ivs) == 1 else Iv(ivs[0].lo, ivs[0].hi, ivs[0].days, ivs[0].src, origin=ivs[0].origin,
+                                              carry=carry_union(*ivs))
         opts = []
         size = 1
         for v in vals:
             if not isinstance(v, Iv):
                 opts.append([v])
-            elif isinstance(v.lo, Num) and whole_valued(v):
+            elif isinstance(v.lo, Num) and whole_valued(v) and not mono:
+                # only an operation that isn't monotone takes the whole numbers in turn, up to the cap (P41, F1)
                 size *= int(v.hi.q - v.lo.q) + 1
-                opts.append(None if size > LIFT_CAP else [Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
+                # each whole number in its own unit: 0 PLN stays money (the builder's w15; tally 2.2.1 W10)
+                opts.append(None if size > LIFT_CAP else [num_at(v.lo, k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
             elif mono:
                 opts.append([v.lo, v.hi] + ([zero_like(v.lo)] if isinstance(v.lo, Num) and v.lo.q < 0 < v.hi.q
                                             else []))
@@ -3821,7 +3839,7 @@ class Engine:
                 opts.append(None)
         if any(o is None for o in opts):
             # its values can't be taken in turn and it isn't monotone in them: not decided for the whole interval
-            raise self.imprecise(ivs[0], what)
+            raise self.imprecise(hw, what)
         outs, errs = [], []
         for c in itertools.product(*opts):
             try:
@@ -3835,7 +3853,7 @@ class Engine:
         if errs and not outs:
             raise errs[0]
         if errs:
-            raise self.imprecise(ivs[0], what)
+            raise self.imprecise(hw, what)
         if any(isinstance(r, Iv) for r in outs):
             outs = [x for r in outs for x in ((r.lo, r.hi) if isinstance(r, Iv) else (r,))]
         return self.interval_of(outs, ivs[0], carry_union(*ivs))
@@ -4849,6 +4867,17 @@ def zero_like(x):
 LIFT_CAP = 100000
 
 
+def num_at(x, k):
+    """The whole number k in x's type and unit (an int stays an Int)."""
+    if not x.u and not x.money and getattr(x, 'isint', False):
+        return Int(k)
+    import copy
+    z = copy.copy(x)
+    z.q = Fraction(k)
+    z.enc = None
+    return z
+
+
 def whole_valued(v):
     """Every value it can hold is a whole number: an int, a whole number, or an interval kept whole (Iv.whole)."""
     if isinstance(v, Iv):
@@ -5036,8 +5065,10 @@ def arith(op, a, b, rt, lt, rtt):
         return Num(q, (), isint=True, enc=e)
     if k == 'rate':
         return Num(q, a.u if a.rate else b.u, rate=True, enc=e)
-    if k == 'dyn' and (a.money or b.money) and len(u) == 1 and u[0][1] == 1 and u[0][0] in CURRENCIES:
-        # a quantity of a unit known only at run (a leg of unit any): money stays money (L §3.2)
+    if k == 'dyn' and (a.money or b.money) and len(u) == 1 and u[0][1] == 1 and u[0][0] in CURRENCIES and \
+            not (op in '+-' and not (a.money and b.money) and (b if a.money else a).q != 0):
+        # a quantity of a unit known only at run (a leg of unit any): money stays money (L §3.2), but money with
+        # num CUR gives num CUR (L §3.2's table; tally 2.2.1 234.1)
         return Num(q, u, money=True, enc=e)
     return Num(q, u, enc=e)
 

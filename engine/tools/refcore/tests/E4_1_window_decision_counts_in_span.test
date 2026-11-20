@@ -69,6 +69,7 @@ fl5: ?"date within window(2026-04-29, 2026-05-02) not precise enough for flows o
   unfulfilled: dx
   cut 2026-06-10
 fl5_p0430: 0.00 PLN
+  pinned: w = 2026-04-30
   cut 2026-06-10
 fl5_p0501: 100.00 PLN
   pinned: w = 2026-05-01

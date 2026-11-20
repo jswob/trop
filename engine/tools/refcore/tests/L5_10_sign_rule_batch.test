@@ -52,5 +52,6 @@ q: (0.00 PLN, 500.00 PLN)
 q2: (refused: RUN-PLACE owed is 1.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE owed is 1.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE owed is 1.00 PLN after the day's observations and plans of 2026-03-10)
   pinned: big = 1.00 PLN
   unfulfilled: a_repay
+  unfulfilled: b_borrow
   unfulfilled: c_over
   cut 2026-06-30

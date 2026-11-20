@@ -1,0 +1,58 @@
+# tally 2.2.1 P43 S6 (E §6.3): a window-dated instance's day is its last fulfilling observation's as
+# known on the model's on, in every ledger, once (review g2fix led/l1_two_months). A guard: refcore so.
+=== l1_two_months.tally
+model l1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input pay: money PLN
+input w: date
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  w = window(2026-03-05, 2026-03-07) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+version st
+  cite card
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  bank[r1] = (on: 2026-03-06, kind: transfers, leg cash from world to konto amount 60.00 PLN, fulfils: pay_w) "r1"
+version st4
+  cite card
+  governs 2026-04
+  known 2026-05-10
+  covers konto
+  bank[r2] = (on: 2026-04-02, kind: transfers, leg cash from world to konto amount 40.00 PLN, fulfils: pay_w) "r2"
+ask mar: residuals konto 2026-03
+ask apr: residuals konto 2026-04
+ask both: residuals konto 2026-03 .. 2026-04
+ask mar_k: residuals konto 2026-03 as known 2026-04-15
+ask bal_m: bal(konto, 2026-03-31)
+=== expect
+apr: residuals konto 2026-04
+  2026-04 move pay_w: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN
+    matched pay_w on 2026-04-02: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN, timing +0 days
+  cut 2026-06-20
+bal_m: 560.00 PLN
+  cut 2026-06-20
+both: residuals konto 2026-03 .. 2026-04
+  2026-04 move pay_w: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_w on 2026-04-02: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days, -27 days
+  cut 2026-06-20
+mar: residuals konto 2026-03
+  cut 2026-06-20
+mar_k: residuals konto 2026-03
+  cut 2026-04-15
+warning: WARN-LEGS the two observations of pay_w disagree: bank[r1] (60.00 PLN) and bank[r2] (40.00 PLN)
