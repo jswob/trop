@@ -709,7 +709,9 @@ def m_answer_booking(self, mi, i, tctx, upto=None):
     for c, vids in self.known_dates():
         if not i.day < c <= tctx.cut:
             continue
-        j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c, upto=upto)
+        # its keys' where is read at the ask's cut K (E §4.1 step 1), so a hole it leaves (a window at whose law-date
+        # classes disagree, #236) is no version's to answer
+        j = self.eval_inst(mi, i.env, i.keys, tctx, exists0=getattr(i, 'exists0', True), at_cut=c, upto=upto)
         if j is None:
             continue
         if j.err is not None:
@@ -844,6 +846,7 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
     its day is never.  A decision's body is evaluated in the walk."""
     inst = Inst(mi, keys, env)
     inst.coll = _coll()
+    inst.exists0 = exists0
     self.stack.append(inst.coll)
     try:
         try:
@@ -914,12 +917,18 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 # falls after it when the window's first day does (L §4.4; MC-X-F11: its body was evaluated, and an
                 # amount that reads the cell being evaluated made the answer depend on the order of the terms)
                 return None
+            pr = tctx.rnd
+            if pr is not None and pr[0] == 'proj' and isinstance(day_lo(day), datetime.date):
+                # a projection reads the instance's random amounts by its day (L §5.16, §5.14.1; #212)
+                tctx = tctx.but(rnd=pr[:5] + (day_lo(day),))
             if at_cut is not None:
                 cuts = [at_cut]
             elif isinstance(day, datetime.date):
                 cuts = [min(day, K)]
             elif isinstance(day, Iv):
-                cuts = sorted(set([min(day.lo, K), min(day.hi, K)]))
+                # one booking cut per piece of the window: a version known inside it changes the amounts there
+                # (E §5 step 1, #230)
+                cuts = sorted(set(min(a, K) for a in self.window_pieces(inst, tctx, day.lo, day.hi)))
             else:
                 cuts = [K]
             inst.cut = cuts[0]
@@ -1721,9 +1730,9 @@ def m_status(self, i, ctx):
         st = 'none'
     elif lo is not None and (hi < S or lo > E):
         st = 'leftout'
-    elif self.scen_early(i, lo):
-        # L §6.4: "A move the scenario declares books nothing before D: an instance whose day, or a window's first
-        # day, falls before D is left out"
+    elif self.scen_early(i, hi if isinstance(d, Iv) else lo):
+        # L §6.4: "A move the scenario declares books nothing before D: an instance whose day falls before D is left
+        # out"; a window across D is §4.4's (window_class_depends)
         st = 'leftout'
     elif i.err is not None:
         st = 'refused'
@@ -1755,12 +1764,19 @@ def m_status(self, i, ctx):
 
 
 def m_scen_early(self, i, lo):
-    """L §6.4: an instance of a move a scenario declares whose day, or a window's first day, falls before the
-    scenario's from."""
+    """L §6.4: an instance of a move a scenario declares whose day falls before the scenario's from; a window does
+    when its last day does (lo is then that day), one across the from being §4.4's (m_window_class_depends)."""
     wlo = getattr(i, 'wlo', None)
-    if wlo is not None and (lo is None or wlo < lo):
+    if wlo is not None and not isinstance(i.day, Iv) and (lo is None or wlo < lo):
         lo = wlo
     return lo is not None and self.before_scen_from(i, lo)
+
+
+def m_scen_from(self, i):
+    """The from of the scenario that declares i's move, or None (L §6.4)."""
+    mi = getattr(i, 'move', None)
+    sc = getattr(mi.decl, '_scen', None) if mi is not None and mi.decl is not None else None
+    return None if sc is None else getattr(self.m, 'scen_from', {}).get(sc)
 
 
 def m_before_scen_from(self, i, day):
@@ -1781,24 +1797,54 @@ def m_before_scen_from(self, i, day):
     return True
 
 
+def m_window_pieces(self, i, ctx, lo, hi):
+    """The first day of each piece of the window lo .. hi: the window split where a test the plan pass makes of the
+    instance's day can change (E §4.1 step 2, L §4.4 "One rule for every window a line meets"): the run's start S,
+    the cut K, the scenario's from (L §6.4), a covered span's ends at a place of its legs (L §5.19) and a version's
+    known date, the edge of the booking cut's class (E §5 step 1). Each piece is read once, at its first day; the
+    run's end is the walk's (a window that crosses E is its hole there)."""
+    m = self.m
+    edges = {m.S, ctx.cut}
+    frm = self.scen_from(i)
+    if frm is not None:
+        edges.add(frm)
+    cov = self.coverage(ctx) if i.legs else {}
+    for lg in i.legs:
+        for p in (lg.frm, lg.to):
+            if isinstance(p, Thing):
+                for span, _v in cov.get(p.name, ()):
+                    edges.update((span.start, span.end))
+    edges.update(c for c, _vids in self.known_dates())
+    return [lo] + sorted(e for e in edges if e is not None and lo < e <= hi)
+
+
+def m_day_class(self, i, ctx, day):
+    """The class an instance dated by a window takes on one of its days (E §4.1 step 3): 'out' before S or before its
+    scenario's from (L §6.4), 'modelled' on a covered day before K, else 'booked'."""
+    frm = self.scen_from(i)
+    if day < self.m.S or (frm is not None and day < frm):
+        return 'out'
+    if day < ctx.cut and self.touches_covered(i, ctx, day):
+        return 'modelled'
+    return 'booked'
+
+
 def m_window_class_depends(self, i, ctx, lo, hi):
     """Whether a plan instance dated by a window takes its class (E §4.1 step 3) one way on some of the window's days
-    and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77): inside [S, E] or before it (a window that
-    crosses E is its hole already, in the walk), and modelled past or booked."""
+    and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77), read once per piece of the window
+    (window_pieces). Where it does, i.booked is the first and last day of the pieces that book it, as far as the
+    other class reaches (False when no piece books it); 'covered' when a piece is modelled past, whether it is a
+    binding's member then depending on the day too (mreads)."""
     if lo is None or lo == hi or not isinstance(i.day, Iv) or i.decision:
         return False
-    S, K = self.m.S, ctx.cut
-    if lo < S <= hi:
-        return 'start'
-    if lo >= K:
+    starts = self.window_pieces(i, ctx, lo, hi)
+    cls = [self.day_class(i, ctx, a) for a in starts]
+    if len(set(cls)) == 1:
         return False
-    rs = []
-    d = lo
-    while d <= hi:
-        rs.append(d < K and self.touches_covered(i, ctx, d))
-        d = d + datetime.timedelta(1)
-    # modelled past on some days: whether it is a binding's member depends on the day too (mreads)
-    return 'covered' if any(rs) and not all(rs) else False
+    ends = [b - ONE_DAY for b in starts[1:]] + [hi]
+    booked = [(a, b) for a, b, c in zip(starts, ends, cls) if c == 'booked']
+    i.booked = (booked[0][0], booked[-1][1]) if booked else False
+    return 'covered' if 'modelled' in cls else 'start'
 
 
 def m_touches_covered(self, i, ctx, day=None):

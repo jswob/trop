@@ -2970,6 +2970,14 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
         if tk == 'key':
             return key_value(m, node, ty, loc)
         raise LoadError('LOAD-UNIT', 'a value of the wrong type: a month-day for %s' % T.show(ty), loc)
+    if k == 'call' and node.name == 'window' and len(node.args) == 2 and all(a.k == 'date' for a in node.args):
+        # an observed row's field is written as a call: a window belongs in an attribute (L §5.19; #221, 221.R2)
+        return convert_value(m, Node('window', a=node.args[0].v, b=node.args[1].v, loc=node.loc), ty, loc, factor,
+                             target)
+    if k == 'call' and node.name == 'one_of' and len(node.args) == 1 and node.args[0].k == 'list' and \
+            node.args[0].items and all(a.k == 'date' for a in node.args[0].items):
+        return convert_value(m, Node('oneof', days=[a.v for a in node.args[0].items], loc=node.loc), ty, loc, factor,
+                             target)
     if k in ('window', 'oneof'):
         if tk != 'date':
             raise LoadError('LOAD-UNIT', 'a window is a date; %s is %s' % (target, T.show(ty)), loc)

@@ -251,7 +251,16 @@ def fmt_value(v, partial=False, t=None):
         return v.text
     if isinstance(v, tuple) and v and v[0] == 'mmdd':
         return '%02d-%02d' % v[1]
+    if isinstance(v, Lst) and any(computed_iv(x) for x in v.items):
+        # an entry computed from a window is where one value is needed: the hole (L §4.4 l.669; #221, C2)
+        return '[%s]' % ', '.join(fmt_value(x) for x in v.items)
     return fmt_typed(v, t)
+
+
+def computed_iv(x):
+    """A value computed from a window that is no window of days (fmt_value prints it as the hole)."""
+    return isinstance(x, Iv) and not isinstance(x.lo, datetime.date) or \
+        isinstance(x, Lst) and any(computed_iv(y) for y in x.items)
 
 
 def fmt_bind(b, v):
@@ -1878,6 +1887,9 @@ def hole_days(vals):
             out.update(str(w[1]) for w in iv_carry(x))
         elif isinstance(x, (tuple, list, frozenset, set)):
             for y in x:
+                walk(y, depth + 1)
+        elif isinstance(x, Lst):
+            for y in x.items:
                 walk(y, depth + 1)
         elif hasattr(x, 'carry_vals'):
             for y in x.carry_vals():

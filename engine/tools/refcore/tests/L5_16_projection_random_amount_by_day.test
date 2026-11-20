@@ -1,0 +1,75 @@
+# tally 2.2.1 (#212, S-212), L §5.16: a decision reads a random fact "through a projection only for an amount booked on
+# or before that day"; L §5.14.1: "A random amount dated after t is read as §5.16 says". save[m], on the month's
+# second day, projects konto at mean; spend[m] is dated the month's second-last day, its law date the month's first:
+# the projection reads its amount at its distribution's mean, never the path's sample, so konto isn't held at keep on
+# every path (m_konto, one). tally 2.2 took the sample by the fact's law date: m_konto 100 PLN with standard error 0
+# (the simplification review's r1b.tally).
+=== r1b.tally
+model r1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input shock[m in months]: dist PLN
+input keep: money PLN
+input pay: money PLN
+
+move wage[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount pay
+
+move spend[m in months]: transfers
+  on end_of(m) - 1 day
+  at start_of(m)
+  leg cash from konto to world amount round(shock[m], minor(PLN), half-even)
+
+move save[m in months]: transfers
+  on start_of(m) + 1 day
+  at start_of(m)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, round(min(bal(konto, d) from (start_of(m) + 1 day) random at mean for d in start_of(m) + 1 day .. end_of(m) - 1 day step 1 day), minor(PLN), half-even) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  pay = 1000.00 PLN "s"
+  shock[*] = uniform(200 PLN, 600 PLN) to 0.01 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask m_sav: mean(bal(sav, 2026-03-31)) paths 8 seed 3
+ask m_konto: mean(bal(konto, 2026-03-31)) paths 8 seed 3
+ask one: bal(sav, 2026-03-31), bal(konto, 2026-03-31) paths 8 seed 3 path 2
+ask proj_mean: bal(konto, 2026-03-31) from 2026-01-01 random at mean
+ask proj_q: bal(konto, 2026-03-31) from 2026-01-01 random at quantile(0.9)
+=== expect m_sav m_konto one
+m_sav: 1 736.8875 PLN (standard error 74.098727; 8 paths; horizon none)
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+m_konto: 152.295 PLN (standard error 41.117534; 8 paths; horizon none)
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+one: (1 485.78 PLN, 191.25 PLN)
+  sample: shock[2026-01] = 551.48 PLN (u = 0.87870451890858247221273262528296044138187426142394542694091796875 (0.878704518908582))
+  sample: shock[2026-02] = 462.74 PLN (u = 0.65684362106157429962824574609658867530015413649380207061767578125 (0.656843621061574))
+  sample: shock[2026-03] = 308.75 PLN (u = 0.27187652637924711028515924182702434563907445408403873443603515625 (0.271876526379247))
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+warning: WARN-NEGATIVE konto is below zero from 2026-01-31
+warning: WARN-NEGATIVE konto is below zero from 2026-02-28
+warning: WARN-NEGATIVE konto is below zero from 2026-03-31
+warning: WARN-NEGATIVE konto is below zero from 2026-04-30
