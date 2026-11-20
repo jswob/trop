@@ -362,6 +362,19 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
     forks = cross_world_forks(realities)
     if forks is not None:
         return ['refused: %s' % forks.text()]
+    # load's last check, a literal key at a literal stepped range (L §2.5, §8.4), on every reality before anything is
+    # answered, in run as in check (L §8.3; tally 2.2.1, 229.2): the base's refusal is the run's one line, a
+    # scenario's refuses that scenario (L §6.4)
+    from .evaluate import Engine
+    _, err = guarded(lambda: Engine(m0).check_range_lits())
+    if err is not None:
+        return ['refused: %s' % err.text()]
+    for sid in sorted(k for k in realities if k is not None):
+        r = realities[sid]
+        _, err = guarded(lambda: Engine(r).check_range_lits())
+        if err is not None:
+            errs[sid] = err
+            del realities[sid]
     if check:
         return check_worlds(scen, realities, errs, first)
     if ids:
@@ -541,20 +554,10 @@ def check_worlds(scen, realities, errs, first=None):
     Load's last check (a literal key at a literal stepped range, L §2.5, §8.4), which run makes when an ask is
     answered, is made here on every reality: the base's refusal is the run's one line, a scenario's refuses that
     scenario (L §6.4)."""
-    from .evaluate import Engine
     from .ask import alone_line, emit_warnings
     realities = dict(realities)
     errs = dict(errs)
     m0 = realities[None]
-    _, err = guarded(lambda: Engine(m0).check_range_lits())
-    if err is not None:
-        return ['refused: %s' % err.text()]
-    for sid in sorted(k for k in realities if k is not None):
-        r = realities[sid]
-        _, err = guarded(lambda: Engine(r).check_range_lits())
-        if err is not None:
-            errs[sid] = err
-            del realities[sid]
     first = first or {}
     out = ['scenario %s: refused: %s' % (sid, errs[sid].text())
            for sid in sorted(errs, key=lambda s: (first.get(s, scen[s][0]), s))]
