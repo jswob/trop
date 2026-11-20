@@ -5416,3 +5416,79 @@ On `build/m3-gatefix` from beb93424, one commit and this one. The fix review is 
 - **Usage:** about 0.25 % of the week this turn (`engine/tools/usage`, 0.71 % over the session before this commit), against a budget of 0.4 %.
 - **For T:** a vector for each of A to D and N-6, held "for #235" while refcore prints its guard.
 - **Checks:** `check quick: green, 11 steps (81s)` at ad876e72's tree. `check commit: green, 23 steps (136s)`, exit 0, at ad876e72's tree with this log; this commit adds the log alone.
+
+## 2026-11-20 tally 2.2.1 G1, windows: every change built, waiting for C2 (issue #241)
+
+On `build/2.2.1` from 90973211 (master e629c26a with the writer's group), eleven commits and this one. The plan is `tmp/spec-2.2.1-build/plan.md` §2 G1 and §4; the lead's answers Q3 and Q-seq. Each change was built in the plan's order and committed on `check quick`, with `check commit` run once after it (the stop rule). Its red ids were compared with its §4 row: none fell outside. By Q-seq, the group's last commit and its push wait for C2's re-store of the window records. Until then `check commit` is red at tests on the ids below, and on no other. Nothing is pushed.
+
+- **The changes, each with its files and functions:**
+  - **37dde25e, 221.C3:** `eval/windows.rs` `window_arith`. `+` of two windows gives the interval of its values, from its corners; the hole only where one value is needed (L §4.4 l.668–669). The plan named `eval/arith.rs`; the two-window arm is in `windows.rs`.
+  - **5765206c, S-window-key:** `eval/keys.rs` `make_keys`' window arm and the new `window_key`. An `Index` domain with a period whose two ends fall in one period is read at that period's key. A day's key stays the hole "for a key". By Q3, such a value lists no `unknown day:` line.
+  - **91bcaba4, 221.C2:** `ask/answer.rs` `print_hole`, `computed_entry`, `entries_text` and `item_text`'s list arm, used by `ask/check.rs` and `ask/explain.rs`; `model/value.rs` `hole_days_into`. A list element that is an undecided interval prints as its hole, and its `unknown day:` lines are the list's. The plan named `eval/expr.rs`' list literal; refcore does this at the print (`fmt_value`'s list), so the engine does too.
+  - **718cdf92, the built-ins over a window (P22):** `eval/windows.rs` gets `value_choices` and `values_interval` (with `number_interval` and `interval_values`). `eval/builtin.rs` `abs` and `pow` go through them (`abs_value`, `pow_value`); so do `eval/dates.rs` `day_of` (`day_of_month`, `anchored`) and `day_count`'s `add_*` (`moved_by`, `moved`). `round` stays the hole: STOP-REPORT 1 below.
+  - **10ede13e, the restructure:** `walk/instance.rs` gets the new `Piece` and `window_pieces(w, edges)`. `walk/plan.rs` `class_depends` reads each piece's class once, at its first day (`day_class`, `DayClass`, `covered_edges`). Only the S and coverage edges are used; byte-equal on every store.
+  - **0dac9bcf, cut classes (230.Q4):** `walk/plan.rs` `booking_cuts` makes each version known inside the window an edge, and `inst_parts` takes cuts and bodies per piece. Where the bodies differ, the hole is "for the booking cut of". `book/adjust.rs` `known_dates` is now `pub(crate)` (re-exported from `lib.rs`).
+  - **ec4102b9, S-from:** `walk/plan.rs` `class_depends` makes the scenario's `from` an edge. `scenario_early` leaves an instance out only when the window's last day (`Dated::hi`) is before `from`; `walk/agenda.rs` and `walk/instance.rs` follow. Decisions: STOP-REPORT 2.
+  - **16eae501, law-date classes (236.1):** `walk/agenda.rs` `Status::Hole`'s law block, through `inst.law.window()` and `walk/tuples.rs` `imprecise_law`. Where a key's `where` differs by law class, the hole names the `at`'s window. A refusal that shares the hole doesn't outrank it (`walk.open_tests`). `walk/instance.rs` `Inst.exists0` carries the tuple's existence at K into `book/adjust.rs` `measure_inst` and `walk/plan.rs` `trace_answers`; refcore calls it `exists0`.
+  - **184cae99, the window's end (218.1):** `walk/agenda.rs` `schedule_decision` now puts `Act::WindowEnd` at stratum 0 of the last day's end step, before the closing readings (E §4.2 step 4).
+  - **4f032238, a covered span's end (220.1):** the new `walk/agenda.rs` `schedule_booked_hole`. The hole reaches as far as the class that books it: `Perm` at the first day, then `WindowEnd` before the readings of the booked piece's last day. With it come `Depends::{Start, Covered}(Option<Piece>)` and `Depends::booked` (`walk/instance.rs`); `walk/plan.rs` `class_depends`, which gives Start where a piece is out and Covered where the class is modelled and booked; and `book/members.rs`.
+  - **039dbeb4, a leg of amount 0 (214.1):** `walk/agenda.rs` `zero_leg`. A zero leg is skipped in the plain `LegHole` loop, in `schedule_booked_hole` and in the Past/Plan window arms (E §4.1 step 2). A one-day window already reads as its day at run (`od.tally`, m1 `oneday`), so `day_window` is unchanged: a change there was tried, moved nothing, and was reverted.
+- **Size** (`git diff --stat 90973211..HEAD -- engine/crates`): 14 files, 762 in and 221 out (net +541), against the plan's 0.55 to 0.9 k. All of it is library; no tests. By area: `eval` 368 in and 104 out (P22's commit alone is 324 in, 93 out), `walk` 294/79, `ask` 79/21, `model` 15/13, `book` 5/3, `lib.rs` 1/1.
+- **Kernel files touched** (`tools/kernel.toml`): `walk/agenda.rs`, `walk/instance.rs`, `walk/plan.rs`, `book/adjust.rs`, `book/members.rs`. The `eval/`, `ask/`, `model/` files and `lib.rs` are protected non-kernel.
+- **Stored ids moved, per change** (`check commit` once after each; `tmp/spec-2.2.1-build/g1/commit-*.txt`). Each moved id equals mended refcore (`g1/rows.py`):
+  - 221.C3: none. S-window-key: none; its listed rows, m1 `fixes/g13/rf_w_model_with_rf_w_w02 w03 w18 w19` and m2 `r13/key_through_window`, already equal mended refcore. 221.C2: m2 `fixes/t22/list_window_name`, on its list.
+  - P22: m1 `fixes/g13/r_agent_w_model_with_r_agent_w_{c1_c1,c3_c3,c5_c5,f1_f1,f2_f2,f3_f3}` and `fixes/g13/rf_w_model_with_rf_w_{w11_w11,w13_w13}`, on the brief's list (m1 `fixes/g13` `r_agent_w_*`, `rf_w_*`).
+  - The restructure, 230.Q4, S-from and 236.1: none.
+  - 218.1: m1 `fixes/gate8/m3_window_end` (the 2026-02-10 hole → 900.00): "a reading at the end of a window's last day: hole → value after it".
+  - 220.1: none.
+  - 214.1: m2 `fixes/rv/g4f_zero_leg` and `fixes/rv/g4f_zero_leg_life` (`bz`: hole → `0.00 PLN`, its `unknown day:` line gone).
+  - Outside a list: none.
+- **Probes,** engine beside mended refcore (`g1/probes.sh`, `g1/evalprobes.sh`; outputs `g1/probes-end.txt`, `g1/evalprobes-end.txt` at 039dbeb4):
+  - 221.C3, `arith2.tally` `z2`: `?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w2)`; `z1`: the hole "for days_between(w2, w) + days_between(d0, w) > 0". SAME.
+  - S-window-key, `cr/fx.tally` `f2`: `(?"… for a key" (w), 400.00 PLN)`. `g1/probes/wkey.tally` `k1`: `4 PLN` (one period); `k2`/`k4`: the hole "for a key" (two periods; a day's key); `k3`: `(6 PLN, 6 PLN)`. SAME.
+  - 221.C2, `p25_list.tally` `a`: `[?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1]`. `g1/probes/list2.tally` `c`: `[window(2026-03-05, 2026-03-07), 1]`; `e`: `[2026-03-01, ?"…" (w)]`. SAME.
+  - P22, the g13 texts (`g1/g13.sh`): `c1` the print's hole, `f1` `window(2026-01-01, 2026-02-01)`, `f3` `window(2026-01-01, 2026-01-02)`, `w13` `window(2026-03-03, 2027-03-20)`, `w01` the hole "for day_of". SAME.
+  - 230.Q4, `pl/misc2/m2.tally` `undone`: `?"date within window(2026-03-05, 2026-03-20) not precise enough for the booking cut of pay" (pay)`; `u06`, `u10`, `u15` pinned as before. SAME.
+  - S-from, `pl/cells` `s_after`: `?"date within window(2026-04-28, 2026-05-03) not precise enough for a balance" (extra)`, with no `left out:` line. `g1/probes/dfrom` `d_apr`/`d_may`: both windows' holes. SAME.
+  - 236.1, `gp/win/w1_differs` and `w4_agree_false` `q`: `?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (shut)`. Refcore prints `REFCORE-NOT-YET` there (#235's guard), so those two differ. `g1/probes/law/nov2.tally` and `nolater.tally` print the same hole and are SAME.
+  - 218.1, `a1_window_end.tally` `b`: `(?"… for the day of save" (save), 100.00 PLN, 100.00 PLN)`. SAME.
+  - 220.1, `p4/cov.tally` `v1`: `?"date within window(2026-03-30, 2026-04-02) not precise enough for a balance" (pay_x)`, with `pad:` at 0.00 PLN; `v2` 595.00 PLN, `v3` 695.00 PLN. SAME.
+  - 214.1, `pl/misc/m1.tally` `oneday` and `zerowin`: `0.00 PLN`. `g1/probes/oneday/od.tally` `d`: `window(2026-03-10, 2026-03-10)`; `a9`: `0.00 PLN`; `a10`: `100.00 PLN`. SAME.
+  - The guards: `critic/sign.tally`'s hole stays, and `pl/cells` `cnt` stays the hole "for a binding over transfers". SAME.
+- **Single-mutant proofs:** none run. The gate's one gate-8 run covers the group.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` byte-equal to 90973211's); report-only hits are 8, as before.
+- **Open STOP-REPORTs:** three, below: `round` over a window; S-from for decisions; refcore alone on `L4_4_window_aggregate_terms`.
+- **Usage:** about 1.06 % of the week before this commit (`engine/tools/usage tmp/spec-2.2.1-build/g1-ids.txt`; week meter about 1.3 %), against about 1.5 %.
+- **Time:** 17:03 to about 18:25, about 82 minutes. About 44 of them were checks: `check quick` 24 timed runs (27 min), `check commit` 9 runs (15 min), `check fences` 5 runs (2 min).
+- **Next:** after C2 re-stores the window records, run `check commit` (it should go green on these ids), make the group's last commit and push.
+- **Checks:** `check quick: green on this tree already (sha256 d5a233f0aff7af5c)` at 039dbeb4's tree. `check fences: green, 1 step (22s)` at 039dbeb4. The last `check commit` (`g1/commit-4.txt`, 039dbeb4's tree): `check commit: red at tests, stopped after 10 of 24 steps (72s)`, red only on the 12 ids above. That is waiting for C2.
+
+## STOP-REPORT 2026-11-20: `round` over a window: L l.668 gives an interval, refcore gives the hole
+
+- **Kind:** the spec seems wrong, or refcore does; the engine follows refcore
+- **Where:** `eval/builtin.rs` `round`; L §4.4 l.668 ("each operation gives the interval of its values"); refcore `lift_values`
+- **Rule or gate:** L §4.4; DONE gate 10 (refcore's bytes)
+- **What happens:** `round(days_between(d0, w) / 3, 0)` with `w` a window. Mended refcore prints the hole "… not precise enough for round"; by l.668 it would be the interval of the rounded values. The engine prints refcore's hole. A second, smaller point: on a non-integer interval across 0, refcore's `lift_values` takes the two ends only, while the interval of `abs` or `pow` over it also holds 0. The engine adds 0 where the interval crosses it; no T vector or stored record reads such an interval.
+- **What I tried:** P22's `values_interval` would give `round` its interval in one line. Taking it would make the engine differ from refcore on a text no plan row names, so it isn't taken.
+- **What I ask:** a ruling: is `round` (and any other built-in refcore holes over a window) under l.668, and does an interval across 0 hold 0?
+- **State:** 039dbeb4, green on `check quick`; nothing uncommitted but this log.
+
+## STOP-REPORT 2026-11-20: S-from for decisions: refcore and the plan's row differ
+
+- **Kind:** other: mended refcore and the plan's row differ
+- **Where:** `walk/agenda.rs` `schedule_decision`; `walk/plan.rs` `scenario_early`; L §6.4; plan §4's S-from row ("a scenario's move whose window crosses `from`: value → hole from `from`")
+- **Rule or gate:** L §6.4; the brief ("where mended refcore and the plan's row differ → STOP-REPORT, not copy")
+- **What happens:** on a decision whose window crosses a scenario's `from` (`g1/probes/dfrom/base.tally`, `sc.tally`), mended refcore holes from the window's first day, before `from`, and keeps the windows that lie wholly before `from`. The plan's row says nothing before `from` changes. The engine prints refcore's bytes (SAME on `d_apr`, `d_may`, `d_pin`); for moves it follows the row, which there equals refcore.
+- **What I tried:** nothing beyond the probes. The row's reading would make the engine differ from refcore, and the brief says not to copy either side.
+- **What I ask:** which is meant for a decision: the hole from `from` (the row), or refcore's?
+- **State:** 039dbeb4, green on `check quick`; nothing uncommitted but this log.
+
+## STOP-REPORT 2026-11-20: `L4_4_window_aggregate_terms`: refcore alone answers, the engine stops `not implemented`
+
+- **Kind:** other: a refcore test no plan row names
+- **Where:** refcore's `.test` for 221.10, `L4_4_window_aggregate_terms` (`g1/rtests.py`); the engine's aggregate terms over a window
+- **Rule or gate:** L §4.4 l.668–671
+- **What happens:** the engine stops `tally run: not implemented`; refcore prints the hole "for a term of mean/quantile/sum". No T vector or stored record reads it, and no G1 row names it.
+- **What I tried:** nothing: the aggregate's term over a window is outside G1's list.
+- **What I ask:** which group takes it, or is it held to a later milestone (plan §6)?
+- **State:** 039dbeb4, green on `check quick`; nothing uncommitted but this log.
