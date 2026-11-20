@@ -5,9 +5,9 @@
 //! (`HOLE-IMPRECISE`), §8.4.
 //! Twin: engine/tools/refcore/evaluate.py (`iv_arith`, `iv_compare`, `imprecise`, `lift`'s end,
 //! `e_neg` of an `Iv`, `c_window`, `c_one_of`, `date_of`); ask.py (`fmt_value` of an `Iv`).
-//! Invariants: a window's low end is never above its high end; an operation on two windows,
-//! and a use that needs one value, is the window's `HOLE-IMPRECISE`, asked of the row it came
-//! from; a window keeps the text it was written with and its row's figure through every
+//! Invariants: a window's low end is never above its high end; an operation on two windows
+//! gives the interval of its values at their ends' corners; a use that needs one value is the
+//! window's `HOLE-IMPRECISE`, asked of the row it came from; a window keeps the text it was written with and its row's figure through every
 //! operation that keeps it a window, but only a read of an item gives it a read, so a value
 //! an operation computed is never decided against itself (#115, pick P28); a window a read
 //! gives carries its unknown day, named by that read, and every interval and hole made of it
@@ -129,13 +129,23 @@ pub(super) fn interval_of(m: &Reality, outs: Vec<Value>, from: &Window) -> Resul
 }
 
 /// `a op b` where one side is a window: the op at the window's ends, in order, a window with
-/// its text and figure and no read, a value computed; on two windows `HOLE-IMPRECISE`
-/// (refcore's `iv_arith`). L §4.4.
+/// its text and figure and no read, a value computed; on two windows the interval of its
+/// values at every corner of their ends, one value where they agree, carrying both windows'
+/// unknown days (refcore's `iv_arith`, its `lift`). L §4.4 ("each operation gives the
+/// interval of its values … from their ends where it is monotone in them (arithmetic …)").
 pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
     let (lhs, rhs) = (single(lhs), single(rhs));
     let (w, lo, hi) = match (lhs, rhs) {
-        (Value::Window(a), Value::Window(_)) => {
-            return Ok(Value::Hole(imprecise(m, a, "arithmetic on two windows")?));
+        (Value::Window(a), Value::Window(b)) => {
+            let mut outs = Vec::with_capacity(4);
+            for x in [&a.lo, &a.hi] {
+                for y in [&b.lo, &b.hi] {
+                    outs.push(arith(m, op, x, y)?);
+                }
+            }
+            let mut from = (**a).clone();
+            crate::hole::carry_union(&mut from.carry, &b.carry);
+            return interval_of(m, outs, &from);
         }
         (Value::Window(a), b) => (a, arith(m, op, &a.lo, b)?, arith(m, op, &a.hi, b)?),
         (a, Value::Window(b)) => (b, arith(m, op, a, &b.lo)?, arith(m, op, a, &b.hi)?),
