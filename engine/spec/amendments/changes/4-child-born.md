@@ -2,12 +2,12 @@
 
 **Statement (household):** "12 maja 2028 urodziła się Ola. Ulgę na dziecko odlicza żona. Wniosku o 800+ jeszcze nie złożyliśmy." A follow-up, two weeks later: "Wniosek o 800+ złożony 1 czerwca przez PUE ZUS."
 
-**Operation:** add a fact (OPERATIONS §2.1), with `add_keys`, three times:
+**Operation:** add a fact (OPERATIONS §3.3, CHG-1), three times:
 - the birth certificate (one document, so one version);
 - the household's decisions (one statement, so another version);
 - later, the claim.
 
-**Kind:** four amendments: an `advance` of `on` to 2028-05-14 (OPERATIONS §4), the `add` of the birth's two versions, an `advance` to 2028-06-02, then the `add` of the claim. Each `add` alone would be refused (`OP-EDIT`), since it would edit the `on` line. **Known:** 2028-05-14, then 2028-06-02.
+**Steps:** `on` moves to 2028-05-14 (CHG-7), the birth's two versions are added, `on` moves to 2028-06-02, then the claim is added. A version added before `on` reaches its `known` is refused: `LOAD-KNOWN version ola_800 is known after the model's on date`. **Known:** 2028-05-14, then 2028-06-02.
 
 ## Diff
 
@@ -77,7 +77,7 @@ Then, at the follow-up (the `on` line moves again, to 2028-06-02):
 
 **Lines:** 22 added at the birth and 26 at the claim (19 and 20 non-blank), plus the `on` line each time. Lines edited: the `on` line only. The claim's back pay, one line in tally 1.0.1 (`arrears on 2028-06-20 for b800_pay`), is now a settlement move: an event kind with a leg each way, the day as a row of `ola_800`, and one move whose instances fulfil each adjustment of `b800_pay` that the claim makes (LANGUAGE §5.14.3).
 
-**New keys checked against closed-world rows.** The operation lists every input keyed by `person` whose base rows don't cover `ola`.
+**New keys checked against closed-world rows.** Every input keyed by `person` whose base rows don't cover `ola`.
 
 | Input | Base row | Covers `ola`? | In the diff |
 |---|---|---|---|
@@ -93,7 +93,7 @@ Without the `parent = false` restatement, `is_child[me]` would read `parent[me, 
 
 The expected outputs, cell by cell, are in `amendments/expected/4-child-born.md`, with the diff as first written as a variant.
 
-**First day anything differs:** 2028-06-20, when the 800+ arrives (below). The birth alone first changes a movement on 2029-06-14, the wife's larger refund: reading the new keys changes none on 2028-05-14. The earliest `governs` is 2026-01 (Ola's residence), so the sanity check holds.
+**First day anything differs**, from two runs' asks of each place's balance by day (OPERATIONS §3.3, CHG-11): 2028-06-20, when the 800+ arrives (below). The birth alone first changes a movement on 2029-06-14, the wife's larger refund: reading the new keys changes none on 2028-05-14. The earliest `governs` is 2026-01 (Ola's residence).
 
 **At the birth** (`on` = 2028-05-14):
 - **800+:**
@@ -136,7 +136,7 @@ The expected outputs, cell by cell, are in `amendments/expected/4-child-born.md`
 **Register:** one household version (`ola_home`) and two document versions (`ola_born`, citing the birth certificate, and `ola_800`, citing the ZUS confirmation). Nothing is assumed. New `held` entries: `residence[ola] = pl (ola_home)`, and the three rows of the 800+ law's `b800_2024`, read from 2028-07.
 
 **Warnings:**
-- `WARN-BACKPAY` at the claim lists `b800_pay[ola, 2028-05]`, δ +800, with the settlement move that fulfils its adjustment (OPERATIONS §2.1, §10). The birth changes no booked pay: Ola's re-measured instances have δ 0.
+- None for the back pay: at the claim the register lists the `adjustment:` line of `b800_pay[ola, 2028-05]`, δ +800 on 2028-06-02 (version `ola_800`), and the settlement move `b800_pay_arrears_ola_800` fulfils it, so no `HOLE-CHANGED` arises (OPERATIONS §3.3, CHG-3). The birth changes no booked pay: Ola's re-measured instances have δ 0.
 - The household's spending budget doesn't grow with a child. This is not a warning: the model can't know it. The household's next statement would restate `spend_budget`.
 
 **Depends on:**
