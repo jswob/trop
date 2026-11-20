@@ -1,0 +1,47 @@
+# tally 2.2.1 P35 (L §8.2 l.2248, "an entry is listed under a result exactly when a read in its set gave it", whatever
+# the form of the line, its outcome, or the way a movement came not to count): N1, a balance before a leg whose day row is assumed lists
+# assumed: (review g2 reg/r8). Before W8: before no line.
+=== r8.tally
+model r8
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input w: date
+input w3: date
+input pay: money PLN
+move pw: transfers
+  on w
+  leg cash from world to konto amount pay
+move ps: transfers
+  on w3
+  leg cash from world to sav amount pay
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN assumed "the card names no pay"
+  w = 2026-03-10 assumed "the card names no day"
+  w3 = 2026-03-10 "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+ask before: bal(konto, 2026-03-07)
+ask after: bal(konto, 2026-03-12)
+ask fbefore: flows(konto, 2026-03-01 .. 2026-03-07)
+ask fafter: flows(konto, 2026-03-01 .. 2026-03-12)
+ask pbefore: bal(konto, 2026-03-07) with w = 2026-03-09
+ask cbefore: count(m in transfers over 2026-03-01 .. 2026-03-07)
+ask prj: bal(konto, 2026-03-07) from 2026-03-01
+=== expect before after
+before: 500.00 PLN
+  assumed: the card names no day (w)
+  cut 2026-01-01
+after: 600.00 PLN
+  assumed: the card names no day (w)
+  assumed: the card names no pay (pay)
+  cut 2026-01-01

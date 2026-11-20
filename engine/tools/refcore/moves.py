@@ -1591,11 +1591,39 @@ def once_obs(m, obs, ctx):
     return out
 
 
-def same_obs_differ(a, others, leg=None, m=None):
+def same_days(xs):
+    """Whether days rows stated same give agree (L §4.4 l.669, tally 2.2.1 P36 Q1: a comparison): None where they do
+    (one day, or one window's name on every side), 'differ' where no day is in all of them, else the windows that
+    leave it undecided."""
+    named = set(x.name for x in xs if isinstance(x, Iv))
+    if all(isinstance(x, Iv) for x in xs) and len(named) == 1 and None not in named:
+        return None
+    sets = []
+    for x in xs:
+        if isinstance(x, datetime.date):
+            sets.append({x})
+        elif isinstance(x, Iv) and x.days:
+            sets.append(set(x.days))
+        elif isinstance(x, Iv) and isinstance(x.lo, datetime.date) and isinstance(x.hi, datetime.date):
+            sets.append(set(x.lo + datetime.timedelta(days=k) for k in range((x.hi - x.lo).days + 1)))
+        else:
+            return 'differ' if len(set(vkey(y) for y in xs)) > 1 else None
+    common = set.intersection(*sets)
+    if not common:
+        return 'differ'
+    if all(len(z) == 1 for z in sets):
+        return None
+    return [x for x, z in zip(xs, sets) if len(z) > 1]
+
+
+def same_obs_differ(a, others, leg=None, m=None, fact=None):
     """Where rows stated same disagree on a leg's amount or day (L §5.19: "a read of the movement away from its places
     (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
-    naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read."""
+    naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read; fact, where
+    given ('amount' or 'day'), the one fact read: HOLE-SAME is per fact (tally 2.2.1 P36, Q3). Two days agree as a
+    comparison does: undecided is HOLE-IMPRECISE naming the window (Q1)."""
     from .joint import shown
+    from .evaluate import carry_hole
     for g in a.legs:
         if leg is not None and g.name != leg:
             continue
@@ -1605,8 +1633,21 @@ def same_obs_differ(a, others, leg=None, m=None):
         mem.sort(key=lambda t: id_order(m, t[0].id) if m is not None else shown(t[0].id))
         for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
                                                                                 lambda h: h.day)):
+            if fact is not None and not what.startswith('the %s ' % fact):
+                continue
             xs = [get(h) for o, h in mem]
-            if any(isinstance(x, Hole) for x in xs) or len(set(vkey(x) for x in xs)) == 1:
+            if any(isinstance(x, Hole) for x in xs):
+                continue
+            if what.startswith('the day '):
+                cmp = same_days(xs)
+                if cmp is None:
+                    continue
+                if cmp != 'differ':
+                    # undecided: it depends on where in the window the day falls (L §4.4 l.669, P36 Q1)
+                    w = cmp[0]
+                    return carry_hole(Hole([('date within %s not precise enough for %s' % (
+                        w.window_text(), what), ', '.join(shown(o.id) for o, h in mem))]), *cmp)
+            elif len(set(vkey(x) for x in xs)) == 1:
                 continue
             d = g.day if isinstance(g.day, datetime.date) else a.day
             # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)

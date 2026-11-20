@@ -272,6 +272,7 @@ class Walk:
         self.leftout_insts = []     # (day, instance id) of the movements a projection leaves out (E §10)
         self.post_e = []            # the instances dated after E, which flows counts (E §2; tally 2.1.7 S1, #93)
         self.bad_legs = {}          # (movement id, leg) -> the refusal of a leg the walk refused (E §4.2 step 5)
+        self.bad_reads = {}         # (movement id, leg) -> what the sign rule's refusal of it rests on (P35)
         self.hole_legs = {}         # (movement id, leg) -> the hole of a window leg its lifespan test leaves open
         self.hole_flows = {}        # (movement id, leg) -> the hole a test some days of a window pass gives its reads
         self.running = False
@@ -403,10 +404,10 @@ class Walk:
         if e.kind == 'bad' and e.coll is None and getattr(e.mv, 'coll', None) is not None:
             # a refusal rests on the reads that refused it: the movement's pins are listed under it, a pin nothing it
             # read isn't (L §8.2 One read set; tally 2.2.1, #208)
-            pins = [r for r in e.mv.coll.reg if r[0] in ('pinned', 'pin met')]
-            if pins:
+            # tally 2.2.1 P35: every entry its reads gave, `assumed:` included, as a value lists them
+            if e.mv.coll.reg:
                 e.coll = _coll()
-                e.coll.reg.update(pins)
+                e.coll.merge(e.mv.coll)
         prev = lg.ents[-1].st if lg.ents else self.default(place, unit)
         e.st = apply(prev, e, len(lg.ents))
         lg.ents.append(e)
@@ -578,6 +579,14 @@ class Walk:
                     self.note_none(i, ctx, S)
                 if st == 'modelled':
                     self.modelled.append(i)
+                    if getattr(i, 'day_coll', None) is not None:
+                        # a covered leg: a balance before its day doesn't count it either, so the reads that decided
+                        # its day are in that balance's read set (L §8.2; tally 2.2.1 P35, N1)
+                        for lg in i.legs:
+                            if isinstance(lg.day, datetime.date):
+                                for p in (lg.frm, lg.to):
+                                    if isinstance(p, Thing):
+                                        self.later_by_place.setdefault(p.name, []).append((lg.day, i.day_coll))
                     if not i.obs and not self.same_observed(i):
                         # a planned instance in a covered span that nothing fulfils: open (L §5.19); one stated same
                         # as an observed row is that observed movement (L §6.1), as for unfulfilled (TX-F1)
@@ -628,6 +637,11 @@ class Walk:
                             self.note_leftout(i)
                             self.note_post_e(i, d)
                         continue
+                    if getattr(i, 'day_coll', None) is not None:
+                        # a balance before its day doesn't count it: the reads that decided its day are in that
+                        # balance's read set, as a plan's are (L §8.2; tally 2.2.1 P35, N1)
+                        for pn in self.dec_places(i, ctx):
+                            self.later_by_place.setdefault(pn, []).append((d, i.day_coll))
                     k = (qid, d)
                     if k not in self.decday:
                         self.decday[k] = []
@@ -701,6 +715,20 @@ class Walk:
         for p in sorted(places):
             self.at(key, 'placehole', (p, frozenset(h.qs), i))
 
+    def dec_places(self, i, ctx):
+        """The places a decision instance's legs name, where they read as things here; none where they don't."""
+        from .evaluate import HoleSignal
+        out = set()
+        for ln, _d in i.move.legs:
+            for e in (ln.frm, ln.to):
+                try:
+                    p = self.eng.ev(e, i.env, ctx)
+                except (TallyError, HoleSignal):
+                    continue
+                if isinstance(p, Thing):
+                    out.add(p.name)
+        return sorted(out)
+
     def dec_bad(self, i, key, err, ctx):
         """A decision instance refused for its day (a random day outside a path): every end of its legs is refused from
         the walk's start, at the places its legs name, read at the cut as dec_hole reads them; other places stand (E §7
@@ -752,6 +780,9 @@ class Walk:
             for p in (lg.frm, lg.to):
                 if isinstance(p, Thing):
                     self.leftout_by_place.setdefault(p.name, set()).add(mid)
+                    if getattr(i, 'day_coll', None) is not None:
+                        # the reads that left it out are in every read set that lists it (L §8.2; tally 2.2.1 P35)
+                        self.later_by_place.setdefault(p.name, []).append((None, i.day_coll))
 
     def note_post_e(self, i, d):
         """An instance dated after E: never booked, counted by flows (E §2 Movements outside [S, E]; tally 2.1.7 S1,
@@ -773,7 +804,7 @@ class Walk:
         if isinstance(d, datetime.date):
             if d < self.start:
                 return
-            if phase == 2 and getattr(i, 'day_coll', None) is not None:
+            if getattr(i, 'day_coll', None) is not None:
                 # a balance before the leg's day doesn't count it: the reads that decided its day are in that
                 # balance's read set (L §8.2 One read set: "a day outside the span"; tally 2.2.1, #221)
                 for p in (lg.frm, lg.to):
@@ -1005,23 +1036,33 @@ class Walk:
         for pu in places:
             pend.pop(pu, None)
         for (place, u), nv in bad:
+            # the sign rule's refusal reads the place's balance: it rests on every entry that balance rests on (L §8.2
+            # l.2248; tally 2.2.1 P35, B1's second form)
+            plg = self.logs.get((place, u))
+            rc = self.cum(plg, len(plg.ents) - 1) if plg is not None and plg.ents else None
             if not bl[(place, u)]:
                 # an anchored place (an opening included) with no leg of the group at it: refused from here, with the
                 # reading's own message (L §8.4; tally 2.1.2, issue #46)
                 at = self.__dict__.get('anchor_at', {}).get((place, u))
-                self.add(place, u, Ent(key, 'bad', err=refuse('RUN-PLACE', words(place, u, nv))))
+                self.add(place, u, Ent(key, 'bad', err=refuse('RUN-PLACE', words(place, u, nv)), coll=rc))
                 continue
             err = refuse('RUN-PLACE', words(place, u, nv))
             for mv, lg in bl[(place, u)]:
                 if (mv.id, lg.name) in self.bad_legs:
                     continue
                 self.bad_legs[(mv.id, lg.name)] = err
+                c = _coll()
+                if rc is not None:
+                    c.merge(rc)
+                if getattr(mv, 'coll', None) is not None:
+                    c.merge(mv.coll)
+                self.bad_reads[(mv.id, lg.name)] = c
                 for p in (lg.frm, lg.to):
                     if isinstance(p, Thing):
                         self.unbook(p.name, u, mv, lg, match)
                 for p in (lg.frm, lg.to):
                     if isinstance(p, Thing):
-                        self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv))
+                        self.add(p.name, u, Ent(key, 'bad', err=err, mv=mv, coll=c))
 
     def reading_group(self, key):
         """The sign rule's group a reading at key joins (L §5.10), as book_leg picks it for the reading's pad: the
@@ -1748,7 +1789,10 @@ class Walk:
             txt = 'anchor: %s %s, stated %s, difference %s' % (place, it, fmt(rv) if not isinstance(rv, Hole)
                                                                else fmt_hole(rv), gtext(gap))
             self.add(place, unit, Ent(key, 'reset', val=rv if not isinstance(rv, Hole) else qty(0, unit),
-                                      qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY, coll=c,
+                                      qs=frozenset(rv.qs) if isinstance(rv, Hole) else EMPTY,
+                                      # its difference is carried like every entry, as a pad's (L §8.2 the `open:`
+                                      # row; tally 2.2.1 P35, N5)
+                                      coll=self.open_kept(place, unit, key, c),
                                       reg=(('anchor', txt[len('anchor: '):]),), note='anchor', row=r))
             self.sign_anchor(key, place, unit, rv, it)
             return
