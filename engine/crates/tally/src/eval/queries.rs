@@ -93,6 +93,9 @@ impl Engine {
                 let read = self.ev(m, level, env, ctx)?;
                 if let Value::Hole(h) = &read {
                     holes.push(h.clone());
+                } else if read == Value::None {
+                    // a `none` level too (L §8, l.2217; 208.10 on #241)
+                    return Err(none_level());
                 } else if let Value::Number(Number { q, .. }) = &read {
                     level_in_range(m, &read, q)?;
                 }
@@ -129,10 +132,7 @@ impl Engine {
             return Ok(Value::Hole(h));
         }
         if read == Value::None {
-            // `none` is only tested (L §3.1): the level's use is refused, as refcore's `no_none`
-            // words it
-            let text = "a value is none here: the level of quantile".to_owned();
-            return Err(refuse(Run::None, text));
+            return Err(none_level());
         }
         let Value::Number(Number { q, .. }) = &read else {
             return Err(not_typed());
@@ -162,6 +162,15 @@ impl Engine {
         }
         last.ok_or_else(|| refuse(Run::Empty, "quantile over no keys".to_owned()))
     }
+}
+
+/// A quantile's level that is `none`: `none` is only tested, so the level's use is refused,
+/// `RUN-NONE`, as refcore's `no_none` words it (L §3.1, §8; tally 2.2.1's 208.10).
+fn none_level() -> Stop {
+    refuse(
+        Run::None,
+        "a value is none here: the level of quantile".to_owned(),
+    )
 }
 
 /// A quantile's level `q` (read as `read`) outside (0, 1]: type 1 over its terms has no
