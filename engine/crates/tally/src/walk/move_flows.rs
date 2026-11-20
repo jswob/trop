@@ -369,10 +369,11 @@ impl Engine {
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
     /// running walk's and the walks' it continues, before its point; an instance whose day is
     /// a hole counted as that hole, and one whose day is refused as its refusal, in any span
-    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; outside a decision,
-    /// one dated by a window no walk ran that span `sp` (its last day `last`) reaches, read
-    /// per day of it ([`Engine::window_met`]) (refcore's `flows_move`, its decisions).
-    /// L §5.14.1, §5.14.3, E §4.3, §4.1 step 2.
+    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; one dated by a window
+    /// no walk ran that span `sp` (its last day `last`) reaches, read per day of it at an ask
+    /// line's own read, else the window's hole, inside a decision too ([`Engine::window_met`])
+    /// (refcore's `flows_move`, its decisions; P41, F5). L §5.14.1, §5.14.3, E §4.3, §4.1
+    /// step 2.
     fn decision_runs(
         &mut self,
         m: &Reality,
@@ -401,7 +402,7 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
-                if let (None, Some(Dated::Window(w))) = (ctx.at, &i.day)
+                if let Some(Dated::Window(w)) = &i.day
                     && i.exists != Exists::No
                     && window_in(w, sp, last) != Some(false)
                 {

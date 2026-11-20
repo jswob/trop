@@ -558,7 +558,7 @@ impl Engine {
         for mv in decided {
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(self.window_member(m, mv, inst, ctx)?);
+                    out.extend(self.unrun_window(m, mv, inst)?);
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -581,18 +581,17 @@ impl Engine {
         Ok(out)
     }
 
-    /// Decision `mv`'s instance `inst` that no walk ran, read outside a decision: dated by a
-    /// window, a member whose day is the window's hole, or the line read per day of the window
-    /// ([`Engine::window_met`]); else none (E §4.1 step 2; tally 2.2.1 N3; refcore's
-    /// `movements_of`, its `WinDay`).
-    fn window_member(
+    /// Decision `mv`'s instance `inst` that no walk ran: dated by a window, a member whose day
+    /// is the window's hole, or the line read per day of the window ([`Engine::window_met`]),
+    /// inside a decision's walk too, where it is the hole, never left out; else none (E §4.1
+    /// step 2; tally 2.2.1 N3, P41 F5; refcore's `movements_of`, its `WinDay`).
+    fn unrun_window(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
         inst: &Inst,
-        ctx: Ctx,
     ) -> Result<Option<Moving>, Stop> {
-        let (None, Some(Dated::Window(w))) = (ctx.at, &inst.day) else {
+        let Some(Dated::Window(w)) = &inst.day else {
             return Ok(None);
         };
         if inst.exists == Exists::No {
@@ -653,7 +652,7 @@ impl Engine {
     /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
     /// decision, in its walk or one it continues, `RUN-ORDER` where it hasn't run yet; else in
     /// the main walk of the read's timeline, or the instance as planned where that walk didn't
-    /// run it, one dated by a window as a binding's member is ([`Engine::window_member`])
+    /// run it, one dated by a window as a binding's member is ([`Engine::unrun_window`])
     /// (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2, E §4.1
     /// step 2.
     fn instance_by_id(
@@ -680,14 +679,15 @@ impl Engine {
         };
         match self.chain_run(walk, id)? {
             Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),
-            None if running => Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::Order),
-                format!("decision {id} is read before it has run"),
-            ))),
             // dated by a window no walk ran: its fields are the window's, read per day or its
-            // hole, as its membership is (E §4.1 step 2; tally 2.2.1 F4, P41)
-            None => match self.window_member(m, mv, &inst, ctx)? {
+            // hole, as its membership is, inside a decision's walk too (E §4.1 step 2; tally
+            // 2.2.1 F4, F5, P41)
+            None => match self.unrun_window(m, mv, &inst)? {
                 Some(held) => Ok(Some(held)),
+                None if running => Err(Stop::Refused(Refusal::new(
+                    Code::Run(Run::Order),
+                    format!("decision {id} is read before it has run"),
+                ))),
                 None => Ok(Some(Moving::Plan(inst))),
             },
         }
