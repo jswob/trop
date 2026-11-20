@@ -22,7 +22,8 @@ use crate::model::{Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
+    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, SameSides, Status, Step,
+    invariant,
 };
 
 /// What one end of a leg books under the `same` lines (refcore's `consol`). L §6.1.
@@ -34,8 +35,9 @@ pub(crate) enum EndBook {
     Skip,
     /// At the point of the decision named, which hasn't run yet.
     Wait(String),
-    /// The group's disagreement there, a hole movement (`HOLE-SAME`).
-    Hole(Hole),
+    /// The group's disagreement there, a hole movement (`HOLE-SAME`), or the hole of days
+    /// left undecided where the amounts agree, with its sides (S1, P43; P45 (c) on #241).
+    Hole(Hole, Option<Box<SameSides>>),
 }
 
 /// A member of a `same` group as the walk meets it (refcore's `movement`, `decs`).
@@ -77,6 +79,35 @@ impl Member {
 
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
 pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
+
+/// The sides `touch` of a leg of movements stated `same` at one place, the mover's first, whose
+/// days are undecided and amounts agree: their legs as `<id>.<leg>`, sorted, which each side's
+/// entry names alike, the day each states, and the mover's amount signed as a flow into the
+/// place (side 0 its `from`). L §6.1, §4.4 (S2, P43; P45 (c) on #241).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for no side; a number error negating the amount.
+fn same_sides(touch: &[(&Member, &LegVal, usize)]) -> Result<SameSides, Stop> {
+    let mut legs: Vec<String> = touch
+        .iter()
+        .map(|(x, g, _)| format!("{}.{}", x.id(), g.name))
+        .collect();
+    legs.sort();
+    let flow = match touch.first() {
+        Some((_, g, 0)) => match &g.amount {
+            Amount::Qty(a) => Amount::Qty(a.checked_neg().map_err(num_stop)?),
+            Amount::Hole(_) | Amount::Refused(_) => g.amount.clone(),
+        },
+        Some((_, g, _)) => g.amount.clone(),
+        None => return Err(invariant("a leg stated same with no side")),
+    };
+    Ok(SameSides {
+        key: legs.join(", "),
+        days: touch.iter().map(|(_, g, _)| g.day.clone()).collect(),
+        flow,
+    })
+}
 
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
 /// L §8.1.
@@ -145,7 +176,7 @@ impl Engine {
                         .or_insert_with(Vec::new)
                         .push(waiting);
                 }
-                EndBook::Hole(h) => {
+                EndBook::Hole(h, same) => {
                     let Some(p) = end.place() else {
                         continue;
                     };
@@ -154,6 +185,7 @@ impl Engine {
                     ent.leg = Some(lg.name.clone());
                     ent.reg = reg.to_vec();
                     ent.coll = Some(coll.clone());
+                    ent.same = same;
                     let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
                     let walk = self.walk_mut(id)?;
                     walk.worth_add(&unit, None)?;
@@ -293,7 +325,7 @@ impl Engine {
                 inst.id
             );
             let figure = format!("{}, {}", mover.id(), inst.id);
-            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure))));
+            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure), None)));
         }
         Ok(None)
     }
@@ -373,10 +405,10 @@ impl Engine {
             touch.iter().map(|(x, g, _)| (x.id(), &g.day)).collect();
         sides.sort_by_cached_key(|(x, _)| m.id_order(x));
         let agree = match compare_days(&sides) {
-            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h)),
+            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h, None)),
             DayCmp::Undecided(unknown) if amounts_agree => {
                 return Ok(match undecided_hole(&unknown, "a balance") {
-                    Some(h) => EndBook::Hole(h),
+                    Some(h) => EndBook::Hole(h, Some(Box::new(same_sides(&touch)?))),
                     None => EndBook::Written,
                 });
             }
@@ -414,7 +446,7 @@ impl Engine {
             days.join(", "),
             and_list(&parts)
         );
-        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", "))))
+        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", ")), None))
     }
 
     /// The legs of member `o` that touch place `p` in unit `unit`, by position, each with

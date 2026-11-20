@@ -247,8 +247,25 @@ pub struct Ent {
     /// window's hole, so every day gives it and it outranks one (refcore's `note == 'own'`;
     /// L §8 l.2217, §4.4 l.671; P31, B4).
     pub own: bool,
+    /// For the hole of a leg of movements stated `same` that agree on its amount but whose days
+    /// are undecided: the sides, which `flows` over a span reads for membership only (S2, P43;
+    /// P45 (c) on #241).
+    pub same: Option<Box<SameSides>>,
     /// The state after it.
     pub st: St,
+}
+
+/// The sides of one leg of movements stated `same` whose days are undecided: each member's leg
+/// at the place, `<id>.<leg>` sorted and joined, which every side's entry names alike, and the
+/// day each states. L §6.1, §4.4 (S2, P43; P45 (c) on #241).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SameSides {
+    /// The members' legs, `<id>.<leg>` sorted and joined by `, `.
+    pub key: String,
+    /// The day each side states.
+    pub days: Vec<Dated>,
+    /// The amount they agree on, signed as a flow into the place.
+    pub flow: Amount,
 }
 
 /// A hole leg as a `partial` line reads a balance through it: into the place or out of it, and
@@ -293,6 +310,7 @@ impl Ent {
             hole_leg: None,
             signed: None,
             own: false,
+            same: None,
             st: St::of(None),
         }
     }

@@ -141,6 +141,7 @@ impl Engine {
             legs: Vec::new(),
             met,
             keep,
+            same: BTreeSet::new(),
         };
         for (wid, cut) in &chain {
             if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
@@ -345,6 +346,37 @@ fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
     Hole::asked(&text, movement).carrying(&w.value.carry)
 }
 
+/// Whether every day the sides `days` can take lies inside the span `(first, last)` (true) or
+/// every one outside it (false); none where some do and some don't, or a side's day is a hole
+/// (S2, P43 on #241). L §4.4.
+fn same_inside(days: &[Dated], (first, last): (Day, Day)) -> Option<bool> {
+    let within = |d: &Day| first <= *d && *d <= last;
+    let mut seen: BTreeSet<bool> = BTreeSet::new();
+    for d in days {
+        match d {
+            Dated::Day(x) => {
+                seen.insert(within(x));
+            }
+            Dated::Window(w) => match &w.value.days {
+                Some(list) => seen.extend(list.iter().map(within)),
+                None if first <= w.lo && w.hi <= last => {
+                    seen.insert(true);
+                }
+                None if w.hi < first || last < w.lo => {
+                    seen.insert(false);
+                }
+                None => seen.extend([true, false]),
+            },
+            Dated::Hole(_) => return None,
+        }
+    }
+    let mut kinds = seen.into_iter();
+    match (kinds.next(), kinds.next()) {
+        (Some(one), None) => Some(one),
+        (Some(_), Some(_)) | (None, _) => None,
+    }
+}
+
 /// Whether a leg's amount is zero, so its day can't change a sum (L §4.4).
 fn zero_amount(amount: &Amount) -> bool {
     matches!(amount, Amount::Qty(q) if q.is_zero())
@@ -371,6 +403,8 @@ struct Sums {
     met: Collected,
     /// Under `, for k`, the movements for period k by id; none counts every movement.
     keep: Option<BTreeSet<String>>,
+    /// The legs of movements stated `same` counted once already, by their sides' key.
+    same: BTreeSet<String>,
 }
 
 impl Sums {
@@ -496,10 +530,7 @@ impl Sums {
             }
             match &e.change {
                 Change::Bad(r) | Change::PermBad(r) => return Err(Stop::Refused(r.clone())),
-                Change::Hole(h) | Change::Perm(h) => {
-                    self.holes.push(h.clone());
-                    self.meet(e);
-                }
+                Change::Hole(h) | Change::Perm(h) => self.hole_in_span(e, unit, h)?,
                 Change::Delta(f) => match &e.window {
                     // a window that crosses the span is its hole, below (L §4.4)
                     Some((_, w)) if crosses(w, self.span) => {}
@@ -582,6 +613,38 @@ impl Sums {
             }
         }
         Ok(())
+    }
+
+    /// A hole booked in the span, `h`: the read's hole; but a leg of movements stated `same`
+    /// that agree on its amount and leave its day undecided is a member of the span by that
+    /// day alone, so where every day every side can take lies inside the span its amount
+    /// counts, once for all its sides, and where every one lies outside it nothing does (S2's
+    /// membership, a place's flows as a movement's: P43, P45 (c) on #241). L §4.4, §6.1.
+    ///
+    /// # Errors
+    ///
+    /// A number error adding the amount.
+    fn hole_in_span(&mut self, e: &Ent, unit: &str, h: &Hole) -> Result<(), Stop> {
+        let inside = e
+            .same
+            .as_ref()
+            .and_then(|s| same_inside(&s.days, self.span));
+        match (inside, &e.same) {
+            (Some(true), Some(sides)) if self.same.insert(sides.key.clone()) => match &sides.flow {
+                Amount::Qty(f) => self.count(e, unit, Ok(f)),
+                Amount::Hole(a) => self.count(e, unit, Err(a)),
+                Amount::Refused(_) => Err(invariant("a refused amount stated same and booked")),
+            },
+            (Some(_), _) => {
+                self.meet(e);
+                Ok(())
+            }
+            (None, _) => {
+                self.holes.push(h.clone());
+                self.meet(e);
+                Ok(())
+            }
+        }
     }
 
     /// An entry the span meets, its register and its reads into the read set, whatever it

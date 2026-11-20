@@ -793,7 +793,7 @@ impl Engine {
                 EndBook::Skip => continue,
                 EndBook::Written | EndBook::Wait(_) => o.clone(),
                 // the walk books the movement there once, as the hole: listed once with it
-                EndBook::Hole(hole) => {
+                EndBook::Hole(hole, _) => {
                     let lead = group.first().map_or(o.id.as_str(), String::as_str);
                     if !holed.insert(lead) {
                         continue;
@@ -855,14 +855,14 @@ impl Engine {
                     continue;
                 }
                 match book {
-                    EndBook::Hole(h) => holes.push(h),
+                    EndBook::Hole(h, _) => holes.push(h),
                     EndBook::Skip => skip = true,
                     EndBook::Wait(_) | EndBook::Written => {}
                 }
             }
         }
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
-            return Ok(EndBook::Hole(h));
+            return Ok(EndBook::Hole(h, None));
         }
         Ok(if skip {
             EndBook::Skip
