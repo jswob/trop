@@ -152,6 +152,10 @@ pub struct Window {
     /// own, an operation's operands' (L §4.4: "it carries the names it was computed from"),
     /// which a hole made of it carries too. No part of the value.
     pub carry: Vec<crate::hole::Unknown>,
+    /// Every value it can hold is a whole number, though its ends' class may not say so: an
+    /// interval kept whole by `+`, `-` and `*` of whole numbers (refcore's `Iv.whole`), whose
+    /// values an operation can take in turn (L §4.4 l.668; P30).
+    pub whole: bool,
 }
 
 impl PartialEq for Window {

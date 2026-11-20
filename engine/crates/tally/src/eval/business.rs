@@ -360,6 +360,7 @@ impl Engine {
             figure: None,
             read: None,
             carry,
+            whole: false,
         })))
     }
 

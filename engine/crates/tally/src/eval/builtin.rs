@@ -19,7 +19,9 @@ use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
 use super::ty::sample;
-use super::windows::{End, as_window, imprecise, value_choices, values_interval};
+use super::windows::{
+    Choices, End, Shape, as_window, imprecise, single, value_choices, values_interval,
+};
 use crate::base::{Load, Run};
 use crate::load::expr_text;
 use crate::model::{
@@ -245,22 +247,35 @@ impl Engine {
         if some_hole {
             return hole_of(&[x.as_hole(), k.as_hole()]);
         }
-        if let Some(tuples) = value_choices(m, &[&x, &k])? {
-            // an interval of numbers: the interval of its values (L §4.4 l.668)
-            let mut outs = Vec::with_capacity(tuples.len());
-            for t in &tuples {
-                let [at_x, at_k] = t.as_slice() else {
-                    return Err(arity());
-                };
-                outs.push(pow_value(m, at_x, at_k));
-            }
-            return values_interval(m, "pow", outs, &[&x, &k]);
-        }
-        if let Some(w) = as_window(&x).or_else(|| as_window(&k)) {
+        if let Some(w) = as_window(&x)
+            .or_else(|| as_window(&k))
+            .filter(|w| w.of_days())
+        {
             // a window of days, which no power takes (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "pow")?));
         }
-        pow_value(m, &x, &k)
+        // monotone in its base where the exponent is one number, an even one by its shape
+        // (0 joins the ends); over an exponent's interval, of a negative base say, only its
+        // values in turn (L §4.4 l.668; P30, B1)
+        let shape = if as_window(&k).is_some() {
+            Shape::Values
+        } else {
+            Shape::Monotone
+        };
+        let tuples = match value_choices(m, ("pow", shape), &[&x, &k])? {
+            // a window of one value is that value (F3)
+            Choices::Plain => return pow_value(m, single(&x), single(&k)),
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => tuples,
+        };
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [at_x, at_k] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(pow_value(m, at_x, at_k));
+        }
+        values_interval(m, "pow", outs, &[&x, &k])
     }
 
     /// `lifespan(k)`: thing k's lifespan as the cut sees it, a record of its first day `from`
@@ -333,22 +348,26 @@ impl Engine {
         if v == Value::None {
             return Err(refuse(Run::None, "a value is none here: abs".to_owned()));
         }
-        if let Some(tuples) = value_choices(m, &[&v])? {
-            // an interval of numbers: the interval of its values (L §4.4 l.668)
-            let mut outs = Vec::with_capacity(tuples.len());
-            for t in &tuples {
-                let [x] = t.as_slice() else {
-                    return Err(arity());
-                };
-                outs.push(abs_value(x));
-            }
-            return values_interval(m, "abs", outs, &[&v]);
-        }
-        if let Some(w) = as_window(&v) {
+        if let Some(w) = as_window(&v).filter(|w| w.of_days()) {
             // a window of days, which has no absolute value (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "abs")?));
         }
-        abs_value(&v)
+        // monotone on each side of 0, so its ends and 0 stand for its values: its shape
+        // (L §4.4 l.668; P25, P30)
+        let tuples = match value_choices(m, ("abs", Shape::Monotone), &[&v])? {
+            // a window of one value is that value (F3)
+            Choices::Plain => return abs_value(single(&v)),
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => tuples,
+        };
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [x] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(abs_value(x));
+        }
+        values_interval(m, "abs", outs, &[&v])
     }
 
     /// `pos(k)`: a key's place in its index, from 1 (refcore's `c_pos`). L §4.2.
