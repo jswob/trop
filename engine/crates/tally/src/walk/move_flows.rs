@@ -151,7 +151,8 @@ impl Engine {
             if let Some(h) =
                 self.same_member_hole(m, inst_side(i), (i.day.as_ref(), sp, ctx.cut))?
             {
-                acc.met.merge(&i.coll);
+                // the day's hole holds the day's reads, not the amounts' (S3, P43 on #241)
+                acc.met.merge(&i.day_coll);
                 acc.holes.push(h);
                 continue;
             }
