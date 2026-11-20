@@ -1,0 +1,240 @@
+# tally 2.2.1 R20 (L §6.1 l.1802, OPERATIONS §2.1): a member's ask brings to the run's own level its refused scenario's
+# line, its own when refused alone and its walk's warnings, never WARN-UNREAD, by the joint model's names, once per member;
+# the lines under its result are the member's.
+# C-13 on the critic's jw: two members of one text whose walks warn alike: two last lines, a.konto and b.konto.
+# tally 2.2 printed none for a.q, b.q.
+=== a/a.tally
+model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+input back_day: date
+
+input zero: int
+
+input one_amt: money PLN
+
+input gap_day: date
+
+input d_open: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move back[a in adjustments over .. where a.adjusts in rents and act_day < back_day]: transfers
+  on act_day
+  at a.day
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version v2
+  cite plan
+  governs 2026..
+  known 2026-03-15
+  replace rent_amt = 950.00 PLN "raise"
+
+version day
+  cite plan
+  governs always
+  known 2026-01-01
+  act_day = 2026-04-05
+  back_day = 2026-04-20
+
+version fixed
+  cite plan
+  governs always
+  known 2026-01-01
+  zero = 0
+  one_amt = 1.00 PLN
+  d_open = 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "w"
+
+ask q: bal(konto, 2026-04-30) law cut
+=== a/asks.tally
+part asks
+  tally 2
+
+ask q_u: unit(konto) == PLN, unit(bal(konto, 2026-04-30))
+ask q_n: count(x in places over .. where x in accounts and unit(x) == PLN)
+ask q_base_gone: bal(konto, 2026-04-30) in nowhere2 law cut
+ask warning_x: bal(spare, 2026-01-31) law cut
+=== a/sc.tally
+scenario sc over m
+  tally 2
+  from 2026-03-01
+
+version day2
+  cite plan
+  governs 2026-03-01..
+  known 2026-01-01
+  replace act_day = 2026-04-25
+
+ask q_sc: bal(konto, 2026-04-30) in sc law cut
+ask q_d: diff(bal(konto, 2026-04-30)) in sc against m law cut
+ask q_late: bal(konto, 2026-04-30) in sc law cut as known 2026-07-01
+ask q_gone: bal(konto, 2026-04-30) in nowhere law cut
+=== b/a.tally
+model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+input back_day: date
+
+input zero: int
+
+input one_amt: money PLN
+
+input gap_day: date
+
+input d_open: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move back[a in adjustments over .. where a.adjusts in rents and act_day < back_day]: transfers
+  on act_day
+  at a.day
+  leg cash from konto to landlord amount back_amt
+  fulfils a
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version v2
+  cite plan
+  governs 2026..
+  known 2026-03-15
+  replace rent_amt = 950.00 PLN "raise"
+
+version day
+  cite plan
+  governs always
+  known 2026-01-01
+  act_day = 2026-04-05
+  back_day = 2026-04-20
+
+version fixed
+  cite plan
+  governs always
+  known 2026-01-01
+  zero = 0
+  one_amt = 1.00 PLN
+  d_open = 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "w"
+
+ask q: bal(konto, 2026-04-30) law cut
+=== b/asks.tally
+part asks
+  tally 2
+
+ask q_u: unit(konto) == PLN, unit(bal(konto, 2026-04-30))
+ask q_n: count(x in places over .. where x in accounts and unit(x) == PLN)
+ask q_base_gone: bal(konto, 2026-04-30) in nowhere2 law cut
+ask warning_x: bal(spare, 2026-01-31) law cut
+=== b/sc.tally
+scenario sc over m
+  tally 2
+  from 2026-03-01
+
+version day2
+  cite plan
+  governs 2026-03-01..
+  known 2026-01-01
+  replace act_day = 2026-04-25
+
+ask q_sc: bal(konto, 2026-04-30) in sc law cut
+ask q_d: diff(bal(konto, 2026-04-30)) in sc against m law cut
+ask q_late: bal(konto, 2026-04-30) in sc law cut as known 2026-07-01
+ask q_gone: bal(konto, 2026-04-30) in nowhere law cut
+=== top.tally
+model fam
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a" sha256 "5d4defbda7fa73fc94d8a6fd7ed2f2e3e41fef6a8d1d6b48741838fccf6ac56c"
+  use b = "b" sha256 "5d4defbda7fa73fc94d8a6fd7ed2f2e3e41fef6a8d1d6b48741838fccf6ac56c"
+=== expect a.q b.q
+a.q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+b.q: -3 950.00 PLN
+  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining -50.00 PLN
+  unfulfilled: back[adjustments[rent[2026-01].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-02].cash, v2]]
+  unfulfilled: back[adjustments[rent[2026-03].cash, v2]]
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  unfulfilled: rent[2026-03]
+  unfulfilled: rent[2026-04]
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-NEGATIVE a.konto is below zero from 2026-01-01
+warning: WARN-NEGATIVE b.konto is below zero from 2026-01-01

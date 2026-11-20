@@ -1,0 +1,44 @@
+# tally 2.2.1 R20 clause 2 (OPERATIONS §2.3): check prints each refused scenario's line in the full-path order of the
+# files that declare them (one declared twice, by its first), then each ask refused alone by id, then full path, then
+# line.
+# P5: one id refused alone in n1/a/s2 and n1/z/s1: a/s2's first. tally 2.2 ordered by scenario id (T's held
+# fixture/reviews/same-id-order).
+=== options check exit=1
+=== model.tally
+model plain
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2027-12-31
+  note "T's base for M3's check fixtures (invented): it loads clean with no warning; each fixture of fixtures.tsv adds files to it"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input amt: money PLN
+
+def doubled: money PLN = amt + amt at reader
+
+ask q: doubled law 2026-03-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+=== n1/a/s2.tally
+scenario s2 over plain
+  tally 2
+  from 2027-01-01
+
+ask qq: doubled in nowhere_a law 2027-06-01
+=== n1/z/s1.tally
+scenario s1 over plain
+  tally 2
+  from 2027-01-01
+
+ask qq: doubled in nowhere_z law 2027-06-01
+=== expect
+qq: refused: LOAD-SCENARIO ask qq names nowhere_a, neither the model nor a loaded scenario (n1/a/s2.tally:5)
+qq: refused: LOAD-SCENARIO ask qq names nowhere_z, neither the model nor a loaded scenario (n1/z/s1.tally:5)

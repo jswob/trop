@@ -2,6 +2,8 @@
 # over it. s2 (a_s2.tally) is over s1 (z_s1.tally), and each file's grammar fails on line 5. s1 is refused by its own
 # file; s2's reality holds both files, and load parses them in the order of their full paths, so a_s2.tally's refusal
 # is the one s2 prints. The base's ask is answered.
+# tally 2.2.1 R20 clause 1 (OPERATIONS §2.1): run prints the refused scenarios' lines in check's order, the full path of
+# the files that declare them, so a_s2's line first (was by scenario id).
 === m.tally
 model t
   tally 2
@@ -32,7 +34,7 @@ scenario s2 over s1
 
 def w int 2
 === expect
-scenario s1: refused: LOAD-PARSE cannot parse: expected ":", got int (z_s1.tally:5)
 scenario s2: refused: LOAD-PARSE cannot parse: expected ":", got int (a_s2.tally:5)
+scenario s1: refused: LOAD-PARSE cannot parse: expected ":", got int (z_s1.tally:5)
 q: 1
   law date 2026-12-31, cut 2026-12-31

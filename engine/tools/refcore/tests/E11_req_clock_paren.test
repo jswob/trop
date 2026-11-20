@@ -1,0 +1,30 @@
+# tally 2.2.1, E §11 REQ-CLOCK: "a cut an ask's literal states after `on` (`as known`, `with known`; a literal in `( )`
+# too), in an ask load left standing" refuses the request, the run's one result, exit 1.
+# S-233.8: `as known (2026-06-01)` after on 2026-03-01. tally 2.2 answered it alone, RUN-DOMAIN.
+=== options exit=1
+=== b.tally
+model bob
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "b card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+ask qc: twice law 2026-03-01 as known (2026-06-01)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 3 000.00 PLN "the card"
+=== expect
+refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01

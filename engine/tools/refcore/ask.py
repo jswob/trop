@@ -82,12 +82,17 @@ def req_ask(qid):
 def req_clock(m, a):
     """E §11 (tally 2.1.7 R5, #112): a cut an asked line's literal states after `on` (`as known D`, `with known D`)
     refuses the request, after load, as REQ-ASK does: the run's one result. A computed one is refused at its value."""
+    def lit(n):
+        # a literal in ( ) is that literal (E §11 REQ-CLOCK, tally 2.2.1 S-233.8)
+        while n is not None and n.k == 'paren':
+            n = n.e
+        return n if n is not None and n.k == 'date' else None
     lits = []
-    if a.known is not None and a.known.k == 'date':
-        lits.append(('as known', a.known))
+    if a.known is not None and lit(a.known) is not None:
+        lits.append(('as known', lit(a.known)))
     for p in a.pins:
-        if getattr(p, 'kind', None) == 'known' and p.value.k == 'date':
-            lits.append(('with known', p.value))
+        if getattr(p, 'kind', None) == 'known' and lit(p.value) is not None:
+            lits.append(('with known', lit(p.value)))
     for word, n in lits:
         d = datetime.date.fromisoformat(n.v) if isinstance(getattr(n, 'v', None), str) else getattr(n, 'v', None)
         if isinstance(d, datetime.date) and d > m.on:
@@ -102,7 +107,8 @@ def knows_ask(m, qid):
     if '.' in qid and qid.split('.', 1)[0] in members:
         alias, aid = qid.split('.', 1)
         mm = members[alias]
-        if any(b.id == aid for b in mm.asks):
+        if any(b.id == aid for b in list(mm.asks) + list(getattr(mm, 'asks_alone', ()))):
+            # a member's ask refused alone exists too: its own line (OPERATIONS §2.1; tally 2.2.1, 233.2)
             return True
         if '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
             return knows_ask(mm, aid)
@@ -315,6 +321,57 @@ def alone_line(a):
     return '%s: refused: %s' % (a.id, a.refused_alone.text())
 
 
+# a member run alone gives its warnings here, as data, not as lines among its results (Asker.member_alone; R20)
+WARN_SINK = []
+
+
+def emit_warnings(out, warnings):
+    """A run's lines and then its warnings (L §8.5), or, for a member run alone, the warnings handed to its caller."""
+    if WARN_SINK:
+        WARN_SINK[-1].extend(warnings)
+        return out
+    return out + warning_lines(warnings)
+
+
+def member_ask_node(m, qid):
+    """(the member, its ask) a request's a.q names (L §6.1), a nested member's a.b.q too, or None."""
+    members = getattr(m, 'joint_members', None) or {}
+    alias, aid = qid.split('.', 1)
+    mm = members.get(alias)
+    if mm is None:
+        return None
+    for b in list(mm.asks) + list(getattr(mm, 'asks_alone', ())):
+        if b.id == aid:
+            return mm, b
+    if '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
+        return member_ask_node(mm, aid)
+    return None
+
+
+# the walk's warnings (L §8.5), the ones a member's ask brings to the run's level (L §6.1, R20 clause 3)
+WALK_WARNINGS = ('WARN-NEGATIVE', 'WARN-LEGS', 'WARN-LABELS')
+
+
+def joint_warning(alias, code, msg):
+    """A member's walk warning by the joint model's names (L §6.1: `a.konto`, R20 clause 3)."""
+    import re
+    from .joint import SEP
+    msg = msg.replace(SEP, '.')
+    if code == 'WARN-NEGATIVE':
+        return '%s.%s' % (alias, msg)
+    if code == 'WARN-LEGS':
+        m = re.match(r'^the two observations of (\S+) disagree: (\S+?)\[(.*)\) and (\S+?)\[(.*)$', msg)
+        if m:
+            return 'the two observations of %s.%s disagree: %s.%s[%s) and %s.%s[%s' % (
+                alias, m.group(1), alias, m.group(2), m.group(3), alias, m.group(4), m.group(5))
+    if code == 'WARN-LABELS':
+        m = re.match(r'^labels dropped at (\S+) from (\S+): (.*)$', msg)
+        if m:
+            return 'labels dropped at %s.%s from %s: %s' % (alias, m.group(1), m.group(2), ', '.join(
+                '%s.%s' % (alias, x) for x in m.group(3).split(', ')))
+    return msg
+
+
 def warning_lines(warnings):
     """L §8.5 (tally 2.1.1): a run's warnings [(code, text)] print sorted by code, then by their text (code point),
     whatever the order of the reality's files.  A joint model's member prefix prints as '.' (cli.joint), so the text
@@ -327,6 +384,29 @@ class Asker:
     def __init__(self, m):
         self.m = m
         self.walk_warnings = []
+        # the lines a member's ask brings to the run's own level (L §6.1, R20 clause 3): its refused scenarios'
+        # lines and its walk's warnings, by the joint model's names, each once per member
+        self.level = []
+        self.member_warn = []
+
+    def lift(self, alias, scen=(), warns=()):
+        """A member's run-level lines, renamed by the joint model's names, each once."""
+        for l in scen:
+            l = 'scenario %s.%s' % (alias, l[len('scenario '):])
+            if l not in self.level:
+                self.level.append(l)
+        for code, msg in warns:
+            if code not in WALK_WARNINGS:
+                continue
+            w = (code, joint_warning(alias, code, msg))
+            if w not in self.member_warn:
+                self.member_warn.append(w)
+
+    def lifted_warnings(self):
+        """Every member's walk warnings this asker's asks met: its sub-askers' and the members run alone."""
+        for alias, sub in sorted(getattr(self, '_member_askers', {}).items()):
+            self.lift(alias, (), sub.walk_warnings)
+        return list(self.member_warn)
 
     def run(self, ids=None):
         m = self.m
@@ -354,6 +434,12 @@ class Asker:
         for a in order:
             if not isinstance(a, str):
                 req_clock(m, a)
+            else:
+                # a member's ask is checked against its member's on, as the member alone answers it (L §6.1;
+                # tally 2.2.1, 233.3, 228.Q10), unless load left it refused alone
+                hit = member_ask_node(m, a)
+                if hit is not None and getattr(hit[1], 'refused_alone', None) is None:
+                    req_clock(hit[0], hit[1])
         out = []
         try:
             for a in order:
@@ -364,7 +450,11 @@ class Asker:
                 out.extend(self.answer(a))
         except LoadAtRun as x:
             return ['refused: %s' % x.err.text()]
-        return out + warning_lines(list(m.warnings) + list(self.walk_warnings))
+        # the lines a member's ask brings print at the run's own level: its scenarios' before every result, its
+        # walk's warnings with the run's (OPERATIONS §2.1, L §6.1, §8.5; R20)
+        ws = list(m.warnings) + list(self.walk_warnings)
+        ws += [w for w in self.lifted_warnings() if w not in ws]
+        return emit_warnings(self.level + out, ws)
 
     def load_check(self):
         """`check` (OPERATIONS §2.3) on a loaded reality with no scenario file: what run() does before its first ask is
@@ -374,34 +464,46 @@ class Asker:
         m = self.m
         Engine(m).check_range_lits()
         out = [alone_line(a) for a in sorted(getattr(m, 'asks_alone', ()), key=lambda a: a.id)]
-        return (out or ['ok']) + warning_lines(list(m.warnings))
+        return emit_warnings(out or ['ok'], list(m.warnings))
 
     def member_alone(self, qid, alias, aid, mm):
         """The member alone, all its files loaded (its scenarios included), answers its ask aid (L §6.1)."""
         from .cli import run_texts
         out = []
-        for l in run_texts(mm.member_all, [aid], mm.member_options):
+        WARN_SINK.append([])
+        try:
+            lines = run_texts(mm.member_all, [aid], mm.member_options)
+        finally:
+            warns = WARN_SINK.pop()
+        scen = []
+        for l in lines:
             if l.startswith('refused: '):
                 out.append('%s: %s' % (qid, l))
-            elif l.startswith('scenario '):
-                # its scenario's load refused (L §8: that scenario only), named under the member's prefix
-                out.append('scenario %s.%s' % (alias, l[len('scenario '):]))
-            elif not l.startswith((' ', 'warning')):
+            elif l.startswith('scenario ') and not out:
+                # its scenario's load refused (L §8: that scenario only): a line at the run's own level, by the
+                # joint model's name (R20)
+                scen.append(l)
+            elif not l.startswith(' '):
                 out.append(alias + '.' + l)
             else:
                 out.append(l)
+        self.lift(alias, scen, warns)
         return out
 
     def member_ask(self, qid):
         alias, aid = qid.split('.', 1)
         mm = self.m.joint_members[alias]
-        hit = [b for b in mm.asks if b.id == aid]
+        hit = [b for b in list(mm.asks) + list(getattr(mm, 'asks_alone', ())) if b.id == aid]
         sub = self.__dict__.setdefault('_member_askers', {})
         if not hit and '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
             # a member that is a joint model asks its members' asks as b.q, so they are asked here as a.b.q (L §6.1)
             if alias not in sub:
                 sub[alias] = Asker(mm)
-            return [alias + '.' + l if not l.startswith((' ', 'warning')) else l for l in sub[alias].member_ask(aid)]
+            inner = sub[alias]
+            lines = [alias + '.' + l if not l.startswith(' ') else l for l in inner.member_ask(aid)]
+            # the nested member's run-level lines, named from here (`scenario a.b.s`, `a.b.konto`; 228.Q9)
+            self.lift(alias, inner.level, inner.lifted_warnings())
+            return lines
         if not hit:
             if aid in getattr(mm, 'scenario_asks', ()):
                 # an ask in one of the member's scenario files: the member is all its files (E §3.1 step 1), so
@@ -420,7 +522,8 @@ class Asker:
             sub[alias] = Asker(mm)
         out = []
         for l in sub[alias].answer(hit[0]):
-            out.append(alias + '.' + l if not l.startswith((' ', 'warning')) else l)
+            # the ask's own lines: its result's head named a.q, the lines under it the member's (L §6.1; 233.1)
+            out.append(alias + '.' + l if not l.startswith(' ') else l)
         return out
 
     # ------------------------------------------------------------------------------------------

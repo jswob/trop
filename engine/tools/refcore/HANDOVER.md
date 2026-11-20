@@ -7,6 +7,21 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W2: the lines at the run's own level (issue #241; 1 572 tests)
+
+- **R20, one mechanism.** A member's ask is answered by the member (`Asker.member_ask`, `member_alone`); its run-level
+  lines come back as data, never read off a line's text: its refused scenarios' lines and its walk's warnings
+  (`WARN_SINK`, `emit_warnings`; `WALK_WARNINGS`, never `WARN-UNREAD`), renamed by the joint model's names
+  (`Asker.lift`, `joint_warning`: `scenario a.s`, `a.konto`; a nested member's `scenario m.b.s`), each once per
+  member. `run` prints every scenario line once, before every result, in `check`'s order (by the first file that
+  declares the scenario, `first`), and the members' walk warnings with the run's (L §8.5's order). Asks of one id go
+  by full path, then line (`place_key`), in `check` and in `run`. A scenario file's own ask refused alone prints its
+  line in `run` (229.1); a member's ask refused alone is its own line (233.2).
+- **REQ-CLOCK.** A literal in `( )` too (S-233.8); a member's ask against its member's `on` (233.3); a reality with
+  scenario files (`clock_check`, 233.4), on the asks load left standing (233.5).
+- **S-usage.** `cli.OPTIONS`: an option, a word that starts with `--`, the command doesn't take is a usage error, exit
+  2; `--pin=bytes` is taken by `run`, `check` and `reprint`.
+
 ## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 555 tests)
 
 - **P30, one statement for an operation over an interval** (L §4.4 l.667 to l.671). `lift_values` is the one
