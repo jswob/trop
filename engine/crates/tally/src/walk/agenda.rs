@@ -765,12 +765,13 @@ fn schedule_decision(
             );
             let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
             if w.hi <= walk.end {
-                // m has fallen by the end of the window's last day (pick P29 on #175); ends
-                // at one point apply by move id, then keys in index order, the plan's order
-                // that the day's stable sort keeps, never as text (E §4.1; N-f of group 3's
-                // fix review: `save[k9]` before `save[k10]`)
+                // m has fallen by the end of the window's last day (pick P29 on #175), before
+                // that day's closing readings (E §4.2 step 4: "a window whose last day is t has
+                // ended before them"; #218); ends at one point apply by move id, then keys in
+                // index order, the plan's order that the day's stable sort keeps, never as text
+                // (E §4.1; N-f of group 3's fix review: `save[k9]` before `save[k10]`)
                 let end = At {
-                    stratum: 2,
+                    stratum: 0,
                     rank,
                     ..At::of(w.hi, Step::End)
                 };
