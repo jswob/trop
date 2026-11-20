@@ -1,0 +1,56 @@
+# tally 2.2.1 (#233, 233.7; #235, 235.6), L §8.4's RUN-NONE row, `<x>[k] is none here: …`, and L §8.1: "with the item
+# and keys each came from": fee[2026-02] is none in arithmetic under a binding (n), and flows of pay[m].cash before the
+# run's start names pay[2026-01].cash (pr). tally 2.2 printed `a value is none here: arithmetic` and `pay[m].cash`.
+=== nm.tally
+model nm
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input rent[m in months]: money PLN
+input fee[m in months]: money PLN
+input lvl: num
+move pay[m in months]: transfers
+  on start_of(m)
+  leg cash from konto to world amount rent[m]
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+version v1
+  cite s
+  governs 2026-01
+  known 2026-01-01
+  rent = 100.00 PLN "s"
+  fee = 5.00 PLN "s"
+version v3
+  cite s
+  governs 2026-03..
+  known 2026-01-01
+  rent = 100.00 PLN "s"
+version v2
+  cite s
+  governs 2026-02
+  known 2026-01-01
+  rent = ?"rent for February?" "s"
+  fee = none "s"
+ask b: sum(rent[m] for m in [2026-01, 2026-02, 2026-03])
+ask c: flows(konto, 2026-01 .. 2026-03)
+ask n: fee[m] + 1.00 PLN for m in [2026-01, 2026-02]
+ask pr: flows(pay[m].cash, 2025-12-01 .. 2026-01-31) for m in [2026-01]
+=== expect n pr b
+n (m = 2026-01): 6.00 PLN
+  cut 2026-01-01
+n (m = 2026-02): refused: RUN-NONE fee[2026-02] is none here: arithmetic
+  cut 2026-01-01
+pr (m = 2026-01): ?"before the run's start" (pay[2026-01].cash)
+  cut 2026-01-01
+b: ?"rent for February?" (rent[2026-02])
+  held: rent[2026-03] = 100.00 PLN (v3), read for 2026-03
+  cut 2026-01-01
+warning: WARN-UNREAD input lvl is read by nothing

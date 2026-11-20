@@ -37,4 +37,4 @@ These are the answer keys for DONE gate 3's second half: "each of the 7 changes 
 
 ## The premise for law versions
 
-Changes 2, 3 and 5 add law versions. A run reads every law part it is given; whether a part is `tested` is the store's (`OPERATIONS.md` §4), and the gate waits (§5 there). So these keys rest on no status (`amendments/README.md`, "Not gated law"). Their `WARN-BACKPAY` lines are tally 1.0.1's operation output, which no run prints: a run prints the `adjustment:` lines and `HOLE-CHANGED` holes in their place (`OPERATIONS.md` §3.3, CHG-3).
+Changes 2, 3 and 5 add law versions. A run reads every law part it is given; whether a part is `tested` is the store's (`OPERATIONS.md` §4), and the gate waits (§5 there). So these keys rest on no status (`amendments/README.md`, "Not gated law").

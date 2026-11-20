@@ -1,0 +1,63 @@
+# tally 2.2.1, L §4.3 as it stands (§3's law-date rows):
+# 235.2 (P30): a key's where that reads a law-dated fact is read at its tuple's at: its law-free twin's
+# bytes (m3/fixes/lawdate/g1_c_at). tally 2.2: the guard.
+=== g1_c_at.tally
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+index regions = [pl, de]
+
+input fee: money PLN
+input cal[r in regions]: calendar
+input region: key regions
+input d0: date
+input d1: date
+input rd[r in regions]: date reading
+
+move pay[d in wk where is_business(d, cal[region])]: transfers
+  on d
+  at d
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  d0 = 2026-01-02
+  d1 = 2026-01-20
+  rd[pl] = 2026-01-01 at 2026-01-01
+  rd[de] = 2026-01-07 at 2026-01-07
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+version c
+  cite s
+  governs 2026..
+  known 2026-01-01
+  region = pl
+  cal[pl] = calendar(weekends [sat, sun])
+  cal[de] = calendar(weekends [sun])
+
+ask q: bal(konto, 2026-01-31)
+=== expect
+q: 50.00 PLN
+  unfulfilled: pay[2026-01-05]
+  unfulfilled: pay[2026-01-06]
+  unfulfilled: pay[2026-01-07]
+  unfulfilled: pay[2026-01-08]
+  unfulfilled: pay[2026-01-09]
+  cut 2026-01-31
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input rd is read by nothing

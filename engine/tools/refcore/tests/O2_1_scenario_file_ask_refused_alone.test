@@ -1,0 +1,61 @@
+# tally 2.2.1, OPERATIONS §2.1 (229.1, 233.5, R20 clause 1): a scenario file's own ask refused alone prints its line in
+# run in its place by id (q_gone); the refused scenario's line prints once, first; an ask in its world with as known
+# after on (q_bad) is covered by that line, no REQ-CLOCK (S-233.5). tally 2.2 printed nothing for q_gone.
+=== options exit=0
+=== b.tally
+model bob
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "b card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 3 000.00 PLN "the card"
+=== sb.tally
+scenario sb over bob
+  tally 2
+  from 2026-01-01
+
+version lower
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 2 000.00 PLN "a cut"
+
+ask q_sb: twice in sb law 2026-03-01
+
+ask q_gone: twice in nowhere law 2026-03-01
+=== sbad.tally
+scenario sbad over bob
+  tally 2
+  from 2026-01-01
+
+version lower2
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 2 000.00 USD "a cut"
+
+ask q_bad: twice in sbad law 2026-03-01 as known 2026-06-01
+=== expect
+scenario sbad: refused: LOAD-UNIT 2 000.00 USD and money PLN have different units (sbad.tally:9)
+q: 6 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01
+q_gone: refused: LOAD-SCENARIO ask q_gone names nowhere, neither the model nor a loaded scenario (sb.tally:13)
+q_sb: 4 000.00 PLN
+  world: sb
+  law date 2026-03-01, cut 2026-03-01

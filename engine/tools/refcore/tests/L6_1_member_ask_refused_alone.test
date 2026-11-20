@@ -1,0 +1,53 @@
+# tally 2.2.1 R20 (L §6.1 l.1802, OPERATIONS §2.1): a member's ask brings to the run's own level its refused scenario's
+# line, its own when refused alone and its walk's warnings, never WARN-UNREAD, by the joint model's names, once per member;
+# the lines under its result are the member's.
+# 233.2: a member's ask refused alone prints its own line, the rest answers, exit 0. tally 2.2 refused the
+# request REQ-ASK (T's held fixes/member-refused-alone).
+=== options exit=0
+=== jz.tally
+model famz
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use c = "z/c.tally" sha256 "235dbf1f086762c2c3a59d08af4985e0421237bca1b3ce1f1d0ed7baf324d974"
+=== z/c.tally
+model cee
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+input spare: num
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+
+
+
+
+ask qw: twice with pay = 1 000.00 PLN law 2026-03-01
+
+ask qk: twice law 2026-03-01 as known 2026-01-01
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"
+
+ask qnone: twice in zzz law 2026-03-01
+=== expect c.qnone c.q
+c.qnone: refused: LOAD-SCENARIO ask qnone names zzz, neither the model nor a loaded scenario (z/c.tally:35)
+c.q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01

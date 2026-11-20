@@ -9,10 +9,10 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
-from .evaluate import member_owns, member_moves, move_owner, carry_hole
+from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay
 from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
-                     fmt_hole, vkey)
+                     fmt_hole, vkey, day_text)
 from .moves import (item_in_world, Inst, ObsMv, AdjMv, PadMv, qty, unit_of_value, day_lo, day_hi, merge, order_key,
                     same_groups, same_lines, once_obs, same_obs_differ)
 from .walk import K_end, K_start, K_before, kday, add_q, St, dec_move
@@ -294,6 +294,9 @@ def m_mv_field(self, n, env, ctx):
         self.cur.merge(src.day_coll)
     elif src.coll is not None:
         self.cur.merge(src.coll)
+    for r in getattr(src, 'reg', None) or ():
+        # a binding that counts a pad lists it (L §8.2's `pad:` row; tally 2.2.1, #237)
+        self.reg(r)
     if getattr(src, 'err', None) is not None and not identity:
         # a refused adjustment refuses its change and its remainder, never its identity, so a binding's `where` that
         # reads `a.adjusts` or `a.day` takes it or leaves it out (E §5 step 5; tally 2.1.2, issue #34, T's
@@ -327,7 +330,7 @@ def m_mv_field(self, n, env, ctx):
                     c = w.cum(log, at[-1])
                     if c is not None:
                         self.cur.axes |= c.axes
-    if what in ('day', 'leg') and isinstance(src, ObsMv):
+    if what in ('day', 'leg') and isinstance(src, (ObsMv, Inst)):
         # L §5.19 One movement on two statements: where rows stated same disagree on an amount or a day, "a read of
         # the movement away from its places (its leg's amount ... through a binding) is the disagreement's hole,
         # HOLE-SAME, naming both rows"
@@ -407,6 +410,11 @@ def m_same_rows_hole(self, o, leg, ctx):
     if not g:
         return None
     idx = dict((x.id, x) for x in self.observations(ctx))
+    if any(y not in idx for y in g):
+        # a planned side: its instance (L §6.1, §8.1 HOLE-SAME `<row or instance>`; #219)
+        for i in self.plan_insts(ctx):
+            if i.id in g:
+                idx.setdefault(i.id, i)
     others = [idx[y] for y in g if y != o.id and y in idx]
     return same_obs_differ(o, others, leg, m=self.m) if others else None
 
@@ -603,6 +611,10 @@ def m_movements_of(self, dom, ctx, owner=None):
                     ww = getattr(ww, 'base', None)
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
+                if r is None and isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date) and \
+                        i.exists is not False and ctx.walk is None:
+                    # a decision dated by a window: a binding over its kind reads its days in turn (E §4.1 step 2; N3)
+                    raise WinDay(i.day, 'a binding over %s' % q)
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
                     continue
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
@@ -921,6 +933,11 @@ def m_read_state(self, w, place, unit, key):
             self.reg(('left out', '%s, %d instances, first %s' % (mid, n, day_text(first))))
         ww = ww.base
     self.joint_left_out(w, place, key)
+    for ld, dc in getattr(w, 'later_by_place', {}).get(place, ()):
+        if ld > d:
+            for r in dc.reg:
+                if r[0] == 'pinned':
+                    self.reg(r)
     v = w.st_value(st, place, unit)
     if isinstance(v, TallyError):
         raise v
@@ -1402,7 +1419,9 @@ def m_e_flows(self, n, env, ctx):
     if isinstance(sp, Hole):
         return sp
     if sp.start is None or sp.start < self.m.S:
-        return Hole([('before the run\'s start', fmt_node(n.ref))])
+        # the read with its keys' values (L §8.1; tally 2.2.1, 235.6)
+        from .evaluate import env_txt
+        return Hole([('before the run\'s start', env_txt(n.ref, env))])
     fk = None
     if n.forkey is not None:
         fk = self.ev(n.forkey, env, ctx)
@@ -1730,6 +1749,11 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 run = ww.decs.get(i.id)
                 ww = ww.base
             if run is None:
+                d = i.day
+                if isinstance(d, Iv) and isinstance(d.lo, datetime.date) and i.exists is not False and \
+                        ctx.walk is None and not ((sp.end is not None and d.lo > last) or d.hi < sp.start):
+                    # a decision dated by a window the span reaches: its days in turn (E §4.1 step 2; N3)
+                    raise WinDay(d, 'flows of %s' % mi.id)
                 if isinstance(i.day, datetime.date) and i.day > m.E and i.exists is not False:
                     # a decision instance after E: never walked, so its amount is a hole flows counts (E §2 Movements
                     # outside [S, E], HOLE-POSTRUN; tally 2.1.7 S1, #93), as a place's flows does (flows_post_e)
@@ -1827,10 +1851,11 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                     u = unit_of_value(a)
                     seen_units.add(u)
             continue
+        if i.coll is not None:
+            # a refused result lists what it read like a value (L §8.2 One read set; tally 2.2.1, #208)
+            self.cur.merge(i.coll)
         if st == 'refused' or i.err is not None:
             raise i.err
-        if i.coll is not None:
-            self.cur.merge(i.coll)
         if isinstance(i.exists, Hole):
             holes.append(i.exists)
             continue
@@ -1887,7 +1912,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 continue
             if not a.settled and last >= a.day:
                 holes.append(Hole([('%s on %s changed after it was paid (version %s); is back pay due, and when?' % (
-                    a.inst.id, a.inst.day, ', '.join(a.vids)), a.inst.id)]))
+                    a.inst.id, day_text(a.inst.day), ', '.join(a.vids)), a.inst.id)]))
                 continue
             rem = a.remainder()
             if rem is not None and not (isinstance(rem, Num) and rem.q == 0) and last >= a.day:
@@ -2284,9 +2309,12 @@ def m_c_unit(self, n, env, ctx):
         if v is NONE:
             raise refuse('RUN-NONE', '%s is none here: a quantity' % fmt_node(n.args[0]))
         us = list(getattr(v, 'u', None) or ())
-        if not isinstance(v, Num) or len(us) != 1 or us[0][1] != 1 or \
-                (us[0][0] not in CURRENCIES and us[0][0] not in self.m.unit_kind_keys):
-            raise refuse('RUN-DOMAIN', 'unit of %s: a key of no unit kind' % fmt(v))
+        # in load's words (L §8.4 R-load, 2.1.7's R5; tally 2.2.1, 233.c)
+        if not isinstance(v, Num) or len(us) != 1 or us[0][1] != 1:
+            raise refuse('RUN-DOMAIN', 'unit of %s: a plain number or a compound unit is a key of no unit kind'
+                         % fmt(v))
+        if us[0][0] not in CURRENCIES and us[0][0] not in self.m.unit_kind_keys:
+            raise refuse('RUN-DOMAIN', 'unit of %s: %s is a quantity unit, a key of no unit kind' % (fmt(v), us[0][0]))
         return Thing(us[0][0])
     p = self.place_arg(n.args[0], env, ctx)
     if isinstance(p, Hole):

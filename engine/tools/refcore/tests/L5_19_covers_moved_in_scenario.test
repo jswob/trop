@@ -1,0 +1,52 @@
+# tally 2.2.1 S-232 (L §5.19 "each observation that stands (§4.6)"; E §3.1 step 9: LOAD-COVERS "on the rows that
+# stand, per world and cut class"; P19):
+# scenario narrowed moves register_10 to 2026-10-01..2026-10-20; r2 on 10-28 stands in its world:
+# the scenario is refused. tally 2.2's refcore loaded it (T's held fixture/reviews/narrowed).
+=== options check exit=1
+=== m.tally
+model narrow
+  tally 2
+  on 2026-11-05
+  start 2026-10-01
+  end 2026-12-31
+  note "T's base for #232's second case (invented): a register covering konto in October with two bank rows, one on 10-10 and one on 10-28"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input bank: observed
+
+version home
+  cite s
+  governs 2026-10..
+  known 2026-10-01
+  opening[konto] = 1 000.00 PLN at 2026-10-01 start "wyciąg"
+
+version register_10
+  cite s
+  governs 2026-10
+  known 2026-11-02
+  covers konto
+  bank[r1] = (on: 2026-10-10, kind: transfers, leg cash from world to konto amount 500.00 PLN) "line 1"
+  bank[r2] = (on: 2026-10-28, kind: transfers, leg cash from konto to world amount 120.00 PLN) "line 2"
+
+ask q: bal(konto, 2026-10-31)
+=== s.tally
+scenario narrowed over narrow
+  tally 2
+  from 2026-10-01
+
+version narrowed_coverage
+  cite s
+  governs 2026-10..
+  known 2026-11-03
+  moves register_10 to 2026-10-01..2026-10-20
+
+ask q_narrowed: bal(konto, 2026-10-31) in narrowed
+=== expect
+scenario narrowed: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span register_10 covers (m.tally:30)

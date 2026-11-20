@@ -1,10 +1,10 @@
 # Change 3: a retroactive law change (lower health share, back to January)
 
-**Statement:** none is needed. This is a law version (OPERATIONS §3), with illustrative content.
+**Statement:** none is needed. This is a law version (OPERATIONS §3.6), with illustrative content.
 - An act passed on 2027-06-15 lowers the ryczałt health contribution for the middle revenue tier from 100% to 90% of the base. It applies from 2027-01-01.
 - Monthly payments already made stand. The difference is settled in the annual settlement, due by 20 May of the next year.
 
-**Operation:** add a law version. **Kind:** `add`. **Known:** 2027-06-15. `on` advances to it first.
+**Operation:** add a law version (OPERATIONS §3.3, CHG-2). **Known:** 2027-06-15. `on` moves to it first (CHG-7).
 
 ## Diff
 
@@ -51,9 +51,9 @@ Lines added: 15 (11 non-blank, 4 blank), plus the `on` line. Lines edited: the `
 - The settlement moves `health_settle_pay` and `health_settle_back` for 2027 are dated 2028-05-22, after K. They are planned with the new law, not changed after booking, so they need no settlement.
 - The ryczałt advances read `flows(health_pay, m)`, the booked amounts. So they change only where a `health_pay` they read is planned after K.
 
-## Back pay listed (OPERATIONS §3, `WARN-BACKPAY`)
+## Back pay (OPERATIONS §3.3, CHG-3)
 
-The operation re-evaluates every booked instance whose read set the version touches (ENGINE §5, step 2). That is `health_pay[2027-04]`, booked on 2027-05-20, the one booked mid-tier month. The low-tier instances for 2027-01 to 2027-03 (booked 02-22, 03-22 and 04-20) read `health_share[low]`, for which the version has no row, so step 2 skips them; the table shows them with δ 0 to say why.
+A run re-evaluates every booked instance whose read set the version touches (ENGINE §5, step 2). That is `health_pay[2027-04]`, booked on 2027-05-20, the one booked mid-tier month. The low-tier instances for 2027-01 to 2027-03 (booked 02-22, 03-22 and 04-20) read `health_share[low]`, for which the version has no row, so step 2 skips them; the table shows them with δ 0 to say why.
 
 | Instance | Tier | δ | Under the version's line |
 |---|---|---|---|
@@ -111,7 +111,7 @@ The difference is 86.38 a month. The low tier, at 0.6, is 518.28 and doesn't cha
 
 **Register:** one new law version and its waiver move. Nothing is assumed. The `held` figure for `health_share[mid]`, read after K, becomes the new version's: `held: health_share[mid] = 0.9 (health_ryczalt_2027)`.
 
-**Warnings:** `WARN-BACKPAY` lists the one instance above, with the move that waives its adjustment, `health_pay_waive_health_ryczalt_2027` (OPERATIONS §10). The waiver answers the back pay, so no hole arises.
+**Back pay in the run:** the register's line for the one instance above, `adjustment: health_pay[2027-04] by -86.38 PLN on 2027-06-15 (version health_ryczalt_2027), remaining 0.00 PLN`: the move `health_pay_waive_health_ryczalt_2027` waives it, so no `HOLE-CHANGED` arises (OPERATIONS §3.3, CHG-3).
 
 **Depends on:**
 - L17: the settlement and the advances are plans, re-measured at their own cut, and the waiver fulfils adjustments of a plan;

@@ -1,0 +1,82 @@
+# tally 2.2.1 (#237, 237.2), HOLE-SAME's row: "<x> differs …: <a> (<row>) and <b> (<row>)", one fact, each row once:
+# bank[a2] and bank[b1], stated same, agree on cash and differ on fee, so the hole is one question, leg fee, and cash
+# is booked once. tally 2.2 compared each leg with every leg at konto: four questions, bank[a2] or bank[b1] twice (T's
+# m3/fixes/b192/same_two_legs.tally).
+=== st.tally
+model same_two_legs
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+  note "T, M3 C7, #192 row 52 (G5 fix NB-4, HOLE-SAME's leg follows row.legs): two rows stated same, of a kind with two legs that both leave konto, disagreeing on fee; both versions cover konto"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place unexplained: outside lives 1900-01-01..
+place banker: outside lives 1900-01-01..
+input bank: observed
+kind wire: event certain
+  leg cash: PLN
+  leg fee: PLN
+input keep: money PLN
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
+
+ask k3_sav: bal(sav, 2026-03-31) as known 2026-04-03
+ask k3_konto: bal(konto, 2026-03-31) as known 2026-04-03
+ask k3_n: count(t in transfers over 2026-03) as known 2026-04-03
+ask k4_sav: bal(sav, 2026-03-31) as known 2026-04-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  d_save = 15 "s"
+  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st_konto
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a2] = (on: 2026-03-20, kind: wire, leg cash from konto to sav amount 10.00 PLN, leg fee from konto to banker amount 1.00 PLN) "a"
+
+version st_sav
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers konto, sav
+  bank[b1] = (on: 2026-03-20, kind: wire, leg cash from konto to sav amount 10.00 PLN, leg fee from konto to banker amount 2.00 PLN) "b"
+  same bank[a2] = bank[b1]
+ask f: flows(konto, 2026-03-01 .. 2026-03-31)
+ask r: residuals konto 2026-03
+ask e: explain bal(konto, 2026-03-31)
+=== expect e f k3_konto r
+e: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  balance of konto (PLN) at the end of 2026-03-31
+  from: opening v:opening[konto] = 1 050.00 PLN, 2026-03-01 start (version v, source s, locator "s")
+  2026-03-20:
+    bank[a2].fee (observed): hole: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+    bank[b1].cash (observed): -10.00 PLN
+    bank[b1].fee (observed): hole: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+f: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-10
+k3_konto: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  cut 2026-04-03
+r: residuals konto 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1]), difference ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+    unexplained bank[a2], bank[b1] on 2026-03-20: observed ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+  2026-03 move save: model -950.00 PLN, observed 0.00 PLN, difference 950.00 PLN
+    expected but missing save[2026-03] on 2026-03-15: model -950.00 PLN
+  cut 2026-04-10
+warning: WARN-LEGS the two observations of bank[a2] disagree: bank[a2] (10.00 PLN, 1.00 PLN) and bank[b1] (10.00 PLN, 2.00 PLN)
+warning: WARN-UNREAD place unexplained is read by nothing

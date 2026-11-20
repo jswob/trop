@@ -2,7 +2,7 @@
 
 **Statement (household):** "Co jeśli żona przestanie pracować od stycznia 2027? Ile mniej odłożymy i czy starczy na bieżąco?"
 
-**Operation:** add a scenario patch (OPERATIONS §5). Claude never proposes one (S-09), so the household's words are its required statement. **Kind:** a new scenario file. The reality is untouched and `on` doesn't move: a scenario is read over the current reality, as known today.
+**Operation:** a scenario file (OPERATIONS §3.4, SCN-1). Claude never proposes one (S-09), so the household's words are its required statement. **Kind:** a new scenario file. The reality is untouched and `on` doesn't move: a scenario is read over the current reality, as known today.
 
 ## Diff
 
@@ -31,8 +31,8 @@
 
 | Run | What it gives |
 |---|---|
-| `plan scenario wife_stops` | the diff of every saved ask, movement and balance against the base (OPERATIONS §7) |
-| `ask net_worth with scenario wife_stops` | the whole ask in the scenario |
+| the household's asks written `in wife_stops`, in an ask file (OPERATIONS §3.1, ASK-2) | each ask in the scenario |
+| `diff(e) in wife_stops against tropek` for an ask's expression e | each line that differs from the base (OPERATIONS §3.4, SCN-1) |
 | `net_worth_at[2041-12-31] as if {scenario wife_stops} - net_worth_at[2041-12-31]` | the difference inside one expression, if the household saves a def for net worth |
 
 ## What it changes, in words
@@ -67,7 +67,7 @@ The expected outputs, cell by cell, are in `amendments/expected/7-scenario-partn
 - `net_worth`:
   - unchanged at 2026-12-31;
   - lower at 2031, 2041 and 2059, by roughly 61 000 zł a year of lost net wages plus their growth at the assumed 6%;
-  - the plan prints the exact figures.
+  - a run prints the exact figures.
 - `ike_left`: the 2027 and 2028 rows are 0.00 in both; they reach 0 later, on 2027-04-15 and 2028-05-15.
 - `taxes_paid`: 2028 is 214 zł lower, 68 783.00: `oki_tax[2027]` falls from 368 to 152, and the wife's 2 zł refund is gone.
 - **Unchanged:** `replay_september`, `explain_room`, `health_settlement`, `pit28`, `social_and_health`, my `pit37`, `taxes_paid` for 2026 and 2027, and every result before 2027-01-15.
@@ -84,7 +84,6 @@ The expected outputs, cell by cell, are in `amendments/expected/7-scenario-partn
 **Register:** every result gains `scenario: wife_stops`. The scenario's row isn't listed as `held`: it isn't knowledge, and the `scenario:` entry stands for it (LANGUAGE §8.2). Nothing is assumed beyond the scenario itself.
 
 **Warnings:**
-- None now. Under the fixture premise every law part is `tested` (`amendments/README.md`), so there is no `WARN-DRAFT`.
-- `WARN-STALE` appears if a later reality version writes `salary[wife_acme]` from 2027. Change 5's `salary[wife_acme] = 0 governs 2029-07..` is one: the scenario then overrides something newer than itself.
+- None. A later reality version that writes `salary[wife_acme]` from 2027 moves the base under the scenario, which then overrides something newer than itself; change 5's `salary[wife_acme] = 0 governs 2029-07..` is one. No run warns of it: that is the store's (OPERATIONS §4, SCN-2).
 
-**Depends on:** nothing open. Scenarios visible by date, layer precedence and `plan` with a scenario are all defined.
+**Depends on:** nothing open. Scenarios visible by date, layer precedence and asks in a scenario are all defined.

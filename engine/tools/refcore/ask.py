@@ -16,7 +16,8 @@ import datetime
 import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
-from .evaluate import Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on, new_ask
+from .evaluate import (Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on, new_ask,
+                       WinDay, PinVal, imprecise_hole)
 from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
@@ -81,12 +82,17 @@ def req_ask(qid):
 def req_clock(m, a):
     """E §11 (tally 2.1.7 R5, #112): a cut an asked line's literal states after `on` (`as known D`, `with known D`)
     refuses the request, after load, as REQ-ASK does: the run's one result. A computed one is refused at its value."""
+    def lit(n):
+        # a literal in ( ) is that literal (E §11 REQ-CLOCK, tally 2.2.1 S-233.8)
+        while n is not None and n.k == 'paren':
+            n = n.e
+        return n if n is not None and n.k == 'date' else None
     lits = []
-    if a.known is not None and a.known.k == 'date':
-        lits.append(('as known', a.known))
+    if a.known is not None and lit(a.known) is not None:
+        lits.append(('as known', lit(a.known)))
     for p in a.pins:
-        if getattr(p, 'kind', None) == 'known' and p.value.k == 'date':
-            lits.append(('with known', p.value))
+        if getattr(p, 'kind', None) == 'known' and lit(p.value) is not None:
+            lits.append(('with known', lit(p.value)))
     for word, n in lits:
         d = datetime.date.fromisoformat(n.v) if isinstance(getattr(n, 'v', None), str) else getattr(n, 'v', None)
         if isinstance(d, datetime.date) and d > m.on:
@@ -101,7 +107,8 @@ def knows_ask(m, qid):
     if '.' in qid and qid.split('.', 1)[0] in members:
         alias, aid = qid.split('.', 1)
         mm = members[alias]
-        if any(b.id == aid for b in mm.asks):
+        if any(b.id == aid for b in list(mm.asks) + list(getattr(mm, 'asks_alone', ()))):
+            # a member's ask refused alone exists too: its own line (OPERATIONS §2.1; tally 2.2.1, 233.2)
             return True
         if '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
             return knows_ask(mm, aid)
@@ -241,8 +248,8 @@ def fmt_value(v, partial=False, t=None):
     if isinstance(v, Iv):
         if isinstance(v.lo, datetime.date):
             return fmt(v)
-        return fmt_hole(Hole([('date within %s not precise enough for a print' % v.window_text(),
-                               v.origin[1] if v.origin else '')]))
+        from .evaluate import imprecise_hole
+        return fmt_hole(imprecise_hole(v, 'a print'))
     if isinstance(v, (OutKey,)):
         return 'refused: RUN-KEY %s is outside %s' % (v.text, v.index)
     if isinstance(v, ListKey):
@@ -314,6 +321,57 @@ def alone_line(a):
     return '%s: refused: %s' % (a.id, a.refused_alone.text())
 
 
+# a member run alone gives its warnings here, as data, not as lines among its results (Asker.member_alone; R20)
+WARN_SINK = []
+
+
+def emit_warnings(out, warnings):
+    """A run's lines and then its warnings (L §8.5), or, for a member run alone, the warnings handed to its caller."""
+    if WARN_SINK:
+        WARN_SINK[-1].extend(warnings)
+        return out
+    return out + warning_lines(warnings)
+
+
+def member_ask_node(m, qid):
+    """(the member, its ask) a request's a.q names (L §6.1), a nested member's a.b.q too, or None."""
+    members = getattr(m, 'joint_members', None) or {}
+    alias, aid = qid.split('.', 1)
+    mm = members.get(alias)
+    if mm is None:
+        return None
+    for b in list(mm.asks) + list(getattr(mm, 'asks_alone', ())):
+        if b.id == aid:
+            return mm, b
+    if '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
+        return member_ask_node(mm, aid)
+    return None
+
+
+# the walk's warnings (L §8.5), the ones a member's ask brings to the run's level (L §6.1, R20 clause 3)
+WALK_WARNINGS = ('WARN-NEGATIVE', 'WARN-LEGS', 'WARN-LABELS')
+
+
+def joint_warning(alias, code, msg):
+    """A member's walk warning by the joint model's names (L §6.1: `a.konto`, R20 clause 3)."""
+    import re
+    from .joint import SEP
+    msg = msg.replace(SEP, '.')
+    if code == 'WARN-NEGATIVE':
+        return '%s.%s' % (alias, msg)
+    if code == 'WARN-LEGS':
+        m = re.match(r'^the two observations of (\S+) disagree: (\S+?)\[(.*)\) and (\S+?)\[(.*)$', msg)
+        if m:
+            return 'the two observations of %s.%s disagree: %s.%s[%s) and %s.%s[%s' % (
+                alias, m.group(1), alias, m.group(2), m.group(3), alias, m.group(4), m.group(5))
+    if code == 'WARN-LABELS':
+        m = re.match(r'^labels dropped at (\S+) from (\S+): (.*)$', msg)
+        if m:
+            return 'labels dropped at %s.%s from %s: %s' % (alias, m.group(1), m.group(2), ', '.join(
+                '%s.%s' % (alias, x) for x in m.group(3).split(', ')))
+    return msg
+
+
 def warning_lines(warnings):
     """L §8.5 (tally 2.1.1): a run's warnings [(code, text)] print sorted by code, then by their text (code point),
     whatever the order of the reality's files.  A joint model's member prefix prints as '.' (cli.joint), so the text
@@ -326,6 +384,29 @@ class Asker:
     def __init__(self, m):
         self.m = m
         self.walk_warnings = []
+        # the lines a member's ask brings to the run's own level (L §6.1, R20 clause 3): its refused scenarios'
+        # lines and its walk's warnings, by the joint model's names, each once per member
+        self.level = []
+        self.member_warn = []
+
+    def lift(self, alias, scen=(), warns=()):
+        """A member's run-level lines, renamed by the joint model's names, each once."""
+        for l in scen:
+            l = 'scenario %s.%s' % (alias, l[len('scenario '):])
+            if l not in self.level:
+                self.level.append(l)
+        for code, msg in warns:
+            if code not in WALK_WARNINGS:
+                continue
+            w = (code, joint_warning(alias, code, msg))
+            if w not in self.member_warn:
+                self.member_warn.append(w)
+
+    def lifted_warnings(self):
+        """Every member's walk warnings this asker's asks met: its sub-askers' and the members run alone."""
+        for alias, sub in sorted(getattr(self, '_member_askers', {}).items()):
+            self.lift(alias, (), sub.walk_warnings)
+        return list(self.member_warn)
 
     def run(self, ids=None):
         m = self.m
@@ -353,6 +434,12 @@ class Asker:
         for a in order:
             if not isinstance(a, str):
                 req_clock(m, a)
+            else:
+                # a member's ask is checked against its member's on, as the member alone answers it (L §6.1;
+                # tally 2.2.1, 233.3, 228.Q10), unless load left it refused alone
+                hit = member_ask_node(m, a)
+                if hit is not None and getattr(hit[1], 'refused_alone', None) is None:
+                    req_clock(hit[0], hit[1])
         out = []
         try:
             for a in order:
@@ -363,7 +450,11 @@ class Asker:
                 out.extend(self.answer(a))
         except LoadAtRun as x:
             return ['refused: %s' % x.err.text()]
-        return out + warning_lines(list(m.warnings) + list(self.walk_warnings))
+        # the lines a member's ask brings print at the run's own level: its scenarios' before every result, its
+        # walk's warnings with the run's (OPERATIONS §2.1, L §6.1, §8.5; R20)
+        ws = list(m.warnings) + list(self.walk_warnings)
+        ws += [w for w in self.lifted_warnings() if w not in ws]
+        return emit_warnings(self.level + out, ws)
 
     def load_check(self):
         """`check` (OPERATIONS §2.3) on a loaded reality with no scenario file: what run() does before its first ask is
@@ -373,34 +464,46 @@ class Asker:
         m = self.m
         Engine(m).check_range_lits()
         out = [alone_line(a) for a in sorted(getattr(m, 'asks_alone', ()), key=lambda a: a.id)]
-        return (out or ['ok']) + warning_lines(list(m.warnings))
+        return emit_warnings(out or ['ok'], list(m.warnings))
 
     def member_alone(self, qid, alias, aid, mm):
         """The member alone, all its files loaded (its scenarios included), answers its ask aid (L §6.1)."""
         from .cli import run_texts
         out = []
-        for l in run_texts(mm.member_all, [aid], mm.member_options):
+        WARN_SINK.append([])
+        try:
+            lines = run_texts(mm.member_all, [aid], mm.member_options)
+        finally:
+            warns = WARN_SINK.pop()
+        scen = []
+        for l in lines:
             if l.startswith('refused: '):
                 out.append('%s: %s' % (qid, l))
-            elif l.startswith('scenario '):
-                # its scenario's load refused (L §8: that scenario only), named under the member's prefix
-                out.append('scenario %s.%s' % (alias, l[len('scenario '):]))
-            elif not l.startswith((' ', 'warning')):
+            elif l.startswith('scenario ') and not out:
+                # its scenario's load refused (L §8: that scenario only): a line at the run's own level, by the
+                # joint model's name (R20)
+                scen.append(l)
+            elif not l.startswith(' '):
                 out.append(alias + '.' + l)
             else:
                 out.append(l)
+        self.lift(alias, scen, warns)
         return out
 
     def member_ask(self, qid):
         alias, aid = qid.split('.', 1)
         mm = self.m.joint_members[alias]
-        hit = [b for b in mm.asks if b.id == aid]
+        hit = [b for b in list(mm.asks) + list(getattr(mm, 'asks_alone', ())) if b.id == aid]
         sub = self.__dict__.setdefault('_member_askers', {})
         if not hit and '.' in aid and aid.split('.', 1)[0] in (getattr(mm, 'joint_members', None) or {}):
             # a member that is a joint model asks its members' asks as b.q, so they are asked here as a.b.q (L §6.1)
             if alias not in sub:
                 sub[alias] = Asker(mm)
-            return [alias + '.' + l if not l.startswith((' ', 'warning')) else l for l in sub[alias].member_ask(aid)]
+            inner = sub[alias]
+            lines = [alias + '.' + l if not l.startswith(' ') else l for l in inner.member_ask(aid)]
+            # the nested member's run-level lines, named from here (`scenario a.b.s`, `a.b.konto`; 228.Q9)
+            self.lift(alias, inner.level, inner.lifted_warnings())
+            return lines
         if not hit:
             if aid in getattr(mm, 'scenario_asks', ()):
                 # an ask in one of the member's scenario files: the member is all its files (E §3.1 step 1), so
@@ -419,7 +522,8 @@ class Asker:
             sub[alias] = Asker(mm)
         out = []
         for l in sub[alias].answer(hit[0]):
-            out.append(alias + '.' + l if not l.startswith((' ', 'warning')) else l)
+            # the ask's own lines: its result's head named a.q, the lines under it the member's (L §6.1; 233.1)
+            out.append(alias + '.' + l if not l.startswith(' ') else l)
         return out
 
     # ------------------------------------------------------------------------------------------
@@ -710,6 +814,12 @@ class Asker:
                 lines = []
                 if bs:
                     mem = list(eng.members(bs, dict(base), wctx))
+                    # a thing only another world declares is no member here: what only S declares is `added` (L §5.18's
+                    # diff row, §6.4; tally 2.2.1, 231.R2)
+                    from .moves import item_in_world
+                    mem = [(env, st) for env, st in mem
+                           if not any(isinstance(env.get(b.var), Thing) and env[b.var].name in m.places and
+                                      not item_in_world(m.places[env[b.var].name]) for b in bs)]
                     for env, st in mem:
                         if isinstance(st, tuple) and st[0] == 'domainhole':
                             lines.append((_txt(e), st[1]))
@@ -720,13 +830,27 @@ class Asker:
                             lines.append((key, st))
                             continue
                         lines.append((key, self.one(eng, e, env, wctx)))
-                else:
+                elif self.declared_in_world(e):
+                    # what only the scenario declares is `added` (L §5.18's diff row; tally 2.2.1, #231): a world
+                    # that doesn't declare an item the expression reads has no line for it
                     lines.append((_txt(e), self.one(eng, e, dict(base), wctx)))
             finally:
                 eng.stack.pop()
                 set_world(old)
             res[w] = lines
         return res, coll, ctx, getattr(e, '_t', None)
+
+    def declared_in_world(self, e):
+        """Whether every item e names is declared in the world being evaluated (L §6.4: an item declared in a
+        scenario file exists only in that scenario and those over it)."""
+        from .node import walk as nodes
+        from .moves import item_in_world
+        for n in nodes(e):
+            if n.k == 'name':
+                hit = self.m.lookup(n.id)
+                if hit is not None and not item_in_world(hit[1]):
+                    return False
+        return True
 
     def diff_lines(self, a, res, ctx, t):
         """A cell's result, the set of its lines (L §5.18): `added` (only in S), `removed` (only in B), `changed` with
@@ -929,6 +1053,40 @@ class Asker:
             if is_load(err):
                 raise LoadAtRun(err)
             return err
+        except WinDay as wd:
+            return self.window_days(eng, e, env, ctx, line, wd)
+
+    def window_days(self, eng, e, env, ctx, line, wd):
+        """A line that meets a decision dated by a window, read once per day of the window, the cell its day is read
+        from pinned to that day (E §4.1 step 2: it counts in flows when the window lies inside the span; L §4.4 l.668:
+        the window's days in turn; tally 2.2.1 P30, N3): one value when they agree, the refusal when every day refuses,
+        else the window's hole. A window no cell names is its hole."""
+        import datetime
+        iv = wd.iv
+        nm = iv.name
+        if nm is not None and nm[0] == 'row' and '[' not in nm[2]:
+            item, keys = nm[2], None
+        elif nm is not None and nm[0] == 'pin':
+            item, keys = nm[1], (nm[2] or None)
+        else:
+            return imprecise_hole(iv, wd.use)
+        days = sorted(iv.days) if iv.days is not None else [
+            iv.lo + datetime.timedelta(days=k) for k in range((iv.hi - iv.lo).days + 1)]
+        layer = 1 + max((p.layer for p in ctx.pins), default=0)
+        outs = []
+        for d in days:
+            pv = PinVal('solve', item, keys, (), d, '', layer)
+            c2 = ctx.but(pins=tuple(sorted(list(ctx.pins) + [pv], key=lambda p: repr(p.key()))))
+            outs.append(self.one(eng, e, env, c2, line))
+        errs = [r for r in outs if isinstance(r, TallyError)]
+        if errs:
+            return errs[0] if len(errs) == len(outs) else imprecise_hole(iv, wd.use)
+        holes = [r for r in outs if isinstance(r, Hole)]
+        if holes:
+            return merge(*holes)
+        if len(set(repr(vkey(r)) for r in outs)) == 1:
+            return outs[0]
+        return imprecise_hole(iv, wd.use)
 
     def one_solve(self, eng, a, env, ctx):
         try:
@@ -1105,8 +1263,7 @@ class Asker:
         for e in [e for e in pins_coll.reg if e[0] == 'pinned' and e[1] in cells and e not in ln.coll.reg]:
             # a refusal carries no read set of its own: what it rests on took the pin unless an inner claim met it
             # (item 9 of the follow-up; the stored m1 vectors)
-            if not refused or ('pin met', e[1]) in ln.coll.reg:
-                coll.reg.discard(e)
+            coll.reg.discard(e)
         laws = getattr(vals[0], 'laws', None) if vals else None
         out.extend('  ' + r for r in self.register(coll, ln.reading, ctx, a.path is not None, laws,
                                                           hole_days(ln.each_vals if ln.each_vals is not None else vals)))

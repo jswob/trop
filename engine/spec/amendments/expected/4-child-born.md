@@ -67,10 +67,10 @@ Final cut K = 2028-06-02. **The optional addition** (the `ola_800_paid` ask, put
 - **ola_800_paid:** the 800+ benefit from 2028-05, the May instance corrected from 05-22 to 06-20 (it was dated before the claim was known), so 1600 on 2028-06-20; 6400.00 for 2028 and 9600.00 for 2029, to the last month 2046-04.
 - **net_worth, run-only:** higher than the base. C4-a gives Δ = I + R − T with I = 38165 / 145285 / 192816 at 2031 / 2041 / 2059, exact, and R, T run-only.
 
-## First day, and sanity
+## First day
 
-- **First day anything differs:** 2028-06-20, the 800+ movement and zus's balance (−1600.00 that day, −172800.00 at E). C4-b computes konto's 2028-06-15 invest as unchanged; C4-a leaves konto's first day open between 06-15 and 06-20 as run-only. The birth's own first movement difference is 2029-06-14 (`urzad_skarbowy`, the 2028 return).
-- **Sanity:** the earliest `governs` is 2026-01 (Ola's residence), so it passes.
+- **First day anything differs**, from two runs' asks of each place's balance by day (`OPERATIONS.md` §3.3, CHG-11): 2028-06-20, the 800+ movement and zus's balance (−1600.00 that day, −172800.00 at E). C4-b computes konto's 2028-06-15 invest as unchanged; C4-a leaves konto's first day open between 06-15 and 06-20 as run-only. The birth's own first movement difference is 2029-06-14 (`urzad_skarbowy`, the 2028 return).
+- **The earliest `governs`:** 2026-01 (Ola's residence), before it.
 
 ## The advances alone
 
@@ -78,7 +78,7 @@ No value, hole, ledger line or anchor changes. The registers do change: the cut 
 
 ## Warnings and holes
 
-- **Added:** at the claim, `WARN-BACKPAY` lists `b800_pay[ola, 2028-05]`, δ +800, covered by `arrears on 2028-06-20` (LR-10, LR-8). The birth changes no booked pay: the pit37 ola instances re-measure to δ 0.
+- **Added:** no warning. At the claim the register lists the `adjustment:` line of `b800_pay[ola, 2028-05]`, δ +800, which the settlement on 2028-06-20 fulfils (`arrears on 2028-06-20`; LR-10, LR-8), so no `HOLE-CHANGED` (`OPERATIONS.md` §3.3, CHG-3). The birth changes no booked pay: the pit37 ola instances re-measure to δ 0.
 - **Cleared:** none. **Holes:** none.
 
 ## The register
@@ -144,8 +144,8 @@ The 1.0 diff states `residence[ola] = pl governs 2028-05..`. `pit37_tax`'s `abro
 
 - **The hole questions:** `? W jakim kraju ta osoba mieszka w tym miesiącu?` at residence[ola, 2026-01..2026-12], [2027-01..2027-12] and [2028-01..2028-04] for the three pit37 ola lines; the cells reached through her pay instances carry the same question.
 - **First day:** 2028-05-14, when the `HOLE-CHANGED` movements of the re-measured past pit37 ola instances land: the key was added after their booking cuts, so each counted A₀ = 0 there (LC-1), and its hole δ is dated on or after the version's `known` (V4-P4).
-- **Warnings:** at the birth, `WARN-BACKPAY` lists the three re-measured pit37 ola instances as covered by no line: they become `HOLE-CHANGED`. At the claim, as above.
-- **Sanity:** `ola_born` has no `governs`, so its spanless rows (`born[ola]`, the `parent` rows) govern every date and the bound is the run's first day (OPERATIONS §7). The first day is after it, so it passes. The 1.0 words' "2028-05" counted Ola's residence row only.
+- **Back pay:** at the birth, the three re-measured pit37 ola instances print `adjustment:` lines that nothing fulfils: they become `HOLE-CHANGED` (`OPERATIONS.md` §3.3, CHG-3). At the claim, as above.
+- **The earliest `governs`:** `ola_born` has none, so its spanless rows (`born[ola]`, the `parent` rows) govern every date, from the run's first day, before the first day anything differs. The 1.0 words' "2028-05" counted Ola's residence row only.
 
 ## Readings it rests on
 

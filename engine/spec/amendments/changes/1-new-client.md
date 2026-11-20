@@ -4,7 +4,7 @@
 
 The user's main work is B2B, so a new job is a new client contract. (The wife's change of employer is the same shape as LANGUAGE §6.3 change 1; change 5 below gives her a new job abroad.)
 
-**Operation:** add a fact (OPERATIONS §2.1), with `add_keys`. **Kind:** `add`. **Known:** 2027-01-20, after the base's `on` (2026-10-19), so `on` advances first (README, "Advancing `on`").
+**Operation:** add a fact: an entry and its rows in a new file (OPERATIONS §3.3, CHG-1). **Known:** 2027-01-20, after the base's `on` (2026-10-19), so `on` moves there first (CHG-7).
 
 ## Diff
 
@@ -38,7 +38,7 @@ Lines added: 13 (11 non-blank, 2 blank), plus the `on` line. Lines edited: the `
 
 The expected outputs, cell by cell, are in `amendments/expected/1-new-client.md`.
 
-The plan's sanity line: the first day anything differs is **2027-03-15**. That day the rule of the 15th invests 5 280 zł more in OKI, since `room[2027-03]` sees client C's February pay arriving on 2027-03-22. `room[2027-02]` is unchanged at 9 835.50: 2027-03-22 is outside its window (02-15..03-14). Its register differs from 2027-02-15, but sanity counts movements and balances only (OPERATIONS §7). The amendment's earliest `governs` is 2026-01, so the sanity check holds.
+Two runs, without and with the change, asked each place's balance by day (OPERATIONS §3.3, CHG-11): the first day anything differs is **2027-03-15**. That day the rule of the 15th invests 5 280 zł more in OKI, since `room[2027-03]` sees client C's February pay arriving on 2027-03-22. `room[2027-02]` is unchanged at 9 835.50: 2027-03-22 is outside its window (02-15..03-14). Its register differs from 2027-02-15, but the balances don't. The amendment's earliest `governs` is 2026-01.
 
 **Movements**
 - **New:** `client_pay[client_c, m]` from 2027-02, 7 380 zł gross a month (6 000 + 1 380 VAT). The February invoice, issued 2027-02-28, is due 21 days later on 2027-03-21, a Sunday, so it arrives Monday **2027-03-22**.

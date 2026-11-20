@@ -1,0 +1,43 @@
+# tally 2.2.1, E §11 REQ-CLOCK: "a cut an ask's literal states after `on` (`as known`, `with known`; a literal in `( )`
+# too), in an ask load left standing" refuses the request, the run's one result, exit 1.
+# 233.4: a reality with a scenario file. tally 2.2 answered qc alone RUN-DOMAIN, exit 0 (T's held
+# fixes/scenario-files-clock).
+=== options exit=1
+=== b.tally
+model bob
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "b card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+ask qc: twice law 2026-03-01 as known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 3 000.00 PLN "the card"
+=== sb.tally
+scenario sb over bob
+  tally 2
+  from 2026-01-01
+
+version lower
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 2 000.00 PLN "a cut"
+
+ask q_sb: twice in sb law 2026-03-01
+=== expect q qc
+refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
