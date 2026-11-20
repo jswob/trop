@@ -35,7 +35,7 @@ use crate::eval::{
     Collected, Ctx, Engine, Entry, Env, How, Item, Member, Memo, after_on, names_in, num_stop,
     one_day, past_days, world_named,
 };
-use crate::model::{Reality, Value};
+use crate::model::{Reality, Value, Window};
 use crate::syntax::{
     Ask, AskBody, Bind, Diff, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop,
 };
@@ -999,13 +999,80 @@ pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
         Item::Value(Value::Day(d)) if d.is_end() => Err(past_days(1)),
         Item::Value(Value::Window(w)) if !w.of_days() => {
             // a window prints as a date; any other interval needs its one value (L §4.4)
-            let window = w.question_text(m).map_err(num_stop)?;
-            let text = format!("date within {window} not precise enough for a print");
-            Ok(crate::hole::Hole::asked(&text, w.figure())
-                .carrying(&w.carry)
-                .text())
+            print_hole(m, w)
         }
+        Item::Value(Value::List(items)) if computed_entry(items) => entries_text(m, items),
         Item::Value(v) => v.typed_text(m).map_err(num_stop),
+    }
+}
+
+/// The hole an interval that is no window of days prints as, where a print needs its one
+/// value: `?"date within <w> not precise enough for a print" (<its read>)` (refcore's
+/// `fmt_value` of an `Iv`). L §4.4 l.669, §8.1.
+pub(super) fn print_hole(m: &Reality, w: &Window) -> Result<String, Stop> {
+    let window = w.question_text(m).map_err(num_stop)?;
+    let text = format!("date within {window} not precise enough for a print");
+    Ok(crate::hole::Hole::asked(&text, w.figure())
+        .carrying(&w.carry)
+        .text())
+}
+
+/// Whether a list holds an entry computed from a window that is no window of days, in a list
+/// it holds too (refcore's `computed_iv`). L §4.4.
+pub(super) fn computed_entry(items: &[Value]) -> bool {
+    let mut todo: Vec<&Value> = items.iter().collect();
+    while let Some(v) = todo.pop() {
+        if let Value::Window(w) = v
+            && !w.of_days()
+        {
+            return true;
+        }
+        if let Value::List(more) = v {
+            todo.extend(more);
+        }
+    }
+    false
+}
+
+/// A list that holds an entry computed from a window, as a line prints it: an entry is where
+/// one value is needed, so such an entry prints as its hole, a list of them likewise, every
+/// other entry as it prints in a list (refcore's `fmt_value` of a `Lst`; #221, 221.C2).
+/// L §4.4 l.669 ("wherever one value is needed (a print but a date's …)").
+///
+/// # Errors
+///
+/// A number error printing an entry.
+pub(super) fn entries_text(m: &Reality, items: &[Value]) -> Result<String, Stop> {
+    // the lists open, outermost first: each with its entries not yet printed and the texts
+    // of those printed, so a list inside a list is a worklist step, never a recursion (R-16)
+    let mut open: Vec<(core::slice::Iter<'_, Value>, Vec<String>)> =
+        vec![(items.iter(), Vec::new())];
+    loop {
+        let Some((rest, _)) = open.last_mut() else {
+            return Err(invariant("a list printed with no list open"));
+        };
+        let text = match rest.next() {
+            Some(Value::List(more)) if computed_entry(more) => {
+                open.push((more.iter(), Vec::new()));
+                continue;
+            }
+            Some(Value::Window(w)) if !w.of_days() => print_hole(m, w)?,
+            Some(other) => other.text(m).map_err(num_stop)?,
+            None => {
+                let Some((_, done)) = open.pop() else {
+                    return Err(invariant("a list printed with no list open"));
+                };
+                let list = format!("[{}]", done.join(", "));
+                if open.is_empty() {
+                    return Ok(list);
+                }
+                list
+            }
+        };
+        let Some((_, done)) = open.last_mut() else {
+            return Err(invariant("a list printed with no list open"));
+        };
+        done.push(text);
     }
 }
 
