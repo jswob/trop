@@ -112,6 +112,10 @@ pub struct St {
     /// instant: at the reading's own instant the stated balance stands without them (refcore's
     /// `reopen`; L §5.19 l.1726, E §4.1 step 2; P32, N1 and N8). None after any other entry.
     pub reopen: Option<Hole>,
+    /// The movements dated by a window a reading met before they fell, not yet booked: each
+    /// reading after it reopens them too, every reading inside a window an edge (P32 said
+    /// whole, P41, F2). L §5.19 l.1726.
+    pub held: Vec<Pending>,
 }
 
 /// A movement dated by a window that may still fall at a place (refcore's `imp`, one entry;
@@ -160,6 +164,7 @@ impl St {
             imp: Vec::new(),
             rst: None,
             reopen: None,
+            held: Vec::new(),
         }
     }
 
@@ -1292,14 +1297,22 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
             // a window that runs past the reading: the reading states the balance at its
             // instant, and from the next instant the movement may still fall, so the balance
             // is its hole up to the next reading (L §5.19 l.1726, E §4.1 step 2; P32, N1, N8);
-            // `Walk::state` gives the reading's own instant without it
-            let pending: Vec<Option<&Hole>> = st.imp.iter().map(|p| Some(&p.hole)).collect();
+            // `Walk::state` gives the reading's own instant without it. A window an earlier
+            // reading met and not yet booked is reopened again: every reading inside it is an
+            // edge (P41, F2)
+            let pending: Vec<Option<&Hole>> = st
+                .imp
+                .iter()
+                .chain(&st.held)
+                .map(|p| Some(&p.hole))
+                .collect();
             let imp = spread(&pending);
             let wins = st.perm.as_ref().and_then(Hole::of_windows);
             st.reopen = spread(&[imp.as_ref(), wins.as_ref()]);
             st.val = Some(val.clone());
             st.hole = spread(&[qs.as_ref(), imp.as_ref()]);
-            st.imp.clear();
+            let met = std::mem::take(&mut st.imp);
+            st.held.extend(met);
             st.bad.clone_from(&st.perm_bad);
             st.rst = Some(at);
         }
@@ -1347,7 +1360,10 @@ fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result
                 hole: h.clone(),
                 signed: ent.signed.clone(),
             }),
-            Change::Delta(_) | Change::Hole(_) => st.imp.retain(|p| &p.wid != wid),
+            Change::Delta(_) | Change::Hole(_) => {
+                st.imp.retain(|p| &p.wid != wid);
+                st.held.retain(|p| &p.wid != wid);
+            }
             Change::Reset { .. }
             | Change::Perm(_)
             | Change::Unperm(_)
