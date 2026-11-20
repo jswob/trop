@@ -5047,8 +5047,10 @@ def arith(op, a, b, rt, lt, rtt):
         return Num(q, (), isint=True, enc=e)
     if k == 'rate':
         return Num(q, a.u if a.rate else b.u, rate=True, enc=e)
-    if k == 'dyn' and (a.money or b.money) and len(u) == 1 and u[0][1] == 1 and u[0][0] in CURRENCIES:
-        # a quantity of a unit known only at run (a leg of unit any): money stays money (L §3.2)
+    if k == 'dyn' and (a.money or b.money) and len(u) == 1 and u[0][1] == 1 and u[0][0] in CURRENCIES and \
+            not (op in '+-' and not (a.money and b.money) and (b if a.money else a).q != 0):
+        # a quantity of a unit known only at run (a leg of unit any): money stays money (L §3.2), but money with
+        # num CUR gives num CUR (L §3.2's table; tally 2.2.1 234.1)
         return Num(q, u, money=True, enc=e)
     return Num(q, u, enc=e)
 
