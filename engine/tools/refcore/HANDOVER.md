@@ -7,6 +7,26 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W10: the day of same sides, the register per fact (P43; issue #241; 1 644 tests)
+
+- **S1** (`moves.same_days`, `same_obs_differ`; `walk.consol`; `mreads.same_in_span`): one comparison of the days
+  each side can take (`day_set`): a hole side's question; no common day, `HOLE-SAME` on the first side's day as
+  stated (a window as its text); agreed (one named window on every side, or one day); else `HOLE-IMPRECISE` "for
+  the day of in1 and in2", a question per unknown day labelled by its side. The booking books once, by the first
+  window side in id order, and ends a skipped side's pending window with an empty hole entry.
+- Limit: two sides on one named window with the same question text print as one question labelled `(in1, in2)`
+  (`values.fmt_hole` merges by text; per label moved 5 tests outside the item, reverted).
+- **S2, S3, S5** (`mreads.same_fact_reads`; `Leg.coll`): a read of one fact holds that fact's reads from both sides;
+  membership merges every side's day reads; flows over a covered span registers marks and `open:` as the balance.
+- **S7** (`ask.declared_in_world`): a thing whose entries are none in this world isn't declared, so `diff` says added.
+- **Item 6, the order of two questions in one line:** by the question's text, code point order (Python `sorted`
+  over the texts); identical texts merge, their labels sorted and joined ", ".
+- **w15:** `evaluate.num_at` keeps the unit of a value taken in turn. refcore prints the hole "not precise enough
+  for a print", the engine "for round": the use word differs; by P41 F1 `round` is monotone, so the interval stands
+  until the print. For the lead.
+- **S-231.Q1a:** `beats_order` reads the beats of the rules in force (`live`), not the stale `info.beaters`.
+- **Not built, for want of budget:** cause H's 208.R2, 231.R1, 231.Q10; cause A's sites as in W8 below.
+
 ## tally 2.2.1, group W8: the second engine review, the fix review (issue #241; 1 631 tests)
 
 - **P35, one read set.** A refused entry carries every entry its reads gave (`Walk.add`; the sign rule's refusal the

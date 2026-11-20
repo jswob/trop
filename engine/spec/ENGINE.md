@@ -296,7 +296,7 @@ The balance at S comes from `opening`, and from each `stated` reading on, by its
 - An observation that fulfils an uncertain instance makes it count: the observation is booked, and the instance leaves `uncertain`.
 
 **Readings** (LANGUAGE §5.19). A `stated[x]` reading that the cut K sees, at an instant before K, is applied at its instant in the walk (§4.2): at the start of its day or at the close. Its **gap** is the reading less the balance the walk reached at that instant. Its version's gap role says what follows:
-- **`pad x from y`:** a movement of the prelude kind `pads`, with id `pads:<version>:<x>@<instant>` and status `pad`, as LANGUAGE §5.19 says.
+- **`pad x from y`:** a movement of the prelude kind `pads` (into x when the gap is positive), with id `pads:<version>:<x>@<instant>` and status `pad`, as LANGUAGE §5.19 says.
 - **`anchor x`:** x's balance is set to the reading, and no other place changes; the gap is an `anchor:` entry too (LANGUAGE §8.2).
 
 - **Holes and refusals.** A hole or refused movement of x dated on or before the instant stops there, as LANGUAGE §5.19 says; the gap carries it (a hole or refused gap makes a pad's amount one too).
