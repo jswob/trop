@@ -7,3 +7,8 @@ M5c/r9_joint_header	M5c	#148	L §6.1, §5.1 (tally 2.1.7, P44, R9): a joint mode
 M5c/r9_joint_header_twin	M5c	#148	L §6.1 (tally 2.1.7, P44, R9): the twin of M5c/r9_joint_header with `tally 2`, which loads; built at M5c (BUILD-ORDER M5c)
 M5b/r9_owns_months_beside_parts	M5b	#148	L §3.6 (tally 2.1.7, P45 A, R9): an `owns` input keyed by months beside a place that keeps parts loads (only `owns[p, x]` at a parts place is refused), WARN-UNREAD; parts are built at M5b (BUILD-ORDER M5b), the fix review's probe ow
 M5c/cut_joint	M5c	#187	L §6.1, plan §13 (tally 2.1.8, the cut): a joint model's same line between two members' movements (PTY-05's header line moved into version jv) still loads; joint members (a use line) are built at M5c (BUILD-ORDER M5c)
+M7/t221_random_proj	M7	#241	tally 2.2.1 S-212 (L §5.16, §5.14.1): a decision's projection reads a random amount dated after its day by the amount's day, not its fact's law date; paths are built at M7 (BUILD-ORDER M7, rulings 12)
+M5a/t221_fill_window	M5a	#241	tally 2.2.1 S-213 (L §5.12 step 2): a fill whose order rests only on a window is HOLE-IMPRECISE, no day of the window giving the refusal; fills are built at M5a (rulings 12)
+M5a/t221_fill_window_pinned	M5a	#241	tally 2.2.1 S-213's twin: the same fill with its days pinned answers; fills are built at M5a
+M5a/t221_fill_hole_order	M5a	#241	tally 2.2.1 S-213's twin: a plain hole in a fill's order stays RUN-ORDER; fills are built at M5a
+M5a/t221_row_window	M5a	#241	tally 2.2.1 221.R2 (L §4.4, §5.19): an observed row's date attribute may hold a window; a window in an observed row's attribute is built at M5a (rulings 12)

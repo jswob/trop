@@ -5483,4 +5483,13 @@ z2: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print"
   unknown day: w
   unknown day: w2
   cut 2026-01-01
+,28:t221-rc/221-10-mean-quantile,7:t221-rc,3:run,30:engine/tests/m3/fixes/t221/new,14:run agg2.tally,40:agg2.tally	m3/fixes/t221/new/agg2.tally
+,1:0,325:m: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a term of mean" (wd[k1])
+  unknown day: wd[k1]
+  cut 2026-01-01
+q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a term of quantile" (wd[k1])
+  unknown day: wd[k1]
+  cut 2026-01-01
+x: window(2026-03-05, 2026-03-07)
+  cut 2026-01-01
 ,

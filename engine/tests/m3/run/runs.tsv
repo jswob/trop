@@ -92,3 +92,4 @@ t221-gd/221-10-agg-window	m3/fixes/t221/new	run tb.tally --ask a221_10	-	tally 2
 t221-gd/233-8-twin	m3/fixes/t221/new	run tb.tally --ask c233_8t	-	tally 2.2.1 (#241) S-233.8's twin: as known after on refuses the request REQ-CLOCK
 t221-gd/233-c-load-words	m3/fixes/t221/new	run u233c.tally	-	tally 2.2.1 (#241) 233.c: unit of a number, refused at load in load's words
 t221-g1/221-C3-arith	m3/fixes/t221/arith2	run arith2.tally	-	tally 2.2.1 (#241) 221.C3, L §4.4: + of two computed windows is their interval, a hole only where one value is needed (held for G1)
+t221-rc/221-10-mean-quantile	m3/fixes/t221/new	run agg2.tally	-	tally 2.2.1 (#241) 221.10, L §4.4 l.669: window terms of mean and quantile are the hole

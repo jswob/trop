@@ -117,4 +117,12 @@ mod tests {
     fn m3_fixes_t221_g1() {
         group_holds(RUNS, "t221-g1");
     }
+
+    /// tally 2.2.1's refcore-alone vectors (#241): refcore's mends, which the engine prints on
+    /// arrival; 221.10's `mean` and `quantile` over a window term held for M4 (`held.tsv`),
+    /// where the aggregates are built.
+    #[test]
+    fn m3_fixes_t221_refcore() {
+        group_holds(RUNS, "t221-rc");
+    }
 }
