@@ -28,7 +28,7 @@ use super::check::Printed;
 use super::register::{name_unknown_days, register_lines};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, world_named};
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, Diff, Stop};
+use crate::syntax::{Ask, Diff, Expr, Stop};
 use crate::walk::invariant;
 
 /// A world's lines of a diff: each key with its value, in the order evaluated.
@@ -359,6 +359,9 @@ fn side_lines(
 ) -> Result<Side, Stop> {
     let text = crate::load::expr_text(&diff.expr);
     if diff.binds.is_empty() {
+        if !declared_in(m, &diff.expr, ctx) {
+            return Ok(Vec::new());
+        }
         return Ok(vec![(text, one(m, diff, engine, (env, ctx), met)?)]);
     }
     // the diff's own binding, inside the ask's tuple (L §5.18, tally 2.1.8 R13)
@@ -377,6 +380,24 @@ fn side_lines(
         lines.push((key, value));
     }
     Ok(lines)
+}
+
+/// Whether world `ctx` declares every def and input expression `e` names: one a scenario's file
+/// declares exists only in that scenario and those over it, so a world below it has no line
+/// for the expression, and the diff's line is `added` (refcore's `declared_in_world`; L §6.4,
+/// §5.18's diff row; 231.R2 on #241).
+fn declared_in(m: &Reality, e: &Expr, ctx: Ctx) -> bool {
+    let mut work = vec![e];
+    while let Some(x) = work.pop() {
+        if let Expr::Name(n) = x
+            && (m.defs.contains(n) || m.inputs.contains(n))
+            && !m.scenarios.sees(ctx.world, Some(n))
+        {
+            return false;
+        }
+        work.extend(crate::load::expr_children(x));
+    }
+    true
 }
 
 /// The diff's expression at one tuple: its value or the run-time refusal it met, what it read
