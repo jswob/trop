@@ -17,7 +17,10 @@ use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
 use super::time_arith::step_count;
-use super::windows::{End, as_window, imprecise, interval, interval_of, single, window_end};
+use super::windows::{
+    End, as_window, imprecise, interval, interval_of, single, value_choices, values_interval,
+    window_end,
+};
 use super::years::as_year;
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, Window};
@@ -111,48 +114,29 @@ impl Engine {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
         let period = period_arg(m, (call.args.first(), &a), "day_of")?;
-        let anchored = || {
-            refuse(
-                Run::Domain,
-                format!("day_of of {}, a key of an anchored index", period.label()),
-            )
-        };
+        if let Some(tuples) = value_choices(m, &[&b])? {
+            // a day number that is an interval: the interval of its days, the hole where
+            // only some of its values are refused (L §4.4 l.668, l.671)
+            let mut outs = Vec::with_capacity(tuples.len());
+            for t in &tuples {
+                let [n] = t.as_slice() else {
+                    return Err(arity());
+                };
+                outs.push(day_of_month(m, period, n));
+            }
+            return values_interval(m, "day_of", outs, &[&b]);
+        }
         if let Some(w) = as_window(&b) {
-            // a day number that is an interval, where one value is needed (L §4.4)
+            // a window of days, which is no day number (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "day_of")?));
         }
         if !matches!(b, Value::MonthDay(..)) {
-            let number = whole_of(m, &b)?;
-            if period.kind() != PeriodKind::Month || period.start().day() != 1 {
-                return Err(anchored());
-            }
-            if number.is_negative() || number.is_zero() {
-                let text = number
-                    .integer_text()
-                    .ok_or_else(|| invariant("a day number"))?;
-                return Err(refuse(
-                    Run::Domain,
-                    format!("day_of(m, {text}): a day number below 1"),
-                ));
-            }
-            let last = period
-                .end()
-                .previous()
-                .ok_or_else(|| invariant("a month with no last day"))?;
-            // a number past 64 bits is past the month's last day too
-            let day = match number.to_i64() {
-                Some(whole) => u8::try_from(whole.min(i64::from(last.day())))
-                    .map_err(|_| invariant("a day number"))?,
-                None => last.day(),
-            };
-            return Day::from_ymd(last.year(), last.month(), day)
-                .map(Value::Day)
-                .ok_or_else(|| invariant("a day of a month"));
+            return day_of_month(m, period, &b);
         }
         if period.kind() == PeriodKind::Year
             && (period.start().month(), period.start().day()) != (1, 1)
         {
-            return Err(anchored());
+            return Err(anchored(period));
         }
         let Value::MonthDay(month, day) = b else {
             return Err(invariant(
@@ -188,11 +172,8 @@ impl Engine {
         }
         let name = call.name.as_str();
         let first = date_or_window(a, name)?;
-        if matches!(name, "add_days" | "add_months" | "add_years")
-            && let Some(w) = as_window(&b)
-        {
-            // a count that is an interval, where one value is needed (L §4.4)
-            return Ok(Value::Hole(imprecise(m, w, name)?));
+        if matches!(name, "add_days" | "add_months" | "add_years") {
+            return moved_by(m, name, &first, &b);
         }
         match name {
             "days_between" => {
@@ -204,9 +185,6 @@ impl Engine {
                 }
                 lifted(m, DateFn::Between, &[first, second])
             }
-            "add_days" => lifted(m, DateFn::AddDays(step_count(m, &b, 1)?), &[first]),
-            "add_months" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "month")?), &[first]),
-            "add_years" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "year")?), &[first]),
             "age_months" => lifted(m, DateFn::AgeMonths, &[first, date_or_window(b, name)?]),
             "age" => lifted(m, DateFn::Age, &[first, date_or_window(b, name)?]),
             _ => Err(invariant("a day-count built-in dispatched by another name")),
@@ -314,6 +292,93 @@ impl Engine {
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.
 fn arity() -> Stop {
     invariant("a built-in called with the wrong number of arguments")
+}
+
+/// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
+/// `first` and a count `b`; a count that is an interval gives the interval of the days it
+/// moves to (refcore's `lift_values` over the count). L §4.2, §4.4 l.668.
+///
+/// # Errors
+///
+/// As [`moved`]; a refusal at every value of the count.
+fn moved_by(m: &Reality, name: &str, first: &Value, b: &Value) -> Result<Value, Stop> {
+    if let Some(tuples) = value_choices(m, &[b])? {
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [n] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(moved(m, name, first, n));
+        }
+        return values_interval(m, name, outs, &[b]);
+    }
+    if let Some(w) = as_window(b) {
+        // a window of days, which is no count (L §4.4)
+        return Ok(Value::Hole(imprecise(m, w, name)?));
+    }
+    moved(m, name, first, b)
+}
+
+/// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
+/// `first` and a count `n` that is no interval (refcore's `c_add_days`, `c_add_months`,
+/// `c_add_years`, their lambdas). L §4.2, §4.4.
+///
+/// # Errors
+///
+/// The refusals of reading the count; `RUN-LIMIT` past the calendar.
+fn moved(m: &Reality, name: &str, first: &Value, n: &Value) -> Result<Value, Stop> {
+    let f = match name {
+        "add_days" => DateFn::AddDays(step_count(m, n, 1)?),
+        "add_months" => DateFn::AddMonths(months_arg(m, n, "month")?),
+        "add_years" => DateFn::AddMonths(months_arg(m, n, "year")?),
+        _ => return Err(invariant("a moved day dispatched by another name")),
+    };
+    lifted(m, f, core::slice::from_ref(first))
+}
+
+/// `day_of` of a key of an anchored index: `RUN-DOMAIN` (L §4.2).
+fn anchored(period: Period) -> Stop {
+    refuse(
+        Run::Domain,
+        format!("day_of of {}, a key of an anchored index", period.label()),
+    )
+}
+
+/// `day_of(m, n)` of a day number that is no interval: the n-th day of month m, clamped to
+/// its days (refcore's `day_of_month`). L §4.2.
+///
+/// # Errors
+///
+/// `RUN-DOMAIN` for a key of an anchored index or a number below 1; the refusals of reading a
+/// whole number.
+fn day_of_month(m: &Reality, period: Period, b: &Value) -> Result<Value, Stop> {
+    let number = whole_of(m, b)?;
+    if period.kind() != PeriodKind::Month || period.start().day() != 1 {
+        return Err(anchored(period));
+    }
+    if number.is_negative() || number.is_zero() {
+        let text = number
+            .integer_text()
+            .ok_or_else(|| invariant("a day number"))?;
+        return Err(refuse(
+            Run::Domain,
+            format!("day_of(m, {text}): a day number below 1"),
+        ));
+    }
+    let last = period
+        .end()
+        .previous()
+        .ok_or_else(|| invariant("a month with no last day"))?;
+    // a number past 64 bits is past the month's last day too
+    let day = match number.to_i64() {
+        Some(whole) => {
+            u8::try_from(whole.min(i64::from(last.day()))).map_err(|_| invariant("a day number"))?
+        }
+        None => last.day(),
+    };
+    Day::from_ymd(last.year(), last.month(), day)
+        .map(Value::Day)
+        .ok_or_else(|| invariant("a day of a month"))
 }
 
 /// The value of date built-in `f` at `args`; where some are windows, the interval of its

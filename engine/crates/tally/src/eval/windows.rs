@@ -18,9 +18,9 @@ use core::cmp::Ordering;
 use super::arith::{Op, Test, arith, compare, negate};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use crate::base::{Load, Run};
+use crate::base::{Code, Load, Run};
 use crate::hole::{Hole, Unknown};
-use crate::model::{KeyVal, ReadOf, Reality, Value, Window};
+use crate::model::{Class, KeyVal, ReadOf, Reality, Value, Window};
 use crate::syntax::{Call, CmpOp, Stop};
 use crate::time::{Day, PeriodKind};
 
@@ -166,6 +166,130 @@ pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Res
         read: None,
         carry: w.carry.clone(),
     })))
+}
+
+/// The interval of numbers value `v` is, computed from a window: a window that is no window
+/// of days. L §4.4.
+fn number_interval(v: &Value) -> Option<&Window> {
+    if let Value::Window(w) = v
+        && !w.of_days()
+    {
+        return Some(w);
+    }
+    None
+}
+
+/// The values a built-in reads interval `w` of numbers at: every whole value an `int`
+/// interval of at most 400 can take, else its two ends and 0 where it crosses 0 (refcore's
+/// `lift_values`, its choices; `abs` and `pow` aren't monotone across 0, so their interval
+/// needs it, L §4.4 l.668).
+///
+/// # Errors
+///
+/// The refusals of comparing the ends with 0.
+fn interval_values(m: &Reality, w: &Window) -> Result<Vec<Value>, Stop> {
+    if let (Value::Number(lo), Value::Number(hi)) = (&w.lo, &w.hi)
+        && lo.class == Class::Int
+        && hi.class == Class::Int
+        && let (Some(first), Some(last)) = (lo.q.to_i64(), hi.q.to_i64())
+        && last.checked_sub(first).is_some_and(|span| span <= 400)
+    {
+        return Ok((first..=last).map(Value::int).collect());
+    }
+    let zero = arith(m, Op::Sub, &w.lo, &w.lo)?;
+    let crosses = compare(m, &w.lo, &zero, Test::Order)? == Ordering::Less
+        && compare(m, &zero, &w.hi, Test::Order)? == Ordering::Less;
+    if crosses {
+        return Ok(vec![w.lo.clone(), zero, w.hi.clone()]);
+    }
+    Ok(vec![w.lo.clone(), w.hi.clone()])
+}
+
+/// The argument tuples a built-in is read at where some of `args` are intervals of numbers
+/// computed from a window: each such argument at the values [`interval_values`] gives, every
+/// other argument as it is, every combination in order; none where no argument is such an
+/// interval (refcore's `lift_values`). L §4.4 l.668 ("each operation gives the interval of
+/// its values over the days its own arguments can take").
+///
+/// # Errors
+///
+/// As [`interval_values`]; `RUN-LIMIT` for more tuples than a count holds.
+pub(super) fn value_choices(m: &Reality, args: &[&Value]) -> Result<Option<Vec<Vec<Value>>>, Stop> {
+    let args: Vec<&Value> = args.iter().map(|v| single(v)).collect();
+    if !args.iter().any(|v| number_interval(v).is_some()) {
+        return Ok(None);
+    }
+    let mut tuples: Vec<Vec<Value>> = vec![Vec::new()];
+    for v in args {
+        let options = match number_interval(v) {
+            Some(w) => interval_values(m, w)?,
+            None => vec![v.clone()],
+        };
+        let count = tuples
+            .len()
+            .checked_mul(options.len())
+            .ok_or_else(|| invariant("an argument tuple count past the integers"))?;
+        let mut next = Vec::with_capacity(count);
+        for t in &tuples {
+            for o in &options {
+                next.push([t.as_slice(), core::slice::from_ref(o)].concat());
+            }
+        }
+        tuples = next;
+    }
+    Ok(Some(tuples))
+}
+
+/// A built-in's value over intervals of numbers, from `outs`, its value at each of
+/// [`value_choices`]' tuples of `args`, in order: one value where they agree, else their
+/// interval, a window among them taken by its ends, a computed value with the first
+/// interval's text, carrying every interval's unknown days; a hole among them is the value;
+/// a run refusal at every tuple is the first, at only some of them the interval's
+/// `HOLE-IMPRECISE` for `what` (refcore's `lift_values`). L §4.4 l.668, l.671 ("and for a
+/// refusal that only some of its days give").
+///
+/// # Errors
+///
+/// The first run refusal where every tuple gives one; any other stop as it came.
+pub(super) fn values_interval(
+    m: &Reality,
+    what: &str,
+    outs: Vec<Result<Value, Stop>>,
+    args: &[&Value],
+) -> Result<Value, Stop> {
+    let mut values = Vec::with_capacity(outs.len());
+    let (mut first_refusal, mut refused) = (None, false);
+    for out in outs {
+        match out {
+            Ok(Value::Hole(h)) => return Ok(Value::Hole(h)),
+            Ok(Value::Window(w)) => values.extend([w.lo, w.hi]),
+            Ok(v) => values.push(v),
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Run(_)) => {
+                refused = true;
+                first_refusal.get_or_insert(r);
+            }
+            Err(other) => return Err(other),
+        }
+    }
+    let windows: Vec<&Window> = args
+        .iter()
+        .filter_map(|v| number_interval(single(v)))
+        .collect();
+    let [first, rest @ ..] = windows.as_slice() else {
+        return Err(invariant("an interval's value with no interval"));
+    };
+    if values.is_empty() {
+        let refusal = first_refusal.ok_or_else(|| invariant("an interval of no value"))?;
+        return Err(Stop::Refused(refusal));
+    }
+    if refused {
+        return Ok(Value::Hole(imprecise(m, first, what)?));
+    }
+    let mut from = (*first).clone();
+    for w in rest {
+        crate::hole::carry_union(&mut from.carry, &w.carry);
+    }
+    interval_of(m, values, &from)
 }
 
 /// `-w` of a window of numbers: the window of its ends negated, in order (refcore's `e_neg`
