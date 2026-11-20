@@ -274,9 +274,13 @@ impl Engine {
         cut: Day,
     ) -> Result<Vec<(String, HolePlaces)>, Stop> {
         let mut out = Vec::new();
+        let from = super::plan::scenario_from(m, &mv.id);
         for inst in insts {
+            // a day before its scenario's from: left out, listed at the places its legs name
+            // as a move's instance is (L §6.4 l.1867, §8.2)
+            let early = matches!((&inst.day, from), (Some(Dated::Day(d)), Some(f)) if *d < f);
             if inst.exists != Exists::No
-                && matches!(inst.day, Some(Dated::Hole(_) | Dated::Window(_)))
+                && (early || matches!(inst.day, Some(Dated::Hole(_) | Dated::Window(_))))
             {
                 out.push((inst.id.clone(), self.hole_places(m, mv, inst, cut)?));
             }
@@ -819,9 +823,10 @@ fn schedule_decision(
     match inst.day.clone() {
         Some(Dated::Day(d)) => {
             if super::plan::scenario_from(m, move_id).is_some_and(|from| d < from) {
-                // a scenario's move books nothing before its from (L §6.4): left out
+                // a scenario's move books nothing before its from (L §6.4): left out, at the
+                // places its legs name
                 if walk.proj.is_none() {
-                    note_left_out(walk, &inst)?;
+                    note_left_out_at(walk, &inst, places.flatten())?;
                 }
                 return Ok(());
             }
@@ -852,7 +857,7 @@ fn schedule_decision(
                 // a scenario's move books nothing before its from (L §6.4): a window wholly
                 // before it is left out, as its day would be
                 if walk.proj.is_none() {
-                    note_left_out(walk, &inst)?;
+                    note_left_out_at(walk, &inst, places.flatten())?;
                 }
                 return Ok(());
             }
@@ -973,6 +978,25 @@ fn schedule_adjustment(
             .entry(place.to_owned())
             .or_insert_with(Vec::new)
             .push((adj.day, entry));
+    }
+    Ok(())
+}
+
+/// A decision instance left out before its scenario's `from`, counted for its move's `left
+/// out:` line at `places`, the places its legs name read at the cut as its hole day's are
+/// (its legs are read only on its day): as a move's instance is listed (L §6.4 l.1867,
+/// §8.2). E §4.1 step 3.
+fn note_left_out_at(
+    walk: &mut Walk,
+    inst: &Inst,
+    places: Option<BTreeSet<String>>,
+) -> Result<(), Stop> {
+    note_left_out(walk, inst)?;
+    for place in places.into_iter().flatten() {
+        walk.left_out_at
+            .entry(place)
+            .or_insert_with(BTreeSet::new)
+            .insert(inst.move_id.clone());
     }
     Ok(())
 }
