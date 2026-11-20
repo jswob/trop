@@ -286,6 +286,34 @@ impl Hole {
         })
     }
 
+    /// The hole of the questions this one carries that a window's day leaves open, `date
+    /// within …`, with the unknown days they carry; none where it carries none (refcore's
+    /// `q[0].startswith('date within ')`). L §4.4, §5.19 l.1726; P32.
+    #[must_use]
+    pub fn of_windows(&self) -> Option<Hole> {
+        let questions: BTreeSet<Asked> = self
+            .questions
+            .iter()
+            .filter(|q| q.text.starts_with("date within "))
+            .cloned()
+            .collect();
+        if questions.is_empty() {
+            return None;
+        }
+        let carry = self
+            .carry
+            .iter()
+            .filter(|(q, _)| questions.contains(*q))
+            .map(|(q, days)| (q.clone(), days.clone()))
+            .collect();
+        Some(Hole {
+            questions,
+            bound: self.bound,
+            lin: Lin::Plain,
+            carry,
+        })
+    }
+
     /// `HOLE-PRERUN`'s hole, asked of `figure`: a walked value of a day before the run's
     /// start S, which nothing walks (L §8.1; E §2).
     #[must_use]

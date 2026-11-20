@@ -108,6 +108,10 @@ pub struct St {
     pub imp: Vec<Pending>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
+    /// After a reading a window runs past, the windows' questions it keeps open from its next
+    /// instant: at the reading's own instant the stated balance stands without them (refcore's
+    /// `reopen`; L §5.19 l.1726, E §4.1 step 2; P32, N1 and N8). None after any other entry.
+    pub reopen: Option<Hole>,
 }
 
 /// A movement dated by a window that may still fall at a place (refcore's `imp`, one entry;
@@ -155,6 +159,7 @@ impl St {
             perm_bad: None,
             imp: Vec::new(),
             rst: None,
+            reopen: None,
         }
     }
 
@@ -750,7 +755,7 @@ impl Walk {
             return (self.default_state(m, place, unit), None);
         };
         match log.ents.get(i) {
-            Some(e) => (e.st.clone(), Some(i)),
+            Some(e) => (at_reading(e, at), Some(i)),
             None => (self.default_state(m, place, unit), None),
         }
     }
@@ -1157,6 +1162,29 @@ impl Taken {
     }
 }
 
+/// The state after entry `e` as a read at point `at` sees it: at a reading's own instant, a
+/// read at its step or, for a closing reading, after it that day, the stated balance without
+/// the windows' questions the reading keeps open from its next instant, every day of a window
+/// that runs past it agreeing (refcore's `state`, its `reopen`; P32, N8). L §5.19 l.1726.
+fn at_reading(e: &Ent, at: At) -> St {
+    let Some(reopen) = &e.st.reopen else {
+        return e.st.clone();
+    };
+    let own_instant = at.day == e.at.day
+        && if e.at.step == Step::End {
+            matches!(at.step, Step::End | Step::Close | Step::After)
+        } else {
+            at.step == e.at.step
+        };
+    if !own_instant {
+        return e.st.clone();
+    }
+    let mut st = e.st.clone();
+    st.hole = st.hole.as_ref().and_then(|h| h.without(reopen));
+    st.perm = st.perm.as_ref().and_then(|h| h.without(reopen));
+    st
+}
+
 /// The position after entry `n` of a log. E §4.2.
 fn next_entry(n: usize) -> Result<usize, Stop> {
     n.checked_add(1)
@@ -1212,10 +1240,20 @@ fn opening_state(
 /// holes, tally 2.1.8), §4.4 (a refusal that only some of a window's days give).
 fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
     let mut st = prev.clone();
+    st.reopen = None;
     match change {
         Change::Reset { val, qs } => {
+            // a window that runs past the reading: the reading states the balance at its
+            // instant, and from the next instant the movement may still fall, so the balance
+            // is its hole up to the next reading (L §5.19 l.1726, E §4.1 step 2; P32, N1, N8);
+            // `Walk::state` gives the reading's own instant without it
+            let pending: Vec<Option<&Hole>> = st.imp.iter().map(|p| Some(&p.hole)).collect();
+            let imp = spread(&pending);
+            let wins = st.perm.as_ref().and_then(Hole::of_windows);
+            st.reopen = spread(&[imp.as_ref(), wins.as_ref()]);
             st.val = Some(val.clone());
-            st.hole.clone_from(qs);
+            st.hole = spread(&[qs.as_ref(), imp.as_ref()]);
+            st.imp.clear();
             st.bad.clone_from(&st.perm_bad);
             st.rst = Some(at);
         }
