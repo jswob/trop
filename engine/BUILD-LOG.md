@@ -5707,3 +5707,48 @@ The sweep (`tmp/spec-2.2.1-build/g1fix/sweep.sh`) runs the review's 46 texts, th
 - **What I tried:** reading both paths. The engine has no per-day re-read of an ask line: a decision's window instance would have to become a binding member and a flows term per day, with its own pin, through the walk's agenda, `move_flows` and the aggregates. That is well past 60 lines, so no code was written.
 - **What I ask:** the lead to rule N3's size (its own group, or a later round), and whether the engine reads it per day as refcore-w7 does or by the window's pieces (inside, across, outside the span) as E §4.1 step 2's sentence reads.
 - **State:** this commit, after f996d955; `check quick` green; nothing uncommitted; not pushed.
+
+## 2026-11-20 tally 2.2.1 G1, N3: a decision dated by a window counts in `flows`, `count`, `sum` (issue #241)
+
+The lead ruled the N3 STOP-REPORT above as P39: build it now, as its own piece, without the 60-line limit. This closes that STOP-REPORT. One commit and this one, after 9bf0b079; not pushed, since the branch waits for the re-store.
+
+- **7cdbe1a2, N3:** a `flows` or a binding at an ask line's own read that meets a decision dated by a window no walk ran stops (`WINDOW_DAYS`, a `NotBuilt` sentinel like `GUARDED` and `UNSET_AXIS`). The line's value is then read again once per day of the window. The cell its day is read from is pinned to that day by a `solve` pin no register lists, each in a layer of its own. The days give:
+  - one value where every day gives it;
+  - the refusal where every day refuses;
+  - the days' holes where one gives a hole;
+  - else the window's hole, `HOLE-IMPRECISE` naming the window, as for a window no such cell names (E §4.1 step 2; L §4.4 l.668–671).
+- **Files and functions:**
+  - `eval/stack.rs`: `value` (now a wrapper over `value_read`), `line_per_day`, `each_day`, `pin_target`, `window_met`, `WindowReads`, `WindowDay`.
+  - `eval/context.rs` `WINDOW_DAYS`; `eval/state.rs` the two fields; `eval/rules.rs` `close_cell`, which keeps no cell that met the stop, so a later read of it meets the window again.
+  - `walk/move_flows.rs` `decision_runs`, for `flows` where the span reaches the window.
+  - `book/members.rs` `decided_members` and the new `window_member`, for a binding over the decision's kind.
+- **Which windows are read per day:** refcore-w7's README line ("only when the window's day comes from a cell that can be pinned"). A window read from an item's row at no keys (`Window.read`, its carried unknown a `row`), or given by a pin of a cell (a `pin` unknown, matched to the layer's pin by its figure). Any other window, computed or keyed, is its hole.
+- **Where the mechanism differs from refcore-w7's re-read per day:**
+  - The stop is met only at an ask line's outermost read (`Engine::value`: a values line, both sides of `check`, a `solve` side, `as known` and `law`), outside the walks and the work stack's replay. Anywhere else a read outside a decision gives the window's hole: an `explain`, a `for` domain, a read inside a walk, or another window read under a first window's pin. refcore raises its `WinDay` wherever `ctx.walk is None` and catches it in `one`, so it also re-reads nested windows in turn.
+  - A binding's member read where the stop isn't met is the window's hole whatever the span. refcore has no such case.
+  - Inside a decision's walk, nothing changed.
+- **Probes, engine beside refcore-w7:**
+  - `review/g1/d2.tally`, all SAME now:
+    - `cn`: `0` → `?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)` with `unknown day: w`, `unfulfilled: dx`. `cn4` and `sm` the same.
+    - `cn45`: `0` → `1`, `unfulfilled: dx`.
+    - `fl`: `0.00 PLN` → `100.00 PLN`, `unfulfilled: dx`.
+    - `fl5`: the hole "for flows of dx" `(dx)` → the same hole `(w)`, `unfulfilled: dx` joins.
+  - `d1_sc` (P26's path), SAME on these three: `cn`, `fl`, `sm`: `0`, `0.00 PLN`, `0` → the hole "for a binding over dx" or "for flows of dx" `(w)`, with `unknown day: w`, `world: sc`, `unfulfilled: dx`. The days before `from` leave the decision out, the later ones count it.
+  - The new `g1fix/probes/n3/n3.tally`, byte-equal to refcore-w7 on every ask:
+    - a window given by a `with` pin: `fp`, `fq` `100.00 PLN`, `fr` `0.00 PLN`;
+    - `check`: `ck` `ok`; `ck5` open on the hole;
+    - a line of two values: `two` `(100.00 PLN, 1)`;
+    - `sum2` `100.00 PLN`; `fj` (July) `0.00 PLN`.
+- **Sweep** (`sweep.sh s8` against s7): 9 asks changed, the 9 above (`d2` 6, `d1_sc` 3), all `flows`, `count` or `sum` over the decision dated by a window; no other ask moved. Against refcore-w7, `d2` is no longer in the list. What still differs from refcore-w7 is the previous entry's list without N3: the decisions' `left out:` lines; 236.1, P25, P26; the multi-window hole naming; and `g_m1`, `g_m2`, `jt`, `sm`.
+- **Red ids:** `check commit` after 7cdbe1a2, `red at tests, stopped after 10 of 24 steps (82s)`: 32, G2's 30 and `round`'s 2 (m1 `fixes/g13/r_agent_w_model_with_r_agent_w_c2`, `rf_w_model_with_rf_w_w15`), the same 32 as before; outside the lists: 0. No stored record moved.
+- **Size** (`git diff --stat 9bf0b079..7cdbe1a2 -- engine/crates`): 7 files, 248 in and 15 out (net +233): `eval/stack.rs` 181/7, `book/members.rs` 29/3, `walk/move_flows.rs` 18/4, `eval/state.rs` 8/0, `eval/context.rs` 6/0, `eval/rules.rs` 5/0, `lib.rs` 1/1. All library. Kernel files: `walk/move_flows.rs`. G1 over its four turns: 1 661 in, 446 out.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched).
+- **Single-mutant proofs:** none. The gate's one gate-8 run covers the group.
+- **Open STOP-REPORTs:** none of G1's. G2's count stays open.
+- **Usage:** about 2.27 % of the week before this commit, 0.27 % this turn, against about 0.5 %.
+- **Time:** about 20 min from 21:09 local. Checks about 5 min of it: `check quick` twice (6 s red at the nesting lint, then 90 s), `check commit` once (82 s), `check fences` once.
+- **Checks at 7cdbe1a2's tree:**
+  - `check quick: green, 11 steps (90s)`.
+  - `check commit`: as above.
+  - `check fences: green, 1 step (27s)`.
+- **Waiting for the re-store:** on G2's 30 ids and `round`'s 2.
