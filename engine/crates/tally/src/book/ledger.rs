@@ -601,7 +601,8 @@ fn fulfilling(obs: &[Obs]) -> Fulfilling {
 
 /// An instance's line: expected but missing when no observation fulfils it (none for an
 /// amount of 0), partly fulfilled when its kind is uncertain and its observations sum to
-/// less, else matched (refcore's model lines). E §6.3.
+/// less, else matched (refcore's model lines). A window's day is the day of the last
+/// observation that fulfils it, which fixes it (L §4.4, §5.19). E §6.3.
 fn instance_line(
     m: &Reality,
     lines: &mut Lines,
@@ -609,11 +610,18 @@ fn instance_line(
     fulfilling: &Fulfilling,
 ) -> Result<(), Stop> {
     // a window inside one month: its first day (refcore's `day_lo`)
-    let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
+    let Some(lo) = inst.day.as_ref().and_then(Dated::lo) else {
         return Err(invariant("a ledger instance with no day"));
     };
     let mdl = flow_into(&inst.legs, &lines.of)?;
     let os = fulfilling.of(&inst.id);
+    // an observation that fulfils the movement fixes its day (L §4.4 l.665, §5.19 l.1707): a
+    // window's is the last one's, as for a window not inside one month (E §6.3 Grouping;
+    // 221.5 on #241)
+    let day = match (&inst.day, os.iter().map(|o| o.day).max()) {
+        (Some(Dated::Window(_)), Some(last)) => last,
+        _ => lo,
+    };
     lines.seen.extend(os.iter().map(|o| o.id.clone()));
     let group = move_group(m, lines, day, &inst.move_id, os)?;
     if os.is_empty() {
