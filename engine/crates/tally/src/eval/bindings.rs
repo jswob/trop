@@ -480,6 +480,68 @@ pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
     false
 }
 
+/// Expression `e` as written, each variable a binding of `env` gave printed as its value, so a
+/// message names a thing by its keys' values, never by a bound variable: `rent[2026-02]`, not
+/// `rent[m]` (refcore's `env_txt`). A name after a `.` is a field, one before a `(` a call's,
+/// and a string literal is copied as it stands. L §8.1 ("with the item and keys each came
+/// from"), §8.4 (tally 2.2.1's 235.6, 233.7).
+///
+/// # Errors
+///
+/// A number error printing a value.
+pub(crate) fn written_bound(m: &Reality, e: &Expr, env: &Env) -> Result<String, Stop> {
+    let text = crate::load::expr_text(e);
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    let mut prev: Option<char> = None;
+    while let Some(c) = chars.next() {
+        if c == '"' {
+            out.push(c);
+            copy_string(&mut chars, &mut out);
+            prev = Some(c);
+            continue;
+        }
+        if !(c.is_alphabetic() || c == '_') {
+            out.push(c);
+            prev = Some(c);
+            continue;
+        }
+        let mut word = String::from(c);
+        while let Some(&n) = chars.peek() {
+            if !(n.is_alphanumeric() || n == '_') {
+                break;
+            }
+            word.push(n);
+            chars.next();
+        }
+        let call = chars.peek() == Some(&'(');
+        match env.get(&word) {
+            Some(var) if prev != Some('.') && !call => {
+                out.push_str(&var.value.text(m).map_err(super::state::num_stop)?);
+            }
+            Some(_) | None => out.push_str(&word),
+        }
+        prev = word.chars().last();
+    }
+    Ok(out)
+}
+
+/// The rest of a string literal from `chars`, after its opening quote, through its closing
+/// one, its escapes kept, copied into `out` (L §2.4).
+fn copy_string(chars: &mut core::iter::Peekable<core::str::Chars<'_>>, out: &mut String) {
+    let mut escaped = false;
+    for s in chars.by_ref() {
+        out.push(s);
+        if escaped {
+            escaped = false;
+        } else if s == '\\' {
+            escaped = true;
+        } else if s == '"' {
+            return;
+        }
+    }
+}
+
 /// The names expression `e` reads, its parts walked as [`reads_name`] walks them; none for a
 /// form whose names aren't walked here (an aggregate, a walk's read, an `as if`), where
 /// `reads_name` counts a read. L §8.2 (a pin formed per binding tuple).

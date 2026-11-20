@@ -638,6 +638,7 @@ impl Engine {
         let mut written = Some(first);
         for (op, x) in rest {
             let b = self.ev(m, x, env, ctx)?;
+            none_operand(m, (&acc, &b), (written, x), env)?;
             if let Some(e) = written.take()
                 && moves_a_year(&b)
                 && let Some(year) = as_year(Some(e), &acc)
@@ -663,8 +664,10 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let mut acc = self.ev(m, first, env, ctx)?;
+        let mut left = Some(first);
         for (op, x) in rest {
             let b = self.ev(m, x, env, ctx)?;
+            none_operand(m, (&acc, &b), (left.take(), x), env)?;
             let op = match op {
                 MulOp::Mul => Op::Mul,
                 MulOp::Div => Op::Div,
@@ -835,6 +838,36 @@ fn boolean(v: Value, word: &str) -> Result<Value, Stop> {
         return Err(refuse(Run::None, format!("a value is none here: {word}")));
     }
     Err(not_typed())
+}
+
+/// `RUN-NONE` of `a op b` where an operand is `none` and neither is `never`: named by that
+/// operand as written, the left one first, each variable a binding gave printed as its value
+/// (`fee[2026-02] is none here: arithmetic`; refcore's `e_bin`). Nothing where neither is
+/// `none`, or the left is a value computed before, which [`binop`] words. L §8.4 `RUN-NONE`'s
+/// row (`<x>[k] is none here: …`; tally 2.2.1's 233.7).
+///
+/// # Errors
+///
+/// `RUN-NONE` naming the operand; a number error printing a bound value.
+fn none_operand(
+    m: &Reality,
+    (a, b): (&Value, &Value),
+    (left, right): (Option<&Expr>, &Expr),
+    env: &Env,
+) -> Result<(), Stop> {
+    if *a == Value::Never || *b == Value::Never {
+        return Ok(());
+    }
+    let named = match (left, *a == Value::None, *b == Value::None) {
+        (Some(e), true, _) => e,
+        (_, false, true) => right,
+        (None, true, _) | (_, false, false) => return Ok(()),
+    };
+    let shown = super::bindings::written_bound(m, named, env)?;
+    Err(refuse(
+        Run::None,
+        format!("{shown} is none here: arithmetic"),
+    ))
 }
 
 /// `a op b` on two values: a hole spreads, unless the other is `none` or `never`, which are
