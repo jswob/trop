@@ -310,9 +310,11 @@ fn whole_values(w: &Window, size: &mut u64) -> Option<Vec<Value>> {
     let Value::Number(lo) = &w.lo else {
         return None;
     };
-    let count = u64::try_from(last.checked_sub(first)?)
-        .ok()?
-        .checked_add(1)?;
+    // an interval's ends are in order, so its width is never negative
+    let Ok(width) = u64::try_from(last.checked_sub(first)?) else {
+        return None;
+    };
+    let count = width.checked_add(1)?;
     let total = size.checked_mul(count)?;
     if total > VALUES_CAP {
         return None;
@@ -379,12 +381,13 @@ fn day_tuples(w: &Window, args: &[&Value]) -> Result<Vec<Vec<Value>>, Stop> {
 /// The argument tuples an operator or a built-in is read at where some of `args` are
 /// intervals: the one mechanism every operation over an interval goes through (refcore's
 /// `lift_values`; P30). One window named in two arguments is one day, its days in turn, as in
-/// a comparison. Otherwise each interval at the whole numbers it holds, in turn, up to 100 000
-/// tuples, beyond them its hole, never a fallback to the ends; else, where the operation is
-/// [`Shape::Monotone`] in it, at its two ends and 0 where a number's interval crosses it; else
-/// the first interval's hole for `what`. Every other argument as it is, every combination in
-/// order; [`Choices::Plain`] where none is an interval. L §4.4 l.667 to l.671 ("each
-/// operation gives the interval of its values over the days its own arguments can take").
+/// a comparison. Otherwise, where the operation is [`Shape::Monotone`] in an interval, at its
+/// two ends and 0 where a number's interval crosses it, whatever its size; where it isn't, at
+/// the whole numbers it holds, in turn, up to 100 000 tuples, and beyond them or where they
+/// can't be taken in turn the hole for `what`, carrying every interval's unknown days. Every
+/// other argument as it is, every combination in order; [`Choices::Plain`] where none is an
+/// interval. L §4.4 l.667 to l.671 ("each operation gives the interval of its values over the
+/// days its own arguments can take"); P41 (F1, F8).
 ///
 /// # Errors
 ///
@@ -407,14 +410,12 @@ pub(super) fn value_choices(
     for v in &args {
         let options = match (as_window(v), shape) {
             (None, _) => vec![(*v).clone()],
-            (Some(w), _) if whole_range(w).is_some() => {
-                let Some(values) = whole_values(w, &mut size) else {
-                    return Ok(Choices::Hole(imprecise(m, first, what)?));
-                };
-                values
-            }
+            // its ends stand for its values whatever its size (P41, F1)
             (Some(w), Shape::Monotone) => interval_ends(m, w)?,
-            (Some(_), Shape::Values) => return Ok(Choices::Hole(imprecise(m, first, what)?)),
+            (Some(w), Shape::Values) => match whole_values(w, &mut size) {
+                Some(values) => values,
+                None => return Ok(Choices::Hole(imprecise_all(m, &windows, what)?)),
+            },
         };
         let count = tuples
             .len()
@@ -459,7 +460,7 @@ pub(super) fn values_interval(
             Ok(Value::Hole(h)) => return Ok(Value::Hole(h)),
             Ok(Value::None) => {
                 let none = "a built-in that is none on part of the window";
-                return Ok(Value::Hole(imprecise(m, first, none)?));
+                return Ok(Value::Hole(imprecise_all(m, &windows, none)?));
             }
             Ok(Value::Window(w)) => values.extend([w.lo, w.hi]),
             Ok(v) => values.push(v),
@@ -475,13 +476,31 @@ pub(super) fn values_interval(
         return Err(Stop::Refused(refusal));
     }
     if refused {
-        return Ok(Value::Hole(imprecise(m, first, what)?));
+        return Ok(Value::Hole(imprecise_all(m, &windows, what)?));
     }
     let mut from = (*first).clone();
     for w in rest {
         crate::hole::carry_union(&mut from.carry, &w.carry);
     }
     interval_of(m, values, &from)
+}
+
+/// [`imprecise`] of the first of `windows`, carrying the unknown days of every one: a hole an
+/// operation over them makes names every window its operands carry (L §4.4 l.667, l.671;
+/// P41, F8).
+///
+/// # Errors
+///
+/// As [`imprecise`]; `ENGINE-INVARIANT` for no window.
+fn imprecise_all(m: &Reality, windows: &[&Window], what: &str) -> Result<Hole, Stop> {
+    let [first, rest @ ..] = windows else {
+        return Err(invariant("an interval's hole with no interval"));
+    };
+    let mut from = (*first).clone();
+    for w in rest {
+        crate::hole::carry_union(&mut from.carry, &w.carry);
+    }
+    imprecise(m, &from, what)
 }
 
 /// `-w` of a window of numbers: the window of its ends negated, in order (refcore's `e_neg`
