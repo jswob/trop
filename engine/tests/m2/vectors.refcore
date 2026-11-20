@@ -1,6 +1,6 @@
-20:I:X:wife_net@c3_fast,12:checks-green,382:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask wife_net,50351:25:real11/c3/asks/core.tally,1264:part asks_core
+20:I:X:wife_net@c3_fast,12:checks-green,382:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask wife_net,50377:25:real11/c3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -409,11 +409,11 @@ version health_ryczalt_2027
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
   health_waive_on = 2027-06-15 governs always "tytuł ustawy"
-,29:real11/c3/law/pl/common.tally,4896:part pl_common
+,29:real11/c3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -1142,9 +1142,9 @@ wife_net (m = 2027-01): 5 101.67 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
   law date 2027-06-15, cut 2027-06-15
-,29:I:X:social_and_health@c3_fast,12:checks-green,391:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask social_and_health,50351:25:real11/c3/asks/core.tally,1264:part asks_core
+,29:I:X:social_and_health@c3_fast,12:checks-green,391:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask social_and_health,50377:25:real11/c3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -1553,11 +1553,11 @@ version health_ryczalt_2027
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
   health_waive_on = 2027-06-15 governs always "tytuł ustawy"
-,29:real11/c3/law/pl/common.tally,4896:part pl_common
+,29:real11/c3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -2324,9 +2324,9 @@ social_and_health (m = 2028-09): (2 083.99 PLN, 808.52 PLN)
   held: zus_rate[sickness] = 0.0245 (sus_rates_2026), read for 2028-09-01
   held: zus_stage[2028-09] = standard (dg_2026), read for 2028-09
   law date 2027-06-15, cut 2027-06-15
-,17:I:X:pit37@c3_fast,12:checks-green,379:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask pit37,50351:25:real11/c3/asks/core.tally,1264:part asks_core
+,17:I:X:pit37@c3_fast,12:checks-green,379:run real11/c3/asks/core.tally real11/c3/facts/2026.tally real11/c3/law/pl/benefits.tally real11/c3/law/pl/business.tally real11/c3/law/pl/common.tally real11/c3/law/pl/employment.tally real11/c3/law/pl/wrappers.tally real11/c3/loans.tally real11/c3/pays.tally real11/c3/people.tally real11/c3/places.tally real11/c3/reality.tally real11/c3/records/mbank/2026-09.tally --ask pit37,50377:25:real11/c3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -2735,11 +2735,11 @@ version health_ryczalt_2027
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
   health_waive_on = 2027-06-15 governs always "tytuł ustawy"
-,29:real11/c3/law/pl/common.tally,4896:part pl_common
+,29:real11/c3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -3646,9 +3646,9 @@ pit37 (p = wife, y = 2028): -2.00 PLN
   held: salary[wife_acme, 2028-12] = 7 000.00 PLN (home_2026), read for 2028-12
   held: wage_growth = 0.04 (wage_fc_2026), read for 2028-01-01
   law date 2027-06-15, cut 2027-06-15
-,20:I:X:wife_net@v3_fast,12:checks-green,382:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask wife_net,50113:25:real11/v3/asks/core.tally,1264:part asks_core
+,20:I:X:wife_net@v3_fast,12:checks-green,382:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask wife_net,50139:25:real11/v3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -4050,11 +4050,11 @@ version health_ryczalt_2027
   governs 2027..
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
-,29:real11/v3/law/pl/common.tally,4896:part pl_common
+,29:real11/v3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -4783,9 +4783,9 @@ wife_net (m = 2027-01): 5 101.67 PLN
   assumed: indeks płac +4% rocznie, założenie prototypu (wage_growth)
   missing record counted by wage_fc_2026
   law date 2027-06-15, cut 2027-06-15
-,29:I:X:social_and_health@v3_fast,12:checks-green,391:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask social_and_health,50113:25:real11/v3/asks/core.tally,1264:part asks_core
+,29:I:X:social_and_health@v3_fast,12:checks-green,391:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask social_and_health,50139:25:real11/v3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -5187,11 +5187,11 @@ version health_ryczalt_2027
   governs 2027..
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
-,29:real11/v3/law/pl/common.tally,4896:part pl_common
+,29:real11/v3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -5958,9 +5958,9 @@ social_and_health (m = 2028-09): (2 083.99 PLN, 808.52 PLN)
   held: zus_rate[sickness] = 0.0245 (sus_rates_2026), read for 2028-09-01
   held: zus_stage[2028-09] = standard (dg_2026), read for 2028-09
   law date 2027-06-15, cut 2027-06-15
-,17:I:X:pit37@v3_fast,12:checks-green,379:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask pit37,50113:25:real11/v3/asks/core.tally,1264:part asks_core
+,17:I:X:pit37@v3_fast,12:checks-green,379:run real11/v3/asks/core.tally real11/v3/facts/2026.tally real11/v3/law/pl/benefits.tally real11/v3/law/pl/business.tally real11/v3/law/pl/common.tally real11/v3/law/pl/employment.tally real11/v3/law/pl/wrappers.tally real11/v3/loans.tally real11/v3/pays.tally real11/v3/people.tally real11/v3/places.tally real11/v3/reality.tally real11/v3/records/mbank/2026-09.tally --ask pit37,50139:25:real11/v3/asks/core.tally,1283:part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 
@@ -6362,11 +6362,11 @@ version health_ryczalt_2027
   governs 2027..
   known 2027-06-15
   replace health_share[mid] = 0.9 "art. 1 pkt 2"
-,29:real11/v3/law/pl/common.tally,4896:part pl_common
+,29:real11/v3/law/pl/common.tally,4903:part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 
@@ -14828,7 +14828,7 @@ version late_amt
   governs 2027..
   known 2026-01-01
   replace amt = 20.00 PLN "own"
-,,1:0,1044:bl: 60.00 PLN
+,,1:0,1070:bl: 60.00 PLN
   world: late
   before from: adv on 2026-12-15 reads amt
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
@@ -14852,6 +14852,7 @@ blw_s1: 60.00 PLN
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
   cut 2026-10-20
 blw_s2: 80.00 PLN
+  pinned: wd = 2026-12-25
   world: late
   before from: adv on 2026-12-15 reads amt
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
@@ -51021,7 +51022,7 @@ ask fw: flows(wage, 2026-05-01 .. 2026-05-31)
 ask fw3: flows(wage, 2026-03-01 .. 2026-05-31)
 ask bk: bal(konto, 2026-05-31)
 ask ew: explain bal(konto, 2026-05-31)
-,,1:0,2878:fw: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+,,1:0,2956:fw: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-05]
   cut 2026-10-20
@@ -51031,7 +51032,7 @@ fw3: ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-
   unfulfilled: wage[2026-04]
   unfulfilled: wage[2026-05]
   cut 2026-10-20
-bk: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+bk: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
@@ -51039,7 +51040,7 @@ bk: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15:
   unfulfilled: wage[2026-04]
   unfulfilled: wage[2026-05]
   cut 2026-10-20
-ew: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+ew: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   balance of konto (PLN) at the end of 2026-05-31
   from: opening plan_2026:opening[konto] = 0.00 PLN, 2026-01-01 start (version plan_2026, source plan, locator "wyciąg")
   2026-01-10:
@@ -51053,8 +51054,8 @@ ew: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15:
   2026-05-10:
     wage[2026-05].cash (past): +5 000.00 PLN
   2026-05-15:
-    bank[c1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
-    bank[r1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+    bank[c1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
+    bank[r1].cash (observed): hole: ?"bank[c1] and bank[r1] are one, but leg cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   adjustment: wage[2026-03] by 500.00 PLN on 2026-05-01 (version raise_2026), remaining ?"bank[c1] and bank[r1] are one, but the amount of cash differs on 2026-05-15: 400.00 PLN (bank[c1]) and 500.00 PLN (bank[r1])" (bank[c1], bank[r1])
   unfulfilled: wage[2026-01]
   unfulfilled: wage[2026-02]
@@ -51062,6 +51063,7 @@ ew: ?"bank[c1] and bank[r1] are one, but the leg at konto differs on 2026-05-15:
   unfulfilled: wage[2026-04]
   unfulfilled: wage[2026-05]
   cut 2026-10-20
+warning: WARN-LEGS the two observations of bank[c1] disagree: bank[c1] (400.00 PLN) and bank[r1] (500.00 PLN)
 ,19:hindcasts/h0/replay,12:hindcasts-h0,1306:run model.tally ledger/2021-01.tally ledger/2021-02.tally ledger/2021-03.tally ledger/2021-04.tally ledger/2021-05.tally ledger/2021-06.tally ledger/2021-07.tally ledger/2021-08.tally ledger/2021-09.tally ledger/2021-10.tally ledger/2021-11.tally ledger/2021-12.tally ledger/2022-01.tally ledger/2022-02.tally ledger/2022-03.tally ledger/2022-04.tally ledger/2022-05.tally ledger/2022-06.tally ledger/2022-07.tally ledger/2022-08.tally ledger/2022-09.tally ledger/2022-10.tally ledger/2022-11.tally ledger/2022-12.tally ledger/2023-01.tally ledger/2023-02.tally ledger/2023-03.tally ledger/2023-04.tally ledger/2023-05.tally ledger/2023-06.tally ledger/2023-07.tally ledger/2023-08.tally ledger/2023-09.tally ledger/2023-10.tally ledger/2023-11.tally ledger/2023-12.tally ledger/2024-01.tally ledger/2024-02.tally ledger/2024-03.tally ledger/2024-04.tally ledger/2024-05.tally ledger/2024-06.tally ledger/2024-07.tally ledger/2024-08.tally ledger/2024-09.tally ledger/2024-10.tally ledger/2024-11.tally ledger/2024-12.tally ledger/2025-01.tally ledger/2025-02.tally ledger/2025-03.tally ledger/2025-04.tally ledger/2025-05.tally ledger/2025-06.tally ledger/2025-07.tally ledger/2025-08.tally ledger/2025-09.tally ledger/2025-10.tally ledger/2025-11.tally ledger/2025-12.tally --ask replay mask_bal mask_net,131738:11:model.tally,4784:model hindcast
   tally 2
   on 2026-01-05
@@ -109526,11 +109528,11 @@ version join_b
 ask fp: flows(tip, 2026-03)
 ask f3: flows(save, 2026-03)
 ask b3: bal(sav, 2026-03-31), bal(konto, 2026-03-31)
-,,1:0,904:fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
+,,1:0,898:fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
   cut 2026-06-10
 f3: ?"bank[r1], bank[r2] and bank[r3] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
   cut 2026-06-10
-b3: (?"bank[r2] and bank[r3] are one, but the leg at sav differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
+b3: (?"bank[r2] and bank[r3] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
   cut 2026-06-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[r1] (950.00 PLN) and bank[r3] (940.00 PLN)
 warning: WARN-LEGS the two observations of tip[2026-03] disagree: bank[q1] (35.00 PLN) and bank[q2] (30.00 PLN)
@@ -110280,7 +110282,7 @@ ask p4_s2: bal(jar, 2026-03-06) with wd = 2026-03-06
 ask p4_s3: bal(jar, 2026-03-06) with wd = 2026-03-07
 ask p5: bal(jar, 2026-03-31) with wd = 2026-03-05
 ask p6: bal(jar, 2026-03-31) with wd = 2026-03-08
-,,1:0,1096:p1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
+,,1:0,1122:p1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for a balance" (out)
   unknown day: wd
   cut 2026-01-01
 p2_s1: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
@@ -110302,6 +110304,7 @@ p4_s2: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and pla
   pinned: wd = 2026-03-06
   cut 2026-01-01
 p4_s3: 50.00 PLN
+  pinned: wd = 2026-03-07
   cut 2026-01-01
 p5: refused: RUN-PLACE jar is -50.00 PLN after the day's observations and plans of 2026-03-05
   pinned: wd = 2026-03-05
@@ -111539,14 +111542,12 @@ ask g4_s2: bal(pot, 2026-04-30) with wa = 2026-04-08
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g7: flows(ob, 2026-04) with wa = 2026-04-05
-,,1:0,1276:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+,,1:0,1198:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   unknown day: wa
   cut 2026-01-01
 g2_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
-  pinned: wa = 2026-04-05
   cut 2026-01-01
 g2_s2: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
-  pinned: wa = 2026-04-08
   cut 2026-01-01
 g3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
   unknown day: wa
@@ -111564,7 +111565,6 @@ g6: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans
   pinned: wa = 2026-04-05
   cut 2026-01-01
 g7: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
-  pinned: wa = 2026-04-05
   cut 2026-01-01
 warning: WARN-UNREAD input amt is read by nothing
 ,24:fixes/rv/g2_b4_cover_gap,8:fixes-rv,22:run b4_cover_gap.tally,1006:18:b4_cover_gap.tally,979:model t
@@ -112223,14 +112223,12 @@ ask g4_s1: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g4_s2: bal(pot, 2026-04-30) with wa = 2026-04-08
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
-,,1:0,1138:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+,,1:0,1086:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   unknown day: wa
   cut 2026-01-01
 g2_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
-  pinned: wa = 2026-04-05
   cut 2026-01-01
 g2_s2: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
-  pinned: wa = 2026-04-08
   cut 2026-01-01
 g3: ?"date within window(2026-04-05, 2026-04-10) not precise enough for a balance" (oa)
   unknown day: wa
@@ -114225,13 +114223,14 @@ ask q: bal(konto, 2026-03-06)
 ask q_05: bal(konto, 2026-03-06) with w = 2026-03-05
 
 ask q_07: bal(konto, 2026-03-06) with w = 2026-03-07
-,,1:0,217:q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
+,,1:0,242:q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
   unknown day: w
   cut 2026-01-01
 q_05: 600.00 PLN
   pinned: w = 2026-03-05
   cut 2026-01-01
 q_07: 500.00 PLN
+  pinned: w = 2026-03-07
   cut 2026-01-01
 ,23:fixes/t22/cut_each_read,8:fixes-22,11:run m.tally,742:7:m.tally,727:model g4_each_read
   tally 2
@@ -114302,13 +114301,14 @@ ask q: bal(konto, 2026-03-06) from 2026-01-01
 ask q_05: bal(konto, 2026-03-06) from 2026-01-01 with w = 2026-03-05
 
 ask q_07: bal(konto, 2026-03-06) from 2026-01-01 with w = 2026-03-07
-,,1:0,217:q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
+,,1:0,242:q: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
   unknown day: w
   cut 2026-01-01
 q_05: 600.00 PLN
   pinned: w = 2026-03-05
   cut 2026-01-01
 q_07: 500.00 PLN
+  pinned: w = 2026-03-07
   cut 2026-01-01
 ,27:fixes/t22/unknown_day_names,8:fixes-22,11:run m.tally,1682:7:m.tally,1666:model g22_unknown_day_names
   tally 2
@@ -114375,18 +114375,18 @@ ask n_rule: bal(konto, 2026-05-05)
 ask n_two: bal(konto, 2026-03-06) + bal(konto, 2026-05-05)
 
 ask n_win: w
-,,1:0,770:n_cal: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_cal)
-  unknown day: added one_of([2026-06-22, 2026-06-24])
+,,1:0,721:n_cal: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_cal)
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
   cut 2026-01-01
 n_cell: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
   unknown day: w
   cut 2026-01-01
 n_rule: ?"date within window(2026-05-04, 2026-05-06) not precise enough for a balance" (pay_r)
-  unknown day: window(2026-05-04, 2026-05-06)
+  unknown day: wr
   cut 2026-01-01
 n_two: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for a balance" (pay_r)
   unknown day: w
-  unknown day: window(2026-05-04, 2026-05-06)
+  unknown day: wr
   cut 2026-01-01
 n_win: window(2026-03-05, 2026-03-07)
   cut 2026-01-01
@@ -114514,11 +114514,12 @@ version drop
   replace bank[a1] = none
 
 ask in_sc: count(m in transfers over 2026-03), bal(sav, 2026-03-31), bal(konto, 2026-03-31) in sc
-,,1:0,445:base: (1, ?"bank[a1] and sbank[b1] are one, but the leg at sav differs on 2026-03-18: 900.00 PLN (bank[a1]) and 950.00 PLN (sbank[b1])" (bank[a1], sbank[b1]), ?"bank[a1] and sbank[b1] are one, but the leg at konto differs on 2026-03-18: 900.00 PLN (bank[a1]) and 950.00 PLN (sbank[b1])" (bank[a1], sbank[b1]))
+,,1:0,542:base: (1, ?"bank[a1] and sbank[b1] are one, but leg cash differs on 2026-03-18: 900.00 PLN (bank[a1]) and 950.00 PLN (sbank[b1])" (bank[a1], sbank[b1]), ?"bank[a1] and sbank[b1] are one, but leg cash differs on 2026-03-18: 900.00 PLN (bank[a1]) and 950.00 PLN (sbank[b1])" (bank[a1], sbank[b1]))
   cut 2026-04-30
 in_sc: (1, 950.00 PLN, 1 050.00 PLN)
   world: sc
   cut 2026-04-30
+warning: WARN-LEGS the two observations of bank[a1] disagree: bank[a1] (900.00 PLN) and sbank[b1] (950.00 PLN)
 warning: WARN-UNREAD place world is read by nothing
 ,35:fixes/t22/rv3_scen_over_base_noline,8:fixes-22,25:run base.tally scen.tally,1404:10:base.tally,1131:model p1n
   tally 2
@@ -115021,14 +115022,14 @@ ask qb: bal(konto, 2026-06-22) with x = add_business(from_day, 1, cal)
 ask qc: last(w, 2026-06-01) < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
 ask qd: bal(konto, 2026-03-06) with w = window(2026-03-05, 2026-03-07)
 ask qe: w < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
-,,1:0,592:qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_d, pay_w)
+,,1:0,599:qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_d, pay_w)
   pinned: dd = window(2026-03-05, 2026-03-07)
   unknown day: dd
   unknown day: w
   cut 2026-01-01
 qb: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_x)
   pinned: x = window(2026-06-22, 2026-06-23)
-  unknown day: added one_of([2026-06-22, 2026-06-24])
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
   cut 2026-01-01
 qc: ?"date within window(2026-03-05, 2026-03-07) not precise enough for last(w, 2026-06-01) < 2026-03-06" (w)
   pinned: w = window(2026-03-05, 2026-03-07)
@@ -115116,9 +115117,9 @@ ask r4: bal(konto, 2026-05-05) with x = wr
 ask r5: last(w, 2026-06-01) < 2026-03-06
 ask r6: bal(konto, 2026-03-06) with dd = w
 ask r7: bal(konto, 2026-06-22) with dd = add_business(from_day, 1, cal)
-,,1:0,208:r7: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_d)
+,,1:0,215:r7: ?"date within window(2026-06-22, 2026-06-23) not precise enough for a balance" (pay_d)
   pinned: dd = window(2026-06-22, 2026-06-23)
-  unknown day: added one_of([2026-06-22, 2026-06-24])
+  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
   cut 2026-01-01
 ,22:fixes/t22/rv4_pin_copy,8:fixes-22,23:run m.tally --ask e1 e2,861:7:m.tally,846:model g4_pin_copy3
   tally 2
@@ -115317,4 +115318,63 @@ b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" 
 t: (?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1)
   unknown day: w
   cut 2026-01-01
+,10:spec/g1/qn,11:fixes-forms,25:run qn.tally --ask q_none,447:8:qn.tally,431:model qn
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+unit PLN: currency minor 0.01
+index ix = [a, b, c]
+
+input v[k in ix]: money PLN
+input lvl: num
+input half: num
+
+ask q_none: quantile(v[k] for k in ix, lvl)
+ask q_half: quantile(v[k] for k in ix, half)
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  v[a] = 1.00 PLN
+  v[b] = 2.00 PLN
+  v[c] = 3.00 PLN
+  lvl = none
+  half = 0.5
+,,1:0,83:q_none: refused: RUN-NONE lvl is none here: the level of quantile
+  cut 2026-06-30
+,21:spec/p60/num_list_key,11:fixes-sweep,30:run num_list_key.tally --ask q,642:18:num_list_key.tally,615:model pw
+  tally 2
+  on 2026-04-25
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): walk/tuples.rs:403, a move keyed by a list of numbers not integers"
+
+source s "s"
+unit PLN: currency minor 0.01
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input dm: date
+
+move ml[x in [1.5, 2]]: transfers
+  on dm
+  leg cash from world to sav amount amt
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  dm = 2026-03-31 "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q: bal(sav, 2026-06-30)
+,,1:0,74:q: 20.00 PLN
+  unfulfilled: ml[1.5]
+  unfulfilled: ml[2]
+  cut 2026-04-25
 ,

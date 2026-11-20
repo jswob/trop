@@ -4659,10 +4659,9 @@ over_kind: 3
 ,20:fixes/stacked-covers,5:fixes,3:run,27:engine/tests/m3/fixes/g3/st,49:run base.tally mv.tally late.tally --ask q q_late,107:base.tally	m3/fixes/g3/st/base.tally
 mv.tally	m3/fixes/g3/st/mv.tally
 late.tally	m3/fixes/g3/st/late.tally
-,1:0,79:q: 30.00 PLN
-  cut 2026-04-30
-q_late: 50.00 PLN
-  world: late
+,1:0,268:scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+scenario mv: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+q: 30.00 PLN
   cut 2026-04-30
 ,18:fixes/stacked-unit,5:fixes,3:run,27:engine/tests/m3/fixes/g3/st,52:run base.tally bad.tally over_bad.tally --ask q q_ob,117:base.tally	m3/fixes/g3/st/base.tally
 bad.tally	m3/fixes/g3/st/bad.tally
@@ -4675,28 +4674,25 @@ q: 30.00 PLN
 w/a.tally	m3/fixes/g3/j/w/a.tally
 w/bad.tally	m3/fixes/g3/j/w/bad.tally
 w/s1.tally	m3/fixes/g3/j/w/s1.tally
-,1:0,335:warning_total: 8 000.00 PLN
+,1:0,287:scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (w/bad.tally:5)
+a.warning_total: 8 000.00 PLN
   law date 2026-03-01, cut 2026-03-01
-scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (w/bad.tally:5)
-warning_s: 10 000.00 PLN
+a.warning_s: 10 000.00 PLN
   world: s1
   law date 2026-03-01, cut 2026-03-01
-warning: WARN-UNREAD input spare is read by nothing
 a.q: 8 000.00 PLN
   law date 2026-03-01, cut 2026-03-01
 ,26:fixes/member-refused-alone,5:fixes,3:run,26:engine/tests/m3/fixes/g3/j,30:run jz.tally --ask c.qnone c.q,66:jz.tally	m3/fixes/g3/j/jz.tally
 z/c.tally	m3/fixes/g3/j/z/c.tally
-,1:1,32:refused: REQ-ASK no ask c.qnone
+,1:0,164:c.qnone: refused: LOAD-SCENARIO ask qnone names zzz, neither the model nor a loaded scenario (z/c.tally:35)
+c.q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01
 ,18:fixes/member-clock,5:fixes,3:run,26:engine/tests/m3/fixes/g3/j,27:run jc.tally --ask c.q c.qc,62:jc.tally	m3/fixes/g3/j/jc.tally
 c.tally	m3/fixes/g3/j/c.tally
-,1:0,134:c.q: 8 000.00 PLN
-  law date 2026-03-01, cut 2026-03-01
-c.qc: refused: RUN-DOMAIN known 2026-06-01 is after the model's on 2026-03-01
+,1:1,74:refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
 ,26:fixes/scenario-files-clock,5:fixes,3:run,26:engine/tests/m3/fixes/g3/j,19:run n/b/ --ask q qc,78:n/b/b.tally	m3/fixes/g3/j/n/b/b.tally
 n/b/sb.tally	m3/fixes/g3/j/n/b/sb.tally
-,1:0,130:q: 6 000.00 PLN
-  law date 2026-03-01, cut 2026-03-01
-qc: refused: RUN-DOMAIN known 2026-06-01 is after the model's on 2026-03-01
+,1:1,74:refused: REQ-CLOCK as known 2026-06-01 is after the model's on 2026-03-01
 ,16:fixes/cycle-when,5:fixes,3:run,24:engine/tests/m3/fixes/a4,60:run cycle_when.tally --ask q_jan q_feb q_mar q_ca q_cb q_bal,46:cycle_when.tally	m3/fixes/a4/cycle_when.tally
 ,1:0,2948:q_jan: walk-bound, read at 1 walk point
   avail[2026-01] at (2026-01-10, stratum 1, ca): 1 000.00 PLN
@@ -5201,27 +5197,28 @@ qs: ?"calendar cal doesn't cover 2026" (cal)
             version v, source s, "s", governs always, known 2026-01-01
   cut 2026-01-31
 ,18:b192/same-two-legs,4:b192,3:run,26:engine/tests/m3/fixes/b192,42:run same_two_legs.tally --ask e f k3_konto,54:same_two_legs.tally	m3/fixes/b192/same_two_legs.tally
-,1:0,3400:e: ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 10.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1]) ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1]) ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1]) ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
+,1:0,1199:e: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
   balance of konto (PLN) at the end of 2026-03-31
   from: opening v:opening[konto] = 1 050.00 PLN, 2026-03-01 start (version v, source s, locator "s")
   2026-03-20:
-    bank[a2].cash (observed): hole: ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
-    bank[a2].fee (observed): hole: ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
-    bank[b1].cash (observed): hole: ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 10.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1])
-    bank[b1].fee (observed): hole: ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1])
+    bank[a2].fee (observed): hole: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+    bank[b1].cash (observed): -10.00 PLN
+    bank[b1].fee (observed): hole: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
-f: ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 10.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1]) ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1]) ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1]) ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
+f: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-10
-k3_konto: ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 10.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1]) ?"bank[a2], bank[a2] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[a2], bank[b1]) ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1]) ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 10.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
+k3_konto: ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
   cut 2026-04-03
+warning: WARN-LEGS the two observations of bank[a2] disagree: bank[a2] (10.00 PLN, 1.00 PLN) and bank[b1] (10.00 PLN, 2.00 PLN)
 warning: WARN-UNREAD place unexplained is read by nothing
 ,27:b192/same-two-legs-residual,4:b192,3:run,26:engine/tests/m3/fixes/b192,31:run same_two_legs.tally --ask r,54:same_two_legs.tally	m3/fixes/b192/same_two_legs.tally
-,1:0,929:r: residuals konto 2026-03
-  2026-03 unexplained: model 0.00 PLN, observed ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1]), difference ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
-    unexplained bank[a2], bank[b1] on 2026-03-20: observed ?"bank[a2], bank[b1] and bank[b1] are one, but the leg at konto differs on 2026-03-20: 1.00 PLN (bank[a2]), 10.00 PLN (bank[b1]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1], bank[b1])
+,1:0,904:r: residuals konto 2026-03
+  2026-03 unexplained: model 0.00 PLN, observed ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1]), difference ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
+    unexplained bank[a2], bank[b1] on 2026-03-20: observed ?"bank[a2] and bank[b1] are one, but leg fee differs on 2026-03-20: 1.00 PLN (bank[a2]) and 2.00 PLN (bank[b1])" (bank[a2], bank[b1])
   2026-03 move save: model -950.00 PLN, observed 0.00 PLN, difference 950.00 PLN
     expected but missing save[2026-03] on 2026-03-15: model -950.00 PLN
   cut 2026-04-10
+warning: WARN-LEGS the two observations of bank[a2] disagree: bank[a2] (10.00 PLN, 1.00 PLN) and bank[b1] (10.00 PLN, 2.00 PLN)
 warning: WARN-UNREAD place unexplained is read by nothing
 ,18:b192/trace-answers,4:b192,3:run,26:engine/tests/m3/fixes/b192,23:run trace_answers.tally,54:trace_answers.tally	m3/fixes/b192/trace_answers.tally
 ,1:0,875:b: refused: RUN-DIV division by zero
@@ -5253,7 +5250,7 @@ k: ?"how much in February?" (amt[2026-02]) ?"how much in March?" (amt[2026-03])
   unfulfilled: pay[2026-03]
   cut 2026-04-09
 ,15:b192/chain-pads,4:b192,3:run,26:engine/tests/m3/fixes/b192,20:run chain_pads.tally,48:chain_pads.tally	m3/fixes/b192/chain_pads.tally
-,1:0,2692:e30: 450.00 PLN
+,1:0,3727:e30: 450.00 PLN
   balance of sav (PLN) at the end of 2026-04-30
   from: opening v:opening[sav] = 0.00 PLN, 2026-03-01 start (version v, source s, locator "s")
   2026-03-15:
@@ -5261,15 +5258,20 @@ k: ?"how much in February?" (amt[2026-02]) ?"how much in March?" (amt[2026-03])
   2026-04-15:
     save[2026-04].cash (past): +350.00 PLN
   pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
+  pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
+  pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
   unfulfilled: save[2026-03]
   unfulfilled: save[2026-04]
   cut 2026-05-31
 f: 100.00 PLN
+  pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-05-31
 f2: 450.00 PLN
   pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
+  pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
+  pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
   unfulfilled: save[2026-03]
   unfulfilled: save[2026-04]
@@ -5285,9 +5287,11 @@ p30: 850.00 PLN
   pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
   pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
+  pad: konto 2026-04-20 end, pads:rd4:konto@2026-04-20 end of 500.00 PLN
   unfulfilled: save[2026-04]
   cut 2026-05-31
 p31: 600.00 PLN
+  pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
   pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-05-31
@@ -5296,28 +5300,35 @@ pall: 1 450.00 PLN
   pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
   pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
+  pad: konto 2026-04-20 end, pads:rd4:konto@2026-04-20 end of 500.00 PLN
   unfulfilled: save[2026-03]
   unfulfilled: save[2026-04]
   cut 2026-05-31
 s30: 450.00 PLN
   pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
+  pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
+  pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
   unfulfilled: save[2026-03]
   unfulfilled: save[2026-04]
   cut 2026-05-31
 s31: 100.00 PLN
+  pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-05-31
 sp: 350.00 PLN
   pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
+  pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
   cut 2026-05-31
 sp3: 600.00 PLN
+  pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
   pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN
   unfulfilled: save[2026-03]
   cut 2026-05-31
 sv: 350.00 PLN
   pad: konto 2026-03-15 end, pads:rd:konto@2026-03-15 end of 500.00 PLN
+  pad: konto 2026-04-10 end, pads:rd4:konto@2026-04-10 end of 150.00 PLN
   pad: konto 2026-04-10 start, pads:rd4:konto@2026-04-10 start of -200.00 PLN
   unfulfilled: save[2026-04]
   cut 2026-05-31
@@ -5475,11 +5486,11 @@ warning: WARN-UNREAD place world is read by nothing
 ,24:t221-gd/233-c-load-words,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,15:run u233c.tally,42:u233c.tally	m3/fixes/t221/new/u233c.tally
 ,1:1,108:refused: LOAD-UNIT unit of num: a plain number or a compound unit is a key of no unit kind (u233c.tally:22)
 ,20:t221-g1/221-C3-arith,7:t221-g1,3:run,33:engine/tests/m3/fixes/t221/arith2,16:run arith2.tally,47:arith2.tally	m3/fixes/t221/arith2/arith2.tally
-,1:0,314:z1: ?"date within window(2026-03-10, 2026-03-12) not precise enough for days_between(w2, w) + days_between(d0, w) > 0" (w2)
+,1:0,514:z1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between(w2, w) + days_between(d0, w) > 0" (w) ?"date within window(2026-03-10, 2026-03-12) not precise enough for days_between(w2, w) + days_between(d0, w) > 0" (w2)
   unknown day: w
   unknown day: w2
   cut 2026-01-01
-z2: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w2)
+z2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w) ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w2)
   unknown day: w
   unknown day: w2
   cut 2026-01-01
@@ -5500,12 +5511,14 @@ warning: WARN-UNREAD input lvl is read by nothing
   cut 2026-06-10
 warning: WARN-UNREAD place world is read by nothing
 ,25:t221-g1/220-1-covered-end,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/cov,28:run cov.tally --ask v1 v2 v3,38:cov.tally	m3/fixes/t221/cov/cov.tally
-,1:0,447:v1: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a balance" (pay_x)
+,1:0,487:v1: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a balance" (pay_x)
   unknown day: w2
   pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 0.00 PLN
   cut 2026-04-20
 v2: 595.00 PLN
+  pinned: w2 = 2026-03-31
   pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 0.00 PLN
+  open: pay_x
   cut 2026-04-20
 v3: 695.00 PLN
   pinned: w2 = 2026-04-01

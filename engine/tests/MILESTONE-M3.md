@@ -230,3 +230,38 @@ On refcore at the window group's pin (bcc49686). Every store was re-run (P23), e
 - m1 1 977 records, m2 296, kernel 166, codes m0 252, m1 38, m2 9, m0 load, m3 check 383, runs 124, spec 40, later 13, hh4 75. Integration 479: 395 same, 84 not run. Unit 154: 153 same, 1 ran.
 - `m1/spec.tsv` keeps 10 rows (e1 and e2 still crash refcore). `m2/spec.tsv` keeps 9: `num_list_key` still prints the object 207.4 mends at W5.
 - **The STOP-REPORT** (GAPS.md, C2): refcore at the pin passes 8 GB on m2's five R7 goldens. The cause is S-212's context per projected instance. Their records stay as stored, and `m2/vectors.py --check` is red on them alone until the writer's mend.
+
+## tally 2.2.1, chunk C3: the second pin's proof (#241, 2026-11-20)
+
+On refcore at the second pin (0818f488: W6, W5, W7, W2, W3, W1; 1 597 tests). Every store was written from it, each script at its own job count, niced, and diffed against HEAD record by record.
+
+**The proof: what moved, by item.** Nothing else moved.
+
+| Item (writer, builder) | Records |
+|---|---|
+| 206.1 (W6, G2) | m1 `fixes/gate8/m2_g7_p1_cuts`, `m2_g7_p2`, `m2_g8c_b1f`, `m2_g8c_b2` |
+| 221.5 (W6, G2) | m1 `fixes/gate8/m3_window_class` |
+| 219.2 (W6, G2) | m1 `m2_g4_adj_amt`, `m2_d512_day_rows`, `m2_d512_link_same`, `m2_d512_two_groups`; m2 `fixes/g4/adj_amt`, `fixes/t22/rv3_scen_over_base`; m3 `b192/same-two-legs`, `b192/same-two-legs-residual` (both with 237.2) |
+| 208.2 (W6, G2) | m2 `fixes/rv/g2_b3_both_break`, `rc_refusal_words_differ` |
+| 221.1 (W6, G2) | m2 `d77/sign`, `fixes/t22/cut_each_ask_twin`, `items/explain/from`; `fixes/t22/cut_each_read_twin` (its class, on no build-log list) |
+| 220.2 (W6, G2) | kernel `g10/ledger`; m1 `fixes/g12/pm_ledger_ledger`, `pm3_…`, `pm4_g10_…`, `pm8_g10_…`, `prr_projunc_g10_…`, `r_pb_bal-ledger_…`, `v_mvq`; m3 `t221-g1/220-1-covered-end` |
+| 237.1 (W6, G2) | m1 `m2_d512_alone_pad`, `m2_d512_pads_run`, `m2_g4_p_pad`; m3 `b192/chain-pads` |
+| 208.5 (W6) | I:A:a10's baseline (`assumed:` under a refusal) |
+| P25 (W6, G1's fix) | m1 `fixes/g13/r_agent_w_model_with_r_agent_w_c2`, `rf_w_model_with_rf_w_w15` (`round` gives the interval: "for a print") |
+| P27 (W4, G1) | `t221-rc/221-10-mean-quantile` released |
+| R21 (W5, G3) | m1 `fixes/g2/p4_f2`; m2 `fixes/t22/rv4_b2_pin_calendar`, `rv4_b2_pins`, `unknown_day_names`; m3 `t221-g1/221-C3-arith` (both windows named); 11 baselines |
+| 237.2 (W5, G3) | m1 `m2_d512_both_cover_day`, `m2_g4_g3_amt`, `m2_g4_p_both_konto_amt`, `m2_rt_e6_3_…`, `m2_rt_l6_1_…`; m2 `s6/hole_same_order_class` |
+| 221.6 (W5, G3) | m1 `fixes/gate8/m2_g3_fix2_c2`; I:E1:tx2_owes_explain's baseline |
+| 233.7 (W5, G3) | codes/m1 `rules/none`; m2 `spec/g1/qn` released (with 208.10) |
+| 207.4 (W5) | m2 `spec/p60/num_list_key` released |
+| R20, 233.8 (W2, G4) | released: `fixes/member-warning-id` (red here); `member-refused-alone`, `member-clock`, `scenario-files-clock`, `fixture/reviews/same-id-order`, `twin-placed` (green here) |
+| S-223, S-232 (W3) | released, green here: `fixture/reviews/narrowed`, `stacked-covers`, `fixes/stacked-covers` |
+| R18 (W1) | the 40 `m3/spec.tsv` rows' refcore cells (their answers); `spec/lawdate/i1-atref-false`, `w-hole-at-false` released (green here) |
+| the household's notes (W6) | file tables only: kernel 3, m1 20, m2 6; m0/format 24 lines and 14 hashes |
+
+- **Byte-equal:** m0 load 327; codes m0 252 and m2 9; loadcheck 90; the laws (570, 648, 168); later 13; hh4 75. m3 check 383 and spec 40 also matched, but for the rows above.
+- **The R7 goldens:** m2's five ran, byte-equal, at the pin (C2's STOP-REPORT mended by W6's 82e80319).
+- **Integration:** 479: 382 same, 13 re-stored (above), 84 not run. Unit 154: 153 same, 1 ran.
+- **Still held:** `fixes/t22/fault_paths` (M7) and `last/net_worth` (234.1, which W5 didn't take).
+- **T's texts:** `misc2/m2.tally` loses `before top`, which S-221.9 refuses.
+- **Waits for a tree with G2:** `m2_counts.rs`' five rows (206.1: `r2`, `u2`, `u4`, `r7`, `u3f`). They hold the engine's counters, not refcore's, so they can't be re-pinned on this branch.

@@ -56,9 +56,10 @@ row, M2's `spec/…` form: `id` (`spec/<group>/<name>`, group `spec-<group>`), `
 from refcore's run of the twin (the twin's name read as the row's: P30, L §4.3, E §4.1 step 1); its `code` and `out`
 are `-`. Any other row states its `code` and `out` (`\\n` a new line), read against `section`. `refcore_code` and
 `refcore` are refcore's own run of the row, kept beside it and run again on every write and `--check`: a row whose
-refcore bytes move is the round's fix, and the row moves to m3/runs.vectors. A row of #229 (`section` names it) must
-be refcore's bytes with the asks refused alone added (refcore's `run` prints nothing for them). Stored in
-m3/spec.vectors, check.vectors' eight netstrings, `source` `spec`.
+refcore bytes move is the round's fix, and the row moves to m3/runs.vectors. At tally 2.2.1's second pin (0818f488,
+#241) refcore's run of every row is its answer: R18 runs the law-date rows, and R20 prints a scenario file's ask
+refused alone in its place (#229's rows, whose refcore cells were the answer less those lines); their `refcore` cells
+are that run, the rows kept here. Stored in m3/spec.vectors, check.vectors' eight netstrings, `source` `spec`.
 
     python3 -I -B engine/tests/m3/vectors.py              -> writes m3/check.vectors, m3/runs.vectors, m3/spec.vectors,
                                                              m3_texts.rs
@@ -317,7 +318,7 @@ def refcore_any(checks):
 def spec_of(svs):
     """The spec's answer of each spec.tsv row, {id: (exit, output, 'spec')}, after its ties: refcore's run of the row is
     its `refcore` cells; a twin row's answer is refcore's run of its twin, the twin's name read as the row's (the twin
-    must print no REFCORE-NOT-YET); a #229 row's output less its asks refused alone is refcore's."""
+    must print no REFCORE-NOT-YET)."""
     def twin_args(v):
         dated = [a for a in v['args'][1:] if not a.startswith('--')][0]
         return [v['twin'] if a == dated else a for a in v['args']], dated
@@ -337,10 +338,6 @@ def spec_of(svs):
             out[v['id']] = (t['rc'], t['out'].replace(v['twin'], twin_args(v)[1]), 'spec')
         else:
             out[v['id']] = (int(v['code']), v['out'], 'spec')
-        if '#229' in v['section']:
-            less = ''.join(l for l in out[v['id']][1].splitlines(True) if not ALONE.match(l.rstrip('\n')))
-            if less != v['refcore'] or less == out[v['id']][1]:
-                bad.append('%s: the answer less its asks refused alone isn\'t refcore\'s run' % v['id'])
     if bad:
         sys.exit('\n'.join('FAIL ' + b for b in bad) + '\nm3/spec.tsv\'s ties fail')
     return out

@@ -295,3 +295,5 @@ fixes/t22/rv4_pin_copy	fixes-22		engine/tests/m2/fixes/t22/rv4_pin_copy	engine/t
 fixes/t22/rv4_pin_copy_alone	fixes-22		engine/tests/m2/fixes/t22/rv4_pin_copy_alone	engine/tests/m2/fixes/t22/rv4_pin_copy_alone/m.tally	e2		S-4
 fixes/t22/min_step_week	fixes-22		engine/tests/m2/fixes/t22/min_step_week	engine/tests/m2/fixes/t22/min_step_week/m.tally			S-9
 fixes/t22/list_window_name	fixes-22		engine/tests/m2/fixes/t22/list_window_name	engine/tests/m2/fixes/t22/list_window_name/m.tally			S-4
+spec/g1/qn	fixes-forms		engine/tests/m2/fixes/g1	engine/tests/m2/fixes/g1/qn.tally	q_none		t221-G3
+spec/p60/num_list_key	fixes-sweep		engine/tests/m2/fixes/p60	engine/tests/m2/fixes/p60/num_list_key.tally	q		-

@@ -18,12 +18,12 @@ HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	6	M1	codes/m1/prices/n
 HOLE-PRICE	L §8.1	M1	<x> is in Y prices; no index moves it to <d>	1	M1	codes/m1/prices/price-year
 HOLE-CALENDAR	L §8.1	S	*	4	M2	m2/fixes/rv/g1_b2_fallback
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	4	M2	m2/fixes/rv/g1_b2_fallback
-HOLE-IMPRECISE	L §8.1	M1	*	134	M1	U:time/TIME-01
-HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	134	M1	U:time/TIME-01
+HOLE-IMPRECISE	L §8.1	M1	*	133	M1	U:time/TIME-01
+HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	133	M1	U:time/TIME-01
 HOLE-CHANGED	L §8.1	S	*	22	S	kernel/g11/adjust
 HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	22	S	kernel/g11/adjust
 HOLE-SAME	L §8.1	M2	*	22	M1	m1/fixes/gate8/m2_d512_both_cover_day
-HOLE-SAME	L §8.1	M2	<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)	22	M1	m1/fixes/gate8/m2_d512_both_cover_day
+HOLE-SAME	L §8.1	M2	<p> and <q> are one, but <x> differs on <d>: <a> (<row or instance>) and <b> (<row or instance>)	22	M1	m1/fixes/gate8/m2_d512_both_cover_day
 HOLE-SAME	L §8.1	M2	<movement> crosses to <member> with no link	0	-	-
 HOLE-PRERUN	L §8.1	S	*	46	S	kernel/g7/flows
 HOLE-PRERUN	L §8.1	S	before the run's start	46	S	kernel/g7/flows
@@ -44,6 +44,7 @@ LOAD-HEADER	L §8.3	M0	start after end	1	M0	codes/m0/basic/header-order
 LOAD-HEADER	L §8.3	M0	<n> files have a model header; exactly one does	26	M0	U:law/LAW-13/rate25
 LOAD-VERSION	L §8.3	M0	*	2	M0	codes/m0/basic/version-rule
 LOAD-VERSION	L §8.3	M0	files declare different tally versions	1	M0	codes/m0/parts/version
+LOAD-VERSION	L §8.3	M0	tally <N>: this engine runs tally 2	0	-	-
 LOAD-VERSION	L §8.3	M0	replace rule <d>.<r> in <V> names version <W>	1	M0	codes/m0/basic/version-rule
 LOAD-PIN	L §8.3	M0	*	1	M0	codes/m0/joint/pin
 LOAD-PIN	L §8.3	M0	<file> doesn't match its sha256 in use <a>	1	M0	codes/m0/joint/pin
@@ -140,6 +141,7 @@ LOAD-INSTANT	L §8.3	M0	*	4	M0	codes/m0/basic/instant
 LOAD-INSTANT	L §8.3	M0	balance reading <x> at <D> needs start or end	2	M0	codes/m0/basic/instant-side
 LOAD-INSTANT	L §8.3	M0	row <x>[k] of a reading has no instant	1	M0	codes/m0/basic/instant-none
 LOAD-INSTANT	L §8.3	M0	<x> is not a reading; its rows take no instant	1	M0	codes/m0/basic/instant
+LOAD-INSTANT	L §8.3	M0	a pin of balance reading <x> states no instant	0	-	-
 LOAD-GOVERNS	L §8.3	M0	*	1	M0	codes/m0/basic/governs
 LOAD-GOVERNS	L §8.3	M0	version <v> has rows with no time of their own and no governs	1	M0	codes/m0/basic/governs
 LOAD-KNOWN	L §8.3	M0	*	3	M0	codes/m0/basic/known
@@ -171,6 +173,7 @@ LOAD-LAWDATE	L §8.3	M0	*	8	M0	codes/m0/adjust/lawdate-move
 LOAD-LAWDATE	L §8.3	M0	<def or move> reads law-dated facts and states no at	2	M0	codes/m0/basic/lawdate-def
 LOAD-LAWDATE	L §8.3	M0	ask <q> reaches an at reader def, or reads law-dated <x> directly, without law	3	M0	codes/m0/basic/lawdate
 LOAD-LAWDATE	L §8.3	M0	move <m>'s at reads law-dated <x>	1	M0	codes/m0/adjust/lawdate-move
+LOAD-LAWDATE	L §8.3	M0	move <m>'s key <k> reads law-dated <x> with no law date: its at reads <k'>	0	-	-
 LOAD-LAWDATE	L §8.3	M0	?	2	M1	m1/fixes/gate8/m2_g1_n1_law
 LOAD-LAWPERIOD	L §8.3	M0	*	1	M0	codes/m0/basic/lawperiod
 LOAD-LAWPERIOD	L §8.3	M0	at <m>: a period is not a law date	1	M0	codes/m0/basic/lawperiod
@@ -203,6 +206,7 @@ LOAD-ORDER	L §8.3	M0	decisions <a> and <b> read each other on <d> with no befor
 LOAD-ORDER	L §8.3	M0	… read each other with no before or after	2	M0	codes/m0/basic/order-each
 LOAD-ORDER	L §8.3	M0	<a> before <b> contradicts a read of <b>'s legs	2	M0	codes/m0/basic/order-legs
 LOAD-ORDER	L §8.3	M0	<a> before <m>: <m> is a plan or an observation	1	M0	codes/m0/basic/order-plan
+LOAD-ORDER	L §8.3	M0	<a> before <a>: a move isn't ordered against itself	0	-	-
 LOAD-PRICE	L §8.3	M0	*	13	M0	codes/m0/basic/price
 LOAD-PRICE	L §8.3	M0	value(<x>) in <CUR> holds units in <u> and states no by	3	M0	codes/m0/basic/price-by
 LOAD-PRICE	L §8.3	M0	asset <x> names no price input	1	M0	codes/m0/basic/price
@@ -211,6 +215,7 @@ LOAD-PRICE	L §8.3	M0	value(<x>) by <p>: <x>'s price already gives its <u>	8	M1	
 LOAD-COVERS	L §8.3	M0	*	4	M0	codes/m0/adjust/covers-outside
 LOAD-COVERS	L §8.3	M0	<x> is not a place	2	M0	codes/m0/basic/covers
 LOAD-COVERS	L §8.3	M0	observation <r> of <x> is dated outside the span <version> covers	2	M0	codes/m0/adjust/covers-outside
+LOAD-COVERS	L §8.3	M0	replace <r> of <x>: <version> doesn't cover <x> on <d>	0	-	-
 LOAD-COVERED	L §8.3	M0	*	2	M0	codes/m0/basic/covered
 LOAD-COVERED	L §8.3	M0	<def> aggregates observations over a span with no covered() guard	2	M0	codes/m0/basic/covered
 LOAD-SCENARIO	L §8.3	M0	*	30	M0	codes/m0/basic/scenario-ask
@@ -262,8 +267,8 @@ LOAD-MISSING	L §8.3	M0	missing() outside the when of a cited rule	1	M0	codes/m0
 LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	1	M0	codes/m0/basic/missing-read
 LOAD-ORIENT	L §8.3	M0	*	1	M0	codes/m0/basic/orient
 LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/basic/orient
-RUN-NONE	L §8.4	S	*	30	S	kernel/g12/members
-RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate or comparison with a value>	3	M1	codes/m1/rules/none
+RUN-NONE	L §8.4	S	*	31	S	kernel/g12/members
+RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate, comparison with a value, a place, a quantity, a field read of it, the level of quantile>	4	M1	codes/m1/rules/none
 RUN-NONE	L §8.4	S	never in <a use>	17	S	kernel/g12/members
 RUN-NONE	L §8.4	S	?	10	M1	m1/fixes/g12/r_p_mr2_q4
 RUN-NOT-INT	L §8.4	S	*	2	S	kernel/g14/past_64_counts
@@ -303,7 +308,7 @@ RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	6	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	9	S	kernel/g14/day_range_end
 RUN-DIV	L §8.4	S	*	100	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	100	S	kernel/g1/text
-RUN-DOMAIN	L §8.4	S	*	55	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	*	56	S	kernel/g1/rate_duration
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	a stepped range whose step <s> is not positive	5	M1	m1/fixes/g13/r_p_dz
@@ -313,7 +318,7 @@ RUN-DOMAIN	L §8.4	S	<code> is not a <family> code	0	-	-
 RUN-DOMAIN	L §8.4	S	of <q> at <x>, which keeps no labels of its sort	0	-	-
 RUN-DOMAIN	L §8.4	S	calendar <c> has no business day	3	S	kernel/g14/calendar
 RUN-DOMAIN	L §8.4	S	known <d> is after the model's on <on>	1	M1	m1/r5/e11_cut_computed_after_on
-RUN-DOMAIN	L §8.4	S	?	41	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	?	42	S	kernel/g1/rate_duration
 RUN-UNDECIDED	L §8.4	M6	*	0	-	-
 RUN-UNDECIDED	L §8.4	M6	<function> to <u> not decided within the precision cap	0	-	-
 RUN-PARAM	L §8.4	M6	*	1	M6	I:M:CH-03
@@ -365,12 +370,10 @@ WARN-NEGATIVE	L §8.5	S	*	185	S	I:X:konto_balance@b_r1
 WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	185	S	I:X:konto_balance@b_r1
 WARN-UNREAD	L §8.5	S	*	569	S	kernel/I:M:RC-06
 WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	569	S	kernel/I:M:RC-06
-WARN-LEGS	L §8.5	S	*	20	S	kernel/g10/observe
-WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	20	S	kernel/g10/observe
+WARN-LEGS	L §8.5	S	*	26	S	kernel/g10/observe
+WARN-LEGS	L §8.5	S	the two observations of <movement> disagree: <input>[<row>] (<a>) and <input>[<row>] (<b>)	26	S	kernel/g10/observe
 WARN-LABELS	L §8.5	M5b	*	4	M5b	I:S4:S4-01~s4
 WARN-LABELS	L §8.5	M5b	labels dropped at <place> from <d>: <movements>	4	M5b	I:S4:S4-01~s4
-WARN-STALE	L §8.5	M3	*	0	-	-
-WARN-STALE	L §8.5	M3	scenario <s> replaces <target> at <keys>, changed in the base by <version>	0	-	-
 REQ-ASK	E §11	S	*	324	M0	codes/m0/adjust/base
 REQ-ASK	E §11	S	no ask <q>	324	M0	codes/m0/adjust/base
 REQ-CLOCK	E §11	M1	*	6	M1	codes/m1/rules/clock

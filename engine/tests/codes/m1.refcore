@@ -2233,7 +2233,7 @@ version card_2026
   weight[q2] = 3 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
-,,1:0,179:q_total: (refused: RUN-NONE a value is none here: arithmetic, 480.00 PLN)
+,,1:0,180:q_total: (refused: RUN-NONE rate[q2] is none here: arithmetic, 480.00 PLN)
   assumed: the card names no holiday (holidays)
   unfulfilled: pay
   unfulfilled: repay

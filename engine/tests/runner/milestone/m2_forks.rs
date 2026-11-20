@@ -1670,12 +1670,12 @@ mod tests {
     /// `m2/spec.vectors`'s group `spec-forms`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_forms() {
-        group_holds(M2_SPEC, "spec-forms", (0, 1), 2);
+        group_holds(M2_SPEC, "spec-forms", (0, 1), 1);
     }
 
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_sweep() {
-        group_holds(M2_SPEC, "spec-sweep", (0, 1), 7);
+        group_holds(M2_SPEC, "spec-sweep", (0, 1), 6);
     }
 }
