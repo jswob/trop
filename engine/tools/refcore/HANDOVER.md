@@ -7,6 +7,42 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W8: the second engine review, the fix review (issue #241; 1 631 tests)
+
+- **P35, one read set.** A refused entry carries every entry its reads gave (`Walk.add`; the sign rule's refusal the
+  place balance's, `Walk.cum`, and `bad_reads` for `leg_refused`); every read of a refused entry lists them
+  (`mreads.refuse_ent`). A read of facts stated `same` merges the other sides' reads (`same_others`). The reads that
+  put a movement's day outside a read (`later_by_place`: plan, covered, decision and left-out legs; `day_reads` in
+  `flows`, bindings and `flows` of a move) list their `pinned:` and `assumed:` rows only (`LATER_KINDS`): a later
+  movement's `held:` rows are the statement's too, but 60 stored records would move (1 520 lines), so they wait for
+  the lead. A count over pads lists each pad (`span_members`); an anchor carries `open:` as a pad (`open_kept`).
+- **P36, `same`.** `same_obs_differ(fact=)` is per fact; `same_days` compares days as a comparison (undecided:
+  `HOLE-IMPRECISE` naming the window); a field read of a leg is a record whose amount and day are each their own
+  hole; `same_in_span` and the leg amounts make `flows`, `count` and `sum` of a side the hole. The walk's own
+  consolidation (`Walk.consol`) still compares days by equality (b3's balance prints both holes): not in the ruling's
+  probes. `WARN-LEGS` for one version and for a day alone. A residual's two-leg hole merges (`resid.py`).
+- **P37, P39.** `diff` under a binding: a world that doesn't declare what the expression names has no tuples. A
+  window-dated instance's ledger day is its last fulfilling observation's (`ful_last`). A scenario's decision before
+  `from` is noted left out at the places its legs name (`dec_places`), at the scenario sites only: decisions outside
+  [S, E] still print no `left out:` (E2_flows_after_end, E4_2_tie_when_false would gain it; not P39's item).
+- **P41.** `lift_values`: a monotone operation reads its ends (and 0) whatever the size; the hole names every
+  window (`hw`). A reading keeps a window pending (`St.imp`), its own instant reads the stated value. A decision's
+  refusal stands unless a place in its `reads` holds a window's hole (`dec_refusal_stands`); a lifespan's always.
+  Inside a walk `flows` of a window-dated decision and a binding over its kind are its hole; an ask's `for … where`
+  turns a `WinDay` into the tuple's hole.
+- **Part 2.** 234.1: a dyn `+`/`-` is money only when both sides are, or the other is 0. 236.3: a scenario over a
+  refused one is refused with its message (`run_worlds`). 221.8, 221.R1, 228.Q5: both interpreters so (tests for
+  the first two; 228.Q5 `scenario s9 … (s9.tally:1)` on both). R18's three cells ran in W1 (`L4_3_*`).
+- **Open.** 230.Q-5a: both print `pm and dx are one, but the leg at konto differs on …: … (pm) and its day … (dx)`,
+  mover first whatever the text's order, beside `Walk.consol`'s own hole; `HOLE-SAME`'s row fixes the id order and
+  its form has no "and its day" (`writer/w8/t230q5a.tally`): for the lead. Cause H, not built, for want of budget:
+  208.R2 (a per-tuple `law` off `diff`), 231.R1 (`explain … in s`, the axes' order), 231.Q10 (a cycle's instance
+  keys). Cause A (229.3, 208.R1), none taken: `refuse('LOAD-…')` at run in `evaluate.py` 975, 1440, 1739, 1743, 1914,
+  1919, 1929, 1940, 2093, 528; `mreads.py` 288, 404, 1053, 2078, 2093, 2108, 2126; `eval2.py` 720, 896;
+  `partswalk.py` 2283; `LoadError` raised at run in `evaluate.py` 359, 396, 608, 1158, 1163, 1170, 1467, 1752, 3049;
+  `moves.py` 903, 1178, 1929, 2412; `walk.py` 1791 (line numbers at 69fb98ea). Each wants load's check or a `RUN-*`
+  name and a text that reaches it; the value codes print `RUN-*` already (`errors.RUN_PHASE`).
+
 ## tally 2.2.1, group W1: a move's keys bind in order (R18; issue #241; 1 597 tests)
 
 - **Load.** `Checker.edge` records a move's key reads with their relations while `check_move` types each binding
