@@ -95,6 +95,9 @@ pub enum Act {
     GlobalHole(Hole),
     /// A refusal that holds for every place.
     GlobalBad(Refusal),
+    /// A plan instance's own refusal that holds for every place, which no window's hole
+    /// outranks (refcore's `global_own`; P31).
+    GlobalOwn(Refusal),
     /// The decisions of a move due that day (E §4.2 step 3).
     Decide(String, Day),
     /// The end of the last day of a decision's window, by its id, with the hole it left its
@@ -636,7 +639,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                     walk.at(point(day), Act::LegBad(mv, leg, err.clone()));
                 }
             } else {
-                walk.at(At::before(day), Act::GlobalBad(err));
+                walk.at(At::before(day), Act::GlobalOwn(err));
             }
         }
         Status::Hole => {

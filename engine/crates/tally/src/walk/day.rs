@@ -287,6 +287,11 @@ impl Engine {
             }
             Act::Leg(mv, leg) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                if let Amount::Refused(r) = &lg.amount {
+                    // a plan's own refusal stands beside a window's hole (P31)
+                    let walk = self.walk_mut(id)?;
+                    return walk.leg_bad_own(m, (&movement.id, &lg, &movement.coll), r, at);
+                }
                 let mut reg = Vec::new();
                 if movement.status == Status::Past && movement.obs.is_empty() {
                     reg.push(Entry {
@@ -306,7 +311,7 @@ impl Engine {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let h = match &lg.amount {
                     Amount::Refused(r) => {
-                        return self.walk_mut(id)?.leg_bad(
+                        return self.walk_mut(id)?.leg_bad_own(
                             m,
                             (&movement.id, &lg, &movement.coll),
                             r,
@@ -332,7 +337,7 @@ impl Engine {
                     // its day is a hole or refused (tally 2.1.8, R11)
                     return walk.leg_bad_undated(m, (&movement.id, &lg, &movement.coll), &err, at);
                 }
-                walk.leg_bad(m, (&movement.id, &lg, &movement.coll), &err, at)
+                walk.leg_bad_own(m, (&movement.id, &lg, &movement.coll), &err, at)
             }
             Act::Perm(mv, leg, h) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
@@ -352,6 +357,8 @@ impl Engine {
             Act::ChangeRefused(place, err, adj) => {
                 let mut ent = Ent::new(at, Change::Bad(err));
                 ent.mv = Some(adj);
+                // an adjustment's own refusal (refcore's `placebad_own`; P31)
+                ent.own = true;
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
             Act::PlaceHole(place, h, movement, coll) => {
@@ -367,6 +374,11 @@ impl Engine {
             Act::GlobalBad(err) => {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Bad(err)))
+            }
+            Act::GlobalOwn(err) => {
+                let mut ent = Ent::new(at, Change::Bad(err));
+                ent.own = true;
+                self.walk_mut(id)?.add(m, ALL, ALL, ent)
             }
             Act::WindowEnd(mid, h) => self.window_end(m, id, at, (&mid, &h)),
             Act::Decide(..) => Err(invariant("a decision act taken as a plain act")),
@@ -637,10 +649,15 @@ impl Engine {
         lg: &LegVal,
         at: At,
     ) -> Result<(), Stop> {
-        if let Some(err) = &wo.err {
+        // an observation's own refusal stands beside a window's hole (refcore's `own`; P31)
+        let refused = wo.err.as_ref().or(match &lg.amount {
+            Amount::Refused(r) => Some(r),
+            Amount::Qty(_) | Amount::Hole(_) => None,
+        });
+        if let Some(err) = refused {
             return self
                 .walk_mut(id)?
-                .leg_bad(m, (&wo.obs.id, lg, &wo.obs.coll), err, at);
+                .leg_bad_own(m, (&wo.obs.id, lg, &wo.obs.coll), err, at);
         }
         let cut = self.walk(id)?.cut;
         let day = lg

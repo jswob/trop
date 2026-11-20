@@ -233,6 +233,10 @@ pub struct Ent {
     /// An `ImpOn`'s leg amount signed as a flow into the place, where known (tally 2.1.8
     /// item 77).
     pub signed: Option<Num>,
+    /// A refusal a plan's or an observation's own evaluation gives: it reads no value under a
+    /// window's hole, so every day gives it and it outranks one (refcore's `note == 'own'`;
+    /// L §8 l.2217, §4.4 l.671; P31, B4).
+    pub own: bool,
     /// The state after it.
     pub st: St,
 }
@@ -278,6 +282,7 @@ impl Ent {
             flow: None,
             hole_leg: None,
             signed: None,
+            own: false,
             st: St::of(None),
         }
     }
@@ -1246,8 +1251,10 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
 
 /// The state after entry `ent`: its change applied, the window tests' questions `open`
 /// ([`apply`]); a movement dated by a window may fall from its `ImpOn` on, until its leg's
-/// booking at the window's last day (refcore's `apply`, its `wid`). E §4.2, L §4.4.
+/// booking at the window's last day (refcore's `apply`, its `wid`); a movement's own refusal
+/// meets no window test, so it outranks their hole (P31). E §4.2, L §4.4.
 fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
+    let open = if ent.own { None } else { open };
     let mut st = apply(prev, &ent.change, (at, open))?;
     if let Some((wid, _)) = &ent.window {
         match &ent.change {

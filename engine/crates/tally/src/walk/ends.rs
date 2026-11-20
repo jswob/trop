@@ -37,10 +37,30 @@ impl Walk {
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
-        self.leg_refused(m, (movement, lg, read), &Change::Bad(err.clone()), at)
+        self.leg_refused(
+            m,
+            (movement, lg, read),
+            &Ent::new(at, Change::Bad(err.clone())),
+        )
     }
 
-    /// A refused leg's `change`, a dated refusal or one no reading ends, at each place it
+    /// [`Walk::leg_bad`] of a plan's or an observation's own leg: its refusal reads no value
+    /// under a window's hole (a plain movement makes no running reads, L §5.14.2), so every day
+    /// gives it and it stands beside one (refcore's `leg_bad`, `own`). L §8 l.2217, §4.4 l.671;
+    /// P31 (B4).
+    pub(crate) fn leg_bad_own(
+        &mut self,
+        m: &Reality,
+        (movement, lg, read): (&str, &LegVal, &Collected),
+        err: &Refusal,
+        at: At,
+    ) -> Result<(), Stop> {
+        let mut ent = Ent::new(at, Change::Bad(err.clone()));
+        ent.own = true;
+        self.leg_refused(m, (movement, lg, read), &ent)
+    }
+
+    /// A refused leg's entry `like`, a dated refusal or one no reading ends, at each place it
     /// names, in its unit or its place's, with the pins its movement's evaluation `read` took:
     /// a refusal rests on the reads that refused it, so a pin nothing it read isn't listed
     /// under it (refcore's `leg_bad`, its kind, and `add`; L §8.2 One read set, 208.2 on
@@ -49,8 +69,7 @@ impl Walk {
         &mut self,
         m: &Reality,
         (movement, lg, read): (&str, &LegVal, &Collected),
-        change: &Change,
-        at: At,
+        like: &Ent,
     ) -> Result<(), Stop> {
         let pins = pins_read(read);
         for p in ends(lg) {
@@ -61,7 +80,7 @@ impl Walk {
                 .or(own)
                 .filter(|u| u != "any")
                 .unwrap_or_else(|| ALL.to_owned());
-            let mut ent = Ent::new(at, change.clone());
+            let mut ent = like.clone();
             ent.mv = Some(movement.to_owned());
             ent.coll.clone_from(&pins);
             self.add(m, p, &unit, ent)?;
@@ -79,7 +98,11 @@ impl Walk {
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
-        self.leg_refused(m, (movement, lg, read), &Change::PermBad(err.clone()), at)
+        self.leg_refused(
+            m,
+            (movement, lg, read),
+            &Ent::new(at, Change::PermBad(err.clone())),
+        )
     }
 
     /// A hole movement's leg: a hole at both its places (refcore's `act`, `legq` and
