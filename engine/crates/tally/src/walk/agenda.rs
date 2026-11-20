@@ -772,7 +772,8 @@ fn schedule_booked_hole(
 
 /// Puts a decision instance on its day, at its move's stratum; one dated outside the run is
 /// left out, and so is one of a move a scenario declares dated before the scenario's `from`,
-/// which books nothing there (L §6.4); one refused before its point (its key's `where`) is
+/// a window wholly before it too, which books nothing there, and a window across it makes its
+/// hole from `from` (L §6.4; P26); one refused before its point (its key's `where`) is
 /// put on its day as any instance is, so its refusal takes its place in the day's movement
 /// order (E §4.1; L §8.4, tally 2.1.6), the scenario's rule first; one whose day is a hole
 /// makes `places` holes from the walk's start, every place where they can't be read
@@ -819,9 +820,21 @@ fn schedule_decision(
             decision_hole(walk, (at, h), &inst, places)?;
         }
         Some(Dated::Window(w)) => {
+            let from = super::plan::scenario_from(m, move_id);
+            if from.is_some_and(|from| w.hi < from) {
+                // a scenario's move books nothing before its from (L §6.4): a window wholly
+                // before it is left out, as its day would be
+                if walk.proj.is_none() {
+                    note_left_out(walk, &inst)?;
+                }
+                return Ok(());
+            }
             // a decision dated by a window: a hole at its places from the window's first day
-            // (refcore's `prepare`, its decisions)
-            let at = At::before(w.lo.max(walk.start));
+            // (refcore's `prepare`, its decisions), or from its scenario's from where the
+            // window crosses it: nothing before from changes, so a day before it is the base's
+            // whatever day of the window m falls on (L §6.4, §4.4 l.671; P26 on #241)
+            let first = from.map_or(w.lo, |from| w.lo.max(from));
+            let at = At::before(first.max(walk.start));
             let text = format!(
                 "date within {} not precise enough for the day of {}",
                 w.question, inst.id
