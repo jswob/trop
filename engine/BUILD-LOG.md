@@ -5543,3 +5543,91 @@ C2 is merged at 1e561f79: the `t221-g1` vectors, the re-stored window records (t
 - **What I tried:** the change above, then taking it back out. Nothing else fits: the records hold refcore's bytes.
 - **What I ask:** the two records re-stored with "for a print" once refcore's `round` follows P25 (or held for P25), and then `round` under `values_interval`, the dozen lines tried here.
 - **State:** this commit, after 066b8b90; `check commit` green; nothing uncommitted.
+
+- 2026-11-20T18:07:41Z CONFIG-CHANGE BLOCKED: source skills /Users/jswob/.claude-personal/skills/synced/eea50a48-ef05-45fd-a077-2f30fee77fdd_b08d67ee-f5da-4e8a-8360-24723a436a14/docx/SKILL.md (R-81)
+
+## 2026-11-20 tally 2.2.1 G2: the register, `same` and a projection (issue #241)
+
+Branch `build/2.2.1`, from G1's b511aa0f. Seven commits and this one, in the plan's order. None is pushed: stored records moved, so the group waits for the pin.
+
+The oracle is the writer's unpinned refcore (`tmp/spec-2.2.1-build/refcore-w6/`), used only as a cross-check. The probes and saved outputs are in `tmp/spec-2.2.1-build/g2/`: `both6.sh` runs the engine beside refcore-w6, and `probes/` holds copies of the stored texts.
+
+- **231.Q1b:** located, no change. The engine reads every unbeaten `when`. The `rp/g1/diff` heads equal refcore (`q1b-three.txt`). What still differs is 231.R1 (explain's axis order) and S-231.Q1a (conflict naming), both refcore's. T's vector `t221-g2/231-1b-whens` doesn't exist yet: C1 wrote only 221.C3. L §5.11 l.1126 stays as built.
+- **7a5202a4, 206.1 (narrow):** `walk/projection.rs` `proj_base`. A projection from a day before its walk's start starts up the chain (E §4.3 step 1).
+  - Probe `pl/206/p2.tally` `b`: 5 000.00 DUK three times. That is the plan's row (5 000.00) and refcore-w6's (SAME). The pinned refcore gave 4 000.00.
+  - Builder tests follow: `projection_cases` (plain_unc 90.00, unc 340.00, worked in a comment) and `fork_oracle` (d_back, d_many, d_uncertain).
+- **7c88bbf7, 208.10:** `eval/queries.rs` `key_query`, `quantile`, the new `none_level`. Probe `pl/misc2` `qn`: `refused: RUN-NONE a value is none here: the level of quantile`, with today's words (G3 renames). That is the plan's row. No stored record moved.
+- **f3134852, 221.5:** `book/ledger.rs` `instance_line`. A matched line of a window-dated instance takes its last observation's day, at timing +0. Probe `p22/review-g4-inputs/p4/cov.tally` `v4`: `matched pay_w on 2026-03-06 … timing +0 days`. That is the plan's row and refcore-w6's (SAME).
+- **ca88ad1a, 219.1:** `book/same.rs` `same_differ` over the new `sides_differ`, `obs_side` and `inst_side`; `book/members.rs` `mv_field` and `same_rows_hole`. HOLE-SAME for planned sides, each named as the register names its instance.
+  - Probe `s5/hs_disagree.tally` `amt`: `?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)`. That is refcore-w6's.
+  - No stored record moved.
+- **4c4fc2ba, 219.2:** `book/observe.rs` `disagreeing_links` and the new `same_rows_warned`. WARN-LEGS for two observed rows stated `same` that disagree, named by the first row in id order.
+  - Probe `s5/r3_disagree.tally`: `warning: WARN-LEGS the two observations of bank[a2] disagree: bank[a2] (950.00 PLN) and sbank[b1] (900.00 PLN)`. That is refcore-w6's.
+  - The subject was reworded to 72 characters before any push: a soft reset to ca88ad1a, then the same trees again.
+- **12b7f967, 208.2 and 221.1 (one commit):** both read through the same entries.
+  - 208.2: `ask/answer.rs` `form_line` drops `refused_pins`. A refused line lists the pins its refusal rests on, carried by the refused movement's entries: `walk/ends.rs` (`pins_read`, `leg_bad*`), `walk/readings.rs` (`refuse_leg`, `check_group` via `walk/state.rs` `booked_pins`), and `walk/move_flows.rs`, which merges an instance's reads before its refusal. Call sites change in `walk/day.rs`, `walk/order.rs` and `book/same_booking.rs`.
+  - 221.1: `walk/state.rs` `later_pins`, `walk/agenda.rs` `note_later_pins`, `walk/reads.rs` `read_state`. A balance before a pinned plan leg's day lists that pin.
+  - Probes: `pl/misc/m1.tally` `refpin` gives `refused: RUN-DIV division by zero` with no `pinned:` line; `p_after` gives `500.00 PLN / pinned: w = 2026-03-06`. Both are refcore-w6's.
+  - Builder test `window_cases` g7 loses its `pinned: wa` line, as refcore-w6 prints it.
+- **208.5:** no change of its own. Probe `g4fix/agent/c_base.tally` `q2` and `q_decide`: `assumed: the card names no holiday (holidays)` under the refused result. That is the plan's row and refcore-w6's (SAME), through 208.2's `move_flows` merge.
+- **33e9ebeb, 220.2 and 237.1 (one commit, both in `book/reading.rs`):**
+  - 220.2: `walk/state.rs` `open_kept`, `book/reading.rs` `apply_stated`. A pad's reset keeps each open instance's reads since the place's last reset, with its `open:` line. Probe `cov.tally` `v2`: `595.00 PLN / pinned: w2 = 2026-03-31 / pad: … / open: pay_x`. That is the plan's row and refcore-w6's (SAME on v1 to v4).
+  - 237.1: `book/reading.rs` gains `Pad.reg` (set in `make_pad` and `apply_stated`), read in `book/members.rs` `mv_field`. A field read of a pad lists its own `pad:` line. Probe `pl/237/cp.tally` `a10` lists `pads:rd4:konto@2026-04-10 end` beside the other two. refcore-w6 gives SAME on every ask.
+- **06024c06, 231.R2 for a def:** `ask/diff.rs` `side_lines` and the new `declared_in`. A world that doesn't declare a def or input the expression names has no line, so the line is `added`. Probe `cr/ax` `qd`: `0 changed, 1 added … / added extra: 1.00 PLN` (2.00 PLN at `exact`). That is the plan's row and refcore-w6's (SAME). No stored record moved.
+- **208.8:** not taken. T has no text for it.
+- **Stored records moved, by change, with the line the engine now prints.** Each is equal to refcore-w6's bytes on its own asks, and red until the pin.
+  - 206.1, 9 ids against T §2's 0 (STOP-REPORT below):
+    - m1 `fixes/gate8/m2_g7_p1_cuts` and `m2_g7_p2`: `d_back (d = 2026-03-10) [pay_reading = low]: 450.00 DUK`.
+    - m1 `m2_g8c_b2`: `b2_all … 1 400.00 DUK`.
+    - m1 `m2_g8c_b1f`: `f_then [pay_reading = low]: 2 200.00 DUK`.
+    - m2 counts `r2`, `u2`, `u4` (legs_booked +1) and `r7`, `u3f` (fewer walks, more shared): files `m2/counts/r4.tally`, `days_c.tally`, `unc.tally`.
+  - 221.5, 1 id: m1 `fixes/gate8/m3_window_class`: `matched covered_pay on 2026-02-05 … timing +0 days`.
+  - 219.2, 7 ids against T §2's 0 (STOP-REPORT below). Each now prints a `warning: WARN-LEGS the two observations of …` line:
+    - m1 `fixes/gate8/m2_g4_adj_amt` and m2 `fixes/g4/adj_amt`: `bank[c1] (400.00 PLN) and bank[r1] (500.00 PLN)`.
+    - m1 `m2_d512_day_rows`: `bank[a1] (100.00 PLN, 1.00 PLN) and bank[b1] (100.00 PLN, 2.00 PLN)`.
+    - m1 `m2_d512_link_same`: `bank[a1] (50.00 PLN) and bank[b1] (60.00 PLN)`.
+    - m1 `m2_d512_two_groups`: `bank[a2] (200.00 PLN) and bank[b2] (250.00 PLN)`.
+    - m2 `fixes/t22/rv3_scen_over_base`: `bank[a1] (900.00 PLN) and sbank[b1] (950.00 PLN)`.
+    - m3 `b192/same-two-legs`: `bank[a2] (10.00 PLN, 1.00 PLN) and bank[b1] (10.00 PLN, 2.00 PLN)`.
+  - 208.2, 2 ids (at most 17): m2 `fixes/rv/g2_b3_both_break` and `fixes/rv/rc_refusal_words_differ` lose `pinned: wa = 2026-04-05`. Their line 5 is now `cut 2026-01-01`.
+  - 221.1, 3 ids (a `pinned:` line joins):
+    - m2 `d77/sign`: `pinned: wd = 2026-03-07`.
+    - m2 `fixes/t22/cut_each_ask_twin`: `pinned: w = 2026-03-07`.
+    - m2 `items/explain/from`: `pinned: wd = 2026-12-25`.
+  - 220.2, 9 ids (an `open:` or `pinned:` line joins):
+    - kernel `g10/ledger` and m1 `fixes/g12/pm_ledger_ledger`, `pm3_ledger_ledger`, `pm4_g10_ledger_ledger`, `pm8_g10_ledger_ledger`, `prr_projunc_g10_ledger_ledger`, `r_pb_bal-ledger_ledger`, `v_mvq`: `open: fee` before `open: tip[t01]`.
+    - m3 `t221-g1/220-1-covered-end`: `pinned: w2 = 2026-03-31` above its `pad:` line.
+  - 237.1, 4 ids (a `pad:` line joins), each the read pad's own:
+    - m3 `b192/chain-pads`: `pad: konto 2026-03-15 start, pads:rd:konto@2026-03-15 start of 100.00 PLN`.
+    - m2 `fixes/gate8/m2_d512_alone_pad`: `pad: … end of 300.00 PLN`.
+    - m2 `m2_d512_pads_run`: `pad: … start of 100.00 PLN`.
+    - m2 `m2_g4_p_pad`: `pad: konto 2026-03-20 end, … of -20.00 PLN`.
+  - 208.10, 219.1, 231.R2: none.
+  - No red id fell outside its change's list. The register's 18 ids carry no value, code or result line.
+- **Not chased:** `b192/same_two_legs.tally`'s `r` (residuals), an ask its record doesn't run, words HOLE-SAME `1.00 PLN (bank[a2])` on both refcores and `10.00 PLN (bank[a2])` on the engine. G2 touched `book/same_booking.rs`, where that text is made, only at one register call site, so the difference most likely predates G2.
+- **Size** (`git diff --stat b511aa0f..HEAD -- engine/crates`): 21 files, 387 in and 112 out (net +275), against the plan's 0.35 to 0.6 k. The library alone is 18 files, 369 in and 102 out; builder tests are 3 files, 18 in and 10 out.
+- **Kernel files:** `walk/projection.rs`, `ends.rs`, `readings.rs`, `state.rs`, `agenda.rs`, `reads.rs`, `move_flows.rs`, `day.rs`, `order.rs`; `book/ledger.rs`, `same.rs`, `members.rs`, `observe.rs`, `same_booking.rs`, `reading.rs`. `check fences` was green after 12b7f967 and after 06024c06. The fences' suites also ran in every `check commit`, and none was red.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched). Report-only hits: 8, as at b511aa0f.
+- **Single-mutant proofs:** none. The gate's one gate-8 run covers the group.
+- **Open STOP-REPORTs:** one, the count (below).
+- **Usage:** about 1.31 % of the week (`engine/tools/usage tmp/spec-2.2.1-build/g2-ids.txt`), against about 1.2 %.
+- **Time:** about 1 h 25 min from 17:52Z. Checks took about half an hour of it, estimated from the runs: `check commit` 70 to 140 s, about 9 runs; `check quick` about 77 s, about 15 runs; fences 22 s, twice.
+- **Checks at 06024c06's tree:**
+  - `check quick: green, 11 steps (79s)`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (71s)`: the 19 test files holding the ids above, no other.
+  - `check fences: green, 1 step (23s)`.
+  - `commit-check: 0 rule-changing commits, no attribution line`.
+- **Waiting for the pin:** on the ids above.
+
+## STOP-REPORT 2026-11-20: 206.1 and 219.2 move stored records where T §2 counts none
+
+- **Kind:** other: a count in the plan.
+- **Where:** 7a5202a4 (`walk/projection.rs` `proj_base`) and 4c4fc2ba (`book/observe.rs` `same_rows_warned`); the plan's line 85, "No stored record moves for 206.1, 219.1, 219.2 (T §2)".
+- **Rule or gate:** the brief's stop rule (a red id outside a change's list puts the change back).
+- **What happens:** after 206.1, `check commit` is red on 4 m1 value records and 5 m2 count rows. After 219.2 it is red on 7 records, each gaining one WARN-LEGS line. All 16 are in the entry above.
+  - Each is the item's own class by its words: a projection from a day before its walk's start, or two observed rows stated `same` that disagree with no instance fulfilled.
+  - Each is byte-equal to the writer's refcore (refcore-w6) on its own asks. `m2_g8c_b1f` and `d_back` were also worked by hand.
+  - So I read the ids as inside the changes' lists, and T §2's count of 0 as low.
+- **What I tried:** a narrower 206.1 (`proj_base` only, as the plan says). It already is that. The moved records are exactly the inputs that function's rule reaches.
+- **What I ask:** the lead to rule whether these 16 ids are the pin's (re-stored with the rest of G2's), or whether either change goes back. Each change is its own commit and reverts alone.
+- **State:** this commit, after 06024c06; `check quick` green; nothing uncommitted; not pushed.
