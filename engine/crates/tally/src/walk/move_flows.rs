@@ -311,6 +311,9 @@ impl Engine {
                 text: i.id.clone(),
                 figure: String::new(),
             });
+            // what the balance lists of it: its reads, as its mark carries them (S5, P43 on
+            // #241; L §8.2 One read set)
+            acc.met.merge(&i.coll);
         }
         let groups = self.same_groups(m, cut)?;
         for (first, rest) in once_obs(&groups, &obs) {
