@@ -265,3 +265,13 @@ On refcore at the second pin (0818f488: W6, W5, W7, W2, W3, W1; 1 597 tests). Ev
 - **Still held:** `fixes/t22/fault_paths` (M7) and `last/net_worth` (234.1, which W5 didn't take).
 - **T's texts:** `misc2/m2.tally` loses `before top`, which S-221.9 refuses.
 - **Waits for a tree with G2:** `m2_counts.rs`' five rows (206.1: `r2`, `u2`, `u4`, `r7`, `u3f`). They hold the engine's counters, not refcore's, so they can't be re-pinned on this branch.
+
+## tally 2.2.1, chunks C4 and C7: G2's vectors and refcore's (#241, 2026-11-20)
+
+On the build branch merged at 7e4ae092 (G1, G1's fix, G2, G2's fix) and refcore at the second pin (0818f488).
+
+- **C4, G2 (`t221-g2`, 11 rows):** 206.1, 208.2, 208.5, 219.1, 219.2, 220.2, 221.1, 221.5 (with 208.1's `?` line), 231.Q1b, 231.R2 for a def, 237.1, refcore's bytes, green on this engine. 208.10's row (`qn`) waits for G3: 233.7 names the read (`lvl is none here`). 208.8 isn't written: no text holds `value … in PLN` under `partial` (M5a's form).
+- **The counts:** `m2_counts.rs` re-pinned to this engine for 206.1 (`r2`, `u2`, `u4`: one leg more; `r7`, `u3f`: fewer walks, more shared).
+- **C7, refcore alone (`t221-rc`, 16 rows and 1 check fixture):** 221.R1, 222.1, 228.Q5 (check: a cycle's refusal placed by its header's file), 228.Q9, 231.Q10 (written orders compose; the first by id not due that day), 231.R2 for a place, 235.3 (and its refused twin), 235.10 (and its twin), 235.13 (and its twin), 236.2, R18's cell 2. 235.8, R18's cell 1 and 229.2 were already guards (`t221-gd`, C1).
+- **Held for refcore (`held.tsv`):** S-231.Q1a (`t221-g2/231-1b-whens`, `t221-rc/231-1a-conflict-order`: refcore names `bz and bx`, step 3's order is `bx and bz`), 231.R1 (`t221-rc/231-R1-explain-in-s`: refcore's axes not in id order), 236.3 (`t221-rc/236-3-over-world`: the writer's W8 mends it after the pin). Not written: 208.R2 (refcore refuses each ask `REFCORE-NOT-YET`; T's text waits in T's notes).
+- **To G3 and G4:** 221.C1's `min(window, w)` (refcore one question per unknown day, R21: G3); 228.Q5's `run` (the refusals in path order, R20: G4).

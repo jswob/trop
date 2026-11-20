@@ -379,6 +379,7 @@ mod tests {
                     "lawdate",
                     "t221-gd",
                     "t221-g1",
+                    "t221-g2",
                     "t221-rc"
                 ]
                 .contains(&v.group.as_str()),

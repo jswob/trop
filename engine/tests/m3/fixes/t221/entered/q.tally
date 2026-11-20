@@ -1,0 +1,5 @@
+part q
+  tally 2
+
+ask q_bal: bal(konto, 2026-10-31)
+ask q_resid: residuals konto 2026-10

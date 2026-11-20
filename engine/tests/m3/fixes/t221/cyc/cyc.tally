@@ -1,0 +1,48 @@
+model cyc
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-06-30
+  note "T's text for 231.Q10 (invented): three decisions read each other's place; written orders compose (m_a before m_c, m_c before m_b); m_a, first by id, is due on 2026-01-01 only"
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place savings: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input d_a: date
+input fa: num
+input fb: num
+input fc: num
+
+move m_a: transfers
+  on d_a
+  reads konto
+  before m_c
+  leg cash from konto to world amount round(bal(konto) / fa, minor(PLN), down)
+
+move m_b[m in months]: transfers
+  on start_of(m)
+  reads konto
+  leg cash from konto to savings amount round(bal(konto) / fb, minor(PLN), down)
+
+move m_c[m in months]: transfers
+  on start_of(m)
+  reads konto
+  before m_b
+  leg cash from konto to world amount round(bal(konto) / fc, minor(PLN), down)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d_a = 2026-01-01 "s"
+  fa = 10 "s"
+  fb = 4 "s"
+  fc = 2 "s"
+  opening[konto] = 1 600.00 PLN at 2026-01-01 start "s"
+
+ask q: flows(m_b, 2026-01..2026-03), flows(m_c, 2026-01..2026-03), bal(konto, 2026-03-31)

@@ -106,3 +106,30 @@ t221-g1/from-across	m3/fixes/t221/from	run base.tally sc.tally --ask s_after s_d
 t221-g1/from-after	m3/fixes/t221/from	run base.tally sc_after.tally	-	tally 2.2.1 (#241) S-from's twin: a window wholly after from books as written
 t221-g1/from-before	m3/fixes/t221/from	run base.tally sc_before.tally	-	tally 2.2.1 (#241) S-from's twin: a window wholly before from is left out
 t221-rc/221-10-mean-quantile	m3/fixes/t221/new	run agg2.tally	-	tally 2.2.1 (#241) 221.10, L §4.4 l.669: window terms of mean and quantile are the hole
+t221-g2/206-nested-proj	m3/fixes/t221/p206	run p2.tally --ask b	-	tally 2.2.1 (#241) 206.1, E §4.3 step 1: a projection from a day before its walk's start starts up the chain
+t221-g2/208-2-unread-pin	m3/fixes/t221/misc	run m1.tally --ask refpin	-	tally 2.2.1 (#241) 208.2, L §8.2 l.2248: a refused line lists only the pins its refusal rests on
+t221-g2/208-5-assumed	m3/fixes/t221/cbase	run c_base.tally --ask q2 q_decide	-	tally 2.2.1 (#241) 208.5, L §8.2: an assumed line under a refused result
+t221-g2/219-1-same-planned	m3/fixes/t221/s5	run hs_disagree.tally --ask amt	-	tally 2.2.1 (#241) 219.1, L §6.1 l.1797: two planned sides stated same that disagree are HOLE-SAME
+t221-g2/219-2-warn-legs	m3/fixes/t221/s5	run r3_disagree.tally	-	tally 2.2.1 (#241) 219.2, L §5.19 l.1717: WARN-LEGS for two observed rows stated same that disagree
+t221-g2/220-2-pin-open	m3/fixes/t221/cov	run cov.tally --ask v2	-	tally 2.2.1 (#241) 220.2, L §8.2: a pad's reset keeps an open instance's reads, its open line
+t221-g2/221-1-late-pin	m3/fixes/t221/misc	run m1.tally --ask p_after	-	tally 2.2.1 (#241) 221.1, L §8.2: a balance before a pinned plan leg's day lists that pin
+t221-g2/221-5-timing	m3/fixes/t221/cov	run cov.tally --ask v4	-	tally 2.2.1 (#241) 221.5 and 208.1, L §4.4 l.665, E §6.3: a window-dated instance's matched line takes its observation's day
+t221-g2/231-1b-whens	m3/fixes/t221/diff	run base.tally sa.tally sb.tally --ask pinned	-	tally 2.2.1 (#241) 231.Q1b, L §5.11 step 3: every unbeaten rule's when is read; the fan-out head
+t221-g2/231-R2-added-def	m3/fixes/t221/ax	run reality.tally sa.tally --ask qd	-	tally 2.2.1 (#241) 231.R2, L §5.18 diff: a def the base doesn't declare is added
+t221-g2/237-1-pad-lines	m3/fixes/t221/p237	run cp.tally	-	tally 2.2.1 (#241) 237.1, L §8.2's pad row: a field read of a pad lists its own pad line
+t221-rc/221-R1-residuals-one	m3/fixes/t221/r1one	run t221r1.tally	-	tally 2.2.1 (#241) 221.R1, L §5.18 l.1603: residuals of a place of a unit of kind one runs
+t221-rc/222-residuals-entered	m3/fixes/t221/entered	run reality.tally q.tally --ask q_resid	-	tally 2.2.1 (#241) 222.1, L §5.18: residuals of any place, however it entered
+t221-rc/228-9-nested-member	m3/fixes/t221/n9	run top.tally	-	tally 2.2.1 (#241) 228.Q9, R20: a nested member's scenario refused, its file named
+t221-rc/231-1a-conflict-order	m3/fixes/t221/diff	run base.tally sa.tally sb.tally --ask pinned2	-	tally 2.2.1 (#241) S-231.Q1a, L §5.11 l.1131: RUN-CONFLICT names the first two in step 3's order
+t221-rc/231-10-cycle-keys	m3/fixes/t221/cyc	run cyc.tally	-	tally 2.2.1 (#241) 231.Q10, L §5.14.2: written orders compose; the first by id not due that day
+t221-rc/231-R1-explain-in-s	m3/fixes/t221/diff	run base.tally sa.tally sb.tally --ask exs	-	tally 2.2.1 (#241) 231.R1, L §5.18 l.1641: explain in a scenario with pins, the axes in id order
+t221-rc/231-R2-added-place	m3/fixes/t221/rs2	run b.tally sc.tally --ask q6	-	tally 2.2.1 (#241) 231.R2, L §5.18 diff: a place only the scenario declares is added
+t221-rc/235-3-key-order	m3/fixes/t221/g3d	run l6_two_ok.tally	-	tally 2.2.1 (#241) 235.3, R18 cl.2: a key over months before a law-dated key loads
+t221-rc/235-3-key-order-later	m3/fixes/t221/g3d	run l7_two_later.tally	-	tally 2.2.1 (#241) 235.3, R18 cl.2: the law-dated key first is refused
+t221-rc/235-10-at-reader-on	m3/fixes/t221/ld	run reader_on.d.tally	-	tally 2.2.1 (#241) 235.10, L §4.3 l.640: an at reader def in a key's on before the at: LOAD-LAWDATE
+t221-rc/235-10-at-reader-on-twin	m3/fixes/t221/ld	run reader_on.t.tally	-	tally 2.2.1 (#241) 235.10's twin: the same chain, its version governing always: LOAD-LAWDATE still
+t221-rc/235-13-domain-hole	m3/fixes/t221/g3ef	run p17_domhole.tally	-	tally 2.2.1 (#241) 235.13, R18 cl.3 option A: a key domain's hole
+t221-rc/235-13-domain-hole-twin	m3/fixes/t221/g3ef	run p17t_domhole.tally	-	tally 2.2.1 (#241) 235.13's twin: the same text, its version governing always
+t221-rc/236-2-residuals-none	m3/fixes/t221/snone	run w_snone.tally --ask q3	-	tally 2.2.1 (#241) 236.2, L §5.19 l.1719: residuals over a stated reading replaced by none
+t221-rc/236-3-over-world	m3/fixes/t221/sw	run reality.tally s1.tally s3.tally --ask q_low	-	tally 2.2.1 (#241) 236.3, O §2.1: a scenario over one refused LOAD-WORLD is refused with it
+t221-rc/r18-c2-read-in-key	m3/fixes/t221/r18	run r18c2.tally	-	tally 2.2.1 (#241) R18's cell 2: last of a reading at a law-dated key

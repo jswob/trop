@@ -1,0 +1,20 @@
+scenario sc over rb
+  tally 2
+  from 2026-01-01
+
+place nowa: accounts PLN lives 2026-01-01..
+
+ask s1: bal(sav, 2026-02-28), bal(nowa, 2026-02-28) in sc
+ask s1b: stated[sav] in sc law 2026-02-28
+ask s2: explain bal(nowa, 2026-02-28) in sc
+ask s4: last(stated[nowa], 2026-03-01), bal(p, 2026-02-28) for p in accounts on 2026-02-28 in sc
+
+version sc_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor sav
+  anchor nowa
+  opening[sav] = 5 at 2026-01-01 start "sc"
+  stated[sav] = 50 at 2026-02-28 start "sc"
+  stated[nowa] = 9 at 2026-02-10 end "sc"
