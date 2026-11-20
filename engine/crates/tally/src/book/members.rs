@@ -653,7 +653,9 @@ impl Engine {
     /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
     /// decision, in its walk or one it continues, `RUN-ORDER` where it hasn't run yet; else in
     /// the main walk of the read's timeline, or the instance as planned where that walk didn't
-    /// run it (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2.
+    /// run it, one dated by a window as a binding's member is ([`Engine::window_member`])
+    /// (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2, E §4.1
+    /// step 2.
     fn instance_by_id(
         &mut self,
         m: &Reality,
@@ -682,7 +684,12 @@ impl Engine {
                 Code::Run(Run::Order),
                 format!("decision {id} is read before it has run"),
             ))),
-            None => Ok(Some(Moving::Plan(inst))),
+            // dated by a window no walk ran: its fields are the window's, read per day or its
+            // hole, as its membership is (E §4.1 step 2; tally 2.2.1 F4, P41)
+            None => match self.window_member(m, mv, &inst, ctx)? {
+                Some(held) => Ok(Some(held)),
+                None => Ok(Some(Moving::Plan(inst))),
+            },
         }
     }
 
