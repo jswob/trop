@@ -485,15 +485,25 @@ pub(crate) fn sides_differ(
             Fact::Day => None,
             Fact::Any | Fact::Amounts | Fact::Leg(_) => amounts_differ(m, &class)?,
         };
-        let (what, figures) = if let Some(figures) = amounts {
-            (format!("the amount of {}", mine.name), figures)
+        let (what, figures, day) = if let Some(figures) = amounts {
+            let day = match mine.day.day().or(row_day) {
+                Some(day) => day.text(),
+                None => mine.day.value().text(m).map_err(num_stop)?,
+            };
+            (format!("the amount of {}", mine.name), figures, day)
         } else if matches!(fact, Fact::Leg(_) | Fact::Amounts) {
             // a leg's amount is its fact: the days are another (Q1, Q3, S2)
             continue;
         } else {
             let sides: Vec<(&str, &Dated)> = class.iter().map(|(id, lg)| (*id, &lg.day)).collect();
             match compare_days(&sides) {
-                DayCmp::Differ(figures) => (format!("the day of {}", mine.name), figures),
+                // the day it differs on is the first side's in id order, as stated (P45 (a))
+                DayCmp::Differ(figures) => {
+                    let Some(first) = figures.first().cloned() else {
+                        return Err(invariant("a class of movements stated same with no side"));
+                    };
+                    (format!("the day of {}", mine.name), figures, first)
+                }
                 DayCmp::Hole(hole) => return Ok(Some(hole)),
                 DayCmp::Undecided(unknown) => {
                     let what = format!("the day of {}", and_list(&ids));
@@ -507,10 +517,6 @@ pub(crate) fn sides_differ(
             .zip(&ids)
             .map(|(figure, id)| format!("{figure} ({id})"))
             .collect();
-        let day = match mine.day.day().or(row_day) {
-            Some(day) => day.text(),
-            None => mine.day.value().text(m).map_err(num_stop)?,
-        };
         let text = format!(
             "{} are one, but {what} differs on {day}: {}",
             and_list(&ids),
