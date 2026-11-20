@@ -192,7 +192,8 @@ impl Engine {
     }
 
     /// `overlap_days(a, b, k)`: the days from a to b, both counted, that lie in period k; of
-    /// two windows `HOLE-IMPRECISE` (refcore's `c_overlap_days`). L §4.2, §4.4.
+    /// windows, the interval of its values at their ends' corners (refcore's `c_overlap_days`,
+    /// whose hole of two windows P25 lifts). L §4.2, §4.4 l.668.
     pub(super) fn overlap(
         &mut self,
         m: &Reality,
@@ -210,9 +211,8 @@ impl Engine {
         let from = date_or_window(a, "overlap_days")?;
         let to = date_or_window(b, "overlap_days")?;
         let period = period_arg(m, (call.args.get(2), &k), "overlap_days")?;
-        if let (Value::Window(w), Value::Window(_)) = (&from, &to) {
-            return Ok(Value::Hole(imprecise(m, w, "overlap_days of two windows")?));
-        }
+        // of two windows too, the interval from the corners of their ends, where it is
+        // monotone in each (L §4.4 l.668; P25)
         lifted(m, DateFn::Overlap(period), &[from, to])
     }
 
