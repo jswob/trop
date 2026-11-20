@@ -1367,8 +1367,9 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
 
 /// The state after entry `ent`: its change applied, the window tests' questions `open`
 /// ([`apply`]); a movement dated by a window may fall from its `ImpOn` on, until its leg's
-/// booking at the window's last day (refcore's `apply`, its `wid`); a movement's own refusal
-/// meets no window test, so it outranks their hole (P31). E §4.2, L §4.4.
+/// booking at the window's last day, or its mark there where a member stated `same` books it
+/// instead (refcore's `apply`, its `wid`); a movement's own refusal meets no window test, so
+/// it outranks their hole (P31). E §4.2, L §4.4, §6.1.
 fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
     let open = if ent.own { None } else { open };
     let mut st = apply(prev, &ent.change, (at, open))?;
@@ -1379,7 +1380,7 @@ fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result
                 hole: h.clone(),
                 signed: ent.signed.clone(),
             }),
-            Change::Delta(_) | Change::Hole(_) => {
+            Change::Delta(_) | Change::Hole(_) | Change::Mark => {
                 st.imp.retain(|p| &p.wid != wid);
                 st.held.retain(|p| &p.wid != wid);
             }
@@ -1387,8 +1388,7 @@ fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result
             | Change::Perm(_)
             | Change::Unperm(_)
             | Change::Bad(_)
-            | Change::PermBad(_)
-            | Change::Mark => {}
+            | Change::PermBad(_) => {}
         }
     }
     Ok(st)

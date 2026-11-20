@@ -121,7 +121,16 @@ impl Engine {
             }
             match book {
                 EndBook::Written => continue,
-                EndBook::Skip => {}
+                EndBook::Skip => {
+                    // a window side another member books ends its window here, booking
+                    // nothing: its day is the other's (refcore's `book_leg`; P45 (b) on #241)
+                    if let (Dated::Window(w), Some(p)) = (&lg.day, end.place()) {
+                        let mut ent = Ent::new(at, Change::Mark);
+                        ent.window = Some((format!("{}.{}", mover.id(), lg.name), w.clone()));
+                        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+                        self.walk_mut(id)?.add(m, p, &unit, ent)?;
+                    }
+                }
                 EndBook::Wait(decision) => {
                     let waiting = (
                         mover.id().to_owned(),
