@@ -162,11 +162,11 @@ pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option
 /// A piece of a window a movement falls on: the days from `first` to `last`, on which every
 /// test of its day the plan pass makes comes out one way (E §4.1 step 2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct Piece {
+pub struct Piece {
     /// Its first day, where it is read.
-    pub(super) first: Day,
+    pub first: Day,
     /// Its last day.
-    pub(super) last: Day,
+    pub last: Day,
 }
 
 /// Window `w` cut where a test of its day can change: each of `edges` inside it, an edge being
@@ -521,12 +521,24 @@ pub struct Inst {
 /// `window_class_depends`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Depends {
-    /// Inside the run on some days, before its start or its scenario's `from` on the rest:
-    /// the first day it may book, the first day of the first piece that isn't out (L §6.4).
-    Start(Day),
+    /// Inside the run on some days, before its start or its scenario's `from` on the rest
+    /// (L §6.4); the days the class that books reaches, none where no piece books it.
+    Start(Option<Piece>),
     /// Modelled past on some days, booked on the rest: whether it is a binding's member
-    /// depends on the day too.
-    Covered,
+    /// depends on the day too; the days the class that books reaches.
+    Covered(Option<Piece>),
+}
+
+impl Depends {
+    /// The days the class that books reaches: from the first day of the first piece that
+    /// books it to the last day of the last (refcore's `i.booked`); none where no piece does.
+    /// E §4.1 step 2.
+    #[must_use]
+    pub fn booked(self) -> Option<Piece> {
+        match self {
+            Depends::Start(booked) | Depends::Covered(booked) => booked,
+        }
+    }
 }
 
 impl Inst {

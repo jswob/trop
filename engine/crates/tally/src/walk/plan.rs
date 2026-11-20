@@ -19,8 +19,8 @@
 
 use super::body::{imprecise_body, no_body, same_body};
 use super::instance::{
-    Amount, Booked, BookedLeg, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Seed, Status,
-    day_window, inst_order, window_pieces,
+    Amount, Booked, BookedLeg, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Piece, Seed,
+    Status, day_window, inst_order, window_pieces,
 };
 use super::tuples::{Law, Tuple};
 use crate::base::{Code, Load, Refusal, Run};
@@ -336,12 +336,26 @@ impl Engine {
             classes.push((piece, self.day_class(m, inst, (cut, from), piece.first)));
         }
         let kinds: Vec<DayClass> = classes.iter().map(|(_, c)| *c).collect();
-        let first_in = classes.iter().find(|(_, c)| *c != DayClass::Out);
-        if let (true, Some((piece, _))) = (kinds.contains(&DayClass::Out), first_in) {
-            return Ok(Some(Depends::Start(piece.first)));
+        // the days the class that books reaches: its hole's, from the first piece that books
+        // it, past a reading it may fall after, to the last (E §4.1 step 2, L §5.19 Holes; #220)
+        let booking: Vec<Piece> = classes
+            .iter()
+            .filter(|(_, c)| *c == DayClass::Booked)
+            .map(|(p, _)| *p)
+            .collect();
+        let booked = match (booking.first(), booking.last()) {
+            (Some(a), Some(b)) => Some(Piece {
+                first: a.first,
+                last: b.last,
+            }),
+            _ => None,
+        };
+        let inside = kinds.contains(&DayClass::Modelled) || kinds.contains(&DayClass::Booked);
+        if kinds.contains(&DayClass::Out) && inside {
+            return Ok(Some(Depends::Start(booked)));
         }
         let mixed = kinds.contains(&DayClass::Modelled) && kinds.contains(&DayClass::Booked);
-        Ok(mixed.then_some(Depends::Covered))
+        Ok(mixed.then_some(Depends::Covered(booked)))
     }
 
     /// The class plan instance `inst` takes on day `day` of its window, at cut `cut`: out

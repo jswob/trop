@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::instance::{Amount, Dated, Depends, End, Exists, Inst, Order, Status};
+use super::instance::{Amount, Dated, End, Exists, Inst, Order, Piece, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -662,22 +662,24 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                     walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
                 }
             }
-            if inst.depends.is_some()
-                && let Some(Dated::Window(w)) = &inst.day
-            {
-                // a window whose days take different classes (tally 2.1.8 item 77)
+            if let (Some(depends), Some(Dated::Window(w))) = (inst.depends, &inst.day) {
+                // a window whose days take different classes (tally 2.1.8 item 77): the hole
+                // reaches as far as the class that books would, from its first day, none where
+                // no day books it (refcore's `sched_hole`, its `booked`; #220)
                 let class = super::plan::class_hole(&inst, w);
                 walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
                 qs = spread(&[qs.as_ref(), Some(&class)]);
+                let Some(booked) = depends.booked() else {
+                    return Ok(());
+                };
+                return schedule_booked_hole(walk, (mv, rank), &inst, (booked, qs.as_ref()));
             }
-            // its legs on its day, a window's first, or the first day it may book where its
-            // window starts before the run or its scenario's `from` (refcore's
-            // `sched_leg_hole`; L §6.4: nothing before `from` changes)
-            let first = match inst.depends {
-                Some(Depends::Start(first)) => Some(first),
-                Some(Depends::Covered) | None => inst.day.as_ref().and_then(Dated::lo),
-            };
-            let day = first.map_or(start, |d| d.max(start));
+            // its legs on its day, a window's first (refcore's `sched_leg_hole`)
+            let day = inst
+                .day
+                .as_ref()
+                .and_then(Dated::lo)
+                .map_or(start, |d| d.max(start));
             for leg in 0..inst.legs.len() {
                 walk.at(point(day), Act::LegHole(mv, leg, qs.clone()));
             }
@@ -703,6 +705,48 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         | Status::Open
         | Status::Uncertain
         | Status::Modelled => {}
+    }
+    Ok(())
+}
+
+/// The hole of window-dated plan instance `inst`, movement `mv` at rank `rank`, whose class
+/// depends on its window's day, at its legs' places over the days `booked` the class that
+/// books reaches, its questions `qs`: from their first day, a hole no reading ends while the
+/// movement may still fall after it, which becomes, at the end of their last day and before
+/// that day's closing readings, a hole the next reading ends; a plain hole from their first
+/// day where they are one day or a leg's amount is refused (refcore's `sched_hole`, `perm`,
+/// `dec_win_end`). E §4.1 step 2 ("as far as … the other class would reach"), §4.2 step 4,
+/// L §5.19 Holes; #220.
+fn schedule_booked_hole(
+    walk: &mut Walk,
+    (mv, rank): (Mv, u32),
+    inst: &Inst,
+    (booked, qs): (Piece, Option<&Hole>),
+) -> Result<(), Stop> {
+    let first = booked.first.max(walk.start);
+    let point = At {
+        rank,
+        ..At::of(first, Step::Plans)
+    };
+    for (leg, lg) in inst.legs.iter().enumerate() {
+        if first >= booked.last || matches!(lg.amount, Amount::Refused(_)) {
+            walk.at(point, Act::LegHole(mv, leg, qs.cloned()));
+            continue;
+        }
+        let q = match &lg.amount {
+            Amount::Hole(a) => spread(&[qs, Some(a)]),
+            Amount::Qty(_) | Amount::Refused(_) => qs.cloned(),
+        };
+        let q = q.ok_or_else(|| super::plan::invariant("a hole movement with no question"))?;
+        walk.at(point, Act::Perm(mv, leg, q.clone()));
+        if booked.last <= walk.end {
+            let end = At {
+                stratum: 0,
+                rank,
+                ..At::of(booked.last, Step::End)
+            };
+            walk.at(end, Act::WindowEnd(inst.id.clone(), q));
+        }
     }
     Ok(())
 }

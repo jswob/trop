@@ -284,7 +284,7 @@ impl Engine {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
                 }
-                if i.depends == Some(Depends::Covered)
+                if matches!(i.depends, Some(Depends::Covered(_)))
                     && let Some(Dated::Window(w)) = &i.day
                 {
                     // modelled past on some of its window's days, booked on the rest: whether
