@@ -168,7 +168,7 @@ def m_trans_call(self, n, vals, to, ctx, env=None):
     from .values import Iv
     if any(isinstance(v, Iv) for v in vals):
         # an argument computed from a window: the interval of its values (L §4.4 l.668; P25)
-        return self.lift_values(name, lambda *vs: self.trans_call(n, list(vs), to, ctx, env), *vals)
+        return self.lift_values(name, lambda *vs: self.trans_call(n, list(vs), to, ctx, env), *vals, mono=True)
     idx = [i for i, v in enumerate(vals) if isinstance(v, Num)]
 
     def at(qs):
@@ -342,7 +342,7 @@ def m_c_dcf(self, n, env, ctx):
     if h:
         return h
     # the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
-    return self.lift(lambda a, b, dc: Num(self.dcf_q(a, b, dc), ()), *vals)
+    return self.lift(lambda a, b, dc: Num(self.dcf_q(a, b, dc), ()), *vals, what='dcf')
 
 
 def m_call_args(self, n, env, ctx):

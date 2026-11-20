@@ -1,0 +1,56 @@
+# tally 2.2.1 P30 (L §4.4 l.667 to l.671): an operation decides over an interval only what holds for every value
+# the interval can hold; its ends stand for them only where it is monotone and gives a value everywhere between.
+# B1 (the first engine review): pow(-1, days_between(de, wl)) is 1 on some days and -1 on others, so the print
+# and `> 0` are the hole (pins pl_a, pl_b). tally 2.2 printed one end, 1 and true.
+=== b1_pow.tally
+model b1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input w: date
+input wl: date
+input d0: date
+input d1: date
+input de: date
+input n2: num
+input n100: num
+input m1: num
+input mm: month
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  wl = window(2026-01-01, 2027-06-01) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  de = 2025-12-30 "c"
+  n2 = 2 "c"
+  n100 = 100 "c"
+  m1 = -1 "c"
+  mm = 2026-02 "c"
+ask pl: pow(m1, days_between(de, wl))
+ask pl_a: pow(m1, days_between(de, wl)) with wl = 2026-01-01
+ask pl_b: pow(m1, days_between(de, wl)) with wl = 2026-01-02
+ask pl_cmp: pow(m1, days_between(de, wl)) > 0
+=== expect
+pl: ?"date within window(2026-01-01, 2027-06-01) not precise enough for a print" (wl)
+  unknown day: wl
+  cut 2026-01-01
+pl_a: 1
+  pinned: wl = 2026-01-01
+  cut 2026-01-01
+pl_b: -1
+  pinned: wl = 2026-01-02
+  cut 2026-01-01
+pl_cmp: ?"date within window(2026-01-01, 2027-06-01) not precise enough for pow(m1, days_between(de, wl)) > 0" (wl)
+  unknown day: wl
+  cut 2026-01-01
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input mm is read by nothing
+warning: WARN-UNREAD input n100 is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input w is read by nothing

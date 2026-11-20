@@ -1,0 +1,100 @@
+# tally 2.2.1 P30 (L §4.4 l.667 to l.671): an operation decides over an interval only what holds for every value
+# the interval can hold; its ends stand for them only where it is monotone and gives a value everywhere between.
+# A number computed from one window takes its days' values in turn: day_of(mm, days_between(d1, w) + n18) is
+# 2026-02-27 or 2026-02-28 (day_of clamps; dof, dof2); day_of and add_days of a half (dofh, adh) refuse on some days only,
+# so the hole (B2). tally 2.2 printed RUN-NOT-INT 4.5 for dofh and adh.
+=== e1.tally
+model e1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+input w: date
+input w1: date
+input wl: date
+input d0: date
+input d1: date
+input n2: num
+input n3: num
+input n100: num
+input m1: num
+input k1: num
+input mm: month
+input n18: num
+input n20: num
+input n5: num
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  w1 = window(2026-03-10, 2026-03-10) "c"
+  wl = window(2026-01-01, 2027-06-01) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  n2 = 2 "c"
+  n3 = 3 "c"
+  n100 = 100 "c"
+  m1 = -1 "c"
+  k1 = 1 "c"
+  mm = 2026-02 "c"
+  n18 = 18 "c"
+  n20 = 20 "c"
+  n5 = 5 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+ask r_agree: round(days_between(d1, w) / n100, 0, half-up)
+ask r_cmp: round(days_between(d1, w) / n3, 0, half-up) > k1
+ask r_w1: round(days_between(d1, w1) / n3, 0, half-up)
+ask ww_eq: w == w
+ask ww_lt: w < w
+ask xx_sub: days_between(d0, w) - days_between(d0, w)
+ask xx_lt: days_between(d0, w) < days_between(d0, w) + k1
+ask xx_eq: days_between(d0, w) == days_between(d0, w)
+ask ad_eq: add_days(w, 1) == w
+ask ad_gt: add_days(w, 1) > w
+ask div0: n2 / days_between(d0, w)
+ask div0c: n2 / days_between(d0, w) > n3
+ask divw: days_between(d1, w) / days_between(d0, w)
+ask mulw: days_between(d0, w) * days_between(d0, w)
+ask abs_neg: abs(days_between(w, d1))
+ask abs_x: abs(days_between(d0, w))
+ask abs_c: abs(days_between(d0, w)) <= k1
+ask abs_c0: abs(days_between(d0, w)) >= 0
+ask pow_odd: pow(days_between(d0, w), n3)
+ask pow_c: pow(days_between(d0, w), n3) >= m1
+ask pow_ev: pow(days_between(d0, w), n2) >= 0
+ask pow_ev1: pow(days_between(d0, w), n2) <= k1
+ask pow_neg: pow(days_between(d0, w), m1)
+ask pow_negb: pow(m1, days_between(d1, w))
+ask pow_long: pow(m1, days_between(d1, wl))
+ask pow_long2: pow(m1, days_between(d1, wl) * n2)
+ask dof: day_of(mm, days_between(d1, w) + n18)
+ask dof2: day_of(mm, days_between(d1, w) + n20)
+ask dof0: day_of(mm, days_between(d0, w))
+ask dofneg: day_of(mm, days_between(w, d1))
+ask dofh: day_of(mm, days_between(d1, w) / n2)
+ask adh: add_days(d1, days_between(d1, w) / n2)
+ask adm: add_months(d1, days_between(d0, w))
+ask adw: add_months(w, days_between(d0, w))
+ask mnx: min(days_between(d0, w), 0), max(days_between(d0, w), n5), min(days_between(d0, w), n5)
+ask ifx: if days_between(d0, w) > n5 then k1 else n2
+ask ifu: if days_between(d0, w) > 0 then k1 else n2
+ask ifsame: if days_between(d0, w) > 0 then 1 else 1
+def x0: num = days_between(d0, w)
+def y1: num = days_between(d1, w1)
+ask lst: [x0, 1, y1]
+=== expect dof dof2 dofh adh
+dof: window(2026-02-27, 2026-02-28)
+  cut 2026-01-01
+dof2: 2026-02-28
+  cut 2026-01-01
+dofh: ?"date within window(2026-03-10, 2026-03-12) not precise enough for day_of" (w)
+  unknown day: w
+  cut 2026-01-01
+adh: ?"date within window(2026-03-10, 2026-03-12) not precise enough for add_days" (w)
+  unknown day: w
+  cut 2026-01-01
+warning: WARN-UNREAD place konto is read by nothing

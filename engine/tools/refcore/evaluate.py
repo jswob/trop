@@ -2274,6 +2274,10 @@ class Engine:
 
     def iv_arith(self, n, a, b, ctx):
         """Arithmetic on a window gives an interval (L §4.4)."""
+        if n.op == '/' and isinstance(b, Iv) and isinstance(b.lo, Num) and b.lo.q <= 0 <= b.hi.q:
+            # a divisor whose interval holds 0: its ends don't stand for its values (L §4.4 l.668, l.671; P30, B3, N6),
+            # so each value in turn, or the hole
+            return self.lift_values('arithmetic', lambda x, y: self.binop_plain(n, x, y, ctx), a, b)
         if isinstance(a, Iv) and not isinstance(b, Iv):
             lo = self.binop_plain(n, a.lo, b, ctx)
             hi = self.binop_plain(n, a.hi, b, ctx)
@@ -2284,12 +2288,21 @@ class Engine:
             src = b.src
         else:
             # two windows: the interval over every corner of their ends (tally 2.1.7 R3, the natural extension)
-            return self.lift(lambda x, y: self.binop_plain(n, x, y, ctx), a, b)
+            r = self.lift(lambda x, y: self.binop_plain(n, x, y, ctx), a, b, what='arithmetic')
+            if isinstance(r, Iv) and n.op in ('+', '-', '*') and whole_valued(a) and whole_valued(b):
+                r.whole = True
+            return r
         if order_lt(hi, lo):
             lo, hi = hi, lo
+        if self.cmp3(lo, hi, None) == 0:
+            # one value when its ends agree (L §4.4 l.668; P30: `days_between(d, w) * 0` is 0)
+            return lo
         org = a.origin if isinstance(a, Iv) else b.origin
         # a computed value: no name (tally 2.1.7 R3, L §4.4: only a copy is the same unknown)
-        return Iv(lo, hi, None, src, origin=org, carry=carry_union(a, b))
+        res = Iv(lo, hi, None, src, origin=org, carry=carry_union(a, b))
+        # whole numbers stay whole under + - * by a whole number (P30: the whole numbers of a whole-number interval)
+        res.whole = n.op in ('+', '-', '*') and whole_valued(a) and whole_valued(b)
+        return res
 
     def binop_plain(self, n, a, b, ctx):
         da = getattr(n, '_datearith', None)
@@ -3770,48 +3783,55 @@ class Engine:
             raise refuse('RUN-NONE', 'never in %s' % what)
         raise refuse('LOAD-UNIT', '%s is %s' % (what, fmt(v)))
 
-    def lift(self, fn, *vals, src=None):
-        """An operation monotone in its windows gives the interval of its values over the days they can take, from
-        their ends (L §4.4; tally 2.1.7 R3: the natural interval extension, every corner of the windows' ends): one
-        value when they agree; a computed value, so no name."""
+    def lift(self, fn, *vals, what='a built-in'):
+        """An operation monotone in its windows and giving a value on every day between their ends: its ends stand for
+        its days (L §4.4 l.668), through the one mechanism, lift_values."""
+        return self.lift_values(what, fn, *vals, mono=True)
+
+    def lift_values(self, what, fn, *vals, mono=False):
+        """An operation over an interval, the one mechanism every operator and built-in goes through (L §4.4 l.667 to
+        l.671, l.2217; tally 2.2.1 P30): it decides only what holds for every value the interval can hold. It takes
+        each value in turn where it can (the whole numbers of a whole-number interval: an int, or whole numbers kept
+        whole by + - *, as days_between(d, w) + 18), with no cap that falls back to the ends; its two ends, and 0 where a
+        number's interval crosses it (abs, an even pow: its shape), stand for the rest only where it is monotone
+        (mono). Then: one value when they agree, the refusal when every one refuses (the first value's), the hole when
+        only some refuse, else their interval; an interval it can't take in turn, where it isn't monotone, is the hole.
+        One window named in two arguments of one operation is one day, as in a comparison."""
         vals = [one_day(v) for v in vals]
         ivs = [v for v in vals if isinstance(v, Iv)]
         if not ivs:
             return fn(*vals)
-        import itertools
-        outs = []
-        for ends in itertools.product(*[((v.lo, v.hi) if isinstance(v, Iv) else (v,)) for v in vals]):
-            r = fn(*ends)
-            if r is None or r is NONE:
-                raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
-            outs.append(r)
-        return self.interval_of(outs, ivs[0], carry_union(*ivs))
-
-    def lift_values(self, what, fn, *vals):
-        """An operation of a number computed from a window (L §4.4 l.668: each operation gives the interval of its
-        values; #221, 221.R3): fn at every value an integer interval can take, at the ends of any other, one value where
-        they agree, else their interval; a refusal only some of its values give is the window's hole."""
-        vals = [one_day(v) for v in vals]
-        ivs = [v for v in vals if isinstance(v, Iv) and not isinstance(v.lo, datetime.date)]
-        if not ivs:
-            return fn(*vals)
+        named = [v.name for v in ivs if v.name is not None and isinstance(v.lo, datetime.date)]
+        if len(ivs) > 1 and len(named) == len(ivs) and len(set(repr(x) for x in named)) == 1:
+            w = ivs[0]
+            return self.per_day(w, lambda d: fn(*[d if isinstance(v, Iv) else v for v in vals]), what)
         import itertools
         opts = []
+        size = 1
         for v in vals:
-            if v in ivs and isinstance(v.lo, Num) and v.lo.isint and v.hi.isint and v.hi.q - v.lo.q <= 400:
-                opts.append([Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
-            elif v in ivs:
-                # its two ends, and 0 where the interval crosses it (abs, an even pow: L §4.4 l.668, P25)
+            if not isinstance(v, Iv):
+                opts.append([v])
+            elif isinstance(v.lo, Num) and whole_valued(v):
+                size *= int(v.hi.q - v.lo.q) + 1
+                opts.append(None if size > LIFT_CAP else [Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
+            elif mono:
                 opts.append([v.lo, v.hi] + ([zero_like(v.lo)] if isinstance(v.lo, Num) and v.lo.q < 0 < v.hi.q
                                             else []))
             else:
-                opts.append([v])
+                opts.append(None)
+        if any(o is None for o in opts):
+            # its values can't be taken in turn and it isn't monotone in them: not decided for the whole interval
+            raise self.imprecise(ivs[0], what)
         outs, errs = [], []
         for c in itertools.product(*opts):
             try:
-                outs.append(fn(*c))
+                r = fn(*c)
             except Refusal as e:
                 errs.append(e)
+                continue
+            if r is None or r is NONE:
+                raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
+            outs.append(r)
         if errs and not outs:
             raise errs[0]
         if errs:
@@ -3854,7 +3874,7 @@ class Engine:
         if all(isinstance(r, bool) for r in outs):
             if len(set(outs)) == 1:
                 return outs[0]
-            raise self.imprecise(iv, _ntxt(n))
+            raise self.imprecise(iv, n if isinstance(n, str) else _ntxt(n))
         return self.interval_of(outs, iv)
 
     def period_arg(self, v, what):
@@ -3871,7 +3891,8 @@ class Engine:
         if isinstance(v, Hole):
             return v
         if isinstance(v, Iv):
-            return self.lift(lambda d: d, v)
+            # a window of days or of periods (`month_of(w)`): monotone, so its ends (L §4.4 l.668; P30, N5)
+            return self.lift(lambda d: self.period_arg(d, 'start_of').start, v, what='start_of')
         p = self.period_arg(v, 'start_of')
         return p.start
 
@@ -3880,7 +3901,7 @@ class Engine:
         if isinstance(v, Hole):
             return v
         if isinstance(v, Iv):
-            return self.lift(lambda d: d + ONE_DAY, v)
+            return self.lift(lambda d: self.period_arg(d, 'end_of').end, v, what='end_of')
         p = self.period_arg(v, 'end_of')
         return p.end
 
@@ -3889,7 +3910,7 @@ class Engine:
         if isinstance(v, Hole):
             return v
         if isinstance(v, Iv):
-            return self.lift(f, v)
+            return self.lift(f, v, what=f.__name__)
         if isinstance(v, Period):
             return f(v.start)
         return f(self.date_of(v, n.name))
@@ -3944,7 +3965,7 @@ class Engine:
             # a window taken with its own name once (L §4.4, as iv_compare): one unknown day, 0 days from itself
             # (the third turn's note, the review of group 2's fix)
             return Int(0)
-        return self.lift(lambda x, y: Int((y - x).days), a, b)
+        return self.lift(lambda x, y: Int((y - x).days), a, b, what='days_between')
 
     def c_add_days(self, n, env, ctx):
         a, k = self.args(n, env, ctx)
@@ -3952,7 +3973,7 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_days')
-        return self.lift_values('add_days', lambda k: self.lift(lambda x: add_days(x, self.int_of(k)), a), k)
+        return self.lift_values('add_days', lambda k: self.lift(lambda x: add_days(x, self.int_of(k)), a, what='add_days'), k)
 
     def months_arg(self, k, per, mult):
         if isinstance(k, Num) and k.u:
@@ -3968,7 +3989,7 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'add_months')
         return self.lift_values('add_months', lambda k: self.lift(
-            lambda x: add_months(x, self.months_arg(k, 'month', 1)), a), k)
+            lambda x: add_months(x, self.months_arg(k, 'month', 1)), a, what='add_months'), k)
 
     def c_add_years(self, n, env, ctx):
         a, k = self.args(n, env, ctx)
@@ -3977,7 +3998,7 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'add_years')
         return self.lift_values('add_years', lambda k: self.lift(
-            lambda x: add_months(x, self.months_arg(k, 'year', 12)), a), k)
+            lambda x: add_months(x, self.months_arg(k, 'year', 12)), a, what='add_years'), k)
 
     def c_overlap_days(self, n, env, ctx):
         a, b, k = self.args(n, env, ctx)
@@ -3989,7 +4010,7 @@ class Engine:
         p = self.period_arg(k, 'overlap_days')
         # monotone in each window, so the interval of its values from their ends, two windows too (L §4.4 l.668;
         # P25)
-        return self.lift(lambda x, y: Int(overlap_days(x, y, p)), a, b)
+        return self.lift(lambda x, y: Int(overlap_days(x, y, p)), a, b, what='overlap_days')
 
     def c_age(self, n, env, ctx):
         b, d = self.args(n, env, ctx)
@@ -4005,7 +4026,7 @@ class Engine:
             return NONE if r is None else Int(r)
         if not isinstance(b, Iv) and not isinstance(d, Iv):
             return f(b, d)
-        return self.lift(f, b, d)
+        return self.lift(f, b, d, what=n.name)
 
     c_age_months = c_age
 
@@ -4083,7 +4104,7 @@ class Engine:
             return v
         self.no_none(v, 'abs')
         return self.lift_values('abs', lambda v: Num(abs(v.q), v.u, money=v.money, isint=v.isint, rate=v.rate,
-                                                     enc=enc_abs(v.enc)), v)
+                                                     enc=enc_abs(v.enc)), v, mono=True)
 
     def c_pow(self, n, env, ctx):
         x, k = self.args(n, env, ctx)
@@ -4092,7 +4113,8 @@ class Engine:
             return h
         self.no_none(x, 'pow')
         self.no_none(k, 'pow')
-        return self.lift_values('pow', lambda x, k: self.pow_of(n, x, k, ctx), x, k)
+        # monotone in its base where the exponent is one number (odd), its shape where it is even (0 joins the ends)
+        return self.lift_values('pow', lambda x, k: self.pow_of(n, x, k, ctx), x, k, mono=not isinstance(k, Iv))
 
     def pow_of(self, n, x, k, ctx):
         if getattr(n, '_realpow', False) and (k.q.denominator != 1 or k.enc is not None or x.enc is not None):
@@ -4129,7 +4151,7 @@ class Engine:
         self.no_none(mode, 'round')
         if isinstance(x, Iv):
             # round is monotone in x: the interval of its values (L §4.4 l.668; P25)
-            return self.lift_values('round', lambda xv: self.round_one(n, xv, u, mode), x)
+            return self.lift_values('round', lambda xv: self.round_one(n, xv, u, mode), x, mono=True)
         return self.round_one(n, x, u, mode)
 
     def round_one(self, n, x, u, mode):
@@ -4811,6 +4833,17 @@ def zero_like(x):
     z.q = Fraction(0)
     z.enc = None
     return z
+
+
+# the values an operation takes in turn before an interval is the hole (P30: not a fallback to the ends)
+LIFT_CAP = 100000
+
+
+def whole_valued(v):
+    """Every value it can hold is a whole number: an int, a whole number, or an interval kept whole (Iv.whole)."""
+    if isinstance(v, Iv):
+        return v.whole or isinstance(v.lo, Num) and v.lo.isint and v.hi.isint
+    return isinstance(v, Num) and (v.isint or v.q.denominator == 1)
 
 
 def one_day(v):

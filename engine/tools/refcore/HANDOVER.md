@@ -7,6 +7,19 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 545 tests)
+
+- **P30, one statement for an operation over an interval** (L §4.4 l.667 to l.671). `lift_values` is the one
+  mechanism; `lift` is its monotone form (`mono=True`). It takes each value in turn where it can: the whole numbers
+  of a whole-number interval (an int, or one kept whole by + - * by a whole number: `Iv.whole`, `whole_valued`), with
+  no cap that falls back to the ends (`LIFT_CAP`, 100 000 values, beyond which the hole). Its ends, and 0 where a
+  number's interval crosses it, stand for the rest only where the operation is monotone and total (`exp`, `ln`,
+  `sqrt`, `round`, `abs`, `pow` with one exponent, the date built-ins); else the hole. Then one value when they agree,
+  the refusal when every one refuses (the first's), the hole when only some do. One window named in two arguments of
+  one operation is one day (`overlap_days(w, w, k)`, N9). `iv_arith`: `/` by an interval holding 0 goes through
+  `lift_values` (B3, N6); ends that agree are one value (`days_between(d, w) * 0`, the review's k1). `start_of`,
+  `end_of` of an interval of periods take its ends (N5; the `REFCORE-NOT-YET` there goes).
+
 ## tally 2.2.1, group W5: the names (issue #241; 1 538 tests)
 
 - **R21, an unknown day's name.** A carry entry is (id, label, days, the window's text) (`window_id`,
