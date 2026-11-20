@@ -917,6 +917,10 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 # falls after it when the window's first day does (L §4.4; MC-X-F11: its body was evaluated, and an
                 # amount that reads the cell being evaluated made the answer depend on the order of the terms)
                 return None
+            pr = tctx.rnd
+            if pr is not None and pr[0] == 'proj' and isinstance(day_lo(day), datetime.date):
+                # a projection reads the instance's random amounts by its day (L §5.16, §5.14.1; #212)
+                tctx = tctx.but(rnd=pr[:5] + (day_lo(day),))
             if at_cut is not None:
                 cuts = [at_cut]
             elif isinstance(day, datetime.date):

@@ -488,7 +488,11 @@ def m_sample_read(self, info, keys, ctx):
         if law > dday:
             raise refuse('RUN-FUTURE', 'a decision on %s reads the sample of %s at %s, after its day' % (dday, org,
                                                                                                           law))
-    if upin is None and r is not None and r[0] == 'proj' and law is not None and law > r[3]:
+    # a projection from t reads a random amount of a movement dated after t by its clause, whatever its fact's law
+    # date: the amount's day decides (L §5.16 Decisions and projections, §5.14.1; #212); another read, by the law date
+    mday = r[5] if r is not None and r[0] == 'proj' and len(r) > 5 else None
+    after = r is not None and r[0] == 'proj' and (mday > r[3] if mday is not None else law is not None and law > r[3])
+    if upin is None and after:
         # a projection from t reads a fact after t at its random clause's value, the same on every path (L §5.16
         # Decisions and projections); without a clause it is refused
         if r[1] is None and r[4] is not None:
@@ -504,7 +508,7 @@ def m_sample_read(self, info, keys, ctx):
             # refcore's load doesn't see which movements a projection reaches, so it refuses at the read)
             raise RandomLine('a projection from %s reaches random %s at %s, after %s, with no random clause or '
                              'query' % (r[3], org, law, r[3]))
-    if upin is None and r is not None and r[0] == 'proj' and law is not None and law > r[3] and r[1] is not None:
+    if upin is None and after and r[1] is not None:
         if d.fn == 'discrete':
             if r[1] == 'mean':
                 raise refuse('RUN-DOMAIN', 'random at mean of %s, a draw of keys (L §5.16)' % org)
@@ -1888,9 +1892,8 @@ def m_fill_compute(self, qid, fkeys, ctx):
                 return 1
             if lt is False and gt is False:
                 return 0
-            raise refuse('RUN-ORDER', 'fill %s: the order of the arc (%s; %s) is a hole' % (
-                qid, ', '.join(fmt(arc['se'][bb.var]) for bb in s.sbinds),
-                ', '.join(fmt(arc['de'][bb.var]) for bb in s.dbinds)))
+            # only a window leaves the order open: no day of it gives the refusal (L §5.12 step 2, #213)
+            raise _OpenOrder(a if isinstance(a, Iv) else b)
         return self.cmp3(a, b, None)
 
     def cmpv(x, y, k):
@@ -1899,13 +1902,15 @@ def m_fill_compute(self, qid, fkeys, ctx):
             if r:
                 return r
         return 0
-    arcs.sort(key=functools.cmp_to_key(lambda x, y: cmpv(x, y, 'ord') or cmpv(x, y, 'tie')))
-    groups = []
-    for x in arcs:
-        if groups and cmpv(groups[-1][0], x, 'ord') == 0 and cmpv(groups[-1][0], x, 'tie') == 0:
-            groups[-1].append(x)
-        else:
-            groups.append([x])
+    def sort_groups(arcs):
+        arcs = sorted(arcs, key=functools.cmp_to_key(lambda x, y: cmpv(x, y, 'ord') or cmpv(x, y, 'tie')))
+        groups = []
+        for x in arcs:
+            if groups and cmpv(groups[-1][0], x, 'ord') == 0 and cmpv(groups[-1][0], x, 'tie') == 0:
+                groups[-1].append(x)
+            else:
+                groups.append([x])
+        return groups
 
     def simulate(seq, log=None):
         R = {sk: (sv, sc_) for sk, se, sv, sc_ in sups}
@@ -1949,24 +1954,98 @@ def m_fill_compute(self, qid, fkeys, ctx):
             if log is not None:
                 log.append((x, before[0], before[1], out[x['sk'] + x['dk']][0], R[x['sk']][0], Q[x['dk']][0]))
         return out
-    seq = [x for g in groups for x in g]
+    import itertools
+
+    def ordered_takes(arcs, log=None, every=False):
+        """every: a tie is tested in every order of its arcs (up to 6), not only reversed (the open order's days)."""
+        groups = sort_groups(arcs)
+        seq = [x for g in groups for x in g]
+        res = simulate(seq, log)
+        for i, g in enumerate(groups):
+            if len(g) < 2:
+                continue
+            orders = itertools.permutations(g) if every and len(g) <= 6 else [reversed(g)]
+            alts = [simulate([x for gg in groups[:i] for x in gg] + list(o) + [x for gg in groups[i + 1:] for x in gg])
+                    for o in orders]
+            if any(_vk(res[k][0]) != _vk(alt[k][0]) for alt in alts for k in res):
+                raise refuse('RUN-TIE', 'fill %s has a tie at %s that changes the result, and %s' % (
+                    qid, '; '.join('(%s; %s)' % (', '.join(fmt(x['se'][b.var]) for b in s.sbinds),
+                                                 ', '.join(fmt(x['de'][b.var]) for b in s.dbinds)) for x in g),
+                    'its ties by doesn\'t break it' if s.tie else 'no ties by'))
+        return res
+
     log = [] if getattr(self, 'fill_trace', None) is not None else None
-    res = simulate(seq, log)
+    try:
+        res = ordered_takes(arcs, log)
+    except _OpenOrder as e:
+        res = self.open_order_takes(qid, arcs, ordered_takes, e.iv)
     if log is not None:
         # explain of a fill take (E §10): the arcs in order, the remaining supply and demand before and after each
         self.fill_trace.append((qid, tuple(_kv(k) for k in fkeys), s, log))
-    for i, g in enumerate(groups):
-        if len(g) < 2:
-            continue
-        rev = [x for gg in groups[:i] for x in gg] + list(reversed(g)) + [x for gg in groups[i + 1:] for x in gg]
-        alt = simulate(rev)
-        if any(_vk(res[k][0]) != _vk(alt[k][0]) for k in res):
-            raise refuse('RUN-TIE', 'fill %s has a tie at %s that changes the result, and %s' % (
-                qid, '; '.join('(%s; %s)' % (', '.join(fmt(x['se'][b.var]) for b in s.sbinds),
-                                             ', '.join(fmt(x['de'][b.var]) for b in s.dbinds)) for x in g),
-                'its ties by doesn\'t break it' if s.tie else 'no ties by'))
     takes.update(res)
     return takes
+
+
+class _OpenOrder(Exception):
+    """An order term a window leaves undecided (L §5.12 step 2)."""
+
+    def __init__(self, iv):
+        Exception.__init__(self)
+        self.iv = iv
+
+
+def m_open_order_takes(self, qid, arcs, ordered_takes, iv):
+    """A fill whose order only a window leaves open (L §5.12 step 2, #213): each unknown the order terms carry is
+    taken at each value it can take, every combination (a window's days, an interval's whole numbers, another
+    interval's two ends; past 20 000 combinations every take is the hole), and a take is its value where every order
+    gives it, else the window's hole (HOLE-IMPRECISE, L §4.4); a refusal only some of them give is that hole too."""
+    import itertools
+    from .values import Iv
+    from .evaluate import carry_hole, iv_carry
+
+    def unknown(v):
+        return (v.window_text(), tuple(sorted(str(w) for w in iv_carry(v))))
+    names = sorted(set(unknown(v) for x in arcs for v in x['ord'] + x['tie'] if isinstance(v, Iv)))
+    first = {}
+    for x in arcs:
+        for v in x['ord'] + x['tie']:
+            if isinstance(v, Iv):
+                first.setdefault(unknown(v), v)
+    # the question the sort met, carrying every unknown day the order rests on
+    hole = carry_hole(Hole([('date within %s not precise enough for the order of fill %s' % (iv.window_text(), qid),
+                             iv.origin[1] if iv.origin else qid)]), iv, *[first[n] for n in names])
+
+    def values(v):
+        # each day a window of days can take, each whole number an interval of them can, else its two ends
+        if isinstance(v.lo, datetime.date):
+            return sorted(v.days) if v.days else [v.lo + datetime.timedelta(i) for i in range((v.hi - v.lo).days + 1)]
+        if isinstance(v.lo, Num) and v.lo.isint and v.hi.isint:
+            return [Num(k, v.lo.u, isint=True) for k in range(int(v.lo.q), int(v.hi.q) + 1)]
+        return [v.lo, v.hi]
+    opts = [values(first[n]) for n in names]
+    count = 1
+    for o in opts:
+        count *= len(o)
+    if count > 20000:
+        return dict((k, (hole, c)) for k, (v, c) in ordered_takes([dict(x, ord=[], tie=[]) for x in arcs]).items())
+    outs, errs = [], []
+    for choice in itertools.product(*opts):
+        end = dict(zip(names, choice))
+
+        def pick(v):
+            return end[unknown(v)] if isinstance(v, Iv) else v
+        try:
+            outs.append(ordered_takes([dict(x, ord=[pick(v) for v in x['ord']], tie=[pick(v) for v in x['tie']])
+                                       for x in arcs], every=True))
+        except Refusal as e:
+            errs.append(e)
+    if errs and not outs:
+        raise errs[0]
+    res = {}
+    for k, (v, c) in outs[0].items():
+        same = not errs and all(_vk(o[k][0]) == _vk(v) for o in outs[1:])
+        res[k] = (v if same else hole, c)
+    return res
 
 
 def _vk(v):

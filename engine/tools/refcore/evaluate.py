@@ -632,6 +632,13 @@ class Engine:
         if v is NONE:
             raise refuse('RUN-NONE', '%s is none here: a key' % _ntxt(kn))
         if isinstance(v, Iv):
+            if (c == 'holding' or c == 'period') and isinstance(v.lo, datetime.date):
+                # a period's key that holds the whole window is decided and read; a day's key is the hole (L §4.6
+                # Reading at a date, §4.4 l.668 and l.669; the round's S-window-key, option A)
+                ix = m.indexes[dom[1]]
+                k = ix.holding(v.lo)
+                if k is not None and k == ix.holding(v.hi):
+                    return k
             raise self.imprecise(v, 'a key')
         if dom is not None and dom[0] == 'range':
             # a key at a stepped range's position is the value it equals (L §2.5, B1)
@@ -3240,12 +3247,8 @@ class Engine:
             if isinstance(t, Hole):
                 holes.append(t)
                 continue
-            if fn == 'sum' and isinstance(t, Iv) and isinstance(getattr(t, 'src', None), str):
-                # a term a window leaves open: the sum is decided only where every day agrees (L §4.4; tally 2.1.8
-                # §4, #169-e), so it is the window's hole, named by the day it comes from
-                w = t.src       # the text of the window the term comes from
-                holes.append(carry_hole(Hole([('date within %s not precise enough for a term of sum' % (
-                    w), t.origin[1] if t.origin else '')]), t))
+            if fn == 'sum' and isinstance(t, Iv):
+                holes.append(self.window_term(t, fn))
                 continue
             if t is NONE:
                 raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
@@ -3325,6 +3328,12 @@ class Engine:
             win()
         except (TallyError, HoleSignal):
             pass
+
+    def window_term(self, t, fn):
+        """A term a window leaves open: an aggregate other than min, max, argmin and argmax needs one value of it
+        (L §4.4; tally 2.1.8 §4, #169-e; #221, 221.10), so it is the window's hole, named by the day it comes from."""
+        return carry_hole(Hole([('date within %s not precise enough for a term of %s' % (
+            t.window_text(), fn), t.origin[1] if t.origin else '')]), t)
 
     def bare_key(self, n, e2):
         vs = [e2[b.var] for b in n.binds]
@@ -3649,6 +3658,9 @@ class Engine:
                 continue
             if t is NONE:
                 raise refuse('RUN-NONE', 'a term of %s is none here' % n.fn)
+            if isinstance(t, Iv):
+                holes.append(self.window_term(t, n.fn))
+                continue
             terms.append(t)
         if holes and ctx.partial and n.fn == 'mean' and not any(isinstance(st, Hole) for e2, st in mem):
             # L §5.18 (tally 2.1.8 R15): a mean over a known count is its sum scaled by the count, linear in its terms
@@ -3754,6 +3766,37 @@ class Engine:
             outs.append(r)
         return self.interval_of(outs, ivs[0], carry_union(*ivs))
 
+    def lift_values(self, what, fn, *vals):
+        """An operation of a number computed from a window (L §4.4 l.668: each operation gives the interval of its
+        values; #221, 221.R3): fn at every value an integer interval can take, at the ends of any other, one value where
+        they agree, else their interval; a refusal only some of its values give is the window's hole."""
+        vals = [one_day(v) for v in vals]
+        ivs = [v for v in vals if isinstance(v, Iv) and not isinstance(v.lo, datetime.date)]
+        if not ivs:
+            return fn(*vals)
+        import itertools
+        opts = []
+        for v in vals:
+            if v in ivs and isinstance(v.lo, Num) and v.lo.isint and v.hi.isint and v.hi.q - v.lo.q <= 400:
+                opts.append([Int(k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
+            elif v in ivs:
+                opts.append([v.lo, v.hi])
+            else:
+                opts.append([v])
+        outs, errs = [], []
+        for c in itertools.product(*opts):
+            try:
+                outs.append(fn(*c))
+            except Refusal as e:
+                errs.append(e)
+        if errs and not outs:
+            raise errs[0]
+        if errs:
+            raise self.imprecise(ivs[0], what)
+        if any(isinstance(r, Iv) for r in outs):
+            outs = [x for r in outs for x in ((r.lo, r.hi) if isinstance(r, Iv) else (r,))]
+        return self.interval_of(outs, ivs[0], carry_union(*ivs))
+
     def interval_of(self, outs, iv, carry=None):
         """The values an operation takes over a window's days: one value when they agree, else their interval (a
         computed window, no name)."""
@@ -3843,13 +3886,7 @@ class Engine:
         if h:
             return h
         if n._form == 'month':
-            p = self.period_arg(a, 'day_of')
-            k = self.int_of(b)
-            y, mo = p.start.year, p.start.month
-            if p.kind != 'month' or p.start.day != 1:
-                # L §4.2: "Of a key of an anchored index (§4.1) it is refused (RUN-DOMAIN)"
-                raise refuse('RUN-DOMAIN', 'day_of of %s, a key of an anchored index' % fmt(p))
-            return datetime.date(y, mo, max(1, min(k, last_day(y, mo)))) if k >= 1 else self._bad_day(k)
+            return self.lift_values('day_of', lambda b: self.day_of_month(a, b), b)
         p = self.period_arg(a, 'day_of')
         if p.kind == 'year' and (p.start.month, p.start.day) != (1, 1):
             # L §4.2: "Of a key of an anchored index (§4.1) it is refused (RUN-DOMAIN)"
@@ -3860,6 +3897,15 @@ class Engine:
         except ValueError:
             # only day_of(m, n) clamps (L §4.2) (L §8.4 What isn't defined is refused)
             raise refuse('RUN-DOMAIN', 'day_of(y, %02d-%02d) in a year without that day' % (mm, dd))
+
+    def day_of_month(self, a, b):
+        p = self.period_arg(a, 'day_of')
+        k = self.int_of(b)
+        y, mo = p.start.year, p.start.month
+        if p.kind != 'month' or p.start.day != 1:
+            # L §4.2: "Of a key of an anchored index (§4.1) it is refused (RUN-DOMAIN)"
+            raise refuse('RUN-DOMAIN', 'day_of of %s, a key of an anchored index' % fmt(p))
+        return datetime.date(y, mo, max(1, min(k, last_day(y, mo)))) if k >= 1 else self._bad_day(k)
 
     def _bad_day(self, k):
         raise refuse('RUN-DOMAIN', 'day_of(m, %d): a day number below 1' % k)
@@ -3883,8 +3929,7 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_days')
-        kk = self.int_of(k)
-        return self.lift(lambda x: add_days(x, kk), a)
+        return self.lift_values('add_days', lambda k: self.lift(lambda x: add_days(x, self.int_of(k)), a), k)
 
     def months_arg(self, k, per, mult):
         if isinstance(k, Num) and k.u:
@@ -3899,8 +3944,8 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_months')
-        mm = self.months_arg(k, 'month', 1)
-        return self.lift(lambda x: add_months(x, mm), a)
+        return self.lift_values('add_months', lambda k: self.lift(
+            lambda x: add_months(x, self.months_arg(k, 'month', 1)), a), k)
 
     def c_add_years(self, n, env, ctx):
         a, k = self.args(n, env, ctx)
@@ -3908,8 +3953,8 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_years')
-        mm = self.months_arg(k, 'year', 12)
-        return self.lift(lambda x: add_months(x, mm), a)
+        return self.lift_values('add_years', lambda k: self.lift(
+            lambda x: add_months(x, self.months_arg(k, 'year', 12)), a), k)
 
     def c_overlap_days(self, n, env, ctx):
         a, b, k = self.args(n, env, ctx)
@@ -4014,7 +4059,8 @@ class Engine:
         if isinstance(v, Hole):
             return v
         self.no_none(v, 'abs')
-        return Num(abs(v.q), v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_abs(v.enc))
+        return self.lift_values('abs', lambda v: Num(abs(v.q), v.u, money=v.money, isint=v.isint, rate=v.rate,
+                                                     enc=enc_abs(v.enc)), v)
 
     def c_pow(self, n, env, ctx):
         x, k = self.args(n, env, ctx)
@@ -4023,6 +4069,9 @@ class Engine:
             return h
         self.no_none(x, 'pow')
         self.no_none(k, 'pow')
+        return self.lift_values('pow', lambda x, k: self.pow_of(n, x, k, ctx), x, k)
+
+    def pow_of(self, n, x, k, ctx):
         if getattr(n, '_realpow', False) and (k.q.denominator != 1 or k.enc is not None or x.enc is not None):
             return self.trans_call(n, [x, k], None, ctx)
         kk = self.int_of(k)

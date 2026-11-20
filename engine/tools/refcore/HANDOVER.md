@@ -7,6 +7,26 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W4: the windows (issue #241; 1 514 tests)
+
+- **One function splits a window** (`moves.window_pieces`): the first day of each piece where a test of the day can
+  change (S, K, a scenario's `from`, a covered span's ends at a leg's place, a version's known date). `day_class`
+  reads each piece once; `window_class_depends` compares them in place of the day loop (208.R3) and keeps `i.booked`,
+  the days the booking class reaches: `walk.sched_hole` holes the places from its first day, past a reading up to its
+  last (`perm`, then `dec_win_end`; #220). The booking cuts of a window are one per piece (#230). A scenario leaves a
+  window out only when its last day is before `from`; one across is the class hole (S-from).
+- **Smaller mends.** A leg of known amount 0 books no window (`walk.zero_leg`, #214); a decision's window ends before
+  its last day's readings (`dec_win_end` at phase 4, 0; #218); a key's `where` left open by a window `at` is no
+  version's to answer (`answer_booking` passes `exists0`), and a refusal only its other days give doesn't outrank it
+  (`UNCERTAIN`; #236). An entry computed from a window prints as the hole (`ask.fmt_value`, 221.C2); `mean`,
+  `quantile`, `share` take a window term as its hole (`window_term`, 221.10); `abs`, `pow`, `add_days`,
+  `add_months`, `add_years`, `day_of` take an interval (`lift_values`, 221.R3); an observed row's attribute may be a
+  window (`loader.convert_value`, 221.R2); a period's key holding the whole window is read (`to_key`,
+  S-window-key A); a fill's order a window leaves open is read at each value its unknowns take, every tie in every
+  order, and a take that differs is the hole (`open_order_takes`, S-213); a projection reads an instance's random
+  amount by the instance's day (`rnd`'s sixth term, `sample_read`; S-212).
+- A plain fill's `RUN-TIE` still tests a tie reversed only; the open order tests each permutation (up to 6 arcs).
+
 ## M3: `check` (OPERATIONS §2.3; tally 2.2 kept, issue #226)
 
 `python -m refcore check <path>… [--pin=bytes]`: load without the run. `cli._run_texts` takes an option `check` and
