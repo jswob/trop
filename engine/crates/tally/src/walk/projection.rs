@@ -320,26 +320,37 @@ impl Engine {
 
     /// Where the projection from day `t` starts: the main walk at the start of t, or the
     /// reading decision's walk, at its point on t or at the start of an earlier t, with that
-    /// walk's cut (refcore's `proj_walk`, its start). E §4.3 step 1, L §5.14.1.
+    /// walk's cut (refcore's `proj_walk`, its start). An earlier t before the start of the
+    /// projection's walk the decision runs in is a day that walk takes from the walk it
+    /// continues, so the projection starts there, up the chain (E §4.3 step 1: "a read in it
+    /// of days before its start … takes those days from that walk"). E §4.3 step 1,
+    /// L §5.14.1.
     fn proj_base(&mut self, m: &Reality, ctx: Ctx, t: Day) -> Result<Base, Stop> {
-        match ctx.at {
-            Some(at) => {
-                let day = at.point.day;
-                if t > day {
-                    return Err(refuse(
-                        Run::Future,
-                        format!(
-                            "a decision on {} reads a projection from {}, after its day",
-                            day.text(),
-                            t.text()
-                        ),
-                    ));
-                }
-                let point = if t == day { at.point } else { At::start(t) };
-                Ok((self.walk(at.walk)?.cut, at.walk, point))
-            }
-            None => Ok((ctx.cut, self.main_walk(m, ctx.cut)?, At::start(t))),
+        let Some(at) = ctx.at else {
+            return Ok((ctx.cut, self.main_walk(m, ctx.cut)?, At::start(t)));
+        };
+        let day = at.point.day;
+        if t > day {
+            return Err(refuse(
+                Run::Future,
+                format!(
+                    "a decision on {} reads a projection from {}, after its day",
+                    day.text(),
+                    t.text()
+                ),
+            ));
         }
+        if t == day {
+            return Ok((self.walk(at.walk)?.cut, at.walk, at.point));
+        }
+        let mut id = at.walk;
+        for wid in self.chain(at.walk)? {
+            id = wid;
+            if self.walk(wid)?.start <= t {
+                break;
+            }
+        }
+        Ok((self.walk(id)?.cut, id, At::start(t)))
     }
 
     /// The walk of a projection from day `t` through day `through`, from where
