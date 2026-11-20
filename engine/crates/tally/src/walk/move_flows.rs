@@ -17,7 +17,7 @@ use super::plan::{invariant, qty_value};
 use super::reads::refuse;
 use super::state::{LegOut, Progress};
 use crate::base::Run;
-use crate::book::{Obs, once_obs, same_differ};
+use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
@@ -45,7 +45,7 @@ impl Engine {
         };
         let last = span_last(m, sp)?;
         let insts = if mv.decision {
-            std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
+            std::rc::Rc::new(self.decision_runs(m, mv, (sp, last), ctx)?)
         } else {
             self.move_instances(m, mv, ctx.cut)?
         };
@@ -134,7 +134,21 @@ impl Engine {
             if !i.keys.starts_with(want) {
                 continue;
             }
-            if matches!(i.status, Status::None | Status::Uncertain) {
+            // a movement the span doesn't count: what decided it is in the read set (L §8.2
+            // One read set; P35 on #241)
+            if i.status == Status::None {
+                acc.met.merge(&i.coll.deciding());
+                continue;
+            }
+            if i.status == Status::Uncertain {
+                continue;
+            }
+            // a movement stated same whose sides' days fall on both sides of the span (N4)
+            if let Some(h) =
+                self.same_member_hole(m, inst_side(i), (i.day.as_ref(), sp, ctx.cut))?
+            {
+                acc.met.merge(&i.coll);
+                acc.holes.push(h);
                 continue;
             }
             let day = match &i.day {
@@ -143,12 +157,18 @@ impl Engine {
                     continue;
                 }
                 Some(Dated::Day(d)) if sp.contains(*d) => Some(*d),
-                Some(Dated::Day(_)) => continue,
+                Some(Dated::Day(_)) => {
+                    acc.met.merge(&i.day_coll.deciding());
+                    continue;
+                }
                 // a window inside the span counts, one outside it doesn't, one across its
                 // edge may fall either side (refcore's `flows_move`; L §4.4)
                 Some(Dated::Window(w)) => match window_in(w, sp, last) {
                     Some(true) => None,
-                    Some(false) => continue,
+                    Some(false) => {
+                        acc.met.merge(&i.day_coll.deciding());
+                        continue;
+                    }
                     None => {
                         let text = format!(
                             "date within {} not precise enough for flows of {}",
@@ -198,10 +218,11 @@ impl Engine {
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 continue;
             }
+            acc.met.merge(&i.coll);
+            // a refused result lists what it read like a value (L §8.2 One read set; 208.2)
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
             }
-            acc.met.merge(&i.coll);
             if let Exists::Unknown(h) = &i.exists {
                 acc.holes.push(h.clone());
                 continue;
@@ -212,6 +233,23 @@ impl Engine {
                     text: i.id.clone(),
                     figure: String::new(),
                 });
+            }
+            // flows of a movement stated same reads it from both sides: where they disagree it
+            // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241)
+            // per fact: one leg's flows read its amount and the day (Q3)
+            let facts = match leg {
+                Some(name) => vec![Fact::Leg(name.to_owned()), Fact::Day],
+                None => vec![Fact::Any],
+            };
+            let mut same = None;
+            for fact in &facts {
+                if same.is_none() {
+                    same = self.same_hole(m, inst_side(i), fact, ctx.cut)?;
+                }
+            }
+            if let Some(h) = same {
+                acc.holes.push(h);
+                continue;
             }
             for lg in i.legs.iter().filter(|lg| wanted(leg, &lg.name)) {
                 let q = match &lg.amount {
@@ -331,13 +369,15 @@ impl Engine {
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
     /// running walk's and the walks' it continues, before its point; an instance whose day is
     /// a hole counted as that hole, and one whose day is refused as its refusal, in any span
-    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run (refcore's
-    /// `flows_move`, its decisions). L §5.14.1, §5.14.3, E §4.3.
+    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; outside a decision,
+    /// one dated by a window no walk ran that span `sp` (its last day `last`) reaches, read
+    /// per day of it ([`Engine::window_met`]) (refcore's `flows_move`, its decisions).
+    /// L §5.14.1, §5.14.3, E §4.3, §4.1 step 2.
     fn decision_runs(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        last: Day,
+        (sp, last): (&Span, Day),
         ctx: Ctx,
     ) -> Result<Vec<Inst>, Stop> {
         let (id, limit) = match ctx.at {
@@ -361,6 +401,18 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
+                if let (None, Some(Dated::Window(w))) = (ctx.at, &i.day)
+                    && i.exists != Exists::No
+                    && window_in(w, sp, last) != Some(false)
+                {
+                    // dated by a window no walk books on one day, which the span reaches:
+                    // what it counts is read per day of the window (E §4.1 step 2; N3)
+                    let what = format!("flows of {}", mv.id);
+                    let mut held = i.clone();
+                    held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
+                    out.push(held);
+                    continue;
+                }
                 // an instance no walk ran: its day a hole, or after the run's end (E §2)
                 let unwalked = match i.day {
                     Some(Dated::Day(d)) => d > m.end,
@@ -451,11 +503,18 @@ impl Engine {
     /// else the hole a test some of a window's days pass left it: a projection's walk keeps
     /// what the walks it continues have refused so far (refcore's `leg_refused`, its loop over
     /// `w.base`). E §4.2 step 5, §4.3 step 1; tally 2.1.8 item 77.
-    fn chain_refusal(&self, id: usize, wanted: &(String, String)) -> Result<Option<LegOut>, Stop> {
+    fn chain_refusal(
+        &mut self,
+        id: usize,
+        wanted: &(String, String),
+    ) -> Result<Option<LegOut>, Stop> {
         for wid in self.chain(id)? {
             let walk = self.walk(wid)?;
             if let Some(refusal) = walk.bad_legs.get(wanted) {
-                return Ok(Some(LegOut::Refused(refusal.clone())));
+                // the refusal is read with what it rests on (L §8.2; B1 on #241)
+                let (refusal, read) = (refusal.clone(), walk.refused_reads(&wanted.0));
+                self.absorb(&read);
+                return Ok(Some(LegOut::Refused(refusal)));
             }
             if let Some(hole) = walk.hole_legs.get(wanted) {
                 return Ok(Some(LegOut::Hole(hole.clone())));

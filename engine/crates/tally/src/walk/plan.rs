@@ -19,8 +19,8 @@
 
 use super::body::{imprecise_body, no_body, same_body};
 use super::instance::{
-    Amount, Booked, BookedLeg, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Seed, Status,
-    day_window, inst_order,
+    Amount, Booked, BookedLeg, Dated, DayWindow, Depends, End, Exists, Inst, LegVal, Piece, Seed,
+    Status, day_window, inst_order, window_pieces,
 };
 use super::tuples::{Law, Tuple};
 use crate::base::{Code, Load, Refusal, Run};
@@ -129,7 +129,7 @@ impl Engine {
             let seed = Seed {
                 env: inst.env.clone(),
                 keys: inst.keys.clone(),
-                exists: Exists::Yes,
+                exists: (*inst.exists0).clone(),
                 at_cut: Some(*at),
                 upto: None,
             };
@@ -305,12 +305,13 @@ impl Engine {
 
     /// Whether plan instance `inst`, dated by a window, takes its class one way on some of
     /// the window's days and another on the rest, at cut `cut`: inside the run or before its
-    /// start, and modelled past or booked, each day of the window asked (refcore's
-    /// `window_class_depends`). E §4.1 steps 2–3, L §4.4; tally 2.1.8 item 77.
+    /// start, and modelled past or booked, each piece of the window read once, at its first
+    /// day (refcore's `window_class_depends`, `window_pieces`, `day_class`). E §4.1 steps 2–3,
+    /// L §4.4; tally 2.1.8 item 77.
     ///
     /// # Errors
     ///
-    /// `ENGINE-INVARIANT` for a day past the calendar.
+    /// As [`window_pieces`].
     fn class_depends(
         &mut self,
         m: &Reality,
@@ -323,34 +324,75 @@ impl Engine {
         if w.lo == w.hi {
             return Ok(None);
         }
-        if w.lo < m.start && m.start <= w.hi {
-            return Ok(Some(Depends::Start));
+        // the edges where a class can change: the run's start, the cut (no day from K on is
+        // modelled), its scenario's `from` (L §6.4) and the ends of a covered span at a place
+        // of its legs (L §5.19 Coverage)
+        let from = scenario_from(m, &inst.move_id);
+        let mut edges = vec![m.start, cut];
+        edges.extend(from);
+        self.covered_edges(m, inst, cut, &mut edges);
+        let mut classes = Vec::new();
+        for piece in window_pieces(w, &edges)? {
+            classes.push((piece, self.day_class(m, inst, (cut, from), piece.first)));
         }
-        if w.lo >= cut {
-            return Ok(None);
+        let kinds: Vec<DayClass> = classes.iter().map(|(_, c)| *c).collect();
+        // the days the class that books reaches: its hole's, from the first piece that books
+        // it, past a reading it may fall after, to the last (E §4.1 step 2, L §5.19 Holes; #220)
+        let booking: Vec<Piece> = classes
+            .iter()
+            .filter(|(_, c)| *c == DayClass::Booked)
+            .map(|(p, _)| *p)
+            .collect();
+        let booked = match (booking.first(), booking.last()) {
+            (Some(a), Some(b)) => Some(Piece {
+                first: a.first,
+                last: b.last,
+            }),
+            _ => None,
+        };
+        let inside = kinds.contains(&DayClass::Modelled) || kinds.contains(&DayClass::Booked);
+        if kinds.contains(&DayClass::Out) && inside {
+            return Ok(Some(Depends::Start(booked)));
         }
-        // every day asked: coverage may change inside the window (E §4.1 step 2). No day from
-        // K on is modelled, and the answer is known at the first two days that disagree, so
-        // the days asked stop there: at most the days from the window's first to K, however
-        // far the window reaches (to 9999-12-31)
-        let (mut some, mut every) = (false, true);
-        let mut d = w.lo;
-        loop {
-            if d >= cut {
-                every = false;
-                break;
+        let mixed = kinds.contains(&DayClass::Modelled) && kinds.contains(&DayClass::Booked);
+        Ok(mixed.then_some(Depends::Covered(booked)))
+    }
+
+    /// The class plan instance `inst` takes on day `day` of its window, at cut `cut`: out
+    /// before the run's start or before the `from` of the scenario that declares its move,
+    /// modelled past on a day before K where a version covers a place of its legs, booked
+    /// otherwise (refcore's `day_class`). E §4.1 step 3, L §5.19, §6.4.
+    fn day_class(
+        &mut self,
+        m: &Reality,
+        inst: &Inst,
+        (cut, from): (Day, Option<Day>),
+        day: Day,
+    ) -> DayClass {
+        if day < m.start || from.is_some_and(|f| day < f) {
+            return DayClass::Out;
+        }
+        if day < cut && self.touches_covered(m, inst, (cut, Some(day))) {
+            return DayClass::Modelled;
+        }
+        DayClass::Booked
+    }
+
+    /// The edges of the covered spans at the places of `inst`'s legs at cut `cut`, each span's
+    /// first day and the day after its last, added to `edges`: where whether a day is covered
+    /// can change (refcore's `window_pieces`, its coverage). L §5.19 Coverage, E §4.1 step 2.
+    fn covered_edges(&mut self, m: &Reality, inst: &Inst, cut: Day, edges: &mut Vec<Day>) {
+        for leg in &inst.legs {
+            for place in [&leg.from, &leg.to].into_iter().filter_map(End::place) {
+                let Some(spans) = self.coverage(m, cut).spans.get(place) else {
+                    continue;
+                };
+                for (span, _) in spans {
+                    edges.extend(span.start());
+                    edges.extend(span.end());
+                }
             }
-            let modelled = self.touches_covered(m, inst, (cut, Some(d)));
-            some = some || modelled;
-            every = every && modelled;
-            if (some && !every) || d >= w.hi {
-                break;
-            }
-            d = d
-                .next()
-                .ok_or_else(|| invariant("a window's day past the calendar"))?;
         }
-        Ok((some && !every).then_some(Depends::Covered))
     }
 
     /// Whether one of the observations `obs` that fulfil an instance is applied at cut `cut`:
@@ -426,7 +468,12 @@ impl Engine {
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
                 {
-                    self.check_booked(&inst, (booking, cut), upto)?;
+                    // a window's body joins one booking cut per piece up to K (E §5 step 1)
+                    let cuts = match &inst.day {
+                        Some(Dated::Window(w)) => booking_cuts(m, w, tctx.cut)?,
+                        Some(Dated::Day(_) | Dated::Hole(_)) | None => vec![booking],
+                    };
+                    self.check_booked(&inst, (booking, &cuts, cut), upto)?;
                 }
                 inst.coll.merge(&tuple.coll);
                 if let (Some(marks), Some(mark)) = (marks.as_deref_mut(), self.trace_snap()) {
@@ -481,16 +528,19 @@ impl Engine {
     }
 
     /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
-    /// its booking cut, is the same under every cut that books it at booking cut `booking`,
-    /// across the asks of a run (refcore's `inv5`). Its day, its legs' too, is read at the cut
-    /// K, so it isn't part of A₀ (E §4.1 step 2). E §9 item 5.
+    /// its booking cuts, is the same under every cut that books it at the same cuts `cuts`
+    /// (`booking` the first), across the asks of a run (refcore's `inv5`). A window's body joins
+    /// one cut per piece up to K, so it is compared under that set of cuts, not its first alone:
+    /// asks at two cuts in one run give what each gives alone (L §8, l.2215; B5 of G1's review).
+    /// Its day, its legs' too, is read at the cut K, so it isn't part of A₀ (E §4.1 step 2).
+    /// E §9 item 5.
     fn check_booked(
         &mut self,
         inst: &Inst,
-        (booking, cut): (Day, Day),
+        (booking, cuts, cut): (Day, &[Day], Day),
         upto: Option<Day>,
     ) -> Result<(), Stop> {
-        let key = (inst.id.clone(), booking, upto);
+        let key = (inst.id.clone(), cuts.to_vec(), upto);
         let legs = booked_legs(&inst.legs);
         let Some(old) = self.booked.get(&key) else {
             let first = Booked {
@@ -531,6 +581,7 @@ impl Engine {
         tctx: Ctx,
     ) -> Result<Option<Inst>, Stop> {
         let mut inst = Inst::new(mv, seed.keys.clone(), seed.env.clone());
+        inst.exists0 = Box::new(seed.exists.clone());
         self.push();
         let made = match self.inst_parts(m, mv, &mut inst, tctx, seed) {
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
@@ -785,48 +836,53 @@ impl Engine {
             // first day falls after it (refcore's `eval_inst`, `upto`; L §4.4)
             return Ok(false);
         }
-        // the booking cut min(t, K); a window's at its first day and its last (refcore's
-        // `cuts`)
-        let (cut, last) = match (seed.at_cut, day.lo(), day.hi()) {
-            (Some(c), _, _) => (c, c),
-            (None, Some(lo), Some(hi)) => (lo.min(tctx.cut), hi.min(tctx.cut)),
-            (None, _, _) => (tctx.cut, tctx.cut),
+        // the booking cut min(t, K); a window's one per piece its versions' known dates cut it
+        // into (refcore's `cuts`, `window_pieces`; E §5 step 1)
+        let cuts = match (seed.at_cut, &day) {
+            (Some(c), _) => vec![c],
+            (None, Dated::Window(w)) => booking_cuts(m, w, tctx.cut)?,
+            (None, _) => vec![day.lo().map_or(tctx.cut, |d| d.min(tctx.cut))],
         };
-        inst.cut = Some(cut);
+        let [cut, later @ ..] = cuts.as_slice() else {
+            return Err(invariant("an instance with no booking cut"));
+        };
+        inst.cut = Some(*cut);
         let world = self.timeline_world();
-        let first = keys_seen(m, mv, &inst.keys, (cut, world));
-        let seen = if last == cut {
-            (first, first)
-        } else {
-            (first, keys_seen(m, mv, &inst.keys, (last, world)))
-        };
-        if seen == (false, false) {
+        let seen: Vec<bool> = cuts
+            .iter()
+            .map(|c| keys_seen(m, mv, &inst.keys, (*c, world)))
+            .collect();
+        if !seen.contains(&true) {
             inst.exists = Exists::No;
             return Ok(true);
         }
         // at a booking cut that doesn't see its keys the instance has no body (E §5 steps 1–3)
-        let mut body = if seen.0 {
-            self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?
-        } else {
-            no_body()
-        };
-        if let (Dated::Window(w), true) = (&day, last != cut) {
+        let mut bodies = Vec::with_capacity(cuts.len());
+        for (c, s) in cuts.iter().zip(&seen) {
+            bodies.push(if *s {
+                self.body_over_law(m, mv, inst, self.timeline_ctx(None, *c))?
+            } else {
+                no_body()
+            });
+        }
+        let mut bodies = bodies.into_iter();
+        let mut body = bodies
+            .next()
+            .ok_or_else(|| invariant("an instance with no body"))?;
+        if let (Dated::Window(w), false) = (&day, later.is_empty()) {
             // a version known inside the window of a windowed instance (L §5.14.3): each
-            // part is the window's hole where the two booking cuts differ, so a key added or
-            // dropped inside the window leaves its existence and its legs to the day
-            // (refcore's `agreed_body`; L §4.4, tally 2.1.8 #169-e)
+            // part is the window's hole where two of its booking cuts differ, so a key added
+            // or dropped, or an amount changed and undone, inside the window leaves its
+            // existence and its legs to the day (refcore's `agreed_body`; L §4.4, tally 2.1.8
+            // #169-e; #230)
             let text = format!(
                 "date within {} not precise enough for the booking cut of {}",
                 w.question, inst.id
             );
             let hole = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
-            let other = if seen.1 {
-                self.body_over_law(m, mv, inst, self.timeline_ctx(None, last))?
-            } else {
-                no_body()
-            };
-            if !same_body(&body, &other) {
-                body = imprecise_body(body, &other, &hole);
+            let differ: Vec<_> = bodies.filter(|other| !same_body(&body, other)).collect();
+            for other in &differ {
+                body = imprecise_body(body, other, &hole);
             }
         }
         inst.exists = body.exists;
@@ -836,6 +892,41 @@ impl Engine {
         inst.fulfils = body.fulfils;
         Ok(true)
     }
+}
+
+/// The booking cuts of an instance dated by window `w` at the ask's cut `cut`: min(d, K) for
+/// the first day d of each piece the days versions became known cut the window into, in order,
+/// each once (refcore's `cuts` over `window_pieces`). E §5 step 1 ("one known inside the window
+/// leaves the amounts `HOLE-IMPRECISE` where it changes them"), L §4.4.
+///
+/// # Errors
+///
+/// As [`window_pieces`].
+fn booking_cuts(m: &Reality, w: &DayWindow, cut: Day) -> Result<Vec<Day>, Stop> {
+    let edges: Vec<Day> = crate::book::known_dates(m)
+        .into_iter()
+        .map(|(known, _)| known)
+        .collect();
+    let mut cuts: Vec<Day> = Vec::new();
+    for piece in window_pieces(w, &edges)? {
+        let c = piece.first.min(cut);
+        if !cuts.contains(&c) {
+            cuts.push(c);
+        }
+    }
+    Ok(cuts)
+}
+
+/// The class a window-dated plan instance takes on one day of its window (E §4.1 step 3;
+/// refcore's `day_class`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DayClass {
+    /// Dated before the run's start: left out.
+    Out,
+    /// Modelled past: a covered day before K.
+    Modelled,
+    /// Booked.
+    Booked,
 }
 
 /// Whether the keys of an instance were there at cut `cut` in world `world`: an index's key
@@ -887,15 +978,16 @@ fn booked_legs(legs: &[LegVal]) -> Vec<BookedLeg> {
 
 /// Whether `inst` is an instance of a move a scenario declares whose day falls before the
 /// scenario's `from`: it books nothing there, so it is left out; load has refused the move
-/// where it sees that day and that the instance exists (refcore's `scen_early`). L §6.4.
+/// where it sees that day and that the instance exists (refcore's `scen_early`). A window
+/// falls before `from` when its last day does; one across `from` is L §4.4's, its class
+/// depending on the day (`class_depends`; S-from). L §6.4.
 fn scenario_early(m: &Reality, mv: &MoveInfo, inst: &Inst) -> bool {
     let Some(from) = scenario_from(m, &mv.id) else {
         return false;
     };
-    // a window's first day (refcore's `day_lo`)
     inst.day
         .as_ref()
-        .and_then(Dated::lo)
+        .and_then(Dated::hi)
         .is_some_and(|d| d < from)
 }
 

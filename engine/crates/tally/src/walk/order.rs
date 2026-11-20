@@ -491,8 +491,9 @@ impl Engine {
             run.inst.err = Some(err.clone());
             run.inst.status = Status::Refused;
             let (movement, legs) = (run.inst.id.clone(), run.inst.legs.clone());
+            let read = run.inst.coll.clone();
             for lg in &legs {
-                tied_walk.leg_bad(m, &movement, lg, &err, key)?;
+                tied_walk.leg_bad(m, (&movement, lg, &read), &err, key)?;
             }
         }
         Ok(())
@@ -749,12 +750,13 @@ impl Engine {
                 .cloned()
                 .collect();
             let mv_id = run.inst.id.clone();
+            let read = run.inst.coll.clone();
             walk.record(run);
             if known.is_empty() && !legless {
                 walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?;
             }
             for lg in &known {
-                walk.leg_bad(m, &mv_id, lg, &err, key)?;
+                walk.leg_bad(m, (&mv_id, lg, &read), &err, key)?;
             }
             return Ok(ix);
         }

@@ -17,7 +17,7 @@ use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
 use super::time_arith::step_count;
-use super::windows::{End, as_window, imprecise, interval, interval_of, single, window_end};
+use super::windows::{Choices, Shape, as_window, interval, single, value_choices, values_interval};
 use super::years::as_year;
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, Window};
@@ -51,6 +51,25 @@ enum DateFn {
     Age,
     /// `age_months(b, d)`: `none` before b.
     AgeMonths,
+}
+
+impl DateFn {
+    /// The built-in's name, which its hole over a window names (refcore's `what`).
+    fn name(self) -> &'static str {
+        match self {
+            DateFn::Start => "start_of",
+            DateFn::End => "end_of",
+            DateFn::Year => "year_of",
+            DateFn::Month => "month_of",
+            DateFn::Quarter => "quarter_of",
+            DateFn::Between => "days_between",
+            DateFn::AddDays(_) => "add_days",
+            DateFn::AddMonths(_) => "add_months",
+            DateFn::Overlap(_) => "overlap_days",
+            DateFn::Age => "age",
+            DateFn::AgeMonths => "age_months",
+        }
+    }
 }
 
 impl Engine {
@@ -111,50 +130,34 @@ impl Engine {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
         let period = period_arg(m, (call.args.first(), &a), "day_of")?;
-        let anchored = || {
-            refuse(
-                Run::Domain,
-                format!("day_of of {}, a key of an anchored index", period.label()),
-            )
-        };
-        if let Some(w) = as_window(&b) {
-            // a day number that is an interval, where one value is needed (L §4.4)
-            return Ok(Value::Hole(imprecise(m, w, "day_of")?));
+        // a day number that is an interval: its whole numbers in turn, the interval of its
+        // days; the hole where only some of its values are refused, or where they can't be
+        // taken in turn, a window of days or of fractions (L §4.4 l.668, l.671; P30, B2)
+        match value_choices(m, ("day_of", Shape::Values), &[&b])? {
+            Choices::Plain => {}
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => {
+                let mut outs = Vec::with_capacity(tuples.len());
+                for t in &tuples {
+                    let [n] = t.as_slice() else {
+                        return Err(arity());
+                    };
+                    outs.push(day_of_month(m, period, n));
+                }
+                return values_interval(m, "day_of", outs, &[&b]);
+            }
         }
-        if !matches!(b, Value::MonthDay(..)) {
-            let number = whole_of(m, &b)?;
-            if period.kind() != PeriodKind::Month || period.start().day() != 1 {
-                return Err(anchored());
-            }
-            if number.is_negative() || number.is_zero() {
-                let text = number
-                    .integer_text()
-                    .ok_or_else(|| invariant("a day number"))?;
-                return Err(refuse(
-                    Run::Domain,
-                    format!("day_of(m, {text}): a day number below 1"),
-                ));
-            }
-            let last = period
-                .end()
-                .previous()
-                .ok_or_else(|| invariant("a month with no last day"))?;
-            // a number past 64 bits is past the month's last day too
-            let day = match number.to_i64() {
-                Some(whole) => u8::try_from(whole.min(i64::from(last.day())))
-                    .map_err(|_| invariant("a day number"))?,
-                None => last.day(),
-            };
-            return Day::from_ymd(last.year(), last.month(), day)
-                .map(Value::Day)
-                .ok_or_else(|| invariant("a day of a month"));
+        // a window of one day is that day (F3)
+        let number = single(&b);
+        if !matches!(number, Value::MonthDay(..)) {
+            return day_of_month(m, period, number);
         }
         if period.kind() == PeriodKind::Year
             && (period.start().month(), period.start().day()) != (1, 1)
         {
-            return Err(anchored());
+            return Err(anchored(period));
         }
-        let Value::MonthDay(month, day) = b else {
+        let &Value::MonthDay(month, day) = number else {
             return Err(invariant(
                 "day_of(y, md) with no month-day: load's types refuse it first (LOAD-UNIT)",
             ));
@@ -188,11 +191,8 @@ impl Engine {
         }
         let name = call.name.as_str();
         let first = date_or_window(a, name)?;
-        if matches!(name, "add_days" | "add_months" | "add_years")
-            && let Some(w) = as_window(&b)
-        {
-            // a count that is an interval, where one value is needed (L §4.4)
-            return Ok(Value::Hole(imprecise(m, w, name)?));
+        if matches!(name, "add_days" | "add_months" | "add_years") {
+            return moved_by(m, name, &first, &b);
         }
         match name {
             "days_between" => {
@@ -204,9 +204,6 @@ impl Engine {
                 }
                 lifted(m, DateFn::Between, &[first, second])
             }
-            "add_days" => lifted(m, DateFn::AddDays(step_count(m, &b, 1)?), &[first]),
-            "add_months" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "month")?), &[first]),
-            "add_years" => lifted(m, DateFn::AddMonths(months_arg(m, &b, "year")?), &[first]),
             "age_months" => lifted(m, DateFn::AgeMonths, &[first, date_or_window(b, name)?]),
             "age" => lifted(m, DateFn::Age, &[first, date_or_window(b, name)?]),
             _ => Err(invariant("a day-count built-in dispatched by another name")),
@@ -214,7 +211,8 @@ impl Engine {
     }
 
     /// `overlap_days(a, b, k)`: the days from a to b, both counted, that lie in period k; of
-    /// two windows `HOLE-IMPRECISE` (refcore's `c_overlap_days`). L §4.2, §4.4.
+    /// windows, the interval of its values at their ends' corners (refcore's `c_overlap_days`,
+    /// whose hole of two windows P25 lifts). L §4.2, §4.4 l.668.
     pub(super) fn overlap(
         &mut self,
         m: &Reality,
@@ -232,9 +230,8 @@ impl Engine {
         let from = date_or_window(a, "overlap_days")?;
         let to = date_or_window(b, "overlap_days")?;
         let period = period_arg(m, (call.args.get(2), &k), "overlap_days")?;
-        if let (Value::Window(w), Value::Window(_)) = (&from, &to) {
-            return Ok(Value::Hole(imprecise(m, w, "overlap_days of two windows")?));
-        }
+        // of two windows too, the interval from the corners of their ends, where it is
+        // monotone in each (L §4.4 l.668; P25)
         lifted(m, DateFn::Overlap(period), &[from, to])
     }
 
@@ -316,49 +313,123 @@ fn arity() -> Stop {
     invariant("a built-in called with the wrong number of arguments")
 }
 
-/// The value of date built-in `f` at `args`; where some are windows, the interval of its
-/// values at every corner of their first and last days, a computed value carrying each
-/// window's unknown day; `HOLE-IMPRECISE` where it is `none` at a corner (refcore's `lift`;
-/// tally 2.1.7 R3, the natural interval extension). L §4.4.
-fn lifted(m: &Reality, f: DateFn, args: &[Value]) -> Result<Value, Stop> {
-    let windows: Vec<&Window> = args.iter().filter_map(as_window).collect();
-    let [window, others @ ..] = windows.as_slice() else {
-        return apply(f, args);
+/// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
+/// `first` and a count `b`; a count that is an interval gives the interval of the days it
+/// moves to (refcore's `lift_values` over the count). L §4.2, §4.4 l.668.
+///
+/// # Errors
+///
+/// As [`moved`]; a refusal at every value of the count.
+fn moved_by(m: &Reality, name: &str, first: &Value, b: &Value) -> Result<Value, Stop> {
+    // a count must be whole: its whole numbers in turn, the hole where they can't be taken,
+    // a window of days or of fractions (L §4.4 l.668, l.671; P30, B2)
+    let tuples = match value_choices(m, (name, Shape::Values), &[b])? {
+        Choices::Plain => return moved(m, name, first, single(b)),
+        Choices::Hole(h) => return Ok(Value::Hole(h)),
+        Choices::Tuples(tuples) => tuples,
     };
-    let mut corners: Vec<Vec<Value>> = vec![Vec::new()];
-    for v in args {
-        let ends = match as_window(v) {
-            Some(_) => vec![window_end(v, End::Low), window_end(v, End::High)],
-            None => vec![v.clone()],
+    let mut outs = Vec::with_capacity(tuples.len());
+    for t in &tuples {
+        let [n] = t.as_slice() else {
+            return Err(arity());
         };
-        let mut next = Vec::with_capacity(corners.len());
-        for c in &corners {
-            for e in &ends {
-                next.push([c.as_slice(), core::slice::from_ref(e)].concat());
-            }
+        outs.push(moved(m, name, first, n));
+    }
+    values_interval(m, name, outs, &[b])
+}
+
+/// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
+/// `first` and a count `n` that is no interval (refcore's `c_add_days`, `c_add_months`,
+/// `c_add_years`, their lambdas). L §4.2, §4.4.
+///
+/// # Errors
+///
+/// The refusals of reading the count; `RUN-LIMIT` past the calendar.
+fn moved(m: &Reality, name: &str, first: &Value, n: &Value) -> Result<Value, Stop> {
+    let f = match name {
+        "add_days" => DateFn::AddDays(step_count(m, n, 1)?),
+        "add_months" => DateFn::AddMonths(months_arg(m, n, "month")?),
+        "add_years" => DateFn::AddMonths(months_arg(m, n, "year")?),
+        _ => return Err(invariant("a moved day dispatched by another name")),
+    };
+    lifted(m, f, core::slice::from_ref(first))
+}
+
+/// `day_of` of a key of an anchored index: `RUN-DOMAIN` (L §4.2).
+fn anchored(period: Period) -> Stop {
+    refuse(
+        Run::Domain,
+        format!("day_of of {}, a key of an anchored index", period.label()),
+    )
+}
+
+/// `day_of(m, n)` of a day number that is no interval: the n-th day of month m, clamped to
+/// its days (refcore's `day_of_month`). L §4.2.
+///
+/// # Errors
+///
+/// `RUN-DOMAIN` for a key of an anchored index or a number below 1; the refusals of reading a
+/// whole number.
+fn day_of_month(m: &Reality, period: Period, b: &Value) -> Result<Value, Stop> {
+    let number = whole_of(m, b)?;
+    if period.kind() != PeriodKind::Month || period.start().day() != 1 {
+        return Err(anchored(period));
+    }
+    if number.is_negative() || number.is_zero() {
+        let text = number
+            .integer_text()
+            .ok_or_else(|| invariant("a day number"))?;
+        return Err(refuse(
+            Run::Domain,
+            format!("day_of(m, {text}): a day number below 1"),
+        ));
+    }
+    let last = period
+        .end()
+        .previous()
+        .ok_or_else(|| invariant("a month with no last day"))?;
+    // a number past 64 bits is past the month's last day too
+    let day = match number.to_i64() {
+        Some(whole) => {
+            u8::try_from(whole.min(i64::from(last.day()))).map_err(|_| invariant("a day number"))?
         }
-        corners = next;
-    }
-    let mut outs = Vec::with_capacity(corners.len());
-    for c in &corners {
-        let out = apply(f, c)?;
-        if out == Value::None {
-            let what = "a built-in that is none on part of the window";
-            return Ok(Value::Hole(imprecise(m, window, what)?));
+        None => last.day(),
+    };
+    Day::from_ymd(last.year(), last.month(), day)
+        .map(Value::Day)
+        .ok_or_else(|| invariant("a day of a month"))
+}
+
+/// The value of date built-in `f` at `args`; where some are windows, through the one
+/// mechanism, [`value_choices`] with `f` monotone in them: the interval of its values at
+/// every corner of their first and last days, one window named in two arguments as one day,
+/// a computed value carrying each window's unknown day; `HOLE-IMPRECISE` where it is `none`
+/// or refused at only some of them (refcore's `lift`; tally 2.1.7 R3). L §4.4 l.668; P30.
+fn lifted(m: &Reality, f: DateFn, args: &[Value]) -> Result<Value, Stop> {
+    // a window of one day is that day (F3)
+    let refs: Vec<&Value> = args.iter().map(single).collect();
+    let tuples = match value_choices(m, (f.name(), Shape::Monotone), &refs)? {
+        Choices::Plain => {
+            let plain: Vec<Value> = refs.iter().map(|v| (*v).clone()).collect();
+            return apply(f, &plain);
         }
-        outs.push(out);
+        Choices::Hole(h) => return Ok(Value::Hole(h)),
+        Choices::Tuples(tuples) => tuples,
+    };
+    let mut outs = Vec::with_capacity(tuples.len());
+    for t in &tuples {
+        outs.push(apply(f, t));
     }
-    let mut from = (*window).clone();
-    for w in others {
-        crate::hole::carry_union(&mut from.carry, &w.carry);
-    }
-    interval_of(m, outs, &from)
+    values_interval(m, f.name(), outs, &refs)
 }
 
 /// Date built-in `f` at days (refcore's lambdas under `lift`). L §4.2.
 fn apply(f: DateFn, args: &[Value]) -> Result<Value, Stop> {
     let missing = || invariant("a period past the calendar's range");
     match (f, args) {
+        // of a period, as `month_of(w)` gives it over a window (refcore's `period_arg`; P30, N5)
+        (DateFn::Start, [Value::Period(p)]) => Ok(Value::Day(p.start())),
+        (DateFn::End, [Value::Period(p)]) => Ok(Value::Day(p.end())),
         (DateFn::Start, [d]) => Ok(Value::Day(a_date(d)?)),
         (DateFn::End, [d]) => a_day(a_date(d)?)?
             .next()
@@ -442,6 +513,7 @@ fn window_weekday(w: &Window) -> Result<Value, Stop> {
         figure: w.figure.clone(),
         read: None,
         carry: w.carry.clone(),
+        whole: false,
     })))
 }
 

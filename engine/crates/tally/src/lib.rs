@@ -188,7 +188,7 @@ pub mod eval {
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name, reads_var};
     pub use context::Layer;
-    pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
+    pub(crate) use context::{GUARDED, UNSET_AXIS, WINDOW_DAYS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::{equal_sides, hole_of};
     pub(crate) use extremes::min_max;
@@ -279,14 +279,15 @@ pub mod book {
     mod same_booking;
     mod settle;
 
-    pub(crate) use adjust::hole_booked_before;
     pub use adjust::{Adjustment, Measured, Settled};
+    pub(crate) use adjust::{hole_booked_before, known_dates};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, reading_rank};
     pub(crate) use reading::{first_readings, gap_text, instant_text, readings};
+    pub(crate) use same::{Fact, inst_side};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same_booking::{Member, Waiting};
     pub(crate) use settle::settlement_move;

@@ -19,7 +19,9 @@ use super::state::{
     Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
 use super::ty::sample;
-use super::windows::{End, as_window, imprecise};
+use super::windows::{
+    Choices, End, Shape, as_window, imprecise, single, value_choices, values_interval,
+};
 use crate::base::{Load, Run};
 use crate::load::expr_text;
 use crate::model::{
@@ -182,10 +184,27 @@ impl Engine {
                 return Err(refuse(Run::None, "a value is none here: round".to_owned()));
             }
         }
-        if let Value::Window(w) = &x {
+        if let Some(w) = as_window(&x).filter(|w| w.of_days()) {
+            // a window of days, which no round takes (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "round")?));
         }
-        round_values(m, &x, &bare_step(call.args.get(1), u), &mode)
+        let step = bare_step(call.args.get(1), u);
+        // monotone in x: its ends stand for its values, the interval of its rounded values
+        // (L §4.4 l.668; P25, P30, N2)
+        let tuples = match value_choices(m, ("round", Shape::Monotone), &[&x])? {
+            // a window of one value is that value (F3)
+            Choices::Plain => return round_values(m, single(&x), &step, &mode),
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => tuples,
+        };
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [at_x] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(round_values(m, at_x, &step, &mode));
+        }
+        values_interval(m, "round", outs, &[&x])
     }
 
     /// `min(a, b, …)`, `max(a, b, …)`: a bare figure takes the unit of an argument with one;
@@ -245,37 +264,35 @@ impl Engine {
         if some_hole {
             return hole_of(&[x.as_hole(), k.as_hole()]);
         }
-        if let Some(w) = as_window(&x).or_else(|| as_window(&k)) {
-            // an interval where one value is needed (L §4.4), as `round` of one is
+        if let Some(w) = as_window(&x)
+            .or_else(|| as_window(&k))
+            .filter(|w| w.of_days())
+        {
+            // a window of days, which no power takes (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "pow")?));
         }
-        let not_number = || Stop::NotBuilt("pow of a value that is no number, met at run");
-        let (base, unit) = if let Value::Money(money) = &x {
-            (
-                money_num(m, money).map_err(num_stop)?,
-                currency_unit(m, money.currency()).map_err(num_stop)?,
-            )
-        } else if let Value::Number(n) = &x {
-            (n.q.clone(), n.unit())
+        // monotone in its base where the exponent is one number, an even one by its shape
+        // (0 joins the ends); over an exponent's interval, of a negative base say, only its
+        // values in turn (L §4.4 l.668; P30, B1)
+        let shape = if as_window(&k).is_some() {
+            Shape::Values
         } else {
-            return Err(not_number());
+            Shape::Monotone
         };
-        let Value::Number(power) = &k else {
-            return Err(not_number());
+        let tuples = match value_choices(m, ("pow", shape), &[&x, &k])? {
+            // a window of one value is that value (F3)
+            Choices::Plain => return pow_value(m, single(&x), single(&k)),
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => tuples,
         };
-        if !power.q.is_integer() {
-            return Err(Stop::NotBuilt(
-                "a power that isn't an integer (the transcendental kernel)",
-            ));
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [at_x, at_k] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(pow_value(m, at_x, at_k));
         }
-        let q = int_power(m, (&x, &base), &power.q)?;
-        let unit = if unit.is_one() {
-            unit
-        } else {
-            unit.power(&power.q)
-                .map_err(|e| e.refusal(num_stop, None))?
-        };
-        Ok(Value::Number(Number::plain(q, unit)))
+        values_interval(m, "pow", outs, &[&x, &k])
     }
 
     /// `lifespan(k)`: thing k's lifespan as the cut sees it, a record of its first day `from`
@@ -348,28 +365,26 @@ impl Engine {
         if v == Value::None {
             return Err(refuse(Run::None, "a value is none here: abs".to_owned()));
         }
-        if let Some(w) = as_window(&v) {
-            // an interval where one value is needed (L §4.4), as `round` of one is
+        if let Some(w) = as_window(&v).filter(|w| w.of_days()) {
+            // a window of days, which has no absolute value (L §4.4)
             return Ok(Value::Hole(imprecise(m, w, "abs")?));
         }
-        if let Value::Money(money) = &v {
-            if money.is_negative() {
-                return Ok(Value::Money(money.checked_neg().map_err(num_stop)?));
-            }
-            return Ok(v);
-        }
-        let Value::Number(n) = v else {
-            return Err(Stop::NotBuilt(
-                "abs of a value that is no number, met at run",
-            ));
+        // monotone on each side of 0, so its ends and 0 stand for its values: its shape
+        // (L §4.4 l.668; P25, P30)
+        let tuples = match value_choices(m, ("abs", Shape::Monotone), &[&v])? {
+            // a window of one value is that value (F3)
+            Choices::Plain => return abs_value(single(&v)),
+            Choices::Hole(h) => return Ok(Value::Hole(h)),
+            Choices::Tuples(tuples) => tuples,
         };
-        if n.q.is_negative() {
-            return Ok(Value::Number(Number {
-                q: n.q.checked_neg().map_err(num_stop)?,
-                class: n.class,
-            }));
+        let mut outs = Vec::with_capacity(tuples.len());
+        for t in &tuples {
+            let [x] = t.as_slice() else {
+                return Err(arity());
+            };
+            outs.push(abs_value(x));
         }
-        Ok(Value::Number(n))
+        values_interval(m, "abs", outs, &[&v])
     }
 
     /// `pos(k)`: a key's place in its index, from 1 (refcore's `c_pos`). L §4.2.
@@ -568,6 +583,69 @@ fn bare_step(written: Option<&Expr>, u: Value) -> Value {
         });
     }
     u
+}
+
+/// `abs(x)` of a value that is no interval (refcore's `c_abs`, its lambda). L §5.11.
+///
+/// # Errors
+///
+/// A number error; `NotBuilt` for a value that is no number.
+fn abs_value(v: &Value) -> Result<Value, Stop> {
+    if let Value::Money(money) = v {
+        if money.is_negative() {
+            return Ok(Value::Money(money.checked_neg().map_err(num_stop)?));
+        }
+        return Ok(v.clone());
+    }
+    let Value::Number(n) = v else {
+        return Err(Stop::NotBuilt(
+            "abs of a value that is no number, met at run",
+        ));
+    };
+    if n.q.is_negative() {
+        return Ok(Value::Number(Number {
+            q: n.q.checked_neg().map_err(num_stop)?,
+            class: n.class.clone(),
+        }));
+    }
+    Ok(v.clone())
+}
+
+/// `pow(x, n)` of two values that are no intervals: x to the integer power n, exact, its unit
+/// to the n-th power, a `num` (refcore's `pow_of`). L §3.3, §7.1, §7.3.
+///
+/// # Errors
+///
+/// The refusals of the power; `NotBuilt` for a value that is no number or a power that isn't
+/// an integer (the transcendental kernel).
+fn pow_value(m: &Reality, x: &Value, k: &Value) -> Result<Value, Stop> {
+    let not_number = || Stop::NotBuilt("pow of a value that is no number, met at run");
+    let (base, unit) = if let Value::Money(money) = x {
+        (
+            money_num(m, money).map_err(num_stop)?,
+            currency_unit(m, money.currency()).map_err(num_stop)?,
+        )
+    } else if let Value::Number(n) = x {
+        (n.q.clone(), n.unit())
+    } else {
+        return Err(not_number());
+    };
+    let Value::Number(power) = k else {
+        return Err(not_number());
+    };
+    if !power.q.is_integer() {
+        return Err(Stop::NotBuilt(
+            "a power that isn't an integer (the transcendental kernel)",
+        ));
+    }
+    let q = int_power(m, (x, &base), &power.q)?;
+    let unit = if unit.is_one() {
+        unit
+    } else {
+        unit.power(&power.q)
+            .map_err(|e| e.refusal(num_stop, None))?
+    };
+    Ok(Value::Number(Number::plain(q, unit)))
 }
 
 /// `base^k` for a whole `k`, as refcore's `c_pow` screens and computes it: past the digits its

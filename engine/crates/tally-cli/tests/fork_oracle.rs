@@ -259,16 +259,19 @@ mod tests {
         for lows in [Lows::Tree, Lows::Walk] {
             let lines = alike("days.tally", &files, &Asks::Every, lows).expect("answered");
             // refcore's lines (tally 2.1.8, the sweep's leg on its day as tally 2.2 books it),
-            // each under both options of the axis the pay reads
+            // each under both options of the axis the pay reads; but for tally 2.2.1's 206.1
+            // in `d_back`'s first two, `d_many` and `d_uncertain`: a sweep in a projection from
+            // after the month's first day reads `room`'s projection from that day, which starts
+            // from the main walk there and counts the salary once (E §4.3 step 1)
             for line in [
                 "d_min [pay_reading = low]: 350.00 DUK",
                 "d_min [pay_reading = high]: 575.00 DUK",
-                "d_back (d = 2026-03-10) [pay_reading = low]: -50.00 DUK",
-                "d_back (d = 2026-02-20) [pay_reading = high]: -75.00 DUK",
+                "d_back (d = 2026-03-10) [pay_reading = low]: 450.00 DUK",
+                "d_back (d = 2026-02-20) [pay_reading = high]: 575.00 DUK",
                 "d_back (d = 2026-02-03) [pay_reading = low]: 1 400.00 DUK",
-                "d_many [pay_reading = high]: 275.00 DUK",
+                "d_many [pay_reading = high]: 2 875.00 DUK",
                 "d_axis [pay_reading = low]: 325.00 DUK",
-                "d_uncertain [pay_reading = low]: -218.75 DUK",
+                "d_uncertain [pay_reading = low]: 281.25 DUK",
                 "d_room (m = 2026-07) [pay_reading = high]: 910.94 DUK",
                 "  held: rent = 950.00 DUK (later), read for 2026-07-01",
             ] {

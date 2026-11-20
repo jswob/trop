@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::instance::{Amount, Dated, End, Exists, Inst, Order, Status};
+use super::instance::{Amount, Dated, End, Exists, Inst, LegVal, Order, Piece, Status};
 use super::point::{At, Step};
 use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
@@ -95,6 +95,9 @@ pub enum Act {
     GlobalHole(Hole),
     /// A refusal that holds for every place.
     GlobalBad(Refusal),
+    /// A plan instance's own refusal that holds for every place, which no window's hole
+    /// outranks (refcore's `global_own`; P31).
+    GlobalOwn(Refusal),
     /// The decisions of a move due that day (E §4.2 step 3).
     Decide(String, Day),
     /// The end of the last day of a decision's window, by its id, with the hole it left its
@@ -271,9 +274,16 @@ impl Engine {
         cut: Day,
     ) -> Result<Vec<(String, HolePlaces)>, Stop> {
         let mut out = Vec::new();
+        let from = super::plan::scenario_from(m, &mv.id);
         for inst in insts {
+            // a day before its scenario's from: left out, listed at the places its legs name
+            // as a move's instance is (L §6.4 l.1867, §8.2)
+            let early = matches!((&inst.day, from), (Some(Dated::Day(d)), Some(f)) if *d < f);
+            // a day a pin or an assumption decided: a read its span leaves out lists them at
+            // the places its legs name (L §8.2 One read set; N1 on #241)
+            let decided = !inst.day_coll.deciding().entries.is_empty();
             if inst.exists != Exists::No
-                && matches!(inst.day, Some(Dated::Hole(_) | Dated::Window(_)))
+                && (early || decided || matches!(inst.day, Some(Dated::Hole(_) | Dated::Window(_))))
             {
                 out.push((inst.id.clone(), self.hole_places(m, mv, inst, cut)?));
             }
@@ -569,6 +579,9 @@ fn schedule_decided(
         rank: walk.plan_rank(&inst.order)?,
         ..At::of(day, Step::Plans)
     };
+    // it counts on no day: a read before its day lists what decided it too (P35 on #241)
+    let named: Vec<&str> = places.iter().map(|(p, _)| p.as_str()).collect();
+    walk.note_uncounted(&named, None, &inst.coll);
     for (place, unit) in places {
         walk.at(at, Act::Mark(place, unit, None, inst.coll.clone()));
     }
@@ -595,8 +608,14 @@ fn outside_window(walk: &Walk, inst: &Inst) -> bool {
 fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     let rank = walk.plan_rank(&inst.order)?;
     match inst.status {
-        Status::LeftOut => return note_left_out(walk, &inst),
-        Status::Modelled => return schedule_modelled(walk, inst),
+        Status::LeftOut => {
+            note_never(walk, &inst, &inst.day_coll);
+            return note_left_out(walk, &inst);
+        }
+        Status::Modelled => {
+            note_uncounted(walk, &inst, &inst.day_coll);
+            return schedule_modelled(walk, inst);
+        }
         Status::None | Status::Decision | Status::Open => return Ok(()),
         Status::Uncertain => {
             walk.uncertain.push(inst);
@@ -605,6 +624,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         Status::Refused | Status::Hole | Status::Past | Status::Plan => {}
     }
     if walk.proj.is_some() && outside_window(walk, &inst) {
+        note_uncounted(walk, &inst, &inst.day_coll);
         return Ok(());
     }
     let ix = walk.insts.len();
@@ -636,7 +656,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                     walk.at(point(day), Act::LegBad(mv, leg, err.clone()));
                 }
             } else {
-                walk.at(At::before(day), Act::GlobalBad(err));
+                walk.at(At::before(day), Act::GlobalOwn(err));
             }
         }
         Status::Hole => {
@@ -653,13 +673,26 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 Exists::Unknown(h) => Some(h.clone()),
                 Exists::Yes | Exists::No => None,
             };
-            if inst.depends.is_some()
-                && let Some(Dated::Window(w)) = &inst.day
-            {
-                // a window whose days take different classes (tally 2.1.8 item 77)
+            if let (Some(h), Some(window)) = (&qs, inst.law.window()) {
+                // an existence a window `at`'s law-date classes leave open: a refusal only the
+                // days it exists on, or those it doesn't, would give doesn't outrank its hole
+                // (L §4.4 l.671; refcore's `UNCERTAIN`, #236)
+                let class = super::tuples::imprecise_law(window, &inst.move_id);
+                if h.shares(&class) {
+                    walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
+                }
+            }
+            if let (Some(depends), Some(Dated::Window(w))) = (inst.depends, &inst.day) {
+                // a window whose days take different classes (tally 2.1.8 item 77): the hole
+                // reaches as far as the class that books would, from its first day, none where
+                // no day books it (refcore's `sched_hole`, its `booked`; #220)
                 let class = super::plan::class_hole(&inst, w);
                 walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&class)]);
                 qs = spread(&[qs.as_ref(), Some(&class)]);
+                let Some(booked) = depends.booked() else {
+                    return Ok(());
+                };
+                return schedule_booked_hole(walk, (mv, rank), &inst, (booked, qs.as_ref()));
             }
             // its legs on its day, a window's first (refcore's `sched_leg_hole`)
             let day = inst
@@ -667,15 +700,26 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
                 .as_ref()
                 .and_then(Dated::lo)
                 .map_or(start, |d| d.max(start));
-            for leg in 0..inst.legs.len() {
+            let known = !matches!(inst.exists, Exists::Unknown(_));
+            for (leg, lg) in inst.legs.iter().enumerate() {
+                if known && zero_leg(lg) {
+                    // a leg of amount 0 of a movement that exists books nothing on any day
+                    // (L §5.14; refcore's `sched_leg_hole`; #214)
+                    continue;
+                }
                 walk.at(point(day), Act::LegHole(mv, leg, qs.clone()));
             }
         }
         Status::Past | Status::Plan => {
+            // a read whose span leaves a leg's day out doesn't count it (221.1)
+            note_uncounted(walk, &inst, &inst.day_coll);
             for (leg, lg) in inst.legs.iter().enumerate() {
                 match &lg.day {
                     Dated::Day(d) if *d >= start => walk.at(point(*d), Act::Leg(mv, leg)),
                     Dated::Day(_) => {}
+                    // a leg of amount 0 books nothing on any day of its window: no hole (E §4.1
+                    // step 2: "but for a leg of amount 0"; #214)
+                    Dated::Window(_) if zero_leg(lg) => {}
                     Dated::Window(w) => {
                         // imprecise from its first day, booked at its last (refcore's
                         // `sched_leg`)
@@ -696,9 +740,103 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
     Ok(())
 }
 
+/// What decided instance `inst`'s legs don't count where a read leaves their day out, kept at
+/// each place they name, each leg on its day (a window's first; a hole day holes the read
+/// itself), with what its day read, `read` (refcore's `sched_leg`, `later_by_place`). With
+/// [`note_never`], one place for every way a movement comes not to count. L §8.2 One read set
+/// (221.1, N1, B3 and P35 on #241).
+fn note_uncounted(walk: &mut Walk, inst: &Inst, read: &Collected) {
+    for lg in &inst.legs {
+        if let Some(day) = lg.day.lo() {
+            walk.note_uncounted(&leg_places(lg), Some(day), read);
+        }
+    }
+}
+
+/// What decided instance `inst` counts on no day of the walk (left out, before a scenario's
+/// `from`), kept at each place its legs name, with what its day read, `read`. L §8.2 One read
+/// set (N1 and P35 on #241).
+fn note_never(walk: &mut Walk, inst: &Inst, read: &Collected) {
+    for lg in &inst.legs {
+        walk.note_uncounted(&leg_places(lg), None, read);
+    }
+}
+
+/// What decided a decision's instance doesn't count, on `day` (none: on no day of the walk),
+/// kept at the places its legs name as [`Engine::hole_days`] read them; none where they
+/// weren't read (L §8.2 One read set; N1 on #241).
+fn note_decision(walk: &mut Walk, places: Option<&HolePlaces>, day: Option<Day>, read: &Collected) {
+    let Some(Some(set)) = places else {
+        return;
+    };
+    let named: Vec<&str> = set.iter().map(String::as_str).collect();
+    walk.note_uncounted(&named, day, read);
+}
+
+/// The places leg `lg` names, its from and its to. E §4.1 step 2.
+fn leg_places(lg: &LegVal) -> Vec<&str> {
+    [&lg.from, &lg.to]
+        .into_iter()
+        .filter_map(End::place)
+        .collect()
+}
+
+/// Whether leg `lg` has a known amount of 0, which books nothing on whichever day (refcore's
+/// `zero_leg`). L §5.14 ("an amount of 0 books nothing"), E §4.1 step 2.
+fn zero_leg(lg: &LegVal) -> bool {
+    matches!(&lg.amount, Amount::Qty(q) if q.is_zero())
+}
+
+/// The hole of window-dated plan instance `inst`, movement `mv` at rank `rank`, whose class
+/// depends on its window's day, at its legs' places over the days `booked` the class that
+/// books reaches, its questions `qs`: from their first day, a hole no reading ends while the
+/// movement may still fall after it, which becomes, at the end of their last day and before
+/// that day's closing readings, a hole the next reading ends; a plain hole from their first
+/// day where they are one day or a leg's amount is refused (refcore's `sched_hole`, `perm`,
+/// `dec_win_end`). E §4.1 step 2 ("as far as … the other class would reach"), §4.2 step 4,
+/// L §5.19 Holes; #220.
+fn schedule_booked_hole(
+    walk: &mut Walk,
+    (mv, rank): (Mv, u32),
+    inst: &Inst,
+    (booked, qs): (Piece, Option<&Hole>),
+) -> Result<(), Stop> {
+    let first = booked.first.max(walk.start);
+    let point = At {
+        rank,
+        ..At::of(first, Step::Plans)
+    };
+    for (leg, lg) in inst.legs.iter().enumerate() {
+        if zero_leg(lg) {
+            // a leg of amount 0 books nothing on any day (E §4.1 step 2; #214)
+            continue;
+        }
+        if first >= booked.last || matches!(lg.amount, Amount::Refused(_)) {
+            walk.at(point, Act::LegHole(mv, leg, qs.cloned()));
+            continue;
+        }
+        let q = match &lg.amount {
+            Amount::Hole(a) => spread(&[qs, Some(a)]),
+            Amount::Qty(_) | Amount::Refused(_) => qs.cloned(),
+        };
+        let q = q.ok_or_else(|| super::plan::invariant("a hole movement with no question"))?;
+        walk.at(point, Act::Perm(mv, leg, q.clone()));
+        if booked.last <= walk.end {
+            let end = At {
+                stratum: 0,
+                rank,
+                ..At::of(booked.last, Step::End)
+            };
+            walk.at(end, Act::WindowEnd(inst.id.clone(), q));
+        }
+    }
+    Ok(())
+}
+
 /// Puts a decision instance on its day, at its move's stratum; one dated outside the run is
 /// left out, and so is one of a move a scenario declares dated before the scenario's `from`,
-/// which books nothing there (L §6.4); one refused before its point (its key's `where`) is
+/// a window wholly before it too, which books nothing there, and a window across it makes its
+/// hole from `from` (L §6.4; P26); one refused before its point (its key's `where`) is
 /// put on its day as any instance is, so its refusal takes its place in the day's movement
 /// order (E §4.1; L §8.4, tally 2.1.6), the scenario's rule first; one whose day is a hole
 /// makes `places` holes from the walk's start, every place where they can't be read
@@ -717,12 +855,16 @@ fn schedule_decision(
     match inst.day.clone() {
         Some(Dated::Day(d)) => {
             if super::plan::scenario_from(m, move_id).is_some_and(|from| d < from) {
-                // a scenario's move books nothing before its from (L §6.4): left out
+                // a scenario's move books nothing before its from (L §6.4): left out, at the
+                // places its legs name
                 if walk.proj.is_none() {
-                    note_left_out(walk, &inst)?;
+                    note_decision(walk, places.as_ref(), None, &inst.day_coll);
+                    note_left_out_at(walk, &inst, places.flatten())?;
                 }
                 return Ok(());
             }
+            // a read whose span leaves its day out doesn't count it (N1 on #241)
+            note_decision(walk, places.as_ref(), Some(d), &inst.day_coll);
             if d < walk.start || d > walk.plans_through() {
                 if walk.proj.is_none() && (d < m.start || d > m.end) {
                     note_left_out(walk, &inst)?;
@@ -745,21 +887,34 @@ fn schedule_decision(
             decision_hole(walk, (at, h), &inst, places)?;
         }
         Some(Dated::Window(w)) => {
+            let from = super::plan::scenario_from(m, move_id);
+            if from.is_some_and(|from| w.hi < from) {
+                // a scenario's move books nothing before its from (L §6.4): a window wholly
+                // before it is left out, as its day would be
+                if walk.proj.is_none() {
+                    note_left_out_at(walk, &inst, places.flatten())?;
+                }
+                return Ok(());
+            }
             // a decision dated by a window: a hole at its places from the window's first day
-            // (refcore's `prepare`, its decisions)
-            let at = At::before(w.lo.max(walk.start));
+            // (refcore's `prepare`, its decisions), or from its scenario's from where the
+            // window crosses it: nothing before from changes, so a day before it is the base's
+            // whatever day of the window m falls on (L §6.4, §4.4 l.671; P26 on #241)
+            let first = from.map_or(w.lo, |from| w.lo.max(from));
+            let at = At::before(first.max(walk.start));
             let text = format!(
                 "date within {} not precise enough for the day of {}",
                 w.question, inst.id
             );
             let h = Hole::asked(&text, &inst.id).carrying(&w.value.carry);
             if w.hi <= walk.end {
-                // m has fallen by the end of the window's last day (pick P29 on #175); ends
-                // at one point apply by move id, then keys in index order, the plan's order
-                // that the day's stable sort keeps, never as text (E §4.1; N-f of group 3's
-                // fix review: `save[k9]` before `save[k10]`)
+                // m has fallen by the end of the window's last day (pick P29 on #175), before
+                // that day's closing readings (E §4.2 step 4: "a window whose last day is t has
+                // ended before them"; #218); ends at one point apply by move id, then keys in
+                // index order, the plan's order that the day's stable sort keeps, never as text
+                // (E §4.1; N-f of group 3's fix review: `save[k9]` before `save[k10]`)
                 let end = At {
-                    stratum: 2,
+                    stratum: 0,
                     rank,
                     ..At::of(w.hi, Step::End)
                 };
@@ -858,6 +1013,25 @@ fn schedule_adjustment(
             .entry(place.to_owned())
             .or_insert_with(Vec::new)
             .push((adj.day, entry));
+    }
+    Ok(())
+}
+
+/// A decision instance left out before its scenario's `from`, counted for its move's `left
+/// out:` line at `places`, the places its legs name read at the cut as its hole day's are
+/// (its legs are read only on its day): as a move's instance is listed (L §6.4 l.1867,
+/// §8.2). E §4.1 step 3.
+fn note_left_out_at(
+    walk: &mut Walk,
+    inst: &Inst,
+    places: Option<BTreeSet<String>>,
+) -> Result<(), Stop> {
+    note_left_out(walk, inst)?;
+    for place in places.into_iter().flatten() {
+        walk.left_out_at
+            .entry(place)
+            .or_insert_with(BTreeSet::new)
+            .insert(inst.move_id.clone());
     }
     Ok(())
 }

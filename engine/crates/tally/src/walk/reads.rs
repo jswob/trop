@@ -459,6 +459,9 @@ impl Engine {
                 met.entries.insert(entry.clone());
             }
         }
+        // a movement the balance doesn't count: what decided it is in its read set (L §8.2
+        // One read set; 221.1, P35 on #241)
+        met.merge(&walk.uncounted_in(place, (walk.start, at.day)));
         self.chain_register(m, (id, at), (place, unit), &mut met)?;
         self.absorb(&met);
         state_value(m, &st, unit, &anchor)

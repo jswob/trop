@@ -108,6 +108,10 @@ pub struct St {
     pub imp: Vec<Pending>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
+    /// After a reading a window runs past, the windows' questions it keeps open from its next
+    /// instant: at the reading's own instant the stated balance stands without them (refcore's
+    /// `reopen`; L §5.19 l.1726, E §4.1 step 2; P32, N1 and N8). None after any other entry.
+    pub reopen: Option<Hole>,
 }
 
 /// A movement dated by a window that may still fall at a place (refcore's `imp`, one entry;
@@ -155,6 +159,7 @@ impl St {
             perm_bad: None,
             imp: Vec::new(),
             rst: None,
+            reopen: None,
         }
     }
 
@@ -233,6 +238,10 @@ pub struct Ent {
     /// An `ImpOn`'s leg amount signed as a flow into the place, where known (tally 2.1.8
     /// item 77).
     pub signed: Option<Num>,
+    /// A refusal a plan's or an observation's own evaluation gives: it reads no value under a
+    /// window's hole, so every day gives it and it outranks one (refcore's `note == 'own'`;
+    /// L §8 l.2217, §4.4 l.671; P31, B4).
+    pub own: bool,
     /// The state after it.
     pub st: St,
 }
@@ -278,6 +287,7 @@ impl Ent {
             flow: None,
             hole_leg: None,
             signed: None,
+            own: false,
             st: St::of(None),
         }
     }
@@ -388,6 +398,12 @@ pub struct Walk {
     pub(crate) left_out_at: BTreeMap<String, BTreeSet<String>>,
     /// The adjustments with a remainder, per place, from their day (L §8.2 `adjustment:`).
     pub(crate) adj_regs: BTreeMap<String, Vec<(Day, Entry)>>,
+    /// The movements that don't count where a read of a place reaches, by each place their
+    /// legs name: the day a leg is on, none where no day of the walk holds it (left out, past
+    /// a projection's plans, a false `when`), and what decided it ([`Collected::deciding`]).
+    /// A read of the place over a span that leaves the day out lists them: a balance, `flows`
+    /// (L §8.2 One read set, "a day outside the span"; P35 on #241).
+    pub(crate) uncounted: BTreeMap<String, Vec<(Option<Day>, Collected)>>,
     /// The legs the walk refused, by (movement, leg) (E §4.2 step 5).
     pub(crate) bad_legs: BTreeMap<(String, String), Refusal>,
     /// The legs a test some of a window's days pass left the window's hole, by (movement,
@@ -626,6 +642,7 @@ impl Walk {
             left_out: BTreeMap::new(),
             left_out_at: BTreeMap::new(),
             adj_regs: BTreeMap::new(),
+            uncounted: BTreeMap::new(),
             bad_legs: BTreeMap::new(),
             hole_legs: BTreeMap::new(),
             pend_at: BTreeMap::new(),
@@ -739,7 +756,7 @@ impl Walk {
             return (self.default_state(m, place, unit), None);
         };
         match log.ents.get(i) {
-            Some(e) => (e.st.clone(), Some(i)),
+            Some(e) => (at_reading(e, at), Some(i)),
             None => (self.default_state(m, place, unit), None),
         }
     }
@@ -851,6 +868,36 @@ impl Walk {
         }
     }
 
+    /// What a pad's reset at `at` keeps beside its reading's reads: each open instance's
+    /// since the place's last reset, in its unit and in every unit, with its `open:` line, for
+    /// the gap a movement left unbooked is the pad's size (refcore's `open_kept`; L §8.2 One
+    /// read set, the `open:` row; 220.2 on #241). E §6.1.
+    pub(crate) fn open_kept(
+        &self,
+        m: &Reality,
+        (place, unit): (&str, &str),
+        at: At,
+        into: &mut Collected,
+    ) {
+        for u in [unit, ALL] {
+            let Some(log) = self.logs.get(&(place.to_owned(), u.to_owned())) else {
+                continue;
+            };
+            let (st, _) = self.state(m, place, u, at);
+            for (j, e) in log.ents.iter().enumerate().take_while(|(_, e)| e.at <= at) {
+                let before_reset = st.rst.is_some_and(|r| j < r);
+                let open = e.reg.iter().any(|r| r.word == "open");
+                if before_reset || !matches!(e.change, Change::Mark) || !open {
+                    continue;
+                }
+                if let Some(c) = &e.coll {
+                    into.merge(c);
+                }
+                into.entries.extend(e.reg.iter().cloned());
+            }
+        }
+    }
+
     /// The register of a place's log through entry `i`: every entry's since the last reset,
     /// the movement's evaluation and the entry's own (refcore's `cum`). L §8.2.
     pub fn cum(&mut self, place: &str, unit: &str, i: usize) -> Collected {
@@ -880,6 +927,78 @@ impl Walk {
             Some(c) => c.clone(),
             None => Collected::default(),
         }
+    }
+
+    /// The pins leg `movement` (its movement and leg names) took where it is booked at
+    /// `places` in `unit`, from its entries' reads: what a refusal of it rests on (L §8.2 One
+    /// read set; tally 2.2.1's 208.2); none where it took no pin.
+    #[must_use]
+    pub fn booked_pins(
+        &self,
+        places: Vec<&str>,
+        unit: &str,
+        movement: (&str, &str),
+    ) -> Option<Collected> {
+        let mut read = Collected::default();
+        for place in places {
+            let Some(log) = self.logs.get(&(place.to_owned(), unit.to_owned())) else {
+                continue;
+            };
+            for e in &log.ents {
+                let booked = matches!(e.change, Change::Delta(_))
+                    && e.mv.as_deref() == Some(movement.0)
+                    && e.leg.as_deref() == Some(movement.1);
+                if booked && let Some(c) = &e.coll {
+                    read.merge(c);
+                }
+            }
+        }
+        super::ends::pins_read(&read)
+    }
+
+    /// What the walk's refusals of movement `movement` rest on: its `bad` entries' reads, at
+    /// every place (L §8.2 One read set, a refusal's like a value's; B1 on #241).
+    #[must_use]
+    pub(crate) fn refused_reads(&self, movement: &str) -> Collected {
+        let mut out = Collected::default();
+        for log in self.logs.values() {
+            for e in &log.ents {
+                let refused =
+                    matches!(e.change, Change::Bad(_)) && e.mv.as_deref() == Some(movement);
+                if refused && let Some(c) = &e.coll {
+                    out.merge(c);
+                }
+            }
+        }
+        out
+    }
+
+    /// Notes a movement that doesn't count at `places` on `day` (none: on no day of the walk),
+    /// with `read`'s deciding entries, none kept where it has none (P35 on #241). L §8.2.
+    pub(crate) fn note_uncounted(&mut self, places: &[&str], day: Option<Day>, read: &Collected) {
+        let deciding = read.deciding();
+        if deciding.entries.is_empty() {
+            return;
+        }
+        for p in places {
+            self.uncounted
+                .entry((*p).to_owned())
+                .or_insert_with(Vec::new)
+                .push((day, deciding.clone()));
+        }
+    }
+
+    /// What decided that a movement at `place` doesn't count over the days `first` to `last`:
+    /// each one noted on a day outside them or on none (P35 on #241). L §8.2 One read set.
+    #[must_use]
+    pub(crate) fn uncounted_in(&self, place: &str, (first, last): (Day, Day)) -> Collected {
+        let mut out = Collected::default();
+        for (day, read) in self.uncounted.get(place).into_iter().flatten() {
+            if day.is_none_or(|d| d < first || d > last) {
+                out.merge(read);
+            }
+        }
+        out
     }
 
     /// Takes back a leg the sign rule refuses: its entries at `place` that `holds` matches are
@@ -1089,6 +1208,29 @@ impl Taken {
     }
 }
 
+/// The state after entry `e` as a read at point `at` sees it: at a reading's own instant, a
+/// read at its step or, for a closing reading, after it that day, the stated balance without
+/// the windows' questions the reading keeps open from its next instant, every day of a window
+/// that runs past it agreeing (refcore's `state`, its `reopen`; P32, N8). L §5.19 l.1726.
+fn at_reading(e: &Ent, at: At) -> St {
+    let Some(reopen) = &e.st.reopen else {
+        return e.st.clone();
+    };
+    let own_instant = at.day == e.at.day
+        && if e.at.step == Step::End {
+            matches!(at.step, Step::End | Step::Close | Step::After)
+        } else {
+            at.step == e.at.step
+        };
+    if !own_instant {
+        return e.st.clone();
+    }
+    let mut st = e.st.clone();
+    st.hole = st.hole.as_ref().and_then(|h| h.without(reopen));
+    st.perm = st.perm.as_ref().and_then(|h| h.without(reopen));
+    st
+}
+
 /// The position after entry `n` of a log. E §4.2.
 fn next_entry(n: usize) -> Result<usize, Stop> {
     n.checked_add(1)
@@ -1144,10 +1286,20 @@ fn opening_state(
 /// holes, tally 2.1.8), §4.4 (a refusal that only some of a window's days give).
 fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
     let mut st = prev.clone();
+    st.reopen = None;
     match change {
         Change::Reset { val, qs } => {
+            // a window that runs past the reading: the reading states the balance at its
+            // instant, and from the next instant the movement may still fall, so the balance
+            // is its hole up to the next reading (L §5.19 l.1726, E §4.1 step 2; P32, N1, N8);
+            // `Walk::state` gives the reading's own instant without it
+            let pending: Vec<Option<&Hole>> = st.imp.iter().map(|p| Some(&p.hole)).collect();
+            let imp = spread(&pending);
+            let wins = st.perm.as_ref().and_then(Hole::of_windows);
+            st.reopen = spread(&[imp.as_ref(), wins.as_ref()]);
             st.val = Some(val.clone());
-            st.hole.clone_from(qs);
+            st.hole = spread(&[qs.as_ref(), imp.as_ref()]);
+            st.imp.clear();
             st.bad.clone_from(&st.perm_bad);
             st.rst = Some(at);
         }
@@ -1183,8 +1335,10 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
 
 /// The state after entry `ent`: its change applied, the window tests' questions `open`
 /// ([`apply`]); a movement dated by a window may fall from its `ImpOn` on, until its leg's
-/// booking at the window's last day (refcore's `apply`, its `wid`). E §4.2, L §4.4.
+/// booking at the window's last day (refcore's `apply`, its `wid`); a movement's own refusal
+/// meets no window test, so it outranks their hole (P31). E §4.2, L §4.4.
 fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
+    let open = if ent.own { None } else { open };
     let mut st = apply(prev, &ent.change, (at, open))?;
     if let Some((wid, _)) = &ent.window {
         match &ent.change {

@@ -237,8 +237,6 @@ pub enum Warn {
     Legs,
     /// `WARN-LABELS`
     Labels,
-    /// `WARN-STALE`
-    Stale,
 }
 
 /// The refused requests of E §11.
@@ -255,7 +253,7 @@ pub enum Req {
 impl Code {
     /// Every code, each once, in the order of the spec's tables: L §8.1, §8.3, §8.4, §8.5,
     /// then E §11.
-    pub const ALL: [Code; 102] = [
+    pub const ALL: [Code; 101] = [
         Code::Hole(Hole::Stated),
         Code::Hole(Hole::Ungoverned),
         Code::Hole(Hole::NoReading),
@@ -353,7 +351,6 @@ impl Code {
         Code::Warn(Warn::Unread),
         Code::Warn(Warn::Legs),
         Code::Warn(Warn::Labels),
-        Code::Warn(Warn::Stale),
         Code::Req(Req::Ask),
         Code::Req(Req::Clock),
         Code::Req(Req::Paths),
@@ -518,7 +515,6 @@ impl Warn {
             Warn::Unread => "WARN-UNREAD",
             Warn::Legs => "WARN-LEGS",
             Warn::Labels => "WARN-LABELS",
-            Warn::Stale => "WARN-STALE",
         }
     }
 }

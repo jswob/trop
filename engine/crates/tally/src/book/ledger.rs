@@ -356,11 +356,30 @@ impl Engine {
         for mv in moves {
             insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());
         }
+        // an observation that fulfils a window-dated instance fixes its day, in every ledger:
+        // the month of each observation the cut sees holds it, on the last of the span's, and
+        // a span that holds none of them holds nothing of it (L §4.4, §5.19; N7, P37 on #241)
+        let mut fixed: BTreeMap<String, Vec<Day>> = BTreeMap::new();
+        for o in self.observations(m, cut)? {
+            if let Some(t) = o.target_id() {
+                fixed.entry(t).or_insert_with(Vec::new).push(o.day);
+            }
+        }
         for inst in insts {
-            let day = match model_day(&inst, span)? {
-                Modelled::Skip => continue,
-                Modelled::Undated => None,
-                Modelled::On(day) => Some(day),
+            let exists = !matches!(inst.status, Status::None | Status::LeftOut);
+            let fixed_days = match &inst.day {
+                Some(Dated::Window(_)) if exists => fixed.get(&inst.id),
+                Some(_) | None => None,
+            };
+            let in_span = fixed_days.map(|days| last_within(days, span));
+            let day = match in_span {
+                Some(Some(last)) => Some(last),
+                Some(None) => continue,
+                None => match model_day(&inst, span)? {
+                    Modelled::Skip => continue,
+                    Modelled::Undated => None,
+                    Modelled::On(day) => Some(day),
+                },
             };
             let refused = inst.status == Status::Refused;
             let touching = if refused {
@@ -577,6 +596,18 @@ fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
     }
 }
 
+/// The last of the days an instance's observations fix that falls in the span: the day its
+/// line stands on in that ledger, or none when the span holds none of them. L §4.4, E §6.3.
+fn last_within(days: &[Day], span: &Span) -> Option<Day> {
+    let mut last: Option<Day> = None;
+    for d in days {
+        if span.contains(*d) {
+            last = Some(last.map_or(*d, |l| l.max(*d)));
+        }
+    }
+    last
+}
+
 /// The observations that fulfil each instance and each adjustment, in the observations'
 /// order (refcore's `by_target`, `by_adj`). E §6.3.
 fn fulfilling(obs: &[Obs]) -> Fulfilling {
@@ -601,7 +632,8 @@ fn fulfilling(obs: &[Obs]) -> Fulfilling {
 
 /// An instance's line: expected but missing when no observation fulfils it (none for an
 /// amount of 0), partly fulfilled when its kind is uncertain and its observations sum to
-/// less, else matched (refcore's model lines). E §6.3.
+/// less, else matched (refcore's model lines). A window's day is the day of the last
+/// observation that fulfils it, which fixes it (L §4.4, §5.19). E §6.3.
 fn instance_line(
     m: &Reality,
     lines: &mut Lines,
@@ -609,11 +641,18 @@ fn instance_line(
     fulfilling: &Fulfilling,
 ) -> Result<(), Stop> {
     // a window inside one month: its first day (refcore's `day_lo`)
-    let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
+    let Some(lo) = inst.day.as_ref().and_then(Dated::lo) else {
         return Err(invariant("a ledger instance with no day"));
     };
     let mdl = flow_into(&inst.legs, &lines.of)?;
     let os = fulfilling.of(&inst.id);
+    // an observation that fulfils the movement fixes its day (L §4.4 l.665, §5.19 l.1707): a
+    // window's is the last one's, as for a window not inside one month (E §6.3 Grouping;
+    // 221.5 on #241)
+    let day = match (&inst.day, os.iter().map(|o| o.day).max()) {
+        (Some(Dated::Window(_)), Some(last)) => last,
+        _ => lo,
+    };
     lines.seen.extend(os.iter().map(|o| o.id.clone()));
     let group = move_group(m, lines, day, &inst.move_id, os)?;
     if os.is_empty() {
