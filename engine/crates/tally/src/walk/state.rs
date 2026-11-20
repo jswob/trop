@@ -407,8 +407,9 @@ pub struct Walk {
     /// legs name: the day a leg is on, none where no day of the walk holds it (left out, past
     /// a projection's plans, a false `when`), and what decided it ([`Collected::deciding`]).
     /// A read of the place over a span that leaves the day out lists them: a balance, `flows`
-    /// (L §8.2 One read set, "a day outside the span"; P35 on #241).
-    pub(crate) uncounted: BTreeMap<String, Vec<(Option<Day>, Collected)>>,
+    /// (L §8.2 One read set, "a day outside the span"; P35 on #241); one that doesn't exist
+    /// from its day, a read whose prefix reaches the day (S4, P43 on #241).
+    pub(crate) uncounted: BTreeMap<String, Vec<(Noted, Collected)>>,
     /// The legs the walk refused, by (movement, leg) (E §4.2 step 5).
     pub(crate) bad_legs: BTreeMap<(String, String), Refusal>,
     /// The legs a test some of a window's days pass left the window's hole, by (movement,
@@ -981,6 +982,19 @@ impl Walk {
     /// Notes a movement that doesn't count at `places` on `day` (none: on no day of the walk),
     /// with `read`'s deciding entries, none kept where it has none (P35 on #241). L §8.2.
     pub(crate) fn note_uncounted(&mut self, places: &[&str], day: Option<Day>, read: &Collected) {
+        self.note(places, Noted::Out(day), read);
+    }
+
+    /// Notes a movement that doesn't exist (a false `when` or key `where`) at `places` from
+    /// `day`, with `read`'s deciding entries: a read of day t reads its prefix through t, so a
+    /// read whose last day is before `day` never met them (E §4.2; S4, P43 on #241). L §8.2.
+    pub(crate) fn note_decided(&mut self, places: &[&str], day: Day, read: &Collected) {
+        self.note(places, Noted::From(day), read);
+    }
+
+    /// Keeps `read`'s deciding entries at `places` as `noted` says they join a read, none kept
+    /// where it has none. L §8.2.
+    fn note(&mut self, places: &[&str], noted: Noted, read: &Collected) {
         let deciding = read.deciding();
         if deciding.entries.is_empty() {
             return;
@@ -989,17 +1003,22 @@ impl Walk {
             self.uncounted
                 .entry((*p).to_owned())
                 .or_insert_with(Vec::new)
-                .push((day, deciding.clone()));
+                .push((noted, deciding.clone()));
         }
     }
 
     /// What decided that a movement at `place` doesn't count over the days `first` to `last`:
-    /// each one noted on a day outside them or on none (P35 on #241). L §8.2 One read set.
+    /// each one noted on a day outside them or on none, and each that doesn't exist from a day
+    /// on or before `last` (P35, S4 on #241). L §8.2 One read set, E §4.2.
     #[must_use]
     pub(crate) fn uncounted_in(&self, place: &str, (first, last): (Day, Day)) -> Collected {
         let mut out = Collected::default();
-        for (day, read) in self.uncounted.get(place).into_iter().flatten() {
-            if day.is_none_or(|d| d < first || d > last) {
+        for (noted, read) in self.uncounted.get(place).into_iter().flatten() {
+            let met = match noted {
+                Noted::Out(day) => day.is_none_or(|d| d < first || d > last),
+                Noted::From(d) => *d <= last,
+            };
+            if met {
                 out.merge(read);
             }
         }
@@ -1373,6 +1392,16 @@ fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result
         }
     }
     Ok(st)
+}
+
+/// How a movement that doesn't count joins a read of its place (L §8.2 One read set, E §4.2):
+/// by its day, which a pin can move out of the read's days, or from the day it doesn't exist.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Noted {
+    /// Its leg's day: a read whose days leave it out lists it; none: every read.
+    Out(Option<Day>),
+    /// It doesn't exist from this day: a read whose prefix reaches it lists it (S4 on #241).
+    From(Day),
 }
 
 #[cfg(test)]

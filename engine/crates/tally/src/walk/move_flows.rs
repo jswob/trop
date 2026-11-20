@@ -137,7 +137,11 @@ impl Engine {
             // a movement the span doesn't count: what decided it is in the read set (L §8.2
             // One read set; P35 on #241)
             if i.status == Status::None {
-                acc.met.merge(&i.coll.deciding());
+                // a read of day t reads its prefix through t: one dated after the span's last
+                // day was never met (E §4.2; S4, P43 on #241)
+                if i.day.as_ref().and_then(Dated::lo).is_none_or(|d| d <= last) {
+                    acc.met.merge(&i.coll.deciding());
+                }
                 continue;
             }
             if i.status == Status::Uncertain {
