@@ -1,0 +1,6 @@
+model fam
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "a/m.tally" sha256 "1e3b3d574324014553915e7a801e2c2f3ecc141d33199cabb5c1f4e99c009637"

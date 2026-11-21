@@ -1,0 +1,35 @@
+model mm
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input dn: int
+input amt: money PLN
+move put[k in ks, m in months]: transfers
+  on day_of(m, dn)
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  dn = 5 "s"
+  amt = 10.00 PLN "s"
+version st1
+  cite s
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  bank[r1] = (on: 2026-03-05, kind: transfers, leg cash from world to konto amount 10.00 PLN, fulfils: put[a, 2026-03]) "r1"
+version st2
+  cite s
+  governs 2026-03
+  known 2026-04-12
+  bank[r2] = (on: 2026-03-06, kind: transfers, leg cash from world to konto amount 12.00 PLN, fulfils: put[a, 2026-03]) "r2"
+ask q: bal(konto, 2026-03-31)

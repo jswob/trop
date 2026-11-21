@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 334] = [
+pub static TEXTS: [(&str, &str); 340] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -1236,6 +1236,30 @@ pub static TEXTS: [(&str, &str); 334] = [
     (
         "m3/fixes/t221/rv4/verj/t3_m2.tally",
         include_str!("../../m3/fixes/t221/rv4/verj/t3_m2.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv5/inv/a/m.tally",
+        include_str!("../../m3/fixes/t221/rv5/inv/a/m.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv5/inv/top.tally",
+        include_str!("../../m3/fixes/t221/rv5/inv/top.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv5/s223/cc_mid_drop.tally",
+        include_str!("../../m3/fixes/t221/rv5/s223/cc_mid_drop.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv5/s223/cc_mid_moved.tally",
+        include_str!("../../m3/fixes/t221/rv5/s223/cc_mid_moved.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv5/verrule/b.tally",
+        include_str!("../../m3/fixes/t221/rv5/verrule/b.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv5/verrule/s3.tally",
+        include_str!("../../m3/fixes/t221/rv5/verrule/s3.tally"),
     ),
     (
         "m3/fixes/t221/s5/hs_disagree.tally",
