@@ -1112,7 +1112,8 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
             .iter()
             .map(|(path, text)| (path.as_str(), text.as_bytes()))
             .collect();
-        let printed = tally::reprint_in(given, &disk).map(|a| a.lines().to_vec());
+        let printed =
+            tally::reprint_in(given, &disk, tally::Pin::Canonical).map(|a| a.lines().to_vec());
         let last = printed.ok().and_then(|lines| lines.last().cloned());
         last.and_then(|line| line.strip_prefix("sha256 ").map(str::to_owned))
             .unwrap_or_else(|| "no hash printed".to_owned())

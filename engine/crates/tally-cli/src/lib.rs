@@ -81,11 +81,13 @@ enum Command {
         /// How a `use` line's pin is taken.
         pin: tally::Pin,
     },
-    /// `reprint <path>… [--pin=bytes]`: each file's canonical text and the reality's hash; it
-    /// reads no pin (OPERATIONS §2.2: `run`'s inputs).
+    /// `reprint <path>… [--pin=bytes]`: each file's canonical text and the reality's hash,
+    /// its members pinned as `run` pins them (OPERATIONS §2.2: "Inputs. As `run`").
     Reprint {
         /// The paths, in the order given.
         paths: Vec<String>,
+        /// How a `use` line's pin is taken.
+        pin: tally::Pin,
     },
 }
 
@@ -169,7 +171,9 @@ fn counted(args: &[OsString], files: &[u8]) -> Output {
 pub fn paths(args: &[OsString]) -> Vec<String> {
     match parse(args) {
         Some(
-            Command::Run { paths, .. } | Command::Check { paths, .. } | Command::Reprint { paths },
+            Command::Run { paths, .. }
+            | Command::Check { paths, .. }
+            | Command::Reprint { paths, .. },
         ) => paths,
         None => Vec::new(),
     }
@@ -243,7 +247,7 @@ fn command(args: &[OsString], files: &[u8]) -> Output {
             pin,
         }) => run_paths((&paths, pin), &request, files),
         Some(Command::Check { paths, pin }) => check_paths(&paths, pin, files),
-        Some(Command::Reprint { paths }) => reprint_paths(&paths, files),
+        Some(Command::Reprint { paths, pin }) => reprint_paths(&paths, pin, files),
         None => usage(),
     }
 }
@@ -270,7 +274,7 @@ fn check_paths(paths: &[String], pin: tally::Pin, files: &[u8]) -> Output {
 /// A file is named as given; a directory's files relative to the directory given (INTERFACE
 /// gap I-3); they are read, printed and hashed in the order of their full paths. A joint
 /// model's members are found among them, then in the file table, as `run` finds them.
-fn reprint_paths(paths: &[String], files: &[u8]) -> Output {
+fn reprint_paths(paths: &[String], pin: tally::Pin, files: &[u8]) -> Output {
     let Ok(table) = table(files) else {
         return bad_table();
     };
@@ -285,7 +289,7 @@ fn reprint_paths(paths: &[String], files: &[u8]) -> Output {
             named.push((given, name));
         }
     }
-    match tally::reprint_in(named, &table) {
+    match tally::reprint_in(named, &table, pin) {
         Ok(answer) => answered(&answer),
         Err(tally::NotImplemented) => not_implemented("reprint"),
     }
@@ -333,6 +337,7 @@ fn parse(args: &[OsString]) -> Option<Command> {
         }),
         _ => Some(Command::Reprint {
             paths: paths_of(rest),
+            pin,
         }),
     }
 }
