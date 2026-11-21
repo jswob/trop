@@ -37,7 +37,7 @@ def by_path(texts):
 def _run_texts(texts, ids=None, options=None):
     from .loader import scenario_header
     if (options or {}).get('reprint') is not None:
-        return reprint_lines(texts)
+        return reprint_lines(texts, options=options)
     # options {'check': …}: `check` (OPERATIONS §2.3) takes run's own path through load below, every shape of reality
     # the same functions, and stops where run would answer its first ask (Asker.load_check, check_worlds); a joint
     # model's members never see the flag (their options are run's)
@@ -61,7 +61,7 @@ def _run_texts(texts, ids=None, options=None):
     return run_one(texts, ids, check=check)
 
 
-def reprint_lines(texts, ordered=False, run_as=None):
+def reprint_lines(texts, ordered=False, run_as=None, options=None):
     """Each file's canonical text (L §2.4) in the order of their paths, then the reality's hash (E §3.1 step 1): the
     sha256 of the texts printed, in the order printed.  texts are taken by their names, unless ordered: then in the
     order given (reprint_paths gives them in the order of their full paths, tally 2.1.3)."""
@@ -84,8 +84,8 @@ def reprint_lines(texts, ordered=False, run_as=None):
                 # reprint loads as run loads before it prints anything: its members found, pinned (a nested
                 # member's own first) and each loaded in full, so it refuses what run refuses, first in run's order
                 # (E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14; tally 2.1.7 B4, #105)
-                joint_texts(load, uses, {})
-                for a, fs in pinned_members(p, uses, load).items():
+                joint_texts(load, uses, dict(options or {}))
+                for a, fs in pinned_members(p, uses, load, options).items():
                     member_paths[a] = set(f for f, rel, s in fs)
                 members.update(use_member_files([(p, p, src)], load, on_disk))
         printed = reprint(files, members, member_paths)
@@ -292,6 +292,16 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
     from .ask import Asker, LoadAtRun, alone_line, emit_warnings
     from .errors import LoadError, Unspecified
     base = [(f, src) for f, src, h in heads if h is None]
+    # all files of a reality declare one N (L §6.1): a base that agrees on a version with a scenario file on another
+    # is the disagreement, not the base's version (tally 2.2.1 P50, the review's Q5)
+    from .joint import header_tally
+    from .lexer import split_lines as _sl
+    def _tl(f, src):
+        return header_tally(src if isinstance(src, list) else _sl(src, f))
+    tb = set(_tl(f, src) for f, src in base)
+    ta = set(_tl(f, src) for f, src, h in heads)
+    if len(tb) == 1 and tb != {2} and len(ta) > 1:
+        return ['refused: %s' % LoadError('LOAD-VERSION', 'files declare different tally versions').text()]
     scen = {}
     dup = set()
     first = {}
@@ -772,7 +782,7 @@ def run_paths(paths, ids=None, options=None):
     return run_texts(texts, ids, options)
 
 
-def reprint_paths(paths):
+def reprint_paths(paths, options=None):
     """`reprint` (tally 2.1.3, issue #60): a loose file named as `run` names it, the path as given; a directory's files
     relative to the directory given (INTERFACE gap I-3). The files are read, printed and hashed in the order of their
     full paths, compared by code point (L §8.3, E §3.1 step 1), as `run` takes them (read_files): they were named by
@@ -786,15 +796,16 @@ def reprint_paths(paths):
     if refused is not None:
         return [refused]
     by_name = dict((name, f) for f, name in pairs)
-    return reprint_lines(texts, ordered=True, run_as=[(by_name[n], src) for n, src in texts])
+    return reprint_lines(texts, ordered=True, run_as=[(by_name[n], src) for n, src in texts], options=options)
 
 
 def command_lines(argv):
     """The lines `run`, `reprint` or `check` prints (argv as main takes it, a usage error excluded; testrun's
     `=== options disk` calls it too).  `check` reads its words as `run` does (OPERATIONS §2.3: inputs as run's)."""
     if argv[0] == 'reprint':
-        # --pin=bytes is taken (OPERATIONS §2.2: reprint takes run's inputs); a reprint reads no pin
-        return reprint_paths([a for a in argv[1:] if a != '--pin=bytes'])
+        # --pin=bytes is read as run reads it (OPERATIONS §2.2: "Inputs. As run"; tally 2.2.1 P50, B3)
+        return reprint_paths([a for a in argv[1:] if a != '--pin=bytes'],
+                             {'pin': 'bytes'} if '--pin=bytes' in argv[1:] else None)
     paths = []
     ids = []
     mode = 'paths'

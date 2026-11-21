@@ -7,6 +7,46 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W13: the last review, the close (P50; issue #241; 1 665 tests)
+
+- **Done here:** S-223 per world and cut class against the last statement with a row (`loader.check_correction_covers`);
+  `reprint --pin=bytes` (`cli.reprint_paths`, `run_texts`); `REQ-CLOCK` on the asks load left standing, one file too
+  (`ask.Asker.run`); `LOAD-VERSION` with its line (`parser` keeps `tally_loc`) and the disagreement across a scenario
+  file (`cli.run_worlds`).
+
+### For the next milestone
+
+- **Cause A, 33 sites** (229.3, 208.R1): the `refuse('LOAD-…')` and `LoadError` raised at run, listed in W8's section
+  below, each wanting load's check and a text that reaches it.
+- **231.Q10:** `walk.run_group` keys a cycle's instances `dec_text(g[0], …)`, the group's first move by id whether or
+  not it is due that day; no text shows an output it changes.
+- **The review's S2** (g4 `jw/`, `run b --ask q_d`): a `diff … in sc against m` in a member run alone; the `m` side
+  prints a back-pay hole where the base's own `q` is `-3 950.00 PLN`, as the engine prints. Likely the scenario's
+  state reaching the base world's evaluation inside the diff; not found.
+- **P24's head** on `res/r1` a2, a3, a8 (a span written with a bound variable inside an expression): refcore puts the
+  value in the text as written; the engine's bytes not seen.
+- `RUN-NONE` of `abs`, `round`, `if`, `and`, `not`, `min` and a membership test still says "a value" (P48 listed the
+  others).
+
+### For the windows round
+
+- Two sides on one named window with the same question text print one question labelled `(in1, in2)` (`fmt_hole`
+  merges by text; W10).
+- `round` over a window: refcore asks "not precise enough for a print", the engine "for round" (W10, w15).
+- `hs/h5`, `h5b` `fl` and `same/s4_windows` differ from the engine (P48's comparison); N6 (`read_def_held`) is the
+  engine's.
+
+## tally 2.2.1, group W12: the names, the engine's third review (P48; issue #241; 1 658 tests)
+
+- **230.Q-5a** (`loader`, `walk.as_written`, `walk.line_naming`): sides as written; RUN-RECORD names the written line
+  naming the decision, a chain's too; none found is `ENGINE-INVARIANT`. HOLE-SAME's same-line form keeps the mover's
+  amount then the decision's day, its two names as written.
+- **221.8:** a header's `same` at its own line. **B2, N2:** `env_txt` in every `RUN-NONE` that names a read (`abs`,
+  `round`, `if`, `and`, `not`, `min`, a membership test still say "a value": not in the review's list).
+- **P24:** the head substitutes values into the span as written (`2026-03 .. end_of(2026-03)`); the engine's bytes on
+  `res/r1` a2, a3, a8 not seen here.
+- **F-C, F-E, two register lines:** as CHANGES 2.2.1-94. For the windows round: `hs/h5`, `h5b`, `s4_windows`.
+
 ## tally 2.2.1, group W11: P45's three points, cause H (issue #241; 1 648 tests)
 
 - **P45 (d)** (`walk.consol`): undecided days of sides stated `same` with equal amounts book, at each side, the

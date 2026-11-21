@@ -1,0 +1,42 @@
+# tally 2.2.1, P48 (L §8.2): flows of a move over a span lists the reads of an instance its false when
+# leaves out: pinned: on_ (review g2fix reg/r1_when f_mv). Before W12: no pin.
+=== r1_when.tally
+model r1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input on_: bool
+input pay: money PLN
+input w: date
+move pw: transfers
+  on w
+  when on_
+  leg cash from world to konto amount pay
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  pay = 100.00 PLN "s"
+  on_ = true "s"
+  w = 2026-03-10 "s"
+ask a_after: bal(konto, 2026-03-31) with on_ = false
+ask a_before: bal(konto, 2026-03-05) with on_ = false
+ask a_pay: bal(konto, 2026-03-31) with on_ = false, pay = 200.00 PLN
+ask a_payb: bal(konto, 2026-03-05) with pay = 200.00 PLN
+ask a_wb: bal(konto, 2026-03-05) with w = 2026-03-12, pay = 200.00 PLN
+ask f_mv: flows(pw, 2026-03) with on_ = false, pay = 200.00 PLN
+ask f_pl: flows(konto, 2026-03) with on_ = false, pay = 200.00 PLN
+ask c_mv: count(m in transfers over 2026-03) with on_ = false, pay = 200.00 PLN
+ask p_b: bal(konto, 2026-03-31) from 2026-03-01 with on_ = false
+ask k_b: check bal(konto, 2026-03-31) == bal(konto, 2026-01-31) with on_ = false
+ask x_b: explain bal(konto, 2026-03-31) with on_ = false
+=== expect f_mv
+f_mv: 0.00 PLN
+  pinned: on_ = false
+  cut 2026-01-01

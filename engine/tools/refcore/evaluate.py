@@ -301,7 +301,9 @@ class Engine:
             if ctx.partial and lin_of(v) is not None:
                 return Hole(v.qs, lin_scale(lin_of(v), Num(-1, (), isint=True)))
             return Hole(v.qs)
-        self.no_none(v, 'arithmetic')
+        if v is NONE:
+            # unary minus is arithmetic, and names the read (233.7; P48, N2)
+            raise refuse('RUN-NONE', '%s is none here: arithmetic' % env_txt(n.e, env))
         if isinstance(v, Num):
             return Num(-v.q, v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_neg(v.enc))
         if isinstance(v, Iv):
@@ -522,7 +524,7 @@ class Engine:
         if isinstance(v, Hole):
             return v
         if v is NONE:
-            raise refuse('RUN-NONE', '%s is none here: a field read of it' % _ntxt(n.obj))
+            raise refuse('RUN-NONE', '%s is none here: a field read of it' % env_txt(n.obj, env))
         if isinstance(v, Rec):
             return v.get(n.name)
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (n.name, fmt(v)))
@@ -2381,6 +2383,9 @@ class Engine:
     def e_cmp(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
         b = self.ev(n.r, env, ctx)
+        if n.op not in ('==', '!=') and (a is NONE or b is NONE):
+            # an ordering names the read that gave none (L §8.4's row; P48, N2)
+            raise refuse('RUN-NONE', '%s is none here: an ordering' % env_txt(n.l if a is NONE else n.r, env))
         return self.compare(n.op, a, b, n, ctx)
 
     def compare(self, op, a, b, n, ctx):
@@ -3368,11 +3373,11 @@ class Engine:
         except (TallyError, HoleSignal):
             pass
 
-    def level_none(self, q, n):
+    def level_none(self, q, n, env=None):
         """A quantile's level that is none is refused, beside hole terms too: refusals outrank holes (L §8, §8.4
         RUN-NONE; #208, 208.10)."""
         if q is NONE:
-            raise refuse('RUN-NONE', '%s is none here: the level of quantile' % _ntxt(n.q))
+            raise refuse('RUN-NONE', '%s is none here: the level of quantile' % env_txt(n.q, env))
 
     def window_term(self, t, fn):
         """A term a window leaves open: an aggregate other than min, max, argmin and argmax needs one value of it
@@ -3722,7 +3727,7 @@ class Engine:
             # a level that is refused refuses before the hole terms: refusals outrank holes (L §8; tally 2.1.8 R16(c),
             # #171; B7 of group 3's review)
             q = self.ev(n.q, env, ctx)
-            self.level_none(q, n)
+            self.level_none(q, n, env)
             if not isinstance(q, Hole) and (q.q <= 0 or q.q > 1):
                 from .values import fmt_q
                 raise refuse('RUN-DOMAIN', 'quantile has no meaning for the level %s' % fmt_q(q.q))
@@ -3742,7 +3747,7 @@ class Engine:
             nn = Num(len(terms), (), isint=True)
             return Num(acc.q / len(terms), acc.u, enc=enc_arith('/', acc, nn, 1) if acc.enc is not None else None)
         q = self.ev(n.q, env, ctx)
-        self.level_none(q, n)
+        self.level_none(q, n, env)
         if isinstance(q, Hole):
             return q
         if q.q <= 0 or q.q > 1:

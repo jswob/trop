@@ -1,0 +1,27 @@
+# tally 2.2.1, P48 N5 (L §2.4): a hole in a calendar's added list prints its question escaped
+# (review g3 cal/c4 a1). Before W12: unescaped.
+=== c4.tally
+model c4
+  tally 2
+  on 2026-01-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+index ks = [a, b]
+input cals[k in ks]: calendar
+input d1: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d1 = 2026-06-19 "c"
+  cals[a] = calendar(weekends [sat, sun], added [?"which day off?", 2026-06-22]) "c"
+  cals[b] = calendar(weekends [sat, sun], added [2026-06-23, ?"is \"it\" a day \\ off?"]) "c"
+ask a1: cals[k] for k in ks
+ask a2: add_business(d1, 1, cals[k]) for k in ks
+ask a3: cals[a] with cals[a] = cals[b]
+=== expect a1
+a1 (k = a): calendar(weekends [sat, sun], added [?"which day off?", 2026-06-22])
+  cut 2026-01-10
+a1 (k = b): calendar(weekends [sat, sun], added [2026-06-23, ?"is \"it\" a day \\ off?"])
+  cut 2026-01-10

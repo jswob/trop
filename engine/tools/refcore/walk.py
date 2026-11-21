@@ -1294,6 +1294,31 @@ class Walk:
         from .moves import same_pairs
         return same_pairs(self.m, self.tctx)
 
+    def as_written(self, x, y):
+        """x and y in the order a same line naming both writes them (2.1.7's R9: a same line named in a message prints
+        its sides as written; tally 2.2.1, 230.Q-5a), else as given."""
+        from .moves import same_lines
+        for a, b, _l, _o in same_lines(self.m, self.tctx):
+            if (a, b) == (y, x):
+                return (y, x)
+            if (a, b) == (x, y):
+                return (x, y)
+        return (x, y)
+
+    def line_naming(self, x, y):
+        """The same line, as written, that a refusal of x's end for y names: one naming both, else the first that names y
+        with a side in x's group (a chain); None if none does (tally 2.2.1 P48, N4: no invented line)."""
+        from .moves import same_lines
+        ls = [(a, b) for a, b, _l, _o in same_lines(self.m, self.tctx)]
+        for a, b in ls:
+            if set((a, b)) == set((x, y)):
+                return (a, b)
+        grp = set(self.same_pairs().get(x, ((x,), None))[0])
+        for a, b in ls:
+            if y in (a, b) and (b if a == y else a) in grp:
+                return (a, b)
+        return None
+
     def same_observed(self, i):
         """Whether a plan instance is stated same as an observation (L §6.1: the group is one movement, and it was
         observed), so it is no unfulfilled instance."""
@@ -1499,8 +1524,9 @@ class Walk:
                 continue
             if isinstance(lg.day, datetime.date) and lg.day == dday:
                 return ('wait', dec)
+            n1, n2 = self.as_written(mv.id, dec.id)
             q = '%s and %s are one, but the leg at %s differs on %s: %s (%s) and its day %s (%s)' % (
-                shown(mv.id), shown(dec.id), shown(p.name), lg.day,
+                shown(n1), shown(n2), shown(p.name), lg.day,
                 fmt(lg.amount) if not isinstance(lg.amount, TallyError) else 'refused', shown(mv.id), dday,
                 shown(dec.id))
             return Hole([(q, '%s, %s' % (shown(mv.id), shown(dec.id)))])
@@ -1515,8 +1541,12 @@ class Walk:
         for mv, lg, si, reg, coll in pend:
             p = (lg.frm, lg.to)[si]
             if run.exists is False:
+                ln = self.line_naming(mv.id, run.id)
+                if ln is None:
+                    raise refuse('ENGINE-INVARIANT', 'no same line names %s and %s' % (shown(mv.id), shown(run.id)))
+                n1, n2 = ln
                 self.leg_bad(mv, lg, refuse('RUN-RECORD', 'same %s = %s: %s doesn\'t exist' % (
-                    shown(mv.id), shown(run.id), shown(run.id))), key)
+                    shown(n1), shown(n2), shown(run.id))), key)
                 continue
             hit = any(isinstance(q, Thing) and q.name == p.name and (g.unit or '*') == (lg.unit or '*')
                       for g in (run.legs or ()) for q in (g.frm, g.to)) and not getattr(run, 'modelled', False)

@@ -72,17 +72,9 @@ e_both: 10.00 PLN
           (v:p: see [7])
           [12] row v:twice = 2
               version v, source s, "made up", locator "the card", governs always, known 2026-01-01
-  [13] outside the pins [x = x2, z = z1]: 40.00 PLN
+  [13] outside the pins [x = x2]: 40.00 PLN
     (v:asked_on: see [5])
     [14] f = 40.00 PLN, law date 2026-06-01
-        rule base: beaten by xr
-        rule xr: won
-          (v:p: see [7])
-          (v:twice: see [12])
-        rule zr: beaten by xr
-  [15] outside the pins [x = x2, z = z2]: 40.00 PLN
-    (v:asked_on: see [5])
-    [16] f = 40.00 PLN, law date 2026-06-01
         rule base: beaten by xr
         rule xr: won
           (v:p: see [7])

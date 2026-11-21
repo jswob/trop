@@ -27,4 +27,4 @@ version v
   same pay[2026-03] = bank[r1]
 ask b: bal(konto, 2026-03-31)
 === expect
-refused: LOAD-SAME same bank[r1] = pay[2026-03]: an observed row and a planned instance of one model; state fulfils on the row (t2218.tally:22)
+refused: LOAD-SAME same pay[2026-03] = bank[r1]: an observed row and a planned instance of one model; state fulfils on the row (t2218.tally:22)
