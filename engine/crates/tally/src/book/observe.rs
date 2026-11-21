@@ -698,11 +698,7 @@ fn same_pairs_warned(
     out: &mut Vec<(Warn, String)>,
 ) -> Result<(), Stop> {
     for b in later {
-        let (fa, fb) = if disagree(a, b) {
-            (amounts(m, a)?, amounts(m, b)?)
-        } else if a.day != b.day {
-            (a.day.text(), b.day.text())
-        } else {
+        let Some((fa, fb)) = disagreement(m, a, b)? else {
             continue;
         };
         let text = format!(
@@ -718,7 +714,8 @@ fn same_pairs_warned(
 }
 
 /// `WARN-LEGS` for observation `a` against each later one of another version that fulfils
-/// instance `tid` and disagrees with it, each warning once (refcore's `prepare`). E §6.1.
+/// instance `tid` and disagrees with it on an amount or a day, each warning once (refcore's
+/// `prepare`, `legs_warn`; L §5.19 l.1717; P36 on #241). E §6.1.
 fn pairs_warned(
     m: &Reality,
     tid: &str,
@@ -727,15 +724,15 @@ fn pairs_warned(
     out: &mut Vec<(Warn, String)>,
 ) -> Result<(), Stop> {
     for b in later {
-        if a.version == b.version || !disagree(a, b) {
+        if a.version == b.version {
             continue;
         }
+        let Some((fa, fb)) = disagreement(m, a, b)? else {
+            continue;
+        };
         let text = format!(
-            "the two observations of {tid} disagree: {} ({}) and {} ({})",
-            a.id,
-            amounts(m, a)?,
-            b.id,
-            amounts(m, b)?
+            "the two observations of {tid} disagree: {} ({fa}) and {} ({fb})",
+            a.id, b.id
         );
         let w = (Warn::Legs, text);
         if !out.contains(&w) {
@@ -743,6 +740,20 @@ fn pairs_warned(
         }
     }
     Ok(())
+}
+
+/// What observations `a` and `b` each state of the fact they disagree on, as `WARN-LEGS`
+/// prints it: their leg amounts where an amount differs, else their days where only the days
+/// differ; none where they agree on both ("disagree on an amount or a day", L §5.19 l.1717;
+/// refcore's `legs_warn`; B5, Q7, P36 on #241). E §6.1.
+fn disagreement(m: &Reality, a: &Obs, b: &Obs) -> Result<Option<(String, String)>, Stop> {
+    if disagree(a, b) {
+        return Ok(Some((amounts(m, a)?, amounts(m, b)?)));
+    }
+    if a.day != b.day {
+        return Ok(Some((a.day.text(), b.day.text())));
+    }
+    Ok(None)
 }
 
 /// Whether two observations disagree on the amount of a leg both state (refcore's
