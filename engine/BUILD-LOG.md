@@ -6106,3 +6106,26 @@ The review is `tmp/spec-2.2.1/review-g3.md` (blocking 2, non-blocking 7), its pr
   - `check quick: green, 11 steps (78s)`.
   - `check commit: red at tests, stopped after 10 of 24 steps (73s)`: the 37 ids above.
   - `check fences: green, 1 step (24s)`.
+
+## 2026-11-21 tally 2.2.1 G2, two findings of the third pin's proof: F-A, F-B (issue #241)
+
+The findings are `tmp/spec-2.2.1/t-c9-notes.md`'s F-A and F-B; the ids are 8c3ad430's `Logged-Red:` lines. Branch `build/2.2.1` after the merge 800495bc. Two commits and this one. No window work: no probe with a window, no window behaviour changed. Not pushed.
+
+**1fb18b1c, F-A:** `walk/readings.rs` `check_group`: the sign rule's refusal rests on the tested balance's whole register (`cum`), no longer its deciding entries only. `walk/ends.rs` `refusal_read` (was `pins_read`): a refused leg's entry keeps every entry its movement's evaluation gave, as refcore's `add` merges a bad entry's `mv.coll` (P35); used by `leg_refused`, `refuse_leg_as` and `booked_pins` (`walk/state.rs`). The builder's `tests/projection_cases.rs` REFUSED lines are the pinned refcore's again (`unfulfilled: pay` under `projected` and `saved`).
+- Green (39): `fixes/g1/legf`, `legf_z`; `fixes/g11/r_p_pr_sign`; `fixes/g12/` `pb_g9_sign_sign`, `pm2_g8_proj_proj`, `pm2_g9_sign_sign`, `pm2_g9_sweep_sweep`, `pm4_g8_proj_proj`, `pm4_g9_sign_sign`, `pm4_g9_sweep_sweep`, `pm8_g8_proj_proj`, `pm8_g9_sign_sign`, `pm8_g9_sweep_sweep`, `pp_proj_g9_sign_sign`, `pp4_proj_g9_sign_sign`, `pr_bal_g9_sign_sign`, `pr_proj_g9_sign_sign`, `prr_bal_g8_proj_proj`, `prr_bal_g9_sign_sign`, `prr_proj_g9_sign_sign`, `prr_projunc_g9_sign_sign`, `r_pb_bal-sign_sign`, `r_pb_projunc-proj_proj`; `fixes/g7/` `pr1_q_bal`, `pr1_q_fc`, `pr1_q_fc_lo`, `pr2_q_bal`, `pr2_q_fc`, `pr2_q_fc_hi`, `pr2_q_fc_lo`; `fixes/gate8/due_alone`, `m2_g1_legf`, `m2_g1_legf_z`; `g8/proj`; `g9/sign`; `g9/sweep`; `r8/l5_5_fanout_guarded_leg`; `rules/debt-above`; `U:ask/ASK-03`.
+- The deciding-only filter left two kinds: the sign rule's tested balance (32 ids, the first change alone), and a decision's leg refused through a refused `flows` read (`g8/proj`'s `q_n2` and its g12 copies, `due_alone`: 7 ids).
+
+**bfbc876b, F-B:** `book/observe.rs` `disagreement` (new): the amounts where an amount differs, else the days where only the days differ (refcore's `legs_warn`; L §5.19 l.1717, P36); `pairs_warned` (two links of different versions) and `same_pairs_warned` (rows stated same) both take it. Green (2): `fixes/gate8/m2_g8b_sc1`, `m2_g8b_sc2`.
+
+- **Red list** (`check commit`, `g2c9/red-*.txt`): 51 ids before; 12 after F-A; 10 after F-B. None joined. Of the 41, none is still red. The 10 left are others': G4's LOAD-SAME text (`cut/instance_first`, `fixes/t22/cut_same_rows_header`, `joint/same-what`, `t221-rc/221-8-same-row-line`, `230-5a-same-order`), F-C (`fixes/gate8/m2_g4_s_day`), F-D (`t221-g3/p45-same-day-names`), G3's `t221-g3/233-7-none-arith` and `t221-rc/208-R2-for-law`, and `s6/hole_same_order_class` (red at the baseline, not on G2's list).
+- **The review's probes** (`review/g2/`, `g2fix/`, `cmp.py` against the pinned refcore, `g2c9/cmp-*.txt`): same 63, differs 6 before, after F-A and after F-B; the same six (`hs/h10`, `h11`, `h5`, `h5b`, `reg/r1_when`, `same/s4_windows`).
+- **Size** (`git diff --numstat 800495bc..bfbc876b -- engine/crates`): 5 files, 43 in, 29 out. F-A 20/17 (the builder's test 4/1), F-B 23/12.
+- **Exceptions:** +0 (`engine/tools/exceptions --check` exits 0).
+- **For the windows round:** nothing met.
+- **Open STOP-REPORTs:** none of G2's.
+- **Usage:** about 3.19 % of the week before this entry (`engine/tools/usage tmp/spec-2.2.1-build/g2-ids.txt`; 2.82 % before the last turn's entry), against about 0.5 % for this turn.
+- **Time:** about 22 min from 02:22 local; `check commit` 4 runs (75 to 77 s), `check quick` 5, `check fences` once.
+- **Checks at bfbc876b's tree:**
+  - `check quick: red at tests, stopped after 10 of 11 steps (93s)`: T's `codes::tests::the_m0_fixtures_read_and_print_their_codes` alone (codes/m0's four G4 fixtures, 8c3ad430; red at the baseline).
+  - `check commit: red at tests, stopped after 10 of 24 steps (76s)`: the 10 ids above.
+  - `check fences: green, 1 step (27s)`.
