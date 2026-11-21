@@ -6067,3 +6067,42 @@ The plan's G4 order (`tmp/spec-2.2.1-build/plan.md` §2, rows 54 to 64), S-224b 
 - **What I tried:** nothing in the code: R20's rows in the plan (§4 "G4 R20") list the refused scenarios' order and the member lines, not the results' order, so a change here moves an answer outside the list (rulings 11)
 - **What I ask:** which order the results of one id take in `run`. Recommended: `check`'s, full path then line (R20's "one order"; refcore's), a sentence in O §2.1 ("…by id with none, asks of one id by full path, then line"); the engine's change is `ask_turns`' key, about 15 lines
 - **State:** 2c13b4dc, `check quick` green; this entry uncommitted until its commit; not pushed
+
+## 2026-11-21 tally 2.2.1 G3, the review's fix: B1, B2 with N2, N1, N4, N5 (issue #241)
+
+The review is `tmp/spec-2.2.1/review-g3.md` (blocking 2, non-blocking 7), its probes `review/g3/agent/`; the ruling is `picks-g3-review.md` (P48). Branch `build/2.2.1` after G4's 642d8647 (G4's files untouched but `load_cases.rs`, two expected lines). Five commits and this one, one per item. No window work: no probe written, no window behaviour changed. Not pushed.
+
+- **The sweep** (`tmp/spec-2.2.1-build/g3/sweep3.py`): the engine on every text of `review/g3/agent/{bind,cal,day,hdr,hs,jr,misc,none,rel,res,wb,wb/names}` and G3's own `g3/probes` (100 texts) after each item (`r-b1` … `r-n5`), each against the run before; the pinned refcore once (`ref3/`). Every changed line below is the item's own and a message's text; no line count moved on any text.
+- **The kept list:** `check commit` before the first change: 36 red ids (`g3/red-k.txt`; G4 had turned `fixes/member-warning-id` green).
+- **Before B1:** the guard refuses a checkout of `engine/crates`, so no pre-B1 binary was rebuilt; B1's "before" lines are the review's (its engine at d266b975), each later item's the run after the one before.
+
+**e590b828, B1:** `load/texts.rs` `bound_text` (was `text`, which now calls it with no bindings), `bound_span`, `bound_post_text`, `Bound`, and the helpers it threads (`chain_text`, `joined`, `list_text`, `key_text`, `flows_text`); `eval/state.rs` `Env::bound_texts`; `eval/bindings.rs` `written_bound` (the text scan and `copy_string` go); `ask/residuals.rs` `ledger_result` (its `span_text`, `end_text` go); `load/reads.rs` `span_text` goes (the shared `bound_span` prints a `flows` span). A name node a binding gave prints as its value's text; a period word, a field, a call's name and a string are no name node (refcore's `env_txt`).
+- `wb/g1_min` `t`: `(if dd + 1 2026-03-01 > dd …)` → `(if dd + 1 day > dd then none else one) is none here: arithmetic` (= refcore). `wb/w1` b7, `w2` c13, `w3` d6, `w4` e1: = refcore. `res/r1` a10: `2026-03-20 .. 2026-03-20 + 1 2026-03-20` → `residuals konto 2026-03-20 .. 2026-03-20 + 1 day` (refcore: `day .. day + 1 day`, the ruled head).
+- Sweep: changed lines only in B1's texts. Stored: none moved (checked with B2's `check commit`, which covers both: 36, the list, the same first differences).
+
+**a16cada2, B2 and N2:** `eval/queries.rs` `none_level`; `eval/expr.rs` `field`, `compare_values` and the new `none_side` (the side that gave `none`; `equal_sides` passes an empty scope), `minus`; `eval/builtin.rs` `unit_call`; `walk/reads.rs` `place_of` (takes the scope). Each names its read as written, each variable by its value.
+- `wb/g2_min` `t`: `rate[k] is none here: the level of quantile` → `rate[k2] …` (refcore: `rate[k]`). `wb/w1` b8 `lv[k]` → `lv[k2]`, b9 `rate[k]` → `rate[k2]`.
+- `none/n2` (refcore = the engine's before on each): o1, o2 `a value is none here: an ordering` → `rate[k2] is none here: an ordering`; o15 (`count(j in ks where rate[j] > one)`) → `rate[k2] …`; o7 `rec[k] … a field read of it` → `rec[k2] …`; o8 `acct[k] … a place` → `acct[k2] …`; o9 `q[k] … a quantity` → `q[k2] …`; o14 `a value is none here: arithmetic` → `rate[k2] is none here: arithmetic`. `none/n1` a18 → `nn is none here: arithmetic`, a26 → `fee[2026-02] …`; `none/n3` e9 → `nn is none here: an ordering`, e10 → `dn …`; `g3/probes/n2337` a7 → `fee[2026-02] …`.
+- Not changed (uses outside the row's list, `a value is none here: <use>`): abs, round, if, and, not, min, a membership test (n2 o6, o10 to o13, o16, o17).
+- Stored: none moved (36, the list).
+
+**8261b7bc, N1:** `load/same.rs` `row_and_instance`: the line's sides in the text's order. `rel/ls1`: `LOAD-SAME same bank[r1] = pay: …` → `same pay = bank[r1]: …` (refcore: the row first). The workspace's `tests/load_cases.rs` expected lines follow (two texts that write the instance first).
+- Stored: one moved, N1's own kind: m2 `cut/instance_first` (text `same save[2026-03] = bank[o1]`): `same bank[o1] = save[2026-03]` → `same save[2026-03] = bank[o1]`, same code, exit and line count. For the re-store. Red after: 37.
+
+**cff1f735, N4:** `book/same.rs` `first_line` takes the mover: the line joining it to the decision, else (a chain) the first naming the decision; `book/same_booking.rs` `same_release` and `same_ends`: no line is an invariant's refusal (both `unwrap_or_else`s go). `rel/q4` (`same dec = pay2`, `same pay = dec`) e, f, k: `same dec = pay2: dec doesn't exist` → `same pay = dec: …` (= refcore now). q1, q2, q3, q5 (the chain: `same pay2 = dec`), q6 unchanged. Stored: none (37).
+
+**88506cfc, N5:** `time/calendar.rs` `Added::text`: a stated hole prints through `hole::atom_text`, escaped. `cal/c4` a1, a3 and a3's `pinned:` line: `?"is "it" a day \ off?"` → `?"is \"it\" a day \\ off?"` (refcore: unescaped). Stored: none (37).
+
+- **Where the engine now differs from the pinned refcore on purpose** (the sweep at the end: same 75, differs 25): B2 (`wb/g2_min`, `w1` b8, b9); N2 (`none/n1` a18, a26, `n2`, `n3`, `n2337` a7); N1 (`rel/ls1`); N5 (`cal/c4`); and the first turn's three: the residual head (`res/r1`, `bind/m1` r1, `resid/m`), 221.8 (`hdr/h1`, `h2`, `h4`, `h5`, `h7` to `h9`), 230.Q-5a (`rel/q2`, `q5`, `n230q5a`). Older, not this turn's: `none/n1` a30 (N7), `day/d5` (spec question 6), `day/d6` (P45 (e)), `hdr/h3`, `h6` (not built in the engine).
+- **Red ids:** 36 kept; after B1 and B2 36; N1 37 (`cut/instance_first`, above); N4 37; N5 37. None outside the list and its item's kind.
+- **Size** (`git diff --stat 642d8647..HEAD -- engine/crates`): 15 files, 222 in, 213 out. By commit: B1 112/151, B2 and N2 76/36, N1 12/12, N4 20/13, N5 3/2.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched; `engine/tools/exceptions --check` exits 0).
+- **For M4's list (P48), not taken:** N3, N7, `none == value`, `held:` runs, a computed key, the review's questions 4 to 8; the residual head with no first end keeps its two spaces (`res/r1` a14, the review's item 5).
+- **For the windows round:** N6 (`read_def_held` builds its name on every def read) and the review's list of window code, untouched.
+- **Open STOP-REPORTs:** none of G3's.
+- **Usage:** about 1.61 % of the week before this entry (`engine/tools/usage tmp/spec-2.2.1-build/g3-ids.txt`); this turn about 0.29 %, against about 0.7 %.
+- **Time:** about 27 min from 01:55 local; checks about 14 min of it: `check commit` 5 runs (57 to 101 s), `check quick` about 8, `check fences` once, 6 engine sweeps and one refcore run (26 s).
+- **Checks at 88506cfc's tree:**
+  - `check quick: green, 11 steps (78s)`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (73s)`: the 37 ids above.
+  - `check fences: green, 1 step (24s)`.
