@@ -72,6 +72,28 @@ impl Engine {
         Ok(out)
     }
 
+    /// Every adjustment cut `cut` sees of an instance whose day is a hole, each existing as
+    /// that hole: each plan move's but a settlement's, sorted (E §5 step 1, tally 2.3 C-4).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::unsettled_adjustments`].
+    pub(crate) fn unsure_adjustments(
+        &mut self,
+        m: &Reality,
+        cut: Day,
+    ) -> Result<Vec<Adjustment>, Stop> {
+        let mut out = Vec::new();
+        for mv in plan_moves(m, self.timeline_world()) {
+            if settlement_move(m, mv)? {
+                continue;
+            }
+            out.extend(self.unsure_of(m, mv, cut)?);
+        }
+        sort_adjustments(&mut out);
+        Ok(out)
+    }
+
     /// Every adjustment cut `cut` sees with its settlements and waivers linked; an observed
     /// row naming an adjustment no version made by the cut refused `RUN-RECORD` (refcore's
     /// `adjustments`). E §5 step 5, L §5.19 Links.

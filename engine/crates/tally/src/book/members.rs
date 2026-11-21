@@ -298,6 +298,13 @@ impl Engine {
                     return Err(Stop::Refused(e.clone()));
                 }
             }
+            // an adjustment of a hole-day instance is a member only where that day falls before
+            // its step's: its existence is the hole (E §5 step 1, tally 2.3 C-4)
+            if let Moving::Adj(a) = &x
+                && let Some(h) = &a.unknown
+            {
+                st = spread(&[st.as_ref(), Some(h)]);
+            }
             if let Moving::Obs(o) = &x
                 && let Some(t) = self.obs_target(m, o, ctx.cut)?
             {
@@ -492,6 +499,13 @@ impl Engine {
                     .into_iter()
                     .map(Moving::Adj),
             );
+            // those of an instance whose day is a hole, which may or may not exist (E §5 step
+            // 1, tally 2.3 C-4)
+            out.extend(
+                self.unsure_adjustments(m, cut)?
+                    .into_iter()
+                    .map(Moving::Adj),
+            );
         }
         if sub.contains("pads") {
             // the walk's own movements, as it booked them (L §5.14.1 Running reads)
@@ -563,7 +577,12 @@ impl Engine {
                     return Ok(Some(Moving::Adj(a.clone())));
                 }
                 let all = self.unsettled_adjustments(m, cut)?;
-                Ok(all.into_iter().find(|a| a.id == v.id).map(Moving::Adj))
+                if let Some(a) = all.into_iter().find(|a| a.id == v.id) {
+                    return Ok(Some(Moving::Adj(a)));
+                }
+                // one of an instance whose day is a hole, a binding's member (tally 2.3 C-4)
+                let unsure = self.unsure_adjustments(m, cut)?;
+                Ok(unsure.into_iter().find(|a| a.id == v.id).map(Moving::Adj))
             }
             MvSrc::Kind(_) => Ok(None),
             MvSrc::Missing => {
@@ -1101,7 +1120,7 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
         Moving::Adj(a) => match name {
             "adjusts" => Some(Value::Mv(Box::new(MvRef {
                 id: a.inst_id.clone(),
-                day: Some(a.inst_day),
+                day: a.inst_day,
                 src: MvSrc::Inst(a.move_id.clone(), a.inst_keys.clone()),
             }))),
             "change" => Some(amount_value(m, &a.delta, a.leg.unit.as_deref())?),
