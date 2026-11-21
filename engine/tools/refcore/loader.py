@@ -151,7 +151,9 @@ class Loader:
             raise LoadError('LOAD-VERSION', 'files declare different tally versions')
         if tallies != {2}:
             # L §8.3 LOAD-VERSION (S-224a): files that agree on a version the engine doesn't run
-            raise LoadError('LOAD-VERSION', 'tally %d: this engine runs tally 2' % list(tallies)[0])
+            t0 = self.trees[0][1].header
+            raise LoadError('LOAD-VERSION', 'tally %d: this engine runs tally 2' % t0.tally,
+                            getattr(t0, 'tally_loc', None))
         h = models[0].header
         m.header = h
         m.S, m.E, m.on = h.start, h.end, h.on
@@ -2217,7 +2219,10 @@ class Loader:
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at [%s], neither replacing the '
                                         'other' % (os_[i - 1].loc, o.loc, qid, key), o.loc)
                     if not o.removed:
-                        self.check_correction_covers(o, os_[i - 1])
+                        # the replaced statement is the last one with a row, also behind a `= none` (P50, N1)
+                        prev = next((x for x in reversed(os_[:i]) if not x.removed), None)
+                        if prev is not None:
+                            self.check_correction_covers(o, prev)
             self.check_covers_standing(inf, by)
 
     def check_covers_standing(self, inf, by):
@@ -2271,19 +2276,41 @@ class Loader:
         and needs no covers (the caller's test)."""
         m = self.m
 
-        def covers(v, name, d):
+        def covers(v, name, d, K):
             for th, sp in getattr(v, 'covers', []):
-                span = sp if sp is not None else v.span_at(m.on)
+                span = sp if sp is not None else v.span_at(K)
                 if th.name == name and span is not None and isinstance(d, datetime.date) and span.contains(d):
                     return True
             return False
         places = set()
         for ln in o.legs:
             places |= set(p.name for p in (ln[1], ln[2]) if hasattr(p, 'name'))
-        for name in sorted(places):
-            if covers(prev.version, name, o.day) and not covers(o.version, name, o.day):
-                raise LoadError('LOAD-COVERS', 'replace %s of %s: %s doesn\'t cover %s on %s' % (
-                    o.sid, name, o.version.id, name, o.day), o.loc)
+        # per cut class (E §3.1 step 9; tally 2.2.1 P50, B2): every cut at which the correction stands, from its known
+        # date to the model's on, each class starting at a version's known date
+        ks = sorted(set([o.known, m.on] + [v.known for v in m.versions.values()
+                                           if v.known is not None and o.known <= v.known <= m.on]))
+        # and per world (E §3.1 step 9; P50, N7a): the base and each scenario's chain, its moves lines seen there
+        over = getattr(m, 'scenario_over', {}) or {}
+        worlds = [frozenset()]
+        for sid in sorted(over):
+            ch, w = set(), sid
+            while w is not None:
+                ch.add(w)
+                w = over.get(w)
+            worlds.append(frozenset(ch))
+        old = set_world(frozenset())
+        try:
+            for ws in worlds:
+                set_world(ws)
+                if not (in_world(o.version) and in_world(prev.version)):
+                    continue
+                for K in ks:
+                    for name in sorted(places):
+                        if covers(prev.version, name, o.day, K) and not covers(o.version, name, o.day, K):
+                            raise LoadError('LOAD-COVERS', 'replace %s of %s: %s doesn\'t cover %s on %s' % (
+                                o.sid, name, o.version.id, name, o.day), o.loc)
+        finally:
+            set_world(old)
 
     def check_overlap(self, inf, rows):
         m = self.m

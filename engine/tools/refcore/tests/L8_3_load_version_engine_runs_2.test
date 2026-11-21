@@ -60,4 +60,4 @@ version v
   d_6 = 2026-03-06 "c"
   opening[konto] = 0.00 DUK at 2026-01-01 start "c"
 === expect
-refused: LOAD-VERSION tally 3: this engine runs tally 2
+refused: LOAD-VERSION tally 3: this engine runs tally 2 (v3.tally:2)

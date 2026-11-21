@@ -433,7 +433,10 @@ class Asker:
             order = [asks[i] for i in sorted(asks)]
         for a in order:
             if not isinstance(a, str):
-                req_clock(m, a)
+                # judged on the asks load left standing (E §11): an ask refused alone prints its own line (tally
+                # 2.2.1 P50, B1: the one-file case too)
+                if getattr(a, 'refused_alone', None) is None:
+                    req_clock(m, a)
             else:
                 # a member's ask is checked against its member's on, as the member alone answers it (L §6.1;
                 # tally 2.2.1, 233.3, 228.Q10), unless load left it refused alone

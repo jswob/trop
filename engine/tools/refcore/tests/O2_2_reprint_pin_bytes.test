@@ -1,0 +1,29 @@
+# tally 2.2.1 P50 B3 (O §2.2: "Inputs. As run"): reprint reads --pin=bytes: a member pinned by its
+# canonical hash is LOAD-PIN under it (review g4 findings/b3). Before W13: the pin ignored.
+=== options reprint pin=bytes exit=1
+=== m.tally
+model m
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+input one: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1
+
+ask q: one
+=== top_canon.tally
+model fam
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "m.tally" sha256 "8c9f5e28182b6f1df62eceb9c0dcb5c9c69f4baa423dc53157066792628dc7ca"
+=== expect
+refused: LOAD-PIN m.tally doesn't match its sha256 in use a
