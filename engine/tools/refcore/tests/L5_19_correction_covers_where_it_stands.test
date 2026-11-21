@@ -1,0 +1,60 @@
+# tally 2.2.1 P53: the test is made at the cuts where the row stands; a dropped row needs none
+# (review g4fix s223/cc_mid_drop: q 1 000.00 PLN, q_0402 940.00 PLN). Before W14: fix1 refused.
+=== cc_mid_drop.tally
+model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place sav: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+
+version open
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version stmt
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "a"
+
+version fix1
+  cite s
+  governs 2026-02
+  known 2026-04-01
+  covers konto
+  replace bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 60.00 PLN) "f1"
+
+version fix2
+  cite s
+  governs 2026-02
+  known 2026-04-05
+  replace bank[r1] = none
+
+version mover
+  cite s
+  governs 2026-02
+  known 2026-04-05
+  moves fix1 to 2026-03
+
+ask q: bal(konto, 2026-04-30)
+ask q_0402: bal(konto, 2026-04-30) as known 2026-04-02
+ask q_0407: bal(konto, 2026-04-30) as known 2026-04-07
+=== expect
+q: 1 000.00 PLN
+  cut 2026-04-30
+q_0402: 940.00 PLN
+  cut 2026-04-02
+q_0407: 1 000.00 PLN
+  cut 2026-04-07
+warning: WARN-UNREAD place sav is read by nothing
