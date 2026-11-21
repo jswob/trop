@@ -6961,4 +6961,27 @@ s2.tally	m3/fixes/t221/rv4/ver/s2.tally
 ,26:t221-g4/rv4-version-member,7:t221-g4,3:run,35:engine/tests/m3/fixes/t221/rv4/verj,15:run t3_m2.tally,88:t3_m2.tally	m3/fixes/t221/rv4/verj/t3_m2.tally
 m2.tally	m3/fixes/t221/rv4/verj/m2.tally
 ,1:1,67:refused: LOAD-VERSION member a declares tally 2, the joint model 3
+,30:t221-g4/rv5-b1-two-key-warning,7:t221-g4,3:run,34:engine/tests/m3/fixes/t221/rv5/inv,23:run top.tally --ask a.q,84:top.tally	m3/fixes/t221/rv5/inv/top.tally
+a/m.tally	m3/fixes/t221/rv5/inv/a/m.tally
+,1:0,301:a.q: 50.00 PLN
+  unfulfilled: put[a, 2026-01]
+  unfulfilled: put[a, 2026-02]
+  unfulfilled: put[b, 2026-01]
+  unfulfilled: put[b, 2026-02]
+  open: put[b, 2026-03]
+  cut 2026-04-30
+warning: WARN-LEGS the two observations of a.put[a, 2026-03] disagree: a.bank[r1] (10.00 PLN) and a.bank[r2] (12.00 PLN)
+,27:t221-g4/rv5-b2-base-refusal,7:t221-g4,3:run,38:engine/tests/m3/fixes/t221/rv5/verrule,20:run b.tally s3.tally,86:b.tally	m3/fixes/t221/rv5/verrule/b.tally
+s3.tally	m3/fixes/t221/rv5/verrule/s3.tally
+,1:1,76:refused: LOAD-VERSION replace rule d.base in w names version v (b.tally:22)
+,26:t221-g4/rv5-s223-mid-moved,7:t221-g4,3:run,35:engine/tests/m3/fixes/t221/rv5/s223,22:run cc_mid_moved.tally,61:cc_mid_moved.tally	m3/fixes/t221/rv5/s223/cc_mid_moved.tally
+,1:1,111:refused: LOAD-COVERS replace bank[r1] of konto: fix2 doesn't cover konto on 2026-02-10 (cc_mid_moved.tally:39)
+,25:t221-g4/rv5-s223-mid-drop,7:t221-g4,3:run,35:engine/tests/m3/fixes/t221/rv5/s223,21:run cc_mid_drop.tally,59:cc_mid_drop.tally	m3/fixes/t221/rv5/s223/cc_mid_drop.tally
+,1:0,157:q: 1 000.00 PLN
+  cut 2026-04-30
+q_0402: 940.00 PLN
+  cut 2026-04-02
+q_0407: 1 000.00 PLN
+  cut 2026-04-07
+warning: WARN-UNREAD place sav is read by nothing
 ,

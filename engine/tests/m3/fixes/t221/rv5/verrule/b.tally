@@ -1,0 +1,24 @@
+model m
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+input one: int
+def d: int
+  rule base = one
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1
+
+version w
+  cite s
+  governs 2026-03..
+  known 2026-02-01
+  replace rule d.base v v = one + one
+
+ask q: d law 2026-04-01
