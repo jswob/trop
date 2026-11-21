@@ -371,7 +371,9 @@ pub mod load {
     pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
-    pub(crate) use texts::{children as expr_children, post_text, text as expr_text};
+    pub(crate) use texts::{
+        Bound, bound_span, bound_text, children as expr_children, post_text, text as expr_text,
+    };
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 
