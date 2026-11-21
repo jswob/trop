@@ -11,9 +11,15 @@ line is a hole or a refusal is reported empty and fails, as does a text refused 
 
 G1 holds the places (§9.2): #244's ten meetings (the run's start, a covered span's end, a version's known day inside
 and after the stretch, a scenario's `from`, a law-date class boundary, a reading's instant, a lifespan's end, two
-movements stated `same`, the register, the ledger), the sign rule, a count over `adjustments` (C-4) and, C13 being
-taken, a take at a place that keeps parts (`parts`: on the engine it waits for M5b and is skipped). Each holds a plain
-movement at another place and counts beside it. Its readers join in G2.
+movements stated `same`, the register, the ledger), the sign rule and its twin with a hole amount on a plain day, a
+division by a plain zero beside the hole day, a count and a sum over `adjustments` (C-4) and, C13 being taken, a take
+at a place that keeps parts (`parts`: on the engine it waits for M5b and is skipped). Each holds a plain movement at
+another place and counts beside it. Its readers join in G2.
+
+A ledger's or an explanation's lines are its body and are held line by line; the register under an answer (`pinned:`,
+`unknown day:`, `unfulfilled:`, `assumed`, an adjustment, a pad, an anchor, `open`, `left out`, `cut`) is left out:
+it carries the day by design, and §9.4 keeps its words in hand-stored vectors. Refused days are those a balance check
+refuses (C-3: `RUN-PLACE`, `RUN-LIFESPAN`, a take's); any other refusal is a value every day must agree on.
 
     python3 -I -B engine/tests/properties/oracle.py [--interp refcore|fast|engine] [--seed N] [--variants N]
         [--sample K] [--only NAME[,NAME]] [--out DIR] [--keep]
@@ -78,6 +84,7 @@ class Text:
             self.line('bal(konto, %s)' % iso(self.x))
             self.line('bal(konto, %s)' % iso(self.after))
             self.line('flows(konto, %s)' % self.m)
+        self.line('pw.cash.amount')  # the instance's amount: a value beside its hole day
         self.line('bal(other, %s)' % iso(self.after))
         self.line('flows(other, %s)' % self.m)
         self.line('count(m in transfers over %s where m.cash.to == other)' % self.m)
@@ -144,7 +151,8 @@ def known_replaced(t, known):
     t.rows.append('d_at = %s "s"' % iso(t.start))
     t.versions.append(version('a1', known, ['replace amt = 150.00 PLN "s"']))
     t.common()
-    t.line('count(a in adjustments over %s .. %s)' % (t.m, t.m1))  # C-4
+    t.line('count(a in adjustments over %s .. %s)' % (t.m, t.m1))  # C-4: a count and a sum
+    t.line('sum(a.change for a in adjustments over %s .. %s)' % (t.m, t.m1))
     t.line('bal(konto, %s)' % iso(t.after), tail='as known %s' % iso(t.b + 5 * DAY))
 
 
@@ -219,6 +227,25 @@ def t_sign(t):
     t.common()
 
 
+def t_sign_hole(t):
+    """The sign rule's twin (§9.2): a hole amount on a plain day into the `claims` place, the window at another."""
+    t.places[0] = 'place konto: claims PLN lives %s..' % iso(t.start - 366 * DAY)
+    t.inputs += ['input out: money PLN', 'input amt_h: money PLN']
+    t.moves = ['move pw: transfers\n  on dx\n  leg cash from world to konto amount amt_h',
+               'move px: transfers\n  on w\n  leg cash from world to other amount amt',
+               'move pay_out: transfers\n  on dx\n  leg cash from konto to other amount out']
+    t.rows += ['out = 80.00 PLN "s"', 'amt_h = ?"how much comes in?" "s"']
+    t.common()
+
+
+def t_div(t):
+    """A division by a plain zero beside a hole day (§9.2's last row; the plan's P31, `hd5.tally`)."""
+    t.inputs += ['input nz: int', 'input dz: date']
+    t.moves.append('move pz: transfers\n  on dz\n  leg cash from world to konto amount round(amt / nz, minor(PLN), half-even)')
+    t.rows += ['nz = 0 "s"', 'dz = %s "s"' % iso(t.b + DAY)]
+    t.common()
+
+
 def t_parts(t):
     t.head_extra = ['kind persons: parties', 'kind cash_accounts: place one min 0\n  owned by arrive\n'
                     '  step minor(PLN)\n  takes k for w2 order (if k.owner == ania then 0 else 1)']
@@ -242,7 +269,8 @@ def t_parts(t):
 
 PLACES = [('start', t_start), ('cover', t_cover), ('known_in', t_known_in), ('known_after', t_known_after),
           ('scen', t_scen), ('class', t_class), ('reading', t_reading), ('life', t_life), ('same', t_same),
-          ('register', t_register), ('ledger', t_ledger), ('sign', t_sign), ('parts', t_parts)]
+          ('register', t_register), ('ledger', t_ledger), ('sign', t_sign), ('sign_hole', t_sign_hole), ('div', t_div),
+          ('parts', t_parts)]
 WAITS = {'engine': {'parts': 'M5b: the engine keeps no parts before it'}}
 
 
@@ -262,11 +290,42 @@ DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 STRETCH = re.compile(r'^window\((\d{4}-\d{2}-\d{2}), (\d{4}-\d{2}-\d{2})\)$')
 
 
-def judge(u, pinned):
+# The register under an answer: a pinned ask prints `pinned:`, an unpinned one `unknown day:`, and the rest carry a
+# day by design. §9.4 keeps their words hand-stored (the hole's label, `unknown day:`, C-4's register); the oracle
+# holds the answer and its body (a ledger's lines, an explanation's).
+REGISTER = re.compile(r'^  (cut|unfulfilled|pinned|assumed|adjustment|pad|unknown day|anchor|open|left out|world)\b')
+BALANCE_CHECK = re.compile(r'^refused: (RUN-PLACE|RUN-LIFESPAN|RUN-TAKE|RUN-PART)\b')  # C-3: the days counted apart
+
+
+def judge_block(u, pinned):
+    """A printed answer of several lines (a ledger, an explanation): the same verdict line by line where every block
+    has the same shape, its refused days those whose first line a balance check refuses; `block` where shapes differ
+    and the unpinned block isn't what every unrefused day prints."""
+    refused = {d for d, v in pinned.items() if BALANCE_CHECK.match(v[0])}
+    rest = [v for d, v in pinned.items() if d not in refused]
+    if len(u) == 1 and all(len(v) == 1 for v in pinned.values()):
+        return judge(u[0], {d: v[0] for d, v in pinned.items()})
+    if rest and all(v == u for v in rest):
+        return '', ('hole' if u[0].startswith('?') else 'refusal' if u[0].startswith('refused:') else 'value'), ''
+    if any(len(v) != len(u) for v in pinned.values()):
+        return 'a block of %d lines where the pinned days print %s lines' % (
+            len(u), '/'.join(sorted({str(len(v)) for v in pinned.values()}))), 'value', 'block'
+    kind = None
+    for i in range(len(u)):
+        why, k, fault = judge(u[i].strip(), {d: v[i].strip() for d, v in pinned.items()}, refused)
+        kind = kind or k
+        if why:
+            return 'line %d of the block: %s' % (i + 1, why), kind, fault
+    return '', kind, ''
+
+
+def judge(u, pinned, refused_days=None):
     """(verdict, kind, fault): kind is value, hole, refusal or stretch; verdict '' when the line holds; fault, when it
     doesn't, is `label` (a hole naming no day: on 2.2.1 the movement's name stands where 2.3 names `w`), `refusal`,
     `stretch` or `value` (a printed value no unrefused pinned day agrees with: #244's kind)."""
-    refused = {d: v for d, v in pinned.items() if v.startswith('refused:')}
+    if refused_days is None:
+        refused_days = {d for d, v in pinned.items() if BALANCE_CHECK.match(v)}
+    refused = {d: v for d, v in pinned.items() if d in refused_days}
     rest = {d: v for d, v in pinned.items() if d not in refused}
     vals = set(rest.values())
     kind = 'hole' if u.startswith('?') else 'refusal' if u.startswith('refused:') else 'value'
@@ -294,11 +353,17 @@ def run_text(t, interp, out):
                        capture_output=True, text=True, timeout=600)
     o = p.stdout + p.stderr
     open(os.path.join(d, 'run.out'), 'w', encoding='utf-8').write(o)
-    got = {}
+    got, cur = {}, None  # each ask's block: its head line's answer and the indented lines under it
     for l in o.splitlines():
         m = HEAD.match(l)
         if m:
-            got[(m.group(1), m.group(2))] = m.group(3)
+            cur = got[(m.group(1), m.group(2))] = [m.group(3)]
+        elif cur is not None and REGISTER.match(l):
+            continue
+        elif cur is not None and l.startswith(' '):
+            cur.append(l)
+        else:
+            cur = None
     res = {'lines': 0, 'values': 0, 'refused': 0, 'fails': [], 'refused_at': set(), 'faults': {}}
     if not got:
         res['fails'].append('refused at load or printed nothing: ' + (o.splitlines() or [''])[0][:150])
@@ -312,11 +377,11 @@ def run_text(t, interp, out):
             res['fails'].append('%s: no line printed' % k)
             continue
         res['lines'] += 1
-        nref = sum(v.startswith('refused:') for v in pinned.values())
+        nref = sum(bool(BALANCE_CHECK.match(v[0])) for v in pinned.values())
         res['refused'] += nref
         if nref:
             res['refused_at'].add(t.lines[i][0].split('(')[0])
-        why, kind, fault = judge(u, pinned)
+        why, kind, fault = judge_block(u, pinned)
         res['values'] += kind in ('value', 'stretch') and not why
         if why:
             res['fails'].append('%s `%s`: %s' % (k, t.lines[i][0], why))
