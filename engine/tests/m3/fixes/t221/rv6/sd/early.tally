@@ -1,0 +1,17 @@
+scenario early over g5_scen_decisions
+  tally 2
+  from 2026-01-02
+
+move top: transfers
+  on from_day
+  reads konto
+  leg cash from world to konto amount min(top_amt, bal(konto))
+
+move lift: transfers
+  on late_day
+  reads konto
+  leg cash from world to konto amount min(lift_amt, bal(konto))
+
+ask q_e: bal(konto, 2026-01-05) in early
+ask q_e2: bal(konto, 2026-01-02) in early
+ask q_ef: flows(konto, 2026-01-01 .. 2026-01-05) in early
