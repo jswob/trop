@@ -57,7 +57,7 @@ impl Engine {
     /// The value of expression `e` read from outside the evaluator, as an ask's line reads it:
     /// a chain of def cells past the counted depth is computed from the work stack, then the
     /// read starts again, its earlier cells now in the memo; a read that met a decision dated
-    /// by a window, read again per day of it ([`Engine::line_per_day`]). E §3.2, §4.1 step 2.
+    /// by a window, read again per day of it (`Engine::line_per_day`). E §3.2, §4.1 step 2.
     ///
     /// # Errors
     ///
