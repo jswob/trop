@@ -1,0 +1,36 @@
+model ow
+  tally 2
+  on 2026-08-01
+  start 2026-03-01
+  end 2026-12-31
+  note "tally 2.2.1 (#241) 221.R2 (T, invented): an observed row's date attribute holding a window; refcore's bytes, the engine at M5a"
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+kind wages: event certain
+  leg cash: PLN
+  attr period: date
+
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-10, kind: wages, leg cash from world to konto amount 50.00 PLN, period: window(2019-01-01, 2019-12-31)) "r1"
+
+ask b: bal(konto, 2026-03-31)
+ask d: bank[r1].period
+ask y: year_of(bank[r1].period)

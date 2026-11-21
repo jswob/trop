@@ -146,7 +146,7 @@ pub mod model {
 pub mod hole {
     mod questions;
 
-    pub use questions::{Hole, Linear, Unknown, atom_text, carry_union, spread};
+    pub use questions::{Hole, Linear, Unknown, atom_text, carry_union, imprecise, spread};
 }
 
 /// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
@@ -186,9 +186,9 @@ pub mod eval {
     pub use aggregate::Member;
     pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
-    pub(crate) use bindings::{names_in, order_text, reads_name, reads_var};
+    pub(crate) use bindings::{names_in, order_text, reads_name, reads_var, written_bound};
     pub use context::Layer;
-    pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
+    pub(crate) use context::{GUARDED, UNSET_AXIS, WINDOW_DAYS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::{equal_sides, hole_of};
     pub(crate) use extremes::min_max;
@@ -206,7 +206,7 @@ pub mod eval {
     pub(crate) use trace::{
         Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
     };
-    pub(crate) use windows::{End, one_day, window_days};
+    pub(crate) use windows::{End, held_by, one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -258,8 +258,8 @@ pub mod walk {
     pub(crate) use reads::{place_of, state_value};
     pub(crate) use state::GapAt;
     pub use state::{
-        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,
-        Today, Walk, WalkObs,
+        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, SameSides,
+        St, Taken, Today, Walk, WalkObs,
     };
     pub use tuples::Law;
 }
@@ -279,14 +279,15 @@ pub mod book {
     mod same_booking;
     mod settle;
 
-    pub(crate) use adjust::hole_booked_before;
     pub use adjust::{Adjustment, Measured, Settled};
+    pub(crate) use adjust::{hole_booked_before, known_dates};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
     pub use observe::{Coverage, Linked, Obs, inst_id};
     pub use reading::{Pad, Seen, reading_rank};
     pub(crate) use reading::{first_readings, gap_text, instant_text, readings};
+    pub(crate) use same::{Fact, inst_side};
     pub use same::{Groups, kept_once, once_obs, same_differ};
     pub(crate) use same_booking::{Member, Waiting};
     pub(crate) use settle::settlement_move;
@@ -370,7 +371,10 @@ pub mod load {
     pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
-    pub(crate) use texts::{children as expr_children, post_text, text as expr_text};
+    pub(crate) use texts::{
+        Bound, bound_post_text, bound_span, bound_text, children as expr_children,
+        text as expr_text,
+    };
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 

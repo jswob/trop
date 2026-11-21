@@ -55,6 +55,7 @@ n: (1, 2)
 open_: -100.00 PLN
   cut 2026-12-31
 over: refused: RUN-PLACE owed[ewa] is 50.00 PLN after the day's observations and plans of 2026-05-04
+  unfulfilled: overpay
   cut 2026-12-31
 zero: 0.00 PLN
   cut 2026-12-31

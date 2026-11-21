@@ -293,6 +293,12 @@ pub(crate) const UNSET_AXIS: &str = "an axis read outside the combinations its a
 /// started the walk meets it; a run that met it anywhere else would print not implemented.
 pub(crate) const GUARDED: &str = "a walk given up for a cell still being computed outside it";
 
+/// The stop of a `flows` or a binding at an ask line's own read that meets a decision dated
+/// by a window: the walk books it on no one day, so the line is read again once per day of
+/// the window (E §4.1 step 2; tally 2.2.1 N3, P39; refcore's `WinDay`). Only the line's
+/// outermost read (`stack.rs` `value`) meets it; no cell keeps it (`rules.rs` `close_cell`).
+pub(crate) const WINDOW_DAYS: &str = "a line read once per day of a decision's window";
+
 /// The node kinds the walk reads from: whatever they reach, the timeline depends on
 /// (E §3.3).
 const WALKERS: [NodeKind; 6] = [

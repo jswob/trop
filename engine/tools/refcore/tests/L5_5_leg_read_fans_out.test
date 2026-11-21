@@ -67,6 +67,7 @@ q_y (x = salary) [pa = hi]: 20.00 DUK
 q_y (x = charge) [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations and plans of 2026-03-02
   reading: pa = lo
   unfulfilled: charge
+  unfulfilled: salary
   cut 2026-10-25
 q_y (x = charge) [pa = hi]: 10.00 DUK
   reading: pa = hi

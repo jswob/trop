@@ -21,6 +21,13 @@ def run_texts(texts, ids=None, options=None):
         eval2.MJ_CHECK[0] = False
 
 
+def place_key(a):
+    """An ask's full path and line, by which asks of one id are ordered (OPERATIONS §2.3, L §8.3; R20 clause 2)."""
+    s = str(getattr(a, 'loc', None) or '')
+    f, _, line = s.rpartition(':')
+    return (f, int(line) if line.isdigit() else 0)
+
+
 def by_path(texts):
     """L §8.3 Which refusal prints (tally 2.1.1): a reality's files are taken in the order of their full paths, compared
     by code point (as E §3.1 step 1 takes them), whatever order they are given in."""
@@ -30,7 +37,7 @@ def by_path(texts):
 def _run_texts(texts, ids=None, options=None):
     from .loader import scenario_header
     if (options or {}).get('reprint') is not None:
-        return reprint_lines(texts)
+        return reprint_lines(texts, options=options)
     # options {'check': …}: `check` (OPERATIONS §2.3) takes run's own path through load below, every shape of reality
     # the same functions, and stops where run would answer its first ask (Asker.load_check, check_worlds); a joint
     # model's members never see the flag (their options are run's)
@@ -54,7 +61,7 @@ def _run_texts(texts, ids=None, options=None):
     return run_one(texts, ids, check=check)
 
 
-def reprint_lines(texts, ordered=False, run_as=None):
+def reprint_lines(texts, ordered=False, run_as=None, options=None):
     """Each file's canonical text (L §2.4) in the order of their paths, then the reality's hash (E §3.1 step 1): the
     sha256 of the texts printed, in the order printed.  texts are taken by their names, unless ordered: then in the
     order given (reprint_paths gives them in the order of their full paths, tally 2.1.3)."""
@@ -77,8 +84,8 @@ def reprint_lines(texts, ordered=False, run_as=None):
                 # reprint loads as run loads before it prints anything: its members found, pinned (a nested
                 # member's own first) and each loaded in full, so it refuses what run refuses, first in run's order
                 # (E §3.1 step 1, INTERFACE §1, CHANGES 2.1.6-14; tally 2.1.7 B4, #105)
-                joint_texts(load, uses, {})
-                for a, fs in pinned_members(p, uses, load).items():
+                joint_texts(load, uses, dict(options or {}))
+                for a, fs in pinned_members(p, uses, load, options).items():
                     member_paths[a] = set(f for f, rel, s in fs)
                 members.update(use_member_files([(p, p, src)], load, on_disk))
         printed = reprint(files, members, member_paths)
@@ -282,16 +289,29 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
     worlds below it are evaluated in the same reality with the higher layers hidden.  check: the same load, then
     OPERATIONS §2.3's lines (check_worlds) in place of the answers."""
     from .loader import load_texts
-    from .ask import Asker, LoadAtRun, warning_lines, alone_line
+    from .ask import Asker, LoadAtRun, alone_line, emit_warnings
     from .errors import LoadError, Unspecified
     base = [(f, src) for f, src, h in heads if h is None]
+    # all files of a reality declare one N (L §6.1): a base that agrees on a version with a scenario file on another
+    # is the disagreement, not the base's version (tally 2.2.1 P50, the review's Q5)
+    from .joint import header_tally
+    from .lexer import split_lines as _sl
+    def _tl(f, src):
+        return header_tally(src if isinstance(src, list) else _sl(src, f))
+    tb = set(_tl(f, src) for f, src in base)
+    ta = set(_tl(f, src) for f, src, h in heads)
+    if len(tb) == 1 and tb != {2} and len(ta) > 1:
+        return ['refused: %s' % LoadError('LOAD-VERSION', 'files declare different tally versions').text()]
     scen = {}
     dup = set()
+    first = {}
     for f, src, h in heads:
         if h is not None:
             if h[0] in scen:
                 dup.add(h[0])
             scen[h[0]] = (f, src, h[1], h[2])
+            # a scenario declared twice is placed by its first file (OPERATIONS §2.3, R20 clause 2; P12)
+            first.setdefault(h[0], f)
     worlds = set(scen)
     if loader is None:
         loader = load_texts
@@ -352,8 +372,28 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
     forks = cross_world_forks(realities)
     if forks is not None:
         return ['refused: %s' % forks.text()]
+    # load's last check, a literal key at a literal stepped range (L §2.5, §8.4), on every reality before anything is
+    # answered, in run as in check (L §8.3; tally 2.2.1, 229.2): the base's refusal is the run's one line, a
+    # scenario's refuses that scenario (L §6.4)
+    from .evaluate import Engine
+    _, err = guarded(lambda: Engine(m0).check_range_lits())
+    if err is not None:
+        return ['refused: %s' % err.text()]
+    for sid in sorted(k for k in realities if k is not None):
+        r = realities[sid]
+        _, err = guarded(lambda: Engine(r).check_range_lits())
+        if err is not None:
+            errs[sid] = err
+            del realities[sid]
+    # a scenario file that doesn't load refuses that scenario and those over it, with its message (OPERATIONS §2.1;
+    # tally 2.2.1, 236.3: a scenario's own refusal, LOAD-WORLD among them, is found loading its own stack only)
+    for sid in sorted(k for k in realities if k is not None):
+        below = [c for c in chains.get(sid, ())[1:] if c in errs]
+        if below:
+            errs[sid] = errs[below[0]]
+            del realities[sid]
     if check:
-        return check_worlds(scen, realities, errs)
+        return check_worlds(scen, realities, errs, first)
     if ids:
         # E §11 (tally 2.1.3, issue #58): after load (the base's refusal has printed above; a scenario's refuses only
         # that scenario, L §8), the first id of the request that names no ask of any world, no member's ask (L §6.1)
@@ -380,12 +420,15 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
     for sid, r in realities.items():
         if sid is None:
             continue
-        for a in r.asks:
+        for a in list(r.asks) + list(getattr(r, 'asks_alone', ())):
+            # a scenario file's own ask refused alone prints its line as the base's does (OPERATIONS §2.1; 229.1)
             if getattr(a, '_scen', None) == sid:
                 asks[(a.id, sid)] = (a, sid)
-    out = []
-    for sid in sorted(errs):
-        out.append('scenario %s: refused: %s' % (sid, errs[sid].text()))
+    # asks of one id by full path, then line (OPERATIONS §2.3, L §8.3; R20 clause 2)
+    keyed = sorted(asks, key=lambda k: (k[0], place_key(asks[k][0])))
+    # the refused scenarios' lines, once, before every result, in check's order (OPERATIONS §2.1; R20 clause 1)
+    out = ['scenario %s: refused: %s' % (sid, errs[sid].text()) for sid in sorted(errs, key=lambda s: (first[s], s))]
+    head = len(out)
     askers = {}
     members = getattr(m0, 'joint_members', None) or {}
     if ids:
@@ -394,9 +437,14 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
             if '.' in i and i.split('.', 1)[0] in members:
                 order.append(i)      # a member's ask a.q (L §6.1), answered by the member alone
             else:
-                order.extend(k for k in sorted(asks) if k[0] == i)
+                order.extend(k for k in keyed if k[0] == i)
     else:
-        order = sorted(asks)
+        order = keyed
+    try:
+        clock_check(order, asks, errs, scen, chains, m0, mid)
+    except TallyError as e:
+        # the request's one result (E §11)
+        return ['refused: %s' % e.text()]
     for akey in order:
         new_ask()
         if isinstance(akey, str):
@@ -467,14 +515,20 @@ def run_worlds(heads, ids=None, loader=None, srcs=None, check=False):
             out.append('%s: refused: %s' % (aid, lx.err.text()))
     warned = load_warned(realities)
     seen = set(warned)
+    lifted = []
+    if None in askers:
+        # a member's ask's run-level lines: its scenarios' with the run's, before every result; its walk's
+        # warnings with the run's (L §6.1, R20 clause 3)
+        out[head:head] = [l for l in askers[None].level if l not in out[:head]]
+        lifted = askers[None].lifted_warnings()
     for x in [None] + sorted(k for k in askers if k is not None):
         if x not in askers:
             continue
-        for code, msg in askers[x].walk_warnings:
+        for code, msg in list(askers[x].walk_warnings) + (lifted if x is None else []):
             if (code, msg) not in seen:
                 seen.add((code, msg))
                 warned.append((code, msg))
-    return out + warning_lines(warned)
+    return emit_warnings(out, warned)
 
 
 def load_warned(realities):
@@ -509,7 +563,7 @@ def load_warned(realities):
     return warned
 
 
-def check_worlds(scen, realities, errs):
+def check_worlds(scen, realities, errs, first=None):
     """`check` (OPERATIONS §2.3) on a reality with scenarios, once run_worlds has loaded the base (its refusal has
     printed as run prints it) and each scenario: each refused scenario file's `scenario <s>: refused: …` line in the
     order of the files' full paths (E §3.1 step 1), then each ask refused alone by id (alone_line), the base's and a
@@ -517,21 +571,13 @@ def check_worlds(scen, realities, errs):
     Load's last check (a literal key at a literal stepped range, L §2.5, §8.4), which run makes when an ask is
     answered, is made here on every reality: the base's refusal is the run's one line, a scenario's refuses that
     scenario (L §6.4)."""
-    from .evaluate import Engine
-    from .ask import alone_line, warning_lines
+    from .ask import alone_line, emit_warnings
     realities = dict(realities)
     errs = dict(errs)
     m0 = realities[None]
-    _, err = guarded(lambda: Engine(m0).check_range_lits())
-    if err is not None:
-        return ['refused: %s' % err.text()]
-    for sid in sorted(k for k in realities if k is not None):
-        r = realities[sid]
-        _, err = guarded(lambda: Engine(r).check_range_lits())
-        if err is not None:
-            errs[sid] = err
-            del realities[sid]
-    out = ['scenario %s: refused: %s' % (sid, errs[sid].text()) for sid in sorted(errs, key=lambda s: (scen[s][0], s))]
+    first = first or {}
+    out = ['scenario %s: refused: %s' % (sid, errs[sid].text())
+           for sid in sorted(errs, key=lambda s: (first.get(s, scen[s][0]), s))]
     alone = {}
     for a in getattr(m0, 'asks_alone', ()):
         alone[(a.id, '')] = a
@@ -541,8 +587,35 @@ def check_worlds(scen, realities, errs):
         for a in getattr(r, 'asks_alone', ()):
             if getattr(a, '_scen', None) == sid:
                 alone[(a.id, sid)] = a
-    out.extend(alone_line(alone[k]) for k in sorted(alone))
-    return (out or ['ok']) + warning_lines(load_warned(realities))
+    # by id, then full path, then line (OPERATIONS §2.3; R20 clause 2, P5)
+    out.extend(alone_line(alone[k]) for k in sorted(alone, key=lambda k: (k[0], place_key(alone[k]))))
+    return emit_warnings(out or ['ok'], load_warned(realities))
+
+
+def clock_check(order, asks, errs, scen, chains, m0, mid):
+    """E §11 REQ-CLOCK on a reality with scenarios: each ask load left standing (not refused alone, its worlds
+    loaded; 233.5) whose literal cut is after `on` refuses the request, before any ask is answered (233.4); a
+    member's against its member's `on` (233.3)."""
+    from .ask import req_clock, member_ask_node
+    for akey in order:
+        if isinstance(akey, str):
+            hit = member_ask_node(m0, akey)
+            if hit is not None and getattr(hit[1], 'refused_alone', None) is None:
+                req_clock(hit[0], hit[1])
+            continue
+        a, sf = asks[akey]
+        if getattr(a, 'refused_alone', None) is not None:
+            continue
+        need = set([sf]) if sf is not None else set()
+        if a.world is not None and a.world != mid:
+            need.add(a.world)
+        if a.form == 'diff':
+            need |= set(w for w in a.diff[2:] if w != mid)
+        need |= set(p.id for p in a.pins if p.kind == 'scenario' and p.id != mid)
+        need |= set(w for w in asif_worlds(m0, a) if w != mid and w in scen)
+        if any(w in errs for w in need):
+            continue
+        req_clock(m0, a)
 
 
 def make_cross(aid, sf, realities, chains):
@@ -709,7 +782,7 @@ def run_paths(paths, ids=None, options=None):
     return run_texts(texts, ids, options)
 
 
-def reprint_paths(paths):
+def reprint_paths(paths, options=None):
     """`reprint` (tally 2.1.3, issue #60): a loose file named as `run` names it, the path as given; a directory's files
     relative to the directory given (INTERFACE gap I-3). The files are read, printed and hashed in the order of their
     full paths, compared by code point (L §8.3, E §3.1 step 1), as `run` takes them (read_files): they were named by
@@ -723,14 +796,16 @@ def reprint_paths(paths):
     if refused is not None:
         return [refused]
     by_name = dict((name, f) for f, name in pairs)
-    return reprint_lines(texts, ordered=True, run_as=[(by_name[n], src) for n, src in texts])
+    return reprint_lines(texts, ordered=True, run_as=[(by_name[n], src) for n, src in texts], options=options)
 
 
 def command_lines(argv):
     """The lines `run`, `reprint` or `check` prints (argv as main takes it, a usage error excluded; testrun's
     `=== options disk` calls it too).  `check` reads its words as `run` does (OPERATIONS §2.3: inputs as run's)."""
     if argv[0] == 'reprint':
-        return reprint_paths(argv[1:])
+        # --pin=bytes is read as run reads it (OPERATIONS §2.2: "Inputs. As run"; tally 2.2.1 P50, B3)
+        return reprint_paths([a for a in argv[1:] if a != '--pin=bytes'],
+                             {'pin': 'bytes'} if '--pin=bytes' in argv[1:] else None)
     paths = []
     ids = []
     mode = 'paths'
@@ -738,9 +813,9 @@ def command_lines(argv):
     for a in argv[1:]:
         if a == '--ask':
             mode = 'ask'
-        elif a.startswith('--pin='):
+        elif a == '--pin=bytes':
             # --pin=bytes: a use line's sha256 over the member's bytes, not its canonical text (E §3.1 step 1)
-            options['pin'] = a[len('--pin='):]
+            options['pin'] = 'bytes'
         elif mode == 'ask':
             ids.append(a)
         else:
@@ -767,9 +842,18 @@ def big_stack(fn):
     return box['v']
 
 
+# the options each command takes (OPERATIONS §2: `--ask` is run's, `--pin=bytes` all three's; tally 2.2.1 S-usage)
+OPTIONS = {'run': ('--ask', '--pin=bytes'), 'check': ('--pin=bytes',), 'reprint': ('--pin=bytes',)}
+
+
 def usage_error(argv):
-    """No command, an unknown one, or `check` given `--ask` (OPERATIONS §2.3: inputs as run's, no asks): exit 2."""
-    return not argv or argv[0] not in ('run', 'test', 'reprint', 'check') or (argv[0] == 'check' and '--ask' in argv)
+    """No command, an unknown one, or an option, a word that starts with `--`, that the command doesn't take
+    (OPERATIONS §2 For all three; tally 2.2.1 S-usage): exit 2. refcore's own `test` takes its names as they come."""
+    if not argv or argv[0] not in ('run', 'test', 'reprint', 'check'):
+        return True
+    if argv[0] == 'test':
+        return False
+    return any(a.startswith('--') and a not in OPTIONS[argv[0]] for a in argv[1:])
 
 
 def exit_code(command, lines):

@@ -1,0 +1,61 @@
+# tally 2.2.1 S-232 (L §5.19 "each observation that stands (§4.6)"; E §3.1 step 9: LOAD-COVERS "on the rows that
+# stand, per world and cut class"; P19):
+# the run of the same files: both scenarios' lines, then q alone. tally 2.2's refcore answered
+# q_late in late's world (T's held fixes/stacked-covers).
+=== base.tally
+model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place shop: accounts PLN lives 2025-01-01..
+input bank: observed
+
+version open
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version stmt
+  cite s
+  governs 2026-01-01..2026-04-30
+  known 2026-01-02
+  covers konto
+  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "a"
+  bank[r2] = (on: 2026-03-10, kind: transfers, leg cash from konto to shop amount 20.00 PLN) "b"
+
+ask q: bal(konto, 2026-04-30)
+=== late.tally
+scenario late over mv
+  tally 2
+  from 2026-01-01
+
+version late_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-04
+  replace bank[r2] = none "gone"
+
+ask q_late: bal(konto, 2026-04-30) in late
+=== mv.tally
+scenario mv over t
+  tally 2
+  from 2026-01-01
+
+version mv_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-03
+  moves stmt to 2026-01-01..2026-02-28
+
+ask q_mv: bal(konto, 2026-04-30) in mv
+=== expect q q_late
+scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+scenario mv: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+q: 30.00 PLN
+  cut 2026-04-30

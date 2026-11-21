@@ -1,0 +1,3 @@
+scenario c2 over c1
+  tally 2
+  from 2026-03-01

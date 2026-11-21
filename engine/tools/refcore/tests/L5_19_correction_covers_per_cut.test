@@ -1,0 +1,45 @@
+# tally 2.2.1 P50 B2 (L §5.19 S-223, E §3.1 step 9): the correction's cover is tested per cut class: a
+# later moves line that takes the replaced row's version off the day doesn't hide it (review g4
+# findings/b2/percut). Before W13: loads, the correction booked nowhere.
+=== options exit=1
+=== percut.tally
+model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+
+version open
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+
+version stmt
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "a"
+
+version fix
+  cite s
+  governs 2026-02
+  known 2026-04-01
+  replace bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 70.00 PLN) "fix"
+
+version mover
+  cite s
+  governs 2026-02
+  known 2026-04-05
+  moves stmt to 2026-03
+
+ask q_0402: bal(konto, 2026-04-30) as known 2026-04-02
+=== expect
+refused: LOAD-COVERS replace bank[r1] of konto: fix doesn't cover konto on 2026-02-10 (percut.tally:30)

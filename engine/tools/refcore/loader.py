@@ -15,7 +15,8 @@ from .lexer import split_lines
 from .model import (Reality, Span, ALWAYS, lit_period, lspan_to_span, visible, VersionInfo, KindInfo,
                     Entry, ThingInfo, IndexInfo, AxisInfo, BindInfo, Row, InputInfo, RuleVer, DefInfo, Table,
                     BandRow, BandInfo, PRELUDE_PLACE, BUILTIN_INPUTS, BUILTIN_INDEXES, PRELUDE_KINDS,
-                    BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow)
+                    BUILTIN_IDS, key_text, _kv, PlaceInfo, PlaceThing, MoveInfo, ObsRow, in_world,
+                    set_world)
 from .node import Node
 from .parser import parse_file, prescan_units, BUILTINS, KEYWORDS, PERIOD_WORDS
 from .values import (range_key, Num, Int, Money, Text, Key, Thing, Code, Rec, Lst, Iv, Cal, Hole, NONE, NEVER, CURRENCIES,
@@ -149,7 +150,10 @@ class Loader:
         if len(tallies) != 1:
             raise LoadError('LOAD-VERSION', 'files declare different tally versions')
         if tallies != {2}:
-            raise NotYet('tally %d (this interpreter runs tally 2)' % list(tallies)[0])
+            # L §8.3 LOAD-VERSION (S-224a): files that agree on a version the engine doesn't run
+            t0 = self.trees[0][1].header
+            raise LoadError('LOAD-VERSION', 'tally %d: this engine runs tally 2' % t0.tally,
+                            getattr(t0, 'tally_loc', None))
         h = models[0].header
         m.header = h
         m.S, m.E, m.on = h.start, h.end, h.on
@@ -1673,7 +1677,9 @@ class Loader:
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
         m.same_obs = []         # whether each line joins two observed rows, which no cut of its own reads (S-5)
-        pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
+        # a header's same at its own line (221.8)
+        pairs = [(l, r, getattr(l, 'loc', None) or m.header.loc, None) for l, r in m.header.sames] + \
+            [(it.l, it.r, it.loc, v) for v, it in m.sames]
         for l, r, loc, v in pairs:
             a = self.sref(l, loc)
             b = self.sref(r, loc)
@@ -1689,9 +1695,9 @@ class Loader:
                 # L §6.1 Identities are written (tally 2.1.8, the user's cut): inside one model a row realises an
                 # instance by its fulfils (§5.19), so a version's same between the two is refused; a joint model's
                 # line between two members' movements, or a member's and its own, stands
-                row, inst = (l, r) if a[2] == 'row' else (r, l)
+                # the line's sides as written (2.1.7's R9; tally 2.2.1, 230.Q-5a)
                 raise LoadError('LOAD-SAME', 'same %s = %s: an observed row and a planned instance of one model; '
-                                             'state fulfils on the row' % (shown(_txt_node(row)), shown(_txt_node(inst))),
+                                             'state fulfils on the row' % (shown(_txt_node(l)), shown(_txt_node(r))),
                                 loc)
             if a[0] in ('other', 'row') or b[0] in ('other', 'row') or a[0] != b[0]:
                 wa = what.get(a[0]) or ('a %s' % a[1])
@@ -2212,17 +2218,103 @@ class Loader:
                     if not o.replace:
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at [%s], neither replacing the '
                                         'other' % (os_[i - 1].loc, o.loc, qid, key), o.loc)
-            for o in getattr(inf, 'obs', []):
-                if o.removed:
+                    if not o.removed:
+                        # every earlier statement of the row with a row, at the cuts where this one stands, until
+                        # the next statement of it is known (P50, N1; tally 2.2.1 P53)
+                        earlier = [x for x in os_[:i] if not x.removed]
+                        end = os_[i + 1].known if i + 1 < len(os_) else None
+                        if earlier:
+                            self.check_correction_covers(o, earlier, end)
+            self.check_covers_standing(inf, by)
+
+    def check_covers_standing(self, inf, by):
+        """L §5.19, E §3.1 step 9 (tally 2.2.1 S-232): a covered place's observations lie inside the span their version
+        covers, checked on the rows that stand, per world and cut class (LOAD-COVERS). In a world, a key's row stands
+        from its known until a row above it in (layer, known) is known; the span is the one in force at each cut of
+        that stretch (its moves' known dates)."""
+        m = self.m
+        over = getattr(m, 'scenario_over', {}) or {}
+        worlds = [frozenset()]
+        for sid in sorted(over):
+            ch, w = set(), sid
+            while w is not None:
+                ch.add(w)
+                w = over.get(w)
+            worlds.append(frozenset(ch))
+        bad = {}
+        old = set_world(frozenset())
+        try:
+            for ws in worlds:
+                set_world(ws)
+                for os_ in by.values():
+                    seen = [o for o in os_ if in_world(o.version)]
+                    for i, o in enumerate(seen):
+                        if o.removed or id(o) in bad:
+                            continue
+                        end = min((p.known for p in seen[i + 1:]), default=None)
+                        if end is not None and end <= o.known:
+                            continue
+                        v = o.version
+                        cuts = [o.known] + sorted(set(mv.known for mv, _ in v.moved_by if in_world(mv) and
+                                                      mv.known > o.known and (end is None or mv.known < end)))
+                        for th, sp in getattr(v, 'covers', []):
+                            if not any(th.name in (ln[1].name, ln[2].name) for ln in o.legs):
+                                continue
+                            for c in (cuts[:1] if sp is not None else cuts):
+                                span = sp if sp is not None else v.span_at(c)
+                                if span is None or not span.contains(o.day):
+                                    bad.setdefault(id(o), th.name)
+                                    break
+        finally:
+            set_world(old)
+        for o in getattr(inf, 'obs', []):
+            if id(o) in bad:
+                raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
+                                % (o.sid, bad[id(o)], o.version.id), o.loc)
+
+    def check_correction_covers(self, o, earlier, end=None):
+        """L §5.19 (tally 2.2.1 S-223): a correction in a version that doesn't cover, on the row's day, a place of its
+        legs that the replaced row's version covers is refused (LOAD-COVERS); a dropped row (`= none`) books nothing
+        and needs no covers (the caller's test)."""
+        m = self.m
+
+        def covers(v, name, d, K):
+            for th, sp in getattr(v, 'covers', []):
+                span = sp if sp is not None else v.span_at(K)
+                if th.name == name and span is not None and isinstance(d, datetime.date) and span.contains(d):
+                    return True
+            return False
+        places = set()
+        for ln in o.legs:
+            places |= set(p.name for p in (ln[1], ln[2]) if hasattr(p, 'name'))
+        # per cut class (E §3.1 step 9; tally 2.2.1 P50, B2): every cut at which the correction stands, from its known
+        # date to the model's on, each class starting at a version's known date
+        ks = sorted(set([o.known] + [v.known for v in m.versions.values()
+                                     if v.known is not None and o.known <= v.known <= m.on and
+                                     (end is None or v.known < end)]))
+        # and per world (E §3.1 step 9; P50, N7a): the base and each scenario's chain, its moves lines seen there
+        over = getattr(m, 'scenario_over', {}) or {}
+        worlds = [frozenset()]
+        for sid in sorted(over):
+            ch, w = set(), sid
+            while w is not None:
+                ch.add(w)
+                w = over.get(w)
+            worlds.append(frozenset(ch))
+        old = set_world(frozenset())
+        try:
+            for ws in worlds:
+                set_world(ws)
+                if not in_world(o.version):
                     continue
-                v = o.version
-                for th, sp in getattr(v, 'covers', []):
-                    span = sp if sp is not None else v.span_at(m.on)
-                    for ln in o.legs:
-                        if th.name in (ln[1].name, ln[2].name):
-                            if span is None or not span.contains(o.day):
-                                raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
-                                                % (o.sid, th.name, v.id), o.loc)
+                for K in ks:
+                    for name in sorted(places):
+                        if any(in_world(e.version) and covers(e.version, name, o.day, K) for e in earlier) and \
+                                not covers(o.version, name, o.day, K):
+                            raise LoadError('LOAD-COVERS', 'replace %s of %s: %s doesn\'t cover %s on %s' % (
+                                o.sid, name, o.version.id, name, o.day), o.loc)
+        finally:
+            set_world(old)
 
     def check_overlap(self, inf, rows):
         m = self.m
@@ -2970,6 +3062,14 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
         if tk == 'key':
             return key_value(m, node, ty, loc)
         raise LoadError('LOAD-UNIT', 'a value of the wrong type: a month-day for %s' % T.show(ty), loc)
+    if k == 'call' and node.name == 'window' and len(node.args) == 2 and all(a.k == 'date' for a in node.args):
+        # an observed row's field is written as a call: a window belongs in an attribute (L §5.19; #221, 221.R2)
+        return convert_value(m, Node('window', a=node.args[0].v, b=node.args[1].v, loc=node.loc), ty, loc, factor,
+                             target)
+    if k == 'call' and node.name == 'one_of' and len(node.args) == 1 and node.args[0].k == 'list' and \
+            node.args[0].items and all(a.k == 'date' for a in node.args[0].items):
+        return convert_value(m, Node('oneof', days=[a.v for a in node.args[0].items], loc=node.loc), ty, loc, factor,
+                             target)
     if k in ('window', 'oneof'):
         if tk != 'date':
             raise LoadError('LOAD-UNIT', 'a window is a date; %s is %s' % (target, T.show(ty)), loc)

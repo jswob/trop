@@ -194,3 +194,27 @@ Refcore answers 9 of `m2/spec.tsv`'s 17 rows now (`spec.py --refcore`). Five mov
 - **What I ask:** (1) **(Recommended)** refcore's `run` is wrong, fixed at the round after M3; the engine follows L §6.4 (each such ask refused alone, in `run` and in `check`); C4 re-stores the two held fixtures with the spec's lines if refcore's `check` prints them, else holds them. (2) A spec question for the round: does a joint model print its members' load warnings (prefixed `a.`)? Until it is ruled, `check` prints what `run` prints.
 - **State:** C1's commit; nothing else waits on it.
 - **Ruled (the coordinator, 2026-11-18, M3 C2):** (1) **#229**: refcore's `run` makes some load checks only while answering; the engine follows the spec, and refcore's `check` prints the spec's line (the spec step's test `O2_3_check_scenario_ask_alone`). The two fixtures were held for #229 (`held.tsv`) until C4 stored refcore's `check` (2026-11-19). Its lines are the spec's, so the holds are lifted. (2) **Settled by L §8.5**: each member warns alone, and the joint model prints only its own warnings, as refcore's `run` and `check` print it. Refcore's bytes are stored, and there is no spec question.
+
+## STOP-REPORT 2026-11-20 (tally 2.2.1, T's C1, #241): the engine prints a residual ledger's bound span as written, `residuals konto m`
+
+- **Kind:** the engine against the spec, outside a ruled family. Found running T's text for 208.R2 (a per-tuple `law` on `flows`, `explain`, `residuals`; the plan's §3 row, refcore alone).
+- **Where:** L §5.18 (an ask's `for`: one line per binding tuple, the line's forms evaluated per tuple); the stored form under a binding substitutes the key: `m2` `r13/residuals_for` prints `r_for (k = a): residuals jar[a] 2026-03`.
+- **What happens:** `ask r_resid: residuals konto m for m in [2026-03] law dk[m]` (T's draft `tmp/spec-2.2.1-t/drafts/pt208_r2.tally`, a 37-line model). The engine prints `r_resid (m = 2026-03): residuals konto m`, the span as written, and its `flows` and `explain` lines answer. Refcore stops on all three, `REFCORE-NOT-YET … (KeyError: 'm')`, which is 208.R2 (W5).
+- **What I did:** no vector: refcore's bytes for the row come at W5's pin. The text waits in T's drafts.
+- **What I ask:** **(Recommended)** the span takes the tuple's value (`residuals konto 2026-03`), as a bound key does in `r13/residuals_for`. Once W5's refcore prints it, the vector `t221-rc/208-R2-for-law` is red on the engine for this line, and the builder's G3 (the names) turns it green.
+- **State:** C1; nothing waits on it before W5's pin.
+
+## STOP-REPORT 2026-11-20 (tally 2.2.1, T's C2, #241): refcore at W4's pin passes 8 GB on the five R7 goldens of `m2/vectors.tsv`
+
+- **Kind:** refcore's cost, a refcore-alone change (S-212) on texts with no window. Found by C2's re-run of every store (P23) on refcore at bcc49686.
+- **Where:** `engine/tools/refcore/moves.py`, `m_eval_inst`: the lines 2d2c5fe6 adds for S-212 (`tctx = tctx.but(rnd=pr[:5] + (day_lo(day),))`, "a projection reads the instance's random amounts by its day", L §5.16, §5.14.1; #212). They give each projected instance its own context.
+- **What happens:** `goldens/r7_g3`, `r7_pins_2027`, `r7_joint_2027`, `r7_oki_2030` and `r7_joint_oki_2030` (the bank ledger to 2028 and 2031, `m2/bank/r7/`) pass the 8 GB cap. `memcap.py` stops each at 8.2 to 8.8 GB, and `m2/vectors.py` stops: "goldens/r7_g3: over the budget or killed on refcore; a vector must be answered". Run alone, `r7_g3` gives:
+  - M3's refcore (92662381): 13.0 s, peak RSS 1.08 GB, the stored bytes.
+  - W4's first commit (edbd729b): 13.5 s, 0.90 GB, the stored bytes.
+  - The pin (bcc49686): stopped at 8.2 GB after 64 s, no output.
+  - The pin with those four lines taken out: 13.5 s, 1.07 GB, the stored bytes.
+
+  The ledger holds no window and no random amount (`grep window(` finds none in `m2/bank/`).
+- **What I did:** the five records stay as stored. `m2/vectors.refcore` was written with them kept and every other record refcore's (`tmp/spec-2.2.1-t/m2_keep.py`): three records moved, all the window group's. `m2/vectors.py --check` stays red at this pin on these five alone. The `later/` text for S-212 (`M7/t221_random_proj`, the r1b probe) holds refcore's bytes at this pin.
+- **What I ask:** **(Recommended)** the writer keeps S-212's per-day read, but splits the context only where the instance reads a random amount. A projection whose instances read none then evaluates as at edbd729b. After the mend, `m2/vectors.py --check` must print the five as stored, and `later/M7/t221_random_proj` must stay as it is.
+- **State:** C2. The rest of the proof doesn't wait on it. The second pin's whole proof (C3) re-runs these five.

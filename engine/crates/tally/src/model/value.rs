@@ -152,6 +152,10 @@ pub struct Window {
     /// own, an operation's operands' (L §4.4: "it carries the names it was computed from"),
     /// which a hole made of it carries too. No part of the value.
     pub carry: Vec<crate::hole::Unknown>,
+    /// Every value it can hold is a whole number, though its ends' class may not say so: an
+    /// interval kept whole by `+`, `-` and `*` of whole numbers (refcore's `Iv.whole`), whose
+    /// values an operation can take in turn (L §4.4 l.668; P30).
+    pub whole: bool,
 }
 
 impl PartialEq for Window {
@@ -172,22 +176,24 @@ impl Eq for Window {}
 impl Value {
     /// The unknown days the holes the value prints carry, added to `into` in order, each
     /// once: a hole's, and those of the holes a record or a list holds. A window that is no
-    /// window of days prints as the hole `not precise enough for a print` only as the value
-    /// itself, a line's value, so only there it gives its days; inside a record or a list it
-    /// prints as the window, as a window of days does anywhere, and gives none (refcore's
-    /// `hole_days`; tally 2.2, pick P25). L §4.4, §8.2 `unknown day:`.
+    /// window of days prints as the hole `not precise enough for a print` as the value itself,
+    /// a line's value, and as an entry of a list, so there it gives its days; inside a record
+    /// it prints as the window, as a window of days does anywhere, and gives none (refcore's
+    /// `hole_days`; tally 2.2, pick P25; tally 2.2.1, 221.C2). L §4.4, §8.2 `unknown day:`.
     pub fn hole_days_into(&self, into: &mut Vec<crate::hole::Unknown>) {
-        if let Value::Window(w) = self
-            && !w.of_days()
-        {
-            return crate::hole::carry_union(into, &w.carry);
-        }
-        let mut todo: Vec<&Value> = vec![self];
-        while let Some(v) = todo.pop() {
+        // each value with whether it prints where one value is needed: the line's own, a
+        // list's entry
+        let mut todo: Vec<(&Value, bool)> = vec![(self, true)];
+        while let Some((v, one_needed)) = todo.pop() {
             match v {
                 Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
-                Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
-                Value::List(items) => todo.extend(items.iter().rev()),
+                Value::Window(w) if one_needed && !w.of_days() => {
+                    crate::hole::carry_union(into, &w.carry);
+                }
+                Value::Record(fields) => {
+                    todo.extend(fields.iter().rev().map(|(_, x)| (x, false)));
+                }
+                Value::List(items) => todo.extend(items.iter().rev().map(|x| (x, true))),
                 Value::Window(_)
                 | Value::Number(_)
                 | Value::Money(_)

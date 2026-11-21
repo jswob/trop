@@ -10,7 +10,7 @@ import datetime
 from fractions import Fraction
 
 from .errors import TallyError, Refusal, Unspecified, at_run
-from .values import Num, Hole, Thing, Text, Key, Iv, fmt, fmt_hole
+from .values import Num, Hole, Thing, Text, Key, Iv, NONE, fmt, fmt_hole
 from .dates import month_period
 from .moves import Inst, qty, day_lo, merge, key_text, instant_text, order_key, same_groups, same_pairs
 from .walk import K_start, K_end, kday
@@ -147,10 +147,17 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # the instances an observation (as known on `on`) fulfils: compared all the same on a day no statement covers,
     # their matched line on the instance's day (E §6.3)
     ful_ids = set()
+    # the last day of the observations that fulfil each instance, in any span: a window-dated instance's day once
+    # an observation fixes it (L §4.4 l.665, in every ledger; tally 2.2.1 P37, N7)
+    ful_last = {}
     for o in self.observations(octx):
         f = o.fulfils
-        if isinstance(f, tuple) and f[0] == 'inst' and self_touch(o.legs, place) and in_span(o.day):
-            ful_ids.add('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
+        if isinstance(f, tuple) and f[0] == 'inst' and self_touch(o.legs, place):
+            tid = '%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1]
+            if isinstance(o.day, datetime.date):
+                ful_last[tid] = max(ful_last.get(tid, o.day), o.day)
+            if in_span(o.day):
+                ful_ids.add(tid)
     def may_touch(i):
         # tally 2.1.7 R1, R2 (SR-1): a refused instance refuses the ledger exactly where a hole one would be a line of
         # it: a place its legs give, or any place where its legs' places couldn't be read (L §8.4)
@@ -166,8 +173,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place))
             d = i.day
             # a refused instance whose day is refused may fall on any day, as a hole day's (tally 2.1.8 R11, #191 Q1)
+            # a window an observation fulfils, across two months too, takes its last fulfilling observation's day, in
+            # every ledger, once (tally 2.2.1 P43 S6, P45 (f)); only one nothing fulfils is a group of its own
             if isinstance(d, Hole) or (st == 'refused' and day_lo(d) is None) or \
-                    (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and
+                    (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and i.id not in ful_last and
                      (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
                 # E §6.3 Grouping (round 12): "An instance that nothing fulfils whose day is a hole, or a window not
                 # inside one month, prints an expected-but-missing line in a group of its own named ?, first among
@@ -182,6 +191,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 undated.append(i)
                 continue
             dd = day_lo(d)
+            if isinstance(d, Iv) and i.id in ful_last:
+                # the month of the observation holds the line; the window's holds nothing of it (P37, N7)
+                dd = ful_last[i.id]
             if not in_span(dd) or (not covered(dd) and i.id not in ful_ids):
                 continue
             if not touches(i):
@@ -240,7 +252,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                             if g in kept_groups:
                                 skip = True
                             else:
-                                hole_at[o.id] = cs[si]
+                                # a row with two legs at x: the hole carries both legs' questions (L §8.1;
+                                # tally 2.2.1 P36, N6), not the last leg's
+                                hole_at[o.id] = cs[si] if o.id not in hole_at else merge(hole_at[o.id], cs[si])
             if not skip and o.id in hole_at:
                 kept_groups.add(tuple(pairs[o.id][0]))
             if not skip:
@@ -317,6 +331,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 # R13, L §4.4)
                 lines[-1].carry_day = i.day
             continue
+        if isinstance(i.day, Iv):
+            # an observation that fulfils the movement fixes its day (L §4.4, §5.19): a window's is the last one's,
+            # as for a window not inside one month (E §6.3 Grouping; tally 2.2.1, #221)
+            dd = max(o.day for o in os)
         ob = None
         for o in os:
             ob = _add(ob, obs_flow(o))
@@ -422,6 +440,9 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             continue
         key = (d.toordinal(), 0 if pos == 'start' else 4, 1, place + ' ' + ('%s %s' % (d, pos)), -1)
         val = r.val
+        if val is NONE:
+            # a reading `replace … = none` removes: no reading, so no line (L §5.19; 236.2)
+            continue
         if isinstance(val, tuple) and val[0] == 'hole':
             stated = Hole([(val[1], 'stated[%s]' % place)])
         else:

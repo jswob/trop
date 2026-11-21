@@ -35,7 +35,7 @@ use crate::eval::{
     Collected, Ctx, Engine, Entry, Env, How, Item, Member, Memo, after_on, names_in, num_stop,
     one_day, past_days, world_named,
 };
-use crate::model::{Reality, Value};
+use crate::model::{Reality, Value, Window};
 use crate::syntax::{
     Ask, AskBody, Bind, Diff, Domain, Expr, Key, Lit, OfQ, Pin, PinForm, Step, Stop,
 };
@@ -123,6 +123,13 @@ pub(crate) enum Turn {
     Cross([(usize, usize, String); 2]),
     /// A line, printed as it is.
     Line(String),
+    /// A refused scenario's line of the run, printed once, before every result (OPERATIONS
+    /// §2.1; R20 clause 1).
+    Scenario(String),
+    /// The lines a member's ask brings to the run's own level, named by the joint model's
+    /// names: its refused scenarios' lines, printed with the run's before every result, and
+    /// its walk's warnings, printed with the run's, each once (L §6.1; R20 clause 3).
+    Lifted(Vec<String>, Vec<(Warn, String)>),
     /// A member's ask the run names, `a.q` or `a.b.q`, before `members::resolve` turns it
     /// into the turns that answer it (L §6.1).
     Member(String),
@@ -208,7 +215,11 @@ pub(super) fn req_clocks(realities: &[&Reality], turns: &[Turn]) -> Result<(), S
             Turn::Stopped(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
                 return Err(Stop::Refused(refusal.clone()));
             }
-            Turn::Line(_) | Turn::Member(_) | Turn::Stopped(_) => {}
+            Turn::Line(_)
+            | Turn::Scenario(_)
+            | Turn::Lifted(..)
+            | Turn::Member(_)
+            | Turn::Stopped(_) => {}
         }
     }
     Ok(())
@@ -259,12 +270,21 @@ pub(super) fn answer_turns_apart(
     how: How,
 ) -> Result<(Answered, Vec<(Warn, String)>), Stop> {
     let mut out = Vec::new();
+    // the run's own level: its refused scenarios' lines, then those its members' asks bring,
+    // each once, before every result; the members' walk warnings, each once (R20)
+    let mut level: Vec<String> = Vec::new();
+    let mut lifted: Vec<(Warn, String)> = Vec::new();
     // each world's asks share what their engines gather, apart from another world's
     // (refcore's one `Asker` per world); each member's, by its aliases, likewise
     let mut worlds: Vec<World> = realities.iter().map(|m| World::of(m, how)).collect();
     let mut member_worlds: BTreeMap<&[String], World> = BTreeMap::new();
     for turn in turns {
         match turn {
+            Turn::Scenario(line) => level.push(line.clone()),
+            Turn::Lifted(lines, brought) => {
+                line_once(&mut level, lines);
+                warn_once(&mut lifted, brought);
+            }
             Turn::OfMember(aliases, at) => {
                 let base = realities.first().ok_or_else(no_turn)?;
                 let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
@@ -309,16 +329,21 @@ pub(super) fn answer_turns_apart(
             }
         }
     }
-    // the realities' warnings, then each world's walks' own, the base's first, each once; a
-    // member's walks warn only where the member runs alone (refcore's `Asker.member_ask`)
+    // the realities' warnings, then each world's walks' own, the base's first, then the walk
+    // warnings each member's asks met, by the joint model's names, each once (refcore's
+    // `run_worlds`, `Asker.lifted_warnings`; L §6.1, R20 clause 3)
     let mut warned = warnings;
     for world in &worlds {
-        for w in &world.seen.warnings {
-            if !warned.contains(w) {
-                warned.push(w.clone());
-            }
-        }
+        warn_once(&mut warned, &world.seen.warnings);
     }
+    for (aliases, world) in &member_worlds {
+        warn_once(
+            &mut lifted,
+            &members::lifted(aliases, &world.seen.warnings)?,
+        );
+    }
+    warn_once(&mut warned, &lifted);
+    level.extend(out);
     #[cfg(feature = "counters")]
     let mut counts = crate::Counters::default();
     #[cfg(feature = "counters")]
@@ -326,11 +351,30 @@ pub(super) fn answer_turns_apart(
         counts.merge(&world.seen.counts);
     }
     let answered = Answered {
-        lines: out,
+        lines: level,
         #[cfg(feature = "counters")]
         counts,
     };
     Ok((answered, warned))
+}
+
+/// Each of `more` added to `into` where it isn't yet: a member's line at the run's own level
+/// prints once (L §6.1; R20 clause 3).
+fn line_once(into: &mut Vec<String>, more: &[String]) {
+    for line in more {
+        if !into.contains(line) {
+            into.push(line.clone());
+        }
+    }
+}
+
+/// Each of `more` added to `into` where it isn't yet: a warning prints once. L §8.5.
+fn warn_once(into: &mut Vec<(Warn, String)>, more: &[(Warn, String)]) {
+    for w in more {
+        if !into.contains(w) {
+            into.push(w.clone());
+        }
+    }
 }
 
 /// The lines of a diff whose two worlds sit on two stacks of scenarios: each side answered by
@@ -635,14 +679,24 @@ fn ask_lines(
 /// The cuts the request's asks state as literals, `as known D` or `with known D` (`what`), on or
 /// before the model's `on`: past it, the request is refused after load, as `REQ-ASK` is, the
 /// run's one result, `REQ-CLOCK <what> <D> is after the model's on <on>` (E §11; R5, #112;
-/// refcore's `req_clock`). A computed cut is refused at its value (`after_on`).
+/// refcore's `req_clock`). A computed cut is refused at its value (`after_on`). Only an ask
+/// load left standing is judged: one load refused alone prints its own line (E §11 "in an ask
+/// load left standing"; OPERATIONS §2.1; G4's review B1).
 fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
+    if m.asks_alone.contains_key(&ask.id) {
+        return Ok(());
+    }
     let as_known = ask.known.iter().map(|e| ("as known", e));
     let with_known = ask.pins.iter().filter_map(|pin| match &pin.form {
         PinForm::Known(e) => Some(("with known", e)),
         PinForm::Law(_) | PinForm::Wording(..) | PinForm::Scenario(_) | PinForm::Set { .. } => None,
     });
-    for (what, e) in as_known.chain(with_known) {
+    for (what, written) in as_known.chain(with_known) {
+        // a literal in `( )` is that literal (E §11 `REQ-CLOCK`, S-233.8)
+        let mut e = written;
+        while let Expr::Paren(inner) = e {
+            e = inner;
+        }
         if let Expr::Lit(Lit::Day(cut)) = e
             && *cut > m.on
         {
@@ -857,22 +911,6 @@ pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected
     kept
 }
 
-/// The ask's pins of a cell, `pinned`, that a line whose every value is refused takes: a
-/// refusal carries no read set of its own, so what it rests on took each pin, but one its
-/// read set `line` records as met under an inner or narrower claim of its cell (`pin met`: an
-/// `as if`'s pin, a `solve`'s variable; the innermost claim wins, L §4.6) (refcore's
-/// `print_line`, its `refused`; tally 2.1.8 §4, #161). L §8.2 One read set.
-fn refused_pins(pinned: &Collected, line: &Collected) -> Collected {
-    let mut kept = Collected::default();
-    for e in &pinned.entries {
-        let cell = pinned.entries.contains(&pin_entry("pin cell", &e.text));
-        if e.word == "pinned" && cell && !line.entries.contains(&pin_entry("pin met", &e.text)) {
-            kept.entries.insert(e.clone());
-        }
-    }
-    kept
-}
-
 /// The register entry `word` of pin `text`, as a read set notes it (L §8.2).
 fn pin_entry(word: &'static str, text: &str) -> Entry {
     Entry {
@@ -896,14 +934,11 @@ pub(super) fn form_line(
 ) -> Result<Printed, Stop> {
     match &ask.body {
         AskBody::Exprs(exprs) => {
-            let (items, mut met) = engine.line(m, exprs, env, ctx)?;
+            // a refused line lists what it read like a value: a pin nothing read isn't listed
+            // (L §8.2 l.2248, One read set; 208.2 on #241)
+            let (items, met) = engine.line(m, exprs, env, ctx)?;
             if let Some(place) = m.asks_unresolved.get(&ask.id) {
                 unresolved_word(&items, place)?;
-            }
-            if !items.is_empty() && items.iter().all(|i| matches!(i, Item::Refused(_))) {
-                // a refused line rests on what refused it, which took the ask's pins
-                let taken = refused_pins(pinned, &met);
-                met.merge(&taken);
             }
             let unknown = hole_days(&items.iter().collect::<Vec<_>>());
             Ok(Printed {
@@ -999,13 +1034,79 @@ pub(super) fn item_text(m: &Reality, item: &Item) -> Result<String, Stop> {
         Item::Value(Value::Day(d)) if d.is_end() => Err(past_days(1)),
         Item::Value(Value::Window(w)) if !w.of_days() => {
             // a window prints as a date; any other interval needs its one value (L §4.4)
-            let window = w.question_text(m).map_err(num_stop)?;
-            let text = format!("date within {window} not precise enough for a print");
-            Ok(crate::hole::Hole::asked(&text, w.figure())
-                .carrying(&w.carry)
-                .text())
+            print_hole(m, w)
         }
+        Item::Value(Value::List(items)) if computed_entry(items) => entries_text(m, items),
         Item::Value(v) => v.typed_text(m).map_err(num_stop),
+    }
+}
+
+/// The hole an interval that is no window of days prints as, where a print needs its one
+/// value: `?"date within <w> not precise enough for a print" (<its read>)`, one question per
+/// unknown day where it rests on two or more (refcore's `fmt_value` of an `Iv`,
+/// `imprecise_hole`). L §4.4 l.669, §8.1 (R21 on #241).
+pub(super) fn print_hole(m: &Reality, w: &Window) -> Result<String, Stop> {
+    let window = w.question_text(m).map_err(num_stop)?;
+    let hole = crate::hole::imprecise((&window, "a print"), w.figure(), (&w.carry, None));
+    Ok(hole.text())
+}
+
+/// Whether a list holds an entry computed from a window that is no window of days, in a list
+/// it holds too (refcore's `computed_iv`). L §4.4.
+pub(super) fn computed_entry(items: &[Value]) -> bool {
+    let mut todo: Vec<&Value> = items.iter().collect();
+    while let Some(v) = todo.pop() {
+        if let Value::Window(w) = v
+            && !w.of_days()
+        {
+            return true;
+        }
+        if let Value::List(more) = v {
+            todo.extend(more);
+        }
+    }
+    false
+}
+
+/// A list that holds an entry computed from a window, as a line prints it: an entry is where
+/// one value is needed, so such an entry prints as its hole, a list of them likewise, every
+/// other entry as it prints in a list (refcore's `fmt_value` of a `Lst`; #221, 221.C2).
+/// L §4.4 l.669 ("wherever one value is needed (a print but a date's …)").
+///
+/// # Errors
+///
+/// A number error printing an entry.
+pub(super) fn entries_text(m: &Reality, items: &[Value]) -> Result<String, Stop> {
+    // the lists open, outermost first: each with its entries not yet printed and the texts
+    // of those printed, so a list inside a list is a worklist step, never a recursion (R-16)
+    let mut open: Vec<(core::slice::Iter<'_, Value>, Vec<String>)> =
+        vec![(items.iter(), Vec::new())];
+    loop {
+        let Some((rest, _)) = open.last_mut() else {
+            return Err(invariant("a list printed with no list open"));
+        };
+        let text = match rest.next() {
+            Some(Value::List(more)) if computed_entry(more) => {
+                open.push((more.iter(), Vec::new()));
+                continue;
+            }
+            Some(Value::Window(w)) if !w.of_days() => print_hole(m, w)?,
+            Some(other) => other.text(m).map_err(num_stop)?,
+            None => {
+                let Some((_, done)) = open.pop() else {
+                    return Err(invariant("a list printed with no list open"));
+                };
+                let list = format!("[{}]", done.join(", "));
+                if open.is_empty() {
+                    return Ok(list);
+                }
+                list
+            }
+        };
+        let Some((_, done)) = open.last_mut() else {
+            return Err(invariant("a list printed with no list open"));
+        };
+        done.push(text);
     }
 }
 

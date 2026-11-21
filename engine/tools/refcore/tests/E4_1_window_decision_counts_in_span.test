@@ -1,0 +1,89 @@
+# tally 2.2.1 P32 (E §4.1 step 2: a day that is a window "counts in flows(x, span) when the window lies inside the
+# span"), the first engine review's N3: a decision dated by a window is read once per day of its window: cn45 1, fl
+# 100.00 PLN, as every pin; where the window crosses the span's end the days differ, so the hole (cn, cn4, fl5, sm).
+# tally 2.2 counted it as nothing, 0 and 0.00 PLN.
+=== d2.tally
+model d2b
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = window(2026-04-29, 2026-05-02) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+ask cn: count(m in transfers over 2026-05)
+ask cn4: count(m in transfers over 2026-04)
+ask cn45: count(m in transfers over 2026-04 .. 2026-05)
+ask fl: flows(dx, 2026-04 .. 2026-05)
+ask fl5: flows(dx, 2026-05)
+ask sm: sum(m.cash.amount for m in transfers over 2026-05)
+ask b: bal(konto, 2026-04-30), bal(konto, 2026-05-02), bal(konto, 2026-05-03)
+ask fl_p0429: flows(dx, 2026-04 .. 2026-05) with w = 2026-04-29
+ask fl_p0502: flows(dx, 2026-04 .. 2026-05) with w = 2026-05-02
+ask cn45_p0429: count(m in transfers over 2026-04 .. 2026-05) with w = 2026-04-29
+ask cn45_p0502: count(m in transfers over 2026-04 .. 2026-05) with w = 2026-05-02
+ask fl5_p0430: flows(dx, 2026-05) with w = 2026-04-30
+ask fl5_p0501: flows(dx, 2026-05) with w = 2026-05-01
+=== expect
+b: (?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dx" (dx), ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dx" (dx), ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dx" (dx))
+  unknown day: w
+  cut 2026-06-10
+cn: ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+  unknown day: w
+  unfulfilled: dx
+  cut 2026-06-10
+cn4: ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+  unknown day: w
+  unfulfilled: dx
+  cut 2026-06-10
+cn45: 1
+  unfulfilled: dx
+  cut 2026-06-10
+cn45_p0429: 1
+  pinned: w = 2026-04-29
+  unfulfilled: dx
+  cut 2026-06-10
+cn45_p0502: 1
+  pinned: w = 2026-05-02
+  unfulfilled: dx
+  cut 2026-06-10
+fl: 100.00 PLN
+  unfulfilled: dx
+  cut 2026-06-10
+fl5: ?"date within window(2026-04-29, 2026-05-02) not precise enough for flows of dx" (w)
+  unknown day: w
+  unfulfilled: dx
+  cut 2026-06-10
+fl5_p0430: 0.00 PLN
+  pinned: w = 2026-04-30
+  cut 2026-06-10
+fl5_p0501: 100.00 PLN
+  pinned: w = 2026-05-01
+  unfulfilled: dx
+  cut 2026-06-10
+fl_p0429: 100.00 PLN
+  pinned: w = 2026-04-29
+  unfulfilled: dx
+  cut 2026-06-10
+fl_p0502: 100.00 PLN
+  pinned: w = 2026-05-02
+  unfulfilled: dx
+  cut 2026-06-10
+sm: ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+  unknown day: w
+  unfulfilled: dx
+  cut 2026-06-10

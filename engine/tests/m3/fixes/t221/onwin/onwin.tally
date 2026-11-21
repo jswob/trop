@@ -1,0 +1,42 @@
+model c_onwin
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d0: date
+
+input d1: date
+
+input amt: money PLN
+
+def wr: date = window(d0, d1)
+
+move salary: transfers
+  on window(d0, d1)
+  leg cash from world to konto amount amt
+
+move bonus: transfers
+  on wr
+  leg cash from world to konto amount amt
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  d0 = 2026-03-27 "c"
+  d1 = 2026-03-31 "c"
+  amt = 100.00 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+
+ask o1: flows(salary, 2026-03-01 .. 2026-03-28)
+ask o2: flows(bonus, 2026-03-01 .. 2026-03-28)
+ask o3: bal(konto, 2026-03-29)

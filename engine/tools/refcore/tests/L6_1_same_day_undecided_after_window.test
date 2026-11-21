@@ -1,0 +1,52 @@
+# tally 2.2.1 P45 (d) (P43: a decided disagreement stays the hole, also after both days): where the days of
+# movements stated same are undecided, a balance after the window's end is the window's hole, since a pin
+# on days that disagree gives HOLE-SAME (review g1/sm b against b_p05). Before W11: 100.00 PLN on 2026-03-31.
+=== sm.tally
+model sm
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input w: date
+input d1: date
+input a1: money PLN
+move in1: transfers
+  on w
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d1
+  leg cash from world to wallet amount a1
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  w = window(2026-03-05, 2026-03-07) "s"
+  d1 = 2026-03-06 "s"
+  a1 = 100.00 PLN "s"
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  same in1 = in2
+ask b: bal(wallet, 2026-03-04), bal(wallet, 2026-03-05), bal(wallet, 2026-03-06), bal(wallet, 2026-03-31)
+ask b_p05: bal(wallet, 2026-03-04), bal(wallet, 2026-03-05), bal(wallet, 2026-03-06), bal(wallet, 2026-03-31) with w = 2026-03-05
+ask b_p06: bal(wallet, 2026-03-04), bal(wallet, 2026-03-05), bal(wallet, 2026-03-06), bal(wallet, 2026-03-31) with w = 2026-03-06
+ask b_p07: bal(wallet, 2026-03-04), bal(wallet, 2026-03-05), bal(wallet, 2026-03-06), bal(wallet, 2026-03-31) with w = 2026-03-07
+ask cn: count(m in transfers over 2026-03), sum(m.cash.amount for m in transfers over 2026-03)
+ask dy: in1.day, in2.day
+=== expect b b_p05 b_p06
+b: (0.00 PLN, ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in1), ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in1), ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (in1))
+  unknown day: w
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+b_p05: (0.00 PLN, ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-06: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2), ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-06: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2), ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-06: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2))
+  pinned: w = 2026-03-05
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+b_p06: (0.00 PLN, 0.00 PLN, 100.00 PLN, 100.00 PLN)
+  pinned: w = 2026-03-06
+  unfulfilled: in2
+  cut 2026-06-10

@@ -101,3 +101,15 @@ tally 2.2 is a new version of the language (`CHANGES.md`, 2.1.8 → 2.2): the us
 | a line that states `windows each`, on an ask line or a projection read, `ask q: bal(konto, 2026-03-31) law 2026-03-31 windows each` | the plain line, whose answer is the hole `HOLE-IMPRECISE` where the day matters, its register naming each unknown day (`unknown day: w`); to take the window as one day, pin the cell that holds the unknown day itself, never a value computed from it, one ask per day: `ask q_d07: bal(konto, 2026-03-31) with w = 2026-03-07 law 2026-03-31`. A window in a calendar's `added` list is one scenario per choice (`replace holidays = calendar(…, added [2027-04-12])`). A window the caller is to pin is the value of a row or a def, so that it has a cell; a window written in place (`on window(a, b)`) becomes an input's row | manual | household A (A-05, A-13), B (B-07, B-12); T's vectors | D-7, SF-6, SF-23 |
 
 Every 2.1.8 text that uses none of these prints byte for byte as on 2.1.8, but for the lines the round names: the register's `unknown day:` line under a hole that carries an unknown day (2.2-11), the `clauses:` line of a projection's `explain` (2.2-4), `LOAD-INSTANT`'s words (2.2-3), and the lines of a def keyed by a movement, which now split by an axis or take a pin (2.2-10).
+
+## 2.2 → 2.2.1
+
+tally 2.2.1 is a patch of `tally 2.2` (`CHANGES.md`, 2.2 → 2.2.1): a text that loaded under 2.2 loads and means the same, except where a row below refuses it. Each refusal names the line to change.
+
+| 2.2 text | 2.2.1 form | Class | Reaches | Record |
+|---|---|---|---|---|
+| a `replace` of an observed row in a version that doesn't cover, on the row's day, a place its legs touch that the version of an earlier statement of the row covers there, in a world and at a cut where the correction stands | the correction in a version that `covers` that place there (or a `= none` and a new row) | manual | statements corrected out of their version | S-223, `LOAD-COVERS` |
+| a move written `before` or `after` itself | the line dropped | manual | none known | S-221.9, `LOAD-ORDER` |
+| a pin of `opening` or `stated`, `with stated[x] = …` | a reading in a scenario's version | manual | none known | S-231.Q2, `LOAD-INSTANT` |
+| files that agree on `tally <N>` other than 2 | `tally 2`, or the engine of that version | manual | none known | S-224a, `LOAD-VERSION` |
+| a command line with an option the command doesn't take (`--pin=zzz`, `--ask` on `check`) | the option dropped: exit 2, a usage error | manual | scripts | S-usage, `OPERATIONS.md` §2 |

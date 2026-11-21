@@ -68,3 +68,161 @@ b192/same-two-legs	m3/fixes/b192	run same_two_legs.tally --ask e f k3_konto	-	#1
 b192/same-two-legs-residual	m3/fixes/b192	run same_two_legs.tally --ask r	-	#192 row 52 (G5 fix NB-4), L §5.19, §6.1: the same rows' residual line; the unexplained group's observed hole is the fee leg's on refcore, the cash leg's on the engine (held, #192)
 b192/trace-answers	m3/fixes/b192	run trace_answers.tally	-	#192 row 51 (G5 fix NB-3), E §10, E §5 step 1: explain over hole bookings a later version answers, the second answer refused RUN-DIV, and an explain before it
 b192/chain-pads	m3/fixes/b192	run chain_pads.tally	-	#192 row 40 (G4 fix NB-3), L §5.14.1, E §6.1: two decisions reading pads up to their own day, the second's walk continuing the first's, pads in March and April
+t221-gd/208-3-diff-alike	m3/fixes/t221/misc2	run m2.tally sc.tally --ask d_ref d_hole d_all	-	tally 2.2.1 (#241) 208.3, S-208.3: a diff line refused, or a hole, alike in both worlds is unchanged
+t221-gd/208-4-count	m3/fixes/t221/b2pin	run b2_pin.tally --ask a1 a2 a3	-	tally 2.2.1 (#241) 208.4, L §8, §8.4: count reads existence beside sums refused RUN-RECORD
+t221-gd/208-6-gap-after	m3/fixes/t221/misc	run m1.tally --ask gap_after last_after	-	tally 2.2.1 (#241) 208.6, L §4.5: gap after the cut is no reading, last reads the row
+t221-gd/216-o0	m3/fixes/t221/o216	run o0.tally	-	tally 2.2.1 (#241) S-216: a def keyed by a movement, its key an argument; a day's order (RUN-ORDER)
+t221-gd/216-o1	m3/fixes/t221/o216	run o1_key_a.tally	-	tally 2.2.1 (#241) S-216: in_pln[a], LOAD-READS raised at the reader's key
+t221-gd/216-o2	m3/fixes/t221/o216	run o2_sum_helper.tally	-	tally 2.2.1 (#241) S-216: a sum through a keyed helper, LOAD-READS
+t221-gd/216-o3	m3/fixes/t221/o216	run o3_sum_inline.tally	-	tally 2.2.1 (#241) S-216: the inline sum, LOAD-READS
+t221-gd/216-o4	m3/fixes/t221/o216	run o4_leg_a.tally	-	tally 2.2.1 (#241) S-216: a.cash.amount, LOAD-READS
+t221-gd/228-12-run	m3/fixes/t221/j	run top.tally	-	tally 2.2.1 (#241) 228.Q12, R20 (C-14 option A): a joint model's run with no ask prints no member's lines, exit 0
+t221-gd/231-4-axis	m3/fixes/t221/ax	run reality.tally sa.tally --ask qa	-	tally 2.2.1 (#241) S-231.Q4: a scenario declares an axis and fans out
+t221-gd/window-key-day	m3/fixes/t221/fx	run fx.tally --ask fday	-	tally 2.2.1 (#241) S-window-key (option A): a day's key read at a window is HOLE-IMPRECISE
+t221-gd/sign-rule	m3/fixes/t221/sign	run sign.tally	-	tally 2.2.1 (#241) E §4.1's sign rule (answer C-2): a min 0 place, a window-dated outflow, a dated inflow
+t221-gd/cells-cnt	m3/fixes/t221/cells	run base.tally sc.tally --ask cnt	-	tally 2.2.1 (#241) L §4.4: a binding over a span the window crosses is the hole
+t221-gd/231-2-pin-plain	m3/fixes/t221/rd4	run rd4.tally	-	tally 2.2.1 (#241) S-231.Q2's twin: a pin of a plain reading is its value at every instant
+t221-gd/235-8-pinned-read	m3/fixes/t221/new	run p235_8.tally	-	tally 2.2.1 (#241) 235.8, R18: a pinned read is law-dated as its item is (LOAD-LAWDATE)
+t221-gd/r18-c1-ask-binding	m3/fixes/t221/new	run r18c1.tally	-	tally 2.2.1 (#241) R18's cell 1: an ask's own binding reads a law-dated input: LOAD-LAWDATE
+t221-gd/231-6-none-one-row	m3/fixes/t221/new	run s231_6.tally	-	tally 2.2.1 (#241) 231.Q6, L §5.19: none on one row of a same pair; the other books where its statement covers
+t221-gd/230-5b-pieces	m3/fixes/t221/new	run s230_5b.tally	-	tally 2.2.1 (#241) S-230.Q5b: pieces of one payment in two versions, not stated same, warn nothing
+t221-gd/233-5-clock-refused-world	m3/fixes/t221/new/sw233_5	run base.tally bad.tally	-	tally 2.2.1 (#241) S-233.5: a base ask in a refused scenario's world, as known after on: its line, no REQ-CLOCK
+t221-gd/229-2-literal-key	m3/fixes/t221/new/k229_2	run base.tally sc.tally --ask q	-	tally 2.2.1 (#241) 229.2, L §8.3: a scenario file's literal key no index holds is load's, its ask not asked
+t221-gd/221-10-agg-window	m3/fixes/t221/new	run tb.tally --ask a221_10	-	tally 2.2.1 (#241) 221.10, L §4.4: window terms of count, any, all, sum and min
+t221-gd/233-8-twin	m3/fixes/t221/new	run tb.tally --ask c233_8t	-	tally 2.2.1 (#241) S-233.8's twin: as known after on refuses the request REQ-CLOCK
+t221-gd/233-c-load-words	m3/fixes/t221/new	run u233c.tally	-	tally 2.2.1 (#241) 233.c: unit of a number, refused at load in load's words
+t221-g1/221-C3-arith	m3/fixes/t221/arith2	run arith2.tally	-	tally 2.2.1 (#241) 221.C3, L §4.4: + of two computed windows is their interval, a hole only where one value is needed (held for G1)
+t221-g1/214-zero-leg	m3/fixes/t221/misc	run m1.tally --ask zerowin	-	tally 2.2.1 (#241) 214.1, L §5.14, E §4.1: a window-dated leg of amount 0 books nothing and leaves no hole
+t221-g1/214-one-day	m3/fixes/t221/misc	run m1.tally --ask oneday	-	tally 2.2.1 (#241) 214.1, L §4.4 l.669: a window of one day is that day, also after it ends
+t221-g1/218-window-end	m3/fixes/t221/w218	run a1_window_end.tally	-	tally 2.2.1 (#241) 218.1, L §5.19, E §4.2 step 4: a reading at the end of a window's last day; the window has ended before it
+t221-g1/220-1-covered-end	m3/fixes/t221/cov	run cov.tally --ask v1 v2 v3	-	tally 2.2.1 (#241) 220.1, E §4.1 step 2: a planned movement on a window across a covered span's end is the hole where the other class reaches
+t221-g1/230-4-undone	m3/fixes/t221/misc2	run m2.tally --ask undone undone_f u06 u10 u15	-	tally 2.2.1 (#241) 230.Q4, E §5 step 1: a version known inside the window, undone inside it, leaves the amount HOLE-IMPRECISE
+t221-g1/236-1-differs-nowait	m3/fixes/t221/win	run w1_differs_nowait.tally	-	tally 2.2.1 (#241) 236.1, L §4.3, §5.14: a window at whose key's where holds in one law-date class only is the hole (the form that needs no wait; the waiting form comes with W1)
+t221-g1/236-1-agree-false-nowait	m3/fixes/t221/win	run w4_agree_false_nowait.tally	-	tally 2.2.1 (#241) 236.1: a key's where false in the first class and true in the second
+t221-g1/221-C2-list	m3/fixes/t221/p25	run p25_list.tally	-	tally 2.2.1 (#241) 221.C2, L §4.4 l.669: a computed interval inside a list is a hole where one value is needed
+t221-g1/window-key-month	m3/fixes/t221/fx	run fx.tally --ask fmonth f1 f3	-	tally 2.2.1 (#241) S-window-key (option A): a month's key holding the whole window is read, 800.00 PLN
+t221-g1/window-key-two-months	m3/fixes/t221/fx	run fx2.tally	-	tally 2.2.1 (#241) S-window-key: a window across two months read at a month's key is HOLE-IMPRECISE
+t221-g1/from-across	m3/fixes/t221/from	run base.tally sc.tally --ask s_after s_d28 s_d02	-	tally 2.2.1 (#241) S-from, L §6.4: a scenario's move on a window across its from is the hole from D on
+t221-g1/from-after	m3/fixes/t221/from	run base.tally sc_after.tally	-	tally 2.2.1 (#241) S-from's twin: a window wholly after from books as written
+t221-g1/from-before	m3/fixes/t221/from	run base.tally sc_before.tally	-	tally 2.2.1 (#241) S-from's twin: a window wholly before from is left out
+t221-rc/221-10-mean-quantile	m3/fixes/t221/new	run agg2.tally	-	tally 2.2.1 (#241) 221.10, L §4.4 l.669: window terms of mean and quantile are the hole
+t221-g2/206-nested-proj	m3/fixes/t221/p206	run p2.tally --ask b	-	tally 2.2.1 (#241) 206.1, E §4.3 step 1: a projection from a day before its walk's start starts up the chain
+t221-g2/208-2-unread-pin	m3/fixes/t221/misc	run m1.tally --ask refpin	-	tally 2.2.1 (#241) 208.2, L §8.2 l.2248: a refused line lists only the pins its refusal rests on
+t221-g2/208-5-assumed	m3/fixes/t221/cbase	run c_base.tally --ask q2 q_decide	-	tally 2.2.1 (#241) 208.5, L §8.2: an assumed line under a refused result
+t221-g2/219-1-same-planned	m3/fixes/t221/s5	run hs_disagree.tally --ask amt	-	tally 2.2.1 (#241) 219.1, L §6.1 l.1797: two planned sides stated same that disagree are HOLE-SAME
+t221-g2/219-2-warn-legs	m3/fixes/t221/s5	run r3_disagree.tally	-	tally 2.2.1 (#241) 219.2, L §5.19 l.1717: WARN-LEGS for two observed rows stated same that disagree
+t221-g2/220-2-pin-open	m3/fixes/t221/cov	run cov.tally --ask v2	-	tally 2.2.1 (#241) 220.2, L §8.2: a pad's reset keeps an open instance's reads, its open line
+t221-g2/221-1-late-pin	m3/fixes/t221/misc	run m1.tally --ask p_after	-	tally 2.2.1 (#241) 221.1, L §8.2: a balance before a pinned plan leg's day lists that pin
+t221-g2/221-5-timing	m3/fixes/t221/cov	run cov.tally --ask v4	-	tally 2.2.1 (#241) 221.5 and 208.1, L §4.4 l.665, E §6.3: a window-dated instance's matched line takes its observation's day
+t221-g2/231-1b-whens	m3/fixes/t221/diff	run base.tally sa.tally sb.tally --ask pinned	-	tally 2.2.1 (#241) 231.Q1b, L §5.11 step 3: every unbeaten rule's when is read; the fan-out head
+t221-g2/231-R2-added-def	m3/fixes/t221/ax	run reality.tally sa.tally --ask qd	-	tally 2.2.1 (#241) 231.R2, L §5.18 diff: a def the base doesn't declare is added
+t221-g2/237-1-pad-lines	m3/fixes/t221/p237	run cp.tally	-	tally 2.2.1 (#241) 237.1, L §8.2's pad row: a field read of a pad lists its own pad line
+t221-rc/221-R1-residuals-one	m3/fixes/t221/r1one	run t221r1.tally	-	tally 2.2.1 (#241) 221.R1, L §5.18 l.1603: residuals of a place of a unit of kind one runs
+t221-rc/222-residuals-entered	m3/fixes/t221/entered	run reality.tally q.tally --ask q_resid	-	tally 2.2.1 (#241) 222.1, L §5.18: residuals of any place, however it entered
+t221-rc/228-9-nested-member	m3/fixes/t221/n9	run top.tally	-	tally 2.2.1 (#241) 228.Q9, R20: a nested member's scenario refused, its file named
+t221-rc/231-1a-conflict-order	m3/fixes/t221/diff	run base.tally sa.tally sb.tally --ask pinned2	-	tally 2.2.1 (#241) S-231.Q1a, L §5.11 l.1131: RUN-CONFLICT names the first two in step 3's order
+t221-rc/231-10-cycle-keys	m3/fixes/t221/cyc	run cyc.tally	-	tally 2.2.1 (#241) 231.Q10, L §5.14.2: written orders compose; the first by id not due that day
+t221-rc/231-R1-explain-in-s	m3/fixes/t221/diff	run base.tally sa.tally sb.tally --ask exs	-	tally 2.2.1 (#241) 231.R1, L §5.18 l.1641: explain in a scenario with pins, the axes in id order
+t221-rc/231-R2-added-place	m3/fixes/t221/rs2	run b.tally sc.tally --ask q6	-	tally 2.2.1 (#241) 231.R2, L §5.18 diff: a place only the scenario declares is added
+t221-rc/235-3-key-order	m3/fixes/t221/g3d	run l6_two_ok.tally	-	tally 2.2.1 (#241) 235.3, R18 cl.2: a key over months before a law-dated key loads
+t221-rc/235-3-key-order-later	m3/fixes/t221/g3d	run l7_two_later.tally	-	tally 2.2.1 (#241) 235.3, R18 cl.2: the law-dated key first is refused
+t221-rc/235-10-at-reader-on	m3/fixes/t221/ld	run reader_on.d.tally	-	tally 2.2.1 (#241) 235.10, L §4.3 l.640: an at reader def in a key's on before the at: LOAD-LAWDATE
+t221-rc/235-10-at-reader-on-twin	m3/fixes/t221/ld	run reader_on.t.tally	-	tally 2.2.1 (#241) 235.10's twin: the same chain, its version governing always: LOAD-LAWDATE still
+t221-rc/235-13-domain-hole	m3/fixes/t221/g3ef	run p17_domhole.tally	-	tally 2.2.1 (#241) 235.13, R18 cl.3 option A: a key domain's hole
+t221-rc/235-13-domain-hole-twin	m3/fixes/t221/g3ef	run p17t_domhole.tally	-	tally 2.2.1 (#241) 235.13's twin: the same text, its version governing always
+t221-rc/236-2-residuals-none	m3/fixes/t221/snone	run w_snone.tally --ask q3	-	tally 2.2.1 (#241) 236.2, L §5.19 l.1719: residuals over a stated reading replaced by none
+t221-rc/236-3-over-world	m3/fixes/t221/sw	run reality.tally s1.tally s3.tally --ask q_low	-	tally 2.2.1 (#241) 236.3, O §2.1: a scenario over one refused LOAD-WORLD is refused with it
+t221-rc/r18-c2-read-in-key	m3/fixes/t221/r18	run r18c2.tally	-	tally 2.2.1 (#241) R18's cell 2: last of a reading at a law-dated key
+t221-g1/rv-b1-pow	m3/fixes/t221/rv1	run b1_pow.tally	-	tally 2.2.1 (#241) the first review's B1, l.668-669: pow(-1, days_between) over a window of 517 days is the hole, and so its comparison; pinned 2026-01-01 gives 1, 2026-01-02 gives -1
+t221-g1/rv-b2-dayof	m3/fixes/t221/rv1	run b2_dayof.tally	-	tally 2.2.1 (#241) the first review's B2, l.671: a refusal only the two end days give is the hole; pinned 03-10 RUN-NOT-INT 4.5, 03-11 2026-02-05, 03-12 RUN-NOT-INT 5.5
+t221-g1/rv-b3-div	m3/fixes/t221/rv1	run b3_div.tally	-	tally 2.2.1 (#241) the first review's B3, l.671: two windows' quotient where one day divides by 0 is the hole; pinned 03-10 false, 03-11 RUN-DIV, 03-12 false
+t221-g1/rv-b5-two-cuts	m3/fixes/t221/rv1	run inv_b.tally	-	tally 2.2.1 (#241) the first review's B5, L l.2215: an amount changed and undone inside the window, asked at two cuts in one run: now the booking cut's hole (as alone), k07 600.00 PLN; no ENGINE-INVARIANT
+t221-g1/rv-n2-round	m3/fixes/t221/rv1	run e2.tally --ask r_agree r_agree_a r_agree_b r_agree_c r_cmp r_cmp_a r_cmp_c r_ref r_ref_a	-	tally 2.2.1 (#241) the first review's N2 (P25), l.668: round over a window gives one value where every day agrees (0, true) and the refusal every day gives (RUN-DOMAIN); the pinned days beside
+t221-g1/rv-n4-known-after	m3/fixes/t221/rv1	run bk_20260321.tally	-	tally 2.2.1 (#241) the first review's N4, E §5 step 2: a version known the day after the window's last day makes the HOLE-CHANGED question; pinned 03-05, 03-06, 03-19, 03-20 each the question
+t221-g1/rv-n5-month-of	m3/fixes/t221/rv1	run so.tally	-	tally 2.2.1 (#241) the first review's N5: start_of and end_of month_of(w), w across two months, are windows; month_of(w) itself the hole; no ENGINE-INVARIANT
+t221-g1/rv-n6-div-one	m3/fixes/t221/rv1	run e2.tally --ask dv1 dv1_b dve dve_a dve_c	-	tally 2.2.1 (#241) the first review's N6, l.671: one window's divisor 0 on one day is the hole; pinned 03-11 RUN-DIV (dv1), 03-10 1 and 03-12 RUN-DIV (dve)
+t221-g1/rv-n8-reading-day	m3/fixes/t221/rv1	run c1.tally --ask a20260402 a20260402_p20260330 a20260402_p20260402 a20260402_p20260403	-	tally 2.2.1 (#241) the first review's N8 (P32), L l.1726: the balance on a reading's own day inside the window is the stated one, 700.00 PLN; pinned 03-30, 04-02, 04-03 the same
+t221-g1/rv-n9-overlap	m3/fixes/t221/rv1	run e2.tally --ask ovw ovw_a dbw dbw_c	-	tally 2.2.1 (#241) the first review's N9, l.668-669: one name in both arguments is taken once: overlap_days(w, w, k) 1, days_between(w, w) 0; pinned 03-10 1
+t221-g1/rv-p25-abs-pow	m3/fixes/t221/rv1	run p25_round.tally --ask a1 p1	-	tally 2.2.1 (#241) P25: abs and pow of an interval across 0 are the hole for a print (not monotone there)
+t221-g1/rv-p26-from	m3/fixes/t221/rv1	run w1_base.tally w1_sc.tally --ask b0430 b0501 b0531 p0501 p0503	-	tally 2.2.1 (#241) P26: a scenario's move on a window across from: 04-30 500.00 PLN, from 05-01 the hole; pinned 05-01 the HOLE-CHANGED question, 05-03 650.00 PLN
+t221-g2/208-10-quantile-none	m3/fixes/t221/misc2	run m2.tally --ask qn	-	tally 2.2.1 (#241) 208.10, L §8 l.2217: a none level of quantile is RUN-NONE
+t221-g3/221-2-two-windows	m3/fixes/t221/misc	run m1.tally --ask two	-	tally 2.2.1 (#241) 221.2, R21 cl.2: one HOLE-IMPRECISE question per unknown day, both windows
+t221-g3/221-3-two-calendars	m3/fixes/t221/g3t	run cal221_3.tally	-	tally 2.2.1 (#241) 221.3, R21 cl.1: two calendars' equal added entries, each named with its calendar
+t221-g3/221-4-def-window	m3/fixes/t221/onwin	run onwin.tally --ask o2	-	tally 2.2.1 (#241) 221.4, R21 cl.1: a def's window is named by its cell (wr)
+t221-g3/221-6-held-calendar	m3/fixes/t221/p3	run m.tally c22.tally c24.tally cw.tally --ask q2 q4 q13 q14	-	tally 2.2.1 (#241) 221.6, L §2.4: an added entry named with its calendar (of cal)
+t221-g3/221-C1-min-window	m3/fixes/t221/b2mix	run b2mix.tally --ask qa qb	-	tally 2.2.1 (#241) 221.C1, L §4.4 l.667: min of a window and w, both orders: both names, one question per unknown day (R21)
+t221-g3/235-6-bound-key	m3/fixes/t221/f1	run f1_flows.tally f1_flows.scen	-	tally 2.2.1 (#241) 235.6, L §8.1: a key's value under a binding names the hole's reader
+t221-g3/r21-c1-move-on	m3/fixes/t221/onwin	run onwin.tally --ask o1	-	tally 2.2.1 (#241) R21's cell 1: a move's own window is named by its movement (salary)
+t221-g3/r21-c2-two-moves	m3/fixes/t221/onwin	run onwin.tally --ask o3	-	tally 2.2.1 (#241) R21's cell 2: two moves of equal windows, one balance, each named
+t221-g4/221-9-before-self	m3/fixes/t221/g4top	run m2.tally	-	tally 2.2.1 (#241) S-221.9: a move ordered before itself is refused LOAD-ORDER
+t221-g4/223-replace-covers	m3/fixes/t221/mini5	run reality.tally statement.tally fix.tally asks.tally --ask q_mid q_oct	-	tally 2.2.1 (#241) S-223: a replace whose statement doesn't cover the row's day is refused LOAD-COVERS
+t221-g4/228-5-no-file-run	m3/fixes/t221/q5	run base.tally a/ok.tally m/c2.tally z/c1.tally	-	tally 2.2.1 (#241) 228.Q5, R20 cl.2 (P13): at run too, a refusal naming no file of its own is placed by its header's file
+t221-g4/228-11-member-warnings	m3/fixes/t221/jw	run top.tally --ask a.q b.q a.q_sc b.q_sc	-	tally 2.2.1 (#241) 228.Q11, R20 cl.3: each member's warnings, named by member, after the answers
+t221-g4/231-2-pin-balance	m3/fixes/t221/rs5	run b.tally --ask q5	-	tally 2.2.1 (#241) S-231.Q2: a pin of a balance reading states no instant: LOAD-INSTANT
+t221-rc/230-5a-same-order	m3/fixes/t221/g3t	run s230_5a.tally	-	tally 2.2.1 (#241) 230.Q-5a, 2.1.7 R9: a same of an observed row and a planned instance is refused LOAD-SAME
+t221-rc/233-a-unit-literal	m3/fixes/t221/u0	run u0_etf_literal.tally	-	tally 2.2.1 (#241) 233.a, R10: a literal key no index names is refused LOAD-KEY
+t221-g4/228-2-run-path-order	m3/fixes/t221	run q2dir	-	tally 2.2.1 (#241) 228.Q2, R20 cl.1: a run's refused scenario lines in their files' path order (a/s2 before z/s1), no ask
+t221-g4/233-8-known-paren	m3/fixes/t221/new	run tb.tally --ask c233_8	-	tally 2.2.1 (#241) S-233.8: as known (2027-01-01) after on refuses the request REQ-CLOCK, as its twin t221-gd/233-8-twin does
+t221-g4/usage-run-foo	m3/fixes/t221/p206	run p2.tally --foo	-	usage
+t221-g4/usage-check-foo	m3/fixes/t221/p206	check p2.tally --foo	-	usage
+t221-g4/usage-reprint-ask	m3/fixes/t221/p206	reprint p2.tally --ask b	-	usage
+t221-g4/usage-reprint-pin-zzz	m3/fixes/t221/p206	reprint p2.tally --pin=zzz	-	usage
+t221-g4/usage-run-ask-foo	m3/fixes/t221/p206	run p2.tally --ask=foo	-	usage
+t221-g4/usage-run-pin-zzz	m3/fixes/t221/p206	run p2.tally --pin=zzz	-	usage
+t221-g2/rv2-b1-refused-flows	m3/fixes/t221/rv2	run b1.tally --ask b f fz	-	tally 2.2.1 (#241) the second review's B1, L §8.2 l.2248: a refused flows line lists the pins its refusal read, as the balance does: f pinned w = 2026-03-12, fz pinned z = 0
+t221-g2/rv2-b1-r10	m3/fixes/t221/rv2	run r10.tally --ask a8 a8b	-	tally 2.2.1 (#241) the second review's B1, second form: flows(ob, 2026-04) refused RUN-PLACE at the pin's own figure (-130.00 PLN; -140.00 unpinned) lists pinned: small
+t221-g2/rv2-b2-same-register	m3/fixes/t221/rv2	run b2.tally --ask s0 sp sq bp	-	tally 2.2.1 (#241) the second review's B2, L l.1797, l.2248: the HOLE-SAME read takes the other side's register: sp 100.00 PLN and sq's hole each list pinned: a2, as bp does
+t221-g2/rv2-b3-projection-pin	m3/fixes/t221/rv2	run b4.tally --ask b p	-	tally 2.2.1 (#241) the second review's B3, l.2248: a projection lists the pin that moves pw's day outside the span, as the balance does (pinned: w = 2026-03-08)
+t221-g2/rv2-b4-added-place	m3/fixes/t221/rv2	run b5.tally sc/b5.tally --ask qp qd	-	tally 2.2.1 (#241) the second review's B4, L §5.18 diff (231.R2): a place only the scenario declares is added (7.00 PLN), as a def is (1.00 PLN)
+t221-g2/rv2-b5-day-only	m3/fixes/t221/rv2	run w2_day_only.tally	-	tally 2.2.1 (#241) the second review's B5, L l.1717: two rows stated same that disagree only on a day (03-18, 03-19; 950.00 both) print WARN-LEGS
+t221-g3/rv2-b5-one-version	m3/fixes/t221/rv2	run w1_one_version.tally	-	tally 2.2.1 (#241) the second review's B5: two rows of one version stated same that disagree (950.00, 900.00) print WARN-LEGS
+t221-g2/rv2-b5-two-versions	m3/fixes/t221/rv2	run w3_two_versions.tally	-	tally 2.2.1 (#241) the second review's B5, its guard: two versions, 950.00 and 900.00, WARN-LEGS
+t221-g2/rv2-n1-decision	m3/fixes/t221/rv2	run r9.tally --ask d_after d_on d_before	-	tally 2.2.1 (#241) the second review's N1, l.2248: a decision leg a pin puts after the read day lists the pin
+t221-g2/rv2-n1-left-out	m3/fixes/t221/rv2	run r1.tally --ask o_out o_pre fl flm cnt sm	-	tally 2.2.1 (#241) the second review's N1, l.2248: a left-out leg, and flows, count, sum over a span the pin moves the day out of, list the pin
+t221-g2/rv2-n1-assumed	m3/fixes/t221/rv2	run r8.tally --ask before after	-	tally 2.2.1 (#241) the second review's N1: assumed: where the day's row is assumed
+t221-g2/rv2-n3-pads-count	m3/fixes/t221/rv2	run r7.tally --ask c3 p3	-	tally 2.2.1 (#241) the second review's N3, L §8.2 l.2262: count over three pads lists the three pad: lines, as a field read does
+t221-g2/rv2-n4-flows-same	m3/fixes/t221/rv2	run b2.tally --ask f1 f2	-	tally 2.2.1 (#241) the second review's N4, L l.1797 (never a silent pick): flows of either side of a movement stated same, the amounts 100.00 and 120.00, is the HOLE-SAME hole
+t221-g2/rv2-n4-count-same	m3/fixes/t221/rv2	run h10.tally --ask c5 c9	-	tally 2.2.1 (#241) the second review's N4: count over a span holding one side's day reads both sides
+t221-g2/rv2-n6-two-legs	m3/fixes/t221/rv2	run h4.tally --ask blc fl amt fee	-	tally 2.2.1 (#241) the second review's N6 (a): two planned movements that agree in full, cash and fee at one place, give no HOLE-SAME
+t221-g2/rv2-q3-per-fact	m3/fixes/t221/rv2	run h1.tally --ask dys fee amt	-	tally 2.2.1 (#241) the second review's Q3 (P36): HOLE-SAME is per fact: the day reads as one when only an amount differs; the fee reads 2.00 PLN when only cash differs
+t221-g2/p42-leg-to	m3/fixes/t221/rv2	run h1.tally --ask tos	-	tally 2.2.1 (#241) P42: a leg's to when only the amounts differ is the place both sides state (wallet), per fact
+t221-g2/p42-span-days	m3/fixes/t221/rv2	run h2.tally --ask fl1 cnt	-	tally 2.2.1 (#241) P42, P43 S2: flows and count over a span both sides' days lie in (03-05, 03-07) read the amounts, no hole
+t221-g2/rv2f-f5-hole-day	m3/fixes/t221/rv2/fx	run s5_hole_day.tally --ask dy c0 f1	-	tally 2.2.1 (#241) the fix review's F5 (P36, L §8.1): a side whose day is a hole: the day, count and flows carry its question
+t221-g2/rv2f-f6-leg-reads	m3/fixes/t221/rv2/fx	run s2_leg_reads.tally --ask fee0 fee_a2 fl_fee	-	tally 2.2.1 (#241) the fix review's F6 (P43 S3, L §8.2): a read of the fee lists no pin of the cash leg's amount (a2)
+t221-g2/rv2f-f7-membership	m3/fixes/t221/rv2/fx	run s2_leg_reads.tally --ask cnt_d2 cnt_d2x	-	tally 2.2.1 (#241) the fix review's F7 (P43 S2, P35): a count over a span that rests on d2 lists pinned: d2, inside the span and outside
+t221-g2/rv2f-f8-false-when	m3/fixes/t221/rv2/fx	run r2_when_before.tally --ask t_before f_before t_fl f_fl f_flm	-	tally 2.2.1 (#241) the fix review's F8 (P43 S4, E §4.2): a false when of an instance after February isn't listed under February's reads
+t221-g2/rv2f-f8-a-before	m3/fixes/t221/rv2/fx	run r1_when.tally --ask a_before a_after	-	tally 2.2.1 (#241) the fix review's F8, its second text: a_before lists no pin of a when after its day
+t221-g2/rv2f-f10-covered	m3/fixes/t221/rv2/fx	run r3_covered.tally	-	tally 2.2.1 (#241) the fix review's F10 (P43 S5, P35): flows over a covered span lists what the balance lists (pinned: w, open: pw)
+t221-g3/p45-same-day-names	m3/fixes/t221/rv2	run h10.tally --ask f2d	-	tally 2.2.1 (#241) P45 (a): HOLE-SAME on the day names the first side's day (differs on 2026-03-05); G3
+t221-rc/221-8-same-row-line	m3/fixes/t221/g3t2	run t2218.tally	-	tally 2.2.1 (#241) 221.8, L §8.3 l.2270: LOAD-SAME between an observed row and a planned instance names the keys as written, at the line of the same
+t221-g3/233-c-unit-words	m3/fixes/t221/g3t2	run uq.tally	-	tally 2.2.1 (#241) 233.c, L §8.4 (2.1.7's R5): unit of a compound unit or a plain number at run is refused in load's words; a key answers (u1 PLN)
+t221-g3/233-7-none-arith	m3/fixes/t221/g3t2	run n233_7.tally	-	tally 2.2.1 (#241) 233.7, L §8.4: RUN-NONE names the read (fee[2026-02] is none here) in arithmetic, a sum and a comparison; fee[2026-01] answers 10.00 PLN
+t221-rc/208-R2-for-law	m3/fixes/t221/rc208	run pt208_r2.tally	-	tally 2.2.1 (#241) 208.R2, L §5.18 l.1608: a per-tuple law on flows, explain and residuals
+t221-rc/228-10-member-on	m3/fixes/t221/q10	run top.tally --ask m.b m.c	-	tally 2.2.1 (#241) 228.Q10, L §6.1 (R20 cl.2): a member ask as known after the member's on (2026-03-31), before the joint model's (2026-06-30): REQ-CLOCK by the member's on
+t221-g3/rv3-b1-bound-word	m3/fixes/t221/rv3	run g1_min.tally	-	tally 2.2.1 (#241) G3's review B1 (P48), L §8.4 RUN-NONE, 235.6: a bound variable goes in on the expression, not its text: `dd + 1 day` keeps its period word under `for day in`
+t221-g3/rv3-b2-quantile-key	m3/fixes/t221/rv3	run g2_min.tally	-	tally 2.2.1 (#241) G3's review B2 (P48), 235.6: a quantile's none level under a binding names the key's value, rate[k2]
+t221-g3/rv3-n1-load-same	m3/fixes/t221/rv3	run ls1.tally	-	tally 2.2.1 (#241) G3's review N1 (P48), 230.Q-5a: LOAD-SAME names the line's sides in the text's order
+t221-g3/rv3-n2-none-reads	m3/fixes/t221/rv3	run n2.tally	-	tally 2.2.1 (#241) G3's review N2 (P48), L §8.4 RUN-NONE: every builder names the read with its keys' values (an ordering, a field read, a place, a quantity, unary minus)
+t221-g3/rv3-n4-release-line	m3/fixes/t221/rv3	run q4.tally	-	tally 2.2.1 (#241) G3's review N4 (P48): a mover's refusal names a same line that is there; none is invented
+t221-g3/rv3-n5-added-hole	m3/fixes/t221/rv3	run c4.tally --ask a1	-	tally 2.2.1 (#241) G3's review N5 (P48), L §2.4: a hole in a calendar's added list prints its question escaped
+t221-g4/rv4-b1-clock-alone	m3/fixes/t221/rv4/b1	run m.tally good.tally	-	tally 2.2.1 (#241) G4's review B1 (P50), E §11 REQ-CLOCK, O §2.1: an ask refused alone that states `as known (D)` after on doesn't refuse the request; it prints its line and the rest answers
+t221-g4/rv4-b1-clock-one-file	m3/fixes/t221/rv4/b1	run m.tally	-	tally 2.2.1 (#241) G4's review B1 (P50), its one-file case: p_gone is refused alone, q answers, exit 0
+t221-g4/rv4-b2-per-cut	m3/fixes/t221/rv4/b2	run percut.tally	-	tally 2.2.1 (#241) G4's review B2 (P50), E §3.1 step 9, L §5.19: S-223 per cut class: a later moves line doesn't hide the correction at the cuts before it (LOAD-COVERS)
+t221-g4/rv4-n1-after-none	m3/fixes/t221/rv4/b2	run chain_none_row_nocov.tally	-	tally 2.2.1 (#241) G4's review N1 (P50): a correction after a `= none` row is judged against the last statement with a row (LOAD-COVERS)
+t221-g4/rv4-b3-reprint-bytes	m3/fixes/t221/rv4/b3	reprint top_bytes.tally --pin=bytes	-	tally 2.2.1 (#241) G4's review B3 (P50), O §2.2: reprint reads --pin=bytes as run does: a member pinned by its bytes reprints (the last turn's reprint-pin-bytes)
+t221-g4/rv4-b3-reprint-canon	m3/fixes/t221/rv4/b3	reprint top_canon.tally --pin=bytes	-	tally 2.2.1 (#241) G4's review B3 (P50), its twin: a member pinned by its canonical text is off its pin under --pin=bytes (LOAD-PIN)
+t221-g4/p49-ask-order	m3/fixes/t221/rv4/ord	run base.tally m z a	-	tally 2.2.1 (#241) P49, O §2.1: asks of one id from three scenario files print in full-path order, then line (a/cc, m/aa, z/bb)
+t221-g4/rv4-version-line	m3/fixes/t221/rv4/ver	run b3.tally	-	tally 2.2.1 (#241) G4's review N3 (P50), L §8.3: LOAD-VERSION's `tally <N>` form names its file and the tally statement's line
+t221-g4/rv4-version-disagree	m3/fixes/t221/rv4/ver	run b3.tally s2.tally	-	tally 2.2.1 (#241) G4's review Q5 (P50): a base on tally 3 with a scenario file on 2 prints the disagreement's form
+t221-g4/rv4-version-member	m3/fixes/t221/rv4/verj	run t3_m2.tally	-	tally 2.2.1 (#241) G4's review Q5 (P50): a joint model on tally 3 with a member on 2 prints the member's form
+t221-g4/rv5-b1-two-key-warning	m3/fixes/t221/rv5/inv	run top.tally --ask a.q	-	tally 2.2.1 (#241) G4's fix review B-1 (P53), L §6.1: a member's WARN-LEGS on an instance with two keys lifts to the joint model's names, a.put[a, 2026-03]; the run answers
+t221-g4/rv5-b2-base-refusal	m3/fixes/t221/rv5/verrule	run b.tally s3.tally	-	tally 2.2.1 (#241) G4's fix review B-2 (P53), L §6.4, O §2.3: a base on tally 2 refused on its own (a replace rule naming another version) prints its own refusal beside a scenario file on tally 3
+t221-g4/rv5-s223-mid-moved	m3/fixes/t221/rv5/s223	run cc_mid_moved.tally	-	tally 2.2.1 (#241) G4's fix review N-a, L §5.19 (d7cc0526): a correction covers what an earlier statement's version covers where the row stands: refused for the standing correction (LOAD-COVERS)
+t221-g4/rv5-s223-mid-drop	m3/fixes/t221/rv5/s223	run cc_mid_drop.tally	-	tally 2.2.1 (#241) G4's fix review N-b, E §3.1 step 9: the check is made only where the correction stands; a later = none ends it: the text loads and answers
+t221-g3/mut-same-chain-line	m3/fixes/t221/rv6	run q5.tally	-	tally 2.2.1 (#241) mutation run's survivors, book/same.rs first_line: a mover joined to the absent decision only through a chain (same pay = pay2, same pay2 = dec) names the line that names it, same pay2 = dec (230.Q-5a, P48 N4; G3's review rel/q5)
+t221-g2/mut-left-out-before-from	m3/fixes/t221/rv6/sd	run base.tally early.tally --ask q_e q_e2 q_ef	-	tally 2.2.1 (#241) mutation run's survivors, walk/agenda.rs note_left_out_at: a scenario's decision dated before its from is left out, listed as its move's (left out: top, L §6.4, §8.2)
+t221-g3/mut-same-mover-right	m3/fixes/t221/rv6	run q7.tally	-	tally 2.2.1 (#241) mutation run's survivors, book/same.rs first_line: a line with the mover on its right (same pay2 = pay) before the line that joins it to the absent decision (same pay = dec): the refusal names same pay = dec
+t221-g2/mut-uncounted-before-span	m3/fixes/t221/rv6/sd	run base.tally early.tally --ask q_l1 q_l2 q_l3	-	tally 2.2.1 (#241) mutation run's survivors, walk/state.rs uncounted_in: a decision dated before a read's span (lift, 2026-01-03) isn't counted there, and the pin of its day is listed (N1 on #241, L §8.2)
+t221-g2/mut-same-end-legs	m3/fixes/t221/rv6	run se.tally	-	tally 2.2.1 (#241) mutation run's survivors, book/same_booking.rs same_end: movements stated same whose legs at the place have different names and amounts (HOLE-SAME), and one side dated by a stated hole with different amounts (HOLE-SAME and the day's question)
+t221-g2/mut-zero-leg	m3/fixes/t221/rv6	run z0.tally	-	tally 2.2.1 (#241) mutation run's survivors, walk/agenda.rs schedule_plan: a leg of amount 0 beside a hole amount books nothing (0.00 PLN), under a when that is a hole it is the when's hole (L §5.14, E §4.1 step 2)
+t221-g2/mut-same-member-third-row	m3/fixes/t221/rv6	run sm.tally	-	tally 2.2.1 (#241) mutation run's survivors, book/members.rs same_member_hole: a span holding one side's day only of two observed rows stated same is the days' HOLE-SAME, beside a third row before them whose day is in the span (S2, P43)

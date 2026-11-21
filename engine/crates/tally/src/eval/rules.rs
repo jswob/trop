@@ -30,7 +30,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
-use super::windows::{as_read, named_window, window_days};
+use super::windows::{as_read, held_by, named_window, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -117,8 +117,11 @@ impl Engine {
         };
         let value = self.def_cell(m, def, keys, &env, cell)?;
         // a window the def computed is this read's value, in the world its cell is computed
-        // in; one it passes on keeps the read that made it (L §4.4)
-        Ok(as_read(value, (&def.id, keys), cell.world()))
+        // in; one it passes on keeps the read that made it (L §4.4); one no cell held before,
+        // written in its rule, is the unknown day of this cell, which a caller pins (R21)
+        let figure = origin(&def.id, keys);
+        let value = as_read(value, (&def.id, keys), cell.world());
+        Ok(held_by(value, (format!("def {figure}"), &figure)))
     }
 
     /// The context def `def`'s cell at its keys is computed in, `env` binding them: its law
@@ -381,6 +384,11 @@ impl Engine {
         self.active.remove(&id);
         if result == Err(Stop::NotBuilt(super::GUARDED)) {
             // a walk's attempt given up: nothing it reached is kept (refcore's journal)
+            return result;
+        }
+        if result == Err(Stop::NotBuilt(super::WINDOW_DAYS)) {
+            // the line is read again per day of a decision's window: a read of this cell
+            // meets the window again (E §4.1 step 2; refcore's `WinDay` keeps no cell)
             return result;
         }
         self.absorb(&met);

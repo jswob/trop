@@ -1,0 +1,26 @@
+# tally 2.2.1 (S-231.Q2, #231), L §8.3 LOAD-INSTANT: "a pin of balance reading <x> states no instant": a pin of
+# opening or stated is refused at load (a what-if balance is a scenario's row); a pin of a plain reading is read as
+# before. tally 2.2's refcore stopped with AttributeError (the review's m3/review-probes/g1/rs5).
+=== b.tally
+model rb
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+
+ask q5: bal(sav, 2026-02-28) with opening[sav] = 7 PLN
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+=== expect
+refused: LOAD-INSTANT a pin of balance reading opening states no instant (b.tally:12)

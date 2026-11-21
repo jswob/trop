@@ -1,0 +1,5 @@
+scenario s1 over base
+  tally 2
+  from 2026-03-01
+
+ask q1: missing_one in s1

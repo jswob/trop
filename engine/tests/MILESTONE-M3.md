@@ -188,3 +188,151 @@ Left unsorted for C6: `walk/readings.rs` ×3 (a decision window's fallen places;
 ## Keeping master green
 
 As at S, M0, M1 and M2: every `m3_…` target has `test = false` and runs only as `check`'s report until M3 is in `engine/tools/milestones.toml`'s `gating`, which the rules step adds in `build/m3`'s commit before its gate.
+
+## tally 2.2.1, chunk C1 (#241, 2026-11-20)
+
+T's plan for the round (the lead's copy, `tmp/spec-2.2.1/t-plan.md`), chunk C1, on today's refcore and engine:
+- **Guards** (`m3/fixes/t221/`, group `t221-gd`): 24 runs (`m3_fixes_t221_guards`) and 2 checks (`m3_check_t221_guards`). They are answers the round leaves as they are, each the same on both engines, which its changes must not move: S-208.3, 208.4, 208.6, S-216's five, 228.Q12 (C-14 option A), S-231.Q4, S-window-key's day key, the sign rule, a binding over a span the window crosses, S-231.Q2's twin, 235.8, R18's cell 1, 231.Q6, S-230.Q5b, S-233.5, 229.2, 221.10, S-233.8's twin, and 233.c's load words.
+- **221.C3** (`t221-g1/221-C3-arith`, `m3_fixes_t221_g1`): refcore's bytes, where the engine holes at `+`. It is held for #241 in `held.tsv` until the builder's G1, because a `Logged-Red:` commit can't be pushed before a builder commit (R-77).
+- `fixes/t22/fault_paths` is re-held to M7 by name.
+- `baselines/session5-visible/` is retired; its seconds are `defs/session5-seconds.tsv`.
+
+## tally 2.2.1, chunk C2: the windows (#241, 2026-11-20)
+
+On refcore at the window group's pin (bcc49686). Every store was re-run (P23), each script at its own job count, niced.
+
+**Vectors** (`m3/fixes/t221/`):
+- Group `t221-g1`, 13 runs, red on the engine until the builder's G1:
+  - 214.1: `214-zero-leg`, `214-one-day`.
+  - 218.1: `218-window-end`.
+  - 220.1: `220-1-covered-end`.
+  - 230.Q4: `230-4-undone`.
+  - 236.1: `236-1-differs-nowait`, `236-1-agree-false-nowait`.
+  - 221.C2: `221-C2-list`.
+  - S-window-key: `window-key-month`, `window-key-two-months`.
+  - S-from: `from-across`, `from-after`, `from-before`.
+
+  Three of them (`window-key-two-months`, `from-after`, `from-before`) already print refcore's bytes on the engine. They hold the twins G1 must keep.
+- `t221-rc/221-10-mean-quantile` is held for M4 (`held.tsv`): the engine has no `mean` or `quantile` before M4.
+- Five `later/` texts: M5a's 221.R2 and S-213 with its two twins; M7's S-212.
+- 221.R3 (P22): m1 `fixes/g13` `r_agent_w_{c1,c3,c5,f1,f2,f3}` and `rf_w_{w01,w11,w13}` move from `m1/spec.tsv` to `vectors.tsv`, `for` t221-G1. Their bytes are refcore's, and they match the writer's probe lines.
+
+**The proof: what moved, by item.** Nothing else moved.
+
+| Item | Records |
+|---|---|
+| 218.1 | m1 `fixes/gate8/m3_window_end` (the holes after the window's last day become 900.00 PLN; the `unknown day: save_day` lines go) |
+| 214.1 | m2 `fixes/rv/g4f_zero_leg`, `g4f_zero_leg_life` (the hole becomes 0.00 PLN); I:M:CMP-01's baseline (+1 `WARN-NEGATIVE` line, in C2's first commit) |
+| 221.C2 | m2 `fixes/t22/list_window_name` (`[window(4, 6), 1]` becomes the window's hole) |
+| 221.R3 | the 9 m1 rows above (spec rows released) |
+| R:all | 1 514 passed |
+
+- m1 1 977 records, m2 296, kernel 166, codes m0 252, m1 38, m2 9, m0 load, m3 check 383, runs 124, spec 40, later 13, hh4 75. Integration 479: 395 same, 84 not run. Unit 154: 153 same, 1 ran.
+- `m1/spec.tsv` keeps 10 rows (e1 and e2 still crash refcore). `m2/spec.tsv` keeps 9: `num_list_key` still prints the object 207.4 mends at W5.
+- **The STOP-REPORT** (GAPS.md, C2): refcore at the pin passes 8 GB on m2's five R7 goldens. The cause is S-212's context per projected instance. Their records stay as stored, and `m2/vectors.py --check` is red on them alone until the writer's mend.
+
+## tally 2.2.1, chunk C3: the second pin's proof (#241, 2026-11-20)
+
+On refcore at the second pin (0818f488: W6, W5, W7, W2, W3, W1; 1 597 tests). Every store was written from it, each script at its own job count, niced, and diffed against HEAD record by record.
+
+**The proof: what moved, by item.** Nothing else moved.
+
+| Item (writer, builder) | Records |
+|---|---|
+| 206.1 (W6, G2) | m1 `fixes/gate8/m2_g7_p1_cuts`, `m2_g7_p2`, `m2_g8c_b1f`, `m2_g8c_b2` |
+| 221.5 (W6, G2) | m1 `fixes/gate8/m3_window_class` |
+| 219.2 (W6, G2) | m1 `m2_g4_adj_amt`, `m2_d512_day_rows`, `m2_d512_link_same`, `m2_d512_two_groups`; m2 `fixes/g4/adj_amt`, `fixes/t22/rv3_scen_over_base`; m3 `b192/same-two-legs`, `b192/same-two-legs-residual` (both with 237.2) |
+| 208.2 (W6, G2) | m2 `fixes/rv/g2_b3_both_break`, `rc_refusal_words_differ` |
+| 221.1 (W6, G2) | m2 `d77/sign`, `fixes/t22/cut_each_ask_twin`, `items/explain/from`; `fixes/t22/cut_each_read_twin` (its class, on no build-log list) |
+| 220.2 (W6, G2) | kernel `g10/ledger`; m1 `fixes/g12/pm_ledger_ledger`, `pm3_…`, `pm4_g10_…`, `pm8_g10_…`, `prr_projunc_g10_…`, `r_pb_bal-ledger_…`, `v_mvq`; m3 `t221-g1/220-1-covered-end` |
+| 237.1 (W6, G2) | m1 `m2_d512_alone_pad`, `m2_d512_pads_run`, `m2_g4_p_pad`; m3 `b192/chain-pads` |
+| 208.5 (W6) | I:A:a10's baseline (`assumed:` under a refusal) |
+| P25 (W6, G1's fix) | m1 `fixes/g13/r_agent_w_model_with_r_agent_w_c2`, `rf_w_model_with_rf_w_w15` (`round` gives the interval: "for a print") |
+| P27 (W4, G1) | `t221-rc/221-10-mean-quantile` released |
+| R21 (W5, G3) | m1 `fixes/g2/p4_f2`; m2 `fixes/t22/rv4_b2_pin_calendar`, `rv4_b2_pins`, `unknown_day_names`; m3 `t221-g1/221-C3-arith` (both windows named); 11 baselines |
+| 237.2 (W5, G3) | m1 `m2_d512_both_cover_day`, `m2_g4_g3_amt`, `m2_g4_p_both_konto_amt`, `m2_rt_e6_3_…`, `m2_rt_l6_1_…`; m2 `s6/hole_same_order_class` |
+| 221.6 (W5, G3) | m1 `fixes/gate8/m2_g3_fix2_c2`; I:E1:tx2_owes_explain's baseline |
+| 233.7 (W5, G3) | codes/m1 `rules/none`; m2 `spec/g1/qn` released (with 208.10) |
+| 207.4 (W5) | m2 `spec/p60/num_list_key` released |
+| R20, 233.8 (W2, G4) | released: `fixes/member-warning-id` (red here); `member-refused-alone`, `member-clock`, `scenario-files-clock`, `fixture/reviews/same-id-order`, `twin-placed` (green here) |
+| S-223, S-232 (W3) | released, green here: `fixture/reviews/narrowed`, `stacked-covers`, `fixes/stacked-covers` |
+| R18 (W1) | the 40 `m3/spec.tsv` rows' refcore cells (their answers); `spec/lawdate/i1-atref-false`, `w-hole-at-false` released (green here) |
+| the household's notes (W6) | file tables only: kernel 3, m1 20, m2 6; m0/format 24 lines and 14 hashes |
+
+- **Byte-equal:** m0 load 327; codes m0 252 and m2 9; loadcheck 90; the laws (570, 648, 168); later 13; hh4 75. m3 check 383 and spec 40 also matched, but for the rows above.
+- **The R7 goldens:** m2's five ran, byte-equal, at the pin (C2's STOP-REPORT mended by W6's 82e80319).
+- **Integration:** 479: 382 same, 13 re-stored (above), 84 not run. Unit 154: 153 same, 1 ran.
+- **Still held:** `fixes/t22/fault_paths` (M7) and `last/net_worth` (234.1, which W5 didn't take).
+- **T's texts:** `misc2/m2.tally` loses `before top`, which S-221.9 refuses.
+- **Waits for a tree with G2:** `m2_counts.rs`' five rows (206.1: `r2`, `u2`, `u4`, `r7`, `u3f`). They hold the engine's counters, not refcore's, so they can't be re-pinned on this branch.
+
+## tally 2.2.1, chunks C4 and C7: G2's vectors and refcore's (#241, 2026-11-20)
+
+On the build branch merged at 7e4ae092 (G1, G1's fix, G2, G2's fix) and refcore at the second pin (0818f488).
+
+- **C4, G2 (`t221-g2`, 11 rows):** 206.1, 208.2, 208.5, 219.1, 219.2, 220.2, 221.1, 221.5 (with 208.1's `?` line), 231.Q1b, 231.R2 for a def, 237.1, refcore's bytes, green on this engine. 208.10's row (`qn`) waits for G3: 233.7 names the read (`lvl is none here`). 208.8 isn't written: no text holds `value … in PLN` under `partial` (M5a's form).
+- **The counts:** `m2_counts.rs` re-pinned to this engine for 206.1 (`r2`, `u2`, `u4`: one leg more; `r7`, `u3f`: fewer walks, more shared).
+- **C7, refcore alone (`t221-rc`, 16 rows and 1 check fixture):** 221.R1, 222.1, 228.Q5 (check: a cycle's refusal placed by its header's file), 228.Q9, 231.Q10 (written orders compose; the first by id not due that day), 231.R2 for a place, 235.3 (and its refused twin), 235.10 (and its twin), 235.13 (and its twin), 236.2, R18's cell 2. 235.8, R18's cell 1 and 229.2 were already guards (`t221-gd`, C1).
+- **Held for refcore (`held.tsv`):** S-231.Q1a (`t221-g2/231-1b-whens`, `t221-rc/231-1a-conflict-order`: refcore names `bz and bx`, step 3's order is `bx and bz`), 231.R1 (`t221-rc/231-R1-explain-in-s`: refcore's axes not in id order), 236.3 (`t221-rc/236-3-over-world`: the writer's W8 mends it after the pin). Not written: 208.R2 (refcore refuses each ask `REFCORE-NOT-YET`; T's text waits in T's notes).
+- **To G3 and G4:** 221.C1's `min(window, w)` (refcore one question per unknown day, R21: G3); 228.Q5's `run` (the refusals in path order, R20: G4).
+
+## tally 2.2.1, chunk C8: the first review's findings (#241, 2026-11-20)
+
+- **12 vectors, `t221-g1/rv-*`,** from the review's own probe texts (`m3/fixes/t221/rv1/`), each ask beside its pinned days: B1 (`pow` over 517 days), B2 (`day_of`, a refusal only the ends give), B3 (two windows' quotient), B5 (two cuts in one run, no `ENGINE-INVARIANT`), N2 (`round`, P25), N4 (a version known after the window), N5 (`month_of` across two months), N6 (one window's divisor), N8 (a reading's own day, P32), N9 (one name in two arguments), P25's `abs` and `pow` across 0, P26 (a scenario's move across `from`). Refcore's bytes, green on this engine.
+- **Not yet (P41):** B4 and its kin, N1, N3, intervals over 100 000 values. P26's `p0430` (a pin that leaves `px` out prints `pinned:` on the engine since G2's review fix) waits for the last pin.
+
+## tally 2.2.1, chunks C5 and C6: G3's and G4's vectors, red until built (#241, 2026-11-20)
+
+Refcore's bytes at the second pin; one local commit with a `Logged-Red:` line per id (R-77: no engine commit follows it yet).
+
+- **G3, the names (9):** `t221-g3` 221-2-two-windows, 221-3-two-calendars, 221-4-def-window, 221-6-held-calendar, 221-C1-min-window, 235-6-bound-key, r21-c1-move-on, r21-c2-two-moves; `t221-g2/208-10-quantile-none` (233.7's name). Not written: 221.8 (the writer's W8 calls it a guard both interpreters print, after the pin), 233.7's own text (its three stored records carry it), 233.c's run form (the load words are `t221-gd/233-c-load-words`).
+- **G4 (15):** `t221-g4` 221-9-before-self, 223-replace-covers and its check, 228-2-run-path-order, 228-5-no-file-run, 228-11-member-warnings, 231-2-pin-balance, the check 232-per-cut, 233-8-known-paren, and S-usage's six `usage-*` (exit 2). Green on arrival: `t221-rc/230-5a-same-order`, `233-a-unit-literal`.
+- **Not yet written:** `reprint-pin-bytes` (the runs store takes only `run` rows and usage errors), 228.Q10's member `on`, and the four form fixtures (`LOAD-ORDER`, `LOAD-COVERS`, `LOAD-INSTANT`, `LOAD-VERSION`, `codes/m0`).
+- **`INTERFACE.md` §1:** S-usage's words (an option the command doesn't take is exit 2; `reprint` takes `--pin=bytes`); gap I-4 closed. **`MILESTONE-M0.md` row 5:** re-stated from `xref_check.py --gate M0` at tally 2.2.1: 101 codes, 54 `LOAD-*`, 268 forms (175 `LOAD-*`, 20 with no output). **The catalogue:** `map/codes.tsv` as `xref_check.py` writes it (no row moved in this chunk; `WARN-STALE` left at C3).
+
+## tally 2.2.1, chunk C9: the third pin's proof, and the review vectors (#241, 2026-11-21)
+
+On refcore at the third pin (a02d9aec: W9, W8, W10, W11; 1 648 tests) and the build branch at d3d1eba5 (G1's and G2's last fixes). Every store was written from the pin (`proof2.sh`, 3 421 s) and diffed record by record.
+
+**What moved, by item.** Nothing else moved; m0 (load, format), codes m0 and m2, loadcheck, the laws, later and hh4 are byte-equal.
+
+| Item | Records |
+|---|---|
+| P35, the register under every form and outcome (`open:`, `assumed:`, `pinned:`, `anchor:`, `unfulfilled:`) | kernel 6, codes/m1 3, m1 45, m2 12 (the five R7 goldens: `r7_g3` gains its `open:` lines), m3 `t221-g1/from-across`; 18 check baselines (37 integration checks and U:ask/ASK-03) |
+| `WARN-LEGS` by a day and in one version (B5, P43) | m1 `m2_d512_both_cover_day`, `m2_d512_day_rows`, `m2_g4_s_day`, `m2_g8b_sc1`, `m2_g8b_sc2`, `m2_rt_l6_1_same_in_model_disagree`; m2 `s6/hole_same_order_class` |
+| P43 S2, membership in a span | m1 `m2_d512_both_cover_day` `t_sum`, `m2_g4_s_day` `q_moved` (the hole becomes 950.00) |
+| `rf_w_w15` (refcore was wrong; the hole is owed) | m1 `fixes/g13/rf_w_model_with_rf_w_w15` |
+| 234.1, 236.3, S-231.Q1a, 231.R1 | m3 `last/net_worth`, `t221-rc/236-3-over-world`, `t221-g2/231-1b-whens`, `t221-rc/231-1a-conflict-order`, `t221-rc/231-R1-explain-in-s` |
+| 208.R2 | m2 `spec/p60/ask_for_law` released (refcore answers) |
+| `restate_g12`'s rule over refcore's new lines | m1 `fixes/g12/pb_g12_members_members`, its asks restated |
+
+- **Released:** `last/net_worth`, `t221-g2/231-1b-whens`, `t221-rc/231-1a-conflict-order`, `t221-rc/236-3-over-world` (green); `t221-rc/208-R2-for-law` written (both print the same). **Still held:** `fixes/t22/fault_paths` (M7); `t221-rc/231-R1-explain-in-s` (a finding: refcore fans out over every axis outside the pins, the engine over the axes the value reads).
+- **Vectors, none whose text holds a window:** the second review's B1 to B5, N1, N3, N4, N6, Q3 (N2 and N5 have only window texts); the fix review's F5 to F8, F10; P42's leg `to` and a span both days lie in; P45 (a) (G3); `t221-rc/221-8-same-row-line`, `228-10-member-on`; G3's 233.7 and 233.c texts; the four form fixtures of `codes/m0` (G4).
+- **Red on this engine, not G3's or G4's (findings, logged red in the local commit):** a refused result lists no `unfulfilled:` line where refcore lists them as a value's (P35; the second review's N2): 39 records and codes/m1 `rules/debt-above`; `WARN-LEGS` for two observations of one instance that differ only on a day (`m2_g8b_sc1`, `sc2`); `m2_g4_s_day` `q_obs` (refcore the day's `HOLE-SAME` for an amount read, the engine 950.00: P36 per fact).
+
+## tally 2.2.1, chunk D2: the last pin's proof, and the last vectors (#241, 2026-11-21)
+
+On refcore at the round's last pin (b70993c2, `tally-2.2.1`: W12, W13; 1 665 tests) and the round's whole engine (build/2.2.1 at bc483495: G3, G4, F-A, F-B). Every store was written from the pin (`proof2.sh`, 3 241 s) and diffed record by record. Kernel, m0 (load, format), loadcheck, the laws, codes m1 and m2, later and hh4 are byte-equal.
+
+| Item (CHANGES) | Records |
+|---|---|
+| 2.2.1-92, P48: a `same` line as written (230.Q-5a, N1); a header's `same` at its own line (221.8) | codes/m0 `joint/same-what`; m2 `cut/instance_first`, `fixes/t22/cut_same_rows_header`; m3 `t221-rc/221-8-same-row-line`, `t221-rc/230-5a-same-order` |
+| 2.2.1-93, P48: `RUN-NONE` names the read (B2, N2); the residual head (P24) | m3 `t221-g3/233-7-none-arith` (`fee[2026-02] is none here: an ordering`), `t221-rc/208-R2-for-law` (`residuals konto 2026-03`) |
+| 2.2.1-94, P48: the register lines of a same side's day and a false `when` (`pinned:`, `held:`); F-C; F-E | m1 `fixes/gate8/m2_g4_s_day` `q_obs` (950.00 PLN); m2 `fixes/g4/nb3_at` (three `held:` lines); m3 `t221-g3/p45-same-day-names` (`pinned: d2`, F-D), `t221-rc/231-R1-explain-in-s` (the axes the value reads); the eight `I:A:a12_*` checks (`held:` lines; `snap16-house/A-q12.out`) |
+| 2.2.1-96, P50: `LOAD-VERSION` names its file and line (N3) | codes/m0 `basic/version-three` (`(base.tally:2)`) |
+
+- **Released:** `t221-rc/231-R1-explain-in-s` (both print the axes the value reads). **Still held:** `fixes/t22/fault_paths` (paths, M7).
+- **Vectors, none whose text holds a window** (`m3/fixes/t221/rv3`, `rv4`): G3's review B1, B2, N1, N2, N4, N5; G4's review B1 and its one-file case, B2, N1, B3 (two `reprint … --pin=bytes` rows: the runs runner takes `reprint`, O §2.2), P49's order, `LOAD-VERSION`'s line, its disagreement form and its member form; codes/m0 `joint/version-member` (the member form: 160 of 180 `LOAD-*` forms have an output at M0).
+- **Red, logged in T's last commit:** `basic/version-three` and `t221-g4/rv4-version-line`, the builder's (the engine names the header's line 1, refcore the `tally <N>` statement's: the lead rules refcore's); two findings: `fixes/g4/nb3_at` (`flows` over instances a false `when` drops lists no `held:` line of the `when`'s reads on the engine, three on refcore: 2.2.1-94) and `s6/hole_same_order_class` (three observations of one instance stated same, two pairs disagreeing: refcore warns `WARN-LEGS` per pair, the engine once).
+
+## tally 2.2.1, chunk D3: the moved pin's bounded proof, and the fix review's vectors (#241, 2026-11-21)
+
+The pin moved by one commit, d7cc0526 (1 668 tests): L §5.19's phrase, and refcore in two places (`git diff b70993c2..d7cc0526 -- engine/tools/refcore engine/tools/refcore_fast`; refcore_fast unchanged). The proof is bounded by what can reach them (`bound_d3.py`, T's notes): `check_correction_covers` runs only where a row id has a correction, a `replace <input>[<row>] = <row>` (not `= none`) after an earlier statement of it; `joint_warning`'s new pattern differs from the old only on a lifted `WARN-LEGS`, a joint model whose output prints one. The texts of every store (kernel, m0 load and format, codes m0/m1/m2, m1, m2, m3 check/runs/spec, the checks run.py runs on refcore) were scanned: 478 records reach the first (151 checks counted with the 35 joint ones, whose baselines weren't read), none the second. All 478 were re-run on refcore_fast at d7cc0526 (699 s): **none moved**.
+
+- **Vectors, none whose text holds a window** (`m3/fixes/t221/rv5`): the fix review's B-1 (`a.q: 50.00 PLN`, the warning names `a.put[a, 2026-03]`), B-2 (the base's own `LOAD-VERSION replace rule d.base in w names version v (b.tally:22)` beside `s3.tally` on tally 3), S-223's two corners (`cc_mid_moved`: `LOAD-COVERS … fix2 doesn't cover konto on 2026-02-10`; `cc_mid_drop`: loads, `q: 1 000.00 PLN`). R:all 1 668.
+- **Green now:** `basic/version-three`, `t221-g4/rv4-version-line` (the builder's closing turn names the `tally <N>` statement's line). **Still red, logged, the builder's:** `fixes/g4/nb3_at`, `s6/hole_same_order_class`. **Held:** `fixes/t22/fault_paths` (paths, M7).
+
+## tally 2.2.1, chunk D4: the mutation run's survivors (#241, 2026-11-21)
+
+Run 44864149229 on b994b46d left 77 new survivors (`tmp/spec-2.2.1/t-survivors.md` sorts them). Two vectors, none whose text holds a window (`m3/fixes/t221/rv6`): `t221-g3/mut-same-chain-line` (G3's review `rel/q5`: a mover joined to the absent decision only through a chain names `same pay2 = dec`; `book/same.rs` `first_line`) and `t221-g2/mut-left-out-before-from` (a scenario's decision dated before its `from`, `left out: top`; `walk/agenda.rs` `note_left_out_at`). 38 of the 77 are window code, for the windows round.
+- Later in D4: `t221-g3/mut-same-mover-right` (`same pay2 = pay` before `same pay = dec`: `first_line`'s `*a == id`) and `t221-g2/mut-uncounted-before-span` (`lift` dated before the span lists `pinned: late_day`: `uncounted_in`'s `d < first`). Proved on this tree: `note_left_out_at`, the ten mutants of `first_line` and seven of eight of `uncounted_in` caught.

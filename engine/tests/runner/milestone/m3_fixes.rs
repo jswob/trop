@@ -101,4 +101,51 @@ mod tests {
             failed.join("\n")
         );
     }
+
+    /// tally 2.2.1's guards (#241, T's plan §1): answers the round leaves as they are, which
+    /// its window, register, naming and run-line changes must not move (S-208.3, 208.4, 208.6,
+    /// S-216, 228.Q12, S-231.Q4, S-window-key's day key, the sign rule, 235.8, R18's cell 1,
+    /// 231.Q6, S-230.Q5b, S-233.5, 229.2, 221.10, S-233.8's twin, 233.c's load words).
+    #[test]
+    fn m3_fixes_t221_guards() {
+        group_holds(RUNS, "t221-gd");
+    }
+
+    /// tally 2.2.1's builder group G1 (#241): the window group's vectors, refcore's bytes;
+    /// 221.C3 names both windows since the second pin (R21, the names: G3). `rv-*`: the first
+    /// review's findings as G1's fix and the writer's W7 mend them (B1 to B3, B5, N2, N4 to N6,
+    /// N8, N9, P25, P26), each with its pinned days.
+    #[test]
+    fn m3_fixes_t221_g1() {
+        group_holds(RUNS, "t221-g1");
+    }
+
+    /// tally 2.2.1's builder group G2 (#241): the register, `same` and a projection (206.1,
+    /// 208.2, 208.5, 208.10, 219.1, 219.2, 220.2, 221.1, 221.5, 231.Q1b, 231.R2, 237.1), the
+    /// "both" rows the writer's W6 mended, refcore's bytes.
+    #[test]
+    fn m3_fixes_t221_g2() {
+        group_holds(RUNS, "t221-g2");
+    }
+
+    /// tally 2.2.1's builder group G3 (#241): the names (R21's cells, 221.2 to 221.6, 221.C1,
+    /// 235.6), refcore's bytes; red until G3.
+    #[test]
+    fn m3_fixes_t221_g3() {
+        group_holds(RUNS, "t221-g3");
+    }
+
+    /// tally 2.2.1's builder group G4 (#241): the run's lines and load refusals (S-221.9, S-223,
+    /// 228.Q5's run, 228.Q11, S-231.Q2), refcore's bytes; red until G4.
+    #[test]
+    fn m3_fixes_t221_g4() {
+        group_holds(RUNS, "t221-g4");
+    }
+
+    /// tally 2.2.1's refcore-alone vectors (#241): refcore's mends, which the engine prints on
+    /// arrival; 221.10's `mean` and `quantile` over a window term take it as the hole (P27).
+    #[test]
+    fn m3_fixes_t221_refcore() {
+        group_holds(RUNS, "t221-rc");
+    }
 }

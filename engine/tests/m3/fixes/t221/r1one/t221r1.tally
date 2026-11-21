@@ -1,0 +1,24 @@
+model t221r1
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+unit share "one share"
+kind lots: place share min 0
+place pile: lots lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input n: num share
+input db: date
+move buy: transfers
+  on db
+  leg cash from world to pile amount n
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 3 share "s"
+  db = 2026-03-10 "s"
+  opening[pile] = 0 share at 2026-01-01 start "s"
+ask r: residuals pile 2026-03

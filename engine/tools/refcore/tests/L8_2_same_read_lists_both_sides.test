@@ -1,0 +1,47 @@
+# tally 2.2.1 P35 (L §8.2 l.2248, "an entry is listed under a result exactly when a read in its set gave it", whatever
+# the form of the line, its outcome, or the way a movement came not to count): B2, "a read of facts stated same holds both sides' reads": sp
+# lists the pin that removes the hole, sq the pin the hole quotes (review g2 min/b2). Before W8: no line.
+=== b2.tally
+model b2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input a2: money PLN
+input d: date
+move in1: transfers
+  on d
+  leg cash from world to konto amount a1
+move in2: transfers
+  on d
+  leg cash from world to konto amount a2
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  a2 = 120.00 PLN "s"
+  d = 2026-03-05 "s"
+  same in1 = in2
+ask s0: sum(m.cash.amount for m in transfers over 2026-03)
+ask sp: sum(m.cash.amount for m in transfers over 2026-03) with a2 = 100.00 PLN
+ask sq: sum(m.cash.amount for m in transfers over 2026-03) with a2 = 130.00 PLN
+ask bp: bal(konto, 2026-03-31) with a2 = 100.00 PLN
+ask f1: flows(in1, 2026-03)
+ask f2: flows(in2, 2026-03)
+=== expect sp sq bp
+sp: 100.00 PLN
+  pinned: a2 = 100.00 PLN
+  cut 2026-01-01
+sq: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
+  pinned: a2 = 130.00 PLN
+  cut 2026-01-01
+bp: 600.00 PLN
+  pinned: a2 = 100.00 PLN
+  cut 2026-01-01

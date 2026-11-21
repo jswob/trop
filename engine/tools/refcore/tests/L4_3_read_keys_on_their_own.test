@@ -1,0 +1,65 @@
+# tally 2.2.1 R18 (L §4.3: a move binds its keys in the order written; a read that states its own day needs no law
+# date; the engine's move_read_dated):
+# clause 1: "A read's keys and arguments are judged on their own": region in cal[region], in a key's on
+# before the at, is law-dated: LOAD-LAWDATE (m3/fixes/lawdate/g1_b_on). tally 2.2: the guard.
+=== options exit=1
+=== g1_b_on.tally
+model m
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-11
+index regions = [pl, de]
+
+input fee: money PLN
+input cal[r in regions]: calendar
+input region: key regions
+input d0: date
+input d1: date
+input rd[r in regions]: date reading
+
+move pay[d in wk]: transfers
+  on d
+  at d
+  leg cash from konto to shop amount fee
+
+move one[p in accounts on add_business(d0, 1, cal[region])]: transfers
+  on d1
+  at lifespan(p).from
+  leg cash from p to shop amount fee
+
+move pay2[d in wk where false]: transfers
+  on d
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN
+  d0 = 2026-01-02
+  d1 = 2026-01-20
+  rd[pl] = 2026-01-01 at 2026-01-01
+  rd[de] = 2026-01-07 at 2026-01-07
+  opening[konto] = 100.00 PLN at 2026-01-01 start "w"
+
+version c
+  cite s
+  governs 2026..
+  known 2026-01-01
+  region = pl
+  cal[pl] = calendar(weekends [sat, sun])
+  cal[de] = calendar(weekends [sun])
+
+ask q: bal(konto, 2026-01-31)
+=== expect
+refused: LOAD-LAWDATE move one's key p reads law-dated region with no law date: its at reads p (g1_b_on.tally:29)

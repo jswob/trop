@@ -72,4 +72,7 @@ q_obs: refused: RUN-NONE observed(sw[2026-03]) is none here: a field read of it
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
   cut 2026-06-30
 q_sw: 0.00 PLN
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
+  held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30

@@ -1,0 +1,22 @@
+model p235_8
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input pick: int
+
+version law26
+  cite s
+  governs 2026..
+  known 2026-01-01
+  pick = 2 "s"
+
+ask p1: pick + 1 with pick = 3

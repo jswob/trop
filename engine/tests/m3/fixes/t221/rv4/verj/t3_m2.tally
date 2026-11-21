@@ -1,0 +1,17 @@
+model fam
+  tally 3
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "m2.tally" sha256 "d4d0f425805d57f02a223fe1b3d420add82bf4848eba6befefdc3f726ad8ffad"
+
+source ts "ts"
+input tspare: int
+
+version topen
+  cite ts
+  governs always
+  known 2026-01-01
+  tspare = 1
+
+ask w: tspare

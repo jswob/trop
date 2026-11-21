@@ -1,0 +1,33 @@
+exit 0
+m_konto: 152.295 PLN (standard error 41.117534; 8 paths; horizon none)
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+m_sav: 1 736.8875 PLN (standard error 74.098727; 8 paths; horizon none)
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+one: (1 485.78 PLN, 191.25 PLN)
+  sample: shock[2026-01] = 551.48 PLN (u = 0.87870451890858247221273262528296044138187426142394542694091796875 (0.878704518908582))
+  sample: shock[2026-02] = 462.74 PLN (u = 0.65684362106157429962824574609658867530015413649380207061767578125 (0.656843621061574))
+  sample: shock[2026-03] = 308.75 PLN (u = 0.27187652637924711028515924182702434563907445408403873443603515625 (0.271876526379247))
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+proj_mean: 100.00 PLN
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+proj_q: -60.00 PLN
+  left out: save, 1 instances, first 2026-01-02
+  left out: save, 1 instances, first 2026-02-02
+  left out: save, 1 instances, first 2026-03-02
+  cut 2026-01-01
+warning: WARN-NEGATIVE konto is below zero from 2026-01-31
+warning: WARN-NEGATIVE konto is below zero from 2026-02-28
+warning: WARN-NEGATIVE konto is below zero from 2026-03-31
+warning: WARN-NEGATIVE konto is below zero from 2026-04-30

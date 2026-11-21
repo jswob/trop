@@ -1,0 +1,18 @@
+scenario late over t
+  tally 2
+  from 2026-01-01
+
+version narrow_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-03
+  moves stmt to 2026-01-01..2026-02-28
+
+version gone_v
+  cite s
+  governs 2026-01-01..
+  known 2026-01-05
+  replace bank[r2] = none "gone"
+
+ask q_late: bal(konto, 2026-04-30) in late
+ask q_mid: bal(konto, 2026-04-30) in late as known 2026-01-04

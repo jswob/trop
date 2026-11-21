@@ -550,6 +550,9 @@ def key_text(k):
     from .values import fmt
     if isinstance(k, int) and not isinstance(k, bool):
         return str(k)
+    if type(k).__name__ == 'ListKey':
+        # a key of a list binding prints as written (L §8.2 `unfulfilled:`, 2.1.7's R9; tally 2.2.1, 207.4)
+        return k.text
     return fmt(k)
 
 

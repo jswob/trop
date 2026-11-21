@@ -1,0 +1,42 @@
+# tally 2.2.1 P41, the fix review's F5 and n3: a for domain's where over a window-dated decision is the window's hole per
+# tuple, never REFCORE-NOT-YET (review g1fix n3a fr_where, lf_where sm_where). Before W8: REFCORE-NOT-YET.
+=== lf_where.tally
+model n3
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+index qs = 1..2
+place konto: accounts PLN lives 2026-01-01..
+place konto2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input w3: date
+input dy_day: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = window(2026-04-29, 2026-05-02) "s"
+  w3 = window(2026-04-10, 2026-04-12) "s"
+  dy_day = 2026-06-05 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+  opening[konto2] = 500.00 PLN at 2026-03-01 start "s"
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+ask sm_where: q for q in qs where sum(m.cash.amount for m in transfers over 2026-04 .. 2026-05) > 0 PLN
+ask plain: bal(konto, 2026-03-31)
+=== expect plain sm_where
+plain: 500.00 PLN
+  cut 2026-06-10
+sm_where (q = 1): ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+sm_where (q = 2): ?"date within window(2026-04-29, 2026-05-02) not precise enough for a binding over dx" (w)
+warning: WARN-UNREAD input dy_day is read by nothing
+warning: WARN-UNREAD input w3 is read by nothing
+warning: WARN-UNREAD place konto2 is read by nothing

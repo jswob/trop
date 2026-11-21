@@ -55,9 +55,10 @@ def _coll():
 # -- records ---------------------------------------------------------------------------------------------------
 
 class Leg:
-    __slots__ = ('name', 'frm', 'to', 'amount', 'unit', 'day', 'src')
+    __slots__ = ('name', 'frm', 'to', 'amount', 'unit', 'day', 'src', 'coll')
 
     def __init__(self, name, frm, to, amount, unit, day, src=None):
+        self.coll = None      # what reading its amount read, where known: a read of that fact alone (P43 S3)
         self.src = src        # (amount expression, env, context) of a hole amount: a partial ask line reads it again
         #                       for the holes it is linear in (L §5.18 Partial answers; mreads.m_partial_bal)
         self.name = name
@@ -524,9 +525,12 @@ def m_move_law(self, mi, env, ctx):
     if at is None:
         return None
     from .node import walk as nwalk
+    keyvars = set(b.var for b in mi.binds)
     for x in nwalk(at):
         r = getattr(x, '_r', None)
-        if x.k == 'name' and r and r[0] == 'var' and r[1] not in env:
+        # the law date stands after the last key it names (L §4.3, R18 clause 2); a variable an aggregate in the at
+        # binds is no key
+        if x.k == 'name' and r and r[0] == 'var' and r[1] in keyvars and r[1] not in env:
             return None
     v = self.ev(at, env, ctx.but(law=None))
     if isinstance(v, Hole):
@@ -558,8 +562,9 @@ def m_move_tuples(self, mi, ctx):
     """The binding tuples of a move at the cut (E §4.1 step 1): (env, keys, status, coll), status True, a Hole (an
     unknown member) or ('domainhole', Hole); coll what deciding that tuple read."""
     out = []
+    waits_at = getattr(mi, 'dated_wheres', ())
 
-    def go(i, env, keys, st, coll):
+    def go(i, env, keys, st, coll, waiting=()):
         if i == len(mi.binds):
             out.append((env, keys, st, coll))
             return
@@ -592,11 +597,28 @@ def m_move_tuples(self, mi, ctx):
         if isinstance(res, Hole):
             out.append((env, keys, ('domainhole', res), cd))
             return
+        waits = b.where is not None and i in waits_at
+
+        def refused(e2, err, cw, wt):
+            # binding order (L §4.3, R18 clause 2; 235.5): an earlier where that waits is read first, once the at
+            # has its keys; a false one drops the tuple, a refused one is the tuple's refusal
+            if wt:
+                self.stack.append(cw)
+                try:
+                    got = self.waiting_wheres(mi, wt, e2, ctx)
+                finally:
+                    self.stack.pop()
+                if got is False:
+                    return
+                if isinstance(got, TallyError):
+                    err = got
+            out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', err), cw))
+
         for v, s in res:
             e2 = dict(env)
             e2[b.var] = v
             if isinstance(s, TallyError):
-                out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', s), cd))
+                refused(e2, s, cd, waiting + ((i,) if waits else ()))
                 continue
             s2 = st
             if isinstance(s, Hole):
@@ -607,7 +629,12 @@ def m_move_tuples(self, mi, ctx):
                 mc = pc.get(v.id if isinstance(v, Mv) else getattr(v, 'name', None))
                 if mc is not None:
                     cw.merge(mc)
-            if b.where is not None:
+            wt = waiting
+            if waits:
+                # L §4.3 (tally 2.2.1 R18 clause 2): a where that needs the law date while the at reads a key not yet
+                # bound waits for its tuple's at, and is read there in binding order
+                wt = waiting + (i,)
+            elif b.where is not None:
                 self.stack.append(cw)
                 try:
                     w = self.ev(b.where, e2, bctx)
@@ -624,7 +651,7 @@ def m_move_tuples(self, mi, ctx):
                     # refuses the whole plan pass
                     if isinstance(e, LoadError) or load_now(e):
                         raise
-                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', e), cw))
+                    refused(e2, e, cw, wt)
                     continue
                 finally:
                     self.stack.pop()
@@ -634,9 +661,63 @@ def m_move_tuples(self, mi, ctx):
                     raise refuse('RUN-NONE', 'a where is none here')
                 if isinstance(w, Hole):
                     s2 = w if s2 is True else merge(s2, w)
-            go(i + 1, e2, keys + [v], s2, cw)
+            if wt:
+                self.stack.append(cw)
+                try:
+                    got = self.waiting_wheres(mi, wt, e2, ctx)
+                finally:
+                    self.stack.pop()
+                if got is False:
+                    continue
+                if isinstance(got, TallyError):
+                    out.append((e2, keys + [v] + [None] * (len(mi.binds) - i - 1), ('refused', got), cw))
+                    continue
+                wt, h = got
+                if h is not None:
+                    s2 = h if s2 is True else merge(s2, h)
+            go(i + 1, e2, keys + [v], s2, cw, wt)
     go(0, {}, [], True, _coll())
     return out
+
+
+def m_waiting_wheres(self, mi, waiting, env, ctx):
+    """A tuple's waiting wheres, read once the keys its at reads are bound, each at the tuple's law date in binding
+    order (L §4.3, tally 2.2.1 R18 clauses 2 and 3; E §4.1 step 1): False where one is false (the tuple dropped); a
+    refusal where one is refused (a refused tuple); else (still waiting, a hole or None). A hole at makes the tuple
+    that hole; a refused at leaves them unread, and the instance reads the at again and is refused alone."""
+    try:
+        law = self.move_law(mi, env, ctx)
+    except TallyError as e:
+        if isinstance(e, LoadError) or load_now(e):
+            raise
+        return ((), None)
+    if law is None:
+        return (waiting, None)
+    hole = None
+    for pos in waiting:
+        if isinstance(law, Hole):
+            hole = law if hole is None else merge(hole, law)
+            continue
+        b = mi.binds[pos].node
+        lds = law_days(law)
+        try:
+            w = self.ev(b.where, env, ctx.but(law=lds[0]))
+            if len(lds) > 1 and not isinstance(w, Hole):
+                for dd in lds[1:]:
+                    if vkey_opt(self.ev(b.where, env, ctx.but(law=dd))) != vkey_opt(w):
+                        w = imprecise_law(law, mi.id)
+                        break
+        except TallyError as e:
+            if isinstance(e, LoadError) or load_now(e):
+                raise
+            return e
+        if w is False:
+            return False
+        if w is NONE:
+            raise refuse('RUN-NONE', 'a where is none here')
+        if isinstance(w, Hole):
+            hole = w if hole is None else merge(hole, w)
+    return ((), hole)
 
 
 def m_upto_tag(self):
@@ -709,7 +790,9 @@ def m_answer_booking(self, mi, i, tctx, upto=None):
     for c, vids in self.known_dates():
         if not i.day < c <= tctx.cut:
             continue
-        j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c, upto=upto)
+        # its keys' where is read at the ask's cut K (E §4.1 step 1), so a hole it leaves (a window at whose law-date
+        # classes disagree, #236) is no version's to answer
+        j = self.eval_inst(mi, i.env, i.keys, tctx, exists0=getattr(i, 'exists0', True), at_cut=c, upto=upto)
         if j is None:
             continue
         if j.err is not None:
@@ -829,7 +912,11 @@ def m_inv5(self, inst, tctx, upto=None):
     read of day d reads the walk's prefix through d; G10, G16)."""
     reg = self.m.__dict__.setdefault('_inv5', {})
     wk = self.wkey(tctx)
-    k = (inst.id, inst.cut, upto, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
+    # a windowed instance's body joins every booking cut of its window up to K, so it is compared under that set of
+    # cuts, not its first alone: asks at two cuts in one run give what each gives alone (L §8 order never changes a
+    # result; tally 2.2.1, the first engine review's B5)
+    cuts = getattr(inst, 'cuts', None) or (inst.cut,)
+    k = (inst.id, cuts, upto, tuple(repr(q.key()) for q in wk[1])) + tuple(repr(x) for x in wk[2:])
     v = body_key((inst.exists, inst.legs, None, None, None))
     old = reg.get(k)
     if old is None:
@@ -844,6 +931,7 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
     its day is never.  A decision's body is evaluated in the walk."""
     inst = Inst(mi, keys, env)
     inst.coll = _coll()
+    inst.exists0 = exists0
     self.stack.append(inst.coll)
     try:
         try:
@@ -898,6 +986,10 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 return None
             if isinstance(day, Period) and day.kind == 'day':
                 day = day.start
+            if isinstance(day, Iv) and day.origin is None and day.carry is None and isinstance(day.lo, datetime.date):
+                # a window written in the move's own `on`, which no cell holds: its movement names the unknown day
+                # (L §8.2 `unknown day:`, "where no cell does, its movement"; tally 2.2.1 R21)
+                day = Iv(day.lo, day.hi, day.days, day.src, origin=('move ' + inst.id, inst.id), name=day.name)
             if day is END:
                 # L §7.6 item 1 (tally 2.1.6, issue #89): the end of time is no day, so a movement dated there is
                 # refused at its key (LOAD-LIMIT where load sees its day, check3.check_seen_day_limits)
@@ -914,15 +1006,25 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
                 # falls after it when the window's first day does (L §4.4; MC-X-F11: its body was evaluated, and an
                 # amount that reads the cell being evaluated made the answer depend on the order of the terms)
                 return None
+            pr = tctx.rnd
+            if pr is not None and pr[0] == 'proj' and isinstance(day_lo(day), datetime.date) and \
+                    mi.id in getattr(self.m, 'random_moves', ()):
+                # a projection reads the instance's random amounts by its day (L §5.16, §5.14.1; #212); a move the
+                # random cone doesn't hold reads none, and keeps the projection's own context (its cells shared)
+                tctx = tctx.but(rnd=pr[:5] + (day_lo(day),))
             if at_cut is not None:
                 cuts = [at_cut]
             elif isinstance(day, datetime.date):
                 cuts = [min(day, K)]
             elif isinstance(day, Iv):
-                cuts = sorted(set([min(day.lo, K), min(day.hi, K)]))
+                # one booking cut per piece of the window: a version known inside it changes the amounts there
+                # (E §5 step 1, #230)
+                cuts = sorted(set(min(a, K) for a in self.window_pieces(inst, tctx, day.lo, day.hi)))
             else:
                 cuts = [K]
             inst.cut = cuts[0]
+            # every booking cut its body joins: invariant 5 compares bodies booked at the same cuts (B5)
+            inst.cuts = tuple(cuts)
             seen = [self.keys_seen(mi, keys, c) for c in cuts]
             if not any(seen):
                 # a key entered after the booking cut: the instance didn't exist then, A0 = 0 (E §5 steps 1-3)
@@ -1076,6 +1178,7 @@ def m_eval_leg(self, inst, ln, d, env, ctx, day):
         if m.things[p.name].base in m.kinds['assets'].subtree(m):
             raise LoadError('LOAD-KIND', 'a leg to or from an asset (%s of %s)' % (ln.name, inst.id))
     unit = None
+    lc = self.push()
     try:
         amt = self.ev(ln.amount, env, ctx)
         if isinstance(amt, Hole):
@@ -1092,7 +1195,12 @@ def m_eval_leg(self, inst, ln, d, env, ctx, day):
         if load_now(e):
             raise
         amt = e
-    return Leg(ln.name, frm, to, amt, unit, day, (ln.amount, env, ctx) if isinstance(amt, Hole) else None)
+    finally:
+        self.stack.pop()
+        self.cur.merge(lc)
+    leg = Leg(ln.name, frm, to, amt, unit, day, (ln.amount, env, ctx) if isinstance(amt, Hole) else None)
+    leg.coll = lc
+    return leg
 
 
 def m_leg_unit_static(self, d, frm, to):
@@ -1490,11 +1598,46 @@ def once_obs(m, obs, ctx):
     return out
 
 
-def same_obs_differ(a, others, leg=None, m=None):
+def day_set(x):
+    """The days a side's statement of a day can take (P43 S1): a day, one; a window or one_of, its days; else None."""
+    if isinstance(x, datetime.date):
+        return {x}
+    if isinstance(x, Iv) and x.days:
+        return set(x.days)
+    if isinstance(x, Iv) and isinstance(x.lo, datetime.date) and isinstance(x.hi, datetime.date):
+        return set(x.lo + datetime.timedelta(days=k) for k in range((x.hi - x.lo).days + 1))
+    return None
+
+
+def same_days(xs):
+    """Whether the days sides stated same give agree, the one comparison every read and the booking take (L §4.4
+    l.669; tally 2.2.1 P43 S1): None where they do (every side one day and all equal, a one-day window against its
+    day, or one named window on every side), 'differ' where no day is common to every side, else the indexes of the
+    sides whose windows leave it undecided."""
+    named = set(x.name for x in xs if isinstance(x, Iv))
+    if all(isinstance(x, Iv) for x in xs) and len(named) == 1 and None not in named:
+        return None
+    sets = [day_set(x) for x in xs]
+    if any(z is None for z in sets):
+        return 'differ' if len(set(vkey(y) for y in xs)) > 1 else None
+    if not set.intersection(*sets):
+        return 'differ'
+    if all(len(z) == 1 for z in sets):
+        return None
+    return [k for k, z in enumerate(sets) if len(z) > 1]
+
+
+def same_obs_differ(a, others, leg=None, m=None, fact=None):
     """Where rows stated same disagree on a leg's amount or day (L §5.19: "a read of the movement away from its places
     (its leg's amount in observed, in flows of a move or through a binding) is the disagreement's hole, HOLE-SAME,
-    naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read."""
+    naming both rows"): that hole, in L §8.1's form, else None.  leg, where given, is the one leg read; fact, where
+    given ('amount' or 'day'), the one fact read: HOLE-SAME is per fact (tally 2.2.1 P36, Q3). The day by P43 S1:
+    a side's hole day is the read's hole; a decided disagreement HOLE-SAME "differs on <the first side's day as
+    stated>"; undecided, HOLE-IMPRECISE "for the day of <side> and <side>", one question per unknown day, each
+    labelled by its own side."""
     from .joint import shown
+    from .evaluate import carry_hole
+    from .values import day_text
     for g in a.legs:
         if leg is not None and g.name != leg:
             continue
@@ -1504,10 +1647,37 @@ def same_obs_differ(a, others, leg=None, m=None):
         mem.sort(key=lambda t: id_order(m, t[0].id) if m is not None else shown(t[0].id))
         for what, get in (('the amount of %s' % g.name, lambda h: h.amount), ('the day of %s' % g.name,
                                                                                 lambda h: h.day)):
-            xs = [get(h) for o, h in mem]
-            if any(isinstance(x, Hole) for x in xs) or len(set(vkey(x) for x in xs)) == 1:
+            if fact is not None and not what.startswith('the %s ' % fact):
                 continue
-            d = g.day if isinstance(g.day, datetime.date) else a.day
+            xs = [get(h) for o, h in mem]
+            day = what.startswith('the day ')
+            if any(isinstance(x, Hole) for x in xs):
+                if day:
+                    # a side whose day is a hole: the read carries that hole's question (P43 S1 a)
+                    return merge(*[x for x in xs if isinstance(x, Hole)])
+                continue
+            if day:
+                cmp = same_days(xs)
+                if cmp is None:
+                    continue
+                if cmp != 'differ':
+                    # undecided: one question per unknown day, each labelled by its own side (P43 S1 d, P42)
+                    sides = and_list(shown(o.id) for o, h in mem)
+                    qs, seen = [], set()
+                    for k in cmp:
+                        w = xs[k]
+                        nm = repr(w.name) if w.name is not None else id(w)
+                        if nm in seen:
+                            continue
+                        seen.add(nm)
+                        qs.append(carry_hole(Hole([('date within %s not precise enough for the day of %s' % (
+                            w.window_text(), sides), shown(mem[k][0].id))]), w))
+                    return merge(*qs)
+                d = day_text(xs[0])
+            else:
+                if len(set(vkey(x) for x in xs)) == 1:
+                    continue
+                d = day_text(g.day if isinstance(g.day, datetime.date) else a.day)
             # L §8.1 HOLE-SAME, the rows in the order of their ids, each of a larger class named (tally 2.1.8 S6)
             q = '%s are one, but %s differs on %s: %s' % (
                 and_list(shown(o.id) for o, h in mem), what, d,
@@ -1721,9 +1891,9 @@ def m_status(self, i, ctx):
         st = 'none'
     elif lo is not None and (hi < S or lo > E):
         st = 'leftout'
-    elif self.scen_early(i, lo):
-        # L §6.4: "A move the scenario declares books nothing before D: an instance whose day, or a window's first
-        # day, falls before D is left out"
+    elif self.scen_early(i, hi if isinstance(d, Iv) else lo):
+        # L §6.4: "A move the scenario declares books nothing before D: an instance whose day falls before D is left
+        # out"; a window across D is §4.4's (window_class_depends)
         st = 'leftout'
     elif i.err is not None:
         st = 'refused'
@@ -1755,12 +1925,19 @@ def m_status(self, i, ctx):
 
 
 def m_scen_early(self, i, lo):
-    """L §6.4: an instance of a move a scenario declares whose day, or a window's first day, falls before the
-    scenario's from."""
+    """L §6.4: an instance of a move a scenario declares whose day falls before the scenario's from; a window does
+    when its last day does (lo is then that day), one across the from being §4.4's (m_window_class_depends)."""
     wlo = getattr(i, 'wlo', None)
-    if wlo is not None and (lo is None or wlo < lo):
+    if wlo is not None and not isinstance(i.day, Iv) and (lo is None or wlo < lo):
         lo = wlo
     return lo is not None and self.before_scen_from(i, lo)
+
+
+def m_scen_from(self, i):
+    """The from of the scenario that declares i's move, or None (L §6.4)."""
+    mi = getattr(i, 'move', None)
+    sc = getattr(mi.decl, '_scen', None) if mi is not None and mi.decl is not None else None
+    return None if sc is None else getattr(self.m, 'scen_from', {}).get(sc)
 
 
 def m_before_scen_from(self, i, day):
@@ -1781,24 +1958,54 @@ def m_before_scen_from(self, i, day):
     return True
 
 
+def m_window_pieces(self, i, ctx, lo, hi):
+    """The first day of each piece of the window lo .. hi: the window split where a test the plan pass makes of the
+    instance's day can change (E §4.1 step 2, L §4.4 "One rule for every window a line meets"): the run's start S,
+    the cut K, the scenario's from (L §6.4), a covered span's ends at a place of its legs (L §5.19) and a version's
+    known date, the edge of the booking cut's class (E §5 step 1). Each piece is read once, at its first day; the
+    run's end is the walk's (a window that crosses E is its hole there)."""
+    m = self.m
+    edges = {m.S, ctx.cut}
+    frm = self.scen_from(i)
+    if frm is not None:
+        edges.add(frm)
+    cov = self.coverage(ctx) if i.legs else {}
+    for lg in i.legs:
+        for p in (lg.frm, lg.to):
+            if isinstance(p, Thing):
+                for span, _v in cov.get(p.name, ()):
+                    edges.update((span.start, span.end))
+    edges.update(c for c, _vids in self.known_dates())
+    return [lo] + sorted(e for e in edges if e is not None and lo < e <= hi)
+
+
+def m_day_class(self, i, ctx, day):
+    """The class an instance dated by a window takes on one of its days (E §4.1 step 3): 'out' before S or before its
+    scenario's from (L §6.4), 'modelled' on a covered day before K, else 'booked'."""
+    frm = self.scen_from(i)
+    if day < self.m.S or (frm is not None and day < frm):
+        return 'out'
+    if day < ctx.cut and self.touches_covered(i, ctx, day):
+        return 'modelled'
+    return 'booked'
+
+
 def m_window_class_depends(self, i, ctx, lo, hi):
     """Whether a plan instance dated by a window takes its class (E §4.1 step 3) one way on some of the window's days
-    and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77): inside [S, E] or before it (a window that
-    crosses E is its hole already, in the walk), and modelled past or booked."""
+    and another on the rest (E §4.1 step 2, L §4.4; tally 2.1.8 item 77), read once per piece of the window
+    (window_pieces). Where it does, i.booked is the first and last day of the pieces that book it, as far as the
+    other class reaches (False when no piece books it); 'covered' when a piece is modelled past, whether it is a
+    binding's member then depending on the day too (mreads)."""
     if lo is None or lo == hi or not isinstance(i.day, Iv) or i.decision:
         return False
-    S, K = self.m.S, ctx.cut
-    if lo < S <= hi:
-        return 'start'
-    if lo >= K:
+    starts = self.window_pieces(i, ctx, lo, hi)
+    cls = [self.day_class(i, ctx, a) for a in starts]
+    if len(set(cls)) == 1:
         return False
-    rs = []
-    d = lo
-    while d <= hi:
-        rs.append(d < K and self.touches_covered(i, ctx, d))
-        d = d + datetime.timedelta(1)
-    # modelled past on some days: whether it is a binding's member depends on the day too (mreads)
-    return 'covered' if any(rs) and not all(rs) else False
+    ends = [b - ONE_DAY for b in starts[1:]] + [hi]
+    booked = [(a, b) for a, b, c in zip(starts, ends, cls) if c == 'booked']
+    i.booked = (booked[0][0], booked[-1][1]) if booked else False
+    return 'covered' if 'modelled' in cls else 'start'
 
 
 def m_touches_covered(self, i, ctx, day=None):
@@ -1962,9 +2169,16 @@ def m_adjust_move_compute(self, mi, ctx):
             st = self.status(i, ctx)
             if st not in ('past', 'hole', 'none'):
                 continue
-            if not isinstance(i.day, datetime.date) or i.day >= K:
+            if isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date):
+                # a window: every day of it is paid by a version known after its last day, which makes its
+                # adjustment (E §5 step 2; tally 2.2.1 P32, N4); one known inside it is the booking cut's hole
+                t = i.day.hi
+                if t >= K:
+                    continue
+            elif not isinstance(i.day, datetime.date) or i.day >= K:
                 continue
-            t = i.day
+            else:
+                t = i.day
             ans = getattr(i, 'answered', None)
             # a hole booking a version answered is measured from that version's known on (E §5 step 1, answer_booking)
             steps = [(c, vs) for c, vs in kds if t < c <= K and (ans is None or c > ans[0])]

@@ -39,12 +39,10 @@ request = { asks:     the ids of the asks to answer, asks of the reality's files
 
 result  = { timeline: per (cut class, world, pin set, clauses, axis options the moves reach, path): movements and end-of-day balances
             answers:  per ask, the printed result (LANGUAGE §5.18), its register (LANGUAGE §8.2) and warnings
-            residuals: the residual ledger for the residual asks (§6)
-            hash:     the hash of (the reality's canonical text, the request, tally version, engine build)
-            version:  the tally version and the engine build that produced it (LANGUAGE §9) }
+            residuals: the residual ledger for the residual asks (§6) }
 ```
 
-This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The model and its history are one thing here, the reality: observations are rows in versions (LANGUAGE §5.19). Each ask is evaluated in its world (its `in s`, or, in a base file, the model's, LANGUAGE §5.18); the clauses are an ask line's `random` and `with uncertain` (LANGUAGE §5.18).
+This is M-20's `run(model, history, clocks[, scenario]) → timeline`. The model and its history are one thing here, the reality: observations are rows in versions (LANGUAGE §5.19). Each ask is evaluated in its world (its `in s`, or, in a base file, the model's, LANGUAGE §5.18); the clauses are an ask line's `random` and `with uncertain` (LANGUAGE §5.18).
 
 **Pure.** The run reads the reality's files and the request, and nothing else: no clock, environment, locale or network. The same reality and request give the same result to the last digit (LANGUAGE §7.5).
 
@@ -69,7 +67,7 @@ This is spec M-20's `run(model, history, clocks[, scenario]) → timeline`. The 
 
 The **modelled past** (planned movements on covered days before K, and instances an observation the cut applies fulfils, §6.2) is computed and kept for the residual ledger, but it isn't in the timeline's balances.
 
-**Nothing is stored.** A caller may keep a printed result under the reality's hash, the request and the binary (`OPERATIONS.md` §5); a path is recomputed on demand (§7, N-2004).
+**Nothing is stored.** A caller may keep a printed result (`OPERATIONS.md` §5); a path is recomputed on demand (§7, N-2004).
 
 ---
 
@@ -77,7 +75,7 @@ The **modelled past** (planned movements on covered days before K, and instances
 
 <!-- tally2: D-3, D-13 -->
 
-The four clocks of the spec (T-16, N-1219):
+The four clocks (T-16, N-1219):
 
 | Clock | Comes from | What it does |
 |---|---|---|
@@ -120,15 +118,15 @@ Loading happens once per call; load sees what LANGUAGE §8.3 lists. When it fini
 4. **Build the kinds.** The kind each kind is a subkind of, its subkinds, and for each thing its base kind, its dated memberships and its lifespan, from the entries in versions and from `place` sections (LANGUAGE §5.7, §5.10). An entry at a kind with subkinds is refused (`LOAD-LEAF`), one without `lives` too (`LOAD-LIFESPAN`).
 5. **Build the item graph.**
    - Its nodes are inputs, bands, defs (each rule separately), fills, moves, places, the observed inputs and asks.
-   - Its edges are reads. Each edge records how the reader's keys relate to the read's: the same key, an earlier or a later key behind a guard, a computed key, a fixed key, or any key under an aggregate. **A binding over a kind** is an edge to every item that gives things or movements of that kind or its subkinds: the moves of an event kind, the observed inputs, the versions' entries. A posting (a move keyed by movements of a kind, LANGUAGE §5.14) therefore depends on every movement it binds over, and nothing names them.
+   - Its edges are reads. Each edge records how the reader's keys relate to the read's: the same key, an earlier or a later key behind a guard, a computed key, a fixed key, or any key under an aggregate. **A binding over a kind** is an edge to every item that gives things or movements of that kind or its subkinds: the moves of an event kind, the observed inputs, the versions' entries. A posting (a move keyed by movements of a kind, LANGUAGE §5.14) therefore depends on every movement it binds over, and nothing names them. A def, a fill or an input keyed by a kind is a function of the thing or movement at its key, and its key bind is no binding (LANGUAGE §8.3, `LOAD-ALIVE`): what it reads of that key reaches the graph through whoever names or binds the key, with that reader's key relation, running-read mark and need of a law date.
 6. **Check the graph:**
    - same-key cycles, and cycles in `beats` (`LOAD-CYCLE`);
    - guards on recurrence reads, a def's read of itself or of anything that depends on it at k ± n (`LOAD-GUARD`, LANGUAGE §5.11); any other shifted read is checked per key (`RUN-KEY`);
    - `beats` and `replace` labels (`LOAD-LABEL`);
-   - inputs, defs and places nothing reads, and sources no version cites (`WARN-UNREAD`, LANGUAGE §8.5, decided here, whatever the asks reach); a place is read by any line that names it, a leg, an observed row's leg, a pad, a row whose value it is or a binding over its kind included, and not by a row keyed by it, an `anchor` or a `covers` line (tally 2.1.2).
+   - inputs, defs and places nothing reads, and sources no version cites (`WARN-UNREAD`, LANGUAGE §8.5, decided here, whatever the asks reach).
 7. **Classify the moves.** A move with `reads` is a decision, every other a plan (LANGUAGE §5.14.1). Mark every running read (`bal(x)`, `bal(x, d)` at any day, a projection `from t` at any t (the engine proves no day earlier than another, so a plan that reads a balance is written as a decision), `flows` of a place or a decision, a decision's legs, day or attributes, a binding over a decision's movements or over `pads`) and propagate the mark through defs. A plan that reaches a mark, a decision that reaches a running read or a projection of a place or movement it doesn't declare, a decision that declares a read it never makes, and a decision whose day reaches a mark are refused (`LOAD-READS`). A def that reaches a mark and that a decision reaches is **walk-bound**: its cells carry the walk point (§3.2); in an ask, or a def no movement reaches, a plain `bal(x, d)` is the balance on day d at the ask's cut and a projection is its own walk (LANGUAGE §5.14.1). For each def that holds a projection, record the movements that depend on it, which its projection leaves out (LANGUAGE §5.14.1).
 8. **Stratify.** Build the decision graph: an edge from m to m′ when m reads a place m′ changes (for a leg whose place is an expression, every place it can give, LANGUAGE §5.14.2) or reads m′'s legs, day or attributes, and m′ doesn't depend on m. Its strongly connected components with more than one move need a written `before` or `after` that breaks every cycle, checked where the days and places are known at load (`LOAD-ORDER`, LANGUAGE §8.3) and in the walk otherwise (`RUN-ORDER`, §4.2 step 3), where a component no written order breaks is one stratum; a `before` that contradicts a read of legs, or names a plan or an observation, is `LOAD-ORDER` (LANGUAGE §5.14.2). The strata are the layers of the resulting acyclic graph, observations and plans below every decision, but for an observation that fulfils a decision instance of its own day, which is booked at that instance's point (LANGUAGE §5.14.2, §5.19).
-9. **Index the rows.** For each target, rows are grouped by the keys they state and sorted by span, readings by instant. Versions and rows are sorted by `known`, which gives the cut classes. `replace` lines are attached to the rows they replace; an overlap without `replace` is refused (`LOAD-OVERLAP`, `LOAD-REPLACE`, LANGUAGE §4.6). A `moves` line gives the moved version one governs span per cut class: before the moving version's `known`, its own; from it, the moved one. Each version's `enters` is kept for the `wording` pin (LANGUAGE §4.3, §5.3). Band tables are checked per version (`LOAD-BAND`). A version that states balance readings of a place without a gap role is refused (`LOAD-GAPROLE`).
+9. **Index the rows.** For each target, rows are grouped by the keys they state and sorted by span, readings by instant. Versions and rows are sorted by `known`, which gives the cut classes. `replace` lines are attached to the rows they replace; an overlap without `replace` is refused (`LOAD-OVERLAP`, `LOAD-REPLACE`, LANGUAGE §4.6). A `moves` line gives the moved version one governs span per cut class: before the moving version's `known`, its own; from it, the moved one. Each version's `enters` is kept for the `wording` pin (LANGUAGE §4.3, §5.3). Band tables are checked per version (`LOAD-BAND`). A version that states balance readings of a place without a gap role is refused (`LOAD-GAPROLE`). This check and `LOAD-COVERS` are made on the rows that stand, per world and cut class (LANGUAGE §5.19).
 10. **Mark the random cone.** Every item that reaches a `dist` fact in a world, on the item graph or through a place that a random movement books into, is random in that world (LANGUAGE §5.16, §8.3): a scenario's rule or row can make an item random there alone. Each ask line is checked in the worlds it is evaluated in (LANGUAGE §5.18), and in no other. An ask line whose value is random that neither applies a query nor replays a path, a query on an ask line without `paths` that LANGUAGE §5.16's table doesn't give in closed form, and a projection a decision reaches that reads a random fact after the decision's day with neither a `random` clause (on the read or the line) nor a query around the read, where load sees the projection reach the random fact after the decision's day (LANGUAGE §5.16, §8.3), are refused (`LOAD-RANDOM`; otherwise at the read, `RUN-FUTURE`).
 11. **Check the asks,** each in the worlds its line is evaluated in (LANGUAGE §5.18): the axes each one reaches, statically (`LOAD-FORKS`); orientation (`LOAD-ORIENT`); ask-only functions (`LOAD-ASKONLY`); the world (`LOAD-WORLD`); the law date (`LOAD-LAWDATE`).
 
@@ -188,8 +186,8 @@ The plan pass and the day walk run only if something the asks need reaches a pla
 
 For each plan move m, in the dependency order of the item graph:
 1. **Enumerate** its instances over its binding tuples. A binding over a kind gives the things alive on the bind's day or span, a binding over an event kind the movements dated in its span, observed and planned (LANGUAGE §5.7). Each binding's `where` is read for its tuple at the move's `at`, at the ask's cut K, as `on` is in step 2 (LANGUAGE §5.14).
-2. **For each instance,** evaluate `on` at the ask's cut K, giving its day t, then `when`, the legs' amounts and places, and the attributes at its booking cut min(t, K) (§5, LANGUAGE §5.14.3). A hole day or `when` makes a hole movement (LANGUAGE §5.14); a refused key's `where`, `when`, attribute or `for` makes a refused movement, whose day and legs' places are still read (LANGUAGE §8.4, tally 2.1.6). An instance whose `when` is true exists, whatever its amounts; an amount of 0 books nothing.
-   - **A day that is a window** (LANGUAGE §4.4) keeps its interval: the movement counts in `flows(x, span)` when the window lies inside the span, is `HOLE-IMPRECISE` when the window crosses an end of the span, and makes `bal(x, d)` a hole for d inside the window. Where its class (step 3) or a check of §4.2 step 5 comes out one way on some of its days and another on the rest, it is `HOLE-IMPRECISE` as far as the refusal or the other class would reach (LANGUAGE §4.4). When its law date falls to `on`, it is the window's first day when the window lies inside one law-date class; otherwise one law date per class, and one value or `HOLE-IMPRECISE`.
+2. **For each instance,** evaluate `on` at the ask's cut K, giving its day t, then `when`, the legs' amounts and places, and the attributes at its booking cut min(t, K) (§5, LANGUAGE §5.14.3). A hole day, `when` or `at` makes a hole movement (LANGUAGE §5.14); a refused key's `where`, `when`, attribute or `for`, its `at` or a domain that keeps it unread (LANGUAGE §4.3), makes a refused movement, whose day and legs' places are still read (LANGUAGE §8.4, tally 2.1.6). An instance whose `when` is true exists, whatever its amounts; an amount of 0 books nothing.
+   - **A day that is a window** (LANGUAGE §4.4) keeps its interval: the movement counts in `flows(x, span)` when the window lies inside the span, is `HOLE-IMPRECISE` when the window crosses an end of the span, and makes `bal(x, d)` a hole for d inside the window, but for a leg of amount 0. Where its class (step 3) or a check of §4.2 step 5 comes out one way on some of its days and another on the rest, it is `HOLE-IMPRECISE` as far as the refusal or the other class would reach (LANGUAGE §4.4). When its law date falls to `on`, it is the window's first day when the window lies inside one law-date class; otherwise one law date per class, and one value or `HOLE-IMPRECISE`.
 3. **Classify** the instance:
    - dated outside [S, E]: kept for bindings, and after E for `flows` (`flows` over days before S is `HOLE-PRERUN`, §2), never booked, listed (`left out:`);
    - of an uncertain kind with no observation fulfilling it: kept as `uncertain` (§1);
@@ -201,7 +199,7 @@ Plans read other plans through `flows(m[keys], span)`, their legs and attributes
 
 ### 4.2 The day walk
 
-The walk is a fold over days, a read of day t reading its prefix through t (LANGUAGE §8, what a result reads). It starts at S from the opening readings (LANGUAGE §5.10); observed rows dated before S are bound by bindings and fills and booked by none (LANGUAGE §5.19). For each day t from S to E:
+The walk is a fold over days, a read of day t reading its prefix through t (LANGUAGE §8, what a result reads). It starts at S from the opening readings (LANGUAGE §5.10, §5.19). For each day t from S to E:
 0. **Readings at the start of the day.** Each `opening` reading at `t start` that the cut sees, with t before K or t = S, anchors its place, and each `stated` reading there, with t before K, pads or anchors it (LANGUAGE §5.10, §5.19; §6.1).
 1. **Observations.** Book the observations dated t, if t is before K, each end by the rule of §6.1, except one that fulfils a decision instance dated t: it is that instance's movement, booked at its point in step 3, so the decisions before it that day see the balance without it. Every other observation is booked here, on its own day, one dated before or after the instance it fulfils included (LANGUAGE §5.19).
 2. **Plans.** Book the legs of the plan pass's movements dated t. Each leg moves its unit from its `from` to its `to`.
@@ -209,11 +207,10 @@ The walk is a fold over days, a read of day t reading its prefix through t (LANG
    - evaluates its `when` and amounts with running reads at this point of the walk, its law and facts at cut min(t, K) and its projections as of day t (§4.3); its day must be precise, and it is `HOLE-IMPRECISE` otherwise (LANGUAGE §4.4); a walk-bound def it reads is evaluated afresh at this point (§3.2);
    - books its legs at once, so the next decision sees them;
    - on a covered day before K, or where an observation the cut applies fulfils it (LANGUAGE §5.19), is modelled past instead. It is computed against the booked balances, which come from the observations ("did we follow the rule?", N-1221), less its own observations (one dated before t was booked on its own day, step 1), and it isn't booked. Its own observations dated t are booked at this point, after it is computed (LANGUAGE §5.19).
-4. **Close the day.** The day's readings at `t end` that the cut sees, with t before K, pad or anchor their places (§6.1). Then each place's end-of-day balance is stored as a change point. Balances are step functions, so only days with movements or readings cost anything.
+4. **Close the day.** The day's readings at `t end` that the cut sees, with t before K, pad or anchor their places (§6.1); a window whose last day is t has ended before them. Then each place's end-of-day balance is stored as a change point. Balances are step functions, so only days with movements or readings cost anything.
 5. **Check the places.**
-   - The sign rule is checked at the points LANGUAGE §5.10 states, which fall in these steps so: the legs of steps 0–2 (pads at the start, observations, plans) together, against the balance they leave; then, in step 3, each decision's legs together (or the observations booked at its point), as they are booked; then, in step 4, the closing readings together. A balance that breaks its kind's sign rule refuses the legs at the place that brought it there (`RUN-PLACE`): in steps 0–2, each leg of that batch at the place; in step 3, that decision's legs at the place; in step 4, the closing pads at the place. A reading's own place is tested at its point too, against the balance the reading states, its pad among the point's legs; an anchor, an `opening` included (step 0), books no leg and refuses the place from that point (LANGUAGE §8.4 `<place> is <b> after its reading at <instant>`; tally 2.1.2). A leg into or out of a thing outside its lifespan is refused (`RUN-LIFESPAN`), unless its amount is 0: a leg of 0 books nothing (LANGUAGE §5.14). A refused leg isn't booked, so no later movement or decision that day sees it. The place's balance is refused from that point up to its next reading, whether a leg, a reading's pad or an anchor broke the rule (tally 2.1.8), and the refused leg reaches as LANGUAGE §8 says.
+   - The sign rule is checked at the points LANGUAGE §5.10 states, which fall in these steps so: the legs of steps 0–2 (pads at the start, observations, plans) together, against the balance they leave; then, in step 3, each decision's legs together (or the observations booked at its point), as they are booked; then, in step 4, the closing readings together. A balance that breaks its kind's sign rule refuses the legs at the place that brought it there (`RUN-PLACE`): in steps 0–2, each leg of that batch at the place; in step 3, that decision's legs at the place; in step 4, the closing pads at the place. A reading's own place and a thing outside its lifespan are tested as LANGUAGE §5.10 and §5.7 say. A refused leg isn't booked, so no later movement or decision that day sees it. The place's balance is refused from that point up to its next reading, whether a leg, a reading's pad or an anchor broke the rule (tally 2.1.8), and the refused leg reaches as LANGUAGE §8 says.
    - A place whose lifespan ends on t and whose positions aren't all zero at the close is refused from t on (`RUN-LIFESPAN`).
-   - An account or cash place whose end-of-day balance goes below zero prints `WARN-NEGATIVE` on the first day of each stretch.
    - Each warning is tested only where the balance is known; a hole balance prints its hole when asked.
 
 **Parts in the walk** (tally 2.1, LANGUAGE §3.6, §5.14). A place whose kind keeps parts carries them in the walk's state, per (place, unit), beside its balance; a place whose kind keeps none carries nothing more.
@@ -224,19 +221,15 @@ The walk is a fold over days, a read of day t reading its prefix through t (LANG
 
 **Holes in the walk.** A hole movement makes both ends' balances holes from the first day it may fall on (every day, for a day that is a hole and not a window, LANGUAGE §5.14), with its questions, up to the place's next reading as §6.1 says. A leg whose place is a hole books its known side, and every read of the unknown side is a hole naming it (LANGUAGE §5.14). Decisions that read a hole balance are holes in turn. A refused movement reaches as a hole movement does, the refusal in place of the hole (LANGUAGE §8, §8.4). Results about earlier days, and about other places, stand.
 
-**Running reads in the walk** (LANGUAGE §5.14.1):
-- **`bal(x)`** is the running balance at this point of the day.
-- **`bal(x, d)`** for d < t reads the stored change points.
-- **`flows(x, span)`** of a place or a decision counts what is booked up to this point when the span ends on t.
-- **A decision's legs, day and attributes** are read once it has run; the stratification puts the reader after it.
+**Running reads in the walk** are LANGUAGE §5.14.1's table, read at this point of the day; `bal(x, d)` for d < t reads the stored change points.
 
 **There is no fixed point and no iteration.** A decision never sees its own result or a later decision's that depends on it. The only iteration is one the law names, written as a bounded recurrence (LANGUAGE §5.11).
 
 ### 4.3 Projections
 
 `bal(x, d) from t`, held by item P (a def, a decision's own expression, or an ask line), is computed as a walk of its own from day t to day d (LANGUAGE §5.14.1):
-1. **Start** from x's balance at the start of day t in the main walk at cut K; read at a point of the walk on day t (a decision's read), from x's balance at that point, and count in step 2 only the movements not yet booked there (LANGUAGE §5.14.1). The projection's walk continues the walk it starts from: a read in it of days before its start (`bal(x, d)`, `flows` of a place or a decision over a span that starts before t, a binding over a decision's movements) takes those days from that walk, up to the point it starts after, and the rest from its own (tally 2.1.2).
-2. **Count** every movement dated t through d whose instance doesn't depend on P, each evaluated as known on t: its keys, `when`, day and amounts at cut min(t, K). A random amount dated after t counts at the `random` clause's value, the read's or the ask line's, or under a closed-form query around the read; else a projection a decision reaches is refused, and an ask line's own projection on a path counts that path's sample (LANGUAGE §5.14.1, §5.16). Uncertain movements count only under `with uncertain`. Observations and readings dated after t are unused. Decisions in the window run in the projection's own walk, stratum by stratum, reading its balances.
+1. **Start** from x's balance at the start of day t in the main walk at cut K; read at a point of the walk on day t (a decision's read), from x's balance at that point, and count in step 2 only the movements not yet booked there (LANGUAGE §5.14.1). The projection's walk continues the walk it starts from: a read in it of days before its start (`bal(x, d)`, `flows` of a place or a decision over a span that starts before t, a binding over a decision's movements, a projection from an earlier day) takes those days from that walk, up to the point it starts after, and the rest from its own (tally 2.1.2).
+2. **Count** every movement dated t through d whose instance doesn't depend on P, each evaluated as known on t: its keys, `when`, day and amounts at cut min(t, K). A random amount dated after t counts at the `random` clause's value, the read's or the ask line's, or under a closed-form query around the read; else a projection a decision reaches is refused, and an ask line's own projection on a path counts that path's sample (LANGUAGE §5.16). Uncertain movements count only under `with uncertain`. Observations and readings dated after t are unused. Decisions in the window run in the projection's own walk, stratum by stratum, reading its balances.
 3. **Leave out** the movements that depend on P (§3.1 step 7), and list those dated in the window in the register (`left out:`).
 
 **Nesting is finite.** Inside P's projection no movement reaches P, so a decision in it whose own projection is held by Q has Q ≠ P, and a chain of nested projections names each holder at most once.
@@ -298,17 +291,14 @@ Before K, a place's movements on a day are:
 The balance at S comes from `opening`, and from each `stated` reading on, by its version's gap role (below). Observed rows dated before S are seen by bindings and fills and booked by none, so history before the run is given without being walked (LANGUAGE §5.19). So the past is real wherever a statement covers it, and modelled elsewhere, and every movement says which it is (N-1201).
 
 **Booking observations** (LANGUAGE §5.19).
-- Each end of an observed leg is booked at its place from the observation of the version that covers that place on that day; an end at a place no version covers is booked from the observation itself. A transfer on two statements is two rows stated `same`, one movement, which books each end once, from its own statement.
-- Each observation is booked on its own day (LANGUAGE §5.19): one that fulfils a decision instance dated that day at the instance's point in the walk, after the instance is computed (§4.2 step 3); every other in the day's first batch (§4.2 step 1), one dated before or after the instance it fulfils included.
-- Two rows stated `same` that disagree print `WARN-LEGS`; each end is booked as its own statement says, the difference shows in both places' ledgers, and a read of the movement away from its places is `HOLE-SAME`. Two unjoined rows of one transfer that fulfil one instance are refused (`RUN-RECORD`).
+- A transfer on two statements is two rows stated `same`, one movement, which books each end once, from its own statement.
 - An observation whose `fulfils` names an instance that doesn't exist, or doesn't touch its places, is refused (`RUN-RECORD`).
 - An observation that fulfils an uncertain instance makes it count: the observation is booked, and the instance leaves `uncertain`.
 
 **Readings** (LANGUAGE §5.19). A `stated[x]` reading that the cut K sees, at an instant before K, is applied at its instant in the walk (§4.2): at the start of its day or at the close. Its **gap** is the reading less the balance the walk reached at that instant. Its version's gap role says what follows:
-- **`pad x from y`:** a movement of the prelude kind `pads`, with id `pads:<version>:<x>@<instant>`, of |gap| between y and x (into x when the gap is positive), is booked at the instant, status `pad`. `flows` and bindings count it, and the register of every figure that reads it flags it (`pad:`).
-- **`anchor x`:** x's balance is set to the reading. Nothing is booked, `flows` doesn't count it, and no other place changes. The gap is the reading's balance line in the residual ledger (§6.3) and an `anchor:` entry (LANGUAGE §8.2).
+- **`pad x from y`:** a movement of the prelude kind `pads` (into x when the gap is positive), with id `pads:<version>:<x>@<instant>` and status `pad`, as LANGUAGE §5.19 says.
+- **`anchor x`:** x's balance is set to the reading, and no other place changes; the gap is an `anchor:` entry too (LANGUAGE §8.2).
 
-Either way, from the instant on x's balance is the statement's, plus what is booked since; before x's first reading, it is the opening plus what is booked since.
 - **Holes and refusals.** A hole or refused movement of x dated on or before the instant stops there, as LANGUAGE §5.19 says; the gap carries it (a hole or refused gap makes a pad's amount one too).
 - **Decisions.** A reading at the close of D is applied after D's decisions, so it never changes a decision dated on or before D; a decision after it reads the stated balance through the walk, under every cut that sees the row (§9 invariant 5).
 - **Cuts:** LANGUAGE §4.5.
@@ -330,7 +320,7 @@ Law for the past reads observations and facts, not the modelled past (N-1203):
 - When K = `on`, this is the replay.
 - When K is earlier, it is the backtest of the forecast over [K, E] (§8).
 - A day no statement covers for x prints no line, since nothing states x's observations there complete (LANGUAGE §5.19); an instance dated there that an observation fulfils is compared all the same, its matched line on the instance's day.
-- A pair of rows stated `same` is one movement (LANGUAGE §5.19): the ledger lists it once, on one line, and names both rows as its evidence.
+- A pair of rows stated `same` is one movement (LANGUAGE §5.19): the ledger lists it once, on one line; an unexplained line names both rows.
 - A period that E cuts holds its days through E; the days after E are one line, a hole `after the run's end` (`HOLE-POSTRUN`, §2; tally 2.1.7).
 
 Each line of the ledger is one of:
@@ -346,13 +336,13 @@ Each line of the ledger is one of:
 - **Grouping.** Lines are grouped by month and by move id (an adjustment's line by the id of the move it adjusts), or with `by f` by a field of the observed input (a category, a counterparty). A line's month is its own day's: the instance's day for a matched, expected-but-missing or partly fulfilled line (an adjustment's, V.known; for an instance whose day is a hole or a window not inside one month, the day of the last observation that fulfils it, `observed(m[k]).day`, as an observation answers a hole movement's day, LANGUAGE §5.19), the observation's day for an unexplained one, the reading's for a balance line. An instance that nothing fulfils whose day is a hole, or a window not inside one month, prints an expected-but-missing line in a group of its own named `?`, first among the groups, with its day's questions; it counts in no month's totals. Unexplained observations form one group per month named `unexplained`; with `by f`, they go by the field's value, in a group printed `<f> <value>`, and so does a matched line whose observations agree on it; a line with no observation, or whose observations disagree on f or lack it, goes by its move id, in a group printed `move <id>`. Balance lines form one group per month named `balance`.
 - **Zero lines.** A matched line and a balance line print whatever their difference, 0.00 included. An instance of amount 0 with no observation moves nothing and prints no line, though it exists (LANGUAGE §5.14).
 - **Signs.** Every amount is signed as a flow into x: in +, out −. A matched or partly fulfilled line's difference is observed − model; an expected but missing line's is − model; an unexplained line's is the observation; a balance line's is stated − booked. A hole on either side makes the difference a hole; a hole day or amount of an instance that observations fulfil is answered by them (LANGUAGE §5.19).
-- **Totals.** Each group gives the model's total, the observations' total and the difference, so the prototype's "pay in December 2025: model 13 611.54, bank 16 611.54" is one group line. A balance group gives the booked balances as its model total and the stated ones as its observed total.
+- **Totals.** Each group gives the model's total, the observations' total and the difference, so a caller's "pay in December 2025: model 13 611.54, bank 16 611.54" is one group line. A balance group gives the booked balances as its model total and the stated ones as its observed total.
 - **Order.** Groups are sorted by the absolute value of their total difference, and lines in a group by their own, biggest first (N-1223). Holes come first, since a hole may be any size, among themselves by their first question (LANGUAGE §8.1). Remaining ties go by month, then group name, then the movement order of §4.1, each term compared as its own type (tally 2.1.2).
 - **Cost.** It is computed from the timeline and the modelled past, with no re-evaluation.
 
 ### 6.4 The fitting loop
 
-Claude fits a parameter by replaying history many times (N-2005). Each step is:
+A caller fits a parameter by replaying history many times (N-2005). Each step is:
 1. pin one input with `with`;
 2. replay;
 3. read the residuals.
@@ -426,7 +416,7 @@ ask crps_sep: crps(bal(wallet, 2026-09-30) as if {known 2026-03-31}, bal(wallet,
 
 **What the layer can't do:** the log score of paths, which the model writes as a hole with its reason (LANGUAGE §5.15).
 
-**When "n in N futures" may be said** (spec Q-03). Tally 1's engine printed a verdict under every `share`. Tally 2 prints the figures a verdict needs, "n of N", the standard error and the horizon, and no verdict of its own (D-11, LC-28): whether a frequency may be said is a rule the household or its reader writes over those figures, as a `check` whose ask term is the statistic, its bound a def or a row (a statistic over paths stands only in an ask, LANGUAGE §5.16), and the MCP layer words its result. Tally 1's rule needed every random value's planning figure for its carry test, and the planning figure is now a question asked at a read (a `random` clause, or a `mean` or `quantile` in closed form, LANGUAGE §5.16), not a property of the fact, so the engine can't compute that test without the model saying which question it means. The precision part of the old rule (Agresti–Coull, two standard errors at most 0.05) is an expression over n and N that any model can write.
+**When "n in N futures" may be said**. Tally 1's engine printed a verdict under every `share`. Tally 2 prints the figures a verdict needs, "n of N", the standard error and the horizon, and no verdict of its own (D-11, LC-28): whether a frequency may be said is a rule the model or its reader writes over those figures, as a `check` whose ask term is the statistic, its bound a def or a row (a statistic over paths stands only in an ask, LANGUAGE §5.16), and the caller words its result. Tally 1's rule needed every random value's planning figure for its carry test, and the planning figure is now a question asked at a read (a `random` clause, or a `mean` or `quantile` in closed form, LANGUAGE §5.16), not a property of the fact, so the engine can't compute that test without the model saying which question it means. The precision part of the old rule (Agresti–Coull, two standard errors at most 0.05) is an expression over n and N that any model can write.
 
 ---
 
@@ -437,13 +427,13 @@ ask crps_sep: crps(bal(wallet, 2026-09-30) as if {known 2026-03-31}, bal(wallet,
 These hold by construction. The engine checks them anyway, cheaply, on every run, because a failure means an engine bug. A failure refuses the whole result with `ENGINE-INVARIANT`, the invariant and the first day and place where it fails. It is never printed as an answer.
 
 1. **Conservation.** For each unit, on each day, the two ends of each leg booked whole sum to zero, outside places and pads included; a leg booked by its ends (an observation covering one end only, `WARN-LEGS`, LANGUAGE §5.19) is left out, and its unmatched end is what the warning prints; so is a leg whose place is a hole, which books its known side only (LANGUAGE §5.14; tally 2.1.2). So the balances sum to the openings plus the anchors' gaps (§6.1) wherever these are known; a place with no `opening` reading breaks nothing.
-2. **Net worth moves only at the boundary, with a price, or at an anchor.** For the set of all places that aren't outside, the day's change in total worth equals the movements across the boundary (pads from an outside place included) plus the revaluation of positions that day (spec §3.2), plus that day's anchor gaps, stated − booked (§6.1), which the ledger shows as balance lines.
+2. **Net worth moves only at the boundary, with a price, or at an anchor.** For the set of all places that aren't outside, the day's change in total worth equals the movements across the boundary (pads from an outside place included) plus the revaluation of positions that day, plus that day's anchor gaps, stated − booked (§6.1), which the ledger shows as balance lines.
 3. **A scenario changes nothing before its `from` that it doesn't list.** Every movement and balance before D equals the base run's, except the movements that read the scenario's facts (a decision's projection over a scenario row known by its day, a read at a law date from D, `lifespan(k)` of a thing whose lifespan the scenario changes, a binding over a span that reaches D; LANGUAGE §6.4), listed (LANGUAGE §8.2 `before from:`), and what follows from them (LANGUAGE §6.4).
-4. **Asks move no money.** The timeline's hash is the same before and after the asks are answered. Moves inside `as if` are computed and never booked.
+4. **Asks move no money.** The timeline is the same before and after the asks are answered. Moves inside `as if` are computed and never booked.
 5. **A booked plan amount never changes.** Each plan instance's A₀ is the same under every K class that books it at the same cut, and its amount at cut K is A₀ plus its adjustments (§5). A decision's amount isn't fixed that way: it reads the walk of its cut K, so observations and readings that a later cut sees can change what it reads and books (§4.2, §6.1), and so, where it reads parts, can a later version that changes whose past money was (LANGUAGE §5.14.3, the one exception), while the law, facts and projections it reads stay those of its day (§5, §4.3); a reading never changes a decision dated on or before its instant.
 6. **Things hold nothing outside their lifespans.** Every position of a place is zero before its lifespan starts and after it ends (LANGUAGE §5.7).
 
-The test suite adds **determinism**: every case is run twice, with 1 and with 6 workers, and the result hashes must be equal (R-16, N-1401, spec §7).
+The test suite adds **determinism**: every case is run twice, with 1 and with 6 workers, and the results must be the same (R-16, N-1401).
 
 ---
 
@@ -472,11 +462,11 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 
 **`inputs-of ref`** (LANGUAGE §5.18) gives the rows of the read set; a walk or movement read in it stands for the rows behind what it counts: the openings, readings and observed rows of the places it reads, and the rows the movements it counts read for their days, `when`s and amounts (§3.2).
 
-**`readers-of x`** is the inverse of the item graph (§3.1), static: every item with a path of edges to x, the direct readers first. Of an event kind, every binding over it or over a kind it is a subkind of.
+**`readers-of x`** is the inverse of the item graph (§3.1), static: every item with a path of edges to x, the direct readers first.
 
 **The register** (LANGUAGE §8.2) is computed with each value, as the union of the registers of what it read. Sets are shared, so the union is cheap.
 
-**Words for people.** The engine returns structured results: codes, values with units, source tags and the holes' questions, which are Polish in the household's model. A ready Polish sentence per result (spec §6.2, Q-04) is made by the MCP layer from these; the engine has no prose.
+**Words for people.** The engine returns structured results: codes, values with units, source tags and the holes' questions, which are Polish in the household's model. A ready Polish sentence per result is made by the caller from these; the engine has no prose.
 
 ---
 
@@ -486,16 +476,16 @@ The test suite adds **determinism**: every case is run twice, with 1 and with 6 
 
 | Refusal | When | What happens |
 |---|---|---|
-| **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `check` finds it before a caller keeps a change (`OPERATIONS.md` §2.3). A load error in a scenario file refuses only that scenario and the scenarios over it, and an ask's `LOAD-SCENARIO` for a scenario whose file isn't loaded refuses only that ask (LANGUAGE §6.4) |
+| **Load refusals** (LANGUAGE §8.3) | the reality doesn't load | nothing runs. A broken reality never runs in part. `check` finds it before a caller keeps a change (`OPERATIONS.md` §2.3). A load error in a scenario file, or an ask's `LOAD-SCENARIO`, refuses only what `OPERATIONS.md` §2.1 says (LANGUAGE §6.4) |
 | **Per-value refusals** (LANGUAGE §8.4) | a value can't be computed | printed at its key; it propagates and outranks holes |
 | **Holes** (LANGUAGE §8.1) | a fact is missing | printed with their questions; other results stand |
-| `REQ-ASK` | the request names an ask that doesn't exist (an ask in a file handed over with the reality that doesn't load is refused at load, LANGUAGE §8.3; `OPERATIONS.md` §3.1) | the request is refused, after load (a load refusal outranks it), in every shape of reality (a plain one, one with scenarios, a joint model): `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
-| `REQ-CLOCK` | a cut an ask's literal states after `on` (`as known`, `with known`) | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s |
+| `REQ-ASK` | the request names an ask that doesn't exist (an ask in a file handed over with the reality that doesn't load is refused at load, LANGUAGE §8.3; `OPERATIONS.md` §3.1) | the request is refused, after load (a load refusal outranks it), in every shape of reality: `no ask <q>`, q the first such ask in the request's order, a member's ask named as asked (`a.q`, LANGUAGE §6.1), is the run's one result; nothing else prints (tally 2.1.3) |
+| `REQ-CLOCK` | a cut an ask's literal states after `on` (`as known`, `with known`; a literal in `( )` too), in an ask load left standing | the request is refused, checked after load, which it doesn't outrank: `as known <D> is after the model's on <on>` (`with known <D> …` likewise) is the run's one result, as `REQ-ASK`'s |
 | `REQ-PATHS` | more than 100 000 paths for one ask | the request is refused |
 | `ENGINE-INVARIANT` | §9 fails | the whole result is refused, with the evidence |
 
 **What the engine never does:**
-- choose an option for the household by a measure it wasn't given; a choice is an `argmin` over a finite set with a stated cost and tie-break, written by the household or the law, and a root is a `solve` (LANGUAGE §10);
+- choose an option for the caller by a measure it wasn't given; a choice is an `argmin` over a finite set with a stated cost and tie-break, written by the household or the law, and a root is a `solve` (LANGUAGE §10);
 - read a clock, or anything outside the reality and the request;
 - write anything: the caller writes a reality's files and the store keeps them (`OPERATIONS.md` §1, §4);
 - approximate without a stated precision;

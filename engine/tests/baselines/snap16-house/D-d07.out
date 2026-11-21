@@ -49,30 +49,40 @@ d07_check_tax (r = red_20260304): ok
 d07_left: 247
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2025-06-13) [hh_round = *]: 2 209.24 DUK
+  assumed: no Spring Day notice for 2027 is known on the model's day (GEN-1 .3): its first Monday of April is taken (holidays)
+  assumed: quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
   anchor: konto 2025-06-13 end, stated 2 209.24 DUK, difference 79 509.44 DUK
   left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2025-06-19) [hh_round = *]: 4 334.00 DUK
+  assumed: no Spring Day notice for 2027 is known on the model's day (GEN-1 .3): its first Monday of April is taken (holidays)
+  assumed: quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
   anchor: konto 2025-06-19 end, stated 4 334.00 DUK, difference 0.00 DUK
   left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2025-07-03) [hh_round = *]: 4 691.12 DUK
+  assumed: no Spring Day notice for 2027 is known on the model's day (GEN-1 .3): its first Monday of April is taken (holidays)
+  assumed: quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
   anchor: konto 2025-07-03 end, stated 4 691.12 DUK, difference -2 747.82 DUK
   left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_low_balances (d = 2026-03-03) [hh_round = *]: 4 842.46 DUK
+  assumed: no Spring Day notice for 2027 is known on the model's day (GEN-1 .3): its first Monday of April is taken (holidays)
+  assumed: quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
   anchor: konto 2026-03-03 end, stated 4 842.46 DUK, difference -1 924.60 DUK
   left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11
   left out: rent_in, 456 instances, first 2027-01-10
   law date 2026-09-30, cut 2026-09-30
 d07_lowest [hh_round = *]: 1 324.24 DUK
+  assumed: no Spring Day notice for 2027 is known on the model's day (GEN-1 .3): its first Monday of April is taken (holidays)
+  assumed: quarter: D-HR1 runs on, but a quarter is planned only while its due day falls in a year the holidays calendar has a row for (GEN-1's to 2026, the assumed row hol_2027 to 2027): 2027-Q4 is due in January 2028, and a due day that is a hole would spoil every span (L §5.14)
   anchor: konto 2025-06-17 end, stated 1 324.24 DUK, difference -885.00 DUK
   left out: fee_out, 9 instances, first 2027-01-05
   left out: kuba_send, 4 instances, first 2027-01-11

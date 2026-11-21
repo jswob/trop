@@ -1,0 +1,48 @@
+# tally 2.2.1 P50 N1: the replaced statement is the last with a row, also behind a `= none` (review
+# g4 s223/chain_none_row_nocov). Before W13: loads.
+=== options exit=1
+=== chain_none_row_nocov.tally
+model t
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place sav: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+
+version open
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+version stmt
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "a"
+  bank[r2] = (on: 2026-02-11, kind: transfers, leg cash from konto to sav amount 20.00 PLN) "b"
+
+version fix
+  cite s
+  governs 2026-02
+  known 2026-04-01
+  replace bank[r1] = none "gone"
+
+version fix3
+  cite s
+  governs 2026-02
+  known 2026-04-10
+  replace bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 70.00 PLN) "back"
+
+ask q: bal(konto, 2026-04-30), bal(sav, 2026-04-30)
+ask q_mid: bal(konto, 2026-04-30) as known 2026-03-15
+=== expect
+refused: LOAD-COVERS replace bank[r1] of konto: fix3 doesn't cover konto on 2026-02-10 (chain_none_row_nocov.tally:39)

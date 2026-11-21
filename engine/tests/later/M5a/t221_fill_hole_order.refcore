@@ -1,0 +1,11 @@
+exit 0
+c (x = sell) [method = *]: refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+  cut 2026-01-01
+c_each (x = sell) [method = *]: refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+  cut 2026-01-01
+c_fifo (x = sell): refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+  pinned: method = fifo
+  cut 2026-01-01
+t (b = buy_b, x = sell) [method = *]: refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+  cut 2026-01-01
+t (b = buy_a, x = sell): ?"when was the lot bought" (d_a)

@@ -1,0 +1,16 @@
+scenario sc over base
+  tally 2
+  from 2026-03-01
+
+kind ks
+
+input y[k in ks]: num
+
+version vs
+  cite s
+  governs always
+  known 2026-01-02
+  ks + [k1] lives 2026-01-01..
+  y[k1] = 1 "s"
+
+ask q_lit: y[k9] in sc

@@ -1,32 +1,4 @@
-10:spec/g1/qn,10:spec-forms,25:run qn.tally --ask q_none,447:8:qn.tally,431:model qn
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-
-source s "synthetic"
-unit PLN: currency minor 0.01
-index ix = [a, b, c]
-
-input v[k in ix]: money PLN
-input lvl: num
-input half: num
-
-ask q_none: quantile(v[k] for k in ix, lvl)
-ask q_half: quantile(v[k] for k in ix, half)
-
-version v1
-  cite s
-  governs always
-  known 2026-01-01
-  v[a] = 1.00 PLN
-  v[b] = 2.00 PLN
-  v[c] = 3.00 PLN
-  lvl = none
-  half = 0.5
-,,1:0,87:q_none: refused: RUN-NONE a value is none here: the level of quantile
-  cut 2026-06-30
-,14:spec/r8/reach2,10:spec-forms,29:run reach2.tally --ask r_axis,2040:12:reach2.tally,2018:model r8_reach2
+14:spec/r8/reach2,10:spec-forms,29:run reach2.tally --ask r_axis,2040:12:reach2.tally,2018:model r8_reach2
   tally 2
   on 2026-06-30
   start 2026-01-01
@@ -262,37 +234,6 @@ version rr
 ask q: r[1.0]
 ,,1:0,22:q: 1
   cut 2026-06-30
-,21:spec/p60/num_list_key,10:spec-sweep,30:run num_list_key.tally --ask q,642:18:num_list_key.tally,615:model pw
-  tally 2
-  on 2026-04-25
-  start 2026-01-01
-  end 2026-12-31
-  note "T, M2 P60 (G6's census of run-time stops): walk/tuples.rs:403, a move keyed by a list of numbers not integers"
-
-source s "s"
-unit PLN: currency minor 0.01
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input amt: money PLN
-input dm: date
-
-move ml[x in [1.5, 2]]: transfers
-  on dm
-  leg cash from world to sav amount amt
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  dm = 2026-03-31 "s"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
-
-ask q: bal(sav, 2026-06-30)
-,,1:0,74:q: 20.00 PLN
-  unfulfilled: ml[1.5]
-  unfulfilled: ml[2]
-  cut 2026-04-25
 ,22:spec/p60/flows_num_key,10:spec-sweep,31:run flows_num_key.tally --ask q,629:19:flows_num_key.tally,601:model pw
   tally 2
   on 2026-04-25

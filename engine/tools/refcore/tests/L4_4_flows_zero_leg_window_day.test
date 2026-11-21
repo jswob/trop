@@ -4,6 +4,7 @@
 # which depend on the day, stay holes. dce84215 gave fz the window's hole.
 # tally 2.2 (2.2-4): the clause `windows each` is cut; its asks are the plain line, the hole with each unknown day it
 # carries named (`unknown day:`, 2.2-11). A caller who takes the window as one day pins its cell.
+# tally 2.2.1 (#214, E §4.1 step 2: "but for a leg of amount 0"): the balance bz is 0.00 PLN too, no longer the hole.
 === m.tally
 model z1
   tally 2
@@ -38,8 +39,7 @@ version v
   zero = 0.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
 === expect
-bz: ?"date within window(2026-04-15, 2026-04-25) not precise enough for a balance" (zer)
-  unknown day: w_zer
+bz: 0.00 PLN
   cut 2026-08-01
 fe: 0.00 PLN
   cut 2026-08-01

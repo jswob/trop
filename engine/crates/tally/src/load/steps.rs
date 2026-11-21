@@ -162,6 +162,19 @@ impl Loader {
                 "files declare different tally versions".to_owned(),
             )));
         }
+        if model.header.tally != Num::int(2) {
+            // L §8.3 LOAD-VERSION (S-224a): files that agree on a version this engine doesn't run.
+            let version = model.header.tally.integer_text().ok_or_else(|| {
+                invariant("a header's tally version is parsed as an integer".to_owned())
+            })?;
+            // located at the `tally` statement, like every load refusal (G4's review N3,
+            // P50; its line, P53)
+            let line = model.header.tally_line.ok_or_else(|| {
+                invariant("a header with a tally version and no tally line".to_owned())
+            })?;
+            let message = format!("tally {version}: this engine runs tally 2");
+            return Err(refuse(Load::Version, message, &model.path, line));
+        }
         let is_joint = !model.header.uses.is_empty() || !model.header.sames.is_empty();
         if is_joint && joint.is_none() {
             return Err(Stop::NotBuilt(
@@ -172,11 +185,12 @@ impl Loader {
             .header
             .sames
             .iter()
-            .map(|(left, right)| SameLine {
+            .map(|(left, right, line)| SameLine {
                 left: left.clone(),
                 right: right.clone(),
                 file: model.path.clone(),
-                line: model.header.line,
+                // the line of the `same`, which a refusal names (L §8.3; 221.8 on #241)
+                line: *line,
                 version: None,
             })
             .collect();

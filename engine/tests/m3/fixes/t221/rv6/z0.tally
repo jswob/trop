@@ -1,0 +1,56 @@
+model z0
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-06-30
+  note "T, tally 2.2.1 (#241), the mutation run's survivors: a plan instance with a leg of amount 0 (L §5.14: an amount of 0 books nothing; E §4.1 step 2): beside a hole amount it books nothing at the 0 leg's places; under a `when` that is a hole, a hole there"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+
+place wal_k: accounts PLN lives 2025-01-01..
+place fee_k: accounts PLN lives 2025-01-01..
+place wal_l: accounts PLN lives 2025-01-01..
+place fee_l: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+input dk: date
+input dl: date
+input a_h: money PLN
+input a1: money PLN
+input f0: money PLN
+input w_h: bool
+
+move zk: twos
+  on dk
+  leg cash from world to wal_k amount a_h
+  leg fee from world to fee_k amount f0
+
+move zl: twos
+  on dl
+  when w_h
+  leg cash from world to wal_l amount a1
+  leg fee from world to fee_l amount f0
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  dk = 2026-04-06 "s"
+  dl = 2026-04-07 "s"
+  a_h = ?"how much is zk?" "s"
+  a1 = 10.00 PLN "s"
+  f0 = 0.00 PLN "s"
+  w_h = ?"does zl happen?" "s"
+  opening[wal_k] = 0.00 PLN at 2026-01-01 start "s"
+  opening[fee_k] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wal_l] = 0.00 PLN at 2026-01-01 start "s"
+  opening[fee_l] = 0.00 PLN at 2026-01-01 start "s"
+
+ask k_fee: bal(fee_k, 2026-04-30)
+ask k_wal: bal(wal_k, 2026-04-30)
+ask l_fee: bal(fee_l, 2026-04-30)
+ask l_wal: bal(wal_l, 2026-04-30)

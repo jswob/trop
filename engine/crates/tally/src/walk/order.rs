@@ -491,8 +491,9 @@ impl Engine {
             run.inst.err = Some(err.clone());
             run.inst.status = Status::Refused;
             let (movement, legs) = (run.inst.id.clone(), run.inst.legs.clone());
+            let read = run.inst.coll.clone();
             for lg in &legs {
-                tied_walk.leg_bad(m, &movement, lg, &err, key)?;
+                tied_walk.leg_bad(m, (&movement, lg, &read), &err, key)?;
             }
         }
         Ok(())
@@ -669,6 +670,7 @@ impl Engine {
             Ok(b) => {
                 run.inst.exists = b.exists;
                 run.inst.legs = b.legs;
+                run.inst.leg_reads = b.leg_reads;
                 run.inst.attrs = b.attrs;
                 run.inst.for_period = b.for_period;
                 run.inst.fulfils = b.fulfils;
@@ -749,12 +751,13 @@ impl Engine {
                 .cloned()
                 .collect();
             let mv_id = run.inst.id.clone();
+            let read = run.inst.coll.clone();
             walk.record(run);
             if known.is_empty() && !legless {
                 walk.add(m, ALL, ALL, Ent::new(key, Change::Bad(err.clone())))?;
             }
             for lg in &known {
-                walk.leg_bad(m, &mv_id, lg, &err, key)?;
+                walk.leg_bad(m, (&mv_id, lg, &read), &err, key)?;
             }
             return Ok(ix);
         }

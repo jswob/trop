@@ -1,0 +1,72 @@
+# tally 2.2.1 P31 (L §8 l.2217, L §4.4 l.671), the first engine review's B4: a refusal none of whose reads meets a value
+# under a window's hole is given on every day and stands. The scenario's px on a window across its from, the base's bad
+# refused (RUN-DIV) on 05-10: b0531 and explain are that refusal, as every pin; b0509, before it, stays the hole. tally
+# 2.2 printed the window's hole.
+=== ot_base.tally
+model otb
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input zero: num
+input w: date
+input d_bad: date
+move bad: transfers
+  on d_bad
+  leg cash from konto to world amount round(amt / zero, minor(PLN), half-up)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  zero = 0 "s"
+  d_bad = 2026-05-10 "s"
+  w = window(2026-04-28, 2026-05-03) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+ask base: bal(konto, 2026-05-31)
+=== ot_sc.tally
+scenario sc over otb
+  tally 2
+  from 2026-05-01
+move px: transfers
+  on w
+  leg cash from world to konto amount amt
+ask b0509: bal(konto, 2026-05-09) in sc
+ask b0531: bal(konto, 2026-05-31) in sc
+ask p0429: bal(konto, 2026-05-31) in sc with w = 2026-04-29
+ask p0501: bal(konto, 2026-05-31) in sc with w = 2026-05-01
+ask p0503: bal(konto, 2026-05-31) in sc with w = 2026-05-03
+ask ex: explain bal(konto, 2026-05-31) in sc
+=== expect
+b0509: ?"date within window(2026-04-28, 2026-05-03) not precise enough for a balance" (px)
+  unknown day: w
+  world: sc
+  cut 2026-06-10
+b0531: refused: RUN-DIV division by zero
+  world: sc
+  cut 2026-06-10
+base: refused: RUN-DIV division by zero
+  cut 2026-06-10
+ex: refused: RUN-DIV division by zero
+  world: sc
+  cut 2026-06-10
+p0429: refused: RUN-DIV division by zero
+  pinned: w = 2026-04-29
+  world: sc
+  left out: px, 1 instances, first 2026-04-29
+  cut 2026-06-10
+p0501: refused: RUN-DIV division by zero
+  pinned: w = 2026-05-01
+  world: sc
+  unfulfilled: px
+  cut 2026-06-10
+p0503: refused: RUN-DIV division by zero
+  pinned: w = 2026-05-03
+  world: sc
+  unfulfilled: px
+  cut 2026-06-10

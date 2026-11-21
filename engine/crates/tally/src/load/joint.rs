@@ -295,11 +295,13 @@ pub(super) fn load_joint(
 pub(crate) fn reprint_members(
     given: &[Source],
     disk: &BTreeMap<&str, &[u8]>,
+    pin: Pin,
 ) -> Result<Vec<BTreeSet<String>>, Stop> {
-    // a reprint loads no member: `how` reaches nothing here
+    // a reprint loads no member: `how` reaches nothing here; it checks each pin as `run` does,
+    // in the form the command line names (OPERATIONS §2.2: "Inputs. As `run`")
     let pool = Pool {
         given: given.to_vec(),
-        pin: Pin::Canonical,
+        pin,
         how: How::FENCES,
     };
     let mut members: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();

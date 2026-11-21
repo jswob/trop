@@ -7,6 +7,260 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W14: S-223's last corner (P53; issue #241; 1 668 tests)
+
+- `loader.check_correction_covers` takes every earlier statement of the row with a row, at the cuts from the
+  correction's `known` until the next statement of the row is known, per world. `ask.joint_warning` reads an
+  instance id with spaces (two keys). The lists of what is left stand as in W13's section.
+
+## tally 2.2.1, group W13: the last review, the close (P50; issue #241; 1 665 tests)
+
+- **Done here:** S-223 per world and cut class against the last statement with a row (`loader.check_correction_covers`);
+  `reprint --pin=bytes` (`cli.reprint_paths`, `run_texts`); `REQ-CLOCK` on the asks load left standing, one file too
+  (`ask.Asker.run`); `LOAD-VERSION` with its line (`parser` keeps `tally_loc`) and the disagreement across a scenario
+  file (`cli.run_worlds`).
+
+### For the next milestone
+
+- **Cause A, 33 sites** (229.3, 208.R1): the `refuse('LOAD-…')` and `LoadError` raised at run, listed in W8's section
+  below, each wanting load's check and a text that reaches it.
+- **231.Q10:** `walk.run_group` keys a cycle's instances `dec_text(g[0], …)`, the group's first move by id whether or
+  not it is due that day; no text shows an output it changes.
+- **The review's S2** (g4 `jw/`, `run b --ask q_d`): a `diff … in sc against m` in a member run alone; the `m` side
+  prints a back-pay hole where the base's own `q` is `-3 950.00 PLN`, as the engine prints. Likely the scenario's
+  state reaching the base world's evaluation inside the diff; not found.
+- **P24's head** on `res/r1` a2, a3, a8 (a span written with a bound variable inside an expression): refcore puts the
+  value in the text as written; the engine's bytes not seen.
+- `RUN-NONE` of `abs`, `round`, `if`, `and`, `not`, `min` and a membership test still says "a value" (P48 listed the
+  others).
+
+### For the windows round
+
+- Two sides on one named window with the same question text print one question labelled `(in1, in2)` (`fmt_hole`
+  merges by text; W10).
+- `round` over a window: refcore asks "not precise enough for a print", the engine "for round" (W10, w15).
+- `hs/h5`, `h5b` `fl` and `same/s4_windows` differ from the engine (P48's comparison); N6 (`read_def_held`) is the
+  engine's.
+
+## tally 2.2.1, group W12: the names, the engine's third review (P48; issue #241; 1 658 tests)
+
+- **230.Q-5a** (`loader`, `walk.as_written`, `walk.line_naming`): sides as written; RUN-RECORD names the written line
+  naming the decision, a chain's too; none found is `ENGINE-INVARIANT`. HOLE-SAME's same-line form keeps the mover's
+  amount then the decision's day, its two names as written.
+- **221.8:** a header's `same` at its own line. **B2, N2:** `env_txt` in every `RUN-NONE` that names a read (`abs`,
+  `round`, `if`, `and`, `not`, `min`, a membership test still say "a value": not in the review's list).
+- **P24:** the head substitutes values into the span as written (`2026-03 .. end_of(2026-03)`); the engine's bytes on
+  `res/r1` a2, a3, a8 not seen here.
+- **F-C, F-E, two register lines:** as CHANGES 2.2.1-94. For the windows round: `hs/h5`, `h5b`, `s4_windows`.
+
+## tally 2.2.1, group W11: P45's three points, cause H (issue #241; 1 648 tests)
+
+- **P45 (d)** (`walk.consol`): undecided days of sides stated `same` with equal amounts book, at each side, the
+  window's hole of each undecided side ("not precise enough for a balance", labelled by its side), also after the
+  window's end; agreed days (a one-day window against its day) still book once.
+- **P45 (e)**: a side whose day is a hole books the movement, by that side, and nothing else: its question alone.
+- **P45 (f)** (`resid.m_residuals`): a window an observation fulfils takes its last fulfilling observation's day
+  even across two months; only a window nothing fulfils is the `?` group.
+- **208.R2** (`ask._tuple_law`): read per tuple on every form, in the tuples' loop and `binds_over_axes`, each
+  line's register at its tuple's law date.
+- **231.R1** (`check` records `a._pinned_axes`; `ask.explain_pins`): outside the pins, every tuple of the pinned
+  axes the cone reaches, in id order, options as declared. Not tried with `in s` on a scenario's own axis.
+- **231.Q10, not built:** `run_group` keys a cycle's instances `dec_text(g[0], …)`, the group's first move by id
+  whether or not it is due that day; no text at this tip shows an output it changes. The tests session's text
+  is the place to start.
+
+## tally 2.2.1, group W10: the day of same sides, the register per fact (P43; issue #241; 1 644 tests)
+
+- **S1** (`moves.same_days`, `same_obs_differ`; `walk.consol`; `mreads.same_in_span`): one comparison of the days
+  each side can take (`day_set`): a hole side's question; no common day, `HOLE-SAME` on the first side's day as
+  stated (a window as its text); agreed (one named window on every side, or one day); else `HOLE-IMPRECISE` "for
+  the day of in1 and in2", a question per unknown day labelled by its side. The booking books once, by the first
+  window side in id order, and ends a skipped side's pending window with an empty hole entry.
+- Limit: two sides on one named window with the same question text print as one question labelled `(in1, in2)`
+  (`values.fmt_hole` merges by text; per label moved 5 tests outside the item, reverted).
+- **S2, S3, S5** (`mreads.same_fact_reads`; `Leg.coll`): a read of one fact holds that fact's reads from both sides;
+  membership merges every side's day reads; flows over a covered span registers marks and `open:` as the balance.
+- **S7** (`ask.declared_in_world`): a thing whose entries are none in this world isn't declared, so `diff` says added.
+- **Item 6, the order of two questions in one line:** by the question's text, code point order (Python `sorted`
+  over the texts); identical texts merge, their labels sorted and joined ", ".
+- **w15:** `evaluate.num_at` keeps the unit of a value taken in turn. refcore prints the hole "not precise enough
+  for a print", the engine "for round": the use word differs; by P41 F1 `round` is monotone, so the interval stands
+  until the print. For the lead.
+- **S-231.Q1a:** `beats_order` reads the beats of the rules in force (`live`), not the stale `info.beaters`.
+- **Not built, for want of budget:** cause H's 208.R2, 231.R1, 231.Q10; cause A's sites as in W8 below.
+
+## tally 2.2.1, group W8: the second engine review, the fix review (issue #241; 1 631 tests)
+
+- **P35, one read set.** A refused entry carries every entry its reads gave (`Walk.add`; the sign rule's refusal the
+  place balance's, `Walk.cum`, and `bad_reads` for `leg_refused`); every read of a refused entry lists them
+  (`mreads.refuse_ent`). A read of facts stated `same` merges the other sides' reads (`same_others`). The reads that
+  put a movement's day outside a read (`later_by_place`: plan, covered, decision and left-out legs; `day_reads` in
+  `flows`, bindings and `flows` of a move) list their `pinned:` and `assumed:` rows only (`LATER_KINDS`): a later
+  movement's `held:` rows are the statement's too, but 60 stored records would move (1 520 lines), so they wait for
+  the lead. A count over pads lists each pad (`span_members`); an anchor carries `open:` as a pad (`open_kept`).
+- **P36, `same`.** `same_obs_differ(fact=)` is per fact; `same_days` compares days as a comparison (undecided:
+  `HOLE-IMPRECISE` naming the window); a field read of a leg is a record whose amount and day are each their own
+  hole; `same_in_span` and the leg amounts make `flows`, `count` and `sum` of a side the hole. The walk's own
+  consolidation (`Walk.consol`) still compares days by equality (b3's balance prints both holes): not in the ruling's
+  probes. `WARN-LEGS` for one version and for a day alone. A residual's two-leg hole merges (`resid.py`).
+- **P37, P39.** `diff` under a binding: a world that doesn't declare what the expression names has no tuples. A
+  window-dated instance's ledger day is its last fulfilling observation's (`ful_last`). A scenario's decision before
+  `from` is noted left out at the places its legs name (`dec_places`), at the scenario sites only: decisions outside
+  [S, E] still print no `left out:` (E2_flows_after_end, E4_2_tie_when_false would gain it; not P39's item).
+- **P41.** `lift_values`: a monotone operation reads its ends (and 0) whatever the size; the hole names every
+  window (`hw`). A reading keeps a window pending (`St.imp`), its own instant reads the stated value. A decision's
+  refusal stands unless a place in its `reads` holds a window's hole (`dec_refusal_stands`); a lifespan's always.
+  Inside a walk `flows` of a window-dated decision and a binding over its kind are its hole; an ask's `for … where`
+  turns a `WinDay` into the tuple's hole.
+- **Part 2.** 234.1: a dyn `+`/`-` is money only when both sides are, or the other is 0. 236.3: a scenario over a
+  refused one is refused with its message (`run_worlds`). 221.8, 221.R1, 228.Q5: both interpreters so (tests for
+  the first two; 228.Q5 `scenario s9 … (s9.tally:1)` on both). R18's three cells ran in W1 (`L4_3_*`).
+- **Open.** 230.Q-5a: both print `pm and dx are one, but the leg at konto differs on …: … (pm) and its day … (dx)`,
+  mover first whatever the text's order, beside `Walk.consol`'s own hole; `HOLE-SAME`'s row fixes the id order and
+  its form has no "and its day" (`writer/w8/t230q5a.tally`): for the lead. Cause H, not built, for want of budget:
+  208.R2 (a per-tuple `law` off `diff`), 231.R1 (`explain … in s`, the axes' order), 231.Q10 (a cycle's instance
+  keys). Cause A (229.3, 208.R1), none taken: `refuse('LOAD-…')` at run in `evaluate.py` 975, 1440, 1739, 1743, 1914,
+  1919, 1929, 1940, 2093, 528; `mreads.py` 288, 404, 1053, 2078, 2093, 2108, 2126; `eval2.py` 720, 896;
+  `partswalk.py` 2283; `LoadError` raised at run in `evaluate.py` 359, 396, 608, 1158, 1163, 1170, 1467, 1752, 3049;
+  `moves.py` 903, 1178, 1929, 2412; `walk.py` 1791 (line numbers at 69fb98ea). Each wants load's check or a `RUN-*`
+  name and a text that reaches it; the value codes print `RUN-*` already (`errors.RUN_PHASE`).
+
+## tally 2.2.1, group W1: a move's keys bind in order (R18; issue #241; 1 597 tests)
+
+- **Load.** `Checker.edge` records a move's key reads with their relations while `check_move` types each binding
+  (`mi.key_reads`: the binding's, then its `where`'s). `check_move_keys_lawdate`: for a key the `at` names, or one
+  before it, a read of the binding that `move_read_dated` judges dated is `LOAD-LAWDATE move <m>'s key <k> reads
+  law-dated <x> with no law date: its at reads <k'>` (`reaches <d>, which takes its law date from its reader,` for an
+  `at reader` def); such a key's dated `where` waits (`mi.dated_wheres`). `move_read_dated` is the one test of a
+  move's reads, as the engine's. A read's keys are typed without the read's own mode (`read`, clause 1): `region`
+  in `cal[region]` or `last(rd[region], d)` is read at the law date.
+- **Walk.** `move_tuples` binds keys in order; a waiting `where` is read by `waiting_wheres` at the tuple's `at`
+  once its keys are bound, in binding order, before a later key's refusal (235.5): false drops, a hole joins, a
+  refusal refuses; a hole `at` makes the tuple its hole, a refused one leaves them unread (the instance refuses
+  alone). `move_law` counts only the move's keys (an aggregate's variable in the `at` is none). The
+  `REFCORE-NOT-YET … an interpreter guard` of `LAWGUARD` is no longer met on m3's 37 `spec/lawdate` texts.
+- **Left:** 235.9, a key that reads a fill whose terms are law-dated: refcore still prints the guard
+  (`review-probes/gatefix/f/`); the plan gives it to the engine at M5a.
+
+## tally 2.2.1, group W3: coverage on the rows that stand; `residuals` (issue #241; 1 582 tests)
+
+- **S-223.** `Loader.check_correction_covers`: a `replace` of an observation row that books (not `= none`) in a
+  version that doesn't cover, on the row's day, a place of its legs that the replaced row's version covers is
+  `LOAD-COVERS replace <r> of <x>: <version> doesn't cover <x> on <d>`.
+- **S-232.** `Loader.check_covers_standing` replaces the one test at `on` in the base's world: per world (the base,
+  then each scenario's chain, `set_world`) and per key, a row stands from its `known` until a row above it by
+  (layer, known) in that world is known; it is checked against its version's covers span at each cut of that stretch
+  (its own `known` and the known dates of the moves the world sees, `VersionInfo.span_at`). A dropped row stands for
+  nothing. The message is the old one; a lower scenario's refusal refuses those over it with its message.
+- **Cause D.** `residuals` types its place as `bal` does (`expect=T.key('places')`), so an entered account is a place
+  (222.1); a stated reading a `replace … = none` removes has no ledger line (`resid.py`, 236.2).
+
+## tally 2.2.1, group W2: the lines at the run's own level (issue #241; 1 573 tests)
+
+- **R20, one mechanism.** A member's ask is answered by the member (`Asker.member_ask`, `member_alone`); its run-level
+  lines come back as data, never read off a line's text: its refused scenarios' lines and its walk's warnings
+  (`WARN_SINK`, `emit_warnings`; `WALK_WARNINGS`, never `WARN-UNREAD`), renamed by the joint model's names
+  (`Asker.lift`, `joint_warning`: `scenario a.s`, `a.konto`; a nested member's `scenario m.b.s`), each once per
+  member. `run` prints every scenario line once, before every result, in `check`'s order (by the first file that
+  declares the scenario, `first`), and the members' walk warnings with the run's (L §8.5's order). Asks of one id go
+  by full path, then line (`place_key`), in `check` and in `run`. A scenario file's own ask refused alone prints its
+  line in `run` (229.1); a member's ask refused alone is its own line (233.2).
+- **REQ-CLOCK.** A literal in `( )` too (S-233.8); a member's ask against its member's `on` (233.3); a reality with
+  scenario files (`clock_check`, 233.4), on the asks load left standing (233.5).
+- **S-usage.** `cli.OPTIONS`: an option, a word that starts with `--`, the command doesn't take is a usage error, exit
+  2; `--pin=bytes` is taken by `run`, `check` and `reprint`.
+- **229.2 (cause A).** `run_worlds` makes load's last check, a literal key at a literal stepped range, on every
+  reality before anything is answered, in `run` as in `check`. Cause A's 229.3 and 208.R1 are open: the value
+  codes already print `RUN-*` through `errors.RUN_PHASE`; 22 `refuse('LOAD-…')` sites of the rows' shape, the graph
+  and fields (`LOAD-OVERLAP` 4, `LOAD-PRICE` 4, `LOAD-FIELD` 3, `LOAD-READS` 2, `LOAD-RANDOM` 2, `LOAD-BAND` 2,
+  `LOAD-REPLACE`, `LOAD-LAWDATE`, `LOAD-LABEL`) and about 20 direct `LoadError` raises in run-time modules each want
+  load's check or a `RUN-*` name, and a text that reaches them.
+
+## tally 2.2.1, group W7: the first engine review's findings (issue #241; 1 555 tests)
+
+- **P30, one statement for an operation over an interval** (L §4.4 l.667 to l.671). `lift_values` is the one
+  mechanism; `lift` is its monotone form (`mono=True`). It takes each value in turn where it can: the whole numbers
+  of a whole-number interval (an int, or one kept whole by + - * by a whole number: `Iv.whole`, `whole_valued`), with
+  no cap that falls back to the ends (`LIFT_CAP`, 100 000 values, beyond which the hole). Its ends, and 0 where a
+  number's interval crosses it, stand for the rest only where the operation is monotone and total (`exp`, `ln`,
+  `sqrt`, `round`, `abs`, `pow` with one exponent, the date built-ins); else the hole. Then one value when they agree,
+  the refusal when every one refuses (the first's), the hole when only some do. One window named in two arguments of
+  one operation is one day (`overlap_days(w, w, k)`, N9). `iv_arith`: `/` by an interval holding 0 goes through
+  `lift_values` (B3, N6); ends that agree are one value (`days_between(d, w) * 0`, the review's k1). `start_of`,
+  `end_of` of an interval of periods take its ends (N5; the `REFCORE-NOT-YET` there goes).
+- **B5, invariant 5 under a window's cuts.** A windowed instance's body joins every booking cut of its window up to K
+  (`inst.cuts`), so `m_inv5` compares bodies under that set, not the first cut alone: asks at two cuts in one run
+  give what each gives alone (L l.2215).
+- **B4 (P31), a refusal beside a window's hole.** A plain movement's or an observation's own refusal (a leg's refused
+  amount, a refused instance, a refused adjustment) reads nothing the walk books (L §5.14.2), so it is given on
+  every day and stands after a class hole (`Ent.note == 'own'`: `leg_bad(own=True)`, `global_own`, `placebad_own`);
+  a refusal a decision's or a check's reads give (the sign rule, a lifespan, a decision's run) stays the hole.
+- **N1 and N8 (P32), a reading inside a window.** A reading met while a window's legs are pending at its place (`imp`,
+  or a window's question in `perm`) states the balance at its own instant; from the next instant the balance is the
+  window's hole up to the next reading (`apply`'s reset, `Ent.reopen`; `Walk.state` gives the reading's own instant
+  without it).
+- **N4 (P32), a window's adjustment.** `m_adjust_move_compute` measures a windowed instance from its window's last
+  day: a version known after it makes the adjustment, every day being paid by then (E §5 step 2); one known inside it
+  is the booking cut's hole, as before. The HOLE-CHANGED question names the window (`values.day_text`).
+- **N3 (P32), a decision dated by a window in `flows`, `count`, `sum`.** The walk books it on no one day, so a
+  `flows` or a binding that meets it (outside a walk) signals `WinDay`, and `ask.one` reads the line once per day of
+  the window, the cell its day is read from pinned to that day (`window_days`, an inner `solve` pin that prints
+  nothing): one value where the days agree (`cn45` 1, `fl` 100.00 PLN), the refusal where every day refuses, else the
+  window's hole; a window no cell names is its hole.
+
+## tally 2.2.1, group W5: the names (issue #241; 1 538 tests)
+
+- **R21, an unknown day's name.** A carry entry is (id, label, days, the window's text) (`window_id`,
+  `added_carry`, whose label is `added <entry> of <calendar>`). A def's fresh window takes the def's cell as its
+  origin (`Engine.named`: an observed row's field copied by a def is `held_from[bank[g1]]`); a window written in a
+  move's `on` takes its movement (`moves`, after the day is computed); a pin keeps a computed window's names
+  (`pinned_read`). `imprecise_hole` makes one question per carried day (comparisons, `imprecise`, a print, a leg's
+  balance in `sched_leg`).
+- **The naming rows.** `env_txt` prints an expression with each bound variable as its key's value: `RUN-NONE` in
+  arithmetic names the read (`e_bin`; 233.7), a `flows` before S names `pay[2026-01].cash` (235.6). A list key prints
+  as written (`model.key_text`; 207.4); a calendar prints its `added` list (`values.fmt_added`; 221.6); `unit(q)` at
+  run speaks load's words (233.c); HOLE-SAME at a place compares a leg with the other rows' leg of its name, `leg fee`
+  (`walk`; 237.2); `diff`'s binding leaves out a place another world declares (231.R2, a place).
+- Not done: 234.1 (a `dyn` sum's money; every narrow form moved sums of balances), 221.8 and 230.Q-5a (joint texts
+  not in the inputs), 233.d (refcore prints the row's text already), H's 208.R2, 231.R1, 231.Q10 (not run).
+
+## tally 2.2.1, group W6: the load's refusals, the register (issue #241; 1 529 tests)
+
+- **Three refusals at load:** `tally <N>` the files agree on but 2 (`LOAD-VERSION`, `loader.build`; S-224a), a move
+  `before` itself (`LOAD-ORDER`, `check3`; S-221.9), a pin of `opening` or `stated` (`LOAD-INSTANT`, `check.pin`;
+  S-231.Q2). `RUN-NONE` names the level of `quantile` (`evaluate.level_none`; 208.10).
+- **The register.** A refusal entry of the walk carries the pins of the movement it refuses (`Walk.add`), so a refused
+  line lists the pins its reads took and no other (208.2); `flows` merges an instance's reads before its refusal
+  (208.5); a balance before a planned leg's day lists that day's pins (`later_by_place`; 221.1); a pad's reset keeps
+  the open instances' reads (`Walk.open_kept`; 220.2); a field read of a pad lists the pad (`pad.reg`; 237.1).
+- **Smaller mends.** `WARN-LEGS` for rows stated `same` that fulfil nothing, named by the first row (`legs_warn`;
+  219.2); `HOLE-SAME` for an observed row stated same as a planned instance (`same_rows_hole`; 219.1); a matched line
+  of a window-dated instance is on its last observation's day (`resid`; 221.5); a projection from a day before the
+  start of the one it is read in starts in the walk that one continues (`proj_walk`; 206.1); `diff` of an item only
+  the scenario declares is `added` (`ask.declared_in_world`; 231.R2, a def; a place is another group's).
+- Each refcore half is narrow (the plan's rulings §11): the walk's register gains pins and `open:` only, never the
+  `held:` lines of a later movement's day.
+
+## tally 2.2.1, group W4: the windows (issue #241; 1 514 tests)
+
+- **One function splits a window** (`moves.window_pieces`): the first day of each piece where a test of the day can
+  change (S, K, a scenario's `from`, a covered span's ends at a leg's place, a version's known date). `day_class`
+  reads each piece once; `window_class_depends` compares them in place of the day loop (208.R3) and keeps `i.booked`,
+  the days the booking class reaches: `walk.sched_hole` holes the places from its first day, past a reading up to its
+  last (`perm`, then `dec_win_end`; #220). The booking cuts of a window are one per piece (#230). A scenario leaves a
+  window out only when its last day is before `from`; one across is the class hole (S-from).
+- **Smaller mends.** A leg of known amount 0 books no window (`walk.zero_leg`, #214); a decision's window ends before
+  its last day's readings (`dec_win_end` at phase 4, 0; #218); a key's `where` left open by a window `at` is no
+  version's to answer (`answer_booking` passes `exists0`), and a refusal only its other days give doesn't outrank it
+  (`UNCERTAIN`; #236). An entry computed from a window prints as the hole (`ask.fmt_value`, 221.C2); `mean`,
+  `quantile`, `share` take a window term as its hole (`window_term`, 221.10); `abs`, `pow`, `add_days`,
+  `add_months`, `add_years`, `day_of` take an interval (`lift_values`, 221.R3); an observed row's attribute may be a
+  window (`loader.convert_value`, 221.R2); a period's key holding the whole window is read (`to_key`,
+  S-window-key A); a fill's order a window leaves open is read at each value its unknowns take, every tie in every
+  order, and a take that differs is the hole (`open_order_takes`, S-213); a projection reads an instance's random
+  amount by the instance's day (`rnd`'s sixth term, `sample_read`; S-212).
+- A plain fill's `RUN-TIE` still tests a tie reversed only; the open order tests each permutation (up to 6 arcs).
+
 ## M3: `check` (OPERATIONS §2.3; tally 2.2 kept, issue #226)
 
 `python -m refcore check <path>… [--pin=bytes]`: load without the run. `cli._run_texts` takes an option `check` and

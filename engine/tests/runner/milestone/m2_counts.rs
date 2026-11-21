@@ -124,6 +124,9 @@ mod tests {
     /// sweep decision reads), at 2026-11-15 (fc79eff9); re-pinned at tally 2.2's G1 (T1,
     /// 2026-11-18, the engine of 8ece2484): the sweep decision is dated on the day its leg stated
     /// (a leg has no day of its own, S-6), so no walk carries a leg booked ahead (class S-6/a).
+    /// `r2` re-pinned at tally 2.2.1's G2 (T C4, 2026-11-20, the engine of 7e4ae092): a
+    /// projection from a day before its walk's start starts up the chain (206.1, E §4.3 step 1),
+    /// one leg more booked.
     #[test]
     fn m2_counts_days() {
         let got = table(&DAYS, &["r1", "r1b", "r2", "r3", "r3f", "rm"], false);
@@ -133,7 +136,7 @@ mod tests {
     const DAYS_COUNTS: &str = concat!(
         "r1: on days_stepped=88 nonempty_days=88 walks=6 walks_shared=32 legs_booked=88 def_hits=114 def_misses=38; off days_stepped=222 nonempty_days=222 walks=38 walks_shared=0 legs_booked=222 def_hits=114 def_misses=70\n",
         "r1b: on days_stepped=88 nonempty_days=88 walks=6 walks_shared=32 legs_booked=88 def_hits=114 def_misses=38; off days_stepped=222 nonempty_days=222 walks=38 walks_shared=0 legs_booked=222 def_hits=114 def_misses=70\n",
-        "r2: on days_stepped=84 nonempty_days=82 walks=4 walks_shared=2 legs_booked=81 def_hits=136 def_misses=40; off days_stepped=94 nonempty_days=90 walks=6 walks_shared=0 legs_booked=89 def_hits=136 def_misses=42\n",
+        "r2: on days_stepped=84 nonempty_days=82 walks=4 walks_shared=2 legs_booked=82 def_hits=136 def_misses=40; off days_stepped=94 nonempty_days=90 walks=6 walks_shared=0 legs_booked=90 def_hits=136 def_misses=42\n",
         "r3: on days_stepped=572 nonempty_days=468 walks=132 walks_shared=0 legs_booked=468 def_hits=202 def_misses=172; off days_stepped=572 nonempty_days=468 walks=132 walks_shared=0 legs_booked=468 def_hits=202 def_misses=172\n",
         "r3f: on days_stepped=136 nonempty_days=124 walks=18 walks_shared=88 legs_booked=124 def_hits=180 def_misses=56; off days_stepped=472 nonempty_days=394 walks=106 walks_shared=0 legs_booked=394 def_hits=180 def_misses=144\n",
         "rm: on days_stepped=72 nonempty_days=72 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40; off days_stepped=72 nonempty_days=72 walks=2 walks_shared=0 legs_booked=72 def_hits=114 def_misses=40\n",
@@ -142,7 +145,10 @@ mod tests {
     /// `unc`'s asks (u1 day by day across a month's end, u2 one read twice through a day, u3f
     /// four projections across a month's end, um the sweep's room, u4 one read on rising days
     /// across two month ends, whose later reads continue the parked walk: `continue_planned`),
-    /// at M3 C6 (2026-11-19, the engine of 4fe9ac25).
+    /// at M3 C6 (2026-11-19, the engine of 4fe9ac25). `u2`, `u3f` and `u4` re-pinned at tally
+    /// 2.2.1's G2 (T C4, 2026-11-20, the engine of 7e4ae092): a projection from a day before its
+    /// walk's start starts up the chain (206.1, E §4.3 step 1): `u2` and `u4` book one leg more,
+    /// `u3f` steps fewer days in fewer walks, more of them shared.
     #[test]
     fn m2_counts_uncertain() {
         let got = table(&UNC, &["u1", "u2", "u3f", "um", "u4"], false);
@@ -151,13 +157,15 @@ mod tests {
 
     const UNC_COUNTS: &str = concat!(
         "u1: on days_stepped=144 nonempty_days=144 walks=34 walks_shared=82 legs_booked=144 def_hits=114 def_misses=38; off days_stepped=424 nonempty_days=424 walks=148 walks_shared=0 legs_booked=424 def_hits=114 def_misses=70\n",
-        "u2: on days_stepped=140 nonempty_days=138 walks=32 walks_shared=6 legs_booked=137 def_hits=136 def_misses=40; off days_stepped=160 nonempty_days=152 walks=40 walks_shared=0 legs_booked=151 def_hits=136 def_misses=42\n",
-        "u3f: on days_stepped=740 nonempty_days=656 walks=240 walks_shared=42 legs_booked=656 def_hits=180 def_misses=144; off days_stepped=824 nonempty_days=710 walks=282 walks_shared=0 legs_booked=710 def_hits=180 def_misses=144\n",
+        "u2: on days_stepped=140 nonempty_days=138 walks=32 walks_shared=6 legs_booked=138 def_hits=136 def_misses=40; off days_stepped=160 nonempty_days=152 walks=40 walks_shared=0 legs_booked=152 def_hits=136 def_misses=42\n",
+        "u3f: on days_stepped=588 nonempty_days=504 walks=164 walks_shared=118 legs_booked=504 def_hits=180 def_misses=144; off days_stepped=824 nonempty_days=710 walks=282 walks_shared=0 legs_booked=710 def_hits=180 def_misses=144\n",
         "um: on days_stepped=132 nonempty_days=132 walks=32 walks_shared=0 legs_booked=132 def_hits=114 def_misses=40; off days_stepped=132 nonempty_days=132 walks=32 walks_shared=0 legs_booked=132 def_hits=114 def_misses=40\n",
-        "u4: on days_stepped=144 nonempty_days=142 walks=36 walks_shared=4 legs_booked=141 def_hits=136 def_misses=40; off days_stepped=162 nonempty_days=156 walks=38 walks_shared=0 legs_booked=155 def_hits=136 def_misses=42\n",
+        "u4: on days_stepped=144 nonempty_days=142 walks=36 walks_shared=4 legs_booked=142 def_hits=136 def_misses=40; off days_stepped=162 nonempty_days=156 walks=38 walks_shared=0 legs_booked=156 def_hits=136 def_misses=42\n",
     );
 
-    /// R4 (`r4`, `r4j`) and R7 (`r7`), at 2026-11-15 (fc79eff9).
+    /// R4 (`r4`, `r4j`) and R7 (`r7`), at 2026-11-15 (fc79eff9). `r7` re-pinned at tally 2.2.1's
+    /// G2 (T C4, 2026-11-20, the engine of 7e4ae092): a projection from a day before its walk's
+    /// start starts up the chain (206.1, E §4.3 step 1), so fewer walks, more of them shared.
     #[test]
     fn m2_counts_r4() {
         let got = table(&R4, &["r4", "r4j", "r7"], false);
@@ -167,7 +175,7 @@ mod tests {
     const R4_COUNTS: &str = concat!(
         "r4: on days_stepped=45 nonempty_days=43 walks=3 walks_shared=0 legs_booked=47 def_hits=0 def_misses=0; off days_stepped=45 nonempty_days=43 walks=3 walks_shared=0 legs_booked=47 def_hits=0 def_misses=0\n",
         "r4j: on days_stepped=45 nonempty_days=43 walks=3 walks_shared=0 legs_booked=47 def_hits=0 def_misses=0; off days_stepped=45 nonempty_days=43 walks=3 walks_shared=0 legs_booked=47 def_hits=0 def_misses=0\n",
-        "r7: on days_stepped=65 nonempty_days=61 walks=7 walks_shared=41 legs_booked=71 def_hits=0 def_misses=0; off days_stepped=330 nonempty_days=299 walks=75 walks_shared=0 legs_booked=404 def_hits=0 def_misses=0\n",
+        "r7: on days_stepped=53 nonempty_days=51 walks=5 walks_shared=43 legs_booked=59 def_hits=0 def_misses=0; off days_stepped=330 nonempty_days=299 walks=75 walks_shared=0 legs_booked=404 def_hits=0 def_misses=0\n",
     );
 
     /// T5: every ask of M1's lows at once, and each, at 2026-11-15 (fc79eff9).

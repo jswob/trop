@@ -196,6 +196,11 @@ impl Loader {
         if !self.m.moves.contains(b) {
             return Err(self.at_move(a, Load::Name, format!("unknown move {b} ({word} {b})")));
         }
+        if a == b {
+            // L §8.3's one form, for `after` too: instances of one move go by `ties by` (§5.14.2).
+            let message = format!("{a} before {a}: a move isn't ordered against itself");
+            return Err(self.at_move(a, Load::Order, message));
+        }
         if !after.contains_key(b) {
             if order == Order::Before {
                 let message = format!("{a} before {b}: {b} is a plan or an observation");

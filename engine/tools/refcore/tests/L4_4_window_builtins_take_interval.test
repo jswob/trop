@@ -1,0 +1,142 @@
+# tally 2.2.1 (#221, 221.R3), L §4.4: "Each operation gives the interval of its values over the days its own arguments
+# can take". age(w, d2) is 0 or 1 (w = window(2026-03-03, 2026-03-20), d2 = 2027-03-10): abs, pow, add_days,
+# add_months, add_years and day_of take it and give the interval of their values, a hole only where a print needs one
+# value (c1, c3, c5, f2, w11); a date's interval prints as a window (f1, f3, w13); day_of(2026-03, 0) is refused and
+# day_of(2026-03, 1) isn't, a refusal only some of its days give: the hole (w01). tally 2.2 stopped on each
+# (REFCORE-NOT-YET, AttributeError or TypeError). T's m1/fixes/g13, rows of m1/spec.tsv.
+=== r_agent_w_model.tally
+model rv
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "card"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input wy: date
+
+input n5: int
+
+input n2: int
+
+input d1: date
+
+input d2: date
+
+input rr: rate
+
+input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
+
+input kh: int
+
+input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
+
+ask base: w, wy, n5, d1
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  wy = window(2026-12-20, 2027-01-10) "c"
+  n5 = 5 "c"
+  n2 = 2 "c"
+  d1 = 2026-01-01 "c"
+  d2 = 2027-03-10 "c"
+  rr = 2 %/year "c"
+  t[2 %/year] = 7 "c"
+  r2[1, 0.5] = 3 "c"
+=== r_agent_w_c1.tally
+part c1
+  tally 2
+
+
+ask c1: abs(age(w, d2))
+=== r_agent_w_c3.tally
+part c3
+  tally 2
+
+
+ask c3: pow(age(w, d2), n2)
+=== r_agent_w_c5.tally
+part c5
+  tally 2
+
+
+ask c5: abs(age(w, d2) - n5)
+=== r_agent_w_f1.tally
+part f1
+  tally 2
+
+
+ask f1: add_months(d1, age(w, d2))
+=== r_agent_w_f2.tally
+part f2
+  tally 2
+
+
+ask f2: pow(n5, age(w, d2))
+=== r_agent_w_f3.tally
+part f3
+  tally 2
+
+
+ask f3: add_days(d1, age(w, d2))
+=== rf_w_w01.tally
+part w01
+  tally 2
+
+ask w01: day_of(2026-03, age(w, d2))
+=== rf_w_w11.tally
+part w11
+  tally 2
+
+ask w11: pow(age(w, d2), age(w, d2))
+=== rf_w_w13.tally
+part w13
+  tally 2
+
+ask w13: add_years(w, age(w, d2))
+=== expect
+base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+  cut 2026-03-01
+c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+c3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+c5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+f1: window(2026-01-01, 2026-02-01)
+  cut 2026-03-01
+f2: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+f3: window(2026-01-01, 2026-01-02)
+  cut 2026-03-01
+w01: ?"date within window(2026-03-03, 2026-03-20) not precise enough for day_of" (w)
+  unknown day: w
+  cut 2026-03-01
+w11: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+  unknown day: w
+  cut 2026-03-01
+w13: window(2026-03-03, 2027-03-20)
+  cut 2026-03-01
+warning: WARN-UNREAD input kh is read by nothing
+warning: WARN-UNREAD input r2 is read by nothing
+warning: WARN-UNREAD input rr is read by nothing
+warning: WARN-UNREAD input t is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing

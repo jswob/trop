@@ -1,0 +1,17 @@
+model so
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input wx: date
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  wx = window(2026-02-20, 2026-03-10) "c"
+ask so: start_of(month_of(wx))
+ask eo: end_of(month_of(wx))
+ask mo: month_of(wx)
+ask yo: start_of(year_of(wx))
+ask so_c: start_of(month_of(wx)) <= wx

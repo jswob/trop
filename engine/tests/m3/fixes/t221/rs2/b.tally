@@ -1,0 +1,24 @@
+model rb
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+
+ask q1: bal(konto, 2026-02-28), bal(sav, 2026-02-28)
+ask q2: stated[konto] law 2026-02-28
+ask q2b: last(stated[sav], 2026-03-01)
+ask q3: explain bal(sav, 2026-02-28)
+ask q6: diff(bal(p, 2026-02-28) for p in accounts on 2026-02-28) in sc against rb
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"

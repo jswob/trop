@@ -1,0 +1,80 @@
+# tally 2.2.1 (#208, 208.5), L §8.2 One read set ("a hole lists them like a value"): q2, the flows of spend refused
+# RUN-ORDER, rests on spend's day, add_business(…, holidays), so it lists assumed: the card names no holiday, as
+# q_decide does. tally 2.2 listed it under q_decide only (the 2.1.8 review's g4fix/agent/c_base.tally).
+=== c_base.tally
+model decide
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M1's decision-order fixtures (invented): it loads and answers clean; each fixture of codes/m1/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input holidays: calendar
+
+input horizon: date
+
+input lag: int
+
+input month_start: date
+
+input save_cap: money PLN
+
+input spend_cap: money PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place savings: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+input oday: date
+
+input ocap: money PLN
+
+move save: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to savings amount min(save_cap, bal(konto))
+
+move spend: transfers
+  on add_business(month_start, lag, holidays)
+  reads konto
+  leg cash from konto to world amount min(spend_cap, bal(konto))
+
+ask q_decide: bal(konto, horizon), bal(savings, horizon)
+ask q2: flows(spend, 2026-01..2026-12)
+ask q3: bal(other, horizon)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  holidays = calendar(weekends [sat, sun]) assumed "the card names no holiday" "the card"
+  horizon = 2026-12-31 "the card"
+  lag = 10 "the card"
+  month_start = 2026-04-01 "the card"
+  save_cap = 100.00 PLN "the card"
+  spend_cap = 50.00 PLN assumed "spend guessed" "the card"
+  oday = 2026-05-05 assumed "oday guessed" "the card"
+  ocap = 5.00 PLN assumed "ocap guessed" "the card"
+  opening[other] = 0 PLN at 2026-01-01 start "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+  opening[savings] = 0 PLN at 2026-01-01 start "the card"
+
+move omv: transfers
+  on oday
+  leg cash from world to other amount ocap
+ask q4: bal(konto, 2026-04-30), bal(other, 2026-06-01)
+=== expect q2 q_decide
+q2: refused: RUN-ORDER decisions save and spend read each other on 2026-04-15
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01
+q_decide: (refused: RUN-ORDER decisions save and spend read each other on 2026-04-15, refused: RUN-ORDER decisions save and spend read each other on 2026-04-15)
+  assumed: the card names no holiday (holidays)
+  cut 2026-03-01

@@ -1,0 +1,37 @@
+# tally 2.2.1 (#221, 221.R2), L §5.19: "A window belongs in an attribute (a giver's acquisition day), never in the
+# observation's on". bank[g1]'s bought is window(2019-01-01, 2019-12-31): the row loads, the attribute reads as that
+# window (d), year_of and a comparison decide on it (y, e). tally 2.2 refused it at load (LOAD-UNIT a value of the
+# wrong type).
+=== obsw.tally
+model ow
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+kind gift: event certain
+  leg cash: PLN
+  attr bought: date
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  bank[g1] = (on: 2026-04-10, kind: gift, leg cash from world to konto amount 50.00 PLN, bought: window(2019-01-01, 2019-12-31)) "g1"
+ask b: bal(konto, 2026-04-30)
+ask d: bank[g1].bought
+ask y: year_of(bank[g1].bought)
+ask e: bank[g1].bought < 2020-01-01
+=== expect
+b: 50.00 PLN
+  cut 2026-08-01
+d: window(2019-01-01, 2019-12-31)
+  cut 2026-08-01
+e: true
+  cut 2026-08-01
+y: 2019
+  cut 2026-08-01

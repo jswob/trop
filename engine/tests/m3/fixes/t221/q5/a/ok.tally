@@ -1,0 +1,5 @@
+scenario ok over base
+  tally 2
+  from 2026-03-01
+
+ask q_ok: twice in ok law 2026-03-01

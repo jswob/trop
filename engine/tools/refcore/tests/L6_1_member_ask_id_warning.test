@@ -1,0 +1,82 @@
+# tally 2.2.1 R20 (L §6.1 l.1802, OPERATIONS §2.1): a member's ask brings to the run's own level its refused scenario's
+# line, its own when refused alone and its walk's warnings, never WARN-UNREAD, by the joint model's names, once per member;
+# the lines under its result are the member's.
+# 233.1: asks whose ids start with `warning` keep their prefix, a.warning_total; the member's scenario line
+# `scenario a.bad` prints before every result; its WARN-UNREAD goes. tally 2.2 dropped the prefix and printed both lines
+# mid-output (T's held fixes/member-warning-id).
+=== jw.tally
+model famw
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "w" sha256 "7964b287ca620ddecdcf948fde85eaf4b4ddffcadeb8034aaa15256c0fd2754f"
+=== w/a.tally
+model ana
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+input spare: num
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+ask qin: twice in s1 law 2026-03-01
+
+ask qd: diff(twice) in s1 against ana law 2026-03-01
+
+ask qw: twice with pay = 1 000.00 PLN law 2026-03-01
+
+ask qk: twice law 2026-03-01 as known 2026-01-01
+
+
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"
+
+ask warning_total: twice law 2026-03-01
+
+ask warning_s: twice in s1 law 2026-03-01
+=== w/bad.tally
+scenario bad over ana
+  tally 2
+  from 2026-01-01
+
+def broken: money PLN = nothing_here + pay
+
+ask q_bad: broken
+=== w/s1.tally
+scenario s1 over ana
+  tally 2
+  from 2026-01-01
+
+version raise
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 5 000.00 PLN "a raise"
+
+ask q_s: twice in s1 law 2026-03-01
+
+ask q_sc: twice in s1 law 2026-03-01 as known 2026-06-01
+=== expect a.warning_total a.warning_s a.q
+scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (w/bad.tally:5)
+a.warning_total: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01
+a.warning_s: 10 000.00 PLN
+  world: s1
+  law date 2026-03-01, cut 2026-03-01
+a.q: 8 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01

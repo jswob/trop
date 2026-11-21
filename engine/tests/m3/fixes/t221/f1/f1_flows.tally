@@ -1,0 +1,45 @@
+model n4
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+
+input rent_amt: money PLN
+
+input d0: date
+
+input d1: date
+
+place konto: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+
+kind rents: event certain
+  leg cash: PLN
+
+move rent[m in months]: rents
+  on start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+def early_c[m in months]: money PLN = flows(rent[m].cash, d0 .. d1) at reader
+
+def early[m in months]: money PLN = flows(rent[m], d0 .. d1) at reader
+
+version base
+  cite s
+  governs always
+  known 2025-01-01
+  rent_amt = 2 800.00 PLN
+  d0 = 2025-12-01
+  d1 = 2026-01-31
+  opening[konto] = 5 000.00 PLN at 2026-01-01 start "w"
+
+ask fb: sum(flows(rent[m], 2025-12-01 .. 2026-01-31) for m in months) law cut
+ask fk: early[m] for m in months law cut
+ask fx: explain early_c[2026-01] law cut
+ask fx2: explain early[2026-02] law cut
+ask fi: inputs-of early[2026-01] law cut
+ask fs: diff(early[m] for m in months) in sc against n4 law cut
+ask fs2: diff(early[m] for m in months) in sc against n4 law cut

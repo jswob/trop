@@ -1797,6 +1797,7 @@ def parse_header(lines, units):
         q.i = 1
         if w == 'tally':
             h.tally = q.integer()
+            h.tally_loc = l.loc     # LOAD-VERSION names its file and line (L §8.3; tally 2.2.1 P50, N3)
         elif w == 'on':
             h.on = q.day()
         elif w == 'start':

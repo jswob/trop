@@ -1,0 +1,13 @@
+scenario sc over cb
+  tally 2
+  from 2026-05-01
+input wx: date
+version scv
+  cite s
+  governs always
+  known 2026-01-01
+  wx = window(2026-05-10, 2026-05-12) "s"
+move extra: transfers
+  on wx
+  leg cash from world to konto amount amt
+ask s_after: bal(konto, 2026-05-31) in sc

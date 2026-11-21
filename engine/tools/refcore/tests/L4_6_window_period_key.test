@@ -1,0 +1,59 @@
+# tally 2.2.1 (S-window-key, option A), L §4.6 Reading at a date: an item keyed by one time index, read with a date,
+# "reads the key whose period holds it"; L §4.4: an operation "one value when the two agree", a key needing one value.
+# conv and convm are dated w = window(2026-03-10, 2026-03-12): fxm, keyed by months, holds the whole window in
+# 2026-03, so flows(convm, 2026-03) is 400.00 PLN; fx, keyed by days, is the hole (f2), and so is the balance that
+# books both (f1). tally 2.2 gave the hole for both (the critic's fx.tally).
+=== fx.tally
+model c_fx
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input w: date
+
+input eur: num
+
+input fx[d in days]: num PLN
+
+input fxm[m in months]: num PLN
+
+move conv: transfers
+  on w
+  leg cash from world to konto amount round(eur * fx[w], minor(PLN), half-up)
+
+move convm: transfers
+  on w
+  leg cash from world to konto amount round(eur * fxm[w], minor(PLN), half-up)
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  eur = 100 "c"
+  w = window(2026-03-10, 2026-03-12) "c"
+  fx[2026-03-01..2026-03-31] = 4 PLN "c"
+  fxm[2026-03] = 4 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+
+ask f1: bal(konto, 2026-03-31)
+ask f2: flows(conv, 2026-03), flows(convm, 2026-03)
+ask f3: bal(konto, 2026-03-31) with w = 2026-03-11
+=== expect
+f1: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a key" (w)
+  unknown day: w
+  cut 2026-01-01
+f2: (?"date within window(2026-03-10, 2026-03-12) not precise enough for a key" (w), 400.00 PLN)
+  unknown day: w
+  cut 2026-01-01
+f3: 800.00 PLN
+  pinned: w = 2026-03-11
+  cut 2026-01-01

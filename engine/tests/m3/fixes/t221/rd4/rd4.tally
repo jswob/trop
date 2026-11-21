@@ -1,0 +1,25 @@
+model c_rd
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+
+input quote: num reading
+
+input five: num
+
+def q_now[d in days]: num = last(quote, d) at d
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  quote = 4 at 2026-03-10 "c"
+  five = 5 "c"
+
+ask r1: quote with quote = five law 2026-03-10
+ask r2: quote with quote = five law 2026-03-11
+ask r3: q_now[2026-03-20] with quote = five
+ask r4: last(quote, 2026-03-20), since(quote, 2026-03-20) with quote = five

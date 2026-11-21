@@ -1,0 +1,24 @@
+# tally 2.2.1 P50 B1 (E §11): REQ-CLOCK is judged on the asks load left standing, with one file too:
+# an ask refused alone prints its line, the rest answers (review g4 findings/b1/m). Before W13: REQ-CLOCK.
+=== m.tally
+model m
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+input one: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1
+
+ask q: one
+ask p_gone: one in gone as known (2027-01-04)
+=== expect
+p_gone: refused: LOAD-SCENARIO ask p_gone names gone, neither the model nor a loaded scenario (m.tally:17)
+q: 1
+  cut 2026-04-30

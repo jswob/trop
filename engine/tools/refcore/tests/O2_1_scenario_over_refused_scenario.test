@@ -1,0 +1,77 @@
+# tally 2.2.1, 236.3 (OPERATIONS §2.1: a scenario file that doesn't load "refuses that scenario and those
+# over it, with its message"): s1 refused LOAD-WORLD (an ask naming no world), s3 over s1 refused with
+# it, its own asks printing nothing; s2 answers (m3/gate-probes/sw with q_bad added). Before W8: s3
+# answered, q_d3 REFCORE-NOT-YET.
+=== reality.tally
+model mini
+  tally 2
+  on 2026-11-05
+  start 2026-10-01
+  end 2026-12-31
+
+source s "Oświadczenia gospodarstwa"
+
+unit PLN: currency minor 0.01
+
+kind jobs
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input bank: observed
+input pay_dom[j in jobs]: int
+input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja z tej pracy w tym miesiącu?"
+
+move wage[m in months, j in jobs over m]: wages
+  on day_of(m, pay_dom[j])
+  at start_of(m)
+  leg cash from world to konto amount salary[j, m]
+
+version home
+  cite s
+  governs 2026-10..
+  known 2026-10-01
+  jobs + [acme] lives 2020-02-01..
+  pay_dom = 10 "umowa, § 5"
+  salary = 7 000.00 PLN "umowa, § 4"
+  opening[konto] = 1 000.00 PLN at 2026-10-01 start "wyciąg"
+=== s1.tally
+scenario s1 over mini
+  tally 2
+  from 2026-12-01
+
+ask q_sib: bal(konto, 2026-12-31) in s2
+ask q_model: bal(konto, 2026-12-31) in mini
+ask q_deep: bal(konto, 2026-12-31) in s3
+ask q_dmm: diff(bal(konto, 2026-12-31)) in mini against mini
+ask q_dsib: diff(bal(konto, 2026-12-31)) in s2 against mini
+ask q_dsib2: diff(bal(konto, 2026-12-31)) in s2 against s1
+ask q_ddeep: diff(bal(konto, 2026-12-31)) in s3 against s1
+ask q_own: bal(konto, 2026-12-31) in s1
+ask q_bad: bal(konto, 2026-12-31)
+=== s2.tally
+scenario s2 over mini
+  tally 2
+  from 2026-12-01
+
+ask q_own2: bal(konto, 2026-12-31) in s2
+=== s3.tally
+scenario s3 over s1
+  tally 2
+  from 2026-12-01
+
+ask q_low: bal(konto, 2026-12-31) in s1
+ask q_lowm: bal(konto, 2026-12-31) in mini
+ask q_dlow: diff(bal(konto, 2026-12-31)) in s1 against mini
+ask q_d3: diff(bal(konto, 2026-12-31)) in s3 against s2
+=== expect
+scenario s1: refused: LOAD-WORLD ask q_bad in a scenario file names no world (s1.tally:13)
+scenario s3: refused: LOAD-WORLD ask q_bad in a scenario file names no world (s1.tally:13)
+q_own2: 22 000.00 PLN
+  world: s2
+  unfulfilled: wage[2026-10, acme]
+  held: pay_dom[acme] = 10 (home), read for 2026-12-01
+  held: salary[acme, 2026-12] = 7 000.00 PLN (home), read for 2026-12
+  cut 2026-11-05

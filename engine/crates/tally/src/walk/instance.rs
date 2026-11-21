@@ -20,7 +20,7 @@ use crate::num::Num;
 use crate::syntax::{Expr, Stop};
 use crate::time::Day;
 use core::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// A leg's end: a place by name, or a hole, a place nobody has told us (L §5.14 Legs).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -159,6 +159,44 @@ pub(super) fn day_window(m: &Reality, w: &crate::model::Window) -> Result<Option
     })))
 }
 
+/// A piece of a window a movement falls on: the days from `first` to `last`, on which every
+/// test of its day the plan pass makes comes out one way (E §4.1 step 2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Piece {
+    /// Its first day, where it is read.
+    pub first: Day,
+    /// Its last day.
+    pub last: Day,
+}
+
+/// Window `w` cut where a test of its day can change: each of `edges` inside it, an edge being
+/// the first day of a piece (the run's start, the cut, a covered span's first day or the day
+/// after its last, …), so each piece is read once, at its first day, never day by day
+/// (refcore's `window_pieces`). E §4.1 step 2, L §4.4 ("One rule for every window a line
+/// meets").
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an edge with no day before it.
+pub(super) fn window_pieces(w: &DayWindow, edges: &[Day]) -> Result<Vec<Piece>, Stop> {
+    let starts: BTreeSet<Day> = edges
+        .iter()
+        .copied()
+        .filter(|e| w.lo < *e && *e <= w.hi)
+        .collect();
+    let mut out = Vec::with_capacity(starts.len());
+    let mut first = w.lo;
+    for next in starts {
+        let last = next
+            .previous()
+            .ok_or_else(|| invariant("a window's edge with no day before it"))?;
+        out.push(Piece { first, last });
+        first = next;
+    }
+    out.push(Piece { first, last: w.hi });
+    Ok(out)
+}
+
 /// A leg of an instance, evaluated (refcore's `Leg`).
 #[derive(Debug, Clone, Eq)]
 pub struct LegVal {
@@ -213,7 +251,7 @@ pub struct HoleSrc {
 /// day stops at): a walk up to a day books its partial plan list while cells outside it are
 /// still being computed, so its A₀ are checked against its own kind only, never against the
 /// whole walk's (E §9 item 5, §3.2, §4.1; refcore's `inv5` keys by the timeline).
-pub type Bookings = BTreeMap<(String, Day, Option<Day>), Booked>;
+pub type Bookings = BTreeMap<(String, Vec<Day>, Option<Day>), Booked>;
 
 /// A booked plan instance's amount A₀, its existence and legs as read at its booking cut,
 /// with the cut that first booked it: what every later cut that books it at the same booking
@@ -464,6 +502,8 @@ pub struct Inst {
     pub fulfils: Option<Value>,
     /// What reading its day met (refcore's `day_coll`): what a read of its `day` brings.
     pub day_coll: Collected,
+    /// What reading each leg met, by the leg's name (S3, P43 on #241).
+    pub leg_reads: BTreeMap<String, Collected>,
     /// Its place in the movement order.
     pub order: Order,
     /// For a hole booking a later version answered: the cut that version is known from and
@@ -472,6 +512,10 @@ pub struct Inst {
     /// Where its class depends on its window's day: a hole movement from the window's first
     /// day, its day kept (refcore's `class_q`, `class_member`; tally 2.1.8 item 77).
     pub depends: Option<Depends>,
+    /// Its tuple's existence, its keys' `where` read at the ask's cut K (E §4.1 step 1): a hole
+    /// it leaves, a window `at` whose law-date classes disagree, is no later version's to
+    /// answer, so a re-measure starts from it (refcore's `exists0`; #236).
+    pub exists0: Box<Exists>,
 }
 
 /// Why a window-dated instance's class (E §4.1 step 3) is one on some of the window's days
@@ -479,11 +523,24 @@ pub struct Inst {
 /// `window_class_depends`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Depends {
-    /// Inside the run on some days, before its start on the rest.
-    Start,
+    /// Inside the run on some days, before its start or its scenario's `from` on the rest
+    /// (L §6.4); the days the class that books reaches, none where no piece books it.
+    Start(Option<Piece>),
     /// Modelled past on some days, booked on the rest: whether it is a binding's member
-    /// depends on the day too.
-    Covered,
+    /// depends on the day too; the days the class that books reaches.
+    Covered(Option<Piece>),
+}
+
+impl Depends {
+    /// The days the class that books reaches: from the first day of the first piece that
+    /// books it to the last day of the last (refcore's `i.booked`); none where no piece does.
+    /// E §4.1 step 2.
+    #[must_use]
+    pub fn booked(self) -> Option<Piece> {
+        match self {
+            Depends::Start(booked) | Depends::Covered(booked) => booked,
+        }
+    }
 }
 
 impl Inst {
@@ -513,6 +570,7 @@ impl Inst {
             obs: Vec::new(),
             fulfils: None,
             day_coll: Collected::default(),
+            leg_reads: BTreeMap::new(),
             order: Order {
                 day: None,
                 stratum: mv.stratum,
@@ -521,6 +579,7 @@ impl Inst {
             },
             answered: None,
             depends: None,
+            exists0: Box::new(Exists::Yes),
         }
     }
 }

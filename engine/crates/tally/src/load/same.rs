@@ -81,28 +81,28 @@ impl Side {
 }
 
 /// The refusal of a version's `same` between an observed row and a move instance of the model
-/// the version belongs to, in either order, the row named first: a row realises an instance
-/// by its `fulfils`; a joint model's line between two members' movements, or a member's and
-/// its own, stands (refcore's `joint_sames`, the user's cut). L §6.1 (Identities are written,
-/// tally 2.1.8), §5.19, §8.4 (`LOAD-SAME`).
+/// the version belongs to, in either order, the line's sides named in the text's order: a
+/// row realises an instance by its `fulfils`; a joint model's line between two members'
+/// movements, or a member's and its own, stands (refcore's `joint_sames`, the user's cut).
+/// L §6.1 (Identities are written, tally 2.1.8), §5.19, §8.4 (`LOAD-SAME`; tally 2.2.1
+/// 230.Q-5a, a `same` line as written; P48 N1).
 fn row_and_instance(same: &SameLine, (left, right): (&Side, &Side)) -> Option<String> {
     let version = same.version.as_deref()?;
     let (Side::Move(a, ma), Side::Move(b, mb)) = (left, right) else {
         return None;
     };
-    let (row, inst) = match (ma, mb) {
-        (Mover::Row, Mover::Instance) => (&same.left, &same.right),
-        (Mover::Instance, Mover::Row) => (&same.right, &same.left),
+    match (ma, mb) {
+        (Mover::Row, Mover::Instance) | (Mover::Instance, Mover::Row) => {}
         (Mover::Row, Mover::Row) | (Mover::Instance, Mover::Instance) => return None,
-    };
+    }
     let owner = super::joint::owner_deep(version);
     if super::joint::owner_deep(a) != owner || super::joint::owner_deep(b) != owner {
         return None;
     }
     Some(format!(
         "same {} = {}: an observed row and a planned instance of one model; state fulfils on the row",
-        shown(row),
-        shown(inst)
+        shown(&same.left),
+        shown(&same.right)
     ))
 }
 

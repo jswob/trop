@@ -1,0 +1,59 @@
+# tally 2.2.1 (#231, 231.R2, a place), L §5.18's diff row: added "only in S": nowa, a place only scenario sc declares, is
+# no member of the base's binding over accounts, so the line is `added (p = nowa)`: 1 changed, 1 added. tally 2.2
+# counted it in both worlds, 2 changed (the M3 review's g1/rs2).
+=== b.tally
+model rb
+  tally 2
+  on 2026-03-10
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+
+ask q1: bal(konto, 2026-02-28), bal(sav, 2026-02-28)
+ask q2: stated[konto] law 2026-02-28
+ask q2b: last(stated[sav], 2026-03-01)
+ask q3: explain bal(sav, 2026-02-28)
+ask q6: diff(bal(p, 2026-02-28) for p in accounts on 2026-02-28) in sc against rb
+
+version v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor konto
+  opening[konto] = 0 at 2026-01-01 start "base"
+  stated[konto] = 100 at 2026-02-28 end "base"
+=== sc.tally
+scenario sc over rb
+  tally 2
+  from 2026-01-01
+
+place nowa: accounts PLN lives 2026-01-01..
+
+ask s1: bal(sav, 2026-02-28), bal(nowa, 2026-02-28) in sc
+ask s1b: stated[sav] in sc law 2026-02-28
+ask s2: explain bal(nowa, 2026-02-28) in sc
+ask s4: last(stated[nowa], 2026-03-01), bal(p, 2026-02-28) for p in accounts on 2026-02-28 in sc
+
+version sc_v
+  cite card
+  governs 2026-01..2026-02
+  known 2026-03-05
+  anchor sav
+  anchor nowa
+  opening[sav] = 5 at 2026-01-01 start "sc"
+  stated[sav] = 50 at 2026-02-28 start "sc"
+  stated[nowa] = 9 at 2026-02-10 end "sc"
+=== expect q6
+q6: diff in sc against rb: 1 changed, 1 added, 0 removed, 1 unchanged
+  added (p = nowa): 9.00 PLN
+  changed (p = sav): 50.00 PLN against 0.00 PLN
+  world: rb
+  world: sc
+  anchor: konto 2026-02-28 end, stated 100.00 PLN, difference 100.00 PLN
+  anchor: nowa 2026-02-10 end, stated 9.00 PLN, difference 9.00 PLN
+  anchor: sav 2026-02-28 start, stated 50.00 PLN, difference 45.00 PLN
+  cut 2026-03-10

@@ -1,5 +1,6 @@
 # L §6.1 same: "a fact on which they disagree for a day is a hole naming both rows (HOLE-SAME)"; L §8.1 HOLE-SAME "<p>
 # and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)". The two rows stated same disagree on the amount.
+# tally 2.2.1 (237.2), HOLE-SAME's row: one fact, the leg by its name (`leg cash`); tally 2.2 said `the leg at <place>`.
 === m.tally
 model hh
   tally 2
@@ -30,5 +31,5 @@ version statement_01
 
 ask b: bal(konto, 2026-01-31)
 === expect
-b: ?"bank[r31] and bank[r32] are one, but the leg at konto differs on 2026-01-12: 100.00 PLN (bank[r31]) and 90.00 PLN (bank[r32])" (bank[r31], bank[r32])
+b: ?"bank[r31] and bank[r32] are one, but leg cash differs on 2026-01-12: 100.00 PLN (bank[r31]) and 90.00 PLN (bank[r32])" (bank[r31], bank[r32])
   cut 2026-03-01

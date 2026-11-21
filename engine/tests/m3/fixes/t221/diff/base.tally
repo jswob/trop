@@ -1,0 +1,55 @@
+model fk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "synthetic"
+
+axis x
+  x1 "1"
+  x2 "2"
+  x3 "3"
+
+axis y
+  y1 "1"
+  y2 "2"
+  y3 "3"
+
+axis z
+  z1 "1"
+  z2 "2"
+  z3 "3"
+
+axis w
+  w1 "1"
+  w2 "2"
+  w3 "3"
+
+input flag: bool
+input f: int
+
+def d: int at reader
+  rule base = 1
+  rule bx beats base = 0 when x == x2 and y == y2
+  rule bz beats base, bx = 1 when flag
+
+def e: int at reader
+  rule base = f
+
+ask pinned: diff(d) in sa against sb with w = w1 law 2026-06-01
+
+ask pinned2: diff(d) in sa against sb with w = w1, z = z2 law 2026-06-01
+
+ask other: e law 2026-06-01
+
+ask ex: explain d with x = x2, y = y2 law 2026-06-01
+
+ask exs: explain d in sa with x = x1, y = y1, z = z2 law 2026-06-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flag = false
+  f = 5

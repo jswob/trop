@@ -4808,26 +4808,53 @@ pit.tally	m3/mini/pit.tally
 ,29:fixture/reviews/same-id-order,7:reviews,5:check,21:engine/tests/m3/check,45:check model.tally n1/a/s2.tally n1/z/s1.tally,107:model.tally	m3/check/model.tally
 n1/a/s2.tally	m3/check/n1/a/s2.tally
 n1/z/s1.tally	m3/check/n1/z/s1.tally
-,1:1,218:qq: refused: LOAD-SCENARIO ask qq names nowhere_z, neither the model nor a loaded scenario (n1/z/s1.tally:5)
-qq: refused: LOAD-SCENARIO ask qq names nowhere_a, neither the model nor a loaded scenario (n1/a/s2.tally:5)
+,1:1,218:qq: refused: LOAD-SCENARIO ask qq names nowhere_a, neither the model nor a loaded scenario (n1/a/s2.tally:5)
+qq: refused: LOAD-SCENARIO ask qq names nowhere_z, neither the model nor a loaded scenario (n1/z/s1.tally:5)
 ,27:fixture/reviews/twin-placed,7:reviews,5:check,21:engine/tests/m3/check,64:check model.tally p12/b/t1.tally p12/c/lost.tally p12/d/t2.tally,154:model.tally	m3/check/model.tally
 p12/b/t1.tally	m3/check/p12/b/t1.tally
 p12/c/lost.tally	m3/check/p12/c/lost.tally
 p12/d/t2.tally	m3/check/p12/d/t2.tally
-,1:1,211:scenario alpha: refused: LOAD-SCENARIO scenario alpha is over nowhere, neither the model nor a scenario (p12/c/lost.tally:1)
-scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tally:1)
+,1:1,211:scenario twin: refused: LOAD-SCENARIO scenario twin declared twice (p12/d/t2.tally:1)
+scenario alpha: refused: LOAD-SCENARIO scenario alpha is over nowhere, neither the model nor a scenario (p12/c/lost.tally:1)
 ,24:fixture/reviews/narrowed,7:reviews,5:check,28:engine/tests/m3/check/narrow,21:check m.tally s.tally,64:m.tally	m3/check/narrow/m.tally
 s.tally	m3/check/narrow/s.tally
-,1:0,3:ok
+,1:1,128:scenario narrowed: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span register_10 covers (m.tally:30)
 ,30:fixture/reviews/stacked-covers,7:reviews,5:check,27:engine/tests/m3/fixes/g3/st,36:check base.tally late.tally mv.tally,107:base.tally	m3/fixes/g3/st/base.tally
 late.tally	m3/fixes/g3/st/late.tally
 mv.tally	m3/fixes/g3/st/mv.tally
-,1:0,3:ok
+,1:1,238:scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
+scenario mv: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
 ,28:fixture/reviews/stacked-unit,7:reviews,5:check,27:engine/tests/m3/fixes/g3/st,41:check base.tally bad.tally over_bad.tally,117:base.tally	m3/fixes/g3/st/base.tally
 bad.tally	m3/fixes/g3/st/bad.tally
 over_bad.tally	m3/fixes/g3/st/over_bad.tally
 ,1:1,169:scenario bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (bad.tally:5)
 scenario over_bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (bad.tally:5)
+,34:fixture/t221-gd/228-12-joint-check,7:t221-gd,5:check,28:engine/tests/m3/fixes/t221/j,15:check top.tally,152:top.tally	m3/fixes/t221/j/top.tally
+a/a.tally	m3/fixes/t221/j/a/a.tally
+a/asks.tally	m3/fixes/t221/j/a/asks.tally
+a/sc.tally	m3/fixes/t221/j/a/sc.tally
+,1:0,3:ok
+,35:fixture/t221-gd/229-2-literal-check,7:t221-gd,5:check,37:engine/tests/m3/fixes/t221/new/k229_2,25:check base.tally sc.tally,90:base.tally	m3/fixes/t221/new/k229_2/base.tally
+sc.tally	m3/fixes/t221/new/k229_2/sc.tally
+,1:1,171:scenario sc: refused: LOAD-KEY k9 is not a key of ks (sc.tally:16)
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,29:fixture/t221-rc/228-5-no-file,7:t221-rc,5:check,29:engine/tests/m3/fixes/t221/q5,49:check base.tally a/ok.tally m/c2.tally z/c1.tally,156:base.tally	m3/fixes/t221/q5/base.tally
+a/ok.tally	m3/fixes/t221/q5/a/ok.tally
+m/c2.tally	m3/fixes/t221/q5/m/c2.tally
+z/c1.tally	m3/fixes/t221/q5/z/c1.tally
+,1:1,290:scenario c2: refused: LOAD-SCENARIO over cycle or deeper than 4 (scenario c2) (m/c2.tally:1)
+scenario c1: refused: LOAD-SCENARIO over cycle or deeper than 4 (scenario c1) (z/c1.tally:1)
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing
+,40:fixture/t221-g4/223-replace-covers-check,7:t221-g4,5:check,32:engine/tests/m3/fixes/t221/mini5,56:check reality.tally statement.tally fix.tally asks.tally,182:reality.tally	m3/fixes/t221/mini5/reality.tally
+statement.tally	m3/fixes/t221/mini5/statement.tally
+fix.tally	m3/fixes/t221/mini5/fix.tally
+asks.tally	m3/fixes/t221/mini5/asks.tally
+,1:1,118:refused: LOAD-COVERS replace bank[r1] of konto: statement_2026_10_fix doesn't cover konto on 2026-10-10 (fix.tally:8)
+,27:fixture/t221-g4/232-per-cut,7:t221-g4,5:check,33:engine/tests/m3/fixes/t221/cutcov,27:check base.tally late.tally,86:base.tally	m3/fixes/t221/cutcov/base.tally
+late.tally	m3/fixes/t221/cutcov/late.tally
+,1:1,120:scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)
 ,16:changes/check/c1,7:changes,5:check,42:engine/tests/integration/amendments/real11,43:check c1/ ../../../m3/changes/asks/c1.tally,1065:c1/loans.tally	integration/amendments/real11/c1/loans.tally
 c1/pays.tally	integration/amendments/real11/c1/pays.tally
 c1/people.tally	integration/amendments/real11/c1/people.tally

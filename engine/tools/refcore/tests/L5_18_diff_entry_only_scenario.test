@@ -1,0 +1,61 @@
+# tally 2.2.1 P43 S7 (L §5.18's diff row): diff of a kind's entry only the scenario states is added
+# (review g2fix dif/d1 with sc/d1). Before W10: changed against refused: RUN-KEY.
+=== d1.tally
+model d1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+kind persons: parties
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input sx: money PLN
+input pay[p in persons]: money PLN
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  persons + [ana] lives 2000-01-01..
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  sx = 1.00 PLN "s"
+  pay[ana] = 10.00 PLN "s"
+ask kk: bal(konto, 2026-03-31), sx law 2026-03-31
+=== d1.tally
+scenario sc over d1
+  tally 2
+  from 2026-01-01
+place pot: accounts PLN lives 2026-01-01..
+input sy: money PLN
+version scv
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  persons + [ola] lives 2026-01-01..
+  replace sx = 2.00 PLN "s"
+  sy = 3.00 PLN "s"
+  pay[ola] = 20.00 PLN "s"
+  opening[pot] = 7.00 PLN at 2026-01-01 start "s"
+ask q_rep: diff(sx) in sc against d1 law 2026-03-31
+ask q_in: diff(sy) in sc against d1 law 2026-03-31
+ask q_ent: diff(pay[p] for p in persons on 2026-03-01) in sc against d1 law 2026-03-31
+ask q_entx: diff(pay[ola]) in sc against d1 law 2026-03-31
+ask q_pl: diff(bal(pot, 2026-03-31)) in sc against d1 law 2026-03-31
+ask q_mix: diff(sx + sy) in sc against d1 law 2026-03-31
+ask q_rev: diff(sy) in d1 against sc law 2026-03-31
+ask q_revp: diff(bal(pot, 2026-03-31)) in d1 against sc law 2026-03-31
+=== expect q_entx q_ent
+q_entx: diff in sc against d1: 0 changed, 1 added, 0 removed, 0 unchanged
+  added pay[ola]: 20.00 PLN
+  world: d1
+  world: sc
+  held: pay[ola] = 20.00 PLN (scv), read for 2026-03-31
+  law date 2026-03-31, cut 2026-01-01
+q_ent: diff in sc against d1: 0 changed, 1 added, 0 removed, 1 unchanged
+  added (p = ola): 20.00 PLN
+  world: d1
+  world: sc
+  held: pay[ola] = 20.00 PLN (scv), read for 2026-03-31
+  law date 2026-03-31, cut 2026-01-01
+warning: WARN-UNREAD place world is read by nothing

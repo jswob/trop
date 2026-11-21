@@ -13,11 +13,12 @@ use super::instance::{Amount, Dated, Exists, Inst, LegVal, join};
 use super::plan::{refuse, refuse_load, shown};
 use super::tuples::imprecise_law;
 use crate::base::{Load, Run};
-use crate::eval::{Ctx, Engine, LawClass};
+use crate::eval::{Collected, Ctx, Engine, LawClass};
 use crate::hole::Hole;
 use crate::model::{MoveInfo, Node, NodeKind, Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
+use std::collections::BTreeMap;
 
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
 pub(super) struct Body {
@@ -31,6 +32,9 @@ pub(super) struct Body {
     pub(super) for_period: Option<Value>,
     /// What its `fulfils` names.
     pub(super) fulfils: Option<Value>,
+    /// What reading each leg met, by the leg's name: a read of one leg of a movement stated
+    /// `same` holds the other side's reads of that leg only (S3, P43 on #241).
+    pub(super) leg_reads: BTreeMap<String, Collected>,
 }
 
 impl Engine {
@@ -181,6 +185,7 @@ impl Engine {
                         attrs: Vec::new(),
                         for_period: None,
                         fulfils: None,
+                        leg_reads: BTreeMap::new(),
                     });
                 };
                 ex = join(ex, h);
@@ -199,6 +204,7 @@ impl Engine {
         };
         let kind_legs = m.kind_legs(&mv.kind);
         let mut legs = Vec::with_capacity(mv.decl.legs.len());
+        let mut leg_reads = BTreeMap::new();
         for leg in &mv.decl.legs {
             let unit = kind_legs
                 .iter()
@@ -207,7 +213,12 @@ impl Engine {
                 .ok_or(Stop::NotBuilt(
                     "a leg its kind doesn't declare (M0's check)",
                 ))?;
-            legs.push(self.eval_leg(m, inst, leg, &unit, ctx)?);
+            self.push();
+            let read = self.eval_leg(m, inst, leg, &unit, ctx);
+            let reads = self.pop_alone();
+            self.absorb(&reads);
+            legs.push(read?);
+            leg_reads.insert(leg.name.clone(), reads);
         }
         let mut attrs = Vec::with_capacity(mv.decl.attrs.len());
         for (name, e) in &mv.decl.attrs {
@@ -223,6 +234,7 @@ impl Engine {
             attrs,
             for_period,
             fulfils,
+            leg_reads,
         })
     }
 }
@@ -237,6 +249,7 @@ pub(super) fn no_body() -> Body {
         attrs: Vec::new(),
         for_period: None,
         fulfils: None,
+        leg_reads: BTreeMap::new(),
     }
 }
 
@@ -298,12 +311,23 @@ pub(super) fn imprecise_body(first: Body, other: &Body, hole: &Hole) -> Body {
             *value = Value::Hole(hole.clone());
         }
     }
+    // each leg's reads at both law dates
+    let mut leg_reads = first.leg_reads;
+    for (name, reads) in &other.leg_reads {
+        match leg_reads.get_mut(name) {
+            Some(mine) => mine.merge(reads),
+            None => {
+                leg_reads.insert(name.clone(), reads.clone());
+            }
+        }
+    }
     Body {
         exists,
         legs,
         attrs,
         for_period: imprecise_part(first.for_period, other.for_period.as_ref(), hole),
         fulfils: imprecise_part(first.fulfils, other.fulfils.as_ref(), hole),
+        leg_reads,
     }
 }
 

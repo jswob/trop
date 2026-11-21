@@ -1,0 +1,30 @@
+model r18c2
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input quote[m in months]: num reading
+input dpick: date
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  quote[2026-03] = 4 at 2026-03-10 "s"
+  quote[2026-04] = 5 at 2026-04-10 "s"
+
+version law26
+  cite s
+  governs 2026..
+  known 2026-01-01
+  dpick = 2026-04-02 "s"
+
+ask q: last(quote[month_of(dpick)], 2026-04-20)

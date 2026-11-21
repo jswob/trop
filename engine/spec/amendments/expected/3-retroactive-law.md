@@ -52,10 +52,10 @@
 
 **41 cells:** 38 exact, 0 holes, 3 run-only; 10 differ from the base (new cells included), 31 are the base's value.
 
-## First day, and sanity
+## First day
 
-- **First day anything differs:** 2027-06-15, `invest[oki, 2027-06]` +86.38. Net worth first differs on 2027-06-21.
-- **Sanity:** the earliest `governs` is 2027-01-01, so it passes.
+- **First day anything differs**, from two runs' asks of each place's balance by day (`OPERATIONS.md` §3.3, CHG-11): 2027-06-15, `invest[oki, 2027-06]` +86.38. Net worth first differs on 2027-06-21.
+- **The earliest `governs`:** 2027-01-01, before it.
 
 ## Back pay
 
@@ -67,7 +67,7 @@ No value changes. Only the registers do: the cut line moves to 2027-06-15, and t
 
 ## Warnings and holes
 
-- **Added:** `WARN-BACKPAY`: `health_pay[2027-04]`, δ −86.38, covered by `arrears none for health_pay` (LR-8: the warning lists covered instances too).
+- **Added:** no warning. The register lists `adjustment: health_pay[2027-04] by -86.38 PLN on 2027-06-15 (version health_ryczalt_2027), remaining 0.00 PLN`, its adjustment waived (`arrears none for health_pay`), so no `HOLE-CHANGED` (`OPERATIONS.md` §3.3, CHG-3; LR-8).
 - **Cleared:** none. The base's `WARN-NEGATIVE` on konto (2026-03-01, 2026-03-17) stands.
 - **Holes:** none.
 
@@ -123,13 +123,13 @@ The same version with `arrears none for health_pay` removed.
 
 - `health_pay[2027-04]` gets a hole movement, `HOLE-CHANGED`, dated on or after 2027-06-15 (V4-P4). konto and zus are holes from 2027-06-15 to E; `wcash[ike]` and `wcash[oki]` from 2027-06-15; `wunits[ike]`, `wunits[oki]` and `rynek` from 2027-06-16; `urzad_skarbowy` from 2027-07-20.
 - `health_settlement` 2028 stays known at 808.53: its `flows(health_pay[2028-m], …)` are keyed to 2028's instances and can't count `[2027-04]`'s movement (LR-7). `pit28` 2028 reads `flows(health_pay, 2028)`, the pay as a whole over a span after 2027-06-15, and is a hole.
-- **Warnings:** `WARN-BACKPAY` lists `health_pay[2027-04]`, δ −86.38, as covered by no line: it becomes `HOLE-CHANGED`.
+- **Back pay:** the register's `adjustment:` line of `health_pay[2027-04]`, δ −86.38, with nothing that waives or fulfils it: it becomes `HOLE-CHANGED` (`OPERATIONS.md` §3.3, CHG-3).
 - **Register:** every hole carries the one question above. There is no new `assumed`.
-- **Sanity:** the first day is 2027-06-15, so it passes.
+- **First day:** 2027-06-15, from the same asks.
 
 ## Readings it rests on
 
 - `HOLE-CHANGED` is dated on or after V.known (V4-P4), and only a `flows` that can count the movement is a hole (LR-7).
-- `WARN-BACKPAY` lists covered instances too (LR-8).
+- An adjustment waived prints its `adjustment:` line too (LR-8, read of tally 1.0.1's `WARN-BACKPAY`).
 - `held` and the printed cut are the ask's K: LR-1.
 - The law-part gate premise (`README.md` here).

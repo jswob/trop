@@ -1,0 +1,55 @@
+# tally 2.2.1 P53 (R20, L §6.1): a member's warning lifted to the run's level names the member's
+# things by the joint model's names where the instance has two keys too (review g4fix inv). Before W14:
+# put[a, 2026-03] and the rows unprefixed.
+=== top.tally
+model fam
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "a/m.tally" sha256 "1e3b3d574324014553915e7a801e2c2f3ecc141d33199cabb5c1f4e99c009637"
+=== a/m.tally
+model mm
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input dn: int
+input amt: money PLN
+move put[k in ks, m in months]: transfers
+  on day_of(m, dn)
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  dn = 5 "s"
+  amt = 10.00 PLN "s"
+version st1
+  cite s
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  bank[r1] = (on: 2026-03-05, kind: transfers, leg cash from world to konto amount 10.00 PLN, fulfils: put[a, 2026-03]) "r1"
+version st2
+  cite s
+  governs 2026-03
+  known 2026-04-12
+  bank[r2] = (on: 2026-03-06, kind: transfers, leg cash from world to konto amount 12.00 PLN, fulfils: put[a, 2026-03]) "r2"
+ask q: bal(konto, 2026-03-31)
+=== expect a.q
+a.q: 50.00 PLN
+  unfulfilled: put[a, 2026-01]
+  unfulfilled: put[a, 2026-02]
+  unfulfilled: put[b, 2026-01]
+  unfulfilled: put[b, 2026-02]
+  open: put[b, 2026-03]
+  cut 2026-04-30
+warning: WARN-LEGS the two observations of a.put[a, 2026-03] disagree: a.bank[r1] (10.00 PLN) and a.bank[r2] (12.00 PLN)

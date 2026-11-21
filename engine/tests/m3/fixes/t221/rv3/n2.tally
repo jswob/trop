@@ -1,0 +1,48 @@
+model n2
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2]
+place konto: accounts PLN lives 2025-01-01..
+input rate[k in ks]: num
+input fl[k in ks]: bool
+input acct[k in ks]: key accounts
+input q[k in ks]: money PLN
+input rec[k in ks]: (a num, b num)
+input one: num
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+  fl[k1] = true "s"
+  fl[k2] = none "s"
+  acct[k1] = konto "s"
+  acct[k2] = none "s"
+  q[k1] = 5.00 PLN "s"
+  q[k2] = none "s"
+  rec[k1] = (a: 1, b: 2) "s"
+  rec[k2] = none "s"
+  one = 1 "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+ask o1: rate[k] < one for k in ks
+ask o2: one >= rate[k] for k in ks
+ask o3: rate[k] == one for k in ks
+ask o4: sum(rate[k] for k in ks)
+ask o5: max(rate[k] for k in ks)
+ask o6: min(rate[k], one) for k in ks
+ask o7: rec[k].a for k in ks
+ask o8: bal(acct[k], 2026-03-01) for k in ks
+ask o9: unit(q[k]) for k in ks
+ask o10: abs(rate[k]) for k in ks
+ask o11: round(rate[k], 1, down) for k in ks
+ask o12: (if fl[k] then one else one) for k in ks
+ask o13: (fl[k] and fl[k1]) for k in ks
+ask o14: -rate[k] for k in ks
+ask o15: count(j in ks where rate[j] > one)
+ask o16: (not fl[k]) for k in ks
+ask o17: acct[k] in accounts on 2026-03-01 for k in ks

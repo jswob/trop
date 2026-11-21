@@ -1,0 +1,34 @@
+scenario sc over w1b
+  tally 2
+  from 2026-05-01
+move px: transfers
+  on w
+  at d_at
+  leg cash from world to konto amount amt
+ask b0427: bal(konto, 2026-04-27) in sc
+ask b0428: bal(konto, 2026-04-28) in sc
+ask b0430: bal(konto, 2026-04-30) in sc
+ask b0501: bal(konto, 2026-05-01) in sc
+ask b0502: bal(konto, 2026-05-02) in sc
+ask b0503: bal(konto, 2026-05-03) in sc
+ask b0531: bal(konto, 2026-05-31) in sc
+ask p0428: bal(konto, 2026-05-31) in sc with w = 2026-04-28
+ask p0430: bal(konto, 2026-05-31) in sc with w = 2026-04-30
+ask p0501: bal(konto, 2026-05-31) in sc with w = 2026-05-01
+ask p0502: bal(konto, 2026-05-31) in sc with w = 2026-05-02
+ask p0503: bal(konto, 2026-05-31) in sc with w = 2026-05-03
+ask q0501a: bal(konto, 2026-05-01) in sc with w = 2026-04-30
+ask q0501b: bal(konto, 2026-05-01) in sc with w = 2026-05-01
+ask q0501c: bal(konto, 2026-05-01) in sc with w = 2026-05-02
+ask fl: flows(px, 2026-04 .. 2026-05) in sc
+ask cn: count(m in transfers over 2026-05) in sc
+ask cn4: count(m in transfers over 2026-04) in sc
+ask k0502: bal(konto, 2026-05-31) in sc as known 2026-05-02
+ask k0501: bal(konto, 2026-05-31) in sc as known 2026-05-01
+ask k0430: bal(konto, 2026-05-31) in sc as known 2026-04-30
+ask k0429: bal(konto, 2026-04-29) in sc as known 2026-04-29
+ask ex: explain bal(konto, 2026-05-31) in sc
+ask df: diff(bal(konto, 2026-05-31)) in sc against w1b
+ask df4: diff(bal(konto, 2026-04-30)) in sc against w1b
+ask ck: check bal(konto, 2026-04-30) == bal(konto, 2026-04-27) in sc
+ask ck5: check bal(konto, 2026-05-31) == bal(konto, 2026-04-27) in sc

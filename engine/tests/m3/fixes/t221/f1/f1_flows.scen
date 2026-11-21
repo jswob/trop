@@ -1,0 +1,9 @@
+scenario sc over n4
+  tally 2
+  from 2026-01-01
+
+version sc_span
+  cite s
+  governs 2026-01-01..
+  known 2025-01-02
+  replace d0 = 2026-01-01 "from the start"

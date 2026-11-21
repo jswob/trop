@@ -209,13 +209,13 @@ pub fn check(files: Files) -> Result<Answer, NotImplemented> {
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
-    let report = loaded(Files::new(given), FENCES).map(|loaded| {
-        let lines = report_lines(&loaded);
-        Answered::printed(if is_joint(&loaded) {
+    let report = loaded(Files::new(given), FENCES).and_then(|loaded| {
+        let lines = report_lines(&loaded)?;
+        Ok(Answered::printed(if is_joint(&loaded) {
             joint_lines(lines)
         } else {
             lines
-        })
+        }))
     });
     finish(report)
 }
@@ -278,14 +278,15 @@ fn finish(outcome: Result<Answered, Stop>) -> Result<Answer, NotImplemented> {
 ///
 /// [`NotImplemented`] for a form whose order the engine doesn't build yet (a member's keys).
 pub fn reprint(files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
-    reprint_in(files, &BTreeMap::new())
+    reprint_in(files, &BTreeMap::new(), Pin::Canonical)
 }
 
 /// [`reprint`] with the file table's files, `disk`: a joint model's members are found among
 /// the files given, by their full paths, then on `disk` where it holds the model's file, and
-/// pinned as `run` pins them, before anything prints; each member's files given are a reality
-/// of their own, printed under the names given (E §3.1 step 1; INTERFACE §1; tally 2.1.6,
-/// #74, #91). The CLI's entry.
+/// pinned as `run` pins them, in the form `pin` names (`--pin=bytes`, OPERATIONS §2.2:
+/// "Inputs. As `run`"), before anything prints; each member's files given are a reality of
+/// their own, printed under the names given (E §3.1 step 1; INTERFACE §1; tally 2.1.6, #74,
+/// #91). The CLI's entry.
 ///
 /// # Errors
 ///
@@ -293,6 +294,7 @@ pub fn reprint(files: Vec<(Given, String)>) -> Result<Answer, NotImplemented> {
 pub fn reprint_in(
     mut files: Vec<(Given, String)>,
     disk: &BTreeMap<&str, &[u8]>,
+    pin: Pin,
 ) -> Result<Answer, NotImplemented> {
     files.sort_by(|(a, x), (b, y)| (&a.path, x).cmp(&(&b.path, y)));
     let mut given = Vec::with_capacity(files.len());
@@ -310,7 +312,7 @@ pub fn reprint_in(
         });
         sources.push(Source { path: name, text });
     }
-    let printed = match crate::load::reprint_members(&given, disk).and_then(|members| {
+    let printed = match crate::load::reprint_members(&given, disk, pin).and_then(|members| {
         crate::syntax::reprint_among(&sources, &named(&members, &given, &sources))
     }) {
         Ok(printed) => printed,

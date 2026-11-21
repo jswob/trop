@@ -3,6 +3,7 @@
 # none in arithmetic, max or an ordering is RUN-NONE (L §3.1) whatever the hole beside it holds (y1, y2, y3, y5);
 # sqrt(-1) is RUN-DOMAIN beside a hole (y4); pow(hole, -1) may be anything, a division by zero included, so it stays
 # the hole (y6).
+# tally 2.2.1 (233.7), L §8.4 RUN-NONE: names the read that gave none; tally 2.2 said `a value`.
 === m.tally
 model p12
   tally 2
@@ -44,5 +45,5 @@ q: refused: RUN-PARAM normal parameter s = -5 is invalid
   cut 2026-10-18
 q2: refused: RUN-PARAM normal parameter s = -5 is invalid
   cut 2026-10-18
-q3: (refused: RUN-NONE a value is none here: arithmetic, refused: RUN-NONE a value is none here: arithmetic, refused: RUN-NONE a value is none here: max, refused: RUN-DOMAIN sqrt(-1) outside its domain, refused: RUN-NONE a value is none here: an ordering, ?"what is mu?" (mu[k2]))
+q3: (refused: RUN-NONE nn is none here: arithmetic, refused: RUN-NONE nn is none here: arithmetic, refused: RUN-NONE a value is none here: max, refused: RUN-DOMAIN sqrt(-1) outside its domain, refused: RUN-NONE nn is none here: an ordering, ?"what is mu?" (mu[k2]))
   cut 2026-10-18

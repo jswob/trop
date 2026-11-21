@@ -40,8 +40,10 @@ pub struct Adjustment {
     pub inst_keys: Vec<crate::model::KeyVal>,
     /// Its move.
     pub move_id: String,
-    /// Its day.
+    /// Its day: a window's last day, by which every day of it was paid.
     pub inst_day: Day,
+    /// Its day as its question names it: the day, or its window (refcore's `day_text`; N4).
+    pub inst_on: String,
     /// The leg, as booked or as the step gives it.
     pub leg: LegVal,
     /// The places the step gives the leg, when it changes them (L §5.14.3).
@@ -143,7 +145,7 @@ impl Adjustment {
             &format!(
                 "{} on {} changed after it was paid (version {}); is back pay due, and when?",
                 self.inst_id,
-                self.inst_day.text(),
+                self.inst_on,
                 self.vids.join(", ")
             ),
             &self.inst_id,
@@ -362,8 +364,13 @@ impl Engine {
             if settles && !is_hole_booking(inst) {
                 continue;
             }
-            let Some(t) = inst.day.as_ref().and_then(crate::walk::Dated::day) else {
-                continue;
+            // a window: every day of it is paid by a version known after its last day, which
+            // makes its adjustment; one known inside it is the booking cut's hole (E §5 step 2;
+            // P32, N4)
+            let t = match &inst.day {
+                Some(crate::walk::Dated::Day(d)) => *d,
+                Some(crate::walk::Dated::Window(w)) => w.hi,
+                Some(crate::walk::Dated::Hole(_)) | None => continue,
             };
             if t >= cut {
                 continue;
@@ -422,7 +429,9 @@ impl Engine {
             let seed = Seed {
                 env: inst.env.clone(),
                 keys: inst.keys.clone(),
-                exists: Exists::Yes,
+                // its keys' `where` is read at K, so a hole it leaves is no version's to
+                // answer (E §4.1 step 1; refcore's `exists0`, #236)
+                exists: (*inst.exists0).clone(),
                 at_cut: Some(c),
                 upto: None,
             };
@@ -434,6 +443,12 @@ impl Engine {
                 inst_keys: inst.keys.clone(),
                 move_id: inst.move_id.clone(),
                 inst_day: t,
+                inst_on: match &inst.day {
+                    Some(crate::walk::Dated::Window(w)) => w.question.clone(),
+                    Some(crate::walk::Dated::Day(_) | crate::walk::Dated::Hole(_)) | None => {
+                        t.text()
+                    }
+                },
                 day: c,
                 vids: step_versions(&j.coll, vids),
                 coll: j.coll.clone(),
@@ -689,6 +704,8 @@ struct Step {
     move_id: String,
     /// Its day.
     inst_day: Day,
+    /// Its day as its question names it.
+    inst_on: String,
     /// The step's day c.
     day: Day,
     /// Its versions.
@@ -778,6 +795,7 @@ fn make(
         made: false,
         move_id: step.move_id.clone(),
         inst_day: step.inst_day,
+        inst_on: step.inst_on.clone(),
         leg,
         new_ends,
         delta,
@@ -861,7 +879,7 @@ pub(crate) fn is_hole_booking(inst: &Inst) -> bool {
 
 /// The days versions became known, each with the versions known then: versions' `known`,
 /// rows' own (refcore's `known_dates`). E §5 step 2.
-fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
+pub(crate) fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
     let mut by: BTreeMap<Day, BTreeSet<String>> = BTreeMap::new();
     for (_, v) in m.versions.entries() {
         by.entry(v.known)

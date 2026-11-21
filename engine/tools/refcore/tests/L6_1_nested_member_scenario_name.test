@@ -1,0 +1,133 @@
+# tally 2.2.1 R20 (L §6.1 l.1802, OPERATIONS §2.1): a member's ask brings to the run's own level its refused scenario's
+# line, its own when refused alone and its walk's warnings, never WARN-UNREAD, by the joint model's names, once per member;
+# the lines under its result are the member's.
+# 228.Q9 (P21): a nested member's refused scenario is `scenario m.b.bbad`; the file's own ask q_bb prints
+# nothing. tally 2.2 printed `m.scenario b.bbad`.
+=== a/a.tally
+model ana
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "a card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+input spare: num
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+ask qin: twice in s1 law 2026-03-01
+
+ask qd: diff(twice) in s1 against ana law 2026-03-01
+
+ask qw: twice with pay = 1 000.00 PLN law 2026-03-01
+
+ask qk: twice law 2026-03-01 as known 2026-01-01
+
+ask qc: twice law 2026-03-01 as known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"
+=== a/bad.tally
+scenario bad over ana
+  tally 2
+  from 2026-01-01
+
+def broken: money PLN = nothing_here + pay
+
+ask q_bad: broken
+=== a/s1.tally
+scenario s1 over ana
+  tally 2
+  from 2026-01-01
+
+version raise
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 5 000.00 PLN "a raise"
+
+ask q_s: twice in s1 law 2026-03-01
+
+ask q_sc: twice in s1 law 2026-03-01 as known 2026-06-01
+=== j.tally
+model fam
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a" sha256 "6cecc15c09adceb2fe1dd82aac67f38c9126772bac2d2ef2153c9e6fc4c502a2"
+  use m = "n/mid.tally" sha256 "a7ace99101cbec11c85736246a9860036bd9e1f7a98896b89e846589ef59bdd7"
+=== n/b/b.tally
+model bob
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+
+source card "b card"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay at reader
+
+ask q: twice law 2026-03-01
+
+ask qc: twice law 2026-03-01 as known 2026-06-01
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 3 000.00 PLN "the card"
+=== n/b/bbad.tally
+scenario bbad over bob
+  tally 2
+  from 2026-01-01
+
+version worse
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 2 000.00 USD "a cut"
+
+ask q_bb: twice in bbad law 2026-03-01
+=== n/b/sb.tally
+scenario sb over bob
+  tally 2
+  from 2026-01-01
+
+version lower
+  cite card
+  governs 2026-01-01..
+  known 2026-01-02
+  replace pay = 2 000.00 PLN "a cut"
+
+ask q_sb: twice in sb law 2026-03-01
+=== n/mid.tally
+model mid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use b = "b" sha256 "70c00404fb5f280e6332afc03c31857467c2932bf2297ae052729c732f7178ee"
+
+ask qm: b.twice law 2026-03-01
+=== expect m.b.q_sb m.qm m.b.q_bb
+scenario m.b.bbad: refused: LOAD-UNIT 2 000.00 USD and money PLN have different units (n/b/bbad.tally:9)
+m.b.q_sb: 4 000.00 PLN
+  world: sb
+  law date 2026-03-01, cut 2026-03-01
+m.qm: 6 000.00 PLN
+  law date 2026-03-01, cut 2026-03-01

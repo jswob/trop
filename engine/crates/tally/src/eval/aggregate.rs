@@ -28,7 +28,7 @@ use super::ty::zero_of;
 use super::windows::End;
 use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Reality, Value};
+use crate::model::{Reality, Value, Window};
 use crate::syntax::{Agg, AggFn, Bind, Expr, Stop};
 use crate::time::Day;
 use crate::walk::lowest_shape;
@@ -263,11 +263,8 @@ impl Engine {
                 )
             {
                 // only a comparison decides an interval: a term of any other aggregate needs
-                // its one value (L §4.4), `HOLE-IMPRECISE` named by the window's input and
-                // carrying its unknown days (refcore's `carry_hole`, §8.2 `unknown day:`)
-                let window = w.question_text(m).map_err(num_stop)?;
-                let text = format!("date within {window} not precise enough for a term of {word}");
-                holes.push(Hole::asked(&text, w.figure()).carrying(&w.carry));
+                // its one value (L §4.4)
+                holes.push(window_term_hole(m, w, word)?);
                 continue;
             }
             terms.push((&member.env, t));
@@ -783,6 +780,20 @@ fn count_members(members: &[Member]) -> Result<Value, Stop> {
     }
     let n = i64::try_from(members.len()).map_err(|_| invariant("a count past the integers"))?;
     Ok(Value::int(n))
+}
+
+/// The hole of a term of aggregate `word` that is an undecided interval, window `w`: the term
+/// needs its one value, so `HOLE-IMPRECISE` named by the window's input and carrying its
+/// unknown days (refcore's `carry_hole`; §8.2 `unknown day:`). L §4.4 l.669 ("a term of an
+/// aggregate other than min, max, argmin and argmax").
+///
+/// # Errors
+///
+/// A number error writing the window's text.
+pub(super) fn window_term_hole(m: &Reality, w: &Window, word: &str) -> Result<Hole, Stop> {
+    let window = w.question_text(m).map_err(num_stop)?;
+    let text = format!("date within {window} not precise enough for a term of {word}");
+    Ok(Hole::asked(&text, w.figure()).carrying(&w.carry))
 }
 
 /// Whether a term is zero: an unknown member's 0 adds nothing to a sum (L §5.11).

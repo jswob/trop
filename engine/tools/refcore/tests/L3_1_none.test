@@ -1,6 +1,7 @@
 # L §3.1: none "can only be tested, with x == none or x != none; any other comparison, arithmetic, ordering
 # or aggregation of it is refused (RUN-NONE). A row, a field or a rule may give none ... A def whose winning
 # rule gives none ... prints none (D-7)."
+# tally 2.2.1 (233.7), L §8.4 RUN-NONE: names the read that gave none; tally 2.2 said `a value`.
 === m.tally
 model t
   tally 2
@@ -30,9 +31,9 @@ ask q4: z law 2026-06-30
 === expect
 q1: (true, false, false)
   cut 2026-01-01
-q2: refused: RUN-NONE ...
+q2: refused: RUN-NONE x is none here: arithmetic
   cut 2026-01-01
-q3: refused: RUN-NONE ...
+q3: refused: RUN-NONE x is none here: an ordering
   cut 2026-01-01
 q4: none
   law date 2026-06-30, cut 2026-01-01
