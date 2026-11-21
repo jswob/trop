@@ -6232,3 +6232,11 @@ The findings are `tmp/spec-2.2.1/t-d2-notes.md`'s F-G (Finding 1) and F-H (Findi
 - **Checks at 71fb2bd0's tree:**
   - `check commit: green, 24 steps (225s)`, exit 0.
   - `check fences: green, 1 step (32s)`.
+
+## 2026-11-21 tally 2.2.1, the survivors' list (R-87), first pass (issue #241)
+
+Run 44864149229 on b994b46d (`score 88.5%`, floor 88.9 %). `engine/MUTANTS-SURVIVORS.md` only; no code changed. The 77 unlisted survivors are sorted in `tmp/spec-2.2.1/survivors-sort.md` (lines from the run's shards). Windows are under review: their survivors are listed, not killed.
+- **Rows removed:** 10, the ones caught now (`survivors-now-caught.txt`: `planned_by_id` 3, `same_booking.rs` 6, `class_depends` 1).
+- **Rows added:** 49. Window code 46 (`R-87: missed: window code: …; left for the windows round, #244`): `ledger_model` 4, `unrun_window` 2, `compare_days` 2, `one_day` 3, `common_day` 2, `undecided_hole`, `schedule_booked_hole` 5, `schedule_decision`, `close_day`, `reads_under_window` 2, `hole_in_span` 2, `same_inside` 13, `zero_amount`, `window_pieces`, `decision_runs`, `day_class` 2, `apply_ent`, `at_reading` 2. Equivalent 3: `mv_field`'s `is_leg` guard, `same_rows_warned`'s `!`, `open_kept`'s `<`.
+- **Left for the tests session:** 28, killable without a window, each with the input that reaches it in the sort file. The sign rule's take-back and leg refusal (`refuse_leg`, `take_back`, `Taken::holds`, `unbook`, `same_act`) look like missing tests for a wrong result, not corners: a leg refused by the sign rule as booked leaves its place reading a balance, and a refused group's leg leaves its amount at the other end.
+- **Check:** `engine/tools/mutants-survivors` over the run's 100 shards: `score 88.6% = caught 2607 / (caught 2607 + missed 497 + timed out 1 - equivalent 163)`; its only findings are the 28 left for T.
