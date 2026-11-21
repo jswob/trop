@@ -696,7 +696,7 @@ fixes/g11/r_p_e	fixes-g11		engine/tests/m1/fixes/g11	engine/tests/m1/fixes/g11/r
 fixes/g11/r_p_pr_sign	fixes-g11		engine/tests/m1/fixes/g11	engine/tests/m1/fixes/g11/r_p_pr_sign.tally			G11
 fixes/g12/pb_g10_ledger_ledger	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g10_ledger_ledger.tally	q_res		G12
 fixes/g12/pb_g10_observe_observe	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g10_observe_observe.tally	q_rare_k6 q_rare_konto q_bal q_early q_cov q_cov_before q_cov_on zx1 zx3 zx4 zx6 zx26 zx81 zx95 zx156 zx173 zx175 zx176 zx185 zx198 zx233		G12
-fixes/g12/pb_g12_members_members	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g12_members_members.tally	members members_all res_bank q_dues q_dues3 q_dues4 sums_q total pairs big hole_day sizes_q fulfils_q known_day late_member early_member hole_member never_day zx33 zx34 zx39 zx42 zx47 zx92 zx119		G12
+fixes/g12/pb_g12_members_members	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g12_members_members.tally	members members_all res_bank q_dues q_dues3 q_dues4 sums_q total pairs big hole_day sizes_q fulfils_q known_day late_member early_member hole_member never_day zx33 zx34 zx39 zx42 zx47 zx92 zx105		G12
 fixes/g12/pb_g5_agenda_agenda	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g5_agenda_agenda.tally	q_room q_tin q_bal q_res zx1 zx4 zx6 zx17 zx20 zx23 zx35 zx37 zx41 zx54 zx129 zx137 zx240 zi1		G12
 fixes/g12/pb_g7_flows_touched_flows_touched	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g7_flows_touched_flows_touched.tally	q_place q_bal q_move q_unc zx1 zx3 zx4 zx5 zx24		G12
 fixes/g12/pb_g9_reading_close_reading_close	fixes-g12		engine/tests/m1/fixes/g12	engine/tests/m1/fixes/g12/pb_g9_reading_close_reading_close.tally			G12
@@ -1967,3 +1967,12 @@ fixes/gate8/m3_just_before	fixes-gate8		engine/tests/m1/fixes/gate8/m3_just_befo
 fixes/gate8/m3_window_class	fixes-gate8		engine/tests/m1/fixes/gate8/m3_window_class	engine/tests/m1/fixes/gate8/m3_window_class/base.tally			-
 fixes/gate8/m3_left_out	fixes-gate8		engine/tests/m1/fixes/gate8/m3_left_out	engine/tests/m1/fixes/gate8/m3_left_out/base.tally			-
 fixes/gate8/m3_less_cov	fixes-gate8		engine/tests/m1/fixes/gate8/m3_less_cov	engine/tests/m1/fixes/gate8/m3_less_cov/base.tally			-
+fixes/g13/r_agent_w_model_with_r_agent_w_c1_c1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_c1.tally	c1		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_c3_c3	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_c3.tally	c3		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_c5_c5	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_c5.tally	c5		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_f1_f1	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_f1.tally	f1		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_f2_f2	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_f2.tally	f2		t221-G1
+fixes/g13/r_agent_w_model_with_r_agent_w_f3_f3	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/r_agent_w_model.tally engine/tests/m1/fixes/g13/r_agent_w_f3.tally	f3		t221-G1
+fixes/g13/rf_w_model_with_rf_w_w01_w01	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w01.tally	w01		t221-G1
+fixes/g13/rf_w_model_with_rf_w_w11_w11	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w11.tally	w11		t221-G1
+fixes/g13/rf_w_model_with_rf_w_w13_w13	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w13.tally	w13		t221-G1

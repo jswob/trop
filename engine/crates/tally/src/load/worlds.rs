@@ -16,13 +16,15 @@
 
 use super::check::invariant;
 use super::joint::{joint_root, load_joint};
+use super::merge::tally_tok;
 use super::pins::forks_past_cap;
 use super::steps::load_among;
 use crate::api::{Pin, Source};
 use crate::base::{Code, Load, Place, Reach, Refusal};
 use crate::eval::How;
 use crate::model::{Joint, Reality};
-use crate::syntax::{AskBody, Line, Stop, cannot, parse_split, split_lines};
+use crate::num::Num;
+use crate::syntax::{AskBody, Kind, Line, Stop, cannot, parse_split, split_lines};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The deepest stack of scenarios over the model (L §6.4).
@@ -185,6 +187,35 @@ fn load_world(
     load_among(parse_split(&split)?, (&among.0, &among.1), joint, how)
 }
 
+/// Whether the run's files, the base's and every scenario's, state different `tally`
+/// versions in their headers. L §8.3 (`LOAD-VERSION`: "files declare different tally
+/// versions"), §5.1.
+fn versions_differ(files: &[Split]) -> bool {
+    let Some((first, rest)) = files.split_first() else {
+        return false;
+    };
+    let stated = tally_tok(&first.lines).map(|tok| &tok.kind);
+    for file in rest {
+        if tally_tok(&file.lines).map(|tok| &tok.kind) != stated {
+            return true;
+        }
+    }
+    false
+}
+
+/// Whether every file of the base states `tally 2`, the version this engine runs: a base
+/// that does is refused only for its own reasons, never for a scenario file's version.
+/// L §5.1, §6.4, §8.3 (`LOAD-VERSION`).
+fn runs_tally_two(base: &[&Split]) -> bool {
+    let two = Kind::Int(Num::int(2));
+    for file in base {
+        if tally_tok(&file.lines).map(|tok| &tok.kind) != Some(&two) {
+            return false;
+        }
+    }
+    true
+}
+
 /// The base alone, then each scenario, by id, with the base and its stack (refcore's
 /// `run_worlds`, its loads). L §6.4, §8.3.
 fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<Worlds, Stop> {
@@ -212,6 +243,20 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
     }
     let mut among = (run, elsewhere);
     let alone = match load_world(&base, &among, joint, how) {
+        // a base on a version this engine doesn't run, beside a scenario file on another:
+        // the run's files disagree (L §8.3 `LOAD-VERSION`; G4's review Q5, P50); a base on
+        // tally 2 refused for its own reason prints that refusal, the base being whole
+        // without its scenarios (L §6.4; G4's fix review B-2, P53)
+        Err(Stop::Refused(refusal))
+            if refusal.code() == Code::Load(Load::Version)
+                && !runs_tally_two(&base)
+                && versions_differ(files) =>
+        {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Load(Load::Version),
+                "files declare different tally versions".to_owned(),
+            )));
+        }
         Err(Stop::Refused(refusal)) => {
             return Err(Stop::Refused(read_outside(refusal, &among.1)));
         }

@@ -569,11 +569,12 @@ ask e: explain fee_out[2026-03].cash.amount
 
     /// The final check's `d77/lifespan` (L §4.4 l.672, a refusal that only some of a
     /// window's days give; tally 2.1.8 item 77): a window leg whose lifespan test comes out
-    /// both ways is the window's hole from the window's first day, and a refusal a fixed-day
-    /// leg brings the place later doesn't outrank it, which comes first being the window's to
-    /// say; a pin on either side of the split gives each side's refusal.
+    /// both ways is the window's hole from the window's first day; a fixed-day leg's lifespan
+    /// refusal the place meets later rests on no balance, so it is given on every day and
+    /// stands beside that hole (L §8 l.2217; P31 said whole, P41, F6); a pin on either side
+    /// of the split gives each side's refusal.
     #[test]
-    fn a_refusal_after_a_window_lifespan_test_leaves_the_windows_hole() {
+    fn a_lifespan_refusal_after_a_window_lifespan_test_stands() {
         let text = r#"model t
   tally 2
   on 2026-01-01
@@ -615,9 +616,8 @@ ask b_08: bal(pot, 2026-04-30) with dw = 2026-04-08
         assert_eq!(
             lines,
             [
-                "b: ?\"date within window(2026-04-05, 2026-04-10) not precise enough for a \
-                 balance\" (into_fresh)",
-                "  unknown day: dw",
+                "b: refused: RUN-LIFESPAN into_shut.cash moves into or out of shut outside its \
+                 lifespan",
                 "  cut 2026-01-01",
                 "b_05: refused: RUN-LIFESPAN into_fresh.cash moves into or out of fresh outside \
                  its lifespan",
@@ -628,7 +628,7 @@ ask b_08: bal(pot, 2026-04-30) with dw = 2026-04-08
                 "  pinned: dw = 2026-04-08",
                 "  cut 2026-01-01",
             ],
-            "the window's hole naming its day, then one refusal per pinned side"
+            "the lifespan refusal every day gives, then one refusal per pinned side"
         );
     }
 

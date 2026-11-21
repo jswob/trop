@@ -26,12 +26,12 @@ use super::observe::{Obs, observed_row_seen};
 use super::same_booking::{EndBook, Member};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Ctx, Engine, num_stop};
-use crate::hole::Hole;
+use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MvRef, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, Dated, End, LegVal, invariant, qty_value};
+use crate::walk::{Amount, Dated, DayWindow, End, Inst, LegVal, invariant, qty_value};
 
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
@@ -175,8 +175,10 @@ impl Engine {
             .any(|(a, b)| *a == id || *b == id))
     }
 
-    /// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
-    /// `same_pairs`, its lines). L §6.1, §4.5.
+    /// The `same` line cut `cut` sees that joins movement `mover` to movement `id`, its two
+    /// sides as written: the first naming both, else, where a chain joins them, the first
+    /// naming `id`; none where no line names `id` (refcore's `same_pairs`, its lines). L §6.1,
+    /// §4.5, §8.4 `RUN-RECORD` (tally 2.2.1 230.Q-5a; P48 N4).
     ///
     /// # Errors
     ///
@@ -184,13 +186,18 @@ impl Engine {
     pub(super) fn first_line(
         &mut self,
         m: &Reality,
-        id: &str,
+        (mover, id): (&str, &str),
         cut: Day,
     ) -> Result<Option<(String, String)>, Stop> {
-        Ok(move_lines(m, self.moves_seen(m, cut)?)
-            .into_iter()
-            .find(|(a, b)| *a == id || *b == id)
-            .map(|(a, b)| (a.clone(), b.clone())))
+        let lines = move_lines(m, self.moves_seen(m, cut)?);
+        let joins =
+            |(a, b): &&(&String, &String)| (*a == mover && *b == id) || (*a == id && *b == mover);
+        let names = |(a, b): &&(&String, &String)| *a == id || *b == id;
+        Ok(lines
+            .iter()
+            .find(joins)
+            .or_else(|| lines.iter().find(names))
+            .map(|(a, b)| ((*a).clone(), (*b).clone())))
     }
 }
 
@@ -284,6 +291,19 @@ pub fn kept_once(
     out
 }
 
+/// An observed row as `HOLE-SAME` reads one side of a movement stated `same`: its id, its
+/// day, its legs (L §5.19 One movement on two statements, §8.1).
+pub(crate) fn obs_side(o: &Obs) -> (&str, Option<Day>, &[LegVal]) {
+    (&o.id, Some(o.day), &o.legs)
+}
+
+/// A planned instance as `HOLE-SAME` reads one side of a movement stated `same`: its id as
+/// the register names it (`in1`, `in2[k]`), its day where it is one, its legs (L §6.1, §8.1;
+/// tally 2.2.1's 219.1).
+pub(crate) fn inst_side(i: &Inst) -> (&str, Option<Day>, &[LegVal]) {
+    (&i.id, i.day.as_ref().and_then(Dated::day), &i.legs)
+}
+
 /// Where row `row` and the rows `others` stated `same` with it disagree on a leg's amount
 /// or day (on leg `leg` alone, where given), the disagreement's hole in L §8.1's form,
 /// naming every row of the class that states the leg, in id order; none where they agree or
@@ -298,13 +318,167 @@ pub fn same_differ(
     others: &[&Obs],
     leg: Option<&str>,
 ) -> Result<Option<Hole>, Stop> {
-    for mine in &row.legs {
-        if leg.is_some_and(|name| mine.name != name) {
+    let others: Vec<(&str, Option<Day>, &[LegVal])> = others.iter().map(|o| obs_side(o)).collect();
+    let fact = match leg {
+        Some(name) => Fact::Leg(name.to_owned()),
+        None => Fact::Any,
+    };
+    sides_differ(m, obs_side(row), &others, &fact)
+}
+
+/// The fact of movements stated `same` a read takes: any of their legs' amounts and days, the
+/// day alone, or one leg's amount and day. `HOLE-SAME` is per fact: a read of a fact the sides
+/// agree on is its value (L §6.1, "a fact on which they disagree"; Q3, P36 on #241).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Fact {
+    /// Every leg's amount and day: two observed rows' booking and warnings.
+    Any,
+    /// Every leg's amount, the day read for membership only: `flows` of a movement over a
+    /// span (S2, P43 on #241).
+    Amounts,
+    /// The day alone: a read of `m.day`, a membership.
+    Day,
+    /// The amount and day of the leg named.
+    Leg(String),
+}
+
+/// How the days of the sides of a movement stated `same` compare, each side stating the days
+/// its day can take: a day, one; a window or a `one_of`, its days, under its name; a hole,
+/// unknown (L §4.4, "a comparison is decided when it holds for every day its operands can
+/// take"; S1, P43 on #241).
+pub(crate) enum DayCmp {
+    /// A side's day is a hole: the read carries its question, every such side's.
+    Hole(Hole),
+    /// No day is common to every side: each side's day as it prints (`HOLE-SAME`'s figures).
+    Differ(Vec<String>),
+    /// Every side one day and all equal, or one named window on every side.
+    Agree,
+    /// Otherwise: each unknown day once, with the first side in id order that states it.
+    Undecided(Vec<(String, DayWindow)>),
+}
+
+/// The days of the sides `sides` (in id order) compared: [`DayCmp`]. One window's name on
+/// every side is one day; two names are two unknowns, even with equal intervals; a window of
+/// one day is that day (L §4.4, §6.1; S1, P43 on #241).
+pub(crate) fn compare_days(sides: &[(&str, &Dated)]) -> DayCmp {
+    let holes: Vec<&Hole> = sides
+        .iter()
+        .filter_map(|(_, d)| match d {
+            Dated::Hole(h) => Some(h),
+            Dated::Day(_) | Dated::Window(_) => None,
+        })
+        .collect();
+    if !holes.is_empty() {
+        let merged: Vec<Option<&Hole>> = holes.into_iter().map(Some).collect();
+        if let Some(h) = spread(&merged) {
+            return DayCmp::Hole(h);
+        }
+    }
+    if !common_day(sides) {
+        return DayCmp::Differ(sides.iter().map(|(_, d)| day_shown(d)).collect());
+    }
+    let one_window = match sides.split_first() {
+        Some(((_, Dated::Window(first)), rest)) => rest
+            .iter()
+            .all(|(_, d)| matches!(d, Dated::Window(w) if w.value == first.value)),
+        Some(_) | None => false,
+    };
+    let mut unknown: Vec<(String, DayWindow)> = Vec::new();
+    for (id, d) in sides {
+        if let Dated::Window(w) = d
+            && !one_day(w)
+            && !unknown.iter().any(|(_, u)| u.value == w.value)
+        {
+            unknown.push(((*id).to_owned(), w.clone()));
+        }
+    }
+    if one_window || unknown.is_empty() {
+        return DayCmp::Agree;
+    }
+    DayCmp::Undecided(unknown)
+}
+
+/// Whether window `w` can take one day only. L §4.4 ("a window of one day is that day").
+fn one_day(w: &DayWindow) -> bool {
+    match &w.value.days {
+        Some(days) => days.len() == 1,
+        None => w.lo == w.hi,
+    }
+}
+
+/// Whether some day is one every side can take: inside every side's first and last day, and
+/// one of every `one_of`'s days. L §4.4.
+fn common_day(sides: &[(&str, &Dated)]) -> bool {
+    let (mut lo, mut hi) = (None::<Day>, None::<Day>);
+    let mut lists: Vec<&[Day]> = Vec::new();
+    for (_, d) in sides {
+        let (Some(a), Some(b)) = (d.lo(), d.hi()) else {
+            continue;
+        };
+        lo = Some(lo.map_or(a, |l| l.max(a)));
+        hi = Some(hi.map_or(b, |h| h.min(b)));
+        if let Dated::Window(w) = d
+            && let Some(days) = &w.value.days
+        {
+            lists.push(days);
+        }
+    }
+    let (Some(lo), Some(hi)) = (lo, hi) else {
+        return true;
+    };
+    if lo > hi {
+        return false;
+    }
+    let Some((first, rest)) = lists.split_first() else {
+        return true;
+    };
+    for d in first.iter().filter(|d| lo <= **d && **d <= hi) {
+        if rest.iter().all(|l| l.contains(d)) {
+            return true;
+        }
+    }
+    false
+}
+
+/// The comparison's hole for undecided days: one question per unknown day, `date within <w>
+/// not precise enough for <what>`, each labelled by its own side and carrying its window's
+/// unknown days (L §4.4, §8.1 "one question per unknown day"; S1, P43 on #241).
+pub(crate) fn undecided_hole(unknown: &[(String, DayWindow)], what: &str) -> Option<Hole> {
+    let holes: Vec<Hole> = unknown
+        .iter()
+        .map(|(id, w)| {
+            let text = format!("date within {} not precise enough for {what}", w.question);
+            Hole::asked(&text, id).carrying(&w.value.carry)
+        })
+        .collect();
+    let refs: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
+    spread(&refs)
+}
+
+/// [`same_differ`] over sides, each an id, a day where it is one and legs ([`obs_side`],
+/// [`inst_side`]), a planned one named by its instance (tally 2.2.1's 219.1): where side
+/// `row` and the sides `others` stated `same` with it disagree on a leg's amount or day (on
+/// leg `leg` alone, where given), the disagreement's hole naming every side of the class that
+/// states the leg, in id order (refcore's `same_obs_differ`). L §5.19, §6.1, §8.1.
+///
+/// # Errors
+///
+/// A number error printing an amount or a day.
+pub(crate) fn sides_differ(
+    m: &Reality,
+    (row_id, row_day, legs): (&str, Option<Day>, &[LegVal]),
+    others: &[(&str, Option<Day>, &[LegVal])],
+    fact: &Fact,
+) -> Result<Option<Hole>, Stop> {
+    for mine in legs {
+        if let Fact::Leg(name) = fact
+            && mine.name != *name
+        {
             continue;
         }
-        let mut class: Vec<(&Obs, &LegVal)> = vec![(row, mine)];
-        for other in others {
-            for theirs in other.legs.iter().filter(|lg| lg.name == mine.name) {
+        let mut class: Vec<(&str, &LegVal)> = vec![(row_id, mine)];
+        for (other, _, their_legs) in others {
+            for theirs in their_legs.iter().filter(|lg| lg.name == mine.name) {
                 class.push((other, theirs));
             }
         }
@@ -312,25 +486,47 @@ pub fn same_differ(
             continue;
         }
         // the rows in id order (L §8.1 HOLE-SAME, §2.5; P50)
-        class.sort_by_cached_key(|(o, _)| m.id_order(&o.id));
-        let (what, figures) = if let Some(figures) = amounts_differ(m, &class)? {
-            (format!("the amount of {}", mine.name), figures)
-        } else if let Some(figures) = days_differ(&class) {
-            (format!("the day of {}", mine.name), figures)
-        } else {
-            continue;
+        class.sort_by_cached_key(|(o, _)| m.id_order(o));
+        let ids: Vec<String> = class.iter().map(|(o, _)| (*o).to_owned()).collect();
+        let amounts = match fact {
+            Fact::Day => None,
+            Fact::Any | Fact::Amounts | Fact::Leg(_) => amounts_differ(m, &class)?,
         };
-        let ids: Vec<String> = class.iter().map(|(o, _)| o.id.clone()).collect();
+        let (what, figures, day) = if let Some(figures) = amounts {
+            let day = match mine.day.day().or(row_day) {
+                Some(day) => day.text(),
+                None => mine.day.value().text(m).map_err(num_stop)?,
+            };
+            (format!("the amount of {}", mine.name), figures, day)
+        } else if matches!(fact, Fact::Leg(_) | Fact::Amounts) {
+            // a leg's amount is its fact: the days are another (Q1, Q3, S2)
+            continue;
+        } else {
+            let sides: Vec<(&str, &Dated)> = class.iter().map(|(id, lg)| (*id, &lg.day)).collect();
+            match compare_days(&sides) {
+                // the day it differs on is the first side's in id order, as stated (P45 (a))
+                DayCmp::Differ(figures) => {
+                    let Some(first) = figures.first().cloned() else {
+                        return Err(invariant("a class of movements stated same with no side"));
+                    };
+                    (format!("the day of {}", mine.name), figures, first)
+                }
+                DayCmp::Hole(hole) => return Ok(Some(hole)),
+                DayCmp::Undecided(unknown) => {
+                    let what = format!("the day of {}", and_list(&ids));
+                    return Ok(undecided_hole(&unknown, &what));
+                }
+                DayCmp::Agree => continue,
+            }
+        };
         let parts: Vec<String> = figures
             .iter()
             .zip(&ids)
             .map(|(figure, id)| format!("{figure} ({id})"))
             .collect();
-        let day = mine.day.day().unwrap_or(row.day);
         let text = format!(
-            "{} are one, but {what} differs on {}: {}",
+            "{} are one, but {what} differs on {day}: {}",
             and_list(&ids),
-            day.text(),
             and_list(&parts)
         );
         return Ok(Some(Hole::asked(&text, &ids.join(", "))));
@@ -351,7 +547,7 @@ pub(crate) fn and_list(items: &[String]) -> String {
 
 /// The legs' amounts as they print where every one is a number and they don't all agree
 /// (refcore's `vkey` compare). L §5.19.
-fn amounts_differ(m: &Reality, class: &[(&Obs, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
+fn amounts_differ(m: &Reality, class: &[(&str, &LegVal)]) -> Result<Option<Vec<String>>, Stop> {
     let mut figures: Vec<(&Num, &str)> = Vec::with_capacity(class.len());
     for (_, lg) in class {
         let Amount::Qty(amount) = &lg.amount else {
@@ -377,19 +573,13 @@ pub(super) fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Sto
     qty_value(m, amount, unit)?.text(m).map_err(num_stop)
 }
 
-/// The legs' days as they print where every one is a day and they don't all agree. L §5.19.
-fn days_differ(class: &[(&Obs, &LegVal)]) -> Option<Vec<String>> {
-    let mut days = Vec::with_capacity(class.len());
-    for (_, lg) in class {
-        let Dated::Day(day) = &lg.day else {
-            return None;
-        };
-        days.push(*day);
+/// A leg's day as `HOLE-SAME` prints it: the day, or the window. L §2.4, §8.1.
+fn day_shown(day: &Dated) -> String {
+    match day {
+        Dated::Day(d) => d.text(),
+        Dated::Window(w) => w.shown.clone(),
+        Dated::Hole(_) => "?".to_owned(),
     }
-    if days.iter().all(|d| Some(d) == days.first()) {
-        return None;
-    }
-    Some(days.into_iter().map(Day::text).collect())
 }
 
 /// One leg of a realised movement as its rows build it (refcore's `m_c_observed`, a leg).
@@ -610,7 +800,7 @@ impl Engine {
                 EndBook::Skip => continue,
                 EndBook::Written | EndBook::Wait(_) => o.clone(),
                 // the walk books the movement there once, as the hole: listed once with it
-                EndBook::Hole(hole) => {
+                EndBook::Hole(hole, _) => {
                     let lead = group.first().map_or(o.id.as_str(), String::as_str);
                     if !holed.insert(lead) {
                         continue;
@@ -657,6 +847,10 @@ impl Engine {
         place: &str,
     ) -> Result<EndBook, Stop> {
         let mover = Member::Obs(o.clone());
+        // a row with two legs at the place carries both legs' questions (L §8.1, a hole
+        // "carries the questions of every operand"; N6, P36 on #241)
+        let mut holes: Vec<Hole> = Vec::new();
+        let mut skip = false;
         for lg in &o.legs {
             let books = match self.same_ends(m, id, (&mover, lg)) {
                 Ok(books) => books,
@@ -667,12 +861,21 @@ impl Engine {
                 if end.place() != Some(place) {
                     continue;
                 }
-                if let EndBook::Skip | EndBook::Hole(_) = book {
-                    return Ok(book);
+                match book {
+                    EndBook::Hole(h, _) => holes.push(h),
+                    EndBook::Skip => skip = true,
+                    EndBook::Wait(_) | EndBook::Written => {}
                 }
             }
         }
-        Ok(EndBook::Written)
+        if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
+            return Ok(EndBook::Hole(h, None));
+        }
+        Ok(if skip {
+            EndBook::Skip
+        } else {
+            EndBook::Written
+        })
     }
 
     /// Of the observations `good` whose links to instance `tid` stand, those two unjoined

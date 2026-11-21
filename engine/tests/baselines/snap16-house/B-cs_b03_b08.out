@@ -776,7 +776,7 @@ b08_residuals: residuals cis 2025
     matched social_pay[2025-11] on 2025-12-22: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
   2025-12 move vat_pay: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK
     matched vat_pay[2025-11] on 2025-12-29: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK, timing +0 days
-  unknown day: window(2025-11-14, 2025-11-30)
+  unknown day: gap_card_pays
   law date 2025-12-31, cut 2026-01-07
 b08_unmatched (d = 2025-10-15): (2025-10-15, -111.27 DUK)
   anchor: cis 2025-10-14 end, stated 37 450.44 DUK, difference 0.00 DUK

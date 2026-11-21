@@ -3,7 +3,8 @@
 //! values), §4.6 (a day or a period read at a period key), §5.5 (an axis's option), §5.7 and
 //! §5.11 (a movement as the key of an event kind), §6.4 (keys a world sees), §7.6 item 3 (a
 //! key offset's 18 digits), §8.1 (a read whose key is a hole carries the key's questions
-//! only; a window as a key is `HOLE-IMPRECISE … for a key`, tally 2.1.8 R13), §8.4
+//! only; a window as a key is `HOLE-IMPRECISE … for a key`, tally 2.1.8 R13, but for a
+//! period's key that holds the whole window, §4.4, §4.6), §8.4
 //! (`RUN-KEY`, `RUN-NONE`).
 //! Twin: engine/tools/refcore/evaluate.py (`key_values`, `to_key`, `check_key`) and loader.py
 //! (`resolve_key_literal`).
@@ -90,9 +91,13 @@ impl Engine {
             };
             let made = match written {
                 Given::Value(Value::Hole(h)) => Err(h),
-                // a window where one key is needed is imprecise, the read its hole (L §4.4,
-                // §8.1; tally 2.1.8 R13; refcore's `to_key`)
-                Given::Value(Value::Window(w)) => Err(imprecise(m, &w, "a key")?),
+                // a window where one key is needed is imprecise, the read its hole, but for a
+                // period's key that holds the whole window (L §4.4, §4.6, §8.1; tally 2.1.8
+                // R13; refcore's `to_key`)
+                Given::Value(Value::Window(w)) => match window_key(m, &bind.domain, &w) {
+                    Some(key) => Ok(key),
+                    None => Err(imprecise(m, &w, "a key")?),
+                },
                 at_range if bind.domain == Domain::Range => {
                     self.range_key(m, bind, at_range, (&earlier, ctx))?
                 }
@@ -122,6 +127,24 @@ impl Engine {
         }
         Ok(Ok(keys))
     }
+}
+
+/// The key of an index of periods, `domain`, that holds every day window `w` can take, its
+/// first and its last in one key's period: decided, so read; none for any other domain, a
+/// window across two keys, a day's key (a window of one day is that day before it gets here)
+/// or a day no key holds (refcore's `to_key` of an `Iv`; the round's S-window-key, option A).
+/// L §4.6 Reading at a date ("reads the key whose period holds it"), §4.4.
+fn window_key(m: &Reality, domain: &Domain, w: &crate::model::Window) -> Option<KeyVal> {
+    let Domain::Index(id) = domain else {
+        return None;
+    };
+    let ix = m.indexes.get(id)?;
+    ix.period?;
+    let (Value::Day(first), Value::Day(last)) = (&w.lo, &w.hi) else {
+        return None;
+    };
+    let key = ix.holding(*first)?;
+    (ix.holding(*last)? == key).then(|| key.clone())
 }
 
 /// A key literal at a read's key of `domain`: the key it names; at an index of periods, a

@@ -1,6 +1,6 @@
 part asks_core
   tally 2
-  note "Zapisane pytania gospodarstwa. Plan zmiany (OPERATIONS §7) porównuje je przed i po."
+  note "Zapisane pytania gospodarstwa. Dwa uruchomienia, bez zmiany i z nią, porównują je (OPERATIONS §6.1)."
 
 ask explain_room: explain room[2026-11] law cut
 

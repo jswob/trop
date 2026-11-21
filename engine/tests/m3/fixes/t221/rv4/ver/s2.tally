@@ -1,0 +1,5 @@
+scenario s2 over m
+  tally 2
+  from 2026-03-01
+
+ask q_s2: bal(konto, 2026-03-31) in s2

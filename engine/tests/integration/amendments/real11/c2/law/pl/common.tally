@@ -2,7 +2,7 @@ part pl_common
   tally 2
   law
   note "Wskaźniki wspólne: płaca minimalna, prognozowane przeciętne wynagrodzenie, podstawa zdrowotnej, kalendarz świąt, termin zeznania rocznego."
-  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §3)."
+  note "Wycinek przykładowy z kwotami prototypu; nie przeszedł bramki (OPERATIONS §5, LAW-2)."
 
 source dz_2025_1242 "Rozporządzenie RM w sprawie minimalnego wynagrodzenia za pracę w 2026 r., Dz.U. 2025 poz. 1242"
 

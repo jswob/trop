@@ -111,6 +111,7 @@ pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
         figure,
         read: None,
         carry,
+        whole: false,
     })))
 }
 

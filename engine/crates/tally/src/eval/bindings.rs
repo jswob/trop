@@ -480,6 +480,19 @@ pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
     false
 }
 
+/// Expression `e` as written, each variable a binding of `env` gave printed as its value, so a
+/// message names a thing by its keys' values, never by a bound variable: `rent[2026-02]`, not
+/// `rent[m]` (refcore's `env_txt`). The tree's name nodes are swapped, never its text: a
+/// period word, a field, a call's name and a string are no name node. L §8.1 ("with the item
+/// and keys each came from"), §8.4 (tally 2.2.1's 235.6, 233.7; P48 B1).
+///
+/// # Errors
+///
+/// A number error printing a value.
+pub(crate) fn written_bound(m: &Reality, e: &Expr, env: &Env) -> Result<String, Stop> {
+    Ok(crate::load::bound_text(e, &env.bound_texts(m)?))
+}
+
 /// The names expression `e` reads, its parts walked as [`reads_name`] walks them; none for a
 /// form whose names aren't walked here (an aggregate, a walk's read, an `as if`), where
 /// `reads_name` counts a read. L §8.2 (a pin formed per binding tuple).

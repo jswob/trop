@@ -22,7 +22,7 @@ use super::state::{ALL, Change, Ent, HoleLeg, Walk};
 use crate::base::Refusal;
 use crate::eval::Collected;
 use crate::hole::{Hole, spread};
-use crate::model::Reality;
+use crate::model::{MoveInfo, Reality, Target};
 use crate::syntax::Stop;
 
 impl Walk {
@@ -33,23 +33,74 @@ impl Walk {
     pub(crate) fn leg_bad(
         &mut self,
         m: &Reality,
-        movement: &str,
-        lg: &LegVal,
+        (movement, lg, read): (&str, &LegVal, &Collected),
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
-        self.leg_refused(m, (movement, lg), &Change::Bad(err.clone()), at)
+        self.leg_refused(
+            m,
+            (movement, lg, read),
+            &Ent::new(at, Change::Bad(err.clone())),
+        )
     }
 
-    /// A refused leg's `change`, a dated refusal or one no reading ends, at each place it
-    /// names, in its unit or its place's (refcore's `leg_bad`, its kind). E §4.2 step 5.
+    /// [`Walk::leg_bad`] of a plan's or an observation's own leg: its refusal reads no value
+    /// under a window's hole (a plain movement makes no running reads, L §5.14.2), so every day
+    /// gives it and it stands beside one (refcore's `leg_bad`, `own`). L §8 l.2217, §4.4 l.671;
+    /// P31 (B4).
+    pub(crate) fn leg_bad_own(
+        &mut self,
+        m: &Reality,
+        (movement, lg, read): (&str, &LegVal, &Collected),
+        err: &Refusal,
+        at: At,
+    ) -> Result<(), Stop> {
+        let mut ent = Ent::new(at, Change::Bad(err.clone()));
+        ent.own = true;
+        self.leg_refused(m, (movement, lg, read), &ent)
+    }
+
+    /// Whether decision `mv`'s refusal at `at` may rest on a value under a window's hole: a
+    /// place its `reads` names whose balance there holds a window's question, or a place it
+    /// names by a key or an expression, taken as under it; movements it reads are no place
+    /// (P31 said whole, P41: "a decision's, unless a place it names in `reads` is under the
+    /// hole"; F6). L §8 l.2217, §4.4 l.671.
+    pub(crate) fn reads_under_window(&self, m: &Reality, mv: &MoveInfo, at: At) -> bool {
+        for target in &mv.read_targets {
+            let place = match target {
+                Target::Thing(p) => p,
+                Target::PlaceSec(_) | Target::Unknown => return true,
+                Target::Move(_) | Target::Kind(_) => continue,
+            };
+            let Some(thing) = m.things.get(place) else {
+                return true;
+            };
+            let unit = m.place_unit(thing).unwrap_or_else(|| ALL.to_owned());
+            let st = self.pstate(m, place, &unit, at);
+            if st
+                .questions(None)
+                .as_ref()
+                .and_then(Hole::of_windows)
+                .is_some()
+            {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// A refused leg's entry `like`, a dated refusal or one no reading ends, at each place it
+    /// names, in its unit or its place's, with the pins its movement's evaluation `read` took:
+    /// a refusal rests on the reads that refused it, so a pin nothing it read isn't listed
+    /// under it (refcore's `leg_bad`, its kind, and `add`; L §8.2 One read set, 208.2 on
+    /// #241). E §4.2 step 5.
     fn leg_refused(
         &mut self,
         m: &Reality,
-        (movement, lg): (&str, &LegVal),
-        change: &Change,
-        at: At,
+        (movement, lg, read): (&str, &LegVal, &Collected),
+        like: &Ent,
     ) -> Result<(), Stop> {
+        let pins = refusal_read(read);
         for p in ends(lg) {
             let own = m.things.get(p).and_then(|t| m.place_unit(t));
             let unit = lg
@@ -58,8 +109,9 @@ impl Walk {
                 .or(own)
                 .filter(|u| u != "any")
                 .unwrap_or_else(|| ALL.to_owned());
-            let mut ent = Ent::new(at, change.clone());
+            let mut ent = like.clone();
             ent.mv = Some(movement.to_owned());
+            ent.coll.clone_from(&pins);
             self.add(m, p, &unit, ent)?;
         }
         Ok(())
@@ -71,12 +123,15 @@ impl Walk {
     pub(super) fn leg_bad_undated(
         &mut self,
         m: &Reality,
-        movement: &str,
-        lg: &LegVal,
+        (movement, lg, read): (&str, &LegVal, &Collected),
         err: &Refusal,
         at: At,
     ) -> Result<(), Stop> {
-        self.leg_refused(m, (movement, lg), &Change::PermBad(err.clone()), at)
+        self.leg_refused(
+            m,
+            (movement, lg, read),
+            &Ent::new(at, Change::PermBad(err.clone())),
+        )
     }
 
     /// A hole movement's leg: a hole at both its places (refcore's `act`, `legq` and
@@ -176,11 +231,13 @@ impl Walk {
         let Dated::Window(w) = &lg.day else {
             return Err(invariant("an imprecise leg not dated by a window"));
         };
-        let text = format!(
-            "date within {} not precise enough for a balance",
-            w.question
+        // one question per unknown day its day carries, each asked of the movement (L §8.1
+        // `HOLE-IMPRECISE`; R21 on #241)
+        let own = crate::hole::imprecise(
+            (&w.question, "a balance"),
+            movement,
+            (&w.value.carry, Some(movement)),
         );
-        let own = Hole::asked(&text, movement).carrying(&w.value.carry);
         let amount = match &lg.amount {
             Amount::Hole(h) => Some(h),
             Amount::Qty(_) | Amount::Refused(_) => None,
@@ -326,6 +383,15 @@ impl Walk {
         }
         Ok(())
     }
+}
+
+/// What a refused leg's movement rests on, `read` what its evaluation met: a refusal rests on
+/// the reads that refused it, so its places' entry lists every entry they gave like a value's,
+/// its pins, its assumptions and its register's `unfulfilled:` lines, and a pin nothing it
+/// read isn't (refcore's `add`, a `bad` entry's `mv.coll`); none where it took none. L §8.2
+/// One read set (208.2, N2 and P35 on #241).
+pub(super) fn refusal_read(read: &Collected) -> Option<Collected> {
+    (!read.entries.is_empty()).then(|| read.clone())
 }
 
 /// A leg's window id, `<movement>.<leg>`, and its window, where its day is one (refcore's

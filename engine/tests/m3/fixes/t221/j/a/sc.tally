@@ -1,0 +1,14 @@
+scenario sc over m
+  tally 2
+  from 2026-03-01
+
+version day2
+  cite plan
+  governs 2026-03-01..
+  known 2026-01-01
+  replace act_day = 2026-04-25
+
+ask q_sc: bal(konto, 2026-04-30) in sc law cut
+ask q_d: diff(bal(konto, 2026-04-30)) in sc against m law cut
+ask q_late: bal(konto, 2026-04-30) in sc law cut as known 2026-07-01
+ask q_gone: bal(konto, 2026-04-30) in nowhere law cut

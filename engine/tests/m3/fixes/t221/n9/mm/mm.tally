@@ -1,0 +1,6 @@
+model mid
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use b = "../bb" sha256 "31034f51b1ca81e100c65c4c59045788d969e35d07a3de84e08ff6ab2d7f1ebe"

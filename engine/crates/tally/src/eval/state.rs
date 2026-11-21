@@ -219,6 +219,21 @@ impl Env {
         self.vars.iter().rev().find(|v| v.name == name)
     }
 
+    /// Each variable's name with its value's text, the innermost binding's where two share a
+    /// name: what a message prints for a name node a binding gave (refcore's `env_txt`;
+    /// tally 2.2.1 235.6).
+    ///
+    /// # Errors
+    ///
+    /// A number error printing a value.
+    pub(crate) fn bound_texts(&self, m: &Reality) -> Result<crate::load::Bound, Stop> {
+        let mut out = crate::load::Bound::new();
+        for var in &self.vars {
+            out.insert(var.name.clone(), var.value.text(m).map_err(num_stop)?);
+        }
+        Ok(out)
+    }
+
     /// This scope with `name` bound to `value` too.
     #[must_use]
     pub fn with(&self, name: &str, value: Value, domain: Option<Domain>) -> Env {
@@ -419,6 +434,21 @@ impl Collected {
         for (sid, seen) in &other.rows {
             self.rows.insert(sid.clone(), seen.clone());
         }
+    }
+
+    /// What of these reads decides whether a movement counts where it isn't counted (a
+    /// refused one, a day outside a read's span, left out, covered, a false `when`): its pins,
+    /// `solve`'s and its assumptions; never a `held:` value of its day (L §8.2 One read set,
+    /// one statement for every form and outcome: P35 on #241).
+    #[must_use]
+    pub(crate) fn deciding(&self) -> Collected {
+        let mut out = Collected::default();
+        for e in &self.entries {
+            if matches!(e.word, "pinned" | "pin met" | "assumed") {
+                out.entries.insert(e.clone());
+            }
+        }
+        out
     }
 
     /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
@@ -629,6 +659,12 @@ pub struct Engine {
     /// (`UNSET_AXIS`; refcore's guard's `axis`): an `explain` outside its pins fans out over
     /// it (E §10, L §5.5).
     pub(crate) unset_axis: Option<String>,
+    /// The decision's window the last `WINDOW_DAYS` stop met, and what read it, which the
+    /// line reads per day (E §4.1 step 2; `stack.rs`).
+    pub(crate) window_day: Option<super::stack::WindowDay>,
+    /// Where a read meeting a decision dated by a window stands: an ask line's own read
+    /// stops to be read per day, any other gives the window's hole (`stack.rs`).
+    pub(crate) window_reads: super::stack::WindowReads,
     /// The pins the ask's reads took, and those they met under an inner or narrower claim:
     /// an ask's `with` pin is listed where a read takes it (L §8.2 One read set).
     pub(crate) pins_read: PinsRead,
@@ -758,6 +794,8 @@ impl Engine {
             unpinned: None,
             ask_env: Env::empty(),
             unset_axis: None,
+            window_day: None,
+            window_reads: super::stack::WindowReads::Off,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]

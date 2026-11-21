@@ -494,6 +494,11 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
 /// a key's reads before its `at` (#235) and a key's `where` that waits for it (P30), each
 /// read as load typed it, with its relation. L §4.3 (whatever reads a law-dated fact states
 /// its law date; the two reads that aren't law-dated), §4.2 (a calendar read needs none).
+/// The spec holds this function's test as L §4.3's rule (tally 2.2.1, R18): a read isn't
+/// law-dated where its own day picks the row, nor is a read of the timeline, and a read's keys
+/// and arguments are judged on their own, a pin changing none of this; a move binds its keys
+/// in the order written, the domain of a key its `at` names, or of one before it, read before
+/// the `at`; an `at` that is a hole or refused keeps what waits for it unread.
 fn move_read_dated(
     m: &Reality,
     at: &AtReads,

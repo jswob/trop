@@ -5,9 +5,9 @@
 //! (`HOLE-IMPRECISE`), §8.4.
 //! Twin: engine/tools/refcore/evaluate.py (`iv_arith`, `iv_compare`, `imprecise`, `lift`'s end,
 //! `e_neg` of an `Iv`, `c_window`, `c_one_of`, `date_of`); ask.py (`fmt_value` of an `Iv`).
-//! Invariants: a window's low end is never above its high end; an operation on two windows,
-//! and a use that needs one value, is the window's `HOLE-IMPRECISE`, asked of the row it came
-//! from; a window keeps the text it was written with and its row's figure through every
+//! Invariants: a window's low end is never above its high end; an operation on two windows
+//! gives the interval of its values at their ends' corners; a use that needs one value is the
+//! window's `HOLE-IMPRECISE`, asked of the row it came from; a window keeps the text it was written with and its row's figure through every
 //! operation that keeps it a window, but only a read of an item gives it a read, so a value
 //! an operation computed is never decided against itself (#115, pick P28); a window a read
 //! gives carries its unknown day, named by that read, and every interval and hole made of it
@@ -18,22 +18,28 @@ use core::cmp::Ordering;
 use super::arith::{Op, Test, arith, compare, negate};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use crate::base::{Load, Run};
+use crate::base::{Code, Load, Run};
 use crate::hole::{Hole, Unknown};
-use crate::model::{KeyVal, ReadOf, Reality, Value, Window};
+use crate::model::{Class, KeyVal, Number, ReadOf, Reality, Value, Window};
+use crate::num::Num;
 use crate::syntax::{Call, CmpOp, Stop};
 use crate::time::{Day, PeriodKind};
 
 /// The hole of window `w` met where one value is needed, by `what`: `?"date within <w> not
-/// precise enough for <what>" (<its read>)` (refcore's `imprecise`). L §4.4, §8.1.
+/// precise enough for <what>" (<its read>)`, one question per unknown day where it rests on
+/// two or more, each asked of the day's own name (refcore's `imprecise`, `imprecise_hole`).
+/// L §4.4, §8.1 (R21 on #241).
 ///
 /// # Errors
 ///
 /// A number error printing the window.
 pub(super) fn imprecise(m: &Reality, w: &Window, what: &str) -> Result<Hole, Stop> {
     let window = w.question_text(m).map_err(num_stop)?;
-    let text = format!("date within {window} not precise enough for {what}");
-    Ok(Hole::asked(&text, w.figure()).carrying(&w.carry))
+    Ok(crate::hole::imprecise(
+        (&window, what),
+        w.figure(),
+        (&w.carry, None),
+    ))
 }
 
 /// The window of a value, if it is one.
@@ -101,6 +107,7 @@ pub(super) fn interval(m: &Reality, (a, b): (Value, Value), from: &Window) -> Re
         figure: from.figure.clone(),
         read: None,
         carry: from.carry.clone(),
+        whole: false,
     })))
 }
 
@@ -128,24 +135,34 @@ pub(super) fn interval_of(m: &Reality, outs: Vec<Value>, from: &Window) -> Resul
     interval(m, (lo, hi), from)
 }
 
-/// `a op b` where one side is a window: the op at the window's ends, in order, a window with
-/// its text and figure and no read, a value computed; on two windows `HOLE-IMPRECISE`
-/// (refcore's `iv_arith`). L §4.4.
+/// `a op b` where a side is a window (refcore's `iv_arith`): beside a value that is none, at
+/// the window's ends, arithmetic being monotone in each side, one value where they agree; on
+/// two windows, and where a divisor's interval holds 0, through [`value_choices`]: their
+/// corners or whole numbers in turn, one window named on both sides as one day, a divisor's
+/// values in turn or the hole where they can't be taken. A result of `+`, `-` or `*` of whole
+/// numbers stays whole. L §4.4 l.668 ("from their ends where it is monotone in them
+/// (arithmetic …)"), l.671; P30 (B3, N6).
+///
+/// # Errors
+///
+/// The refusal every value gives; any other stop of the arithmetic.
 pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<Value, Stop> {
     let (lhs, rhs) = (single(lhs), single(rhs));
+    let whole = matches!(op, Op::Add | Op::Sub | Op::Mul) && whole_valued(lhs) && whole_valued(rhs);
+    let zero_divisor = op == Op::Div && holds_zero(m, rhs)?;
     let (w, lo, hi) = match (lhs, rhs) {
-        (Value::Window(a), Value::Window(_)) => {
-            return Ok(Value::Hole(imprecise(m, a, "arithmetic on two windows")?));
-        }
+        (Value::Window(_), Value::Window(_)) => return arith_values(m, op, (lhs, rhs)),
+        _ if zero_divisor => return arith_values(m, op, (lhs, rhs)),
         (Value::Window(a), b) => (a, arith(m, op, &a.lo, b)?, arith(m, op, &a.hi, b)?),
         (a, Value::Window(b)) => (b, arith(m, op, a, &b.lo)?, arith(m, op, a, &b.hi)?),
         // a window of one day is that day (F3)
         _ => return arith(m, op, lhs, rhs),
     };
-    let (lo, hi) = if compare(m, &hi, &lo, Test::Order)? == Ordering::Less {
-        (hi, lo)
-    } else {
-        (lo, hi)
+    let (lo, hi) = match compare(m, &hi, &lo, Test::Order)? {
+        // one value where its ends agree (L §4.4 l.668)
+        Ordering::Equal => return Ok(lo),
+        Ordering::Less => (hi, lo),
+        Ordering::Greater => (lo, hi),
     };
     Ok(Value::Window(Box::new(Window {
         lo,
@@ -155,7 +172,340 @@ pub(super) fn window_arith(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Res
         figure: w.figure.clone(),
         read: None,
         carry: w.carry.clone(),
+        whole,
     })))
+}
+
+/// `a op b` through [`value_choices`] and [`values_interval`]: two windows, monotone in each,
+/// or a divisor whose interval holds 0, whose values stand for it only taken in turn; whole
+/// where `+`, `-` or `*` of whole numbers keeps it whole (refcore's `iv_arith`, its
+/// `lift_values`). L §4.4 l.668, l.671; P30.
+///
+/// # Errors
+///
+/// As [`window_arith`].
+fn arith_values(m: &Reality, op: Op, (lhs, rhs): (&Value, &Value)) -> Result<Value, Stop> {
+    let whole = matches!(op, Op::Add | Op::Sub | Op::Mul) && whole_valued(lhs) && whole_valued(rhs);
+    let shape = if op == Op::Div && holds_zero(m, rhs)? {
+        Shape::Values
+    } else {
+        Shape::Monotone
+    };
+    let tuples = match value_choices(m, ("arithmetic", shape), &[lhs, rhs])? {
+        Choices::Plain => return arith(m, op, lhs, rhs),
+        Choices::Hole(h) => return Ok(Value::Hole(h)),
+        Choices::Tuples(tuples) => tuples,
+    };
+    let mut outs = Vec::with_capacity(tuples.len());
+    for t in &tuples {
+        let [x, y] = t.as_slice() else {
+            return Err(invariant("an operator with no two operands"));
+        };
+        outs.push(arith(m, op, x, y));
+    }
+    let v = values_interval(m, "arithmetic", outs, &[lhs, rhs])?;
+    let Value::Window(mut w) = v else {
+        return Ok(v);
+    };
+    w.whole = whole;
+    Ok(Value::Window(w))
+}
+
+/// Whether `v` is an interval of numbers whose values hold 0 (refcore's `b.lo.q <= 0 <=
+/// b.hi.q`): a divisor that divides by 0 on some of its values. L §4.4 l.671; P30.
+///
+/// # Errors
+///
+/// The refusals of comparing its ends with 0.
+fn holds_zero(m: &Reality, v: &Value) -> Result<bool, Stop> {
+    let Value::Window(w) = v else {
+        return Ok(false);
+    };
+    if !of_numbers(w) {
+        return Ok(false);
+    }
+    let zero = arith(m, Op::Sub, &w.lo, &w.lo)?;
+    Ok(compare(m, &w.lo, &zero, Test::Order)? != Ordering::Greater
+        && compare(m, &zero, &w.hi, Test::Order)? != Ordering::Greater)
+}
+
+/// Whether interval `w` is one of numbers or money, which has a 0 (refcore's `isinstance(lo,
+/// Num)`), not of days or periods. L §4.4.
+fn of_numbers(w: &Window) -> bool {
+    matches!(
+        (&w.lo, &w.hi),
+        (
+            Value::Number(_) | Value::Money(_),
+            Value::Number(_) | Value::Money(_)
+        )
+    )
+}
+
+/// Whether every value `v` can hold is a whole number: an `int`, a number whose value is
+/// whole, an interval of `int`s or one kept whole (refcore's `whole_valued`). L §4.4; P30.
+fn whole_valued(v: &Value) -> bool {
+    match v {
+        Value::Number(n) => n.class == Class::Int || n.q.is_integer(),
+        Value::Window(w) => whole_range(w).is_some(),
+        Value::Money(_)
+        | Value::Bool(_)
+        | Value::Day(_)
+        | Value::Period(_)
+        | Value::MonthDay(..)
+        | Value::Key(_)
+        | Value::Text(_)
+        | Value::Code(_)
+        | Value::Record(_)
+        | Value::List(_)
+        | Value::Calendar(_)
+        | Value::Hole(_)
+        | Value::None
+        | Value::Never
+        | Value::Word(_)
+        | Value::Mv(_)
+        | Value::OutKey { .. } => false,
+    }
+}
+
+/// The ends of interval `w` where every value it can hold is a whole number: its ends `int`s,
+/// or it kept whole (`Window::whole`); none for any other interval (refcore's
+/// `whole_valued`). L §4.4; P30.
+fn whole_range(w: &Window) -> Option<(i64, i64)> {
+    let (Value::Number(lo), Value::Number(hi)) = (&w.lo, &w.hi) else {
+        return None;
+    };
+    let ints = lo.class == Class::Int && hi.class == Class::Int;
+    if !(w.whole || ints) || !lo.q.is_integer() || !hi.q.is_integer() {
+        return None;
+    }
+    Some((lo.q.to_i64()?, hi.q.to_i64()?))
+}
+
+/// How an operation stands in an argument that is an interval (L §4.4 l.668; P30).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum Shape {
+    /// Monotone in it and giving a value everywhere between its ends: its two ends stand for
+    /// its values, with 0 where a number's interval crosses it (`abs`, an even `pow`: its
+    /// shape).
+    Monotone,
+    /// Neither: only its values taken in turn stand for it.
+    Values,
+}
+
+/// What an operation over intervals is read at (refcore's `lift_values`, its choices).
+pub(super) enum Choices {
+    /// No argument is an interval: the operation on its arguments as they are.
+    Plain,
+    /// The argument tuples it is read at, every combination in order.
+    Tuples(Vec<Vec<Value>>),
+    /// An interval whose values can't be taken in turn, where its ends don't stand for them:
+    /// not decided for the whole interval, `HOLE-IMPRECISE`.
+    Hole(Hole),
+}
+
+/// The tuples taken in turn before an interval is its hole (refcore's `LIFT_CAP`; P30: a cap
+/// past which the values aren't taken, never a fallback to the ends).
+const VALUES_CAP: u64 = 100_000;
+
+/// The whole numbers interval `w` holds, in order, in its low end's class, with `size` the
+/// tuples counted so far, times their count; none past [`VALUES_CAP`] (refcore's
+/// `lift_values`, its whole numbers). L §4.4; P30.
+fn whole_values(w: &Window, size: &mut u64) -> Option<Vec<Value>> {
+    let (first, last) = whole_range(w)?;
+    let Value::Number(lo) = &w.lo else {
+        return None;
+    };
+    // an interval's ends are in order, so its width is never negative
+    let Ok(width) = u64::try_from(last.checked_sub(first)?) else {
+        return None;
+    };
+    let count = width.checked_add(1)?;
+    let total = size.checked_mul(count)?;
+    if total > VALUES_CAP {
+        return None;
+    }
+    *size = total;
+    let mut values = Vec::new();
+    for k in first..=last {
+        values.push(Value::Number(Number {
+            q: Num::int(k),
+            class: lo.class.clone(),
+        }));
+    }
+    Some(values)
+}
+
+/// Interval `w`'s two ends, and 0 between them where it is an interval of numbers that
+/// crosses 0 (refcore's `lift_values`, its `mono` choices). L §4.4 l.668.
+///
+/// # Errors
+///
+/// The refusals of comparing its ends with 0.
+fn interval_ends(m: &Reality, w: &Window) -> Result<Vec<Value>, Stop> {
+    if !of_numbers(w) {
+        return Ok(vec![w.lo.clone(), w.hi.clone()]);
+    }
+    let zero = arith(m, Op::Sub, &w.lo, &w.lo)?;
+    let crosses = compare(m, &w.lo, &zero, Test::Order)? == Ordering::Less
+        && compare(m, &zero, &w.hi, Test::Order)? == Ordering::Less;
+    if crosses {
+        return Ok(vec![w.lo.clone(), zero, w.hi.clone()]);
+    }
+    Ok(vec![w.lo.clone(), w.hi.clone()])
+}
+
+/// Whether windows `a` and `b` are one window named twice: two reads alike of one item's
+/// window of days, one unknown day (refcore's `lift_values`, its named windows). L §4.4
+/// l.667; P30 (N9).
+fn one_window(a: &Window, b: &Window) -> bool {
+    a.of_days() && b.of_days() && a.read.is_some() && a.read == b.read
+}
+
+/// The tuples of `args` at each day of window `w`, the day in every argument that is a
+/// window: one unknown day taken day by day (refcore's `per_day`). L §4.4; P30.
+///
+/// # Errors
+///
+/// As [`window_days`].
+fn day_tuples(w: &Window, args: &[&Value]) -> Result<Vec<Vec<Value>>, Stop> {
+    let days = window_days(w)?;
+    let mut tuples = Vec::with_capacity(days.len());
+    for d in days {
+        let mut t = Vec::with_capacity(args.len());
+        for v in args {
+            t.push(match as_window(v) {
+                Some(_) => Value::Day(d),
+                None => (*v).clone(),
+            });
+        }
+        tuples.push(t);
+    }
+    Ok(tuples)
+}
+
+/// The argument tuples an operator or a built-in is read at where some of `args` are
+/// intervals: the one mechanism every operation over an interval goes through (refcore's
+/// `lift_values`; P30). One window named in two arguments is one day, its days in turn, as in
+/// a comparison. Otherwise, where the operation is [`Shape::Monotone`] in an interval, at its
+/// two ends and 0 where a number's interval crosses it, whatever its size; where it isn't, at
+/// the whole numbers it holds, in turn, up to 100 000 tuples, and beyond them or where they
+/// can't be taken in turn the hole for `what`, carrying every interval's unknown days. Every
+/// other argument as it is, every combination in order; [`Choices::Plain`] where none is an
+/// interval. L §4.4 l.667 to l.671 ("each operation gives the interval of its values over the
+/// days its own arguments can take"); P41 (F1, F8).
+///
+/// # Errors
+///
+/// The refusals of comparing an interval's ends with 0, or of its days.
+pub(super) fn value_choices(
+    m: &Reality,
+    (what, shape): (&str, Shape),
+    args: &[&Value],
+) -> Result<Choices, Stop> {
+    let args: Vec<&Value> = args.iter().map(|v| single(v)).collect();
+    let windows: Vec<&Window> = args.iter().filter_map(|v| as_window(v)).collect();
+    let [first, rest @ ..] = windows.as_slice() else {
+        return Ok(Choices::Plain);
+    };
+    if !rest.is_empty() && rest.iter().all(|w| one_window(first, w)) {
+        return Ok(Choices::Tuples(day_tuples(first, &args)?));
+    }
+    let mut tuples: Vec<Vec<Value>> = vec![Vec::new()];
+    let mut size: u64 = 1;
+    for v in &args {
+        let options = match (as_window(v), shape) {
+            (None, _) => vec![(*v).clone()],
+            // its ends stand for its values whatever its size (P41, F1)
+            (Some(w), Shape::Monotone) => interval_ends(m, w)?,
+            (Some(w), Shape::Values) => match whole_values(w, &mut size) {
+                Some(values) => values,
+                None => return Ok(Choices::Hole(imprecise_all(m, &windows, what)?)),
+            },
+        };
+        let count = tuples
+            .len()
+            .checked_mul(options.len())
+            .ok_or_else(|| invariant("an argument tuple count past the integers"))?;
+        let mut next = Vec::with_capacity(count);
+        for t in &tuples {
+            for o in &options {
+                next.push([t.as_slice(), core::slice::from_ref(o)].concat());
+            }
+        }
+        tuples = next;
+    }
+    Ok(Choices::Tuples(tuples))
+}
+
+/// An operation's value over intervals, from `outs`, its value at each of [`value_choices`]'
+/// tuples of `args`, in order: one value where they agree, else their interval, a window
+/// among them taken by its ends, a computed value with the first interval's text, carrying
+/// every interval's unknown days; a hole among them is the value, a `none` among them the
+/// hole; a run refusal at every tuple is the first, at only some of them the first interval's
+/// `HOLE-IMPRECISE` for `what` (refcore's `lift_values`). L §4.4 l.668, l.671 ("and for a
+/// refusal that only some of its days give").
+///
+/// # Errors
+///
+/// The first run refusal where every tuple gives one; any other stop as it came.
+pub(super) fn values_interval(
+    m: &Reality,
+    what: &str,
+    outs: Vec<Result<Value, Stop>>,
+    args: &[&Value],
+) -> Result<Value, Stop> {
+    let windows: Vec<&Window> = args.iter().filter_map(|v| as_window(single(v))).collect();
+    let [first, rest @ ..] = windows.as_slice() else {
+        return Err(invariant("an interval's value with no interval"));
+    };
+    let mut values = Vec::with_capacity(outs.len());
+    let (mut first_refusal, mut refused) = (None, false);
+    for out in outs {
+        match out {
+            Ok(Value::Hole(h)) => return Ok(Value::Hole(h)),
+            Ok(Value::None) => {
+                let none = "a built-in that is none on part of the window";
+                return Ok(Value::Hole(imprecise_all(m, &windows, none)?));
+            }
+            Ok(Value::Window(w)) => values.extend([w.lo, w.hi]),
+            Ok(v) => values.push(v),
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Run(_)) => {
+                refused = true;
+                first_refusal.get_or_insert(r);
+            }
+            Err(other) => return Err(other),
+        }
+    }
+    if values.is_empty() {
+        let refusal = first_refusal.ok_or_else(|| invariant("an interval of no value"))?;
+        return Err(Stop::Refused(refusal));
+    }
+    if refused {
+        return Ok(Value::Hole(imprecise_all(m, &windows, what)?));
+    }
+    let mut from = (*first).clone();
+    for w in rest {
+        crate::hole::carry_union(&mut from.carry, &w.carry);
+    }
+    interval_of(m, values, &from)
+}
+
+/// [`imprecise`] of the first of `windows`, carrying the unknown days of every one: a hole an
+/// operation over them makes names every window its operands carry (L §4.4 l.667, l.671;
+/// P41, F8).
+///
+/// # Errors
+///
+/// As [`imprecise`]; `ENGINE-INVARIANT` for no window.
+fn imprecise_all(m: &Reality, windows: &[&Window], what: &str) -> Result<Hole, Stop> {
+    let [first, rest @ ..] = windows else {
+        return Err(invariant("an interval's hole with no interval"));
+    };
+    let mut from = (*first).clone();
+    for w in rest {
+        crate::hole::carry_union(&mut from.carry, &w.carry);
+    }
+    imprecise(m, &from, what)
 }
 
 /// `-w` of a window of numbers: the window of its ends negated, in order (refcore's `e_neg`
@@ -172,6 +522,7 @@ pub(super) fn window_negated(w: &Window) -> Result<Option<Value>, Stop> {
         figure: w.figure.clone(),
         read: None,
         carry: w.carry.clone(),
+        whole: false,
     }))))
 }
 
@@ -375,14 +726,38 @@ pub(super) fn named_window(v: Value, (id, label): (String, &str)) -> Value {
     let Value::Window(mut w) = v else {
         return v;
     };
-    if !matches!(w.lo, Value::Day(_)) {
+    let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi) else {
         return Value::Window(w);
-    }
+    };
+    // its question names the window as written, else by its days (refcore's `window_text`)
+    let text = match &w.src {
+        Some(src) => src.clone(),
+        None => format!("window({}, {})", lo.text(), hi.text()),
+    };
     w.carry = vec![Unknown {
         id,
         label: label.to_owned(),
+        text,
     }];
     Value::Window(w)
+}
+
+/// Value `value`, a window no cell holds or copies yet (written in the text, or computed from
+/// windows written there), as the cell `figure` that holds it, its unknown day `id` named by
+/// that cell and its holes asked of it; a window that came from a read, or was computed from
+/// one or from a calendar's entry, keeps the names and the days it carries; any other value is
+/// itself (refcore's `named`, `pinned_read`, a move's `on`). L §4.4 ("a copy keeps the name",
+/// "a computed value … carries the names it was computed from"), §8.2 `unknown day:` (R21:
+/// "the cell a caller pins, wherever a cell holds or copies the day"; P30, P32, P26).
+pub(crate) fn held_by(value: Value, (id, figure): (String, &str)) -> Value {
+    let Value::Window(mut w) = value else {
+        return value;
+    };
+    if w.figure.is_some() || !names_only_written(&w.carry) {
+        return Value::Window(w);
+    }
+    w.figure = Some(figure.to_owned());
+    named_window(Value::Window(w), (id, figure))
 }
 
 /// The unknown day a window written in the text is, its id: the window as written (refcore's
@@ -434,6 +809,7 @@ impl Engine {
             figure: None,
             read: None,
             carry: Vec::new(),
+            whole: false,
         }));
         Ok(named_window(window, (written_id(&written), &written)))
     }
@@ -501,6 +877,7 @@ mod tests {
             figure: None,
             read: None,
             carry: Vec::new(),
+            whole: false,
         };
         assert!(
             one_of_holds(&w, &Value::Day(day(2026, 6, 5))),

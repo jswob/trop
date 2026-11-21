@@ -827,6 +827,9 @@ pub struct Header {
     pub over: Option<String>,
     /// The tally version.
     pub tally: Num,
+    /// The line of its `tally` statement, which a `LOAD-VERSION` refusal of it names (L §8.3);
+    /// none before it is read.
+    pub tally_line: Option<u32>,
     /// `on`.
     pub on: Option<Day>,
     /// `start`.
@@ -835,8 +838,8 @@ pub struct Header {
     pub end: Option<Day>,
     /// `use a = "file" sha256 "…"`.
     pub uses: Vec<(String, String, String)>,
-    /// `same p = q`.
-    pub sames: Vec<(Expr, Expr)>,
+    /// `same p = q`, each with its own line, which a refusal of it names (L §8.3).
+    pub sames: Vec<(Expr, Expr, u32)>,
     /// Notes.
     pub notes: Vec<String>,
     /// `law`, a law part.

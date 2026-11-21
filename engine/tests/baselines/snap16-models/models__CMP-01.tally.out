@@ -557,3 +557,4 @@ q_zahlbetrag (a = a12_17): 523.50 EUR
 q_zahlbetrag (a = a18): 439.00 EUR
   law date 2026-10-18, cut 2026-10-18
 warning: WARN-NEGATIVE eur[de_u] is below zero from 2026-01-31
+warning: WARN-NEGATIVE pln[de_u] is below zero from 2026-01-31

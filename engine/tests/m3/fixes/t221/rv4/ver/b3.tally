@@ -1,0 +1,28 @@
+model m
+  tally 3
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input spare: int
+
+version open
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+  spare = 1
+
+version stmt
+  cite s
+  governs 2026-01-01..2026-04-30
+  known 2026-01-02
+  covers konto
+  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "a"
+
+ask q: bal(konto, 2026-04-30)

@@ -1,0 +1,45 @@
+model r1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input shock[m in months]: dist PLN
+input keep: money PLN
+input pay: money PLN
+
+move wage[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount pay
+
+move spend[m in months]: transfers
+  on end_of(m) - 1 day
+  at start_of(m)
+  leg cash from konto to world amount round(shock[m], minor(PLN), half-even)
+
+move save[m in months]: transfers
+  on start_of(m) + 1 day
+  at start_of(m)
+  reads konto
+  leg cash from konto to sav amount max(0 PLN, round(min(bal(konto, d) from (start_of(m) + 1 day) random at mean for d in start_of(m) + 1 day .. end_of(m) - 1 day step 1 day), minor(PLN), half-even) - keep)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 100.00 PLN "s"
+  pay = 1000.00 PLN "s"
+  shock[*] = uniform(200 PLN, 600 PLN) to 0.01 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+
+ask m_sav: mean(bal(sav, 2026-03-31)) paths 8 seed 3
+ask m_konto: mean(bal(konto, 2026-03-31)) paths 8 seed 3
+ask one: bal(sav, 2026-03-31), bal(konto, 2026-03-31) paths 8 seed 3 path 2
+ask proj_mean: bal(konto, 2026-03-31) from 2026-01-01 random at mean
+ask proj_q: bal(konto, 2026-03-31) from 2026-01-01 random at quantile(0.9)

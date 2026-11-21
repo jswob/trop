@@ -28,7 +28,7 @@ use super::check::Printed;
 use super::register::{name_unknown_days, register_lines};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, world_named};
 use crate::model::{Reality, Value};
-use crate::syntax::{Ask, Diff, Stop};
+use crate::syntax::{Ask, Diff, Expr, Stop};
 use crate::walk::invariant;
 
 /// A world's lines of a diff: each key with its value, in the order evaluated.
@@ -358,6 +358,11 @@ fn side_lines(
     (env, ctx, met): (&Env, Ctx, &mut Collected),
 ) -> Result<Side, Stop> {
     let text = crate::load::expr_text(&diff.expr);
+    // a world that doesn't declare a thing the expression names has no line for it, nor for
+    // any tuple of its binding: those lines are `added` (231.R2, B4 and Q6, P37 on #241)
+    if !declared_in(m, &diff.expr, ctx) {
+        return Ok(Vec::new());
+    }
     if diff.binds.is_empty() {
         return Ok(vec![(text, one(m, diff, engine, (env, ctx), met)?)]);
     }
@@ -377,6 +382,48 @@ fn side_lines(
         lines.push((key, value));
     }
     Ok(lines)
+}
+
+/// Whether world `ctx` declares every def and input expression `e` names: one a scenario's file
+/// declares exists only in that scenario and those over it, so a world below it has no line
+/// for the expression, and the diff's line is `added` (refcore's `declared_in_world`; L §6.4,
+/// §5.18's diff row; 231.R2 on #241).
+fn declared_in(m: &Reality, e: &Expr, ctx: Ctx) -> bool {
+    let mut work = vec![e];
+    while let Some(x) = work.pop() {
+        if let Expr::Name(n) = x {
+            let item = (m.defs.contains(n) || m.inputs.contains(n))
+                && !m.scenarios.sees(ctx.world, Some(n));
+            if item || !thing_declared(m, n, ctx) {
+                return false;
+            }
+        }
+        work.extend(crate::load::expr_children(x));
+    }
+    true
+}
+
+/// Whether world `ctx` declares thing `name` (a place, a kind's entry): its own section seen,
+/// and an entry of it that world's versions state, or none of its entries a version's; a name
+/// that is no thing is declared (L §6.4; B4, P37 on #241).
+fn thing_declared(m: &Reality, name: &str, ctx: Ctx) -> bool {
+    let Some(thing) = m.things.get(name) else {
+        return true;
+    };
+    if !m.scenarios.sees(ctx.world, Some(name)) {
+        return false;
+    }
+    if thing.entries.is_empty() {
+        return true;
+    }
+    for entry in &thing.entries {
+        match &entry.version {
+            None => return true,
+            Some(v) if m.scenarios.sees(ctx.world, Some(v)) => return true,
+            Some(_) => {}
+        }
+    }
+    false
 }
 
 /// The diff's expression at one tuple: its value or the run-time refusal it met, what it read

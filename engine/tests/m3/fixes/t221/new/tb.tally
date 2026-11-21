@@ -1,0 +1,41 @@
+model tb
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+kind ks
+
+input amt: money PLN
+input fee[m in months]: money PLN
+input wd[k in ks]: date
+
+move pay[m in months]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from world to konto amount fee[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ks + [k1, k2, k3] lives 2026-01-01..
+  amt = 100.00 PLN "s"
+  fee[2026-03..2026-05] = 10.00 PLN "s"
+  fee[2026-06] = none "s"
+  wd[k1] = window(2026-03-05, 2026-03-07) "s"
+  wd[k2] = 2026-03-10 "s"
+  wd[k3] = 2026-03-20 "s"
+  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
+
+ask n233_7: fee[2026-06] + amt
+ask a221_10: count(k in ks on 2026-03-01 where wd[k] > 2026-03-06), any(wd[k] > 2026-03-06 for k in ks on 2026-03-01), all(wd[k] > 2026-03-06 for k in ks on 2026-03-01), sum(days_between(2026-03-01, wd[k]) for k in ks on 2026-03-01), min(wd[k] for k in ks on 2026-03-01)
+ask c233_8: bal(konto, 2026-03-31) as known (2027-01-01)
+ask c233_8t: bal(konto, 2026-03-31) as known 2027-01-01

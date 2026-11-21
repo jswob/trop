@@ -1,0 +1,50 @@
+model chain_pads
+  tally 2
+  on 2026-05-31
+  start 2026-03-01
+  end 2026-05-31
+  note "T, M3 C7, #192 row 40 (G4 fix NB-3, chain_pads at a continued walk's start): two decisions reading pads up to their own day, the second's walk continuing the first's, pads in March and April"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input d_save: int
+
+move save[m in months]: transfers
+  on day_of(m, d_save)
+  reads pads
+  leg cash from konto to sav amount max(0 PLN, sum(p.cash.amount for p in pads over start_of(m) .. day_of(m, d_save)))
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d_save = 15 "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version rd
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 1100.00 PLN at 2026-03-15 start "saldo"
+  stated[konto] = 1500.00 PLN at 2026-03-15 end "saldo"
+
+version rd4
+  cite s
+  governs 2026-04
+  known 2026-05-04
+  pad konto from world
+  stated[konto] = 1300.00 PLN at 2026-04-10 start "saldo"
+  stated[konto] = 1450.00 PLN at 2026-04-10 end "saldo"
+  stated[konto] = 1600.00 PLN at 2026-04-20 end "saldo"
+
+ask sp: sum(p.cash.amount for p in pads over 2026-04-01 .. 2026-04-15)
+ask a10: sum(p.cash.amount for p in pads over 2026-04-10 .. 2026-04-10)
+ask each: p.cash.amount for p in pads over 2026-03-01 .. 2026-05-31
+ask fr: p.cash.from for p in pads over 2026-04-01 .. 2026-04-15
+ask fl: flows(konto, 2026-04-01 .. 2026-04-15)

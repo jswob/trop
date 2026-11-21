@@ -1,0 +1,29 @@
+model n233_7
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T's text for 233.7 (invented): a keyed input with one cell stated none, read in arithmetic, in a sum and in a comparison"
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input fee[m in months]: money PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee[2026-01] = 10.00 PLN "s"
+  fee[2026-02] = none "s"
+  fee[2026-03] = 10.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask q_arith: fee[2026-02] + fee[2026-01]
+ask q_sum: sum(fee[m] for m in [2026-01, 2026-02])
+ask q_cmp: fee[2026-02] > fee[2026-01]
+ask q_plain: fee[2026-01]

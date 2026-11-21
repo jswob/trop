@@ -1,0 +1,15 @@
+model g2_min
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+index ks = [k1, k2]
+input rate[k in ks]: num
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+ask t: quantile(rate[j] for j in [k1], rate[k]) for k in ks where k == k2

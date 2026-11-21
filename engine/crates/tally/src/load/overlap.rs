@@ -4,25 +4,30 @@
 //! (an observation's id, restated with `replace`; `covers` and LOAD-COVERS), §6.4 (a
 //! scenario's row above its base's whatever their `known`), §8.3.
 //! Twin: engine/tools/refcore/loader.py (`check_overlap`, `_pos_rel`, `narrower`,
-//! `patterns_meet`, `key_order`, `row_layer`, `version_layer`, `check_obs`).
+//! `patterns_meet`, `key_order`, `row_layer`, `version_layer`, `check_obs`,
+//! `check_correction_covers`, `check_covers_standing`).
 //! Invariants: a row's span is its own, else its version's in force at `on`; two readings
 //! overlap only at one instant stated alike; a target's rows are grouped by pattern in the
 //! order the patterns first appear, and the first pair that breaks the rule is refused at
-//! refcore's row; only an observation that stands in the world, at its id's top layer, is
-//! checked against the span its version covers there (pick P19, #232; refcore checks every row
-//! against the base's span).
+//! refcore's row; an observation is checked against the span its version covers only while
+//! it stands: in each world of the stack, from its `known` until a row above it is known,
+//! at each cut class of that stretch (pick P19, #232; S-232); a row standing in place of an
+//! earlier statement of it is in a version that covers, on its day, each place of its legs an
+//! earlier statement's version covers there, per world and cut class where the row stands
+//! (S-223, P50, P53).
 
 use super::check::invariant;
 use super::steps::refuse;
 use crate::base::Load;
 use crate::model::{
-    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, Span, Value, World, pattern_text,
+    BindInfo, Domain, KeyVal, Observation, Pat, Reality, Row, Span, Value, VersionInfo, World,
+    pattern_text,
 };
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
 use core::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// What a balance reading's value groups by (refcore's `r.val` in `check_overlap`): the unit
 /// of its quantity, a hole, or `none`, which states no balance.
@@ -443,10 +448,11 @@ fn rank_cmp(a: &Rank, b: &Rank) -> Option<Ordering> {
 }
 
 /// Every observed input's rows (refcore's `check_obs`): each id once, restated only by a
-/// later row that says `replace` (a scenario's above its base's), and each observation that
-/// stands in the world, of a covered place, dated inside the span its version covers there.
-/// A row a higher layer's row replaces at its id doesn't stand, and a `none` row states no
-/// movement (pick P19, #232). L §5.19, §4.6 step 2, §6.4.
+/// later row that says `replace` (a scenario's above its base's), a correction in a version
+/// that covers, on its day, each place of its legs an earlier statement's version covers,
+/// per world and cut class (P53), and each observation that stands, of a
+/// covered place, dated inside the span its version covers there. A `none` row states no
+/// movement (pick P19, #232). L §5.19, §4.6 step 2, §6.4; E §3.1 step 9.
 ///
 /// # Errors
 ///
@@ -462,27 +468,20 @@ pub(super) fn check_obs(m: &Reality) -> Result<(), Stop> {
                 keys.push(&o.key);
             }
         }
-        // each id's top layer: its rows there stand, a lower layer's are replaced
-        let mut top: BTreeMap<&str, usize> = BTreeMap::new();
+        let mut ids = Vec::new();
         for key in keys {
             let mut rows = Vec::new();
-            for o in input.observations.iter().filter(|o| o.key == key) {
-                rows.push((layer(m, &o.version), obs_known(m, o)?, o));
+            for (at, o) in input.observations.iter().enumerate() {
+                if o.key == key {
+                    rows.push((layer(m, &o.version), obs_known(m, o)?, at, o));
+                }
             }
-            rows.sort_by_key(|(l, k, _)| (*l, *k));
+            rows.sort_by_key(|(l, k, _, _)| (*l, *k));
             one_id(m, qid, key, &rows)?;
-            if let Some((l, _, _)) = rows.last() {
-                top.insert(key, *l);
-            }
+            corrections_cover(m, &rows)?;
+            ids.push(rows);
         }
-        for o in &input.observations {
-            let stands = top
-                .get(o.key.as_str())
-                .is_some_and(|l| layer(m, &o.version) == *l);
-            if stands && !o.removed {
-                covered(m, o)?;
-            }
-        }
+        covers_standing(m, &input.observations, &ids)?;
     }
     Ok(())
 }
@@ -494,12 +493,12 @@ fn one_id(
     m: &Reality,
     qid: &str,
     key: &str,
-    rows: &[(usize, Day, &Observation)],
+    rows: &[(usize, Day, usize, &Observation)],
 ) -> Result<(), Stop> {
-    let mut before: Option<&(usize, Day, &Observation)> = None;
+    let mut before: Option<&(usize, Day, usize, &Observation)> = None;
     for row in rows {
-        let (l, k, o) = row;
-        let Some((pl, pk, prev)) = before else {
+        let (l, k, _, o) = row;
+        let Some((pl, pk, _, prev)) = before else {
             if o.replace {
                 let message = format!("replace {}: no earlier row to replace", o.sid());
                 return Err(at_obs(m, o, Load::Replace, message)?);
@@ -524,35 +523,242 @@ fn one_id(
     Ok(())
 }
 
-/// An observation with a leg at a place its version covers is dated inside the span covered
-/// (refcore's `check_obs`, its end). L §5.19, §5.3.
-fn covered(m: &Reality, o: &Observation) -> Result<(), Stop> {
-    let version = m
-        .versions
-        .get(&o.version)
-        .ok_or_else(|| invariant(format!("version {} isn't built", o.version)))?;
-    let Some(day) = o.day else {
-        return Ok(());
-    };
-    for (place, own) in &version.covers {
-        let span = own
-            .clone()
-            .or_else(|| version.span_at(&m.scenarios, (m.on, World::Whole)).cloned());
-        for leg in &o.legs {
-            if leg.from != *place && leg.to != *place {
+/// An id's corrections, in each world of the stack and at each cut class of the stretch each
+/// stands in: a row that stands in place of an earlier statement of it (a `replace`, also one
+/// after a `= none`) is in a version that covers, on the row's day, each place of its legs
+/// that the version of the last statement with a row known by that cut covers there; a
+/// `none` row books nothing and needs no `covers`. The rows in their order, then the worlds,
+/// the places in name order: the first that breaks it is refused (S-223, P50). L §5.19; E §3.1
+/// step 9.
+///
+/// # Errors
+///
+/// `LOAD-COVERS replace <r> of <x>: <v> doesn't cover <x> on <d>`, at the correction's row.
+fn corrections_cover(m: &Reality, rows: &[(usize, Day, usize, &Observation)]) -> Result<(), Stop> {
+    let depth = m.scenarios.over.len();
+    for (n, (_, _, at, o)) in rows.iter().enumerate() {
+        let Some(day) = o.day.filter(|_| !o.removed && n > 0) else {
+            continue;
+        };
+        for world in (0..depth).map(World::Lowest).chain([World::Whole]) {
+            if !m.scenarios.sees(world, Some(&o.version)) {
                 continue;
             }
-            if span.as_ref().is_none_or(|s| !s.contains(day)) {
+            let seen: Vec<&(usize, Day, usize, &Observation)> = rows
+                .iter()
+                .filter(|(_, _, _, r)| m.scenarios.sees(world, Some(&r.version)))
+                .collect();
+            if let Some(place) = uncovered(m, world, (*at, day), &seen)? {
                 let message = format!(
-                    "observation {} of {place} is dated outside the span {} covers",
+                    "replace {} of {place}: {} doesn't cover {place} on {}",
                     o.sid(),
-                    version.id
+                    o.version,
+                    day.text()
                 );
                 return Err(at_obs(m, o, Load::Covers, message)?);
             }
         }
     }
     Ok(())
+}
+
+/// The first place, in name order, of the legs of the row at `at` among the input's
+/// observations, dated `day` and standing among `seen` in `world`, that the version of an
+/// earlier statement of it with a row covers on `day` at some cut of the row's stretch while
+/// the row's own version doesn't (P53); none where the row never stands there or replaces no
+/// row.
+/// L §5.19 (S-223), §4.5.
+fn uncovered(
+    m: &Reality,
+    world: World,
+    (at, day): (usize, Day),
+    seen: &[&(usize, Day, usize, &Observation)],
+) -> Result<Option<String>, Stop> {
+    let Some(here) = seen.iter().position(|(_, _, i, _)| *i == at) else {
+        return Ok(None);
+    };
+    let Some((earlier, [(_, known, _, o), later @ ..])) = seen.split_at_checked(here) else {
+        return Ok(None);
+    };
+    let end = later.iter().map(|(_, k, _, _)| *k).min();
+    if end.is_some_and(|e| e <= *known) {
+        return Ok(None);
+    }
+    let Some(now) = m.versions.get(&o.version) else {
+        return Err(invariant(format!("version {} isn't built", o.version)));
+    };
+    let mut cuts = BTreeSet::from([*known]);
+    add_cuts(&mut cuts, now, world, (*known, end), m);
+    for (_, row_known, _, row) in earlier {
+        let Some(v) = m.versions.get(&row.version) else {
+            return Err(invariant(format!("version {} isn't built", row.version)));
+        };
+        add_cuts(&mut cuts, v, world, (*known, end), m);
+        // a lower layer's statement known later than the row is replaced from its own day
+        if *row_known > *known && end.is_none_or(|e| *row_known < e) {
+            cuts.insert(*row_known);
+        }
+    }
+    let mut places = BTreeSet::new();
+    for leg in &o.legs {
+        places.insert(leg.from.as_str());
+        places.insert(leg.to.as_str());
+    }
+    for cut in cuts {
+        let seen_at = (cut, world);
+        for place in &places {
+            if !covers_at(m, now, place, day, seen_at)
+                && earlier_covers(m, earlier, (place, day), seen_at)?
+            {
+                return Ok(Some((*place).to_owned()));
+            }
+        }
+    }
+    Ok(None)
+}
+
+/// Whether the version of some earlier statement of the row with a row, known at `cut`,
+/// covers `place` on `day` there (P53: any earlier statement's, not only the last's).
+/// L §5.19 (S-223), §4.5.
+fn earlier_covers(
+    m: &Reality,
+    earlier: &[&(usize, Day, usize, &Observation)],
+    (place, day): (&str, Day),
+    (cut, world): (Day, World),
+) -> Result<bool, Stop> {
+    for (_, known, _, row) in earlier {
+        if row.removed || *known > cut {
+            continue;
+        }
+        let Some(was) = m.versions.get(&row.version) else {
+            return Err(invariant(format!("version {} isn't built", row.version)));
+        };
+        if covers_at(m, was, place, day, (cut, world)) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// The `known` days of `v`'s `moves` lines that `world` sees inside the stretch `(known,
+/// end)`: the cut classes where its span can change. L §4.5, §5.3.
+fn add_cuts(
+    cuts: &mut BTreeSet<Day>,
+    v: &VersionInfo,
+    world: World,
+    (known, end): (Day, Option<Day>),
+    m: &Reality,
+) {
+    for line in &v.moved_by {
+        let inside = line.known > known && end.is_none_or(|e| line.known < e);
+        if inside && m.scenarios.sees(world, Some(&line.by)) {
+            cuts.insert(line.known);
+        }
+    }
+}
+
+/// Whether version `v` covers `place` on `day` as cut `cut` sees it in `world`: its own span,
+/// else the version's in force there. L §5.19, §5.3.
+fn covers_at(m: &Reality, v: &VersionInfo, place: &str, day: Day, seen: (Day, World)) -> bool {
+    let in_force = v.span_at(&m.scenarios, seen);
+    for (at, own) in &v.covers {
+        if at == place && own.as_ref().or(in_force).is_some_and(|s| s.contains(day)) {
+            return true;
+        }
+    }
+    false
+}
+
+/// A covered place's observations lie inside the span their version covers, checked on the
+/// rows that stand, in each world of the stack and at each cut class: in a world, an id's row
+/// stands from its `known` until a row above it is known, and the span is the one in force
+/// at each cut of that stretch (its `moves` lines' `known` days). The first observation in
+/// the input's order that breaks it is refused (refcore's `check_covers_standing`). L §5.19,
+/// E §3.1 step 9 (S-232).
+fn covers_standing(
+    m: &Reality,
+    observations: &[Observation],
+    ids: &[Vec<(usize, Day, usize, &Observation)>],
+) -> Result<(), Stop> {
+    let depth = m.scenarios.over.len();
+    let worlds = (0..depth).map(World::Lowest).chain([World::Whole]);
+    let mut bad: BTreeMap<usize, String> = BTreeMap::new();
+    for world in worlds {
+        for rows in ids {
+            let seen: Vec<&(usize, Day, usize, &Observation)> = rows
+                .iter()
+                .filter(|(_, _, _, o)| m.scenarios.sees(world, Some(&o.version)))
+                .collect();
+            let mut rest = seen.as_slice();
+            while let [(_, known, at, o), later @ ..] = rest {
+                rest = later;
+                if o.removed || bad.contains_key(at) {
+                    continue;
+                }
+                let end = later.iter().map(|(_, k, _, _)| *k).min();
+                if let Some(place) = outside(m, world, (*known, end), o)? {
+                    bad.insert(*at, place);
+                }
+            }
+        }
+    }
+    for (at, o) in observations.iter().enumerate() {
+        if let Some(place) = bad.get(&at) {
+            let message = format!(
+                "observation {} of {place} is dated outside the span {} covers",
+                o.sid(),
+                o.version
+            );
+            return Err(at_obs(m, o, Load::Covers, message)?);
+        }
+    }
+    Ok(())
+}
+
+/// The first covered place of `o`'s legs whose span, in `world`, leaves `o`'s day outside at
+/// some cut of the stretch `(known, end)` it stands in; none where it never stands (a row
+/// above it is known by its own `known`). L §5.19, §4.5 (S-232).
+fn outside(
+    m: &Reality,
+    world: World,
+    (known, end): (Day, Option<Day>),
+    o: &Observation,
+) -> Result<Option<String>, Stop> {
+    let Some(day) = o.day else {
+        return Ok(None);
+    };
+    if end.is_some_and(|e| e <= known) {
+        return Ok(None);
+    }
+    let v = m
+        .versions
+        .get(&o.version)
+        .ok_or_else(|| invariant(format!("version {} isn't built", o.version)))?;
+    let mut cuts = BTreeSet::from([known]);
+    for line in &v.moved_by {
+        let inside = line.known > known && end.is_none_or(|e| line.known < e);
+        if inside && m.scenarios.sees(world, Some(&line.by)) {
+            cuts.insert(line.known);
+        }
+    }
+    for (place, own) in &v.covers {
+        if !o
+            .legs
+            .iter()
+            .any(|leg| leg.from == *place || leg.to == *place)
+        {
+            continue;
+        }
+        // a place's own span is the same at every cut: the first is enough
+        let checked = if own.is_some() { 1 } else { cuts.len() };
+        for cut in cuts.iter().take(checked) {
+            let span = own.as_ref().or(v.span_at(&m.scenarios, (*cut, world)));
+            if span.is_none_or(|s| !s.contains(day)) {
+                return Ok(Some(place.clone()));
+            }
+        }
+    }
+    Ok(None)
 }
 
 /// A row's pattern as a message prints it, or `no keys`.

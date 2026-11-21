@@ -62,7 +62,7 @@ BUILT = dict([(c, 'S') for c in ['HOLE-UNGOVERNED', 'HOLE-ANCHOR', 'HOLE-CALENDA
              [(c, 'M1') for c in ['HOLE-STATED', 'HOLE-NOTYET', 'HOLE-PRICE', 'HOLE-IMPRECISE', 'RUN-CONFLICT',
                                    'RUN-EMPTY', 'RUN-ZERO', 'RUN-WEIGHTS', 'RUN-PRORATA', 'RUN-ORDER', 'RUN-SOLVE',
                                    'REQ-CLOCK', 'ENGINE-INVARIANT']] +
-             [('HOLE-NOREADING', 'M2'), ('HOLE-SAME', 'M2'), ('WARN-STALE', 'M3'), ('HOLE-LOTS', 'M5a'),
+             [('HOLE-NOREADING', 'M2'), ('HOLE-SAME', 'M2'), ('HOLE-LOTS', 'M5a'),
               ('RUN-UNDECIDED', 'M6'), ('RUN-PARAM', 'M6'), ('REQ-PATHS', 'M7')])
 CODE = r'[A-Z]+(?:-[A-Z]+)+'
 REFUSED = re.compile(r'refused: (%s) (.*?)(?=, refused: |$)' % CODE, re.M)

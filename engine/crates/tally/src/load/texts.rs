@@ -3,9 +3,12 @@
 //! as `F.taken[s, d]`), §5.19 (the spans a `covered()` guard names).
 //! Twin: engine/tools/refcore/check.py (`_txt`); check2.py (`m_fill_ref`); check3.py (`_txt`,
 //! `span_txt`, `m_covered_spans_of`).
-//! Invariants: a text is refcore's byte for byte, made from the tree alone, never from a value;
-//! `children` gives every expression directly under a node, so a walk over them sees the whole
-//! tree.
+//! Invariants: a text is refcore's byte for byte, made from the tree alone, never from a value,
+//! but a name node a caller's bindings give, which prints as the value's text it is handed
+//! (`bound_text`, refcore's `env_txt`); `children` gives every expression directly under a
+//! node, so a walk over them sees the whole tree.
+
+use std::collections::BTreeMap;
 
 use super::check::Scope;
 use crate::model::{NameKind, Reality, Unit};
@@ -34,56 +37,72 @@ pub(crate) fn domain_text(d: &Domain) -> String {
     }
 }
 
+/// The names a message prints by their values: each variable a caller's bindings give, with
+/// its value's text (tally 2.2.1 235.6; refcore's `env_txt`, its `key_text`).
+pub(crate) type Bound = BTreeMap<String, String>;
+
 /// An expression's text, as a message names it (refcore's `_txt`).
 pub(crate) fn text(e: &Expr) -> String {
+    bound_text(e, &Bound::new())
+}
+
+/// An expression's text, each name node `bound` holds printed as its value's text, every
+/// other node as written: a period word, a field, a function's name or a string is no name
+/// node (refcore's `env_txt`, which swaps the tree's name nodes; L §8.1 "with the item and
+/// keys each came from", §8.4 `RUN-NONE`'s row; tally 2.2.1 235.6, P48 B1).
+pub(crate) fn bound_text(e: &Expr, bound: &Bound) -> String {
+    let t = |x: &Expr| bound_text(x, bound);
     match e {
-        Expr::Name(id) => id.clone(),
+        Expr::Name(id) => match bound.get(id) {
+            Some(value) => value.clone(),
+            None => id.clone(),
+        },
         Expr::Lit(lit) => lit_txt(lit),
         Expr::Str(s) => format!("\"{s}\""),
         Expr::None => "none".to_owned(),
         Expr::Never => "never".to_owned(),
         Expr::Cut => "cut".to_owned(),
-        Expr::Paren(inner) => format!("({})", text(inner)),
-        Expr::Neg(inner) => format!("-{}", text(inner)),
-        Expr::Not(inner) => format!("not {}", text(inner)),
+        Expr::Paren(inner) => format!("({})", t(inner)),
+        Expr::Neg(inner) => format!("-{}", t(inner)),
+        Expr::Not(inner) => format!("not {}", t(inner)),
         Expr::Sum(first, rest) => {
             let signed: Vec<(&str, &Expr)> = rest
                 .iter()
                 .map(|(op, term)| (add_sign(*op), term))
                 .collect();
-            chain_text(first, &signed)
+            chain_text(first, &signed, bound)
         }
         Expr::Prod(first, rest) => {
             let signed: Vec<(&str, &Expr)> = rest
                 .iter()
                 .map(|(op, factor)| (mul_sign(*op), factor))
                 .collect();
-            chain_text(first, &signed)
+            chain_text(first, &signed, bound)
         }
-        Expr::Or(terms) => joined(terms, "or"),
-        Expr::And(terms) => joined(terms, "and"),
-        Expr::Cmp(cmp) => format!("{} {} {}", text(&cmp.0), cmp_sign(cmp.1), text(&cmp.2)),
+        Expr::Or(terms) => joined(terms, "or", bound),
+        Expr::And(terms) => joined(terms, "and", bound),
+        Expr::Cmp(cmp) => format!("{} {} {}", t(&cmp.0), cmp_sign(cmp.1), t(&cmp.2)),
         Expr::If(parts) => {
-            let [c, a, b] = parts.as_ref();
-            format!("if {} then {} else {}", text(c), text(a), text(b))
+            let [cond, then, other] = parts.as_ref();
+            format!("if {} then {} else {}", t(cond), t(then), t(other))
         }
         Expr::In(test) => {
             let on = test
                 .on
                 .as_ref()
-                .map_or_else(String::new, |on| format!(" on {}", text(on)));
-            format!("{} in {}{on}", text(&test.member), text(&test.set))
+                .map_or_else(String::new, |on| format!(" on {}", t(on)));
+            format!("{} in {}{on}", t(&test.member), t(&test.set))
         }
-        Expr::Post(base, posts) => post_text(base, posts),
-        Expr::Call(call) => format!("{}({})", call.name, list_text(&call.args)),
+        Expr::Post(base, posts) => bound_post_text((base, posts), bound),
+        Expr::Call(call) => format!("{}({})", call.name, list_text(&call.args, bound)),
         Expr::Agg(agg) => format!("{}(...)", agg.func.word()),
-        Expr::Last(pair) => format!("last({}, {})", text(&pair.0), text(&pair.1)),
-        Expr::AsIf(inner, _) => format!("{} as if {{...}}", text(inner)),
+        Expr::Last(pair) => format!("last({}, {})", t(&pair.0), t(&pair.1)),
+        Expr::AsIf(inner, _) => format!("{} as if {{...}}", t(inner)),
         Expr::Bal(bal) => {
-            let mut s = format!("bal({}", text(&bal.place));
+            let mut s = format!("bal({}", t(&bal.place));
             for arg in &bal.args {
                 s.push_str(", ");
-                s.push_str(&text(arg));
+                s.push_str(&t(arg));
             }
             if bal.start {
                 s.push_str(" start");
@@ -94,35 +113,35 @@ pub(crate) fn text(e: &Expr) -> String {
             }
             if let Some(from) = &bal.proj.from {
                 s.push_str(" from ");
-                s.push_str(&text(from));
+                s.push_str(&t(from));
             }
             s
         }
         Expr::Value(value) => format!(
             "value({}, {}) in {}",
-            text(&value.place),
-            text(&value.day),
+            t(&value.place),
+            t(&value.day),
             value.currency
         ),
         Expr::List(_) => "list".to_owned(),
         Expr::Record(_) => "record".to_owned(),
         Expr::LegOf(..) => "legof".to_owned(),
         Expr::To(..) => "to".to_owned(),
-        Expr::Flows(flows) => flows_text(flows),
+        Expr::Flows(flows) => flows_text(flows, bound),
         Expr::Covered(_) => "covered".to_owned(),
         Expr::Calendar(_) => "calendar".to_owned(),
         Expr::Query(q) => {
-            let mut s = text(&q.arg);
+            let mut s = t(&q.arg);
             if q.binds.is_some() {
                 s.push_str(" for ...");
             }
             if let Some(filter) = &q.filter {
                 s.push_str(" where ");
-                s.push_str(&text(filter));
+                s.push_str(&t(filter));
             }
             if let Some(level) = &q.level {
                 s.push_str(", ");
-                s.push_str(&text(level));
+                s.push_str(&t(level));
             }
             let word = match q.func {
                 QueryFn::Mean => "mean",
@@ -139,18 +158,34 @@ pub(crate) fn text(e: &Expr) -> String {
 }
 
 /// A `flows` read's text, its `for` included (refcore's `_txt` of `flows`).
-fn flows_text(flows: &crate::syntax::Flows) -> String {
+fn flows_text(flows: &crate::syntax::Flows, bound: &Bound) -> String {
     let mut s = format!(
         "flows({}, {}",
-        text(&flows.target),
-        super::reads::span_text(&flows.span)
+        bound_text(&flows.target, bound),
+        bound_span(&flows.span, bound)
     );
     if let Some(key) = &flows.for_key {
         s.push_str(", for ");
-        s.push_str(&text(key));
+        s.push_str(&bound_text(key, bound));
     }
     s.push(')');
     s
+}
+
+/// A span's text as a read or a ledger's head names it, `a .. b`, each name node `bound`
+/// holds printed as its value's text (refcore's `_txt` of a span). L §5.18, §8.1.
+pub(crate) fn bound_span(span: &Span, bound: &Bound) -> String {
+    let a = span
+        .from
+        .as_ref()
+        .map_or_else(String::new, |e| bound_text(e, bound));
+    if !span.dots {
+        return a;
+    }
+    match &span.to {
+        Some(b) => format!("{a} .. {}", bound_text(b, bound)),
+        None => format!("{a} .."),
+    }
 }
 
 /// A literal's text: a number with its unit as the unit algebra prints it.
@@ -171,23 +206,23 @@ pub(super) fn lit_txt(lit: &Lit) -> String {
 }
 
 /// A left-nested chain's text, `a + b - c`.
-fn chain_text(first: &Expr, rest: &[(&str, &Expr)]) -> String {
-    let mut out = text(first);
+fn chain_text(first: &Expr, rest: &[(&str, &Expr)], bound: &Bound) -> String {
+    let mut out = bound_text(first, bound);
     for (sign, e) in rest {
-        out = format!("{out} {sign} {}", text(e));
+        out = format!("{out} {sign} {}", bound_text(e, bound));
     }
     out
 }
 
 /// A chain of `and` or `or`.
-fn joined(terms: &[Expr], word: &str) -> String {
-    let shown: Vec<String> = terms.iter().map(text).collect();
+fn joined(terms: &[Expr], word: &str, bound: &Bound) -> String {
+    let shown: Vec<String> = terms.iter().map(|e| bound_text(e, bound)).collect();
     shown.join(&format!(" {word} "))
 }
 
 /// Expressions joined by `, `.
-fn list_text(exprs: &[Expr]) -> String {
-    let shown: Vec<String> = exprs.iter().map(text).collect();
+fn list_text(exprs: &[Expr], bound: &Bound) -> String {
+    let shown: Vec<String> = exprs.iter().map(|e| bound_text(e, bound)).collect();
     shown.join(", ")
 }
 
@@ -219,11 +254,17 @@ pub(super) fn fill_ref(
 
 /// A base with its postfixes, `x[k].f`.
 pub(crate) fn post_text(base: &Expr, posts: &[Postfix]) -> String {
-    let mut out = text(base);
+    bound_post_text((base, posts), &Bound::new())
+}
+
+/// A base with its postfixes, `x[k].f`, each name node `bound` holds printed as its value's
+/// text: `rec[2026-03].amount` (refcore's `env_txt`; tally 2.2.1 235.6).
+pub(crate) fn bound_post_text((base, posts): (&Expr, &[Postfix]), bound: &Bound) -> String {
+    let mut out = bound_text(base, bound);
     for post in posts {
         match post {
             Postfix::Keys(keys) => {
-                let shown: Vec<String> = keys.iter().map(key_text).collect();
+                let shown: Vec<String> = keys.iter().map(|k| key_text(k, bound)).collect();
                 out = format!("{out}[{}]", shown.join(", "));
             }
             Postfix::Field(name) => out = format!("{out}.{name}"),
@@ -233,10 +274,10 @@ pub(crate) fn post_text(base: &Expr, posts: &[Postfix]) -> String {
 }
 
 /// A key position's text.
-fn key_text(key: &Key) -> String {
+fn key_text(key: &Key, bound: &Bound) -> String {
     match key {
         Key::Star => "star".to_owned(),
-        Key::Expr(e) => text(e),
+        Key::Expr(e) => bound_text(e, bound),
     }
 }
 

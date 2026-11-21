@@ -1,0 +1,7 @@
+part asks4
+  tally 2
+
+ask q_mid: bal(konto, 2026-10-20)
+ask q_oct: bal(konto, 2026-10-31)
+ask q_resid: residuals konto 2026-10
+ask q_why: explain bal(konto, 2026-10-30)

@@ -4832,7 +4832,7 @@ version card_2026
   governs always
   known 2026-01-01
   pay = 4 000.00 PLN "the card"
-,,1:1,85:refused: LOAD-SAME same a.pay = a.twice: a row of an input and a def (joint.tally:1)
+,,1:1,85:refused: LOAD-SAME same a.pay = a.twice: a row of an input and a def (joint.tally:7)
 ,19:joint/same-unjoined,9:LOAD-SAME,5:joint,33:run joint.tally --ask zz_m0_probe,912:11:joint.tally,471:model family
   tally 2
   on 2026-03-01
@@ -12698,4 +12698,240 @@ version bank_a
   known 2026-06-01
   bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
 ,,1:1,64:refused: LOAD-FIELD zz is not a field of events (base.tally:33)
+,16:basic/order-self,10:LOAD-ORDER,5:basic,32:run base.tally --ask zz_m0_probe,1154:10:base.tally,1134:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+move sweep: transfers
+  on day
+  reads konto
+  before sweep
+  leg cash from konto to world amount bal(konto, day - 1 day)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,92:refused: LOAD-ORDER sweep before sweep: a move isn't ordered against itself (base.tally:26)
+,21:adjust/covers-replace,11:LOAD-COVERS,6:adjust,32:run base.tally --ask zz_m0_probe,1540:10:base.tally,1520:model adjust
+  tally 2
+  on 2026-10-20
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): a wage raised after it was paid, and the back pay that settles the adjustment; it loads clean"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+unit EUR: currency minor 0.01
+
+kind wages: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 2026-01-01..
+
+input bank: observed
+
+input wage_amt: money PLN
+
+input wage_dom: int
+
+def net[m in months]: money PLN = wage_amt at start_of(m)
+
+move wage[m in months]: wages
+  on day_of(m, wage_dom)
+  at start_of(m)
+  leg cash from world to konto amount net[m]
+
+ask q: bal(konto, 2026-12-31)
+
+version plan
+  cite card
+  governs always
+  known 2025-12-01
+  wage_amt = 5 000.00 "a wage"
+  wage_dom = 10 "paid on the 10th"
+  opening[konto] = 0 at 2026-01-01 start "the card"
+
+version raise
+  cite card
+  governs 2026-03..2026-04
+  known 2026-05-01
+  replace wage_amt = 5 500.00 "a raise for March and April"
+
+version bank_a
+  cite card
+  governs 2026-05
+  known 2026-06-01
+  covers konto
+  bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "back pay for March"
+
+version bank_fix
+  cite card
+  governs 2026-05
+  known 2026-06-10
+  replace bank[r1] = (on: 2026-05-15, kind: wages, leg cash from world to konto amount 500.00 PLN, fulfils: adjustments[wage[2026-03].cash, raise]) "restated"
+,,1:1,107:refused: LOAD-COVERS replace bank[r1] of konto: bank_fix doesn't cover konto on 2026-05-15 (base.tally:61)
+,17:basic/instant-pin,12:LOAD-INSTANT,5:basic,32:run base.tally --ask zz_m0_probe,1093:10:base.tally,1073:model basic
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+ask q_pin: bal(konto, 2026-12-31) with opening[konto] = 7 PLN
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,89:refused: LOAD-INSTANT a pin of balance reading opening states no instant (base.tally:35)
+,19:basic/version-three,12:LOAD-VERSION,5:basic,32:run base.tally --ask zz_m0_probe,1031:10:base.tally,1011:model basic
+  tally 3
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's base for M0's load-code fixtures (invented): it loads clean; each fixture of codes/m0/edits.tsv changes one line"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+index qs = [q1, q2]
+
+input amt: money PLN
+
+input day: date
+
+input rate[k in qs]: num
+
+def fee[k in qs]: money PLN
+  rule base v card_2026 = round(amt * rate[k], minor(PLN), half-up)
+  rule waived beats base v card_2026 = 0 PLN when rate[k] == 0
+
+def total: money PLN = sum(fee[k] for k in qs)
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+move pay: transfers
+  on day
+  leg cash from konto to world amount fee[q1]
+
+ask q: total, bal(konto, 2026-12-31)
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "the card"
+  day = 2026-02-10 "the card"
+  rate[q1] = 0.1 "the card"
+  rate[q2] = 0 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:1,71:refused: LOAD-VERSION tally 3: this engine runs tally 2 (base.tally:2)
+,20:joint/version-member,12:LOAD-VERSION,5:joint,33:run joint.tally --ask zz_m0_probe,780:11:joint.tally,339:model family
+  tally 3
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a/a.tally" sha256 "5c37999654a56b80e0b6abd97099390c0c7bddbee9ca63b5c5d00978e7f15ab3"
+  note "T's base for M0's load-code fixtures (invented): a joint model over one member, a/a.tally, pinned by its canonical text's hash; it loads clean"
+
+ask x: a.twice
+,9:a/a.tally,404:model ana
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member for M0's load-code fixtures (invented): the joint model's one member"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay
+
+ask q: twice
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"
+,,1:1,67:refused: LOAD-VERSION member a declares tally 2, the joint model 3
 ,

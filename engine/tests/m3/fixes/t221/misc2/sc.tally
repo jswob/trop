@@ -1,0 +1,13 @@
+scenario sc over m2
+  tally 2
+  from 2026-05-01
+input sx: num
+version scv
+  cite s
+  governs always
+  known 2026-01-01
+  sx = 1 "s"
+ask d_ref: diff(amt / zero) in sc against m2 law 2026-06-01
+ask d_hole: diff(hx[k2]) in sc against m2
+ask d_same: diff(zero) in sc against m2
+ask d_all: diff(hx[k] / zero for k in ks) in sc against m2

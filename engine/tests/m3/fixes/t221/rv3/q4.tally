@@ -1,0 +1,41 @@
+model q4
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input d1: date
+input d2: date
+input go: bool
+move pay: transfers
+  on d1
+  leg cash from world to konto amount a1
+move pay2: transfers
+  on d1
+  leg cash from world to konto amount a1
+move dec: transfers
+  on d2
+  reads konto
+  when go and bal(konto) > 0 PLN
+  leg cash from world to konto amount a1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a1 = 100.00 PLN "s"
+  d1 = 2026-03-10 "s"
+  d2 = 2026-03-10 "s"
+  go = false "s"
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  same dec = pay2
+  same pay = dec
+ask k: bal(konto, 2026-03-31)
+ask f: flows(konto, 2026-03)
+ask l: t.cash.amount for t in transfers over 2026-03
+ask fp: flows(pay.cash, 2026-03)
+ask fp2: flows(pay2.cash, 2026-03)
+ask e: explain bal(konto, 2026-03-31)

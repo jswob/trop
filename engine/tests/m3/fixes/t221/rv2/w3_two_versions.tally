@@ -1,0 +1,38 @@
+model w3
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+input bank: observed
+input sbank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+ask b_k: bal(konto, 2026-03-31)
+ask b_s: bal(sav, 2026-03-31)
+ask n: count(t in transfers over 2026-03)
+
+version st_k
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[a1] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 950.00 PLN) "konto line"
+
+version st_s
+  cite s
+  governs 2026-03
+  known 2026-04-03
+  covers sav
+  sbank[b1] = (on: 2026-03-18, kind: transfers, leg cash from konto to sav amount 900.00 PLN) "sav line"
+  same bank[a1] = sbank[b1]

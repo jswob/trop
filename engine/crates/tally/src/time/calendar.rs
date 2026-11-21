@@ -127,7 +127,8 @@ impl Added {
     }
 
     /// A window or a choice of days as written, `window(a, b)` or `one_of([a, b])`, which a
-    /// question names (refcore's `business`, its `wt`). L §4.2, §4.4.
+    /// question names (refcore's `business`, its `wt`); a stated hole as a hole prints, its
+    /// question escaped (L §2.4; tally 2.2.1 P48 N5). L §4.2, §4.4.
     #[must_use]
     pub fn text(&self) -> String {
         match self {
@@ -137,7 +138,7 @@ impl Added {
                 format!("one_of([{}])", texts.join(", "))
             }
             Added::Day(d) => d.text(),
-            Added::Hole(q) => format!("?\"{q}\""),
+            Added::Hole(q) => crate::hole::atom_text(q, ""),
         }
     }
 }
@@ -202,8 +203,9 @@ impl Calendar {
         weekends.len() < 7
     }
 
-    /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027)`;
-    /// its added days don't print (refcore's `fmt` of a `Cal`). L §5.18.
+    /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027,
+    /// added [window(2026-06-30, 2026-07-01)])`, with its added list as written (refcore's
+    /// `fmt` of a `Cal`). L §2.4, §5.18 (221.6 on #241).
     #[must_use]
     pub fn text(&self) -> String {
         let words: Vec<&str> = self.weekends.iter().map(|n| weekday_word(*n)).collect();
@@ -219,6 +221,10 @@ impl Calendar {
                 .as_ref()
                 .map_or_else(String::new, |from| format!(" from {}", from.text()));
             parts.push(format!("yearly [{}]{from}", days.join(", ")));
+        }
+        if !self.added.is_empty() {
+            let added: Vec<String> = self.added.iter().map(Added::text).collect();
+            parts.push(format!("added [{}]", added.join(", ")));
         }
         format!("calendar({})", parts.join(", "))
     }

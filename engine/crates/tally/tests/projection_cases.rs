@@ -187,7 +187,11 @@ ask after_spare: bal(spare, 2025-03-20) from 2025-03-01
 ask spare_end: bal(spare, 2025-03-31)
 "#;
 
-    /// refcore's lines for the reality, every ask, in id order.
+    /// refcore's lines for the reality, every ask, in id order, but for `plain_unc` and `unc`
+    /// (tally 2.2.1's 206.1): their skim reads a projection from 2025-01-25 inside their own
+    /// from 2025-02-01, so it starts from the main walk at the start of 2025-01-25 (1 000.00)
+    /// and counts the rent once, not from their start's 600.00 (E §4.3 step 1): skim books
+    /// 1 400.00, and the balance is 600 + 900 − 1 400 − 10 = 90.00 (340.00 with the bonus).
     const LINES: &str = r#"after_spare: refused: RUN-FUTURE a decision on 2025-03-15 reads a projection from 2025-03-16, after its day
   cut 2025-02-10
 backwards: refused: RUN-DOMAIN bal(bank, 2025-01-03) from 2025-01-10: the day is before the projection's start
@@ -203,7 +207,7 @@ deep: -1 900.00 DUK
   cut 2025-02-10
 hole_from: ?"When does the gift come?" (gift_day)
   cut 2025-02-10
-plain_unc: 490.00 DUK
+plain_unc: 90.00 DUK
   unfulfilled: rent
   left out: skim, 1 instances, first 2025-02-25
   cut 2025-02-10
@@ -233,7 +237,7 @@ topped: 0.00 DUK
   left out: skim, 1 instances, first 2025-02-25
   left out: top, 1 instances, first 2025-03-10
   cut 2025-02-10
-unc: 740.00 DUK
+unc: 340.00 DUK
   unfulfilled: rent
   left out: skim, 1 instances, first 2025-02-25
   uncertain: bonus
@@ -450,12 +454,15 @@ ask before: bal(save, 2025-03-31) from 2025-02-01
 "#;
 
     /// refcore's lines for [`REFUSED`], every ask, in id order: the decision run in each
-    /// projection's walk reads the refused leg as refused.
+    /// projection's walk reads the refused leg as refused, and the refusal lists what the
+    /// decision read like a value: `pay` unfulfilled where the walk takes it as past (P35).
     const REFUSED_LINES: &str = r"before: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
   cut 2025-03-10
 projected: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: pay
   cut 2025-03-10
 saved: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: pay
   cut 2025-03-10
 warning: WARN-UNREAD place out is read by nothing";
 

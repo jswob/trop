@@ -1,0 +1,38 @@
+model s230_5a
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+place sav: accounts PLN lives 2026-01-01..
+
+input bank: observed
+input keep: money PLN
+
+move save[m in months]: transfers
+  on start_of(m) + 11 days
+  at start_of(m)
+  leg cash from konto to sav amount keep
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  keep = 500.00 PLN "s"
+  opening[konto] = 1 000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  same save[2026-03] = bank[o1]
+  bank[o1] = (on: 2026-03-12, kind: transfers, leg cash from konto to sav amount 500.00 PLN) "o1"
