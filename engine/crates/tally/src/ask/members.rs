@@ -27,6 +27,7 @@ use crate::load::{Loaded, load_run, split_files};
 use crate::model::{MemberAlone, Reality};
 use crate::oracle::Days;
 use crate::syntax::{Ask, Stop};
+use crate::walk::invariant;
 use crate::{Asks, Pin};
 use std::collections::BTreeMap;
 
@@ -62,7 +63,7 @@ pub(super) fn resolve(
             _ => match alone_lines(member, (&id, &aliases, &own), (days, how)) {
                 Ok(alone) => {
                     out.extend(alone.lines.into_iter().map(Turn::Line));
-                    let warnings = lifted(&aliases, &alone.warnings);
+                    let warnings = lifted(&aliases, &alone.warnings)?;
                     out.push(Turn::Lifted(alone.level, warnings));
                 }
                 Err(stop) => out.push(Turn::Stopped(stop)),
@@ -87,16 +88,22 @@ struct Alone {
 /// The walk warnings of a member's asks, by the joint model's names, each once:
 /// `WARN-NEGATIVE` and `WARN-LEGS` name the member's place, thing and observations under its
 /// aliases (`a.konto`); no other warning reaches the run's own level, `WARN-UNREAD` least of
-/// all, which is judged in the member alone (refcore's `Asker.lift`, `joint_warning`). L §6.1,
-/// §8.5; R20 clause 3.
-pub(super) fn lifted(aliases: &[String], warnings: &[(Warn, String)]) -> Vec<(Warn, String)> {
+/// all, which is judged in the member alone (refcore's `Asker.lift`, `joint_warning`). A
+/// `WARN-LEGS` or `WARN-LABELS` text not of its printed form is `ENGINE-INVARIANT`, never
+/// passed on unnamed (G4's review N4). L §6.1, §8.5; R20 clause 3.
+pub(super) fn lifted(
+    aliases: &[String],
+    warnings: &[(Warn, String)],
+) -> Result<Vec<(Warn, String)>, Stop> {
     let prefix = aliases.join(".");
     let mut out: Vec<(Warn, String)> = Vec::new();
     for (code, text) in warnings {
         let named = match code {
             Warn::Negative => format!("{prefix}.{text}"),
-            Warn::Legs => legs_named(&prefix, text).unwrap_or_else(|| text.clone()),
-            Warn::Labels => labels_named(&prefix, text).unwrap_or_else(|| text.clone()),
+            Warn::Legs => legs_named(&prefix, text)
+                .ok_or_else(|| invariant("a WARN-LEGS text not of its printed form"))?,
+            Warn::Labels => labels_named(&prefix, text)
+                .ok_or_else(|| invariant("a WARN-LABELS text not of its printed form"))?,
             Warn::Unread => continue,
         };
         let w = (*code, named);
@@ -104,7 +111,7 @@ pub(super) fn lifted(aliases: &[String], warnings: &[(Warn, String)]) -> Vec<(Wa
             out.push(w);
         }
     }
-    out
+    Ok(out)
 }
 
 /// A `WARN-LEGS` message, `the two observations of <x> disagree: <a>[…) and <b>[…`, with its

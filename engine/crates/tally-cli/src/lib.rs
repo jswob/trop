@@ -2,7 +2,8 @@
 //! runner both call.
 //! Spec: E §1 (the run function); L §8.3 (`LOAD-PATH`, and `LOAD-PARSE` for bytes);
 //! engine/tests/INTERFACE.md §1–§4, §9 (commands, reading, output, the file table, `check`);
-//! OPERATIONS §2.3 (`check`).
+//! OPERATIONS §2 (for all three: a usage error, an option the command doesn't take, exit 2),
+//! §2.1 (`run`, `--ask`, `--pin=bytes`), §2.2 (`reprint`, its pin as `run`'s), §2.3 (`check`).
 //! Twin: engine/tools/refcore/cli.py (`main`, `command_lines`, `run_paths`),
 //! engine/tools/refcore/loader.py (`collect`) and joint.py (`use_member_files`).
 //! Invariants: pure, no I/O (R-39); everything is printed to standard output; the exit is 0

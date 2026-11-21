@@ -7,8 +7,9 @@
 //! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, its
 //! `unread_everywhere` and `asif_worlds`; `check_worlds`) and ask.py (`Asker.load_check`).
 //! Invariants: every id the run names is checked before any ask is answered; refused
-//! scenarios print first, by their files' full paths, in `run` as in `check` (R20); `check`'s asks refused
-//! alone go by id, then file, then line; the asks go by id, then by world, the base's first; an ask
+//! scenarios print first, by their files' full paths, in `run` as in `check` (R20); `check`'s
+//! asks refused alone go by id, then file, then line; the asks go by id, then by the full path
+//! of the file that states each, then its line, the world breaking no tie (P49); an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
 //! others, each world under it seen with the layers over it hidden; the base's diff whose two
 //! worlds are on two stacks is answered side by side, each side in the reality holding its

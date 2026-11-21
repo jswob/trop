@@ -337,7 +337,10 @@ pub(super) fn answer_turns_apart(
         warn_once(&mut warned, &world.seen.warnings);
     }
     for (aliases, world) in &member_worlds {
-        warn_once(&mut lifted, &members::lifted(aliases, &world.seen.warnings));
+        warn_once(
+            &mut lifted,
+            &members::lifted(aliases, &world.seen.warnings)?,
+        );
     }
     warn_once(&mut warned, &lifted);
     level.extend(out);
