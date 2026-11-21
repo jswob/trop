@@ -11,8 +11,10 @@
 //! order the patterns first appear, and the first pair that breaks the rule is refused at
 //! refcore's row; an observation is checked against the span its version covers only while
 //! it stands: in each world of the stack, from its `known` until a row above it is known,
-//! at each cut class of that stretch (pick P19, #232; S-232); a correction's version covers
-//! each covered place of its legs on its day (S-223).
+//! at each cut class of that stretch (pick P19, #232; S-232); a row standing in place of an
+//! earlier statement of it is in a version that covers, on its day, each place of its legs an
+//! earlier statement's version covers there, per world and cut class where the row stands
+//! (S-223, P50, P53).
 
 use super::check::invariant;
 use super::steps::refuse;
@@ -447,7 +449,8 @@ fn rank_cmp(a: &Rank, b: &Rank) -> Option<Ordering> {
 
 /// Every observed input's rows (refcore's `check_obs`): each id once, restated only by a
 /// later row that says `replace` (a scenario's above its base's), a correction in a version
-/// that covers its legs' covered places on its day, and each observation that stands, of a
+/// that covers, on its day, each place of its legs an earlier statement's version covers,
+/// per world and cut class (P53), and each observation that stands, of a
 /// covered place, dated inside the span its version covers there. A `none` row states no
 /// movement (pick P19, #232). L §5.19, §4.6 step 2, §6.4; E §3.1 step 9.
 ///
@@ -560,9 +563,10 @@ fn corrections_cover(m: &Reality, rows: &[(usize, Day, usize, &Observation)]) ->
 }
 
 /// The first place, in name order, of the legs of the row at `at` among the input's
-/// observations, dated `day` and standing among `seen` in `world`, that the version of the
-/// last earlier statement with a row covers on `day` at some cut of the row's stretch while
-/// the row's own version doesn't; none where the row never stands there or replaces no row.
+/// observations, dated `day` and standing among `seen` in `world`, that the version of an
+/// earlier statement of it with a row covers on `day` at some cut of the row's stretch while
+/// the row's own version doesn't (P53); none where the row never stands there or replaces no
+/// row.
 /// L §5.19 (S-223), §4.5.
 fn uncovered(
     m: &Reality,
@@ -601,24 +605,39 @@ fn uncovered(
         places.insert(leg.to.as_str());
     }
     for cut in cuts {
-        let last = earlier
-            .iter()
-            .rev()
-            .find(|(_, k, _, r)| !r.removed && *k <= cut);
-        let Some((_, _, _, was)) = last else {
-            continue;
-        };
-        let Some(was) = m.versions.get(&was.version) else {
-            return Err(invariant(format!("version {} isn't built", was.version)));
-        };
+        let seen_at = (cut, world);
         for place in &places {
-            let seen_at = (cut, world);
-            if covers_at(m, was, place, day, seen_at) && !covers_at(m, now, place, day, seen_at) {
+            if !covers_at(m, now, place, day, seen_at)
+                && earlier_covers(m, earlier, (place, day), seen_at)?
+            {
                 return Ok(Some((*place).to_owned()));
             }
         }
     }
     Ok(None)
+}
+
+/// Whether the version of some earlier statement of the row with a row, known at `cut`,
+/// covers `place` on `day` there (P53: any earlier statement's, not only the last's).
+/// L §5.19 (S-223), §4.5.
+fn earlier_covers(
+    m: &Reality,
+    earlier: &[&(usize, Day, usize, &Observation)],
+    (place, day): (&str, Day),
+    (cut, world): (Day, World),
+) -> Result<bool, Stop> {
+    for (_, known, _, row) in earlier {
+        if row.removed || *known > cut {
+            continue;
+        }
+        let Some(was) = m.versions.get(&row.version) else {
+            return Err(invariant(format!("version {} isn't built", row.version)));
+        };
+        if covers_at(m, was, place, day, (cut, world)) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 /// The `known` days of `v`'s `moves` lines that `world` sees inside the stretch `(known,
