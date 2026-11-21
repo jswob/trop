@@ -108,7 +108,7 @@ tally 2.2.1 is a patch of `tally 2.2` (`CHANGES.md`, 2.2 → 2.2.1): a text that
 
 | 2.2 text | 2.2.1 form | Class | Reaches | Record |
 |---|---|---|---|---|
-| a `replace` of an observed row in a version that doesn't cover, on the row's day, a place its legs touch that the last statement with a row covers, at some cut or in some world | the correction in a version that `covers` that place there (or a `= none` and a new row) | manual | statements corrected out of their version | S-223, `LOAD-COVERS` |
+| a `replace` of an observed row in a version that doesn't cover, on the row's day, a place its legs touch that the version of an earlier statement of the row covers there, in a world and at a cut where the correction stands | the correction in a version that `covers` that place there (or a `= none` and a new row) | manual | statements corrected out of their version | S-223, `LOAD-COVERS` |
 | a move written `before` or `after` itself | the line dropped | manual | none known | S-221.9, `LOAD-ORDER` |
 | a pin of `opening` or `stated`, `with stated[x] = …` | a reading in a scenario's version | manual | none known | S-231.Q2, `LOAD-INSTANT` |
 | files that agree on `tally <N>` other than 2 | `tally 2`, or the engine of that version | manual | none known | S-224a, `LOAD-VERSION` |
