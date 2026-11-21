@@ -16154,7 +16154,7 @@ version v
   d1 = 2026-03-01
   d2 = 2026-03-02
   fee = 10.00
-,,1:0,463:q_y (x = salary) [pa = lo]: 5.00 DUK
+,,1:0,485:q_y (x = salary) [pa = lo]: 5.00 DUK
   reading: pa = lo
   unfulfilled: salary
   cut 2026-10-25
@@ -16165,6 +16165,7 @@ q_y (x = salary) [pa = hi]: 20.00 DUK
 q_y (x = charge) [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations and plans of 2026-03-02
   reading: pa = lo
   unfulfilled: charge
+  unfulfilled: salary
   cut 2026-10-25
 q_y (x = charge) [pa = hi]: 10.00 DUK
   reading: pa = hi
@@ -16229,14 +16230,18 @@ version v
   d1 = 2026-03-01
   d2 = 2026-03-02
   fee = 10.00
-,,1:0,538:q_w [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations and plans of 2026-03-02
+,,1:0,626:q_w [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations and plans of 2026-03-02
   reading: pa = lo
+  unfulfilled: charge
+  unfulfilled: salary
   law date 2026-10-25, cut 2026-10-25
 q_w [pa = hi]: (from: kasa, to: world, amount: 10.00 DUK, day: 2026-03-02)
   reading: pa = hi
   law date 2026-10-25, cut 2026-10-25
 q_z [pa = lo]: refused: RUN-PLACE kasa is -5.00 DUK after the day's observations and plans of 2026-03-02
   reading: pa = lo
+  unfulfilled: charge
+  unfulfilled: salary
   law date 2026-10-25, cut 2026-10-25
 q_z [pa = hi]: 10.00 DUK
   reading: pa = hi

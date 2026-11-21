@@ -5145,10 +5145,11 @@ version card
   lot_units[g1] = 100 g_unit "(b): lot G1, 100 units"
   sell_day = 2024-06-28 assumed "the card gives no day for the planned sale; any day after lot G1 gives the same refusal" "(b): his plan sells 120"
   sell_units = 120 g_unit "(b): his plan sells 120"
-,,1:0,417:q_a_relief: ?"How many days was Marek abroad in 2024? The field is blank on form F-12." (days_abroad[2024])
+,,1:0,440:q_a_relief: ?"How many days was Marek abroad in 2024? The field is blank on form F-12." (days_abroad[2024])
   law date 2024-12-31, cut 2024-12-31
 q_b_gain: refused: RUN-PLACE fund_g is -20 g_unit after the day's observations and plans of 2024-06-28
   assumed: the card gives no day for the planned sale; any day after lot G1 gives the same refusal (sell_day)
+  unfulfilled: buy[g1]
   unfulfilled: sell
   law date 2024-12-31, cut 2024-12-31
 ,12:U:cur/CUR-01,6:checks,32:run unit/probes/cur/CUR-01.tally,1683:28:unit/probes/cur/CUR-01.tally,1645:model cur01
@@ -9046,19 +9047,23 @@ version lent4_feb
   known 2026-03-02
   anchor lent4
   stated[lent4] = 0.00 at 2026-02-28 end "the twin: a claim stated at 0"
-,,1:0,5342:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
+,,1:0,5726:q_claims (d = 2026-01-31): (50.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end)
   anchor: lent4 2026-01-31 end, stated -5.00 PLN, difference -25.00 PLN
   unfulfilled: back[2026-01]
+  unfulfilled: repay[2026-01]
   law date 2026-03-25, cut 2026-03-25
 q_claims (d = 2026-02-28): (0.00 PLN, 0.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
+  unfulfilled: repay[2026-01]
   law date 2026-03-25, cut 2026-03-25
 q_claims (d = 2026-03-10): (refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, 10.00 PLN, refused: RUN-PLACE repay[2026-01] takes lent3 below 0, 0.00 PLN)
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
+  unfulfilled: back[2026-03]
+  unfulfilled: repay[2026-01]
   unfulfilled: swing_in[2026-03]
   unfulfilled: swing_out[2026-03]
   law date 2026-03-25, cut 2026-03-25
@@ -9066,6 +9071,8 @@ q_claims (d = 2026-03-20): (refused: RUN-PLACE lent is -30.00 PLN after the day'
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
+  unfulfilled: back[2026-03]
+  unfulfilled: repay[2026-01]
   unfulfilled: swing_in[2026-03]
   unfulfilled: swing_out[2026-03]
   law date 2026-03-25, cut 2026-03-25
@@ -9073,6 +9080,8 @@ q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day'
   anchor: lent4 2026-02-28 end, stated 0.00 PLN, difference refused: RUN-PLACE lent4 is -5.00 PLN after its reading at 2026-01-31 end
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
+  unfulfilled: back[2026-03]
+  unfulfilled: repay[2026-01]
   unfulfilled: swing_in[2026-03]
   unfulfilled: swing_out[2026-03]
   law date 2026-03-25, cut 2026-03-25
@@ -9097,6 +9106,7 @@ q_more (d = 2026-02-28): (0.00 PLN, 0 etf_unit, 0.00 PLN, 0.00 PLN, 1 000.00 PLN
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
   unfulfilled: dump[2026-01]
+  unfulfilled: dump[2026-02]
   unfulfilled: into_gone[2026-01]
   unfulfilled: into_gone[2026-02]
   unfulfilled: payoff[2026-01]
@@ -9107,13 +9117,17 @@ q_more (d = 2026-02-28): (0.00 PLN, 0 etf_unit, 0.00 PLN, 0.00 PLN, 1 000.00 PLN
 q_more (d = 2026-03-31): (refused: RUN-PLACE owed is 20.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE fund is -2 etf_unit after the day's observations and plans of 2026-03-10, 0.00 PLN, refused: RUN-LIFESPAN into_gone2[2026-03].cash moves into or out of gone2 outside its lifespan, refused: RUN-PLACE lent is -30.00 PLN after the day's observations and plans of 2026-03-10, refused: RUN-PLACE dump[2026-02] takes fund2 below 0 units)
   unfulfilled: back[2026-01]
   unfulfilled: back[2026-02]
+  unfulfilled: back[2026-03]
   unfulfilled: dump[2026-01]
+  unfulfilled: dump[2026-02]
   unfulfilled: into_gone[2026-01]
   unfulfilled: into_gone[2026-02]
   unfulfilled: payoff[2026-01]
   unfulfilled: payoff[2026-02]
+  unfulfilled: payoff[2026-03]
   unfulfilled: sell[2026-01]
   unfulfilled: sell[2026-02]
+  unfulfilled: sell[2026-03]
   unfulfilled: swing_in[2026-03]
   unfulfilled: swing_out[2026-03]
   law date 2026-03-25, cut 2026-03-25
@@ -10026,7 +10040,7 @@ version openings
   opening[side_jar] = 0 at 2026-01-01 start
   opening[old] = 0 at 2026-01-01 start
   stated[late] = 50.00 at 2026-02-12 end "late's first reading, after t and before the cut"
-,,1:0,2273:q35: 400.00 PLN
+,,1:0,2292:q35: 400.00 PLN
   unfulfilled: d1
   unfulfilled: rent
   left out: pmatch, 1 instances, first 2026-02-20
@@ -10061,6 +10075,7 @@ q_line: (619.00 PLN, ?"late has no balance before 2026-02-12" (late))
   uncertain: g_on_t
   law date 2026-02-15, cut 2026-02-15
 q_n2: (refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan, refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan)
+  unfulfilled: pay
   law date 2026-02-15, cut 2026-02-15
 q_nest: (400.00 PLN, 400.00 PLN)
   unfulfilled: d1
@@ -12788,7 +12803,7 @@ version stmts
   stated[zacct] = 30.00 at 2026-01-31 end "a pad of 30 out of lent: together they take it to -20, refused"
   stated[acct2] = 10.00 at 2026-01-31 end "the twin: a pad of 10 out of lent2"
   stated[zacct2] = 30.00 at 2026-01-31 end "the twin: a pad of 30 out of lent2, which ends at 0"
-,,1:0,2305:q_close (d = 2026-01-30): (0.00 PLN, 0.00 PLN, 20.00 PLN, 0.00 PLN, 0.00 PLN, 40.00 PLN)
+,,1:0,2349:q_close (d = 2026-01-30): (0.00 PLN, 0.00 PLN, 20.00 PLN, 0.00 PLN, 0.00 PLN, 40.00 PLN)
   law date 2026-03-25, cut 2026-03-25
 q_close (d = 2026-01-31): (refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pads:stmts:zacct@2026-01-31 end takes lent below 0, 10.00 PLN, 30.00 PLN, 0.00 PLN)
   pad: acct 2026-01-31 end, pads:stmts:acct@2026-01-31 end of 10.00 PLN
@@ -12805,10 +12820,12 @@ q_close (d = 2026-02-01): (refused: RUN-PLACE pads:stmts:acct@2026-01-31 end, pa
 q_refused (d = 2026-01-19): (0.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-03-25, cut 2026-03-25
 q_refused (d = 2026-01-20): (refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, -20.00 PLN)
+  unfulfilled: repay9
   unfulfilled: spend10
   unfulfilled: spend9
   law date 2026-03-25, cut 2026-03-25
 q_refused (d = 2026-01-21): (refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, refused: RUN-PLACE lent9 is -5.00 PLN after the day's observations and plans of 2026-01-20, -20.00 PLN)
+  unfulfilled: repay9
   unfulfilled: spend10
   unfulfilled: spend9
   law date 2026-03-25, cut 2026-03-25

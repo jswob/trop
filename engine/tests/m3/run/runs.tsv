@@ -175,6 +175,7 @@ t221-g2/rv2-b2-same-register	m3/fixes/t221/rv2	run b2.tally --ask s0 sp sq bp	-	
 t221-g2/rv2-b3-projection-pin	m3/fixes/t221/rv2	run b4.tally --ask b p	-	tally 2.2.1 (#241) the second review's B3, l.2248: a projection lists the pin that moves pw's day outside the span, as the balance does (pinned: w = 2026-03-08)
 t221-g2/rv2-b4-added-place	m3/fixes/t221/rv2	run b5.tally sc/b5.tally --ask qp qd	-	tally 2.2.1 (#241) the second review's B4, L §5.18 diff (231.R2): a place only the scenario declares is added (7.00 PLN), as a def is (1.00 PLN)
 t221-g2/rv2-b5-day-only	m3/fixes/t221/rv2	run w2_day_only.tally	-	tally 2.2.1 (#241) the second review's B5, L l.1717: two rows stated same that disagree only on a day (03-18, 03-19; 950.00 both) print WARN-LEGS
+t221-g3/rv2-b5-one-version	m3/fixes/t221/rv2	run w1_one_version.tally	-	tally 2.2.1 (#241) the second review's B5: two rows of one version stated same that disagree (950.00, 900.00) print WARN-LEGS
 t221-g2/rv2-b5-two-versions	m3/fixes/t221/rv2	run w3_two_versions.tally	-	tally 2.2.1 (#241) the second review's B5, its guard: two versions, 950.00 and 900.00, WARN-LEGS
 t221-g2/rv2-n1-decision	m3/fixes/t221/rv2	run r9.tally --ask d_after d_on d_before	-	tally 2.2.1 (#241) the second review's N1, l.2248: a decision leg a pin puts after the read day lists the pin
 t221-g2/rv2-n1-left-out	m3/fixes/t221/rv2	run r1.tally --ask o_out o_pre fl flm cnt sm	-	tally 2.2.1 (#241) the second review's N1, l.2248: a left-out leg, and flows, count, sum over a span the pin moves the day out of, list the pin
@@ -192,6 +193,9 @@ t221-g2/rv2f-f7-membership	m3/fixes/t221/rv2/fx	run s2_leg_reads.tally --ask cnt
 t221-g2/rv2f-f8-false-when	m3/fixes/t221/rv2/fx	run r2_when_before.tally --ask t_before f_before t_fl f_fl f_flm	-	tally 2.2.1 (#241) the fix review's F8 (P43 S4, E §4.2): a false when of an instance after February isn't listed under February's reads
 t221-g2/rv2f-f8-a-before	m3/fixes/t221/rv2/fx	run r1_when.tally --ask a_before a_after	-	tally 2.2.1 (#241) the fix review's F8, its second text: a_before lists no pin of a when after its day
 t221-g2/rv2f-f10-covered	m3/fixes/t221/rv2/fx	run r3_covered.tally	-	tally 2.2.1 (#241) the fix review's F10 (P43 S5, P35): flows over a covered span lists what the balance lists (pinned: w, open: pw)
+t221-g3/p45-same-day-names	m3/fixes/t221/rv2	run h10.tally --ask f2d	-	tally 2.2.1 (#241) P45 (a): HOLE-SAME on the day names the first side's day (differs on 2026-03-05); G3
 t221-rc/221-8-same-row-line	m3/fixes/t221/g3t2	run t2218.tally	-	tally 2.2.1 (#241) 221.8, L §8.3 l.2270: LOAD-SAME between an observed row and a planned instance names the keys as written, at the line of the same
+t221-g3/233-c-unit-words	m3/fixes/t221/g3t2	run uq.tally	-	tally 2.2.1 (#241) 233.c, L §8.4 (2.1.7's R5): unit of a compound unit or a plain number at run is refused in load's words; a key answers (u1 PLN)
+t221-g3/233-7-none-arith	m3/fixes/t221/g3t2	run n233_7.tally	-	tally 2.2.1 (#241) 233.7, L §8.4: RUN-NONE names the read (fee[2026-02] is none here) in arithmetic, a sum and a comparison; fee[2026-01] answers 10.00 PLN
 t221-rc/208-R2-for-law	m3/fixes/t221/rc208	run pt208_r2.tally	-	tally 2.2.1 (#241) 208.R2, L §5.18 l.1608: a per-tuple law on flows, explain and residuals
 t221-rc/228-10-member-on	m3/fixes/t221/q10	run top.tally --ask m.b m.c	-	tally 2.2.1 (#241) 228.Q10, L §6.1 (R20 cl.2): a member ask as known after the member's on (2026-03-31), before the joint model's (2026-06-30): REQ-CLOCK by the member's on

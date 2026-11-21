@@ -2862,7 +2862,9 @@ version card_2026
   weight[q2] = 3 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[loan] = -5.00 PLN at 2026-01-01 start "the card"
-,,1:0,69:q_loan: refused: RUN-PLACE repay takes loan above 0
+,,1:0,138:q_loan: refused: RUN-PLACE repay takes loan above 0
+  assumed: the card names no holiday (holidays)
+  unfulfilled: repay
   cut 2026-03-01
 ,11:rules/clock,9:REQ-CLOCK,5:rules,26:run base.tally --ask q_due,2395:10:base.tally,2375:model rules
   tally 2

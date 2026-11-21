@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 310] = [
+pub static TEXTS: [(&str, &str); 313] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -750,8 +750,16 @@ pub static TEXTS: [(&str, &str); 310] = [
         include_str!("../../m3/fixes/t221/g3t/s230_5a.tally"),
     ),
     (
+        "m3/fixes/t221/g3t2/n233_7.tally",
+        include_str!("../../m3/fixes/t221/g3t2/n233_7.tally"),
+    ),
+    (
         "m3/fixes/t221/g3t2/t2218.tally",
         include_str!("../../m3/fixes/t221/g3t2/t2218.tally"),
+    ),
+    (
+        "m3/fixes/t221/g3t2/uq.tally",
+        include_str!("../../m3/fixes/t221/g3t2/uq.tally"),
     ),
     (
         "m3/fixes/t221/g4top/m2.tally",
@@ -1132,6 +1140,10 @@ pub static TEXTS: [(&str, &str); 310] = [
     (
         "m3/fixes/t221/rv2/sc/b5.tally",
         include_str!("../../m3/fixes/t221/rv2/sc/b5.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/w1_one_version.tally",
+        include_str!("../../m3/fixes/t221/rv2/w1_one_version.tally"),
     ),
     (
         "m3/fixes/t221/rv2/w2_day_only.tally",
