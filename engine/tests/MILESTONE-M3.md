@@ -331,3 +331,8 @@ The pin moved by one commit, d7cc0526 (1 668 tests): L §5.19's phrase, and refc
 
 - **Vectors, none whose text holds a window** (`m3/fixes/t221/rv5`): the fix review's B-1 (`a.q: 50.00 PLN`, the warning names `a.put[a, 2026-03]`), B-2 (the base's own `LOAD-VERSION replace rule d.base in w names version v (b.tally:22)` beside `s3.tally` on tally 3), S-223's two corners (`cc_mid_moved`: `LOAD-COVERS … fix2 doesn't cover konto on 2026-02-10`; `cc_mid_drop`: loads, `q: 1 000.00 PLN`). R:all 1 668.
 - **Green now:** `basic/version-three`, `t221-g4/rv4-version-line` (the builder's closing turn names the `tally <N>` statement's line). **Still red, logged, the builder's:** `fixes/g4/nb3_at`, `s6/hole_same_order_class`. **Held:** `fixes/t22/fault_paths` (paths, M7).
+
+## tally 2.2.1, chunk D4: the mutation run's survivors (#241, 2026-11-21)
+
+Run 44864149229 on b994b46d left 77 new survivors (`tmp/spec-2.2.1/t-survivors.md` sorts them). Two vectors, none whose text holds a window (`m3/fixes/t221/rv6`): `t221-g3/mut-same-chain-line` (G3's review `rel/q5`: a mover joined to the absent decision only through a chain names `same pay2 = dec`; `book/same.rs` `first_line`) and `t221-g2/mut-left-out-before-from` (a scenario's decision dated before its `from`, `left out: top`; `walk/agenda.rs` `note_left_out_at`). 38 of the 77 are window code, for the windows round.
+- Later in D4: `t221-g3/mut-same-mover-right` (`same pay2 = pay` before `same pay = dec`: `first_line`'s `*a == id`) and `t221-g2/mut-uncounted-before-span` (`lift` dated before the span lists `pinned: late_day`: `uncounted_in`'s `d < first`). Proved on this tree: `note_left_out_at`, the ten mutants of `first_line` and seven of eight of `uncounted_in` caught.

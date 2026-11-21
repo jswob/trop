@@ -6984,4 +6984,93 @@ q_0402: 940.00 PLN
 q_0407: 1 000.00 PLN
   cut 2026-04-07
 warning: WARN-UNREAD place sav is read by nothing
+,27:t221-g3/mut-same-chain-line,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run q5.tally,36:q5.tally	m3/fixes/t221/rv6/q5.tally
+,1:0,389:e: refused: RUN-RECORD same pay2 = dec: dec doesn't exist
+  cut 2026-04-10
+f: refused: RUN-RECORD same pay2 = dec: dec doesn't exist
+  cut 2026-04-10
+fp: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+fp2: 100.00 PLN
+  unfulfilled: pay2
+  cut 2026-04-10
+k: refused: RUN-RECORD same pay2 = dec: dec doesn't exist
+  cut 2026-04-10
+l (t = pay): 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+,32:t221-g2/mut-left-out-before-from,7:t221-g2,3:run,33:engine/tests/m3/fixes/t221/rv6/sd,46:run base.tally early.tally --ask q_e q_e2 q_ef,88:base.tally	m3/fixes/t221/rv6/sd/base.tally
+early.tally	m3/fixes/t221/rv6/sd/early.tally
+,1:0,283:q_e: 12.00 PLN
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
+q_e2: 10.00 PLN
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
+q_ef: 2.00 PLN
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
+,28:t221-g3/mut-same-mover-right,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run q7.tally,36:q7.tally	m3/fixes/t221/rv6/q7.tally
+,1:0,386:e: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+f: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+fp: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+fp2: 100.00 PLN
+  unfulfilled: pay2
+  cut 2026-04-10
+k: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+l (t = pay): 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+,33:t221-g2/mut-uncounted-before-span,7:t221-g2,3:run,33:engine/tests/m3/fixes/t221/rv6/sd,47:run base.tally early.tally --ask q_l1 q_l2 q_l3,88:base.tally	m3/fixes/t221/rv6/sd/base.tally
+early.tally	m3/fixes/t221/rv6/sd/early.tally
+,1:0,332:q_l1: 0.00 PLN
+  pinned: late_day = 2026-01-03
+  world: early
+  cut 2025-12-31
+q_l2: 10.00 PLN
+  pinned: late_day = 2026-01-03
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
+q_l3: 2.00 PLN
+  pinned: late_day = 2026-01-03
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
+,25:t221-g2/mut-same-end-legs,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run se.tally,36:se.tally	m3/fixes/t221/rv6/se.tally
+,1:0,339:h_bal: ?"h1 and h2 are one, but the leg at wal_h differs on 2026-03-05: 100.00 PLN (h1) and 120.00 PLN (h2)" (h1, h2)
+  unfulfilled: h1
+  unfulfilled: h2
+  cut 2026-06-10
+j_bal: ?"j1 and j2 are one, but leg cash differs on 2026-03-07: 50.00 PLN (j1) and 60.00 PLN (j2)" (j1, j2) ?"which day is j1?" (dj)
+  unfulfilled: j2
+  cut 2026-06-10
+,20:t221-g2/mut-zero-leg,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run z0.tally,36:z0.tally	m3/fixes/t221/rv6/z0.tally
+,1:0,180:k_fee: 0.00 PLN
+  cut 2026-01-01
+k_wal: ?"how much is zk?" (a_h)
+  cut 2026-01-01
+l_fee: ?"does zl happen?" (w_h)
+  cut 2026-01-01
+l_wal: ?"does zl happen?" (w_h)
+  cut 2026-01-01
+,33:t221-g2/mut-same-member-third-row,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run sm.tally,36:sm.tally	m3/fixes/t221/rv6/sm.tally
+,1:0,652:c_both: 2
+  cut 2026-06-10
+c_one: ?"bank[r1] and bank[r2] are one, but the day of cash differs on 2026-03-05: 2026-03-05 (bank[r1]) and 2026-03-07 (bank[r2])" (bank[r1], bank[r2])
+  cut 2026-06-10
+f_one: ?"bank[r1] and bank[r2] are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (bank[r1]) and 100.00 PLN (bank[r2])" (bank[r1], bank[r2])
+  cut 2026-06-10
+s_one: ?"bank[r1] and bank[r2] are one, but the day of cash differs on 2026-03-05: 2026-03-05 (bank[r1]) and 2026-03-07 (bank[r2])" (bank[r1], bank[r2])
+  cut 2026-06-10
+warning: WARN-LEGS the two observations of bank[r1] disagree: bank[r1] (2026-03-05) and bank[r2] (2026-03-07)
 ,

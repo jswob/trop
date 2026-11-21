@@ -1,0 +1,63 @@
+model se
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2.1 (#241), the mutation run's survivors: what a place takes from movements stated same (L §6.1, §8.1; P43 on #241): (H) legs of different names and amounts; (J) one side dated by a stated hole, different amounts"
+
+source s "s"
+unit PLN: currency minor 0.01
+kind paid: event certain
+  leg pay: PLN
+
+place wal_h: accounts PLN lives 2025-01-01..
+place wal_j: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+input dh: date
+input dj: date
+input d7: date
+input a1: money PLN
+input a2: money PLN
+input b1: money PLN
+input c2: money PLN
+
+move h1: transfers
+  on dh
+  leg cash from world to wal_h amount a1
+
+move h2: paid
+  on dh
+  leg pay from world to wal_h amount a2
+
+move j1: transfers
+  on dj
+  leg cash from world to wal_j amount b1
+
+move j2: transfers
+  on d7
+  leg cash from world to wal_j amount c2
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wal_h] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wal_j] = 0.00 PLN at 2026-01-01 start "s"
+  dh = 2026-03-05 "s"
+  d7 = 2026-03-07 "s"
+  dj = ?"which day is j1?" "s"
+  a1 = 100.00 PLN "s"
+  a2 = 120.00 PLN "s"
+  b1 = 50.00 PLN "s"
+  c2 = 60.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same h1 = h2
+  same j1 = j2
+
+ask h_bal: bal(wal_h, 2026-03-31)
+ask j_bal: bal(wal_j, 2026-03-31)

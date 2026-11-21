@@ -1,0 +1,34 @@
+model sm
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.2.1 (#241), the mutation run's survivors: a span that holds one side's day only of two observed rows stated same (S2, P43 on #241): the membership is the days' hole, whatever a third row before them in the list says"
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-01-01 start "s"
+  bank[r0] = (on: 2026-03-02, kind: transfers, leg cash from world to konto amount 5.00 PLN) "r0"
+  bank[r1] = (on: 2026-03-05, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "r1"
+  bank[r2] = (on: 2026-03-07, kind: transfers, leg cash from konto to sav amount 100.00 PLN) "r2"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same bank[r1] = bank[r2]
+
+ask c_one: count(x in transfers over 2026-03-01 .. 2026-03-06)
+ask c_both: count(x in transfers over 2026-03-01 .. 2026-03-31)
+ask s_one: sum(x.cash.amount for x in transfers over 2026-03-01 .. 2026-03-06)
+ask f_one: flows(sav, 2026-03-01 .. 2026-03-06)
