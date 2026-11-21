@@ -212,5 +212,6 @@ t221-g4/rv4-n1-after-none	m3/fixes/t221/rv4/b2	run chain_none_row_nocov.tally	-	
 t221-g4/rv4-b3-reprint-bytes	m3/fixes/t221/rv4/b3	reprint top_bytes.tally --pin=bytes	-	tally 2.2.1 (#241) G4's review B3 (P50), O §2.2: reprint reads --pin=bytes as run does: a member pinned by its bytes reprints (the last turn's reprint-pin-bytes)
 t221-g4/rv4-b3-reprint-canon	m3/fixes/t221/rv4/b3	reprint top_canon.tally --pin=bytes	-	tally 2.2.1 (#241) G4's review B3 (P50), its twin: a member pinned by its canonical text is off its pin under --pin=bytes (LOAD-PIN)
 t221-g4/p49-ask-order	m3/fixes/t221/rv4/ord	run base.tally m z a	-	tally 2.2.1 (#241) P49, O §2.1: asks of one id from three scenario files print in full-path order, then line (a/cc, m/aa, z/bb)
+t221-g4/rv4-version-line	m3/fixes/t221/rv4/ver	run b3.tally	-	tally 2.2.1 (#241) G4's review N3 (P50), L §8.3: LOAD-VERSION's `tally <N>` form names its file and the tally statement's line
 t221-g4/rv4-version-disagree	m3/fixes/t221/rv4/ver	run b3.tally s2.tally	-	tally 2.2.1 (#241) G4's review Q5 (P50): a base on tally 3 with a scenario file on 2 prints the disagreement's form
 t221-g4/rv4-version-member	m3/fixes/t221/rv4/verj	run t3_m2.tally	-	tally 2.2.1 (#241) G4's review Q5 (P50): a joint model on tally 3 with a member on 2 prints the member's form

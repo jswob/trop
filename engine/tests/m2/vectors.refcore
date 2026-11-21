@@ -112422,7 +112422,7 @@ version rd
   known 2026-04-03
   anchor konto
   stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
-,,1:0,610:q_konto: 70.00 PLN
+,,1:0,794:q_konto: 70.00 PLN
   anchor: konto 2026-03-10 end, stated 70.00 PLN, difference refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
   cut 2026-06-30
 q_last: 70.00 PLN
@@ -112433,6 +112433,9 @@ q_obs: refused: RUN-NONE observed(sw[2026-03]) is none here: a field read of it
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
   cut 2026-06-30
 q_sw: 0.00 PLN
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
+  held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
+  held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30
 ,16:fixes/g4/nb3_atT,13:fixes-records,17:run nb3_atT.tally,1375:13:nb3_atT.tally,1352:model nb3
   tally 2
