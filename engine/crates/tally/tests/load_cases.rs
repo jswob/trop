@@ -3562,7 +3562,7 @@ version v1
                     "  same bank[r1] = card_bank[c1]",
                     "  same rent[a1] = card_bank[c1]",
                 )],
-                "LOAD-SAME same card_bank[c1] = rent[a1]: an observed row and a planned instance of one model; state fulfils on the row (a.tally:57)",
+                "LOAD-SAME same rent[a1] = card_bank[c1]: an observed row and a planned instance of one model; state fulfils on the row (a.tally:57)",
             ),
             // obs-move: the other order
             (
@@ -3774,7 +3774,7 @@ version v1
         assert_eq!(
             first(&refused).as_deref(),
             Some(
-                "scenario sc: refused: LOAD-SAME same bank[r2] = rent[a2]: an observed row and a planned instance of one model; state fulfils on the row (sc.tally:9)"
+                "scenario sc: refused: LOAD-SAME same rent[a2] = bank[r2]: an observed row and a planned instance of one model; state fulfils on the row (sc.tally:9)"
             ),
             "a scenario's version alike"
         );
