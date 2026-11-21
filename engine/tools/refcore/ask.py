@@ -991,7 +991,10 @@ class Asker:
                     eng.rtext(ot, unit), eng.rtext(dt, unit)))
                 for ln in ls:
                     out.append(ind + '  ' + ln.text)
-        return Ledgers('%s %s%s' % (p.name, _txt(sp), (' by %s' % by) if by else ''), out, vals)
+        # the head's span with each bound variable printed as its value (P24; P48), never the variable
+        from .evaluate import env_txt
+        return Ledgers('%s %s%s' % (p.name, env_txt(sp, env) if env else _txt(sp), (' by %s' % by) if by else ''),
+                       out, vals)
 
     def evaluate(self, eng, a, env, ctx):
         coll = Coll()
@@ -1492,17 +1495,7 @@ class Asker:
         pinned = set(p.axis for p in a.pins if getattr(p, 'pkind', None) == 'axis')
         octx = self._outside_ctx.but(axes=tuple((ax, o) for ax, o in ctx.axes if ax not in pinned))
 
-        # the pinned axes the line's cone reaches, fanned out in the order of their ids, each over its options as
-        # declared: the tuples whatever one derivation stops before reading (L §5.18; tally 2.2.1, 231.R1)
-        cone = list(getattr(a, '_pinned_axes', ()) or ())
-
         def outside_of(oc, fixed):
-            nxt = next((ax for ax in cone if ax not in dict(fixed)), None)
-            if nxt is not None:
-                nodes = []
-                for o in self.m.axes[nxt].options:
-                    nodes += outside_of(oc.but(axes=tuple(sorted(oc.axes + ((nxt, o),)))), fixed + ((nxt, o),))
-                return nodes
             # outside the pins, an axis the ask pinned is read as every other line reads an axis: the derivation fans
             # out over the options of each one it reads, in declaration order (L §5.5 Fan-out; tally 2.1.7 R8, T's
             # SR-10); 2.1.7's first refcore stopped at its guard
@@ -1532,12 +1525,15 @@ class Asker:
                 for o in self.m.axes[ax].options:
                     nodes += outside_of(oc.but(axes=tuple(sorted(oc.axes + ((ax, o),)))), fixed + ((ax, o),))
                 return nodes
+            # the axes the value reads (L §5.18 fan-out), in the order of their ids (tally 2.2.1, 231.R1; P48 F-E)
+            fixed = tuple(sorted(fixed))
             tag = (' [%s]' % ', '.join('%s = %s' % f for f in fixed)) if fixed else ''
             node = TraceNode('group', 'outside the pins%s: %s' % (tag, _tfmt(vo)))
             node.carry_v = vo
             node.children = oroot.children
+            node.fixed = tuple((ax, self.m.axes[ax].options.index(o)) for ax, o in fixed)
             return [node]
-        outs = outside_of(octx, ())
+        outs = sorted(outside_of(octx, ()), key=lambda n: getattr(n, 'fixed', ()))
         out = TraceNode('root', _txt(a.ref))
         pn = TraceNode('group', 'the pins, evaluated outside them')
         for line in eng.pin_lines(octx, ctx):

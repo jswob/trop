@@ -1,0 +1,29 @@
+# tally 2.2.1, 221.8 (L §8.3): LOAD-SAME for a header's same line is at the line of the same (review g3
+# hdr/h4). Before W12: line 1.
+=== h4.tally
+model h4
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  same one = one
+
+  same fee[a2] = fee[a1]
+  note "n"
+source s "s"
+unit PLN: currency minor 0.01
+kind flat
+input fee[f in flat]: money PLN
+input one: num
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  flat + [a1] lives 2026-01-01..
+  flat + [a2] lives 2026-01-01..
+  fee[a1] = 12.00 PLN "s"
+  fee[a2] = 12.00 PLN "s"
+  one = 1 "s"
+ask q: fee[a1]
+=== expect
+refused: LOAD-SAME same one = one: a row of an input and a row of an input (h4.tally:6)

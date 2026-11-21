@@ -1675,7 +1675,9 @@ class Loader:
         m.same_owners = []      # the member whose version states each same_moves line ('' the joint's own)
         m.same_versions = []    # the version that states each line (None: the header), read by its cut (R12)
         m.same_obs = []         # whether each line joins two observed rows, which no cut of its own reads (S-5)
-        pairs = [(l, r, m.header.loc, None) for l, r in m.header.sames] + [(it.l, it.r, it.loc, v) for v, it in m.sames]
+        # a header's same at its own line (221.8)
+        pairs = [(l, r, getattr(l, 'loc', None) or m.header.loc, None) for l, r in m.header.sames] + \
+            [(it.l, it.r, it.loc, v) for v, it in m.sames]
         for l, r, loc, v in pairs:
             a = self.sref(l, loc)
             b = self.sref(r, loc)
@@ -1691,9 +1693,9 @@ class Loader:
                 # L §6.1 Identities are written (tally 2.1.8, the user's cut): inside one model a row realises an
                 # instance by its fulfils (§5.19), so a version's same between the two is refused; a joint model's
                 # line between two members' movements, or a member's and its own, stands
-                row, inst = (l, r) if a[2] == 'row' else (r, l)
+                # the line's sides as written (2.1.7's R9; tally 2.2.1, 230.Q-5a)
                 raise LoadError('LOAD-SAME', 'same %s = %s: an observed row and a planned instance of one model; '
-                                             'state fulfils on the row' % (shown(_txt_node(row)), shown(_txt_node(inst))),
+                                             'state fulfils on the row' % (shown(_txt_node(l)), shown(_txt_node(r))),
                                 loc)
             if a[0] in ('other', 'row') or b[0] in ('other', 'row') or a[0] != b[0]:
                 wa = what.get(a[0]) or ('a %s' % a[1])

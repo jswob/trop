@@ -1,0 +1,30 @@
+# tally 2.2.1, 230.Q-5a (2.1.7's R9; P48 N1): LOAD-SAME names a same line's sides as written
+# (review g3 rel/ls1). Before W12: the row first.
+=== ls1.tally
+model ls1
+  tally 2
+  on 2026-04-10
+  start 2026-03-01
+  end 2026-04-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input a1: money PLN
+input d1: date
+move pay: transfers
+  on d1
+  leg cash from world to konto amount a1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a1 = 100.00 PLN "s"
+  d1 = 2026-03-10 "s"
+  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 100.00 PLN) "a"
+  same pay = bank[r1]
+ask k: bal(konto, 2026-03-31)
+=== expect
+refused: LOAD-SAME same pay = bank[r1]: an observed row and a planned instance of one model; state fulfils on the row (ls1.tally:24)

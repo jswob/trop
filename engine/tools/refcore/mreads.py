@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
-from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay, imprecise_hole
+from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay, imprecise_hole, env_txt
 from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey, day_text)
@@ -283,7 +283,7 @@ def m_mv_field(self, n, env, ctx):
         return v
     if v is NONE:
         # the read that gave none, as an observed row's id (L §8.4; tally 2.1.8 #169-l)
-        raise refuse('RUN-NONE', '%s is none here: a field read of it' % _ntxt(n.obj))
+        raise refuse('RUN-NONE', '%s is none here: a field read of it' % env_txt(n.obj, env))
     if not isinstance(v, Mv):
         raise refuse('LOAD-FIELD', '%s is not a field of %s' % (n.name, fmt(v)))
     src = self.mv_record(v, ctx)
@@ -437,7 +437,8 @@ def m_same_in_span(self, x, sp, ctx):
     others = self.same_others(x, ctx)
     if not others:
         return None
-    for y in others:
+    # every side's day reads, its own among them (L §8.2; P48: h10 f2d lists pinned: d2)
+    for y in [x] + others:
         self.same_fact_reads(y, None, 'day')
     days = [x.day] + [y.day for y in others]
     if any(isinstance(d, Hole) for d in days):
@@ -952,7 +953,7 @@ def m_place_arg(self, node, env, ctx):
     if isinstance(p, Hole):
         return p
     if p is NONE:
-        raise refuse('RUN-NONE', '%s is none here: a place' % fmt_node(node))
+        raise refuse('RUN-NONE', '%s is none here: a place' % env_txt(node, env))
     if not isinstance(p, Thing) or p.name not in self.m.things or not self.m.is_place_thing(self.m.things[p.name]):
         raise refuse('RUN-DOMAIN', '%s is not a place' % fmt(p))
     return p
@@ -1917,6 +1918,11 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             continue
         st = i.status if mi.decision else self.status(i, ctx)
         if st in ('none', 'uncertain'):
+            if st == 'none' and isinstance(i.day, datetime.date) and sp.contains(i.day) and \
+                    getattr(i, 'coll', None) is not None and self.cur is not None:
+                # an instance in the span whose when is false is read to be left out: its reads are the line's, as a
+                # binding's (L §8.2; P48, r1_when f_mv: pinned: on_)
+                self.cur.merge(i.coll)
             continue
         d = i.day
         if d is None and i.err is not None:
@@ -2415,11 +2421,16 @@ def m_c_observed(self, n, env, ctx):
         tot = None
         frm = to = None
         day = None
-        hole = None
+        hole = dhole = None
         for o, others in once:
-            h = self.same_rows_hole(o, ld.name, ctx)
+            # per fact (tally 2.2.1 P36; P48, the tests session's F-C): the amount's hole where the rows' amounts
+            # differ, the day's where their days do; a fact they agree on is its value
+            h = self.same_rows_hole(o, ld.name, ctx, 'amount')
             if hole is None:
                 hole = h
+            hd = self.same_rows_hole(o, ld.name, ctx, 'day')
+            if dhole is None:
+                dhole = hd
             for lg in o.legs:
                 if lg.name != ld.name:
                     continue
@@ -2438,6 +2449,8 @@ def m_c_observed(self, n, env, ctx):
             raise refuse('RUN-RECORD', 'the observations fulfilling %s lack its leg %s' % (v.id, ld.name))
         if hole is not None:
             tot = hole
+        if dhole is not None:
+            day = dhole
         legs.append((ld.name, Rec([('from', frm), ('to', to), ('amount', tot), ('day', day)])))
     day = max(o.day for o in obs)
     return Rec(legs + [('day', day)])
@@ -2450,7 +2463,7 @@ def m_c_unit(self, n, env, ctx):
         if isinstance(v, Hole):
             return v
         if v is NONE:
-            raise refuse('RUN-NONE', '%s is none here: a quantity' % fmt_node(n.args[0]))
+            raise refuse('RUN-NONE', '%s is none here: a quantity' % env_txt(n.args[0], env))
         us = list(getattr(v, 'u', None) or ())
         # in load's words (L §8.4 R-load, 2.1.7's R5; tally 2.2.1, 233.c)
         if not isinstance(v, Num) or len(us) != 1 or us[0][1] != 1:
