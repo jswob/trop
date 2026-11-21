@@ -357,6 +357,12 @@ impl Checker {
         let (binds, declared, node) = match kind {
             NameKind::Input => {
                 let input = m.inputs.at(m.names.input_id(name)?)?;
+                if input.builtin && (name == "opening" || name == "stated") {
+                    // A pin has no instant, and a balance reading anchors the walk at its
+                    // own (L §8.3, S-231.Q2): a what-if balance is a scenario's row.
+                    let message = format!("a pin of balance reading {name} states no instant");
+                    return Err(sc.place(refused(Load::Instant, message)));
+                }
                 (&input.binds, input.ty.clone(), NodeKind::Input)
             }
             NameKind::Def => {
