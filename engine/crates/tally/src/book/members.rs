@@ -27,8 +27,7 @@ use crate::num::Num;
 use crate::syntax::{Bind, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegOut, LegVal, Status, Term, WalkAt,
-    invariant, qty_value,
+    Amount, At, Dated, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -97,7 +96,6 @@ impl Moving {
     fn sort_key(&self) -> Result<(Day, Term), Stop> {
         let day = match self.day() {
             Some(Dated::Day(d)) => d,
-            Some(Dated::Window(w)) => w.lo,
             Some(Dated::Hole(_)) | None => Day::LAST,
         };
         let order = match self {
@@ -291,38 +289,10 @@ impl Engine {
                     self.no_member(&x);
                     continue;
                 }
-                // a window inside the span is a member, one outside it isn't, one across its
-                // edge may be (refcore's `span_members`; L §4.4)
-                Some(Dated::Window(w)) => match window_member(&w, sp) {
-                    Some(true) => None,
-                    Some(false) => {
-                        self.no_member(&x);
-                        continue;
-                    }
-                    None => {
-                        let text = format!(
-                            "date within {} not precise enough for a binding over {}",
-                            w.question, dom.1
-                        );
-                        Some(Hole::asked(&text, x.id()).carrying(&w.value.carry))
-                    }
-                },
             };
             if let Moving::Plan(i) = &x {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
-                }
-                if matches!(i.depends, Some(Depends::Covered(_)))
-                    && let Some(Dated::Window(w)) = &i.day
-                {
-                    // modelled past on some of its window's days, booked on the rest: whether
-                    // it is a member is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
-                    let text = format!(
-                        "date within {} not precise enough for a binding over {}",
-                        w.question, dom.1
-                    );
-                    let h = Hole::asked(&text, &i.id).carrying(&w.value.carry);
-                    st = spread(&[st.as_ref(), Some(&h)]);
                 }
                 if let Some(e) = &i.err {
                     return Err(Stop::Refused(e.clone()));
@@ -528,7 +498,7 @@ impl Engine {
             let pads = self.walk_pads(m, ctx)?;
             out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
-        out.extend(self.decided_members(m, (&decided, kind), ctx)?);
+        out.extend(self.decided_members(m, &decided, ctx)?);
         let groups = self.same_groups(m, ctx.cut)?;
         let sides = self.same_sides(m, ctx.cut)?;
         in_order(once_by_same((&groups, &sides), out))
@@ -536,16 +506,13 @@ impl Engine {
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
     /// as the walk ran them: inside a decision, its walk's and those it continues', the ones
-    /// before its point; else the main walk's of the read's timeline, and an instance dated by
-    /// a window no walk ran, read per day of it ([`Engine::window_met`]); inside a walk that
-    /// one's hole names the binding by `kind`, what it ranges over (the lead's point 5(b) on
-    /// #241). One that doesn't exist or is modelled past is no member, nor is an uncertain
-    /// one without `with uncertain` (refcore's `movements_of`, its decisions, and its
-    /// membership's `imprecise_hole`). L §5.14.1 Running reads, §5.19 Bindings, E §4.1 step 2.
+    /// before its point; else the main walk's of the read's timeline. One that doesn't exist
+    /// or is modelled past is no member, nor is an uncertain one without `with uncertain`
+    /// (refcore's `movements_of`, its decisions). L §5.14.1 Running reads, §5.19 Bindings.
     fn decided_members(
         &mut self,
         m: &Reality,
-        (decided, kind): (&[&MoveInfo], &str),
+        decided: &[&MoveInfo],
         ctx: Ctx,
     ) -> Result<Vec<Moving>, Stop> {
         if decided.is_empty() {
@@ -557,11 +524,8 @@ impl Engine {
         };
         let mut out = Vec::new();
         for mv in decided {
-            // read per day outside a walk, the line names the move (refcore's `WinDay`)
-            let over = if limit.is_some() { kind } else { &mv.id };
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(self.unrun_window(m, over, inst)?);
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -582,29 +546,6 @@ impl Engine {
             }
         }
         Ok(out)
-    }
-
-    /// A decision's instance `inst` that no walk ran: dated by a window, a member whose day
-    /// is the window's hole, or the line read per day of the window ([`Engine::window_met`]),
-    /// inside a decision's walk too, where it is the hole, never left out; else none. What
-    /// met it is `a binding over <over>` (E §4.1 step 2; tally 2.2.1 N3, P41 F5; refcore's
-    /// `movements_of`, its `WinDay`).
-    fn unrun_window(
-        &mut self,
-        m: &Reality,
-        over: &str,
-        inst: &Inst,
-    ) -> Result<Option<Moving>, Stop> {
-        let Some(Dated::Window(w)) = &inst.day else {
-            return Ok(None);
-        };
-        if inst.exists == Exists::No {
-            return Ok(None);
-        }
-        let what = format!("a binding over {over}");
-        let mut held = inst.clone();
-        held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
-        Ok(Some(Moving::Plan(held)))
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
@@ -656,9 +597,7 @@ impl Engine {
     /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
     /// decision, in its walk or one it continues, `RUN-ORDER` where it hasn't run yet; else in
     /// the main walk of the read's timeline, or the instance as planned where that walk didn't
-    /// run it, one dated by a window as a binding's member is ([`Engine::unrun_window`])
-    /// (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2, E §4.1
-    /// step 2.
+    /// run it (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2.
     fn instance_by_id(
         &mut self,
         m: &Reality,
@@ -683,17 +622,11 @@ impl Engine {
         };
         match self.chain_run(walk, id)? {
             Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),
-            // dated by a window no walk ran: its fields are the window's, read per day or its
-            // hole, as its membership is, inside a decision's walk too (E §4.1 step 2; tally
-            // 2.2.1 F4, F5, P41)
-            None => match self.unrun_window(m, &mv.id, &inst)? {
-                Some(held) => Ok(Some(held)),
-                None if running => Err(Stop::Refused(Refusal::new(
-                    Code::Run(Run::Order),
-                    format!("decision {id} is read before it has run"),
-                ))),
-                None => Ok(Some(Moving::Plan(inst))),
-            },
+            None if running => Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Order),
+                format!("decision {id} is read before it has run"),
+            ))),
+            None => Ok(Some(Moving::Plan(inst))),
         }
     }
 
@@ -884,8 +817,8 @@ impl Engine {
 
     /// The `HOLE-SAME` of side `row` (an id, a day where it is one, legs) on fact `fact`, where
     /// the other members of its `same` group disagree with it, each side's reads of the fact
-    /// taken; the hole of a window the comparison doesn't decide (refcore's `same_rows_hole`;
-    /// tally 2.2.1's 219.1, B2, N4, Q1, Q3). L §6.1, §8.1, §8.2, §4.4.
+    /// taken; a side's hole day's hole (refcore's `same_rows_hole`; tally 2.2.1's 219.1, B2,
+    /// N4, Q1, Q3). L §6.1, §8.1, §8.2.
     ///
     /// # Errors
     ///
@@ -935,8 +868,7 @@ impl Engine {
 
     /// Whether span `sp` holds side `row` of a movement stated `same`, `day` its own day: none
     /// where every side's day is in the span or none is; else their day's hole, `HOLE-SAME` or
-    /// a window's the comparison doesn't decide, never one side's day (L §6.1, §5.19 Bindings;
-    /// N4, P36 on #241).
+    /// a side's hole day's, never one side's day (L §6.1, §5.19 Bindings; N4, P36 on #241).
     ///
     /// # Errors
     ///
@@ -1033,13 +965,8 @@ impl Engine {
             // the walk is a cause an explanation prints in its own form only where it refused
             // the leg; else the leg is its instance's, traced as the instance was (E §10)
             let back = self.trace_walked();
-            match self.leg_refused(m, (src.id(), name), day, ctx)? {
-                Some(LegOut::Refused(err)) => return Err(Stop::Refused(err)),
-                Some(LegOut::Hole(h)) => {
-                    self.trace_walked_back(back);
-                    return Ok(Value::Hole(h));
-                }
-                None => {}
+            if let Some(err) = self.leg_refused(m, (src.id(), name), day, ctx)? {
+                return Err(Stop::Refused(err));
             }
             self.trace_walked_back(back);
             let record = leg_record(m, lg)?;
@@ -1208,7 +1135,7 @@ fn body_hole(src: &Moving) -> Option<Hole> {
     }
     match &i.day {
         Some(Dated::Hole(h)) => Some(h.clone()),
-        Some(Dated::Day(_) | Dated::Window(_)) | None => None,
+        Some(Dated::Day(_)) | None => None,
     }
 }
 
@@ -1280,7 +1207,7 @@ fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, St
 pub(crate) fn inst_ref(i: &Inst) -> MvRef {
     MvRef {
         id: i.id.clone(),
-        day: i.day.as_ref().and_then(Dated::lo),
+        day: i.day.as_ref().and_then(Dated::day),
         src: MvSrc::Inst(i.move_id.clone(), i.keys.clone()),
     }
 }
@@ -1293,36 +1220,23 @@ pub(super) fn row_key(o: &Obs) -> &str {
         .unwrap_or(&o.id)
 }
 
-/// Whether span `sp` holds a movement on `day`: a day in it or not, a window as
-/// [`window_member`] takes it; none for a hole day or none. L §4.4, §5.19 Bindings.
+/// Whether span `sp` holds a movement on `day`: a day in it or not; none for a hole day or
+/// none. L §5.19 Bindings.
 fn day_in(day: Option<&Dated>, sp: &Span) -> Option<bool> {
     match day? {
         Dated::Day(d) => Some(sp.contains(*d)),
-        Dated::Window(w) => window_member(w, sp),
         Dated::Hole(_) => None,
     }
 }
 
-/// Whether a movement dated by window `w` is a member of a binding over span `sp`: true
-/// inside it, false wholly outside it, none across its edge (refcore's `span_members`).
-/// L §4.4, §5.19 Bindings.
-fn window_member(w: &DayWindow, sp: &Span) -> Option<bool> {
-    if sp.contains(w.lo) && sp.contains(w.hi) {
-        return Some(true);
-    }
-    let after = sp.end().is_some_and(|end| w.lo >= end);
-    let before = sp.start().is_some_and(|start| w.hi < start);
-    (after || before).then_some(false)
-}
-
 /// Whether a binding over span `sp` rests on movement `x`, so meets its S1 refusal: one dated
-/// on a day outside the span doesn't; one whose day is a window, a hole or refused may be a
+/// on a day outside the span doesn't; one whose day is a hole or refused may be a
 /// member, so does (refcore's `span_members`, its `s1_refusal` test). L §5.19 One movement on
 /// two statements, Bindings.
 fn rests_in(x: &Moving, sp: &Span) -> bool {
     match x.day() {
         Some(Dated::Day(d)) => sp.contains(d),
-        Some(Dated::Window(_) | Dated::Hole(_)) | None => true,
+        Some(Dated::Hole(_)) | None => true,
     }
 }
 
@@ -1370,7 +1284,7 @@ fn unfulfilled(m: &Reality, i: &Inst, cut: Day) -> bool {
         return false;
     }
     if m.moves.get(&i.move_id).is_some_and(|mv| mv.decision) {
-        return i.day.as_ref().and_then(Dated::lo).is_some_and(|d| d < cut);
+        return i.day.as_ref().and_then(Dated::day).is_some_and(|d| d < cut);
     }
     i.status == Status::Past
 }

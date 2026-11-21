@@ -31,7 +31,7 @@ use crate::model::{KeyVal, MvRef, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, Dated, DayWindow, End, Inst, LegVal, invariant, qty_value};
+use crate::walk::{Amount, Dated, End, Inst, LegVal, invariant, qty_value};
 
 /// Each movement stated `same`, by id, with its group's members in the order the same lines
 /// first name them (L §6.1).
@@ -342,117 +342,34 @@ pub(crate) enum Fact {
     Leg(String),
 }
 
-/// How the days of the sides of a movement stated `same` compare, each side stating the days
-/// its day can take: a day, one; a window or a `one_of`, its days, under its name; a hole,
-/// unknown (L §4.4, "a comparison is decided when it holds for every day its operands can
-/// take"; S1, P43 on #241).
+/// How the days of the sides of a movement stated `same` compare (L §6.1; S1, P43 on #241).
 pub(crate) enum DayCmp {
     /// A side's day is a hole: the read carries its question, every such side's.
     Hole(Hole),
-    /// No day is common to every side: each side's day as it prints (`HOLE-SAME`'s figures).
+    /// The sides' days differ: each side's day as it prints (`HOLE-SAME`'s figures).
     Differ(Vec<String>),
-    /// Every side one day and all equal, or one named window on every side.
+    /// Every side the same day.
     Agree,
-    /// Otherwise: each unknown day once, with the first side in id order that states it.
-    Undecided(Vec<(String, DayWindow)>),
 }
 
-/// The days of the sides `sides` (in id order) compared: [`DayCmp`]. One window's name on
-/// every side is one day; two names are two unknowns, even with equal intervals; a window of
-/// one day is that day (L §4.4, §6.1; S1, P43 on #241).
+/// The days of the sides `sides` (in id order) compared: [`DayCmp`] (L §6.1; S1, P43 on
+/// #241).
 pub(crate) fn compare_days(sides: &[(&str, &Dated)]) -> DayCmp {
-    let holes: Vec<&Hole> = sides
+    let holes: Vec<Option<&Hole>> = sides
         .iter()
         .filter_map(|(_, d)| match d {
-            Dated::Hole(h) => Some(h),
-            Dated::Day(_) | Dated::Window(_) => None,
+            Dated::Hole(h) => Some(Some(h)),
+            Dated::Day(_) => None,
         })
         .collect();
-    if !holes.is_empty() {
-        let merged: Vec<Option<&Hole>> = holes.into_iter().map(Some).collect();
-        if let Some(h) = spread(&merged) {
-            return DayCmp::Hole(h);
-        }
+    if let Some(h) = spread(&holes) {
+        return DayCmp::Hole(h);
     }
-    if !common_day(sides) {
+    let days: BTreeSet<Option<Day>> = sides.iter().map(|(_, d)| d.day()).collect();
+    if days.len() > 1 {
         return DayCmp::Differ(sides.iter().map(|(_, d)| day_shown(d)).collect());
     }
-    let one_window = match sides.split_first() {
-        Some(((_, Dated::Window(first)), rest)) => rest
-            .iter()
-            .all(|(_, d)| matches!(d, Dated::Window(w) if w.value == first.value)),
-        Some(_) | None => false,
-    };
-    let mut unknown: Vec<(String, DayWindow)> = Vec::new();
-    for (id, d) in sides {
-        if let Dated::Window(w) = d
-            && !one_day(w)
-            && !unknown.iter().any(|(_, u)| u.value == w.value)
-        {
-            unknown.push(((*id).to_owned(), w.clone()));
-        }
-    }
-    if one_window || unknown.is_empty() {
-        return DayCmp::Agree;
-    }
-    DayCmp::Undecided(unknown)
-}
-
-/// Whether window `w` can take one day only. L §4.4 ("a window of one day is that day").
-fn one_day(w: &DayWindow) -> bool {
-    match &w.value.days {
-        Some(days) => days.len() == 1,
-        None => w.lo == w.hi,
-    }
-}
-
-/// Whether some day is one every side can take: inside every side's first and last day, and
-/// one of every `one_of`'s days. L §4.4.
-fn common_day(sides: &[(&str, &Dated)]) -> bool {
-    let (mut lo, mut hi) = (None::<Day>, None::<Day>);
-    let mut lists: Vec<&[Day]> = Vec::new();
-    for (_, d) in sides {
-        let (Some(a), Some(b)) = (d.lo(), d.hi()) else {
-            continue;
-        };
-        lo = Some(lo.map_or(a, |l| l.max(a)));
-        hi = Some(hi.map_or(b, |h| h.min(b)));
-        if let Dated::Window(w) = d
-            && let Some(days) = &w.value.days
-        {
-            lists.push(days);
-        }
-    }
-    let (Some(lo), Some(hi)) = (lo, hi) else {
-        return true;
-    };
-    if lo > hi {
-        return false;
-    }
-    let Some((first, rest)) = lists.split_first() else {
-        return true;
-    };
-    for d in first.iter().filter(|d| lo <= **d && **d <= hi) {
-        if rest.iter().all(|l| l.contains(d)) {
-            return true;
-        }
-    }
-    false
-}
-
-/// The comparison's hole for undecided days: one question per unknown day, `date within <w>
-/// not precise enough for <what>`, each labelled by its own side and carrying its window's
-/// unknown days (L §4.4, §8.1 "one question per unknown day"; S1, P43 on #241).
-pub(crate) fn undecided_hole(unknown: &[(String, DayWindow)], what: &str) -> Option<Hole> {
-    let holes: Vec<Hole> = unknown
-        .iter()
-        .map(|(id, w)| {
-            let text = format!("date within {} not precise enough for {what}", w.question);
-            Hole::asked(&text, id).carrying(&w.value.carry)
-        })
-        .collect();
-    let refs: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
-    spread(&refs)
+    DayCmp::Agree
 }
 
 /// [`same_differ`] over sides, each an id, a day where it is one and legs ([`obs_side`],
@@ -512,10 +429,6 @@ pub(crate) fn sides_differ(
                     (format!("the day of {}", mine.name), figures, first)
                 }
                 DayCmp::Hole(hole) => return Ok(Some(hole)),
-                DayCmp::Undecided(unknown) => {
-                    let what = format!("the day of {}", and_list(&ids));
-                    return Ok(undecided_hole(&unknown, &what));
-                }
                 DayCmp::Agree => continue,
             }
         };
@@ -573,11 +486,10 @@ pub(super) fn shown(m: &Reality, amount: &Num, unit: &str) -> Result<String, Sto
     qty_value(m, amount, unit)?.text(m).map_err(num_stop)
 }
 
-/// A leg's day as `HOLE-SAME` prints it: the day, or the window. L §2.4, §8.1.
+/// A leg's day as `HOLE-SAME` prints it: the day, or `?`. L §2.4, §8.1.
 fn day_shown(day: &Dated) -> String {
     match day {
         Dated::Day(d) => d.text(),
-        Dated::Window(w) => w.shown.clone(),
         Dated::Hole(_) => "?".to_owned(),
     }
 }
@@ -800,7 +712,7 @@ impl Engine {
                 EndBook::Skip => continue,
                 EndBook::Written | EndBook::Wait(_) => o.clone(),
                 // the walk books the movement there once, as the hole: listed once with it
-                EndBook::Hole(hole, _) => {
+                EndBook::Hole(hole) => {
                     let lead = group.first().map_or(o.id.as_str(), String::as_str);
                     if !holed.insert(lead) {
                         continue;
@@ -862,14 +774,14 @@ impl Engine {
                     continue;
                 }
                 match book {
-                    EndBook::Hole(h, _) => holes.push(h),
+                    EndBook::Hole(h) => holes.push(h),
                     EndBook::Skip => skip = true,
                     EndBook::Wait(_) | EndBook::Written => {}
                 }
             }
         }
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
-            return Ok(EndBook::Hole(h, None));
+            return Ok(EndBook::Hole(h));
         }
         Ok(if skip {
             EndBook::Skip

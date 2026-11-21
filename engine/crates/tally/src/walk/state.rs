@@ -26,7 +26,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use super::agenda::Act;
-use super::instance::{Amount, Dated, DayWindow, HoleSrc, Inst, LegVal, Order};
+use super::instance::{Amount, Dated, HoleSrc, Inst, LegVal, Order};
 use super::order::{CycleItem, Run};
 use super::plan::invariant;
 use super::point::{At, Step};
@@ -73,20 +73,12 @@ pub enum Change {
     Hole(Hole),
     /// A hole no reading answers: a hole day, `HOLE-CHANGED` (E §4.2, E §5 step 5).
     Perm(Hole),
-    /// A decision dated by a window has fallen at the window's last day: its hole no reading
-    /// answered is taken back, as each unit's hole a reading ends takes its place (L §5.19 Holes,
-    /// §4.4; pick P29 on #175; refcore's `unperm`).
-    Unperm(Hole),
     /// A refusal that holds from here to the place's next reading: a dated refused movement's,
     /// or the sign rule's (E §4.2 step 5; L §8, tally 2.1.8).
     Bad(Refusal),
     /// A refusal no reading ends: a refused movement whose day is a hole or refused, which may
     /// fall after any reading (L §8, §5.19; tally 2.1.8; refcore's `pbad`).
     PermBad(Refusal),
-    /// A movement dated by a window may fall from here: the balance is `HOLE-IMPRECISE`
-    /// until its leg is booked at the window's last day; the window is the entry's (L §4.4;
-    /// refcore's `imp_on`).
-    ImpOn(Hole),
     /// A register entry and nothing else: a modelled-past instance nothing fulfils (L §5.19).
     Mark,
 }
@@ -104,51 +96,16 @@ pub struct St {
     pub bad: Option<Refusal>,
     /// The refusal no reading ends (refcore's `pbad`): kept as `bad` at a reset.
     pub perm_bad: Option<Refusal>,
-    /// The movements dated by a window that may still fall (L §4.4; refcore's `imp`).
-    pub imp: Vec<Pending>,
     /// The position of the last reset in its log.
     pub rst: Option<usize>,
-    /// After a reading a window runs past, the windows' questions it keeps open from its next
-    /// instant: at the reading's own instant the stated balance stands without them (refcore's
-    /// `reopen`; L §5.19 l.1726, E §4.1 step 2; P32, N1 and N8). None after any other entry.
-    pub reopen: Option<Hole>,
-    /// The movements dated by a window a reading met before they fell, not yet booked: each
-    /// reading after it reopens them too, every reading inside a window an edge (P32 said
-    /// whole, P41, F2). L §5.19 l.1726.
-    pub held: Vec<Pending>,
-}
-
-/// A movement dated by a window that may still fall at a place (refcore's `imp`, one entry;
-/// L §4.4; tally 2.1.8 item 77).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Pending {
-    /// Its window's id, `<movement>.<leg>`.
-    pub wid: String,
-    /// The question it puts.
-    pub hole: Hole,
-    /// Its leg's amount signed as a flow into the place, where known.
-    pub signed: Option<Num>,
-}
-
-/// What a read of a leg the walk took out meets: its refusal, or the hole a test some of a
-/// window's days pass leaves it (refcore's `bad_legs`, `hole_legs`, `hole_flows`; E §4.2
-/// step 5; tally 2.1.8 item 77).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LegOut {
-    /// The leg is refused.
-    Refused(Refusal),
-    /// The leg is the window's hole.
-    Hole(Hole),
 }
 
 impl St {
-    /// Every question the state's balance rests on: its holes, those no reading answers,
-    /// the windows that may still fall, and `missing`, a balance not known yet (refcore's
-    /// `st_value`). L §8.1, §4.4.
+    /// Every question the state's balance rests on: its holes, those no reading answers, and
+    /// `missing`, a balance not known yet (refcore's `st_value`). L §8.1.
     #[must_use]
     pub fn questions(&self, missing: Option<&Hole>) -> Option<Hole> {
         let mut all = vec![self.hole.as_ref(), self.perm.as_ref()];
-        all.extend(self.imp.iter().map(|p| Some(&p.hole)));
         all.push(missing);
         spread(&all)
     }
@@ -161,10 +118,7 @@ impl St {
             perm: None,
             bad: None,
             perm_bad: None,
-            imp: Vec::new(),
             rst: None,
-            reopen: None,
-            held: Vec::new(),
         }
     }
 
@@ -172,47 +126,10 @@ impl St {
     /// "Each warning is tested only where the balance is known").
     #[must_use]
     pub fn known(&self) -> Option<&Num> {
-        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() || !self.imp.is_empty()
-        {
+        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() {
             return None;
         }
         self.val.as_ref()
-    }
-
-    /// The least and the greatest balance the legs dated by a window that may still fall here
-    /// allow, each booked or not; none where the balance isn't known but for them, or one's
-    /// amount isn't (E §4.1 step 2, §4.2 step 5; tally 2.1.8 item 77).
-    ///
-    /// # Errors
-    ///
-    /// A number past the cap.
-    pub fn imp_range(&self) -> Result<Option<(Num, Num)>, Stop> {
-        if self.imp.is_empty() || self.hole.is_some() || self.perm.is_some() || self.bad.is_some() {
-            return Ok(None);
-        }
-        let Some(val) = &self.val else {
-            return Ok(None);
-        };
-        let (mut lo, mut hi) = (val.clone(), val.clone());
-        for pending in &self.imp {
-            let Some(a) = &pending.signed else {
-                return Ok(None);
-            };
-            if a.is_negative() {
-                lo = lo.checked_add(a).map_err(crate::eval::num_stop)?;
-            } else {
-                hi = hi.checked_add(a).map_err(crate::eval::num_stop)?;
-            }
-        }
-        Ok(Some((lo, hi)))
-    }
-
-    /// The hole of the windows that may still fall here: what their days leave open
-    /// (L §4.4; tally 2.1.8 item 77).
-    #[must_use]
-    pub fn imp_hole(&self) -> Option<Hole> {
-        let all: Vec<Option<&Hole>> = self.imp.iter().map(|p| Some(&p.hole)).collect();
-        spread(&all)
     }
 }
 
@@ -229,9 +146,6 @@ pub struct Ent {
     pub leg: Option<String>,
     /// The register entries it makes (`unfulfilled:`).
     pub reg: Vec<Entry>,
-    /// For a leg dated by a window, the window's id (`<movement>.<leg>`) and the window: an
-    /// `ImpOn` opens its imprecision, the leg's booking ends it (refcore's `wid`, `win`).
-    pub window: Option<(String, DayWindow)>,
     /// What its movement's evaluation met.
     pub coll: Option<Collected>,
     /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
@@ -240,34 +154,9 @@ pub struct Ent {
     /// A hole leg's direction at the place and where its amount was read, which a `partial`
     /// line reads again (refcore's `sgn`, `leg`; L §5.18).
     pub hole_leg: Option<HoleLeg>,
-    /// An `ImpOn`'s leg amount signed as a flow into the place, where known (tally 2.1.8
-    /// item 77).
-    pub signed: Option<Num>,
-    /// A refusal a plan's or an observation's own evaluation gives: it reads no value under a
-    /// window's hole, so every day gives it and it outranks one (refcore's `note == 'own'`;
-    /// L §8 l.2217, §4.4 l.671; P31, B4).
-    pub own: bool,
-    /// For the hole of a leg of movements stated `same` that agree on its amount but whose days
-    /// are undecided: the sides, which `flows` over a span reads for membership only (S2, P43;
-    /// P45 (c) on #241).
-    pub same: Option<Box<SameSides>>,
     /// The state after it.
     pub st: St,
 }
-
-/// The sides of one leg of movements stated `same` whose days are undecided: each member's leg
-/// at the place, `<id>.<leg>` sorted and joined, which every side's entry names alike, and the
-/// day each states. L §6.1, §4.4 (S2, P43; P45 (c) on #241).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SameSides {
-    /// The members' legs, `<id>.<leg>` sorted and joined by `, `.
-    pub key: String,
-    /// The day each side states.
-    pub days: Vec<Dated>,
-    /// The amount they agree on, signed as a flow into the place.
-    pub flow: Amount,
-}
-
 /// A hole leg as a `partial` line reads a balance through it: into the place or out of it, and
 /// where its amount was read, none where nothing read it (refcore's `Ent.sgn`, `Leg.src`).
 /// L §5.18 Partial answers, §5.19.
@@ -304,13 +193,9 @@ impl Ent {
             mv: None,
             leg: None,
             reg: Vec::new(),
-            window: None,
             coll: None,
             flow: None,
             hole_leg: None,
-            signed: None,
-            own: false,
-            same: None,
             st: St::of(None),
         }
     }
@@ -430,19 +315,6 @@ pub struct Walk {
     pub(crate) uncounted: BTreeMap<String, Vec<(Noted, Collected)>>,
     /// The legs the walk refused, by (movement, leg) (E §4.2 step 5).
     pub(crate) bad_legs: BTreeMap<(String, String), Refusal>,
-    /// The legs a test some of a window's days pass left the window's hole, by (movement,
-    /// leg), which a read of the leg meets (refcore's `hole_legs`, `hole_flows`; tally 2.1.8
-    /// item 77).
-    pub(crate) hole_legs: BTreeMap<(String, String), Hole>,
-    /// The window-dated legs whose first day's sign test waits for their point's group, by
-    /// (place, unit): the legs that group's refusal would reach (refcore's `pend_at`; tally
-    /// 2.1.8 item 77).
-    pub(crate) pend_at: BTreeMap<(String, String), Vec<(String, LegVal)>>,
-    /// The questions of the holes a test of a window-dated movement left where some of the
-    /// window's days pass it and some don't: a refusal reaching a place after one doesn't
-    /// outrank it, which comes first being what the window leaves open (refcore's
-    /// `UNCERTAIN`; L §4.4; tally 2.1.8 item 77).
-    pub(crate) open_tests: Option<Hole>,
     /// The warnings it met (L §8.5).
     pub(crate) warnings: Vec<(Warn, String)>,
     /// Whether each (place, unit) ended its last day below zero (`WARN-NEGATIVE`).
@@ -668,9 +540,6 @@ impl Walk {
             adj_regs: BTreeMap::new(),
             uncounted: BTreeMap::new(),
             bad_legs: BTreeMap::new(),
-            hole_legs: BTreeMap::new(),
-            pend_at: BTreeMap::new(),
-            open_tests: None,
             warnings: Vec::new(),
             negative: BTreeMap::new(),
             conserved: BTreeMap::new(),
@@ -758,7 +627,7 @@ impl Walk {
             None => self.default_state(m, place, unit),
         };
         let log = self.logs.entry(key).or_insert_with(Log::default);
-        ent.st = apply_ent(&prev, &ent, (log.ents.len(), self.open_tests.as_ref()))?;
+        ent.st = apply(&prev, &ent.change, log.ents.len())?;
         log.ents.push(ent);
         if place != ALL
             && let Some(today) = &mut self.today
@@ -780,14 +649,14 @@ impl Walk {
             return (self.default_state(m, place, unit), None);
         };
         match log.ents.get(i) {
-            Some(e) => (at_reading(e, at), Some(i)),
+            Some(e) => (e.st.clone(), Some(i)),
             None => (self.default_state(m, place, unit), None),
         }
     }
 
     /// What a `partial` line reads of a place's balance at `at` in one unit: its known part
     /// and the hole legs booked since its last reset; none where the balance is a hole of
-    /// another making (an anchor, a refusal, a window, a question no reading answers, a hole
+    /// another making (an anchor, a refusal, a question no reading answers, a hole
     /// the place or the walk holds for every unit, as a decision's hole day books it, a hole
     /// with no leg's amount to read again): the balance read is the folded state `pstate`
     /// (refcore's `m_partial_bal`, its walk side). L §5.18 Partial answers, §5.19.
@@ -809,7 +678,7 @@ impl Walk {
             return Ok(None);
         };
         let read = self.pstate(m, place, unit, at);
-        if read.bad.is_some() || read.perm.is_some() || !read.imp.is_empty() {
+        if read.bad.is_some() || read.perm.is_some() {
             return Ok(None);
         }
         let Some(known) = st.val else {
@@ -1086,7 +955,7 @@ impl Walk {
             None => start,
         };
         for (j, e) in log.ents.iter_mut().enumerate().skip(first) {
-            e.st = apply_ent(&prev, e, (j, self.open_tests.as_ref()))?;
+            e.st = apply(&prev, &e.change, j)?;
             prev = e.st.clone();
         }
         Ok(dropped)
@@ -1250,29 +1119,6 @@ impl Taken {
     }
 }
 
-/// The state after entry `e` as a read at point `at` sees it: at a reading's own instant, a
-/// read at its step or, for a closing reading, after it that day, the stated balance without
-/// the windows' questions the reading keeps open from its next instant, every day of a window
-/// that runs past it agreeing (refcore's `state`, its `reopen`; P32, N8). L §5.19 l.1726.
-fn at_reading(e: &Ent, at: At) -> St {
-    let Some(reopen) = &e.st.reopen else {
-        return e.st.clone();
-    };
-    let own_instant = at.day == e.at.day
-        && if e.at.step == Step::End {
-            matches!(at.step, Step::End | Step::Close | Step::After)
-        } else {
-            at.step == e.at.step
-        };
-    if !own_instant {
-        return e.st.clone();
-    }
-    let mut st = e.st.clone();
-    st.hole = st.hole.as_ref().and_then(|h| h.without(reopen));
-    st.perm = st.perm.as_ref().and_then(|h| h.without(reopen));
-    st
-}
-
 /// The position after entry `n` of a log. E §4.2.
 fn next_entry(n: usize) -> Result<usize, Stop> {
     n.checked_add(1)
@@ -1285,7 +1131,6 @@ fn fold(mut st: St, any: St, all: St) -> St {
     for other in [any, all] {
         st.hole = spread(&[st.hole.as_ref(), other.hole.as_ref()]);
         st.perm = spread(&[st.perm.as_ref(), other.perm.as_ref()]);
-        st.imp.extend(other.imp);
         if st.bad.is_none() {
             st.bad = other.bad;
         }
@@ -1323,33 +1168,14 @@ fn opening_state(
 }
 
 /// The state after `change`: a reading ends the holes and the dated refusals since the last
-/// one, and keeps those no reading ends; a dated refusal leaves a hole whose question is one
-/// of `open`, the window tests' (refcore's `apply`). E §4.2, §6.1; L §8 (Refusals outrank
-/// holes, tally 2.1.8), §4.4 (a refusal that only some of a window's days give).
-fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
+/// one, and keeps those no reading ends (refcore's `apply`). E §4.2, §6.1; L §8 (Refusals
+/// outrank holes, tally 2.1.8).
+fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
     let mut st = prev.clone();
-    st.reopen = None;
     match change {
         Change::Reset { val, qs } => {
-            // a window that runs past the reading: the reading states the balance at its
-            // instant, and from the next instant the movement may still fall, so the balance
-            // is its hole up to the next reading (L §5.19 l.1726, E §4.1 step 2; P32, N1, N8);
-            // `Walk::state` gives the reading's own instant without it. A window an earlier
-            // reading met and not yet booked is reopened again: every reading inside it is an
-            // edge (P41, F2)
-            let pending: Vec<Option<&Hole>> = st
-                .imp
-                .iter()
-                .chain(&st.held)
-                .map(|p| Some(&p.hole))
-                .collect();
-            let imp = spread(&pending);
-            let wins = st.perm.as_ref().and_then(Hole::of_windows);
-            st.reopen = spread(&[imp.as_ref(), wins.as_ref()]);
             st.val = Some(val.clone());
-            st.hole = spread(&[qs.as_ref(), imp.as_ref()]);
-            let met = std::mem::take(&mut st.imp);
-            st.held.extend(met);
+            st.hole.clone_from(qs);
             st.bad.clone_from(&st.perm_bad);
             st.rst = Some(at);
         }
@@ -1360,12 +1186,8 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
         }
         Change::Hole(h) => st.hole = spread(&[st.hole.as_ref(), Some(h)]),
         Change::Perm(h) => st.perm = spread(&[st.perm.as_ref(), Some(h)]),
-        Change::Unperm(h) => st.perm = st.perm.as_ref().and_then(|p| p.without(h)),
         Change::Bad(r) => {
-            // after a test some of a window's days pass, which comes first is what the window
-            // leaves open: the refusal doesn't outrank that hole
-            let after_test = matches!((&st.hole, open), (Some(h), Some(o)) if h.shares(o));
-            if st.bad.is_none() && !after_test {
+            if st.bad.is_none() {
                 st.bad = Some(r.clone());
             }
         }
@@ -1377,37 +1199,7 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
                 st.perm_bad = Some(r.clone());
             }
         }
-        // its window's id is the entry's (`apply_ent`)
-        Change::ImpOn(_) | Change::Mark => {}
-    }
-    Ok(st)
-}
-
-/// The state after entry `ent`: its change applied, the window tests' questions `open`
-/// ([`apply`]); a movement dated by a window may fall from its `ImpOn` on, until its leg's
-/// booking at the window's last day, or its mark there where a member stated `same` books it
-/// instead (refcore's `apply`, its `wid`); a movement's own refusal meets no window test, so
-/// it outranks their hole (P31). E §4.2, L §4.4, §6.1.
-fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
-    let open = if ent.own { None } else { open };
-    let mut st = apply(prev, &ent.change, (at, open))?;
-    if let Some((wid, _)) = &ent.window {
-        match &ent.change {
-            Change::ImpOn(h) => st.imp.push(Pending {
-                wid: wid.clone(),
-                hole: h.clone(),
-                signed: ent.signed.clone(),
-            }),
-            Change::Delta(_) | Change::Hole(_) | Change::Mark => {
-                st.imp.retain(|p| &p.wid != wid);
-                st.held.retain(|p| &p.wid != wid);
-            }
-            Change::Reset { .. }
-            | Change::Perm(_)
-            | Change::Unperm(_)
-            | Change::Bad(_)
-            | Change::PermBad(_) => {}
-        }
+        Change::Mark => {}
     }
     Ok(st)
 }
@@ -1621,9 +1413,9 @@ ask bank_end: bal(bank, 2025-07-10)
     #[test]
     fn a_state_moves_by_its_entries_and_a_reset_answers_the_holes() {
         let start = St::of(Some(Num::int(5)));
-        let moved = apply(&start, &Change::Delta(Num::int(-7)), (0, None)).expect("moves");
+        let moved = apply(&start, &Change::Delta(Num::int(-7)), 0).expect("moves");
         assert_eq!(moved.known(), Some(&Num::int(-2)), "5 - 7");
-        let holed = apply(&moved, &Change::Hole(Hole::asked("q", "x")), (1, None)).expect("a hole");
+        let holed = apply(&moved, &Change::Hole(Hole::asked("q", "x")), 1).expect("a hole");
         assert_eq!(holed.known(), None, "a hole");
         let reset = apply(
             &holed,
@@ -1631,57 +1423,40 @@ ask bank_end: bal(bank, 2025-07-10)
                 val: Num::int(3),
                 qs: None,
             },
-            (2, None),
+            2,
         )
         .expect("a reset");
         assert_eq!(reset.known(), Some(&Num::int(3)), "answered");
         assert_eq!(reset.rst, Some(2), "the reset's place");
-        let perm = apply(&reset, &Change::Perm(Hole::asked("p", "x")), (3, None)).expect("a hole");
+        let perm = apply(&reset, &Change::Perm(Hole::asked("p", "x")), 3).expect("a hole");
         let after = apply(
             &perm,
             &Change::Reset {
                 val: Num::int(1),
                 qs: None,
             },
-            (4, None),
+            4,
         )
         .expect("a reset");
         assert_eq!(after.known(), None, "a hole no reading answers");
         let bad = Refusal::new(Code::Run(Run::Place), "x".to_owned());
-        let refused = apply(&after, &Change::Bad(bad.clone()), (5, None)).expect("refused");
+        let refused = apply(&after, &Change::Bad(bad.clone()), 5).expect("refused");
         let other = Refusal::new(Code::Run(Run::Lifespan), "y".to_owned());
-        let again = apply(&refused, &Change::Bad(other), (6, None)).expect("refused");
+        let again = apply(&refused, &Change::Bad(other), 6).expect("refused");
         assert_eq!(again.bad, Some(bad), "the first refusal holds");
         let read = Change::Reset {
             val: Num::int(2),
             qs: None,
         };
-        let ended = apply(&again, &read, (7, None)).expect("a reset");
+        let ended = apply(&again, &read, 7).expect("a reset");
         assert_eq!(ended.bad, None, "a reading ends a dated refusal (R11)");
         let lasting = Refusal::new(Code::Run(Run::Div), "z".to_owned());
-        let kept = apply(&ended, &Change::PermBad(lasting.clone()), (8, None)).expect("refused");
-        let still = apply(&kept, &read, (9, None)).expect("a reset");
+        let kept = apply(&ended, &Change::PermBad(lasting.clone()), 8).expect("refused");
+        let still = apply(&kept, &read, 9).expect("a reset");
         assert_eq!(
             still.bad,
             Some(lasting),
             "no reading ends a hole day's refusal"
-        );
-    }
-
-    #[test]
-    fn a_refusal_after_a_window_test_leaves_its_hole() {
-        let open = Hole::asked("date within w not precise enough for a balance", "put");
-        let start = St::of(Some(Num::int(5)));
-        let tested = apply(&start, &Change::Hole(open.clone()), (0, Some(&open))).expect("a hole");
-        let bad = Refusal::new(Code::Run(Run::Lifespan), "x".to_owned());
-        let after = apply(&tested, &Change::Bad(bad.clone()), (1, Some(&open))).expect("kept");
-        assert_eq!(after.bad, None, "which comes first is the window's to say");
-        assert_eq!(after.hole, Some(open), "the window's hole stands");
-        let plain = apply(&tested, &Change::Bad(bad.clone()), (1, None)).expect("refused");
-        assert_eq!(
-            plain.bad,
-            Some(bad),
-            "after a plain hole the refusal outranks it"
         );
     }
 }

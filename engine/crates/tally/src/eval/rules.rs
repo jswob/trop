@@ -386,11 +386,6 @@ impl Engine {
             // a walk's attempt given up: nothing it reached is kept (refcore's journal)
             return result;
         }
-        if result == Err(Stop::NotBuilt(super::WINDOW_DAYS)) {
-            // the line is read again per day of a decision's window: a read of this cell
-            // meets the window again (E §4.1 step 2; refcore's `WinDay` keeps no cell)
-            return result;
-        }
         self.absorb(&met);
         #[cfg(feature = "counters")]
         self.counts.miss(id.key.def());

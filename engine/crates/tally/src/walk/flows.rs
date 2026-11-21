@@ -7,7 +7,7 @@
 //! Invariants: a refused `flows` keeps the register it met before the refusal, as refcore
 //! registers while it counts; a read of a projection's walk reads the walks it continues
 //! through the point each continues from.
-use super::instance::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status};
+use super::instance::{Amount, Dated, Exists, HoleSrc, Inst, Status};
 use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::reads::{Sees, refuse};
@@ -136,13 +136,11 @@ impl Engine {
         // outcome (L §8.2 One read set; P35 on #241)
         let met = self.walk(id)?.uncounted_in(place, (start, last));
         let mut sums = Sums {
-            span: (start, last),
             totals: BTreeMap::new(),
             holes: Vec::new(),
             legs: Vec::new(),
             met,
             keep,
-            same: BTreeSet::new(),
         };
         for (wid, cut) in &chain {
             if let Err(stop) = sums.logs(self.walk(*wid)?, place, &units, (lo, *cut)) {
@@ -206,8 +204,7 @@ impl Engine {
         moves.sort_by_key(|mv| mv.decision);
         for mv in moves {
             for i in self.move_instances(m, mv, ctx.cut)?.iter() {
-                // a window's first day (refcore's `note_post_e`, `day_lo`)
-                let Some(day) = i.day.as_ref().and_then(Dated::lo) else {
+                let Some(day) = i.day.as_ref().and_then(Dated::day) else {
                     continue;
                 };
                 if day <= m.end || i.status != Status::LeftOut {
@@ -337,62 +334,8 @@ impl Engine {
     }
 }
 
-/// `HOLE-IMPRECISE` of flows over a span movement `movement`, dated by window `w`, may fall
-/// in or out of (refcore's `flows_place`). L §4.4, §8.1.
-fn imprecise_flows(w: &DayWindow, place: &str, movement: &str) -> Hole {
-    let text = format!(
-        "date within {} not precise enough for flows of {place}",
-        w.question
-    );
-    Hole::asked(&text, movement).carrying(&w.value.carry)
-}
-
-/// Whether every day the sides `days` can take lies inside the span `(first, last)` (true) or
-/// every one outside it (false); none where some do and some don't, or a side's day is a hole
-/// (S2, P43 on #241). L §4.4.
-fn same_inside(days: &[Dated], (first, last): (Day, Day)) -> Option<bool> {
-    let within = |d: &Day| first <= *d && *d <= last;
-    let mut seen: BTreeSet<bool> = BTreeSet::new();
-    for d in days {
-        match d {
-            Dated::Day(x) => {
-                seen.insert(within(x));
-            }
-            Dated::Window(w) => match &w.value.days {
-                Some(list) => seen.extend(list.iter().map(within)),
-                None if first <= w.lo && w.hi <= last => {
-                    seen.insert(true);
-                }
-                None if w.hi < first || last < w.lo => {
-                    seen.insert(false);
-                }
-                None => seen.extend([true, false]),
-            },
-            Dated::Hole(_) => return None,
-        }
-    }
-    let mut kinds = seen.into_iter();
-    match (kinds.next(), kinds.next()) {
-        (Some(one), None) => Some(one),
-        (Some(_), Some(_)) | (None, _) => None,
-    }
-}
-
-/// Whether a leg's amount is zero, so its day can't change a sum (L §4.4).
-fn zero_amount(amount: &Amount) -> bool {
-    matches!(amount, Amount::Qty(q) if q.is_zero())
-}
-
-/// Whether window `w` meets the span `(first, last)` without lying inside it: the movement
-/// it dates may fall in the span or out of it (L §4.4).
-fn crosses(w: &DayWindow, (first, last): (Day, Day)) -> bool {
-    w.lo <= last && w.hi >= first && !(first <= w.lo && w.hi <= last)
-}
-
 /// What a place's flows gather: the totals per unit, the holes, the register.
 struct Sums {
-    /// The span's first and last day, which a movement dated by a window must fall inside.
-    span: (Day, Day),
     /// The booked flows per unit.
     totals: BTreeMap<String, Num>,
     /// The holes met.
@@ -404,8 +347,6 @@ struct Sums {
     met: Collected,
     /// Under `, for k`, the movements for period k by id; none counts every movement.
     keep: Option<BTreeSet<String>>,
-    /// The legs of movements stated `same` counted once already, by their sides' key.
-    same: BTreeSet<String>,
 }
 
 impl Sums {
@@ -448,10 +389,8 @@ impl Sums {
                 }
                 Change::Bad(_)
                 | Change::PermBad(_)
-                | Change::Unperm(_)
                 | Change::Reset { .. }
                 | Change::Delta(_)
-                | Change::ImpOn(_)
                 | Change::Mark => {}
             }
         }
@@ -476,24 +415,12 @@ impl Sums {
         unit: &str,
         (lo, limit): (At, At),
     ) -> Result<(), Stop> {
-        // the movements dated by a window met by the span's end: each whose window crosses
-        // the span is its hole, booked in the walk or past its end (L §4.4; refcore's `wins`)
-        let mut windows: BTreeMap<&str, (&DayWindow, &str)> = BTreeMap::new();
-        // the holes of windows open before the span: one whose window ended there too is
-        // decided, its movement dated before the span (L §4.4, P29; B5 of group 3's review)
+        // the holes no reading answers met before the span
         let mut open: Vec<Hole> = Vec::new();
         for e in walk.entries(place, unit) {
-            // a zero leg's day can't change the sum: decided (L §4.4)
-            if let (Change::ImpOn(_), Some((wid, w)), Some(mv)) = (&e.change, &e.window, &e.mv)
-                && e.at <= limit
-                && !e.flow.as_ref().is_some_and(zero_amount)
-            {
-                windows.insert(wid, (w, mv));
-            }
             if e.at <= lo {
                 match &e.change {
                     Change::Perm(h) if e.at <= limit => open.push(h.clone()),
-                    Change::Unperm(h) => open.retain(|o| o != h),
                     // a refused movement whose day is a hole or refused may fall in the span,
                     // as a hole day's (tally 2.1.8, R11)
                     Change::PermBad(r) if e.at <= limit => {
@@ -506,7 +433,6 @@ impl Sums {
                     | Change::Reset { .. }
                     | Change::Delta(_)
                     | Change::Hole(_)
-                    | Change::ImpOn(_)
                     | Change::Mark => {}
                 }
                 continue;
@@ -531,12 +457,11 @@ impl Sums {
             }
             match &e.change {
                 Change::Bad(r) | Change::PermBad(r) => return Err(Stop::Refused(r.clone())),
-                Change::Hole(h) | Change::Perm(h) => self.hole_in_span(e, unit, h)?,
-                Change::Delta(f) => match &e.window {
-                    // a window that crosses the span is its hole, below (L §4.4)
-                    Some((_, w)) if crosses(w, self.span) => {}
-                    Some(_) | None => self.count(e, unit, Ok(f))?,
-                },
+                Change::Hole(h) | Change::Perm(h) => {
+                    self.holes.push(h.clone());
+                    self.meet(e);
+                }
+                Change::Delta(f) => self.count(e, unit, Ok(f))?,
                 // a pad's end at its reading's own place (E §6.1); an anchor's or an
                 // opening's reset carries no flow, and `flows` doesn't count it
                 Change::Reset { .. } => match &e.flow {
@@ -547,15 +472,9 @@ impl Sums {
                 // a mark in the span (an open instance, one that doesn't exist): what a balance
                 // lists of it, `flows` lists (S5, P43 on #241; L §8.2 One read set)
                 Change::Mark => self.meet(e),
-                Change::ImpOn(_) | Change::Unperm(_) => {}
             }
         }
         self.holes.extend(open);
-        for (w, movement) in windows.into_values() {
-            if crosses(w, self.span) {
-                self.holes.push(imprecise_flows(w, place, movement));
-            }
-        }
         Ok(())
     }
 
@@ -564,12 +483,10 @@ impl Sums {
     /// L §5.14.3.
     fn unbooked(&mut self, i: &Inst, place: &str, (first, last): (Day, Day)) -> Result<(), Stop> {
         for lg in &i.legs {
-            // a leg dated by a window counts where the window meets the span (refcore's
-            // `flows_post_e`, `day_lo`, `day_hi`)
-            let (Some(lo), Some(hi)) = (lg.day.lo(), lg.day.hi()) else {
+            let Some(day) = lg.day.day() else {
                 continue;
             };
-            if hi < first || lo > last {
+            if day < first || day > last {
                 continue;
             }
             let (out, into) = (lg.from.place() == Some(place), lg.to.place() == Some(place));
@@ -582,15 +499,6 @@ impl Sums {
             }
             if let Exists::Unknown(h) = &i.exists {
                 self.holes.push(h.clone());
-                continue;
-            }
-            // a leg whose window crosses the span may fall in it or out, unless it moves
-            // nothing (L §4.4)
-            if let Dated::Window(w) = &lg.day
-                && crosses(w, (first, last))
-                && !zero_amount(&lg.amount)
-            {
-                self.holes.push(imprecise_flows(w, place, &i.id));
                 continue;
             }
             let q = match &lg.amount {
@@ -614,38 +522,6 @@ impl Sums {
             }
         }
         Ok(())
-    }
-
-    /// A hole booked in the span, `h`: the read's hole; but a leg of movements stated `same`
-    /// that agree on its amount and leave its day undecided is a member of the span by that
-    /// day alone, so where every day every side can take lies inside the span its amount
-    /// counts, once for all its sides, and where every one lies outside it nothing does (S2's
-    /// membership, a place's flows as a movement's: P43, P45 (c) on #241). L §4.4, §6.1.
-    ///
-    /// # Errors
-    ///
-    /// A number error adding the amount.
-    fn hole_in_span(&mut self, e: &Ent, unit: &str, h: &Hole) -> Result<(), Stop> {
-        let inside = e
-            .same
-            .as_ref()
-            .and_then(|s| same_inside(&s.days, self.span));
-        match (inside, &e.same) {
-            (Some(true), Some(sides)) if self.same.insert(sides.key.clone()) => match &sides.flow {
-                Amount::Qty(f) => self.count(e, unit, Ok(f)),
-                Amount::Hole(a) => self.count(e, unit, Err(a)),
-                Amount::Refused(_) => Err(invariant("a refused amount stated same and booked")),
-            },
-            (Some(_), _) => {
-                self.meet(e);
-                Ok(())
-            }
-            (None, _) => {
-                self.holes.push(h.clone());
-                self.meet(e);
-                Ok(())
-            }
-        }
     }
 
     /// An entry the span meets, its register and its reads into the read set, whatever it

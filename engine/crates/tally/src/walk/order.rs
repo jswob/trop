@@ -499,28 +499,6 @@ impl Engine {
         Ok(())
     }
 
-    /// Whether a window `at` gives instance `inst`'s `ties by` other values at a later law
-    /// date than `vals`, its first law date's (refcore's `tie_order`, its `lds`). L §4.3,
-    /// §5.14.2.
-    fn ties_differ(
-        &mut self,
-        m: &Reality,
-        ties: &[crate::syntax::Expr],
-        inst: &Inst,
-        (vals, ctx): (&[Value], Ctx),
-    ) -> Result<bool, Stop> {
-        for day in inst.law.rest() {
-            let mut other = Vec::with_capacity(ties.len());
-            for x in ties {
-                other.push(self.ev(m, x, &inst.env, ctx.at_law(Some(*day)))?);
-            }
-            if other != vals {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
     /// One move's instances due on a day, in the order of its `ties by`: a hole there is
     /// `RUN-TIE`, and so are two instances it doesn't tell apart (refcore's `tie_order`).
     /// L §5.14.2.
@@ -549,13 +527,6 @@ impl Engine {
                     ));
                 }
                 vals.push(v);
-            }
-            if self.ties_differ(m, ties, &inst, (&vals, ctx))? {
-                // `HOLE-IMPRECISE` for the ties by, a hole there (refcore's `tie_order`)
-                return Err(refuse(
-                    RunCode::Tie,
-                    format!("{}: its ties by is a hole", mv.id),
-                ));
             }
             scored.push((vals, inst));
         }
@@ -728,8 +699,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None)))
-                || !run.inst.obs.is_empty());
+            && ((t < cut && self.touches_covered(m, &run.inst, cut)) || !run.inst.obs.is_empty());
         let legless = m
             .moves
             .get(&run.inst.move_id)

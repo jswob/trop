@@ -31,20 +31,6 @@ impl Ord for Asked {
     }
 }
 
-impl Asked {
-    /// The question a read `read` asks where a window put it for a balance (`date within …
-    /// for a balance`), or the question as it is (the plan's §14.1). L §4.4.
-    fn for_read(&self, read: &str) -> Asked {
-        match self.text.strip_suffix(" for a balance") {
-            Some(head) if head.starts_with("date within ") => Asked {
-                text: format!("{head} for {read}"),
-                figure: self.figure.clone(),
-            },
-            _ => self.clone(),
-        }
-    }
-}
-
 impl PartialOrd for Asked {
     /// As [`Ord`]: the print order (L §8.1).
     fn partial_cmp(&self, other: &Asked) -> Option<core::cmp::Ordering> {
@@ -192,24 +178,6 @@ impl Hole {
         self
     }
 
-    /// The hole a read `read` meets where a window's test reaches it: each question a window
-    /// put for a balance asked for `read` instead, carrying the days it did, the rest as they
-    /// are (the plan's §14.1: a hole's printed question is the read's; tally 2.1.8 item 77;
-    /// refcore's `_reask`). L §4.4.
-    #[must_use]
-    pub fn for_read(&self, read: &str) -> Hole {
-        let mut out = self.clone();
-        out.questions = self.questions.iter().map(|q| q.for_read(read)).collect();
-        out.carry = BTreeMap::new();
-        for (q, days) in &self.carry {
-            carry_union(
-                out.carry.entry(q.for_read(read)).or_insert_with(Vec::new),
-                days,
-            );
-        }
-        out
-    }
-
     /// The unknown days it carries, each once: its questions' in their order, each
     /// question's in the order met (refcore's `carried` of a hole). L §4.4.
     #[must_use]
@@ -276,71 +244,10 @@ impl Hole {
         }
     }
 
-    /// Whether the two holes carry a question in common. L §8.1.
-    #[must_use]
-    pub fn shares(&self, other: &Hole) -> bool {
-        !self.questions.is_disjoint(&other.questions)
-    }
-
     /// Whether the two holes carry the same questions. L §8.1.
     #[must_use]
     pub fn same_questions(&self, other: &Hole) -> bool {
         self.questions == other.questions
-    }
-
-    /// The hole of the questions this one carries and `other` doesn't, with the unknown days
-    /// those questions carry; none where `other` carries every one (refcore's `perm - e.qs`,
-    /// each question's days its `CARRY[q]`). L §8.1, §4.4.
-    #[must_use]
-    pub fn without(&self, other: &Hole) -> Option<Hole> {
-        let questions: BTreeSet<Asked> = self
-            .questions
-            .difference(&other.questions)
-            .cloned()
-            .collect();
-        if questions.is_empty() {
-            return None;
-        }
-        let carry = self
-            .carry
-            .iter()
-            .filter(|(q, _)| questions.contains(*q))
-            .map(|(q, days)| (q.clone(), days.clone()))
-            .collect();
-        Some(Hole {
-            questions,
-            bound: self.bound,
-            lin: Lin::Plain,
-            carry,
-        })
-    }
-
-    /// The hole of the questions this one carries that a window's day leaves open, `date
-    /// within …`, with the unknown days they carry; none where it carries none (refcore's
-    /// `q[0].startswith('date within ')`). L §4.4, §5.19 l.1726; P32.
-    #[must_use]
-    pub fn of_windows(&self) -> Option<Hole> {
-        let questions: BTreeSet<Asked> = self
-            .questions
-            .iter()
-            .filter(|q| q.text.starts_with("date within "))
-            .cloned()
-            .collect();
-        if questions.is_empty() {
-            return None;
-        }
-        let carry = self
-            .carry
-            .iter()
-            .filter(|(q, _)| questions.contains(*q))
-            .map(|(q, days)| (q.clone(), days.clone()))
-            .collect();
-        Some(Hole {
-            questions,
-            bound: self.bound,
-            lin: Lin::Plain,
-            carry,
-        })
     }
 
     /// `HOLE-PRERUN`'s hole, asked of `figure`: a walked value of a day before the run's

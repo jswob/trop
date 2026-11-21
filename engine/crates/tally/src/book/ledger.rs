@@ -356,30 +356,11 @@ impl Engine {
         for mv in moves {
             insts.extend(self.move_instances(m, mv, cut)?.iter().cloned());
         }
-        // the observations that fulfil a window-dated instance fix its day: the last of their
-        // days as known on the model's `on`, the same in every ledger whatever its span or the
-        // ask's cut; its line stands in that day's month only (E §6.3, L §5.19; S6, P43 on #241)
-        let mut fixed: BTreeMap<String, Day> = BTreeMap::new();
-        for o in self.observations(m, m.on)? {
-            if let Some(t) = o.target_id() {
-                let last = fixed.entry(t).or_insert(o.day);
-                *last = (*last).max(o.day);
-            }
-        }
         for inst in insts {
-            let exists = !matches!(inst.status, Status::None | Status::LeftOut);
-            let fixed_day = match &inst.day {
-                Some(Dated::Window(_)) if exists => fixed.get(&inst.id).copied(),
-                Some(_) | None => None,
-            };
-            let day = match fixed_day {
-                Some(last) if span.contains(last) => Some(last),
-                Some(_) => continue,
-                None => match model_day(&inst, span)? {
-                    Modelled::Skip => continue,
-                    Modelled::Undated => None,
-                    Modelled::On(day) => Some(day),
-                },
+            let day = match model_day(&inst)? {
+                Modelled::Skip => continue,
+                Modelled::Undated => None,
+                Modelled::On(day) => Some(day),
             };
             let refused = inst.status == Status::Refused;
             let touching = if refused {
@@ -430,7 +411,7 @@ impl Engine {
             .collect();
         let mut out = Vec::new();
         for inst in runs {
-            let Some(day) = inst.day.as_ref().and_then(Dated::lo) else {
+            let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
                 continue;
             };
             if !span.contains(day) || self.covering(m, &of.place, day, m.on).is_empty() {
@@ -559,10 +540,8 @@ fn refusal_of(inst: &Inst) -> Stop {
 /// Where an instance of the model stands (refcore's `m_residuals`, its status test): one
 /// that doesn't exist is no line; a refused one stands where its day is, and refuses the
 /// ledger where it may touch the place, and one whose day is refused stands undated, so it
-/// refuses every ledger it may touch; a window inside one month stands at its first day, one
-/// across months in the `?` group, unless it falls wholly outside the span. E §6.3 Grouping,
-/// L §8.4, §4.4.
-fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
+/// refuses every ledger it may touch. E §6.3 Grouping, L §8.4.
+fn model_day(inst: &Inst) -> Result<Modelled, Stop> {
     match inst.status {
         Status::None | Status::LeftOut => return Ok(Modelled::Skip),
         Status::Refused
@@ -576,18 +555,6 @@ fn model_day(inst: &Inst, span: &Span) -> Result<Modelled, Stop> {
     }
     match &inst.day {
         Some(Dated::Day(d)) => Ok(Modelled::On(*d)),
-        Some(Dated::Window(w)) if (w.lo.year(), w.lo.month()) == (w.hi.year(), w.hi.month()) => {
-            Ok(Modelled::On(w.lo))
-        }
-        Some(Dated::Window(w)) => {
-            let after = span.end().is_some_and(|end| w.lo >= end);
-            let before = span.start().is_some_and(|start| w.hi < start);
-            Ok(if after || before {
-                Modelled::Skip
-            } else {
-                Modelled::Undated
-            })
-        }
         Some(Dated::Hole(_)) => Ok(Modelled::Undated),
         // a refused day may be any day: the instance refuses every ledger of a place it may
         // touch, whatever its span (L §8.4: "every day, for a day that is a hole or refused")
@@ -620,27 +587,18 @@ fn fulfilling(obs: &[Obs]) -> Fulfilling {
 
 /// An instance's line: expected but missing when no observation fulfils it (none for an
 /// amount of 0), partly fulfilled when its kind is uncertain and its observations sum to
-/// less, else matched (refcore's model lines). A window's day is the day of the last
-/// observation that fulfils it, which fixes it (L §4.4, §5.19). E §6.3.
+/// less, else matched (refcore's model lines). E §6.3.
 fn instance_line(
     m: &Reality,
     lines: &mut Lines,
     inst: &Inst,
     fulfilling: &Fulfilling,
 ) -> Result<(), Stop> {
-    // a window inside one month: its first day (refcore's `day_lo`)
-    let Some(lo) = inst.day.as_ref().and_then(Dated::lo) else {
+    let Some(day) = inst.day.as_ref().and_then(Dated::day) else {
         return Err(invariant("a ledger instance with no day"));
     };
     let mdl = flow_into(&inst.legs, &lines.of)?;
     let os = fulfilling.of(&inst.id);
-    // an observation that fulfils the movement fixes its day (L §4.4 l.665, §5.19 l.1707): a
-    // window's is the last one's, as for a window not inside one month (E §6.3 Grouping;
-    // 221.5 on #241)
-    let day = match (&inst.day, os.iter().map(|o| o.day).max()) {
-        (Some(Dated::Window(_)), Some(last)) => last,
-        _ => lo,
-    };
     lines.seen.extend(os.iter().map(|o| o.id.clone()));
     let group = move_group(m, lines, day, &inst.move_id, os)?;
     if os.is_empty() {
@@ -654,8 +612,6 @@ fn instance_line(
             day.text(),
             fig_text(m, &mdl, &lines.of.unit)?
         );
-        // a window inside one month: the day it prints is a window, no hole, so it names no
-        // unknown day (L §8.2 `unknown day:`, holes only)
         lines.out.push(Line {
             day: Some(day),
             group,
@@ -818,11 +774,9 @@ fn undated_line(
     if mdl.is_zero() {
         return Ok(());
     }
-    // a hole as the hole, a window as a question names it (refcore's `window_text`); a day
-    // that is a hole carries its unknown days, a window none (L §4.4, §8.2 `unknown day:`)
+    // a hole as the hole, carrying its unknown days (L §8.2 `unknown day:`)
     let (day_text, carry) = match &inst.day {
         Some(Dated::Hole(h)) => (h.text(), h.carried()),
-        Some(Dated::Window(w)) => (w.question.clone(), Vec::new()),
         Some(Dated::Day(_)) | None => {
             return Err(invariant("an undated instance whose day isn't a hole"));
         }

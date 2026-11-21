@@ -40,9 +40,9 @@ pub struct Adjustment {
     pub inst_keys: Vec<crate::model::KeyVal>,
     /// Its move.
     pub move_id: String,
-    /// Its day: a window's last day, by which every day of it was paid.
+    /// Its day.
     pub inst_day: Day,
-    /// Its day as its question names it: the day, or its window (refcore's `day_text`; N4).
+    /// Its day as its question names it (refcore's `day_text`; N4).
     pub inst_on: String,
     /// The leg, as booked or as the step gives it.
     pub leg: LegVal,
@@ -364,12 +364,8 @@ impl Engine {
             if settles && !is_hole_booking(inst) {
                 continue;
             }
-            // a window: every day of it is paid by a version known after its last day, which
-            // makes its adjustment; one known inside it is the booking cut's hole (E §5 step 2;
-            // P32, N4)
             let t = match &inst.day {
                 Some(crate::walk::Dated::Day(d)) => *d,
-                Some(crate::walk::Dated::Window(w)) => w.hi,
                 Some(crate::walk::Dated::Hole(_)) | None => continue,
             };
             if t >= cut {
@@ -443,12 +439,7 @@ impl Engine {
                 inst_keys: inst.keys.clone(),
                 move_id: inst.move_id.clone(),
                 inst_day: t,
-                inst_on: match &inst.day {
-                    Some(crate::walk::Dated::Window(w)) => w.question.clone(),
-                    Some(crate::walk::Dated::Day(_) | crate::walk::Dated::Hole(_)) | None => {
-                        t.text()
-                    }
-                },
+                inst_on: t.text(),
                 day: c,
                 vids: step_versions(&j.coll, vids),
                 coll: j.coll.clone(),

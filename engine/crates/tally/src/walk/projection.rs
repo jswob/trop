@@ -498,11 +498,7 @@ impl Engine {
             through,
             readers: 0,
         };
-        // the window tests the walk it continues met still leave their holes open here
-        let open_tests = from.open_tests.clone();
-        let mut walk = Walk::projection(c, (t, m.end), projected, first_reading);
-        walk.open_tests = open_tests;
-        Ok(walk)
+        Ok(Walk::projection(c, (t, m.end), projected, first_reading))
     }
 
     /// A projection's walk walked through day `d` (refcore's `run_to`). E §4.3.
