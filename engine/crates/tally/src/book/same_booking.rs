@@ -359,8 +359,8 @@ impl Engine {
 
     /// What place `p` takes from `mover`'s end there: as written where no other member
     /// books it; once, by the latest member in the day's order, where they agree; the
-    /// `HOLE-SAME` hole where they give it different amounts or days (refcore's `consol`).
-    /// L §6.1 What `same` does, §8.1.
+    /// `HOLE-SAME` hole where they give it different amounts or days, naming the leg (refcore's
+    /// `consol`). L §6.1 What `same` does, §8.1; tally 2.2.1 237.2 (`leg fee`).
     fn same_end(
         &mut self,
         m: &Reality,
@@ -440,8 +440,15 @@ impl Engine {
         for (x, g, _) in &ordered {
             parts.push(format!("{} ({})", amount_text(m, g)?, x.id()));
         }
+        // the leg by its name where every side's has it, one question per leg that differs
+        // (tally 2.2.1 237.2); the place's leg where their names differ
+        let what = if ordered.iter().all(|(_, g, _)| g.name == lg.name) {
+            format!("leg {}", lg.name)
+        } else {
+            format!("the leg at {p}")
+        };
         let text = format!(
-            "{} are one, but the leg at {p} differs on {}: {}",
+            "{} are one, but {what} differs on {}: {}",
             and_list(&ids),
             days.join(", "),
             and_list(&parts)
