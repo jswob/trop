@@ -18,6 +18,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use super::same::Groups;
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::eval::{Collected, Engine, Rows};
 use crate::model::{Fulfils, InputInfo, KeyVal, MvRef, MvSrc, Reality, Span, Value, World};
@@ -629,6 +630,7 @@ impl Engine {
         }
         let mut out = Vec::new();
         let mut linked: BTreeSet<String> = BTreeSet::new();
+        let groups = self.same_groups(m, cut)?;
         for tid in targets {
             let good = self.obs_links_for(m, &tid, cut)?;
             let mut all: Vec<Obs> = Vec::new();
@@ -641,7 +643,7 @@ impl Engine {
             let mut rest = all.as_slice();
             while let [a, tail @ ..] = rest {
                 rest = tail;
-                pairs_warned(m, &tid, a, tail, &mut out)?;
+                pairs_warned(m, (&tid, &groups), a, tail, &mut out)?;
             }
         }
         self.same_rows_warned(m, cut, &linked, &mut out)?;
@@ -713,18 +715,21 @@ fn same_pairs_warned(
     Ok(())
 }
 
-/// `WARN-LEGS` for observation `a` against each later one of another version that fulfils
-/// instance `tid` and disagrees with it on an amount or a day, each warning once (refcore's
-/// `prepare`, `legs_warn`; L §5.19 l.1717; P36 on #241). E §6.1.
+/// `WARN-LEGS` for observation `a` against each later one that fulfils instance `tid` and
+/// disagrees with it on an amount or a day, of another version or stated `same` with it in
+/// `groups`, each warning once: unjoined rows of one version are pieces of a payment
+/// (refcore's `prepare`, `legs_warn`; L §5.19 l.1717, "the sentence names no version"; B5,
+/// P36 on #241). E §6.1.
 fn pairs_warned(
     m: &Reality,
-    tid: &str,
+    (tid, groups): (&str, &Groups),
     a: &Obs,
     later: &[Obs],
     out: &mut Vec<(Warn, String)>,
 ) -> Result<(), Stop> {
     for b in later {
-        if a.version == b.version {
+        let joined = groups.get(&a.id).is_some_and(|g| g.contains(&b.id));
+        if a.version == b.version && !joined {
             continue;
         }
         let Some((fa, fb)) = disagreement(m, a, b)? else {
