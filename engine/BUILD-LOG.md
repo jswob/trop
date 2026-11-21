@@ -6129,3 +6129,13 @@ The findings are `tmp/spec-2.2.1/t-c9-notes.md`'s F-A and F-B; the ids are 8c3ad
   - `check quick: red at tests, stopped after 10 of 11 steps (93s)`: T's `codes::tests::the_m0_fixtures_read_and_print_their_codes` alone (codes/m0's four G4 fixtures, 8c3ad430; red at the baseline).
   - `check commit: red at tests, stopped after 10 of 24 steps (76s)`: the 10 ids above.
   - `check fences: green, 1 step (27s)`.
+
+## STOP-REPORT 2026-11-21: T's runner test pins 252 codes/m0 fixtures; 8c3ad430 stored 256
+
+- **Kind:** a test seems wrong (a stale count in T's runner, not an engine output)
+- **Where:** `engine/tests/runner/src/codes.rs:245` `the_m0_fixtures_read_and_print_their_codes`: `assert_eq!((vs.len(), codes.len()), (252, 52), "238 fixtures of 52 codes")`; `engine/tests/codes/m0.refcore`, to which 8c3ad430 added G4's four fixtures (`codes/m0/edits.tsv` +5)
+- **Rule or gate:** R-83 (the Stop hook: `check quick` red on a test no `Logged-Red:` line names)
+- **What happens:** `engine/tools/check quick`, exit non-zero: `FAIL tests: 1 of 331 tests are red`; `left: (256, 52)`, `right: (252, 52)`. The test reads the stored record and never runs the engine. It was red at 800495bc, before this turn's first change (`g2c9/red-0-tests.txt`), and is red at f8f5b190
+- **What I tried:** nothing: no engine change touches the count, and the runner is T's (R-79)
+- **What I ask:** T moves the pin to (256, 52) and its message and doc line with it, or logs the test red until it does
+- **State:** f8f5b190 (F-A, F-B and their log entry); `check commit` red on the 10 ids logged on this branch; `check fences` green; this entry uncommitted until its commit; not pushed
