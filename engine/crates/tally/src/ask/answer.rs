@@ -676,8 +676,13 @@ fn ask_lines(
 /// The cuts the request's asks state as literals, `as known D` or `with known D` (`what`), on or
 /// before the model's `on`: past it, the request is refused after load, as `REQ-ASK` is, the
 /// run's one result, `REQ-CLOCK <what> <D> is after the model's on <on>` (E §11; R5, #112;
-/// refcore's `req_clock`). A computed cut is refused at its value (`after_on`).
+/// refcore's `req_clock`). A computed cut is refused at its value (`after_on`). Only an ask
+/// load left standing is judged: one load refused alone prints its own line (E §11 "in an ask
+/// load left standing"; OPERATIONS §2.1; G4's review B1).
 fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
+    if m.asks_alone.contains_key(&ask.id) {
+        return Ok(());
+    }
     let as_known = ask.known.iter().map(|e| ("as known", e));
     let with_known = ask.pins.iter().filter_map(|pin| match &pin.form {
         PinForm::Known(e) => Some(("with known", e)),
