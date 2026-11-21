@@ -359,7 +359,8 @@ mod tests {
     }
 
     /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes`, `b192`,
-    /// `lawdate` and tally 2.2.1's `t221-gd`, `t221-g1`, `t221-rc`, `run` first but for a usage error,
+    /// `lawdate` and tally 2.2.1's `t221-gd`, `t221-g1`, `t221-rc`, `run` first but for a usage error
+    /// and `reprint` (O §2.2: its inputs are `run`'s, `--pin=bytes` too; G4's review B3, P50),
     /// every text embedded.
     #[test]
     fn the_runs_store_reads_and_every_text_is_embedded() {
@@ -389,7 +390,8 @@ mod tests {
                 v.id
             );
             assert!(
-                v.source == "rule" || v.args.first().map(String::as_str) == Some("run"),
+                v.source == "rule"
+                    || matches!(v.args.first().map(String::as_str), Some("run" | "reprint")),
                 "{}",
                 v.id
             );

@@ -110816,7 +110816,7 @@ version st
 ask b: bal(konto, 2026-03-31)
 ask f: flows(save, 2026-03)
 ask r: residuals konto 2026-03
-,,1:1,141:refused: LOAD-SAME same bank[o1] = save[2026-03]: an observed row and a planned instance of one model; state fulfils on the row (m.tally:37)
+,,1:1,141:refused: LOAD-SAME same save[2026-03] = bank[o1]: an observed row and a planned instance of one model; state fulfils on the row (m.tally:37)
 ,10:cut/unread,9:fixes-cut,11:run m.tally,1274:7:m.tally,1258:model t
   tally 2
   on 2026-06-10
@@ -113830,7 +113830,7 @@ version v
   fee[a2] = 12.00 PLN "s"
 
 ask q: fee[a1]
-,,1:1,95:refused: LOAD-SAME same fee[a1] = fee[a2]: a row of an input and a row of an input (m.tally:1)
+,,1:1,95:refused: LOAD-SAME same fee[a1] = fee[a2]: a row of an input and a row of an input (m.tally:6)
 ,28:fixes/t22/cut_same_rows_twin,8:fixes-22,11:run m.tally,681:7:m.tally,666:model same_rows_def
   tally 2
   on 2026-06-30

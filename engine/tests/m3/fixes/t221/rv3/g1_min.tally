@@ -1,0 +1,15 @@
+model g1_min
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+input one: num
+input dd: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1 "s"
+  dd = 2026-03-05 "s"
+ask t: (if dd + 1 day > dd then none else one) + one for day in [2026-03-01]

@@ -1,0 +1,16 @@
+model m
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+input one: int
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  one = 1
+
+ask q: one

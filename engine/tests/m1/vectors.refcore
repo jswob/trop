@@ -212474,7 +212474,7 @@ version st_sav
   covers sav
   bank[b1] = (on: 2026-03-16, kind: transfers, leg cash from konto to sav amount 950.00 PLN, fulfils: save[2026-03]) "b"
   same bank[a2] = bank[b1]
-,,1:0,931:q_flk: -950.00 PLN
+,,1:0,796:q_flk: -950.00 PLN
   cut 2026-04-10
 q_konto: 100.00 PLN
   cut 2026-04-10
@@ -212486,7 +212486,7 @@ q_moved: 950.00 PLN
   cut 2026-04-10
 q_n: 1
   cut 2026-04-10
-q_obs: ?"bank[a2] and bank[b1] are one, but the day of cash differs on 2026-03-15: 2026-03-15 (bank[a2]) and 2026-03-16 (bank[b1])" (bank[a2], bank[b1])
+q_obs: 950.00 PLN
   cut 2026-04-10
 q_sav: 950.00 PLN
   cut 2026-04-10
