@@ -104,7 +104,7 @@ fn ledger_result(
     }
     let by = r.by.as_ref().map_or(String::new(), |f| format!(" by {f}"));
     Ok(Ok(Printed {
-        text: format!("residuals {place} {}{by}", span_text(&r.span)),
+        text: format!("residuals {place} {}{by}", span_text(m, &r.span, env)?),
         body,
         bare: false,
         whole: true,
@@ -136,35 +136,41 @@ fn group_lines(m: &Reality, ledger: &UnitLedger, indent: &str) -> Result<Vec<Str
     Ok(out)
 }
 
-/// A span as the ask wrote it: its first end, then ` .. ` and its last when `..` was
-/// written (refcore's `_txt` of a span). L §5.18.
-fn span_text(sp: &Span) -> String {
+/// A span as the ask wrote it, each variable a binding of `env` gave printed as its value: its
+/// first end, then ` .. ` and its last when `..` was written (refcore's `_txt` of a span).
+/// L §5.18, §8.1 (a message names a thing by its keys' values; T's STOP-REPORT of C1 on #241).
+///
+/// # Errors
+///
+/// A number error printing a bound value.
+fn span_text(m: &Reality, sp: &Span, env: &Env) -> Result<String, Stop> {
     let first = match &sp.from {
-        Some(e) => end_text(e),
+        Some(e) => end_text(m, e, env)?,
         None => String::new(),
     };
     if !sp.dots {
-        return first;
+        return Ok(first);
     }
-    match &sp.to {
-        Some(e) => format!("{first} .. {}", end_text(e)),
+    Ok(match &sp.to {
+        Some(e) => format!("{first} .. {}", end_text(m, e, env)?),
         None => format!("{first} .."),
-    }
+    })
 }
 
-/// A span's end as written: a name, a day, a month, a quarter, a key, or any other
-/// expression's text, `end_of(2026-03)` (refcore's `_txt`). L §5.18.
-fn end_text(e: &Expr) -> String {
-    if let Expr::Name(n) = e {
-        return n.clone();
-    }
+/// A span's end as written: a day, a month, a quarter, a key, or any other expression's
+/// text, a name a binding gave by its value, `end_of(2026-03)` (refcore's `_txt`). L §5.18.
+///
+/// # Errors
+///
+/// A number error printing a bound value.
+fn end_text(m: &Reality, e: &Expr, env: &Env) -> Result<String, Stop> {
     if let Expr::Lit(lit) = e
         && matches!(
             lit,
             Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) | Lit::Key(_) | Lit::Name(_)
         )
     {
-        return lit.text();
+        return Ok(lit.text());
     }
-    crate::load::expr_text(e)
+    crate::eval::written_bound(m, e, env)
 }
