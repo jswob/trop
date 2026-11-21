@@ -5933,118 +5933,70 @@ pinned2 [x = x2, y = y2]: diff in sa against sb: 1 changed, 0 added, 0 removed, 
 ,27:t221-rc/231-R1-explain-in-s,7:t221-rc,3:run,31:engine/tests/m3/fixes/t221/diff,42:run base.tally sa.tally sb.tally --ask exs,115:base.tally	m3/fixes/t221/diff/base.tally
 sa.tally	m3/fixes/t221/diff/sa.tally
 sb.tally	m3/fixes/t221/diff/sb.tally
-,1:0,5602:exs: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+,1:0,3266:exs: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
   [1] the pins, evaluated outside them
     [2] pin x = x1
     [3] pin y = y1
     [4] pin z = z2
   [5] inside the pins: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
     [6] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [7] outside the pins [x = x1, y = y1, z = z1]: 1
+  [7] outside the pins [x = x1, z = z1]: 1
     [8] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [9] outside the pins [x = x1, y = y1, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  [9] outside the pins [x = x1, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
     [10] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [11] outside the pins [x = x1, y = y1, z = z3]: 1
+  [11] outside the pins [x = x1, z = z3]: 1
     [12] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [13] outside the pins [x = x1, y = y2, z = z1]: 1
+  [13] outside the pins [x = x2, y = y1, z = z1]: 1
     [14] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [15] outside the pins [x = x1, y = y2, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  [15] outside the pins [x = x2, y = y1, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
     [16] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [17] outside the pins [x = x1, y = y2, z = z3]: 1
+  [17] outside the pins [x = x2, y = y1, z = z3]: 1
     [18] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [19] outside the pins [x = x1, y = y3, z = z1]: 1
-    [20] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
+  [19] outside the pins [x = x2, y = y2, z = z1]: 0
+    [20] d = 0, law date 2026-06-01
+        rule base: beaten by bx
+        rule bx: won
         rule bz: not applicable
-  [21] outside the pins [x = x1, y = y3, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
-    [22] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [23] outside the pins [x = x1, y = y3, z = z3]: 1
-    [24] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
+  [21] outside the pins [x = x2, y = y2, z = z2]: refused: RUN-CONFLICT rules bx and bz both win for d on 2026-06-01
+    [22] d = refused: RUN-CONFLICT rules bx and bz both win for d on 2026-06-01, law date 2026-06-01
+  [23] outside the pins [x = x2, y = y2, z = z3]: 0
+    [24] d = 0, law date 2026-06-01
+        rule base: beaten by bx
+        rule bx: won
         rule bz: not applicable
-  [25] outside the pins [x = x2, y = y1, z = z1]: 1
+  [25] outside the pins [x = x2, y = y3, z = z1]: 1
     [26] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [27] outside the pins [x = x2, y = y1, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+  [27] outside the pins [x = x2, y = y3, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
     [28] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [29] outside the pins [x = x2, y = y1, z = z3]: 1
+  [29] outside the pins [x = x2, y = y3, z = z3]: 1
     [30] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [31] outside the pins [x = x2, y = y2, z = z1]: 0
-    [32] d = 0, law date 2026-06-01
-        rule base: beaten by bx
-        rule bx: won
-        rule bz: not applicable
-  [33] outside the pins [x = x2, y = y2, z = z2]: refused: RUN-CONFLICT rules bx and bz both win for d on 2026-06-01
-    [34] d = refused: RUN-CONFLICT rules bx and bz both win for d on 2026-06-01, law date 2026-06-01
-  [35] outside the pins [x = x2, y = y2, z = z3]: 0
-    [36] d = 0, law date 2026-06-01
-        rule base: beaten by bx
-        rule bx: won
-        rule bz: not applicable
-  [37] outside the pins [x = x2, y = y3, z = z1]: 1
-    [38] d = 1, law date 2026-06-01
+  [31] outside the pins [x = x3, z = z1]: 1
+    [32] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
-  [39] outside the pins [x = x2, y = y3, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
-    [40] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [41] outside the pins [x = x2, y = y3, z = z3]: 1
-    [42] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
-        rule bz: not applicable
-  [43] outside the pins [x = x3, y = y1, z = z1]: 1
-    [44] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
-        rule bz: not applicable
-  [45] outside the pins [x = x3, y = y1, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
-    [46] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [47] outside the pins [x = x3, y = y1, z = z3]: 1
-    [48] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
-        rule bz: not applicable
-  [49] outside the pins [x = x3, y = y2, z = z1]: 1
-    [50] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
-        rule bz: not applicable
-  [51] outside the pins [x = x3, y = y2, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
-    [52] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [53] outside the pins [x = x3, y = y2, z = z3]: 1
-    [54] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
-        rule bz: not applicable
-  [55] outside the pins [x = x3, y = y3, z = z1]: 1
-    [56] d = 1, law date 2026-06-01
-        rule base: won
-        rule bx: not applicable
-        rule bz: not applicable
-  [57] outside the pins [x = x3, y = y3, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
-    [58] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
-  [59] outside the pins [x = x3, y = y3, z = z3]: 1
-    [60] d = 1, law date 2026-06-01
+  [33] outside the pins [x = x3, z = z2]: refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01
+    [34] d = refused: RUN-CONFLICT rules bz and base both win for d on 2026-06-01, law date 2026-06-01
+  [35] outside the pins [x = x3, z = z3]: 1
+    [36] d = 1, law date 2026-06-01
         rule base: won
         rule bx: not applicable
         rule bz: not applicable
@@ -6548,7 +6500,7 @@ warning: WARN-NEGATIVE b.konto is below zero from 2026-01-01
 ,25:t221-g4/231-2-pin-balance,7:t221-g4,3:run,30:engine/tests/m3/fixes/t221/rs5,20:run b.tally --ask q5,34:b.tally	m3/fixes/t221/rs5/b.tally
 ,1:1,86:refused: LOAD-INSTANT a pin of balance reading opening states no instant (b.tally:12)
 ,25:t221-rc/230-5a-same-order,7:t221-rc,3:run,30:engine/tests/m3/fixes/t221/g3t,17:run s230_5a.tally,46:s230_5a.tally	m3/fixes/t221/g3t/s230_5a.tally
-,1:1,147:refused: LOAD-SAME same bank[o1] = save[2026-03]: an observed row and a planned instance of one model; state fulfils on the row (s230_5a.tally:37)
+,1:1,147:refused: LOAD-SAME same save[2026-03] = bank[o1]: an observed row and a planned instance of one model; state fulfils on the row (s230_5a.tally:37)
 ,26:t221-rc/233-a-unit-literal,7:t221-rc,3:run,29:engine/tests/m3/fixes/t221/u0,24:run u0_etf_literal.tally,59:u0_etf_literal.tally	m3/fixes/t221/u0/u0_etf_literal.tally
 ,1:1,87:refused: LOAD-KEY ambiguous key etf: nothing names its index (u0_etf_literal.tally:52)
 ,28:t221-g4/228-2-run-path-order,7:t221-g4,3:run,26:engine/tests/m3/fixes/t221,9:run q2dir,144:q2dir/base.tally	m3/fixes/t221/q2dir/base.tally
@@ -6826,10 +6778,11 @@ p1: 600.00 PLN
   pinned: w = 2026-03-12
   cut 2026-04-10
 ,26:t221-g3/p45-same-day-names,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv2,23:run h10.tally --ask f2d,38:h10.tally	m3/fixes/t221/rv2/h10.tally
-,1:0,138:f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+,1:0,164:f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
+  pinned: d2 = 2026-03-09
   cut 2026-06-10
 ,27:t221-rc/221-8-same-row-line,7:t221-rc,3:run,31:engine/tests/m3/fixes/t221/g3t2,15:run t2218.tally,43:t2218.tally	m3/fixes/t221/g3t2/t2218.tally
-,1:1,144:refused: LOAD-SAME same bank[r1] = pay[2026-03]: an observed row and a planned instance of one model; state fulfils on the row (t2218.tally:22)
+,1:1,144:refused: LOAD-SAME same pay[2026-03] = bank[r1]: an observed row and a planned instance of one model; state fulfils on the row (t2218.tally:22)
 ,24:t221-g3/233-c-unit-words,7:t221-g3,3:run,31:engine/tests/m3/fixes/t221/g3t2,12:run uq.tally,37:uq.tally	m3/fixes/t221/g3t2/uq.tally
 ,1:0,254:u1: PLN
   cut 2026-03-01
@@ -6838,9 +6791,9 @@ u2: refused: RUN-DOMAIN unit of 25 PLN^2: a plain number or a compound unit is a
 u3: refused: RUN-DOMAIN unit of 1: a plain number or a compound unit is a key of no unit kind
   cut 2026-03-01
 ,24:t221-g3/233-7-none-arith,7:t221-g3,3:run,31:engine/tests/m3/fixes/t221/g3t2,16:run n233_7.tally,45:n233_7.tally	m3/fixes/t221/g3t2/n233_7.tally
-,1:0,367:q_arith: refused: RUN-NONE fee[2026-02] is none here: arithmetic
+,1:0,372:q_arith: refused: RUN-NONE fee[2026-02] is none here: arithmetic
   cut 2026-06-10
-q_cmp: refused: RUN-NONE a value is none here: an ordering
+q_cmp: refused: RUN-NONE fee[2026-02] is none here: an ordering
   cut 2026-06-10
 q_plain: 10.00 PLN
   cut 2026-06-10
@@ -6849,7 +6802,7 @@ q_sum: refused: RUN-NONE a term of sum is none here
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
 ,22:t221-rc/208-R2-for-law,7:t221-rc,3:run,32:engine/tests/m3/fixes/t221/rc208,18:run pt208_r2.tally,50:pt208_r2.tally	m3/fixes/t221/rc208/pt208_r2.tally
-,1:0,491:r_explain (m = 2026-03): 10.00 PLN
+,1:0,497:r_explain (m = 2026-03): 10.00 PLN
   [1] row f26:fee[2026-03..2026-06] = 10.00 PLN
       version f26, source s, "invented", locator "s", governs 2026-01-01.., known 2026-01-01
   law date 2026-06-01, cut 2026-06-10
@@ -6859,9 +6812,153 @@ r_flows (m = 2026-03): 10.00 PLN
 r_flows (m = 2026-04): 10.00 PLN
   unfulfilled: pay[2026-04]
   law date 2026-06-01, cut 2026-06-10
-r_resid (m = 2026-03): residuals konto m
+r_resid (m = 2026-03): residuals konto 2026-03
   law date 2026-06-01, cut 2026-06-10
 ,24:t221-rc/228-10-member-on,7:t221-rc,3:run,30:engine/tests/m3/fixes/t221/q10,27:run top.tally --ask m.b m.c,76:top.tally	m3/fixes/t221/q10/top.tally
 m/m.tally	m3/fixes/t221/q10/m/m.tally
 ,1:1,74:refused: REQ-CLOCK as known 2026-05-01 is after the model's on 2026-03-31
+,25:t221-g3/rv3-b1-bound-word,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,16:run g1_min.tally,44:g1_min.tally	m3/fixes/t221/rv3/g1_min.tally
+,1:0,122:t (day = 2026-03-01): refused: RUN-NONE (if dd + 1 day > dd then none else one) is none here: arithmetic
+  cut 2026-06-10
+,27:t221-g3/rv3-b2-quantile-key,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,16:run g2_min.tally,44:g2_min.tally	m3/fixes/t221/rv3/g2_min.tally
+,1:0,92:t (k = k2): refused: RUN-NONE rate[k2] is none here: the level of quantile
+  cut 2026-06-10
+,24:t221-g3/rv3-n1-load-same,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,13:run ls1.tally,38:ls1.tally	m3/fixes/t221/rv3/ls1.tally
+,1:1,133:refused: LOAD-SAME same pay = bank[r1]: an observed row and a planned instance of one model; state fulfils on the row (ls1.tally:24)
+,25:t221-g3/rv3-n2-none-reads,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,12:run n2.tally,36:n2.tally	m3/fixes/t221/rv3/n2.tally
+,1:0,1763:o1 (k = k1): false
+  cut 2026-06-10
+o1 (k = k2): refused: RUN-NONE rate[k2] is none here: an ordering
+  cut 2026-06-10
+o10 (k = k1): 1
+  cut 2026-06-10
+o10 (k = k2): refused: RUN-NONE a value is none here: abs
+  cut 2026-06-10
+o11 (k = k1): 1
+  cut 2026-06-10
+o11 (k = k2): refused: RUN-NONE a value is none here: round
+  cut 2026-06-10
+o12 (k = k1): 1
+  cut 2026-06-10
+o12 (k = k2): refused: RUN-NONE a value is none here: if
+  cut 2026-06-10
+o13 (k = k1): true
+  cut 2026-06-10
+o13 (k = k2): refused: RUN-NONE a value is none here: and
+  cut 2026-06-10
+o14 (k = k1): -1
+  cut 2026-06-10
+o14 (k = k2): refused: RUN-NONE rate[k2] is none here: arithmetic
+  cut 2026-06-10
+o15: refused: RUN-NONE rate[k2] is none here: an ordering
+  cut 2026-06-10
+o16 (k = k1): false
+  cut 2026-06-10
+o16 (k = k2): refused: RUN-NONE a value is none here: not
+  cut 2026-06-10
+o17 (k = k1): true
+  cut 2026-06-10
+o17 (k = k2): refused: RUN-NONE a value is none here: a membership test
+  cut 2026-06-10
+o2 (k = k1): true
+  cut 2026-06-10
+o2 (k = k2): refused: RUN-NONE rate[k2] is none here: an ordering
+  cut 2026-06-10
+o3 (k = k1): true
+  cut 2026-06-10
+o3 (k = k2): false
+  cut 2026-06-10
+o4: refused: RUN-NONE a term of sum is none here
+  cut 2026-06-10
+o5: refused: RUN-NONE a term of max is none here
+  cut 2026-06-10
+o6 (k = k1): 1
+  cut 2026-06-10
+o6 (k = k2): refused: RUN-NONE a value is none here: min
+  cut 2026-06-10
+o7 (k = k1): 1
+  cut 2026-06-10
+o7 (k = k2): refused: RUN-NONE rec[k2] is none here: a field read of it
+  cut 2026-06-10
+o8 (k = k1): 0.00 PLN
+  cut 2026-06-10
+o8 (k = k2): refused: RUN-NONE acct[k2] is none here: a place
+  cut 2026-06-10
+o9 (k = k1): PLN
+  cut 2026-06-10
+o9 (k = k2): refused: RUN-NONE q[k2] is none here: a quantity
+  cut 2026-06-10
+,27:t221-g3/rv3-n4-release-line,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,12:run q4.tally,36:q4.tally	m3/fixes/t221/rv3/q4.tally
+,1:0,386:e: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+f: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+fp: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+fp2: 100.00 PLN
+  unfulfilled: pay2
+  cut 2026-04-10
+k: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+l (t = pay): 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+,25:t221-g3/rv3-n5-added-hole,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv3,21:run c4.tally --ask a1,36:c4.tally	m3/fixes/t221/rv3/c4.tally
+,1:0,205:a1 (k = a): calendar(weekends [sat, sun], added [?"which day off?", 2026-06-22])
+  cut 2026-01-10
+a1 (k = b): calendar(weekends [sat, sun], added [2026-06-23, ?"is \"it\" a day \\ off?"])
+  cut 2026-01-10
+,26:t221-g4/rv4-b1-clock-alone,7:t221-g4,3:run,33:engine/tests/m3/fixes/t221/rv4/b1,22:run m.tally good.tally,80:m.tally	m3/fixes/t221/rv4/b1/m.tally
+good.tally	m3/fixes/t221/rv4/b1/good.tally
+,1:0,165:g: 1
+  world: good
+  cut 2026-04-30
+p_gone: refused: LOAD-SCENARIO ask p_gone names gone, neither the model nor a loaded scenario (m.tally:17)
+q: 1
+  cut 2026-04-30
+,29:t221-g4/rv4-b1-clock-one-file,7:t221-g4,3:run,33:engine/tests/m3/fixes/t221/rv4/b1,11:run m.tally,37:m.tally	m3/fixes/t221/rv4/b1/m.tally
+,1:0,129:p_gone: refused: LOAD-SCENARIO ask p_gone names gone, neither the model nor a loaded scenario (m.tally:17)
+q: 1
+  cut 2026-04-30
+,22:t221-g4/rv4-b2-per-cut,7:t221-g4,3:run,33:engine/tests/m3/fixes/t221/rv4/b2,16:run percut.tally,47:percut.tally	m3/fixes/t221/rv4/b2/percut.tally
+,1:1,104:refused: LOAD-COVERS replace bank[r1] of konto: fix doesn't cover konto on 2026-02-10 (percut.tally:30)
+,25:t221-g4/rv4-n1-after-none,7:t221-g4,3:run,33:engine/tests/m3/fixes/t221/rv4/b2,30:run chain_none_row_nocov.tally,75:chain_none_row_nocov.tally	m3/fixes/t221/rv4/b2/chain_none_row_nocov.tally
+,1:1,119:refused: LOAD-COVERS replace bank[r1] of konto: fix3 doesn't cover konto on 2026-02-10 (chain_none_row_nocov.tally:39)
+,28:t221-g4/rv4-b3-reprint-bytes,7:t221-g4,3:run,33:engine/tests/m3/fixes/t221/rv4/b3,35:reprint top_bytes.tally --pin=bytes,90:top_bytes.tally	m3/fixes/t221/rv4/b3/top_bytes.tally
+m.tally	m3/fixes/t221/rv4/b3/m.tally
+,1:0,258:--- top_bytes.tally
+model fam
+  tally 2
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+  use a = "m.tally" sha256 "20c65f0d71819d0a7656da688be203e37d83805ae9aba476e370b552b45ac31b"
+sha256 818223fa3d9c89ef21b1f77138fc4cf83018c3653c26c2d619f37ed65ffed2f6
+,28:t221-g4/rv4-b3-reprint-canon,7:t221-g4,3:run,33:engine/tests/m3/fixes/t221/rv4/b3,35:reprint top_canon.tally --pin=bytes,90:top_canon.tally	m3/fixes/t221/rv4/b3/top_canon.tally
+m.tally	m3/fixes/t221/rv4/b3/m.tally
+,1:1,60:refused: LOAD-PIN m.tally doesn't match its sha256 in use a
+,21:t221-g4/p49-ask-order,7:t221-g4,3:run,34:engine/tests/m3/fixes/t221/rv4/ord,20:run base.tally m z a,176:base.tally	m3/fixes/t221/rv4/ord/base.tally
+m/aa.tally	m3/fixes/t221/rv4/ord/m/aa.tally
+z/bb.tally	m3/fixes/t221/rv4/ord/z/bb.tally
+a/cc.tally	m3/fixes/t221/rv4/ord/a/cc.tally
+,1:0,239:q: -43.00 PLN
+  world: cc
+  cut 2026-04-30
+q: -41.00 PLN
+  world: aa
+  cut 2026-04-30
+q: -40.00 PLN
+  world: m
+  cut 2026-04-30
+warning: WARN-NEGATIVE konto is below zero from 2026-02-10
+warning: WARN-UNREAD input spare is read by nothing
+,24:t221-g4/rv4-version-line,7:t221-g4,3:run,34:engine/tests/m3/fixes/t221/rv4/ver,12:run b3.tally,40:b3.tally	m3/fixes/t221/rv4/ver/b3.tally
+,1:1,69:refused: LOAD-VERSION tally 3: this engine runs tally 2 (b3.tally:2)
+,28:t221-g4/rv4-version-disagree,7:t221-g4,3:run,34:engine/tests/m3/fixes/t221/rv4/ver,21:run b3.tally s2.tally,80:b3.tally	m3/fixes/t221/rv4/ver/b3.tally
+s2.tally	m3/fixes/t221/rv4/ver/s2.tally
+,1:1,61:refused: LOAD-VERSION files declare different tally versions
+,26:t221-g4/rv4-version-member,7:t221-g4,3:run,35:engine/tests/m3/fixes/t221/rv4/verj,15:run t3_m2.tally,88:t3_m2.tally	m3/fixes/t221/rv4/verj/t3_m2.tally
+m2.tally	m3/fixes/t221/rv4/verj/m2.tally
+,1:1,67:refused: LOAD-VERSION member a declares tally 2, the joint model 3
 ,

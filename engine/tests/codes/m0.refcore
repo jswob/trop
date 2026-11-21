@@ -4832,7 +4832,7 @@ version card_2026
   governs always
   known 2026-01-01
   pay = 4 000.00 PLN "the card"
-,,1:1,85:refused: LOAD-SAME same a.pay = a.twice: a row of an input and a def (joint.tally:1)
+,,1:1,85:refused: LOAD-SAME same a.pay = a.twice: a row of an input and a def (joint.tally:7)
 ,19:joint/same-unjoined,9:LOAD-SAME,5:joint,33:run joint.tally --ask zz_m0_probe,912:11:joint.tally,471:model family
   tally 2
   on 2026-03-01
@@ -12901,5 +12901,37 @@ version card_2026
   rate[q1] = 0.1 "the card"
   rate[q2] = 0 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:1,56:refused: LOAD-VERSION tally 3: this engine runs tally 2
+,,1:1,71:refused: LOAD-VERSION tally 3: this engine runs tally 2 (base.tally:2)
+,20:joint/version-member,12:LOAD-VERSION,5:joint,33:run joint.tally --ask zz_m0_probe,780:11:joint.tally,339:model family
+  tally 3
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "a/a.tally" sha256 "5c37999654a56b80e0b6abd97099390c0c7bddbee9ca63b5c5d00978e7f15ab3"
+  note "T's base for M0's load-code fixtures (invented): a joint model over one member, a/a.tally, pinned by its canonical text's hash; it loads clean"
+
+ask x: a.twice
+,9:a/a.tally,404:model ana
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member for M0's load-code fixtures (invented): the joint model's one member"
+
+source card "T's fixture card (invented)"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+
+def twice: money PLN = pay + pay
+
+ask q: twice
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card"
+,,1:1,67:refused: LOAD-VERSION member a declares tally 2, the joint model 3
 ,

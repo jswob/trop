@@ -43,8 +43,9 @@ LOAD-HEADER	L §8.3	M0	missing start or end	1	M0	codes/m0/basic/header-end
 LOAD-HEADER	L §8.3	M0	missing from date	1	M0	codes/m0/scen/header-from
 LOAD-HEADER	L §8.3	M0	start after end	1	M0	codes/m0/basic/header-order
 LOAD-HEADER	L §8.3	M0	<n> files have a model header; exactly one does	26	M0	U:law/LAW-13/rate25
-LOAD-VERSION	L §8.3	M0	*	3	M0	codes/m0/basic/version-rule
+LOAD-VERSION	L §8.3	M0	*	4	M0	codes/m0/basic/version-rule
 LOAD-VERSION	L §8.3	M0	files declare different tally versions	1	M0	codes/m0/parts/version
+LOAD-VERSION	L §8.3	M0	member <a> declares tally <N>, the joint model <M>	1	M0	codes/m0/joint/version-member
 LOAD-VERSION	L §8.3	M0	tally <N>: this engine runs tally 2	1	M0	codes/m0/basic/version-three
 LOAD-VERSION	L §8.3	M0	replace rule <d>.<r> in <V> names version <W>	1	M0	codes/m0/basic/version-rule
 LOAD-PIN	L §8.3	M0	*	1	M0	codes/m0/joint/pin
