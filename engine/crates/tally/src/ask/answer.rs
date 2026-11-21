@@ -642,7 +642,12 @@ fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
         PinForm::Known(e) => Some(("with known", e)),
         PinForm::Law(_) | PinForm::Wording(..) | PinForm::Scenario(_) | PinForm::Set { .. } => None,
     });
-    for (what, e) in as_known.chain(with_known) {
+    for (what, written) in as_known.chain(with_known) {
+        // a literal in `( )` is that literal (E §11 `REQ-CLOCK`, S-233.8)
+        let mut e = written;
+        while let Expr::Paren(inner) = e {
+            e = inner;
+        }
         if let Expr::Lit(Lit::Day(cut)) = e
             && *cut > m.on
         {
