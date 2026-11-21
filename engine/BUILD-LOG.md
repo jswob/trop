@@ -6211,3 +6211,24 @@ The fix review is `tmp/spec-2.2.1/review-g4fix.md` (blocking 2), its probes `rev
 - **Checks at e8d61f51's tree:**
   - `check quick: red at tests, stopped after 10 of 11 steps (94s)`: T's `codes::tests::the_m0_fixtures_read_and_print_their_codes`.
   - `check commit: red at tests, stopped after 10 of 24 steps (90s)`: the 11 ids above.
+
+## 2026-11-21 tally 2.2.1 G2, the last two ids and the branch's close: Finding 1, Finding 2 (issue #241)
+
+The findings are `tmp/spec-2.2.1/t-d2-notes.md`'s F-G (Finding 1) and F-H (Finding 2); the pinned refcore is the final one (b70993c2, `tally-2.2.1`, merged at 86030b36). Branch `build/2.2.1` after the merge 0af39edd; another builder's uncommitted STOP-REPORT on the mended codes/m0 count dropped first. No window work: no probe with a window, no window behaviour changed.
+
+**2253a7d5, Finding 1:** `walk/move_flows.rs` `count_move`, the `Status::None` branch: an instance on a day inside the span whose `when` is false is read to be left out, so every entry its reads gave joins the read set, its `held:` lines too (P35, refcore's `flows_move`); one outside the span keeps its deciding entries, as before. Green: `fixes/g4/nb3_at` (`q_sw: 0.00 PLN` with its three `held:` lines). Probes (`g2d2/probes/nb3`): `count`, `sum`, keyed `flows` and spans starting after a false-`when` instance all equal refcore's; the first try (the whole read set under the old day test) added `held:` lines of instances before the span, which refcore leaves out, and was narrowed.
+
+**24a278c8, Finding 2:** `book/observe.rs` `disagreeing_links` takes the same groups once; `pairs_warned` skips a pair of one version only where its rows aren't stated `same` (refcore's `legs_warn`; L §5.19 l.1717; B5, P36). Green: `s6/hole_same_order_class` (the second line, `bank[r2] (950.00 PLN) and bank[r3] (940.00 PLN)`).
+
+**71fb2bd0, the doc step:** `eval/stack.rs` `Engine::value`'s public doc linked the private `Engine::line_per_day` (7cdbe1a2), which the doc step refuses; the name stays as code text. Every `check commit` on this branch since had stopped red at tests before the doc step.
+
+- **Red list** (`check commit`, `g2d2/red-*.txt`): 2 before; 1 after Finding 1; 0 after Finding 2. None joined. Nothing held for the tests session.
+- **Size** (`git diff --numstat 0af39edd..71fb2bd0 -- engine/crates`): 3 files, 20 in, 10 out (Finding 1 8/3, Finding 2 11/6, the doc 1/1).
+- **Exceptions:** +0 (`engine/tools/exceptions --check` exits 0).
+- **For the windows round:** nothing met.
+- **Open STOP-REPORTs:** none of G2's (25fdae9b's, the codes/m0 count, mended by 09cc011a).
+- **Usage:** about 3.36 % of the week before this entry (`engine/tools/usage tmp/spec-2.2.1-build/g2-ids.txt`; 3.19 % before the last turn's entry), against about 0.4 % for this turn.
+- **Time:** about 18 min from 04:30 local; `check commit` 4 runs (78 to 225 s), `check quick` 3, `check fences` once.
+- **Checks at 71fb2bd0's tree:**
+  - `check commit: green, 24 steps (225s)`, exit 0.
+  - `check fences: green, 1 step (32s)`.
