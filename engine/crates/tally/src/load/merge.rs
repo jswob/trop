@@ -924,6 +924,12 @@ impl Clause {
     }
 }
 
+/// The token a file's header states as its `tally` version, read before the file is parsed
+/// (refcore's `header_tally`); none for a header with no `tally` clause. L §5.1.
+pub(super) fn tally_tok(lines: &[Line]) -> Option<&Tok> {
+    clause_tok(lines, Clause::Tally)
+}
+
 /// The token after a header clause's word (refcore's `header_tally`, `header_clause`).
 fn clause_tok(lines: &[Line], word: Clause) -> Option<&Tok> {
     let (_, header) = lines.split_first()?;

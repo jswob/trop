@@ -175,8 +175,10 @@ impl Engine {
             .any(|(a, b)| *a == id || *b == id))
     }
 
-    /// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
-    /// `same_pairs`, its lines). L §6.1, §4.5.
+    /// The `same` line cut `cut` sees that joins movement `mover` to movement `id`, its two
+    /// sides as written: the first naming both, else, where a chain joins them, the first
+    /// naming `id`; none where no line names `id` (refcore's `same_pairs`, its lines). L §6.1,
+    /// §4.5, §8.4 `RUN-RECORD` (tally 2.2.1 230.Q-5a; P48 N4).
     ///
     /// # Errors
     ///
@@ -184,13 +186,18 @@ impl Engine {
     pub(super) fn first_line(
         &mut self,
         m: &Reality,
-        id: &str,
+        (mover, id): (&str, &str),
         cut: Day,
     ) -> Result<Option<(String, String)>, Stop> {
-        Ok(move_lines(m, self.moves_seen(m, cut)?)
-            .into_iter()
-            .find(|(a, b)| *a == id || *b == id)
-            .map(|(a, b)| (a.clone(), b.clone())))
+        let lines = move_lines(m, self.moves_seen(m, cut)?);
+        let joins =
+            |(a, b): &&(&String, &String)| (*a == mover && *b == id) || (*a == id && *b == mover);
+        let names = |(a, b): &&(&String, &String)| *a == id || *b == id;
+        Ok(lines
+            .iter()
+            .find(joins)
+            .or_else(|| lines.iter().find(names))
+            .map(|(a, b)| ((*a).clone(), (*b).clone())))
     }
 }
 
@@ -485,15 +492,25 @@ pub(crate) fn sides_differ(
             Fact::Day => None,
             Fact::Any | Fact::Amounts | Fact::Leg(_) => amounts_differ(m, &class)?,
         };
-        let (what, figures) = if let Some(figures) = amounts {
-            (format!("the amount of {}", mine.name), figures)
+        let (what, figures, day) = if let Some(figures) = amounts {
+            let day = match mine.day.day().or(row_day) {
+                Some(day) => day.text(),
+                None => mine.day.value().text(m).map_err(num_stop)?,
+            };
+            (format!("the amount of {}", mine.name), figures, day)
         } else if matches!(fact, Fact::Leg(_) | Fact::Amounts) {
             // a leg's amount is its fact: the days are another (Q1, Q3, S2)
             continue;
         } else {
             let sides: Vec<(&str, &Dated)> = class.iter().map(|(id, lg)| (*id, &lg.day)).collect();
             match compare_days(&sides) {
-                DayCmp::Differ(figures) => (format!("the day of {}", mine.name), figures),
+                // the day it differs on is the first side's in id order, as stated (P45 (a))
+                DayCmp::Differ(figures) => {
+                    let Some(first) = figures.first().cloned() else {
+                        return Err(invariant("a class of movements stated same with no side"));
+                    };
+                    (format!("the day of {}", mine.name), figures, first)
+                }
                 DayCmp::Hole(hole) => return Ok(Some(hole)),
                 DayCmp::Undecided(unknown) => {
                     let what = format!("the day of {}", and_list(&ids));
@@ -507,10 +524,6 @@ pub(crate) fn sides_differ(
             .zip(&ids)
             .map(|(figure, id)| format!("{figure} ({id})"))
             .collect();
-        let day = match mine.day.day().or(row_day) {
-            Some(day) => day.text(),
-            None => mine.day.value().text(m).map_err(num_stop)?,
-        };
         let text = format!(
             "{} are one, but {what} differs on {day}: {}",
             and_list(&ids),
@@ -787,7 +800,7 @@ impl Engine {
                 EndBook::Skip => continue,
                 EndBook::Written | EndBook::Wait(_) => o.clone(),
                 // the walk books the movement there once, as the hole: listed once with it
-                EndBook::Hole(hole) => {
+                EndBook::Hole(hole, _) => {
                     let lead = group.first().map_or(o.id.as_str(), String::as_str);
                     if !holed.insert(lead) {
                         continue;
@@ -849,14 +862,14 @@ impl Engine {
                     continue;
                 }
                 match book {
-                    EndBook::Hole(h) => holes.push(h),
+                    EndBook::Hole(h, _) => holes.push(h),
                     EndBook::Skip => skip = true,
                     EndBook::Wait(_) | EndBook::Written => {}
                 }
             }
         }
         if let Some(h) = spread(&holes.iter().map(Some).collect::<Vec<_>>()) {
-            return Ok(EndBook::Hole(h));
+            return Ok(EndBook::Hole(h, None));
         }
         Ok(if skip {
             EndBook::Skip

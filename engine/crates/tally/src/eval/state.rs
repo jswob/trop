@@ -219,6 +219,21 @@ impl Env {
         self.vars.iter().rev().find(|v| v.name == name)
     }
 
+    /// Each variable's name with its value's text, the innermost binding's where two share a
+    /// name: what a message prints for a name node a binding gave (refcore's `env_txt`;
+    /// tally 2.2.1 235.6).
+    ///
+    /// # Errors
+    ///
+    /// A number error printing a value.
+    pub(crate) fn bound_texts(&self, m: &Reality) -> Result<crate::load::Bound, Stop> {
+        let mut out = crate::load::Bound::new();
+        for var in &self.vars {
+            out.insert(var.name.clone(), var.value.text(m).map_err(num_stop)?);
+        }
+        Ok(out)
+    }
+
     /// This scope with `name` bound to `value` too.
     #[must_use]
     pub fn with(&self, name: &str, value: Value, domain: Option<Domain>) -> Env {

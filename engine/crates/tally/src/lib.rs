@@ -146,7 +146,7 @@ pub mod model {
 pub mod hole {
     mod questions;
 
-    pub use questions::{Hole, Linear, Unknown, atom_text, carry_union, spread};
+    pub use questions::{Hole, Linear, Unknown, atom_text, carry_union, imprecise, spread};
 }
 
 /// The evaluator (E §3.2): expressions over the reality, def cells in the memo, rules, bands,
@@ -186,7 +186,7 @@ pub mod eval {
     pub use aggregate::Member;
     pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
-    pub(crate) use bindings::{names_in, order_text, reads_name, reads_var};
+    pub(crate) use bindings::{names_in, order_text, reads_name, reads_var, written_bound};
     pub use context::Layer;
     pub(crate) use context::{GUARDED, UNSET_AXIS, WINDOW_DAYS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
@@ -206,7 +206,7 @@ pub mod eval {
     pub(crate) use trace::{
         Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
     };
-    pub(crate) use windows::{End, one_day, window_days};
+    pub(crate) use windows::{End, held_by, one_day, window_days};
     pub(crate) use years::year_form;
 }
 
@@ -258,8 +258,8 @@ pub mod walk {
     pub(crate) use reads::{place_of, state_value};
     pub(crate) use state::GapAt;
     pub use state::{
-        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, St, Taken,
-        Today, Walk, WalkObs,
+        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, SameSides,
+        St, Taken, Today, Walk, WalkObs,
     };
     pub use tuples::Law;
 }
@@ -371,7 +371,10 @@ pub mod load {
     pub(crate) use pins::reach_axes;
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
-    pub(crate) use texts::{children as expr_children, post_text, text as expr_text};
+    pub(crate) use texts::{
+        Bound, bound_post_text, bound_span, bound_text, children as expr_children,
+        text as expr_text,
+    };
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};
 }
 

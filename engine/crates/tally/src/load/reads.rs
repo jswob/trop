@@ -91,18 +91,6 @@ fn kind_has_leg(m: &Reality, kind: &str, leg: &str) -> bool {
     m.kind_legs(kind).iter().any(|(name, ..)| name == leg)
 }
 
-/// A span's text, as a message names it (refcore's `_txt` of a span).
-pub(super) fn span_text(span: &Span) -> String {
-    let a = span.from.as_ref().map_or_else(String::new, text);
-    if !span.dots {
-        return a;
-    }
-    match &span.to {
-        Some(b) => format!("{a} .. {}", text(b)),
-        None => format!("{a} .."),
-    }
-}
-
 /// The unit type of a place given by `e` of type `t`: the unit of the place it names, of a
 /// keyed place's sections when they hold one, or of the place kind its type names; `Dyn`
 /// otherwise (refcore's `m_place_type_unit`). L §5.10.

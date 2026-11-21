@@ -100,7 +100,7 @@ impl Walk {
         (movement, lg, read): (&str, &LegVal, &Collected),
         like: &Ent,
     ) -> Result<(), Stop> {
-        let pins = pins_read(read);
+        let pins = refusal_read(read);
         for p in ends(lg) {
             let own = m.things.get(p).and_then(|t| m.place_unit(t));
             let unit = lg
@@ -231,11 +231,13 @@ impl Walk {
         let Dated::Window(w) = &lg.day else {
             return Err(invariant("an imprecise leg not dated by a window"));
         };
-        let text = format!(
-            "date within {} not precise enough for a balance",
-            w.question
+        // one question per unknown day its day carries, each asked of the movement (L §8.1
+        // `HOLE-IMPRECISE`; R21 on #241)
+        let own = crate::hole::imprecise(
+            (&w.question, "a balance"),
+            movement,
+            (&w.value.carry, Some(movement)),
         );
-        let own = Hole::asked(&text, movement).carrying(&w.value.carry);
         let amount = match &lg.amount {
             Amount::Hole(h) => Some(h),
             Amount::Qty(_) | Amount::Refused(_) => None,
@@ -383,13 +385,13 @@ impl Walk {
     }
 }
 
-/// What decided a refused leg's movement, `read` what its evaluation met: a refusal rests on
-/// the reads that refused it, so its places' entry lists them like a value's, its pins and
-/// its assumptions, and a pin nothing it read isn't (refcore's `add`, a `bad` entry's
-/// `mv.coll`); none where it took none. L §8.2 One read set (208.2, N2 and P35 on #241).
-pub(super) fn pins_read(read: &Collected) -> Option<Collected> {
-    let pins = read.deciding();
-    (!pins.entries.is_empty()).then_some(pins)
+/// What a refused leg's movement rests on, `read` what its evaluation met: a refusal rests on
+/// the reads that refused it, so its places' entry lists every entry they gave like a value's,
+/// its pins, its assumptions and its register's `unfulfilled:` lines, and a pin nothing it
+/// read isn't (refcore's `add`, a `bad` entry's `mv.coll`); none where it took none. L §8.2
+/// One read set (208.2, N2 and P35 on #241).
+pub(super) fn refusal_read(read: &Collected) -> Option<Collected> {
+    (!read.entries.is_empty()).then(|| read.clone())
 }
 
 /// A leg's window id, `<movement>.<leg>`, and its window, where its day is one (refcore's

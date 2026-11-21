@@ -957,7 +957,10 @@ version bank_a
             (obs, format!("  replace {}", obs.trim_start()), "LOAD-REPLACE replace bank[r1]: no earlier row to replace (a.tally:71)"),
             (obs, format!("{obs}\n{obs2}"), "LOAD-OVERLAP rows a.tally:71 and a.tally:72 of bank overlap at [r1] (a.tally:72)"),
             (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  anchor konto\n{obs2}"), "LOAD-OVERLAP rows a.tally:71 and a.tally:78 of bank overlap at [r1], neither replacing the other (a.tally:78)"),
-            (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  anchor konto\n  replace {}", obs2.trim_start()), "loaded"),
+            // a correction in a version that doesn't cover the replaced row's covered place (S-223)
+            (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  anchor konto\n  replace {}", obs2.trim_start()), "LOAD-COVERS replace bank[r1] of konto: bank_b doesn't cover konto on 2026-02-11 (a.tally:78)"),
+            (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  covers konto\n  anchor konto\n  replace {}", obs2.trim_start()), "loaded"),
+            (obs, format!("{obs}\n\nversion bank_b\n  cite card\n  governs 2026-02\n  known 2026-04-01\n  anchor konto\n  replace bank[r1] = none \"gone\""), "loaded"),
             (obs, format!("{obs}\n  replace bank[r1] = (on: 2026-02-11, kind: wages, leg cash from world to konto amount 100.00 PLN, fulfils: pay) known 2026-03-02 \"again\""), "loaded"),
             (obs, obs.replace("2026-02-10", "2026-03-10"), "LOAD-COVERS observation bank[r1] of konto is dated outside the span bank_a covers (a.tally:71)"),
             ("  covers konto", "  covers konto 2026-02-01..2026-02-05".to_owned(), "LOAD-COVERS observation bank[r1] of konto is dated outside the span bank_a covers (a.tally:71)"),
@@ -3559,7 +3562,7 @@ version v1
                     "  same bank[r1] = card_bank[c1]",
                     "  same rent[a1] = card_bank[c1]",
                 )],
-                "LOAD-SAME same card_bank[c1] = rent[a1]: an observed row and a planned instance of one model; state fulfils on the row (a.tally:57)",
+                "LOAD-SAME same rent[a1] = card_bank[c1]: an observed row and a planned instance of one model; state fulfils on the row (a.tally:57)",
             ),
             // obs-move: the other order
             (
@@ -3771,7 +3774,7 @@ version v1
         assert_eq!(
             first(&refused).as_deref(),
             Some(
-                "scenario sc: refused: LOAD-SAME same bank[r2] = rent[a2]: an observed row and a planned instance of one model; state fulfils on the row (sc.tally:9)"
+                "scenario sc: refused: LOAD-SAME same rent[a2] = bank[r2]: an observed row and a planned instance of one model; state fulfils on the row (sc.tally:9)"
             ),
             "a scenario's version alike"
         );

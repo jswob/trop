@@ -1,0 +1,40 @@
+# tally 2.2.1 P50, the review's Q5 (L §6.1): a base that agrees on 3 with a scenario file on 2
+# prints the disagreement's form (review g4 ver/b3 with s2). Before W13: tally 3: this engine runs tally 2.
+=== options exit=1
+=== b3.tally
+model m
+  tally 3
+  on 2026-04-30
+  start 2026-01-01
+  end 2026-06-30
+
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input spare: int
+
+version open
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+  spare = 1
+
+version stmt
+  cite s
+  governs 2026-01-01..2026-04-30
+  known 2026-01-02
+  covers konto
+  bank[r1] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "a"
+
+ask q: bal(konto, 2026-04-30)
+=== s2.tally
+scenario s2 over m
+  tally 2
+  from 2026-03-01
+
+ask q_s2: bal(konto, 2026-03-31) in s2
+=== expect
+refused: LOAD-VERSION files declare different tally versions

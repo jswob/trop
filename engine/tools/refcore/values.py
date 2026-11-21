@@ -498,7 +498,8 @@ def fmt_added(a):
         return 'window(%s, %s)' % (fmt(a[1]), fmt(a[2]))
     if a[0] == 'oneof':
         return 'one_of([%s])' % ', '.join(fmt(d) for d in sorted(a[1]))
-    return '?"%s"' % a[1]
+    # a hole's question escaped, as every hole prints it (L §2.4; P48, N5)
+    return '?"%s"' % a[1].replace('\\', '\\\\').replace('"', '\\"')
 
 
 def bound_of(v):

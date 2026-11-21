@@ -22,7 +22,8 @@ use crate::model::{Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
+    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, SameSides, Status, Step,
+    invariant,
 };
 
 /// What one end of a leg books under the `same` lines (refcore's `consol`). L §6.1.
@@ -34,8 +35,9 @@ pub(crate) enum EndBook {
     Skip,
     /// At the point of the decision named, which hasn't run yet.
     Wait(String),
-    /// The group's disagreement there, a hole movement (`HOLE-SAME`).
-    Hole(Hole),
+    /// The group's disagreement there, a hole movement (`HOLE-SAME`), or the hole of days
+    /// left undecided where the amounts agree, with its sides (S1, P43; P45 (c) on #241).
+    Hole(Hole, Option<Box<SameSides>>),
 }
 
 /// A member of a `same` group as the walk meets it (refcore's `movement`, `decs`).
@@ -77,6 +79,35 @@ impl Member {
 
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
 pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
+
+/// The sides `touch` of a leg of movements stated `same` at one place, the mover's first, whose
+/// days are undecided and amounts agree: their legs as `<id>.<leg>`, sorted, which each side's
+/// entry names alike, the day each states, and the mover's amount signed as a flow into the
+/// place (side 0 its `from`). L §6.1, §4.4 (S2, P43; P45 (c) on #241).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for no side; a number error negating the amount.
+fn same_sides(touch: &[(&Member, &LegVal, usize)]) -> Result<SameSides, Stop> {
+    let mut legs: Vec<String> = touch
+        .iter()
+        .map(|(x, g, _)| format!("{}.{}", x.id(), g.name))
+        .collect();
+    legs.sort();
+    let flow = match touch.first() {
+        Some((_, g, 0)) => match &g.amount {
+            Amount::Qty(a) => Amount::Qty(a.checked_neg().map_err(num_stop)?),
+            Amount::Hole(_) | Amount::Refused(_) => g.amount.clone(),
+        },
+        Some((_, g, _)) => g.amount.clone(),
+        None => return Err(invariant("a leg stated same with no side")),
+    };
+    Ok(SameSides {
+        key: legs.join(", "),
+        days: touch.iter().map(|(_, g, _)| g.day.clone()).collect(),
+        flow,
+    })
+}
 
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
 /// L §8.1.
@@ -121,7 +152,16 @@ impl Engine {
             }
             match book {
                 EndBook::Written => continue,
-                EndBook::Skip => {}
+                EndBook::Skip => {
+                    // a window side another member books ends its window here, booking
+                    // nothing: its day is the other's (refcore's `book_leg`; P45 (b) on #241)
+                    if let (Dated::Window(w), Some(p)) = (&lg.day, end.place()) {
+                        let mut ent = Ent::new(at, Change::Mark);
+                        ent.window = Some((format!("{}.{}", mover.id(), lg.name), w.clone()));
+                        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
+                        self.walk_mut(id)?.add(m, p, &unit, ent)?;
+                    }
+                }
                 EndBook::Wait(decision) => {
                     let waiting = (
                         mover.id().to_owned(),
@@ -136,7 +176,7 @@ impl Engine {
                         .or_insert_with(Vec::new)
                         .push(waiting);
                 }
-                EndBook::Hole(h) => {
+                EndBook::Hole(h, same) => {
                     let Some(p) = end.place() else {
                         continue;
                     };
@@ -145,6 +185,7 @@ impl Engine {
                     ent.leg = Some(lg.name.clone());
                     ent.reg = reg.to_vec();
                     ent.coll = Some(coll.clone());
+                    ent.same = same;
                     let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
                     let walk = self.walk_mut(id)?;
                     walk.worth_add(&unit, None)?;
@@ -193,8 +234,8 @@ impl Engine {
         for x in group.iter().filter(|x| x.as_str() != mover.id()) {
             let Some(found) = self.walk_member(m, id, x)? else {
                 let (left, right) = self
-                    .first_line(m, x, cut)?
-                    .unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
+                    .first_line(m, (mover.id(), x), cut)?
+                    .ok_or_else(|| invariant("a same group's member no same line names"))?;
                 return Err(Stop::Refused(Refusal::new(
                     Code::Run(Run::Record),
                     format!("same {left} = {right}: {x} doesn't exist"),
@@ -284,7 +325,7 @@ impl Engine {
                 inst.id
             );
             let figure = format!("{}, {}", mover.id(), inst.id);
-            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure))));
+            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure), None)));
         }
         Ok(None)
     }
@@ -318,8 +359,8 @@ impl Engine {
 
     /// What place `p` takes from `mover`'s end there: as written where no other member
     /// books it; once, by the latest member in the day's order, where they agree; the
-    /// `HOLE-SAME` hole where they give it different amounts or days (refcore's `consol`).
-    /// L §6.1 What `same` does, §8.1.
+    /// `HOLE-SAME` hole where they give it different amounts or days, naming the leg (refcore's
+    /// `consol`). L §6.1 What `same` does, §8.1; tally 2.2.1 237.2 (`leg fee`).
     fn same_end(
         &mut self,
         m: &Reality,
@@ -364,10 +405,10 @@ impl Engine {
             touch.iter().map(|(x, g, _)| (x.id(), &g.day)).collect();
         sides.sort_by_cached_key(|(x, _)| m.id_order(x));
         let agree = match compare_days(&sides) {
-            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h)),
+            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h, None)),
             DayCmp::Undecided(unknown) if amounts_agree => {
                 return Ok(match undecided_hole(&unknown, "a balance") {
-                    Some(h) => EndBook::Hole(h),
+                    Some(h) => EndBook::Hole(h, Some(Box::new(same_sides(&touch)?))),
                     None => EndBook::Written,
                 });
             }
@@ -399,13 +440,20 @@ impl Engine {
         for (x, g, _) in &ordered {
             parts.push(format!("{} ({})", amount_text(m, g)?, x.id()));
         }
+        // the leg by its name where every side's has it, one question per leg that differs
+        // (tally 2.2.1 237.2); the place's leg where their names differ
+        let what = if ordered.iter().all(|(_, g, _)| g.name == lg.name) {
+            format!("leg {}", lg.name)
+        } else {
+            format!("the leg at {p}")
+        };
         let text = format!(
-            "{} are one, but the leg at {p} differs on {}: {}",
+            "{} are one, but {what} differs on {}: {}",
             and_list(&ids),
             days.join(", "),
             and_list(&parts)
         );
-        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", "))))
+        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", ")), None))
     }
 
     /// The legs of member `o` that touch place `p` in unit `unit`, by position, each with
@@ -494,11 +542,17 @@ impl Engine {
                 .checked_add(1)
                 .ok_or_else(|| invariant("a point past the counted subpoints"))?,
         );
+        let cut = self.walk(id)?.cut;
         for (mover, lg, side, reg, coll) in pending {
             if none {
+                // the line that joins the waiting movement to the decision, as written, its
+                // sides in the text's order (2.1.7's R9; 230.Q-5a, P48 N4 on #241)
+                let (left, right) = self
+                    .first_line(m, (&mover, &run_id), cut)?
+                    .ok_or_else(|| invariant("a decision a mover waits for no same line names"))?;
                 let err = Refusal::new(
                     Code::Run(Run::Record),
-                    format!("same {mover} = {run_id}: {run_id} doesn't exist"),
+                    format!("same {left} = {right}: {run_id} doesn't exist"),
                 );
                 self.walk_mut(id)?
                     .leg_bad(m, (&mover, &lg, &coll), &err, point)?;

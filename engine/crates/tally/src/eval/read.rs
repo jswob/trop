@@ -18,7 +18,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::keys::Given;
 use super::memo::{LawClass, Read, may_hold, rows_class};
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
-use super::windows::{as_read, named_window, names_only_written, one_day};
+use super::windows::{as_read, held_by, named_window, one_day};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{
@@ -209,16 +209,9 @@ impl Engine {
     /// pin whose `Iv` has no origin; L §4.4 "a copy keeps the name", "a computed value …
     /// carries the names it was computed from"; picks P30, P32, P26).
     pub(super) fn pinned_window(value: Value, figure: &str) -> Value {
-        let Value::Window(mut w) = value else {
-            return value;
-        };
-        if w.figure.is_some() || !names_only_written(&w.carry) {
-            return Value::Window(w);
-        }
         // a pinned window's holes are asked of the item it pins, as a row's of its row
         // (L §8.1, §5.11)
-        w.figure = Some(figure.to_owned());
-        named_window(Value::Window(w), (format!("pin {figure}"), figure))
+        held_by(value, (format!("pin {figure}"), figure))
     }
 
     /// Narrows the reading cell's law date class by what a read of `input` tests its law

@@ -168,7 +168,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Result<String, Hole>, Stop> {
         let v = self.ev(m, e, env, ctx)?;
-        place_of(m, e, v)
+        place_of(m, (e, env), v)
     }
 
     /// A balance read's unit: the one written, or the place's (refcore's `bal_unit`).
@@ -913,22 +913,30 @@ pub(super) fn outside_run(m: &Reality, d: Day, figure: &str) -> Option<Hole> {
     }
 }
 
-/// The place argument `e`, evaluated to `v`, names, or the hole it is: `none` refused naming
-/// the argument as written, a value that is no place refused naming it (refcore's
-/// `m_place_arg`, its `fmt_node`). The one check of a read's place and of `unit(x)`'s.
-/// L §5.10, §8.4 (`RUN-NONE`, `RUN-DOMAIN`).
+/// The place argument `e`, evaluated to `v` under `env`, names, or the hole it is: `none`
+/// refused naming the argument as written, each variable by its value (`acct[k2] is none
+/// here: a place`), a value that is no place refused naming it (refcore's `m_place_arg`, its
+/// `fmt_node`). The one check of a read's place and of `unit(x)`'s. L §5.10, §8.4
+/// (`RUN-NONE`, `RUN-DOMAIN`; tally 2.2.1 235.6, P48 N2).
 ///
 /// # Errors
 ///
 /// `RUN-NONE` for `none`, `RUN-DOMAIN` for a value that is no place.
-pub(crate) fn place_of(m: &Reality, e: &Expr, v: Value) -> Result<Result<String, Hole>, Stop> {
+pub(crate) fn place_of(
+    m: &Reality,
+    (e, env): (&Expr, &Env),
+    v: Value,
+) -> Result<Result<String, Hole>, Stop> {
     if let Value::Hole(h) = v {
         return Ok(Err(h));
     }
     if v == Value::None {
         return Err(refuse(
             Run::None,
-            format!("{} is none here: a place", crate::load::expr_text(e)),
+            format!(
+                "{} is none here: a place",
+                crate::eval::written_bound(m, e, env)?
+            ),
         ));
     }
     if let Value::Key(KeyVal::Thing(name)) = &v

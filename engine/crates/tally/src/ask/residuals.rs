@@ -21,7 +21,7 @@ use crate::book::{Ledger, UnitLedger, fig_text};
 use crate::eval::{Collected, Ctx, Engine, Env};
 use crate::hole::Hole;
 use crate::model::Reality;
-use crate::syntax::{Expr, Lit, Residuals, Span, Stop};
+use crate::syntax::{Residuals, Stop};
 
 /// A `residuals` ask's result in context `ctx`, for one binding tuple and one combination of
 /// the axes it reads (refcore's `answer_residuals`): the head, then each group's line and its
@@ -104,7 +104,10 @@ fn ledger_result(
     }
     let by = r.by.as_ref().map_or(String::new(), |f| format!(" by {f}"));
     Ok(Ok(Printed {
-        text: format!("residuals {place} {}{by}", span_text(&r.span)),
+        text: format!(
+            "residuals {place} {}{by}",
+            crate::load::bound_span(&r.span, &env.bound_texts(m)?)
+        ),
         body,
         bare: false,
         whole: true,
@@ -134,37 +137,4 @@ fn group_lines(m: &Reality, ledger: &UnitLedger, indent: &str) -> Result<Vec<Str
         out.extend(g.lines.iter().map(|l| format!("{indent}  {}", l.text)));
     }
     Ok(out)
-}
-
-/// A span as the ask wrote it: its first end, then ` .. ` and its last when `..` was
-/// written (refcore's `_txt` of a span). L §5.18.
-fn span_text(sp: &Span) -> String {
-    let first = match &sp.from {
-        Some(e) => end_text(e),
-        None => String::new(),
-    };
-    if !sp.dots {
-        return first;
-    }
-    match &sp.to {
-        Some(e) => format!("{first} .. {}", end_text(e)),
-        None => format!("{first} .."),
-    }
-}
-
-/// A span's end as written: a name, a day, a month, a quarter, a key, or any other
-/// expression's text, `end_of(2026-03)` (refcore's `_txt`). L §5.18.
-fn end_text(e: &Expr) -> String {
-    if let Expr::Name(n) = e {
-        return n.clone();
-    }
-    if let Expr::Lit(lit) = e
-        && matches!(
-            lit,
-            Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..) | Lit::Key(_) | Lit::Name(_)
-        )
-    {
-        return lit.text();
-    }
-    crate::load::expr_text(e)
 }

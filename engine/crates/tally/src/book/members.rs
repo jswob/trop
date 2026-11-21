@@ -528,7 +528,7 @@ impl Engine {
             let pads = self.walk_pads(m, ctx)?;
             out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
-        out.extend(self.decided_members(m, &decided, ctx)?);
+        out.extend(self.decided_members(m, (&decided, kind), ctx)?);
         let groups = self.same_groups(m, ctx.cut)?;
         let sides = self.same_sides(m, ctx.cut)?;
         in_order(once_by_same((&groups, &sides), out))
@@ -537,14 +537,15 @@ impl Engine {
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
     /// as the walk ran them: inside a decision, its walk's and those it continues', the ones
     /// before its point; else the main walk's of the read's timeline, and an instance dated by
-    /// a window no walk ran, read per day of it ([`Engine::window_met`]). One that doesn't
-    /// exist or is modelled past is no member, nor is an uncertain one without `with
-    /// uncertain` (refcore's `movements_of`, its decisions). L §5.14.1 Running reads, §5.19
-    /// Bindings, E §4.1 step 2.
+    /// a window no walk ran, read per day of it ([`Engine::window_met`]); inside a walk that
+    /// one's hole names the binding by `kind`, what it ranges over (the lead's point 5(b) on
+    /// #241). One that doesn't exist or is modelled past is no member, nor is an uncertain
+    /// one without `with uncertain` (refcore's `movements_of`, its decisions, and its
+    /// membership's `imprecise_hole`). L §5.14.1 Running reads, §5.19 Bindings, E §4.1 step 2.
     fn decided_members(
         &mut self,
         m: &Reality,
-        decided: &[&MoveInfo],
+        (decided, kind): (&[&MoveInfo], &str),
         ctx: Ctx,
     ) -> Result<Vec<Moving>, Stop> {
         if decided.is_empty() {
@@ -556,9 +557,11 @@ impl Engine {
         };
         let mut out = Vec::new();
         for mv in decided {
+            // read per day outside a walk, the line names the move (refcore's `WinDay`)
+            let over = if limit.is_some() { kind } else { &mv.id };
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(self.unrun_window(m, mv, inst)?);
+                    out.extend(self.unrun_window(m, over, inst)?);
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -581,14 +584,15 @@ impl Engine {
         Ok(out)
     }
 
-    /// Decision `mv`'s instance `inst` that no walk ran: dated by a window, a member whose day
+    /// A decision's instance `inst` that no walk ran: dated by a window, a member whose day
     /// is the window's hole, or the line read per day of the window ([`Engine::window_met`]),
-    /// inside a decision's walk too, where it is the hole, never left out; else none (E §4.1
-    /// step 2; tally 2.2.1 N3, P41 F5; refcore's `movements_of`, its `WinDay`).
+    /// inside a decision's walk too, where it is the hole, never left out; else none. What
+    /// met it is `a binding over <over>` (E §4.1 step 2; tally 2.2.1 N3, P41 F5; refcore's
+    /// `movements_of`, its `WinDay`).
     fn unrun_window(
         &mut self,
         m: &Reality,
-        mv: &MoveInfo,
+        over: &str,
         inst: &Inst,
     ) -> Result<Option<Moving>, Stop> {
         let Some(Dated::Window(w)) = &inst.day else {
@@ -597,7 +601,7 @@ impl Engine {
         if inst.exists == Exists::No {
             return Ok(None);
         }
-        let what = format!("a binding over {}", mv.id);
+        let what = format!("a binding over {over}");
         let mut held = inst.clone();
         held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
         Ok(Some(Moving::Plan(held)))
@@ -682,7 +686,7 @@ impl Engine {
             // dated by a window no walk ran: its fields are the window's, read per day or its
             // hole, as its membership is, inside a decision's walk too (E §4.1 step 2; tally
             // 2.2.1 F4, F5, P41)
-            None => match self.unrun_window(m, mv, &inst)? {
+            None => match self.unrun_window(m, &mv.id, &inst)? {
                 Some(held) => Ok(Some(held)),
                 None if running => Err(Stop::Refused(Refusal::new(
                     Code::Run(Run::Order),

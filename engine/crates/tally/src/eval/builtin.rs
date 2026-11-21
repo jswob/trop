@@ -23,7 +23,6 @@ use super::windows::{
     Choices, End, Shape, as_window, imprecise, single, value_choices, values_interval,
 };
 use crate::base::{Load, Run};
-use crate::load::expr_text;
 use crate::model::{
     BindInfo, Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit,
     money_num, num_money,
@@ -98,26 +97,36 @@ impl Engine {
         } else if let Value::Number(n) = &v {
             n.unit()
         } else if v == Value::None && quantity_typed(m, arg, env, ctx)? {
+            // the read with its keys' values, `q[k2]` (tally 2.2.1 235.6, P48 N2)
             return Err(refuse(
                 Run::None,
-                format!("{} is none here: a quantity", expr_text(arg)),
+                format!(
+                    "{} is none here: a quantity",
+                    super::bindings::written_bound(m, arg, env)?
+                ),
             ));
         } else {
-            return match place_of(m, arg, v)? {
+            return match place_of(m, (arg, env), v)? {
                 Ok(place) => place_unit_key(m, &place),
                 Err(hole) => Ok(Value::Hole(hole)),
             };
         };
-        if let [(u, 1)] = unit.terms()
+        let single = match unit.terms() {
+            [(u, 1)] => Some(u),
+            _ => None,
+        };
+        if let Some(u) = single
             && (m.currencies.contains_key(u) || m.unit_kind_keys.contains_key(u))
         {
             return Ok(Value::Key(KeyVal::Thing(u.clone())));
         }
+        // refused in load's words (L §8.4, 2.1.7's R5; 233.c on #241)
+        let why = match single {
+            Some(u) => format!("{u} is a quantity unit, a key of no unit kind"),
+            None => "a plain number or a compound unit is a key of no unit kind".to_owned(),
+        };
         let shown = v.text(m).map_err(num_stop)?;
-        Err(refuse(
-            Run::Domain,
-            format!("unit of {shown}: a key of no unit kind"),
-        ))
+        Err(refuse(Run::Domain, format!("unit of {shown}: {why}")))
     }
 
     /// `observed(m[k])`: its movement, a hole key's hole (refcore's `m_c_observed`).

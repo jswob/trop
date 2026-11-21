@@ -67,4 +67,4 @@ version v
   share = 5.00 PLN "umowa"
   gday = 2026-03-01 "umowa"
 === expect
-refused: LOAD-SAME same a.rate = b.gift: a row of an input and a movement ...
+refused: LOAD-SAME same a.rate = b.gift: a row of an input and a movement (joint.tally:8)

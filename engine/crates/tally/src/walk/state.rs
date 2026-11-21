@@ -247,8 +247,25 @@ pub struct Ent {
     /// window's hole, so every day gives it and it outranks one (refcore's `note == 'own'`;
     /// L §8 l.2217, §4.4 l.671; P31, B4).
     pub own: bool,
+    /// For the hole of a leg of movements stated `same` that agree on its amount but whose days
+    /// are undecided: the sides, which `flows` over a span reads for membership only (S2, P43;
+    /// P45 (c) on #241).
+    pub same: Option<Box<SameSides>>,
     /// The state after it.
     pub st: St,
+}
+
+/// The sides of one leg of movements stated `same` whose days are undecided: each member's leg
+/// at the place, `<id>.<leg>` sorted and joined, which every side's entry names alike, and the
+/// day each states. L §6.1, §4.4 (S2, P43; P45 (c) on #241).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SameSides {
+    /// The members' legs, `<id>.<leg>` sorted and joined by `, `.
+    pub key: String,
+    /// The day each side states.
+    pub days: Vec<Dated>,
+    /// The amount they agree on, signed as a flow into the place.
+    pub flow: Amount,
 }
 
 /// A hole leg as a `partial` line reads a balance through it: into the place or out of it, and
@@ -293,6 +310,7 @@ impl Ent {
             hole_leg: None,
             signed: None,
             own: false,
+            same: None,
             st: St::of(None),
         }
     }
@@ -935,9 +953,9 @@ impl Walk {
         }
     }
 
-    /// The pins leg `movement` (its movement and leg names) took where it is booked at
-    /// `places` in `unit`, from its entries' reads: what a refusal of it rests on (L §8.2 One
-    /// read set; tally 2.2.1's 208.2); none where it took no pin.
+    /// What leg `movement` (its movement and leg names) read where it is booked at `places`
+    /// in `unit`, every entry its entries' reads gave: what a refusal of it rests on (L §8.2
+    /// One read set; tally 2.2.1's 208.2, P35); none where they gave none.
     #[must_use]
     pub fn booked_pins(
         &self,
@@ -959,7 +977,7 @@ impl Walk {
                 }
             }
         }
-        super::ends::pins_read(&read)
+        super::ends::refusal_read(&read)
     }
 
     /// What the walk's refusals of movement `movement` rest on: its `bad` entries' reads, at
@@ -1367,8 +1385,9 @@ fn apply(prev: &St, change: &Change, (at, open): (usize, Option<&Hole>)) -> Resu
 
 /// The state after entry `ent`: its change applied, the window tests' questions `open`
 /// ([`apply`]); a movement dated by a window may fall from its `ImpOn` on, until its leg's
-/// booking at the window's last day (refcore's `apply`, its `wid`); a movement's own refusal
-/// meets no window test, so it outranks their hole (P31). E §4.2, L §4.4.
+/// booking at the window's last day, or its mark there where a member stated `same` books it
+/// instead (refcore's `apply`, its `wid`); a movement's own refusal meets no window test, so
+/// it outranks their hole (P31). E §4.2, L §4.4, §6.1.
 fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result<St, Stop> {
     let open = if ent.own { None } else { open };
     let mut st = apply(prev, &ent.change, (at, open))?;
@@ -1379,7 +1398,7 @@ fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result
                 hole: h.clone(),
                 signed: ent.signed.clone(),
             }),
-            Change::Delta(_) | Change::Hole(_) => {
+            Change::Delta(_) | Change::Hole(_) | Change::Mark => {
                 st.imp.retain(|p| &p.wid != wid);
                 st.held.retain(|p| &p.wid != wid);
             }
@@ -1387,8 +1406,7 @@ fn apply_ent(prev: &St, ent: &Ent, (at, open): (usize, Option<&Hole>)) -> Result
             | Change::Perm(_)
             | Change::Unperm(_)
             | Change::Bad(_)
-            | Change::PermBad(_)
-            | Change::Mark => {}
+            | Change::PermBad(_) => {}
         }
     }
     Ok(st)

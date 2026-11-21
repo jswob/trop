@@ -16,6 +16,7 @@
 
 use super::check::invariant;
 use super::joint::{joint_root, load_joint};
+use super::merge::tally_tok;
 use super::pins::forks_past_cap;
 use super::steps::load_among;
 use crate::api::{Pin, Source};
@@ -185,6 +186,22 @@ fn load_world(
     load_among(parse_split(&split)?, (&among.0, &among.1), joint, how)
 }
 
+/// Whether the run's files, the base's and every scenario's, state different `tally`
+/// versions in their headers. L §8.3 (`LOAD-VERSION`: "files declare different tally
+/// versions"), §5.1.
+fn versions_differ(files: &[Split]) -> bool {
+    let Some((first, rest)) = files.split_first() else {
+        return false;
+    };
+    let stated = tally_tok(&first.lines).map(|tok| &tok.kind);
+    for file in rest {
+        if tally_tok(&file.lines).map(|tok| &tok.kind) != stated {
+            return true;
+        }
+    }
+    false
+}
+
 /// The base alone, then each scenario, by id, with the base and its stack (refcore's
 /// `run_worlds`, its loads). L §6.4, §8.3.
 fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<Worlds, Stop> {
@@ -212,6 +229,16 @@ fn load_worlds(files: &[Split], joint: Option<&Joint>, how: How) -> Result<World
     }
     let mut among = (run, elsewhere);
     let alone = match load_world(&base, &among, joint, how) {
+        // a base on a version this engine doesn't run, beside a scenario file on another:
+        // the run's files disagree (L §8.3 `LOAD-VERSION`; G4's review Q5, P50)
+        Err(Stop::Refused(refusal))
+            if refusal.code() == Code::Load(Load::Version) && versions_differ(files) =>
+        {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Load(Load::Version),
+                "files declare different tally versions".to_owned(),
+            )));
+        }
         Err(Stop::Refused(refusal)) => {
             return Err(Stop::Refused(read_outside(refusal, &among.1)));
         }

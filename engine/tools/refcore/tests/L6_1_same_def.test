@@ -67,4 +67,4 @@ version v
   share = 5.00 PLN "umowa"
   gday = 2026-03-01 "umowa"
 === expect
-refused: LOAD-SAME same a.twice = b.share: a def and a row ...
+refused: LOAD-SAME same a.twice = b.share: a def and a row of an input (joint.tally:8)

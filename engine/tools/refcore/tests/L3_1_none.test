@@ -33,7 +33,7 @@ q1: (true, false, false)
   cut 2026-01-01
 q2: refused: RUN-NONE x is none here: arithmetic
   cut 2026-01-01
-q3: refused: RUN-NONE a value is none here: an ordering
+q3: refused: RUN-NONE x is none here: an ordering
   cut 2026-01-01
 q4: none
   law date 2026-06-30, cut 2026-01-01

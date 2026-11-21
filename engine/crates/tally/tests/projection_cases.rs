@@ -454,12 +454,15 @@ ask before: bal(save, 2025-03-31) from 2025-02-01
 "#;
 
     /// refcore's lines for [`REFUSED`], every ask, in id order: the decision run in each
-    /// projection's walk reads the refused leg as refused.
+    /// projection's walk reads the refused leg as refused, and the refusal lists what the
+    /// decision read like a value: `pay` unfulfilled where the walk takes it as past (P35).
     const REFUSED_LINES: &str = r"before: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
   cut 2025-03-10
 projected: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: pay
   cut 2025-03-10
 saved: refused: RUN-LIFESPAN pay.cash moves into or out of old outside its lifespan
+  unfulfilled: pay
   cut 2025-03-10
 warning: WARN-UNREAD place out is read by nothing";
 
