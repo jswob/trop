@@ -23,7 +23,6 @@ use super::windows::{
     Choices, End, Shape, as_window, imprecise, single, value_choices, values_interval,
 };
 use crate::base::{Load, Run};
-use crate::load::expr_text;
 use crate::model::{
     BindInfo, Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit,
     money_num, num_money,
@@ -98,12 +97,16 @@ impl Engine {
         } else if let Value::Number(n) = &v {
             n.unit()
         } else if v == Value::None && quantity_typed(m, arg, env, ctx)? {
+            // the read with its keys' values, `q[k2]` (tally 2.2.1 235.6, P48 N2)
             return Err(refuse(
                 Run::None,
-                format!("{} is none here: a quantity", expr_text(arg)),
+                format!(
+                    "{} is none here: a quantity",
+                    super::bindings::written_bound(m, arg, env)?
+                ),
             ));
         } else {
-            return match place_of(m, arg, v)? {
+            return match place_of(m, (arg, env), v)? {
                 Ok(place) => place_unit_key(m, &place),
                 Err(hole) => Ok(Value::Hole(hole)),
             };

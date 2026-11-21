@@ -374,7 +374,7 @@ impl Engine {
                             .checked_add(at)
                             .and_then(|upto| posts.get(..upto))
                             .ok_or_else(|| invariant("a postfix's position"))?;
-                        field(m, value, name, (base, before))?
+                        field(m, value, name, ((base, before), env))?
                     }
                 }
                 Postfix::Keys(_) => return Err(Stop::NotBuilt("keys after a value")),
@@ -532,8 +532,23 @@ impl Engine {
         let left = year_beside(lhs, left, &right);
         let right = year_beside(rhs, right, &left);
         let (left, right) = resolve_pair(m, left, right)?;
-        compare_values(m, op, (&left, &right), written)
+        compare_values(m, op, (&left, &right), (written, env))
     }
+}
+
+/// The side of comparison `written` that gave `none`, as written under `env`: the left where
+/// its value `a` is `none`, else the right; the whole comparison where it is no comparison
+/// (refcore's `compare`, its `RUN-NONE`). L §8.4 `RUN-NONE`'s row; tally 2.2.1 P48 N2.
+///
+/// # Errors
+///
+/// A number error printing a bound value.
+fn none_side(m: &Reality, (a, written): (&Value, &Expr), env: &Env) -> Result<String, Stop> {
+    let Expr::Cmp(cmp) = written else {
+        return super::bindings::written_bound(m, written, env);
+    };
+    let side = if *a == Value::None { &cmp.0 } else { &cmp.2 };
+    super::bindings::written_bound(m, side, env)
 }
 
 /// `e == f` of two values already read, as a comparison of the two expressions decides it
@@ -552,7 +567,7 @@ pub(crate) fn equal_sides(
     let right_year = year_beside(rhs, right.clone(), &left_year);
     let (a, b) = resolve_pair(m, left_year, right_year)?;
     let written = Expr::Cmp(Box::new((lhs.clone(), CmpOp::Eq, rhs.clone())));
-    compare_values(m, CmpOp::Eq, (&a, &b), &written)
+    compare_values(m, CmpOp::Eq, (&a, &b), (&written, &Env::empty()))
 }
 
 impl Engine {
@@ -677,7 +692,9 @@ impl Engine {
         Ok(acc)
     }
 
-    /// `-e` (refcore's `e_neg`). L §3.2.
+    /// `-e` (refcore's `e_neg`); `-e` of `none` is arithmetic on it, refused naming `e` as
+    /// written, each variable by its value (L §3.2, §8.4 `RUN-NONE`'s row; tally 2.2.1
+    /// 233.7, P48 N2).
     fn minus(&mut self, m: &Reality, x: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
         let v = self.ev(m, x, env, ctx)?;
         if let Value::Hole(h) = &v {
@@ -689,7 +706,10 @@ impl Engine {
         if v == Value::None {
             return Err(refuse(
                 Run::None,
-                "a value is none here: arithmetic".to_owned(),
+                format!(
+                    "{} is none here: arithmetic",
+                    super::bindings::written_bound(m, x, env)?
+                ),
             ));
         }
         let negated = if let Value::Window(w) = &v {
@@ -1029,13 +1049,15 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
     Ok(Value::Word(word.to_owned()))
 }
 
-/// The comparison `a op b` of two values, keys resolved, as `written` (refcore's `compare`).
-/// L §3.1, §4.4, §8.4.
+/// The comparison `a op b` of two values, keys resolved, as `written` under `env` (refcore's
+/// `compare`); an ordering of `none` is refused naming the side that gave it, each variable
+/// by its value, `rate[k2] is none here: an ordering`. L §3.1, §4.4, §8.4 (tally 2.2.1
+/// 235.6, P48 N2).
 pub(super) fn compare_values(
     m: &Reality,
     op: CmpOp,
     (a, b): (&Value, &Value),
-    written: &Expr,
+    (written, env): (&Expr, &Env),
 ) -> Result<Value, Stop> {
     let eq = matches!(op, CmpOp::Eq | CmpOp::Ne);
     let holds = |same: bool| Value::Bool(same == (op == CmpOp::Eq));
@@ -1043,7 +1065,10 @@ pub(super) fn compare_values(
         if !eq {
             return Err(refuse(
                 Run::None,
-                "a value is none here: an ordering".to_owned(),
+                format!(
+                    "{} is none here: an ordering",
+                    none_side(m, (a, written), env)?
+                ),
             ));
         }
         let other = if *a == Value::None { b } else { a };
@@ -1090,20 +1115,21 @@ pub(super) fn compare_values(
 }
 
 /// A record's field `name`, the record `v` read by the written `object` (refcore's
-/// `e_field`); a field read of `none` is refused, naming the object as written (L §3.1;
-/// §8.4 `RUN-NONE`); a field of a hole is the hole, which a `partial` line can't see
-/// through (L §5.18).
+/// `e_field`); a field read of `none` is refused, naming the object as written, each
+/// variable of `env` by its value, `rec[k2]` (L §3.1; §8.4 `RUN-NONE`; tally 2.2.1 235.6,
+/// P48 N2); a field of a hole is the hole, which a `partial` line can't see through
+/// (L §5.18).
 fn field(
     m: &Reality,
     v: Value,
     name: &str,
-    (base, posts): (&Expr, &[Postfix]),
+    (object, env): ((&Expr, &[Postfix]), &Env),
 ) -> Result<Value, Stop> {
     if let Value::Hole(h) = &v {
         return Ok(Value::Hole(h.plain()));
     }
     if v == Value::None {
-        let object = crate::load::post_text(base, posts);
+        let object = crate::load::bound_post_text(object, &env.bound_texts(m)?);
         return Err(refuse(
             Run::None,
             format!("{object} is none here: a field read of it"),

@@ -95,7 +95,7 @@ impl Engine {
                     holes.push(h.clone());
                 } else if read == Value::None {
                     // a `none` level too (L §8, l.2217; 208.10 on #241)
-                    return Err(none_level(level));
+                    return Err(none_level(m, level, env));
                 } else if let Value::Number(Number { q, .. }) = &read {
                     level_in_range(m, &read, q)?;
                 }
@@ -132,7 +132,7 @@ impl Engine {
             return Ok(Value::Hole(h));
         }
         if read == Value::None {
-            return Err(none_level(level));
+            return Err(none_level(m, level, env));
         }
         let Value::Number(Number { q, .. }) = &read else {
             return Err(not_typed());
@@ -165,16 +165,18 @@ impl Engine {
 }
 
 /// A quantile's level `level` that is `none`: `none` is only tested, so the level's use is
-/// refused, `RUN-NONE`, naming the level as written, `lvl is none here: the level of quantile`
-/// (refcore's `level_none`). L §3.1, §8, §8.4 `RUN-NONE`'s row (tally 2.2.1's 208.10, 233.7).
-fn none_level(level: &Expr) -> Stop {
-    refuse(
-        Run::None,
-        format!(
-            "{} is none here: the level of quantile",
-            crate::load::expr_text(level)
+/// refused, `RUN-NONE`, naming the level as written, each variable of `env` by its value,
+/// `rate[k2] is none here: the level of quantile` (refcore's `level_none`). L §3.1, §8, §8.4
+/// `RUN-NONE`'s row (tally 2.2.1's 208.10, 233.7, 235.6; P48 B2). A number error printing a
+/// bound value is that error.
+fn none_level(m: &Reality, level: &Expr, env: &Env) -> Stop {
+    match super::bindings::written_bound(m, level, env) {
+        Ok(shown) => refuse(
+            Run::None,
+            format!("{shown} is none here: the level of quantile"),
         ),
-    )
+        Err(stop) => stop,
+    }
 }
 
 /// A quantile's level `q` (read as `read`) outside (0, 1]: type 1 over its terms has no
