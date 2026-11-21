@@ -6174,3 +6174,13 @@ The review is `tmp/spec-2.2.1/review-g4.md` (blocking 3, non-blocking 7), its pr
 - **Checks at 69fcba45's tree:**
   - `check quick: red at tests, stopped after 10 of 11 steps (78s)`: the one T test above.
   - `check commit: red at tests, stopped after 10 of 24 steps (73s)`: the 11 ids above.
+
+## STOP-REPORT 2026-11-21: G4's fix ends on T's stale codes/m0 count, still red (G2's report)
+
+- **Kind:** a test seems wrong (a stale count in T's runner, not an engine output); the same as G2's STOP-REPORT above, "T's runner test pins 252 codes/m0 fixtures; 8c3ad430 stored 256"
+- **Where:** `engine/tests/runner/src/codes.rs:245` `the_m0_fixtures_read_and_print_their_codes`
+- **Rule or gate:** R-83 (the Stop hook: `check quick` red on a test no `Logged-Red:` line names)
+- **What happens:** `engine/tools/check quick`, exit non-zero: `FAIL tests: 1 of 331 tests are red`; `left: (256, 52)`, `right: (252, 52)`. Red before this turn's first change (at 25fdae9b) and at 2f2aab89, after each of G4's six fix commits alike; no engine change reaches it, since the test reads the stored record and never runs the engine
+- **What I tried:** nothing: the runner is T's (R-79)
+- **What I ask:** as G2's report: T moves the pin to (256, 52), or logs the test red on a `Logged-Red:` line until it does
+- **State:** 2f2aab89 (G4's review fix and its entry); this report uncommitted; not pushed

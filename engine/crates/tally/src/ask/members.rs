@@ -116,35 +116,28 @@ pub(super) fn lifted(
 
 /// A `WARN-LEGS` message, `the two observations of <x> disagree: <a>[…) and <b>[…`, with its
 /// thing and its two inputs under the member's prefix (refcore's `joint_warning`); none for a
-/// message of another form.
+/// message of another form. Read from its end, where the engine's own words stand (the two
+/// rows' ids and their amounts or days), so the thing is read whole, an instance's keys and
+/// all (`put[a, 2026-03]`; G4's fix review B-1, P53).
 fn legs_named(prefix: &str, text: &str) -> Option<String> {
     let rest = text.strip_prefix("the two observations of ")?;
-    let (thing, rest) = rest.split_once(" disagree: ")?;
-    let (first, second) = rest.rsplit_once(") and ")?;
-    let (a, a_rest) = first.split_once('[')?;
-    let (b, b_rest) = second.split_once('[')?;
-    if [thing, a, b]
-        .iter()
-        .any(|word| word.is_empty() || word.contains(' '))
-    {
-        return None;
-    }
+    let (head, second) = rest.rsplit_once(") and ")?;
+    let (head, first_amount) = head.rsplit_once(" (")?;
+    let (thing, first) = head.rsplit_once(" disagree: ")?;
     Some(format!(
-        "the two observations of {prefix}.{thing} disagree: {prefix}.{a}[{a_rest}) and \
-         {prefix}.{b}[{b_rest}"
+        "the two observations of {prefix}.{thing} disagree: {prefix}.{first} ({first_amount}) \
+         and {prefix}.{second}"
     ))
 }
 
 /// A `WARN-LABELS` message, `labels dropped at <x> from <s>: <l>, …`, with its place and each
 /// label under the member's prefix (refcore's `joint_warning`); none for a message of another
-/// form. The engine raises none before parts and labels are built (M5).
+/// form. Read from its end, so the place is read whole, keys and all (B-1, P53). The engine
+/// raises none before parts and labels are built (M5).
 fn labels_named(prefix: &str, text: &str) -> Option<String> {
     let rest = text.strip_prefix("labels dropped at ")?;
-    let (place, rest) = rest.split_once(" from ")?;
-    let (source, labels) = rest.split_once(": ")?;
-    if [place, source].iter().any(|word| word.contains(' ')) {
-        return None;
-    }
+    let (head, labels) = rest.rsplit_once(": ")?;
+    let (place, source) = head.rsplit_once(" from ")?;
     let labels: Vec<String> = labels
         .split(", ")
         .map(|label| format!("{prefix}.{label}"))
