@@ -137,9 +137,14 @@ impl Engine {
             // a movement the span doesn't count: what decided it is in the read set (L §8.2
             // One read set; P35 on #241)
             if i.status == Status::None {
-                // a read of day t reads its prefix through t: one dated after the span's last
-                // day was never met (E §4.2; S4, P43 on #241)
-                if i.day.as_ref().and_then(Dated::lo).is_none_or(|d| d <= last) {
+                let in_span = matches!(&i.day, Some(Dated::Day(d)) if sp.contains(*d));
+                if in_span {
+                    // read to be left out: every entry its reads gave, `held:` lines too
+                    // (refcore's `flows_move`; P35, P48 on #241)
+                    acc.met.merge(&i.coll);
+                } else if i.day.as_ref().and_then(Dated::lo).is_none_or(|d| d <= last) {
+                    // a read of day t reads its prefix through t: one dated after the span's
+                    // last day was never met (E §4.2; S4, P43 on #241)
                     acc.met.merge(&i.coll.deciding());
                 }
                 continue;
