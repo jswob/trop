@@ -169,3 +169,29 @@ t221-g4/usage-reprint-ask	m3/fixes/t221/p206	reprint p2.tally --ask b	-	usage
 t221-g4/usage-reprint-pin-zzz	m3/fixes/t221/p206	reprint p2.tally --pin=zzz	-	usage
 t221-g4/usage-run-ask-foo	m3/fixes/t221/p206	run p2.tally --ask=foo	-	usage
 t221-g4/usage-run-pin-zzz	m3/fixes/t221/p206	run p2.tally --pin=zzz	-	usage
+t221-g2/rv2-b1-refused-flows	m3/fixes/t221/rv2	run b1.tally --ask b f fz	-	tally 2.2.1 (#241) the second review's B1, L §8.2 l.2248: a refused flows line lists the pins its refusal read, as the balance does: f pinned w = 2026-03-12, fz pinned z = 0
+t221-g2/rv2-b1-r10	m3/fixes/t221/rv2	run r10.tally --ask a8 a8b	-	tally 2.2.1 (#241) the second review's B1, second form: flows(ob, 2026-04) refused RUN-PLACE at the pin's own figure (-130.00 PLN; -140.00 unpinned) lists pinned: small
+t221-g2/rv2-b2-same-register	m3/fixes/t221/rv2	run b2.tally --ask s0 sp sq bp	-	tally 2.2.1 (#241) the second review's B2, L l.1797, l.2248: the HOLE-SAME read takes the other side's register: sp 100.00 PLN and sq's hole each list pinned: a2, as bp does
+t221-g2/rv2-b3-projection-pin	m3/fixes/t221/rv2	run b4.tally --ask b p	-	tally 2.2.1 (#241) the second review's B3, l.2248: a projection lists the pin that moves pw's day outside the span, as the balance does (pinned: w = 2026-03-08)
+t221-g2/rv2-b4-added-place	m3/fixes/t221/rv2	run b5.tally sc/b5.tally --ask qp qd	-	tally 2.2.1 (#241) the second review's B4, L §5.18 diff (231.R2): a place only the scenario declares is added (7.00 PLN), as a def is (1.00 PLN)
+t221-g2/rv2-b5-day-only	m3/fixes/t221/rv2	run w2_day_only.tally	-	tally 2.2.1 (#241) the second review's B5, L l.1717: two rows stated same that disagree only on a day (03-18, 03-19; 950.00 both) print WARN-LEGS
+t221-g2/rv2-b5-two-versions	m3/fixes/t221/rv2	run w3_two_versions.tally	-	tally 2.2.1 (#241) the second review's B5, its guard: two versions, 950.00 and 900.00, WARN-LEGS
+t221-g2/rv2-n1-decision	m3/fixes/t221/rv2	run r9.tally --ask d_after d_on d_before	-	tally 2.2.1 (#241) the second review's N1, l.2248: a decision leg a pin puts after the read day lists the pin
+t221-g2/rv2-n1-left-out	m3/fixes/t221/rv2	run r1.tally --ask o_out o_pre fl flm cnt sm	-	tally 2.2.1 (#241) the second review's N1, l.2248: a left-out leg, and flows, count, sum over a span the pin moves the day out of, list the pin
+t221-g2/rv2-n1-assumed	m3/fixes/t221/rv2	run r8.tally --ask before after	-	tally 2.2.1 (#241) the second review's N1: assumed: where the day's row is assumed
+t221-g2/rv2-n3-pads-count	m3/fixes/t221/rv2	run r7.tally --ask c3 p3	-	tally 2.2.1 (#241) the second review's N3, L §8.2 l.2262: count over three pads lists the three pad: lines, as a field read does
+t221-g2/rv2-n4-flows-same	m3/fixes/t221/rv2	run b2.tally --ask f1 f2	-	tally 2.2.1 (#241) the second review's N4, L l.1797 (never a silent pick): flows of either side of a movement stated same, the amounts 100.00 and 120.00, is the HOLE-SAME hole
+t221-g2/rv2-n4-count-same	m3/fixes/t221/rv2	run h10.tally --ask c5 c9	-	tally 2.2.1 (#241) the second review's N4: count over a span holding one side's day reads both sides
+t221-g2/rv2-n6-two-legs	m3/fixes/t221/rv2	run h4.tally --ask blc fl amt fee	-	tally 2.2.1 (#241) the second review's N6 (a): two planned movements that agree in full, cash and fee at one place, give no HOLE-SAME
+t221-g2/rv2-q3-per-fact	m3/fixes/t221/rv2	run h1.tally --ask dys fee amt	-	tally 2.2.1 (#241) the second review's Q3 (P36): HOLE-SAME is per fact: the day reads as one when only an amount differs; the fee reads 2.00 PLN when only cash differs
+t221-g2/p42-leg-to	m3/fixes/t221/rv2	run h1.tally --ask tos	-	tally 2.2.1 (#241) P42: a leg's to when only the amounts differ is the place both sides state (wallet), per fact
+t221-g2/p42-span-days	m3/fixes/t221/rv2	run h2.tally --ask fl1 cnt	-	tally 2.2.1 (#241) P42, P43 S2: flows and count over a span both sides' days lie in (03-05, 03-07) read the amounts, no hole
+t221-g2/rv2f-f5-hole-day	m3/fixes/t221/rv2/fx	run s5_hole_day.tally --ask dy c0 f1	-	tally 2.2.1 (#241) the fix review's F5 (P36, L §8.1): a side whose day is a hole: the day, count and flows carry its question
+t221-g2/rv2f-f6-leg-reads	m3/fixes/t221/rv2/fx	run s2_leg_reads.tally --ask fee0 fee_a2 fl_fee	-	tally 2.2.1 (#241) the fix review's F6 (P43 S3, L §8.2): a read of the fee lists no pin of the cash leg's amount (a2)
+t221-g2/rv2f-f7-membership	m3/fixes/t221/rv2/fx	run s2_leg_reads.tally --ask cnt_d2 cnt_d2x	-	tally 2.2.1 (#241) the fix review's F7 (P43 S2, P35): a count over a span that rests on d2 lists pinned: d2, inside the span and outside
+t221-g2/rv2f-f8-false-when	m3/fixes/t221/rv2/fx	run r2_when_before.tally --ask t_before f_before t_fl f_fl f_flm	-	tally 2.2.1 (#241) the fix review's F8 (P43 S4, E §4.2): a false when of an instance after February isn't listed under February's reads
+t221-g2/rv2f-f8-a-before	m3/fixes/t221/rv2/fx	run r1_when.tally --ask a_before a_after	-	tally 2.2.1 (#241) the fix review's F8, its second text: a_before lists no pin of a when after its day
+t221-g2/rv2f-f10-covered	m3/fixes/t221/rv2/fx	run r3_covered.tally	-	tally 2.2.1 (#241) the fix review's F10 (P43 S5, P35): flows over a covered span lists what the balance lists (pinned: w, open: pw)
+t221-rc/221-8-same-row-line	m3/fixes/t221/g3t2	run t2218.tally	-	tally 2.2.1 (#241) 221.8, L §8.3 l.2270: LOAD-SAME between an observed row and a planned instance names the keys as written, at the line of the same
+t221-rc/208-R2-for-law	m3/fixes/t221/rc208	run pt208_r2.tally	-	tally 2.2.1 (#241) 208.R2, L §5.18 l.1608: a per-tuple law on flows, explain and residuals
+t221-rc/228-10-member-on	m3/fixes/t221/q10	run top.tally --ask m.b m.c	-	tally 2.2.1 (#241) 228.Q10, L §6.1 (R20 cl.2): a member ask as known after the member's on (2026-03-31), before the joint model's (2026-06-30): REQ-CLOCK by the member's on

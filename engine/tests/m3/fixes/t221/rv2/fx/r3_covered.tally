@@ -1,0 +1,37 @@
+model r3
+  tally 2
+  on 2026-04-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input pay: money PLN
+input w: date
+move pw: transfers
+  on w
+  leg cash from world to konto amount pay
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  pay = 100.00 PLN "s"
+  w = 2026-04-05 "s"
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  bank[r1] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 30.00 PLN) "r1"
+ask c0: bal(konto, 2026-03-31)
+ask c1: bal(konto, 2026-03-31) with w = 2026-03-12
+ask c2: bal(konto, 2026-03-05) with w = 2026-03-12
+ask c3: bal(konto, 2026-04-30) with w = 2026-03-12
+ask c4: bal(konto, 2026-04-30) with w = 2026-04-06
+ask f1: flows(konto, 2026-03) with w = 2026-03-12
+ask f2: flows(pw, 2026-03) with w = 2026-03-12
+ask n1: count(m in transfers over 2026-03) with w = 2026-03-12
+ask p1: bal(konto, 2026-03-31) from 2026-03-01 with w = 2026-03-12

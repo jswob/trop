@@ -2604,7 +2604,7 @@ version mbank_2026_09
   bank[r20260926a] = (on: 2026-09-26, kind: spending, leg cash from konto to niewyjasnione amount 120.00 PLN, cat: other) "RESTAURACJA"
   bank[r20260929a] = (on: 2026-09-29, kind: spending, leg cash from konto to niewyjasnione amount 401.09 PLN, cat: groceries) "BIEDRONKA KRAKOW"
   stated[konto] = 41386.27 at 2026-09-30 end "saldo końcowe"
-,,1:0,2383:konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
+,,1:0,3236:konto_balance (d = 2026-10-31): (6 064.17 PLN, 6 064.17 PLN)
   assumed: budżet gospodarstwa na 2026, przed pierwszym wyciągiem (spend_budget[groceries], spend_budget[health_care], spend_budget[other], spend_budget[transport])
   anchor: konto 2026-09-30 end, stated 41 386.27 PLN, difference 32 097.23 PLN
   unfulfilled: client_pay[client_a, 2026-09]
@@ -2632,6 +2632,38 @@ version mbank_2026_09
   unfulfilled: spend[2026-10-17]
   unfulfilled: spend[2026-10-18]
   unfulfilled: wage[wife_acme, 2026-09]
+  open: client_pay[client_b, 2026-08]
+  open: loan_instalment[laptop, 4]
+  open: spend[2026-09-01]
+  open: spend[2026-09-02]
+  open: spend[2026-09-03]
+  open: spend[2026-09-04]
+  open: spend[2026-09-05]
+  open: spend[2026-09-06]
+  open: spend[2026-09-07]
+  open: spend[2026-09-08]
+  open: spend[2026-09-09]
+  open: spend[2026-09-10]
+  open: spend[2026-09-11]
+  open: spend[2026-09-12]
+  open: spend[2026-09-13]
+  open: spend[2026-09-14]
+  open: spend[2026-09-15]
+  open: spend[2026-09-16]
+  open: spend[2026-09-17]
+  open: spend[2026-09-18]
+  open: spend[2026-09-19]
+  open: spend[2026-09-20]
+  open: spend[2026-09-21]
+  open: spend[2026-09-22]
+  open: spend[2026-09-23]
+  open: spend[2026-09-24]
+  open: spend[2026-09-25]
+  open: spend[2026-09-26]
+  open: spend[2026-09-27]
+  open: spend[2026-09-28]
+  open: spend[2026-09-29]
+  open: spend[2026-09-30]
   left out: client_pay, 4 instances, first 2026-11-16
   left out: health_pay, 2 instances, first 2026-11-20
   left out: health_settle_pay, 1 instances, first 2027-05-20
@@ -8142,7 +8174,7 @@ version bank_feb
   bank[b20260215] = (on: 2026-02-15, kind: transfers, leg cash from konto to shop amount 50.00 PLN) "on the cut's day"
   stated[pocket] = 45.00 at 2026-02-10 start "the pocket counted in the morning"
   stated[pocket] = 44.00 at 2026-02-15 end "on the cut's day"
-,,1:0,9251:q_bal (d = 2026-01-01): (2 995.00 PLN, 50.00 PLN, 0.00 PLN, 0.00 PLN)
+,,1:0,9870:q_bal (d = 2026-01-01): (2 995.00 PLN, 50.00 PLN, 0.00 PLN, 0.00 PLN)
   open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
@@ -8179,6 +8211,9 @@ q_bal (d = 2026-01-28): (2 345.00 PLN, 50.00 PLN, 0.00 PLN, 0.00 PLN)
   law date 2026-02-15, cut 2026-02-15
 q_bal (d = 2026-01-31): (2 350.00 PLN, 50.00 PLN, 0.00 PLN, 0.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8186,6 +8221,9 @@ q_bal (d = 2026-02-10): (1 710.00 PLN, 45.00 PLN, 0.00 PLN, 0.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8193,6 +8231,9 @@ q_bal (d = 2026-02-15): (1 710.00 PLN, 45.00 PLN, 0.00 PLN, 0.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8200,6 +8241,9 @@ q_bal (d = 2026-02-20): (2 507.00 PLN, 45.00 PLN, 100.00 PLN, 100.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8207,6 +8251,9 @@ q_bal (d = 2026-03-01): (2 457.00 PLN, 45.00 PLN, 100.00 PLN, 100.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8214,6 +8261,9 @@ q_bal (d = 2026-03-20): (2 654.00 PLN, 45.00 PLN, 200.00 PLN, 200.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8221,6 +8271,9 @@ q_bal (d = 2026-03-31): (2 604.00 PLN, 45.00 PLN, 200.00 PLN, 200.00 PLN)
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   law date 2026-02-15, cut 2026-02-15
@@ -8253,6 +8306,9 @@ q_room (m = 2026-02): 457.00 PLN
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   left out: save, 1 instances, first 2026-02-20
@@ -8261,6 +8317,9 @@ q_room (m = 2026-03): 604.00 PLN
   anchor: konto 2026-01-31 end, stated 2 350.00 PLN, difference 5.00 PLN
   anchor: pocket 2026-02-10 start, stated 45.00 PLN, difference -5.00 PLN
   unfulfilled: rent_pay[2026-02]
+  open: bill[2026-01]
+  open: fee[2026-01]
+  open: newyear
   left out: early, 1 instances, first 2025-12-15
   left out: late, 1 instances, first 2026-04-15
   left out: save, 1 instances, first 2026-03-20
@@ -8272,6 +8331,7 @@ q_tin (d = 2026-02-26): (10.00 PLN, 0.00 PLN, 750.00 PLN, 0.00 PLN, refused: RUN
   unfulfilled: rent_pay[2026-02]
   unfulfilled: save[2026-01]
   unfulfilled: sweep[2026-01]
+  open: bill[2026-01]
   open: fee[2026-01]
   open: newyear
   left out: early, 1 instances, first 2025-12-15
@@ -8286,6 +8346,7 @@ q_tin (d = 2026-02-27): (refused: RUN-LIFESPAN tin ends on 2026-02-27 holding 10
   unfulfilled: rent_pay[2026-02]
   unfulfilled: save[2026-01]
   unfulfilled: sweep[2026-01]
+  open: bill[2026-01]
   open: fee[2026-01]
   open: newyear
   left out: early, 1 instances, first 2025-12-15
@@ -8300,6 +8361,7 @@ q_tin (d = 2026-02-28): (refused: RUN-LIFESPAN tin ends on 2026-02-27 holding 10
   unfulfilled: rent_pay[2026-02]
   unfulfilled: save[2026-01]
   unfulfilled: sweep[2026-01]
+  open: bill[2026-01]
   open: fee[2026-01]
   open: newyear
   left out: early, 1 instances, first 2025-12-15
@@ -8314,6 +8376,7 @@ q_tin (d = 2026-03-31): (refused: RUN-LIFESPAN tin ends on 2026-02-27 holding 10
   unfulfilled: rent_pay[2026-02]
   unfulfilled: save[2026-01]
   unfulfilled: sweep[2026-01]
+  open: bill[2026-01]
   open: fee[2026-01]
   open: newyear
   left out: early, 1 instances, first 2025-12-15

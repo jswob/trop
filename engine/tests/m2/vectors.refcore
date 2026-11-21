@@ -37747,8 +37747,10 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,4188:g3_konto (d = 2026-11-14): 20 208.48 PLN
+,,1:0,4448:g3_konto (d = 2026-11-14): 20 208.48 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -37761,6 +37763,8 @@ version bank_2026_10
   cut 2026-10-17
 g3_konto (d = 2026-11-15): 11 594.97 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -37775,6 +37779,8 @@ g3_konto (d = 2026-11-15): 11 594.97 PLN
   cut 2026-10-17
 g3_konto (d = 2026-12-06): 1 000.00 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -37789,6 +37795,8 @@ g3_konto (d = 2026-12-06): 1 000.00 PLN
   cut 2026-10-17
 g3_konto (d = 2026-12-07): 9 275.65 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -37807,6 +37815,8 @@ g3_pay: (8 509.87 PLN, 2026-12-07)
   cut 2026-10-17
 g3_rule: (7 887.29 PLN, 0.00 PLN, 7 887.29 PLN)
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40794,8 +40804,10 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,27719:pin_invest (m = 2026-11): 7 887.29 PLN
+,,1:0,28395:pin_invest (m = 2026-11): 7 887.29 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40809,6 +40821,8 @@ version bank_2026_10
   cut 2026-10-17
 pin_invest (m = 2026-12): 7 424.19 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40826,6 +40840,8 @@ pin_invest (m = 2026-12): 7 424.19 PLN
   cut 2026-10-17
 pin_invest (m = 2027-01): 7 478.94 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40846,6 +40862,8 @@ pin_invest (m = 2027-01): 7 478.94 PLN
   cut 2026-10-17
 pin_to_ike (m = 2026-11): 0.00 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40860,6 +40878,8 @@ pin_to_ike (m = 2026-11): 0.00 PLN
   cut 2026-10-17
 pin_to_ike (m = 2026-12): 0.00 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40878,6 +40898,8 @@ pin_to_ike (m = 2026-12): 0.00 PLN
   cut 2026-10-17
 pin_to_ike (m = 2027-01): 7 478.94 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40899,6 +40921,8 @@ pin_to_ike (m = 2027-01): 7 478.94 PLN
   cut 2026-10-17
 pin_to_rest: 7 312.73 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40955,6 +40979,8 @@ pin_to_rest: 7 312.73 PLN
   cut 2026-10-17
 pin_konto (d = 2026-11-01): 2 261.80 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -40967,6 +40993,8 @@ pin_konto (d = 2026-11-01): 2 261.80 PLN
   cut 2026-10-17
 pin_konto (d = 2027-06-30): 5 743.50 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -41039,6 +41067,8 @@ pin_net_worth (d = 2026-11-01): 223 463.93 PLN
   unfulfilled: buy_mak[2026-07]
   unfulfilled: buy_mak[2026-08]
   unfulfilled: buy_mak[2026-09]
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -41086,6 +41116,8 @@ pin_net_worth (d = 2027-06-30): 298 016.28 PLN
   unfulfilled: buy_mak[2026-07]
   unfulfilled: buy_mak[2026-08]
   unfulfilled: buy_mak[2026-09]
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -41158,6 +41190,8 @@ pin_net_worth_2027: 354 008.39 PLN
   unfulfilled: buy_mak[2026-07]
   unfulfilled: buy_mak[2026-08]
   unfulfilled: buy_mak[2026-09]
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -41214,6 +41248,8 @@ pin_net_worth_2027: 354 008.39 PLN
   cut 2026-10-17
 pin_oki_tax: 202.00 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -44292,7 +44328,7 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,14699:pin_net_worth (d = 2026-11-01): 223 463.93 PLN
+,,1:0,14907:pin_net_worth (d = 2026-11-01): 223 463.93 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
   unfulfilled: buy_ike[2024-01]
   unfulfilled: buy_ike[2024-04]
@@ -44329,6 +44365,8 @@ version bank_2026_10
   unfulfilled: buy_mak[2026-07]
   unfulfilled: buy_mak[2026-08]
   unfulfilled: buy_mak[2026-09]
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -44376,6 +44414,8 @@ pin_net_worth (d = 2027-06-30): 298 270.74 PLN
   unfulfilled: buy_mak[2026-07]
   unfulfilled: buy_mak[2026-08]
   unfulfilled: buy_mak[2026-09]
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -44448,6 +44488,8 @@ pin_net_worth_2027: 354 270.37 PLN
   unfulfilled: buy_mak[2026-07]
   unfulfilled: buy_mak[2026-08]
   unfulfilled: buy_mak[2026-09]
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -44504,6 +44546,8 @@ pin_net_worth_2027: 354 270.37 PLN
   cut 2026-10-17
 pin_oki_tax: 204.00 PLN
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2028-07-20
   left out: biz_fee, 1 instances, first 2028-07-10
   left out: biz_health_pay, 1 instances, first 2028-07-20
@@ -47535,8 +47579,10 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,11178:pin_oki_tax_2030: (1 682.00 PLN, 0.0071)
+,,1:0,11230:pin_oki_tax_2030: (1 682.00 PLN, 0.0071)
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2031-02-20
   left out: biz_fee, 1 instances, first 2031-02-10
   left out: biz_health_pay, 1 instances, first 2031-02-20
@@ -50673,8 +50719,10 @@ version bank_2026_10
   bank[r20261016a] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 147.89 PLN, cat: codzienne) "ledger.json row 1941"
   bank[r20261016b] = (on: 2026-10-16, kind: bank_line, leg cash from konto to sklepy amount 166.44 PLN, cat: codzienne) "ledger.json row 1942"
   stated[konto] = 11685.67 at 2026-10-16 end "the opening plus every row to the day"
-,,1:0,11178:pin_oki_tax_2030: (1 729.00 PLN, 0.0071)
+,,1:0,11230:pin_oki_tax_2030: (1 729.00 PLN, 0.0071)
   anchor: konto 2026-10-16 end, stated 11 685.67 PLN, difference 0.00 PLN
+  open: biz_costs[2026-10]
+  open: biz_fee[2026-09]
   left out: biz_adv_pay, 1 instances, first 2031-02-20
   left out: biz_fee, 1 instances, first 2031-02-10
   left out: biz_health_pay, 1 instances, first 2031-02-20
@@ -105498,13 +105546,14 @@ version st_konto
   bank[a3] = (on: 2026-03-20, kind: transfers, leg cash from world to konto amount 50.00 PLN) "DOPLATA"
   stated[konto] = 210.00 PLN at 2026-03-10 end "saldo 10"
   stated[konto] = 100.00 PLN at 2026-03-31 end "saldo"
-,,1:0,1118:e1: 100.00 PLN
+,,1:0,1141:e1: 100.00 PLN
   balance of konto (PLN) at the end of 2026-03-31, modelled
   from: anchor st_konto:stated[konto] 2026-03-10 end = 210.00 PLN, 2026-03-10 end (version st_konto, source s, locator "saldo 10"), gap role anchor, gap -890.00 PLN
   2026-03-15:
     save[2026-03].cash (modelled): -110.00 PLN
   pinned: ax = lo
   anchor: konto 2026-03-10 end, stated 210.00 PLN, difference -890.00 PLN
+  open: bonus[2026-03]
   cut 2026-04-10
 e2: 1 130.00 PLN
   balance of konto (PLN) at the end of 2026-03-10, modelled
@@ -109528,13 +109577,14 @@ version join_b
 ask fp: flows(tip, 2026-03)
 ask f3: flows(save, 2026-03)
 ask b3: bal(sav, 2026-03-31), bal(konto, 2026-03-31)
-,,1:0,898:fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
+,,1:0,1013:fp: ?"bank[q1] and bank[q2] are one, but the amount of cash differs on 2026-03-20: 35.00 PLN (bank[q1]) and 30.00 PLN (bank[q2])" (bank[q1], bank[q2])
   cut 2026-06-10
 f3: ?"bank[r1], bank[r2] and bank[r3] are one, but the amount of cash differs on 2026-03-15: 950.00 PLN (bank[r1]), 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r1], bank[r2], bank[r3])
   cut 2026-06-10
 b3: (?"bank[r2] and bank[r3] are one, but leg cash differs on 2026-03-15: 950.00 PLN (bank[r2]) and 940.00 PLN (bank[r3])" (bank[r2], bank[r3]), 100.00 PLN)
   cut 2026-06-10
 warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[r1] (950.00 PLN) and bank[r3] (940.00 PLN)
+warning: WARN-LEGS the two observations of save[2026-03] disagree: bank[r2] (950.00 PLN) and bank[r3] (940.00 PLN)
 warning: WARN-LEGS the two observations of tip[2026-03] disagree: bank[q1] (35.00 PLN) and bank[q2] (30.00 PLN)
 warning: WARN-NEGATIVE box is below zero from 2026-05-20
 warning: WARN-NEGATIVE konto is below zero from 2026-04-15
@@ -110029,13 +110079,14 @@ ask fd_each_s1: flows(konto, 2026-12-01 .. 2026-12-31) with wd = 2026-12-20
 
 ask fd_each_s2: flows(konto, 2026-12-01 .. 2026-12-31) with wd = 2027-01-01
 ask fin: flows(konto, 2026-12-01 .. 2027-01-31)
-,,1:0,262:fd: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
+,,1:0,288:fd: ?"date within window(2026-12-20, 2027-01-10) not precise enough for flows of konto" (g)
   unknown day: wd
   cut 2026-03-01
 fd_each_s1: 10.00 PLN
   pinned: wd = 2026-12-20
   cut 2026-03-01
 fd_each_s2: 0.00 PLN
+  pinned: wd = 2027-01-01
   cut 2026-03-01
 fin: 10.00 PLN
   cut 2026-03-01
@@ -110646,7 +110697,7 @@ ask e2_s2: bal(konto, 2026-06-30) with ws = 2025-12-30, we = 2026-07-01
 ask e2_s3: bal(konto, 2026-06-30) with ws = 2026-01-01, we = 2026-06-28
 
 ask e2_s4: bal(konto, 2026-06-30) with ws = 2026-01-01, we = 2026-07-01
-,,1:0,815:s1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early)
+,,1:0,919:s1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balance" (early)
   unknown day: ws
   cut 2025-12-01
 s4: 1
@@ -110657,9 +110708,12 @@ e1: ?"date within window(2025-12-30, 2026-01-03) not precise enough for a balanc
   cut 2025-12-01
 e2_s1: 100.00 PLN
   pinned: we = 2026-06-28
+  pinned: ws = 2025-12-30
   left out: early, 1 instances, first 2025-12-30
   cut 2025-12-01
 e2_s2: 0.00 PLN
+  pinned: we = 2026-07-01
+  pinned: ws = 2025-12-30
   left out: early, 1 instances, first 2025-12-30
   left out: late, 1 instances, first 2026-07-01
   cut 2025-12-01
@@ -110668,6 +110722,7 @@ e2_s3: 200.00 PLN
   pinned: ws = 2026-01-01
   cut 2025-12-01
 e2_s4: 100.00 PLN
+  pinned: we = 2026-07-01
   pinned: ws = 2026-01-01
   left out: late, 1 instances, first 2026-07-01
   cut 2025-12-01
@@ -111542,10 +111597,11 @@ ask g4_s2: bal(pot, 2026-04-30) with wa = 2026-04-08
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g7: flows(ob, 2026-04) with wa = 2026-04-05
-,,1:0,1198:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+,,1:0,1250:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   unknown day: wa
   cut 2026-01-01
 g2_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-05
   cut 2026-01-01
 g2_s2: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
   cut 2026-01-01
@@ -111565,6 +111621,7 @@ g6: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans
   pinned: wa = 2026-04-05
   cut 2026-01-01
 g7: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-05
   cut 2026-01-01
 warning: WARN-UNREAD input amt is read by nothing
 ,24:fixes/rv/g2_b4_cover_gap,8:fixes-rv,22:run b4_cover_gap.tally,1006:18:b4_cover_gap.tally,979:model t
@@ -112223,10 +112280,11 @@ ask g4_s1: bal(pot, 2026-04-30) with wa = 2026-04-05
 ask g4_s2: bal(pot, 2026-04-30) with wa = 2026-04-08
 ask g5: bal(pot, 2026-04-30) with wa = 2026-04-09
 ask g6: bal(pot, 2026-04-30) with wa = 2026-04-05
-,,1:0,1086:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
+,,1:0,1112:g1: ?"date within window(2026-04-05, 2026-04-10) not precise enough for flows of ob" (oa)
   unknown day: wa
   cut 2026-01-01
 g2_s1: refused: RUN-PLACE pot is -160.00 PLN after the day's observations and plans of 2026-04-07
+  pinned: wa = 2026-04-05
   cut 2026-01-01
 g2_s2: refused: RUN-PLACE pot is -150.00 PLN after the day's observations and plans of 2026-04-07
   cut 2026-01-01
@@ -115377,4 +115435,41 @@ ask q: bal(sav, 2026-06-30)
   unfulfilled: ml[1.5]
   unfulfilled: ml[2]
   cut 2026-04-25
+,20:spec/p60/ask_for_law,11:fixes-sweep,21:run ask_for_law.tally,645:17:ask_for_law.tally,619:model p
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  note "T, M2 P60 (G6's census of run-time stops): ask/answer.rs:611, an ask's law formed per its own for's binding tuple"
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input amt: money PLN
+input dk[k in ks]: date
+
+version v
+  cite s
+  governs 2026-01-01..2026-03-31
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+
+version v2
+  cite s
+  governs 2026-04-01..
+  known 2026-01-01
+  amt = 20.00 PLN "s"
+
+version d
+  cite s
+  governs always
+  known 2026-01-01
+  dk[a] = 2026-03-31 "s"
+  dk[b] = 2026-04-30 "s"
+
+ask q: amt for k in ks law dk[k]
+,,1:0,118:q (k = a): 10.00 PLN
+  law date 2026-03-31, cut 2026-06-30
+q (k = b): 20.00 PLN
+  law date 2026-04-30, cut 2026-06-30
 ,

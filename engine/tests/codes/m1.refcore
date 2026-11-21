@@ -1709,7 +1709,8 @@ version card_2026
   weight[q2] = 3 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[loan] = -1000.00 PLN at 2026-01-01 start "the card"
-,,1:0,96:q_first: ?"m: no transfers yet, and its span reaches past the cut" (transfers)
+,,1:0,144:q_first: ?"m: no transfers yet, and its span reaches past the cut" (transfers)
+  assumed: the card names no holiday (holidays)
   cut 2026-03-01
 ,10:rules/zero,8:RUN-ZERO,5:rules,26:run base.tally --ask q_due,2375:10:base.tally,2355:model rules
   tally 2
@@ -2636,7 +2637,8 @@ version card_2026
   spend_cap = 50.00 PLN "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
   opening[savings] = 0 PLN at 2026-01-01 start "the card"
-,,1:0,230:q_decide: (refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day, refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day)
+,,1:0,278:q_decide: (refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day, refused: RUN-FUTURE a decision on 2026-04-15 binds over transfers through 2026-12-31, after its day)
+  assumed: the card names no holiday (holidays)
   cut 2026-03-01
 ,18:adjust/bound-field,10:LOAD-FIELD,9:m0:adjust,32:run base.tally --ask zz_m0_probe,1365:10:base.tally,1345:model adjust
   tally 2

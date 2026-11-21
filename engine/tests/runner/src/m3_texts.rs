@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 285] = [
+pub static TEXTS: [(&str, &str); 310] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -750,6 +750,10 @@ pub static TEXTS: [(&str, &str); 285] = [
         include_str!("../../m3/fixes/t221/g3t/s230_5a.tally"),
     ),
     (
+        "m3/fixes/t221/g3t2/t2218.tally",
+        include_str!("../../m3/fixes/t221/g3t2/t2218.tally"),
+    ),
+    (
         "m3/fixes/t221/g4top/m2.tally",
         include_str!("../../m3/fixes/t221/g4top/m2.tally"),
     ),
@@ -946,6 +950,14 @@ pub static TEXTS: [(&str, &str); 285] = [
         include_str!("../../m3/fixes/t221/p3/m.tally"),
     ),
     (
+        "m3/fixes/t221/q10/m/m.tally",
+        include_str!("../../m3/fixes/t221/q10/m/m.tally"),
+    ),
+    (
+        "m3/fixes/t221/q10/top.tally",
+        include_str!("../../m3/fixes/t221/q10/top.tally"),
+    ),
+    (
         "m3/fixes/t221/q2dir/a/s2.tally",
         include_str!("../../m3/fixes/t221/q2dir/a/s2.tally"),
     ),
@@ -980,6 +992,10 @@ pub static TEXTS: [(&str, &str); 285] = [
     (
         "m3/fixes/t221/r1one/t221r1.tally",
         include_str!("../../m3/fixes/t221/r1one/t221r1.tally"),
+    ),
+    (
+        "m3/fixes/t221/rc208/pt208_r2.tally",
+        include_str!("../../m3/fixes/t221/rc208/pt208_r2.tally"),
     ),
     (
         "m3/fixes/t221/rd4/rd4.tally",
@@ -1040,6 +1056,90 @@ pub static TEXTS: [(&str, &str); 285] = [
     (
         "m3/fixes/t221/rv1/w1_sc.tally",
         include_str!("../../m3/fixes/t221/rv1/w1_sc.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/b1.tally",
+        include_str!("../../m3/fixes/t221/rv2/b1.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/b2.tally",
+        include_str!("../../m3/fixes/t221/rv2/b2.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/b4.tally",
+        include_str!("../../m3/fixes/t221/rv2/b4.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/b5.tally",
+        include_str!("../../m3/fixes/t221/rv2/b5.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/fx/r1_when.tally",
+        include_str!("../../m3/fixes/t221/rv2/fx/r1_when.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/fx/r2_when_before.tally",
+        include_str!("../../m3/fixes/t221/rv2/fx/r2_when_before.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/fx/r3_covered.tally",
+        include_str!("../../m3/fixes/t221/rv2/fx/r3_covered.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/fx/s2_leg_reads.tally",
+        include_str!("../../m3/fixes/t221/rv2/fx/s2_leg_reads.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/fx/s5_hole_day.tally",
+        include_str!("../../m3/fixes/t221/rv2/fx/s5_hole_day.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/h1.tally",
+        include_str!("../../m3/fixes/t221/rv2/h1.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/h10.tally",
+        include_str!("../../m3/fixes/t221/rv2/h10.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/h2.tally",
+        include_str!("../../m3/fixes/t221/rv2/h2.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/h4.tally",
+        include_str!("../../m3/fixes/t221/rv2/h4.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/r1.tally",
+        include_str!("../../m3/fixes/t221/rv2/r1.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/r10.tally",
+        include_str!("../../m3/fixes/t221/rv2/r10.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/r7.tally",
+        include_str!("../../m3/fixes/t221/rv2/r7.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/r8.tally",
+        include_str!("../../m3/fixes/t221/rv2/r8.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/r9.tally",
+        include_str!("../../m3/fixes/t221/rv2/r9.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/sc/b5.tally",
+        include_str!("../../m3/fixes/t221/rv2/sc/b5.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/w2_day_only.tally",
+        include_str!("../../m3/fixes/t221/rv2/w2_day_only.tally"),
+    ),
+    (
+        "m3/fixes/t221/rv2/w3_two_versions.tally",
+        include_str!("../../m3/fixes/t221/rv2/w3_two_versions.tally"),
     ),
     (
         "m3/fixes/t221/s5/hs_disagree.tally",

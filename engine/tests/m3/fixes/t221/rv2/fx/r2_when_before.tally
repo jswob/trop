@@ -1,0 +1,31 @@
+model r2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input on_: bool
+input pay: money PLN
+input w: date
+move pw: transfers
+  on w
+  when on_
+  leg cash from world to konto amount pay
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  pay = 100.00 PLN "s"
+  on_ = true "s"
+  w = 2026-03-10 "s"
+ask t_before: bal(konto, 2026-02-01) with on_ = true
+ask f_before: bal(konto, 2026-02-01) with on_ = false
+ask t_fl: flows(konto, 2026-02) with on_ = true
+ask f_fl: flows(konto, 2026-02) with on_ = false
+ask f_flm: flows(pw, 2026-02) with on_ = false
+ask t_flm: flows(pw, 2026-02) with on_ = true
+ask f_cnt: count(m in transfers over 2026-02) with on_ = false

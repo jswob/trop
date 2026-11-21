@@ -289,3 +289,23 @@ Refcore's bytes at the second pin; one local commit with a `Logged-Red:` line pe
 - **G4 (15):** `t221-g4` 221-9-before-self, 223-replace-covers and its check, 228-2-run-path-order, 228-5-no-file-run, 228-11-member-warnings, 231-2-pin-balance, the check 232-per-cut, 233-8-known-paren, and S-usage's six `usage-*` (exit 2). Green on arrival: `t221-rc/230-5a-same-order`, `233-a-unit-literal`.
 - **Not yet written:** `reprint-pin-bytes` (the runs store takes only `run` rows and usage errors), 228.Q10's member `on`, and the four form fixtures (`LOAD-ORDER`, `LOAD-COVERS`, `LOAD-INSTANT`, `LOAD-VERSION`, `codes/m0`).
 - **`INTERFACE.md` §1:** S-usage's words (an option the command doesn't take is exit 2; `reprint` takes `--pin=bytes`); gap I-4 closed. **`MILESTONE-M0.md` row 5:** re-stated from `xref_check.py --gate M0` at tally 2.2.1: 101 codes, 54 `LOAD-*`, 268 forms (175 `LOAD-*`, 20 with no output). **The catalogue:** `map/codes.tsv` as `xref_check.py` writes it (no row moved in this chunk; `WARN-STALE` left at C3).
+
+## tally 2.2.1, chunk C9: the third pin's proof, and the review vectors (#241, 2026-11-21)
+
+On refcore at the third pin (a02d9aec: W9, W8, W10, W11; 1 648 tests) and the build branch at d3d1eba5 (G1's and G2's last fixes). Every store was written from the pin (`proof2.sh`, 3 421 s) and diffed record by record.
+
+**What moved, by item.** Nothing else moved; m0 (load, format), codes m0 and m2, loadcheck, the laws, later and hh4 are byte-equal.
+
+| Item | Records |
+|---|---|
+| P35, the register under every form and outcome (`open:`, `assumed:`, `pinned:`, `anchor:`, `unfulfilled:`) | kernel 6, codes/m1 3, m1 45, m2 12 (the five R7 goldens: `r7_g3` gains its `open:` lines), m3 `t221-g1/from-across`; 18 check baselines (37 integration checks and U:ask/ASK-03) |
+| `WARN-LEGS` by a day and in one version (B5, P43) | m1 `m2_d512_both_cover_day`, `m2_d512_day_rows`, `m2_g4_s_day`, `m2_g8b_sc1`, `m2_g8b_sc2`, `m2_rt_l6_1_same_in_model_disagree`; m2 `s6/hole_same_order_class` |
+| P43 S2, membership in a span | m1 `m2_d512_both_cover_day` `t_sum`, `m2_g4_s_day` `q_moved` (the hole becomes 950.00) |
+| `rf_w_w15` (refcore was wrong; the hole is owed) | m1 `fixes/g13/rf_w_model_with_rf_w_w15` |
+| 234.1, 236.3, S-231.Q1a, 231.R1 | m3 `last/net_worth`, `t221-rc/236-3-over-world`, `t221-g2/231-1b-whens`, `t221-rc/231-1a-conflict-order`, `t221-rc/231-R1-explain-in-s` |
+| 208.R2 | m2 `spec/p60/ask_for_law` released (refcore answers) |
+| `restate_g12`'s rule over refcore's new lines | m1 `fixes/g12/pb_g12_members_members`, its asks restated |
+
+- **Released:** `last/net_worth`, `t221-g2/231-1b-whens`, `t221-rc/231-1a-conflict-order`, `t221-rc/236-3-over-world` (green); `t221-rc/208-R2-for-law` written (both print the same). **Still held:** `fixes/t22/fault_paths` (M7); `t221-rc/231-R1-explain-in-s` (a finding: refcore fans out over every axis outside the pins, the engine over the axes the value reads).
+- **Vectors, none whose text holds a window:** the second review's B1 to B5, N1, N3, N4, N6, Q3 (N2 and N5 have only window texts); the fix review's F5 to F8, F10; P42's leg `to` and a span both days lie in; P45 (a) (G3); `t221-rc/221-8-same-row-line`, `228-10-member-on`; G3's 233.7 and 233.c texts; the four form fixtures of `codes/m0` (G4).
+- **Red on this engine, not G3's or G4's (findings, logged red in the local commit):** a refused result lists no `unfulfilled:` line where refcore lists them as a value's (P35; the second review's N2): 39 records and codes/m1 `rules/debt-above`; `WARN-LEGS` for two observations of one instance that differ only on a day (`m2_g8b_sc1`, `sc2`); `m2_g4_s_day` `q_obs` (refcore the day's `HOLE-SAME` for an amount read, the engine 950.00: P36 per fact).

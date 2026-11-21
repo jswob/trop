@@ -1676,6 +1676,6 @@ mod tests {
     /// `m2/spec.vectors`'s group `spec-sweep`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_spec_spec_sweep() {
-        group_holds(M2_SPEC, "spec-sweep", (0, 1), 6);
+        group_holds(M2_SPEC, "spec-sweep", (0, 1), 5);
     }
 }

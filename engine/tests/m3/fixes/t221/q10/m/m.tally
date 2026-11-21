@@ -1,0 +1,29 @@
+model m10
+  tally 2
+  on 2026-03-31
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member for 228.Q10 (invented): its on is before the joint model's"
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+move wage[m in months]: transfers
+  on start_of(m)
+  leg cash from world to konto amount pay
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+
+ask b: bal(konto, 2026-06-30) as known 2026-05-01
+ask c: bal(konto, 2026-06-30) as known 2026-03-01

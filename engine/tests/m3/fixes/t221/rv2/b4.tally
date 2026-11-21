@@ -1,0 +1,23 @@
+model b4
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input w: date
+move pw: transfers
+  on w
+  leg cash from world to konto amount pay
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  pay = 100.00 PLN "s"
+  w = 2026-03-10 "s"
+ask b: bal(konto, 2026-03-07) with w = 2026-03-08
+ask p: bal(konto, 2026-03-07) from 2026-03-01 with w = 2026-03-08
