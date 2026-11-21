@@ -827,6 +827,9 @@ pub struct Header {
     pub over: Option<String>,
     /// The tally version.
     pub tally: Num,
+    /// The line of its `tally` statement, which a `LOAD-VERSION` refusal of it names (L §8.3);
+    /// none before it is read.
+    pub tally_line: Option<u32>,
     /// `on`.
     pub on: Option<Day>,
     /// `start`.

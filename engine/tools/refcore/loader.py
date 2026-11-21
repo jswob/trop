@@ -2219,10 +2219,12 @@ class Loader:
                         raise LoadError('LOAD-OVERLAP', 'rows %s and %s of %s overlap at [%s], neither replacing the '
                                         'other' % (os_[i - 1].loc, o.loc, qid, key), o.loc)
                     if not o.removed:
-                        # the replaced statement is the last one with a row, also behind a `= none` (P50, N1)
-                        prev = next((x for x in reversed(os_[:i]) if not x.removed), None)
-                        if prev is not None:
-                            self.check_correction_covers(o, prev)
+                        # every earlier statement of the row with a row, at the cuts where this one stands, until
+                        # the next statement of it is known (P50, N1; tally 2.2.1 P53)
+                        earlier = [x for x in os_[:i] if not x.removed]
+                        end = os_[i + 1].known if i + 1 < len(os_) else None
+                        if earlier:
+                            self.check_correction_covers(o, earlier, end)
             self.check_covers_standing(inf, by)
 
     def check_covers_standing(self, inf, by):
@@ -2270,7 +2272,7 @@ class Loader:
                 raise LoadError('LOAD-COVERS', 'observation %s of %s is dated outside the span %s covers'
                                 % (o.sid, bad[id(o)], o.version.id), o.loc)
 
-    def check_correction_covers(self, o, prev):
+    def check_correction_covers(self, o, earlier, end=None):
         """L §5.19 (tally 2.2.1 S-223): a correction in a version that doesn't cover, on the row's day, a place of its
         legs that the replaced row's version covers is refused (LOAD-COVERS); a dropped row (`= none`) books nothing
         and needs no covers (the caller's test)."""
@@ -2287,8 +2289,9 @@ class Loader:
             places |= set(p.name for p in (ln[1], ln[2]) if hasattr(p, 'name'))
         # per cut class (E §3.1 step 9; tally 2.2.1 P50, B2): every cut at which the correction stands, from its known
         # date to the model's on, each class starting at a version's known date
-        ks = sorted(set([o.known, m.on] + [v.known for v in m.versions.values()
-                                           if v.known is not None and o.known <= v.known <= m.on]))
+        ks = sorted(set([o.known] + [v.known for v in m.versions.values()
+                                     if v.known is not None and o.known <= v.known <= m.on and
+                                     (end is None or v.known < end)]))
         # and per world (E §3.1 step 9; P50, N7a): the base and each scenario's chain, its moves lines seen there
         over = getattr(m, 'scenario_over', {}) or {}
         worlds = [frozenset()]
@@ -2302,11 +2305,12 @@ class Loader:
         try:
             for ws in worlds:
                 set_world(ws)
-                if not (in_world(o.version) and in_world(prev.version)):
+                if not in_world(o.version):
                     continue
                 for K in ks:
                     for name in sorted(places):
-                        if covers(prev.version, name, o.day, K) and not covers(o.version, name, o.day, K):
+                        if any(in_world(e.version) and covers(e.version, name, o.day, K) for e in earlier) and \
+                                not covers(o.version, name, o.day, K):
                             raise LoadError('LOAD-COVERS', 'replace %s of %s: %s doesn\'t cover %s on %s' % (
                                 o.sid, name, o.version.id, name, o.day), o.loc)
         finally:

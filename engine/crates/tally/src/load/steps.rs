@@ -167,14 +167,13 @@ impl Loader {
             let version = model.header.tally.integer_text().ok_or_else(|| {
                 invariant("a header's tally version is parsed as an integer".to_owned())
             })?;
-            // located at the model header, like every load refusal (G4's review N3, P50)
+            // located at the `tally` statement, like every load refusal (G4's review N3,
+            // P50; its line, P53)
+            let line = model.header.tally_line.ok_or_else(|| {
+                invariant("a header with a tally version and no tally line".to_owned())
+            })?;
             let message = format!("tally {version}: this engine runs tally 2");
-            return Err(refuse(
-                Load::Version,
-                message,
-                &model.path,
-                model.header.line,
-            ));
+            return Err(refuse(Load::Version, message, &model.path, line));
         }
         let is_joint = !model.header.uses.is_empty() || !model.header.sames.is_empty();
         if is_joint && joint.is_none() {

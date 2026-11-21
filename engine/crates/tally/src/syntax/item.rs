@@ -273,6 +273,7 @@ fn parse_header(p: &P<'_>, head: &Line, body: &[Line]) -> Result<Header, Stop> {
         id,
         over,
         tally: Num::zero(),
+        tally_line: None,
         on: None,
         start: None,
         end: None,
@@ -329,7 +330,10 @@ fn header_line(
     q: &mut P<'_>,
 ) -> Result<(), Stop> {
     match word {
-        "tally" => header.tally = q.integer()?,
+        "tally" => {
+            header.tally = q.integer()?;
+            header.tally_line = Some(number);
+        }
         "on" => header.on = Some(q.day()?),
         "start" => header.start = Some(q.day()?),
         "end" => header.end = Some(q.day()?),

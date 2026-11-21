@@ -7,6 +7,12 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W14: S-223's last corner (P53; issue #241; 1 668 tests)
+
+- `loader.check_correction_covers` takes every earlier statement of the row with a row, at the cuts from the
+  correction's `known` until the next statement of the row is known, per world. `ask.joint_warning` reads an
+  instance id with spaces (two keys). The lists of what is left stand as in W13's section.
+
 ## tally 2.2.1, group W13: the last review, the close (P50; issue #241; 1 665 tests)
 
 - **Done here:** S-223 per world and cut class against the last statement with a row (`loader.check_correction_covers`);

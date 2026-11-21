@@ -360,7 +360,8 @@ def joint_warning(alias, code, msg):
     if code == 'WARN-NEGATIVE':
         return '%s.%s' % (alias, msg)
     if code == 'WARN-LEGS':
-        m = re.match(r'^the two observations of (\S+) disagree: (\S+?)\[(.*)\) and (\S+?)\[(.*)$', msg)
+        # the instance's id may hold a space, one per key after the first (tally 2.2.1 P53: put[a, 2026-03])
+        m = re.match(r'^the two observations of (.+?) disagree: (\S+?)\[(.*)\) and (\S+?)\[(.*)$', msg)
         if m:
             return 'the two observations of %s.%s disagree: %s.%s[%s) and %s.%s[%s' % (
                 alias, m.group(1), alias, m.group(2), m.group(3), alias, m.group(4), m.group(5))
