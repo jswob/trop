@@ -100,7 +100,7 @@ impl Walk {
         (movement, lg, read): (&str, &LegVal, &Collected),
         like: &Ent,
     ) -> Result<(), Stop> {
-        let pins = pins_read(read);
+        let pins = refusal_read(read);
         for p in ends(lg) {
             let own = m.things.get(p).and_then(|t| m.place_unit(t));
             let unit = lg
@@ -385,13 +385,13 @@ impl Walk {
     }
 }
 
-/// What decided a refused leg's movement, `read` what its evaluation met: a refusal rests on
-/// the reads that refused it, so its places' entry lists them like a value's, its pins and
-/// its assumptions, and a pin nothing it read isn't (refcore's `add`, a `bad` entry's
-/// `mv.coll`); none where it took none. L §8.2 One read set (208.2, N2 and P35 on #241).
-pub(super) fn pins_read(read: &Collected) -> Option<Collected> {
-    let pins = read.deciding();
-    (!pins.entries.is_empty()).then_some(pins)
+/// What a refused leg's movement rests on, `read` what its evaluation met: a refusal rests on
+/// the reads that refused it, so its places' entry lists every entry they gave like a value's,
+/// its pins, its assumptions and its register's `unfulfilled:` lines, and a pin nothing it
+/// read isn't (refcore's `add`, a `bad` entry's `mv.coll`); none where it took none. L §8.2
+/// One read set (208.2, N2 and P35 on #241).
+pub(super) fn refusal_read(read: &Collected) -> Option<Collected> {
+    (!read.entries.is_empty()).then(|| read.clone())
 }
 
 /// A leg's window id, `<movement>.<leg>`, and its window, where its day is one (refcore's

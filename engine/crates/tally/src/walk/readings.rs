@@ -180,10 +180,10 @@ impl Engine {
         for (place, unit, nv, legs) in bad {
             let words = self.refusal_words(m, id, broke, (&place, &unit), &legs, &nv)?;
             let err = Refusal::new(Code::Run(Run::Place), words);
-            // the test read the place's balance: what decided it is the refusal's read set,
-            // like a value's (L §8.2 One read set; B1 on #241)
+            // the test read the place's balance: its register is the refusal's read set, like
+            // a value's, its `unfulfilled:` lines too (L §8.2 One read set; B1, P35 on #241)
             let tested = match self.walk(id)?.state(m, &place, &unit, at).1 {
-                Some(i) => self.walk_mut(id)?.cum(&place, &unit, i).deciding(),
+                Some(i) => self.walk_mut(id)?.cum(&place, &unit, i),
                 None => Collected::default(),
             };
             if legs.is_empty() {
@@ -375,7 +375,7 @@ impl Walk {
         self.bad_legs
             .insert((movement.to_owned(), lg.name.clone()), err.clone());
         let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
-        let pins = super::ends::pins_read(read);
+        let pins = super::ends::refusal_read(read);
         for p in ends(lg) {
             let mut ent = like.clone();
             ent.mv = Some(movement.to_owned());

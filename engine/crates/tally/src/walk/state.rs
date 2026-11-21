@@ -953,9 +953,9 @@ impl Walk {
         }
     }
 
-    /// The pins leg `movement` (its movement and leg names) took where it is booked at
-    /// `places` in `unit`, from its entries' reads: what a refusal of it rests on (L §8.2 One
-    /// read set; tally 2.2.1's 208.2); none where it took no pin.
+    /// What leg `movement` (its movement and leg names) read where it is booked at `places`
+    /// in `unit`, every entry its entries' reads gave: what a refusal of it rests on (L §8.2
+    /// One read set; tally 2.2.1's 208.2, P35); none where they gave none.
     #[must_use]
     pub fn booked_pins(
         &self,
@@ -977,7 +977,7 @@ impl Walk {
                 }
             }
         }
-        super::ends::pins_read(&read)
+        super::ends::refusal_read(&read)
     }
 
     /// What the walk's refusals of movement `movement` rest on: its `bad` entries' reads, at
