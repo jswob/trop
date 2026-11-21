@@ -1,0 +1,103 @@
+# tally 2.2.1 P41, the fix review's F1 (L §4.4 l.668): a monotone operation that gives a value everywhere between
+# its ends is read from its ends, whatever the interval's size: past, two windows of 300 and 365 days (109 500
+# pairs), every sum >= 4 (review g1fix cap). Before W8: the hole.
+=== cap.tally
+model a1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input w: date
+input w2: date
+input wl: date
+input wl2: date
+input d0: date
+input d1: date
+input de: date
+input n0: num
+input n2: num
+input n3: num
+input n4: num
+input n8: num
+input n9: num
+input n10: num
+input n20: num
+input n27: num
+input n33: num
+input n100: num
+input n171: num
+input n1000: num
+input m1: num
+input m7: num
+input m8: num
+input m100: num
+input m1x: num
+input mm: month
+input md: month
+input wa: date
+input wb: date
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  w2 = window(2026-03-20, 2026-03-21) "c"
+  wl = window(2026-01-01, 2027-06-01) "c"
+  wl2 = window(2026-01-01, 2026-12-31) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  de = 2025-12-30 "c"
+  n0 = 0 "c"
+  n2 = 2 "c"
+  n3 = 3 "c"
+  n4 = 4 "c"
+  n8 = 8 "c"
+  n9 = 9 "c"
+  n10 = 10 "c"
+  n20 = 20 "c"
+  n27 = 27 "c"
+  n33 = 33 "c"
+  n100 = 100 "c"
+  n171 = 171 "c"
+  n1000 = 1000 "c"
+  m1 = -1 "c"
+  m7 = -7 "c"
+  m8 = -8 "c"
+  m100 = -100 "c"
+  m1x = -1 "c"
+  mm = 2026-02 "c"
+  md = 2026-03 "c"
+  wa = window(2026-01-01, 2026-10-27) "c"
+  wb = window(2026-02-01, 2026-11-27) "c"
+ask near: days_between(de, wa) + days_between(de, wb) > m1
+ask past: days_between(de, wa) + days_between(de, wl2) > m1
+=== expect past near
+past: true
+  cut 2026-01-01
+near: true
+  cut 2026-01-01
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input m100 is read by nothing
+warning: WARN-UNREAD input m1x is read by nothing
+warning: WARN-UNREAD input m7 is read by nothing
+warning: WARN-UNREAD input m8 is read by nothing
+warning: WARN-UNREAD input md is read by nothing
+warning: WARN-UNREAD input mm is read by nothing
+warning: WARN-UNREAD input n0 is read by nothing
+warning: WARN-UNREAD input n10 is read by nothing
+warning: WARN-UNREAD input n100 is read by nothing
+warning: WARN-UNREAD input n1000 is read by nothing
+warning: WARN-UNREAD input n171 is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input n20 is read by nothing
+warning: WARN-UNREAD input n27 is read by nothing
+warning: WARN-UNREAD input n3 is read by nothing
+warning: WARN-UNREAD input n33 is read by nothing
+warning: WARN-UNREAD input n4 is read by nothing
+warning: WARN-UNREAD input n8 is read by nothing
+warning: WARN-UNREAD input n9 is read by nothing
+warning: WARN-UNREAD input w is read by nothing
+warning: WARN-UNREAD input w2 is read by nothing
+warning: WARN-UNREAD input wl is read by nothing

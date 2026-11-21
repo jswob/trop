@@ -1,0 +1,108 @@
+# tally 2.2.1 P45 (f), P43 S6 (E §6.3): a window across two months that observations fulfil is one line,
+# in its last fulfilling observation's month, in every ledger: a March ledger lists no pay_2 (review g2
+# agent/led/l1). Before W11: matched pay_2 on 2026-03-30 in March.
+=== l1.tally
+model l1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind promises: transfers uncertain
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input bank: observed
+input pay: money PLN
+input w: date
+input wl: date
+input wo: date
+input w2: date
+input dd: date
+input wu: date
+move pay_w: transfers
+  on w
+  leg cash from world to konto amount pay
+move pay_l: transfers
+  on wl
+  leg cash from world to konto amount pay
+move pay_o: transfers
+  on wo
+  leg cash from world to konto amount pay
+move pay_2: transfers
+  on w2
+  leg cash from world to konto amount pay
+move pay_d: transfers
+  on dd
+  leg cash from world to konto amount pay
+move pay_u: promises
+  on wu
+  leg cash from world to konto amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  w = window(2026-03-05, 2026-03-07) "c"
+  wl = window(2026-03-10, 2026-03-12) "c"
+  wo = window(2026-03-15, 2026-03-17) "c"
+  w2 = window(2026-03-28, 2026-04-03) "c"
+  dd = 2026-03-22 "c"
+  wu = window(2026-04-10, 2026-04-12) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+version st
+  cite card
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  bank[r1] = (on: 2026-03-05, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pay_w) "r1"
+  bank[r2] = (on: 2026-03-12, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pay_l) "r2"
+  bank[r3] = (on: 2026-03-19, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pay_o) "r3"
+  bank[r4] = (on: 2026-03-30, kind: transfers, leg cash from world to konto amount 60.00 PLN, fulfils: pay_2) "r4"
+  bank[r6] = (on: 2026-03-24, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pay_d) "r6"
+version st4
+  cite card
+  governs 2026-04
+  known 2026-05-10
+  covers konto
+  bank[r5] = (on: 2026-04-02, kind: transfers, leg cash from world to konto amount 40.00 PLN, fulfils: pay_2) "r5"
+  bank[r7] = (on: 2026-04-11, kind: transfers, leg cash from world to konto amount 40.00 PLN, fulfils: pay_u) "r7"
+ask both: residuals konto 2026-03 .. 2026-04
+ask mar: residuals konto 2026-03
+ask apr: residuals konto 2026-04
+ask old: residuals konto 2026-03 .. 2026-04 as known 2026-04-20
+ask o2: observed(pay_2).day, observed(pay_2).cash.amount, observed(pay_o).day
+ask b: bal(konto, 2026-04-30)
+ask x2: explain pay_2
+=== expect mar apr both
+mar: residuals konto 2026-03
+  2026-03 move pay_d: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_d on 2026-03-22: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +2 days
+  2026-03 move pay_l: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_l on 2026-03-12: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-03 move pay_o: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_o on 2026-03-19: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-03 move pay_w: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_w on 2026-03-05: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  cut 2026-06-20
+apr: residuals konto 2026-04
+  2026-04 move pay_2: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN
+    matched pay_2 on 2026-04-02: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN, timing +0 days
+  2026-04 move pay_u: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN
+    partly fulfilled pay_u on 2026-04-11: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN, remainder 60.00 PLN: when does the rest arrive, or is it written off?
+  cut 2026-06-20
+both: residuals konto 2026-03 .. 2026-04
+  2026-04 move pay_u: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN
+    partly fulfilled pay_u on 2026-04-11: model 100.00 PLN, observed 40.00 PLN, difference -60.00 PLN, remainder 60.00 PLN: when does the rest arrive, or is it written off?
+  2026-03 move pay_d: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_d on 2026-03-22: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +2 days
+  2026-03 move pay_l: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_l on 2026-03-12: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-03 move pay_o: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_o on 2026-03-19: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-03 move pay_w: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_w on 2026-03-05: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days
+  2026-04 move pay_2: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN
+    matched pay_2 on 2026-04-02: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days, -3 days
+  cut 2026-06-20
+warning: WARN-LEGS the two observations of pay_2 disagree: bank[r4] (60.00 PLN) and bank[r5] (40.00 PLN)

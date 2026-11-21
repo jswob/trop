@@ -36,6 +36,7 @@ ask p0302: bal(konto, 2026-05-31) with w = 2026-03-02
 b0531: refused: RUN-DIV division by zero
   cut 2026-06-10
 p0227: refused: RUN-DIV division by zero
+  pinned: w = 2026-02-27
   left out: px, 1 instances, first 2026-02-27
   cut 2026-06-10
 p0302: refused: RUN-DIV division by zero

@@ -29,7 +29,7 @@ Each operation is a command of the engine's binary and a call of its library (`e
 
 ### 2.1 `run`
 
-`tally run <path>… [--ask <id>…]`
+`tally run <path>… [--ask <id>…] [--pin=bytes]`
 
 - **Inputs.** The reality's files; after `--ask`, the ids of the asks to answer, a joint model's member's as `a.q`; with no `--ask`, every ask of the reality (of a joint model, its own). `--pin=bytes` makes a `use` pin the sha256 of the member's file bytes, not of its canonical text.
 - **Result** (worked in §7). Each ask's result in `LANGUAGE.md` §5.18's form, in the order of the ids after `--ask`, or by id with none: `<id>: …`, or `<id> (k = …): …` per binding tuple, with values, holes and their questions, per-value refusals, and the register indented under it (§8.1, §8.4, §8.2). The warnings print last, `warning: CODE message`, sorted by code, then text (§8.5). Holes and per-value refusals are answers: exit 0. A reality with no ask prints nothing.
@@ -37,13 +37,13 @@ Each operation is a command of the engine's binary and a call of its library (`e
   - a reality that doesn't load: `refused: LOAD-… <message> (<path>:<line>)`, the first in full-path order (`LANGUAGE.md` §8.3); a member's as `refused: member <a>: …`;
   - after load: `REQ-ASK no ask <q>`, the first unknown id in request order; `REQ-CLOCK`, a cut an ask states after `on`; `REQ-PATHS`, more than 100 000 paths for one ask (`ENGINE.md` §11).
 
-  `ENGINE-INVARIANT`, an engine fault, refuses every result that rests on the broken walk (`ENGINE.md` §9): report it.
+  `ENGINE-INVARIANT`, an engine fault, refuses the whole result (`ENGINE.md` §9): report it.
 - **A scenario file that doesn't load** refuses that scenario and those over it, with its message; the base answers, exit 0 (`LANGUAGE.md` §6.4). Its line `scenario <s>: refused: CODE message` prints once, before every result, in §2.3's order, whatever is asked; each ask in its world prints `<q>: refused: CODE message`; the file's own asks print nothing, even when named.
 - **An ask refused alone:** one that names a scenario whose file isn't given prints its line, `<q>: refused: LOAD-SCENARIO …` (`LANGUAGE.md` §8.3), and the rest answers, exit 0.
 
 ### 2.2 `reprint`
 
-`tally reprint <path>…`
+`tally reprint <path>… [--pin=bytes]`
 
 - **Inputs.** As `run`; no asks.
 - **Result.** For each file in full-path order, `--- <path>` (a file given alone as given, a directory's files relative to it) and its canonical text (`LANGUAGE.md` §2.4). Last, `sha256 <hex>`, the reality's hash over those files (`ENGINE.md` §3.1 step 1): what a `use` line pins.
@@ -246,7 +246,7 @@ Not in the first version, with what a caller does meanwhile.
 
 ## 6. On paper
 
-### 6.1 The seven changes (`amendments/changes/`)
+### 6.1 The seven changes (`engine/spec/amendments/changes/`)
 
 A change file's diff shows its lines in place; the caller writes them in a new file, since the order of files and sections changes nothing (`LANGUAGE.md` §6.1). Then three steps:
 1. Rewrite `on` to the change's `known` date where it is later (CHG-7), and add the change's file.

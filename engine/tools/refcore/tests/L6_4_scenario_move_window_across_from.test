@@ -78,6 +78,7 @@ s_d02: 850.00 PLN
   unfulfilled: pa
   cut 2026-06-10
 s_d28: 750.00 PLN
+  pinned: w = 2026-04-29
   world: sc
   anchor: konto 2026-03-20 end, stated 650.00 PLN, difference 50.00 PLN
   unfulfilled: pa
