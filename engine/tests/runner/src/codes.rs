@@ -197,7 +197,9 @@ mod tests {
     /// an adjustment's fields and a field read through `.adjusts` or an aggregate, `lifespan`
     /// of `dyn`, and 4 of G13's: `lifespan` of a bound name's field, axis combinations past
     /// 15 digits and past 64 bits). tally 2.2 drops `basic/order`, a reading `after` a plan
-    /// (S-3): 238 fixtures.
+    /// (S-3): 238 fixtures. tally 2.2.1's third pin adds 4, one per form G4 adds
+    /// (`basic/order-self`, `adjust/covers-replace`, `basic/instant-pin`,
+    /// `basic/version-three`): 242.
     #[test]
     fn the_m0_fixtures_read_and_print_their_codes() {
         let vs = m0_fixtures(M0).expect("codes/m0.refcore reads");
@@ -244,8 +246,8 @@ mod tests {
             .collect();
         assert_eq!(
             (vs.len(), codes.len()),
-            (252, 52),
-            "238 fixtures of 52 codes"
+            (256, 52),
+            "242 fixtures of 52 codes"
         );
     }
 
