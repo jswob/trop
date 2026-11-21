@@ -1,0 +1,54 @@
+model h10
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a1: money PLN
+input a2: money PLN
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a2
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-05 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 120.00 PLN "s"
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+ask blc: bal(wallet, 2026-03-31)
+ask blp: bal(wallet, 2026-03-31) with a2 = 100.00 PLN
+ask bld: bal(wallet, 2026-03-31) with a2 = 100.00 PLN, d2 = 2026-03-09
+ask f1: flows(in1, 2026-03)
+ask f2: flows(in2, 2026-03)
+ask f1p: flows(in1, 2026-03) with a2 = 100.00 PLN
+ask f1q: flows(in1, 2026-03) with a2 = 130.00 PLN
+ask f2d: flows(in2, 2026-03-05 .. 2026-03-05) with a2 = 100.00 PLN, d2 = 2026-03-09
+ask fw: flows(wallet, 2026-03)
+ask fwp: flows(wallet, 2026-03) with a2 = 100.00 PLN
+ask sm0: sum(m.cash.amount for m in transfers over 2026-03)
+ask sp: sum(m.cash.amount for m in transfers over 2026-03) with a2 = 100.00 PLN
+ask sq: sum(m.cash.amount for m in transfers over 2026-03) with a2 = 130.00 PLN
+ask c: count(m in transfers over 2026-03)
+ask c5: count(m in transfers over 2026-03-05 .. 2026-03-05) with a2 = 100.00 PLN, d2 = 2026-03-09
+ask c9: count(m in transfers over 2026-03-09 .. 2026-03-09) with a2 = 100.00 PLN, d2 = 2026-03-09
+ask dp: m.day for m in transfers over 2026-03 with a2 = 100.00 PLN, d2 = 2026-03-05
+ask x1: explain in1
+ask x2: explain in2
+ask ck: check (flows(in1, 2026-03)) == (flows(in2, 2026-03))
+ask old: bal(wallet, 2026-03-31) as known 2026-04-01

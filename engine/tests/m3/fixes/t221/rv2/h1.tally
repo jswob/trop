@@ -1,0 +1,73 @@
+model h1
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+kind twos: event certain
+  leg cash: PLN
+  leg fee: PLN
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input dn: int
+input a1: money PLN
+input a2: money PLN
+input a3: money PLN
+input f1: money PLN
+input f2: money PLN
+move in1: twos
+  on d1
+  leg cash from world to wallet amount a1
+  leg fee from wallet to world amount f1
+move in2: twos
+  on d2
+  leg cash from world to wallet amount a2
+  leg fee from wallet to world amount f2
+move in3: twos
+  on d3
+  leg cash from world to wallet amount a3
+  leg fee from wallet to world amount f1
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-05 "s"
+  d3 = 2026-03-20 "s"
+  dn = 7 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 120.00 PLN "s"
+  a3 = 30.00 PLN "s"
+  f1 = 1.00 PLN "s"
+  f2 = 1.00 PLN "s"
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+ask blc: bal(wallet, 2026-03-31)
+ask blm: bal(wallet, 2026-03-06)
+ask before: bal(wallet, 2026-03-31) as known 2026-04-01
+ask amt: sum(m.cash.amount for m in twos over 2026-03)
+ask amtb: sum(m.cash.amount for m in twos over 2026-03) as known 2026-04-01
+ask fee: sum(m.fee.amount for m in twos over 2026-03)
+ask cnt: count(m in twos over 2026-03)
+ask cnt5: count(m in twos over 2026-03-05 .. 2026-03-05)
+ask fl: flows(wallet, 2026-03)
+ask fl1: flows(in1.cash, 2026-03)
+ask lst: m.cash.amount for m in twos over 2026-03
+ask dys: m.day for m in twos over 2026-03
+ask tos: m.cash.to for m in twos over 2026-03
+ask ex: explain bal(wallet, 2026-03-31)
+ask ckk: check (sum(m.cash.amount for m in twos over 2026-03)) == a1
+ask pin: sum(m.cash.amount for m in twos over 2026-03) with a2 = 100.00 PLN
+ask pin2: sum(m.cash.amount for m in twos over 2026-03) with a2 = 130.00 PLN
+ask pind: m.day for m in twos over 2026-03 with d2 = 2026-03-05
+ask pind2: m.day for m in twos over 2026-03 with d2 = 2026-03-09
+ask pinb: bal(wallet, 2026-03-31) with a2 = 100.00 PLN, d2 = 2026-03-05, f2 = 1.00 PLN
+ask mx: max(m.cash.amount for m in twos over 2026-03)

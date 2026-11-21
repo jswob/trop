@@ -1,0 +1,13 @@
+scenario s1 over mini
+  tally 2
+  from 2026-12-01
+
+ask q_sib: bal(konto, 2026-12-31) in s2
+ask q_model: bal(konto, 2026-12-31) in mini
+ask q_deep: bal(konto, 2026-12-31) in s3
+ask q_dmm: diff(bal(konto, 2026-12-31)) in mini against mini
+ask q_dsib: diff(bal(konto, 2026-12-31)) in s2 against mini
+ask q_dsib2: diff(bal(konto, 2026-12-31)) in s2 against s1
+ask q_ddeep: diff(bal(konto, 2026-12-31)) in s3 against s1
+ask q_own: bal(konto, 2026-12-31) in s1
+ask q_plain: bal(konto, 2026-12-31)

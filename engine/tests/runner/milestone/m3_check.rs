@@ -17,7 +17,7 @@ mod tests {
     use tally_runner::m3::{check_group_failures, check_groups};
 
     /// Every group of the store, each run by a test below.
-    const GROUPS: [&str; 24] = [
+    const GROUPS: [&str; 26] = [
         "probes",
         "probe-sets",
         "models",
@@ -42,6 +42,8 @@ mod tests {
         "operations",
         "reviews",
         "t221-gd",
+        "t221-g4",
+        "t221-rc",
     ];
 
     /// Holds every vector of `group` at `part` modulo `parts` to its stored run.
@@ -250,5 +252,19 @@ mod tests {
     #[test]
     fn m3_check_t221_guards() {
         checks_as_stored("t221-gd");
+    }
+
+    /// tally 2.2.1's refcore-alone check fixture (#241): a scenario refusal naming no file of
+    /// its own (over a cycle) is placed by its header's file (228.Q5, R20 cl.2, P13).
+    #[test]
+    fn m3_check_t221_refcore() {
+        checks_as_stored("t221-rc");
+    }
+
+    /// tally 2.2.1's builder group G4's check fixtures (#241): a replace its statement doesn't
+    /// cover (S-223) and a removal known at a later cut (S-232), both `LOAD-COVERS`; red until G4.
+    #[test]
+    fn m3_check_t221_g4() {
+        checks_as_stored("t221-g4");
     }
 }

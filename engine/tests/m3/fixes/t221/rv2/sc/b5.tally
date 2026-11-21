@@ -1,0 +1,21 @@
+scenario sc over b5
+  tally 2
+  from 2026-01-01
+place pot: accounts PLN lives 2026-01-01..
+input sx: money PLN
+def extra: money PLN
+  rule base = sx
+version scv
+  cite s
+  governs always
+  known 2026-01-01
+  sx = 1.00 PLN "s"
+version scv2
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  opening[pot] = 7.00 PLN at 2026-01-01 start "s"
+ask qd: diff(extra) in sc against b5
+ask qp: diff(bal(pot, 2026-03-31)) in sc against b5
+ask qb: diff(extra * k for k in [1, 2]) in sc against b5
+ask qpb: diff(bal(pot, d) for d in [2026-03-31]) in sc against b5

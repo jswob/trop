@@ -1,0 +1,61 @@
+model c_p25
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+  note "builder G1 probe: P25, round over a window and an interval across 0, overlap_days of two windows."
+
+source card "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+input w: date
+
+input w2: date
+
+input d0: date
+
+input d1: date
+
+input n2: num
+
+input n3: num
+
+input n4: num
+
+input k1: num
+
+input mar: date
+
+input apr: date
+
+input feb: date
+
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-10, 2026-03-12) "c"
+  w2 = window(2026-03-30, 2026-04-02) "c"
+  d0 = 2026-03-11 "c"
+  d1 = 2026-03-01 "c"
+  n2 = 2 "c"
+  n3 = 3 "c"
+  n4 = 4 "c"
+  k1 = 1 "c"
+  mar = 2026-03-01 "c"
+  apr = 2026-04-01 "c"
+  feb = 2026-02-01 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+
+ask r1: round(days_between(d0, w) / n3, 1, half-up)
+ask r2: round(days_between(d0, w) / n2, 1, half-up)
+ask r3: round(days_between(d1, w) / n4, 1, half-up)
+ask r4: round(days_between(d1, w) / n4, 1, half-up) > k1
+ask a1: abs(days_between(d0, w) / n3)
+ask p1: pow(days_between(d0, w) / n3, n2)
+ask o1: overlap_days(w, w2, month_of(mar))
+ask o2: overlap_days(w, w2, month_of(apr))
+ask o3: overlap_days(w, w2, month_of(feb))

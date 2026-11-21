@@ -1,0 +1,7 @@
+model fam10
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+  use m = "m" sha256 "e3e26756d1fbca770232903e6718e31a689c2c8144c6cd9d1d588602accea7d0"
+  note "T's joint model for 228.Q10 (invented): its on is after its member's"

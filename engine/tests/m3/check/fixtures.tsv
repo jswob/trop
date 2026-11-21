@@ -50,3 +50,6 @@ reviews/stacked-covers	m3/fixes/g3/st	base.tally late.tally mv.tally	G3 review B
 reviews/stacked-unit	m3/fixes/g3/st	base.tally bad.tally over_bad.tally	G3 review B-1's control: a scenario over one refused LOAD-UNIT is refused with it
 t221-gd/228-12-joint-check	m3/fixes/t221/j	top.tally	tally 2.2.1 (#241) 228.Q12, R20 (C-14 option A): a joint model's check is ok; a member's scenarios show at check of the member
 t221-gd/229-2-literal-check	m3/fixes/t221/new/k229_2	base.tally sc.tally	tally 2.2.1 (#241) 229.2, L §8.3: the scenario refused LOAD-KEY at load
+t221-rc/228-5-no-file	m3/fixes/t221/q5	base.tally a/ok.tally m/c2.tally z/c1.tally	tally 2.2.1 (#241) 228.Q5, R20 cl.2 (P13): a scenario refusal naming no file of its own (over cycle) is placed by its header's file
+t221-g4/223-replace-covers-check	m3/fixes/t221/mini5	reality.tally statement.tally fix.tally asks.tally	tally 2.2.1 (#241) S-223: check refuses a replace its statement does not cover (LOAD-COVERS)
+t221-g4/232-per-cut	m3/fixes/t221/cutcov	base.tally late.tally	tally 2.2.1 (#241) S-232: a removal known at a later cut leaves an observation outside the span its statement covers (LOAD-COVERS)

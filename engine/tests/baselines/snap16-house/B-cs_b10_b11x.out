@@ -139,6 +139,7 @@ b10_v2 (d = 2025-01-27): (3 000.00 DUK, 17 231.12 DUK)
 b10_v2 (d = 2025-02-26): (1 992.12 DUK, 0.00 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-02-25 end, stated 10 992.12 DUK, difference 0.00 DUK
   anchor: cis 2025-02-26 end, stated 9 000.00 DUK, difference 0.00 DUK
   anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
   open: hr2_save[2025-02-26]
@@ -151,6 +152,7 @@ b10_v2 (d = 2025-02-26): (1 992.12 DUK, 0.00 DUK)
 b10_v2 (d = 2025-03-26): (3 000.00 DUK, 2 430.29 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-02-25 end, stated 10 992.12 DUK, difference 0.00 DUK
   anchor: cis 2025-02-26 end, stated 9 000.00 DUK, difference 0.00 DUK
   anchor: cis 2025-03-26 end, stated 9 000.00 DUK, difference 0.00 DUK
   anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR
@@ -165,6 +167,7 @@ b10_v2 (d = 2025-03-26): (3 000.00 DUK, 2 430.29 DUK)
 b10_short: 3 000.00 DUK
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
   anchor: cis 2025-01-27 end, stated 9 000.00 DUK, difference 0.00 DUK
+  anchor: cis 2025-02-25 end, stated 10 992.12 DUK, difference 0.00 DUK
   anchor: cis 2025-02-26 end, stated 9 000.00 DUK, difference 0.00 DUK
   anchor: cis 2025-03-26 end, stated 9 000.00 DUK, difference 0.00 DUK
   anchor: lazur 2025-01-02 start, stated 0.00 FLR, difference 0.00 FLR

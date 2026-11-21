@@ -1,0 +1,49 @@
+model s2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place bankfee: outside lives 1900-01-01..
+kind feed: event certain
+  leg cash: PLN
+  leg fee: PLN
+input a1: money PLN
+input a2: money PLN
+input fe: money PLN
+input d1: date
+input d2: date
+move in1: feed
+  on d1
+  leg cash from world to konto amount a1
+  leg fee from konto to bankfee amount fe
+move in2: feed
+  on d2
+  leg cash from world to konto amount a2
+  leg fee from konto to bankfee amount fe
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  a2 = 100.00 PLN "s"
+  fe = 1.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-05 "s"
+  same in1 = in2
+ask fee0: sum(m.fee.amount for m in feed over 2026-03)
+ask fee_a2: sum(m.fee.amount for m in feed over 2026-03) with a2 = 130.00 PLN
+ask cash_a2: sum(m.cash.amount for m in feed over 2026-03) with a2 = 130.00 PLN
+ask cnt_d2: count(m in feed over 2026-03) with d2 = 2026-03-20
+ask cnt_d2x: count(m in feed over 2026-03) with d2 = 2026-04-20
+ask day_a2: m.day for m in feed over 2026-03 with a2 = 130.00 PLN
+ask day_d2: m.day for m in feed over 2026-03 with d2 = 2026-03-20
+ask fl_a2: flows(in1.cash, 2026-03) with a2 = 130.00 PLN
+ask bal_d2: bal(konto, 2026-03-31) with d2 = 2026-03-20
+ask bal_a2: bal(konto, 2026-03-31) with a2 = 130.00 PLN
+ask x_fee: explain bal(konto, 2026-03-31) with a2 = 130.00 PLN
+ask fl_fee: flows(in1.fee, 2026-03) with a2 = 130.00 PLN

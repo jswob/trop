@@ -1,0 +1,8 @@
+scenario s3 over s1
+  tally 2
+  from 2026-12-01
+
+ask q_low: bal(konto, 2026-12-31) in s1
+ask q_lowm: bal(konto, 2026-12-31) in mini
+ask q_dlow: diff(bal(konto, 2026-12-31)) in s1 against mini
+ask q_d3: diff(bal(konto, 2026-12-31)) in s3 against s2

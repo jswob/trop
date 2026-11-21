@@ -112,15 +112,38 @@ mod tests {
     }
 
     /// tally 2.2.1's builder group G1 (#241): the window group's vectors, refcore's bytes;
-    /// 221.C3 held for G1 (`held.tsv`) until the engine follows L §4.4 l.668.
+    /// 221.C3 names both windows since the second pin (R21, the names: G3). `rv-*`: the first
+    /// review's findings as G1's fix and the writer's W7 mend them (B1 to B3, B5, N2, N4 to N6,
+    /// N8, N9, P25, P26), each with its pinned days.
     #[test]
     fn m3_fixes_t221_g1() {
         group_holds(RUNS, "t221-g1");
     }
 
+    /// tally 2.2.1's builder group G2 (#241): the register, `same` and a projection (206.1,
+    /// 208.2, 208.5, 208.10, 219.1, 219.2, 220.2, 221.1, 221.5, 231.Q1b, 231.R2, 237.1), the
+    /// "both" rows the writer's W6 mended, refcore's bytes.
+    #[test]
+    fn m3_fixes_t221_g2() {
+        group_holds(RUNS, "t221-g2");
+    }
+
+    /// tally 2.2.1's builder group G3 (#241): the names (R21's cells, 221.2 to 221.6, 221.C1,
+    /// 235.6), refcore's bytes; red until G3.
+    #[test]
+    fn m3_fixes_t221_g3() {
+        group_holds(RUNS, "t221-g3");
+    }
+
+    /// tally 2.2.1's builder group G4 (#241): the run's lines and load refusals (S-221.9, S-223,
+    /// 228.Q5's run, 228.Q11, S-231.Q2), refcore's bytes; red until G4.
+    #[test]
+    fn m3_fixes_t221_g4() {
+        group_holds(RUNS, "t221-g4");
+    }
+
     /// tally 2.2.1's refcore-alone vectors (#241): refcore's mends, which the engine prints on
-    /// arrival; 221.10's `mean` and `quantile` over a window term held for M4 (`held.tsv`),
-    /// where the aggregates are built.
+    /// arrival; 221.10's `mean` and `quantile` over a window term take it as the hole (P27).
     #[test]
     fn m3_fixes_t221_refcore() {
         group_holds(RUNS, "t221-rc");

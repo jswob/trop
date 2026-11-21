@@ -1,0 +1,54 @@
+model r7
+  tally 2
+  on 2026-05-31
+  start 2026-03-01
+  end 2026-05-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
+  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
+version rd
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  pad konto from world
+  stated[konto] = 1100.00 PLN at 2026-03-15 start "saldo"
+  stated[konto] = 1500.00 PLN at 2026-03-15 end "saldo"
+version rds
+  cite s
+  governs 2026-03
+  known 2026-04-04
+  pad sav from world
+  stated[sav] = 50.00 PLN at 2026-03-20 end "saldo"
+version rd4
+  cite s
+  governs 2026-04
+  known 2026-05-04
+  pad konto from world
+  stated[konto] = 1300.00 PLN at 2026-04-10 start "saldo"
+  stated[konto] = 1450.00 PLN at 2026-04-10 end "saldo"
+  stated[konto] = 1600.00 PLN at 2026-04-20 end "saldo"
+ask p3: sum(p.cash.amount for p in pads over 2026-03)
+ask c3: count(p in pads over 2026-03)
+ask c3w: count(p in pads over 2026-03 where p.cash.to == konto)
+ask c3d: count(p in pads over 2026-03 where p.day > 2026-03-16)
+ask l3: p.cash.amount for p in pads over 2026-03-01 .. 2026-03-15
+ask d4: p.day for p in pads over 2026-04
+ask f3: flows(konto, 2026-03)
+ask fs: flows(sav, 2026-03)
+ask f4: flows(konto, 2026-04-01 .. 2026-04-15)
+ask f5: flows(konto, 2026-05)
+ask b1: bal(konto, 2026-03-15)
+ask b2: bal(konto, 2026-04-15)
+ask b3: bal(sav, 2026-04-15)
+ask b4: bal(konto, 2026-03-10)
+ask b5: bal(konto, 2026-04-15), bal(sav, 2026-04-15)
+ask k1: sum(p.cash.amount for p in pads over 2026-03 .. 2026-04) as known 2026-04-10
+ask ck: check (sum(p.cash.amount for p in pads over 2026-03)) == (sum(p.cash.amount for p in pads over 2026-04))

@@ -1,0 +1,30 @@
+model w1b
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input d_at: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-04-28, 2026-05-03) "s"
+  d_at = 2026-03-01 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+version a0
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+version a1
+  cite s
+  governs 2026..
+  known 2026-05-02
+  replace amt = 150.00 PLN "s"
+ask base: bal(konto, 2026-05-31)

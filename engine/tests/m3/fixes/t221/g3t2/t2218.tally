@@ -1,0 +1,23 @@
+model t2218
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input bank: observed
+move pay[m in months]: transfers
+  on day_of(m, 10)
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 100.00 PLN) "r1"
+  same pay[2026-03] = bank[r1]
+ask b: bal(konto, 2026-03-31)
