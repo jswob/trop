@@ -162,6 +162,16 @@ impl Loader {
                 "files declare different tally versions".to_owned(),
             )));
         }
+        if model.header.tally != Num::int(2) {
+            // L §8.3 LOAD-VERSION (S-224a): files that agree on a version this engine doesn't run.
+            let version = model.header.tally.integer_text().ok_or_else(|| {
+                invariant("a header's tally version is parsed as an integer".to_owned())
+            })?;
+            return Err(Stop::Refused(Refusal::new(
+                Code::Load(Load::Version),
+                format!("tally {version}: this engine runs tally 2"),
+            )));
+        }
         let is_joint = !model.header.uses.is_empty() || !model.header.sames.is_empty();
         if is_joint && joint.is_none() {
             return Err(Stop::NotBuilt(
