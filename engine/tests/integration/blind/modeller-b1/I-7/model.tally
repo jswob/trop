@@ -85,6 +85,8 @@ input plan_of[j in jobs]: key plans
 
 input plan_terms[pl in plans]: (er_share num, match_share num, match_cap num)
 
+input refund_lag: int
+
 input refund_months: int
 
 input salary[j in jobs, m in months]: money PLN question "Ile wynosi pensja brutto z tej pracy w tym miesiącu?"
@@ -194,7 +196,7 @@ move plan_move[x in move_ids]: plan_moves
   leg er from er_bal[move_terms[x].from_plan, move_terms[x].member] to er_bal[move_terms[x].to_plan, move_terms[x].member] amount bal(er_bal[move_terms[x].from_plan, move_terms[x].member])
 
 move refund_pay[y in years, p in persons over y, pl in plans over y]: refunds
-  on window(end_of(y), refund_deadline[y])
+  on add_days(refund_deadline[y], -refund_lag)
   when refund_of[p, y, pl] > 0
   attr plan = pl
   attr member = p
@@ -256,6 +258,7 @@ version card_act
   ded_cap = 9000.00 PLN "rule 2: up to 9 000.00 for all plans together"
   forfeit_window = 3 "rule 5: within 3 months of leaving"
   member_share = 2 % "rule 1: 2 % of each month's gross salary"
+  refund_lag = 0 assumed "the refund's day is not known: the deadline is planned" "rule 2: by 31 March of the next year"
   refund_months = 15 "rule 2: by 31 March of the next year, the day before 15 months after the year starts"
   vest_months = 36 "rule 4: the 36th counted month"
 

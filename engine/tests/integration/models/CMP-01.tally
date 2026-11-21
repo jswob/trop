@@ -95,6 +95,8 @@ input child_person[c in child]: key person
 input comp_halves[f in foyer]: int
   note "the half-parts that open the réduction d'impôt complémentaire (CGI art. 197, I-2 al. 4)"
 
+input debts_day: date
+
 input debts_on: date
 
 input dt_amount[g in incgroup, a in agegroup]: money EUR
@@ -133,6 +135,8 @@ input income_year[f in foyer]: year
 input kindergeld: money EUR
 
 input lives_with_parent[c in child]: bool question "Lebt das Kind im Haushalt der Eltern oder eines Elternteils?"
+
+input maint_day: date
 
 input maint_on: date
 
@@ -297,13 +301,13 @@ def zahlbetrag[g in incgroup, a in agegroup]: money EUR at reader
   rule base v dt2026 = dt_amount[g, a] - round(kindergeld / zahlbetrag_2, minor(EUR), half-up)
 
 move debt_pay[i in friend, j in friend where j != i]: transfers
-  on debts_on
-  at debts_on
+  on debts_day
+  at debts_day
   leg cash from pln[friend_person[i]] to pln[friend_person[j]] amount owe[i, j]
 
 move maint[c in child]: transfers
-  on maint_on
-  at maint_on
+  on maint_day
+  at maint_day
   leg cash from eur[de_u] to eur[child_person[c]] amount unterhalt[c]
 
 ask q_balance: balance[i] for i in friend law 2026-10-18
@@ -551,6 +555,7 @@ version cmp01_composition
   child_person[k1] = de_k1 "Inputs, Composition: maintenance payments: each German child's maintenance is paid to that child"
   child_person[k2] = de_k2 "Inputs, Composition: maintenance payments: each German child's maintenance is paid to that child"
   child_person[k3] = de_k3 "Inputs, Composition: maintenance payments: each German child's maintenance is paid to that child"
+  debts_day = 2026-01-31 assumed "counted in January 2026, the day is not stated; the last day of the month is planned" "Missing facts, Debts: the composition reads them as złoty and counts them in January 2026"
   debts_on = window(2026-01-01, 2026-01-31) "Missing facts, Debts: the composition reads them as złoty and counts them in January 2026"
   flow_month = 2026-01 "Story, What is asked, questions 4 and 5: For January 2026"
   friend_of[a_is_f2, f0] = de_u "Inputs, Composition: friends: friend 0 = U"
@@ -561,6 +566,7 @@ version cmp01_composition
   friend_of[b_is_f2, f1] = de_e "Inputs, Composition: friends: friend 1 = E"
   friend_of[b_is_f2, f2] = fr_b "Inputs, Composition: friends: friend 2 and friend 3 = the French couple's two spouses"
   friend_of[b_is_f2, f3] = fr_a "Inputs, Composition: friends: friend 2 and friend 3 = the French couple's two spouses"
+  maint_day = 2026-01-31 assumed "paid for January 2026, the day is not stated; the last day of the month is planned" "Inputs, Composition: maintenance payments: monthly, for January 2026"
   maint_on = window(2026-01-01, 2026-01-31) "Inputs, Composition: maintenance payments: monthly, for January 2026"
 
 version dt2026_example

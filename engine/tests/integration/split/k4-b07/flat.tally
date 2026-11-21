@@ -83,6 +83,8 @@ input studio_sold: date question "When was the studio sold (B-D34)?"
 
 input ord_dom: int question "On which day of the month does Ola's standing order to Piotr go (B-HR1 .2)?"
 
+input ord_lag: int question "Where no calendar governs the month, how many days before the window's last day is the order booked?"
+
 input ord_amount: money DUK question "What does Ola send Piotr each month for the flat (B-HR1 .2)?"
 
 input overpay_from: date question "From which day may the mortgage have been overpaid (the dossier names no overpayment before the 26th rule)?"
@@ -177,7 +179,7 @@ def rate_fix[d in loan_days]: date = add_business(reset_day[d], -1, holidays) at
 def ord_day[m in months]: date at start_of(m)
   note "B-HR1 .2: Ola's standing order goes on the 5th, or the next business day where the 5th isn't one. Where no row of the calendar governs the month yet (2026's, at a cut before the gazette's hol_2026, known 2025-10-16), the rule still bounds the day: a day of that month, not before the 5th"
   rule hr1 = schedule(m, ord_dom, following, holidays)
-  rule no_calendar beats hr1 v hr1 = window(day_of(m, ord_dom), end_of(m)) when missing(holidays)
+  rule no_calendar beats hr1 v hr1 = add_days(end_of(m), -ord_lag) when missing(holidays)
 
 def rent_owned: money DUK = sum(round(rent * overlap_days(deed_day, lease_end, k) / days_between(start_of(k), end_of(k)), minor(DUK), answer_round) for k in months where start_of(k) <= lease_end and end_of(k) > deed_day)
 
@@ -297,6 +299,7 @@ version hr1
   known 2022-03-18
   ord_amount = 1700.00 DUK "B-HR1 .2"
   ord_dom = 5 "B-HR1 .2: on the 5th of each month, the next business day where the 5th isn't one"
+  ord_lag = 0 assumed "where no calendar governs the month yet, the order's day is not known: the window's last day is planned" "B-HR1 .2"
   order_rejected[*] = false "B-HR1 .2: a standing order each month; only a statement shows one rejected"
 
 version kitchen_quote

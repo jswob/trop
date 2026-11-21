@@ -11,6 +11,8 @@ place inv_transit: money_accounts DUK lives 2021-01-01..
 
 input card_spend[m in month]: money DUK question "How much do we spend by card from the joint account in this month?"
 
+input card_lag: int question "How many days before the month's end are the month's card payments booked?"
+
 input fc_fixed[y in tax_year]: money DUK question "What fixed sum does the forecast invest on each 15th of this year (story § The forecast, item 1)?"
 
 input fc_on: bool question "Does the forecast's walk apply (story § The forecast)?"
@@ -116,7 +118,7 @@ def wrap_room_now[m in month]: money DUK at rule_day[m]
   rule base = max(0, wrap_limit - flows(invest_wrap, start_of(year_of(m))..(rule_day[m] - 1 day)))
 
 move cards[m in month where start_of(m) >= walk_from and plan_to[m]]: transfers
-  on window(start_of(m), end_of(m) - 1 day)
+  on add_days(end_of(m), -card_lag)
   at start_of(m)
   when m <= plan_until and start_of(m) >= walk_from
   leg cash from joint to world amount card_spend[m]
@@ -226,6 +228,7 @@ version walk_start
   fc_on = false "outside the forecast; the scenario forecast sets it from 2026-01-01"
   plan_until = 2025-12 "MC-A cut-down: the walk stops at 2025-12. GEN-1: the last year whose holidays a row gives (the 2026 row, known 2025-10-16); a 15th or a payday of a later year has a hole for its day, which would make every balance and binding over its kind a hole (G-MP-2, S:306). The scenario forecast assumes the holidays to 2035 and moves it there."
   walk_from = 2026-01-01 assumed "the records end on 2025-12-31 (story); the walk books the model's own movements from the next day" "story 2025-12-31"
+  card_lag = 1 assumed "the card payments' days in a month are not known: the month's last day is planned" "story: no card records after 2025-12-31"
 
 version laz_rate_2021
   cite a_d31
