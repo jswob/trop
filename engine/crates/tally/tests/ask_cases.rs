@@ -1129,8 +1129,9 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
     /// A member's ask at run, `a.q`, is answered by the member alone, under its prefix: a
     /// base ask naming no scenario of the member in the member's own world; an ask of a
     /// member's scenario file, or a base ask naming one, by a run of the member with all its
-    /// files, whose refused scenarios and warnings print with it; a member of a member as
-    /// `m.b.q`. Expected lines are refcore's (`member_ask`, `member_alone`) on `tmp/m3/g3/p18`,
+    /// files; a member of a member as `m.b.q`. The lines a member's ask brings to the run's own
+    /// level, its refused scenarios', print once, before every result, by the joint model's
+    /// names, and its `WARN-UNREAD` not at all (R20 clauses 1 and 3). Expected lines are refcore's (`member_ask`, `member_alone`) on `tmp/m3/g3/p18`,
     /// but a nested member's refused scenario: refcore prints `m.scenario b.bbad: …` level by
     /// level, the spec's line is `scenario m.b.bbad: …` under the member's whole prefix. A
     /// joint member's own ask is M5c's. L §6.1, §6.4; OPERATIONS §2.1; pick P18.
@@ -1161,18 +1162,15 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
             member_run(&given, &["a.q", "a.q_s", "a.qin"]),
             Some(
                 [
+                    "scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (a/bad.tally:5)",
                     "a.q: 8 000.00 PLN",
                     "  law date 2026-03-01, cut 2026-03-01",
-                    "scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (a/bad.tally:5)",
                     "a.q_s: 10 000.00 PLN",
                     "  world: s1",
                     "  law date 2026-03-01, cut 2026-03-01",
-                    "warning: WARN-UNREAD input spare is read by nothing",
-                    "scenario a.bad: refused: LOAD-UNIT keylit and money PLN in arithmetic (a/bad.tally:5)",
                     "a.qin: 10 000.00 PLN",
                     "  world: s1",
                     "  law date 2026-03-01, cut 2026-03-01",
-                    "warning: WARN-UNREAD input spare is read by nothing",
                 ]
                 .map(str::to_owned)
                 .to_vec()
@@ -1224,9 +1222,9 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
             member_run(&nested, &["m.b.q", "m.b.q_sb"]),
             Some(
                 [
+                    "scenario m.b.bbad: refused: LOAD-UNIT keylit and money PLN in arithmetic (n/b/bbad.tally:5)",
                     "m.b.q: 6 000.00 PLN",
                     "  law date 2026-03-01, cut 2026-03-01",
-                    "scenario m.b.bbad: refused: LOAD-UNIT keylit and money PLN in arithmetic (n/b/bbad.tally:5)",
                     "m.b.q_sb: 4 000.00 PLN",
                     "  world: sb",
                     "  law date 2026-03-01, cut 2026-03-01",

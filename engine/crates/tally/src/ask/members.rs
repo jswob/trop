@@ -5,22 +5,23 @@
 //! is answered by the member with all its files), §8 (a scenario's refusal refuses that
 //! scenario alone); E §3.1 step 1 (a member's files), §11 (`REQ-ASK`, `REQ-CLOCK`);
 //! OPERATIONS §2.1 (`--ask a.q`).
-//! Twin: engine/tools/refcore/ask.py (`Asker.member_ask`, `Asker.member_alone`,
-//! `member_names_world`); refcore refuses a member's ask refused alone as `REQ-ASK`, gives its
-//! `REQ-CLOCK` as the ask's line and prefixes no line starting `warning` (#233).
+//! Twin: engine/tools/refcore/ask.py (`Asker.member_ask`, `Asker.member_alone`, `Asker.lift`,
+//! `joint_warning`, `member_names_world`); refcore refuses a member's ask refused alone as
+//! `REQ-ASK`, gives its `REQ-CLOCK` as the ask's line (#233).
 //! Invariants: a member is found by its aliases from the run's model down, a loop over them,
 //! never a recursion (R-16); a member's base ask that names none of its scenarios, refused
-//! alone or not, is answered in the member's own world, whose walks' warnings print nowhere;
-//! any other is a run of the member alone with all its files, made before the run answers its
-//! first ask and printed at its turn, a stop it meets stopping the run there and a request
-//! refusal refusing the run's request; the member's lines take its aliases, each with its dot,
-//! before any warning is added, every line but an indented one; a member that is itself a
-//! joint model answers none of its own asks yet (M5c).
+//! alone or not, is answered in the member's own world; any other is a run of the member alone
+//! with all its files, made before the run answers its first ask and printed at its turn, a
+//! stop it meets stopping the run there and a request refusal refusing the run's request; the
+//! member's result lines take its aliases, each with its dot, every line but an indented one;
+//! the lines it brings to the run's own level (its refused scenarios', its walk's warnings,
+//! never `WARN-UNREAD`) are named by the joint model's names and printed there, each once
+//! (R20 clause 3); a member that is itself a joint model answers none of its own asks yet
+//! (M5c).
 
 use super::answer::{Turn, answer_turns_apart, reality_turns, req_clocks};
-use super::register::warning_lines;
-use super::worlds::{merged_warnings, refused_line};
-use crate::base::{Code, Refusal};
+use super::worlds::{merged_warnings, refused_in_order, refused_line};
+use crate::base::{Code, Refusal, Warn};
 use crate::eval::How;
 use crate::load::{Loaded, load_run, split_files};
 use crate::model::{MemberAlone, Reality};
@@ -59,12 +60,92 @@ pub(super) fn resolve(
                 out.push(Turn::OfMember(aliases, at));
             }
             _ => match alone_lines(member, (&id, &aliases, &own), (days, how)) {
-                Ok(lines) => out.extend(lines.into_iter().map(Turn::Line)),
+                Ok(alone) => {
+                    out.extend(alone.lines.into_iter().map(Turn::Line));
+                    let warnings = lifted(&aliases, &alone.warnings);
+                    out.push(Turn::Lifted(alone.level, warnings));
+                }
                 Err(stop) => out.push(Turn::Stopped(stop)),
             },
         }
     }
     Ok(out)
+}
+
+/// What a run of a member alone gives its ask: the lines it brings to the run's own level (its
+/// refused scenarios', by the joint model's names), its result's lines under its prefix, and
+/// the run's warnings as the member names them (refcore's `member_alone`). L §6.1; R20.
+struct Alone {
+    /// `scenario a.s: refused: …`, in `check`'s order.
+    level: Vec<String>,
+    /// The ask's lines, `a.q: …` and the lines under it.
+    lines: Vec<String>,
+    /// The member's run's warnings, load's and its walks'.
+    warnings: Vec<(Warn, String)>,
+}
+
+/// The walk warnings of a member's asks, by the joint model's names, each once:
+/// `WARN-NEGATIVE` and `WARN-LEGS` name the member's place, thing and observations under its
+/// aliases (`a.konto`); no other warning reaches the run's own level, `WARN-UNREAD` least of
+/// all, which is judged in the member alone (refcore's `Asker.lift`, `joint_warning`). L §6.1,
+/// §8.5; R20 clause 3.
+pub(super) fn lifted(aliases: &[String], warnings: &[(Warn, String)]) -> Vec<(Warn, String)> {
+    let prefix = aliases.join(".");
+    let mut out: Vec<(Warn, String)> = Vec::new();
+    for (code, text) in warnings {
+        let named = match code {
+            Warn::Negative => format!("{prefix}.{text}"),
+            Warn::Legs => legs_named(&prefix, text).unwrap_or_else(|| text.clone()),
+            Warn::Labels => labels_named(&prefix, text).unwrap_or_else(|| text.clone()),
+            Warn::Unread => continue,
+        };
+        let w = (*code, named);
+        if !out.contains(&w) {
+            out.push(w);
+        }
+    }
+    out
+}
+
+/// A `WARN-LEGS` message, `the two observations of <x> disagree: <a>[…) and <b>[…`, with its
+/// thing and its two inputs under the member's prefix (refcore's `joint_warning`); none for a
+/// message of another form.
+fn legs_named(prefix: &str, text: &str) -> Option<String> {
+    let rest = text.strip_prefix("the two observations of ")?;
+    let (thing, rest) = rest.split_once(" disagree: ")?;
+    let (first, second) = rest.rsplit_once(") and ")?;
+    let (a, a_rest) = first.split_once('[')?;
+    let (b, b_rest) = second.split_once('[')?;
+    if [thing, a, b]
+        .iter()
+        .any(|word| word.is_empty() || word.contains(' '))
+    {
+        return None;
+    }
+    Some(format!(
+        "the two observations of {prefix}.{thing} disagree: {prefix}.{a}[{a_rest}) and \
+         {prefix}.{b}[{b_rest}"
+    ))
+}
+
+/// A `WARN-LABELS` message, `labels dropped at <x> from <s>: <l>, …`, with its place and each
+/// label under the member's prefix (refcore's `joint_warning`); none for a message of another
+/// form. The engine raises none before parts and labels are built (M5).
+fn labels_named(prefix: &str, text: &str) -> Option<String> {
+    let rest = text.strip_prefix("labels dropped at ")?;
+    let (place, rest) = rest.split_once(" from ")?;
+    let (source, labels) = rest.split_once(": ")?;
+    if [place, source].iter().any(|word| word.contains(' ')) {
+        return None;
+    }
+    let labels: Vec<String> = labels
+        .split(", ")
+        .map(|label| format!("{prefix}.{label}"))
+        .collect();
+    Some(format!(
+        "labels dropped at {prefix}.{place} from {source}: {}",
+        labels.join(", ")
+    ))
 }
 
 /// A member's ask's lines under its prefix, its aliases each with its dot (`a.b.`), but an
@@ -134,7 +215,7 @@ fn alone_lines(
     member: &MemberAlone,
     (id, aliases, own): (&str, &[String], &str),
     (days, how): (Days, How),
-) -> Result<Vec<String>, Stop> {
+) -> Result<Alone, Stop> {
     if member.reality.joint.is_some() {
         return Err(Stop::NotBuilt("a joint model's asks at run"));
     }
@@ -153,14 +234,19 @@ fn alone_lines(
         Err(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
             Err(Stop::Refused(refusal))
         }
-        Err(Stop::Refused(refusal)) => Ok(vec![refused_line(id, &refusal)]),
+        Err(Stop::Refused(refusal)) => Ok(Alone {
+            level: Vec::new(),
+            lines: vec![refused_line(id, &refusal)],
+            warnings: Vec::new(),
+        }),
         other => other,
     }
 }
 
 /// A run of the member alone, loaded, on `asks`: its refused scenarios' lines, each under the
-/// member's prefix, `scenario a.s: refused: …`; its asks' lines under the prefix; then its
-/// warnings, as they are (refcore's `member_alone`, over `run_worlds`). L §6.1, §6.4, §8, §8.5.
+/// member's prefix, `scenario a.s: refused: …`, in `check`'s order; its asks' lines under the
+/// prefix; its warnings, as the member names them (refcore's `member_alone`, over
+/// `run_worlds`). L §6.1, §6.4, §8, §8.5; R20.
 ///
 /// # Errors
 ///
@@ -170,9 +256,9 @@ fn alone_run(
     asks: &Asks,
     aliases: &[String],
     (days, how): (Days, How),
-) -> Result<Vec<String>, Stop> {
+) -> Result<Alone, Stop> {
     let prefix = aliases.join(".");
-    let (realities, turns, warnings, mut out) = match loaded {
+    let (realities, turns, warnings, level) = match loaded {
         Loaded::One(m) => {
             let m: &Reality = m;
             (
@@ -183,9 +269,8 @@ fn alone_run(
             )
         }
         Loaded::Worlds(w) => {
-            let refused = w
-                .refused
-                .iter()
+            let refused = refused_in_order(w)?
+                .into_iter()
                 .map(|(s, r)| format!("scenario {prefix}.{s}: refused: {}", r.text()))
                 .collect();
             let turns = super::worlds::ask_turns(w, asks)?;
@@ -199,9 +284,11 @@ fn alone_run(
     };
     req_clocks(&realities, &turns)?;
     let (answered, warned) = answer_turns_apart(&realities, &turns, warnings, days, how)?;
-    out.extend(prefixed(aliases, answered.lines));
-    out.extend(warning_lines(&warned));
-    Ok(out)
+    Ok(Alone {
+        level,
+        lines: prefixed(aliases, answered.lines),
+        warnings: warned,
+    })
 }
 
 /// A member's ask the run's check knew that no member holds.

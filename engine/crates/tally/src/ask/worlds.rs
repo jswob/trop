@@ -6,8 +6,8 @@
 //! (`check`).
 //! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, its
 //! `unread_everywhere` and `asif_worlds`; `check_worlds`) and ask.py (`Asker.load_check`).
-//! Invariants: every id the run names is checked before any ask is answered; `run`'s refused
-//! scenarios print first, by id, `check`'s by their files' full paths; `check`'s asks refused
+//! Invariants: every id the run names is checked before any ask is answered; refused
+//! scenarios print first, by their files' full paths, in `run` as in `check` (R20); `check`'s asks refused
 //! alone go by id, then file, then line; the asks go by id, then by world, the base's first; an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
 //! others, each world under it seen with the layers over it hidden; the base's diff whose two
@@ -39,10 +39,9 @@ use std::collections::{BTreeMap, BTreeSet};
 /// first ask whose literal cut is after `on` (E §11); `NotBuilt` for an ask evaluated in two
 /// worlds, a load refusal met at run, and a construct not built yet.
 pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
-    let mut turns: Vec<Turn> = w
-        .refused
-        .iter()
-        .map(|(id, r)| Turn::Line(scenario_line(id, r)))
+    let mut turns: Vec<Turn> = refused_in_order(w)?
+        .into_iter()
+        .map(|(id, r)| Turn::Scenario(scenario_line(id, r)))
         .collect();
     turns.extend(members::resolve(&w.base, ask_turns(w, asks)?, (days, how))?);
     let realities = realities(w);
@@ -252,21 +251,46 @@ fn ask_in(reality: &Reality, id: &str, own: &str) -> Option<usize> {
 }
 
 /// The lines a load prints when no ask is answered: a reality's warnings, or each refused
-/// scenario's line and the worlds' warnings merged. L §8, §8.5.
-#[must_use]
-pub fn report_lines(loaded: &Loaded) -> Vec<String> {
+/// scenario's line, in `check`'s order, and the worlds' warnings merged. L §8, §8.5.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a refused scenario with no file.
+pub fn report_lines(loaded: &Loaded) -> Result<Vec<String>, Stop> {
     match loaded {
-        Loaded::One(m) => warning_lines(&m.warnings),
+        Loaded::One(m) => Ok(warning_lines(&m.warnings)),
         Loaded::Worlds(w) => {
-            let mut lines: Vec<String> = w
-                .refused
-                .iter()
+            let mut lines: Vec<String> = refused_in_order(w)?
+                .into_iter()
                 .map(|(id, r)| scenario_line(id, r))
                 .collect();
             lines.extend(warning_lines(&merged_warnings(w)));
-            lines
+            Ok(lines)
         }
     }
+}
+
+/// The refused scenarios in `check`'s order: by the full path of the file that declares each
+/// (a scenario declared twice by its first; one whose refusal names no file of its own by its
+/// header's), then by id (OPERATIONS §2.1, §2.3; R20 clauses 1 and 2, picks P12, P13).
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for a refused scenario with no file.
+pub(super) fn refused_in_order(w: &Worlds) -> Result<Vec<(&String, &Refusal)>, Stop> {
+    let mut refused = Vec::with_capacity(w.refused.len());
+    for (id, refusal) in &w.refused {
+        let file = w
+            .files
+            .get(id)
+            .ok_or_else(|| invariant("a refused scenario with no file"))?;
+        refused.push((file, id, refusal));
+    }
+    refused.sort_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
+    Ok(refused
+        .into_iter()
+        .map(|(_, id, refusal)| (id, refusal))
+        .collect())
 }
 
 /// The lines `check` prints for a run's files that load (OPERATIONS §2.3; refcore's
@@ -284,18 +308,9 @@ pub fn check_lines(loaded: &Loaded) -> Result<Vec<String>, Stop> {
     let (mut lines, alone, warnings) = match loaded {
         Loaded::One(m) => (Vec::new(), alone_asks(m, None)?, m.warnings.clone()),
         Loaded::Worlds(w) => {
-            let mut refused = Vec::with_capacity(w.refused.len());
-            for (id, refusal) in &w.refused {
-                let file = w
-                    .files
-                    .get(id)
-                    .ok_or_else(|| invariant("a refused scenario with no file"))?;
-                refused.push((file, id, refusal));
-            }
-            refused.sort_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
-            let lines = refused
+            let lines = refused_in_order(w)?
                 .into_iter()
-                .map(|(_, id, refusal)| scenario_line(id, refusal))
+                .map(|(id, refusal)| scenario_line(id, refusal))
                 .collect();
             let mut alone = alone_asks(&w.base, None)?;
             for (id, reality) in &w.loaded {

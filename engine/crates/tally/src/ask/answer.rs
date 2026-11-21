@@ -123,6 +123,13 @@ pub(crate) enum Turn {
     Cross([(usize, usize, String); 2]),
     /// A line, printed as it is.
     Line(String),
+    /// A refused scenario's line of the run, printed once, before every result (OPERATIONS
+    /// §2.1; R20 clause 1).
+    Scenario(String),
+    /// The lines a member's ask brings to the run's own level, named by the joint model's
+    /// names: its refused scenarios' lines, printed with the run's before every result, and
+    /// its walk's warnings, printed with the run's, each once (L §6.1; R20 clause 3).
+    Lifted(Vec<String>, Vec<(Warn, String)>),
     /// A member's ask the run names, `a.q` or `a.b.q`, before `members::resolve` turns it
     /// into the turns that answer it (L §6.1).
     Member(String),
@@ -208,7 +215,11 @@ pub(super) fn req_clocks(realities: &[&Reality], turns: &[Turn]) -> Result<(), S
             Turn::Stopped(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
                 return Err(Stop::Refused(refusal.clone()));
             }
-            Turn::Line(_) | Turn::Member(_) | Turn::Stopped(_) => {}
+            Turn::Line(_)
+            | Turn::Scenario(_)
+            | Turn::Lifted(..)
+            | Turn::Member(_)
+            | Turn::Stopped(_) => {}
         }
     }
     Ok(())
@@ -259,12 +270,21 @@ pub(super) fn answer_turns_apart(
     how: How,
 ) -> Result<(Answered, Vec<(Warn, String)>), Stop> {
     let mut out = Vec::new();
+    // the run's own level: its refused scenarios' lines, then those its members' asks bring,
+    // each once, before every result; the members' walk warnings, each once (R20)
+    let mut level: Vec<String> = Vec::new();
+    let mut lifted: Vec<(Warn, String)> = Vec::new();
     // each world's asks share what their engines gather, apart from another world's
     // (refcore's one `Asker` per world); each member's, by its aliases, likewise
     let mut worlds: Vec<World> = realities.iter().map(|m| World::of(m, how)).collect();
     let mut member_worlds: BTreeMap<&[String], World> = BTreeMap::new();
     for turn in turns {
         match turn {
+            Turn::Scenario(line) => level.push(line.clone()),
+            Turn::Lifted(lines, brought) => {
+                line_once(&mut level, lines);
+                warn_once(&mut lifted, brought);
+            }
             Turn::OfMember(aliases, at) => {
                 let base = realities.first().ok_or_else(no_turn)?;
                 let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
@@ -309,16 +329,18 @@ pub(super) fn answer_turns_apart(
             }
         }
     }
-    // the realities' warnings, then each world's walks' own, the base's first, each once; a
-    // member's walks warn only where the member runs alone (refcore's `Asker.member_ask`)
+    // the realities' warnings, then each world's walks' own, the base's first, then the walk
+    // warnings each member's asks met, by the joint model's names, each once (refcore's
+    // `run_worlds`, `Asker.lifted_warnings`; L §6.1, R20 clause 3)
     let mut warned = warnings;
     for world in &worlds {
-        for w in &world.seen.warnings {
-            if !warned.contains(w) {
-                warned.push(w.clone());
-            }
-        }
+        warn_once(&mut warned, &world.seen.warnings);
     }
+    for (aliases, world) in &member_worlds {
+        warn_once(&mut lifted, &members::lifted(aliases, &world.seen.warnings));
+    }
+    warn_once(&mut warned, &lifted);
+    level.extend(out);
     #[cfg(feature = "counters")]
     let mut counts = crate::Counters::default();
     #[cfg(feature = "counters")]
@@ -326,11 +348,30 @@ pub(super) fn answer_turns_apart(
         counts.merge(&world.seen.counts);
     }
     let answered = Answered {
-        lines: out,
+        lines: level,
         #[cfg(feature = "counters")]
         counts,
     };
     Ok((answered, warned))
+}
+
+/// Each of `more` added to `into` where it isn't yet: a member's line at the run's own level
+/// prints once (L §6.1; R20 clause 3).
+fn line_once(into: &mut Vec<String>, more: &[String]) {
+    for line in more {
+        if !into.contains(line) {
+            into.push(line.clone());
+        }
+    }
+}
+
+/// Each of `more` added to `into` where it isn't yet: a warning prints once. L §8.5.
+fn warn_once(into: &mut Vec<(Warn, String)>, more: &[(Warn, String)]) {
+    for w in more {
+        if !into.contains(w) {
+            into.push(w.clone());
+        }
+    }
 }
 
 /// The lines of a diff whose two worlds sit on two stacks of scenarios: each side answered by

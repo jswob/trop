@@ -209,13 +209,13 @@ pub fn check(files: Files) -> Result<Answer, NotImplemented> {
 ///
 /// [`NotImplemented`] for a construct the engine doesn't build yet.
 pub fn load_report(given: Vec<Given>) -> Result<Answer, NotImplemented> {
-    let report = loaded(Files::new(given), FENCES).map(|loaded| {
-        let lines = report_lines(&loaded);
-        Answered::printed(if is_joint(&loaded) {
+    let report = loaded(Files::new(given), FENCES).and_then(|loaded| {
+        let lines = report_lines(&loaded)?;
+        Ok(Answered::printed(if is_joint(&loaded) {
             joint_lines(lines)
         } else {
             lines
-        })
+        }))
     });
     finish(report)
 }
