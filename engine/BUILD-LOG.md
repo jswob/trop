@@ -6184,3 +6184,30 @@ The review is `tmp/spec-2.2.1/review-g4.md` (blocking 3, non-blocking 7), its pr
 - **What I tried:** nothing: the runner is T's (R-79)
 - **What I ask:** as G2's report: T moves the pin to (256, 52), or logs the test red on a `Logged-Red:` line until it does
 - **State:** 2f2aab89 (G4's review fix and its entry); this report uncommitted; not pushed
+
+## 2026-11-21 tally 2.2.1 G4, the closing turn: B-1, B-2, LOAD-VERSION's place, S-223's last word (issue #241)
+
+The fix review is `tmp/spec-2.2.1/review-g4fix.md` (blocking 2), its probes `review/g4fix/`; the ruling is `picks-g4-fixreview.md` (P53). Branch `build/2.2.1` after bc483495 (the round's last pin). Four commits and this one, one per item; the STOP-REPORT above went in with the first. No window work: no probe written, no window behaviour changed. Not pushed.
+
+- **The sweep** (`tmp/spec-2.2.1-build/g4fix/sweep.py`, now over `review/g4/agent`, G4's probes and `review/g4fix`, 851 commands with 24 more multi-file lines): the engine before the first change (`e2-0.json`) and after each item (`e2-1` … `e2-4`), each against the run before; the pinned refcore of bc483495 once (`ref2.json`). Every changed line is the item's own: 55 of 851 (B-1 1, B-2 3, the place 49, S-223 2). The S-223, member-warning and version lines (222) also ran on the writer's `refcore-w14`: same 222, differ 0 (a cross-check).
+- **The kept list:** 11 red ids, `check commit` at the turn's start (G4's last turn's 10 and `basic/version-three`).
+
+**ee5e1edf, B-1:** `ask/members.rs` `legs_named` reads a `WARN-LEGS` text from its end, where the engine's own words stand (the two rows' ids and their amounts or days), so the thing is read whole, an instance's keys and all; `labels_named` likewise (raised from M5). No user's text reaches the invariant. `g4fix/inv` `run top.tally --ask a.q`: `refused: ENGINE-INVARIANT a WARN-LEGS text not of its printed form`, exit 1 → `a.q: 50.00 PLN` … `warning: WARN-LEGS the two observations of a.put[a, 2026-03] disagree: a.bank[r1] (10.00 PLN) and a.bank[r2] (12.00 PLN)`, exit 0 (pinned refcore: the warning unprefixed; refcore-w14: = the engine). Stored: none (11).
+
+**d51084c6, B-2:** `load/worlds.rs` `load_worlds` and the new `runs_tally_two`: the disagreement form replaces the base's `LOAD-VERSION` only where the base states a version other than 2; a base on tally 2 refused for its own reason prints that refusal. `g4fix/verrule` `run b.tally s3.tally`, `check b.tally s3.tally`, `run .`: `refused: LOAD-VERSION files declare different tally versions` → `refused: LOAD-VERSION replace rule d.base in w names version v (b.tally:22)` (= refcore). `b3 s2`, `b3 tnone`, `b3 s3 t2`, `b2 p3` keep the disagreement form (= refcore). Stored: none (11).
+
+**e0728548, LOAD-VERSION's place:** `syntax/tree.rs` `Header.tally_line`, set in `syntax/item.rs` `header_line`; `load/steps.rs` `Loader::new` places `tally <N>: this engine runs tally 2` at that line. `ver` `run b3.tally`: `… (b3.tally:1)` → `… (b3.tally:2)`; the same on every `ver`, `verj` (`member a: … (m3.tally:2)`), `pass/all_v3`, G4's `v3`, `v12345`, and `g4fix/ver` (`b3 s3 t3`, `b3 s03`, `b03 s3`, `b3 p3`, `b3 s3`): 49 lines, each now = refcore. Stored: `basic/version-three` stays red, not on the engine: the engine prints the pinned refcore's `refused: LOAD-VERSION tally 3: this engine runs tally 2 (base.tally:2)`, T's stored record (`codes/m0.refcore`) the older line with no place; for T's re-store.
+
+**e8d61f51, S-223's last word:** `load/overlap.rs` `uncovered` and the new `earlier_covers`: at each world and cut class where the row stands, its version covers on its day each place of its legs that the version of any earlier statement of it with a row, known at that cut, covers there; a dropped row is skipped as before. The file's `Invariants:` line and `check_obs`'s doc say it (the review's N-e). `g4fix/s223/cc_mid_moved` run and check: `q: 1 000.00 PLN` … (`q_0402: 940.00 PLN`) / `ok` → `refused: LOAD-COVERS replace bank[r1] of konto: fix2 doesn't cover konto on 2026-02-10 (cc_mid_moved.tally:39)` (pinned refcore: `fix1 … (…:33)`; refcore-w14: = the engine). `cc_mid_drop` answers as before (`q: 1 000.00 PLN`); every other `s223/` text as before. Stored: none (11).
+
+- **Where the engine differs from the pinned refcore at the end** (same 837, differ 14): the refcore's, to follow (refcore-w14 has each as the engine): B-1 `g4fix/inv --ask a.q` (the warning's prefix); S-223 `cc_mid_moved` run and check (`fix2`, refcore `fix1`), `cc_mid_drop` run and check (refcore refuses at a cut where `fix1`'s row no longer stands, N-b). The engine's, older and not this round's (a joint model's own ask, not built, S8/M5c): `pin/j` `top_a_opening_a_konto_` run and check, `top_tspare___2`; `r20` `nested`, `top`, `twoalias`, `mid` (`run .`, `run mid.tally`); `verj/t2_m2`: `tally run: not implemented`.
+- **Red ids:** 11 kept, 11 after each item, the same first differences; none outside the list. The ten older ones as logged; `basic/version-three`, T's stored line (above).
+- **Size** (`git diff --shortstat bc483495..e8d61f51 -- engine/crates`): 6 files, 84 in, 48 out. By commit: B-1 12/19, B-2 21/3, the place 14/8, S-223 37/18.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched; one `nested-closure-review` in `runs_tally_two` met and removed by a loop).
+- **For the windows round:** nothing.
+- **Open STOP-REPORTs:** none of this turn's; T's codes/m0 count (G2's, and G4's above) until the tests session's commit is merged.
+- **Usage:** about 1.20 % of the week before this entry (`engine/tools/usage tmp/spec-2.2.1-build/g4-ids.txt`); this turn about 0.12 %, against about 0.5 %.
+- **Time:** about 25 min from 03:42 local; `check commit` 5 runs, `check quick` 4, 5 engine sweeps, one pinned refcore sweep (4 min), one refcore-w14 cross-check.
+- **Checks at e8d61f51's tree:**
+  - `check quick: red at tests, stopped after 10 of 11 steps (94s)`: T's `codes::tests::the_m0_fixtures_read_and_print_their_codes`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (90s)`: the 11 ids above.
