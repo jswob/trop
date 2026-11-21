@@ -127,7 +127,8 @@ impl Added {
     }
 
     /// A window or a choice of days as written, `window(a, b)` or `one_of([a, b])`, which a
-    /// question names (refcore's `business`, its `wt`). L §4.2, §4.4.
+    /// question names (refcore's `business`, its `wt`); a stated hole as a hole prints, its
+    /// question escaped (L §2.4; tally 2.2.1 P48 N5). L §4.2, §4.4.
     #[must_use]
     pub fn text(&self) -> String {
         match self {
@@ -137,7 +138,7 @@ impl Added {
                 format!("one_of([{}])", texts.join(", "))
             }
             Added::Day(d) => d.text(),
-            Added::Hole(q) => format!("?\"{q}\""),
+            Added::Hole(q) => crate::hole::atom_text(q, ""),
         }
     }
 }
