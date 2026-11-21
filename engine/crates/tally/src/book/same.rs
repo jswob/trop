@@ -175,8 +175,10 @@ impl Engine {
             .any(|(a, b)| *a == id || *b == id))
     }
 
-    /// The first `same` line cut `cut` sees naming movement `id`, its two sides (refcore's
-    /// `same_pairs`, its lines). L §6.1, §4.5.
+    /// The `same` line cut `cut` sees that joins movement `mover` to movement `id`, its two
+    /// sides as written: the first naming both, else, where a chain joins them, the first
+    /// naming `id`; none where no line names `id` (refcore's `same_pairs`, its lines). L §6.1,
+    /// §4.5, §8.4 `RUN-RECORD` (tally 2.2.1 230.Q-5a; P48 N4).
     ///
     /// # Errors
     ///
@@ -184,13 +186,18 @@ impl Engine {
     pub(super) fn first_line(
         &mut self,
         m: &Reality,
-        id: &str,
+        (mover, id): (&str, &str),
         cut: Day,
     ) -> Result<Option<(String, String)>, Stop> {
-        Ok(move_lines(m, self.moves_seen(m, cut)?)
-            .into_iter()
-            .find(|(a, b)| *a == id || *b == id)
-            .map(|(a, b)| (a.clone(), b.clone())))
+        let lines = move_lines(m, self.moves_seen(m, cut)?);
+        let joins =
+            |(a, b): &&(&String, &String)| (*a == mover && *b == id) || (*a == id && *b == mover);
+        let names = |(a, b): &&(&String, &String)| *a == id || *b == id;
+        Ok(lines
+            .iter()
+            .find(joins)
+            .or_else(|| lines.iter().find(names))
+            .map(|(a, b)| ((*a).clone(), (*b).clone())))
     }
 }
 

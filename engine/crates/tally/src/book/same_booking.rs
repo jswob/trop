@@ -234,8 +234,8 @@ impl Engine {
         for x in group.iter().filter(|x| x.as_str() != mover.id()) {
             let Some(found) = self.walk_member(m, id, x)? else {
                 let (left, right) = self
-                    .first_line(m, x, cut)?
-                    .unwrap_or_else(|| (x.clone(), mover.id().to_owned()));
+                    .first_line(m, (mover.id(), x), cut)?
+                    .ok_or_else(|| invariant("a same group's member no same line names"))?;
                 return Err(Stop::Refused(Refusal::new(
                     Code::Run(Run::Record),
                     format!("same {left} = {right}: {x} doesn't exist"),
@@ -545,11 +545,11 @@ impl Engine {
         let cut = self.walk(id)?.cut;
         for (mover, lg, side, reg, coll) in pending {
             if none {
-                // the line named as written, its sides in the text's order (2.1.7's R9;
-                // 230.Q-5a on #241)
+                // the line that joins the waiting movement to the decision, as written, its
+                // sides in the text's order (2.1.7's R9; 230.Q-5a, P48 N4 on #241)
                 let (left, right) = self
-                    .first_line(m, &run_id, cut)?
-                    .unwrap_or_else(|| (mover.clone(), run_id.clone()));
+                    .first_line(m, (&mover, &run_id), cut)?
+                    .ok_or_else(|| invariant("a decision a mover waits for no same line names"))?;
                 let err = Refusal::new(
                     Code::Run(Run::Record),
                     format!("same {left} = {right}: {run_id} doesn't exist"),
