@@ -6014,3 +6014,56 @@ The brief's order: P45's three points first, then the plan's G3 rows (`tmp/spec-
   - `check quick: green, 11 steps (86s)`.
   - `check commit: red at tests, stopped after 10 of 24 steps (83s)`: the 37 ids above, none outside a list.
   - `check fences: green, 1 step (29s)`.
+
+## 2026-11-21 tally 2.2.1 G4, the run's lines, load's refusals and the command line: S-usage, S-221.9, S-231.Q2, S-224a, S-233.8, 233.a, S-223, S-232, R20, R18's doc line (issue #241)
+
+The plan's G4 order (`tmp/spec-2.2.1-build/plan.md` §2, rows 54 to 64), S-224b already out of the engine (`base/code.rs` has no `Warn::Stale`). Branch `build/2.2.1` after d266b975; 8 commits and this one. Not pushed: waiting for the pin. Not kernel; no fence touched.
+
+- **T's vectors are not on this branch.** The brief says they are in the tree; they are on `tests/2.2.1` at 6c1d1cbc ("G3's names and G4's refusals, red until built"), not an ancestor of d266b975, so `check commit` never ran them (its m3 groups have no `t221-g3`/`t221-g4`). I read them without merging (the merge is the lead's): `git archive 6c1d1cbc` of `m3/fixes/t221`, `m3/fixes/g3`, `runs.vectors`, `check.vectors`, `check/fixtures.tsv` into `tmp/spec-2.2.1-build/g4/t/`, and `g4/vec.py` runs the 15 G4 ids, `t221-rc/233-a-unit-literal` and `fixes/member-warning-id` on the engine against the stored bytes (a `rule` vector by its exit alone, as `runner/src/m3.rs` does). Before: 1 of 17 green (`233-a`). After: **17 of 17**.
+- **Tools** (`tmp/spec-2.2.1-build/g4/`): `cc.sh <n>` (G3's, with a stop when the tests step didn't run), `both.sh <cmd> …` (the engine against the pinned `engine/tools/refcore_fast`), `vec.py`; probes under `g4/probes/`.
+- **The kept list:** `check commit` before any change, 37 red ids (`g4/red-0.txt`), the earlier groups' moves.
+
+**54b59726, S-usage:** `tally-cli/src/lib.rs` `parse` (one rule: a `--` word is an option; `run` takes `--ask` and `--pin=bytes`, `check` and `reprint` take `--pin=bytes`; any other is a usage error, exit 2), `run_line`, `paths_of`, `USAGE` (`reprint … [--pin=bytes]`); `pin_form` and `check_line` gone. Green: `t221-g4/usage-run-foo`, `usage-check-foo`, `usage-reprint-ask`, `usage-reprint-pin-zzz`, `usage-run-ask-foo`, `usage-run-pin-zzz`. Probe `reprint p2.tally --pin=bytes`: its text and hash, = refcore. Stored: none moved (37).
+
+**be1b35b4, S-221.9:** `load/strata.rs` `written_order`: `LOAD-ORDER top before top: a move isn't ordered against itself (m2.tally:24)`, = refcore; `after top` prints the same form (refcore's, the catalogue's one form; probe `after_self`, = refcore). Green: `t221-g4/221-9-before-self`.
+
+**259fef92, S-231.Q2:** `load/pins.rs` `set_pin`: `LOAD-INSTANT a pin of balance reading opening states no instant (b.tally:12)`, = refcore; `stated` likewise (probe `pin_stated`, = refcore). Green: `t221-g4/231-2-pin-balance`.
+
+**0a2771f7, S-224a:** `load/steps.rs` `Loader::new`: `LOAD-VERSION tally 3: this engine runs tally 2`, = refcore (probe `v3`); the number printed ungrouped (`integer_text`: `tally 12345`, = refcore, probe `v12345`); files that disagree keep `files declare different tally versions` (the check before it). No vector of T's.
+
+**bc74225c, S-233.8:** `ask/answer.rs` `req_clock` takes a literal in `( )`: `refused: REQ-CLOCK as known 2027-01-01 is after the model's on 2026-06-10`, exit 1, = refcore; `with known (…)` likewise (probe `wk`, = refcore). Green: `t221-g4/233-8-known-paren`.
+- **Stored ids for the four:** one `check commit` over them, 37, the same (the four forms are new texts; none stored).
+
+**233.a: no change.** The plan's "today" cell read the whole of `u0_etf_literal.tally`, whose refusal is line 52, `unit(x) == etf` with `x` bound over places; line 51's `unit(ike) == etf` already loads and answers on both (probe `u0b`: `fund_place: (etf, bond, true)`, = refcore; `u0c` `unit(bal(ike, …)) == etf`: `true`, = refcore). T's `t221-rc/233-a-unit-literal` is the line-52 refusal and is green on arrival, as T's commit says.
+
+**e869a4b5, S-223 and S-232:** `load/overlap.rs` `check_obs` (rows keyed with their place among the input's observations), `one_id` (a correction that doesn't remove its row: `correction_covers`), `correction_covers`, `covers_on`, `covers_standing` (each world of the stack, `Lowest(0..n)` then `Whole`; a row stands from its `known` until a row after it in (layer, `known`) is known; checked at its `known` and at each `moves` line's `known` inside that stretch, seen in that world; the first bad observation in the input's order refused), `outside`; refcore's `check_correction_covers`, `check_covers_standing`. The engine's own `tests/load_cases.rs`: its `replace bank[r1]` in `bank_b` with no `covers` now expects S-223's line, with two twins (`covers konto`: loads; `= none` alone: loads).
+- `t221-g4` mini5: `refused: LOAD-COVERS replace bank[r1] of konto: statement_2026_10_fix doesn't cover konto on 2026-10-10 (fix.tally:8)`, = refcore; with `covers konto` `q_mid: 8 000.00 PLN`, = refcore; the `= none` line alone loads, = refcore (Q5). `critic/cutcov` `check`: `scenario late: refused: LOAD-COVERS observation bank[r2] of konto is dated outside the span stmt covers (base.tally:25)`, = refcore. The three held rows' texts (`m3/check/narrow`; `fixes/g3/st`, check and run) print the engine's bytes as before, = refcore.
+- Green: `t221-g4/223-replace-covers`, `fixture/t221-g4/223-replace-covers-check`, `fixture/t221-g4/232-per-cut`. Stored: none moved (37; T's scan said no stored text).
+
+**80d40925, R20:** `ask/worlds.rs` `refused_in_order` (new: `check`'s order, full path then id) used by `answer_worlds`, `check_lines`, `report_lines` (now a `Result`; `api.rs` `load_report`) and a member's run; `ask/answer.rs` `Turn::Scenario`, `Turn::Lifted`, `answer_turns_apart` (the run's refused scenarios, then the lines members' asks bring, each once, before every result; each member world's walk warnings lifted after the last turn), `line_once`, `warn_once`; `ask/members.rs` `Alone`, `lifted` (walk warnings only, `WARN-UNREAD` never, by the aliases: `a.konto`), `legs_named`, `labels_named` (refcore's `joint_warning`; the engine raises no `WARN-LABELS` yet), `alone_lines`, `alone_run`. The engine's own `tests/ask_cases.rs` member test now expects the member's scenario line first and once and no member `WARN-UNREAD`.
+- `t221-g4/228-11-member-warnings` (`jw/top.tally`): the two `warning: WARN-NEGATIVE a.konto …`/`b.konto …` lines last, = refcore; `228-2-run-path-order`: `scenario s2` (`a/s2.tally`) before `s1` (`z/s1.tally`); `228-5-no-file-run`: `c2` (`m/c2.tally`) before `c1` (`z/c1.tally`). Probes, all = refcore: `gate-probes/j` `check top.tally` `ok` and `run top.tally` nothing (C-14 A: no member lines); member mixes `a.q_gone a.q a.q_base_gone`, `a.q_u a.q_n`; `critic/jw` `a.q b.q`; a joint over `r3_disagree.tally`: `warning: WARN-LEGS the two observations of m.bank[a2] disagree: m.bank[a2] (950.00 PLN) and m.sbank[b1] (900.00 PLN)`.
+- Green: `t221-g4/228-2-run-path-order`, `228-5-no-file-run`, `228-11-member-warnings`, and the stored `fixes/member-warning-id`. Red: 37 → 36, inside R20's list.
+
+**2c13b4dc, R18's doc line:** `load/lawdates.rs` `move_read_dated`'s doc comment says the spec holds its test as L §4.3's three clauses. Nothing else.
+
+- **Size** (`git diff --stat d266b975..HEAD -- engine/crates`): 12 files, 461 in, 166 out (0.63 k), against the plan's 0.35 to 0.6 k: above it by 0.03 k, S-223/S-232 (158/54, the plan's 80 to 160 together) and R20 (211/70) carrying it. By commit: S-usage 60/41, S-221.9 5/0, S-231.Q2 6/0, S-224a 10/0, S-233.8 6/1, S-223 and S-232 158/54, R20 211/70, R18 5/0. Library and CLI 452/158; the engine's own tests 9/8.
+- **Logged-red vectors** (6c1d1cbc's 15 G4 ids): all 15 equal their stored bytes on the engine (by `g4/vec.py`, not by `check commit`, which doesn't hold them on this branch): `221-9-before-self`, `223-replace-covers`, `223-replace-covers-check`, `228-2-run-path-order`, `228-5-no-file-run`, `228-11-member-warnings`, `231-2-pin-balance`, `232-per-cut`, `233-8-known-paren`, `usage-run-foo`, `usage-check-foo`, `usage-reprint-ask`, `usage-reprint-pin-zzz`, `usage-run-ask-foo`, `usage-run-pin-zzz`. Stored `fixes/member-warning-id`: green in `check commit`.
+- **Red ids:** 37 at the start; S-usage 37; the four refusals 37; S-223/S-232 37; R20 36 (`fixes/member-warning-id` green); R18 36. None outside a list. The 36 are the earlier groups' moves waiting for the re-store at the last pin (`g4/red-5.txt`).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` untouched; the report's new lifetime, nested-closure and long-chain hits in `overlap.rs` and the CLI were restructured away).
+- **For the windows round:** nothing met.
+- **Open, for the lead:** the STOP-REPORT below (run's order of two asks of one id in two scenario files); T's G4 vectors to merge into this branch (6c1d1cbc); 233.a's "today" cell; the member `REQ-CLOCK` difference (`gate-probes/j` `--ask a.q_late`: the engine refuses the request, refcore prints `a.q_late: refused: REQ-CLOCK …`, exit 0), #233's known one, unchanged by G4.
+- **Usage:** about 0.63 % of the week before this entry (`engine/tools/usage tmp/spec-2.2.1-build/g4-ids.txt`), against about 1.0 %.
+- **Time:** about 40 min from 01:16 local. Checks about 20 min of it: `check commit` 6 runs (70 to 97 s), `check quick` about 11 (14 to 100 s).
+- **Checks at 2c13b4dc's tree:**
+  - `check quick: green, 11 steps (80s)`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (70s)`: the 36 ids above, none outside a list.
+
+## STOP-REPORT 2026-11-21: `run` orders two asks of one id by world id, refcore by full path, and O §2.1 says only "by id"
+
+- **Kind:** the spec seems silent (a tie in `run`'s result order)
+- **Where:** `ask/worlds.rs` `ask_turns` (`keyed` by (id, world), the base's first); refcore `cli.py` `run_worlds` l.417 (`keyed` by (id, full path, line), "R20 clause 2"); OPERATIONS §2.1 "in the order of the ids after `--ask`, or by id with none"
+- **Rule or gate:** DONE gate 10; R20 clause 2 (written for `check`'s asks refused alone)
+- **What happens:** `tmp/spec-2.2.1-build/g4/probes/ord`: `m.tally` (no ask), `a/zz.tally` (`scenario zz`, `ask q: twice in zz`), `z/bb.tally` (`scenario bb`, `ask q: twice + twice in bb`); `run m.tally a/zz.tally z/bb.tally --ask q`, exit 0: the engine prints `q: 16 000.00 PLN` (bb) then `q: 8 000.00 PLN` (zz); refcore `8 000.00` (a/zz.tally) then `16 000.00` (z/bb.tally). The same with no `--ask`
+- **What I tried:** nothing in the code: R20's rows in the plan (§4 "G4 R20") list the refused scenarios' order and the member lines, not the results' order, so a change here moves an answer outside the list (rulings 11)
+- **What I ask:** which order the results of one id take in `run`. Recommended: `check`'s, full path then line (R20's "one order"; refcore's), a sentence in O §2.1 ("…by id with none, asks of one id by full path, then line"); the engine's change is `ask_turns`' key, about 15 lines
+- **State:** 2c13b4dc, `check quick` green; this entry uncommitted until its commit; not pushed
