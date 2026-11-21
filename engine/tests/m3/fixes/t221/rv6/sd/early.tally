@@ -15,3 +15,6 @@ move lift: transfers
 ask q_e: bal(konto, 2026-01-05) in early
 ask q_e2: bal(konto, 2026-01-02) in early
 ask q_ef: flows(konto, 2026-01-01 .. 2026-01-05) in early
+ask q_l1: flows(konto, 2026-01-04 .. 2026-01-05) in early with late_day = 2026-01-03
+ask q_l2: bal(konto, 2026-01-02) in early with late_day = 2026-01-03
+ask q_l3: flows(konto, 2026-01-03 .. 2026-01-05) in early with late_day = 2026-01-03

@@ -7014,4 +7014,36 @@ q_ef: 2.00 PLN
   world: early
   left out: top, 1 instances, first 2026-01-01
   cut 2025-12-31
+,28:t221-g3/mut-same-mover-right,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run q7.tally,36:q7.tally	m3/fixes/t221/rv6/q7.tally
+,1:0,386:e: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+f: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+fp: 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+fp2: 100.00 PLN
+  unfulfilled: pay2
+  cut 2026-04-10
+k: refused: RUN-RECORD same pay = dec: dec doesn't exist
+  cut 2026-04-10
+l (t = pay): 100.00 PLN
+  unfulfilled: pay
+  cut 2026-04-10
+,33:t221-g2/mut-uncounted-before-span,7:t221-g2,3:run,33:engine/tests/m3/fixes/t221/rv6/sd,47:run base.tally early.tally --ask q_l1 q_l2 q_l3,88:base.tally	m3/fixes/t221/rv6/sd/base.tally
+early.tally	m3/fixes/t221/rv6/sd/early.tally
+,1:0,332:q_l1: 0.00 PLN
+  pinned: late_day = 2026-01-03
+  world: early
+  cut 2025-12-31
+q_l2: 10.00 PLN
+  pinned: late_day = 2026-01-03
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
+q_l3: 2.00 PLN
+  pinned: late_day = 2026-01-03
+  world: early
+  left out: top, 1 instances, first 2026-01-01
+  cut 2025-12-31
 ,
