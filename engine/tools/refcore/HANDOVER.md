@@ -7,6 +7,17 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.2.1, group W12: the names, the engine's third review (P48; issue #241; 1 658 tests)
+
+- **230.Q-5a** (`loader`, `walk.as_written`, `walk.line_naming`): sides as written; RUN-RECORD names the written line
+  naming the decision, a chain's too; none found is `ENGINE-INVARIANT`. HOLE-SAME's same-line form keeps the mover's
+  amount then the decision's day, its two names as written.
+- **221.8:** a header's `same` at its own line. **B2, N2:** `env_txt` in every `RUN-NONE` that names a read (`abs`,
+  `round`, `if`, `and`, `not`, `min`, a membership test still say "a value": not in the review's list).
+- **P24:** the head substitutes values into the span as written (`2026-03 .. end_of(2026-03)`); the engine's bytes on
+  `res/r1` a2, a3, a8 not seen here.
+- **F-C, F-E, two register lines:** as CHANGES 2.2.1-94. For the windows round: `hs/h5`, `h5b`, `s4_windows`.
+
 ## tally 2.2.1, group W11: P45's three points, cause H (issue #241; 1 648 tests)
 
 - **P45 (d)** (`walk.consol`): undecided days of sides stated `same` with equal amounts book, at each side, the

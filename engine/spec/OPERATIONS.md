@@ -32,7 +32,7 @@ Each operation is a command of the engine's binary and a call of its library (`e
 `tally run <path>… [--ask <id>…] [--pin=bytes]`
 
 - **Inputs.** The reality's files; after `--ask`, the ids of the asks to answer, a joint model's member's as `a.q`; with no `--ask`, every ask of the reality (of a joint model, its own). `--pin=bytes` makes a `use` pin the sha256 of the member's file bytes, not of its canonical text.
-- **Result** (worked in §7). Each ask's result in `LANGUAGE.md` §5.18's form, in the order of the ids after `--ask`, or by id with none: `<id>: …`, or `<id> (k = …): …` per binding tuple, with values, holes and their questions, per-value refusals, and the register indented under it (§8.1, §8.4, §8.2). The warnings print last, `warning: CODE message`, sorted by code, then text (§8.5). Holes and per-value refusals are answers: exit 0. A reality with no ask prints nothing.
+- **Result** (worked in §7). Each ask's result in `LANGUAGE.md` §5.18's form, in `--ask`'s order, or with none by id, full path, then line: `<id>: …`, or `<id> (k = …): …` per binding tuple, with values, holes and their questions, per-value refusals, and the register indented under it (§8.1, §8.4, §8.2). The warnings print last, `warning: CODE message`, sorted by code, then text (§8.5). Holes and per-value refusals are answers: exit 0. A reality with no ask prints nothing.
 - **Refuses**, each as the one line, exit 1:
   - a reality that doesn't load: `refused: LOAD-… <message> (<path>:<line>)`, the first in full-path order (`LANGUAGE.md` §8.3); a member's as `refused: member <a>: …`;
   - after load: `REQ-ASK no ask <q>`, the first unknown id in request order; `REQ-CLOCK`, a cut an ask states after `on`; `REQ-PATHS`, more than 100 000 paths for one ask (`ENGINE.md` §11).
