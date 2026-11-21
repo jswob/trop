@@ -7046,4 +7046,21 @@ q_l3: 2.00 PLN
   world: early
   left out: top, 1 instances, first 2026-01-01
   cut 2025-12-31
+,25:t221-g2/mut-same-end-legs,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run se.tally,36:se.tally	m3/fixes/t221/rv6/se.tally
+,1:0,339:h_bal: ?"h1 and h2 are one, but the leg at wal_h differs on 2026-03-05: 100.00 PLN (h1) and 120.00 PLN (h2)" (h1, h2)
+  unfulfilled: h1
+  unfulfilled: h2
+  cut 2026-06-10
+j_bal: ?"j1 and j2 are one, but leg cash differs on 2026-03-07: 50.00 PLN (j1) and 60.00 PLN (j2)" (j1, j2) ?"which day is j1?" (dj)
+  unfulfilled: j2
+  cut 2026-06-10
+,20:t221-g2/mut-zero-leg,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/rv6,12:run z0.tally,36:z0.tally	m3/fixes/t221/rv6/z0.tally
+,1:0,180:k_fee: 0.00 PLN
+  cut 2026-01-01
+k_wal: ?"how much is zk?" (a_h)
+  cut 2026-01-01
+l_fee: ?"does zl happen?" (w_h)
+  cut 2026-01-01
+l_wal: ?"does zl happen?" (w_h)
+  cut 2026-01-01
 ,
