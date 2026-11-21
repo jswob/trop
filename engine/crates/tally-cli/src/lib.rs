@@ -51,7 +51,7 @@ pub const EXIT_IO: u8 = 74;
 /// The usage text, printed to standard output with [`EXIT_USAGE`].
 const USAGE: &str = "usage: tally run <path>... [--pin=bytes] [--ask <id>...]\n       \
                      tally check <path>... [--pin=bytes]\n       \
-                     tally reprint <path>...\n";
+                     tally reprint <path>... [--pin=bytes]\n";
 
 /// One file of the reality as the binary reads it: its path as the run names it, and its bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,7 +81,8 @@ enum Command {
         /// How a `use` line's pin is taken.
         pin: tally::Pin,
     },
-    /// `reprint <path>…`: each file's canonical text and the reality's hash.
+    /// `reprint <path>… [--pin=bytes]`: each file's canonical text and the reality's hash; it
+    /// reads no pin (OPERATIONS §2.2: `run`'s inputs).
     Reprint {
         /// The paths, in the order given.
         paths: Vec<String>,
@@ -299,60 +300,61 @@ fn bad_table() -> Output {
     }
 }
 
-/// The command line as refcore's `command_lines` reads it: after `run`, every word before
-/// `--ask` that isn't `--pin=…` is a path, every word after it an ask id, and `--pin=…` may
-/// stand anywhere; after `check`, the same with no `--ask`. None for any other command, a
-/// `check` given an ask (pick P3), or a word that isn't UTF-8.
+/// The command line (OPERATIONS §2): a word that starts with `--` is an option, and an option
+/// the command doesn't take is a usage error (S-usage, tally 2.2.1): `run` takes `--ask` and
+/// `--pin=bytes`, `check` and `reprint` take `--pin=bytes`. After `run`, every word before
+/// `--ask` is a path and every word after it an ask id; after `check` and `reprint`, every word
+/// is a path. None for any other command, an option the command doesn't take, or a word that
+/// isn't UTF-8.
 fn parse(args: &[OsString]) -> Option<Command> {
     let words: Vec<&str> = args.iter().map(|arg| arg.to_str()).collect::<Option<_>>()?;
     let (first, rest) = words.split_first()?;
-    match *first {
-        "run" => Some(run_line(rest)),
-        "check" => check_line(rest),
-        "reprint" => Some(Command::Reprint {
-            paths: rest.iter().map(|word| (*word).to_owned()).collect(),
-        }),
-        _ => None,
+    let options: &[&str] = match *first {
+        "run" => &["--ask", "--pin=bytes"],
+        "check" | "reprint" => &["--pin=bytes"],
+        _ => return None,
+    };
+    if rest
+        .iter()
+        .any(|word| word.starts_with("--") && !options.contains(word))
+    {
+        return None;
     }
-}
-
-/// The words after `check`: its paths and `--pin=…`; none with `--ask`, a usage error
-/// (OPERATIONS §2.3, pick P3).
-fn check_line(words: &[&str]) -> Option<Command> {
-    let mut paths = Vec::new();
-    let mut pin = tally::Pin::Canonical;
-    for word in words {
-        if *word == "--ask" {
-            return None;
-        }
-        match word.strip_prefix("--pin=") {
-            Some(form) => pin = pin_form(form),
-            None => paths.push((*word).to_owned()),
-        }
-    }
-    Some(Command::Check { paths, pin })
-}
-
-/// The pin's form a `--pin=` word names: refcore acts only on `bytes` (INTERFACE §8, gap I-4).
-fn pin_form(form: &str) -> tally::Pin {
-    if form == "bytes" {
+    let pin = if rest.contains(&"--pin=bytes") {
         tally::Pin::Bytes
     } else {
         tally::Pin::Canonical
+    };
+    match *first {
+        "run" => Some(run_line(rest, pin)),
+        "check" => Some(Command::Check {
+            paths: paths_of(rest),
+            pin,
+        }),
+        _ => Some(Command::Reprint {
+            paths: paths_of(rest),
+        }),
     }
 }
 
-/// The words after `run`.
-fn run_line(words: &[&str]) -> Command {
+/// The words of `check` or `reprint` but `--pin=bytes`: its paths.
+fn paths_of(words: &[&str]) -> Vec<String> {
+    words
+        .iter()
+        .filter(|word| **word != "--pin=bytes")
+        .map(|word| (*word).to_owned())
+        .collect()
+}
+
+/// The words after `run`, its options already taken: the paths before `--ask`, the ask ids
+/// after it.
+fn run_line(words: &[&str], pin: tally::Pin) -> Command {
     let mut paths = Vec::new();
     let mut asks = Vec::new();
-    let mut pin = tally::Pin::Canonical;
     let mut after_ask = false;
-    for word in words {
+    for word in words.iter().filter(|word| **word != "--pin=bytes") {
         if *word == "--ask" {
             after_ask = true;
-        } else if let Some(form) = word.strip_prefix("--pin=") {
-            pin = pin_form(form);
         } else if after_ask {
             asks.push((*word).to_owned());
         } else {
@@ -682,6 +684,23 @@ mod tests {
             assert_eq!(code, EXIT_USAGE, "{words:?}");
             assert!(text.starts_with("usage: tally run"), "{text}");
         }
+        let options: [&[&str]; 7] = [
+            &["run", "x", "--foo"],
+            &["check", "x", "--foo"],
+            &["reprint", "x", "--ask", "a"],
+            &["reprint", "x", "--pin=zzz"],
+            &["run", "x", "--ask", "a", "--foo"],
+            &["run", "x", "--ask=foo"],
+            &["run", "x", "--pin=zzz", "--ask", "a"],
+        ];
+        for words in options {
+            assert_eq!(out(words, &[]).1, EXIT_USAGE, "{words:?}: S-usage");
+        }
+        assert_eq!(
+            paths(&args(&["reprint", "x", "--pin=bytes"])),
+            ["x"],
+            "reprint takes --pin=bytes"
+        );
         assert_eq!(
             run(&args(&["run"]), b"1:a").code,
             EXIT_USAGE,
