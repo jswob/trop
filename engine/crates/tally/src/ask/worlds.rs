@@ -56,8 +56,9 @@ pub(super) fn realities(w: &Worlds) -> Vec<&Reality> {
 }
 
 /// The turns of a run of a reality with scenarios, after its refused scenarios' lines: each
-/// ask in the world it names, by id then world, or in the order the run names them, a
-/// member's ask (`a.q`) as `Turn::Member` (refcore's `run_worlds`, its `order`). L §6.4, §6.1.
+/// ask in the world it names, by id, then the full path of the file that states it, then its
+/// line (P49), or in the order the run names them, a member's ask (`a.q`) as `Turn::Member`
+/// (refcore's `run_worlds`, its `order`). L §6.4, §6.1; OPERATIONS §2.1, §2.3.
 ///
 /// # Errors
 ///
@@ -69,22 +70,31 @@ pub(super) fn ask_turns(w: &Worlds, asks: &Asks) -> Result<Vec<Turn>, Stop> {
         return Err(Stop::Refused(no_ask(id)));
     }
     let model = w.base.header.id.as_str();
-    // the base's asks from the base, a scenario's from its own reality, by (id, world)
-    let mut keyed: BTreeMap<(&str, &str), (Option<usize>, &Ask)> = BTreeMap::new();
+    // the base's asks from the base, a scenario's from its own reality, by (id, the full path
+    // of its file, its line), the world last (P49)
+    let mut keyed = Vec::new();
     for (at, ask) in w.base.asks.iter().enumerate() {
-        keyed.insert((&ask.id, ""), (Some(at), ask));
+        let Some(file) = w.base.graph.ask_files.get(&ask.id) else {
+            return Err(invariant("an ask with no file"));
+        };
+        keyed.push(((ask.id.as_str(), file, ask.line, ""), (Some(at), ask)));
     }
     for (id, reality) in &w.loaded {
         for ask in &reality.asks {
-            if reality.scenarios.of(&ask.id) == Some(id.as_str()) {
-                keyed.insert((&ask.id, id), (None, ask));
+            if reality.scenarios.of(&ask.id) != Some(id.as_str()) {
+                continue;
             }
+            let Some(file) = reality.graph.ask_files.get(&ask.id) else {
+                return Err(invariant("an ask with no file"));
+            };
+            keyed.push(((ask.id.as_str(), file, ask.line, id.as_str()), (None, ask)));
         }
     }
+    keyed.sort_by(|a, b| a.0.cmp(&b.0));
     let mut turns = Vec::new();
     match asks {
         Asks::Every => {
-            for ((_, world), (at, ask)) in &keyed {
+            for ((_, _, _, world), (at, ask)) in &keyed {
                 turns.push(ask_turn(w, (*at, world), (ask, model))?);
             }
         }
@@ -95,8 +105,8 @@ pub(super) fn ask_turns(w: &Worlds, asks: &Asks) -> Result<Vec<Turn>, Stop> {
                     turns.push(Turn::Member(id.clone()));
                     continue;
                 }
-                for ((_, world), (at, ask)) in keyed.iter().filter(|((a, _), _)| *a == id.as_str())
-                {
+                let of_id = keyed.iter().filter(|((a, ..), _)| *a == id.as_str());
+                for ((_, _, _, world), (at, ask)) in of_id {
                     turns.push(ask_turn(w, (*at, world), (ask, model))?);
                 }
             }
