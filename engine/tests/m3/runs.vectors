@@ -5356,14 +5356,6 @@ a2: 1
 a3: refused: RUN-RECORD observation bank[o1] fulfils pay[2026-03], which doesn't exist or doesn't touch its places
   pinned: flag = 0
   cut 2026-06-30
-,23:t221-gd/208-6-gap-after,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/misc,39:run m1.tally --ask gap_after last_after,37:m1.tally	m3/fixes/t221/misc/m1.tally
-,1:0,290:gap_after: ?"stated[konto] has no reading at 2026-06-20" (stated[konto])
-  cut 2026-06-10
-last_after: 900.00 PLN
-  held: stated[konto] = 900.00 PLN (st), read for 2026-06-25
-  cut 2026-06-10
-warning: WARN-UNREAD input hx is read by nothing
-warning: WARN-UNREAD input lvl is read by nothing
 ,14:t221-gd/216-o0,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,12:run o0.tally,37:o0.tally	m3/fixes/t221/o216/o0.tally
 ,1:0,837:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
   unfulfilled: in1
@@ -5415,25 +5407,6 @@ qa [cut_reading = exact]: 2.00 PLN
 ,1:0,129:fday: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of conv" (w)
   unknown day: w
   cut 2026-01-01
-,17:t221-gd/sign-rule,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/sign,14:run sign.tally,41:sign.tally	m3/fixes/t221/sign/sign.tally
-,1:0,632:s1: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of out_w" (w)
-  unknown day: w
-  cut 2026-01-01
-s2: refused: RUN-PLACE sav is -100.00 PLN after the day's observations and plans of 2026-03-12
-  pinned: w = 2026-03-12
-  cut 2026-01-01
-s3: 0.00 PLN
-  pinned: w = 2026-03-16
-  cut 2026-01-01
-s4: (?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of out_w" (w), ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of out_w" (w), ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of out_w" (w))
-  unknown day: w
-  cut 2026-01-01
-,17:t221-gd/cells-cnt,7:t221-gd,3:run,32:engine/tests/m3/fixes/t221/cells,33:run base.tally sc.tally --ask cnt,80:base.tally	m3/fixes/t221/cells/base.tally
-sc.tally	m3/fixes/t221/cells/sc.tally
-,1:0,234:cnt: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
 ,23:t221-gd/231-2-pin-plain,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/rd4,13:run rd4.tally,38:rd4.tally	m3/fixes/t221/rd4/rd4.tally
 ,1:0,220:r1: 5
   pinned: quote = 5
@@ -5484,33 +5457,6 @@ warning: WARN-UNREAD place world is read by nothing
 ,1:1,74:refused: REQ-CLOCK as known 2027-01-01 is after the model's on 2026-06-10
 ,24:t221-gd/233-c-load-words,7:t221-gd,3:run,30:engine/tests/m3/fixes/t221/new,15:run u233c.tally,42:u233c.tally	m3/fixes/t221/new/u233c.tally
 ,1:1,108:refused: LOAD-UNIT unit of num: a plain number or a compound unit is a key of no unit kind (u233c.tally:22)
-,20:t221-g1/221-C3-arith,7:t221-g1,3:run,33:engine/tests/m3/fixes/t221/arith2,16:run arith2.tally,47:arith2.tally	m3/fixes/t221/arith2/arith2.tally
-,1:0,514:z1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between(w2, w) + days_between(d0, w) > 0" (w) ?"date within window(2026-03-10, 2026-03-12) not precise enough for days_between(w2, w) + days_between(d0, w) > 0" (w2)
-  unknown day: w
-  unknown day: w2
-  cut 2026-01-01
-z2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w) ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w2)
-  unknown day: w
-  unknown day: w2
-  cut 2026-01-01
-,20:t221-g1/214-zero-leg,7:t221-g1,3:run,31:engine/tests/m3/fixes/t221/misc,26:run m1.tally --ask zerowin,37:m1.tally	m3/fixes/t221/misc/m1.tally
-,1:0,232:zerowin: ?"date within window(2026-03-12, 2026-03-14) not precise enough for the day of nul" (w0)
-  unknown day: w0
-  cut 2026-06-10
-warning: WARN-UNREAD input hx is read by nothing
-warning: WARN-UNREAD input lvl is read by nothing
-,19:t221-g1/214-one-day,7:t221-g1,3:run,31:engine/tests/m3/fixes/t221/misc,25:run m1.tally --ask oneday,37:m1.tally	m3/fixes/t221/misc/m1.tally
-,1:0,231:oneday: ?"date within window(2026-03-12, 2026-03-14) not precise enough for the day of nul" (w0)
-  unknown day: w0
-  cut 2026-06-10
-warning: WARN-UNREAD input hx is read by nothing
-warning: WARN-UNREAD input lvl is read by nothing
-,22:t221-g1/218-window-end,7:t221-g1,3:run,31:engine/tests/m3/fixes/t221/w218,23:run a1_window_end.tally,59:a1_window_end.tally	m3/fixes/t221/w218/a1_window_end.tally
-,1:0,536:b: (?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save" (d_save), ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save" (d_save), ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save" (d_save))
-  unknown day: d_save
-  anchor: konto 2026-03-25 end, stated 100.00 PLN, difference ?"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save" (d_save)
-  cut 2026-06-10
-warning: WARN-UNREAD place world is read by nothing
 ,25:t221-g1/220-1-covered-end,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/cov,28:run cov.tally --ask v1 v2 v3,38:cov.tally	m3/fixes/t221/cov/cov.tally
 ,1:0,573:v1: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of pay_x" (w2)
   unknown day: w2
@@ -5549,68 +5495,6 @@ u15: 600.00 PLN
   unfulfilled: pay
   cut 2026-06-10
 warning: WARN-UNREAD input zero is read by nothing
-,28:t221-g1/236-1-differs-nowait,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/win,27:run w1_differs_nowait.tally,66:w1_differs_nowait.tally	m3/fixes/t221/win/w1_differs_nowait.tally
-,1:0,2183:q: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 100.00 PLN
-  law date 2026-06-30, cut 2026-06-30
-q2: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (win_day) ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
-  unknown day: win_day
-  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
-  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
-  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
-  unfulfilled: rent[2026-01]
-  unfulfilled: rent[2026-02]
-  unfulfilled: rent[2026-03]
-  unfulfilled: rent[2026-04]
-  unfulfilled: rent[2026-05]
-  law date 2026-06-30, cut 2026-06-30
-qa1: true
-  law date 2026-03-10, cut 2026-06-30
-qa2: false
-  law date 2026-03-15, cut 2026-06-30
-qe9: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 100.00 PLN
-  law date 2026-06-30, cut 2026-06-30
-qj (d = 2026-01-01): ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (win_day)
-  unknown day: win_day
-  law date 2026-06-30, cut 2026-06-30
-qj (d = 2026-03-09): ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (win_day)
-  unknown day: win_day
-  law date 2026-06-30, cut 2026-06-30
-qj (d = 2026-03-21): ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (win_day)
-  unknown day: win_day
-  law date 2026-06-30, cut 2026-06-30
-qk: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (win_day)
-  unknown day: win_day
-  unfulfilled: rent[2026-01]
-  law date 2026-06-30, cut 2026-06-30
-qw: window(2026-03-10, 2026-03-20)
-  cut 2026-06-30
-warning: WARN-UNREAD input gap_day is read by nothing
-warning: WARN-UNREAD input one_amt is read by nothing
-warning: WARN-UNREAD input zero is read by nothing
-,32:t221-g1/236-1-agree-false-nowait,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/win,31:run w4_agree_false_nowait.tally,74:w4_agree_false_nowait.tally	m3/fixes/t221/win/w4_agree_false_nowait.tally
-,1:0,1185:q: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 100.00 PLN
-  law date 2026-06-30, cut 2026-06-30
-q2: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the law date of shut" (win_day) ?"rent[2026-01] on 2026-01-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-01]) ?"rent[2026-02] on 2026-02-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-02]) ?"rent[2026-03] on 2026-03-01 changed after it was paid (version v2); is back pay due, and when?" (rent[2026-03])
-  unknown day: win_day
-  adjustment: rent[2026-01] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
-  adjustment: rent[2026-02] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
-  adjustment: rent[2026-03] by 50.00 PLN on 2026-03-15 (version v2), remaining 50.00 PLN
-  unfulfilled: rent[2026-01]
-  unfulfilled: rent[2026-02]
-  unfulfilled: rent[2026-03]
-  unfulfilled: rent[2026-04]
-  unfulfilled: rent[2026-05]
-  law date 2026-06-30, cut 2026-06-30
-warning: WARN-UNREAD input gap_day is read by nothing
-warning: WARN-UNREAD input one_amt is read by nothing
-warning: WARN-UNREAD input zero is read by nothing
-,19:t221-g1/221-C2-list,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/p25,18:run p25_list.tally,48:p25_list.tally	m3/fixes/t221/p25/p25_list.tally
-,1:0,241:a: [?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1]
-  unknown day: w
-  cut 2026-01-01
-b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w)
-  unknown day: w
-  cut 2026-01-01
 ,24:t221-g1/window-key-month,7:t221-g1,3:run,29:engine/tests/m3/fixes/t221/fx,31:run fx.tally --ask fmonth f1 f3,35:fx.tally	m3/fixes/t221/fx/fx.tally
 ,1:0,485:fmonth: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of convm" (w)
   unknown day: w
@@ -5625,85 +5509,6 @@ f3: 800.00 PLN
 ,1:0,130:ftwo: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of convm" (w)
   unknown day: w
   cut 2026-01-01
-,19:t221-g1/from-across,7:t221-g1,3:run,31:engine/tests/m3/fixes/t221/from,49:run base.tally sc.tally --ask s_after s_d28 s_d02,78:base.tally	m3/fixes/t221/from/base.tally
-sc.tally	m3/fixes/t221/from/sc.tally
-,1:0,1777:s_after: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa) ?"date within window(2026-04-28, 2026-05-03) not precise enough for the day of extra" (w)
-  unknown day: w
-  unknown day: wa
-  unknown day: wb
-  world: sc
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa) ?"date within window(2026-04-28, 2026-05-03) not precise enough for the day of extra" (w)
-  cut 2026-06-10
-s_d28: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  pinned: w = 2026-04-29
-  unknown day: wa
-  unknown day: wb
-  world: sc
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  left out: extra, 1 instances, first 2026-04-29
-  cut 2026-06-10
-s_d02: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  pinned: w = 2026-05-02
-  unknown day: wa
-  unknown day: wb
-  world: sc
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unfulfilled: extra
-  cut 2026-06-10
-,18:t221-g1/from-after,7:t221-g1,3:run,31:engine/tests/m3/fixes/t221/from,29:run base.tally sc_after.tally,90:base.tally	m3/fixes/t221/from/base.tally
-sc_after.tally	m3/fixes/t221/from/sc_after.tally
-,1:0,1909:b20: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  cut 2026-06-10
-cnt: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
-fl: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
-fst: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
-s_after: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa) ?"date within window(2026-05-10, 2026-05-12) not precise enough for the day of extra" (wx)
-  unknown day: wa
-  unknown day: wb
-  unknown day: wx
-  world: sc
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa) ?"date within window(2026-05-10, 2026-05-12) not precise enough for the day of extra" (wx)
-  cut 2026-06-10
-warning: WARN-UNREAD input w is read by nothing
-,19:t221-g1/from-before,7:t221-g1,3:run,31:engine/tests/m3/fixes/t221/from,30:run base.tally sc_before.tally,92:base.tally	m3/fixes/t221/from/base.tally
-sc_before.tally	m3/fixes/t221/from/sc_before.tally
-,1:0,1910:b20: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  cut 2026-06-10
-cnt: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
-fl: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
-fst: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa)
-  unknown day: wa
-  unknown day: wb
-  cut 2026-06-10
-s_before: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa) ?"date within window(2026-04-20, 2026-04-22) not precise enough for the day of extra" (wx)
-  unknown day: wa
-  unknown day: wb
-  unknown day: wx
-  world: sc
-  anchor: konto 2026-03-20 end, stated 650.00 PLN, difference ?"date within window(2026-03-10, 2026-03-12) not precise enough for the day of pb" (wb) ?"date within window(2026-03-28, 2026-04-02) not precise enough for the day of pa" (wa) ?"date within window(2026-04-20, 2026-04-22) not precise enough for the day of extra" (wx)
-  cut 2026-06-10
-warning: WARN-UNREAD input w is read by nothing
 ,28:t221-rc/221-10-mean-quantile,7:t221-rc,3:run,30:engine/tests/m3/fixes/t221/new,14:run agg2.tally,40:agg2.tally	m3/fixes/t221/new/agg2.tally
 ,1:0,325:m: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a term of mean" (wd[k1])
   unknown day: wd[k1]
@@ -5729,11 +5534,6 @@ warning: WARN-UNREAD input d_20 is read by nothing
 warning: WARN-UNREAD input d_25 is read by nothing
 warning: WARN-UNREAD input d_6 is read by nothing
 warning: WARN-UNREAD input d_jan is read by nothing
-,24:t221-g2/208-2-unread-pin,7:t221-g2,3:run,31:engine/tests/m3/fixes/t221/misc,25:run m1.tally --ask refpin,37:m1.tally	m3/fixes/t221/misc/m1.tally
-,1:0,158:refpin: refused: RUN-DIV division by zero
-  cut 2026-06-10
-warning: WARN-UNREAD input hx is read by nothing
-warning: WARN-UNREAD input lvl is read by nothing
 ,21:t221-g2/208-5-assumed,7:t221-g2,3:run,32:engine/tests/m3/fixes/t221/cbase,34:run c_base.tally --ask q2 q_decide,46:c_base.tally	m3/fixes/t221/cbase/c_base.tally
 ,1:0,369:q2: refused: RUN-ORDER decisions save and spend read each other on 2026-04-15
   assumed: the card names no holiday (holidays)
@@ -5768,12 +5568,6 @@ warning: WARN-UNREAD place world is read by nothing
   pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 0.00 PLN
   open: pay_x
   cut 2026-04-20
-,22:t221-g2/221-1-late-pin,7:t221-g2,3:run,31:engine/tests/m3/fixes/t221/misc,26:run m1.tally --ask p_after,37:m1.tally	m3/fixes/t221/misc/m1.tally
-,1:0,161:p_after: 500.00 PLN
-  pinned: w = 2026-03-06
-  cut 2026-06-10
-warning: WARN-UNREAD input hx is read by nothing
-warning: WARN-UNREAD input lvl is read by nothing
 ,20:t221-g2/221-5-timing,7:t221-g2,3:run,30:engine/tests/m3/fixes/t221/cov,22:run cov.tally --ask v4,38:cov.tally	m3/fixes/t221/cov/cov.tally
 ,1:0,1106:v4: residuals konto 2026-03 .. 2026-04
   ?: model 100.00 PLN, observed 0.00 PLN, difference -100.00 PLN
@@ -6066,123 +5860,11 @@ s3.tally	m3/fixes/t221/sw/s3.tally
 scenario s3: refused: LOAD-WORLD ask q_plain in a scenario file names no world (s1.tally:13)
 ,26:t221-rc/r18-c2-read-in-key,7:t221-rc,3:run,30:engine/tests/m3/fixes/t221/r18,15:run r18c2.tally,42:r18c2.tally	m3/fixes/t221/r18/r18c2.tally
 ,1:1,89:refused: LOAD-LAWDATE ask q reads law-dated dpick directly, without law (r18c2.tally:30)
-,17:t221-g1/rv-b1-pow,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,16:run b1_pow.tally,44:b1_pow.tally	m3/fixes/t221/rv1/b1_pow.tally
-,1:0,670:pl: ?"date within window(2026-01-01, 2027-06-01) not precise enough for a print" (wl)
-  unknown day: wl
-  cut 2026-01-01
-pl_a: 1
-  pinned: wl = 2026-01-01
-  cut 2026-01-01
-pl_b: -1
-  pinned: wl = 2026-01-02
-  cut 2026-01-01
-pl_cmp: ?"date within window(2026-01-01, 2027-06-01) not precise enough for pow(m1, days_between(de, wl)) > 0" (wl)
-  unknown day: wl
-  cut 2026-01-01
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input d1 is read by nothing
-warning: WARN-UNREAD input mm is read by nothing
-warning: WARN-UNREAD input n100 is read by nothing
-warning: WARN-UNREAD input n2 is read by nothing
-warning: WARN-UNREAD input w is read by nothing
-,19:t221-g1/rv-b2-dayof,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,18:run b2_dayof.tally,48:b2_dayof.tally	m3/fixes/t221/rv1/b2_dayof.tally
-,1:0,614:dofh: ?"date within window(2026-03-10, 2026-03-12) not precise enough for day_of" (w)
-  unknown day: w
-  cut 2026-01-01
-dofh_a: refused: RUN-NOT-INT 4.5 is not an integer
-  pinned: w = 2026-03-10
-  cut 2026-01-01
-dofh_b: 2026-02-05
-  pinned: w = 2026-03-11
-  cut 2026-01-01
-dofh_c: refused: RUN-NOT-INT 5.5 is not an integer
-  pinned: w = 2026-03-12
-  cut 2026-01-01
-warning: WARN-UNREAD input d0 is read by nothing
-warning: WARN-UNREAD input de is read by nothing
-warning: WARN-UNREAD input m1 is read by nothing
-warning: WARN-UNREAD input n100 is read by nothing
-warning: WARN-UNREAD input wl is read by nothing
-,17:t221-g1/rv-b3-div,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,16:run b3_div.tally,44:b3_div.tally	m3/fixes/t221/rv1/b3_div.tally
-,1:0,561:dvc: ?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w)
-  unknown day: w
-  cut 2026-01-01
-dvc_a: false
-  pinned: w = 2026-03-10
-  cut 2026-01-01
-dvc_b: refused: RUN-DIV division by zero
-  pinned: w = 2026-03-11
-  cut 2026-01-01
-dvc_c: false
-  pinned: w = 2026-03-12
-  cut 2026-01-01
-warning: WARN-UNREAD input de is read by nothing
-warning: WARN-UNREAD input m1 is read by nothing
-warning: WARN-UNREAD input mm is read by nothing
-warning: WARN-UNREAD input n2 is read by nothing
-warning: WARN-UNREAD input wl is read by nothing
 ,22:t221-g1/rv-b5-two-cuts,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,15:run inv_b.tally,42:inv_b.tally	m3/fixes/t221/rv1/inv_b.tally
 ,1:0,254:k07: ?"date within window(2026-03-05, 2026-03-20) not precise enough for the day of pay" (w)
   unknown day: w
   cut 2026-03-07
 now: ?"date within window(2026-03-05, 2026-03-20) not precise enough for the day of pay" (w)
-  unknown day: w
-  cut 2026-06-10
-,19:t221-g1/rv-n2-round,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,92:run e2.tally --ask r_agree r_agree_a r_agree_b r_agree_c r_cmp r_cmp_a r_cmp_c r_ref r_ref_a,36:e2.tally	m3/fixes/t221/rv1/e2.tally
-,1:0,781:r_agree: 0
-  cut 2026-01-01
-r_agree_a: 0
-  pinned: w = 2026-03-10
-  cut 2026-01-01
-r_agree_b: 0
-  pinned: w = 2026-03-11
-  cut 2026-01-01
-r_agree_c: 0
-  pinned: w = 2026-03-12
-  cut 2026-01-01
-r_cmp: true
-  cut 2026-01-01
-r_cmp_a: true
-  pinned: w = 2026-03-10
-  cut 2026-01-01
-r_cmp_c: true
-  pinned: w = 2026-03-12
-  cut 2026-01-01
-r_ref: refused: RUN-DOMAIN round with a step 0 that is not positive
-  cut 2026-01-01
-r_ref_a: refused: RUN-DOMAIN round with a step 0 that is not positive
-  pinned: w = 2026-03-10
-  cut 2026-01-01
-warning: WARN-UNREAD input n18 is read by nothing
-warning: WARN-UNREAD input n20 is read by nothing
-warning: WARN-UNREAD input n5 is read by nothing
-warning: WARN-UNREAD input w1 is read by nothing
-warning: WARN-UNREAD place konto is read by nothing
-,25:t221-g1/rv-n4-known-after,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,21:run bk_20260321.tally,54:bk_20260321.tally	m3/fixes/t221/rv1/bk_20260321.tally
-,1:0,1279:a20260331: ?"date within window(2026-03-05, 2026-03-20) not precise enough for the day of pay" (w)
-  unknown day: w
-  cut 2026-06-10
-a20260331_p20260305: ?"pay on 2026-03-05 changed after it was paid (version a1); is back pay due, and when?" (pay)
-  pinned: w = 2026-03-05
-  adjustment: pay by 50.00 PLN on 2026-03-21 (version a1), remaining 50.00 PLN
-  unfulfilled: pay
-  cut 2026-06-10
-a20260331_p20260306: ?"pay on 2026-03-06 changed after it was paid (version a1); is back pay due, and when?" (pay)
-  pinned: w = 2026-03-06
-  adjustment: pay by 50.00 PLN on 2026-03-21 (version a1), remaining 50.00 PLN
-  unfulfilled: pay
-  cut 2026-06-10
-a20260331_p20260319: ?"pay on 2026-03-19 changed after it was paid (version a1); is back pay due, and when?" (pay)
-  pinned: w = 2026-03-19
-  adjustment: pay by 50.00 PLN on 2026-03-21 (version a1), remaining 50.00 PLN
-  unfulfilled: pay
-  cut 2026-06-10
-a20260331_p20260320: ?"pay on 2026-03-20 changed after it was paid (version a1); is back pay due, and when?" (pay)
-  pinned: w = 2026-03-20
-  adjustment: pay by 50.00 PLN on 2026-03-21 (version a1), remaining 50.00 PLN
-  unfulfilled: pay
-  cut 2026-06-10
-fl: ?"date within window(2026-03-05, 2026-03-20) not precise enough for the day of pay" (w)
   unknown day: w
   cut 2026-06-10
 ,22:t221-g1/rv-n5-month-of,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,12:run so.tally,36:so.tally	m3/fixes/t221/rv1/so.tally
@@ -6198,42 +5880,6 @@ so_c: ?"date within window(2026-02-20, 2026-03-10) not precise enough for start_
   cut 2026-01-01
 yo: 2026-01-01
   cut 2026-01-01
-,21:t221-g1/rv-n6-div-one,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,44:run e2.tally --ask dv1 dv1_b dve dve_a dve_c,36:e2.tally	m3/fixes/t221/rv1/e2.tally
-,1:0,713:dv1: ?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w)
-  unknown day: w
-  cut 2026-01-01
-dv1_b: refused: RUN-DIV division by zero
-  pinned: w = 2026-03-11
-  cut 2026-01-01
-dve: ?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w)
-  unknown day: w
-  cut 2026-01-01
-dve_a: 1
-  pinned: w = 2026-03-10
-  cut 2026-01-01
-dve_c: refused: RUN-DIV division by zero
-  pinned: w = 2026-03-12
-  cut 2026-01-01
-warning: WARN-UNREAD input n18 is read by nothing
-warning: WARN-UNREAD input n20 is read by nothing
-warning: WARN-UNREAD input n5 is read by nothing
-warning: WARN-UNREAD input w1 is read by nothing
-warning: WARN-UNREAD place konto is read by nothing
-,25:t221-g1/rv-n8-reading-day,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,88:run c1.tally --ask a20260402 a20260402_p20260330 a20260402_p20260402 a20260402_p20260403,36:c1.tally	m3/fixes/t221/rv1/c1.tally
-,1:0,680:a20260402: ?"date within window(2026-03-30, 2026-04-03) not precise enough for the day of pay_x" (w2)
-  unknown day: w2
-  anchor: konto 2026-04-02 end, stated 700.00 PLN, difference ?"date within window(2026-03-30, 2026-04-03) not precise enough for the day of pay_x" (w2)
-  cut 2026-04-20
-a20260402_p20260330: 700.00 PLN
-  anchor: konto 2026-04-02 end, stated 700.00 PLN, difference 105.00 PLN
-  cut 2026-04-20
-a20260402_p20260402: 700.00 PLN
-  anchor: konto 2026-04-02 end, stated 700.00 PLN, difference 5.00 PLN
-  cut 2026-04-20
-a20260402_p20260403: 700.00 PLN
-  pinned: w2 = 2026-04-03
-  anchor: konto 2026-04-02 end, stated 700.00 PLN, difference 105.00 PLN
-  cut 2026-04-20
 ,21:t221-g1/rv-n9-overlap,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,38:run e2.tally --ask ovw ovw_a dbw dbw_c,36:e2.tally	m3/fixes/t221/rv1/e2.tally
 ,1:0,378:ovw: 1
   cut 2026-01-01
@@ -6248,14 +5894,6 @@ warning: WARN-UNREAD input n18 is read by nothing
 warning: WARN-UNREAD input n20 is read by nothing
 warning: WARN-UNREAD input n5 is read by nothing
 warning: WARN-UNREAD input w1 is read by nothing
-warning: WARN-UNREAD place konto is read by nothing
-,22:t221-g1/rv-p25-abs-pow,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,31:run p25_round.tally --ask a1 p1,50:p25_round.tally	m3/fixes/t221/rv1/p25_round.tally
-,1:0,290:a1: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w)
-  unknown day: w
-  cut 2026-01-01
-p1: ?"date within window(2026-03-10, 2026-03-12) not precise enough for a print" (w)
-  unknown day: w
-  cut 2026-01-01
 warning: WARN-UNREAD place konto is read by nothing
 ,19:t221-g1/rv-p26-from,7:t221-g1,3:run,30:engine/tests/m3/fixes/t221/rv1,65:run w1_base.tally w1_sc.tally --ask b0430 b0501 b0531 p0501 p0503,88:w1_base.tally	m3/fixes/t221/rv1/w1_base.tally
 w1_sc.tally	m3/fixes/t221/rv1/w1_sc.tally
@@ -6286,13 +5924,6 @@ p0503: 650.00 PLN
 ,1:0,130:qn: refused: RUN-NONE lvl is none here: the level of quantile
   cut 2026-06-10
 warning: WARN-UNREAD input zero is read by nothing
-,25:t221-g3/221-2-two-windows,7:t221-g3,3:run,31:engine/tests/m3/fixes/t221/misc,22:run m1.tally --ask two,37:m1.tally	m3/fixes/t221/misc/m1.tally
-,1:0,334:two: (true, false, ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w) ?"date within window(2026-03-12, 2026-03-14) not precise enough for a print" (w0))
-  unknown day: w
-  unknown day: w0
-  cut 2026-06-10
-warning: WARN-UNREAD input hx is read by nothing
-warning: WARN-UNREAD input lvl is read by nothing
 ,27:t221-g3/221-3-two-calendars,7:t221-g3,3:run,30:engine/tests/m3/fixes/t221/g3t,18:run cal221_3.tally,48:cal221_3.tally	m3/fixes/t221/g3t/cal221_3.tally
 ,1:0,465:c3: ?"date within one_of([2026-06-22, 2026-06-24]) not precise enough for is_business(2026-06-22, cal1)" (cal1) ?"date within one_of([2026-06-22, 2026-06-24]) not precise enough for is_business(2026-06-24, cal2)" (cal2)
   unknown day: added one_of([2026-06-22, 2026-06-24]) of cal1
