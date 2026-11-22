@@ -6424,3 +6424,29 @@ Branch `build/2.3` after G1's last fix (0418acad). The plan: `tmp/spec-2.3/input
 - **Checks at 52f96f4e's tree:**
   - `check quick: green, 11 steps (12s)`, with this entry.
   - `check commit: red at tests, stopped after 10 of 24 steps (143s)`: the 176 ids above. `doc` (5s), `build` (17s), `special-casing` (7s) and `fuzz-build` (4s) green alone.
+
+## 2026-11-22 tally 2.3 G1, a field a later version changes (pick P12, issue #247)
+
+T's pin oracle found a field read of a hole-day instance that prints the latest amount where every pinned day before the version's `known` prints the booked one; the lead ruled pick P12. Branch `build/2.3` after G3's 843dea2e; G3's code untouched. Not pushed: **waiting for T and the pin.**
+
+**4ac2c3b4:**
+- **The rule** (`book/members.rs` `mv_field` and the new `changed_leg`): a leg of an instance whose day is a hole, which a later version known by the read's cut changes, is read as that hole: its amount and day, its `from` and `to` too where the version moves them. A leg no version changes stays a value. Which legs change is C-4's measure (P10): an adjustment of that leg among `unsure_of`'s, whose existence is the day's hole. Under a hole `at`, or for a hole-day decision, every field was the instance's hole already (H1).
+- **The record** is `same_leg_record`'s, its doc widened to name this use.
+- **Unit test** `a_field_of_a_hole_day_instance_a_later_version_changes_is_its_hole`, seen red first: it printed `amt: 150.00 PLN`.
+
+**The probe** (`g1fix/probes/hd1raise.tally`, `hd1`'s twin: a version `raise` known 2026-03-15 replaces `pay` 100.00 → 150.00 PLN; `pay_x` on `pd = ?`, `pay_w` on a window of March):
+- `amt_x` (`pay_x.cash.amount`): `150.00 PLN` → `?"which day is the pay?" (pd)`.
+- `amt_x_p10` (`pd` pinned 2026-03-10): `100.00 PLN`. `amt_x_p20` (pinned 2026-03-20): `150.00 PLN`. `amt_x_k` (`as known 2026-03-01`): `100.00 PLN`. All unchanged.
+- `amt_w`: `150.00 PLN` → `?"date within window(2026-03-01, 2026-03-31) not precise enough for the day of pay_w" (w)` with `unknown day: w`. Its pins give `100.00` and `150.00 PLN`.
+- `from_x`, `from_w` (`.cash.from`, which the version doesn't change): `world` unpinned and pinned, unchanged.
+
+**The sweep** (`g1fix/sweep.sh`, `cmp.py`, w2 = `refcore-w2`): 124 texts (both reviews' probes and mine), 2 310 asks on this tree. **2 asks changed:** `hd1raise` `amt_x` and `amt_w`, above, both from the same as w2 to different. w2 still prints the latest amount there, which its third group mends. No other ask moved, BF1's texts included (w2's `RUN-ORDER` there stands as before).
+
+- **Size** (`git diff --shortstat 843dea2e..4ac2c3b4 -- engine/crates`): 1 file, +142/−3. The unit test and its text are about 95 of the lines in.
+- **`check commit`'s red ids** (`g1fix/red-ids-3.txt`): 176, **the same 176 as G3's entry** (`g3/red-ids.txt`). None new, none gone.
+- **Exceptions:** +0.
+- **Open STOP-REPORTs:** none of this turn's.
+- **Usage:** about 1.78 % of the week before this entry (1.71 % at the turn's start), against about 0.3 %.
+- **Checks at 4ac2c3b4's tree:**
+  - `check quick: green, 11 steps (78s)`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (72s)`: the 176 ids. `doc` green alone.
