@@ -6346,3 +6346,37 @@ The review is `tmp/spec-2.3/inputs/review-g1.md` (blocking 2), its probes `input
 - **Checks at 7438fef0's tree:**
   - `check quick: green, 11 steps (81s)`.
   - `check commit: red at tests, stopped after 10 of 24 steps (85s)`: the 130 ids above; `doc` and `build` green alone.
+
+## 2026-11-22 tally 2.3 G1, the last fix: one statement for a hole-day instance (issue #247)
+
+The fix's review is `tmp/spec-2.3/inputs/review-g1fix.md` (blocking 2: BF1, BF2; notes N-a to N-g), its probes `inputs/review/g1fix/`; the lead's statement is pick P10 (H1, members and fields; H2, adjustments). Branch `build/2.3` after 75e7f736. One commit. Not pushed: **waiting for T and the pin.**
+
+**6b02ebbf, P10:**
+- **H1** (`book/members.rs`): an instance whose day is a hole is never waited for. `instance_by_id` gives the unrun instance where its day is a hole, where it refused `RUN-ORDER` inside a decision's walk. `mv_field` reads a field other than `day` as the instance's hole where the plan pass read none of its fields (`unread_hole`: a decision, which never runs without a day; any instance under a hole `at`). A plain move's legs under a hole day are read as before.
+- **H2** (`book/adjust.rs`): under a hole `at`, a step makes adjustments only where one of its versions touches what the move names (`named_reads`). That set is, from the move's node and its day's node in the item graph, every input reached through defs and the other items they read, plus the indexes of its keys (every index where a def is reached). A step touches it by stating a row or a reading of one of those inputs, or by adding a key to one of those indexes. Reaching the balances makes every version touch it. Elsewhere there is no adjustment (E §5 step 2).
+- **N-e:** the adjustments are built by `make`, through a `Step`.
+- **N-f:** the doc cites L §5.14 `at e` with §4.4 (an `at` that gives a window is a hole `at`) and E §5 steps 1 and 2.
+- **The picks:** "#235's P30" and "#235's P31" in `walk/tuples.rs` (6), `load/lawdates.rs` (3), `load/binds.rs` and `model/decl.rs`.
+- **The first try** was green on `check quick` but red on `check commit`'s exceptions step: two report-only patterns (nested closures in `touched_by`, a lifetime on `unread_hole`). Both were restructured (loops; the hole cloned) before the commit was final. The sweep didn't move.
+- **Unit tests,** both seen red first:
+  - `a_field_of_a_hole_day_decision_is_its_hole_never_run_order` (it printed `f: refused: RUN-ORDER …`).
+  - `a_version_that_touches_nothing_a_hole_at_move_reads_adjusts_nothing` (it printed the law date's hole).
+
+**The sweep** (`g1fix/sweep.sh`, `cmp.py`; w2 = `refcore-w2`): 123 texts (the first review's 83, this review's 40 with `b2f`'s two scenarios), 2 341 asks, on the engine before (`t0`) and after (`t1`, `t2`). **12 asks changed, every one by P10:**
+- **BF1, 8 asks, from the same as w2 to different:** `b1/b1h` and `b1hq` `f` and `b`, `b1/b1f` and `b1fq` `ft` and `tb` (the same read: `top`'s amount sums the sweeps' `cash.amount`). Each went from `refused: RUN-ORDER decision sweep is read before it has run` to the hole of `dd`: `?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep" (dd)` with `unknown day: dd` (the `q` twins `?"which day?" (dd)`). The pinned days print `f_p4`, `f_p6`, `b_p5`, `ft_p5`, `tb_p4`, `tb_p6` `100.00 PLN`. w2 still prints `RUN-ORDER`, the difference the brief expects.
+- **BF2, 4 asks, from different to the same as w2:** `b2/b2b`, `b2bq`, `b2a` and `b2aq` `n`, from the law date's hole to `0`, as w2, every pin (`n_p01`, `n_p05` `0`) and the hole-`on` twin `b2bon`.
+- **Kept:**
+  - N-c (`b2/b2c` `wb`): the law date's hole; `wb_p03` `0`; w2 `0`.
+  - N-d (`b2/b2f` `n2`, world `s2`): the hole; `n2_p03` `0`; w2 `0`.
+  - Both keep the hole because `amt` and `dd` are in the named set. Refcore follows.
+- **Not moved:** `f/f9q`'s hole (w2 `0`, the known `?`-law-date difference). Every other ask is the same bytes as before.
+
+- **Size** (`git diff --shortstat 75e7f736..6b02ebbf -- engine/crates`): 6 files, +329/−50; the two unit tests and their texts are about 140 of the lines in.
+- **`check commit`'s red ids** (`g1fix/red-ids-2.txt`): 130, **the same 130** as G2's list (G1's 83 stored window vectors and G2's 47). None new, none gone.
+- **Not this turn's:** N-a, N-b, N-g (the old rule for plain moves; the follow-up issue).
+- **Exceptions:** +0 (the lock untouched; the two report-only patterns restructured away).
+- **Open STOP-REPORTs:** none of this turn's.
+- **Usage:** about 1.68 % of the week before this entry (1.45 % at the turn's start), against about 0.4 %.
+- **Checks at 6b02ebbf's tree:**
+  - `check quick: green, 11 steps (12s)`, with this entry (before the restructure: `(95s)`).
+  - `check commit: red at tests, stopped after 10 of 24 steps (163s)`: the 130 ids above. `doc` and `build` green alone.
