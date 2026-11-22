@@ -6541,3 +6541,61 @@ T's vectors found a defect of the cut. When observations fulfil an instance whos
   - T: in `m3_oracle.rs`, `checked_add` with a refusal, or a counter that needs none, in place of the nine `saturating_add` calls; and `t23-g1` added to the runner test's list of groups.
   - The lead: whether `t23-g1/ledger-fulfilled` and `t23-g1/ledger-span` are to hold the engine's `pinned:` line (the lead's ruling) in their stored lines. Until then they stay red on it alone.
 - **State:** the last green-by-my-steps commit is 4d4f3d0e (the fix), and this entry's commit follows it. Nothing is uncommitted but `tmp/`. Not pushed.
+
+## 2026-11-22 tally 2.3 G1, T's oracle texts against the third pin (issue #247)
+
+T compared the pin oracle's 75 texts on both interpreters (`tmp/spec-2.3/inputs/oradiff.txt`, second pin: 15 answer lines, 37 register lines). I extracted the texts from a copy of `properties/oracle.corpus` (`g1/ora/ora.py`, nine fields a record) and ran both on them. The oracle here is the third pin's refcore (`engine/tools/refcore_fast`, at e08b4c4a). The engine before is e08b4c4a's build. Register lines are counted with T's words (`m3_oracle.rs`'s `REGISTER`). On this refcore, before this turn: 3 answer lines and 12 register lines differed.
+
+**1. `o_when_gone_*` line 4, `pw.cash.amount`: equal, no change.**
+- Both now print `pw`'s day's hole unpinned. Refcore moved, so the second pin's `100.00 PLN` is gone.
+- Pinned days, the same on both:
+  - `_0`: 2026-05-13 prints `100.00 PLN`; 05-14 to 05-17 are `RUN-NONE pw doesn't exist: a field read of it`.
+  - `_1`: 2028-02-26 to 02-28 print `100.00 PLN`; 02-29 and 03-01 are `RUN-NONE`.
+  - `_2`: 2028-02-28 prints `100.00 PLN`; 02-29 and 03-01 are `RUN-NONE`.
+- No two days that aren't refused differ. By the brief's test the value would stand, but refcore prints the hole. Its reading is P12's: version `gone` (known 2026-05-14) makes `when` false, which is an adjustment of the leg whose existence is the hole (ruling 11), so the amount is a field a later version changes.
+- Ruling 15 (a field read of a movement whose `when` is a hole prints its amount) reads the other way. **For the lead:** rulings 11 with P12, and 15, meet here. I followed the oracle, which equals the engine.
+
+**2. `o_decision_*` line 7, `count(m in transfers over M where m.cash.to == other)`: mended (dd753cd3).**
+- Pinned days, the same on both before the fix: every day of each window prints `1`, with `unfulfilled: px`, so `pw` never counts. Unpinned, refcore printed `1`; the engine printed the hole with `unknown day: w`.
+- **The cause:** `pw` is a decision whose day is a hole, a binding's member with that hole (B1). P10's H1 made every field of it but `day` the hole, so the `where` on `m.cash.to` was the hole.
+- **Refcore** (`movements_of`, `hole_day_dec_body`): a binding reads such a member's legs as a refused instance's places are read, with each amount and day the day's hole. The `where` is then decided, and a member it fails is counted on no day (ruling 14).
+  - The body lives on the binding's member record alone. Read by its name (`pw.cash.to`), the field stays the hole (`_body_hole`), even in an ask after a binding met it (probe `g1/ora/probes/dec_direct`, d1 and d3).
+- **The engine:**
+  - `Engine::hole_day_legs` (`walk/plan.rs`, beside `refused_places`) reads the places through `leg_ends` at the read's cut, in a collector of its own whose reads reach no reader. A place that can't be read leaves the field the hole.
+  - `span_members` marks a member value of such a decision (`MvRef.member`).
+  - `mv_field`'s unread-hole branch (`unread_field`) reads a leg of a marked member as `same_leg_record`: its places, with its amount and day the hole. Every other read stays the hole.
+  - Movements still compare by id (`eval/expr.rs`), so the mark changes no `==`. `leg_unit_static` is now `pub(super)`.
+- **For the lead:** a field now depends on how the movement was reached (a binding's member reads `konto`; `pw.cash.to` reads the hole), as in refcore. Ruling 14's words ("a field read gives the value where the plan pass has it") would let a read by name give the place too. That would be a refcore change first; I matched the oracle.
+- **Unit test** `a_where_on_a_hole_day_decisions_places_is_decided` (`book/members.rs`, three asks added to `SWEEP`): `w_to` is `0`; `w_from` and `d_to` are the window's hole. On e08b4c4a's build, the same text printed the hole for `w_to` (probe `sweep_where`). Refcore prints the test's lines.
+
+**3. `o_register_*` (12 register lines): equal on this refcore, no change.** Neither interpreter lists `assumed: a guess (amt)` under a hole line now; the pinned `l09` lines agree too. With no difference left, I didn't trace the age question.
+
+**4. `o_ledger_*`** is equal now: refcore prints `pinned:`. **`o_same_*`'s 9 lines are #245's `unfulfilled: pd`**, as expected.
+
+**After the fix, against this refcore:** 0 answer lines and 9 register lines differ, all `o_same`'s: `o_same_0` 0/3, `o_same_1` 0/3, `o_same_2` 0/3. 72 of the 75 texts are byte-equal. The fix moved only the three `o_decision` texts, each to byte-equal.
+
+**The sweep** (`g1fix/sweep-pin3.sh`, `cmp2.py`; the reference is this refcore, in `sweep/pin3/`). It covers both reviews' probes, mine, and copies of T's six texts. The engine before is e08b4c4a's build, after is dd753cd3's.
+- 130 texts, 2 603 asks. **0 asks moved.**
+- 70 asks differ from this refcore before and after:
+  - 64 are on 7 texts the engine answers `tally run: not implemented`: `critic-p1`, `c-c11`, `critic-at_prices`, `e-e3`, `e-e1w`, `e-e1q`, `c-c19`.
+  - 6 are #245's `unfulfilled:`, in `b-b4w`, `b-b4q` and `t23-se_w_eq`.
+- T's six texts now differ only on `se_w_eq`'s `b_mar` and `f_mar` (#245). The ledger texts' pinned asks equal refcore.
+
+**T's runner and gating** (`check group dev-gating`, once; red at `gating`, 242 s; `runner` is green). 18 of 572 tests are red, holding **61 ids** (`g1/ora/red-full.txt`): 59 vectors and 2 model formats. Every one is a text that writes a window or a `one_of`, stored before the third pin, waiting for T's re-run. By form:
+- 20 are refused `LOAD-PARSE … expected a day or a hole, got window`, a window where G3's form writes a day or a hole: `carried/steps` ×9, `fixes/g12` ×3, `fixes/g2/p3_e1`, `p3_e2`, `p4_f1`, `p4_f2`, `p4_f3`, `fixes/gate8/m2_g3_fix2_c2`, `items/windows/m`, `r3/l4_4_windows_added_entries`.
+- 5 are refused `LOAD-PARSE … got one_of` (G3 dropped `one_of`): `fixes/t22/rv4_b2_pin_calendar`, `rv4_b2_pins`, `unknown_day_names`, `t221-g3/221-3-two-calendars`, `221-6-held-calendar`.
+- 4 are `LOAD-SCENARIO`: `fixes/g2/p1_a1`, `a2`, `a3`, `a10`.
+- 25 are window holes whose answer moved at the third pin: `fixes/g13` ×15, `fixes/gate8/m2_g2_rw` and `m2_g2_rw_m4`, `fixes/p60/sum_days_win`, `fixes/t22/list_window_name`, `r3/l4_4_windows_per_day`, `t221-g1` ×3, `t221-gd/221-10-agg-window`, `t221-rc/221-10-mean-quantile`.
+- 5 are registers: `t23-g1/ledger-fulfilled` and `ledger-span` (`pinned: w = 2026-04-05`, which refcore now prints), `t22/rv4_pin_copy`, `rv4_pin_copy_alone` and `t221-g3/221-C1-min-window`.
+- 2 are model formats: `I:M:CB-07` and `I:M:LH-01`. Both write windows, and T changed both in 86e34c97.
+
+None writes no window, no `one_of` and no reader off the list.
+
+- **Size** (`git diff --shortstat e08b4c4a..dd753cd3 -- engine/crates`): 8 files, +148/−16. The unit test and its asks are about 30 of the lines.
+- **Exceptions:** +0.
+- **STOP-REPORTs:** last turn's (`check quick` red at ast-grep-scan on T's `m3_oracle.rs`, and the runner's group list) is closed: T fixed both (e24cad13), and `check quick` is green. None new.
+- **Usage:** about 2.32 % of the week by `engine/tools/usage` before this entry (2.02 % at the turn's start), against about 0.5 %.
+- **Next:** T's re-run of every store on the third pin, its merge, then a green `check commit`.
+- **Checks at dd753cd3's tree:**
+  - `check quick: green, 11 steps (96s)`.
+  - `check group dev-gating: red, 1 of 3 steps failed (242s)`: the 61 ids above.
