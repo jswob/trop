@@ -1,0 +1,70 @@
+# L §4.4 A movement takes a day, §5.19 Holes, §5.14.2 (tally 2.3, #247; the plan's S6, planner/hd/hd2.tally with
+# windows for its ? days): a decision dated by a window is a hole day, its place the hole on every day, a pin of its cell
+# answering it (s_pin); a plan dated by a window and fulfilled by an observation is answered by it once the statement
+# is known (L §5.19: the observation gives the day), the hole at a cut before. Before: the decision's window kept its
+# stretch (s_jan 500.00 PLN).
+=== m.tally
+model hd2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+place unexplained: outside lives 1900-01-01..
+input pay: money PLN
+input pd: date
+input dd: date
+input bank: observed
+move pay_x: transfers
+  on pd
+  leg cash from world to konto amount pay
+move sweep: transfers
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  pd = window(2026-03-01, 2026-03-31) "c"
+  dd = window(2026-05-01, 2026-05-10) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "c"
+version st
+  cite card
+  governs 2026-03
+  known 2026-04-01
+  covers konto
+  pad konto from unexplained
+  bank[r1] = (on: 2026-03-12, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pay_x) "line 1"
+ask b_feb_before: bal(konto, 2026-02-15) as known 2026-03-01
+ask b_feb_seen: bal(konto, 2026-02-15)
+ask b_apr_seen: bal(konto, 2026-04-05)
+ask day_seen: pay_x.day
+ask s_jan: bal(sav, 2026-01-15)
+ask s_dec: bal(sav, 2026-12-31)
+ask s_pin: bal(sav, 2026-12-31) with dd = 2026-05-05
+=== expect
+b_apr_seen: 600.00 PLN
+  cut 2026-04-20
+b_feb_before: ?"date within window(2026-03-01, 2026-03-31) not precise enough for the day of pay_x" (pd)
+  unknown day: pd
+  cut 2026-03-01
+b_feb_seen: 500.00 PLN
+  cut 2026-04-20
+day_seen: ...
+...
+s_dec: ?"date within window(2026-05-01, 2026-05-10) not precise enough for the day of sweep" (dd)
+  unknown day: dd
+  cut 2026-04-20
+s_jan: ?"date within window(2026-05-01, 2026-05-10) not precise enough for the day of sweep" (dd)
+  unknown day: dd
+  cut 2026-04-20
+s_pin: 400.00 PLN
+  pinned: dd = 2026-05-05
+  cut 2026-04-20

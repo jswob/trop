@@ -1978,15 +1978,14 @@ def m_check_seen_day_limits(self):
 
 
 def m_check_scenario_moves(self):
-    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day, or a window's first day,
-    falls before D is left out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6, issue #75): a move
+    """L §6.4 ("A move the scenario declares books nothing before D: an instance whose day falls before D is left
+    out (LOAD-SCENARIO where load sees the day)"), §8.3 item 9 (tally 2.1.6, issue #75): a move
     a scenario's file declares, whose day load sees, folded at every key of its bindings, before the scenario's from,
     is refused at load: the first such move by id, at its line, with the engine's bytes (load/across.rs). A fold that gives no day refuses nothing. refcore 2.1.5 refused it only
     as the walk reached the instance (moves.m_before_scen_from), so an ask that didn't reach it answered."""
     m = self.m
     import itertools
     from .evaluate import Engine, Ctx
-    from .moves import day_lo
     froms = getattr(m, 'scen_from', {})
     eng = None
     for mid in sorted(m.moves):
@@ -2016,7 +2015,9 @@ def m_check_scenario_moves(self):
             except TallyError:
                 continue
             try:
-                first = day_lo(eng.ev(on, env, ctx))
+                # a window that reaches `on` is a hole day (L §4.4; tally 2.3): load sees no day
+                first = eng.ev(on, env, ctx)
+                first = first if isinstance(first, datetime.date) else None
             except TallyError:
                 continue
             if first is not None and first < frm:

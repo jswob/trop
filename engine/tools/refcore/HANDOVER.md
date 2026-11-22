@@ -7,6 +7,28 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.3, group W1: the timeline takes days (the plan's G1; issue #247; 1 619 tests)
+
+- **A movement takes a day** (L §4.4): `moves.hole_day`, where an instance's `on` and its law date are set, turns a
+  ranged day into the hole `HOLE-IMPRECISE` naming the day ("the day of <move>", "the law date of <move>"); a window
+  of one day is that day. From there it is a hole day (`walk.sched_hole`'s `perm`, `mreads`' bindings and flows).
+- **Gone with it:** the window pieces and the class per day (`window_pieces`, `day_class`, `window_class_depends`),
+  the per-law-date body (`law_days`, `imprecise_law`, `body_over_law`, `agreed_body`), the booking cut per piece
+  (`inst.cuts`), `inst.wlo`, the decision's window and its end (`dec_win_end`), the pending window's tests
+  (`imp_cands` … `imp_tests`, `window_lifespan`, `apply`'s `imp_on` and the reset's reopened instant, `UNCERTAIN`),
+  P31's carve-out (`own`, `dec_refusal_stands`), the per-day line (`ask.window_days`, `evaluate.WinDay`), the window
+  branches of bindings and flows, the ledger's window months (`resid`), check3's window `on`.
+- **Left, dead and harmless** (for a later pass): `St.imp` (always empty), `Ent.wid`/`win` and the flows code that
+  reads them (`mreads` near "wins"), `Walk.hole_legs`/`hole_flows` (never set), `same_days`' list of undecided sides
+  and its callers (only a window side gave one). The readers of a window (`Iv`) are 2.2.1's until G2.
+- **C-4** (E §5 step 1): `moves.hole_day_steps` measures a hole-day instance at S and at each version known after S
+  and by K, once each; a step that changes it records each changed leg's adjustment, existence the day's hole
+  (`AdjMv.exists`, read by `mreads`' binding).
+- **C13** (L §5.14 Parts): `partswalk.phole_day_legs`; every group that takes at x takes the hole day's leg too.
+- **Hole days read as the spec says** (met re-storing): `resid` gives a fulfilled hole day its last observation's
+  day in every ledger; `walk.cum` keeps a hole day's reads past a reading; `sched_hole` prints a hole amount's
+  question beside the day's (J-A-2).
+
 ## tally 2.2.1, group W14: S-223's last corner (P53; issue #241; 1 668 tests)
 
 - `loader.check_correction_covers` takes every earlier statement of the row with a row, at the cuts from the

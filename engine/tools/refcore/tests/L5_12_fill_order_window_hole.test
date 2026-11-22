@@ -3,6 +3,8 @@
 # dated d_a = window(2026-02-01, 2026-02-28), buy_b 2026-02-10: under fifo the arcs' order depends on d_a, and pinned
 # days give 1 000.00 or 1 200.00 PLN, so the takes and the cost are the hole naming d_a. tally 2.2 refused them
 # (RUN-ORDER fill matched: the order of the arc (buy_b; sell) is a hole) (the planner's 213/f1.tally).
+# tally 2.3 (G1, #247): restated so the window sits in an attribute, not the movement's day: a window that
+# reaches a move's `on` is a hole day (L §4.4), so the order the test is about reads the attribute.
 === f1.tally
 model f1
   tally 2
@@ -17,6 +19,7 @@ kind trades: event certain
   leg units: funds
   leg cash: PLN
   attr seq: int
+  attr bought: date
 kind purchases: trades
 kind sales: trades
 kind pockets: place one min 0
@@ -26,6 +29,7 @@ axis method
 place konto: accounts PLN lives 2026-01-01..
 place market: outside lives 1900-01-01..
 input d_a: date
+input d_a0: date
 input d_b: date
 input d_s: date
 input n_a: num fa
@@ -34,28 +38,31 @@ input p_b: money PLN
 input p_s: money PLN
 
 move buy_a: purchases
-  on d_a
+  on d_a0
   attr seq = 1
+  attr bought = d_a
   leg units from market to pocket amount n_a
   leg cash from konto to market amount p_a
 
 move buy_b: purchases
   on d_b
   attr seq = 1 + 1
+  attr bought = d_b
   leg units from market to pocket amount n_a
   leg cash from konto to market amount p_b
 
 move sell: sales
   on d_s
   attr seq = 1 + 1 + 1
+  attr bought = d_s
   leg units from pocket to market amount n_a
   leg cash from market to konto amount p_s
 
 fill matched
   supply b.units.amount for b in purchases over ..
   demand x.units.amount for x in sales over ..
-  arc b.day <= x.day
-  order (if method == fifo then days_between(d_s, b.day) else days_between(b.day, d_s)) ties by (b.seq, x.seq)
+  arc b.bought <= x.bought
+  order (if method == fifo then days_between(d_s, b.bought) else days_between(b.bought, d_s)) ties by (b.seq, x.seq)
 
 def cost[x in sales]: money PLN = round(sum(matched.taken[b, x] * b.cash.amount / b.units.amount for b in purchases over ..), minor(PLN), half-even) at x.day
 
@@ -69,6 +76,7 @@ version v
   opening[pocket] = 0 fa at 2026-01-01 start "s"
   d_a = window(2026-02-01, 2026-02-28) "s"
   d_b = 2026-02-10 "s"
+  d_a0 = 2026-02-01 "s"
   d_s = 2026-03-10 "s"
   n_a = 10 fa "s"
   p_a = 1000.00 PLN "s"

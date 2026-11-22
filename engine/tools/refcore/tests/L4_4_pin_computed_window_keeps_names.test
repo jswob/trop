@@ -2,6 +2,8 @@
 # min(window(…), w) the unknown days are w and the window's text, in either argument order (qa, qa2), one question
 # each; an if or add_days(w, 0) keeps w (qd, qe). tally 2.2 named x for qa
 # (the 2.2 fix review's agent/b2mix.tally).
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
 === b2mix.tally
 model b2mix
   tally 2
@@ -43,21 +45,21 @@ ask qc: bal(konto, 2026-03-06) with x = add_days(window(2026-03-04, 2026-03-06),
 ask qd: bal(konto, 2026-03-06) with x = if pay > 0.00 PLN then w else window(2026-03-04, 2026-03-08)
 ask qe: bal(konto, 2026-03-06) with x = add_days(w, 0)
 === expect qa qa2 qd qe
-qa: ?"date within window(2026-03-04, 2026-03-08) not precise enough for a balance" (pay_x) ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_x)
+qa: ?"date within window(2026-03-04, 2026-03-08) not precise enough for the day of pay_x" (window(2026-03-04, 2026-03-08)) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_x" (w)
   pinned: x = window(2026-03-04, 2026-03-07)
   unknown day: w
   unknown day: window(2026-03-04, 2026-03-08)
   cut 2026-01-01
-qa2: ?"date within window(2026-03-04, 2026-03-08) not precise enough for a balance" (pay_x) ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_x)
+qa2: ?"date within window(2026-03-04, 2026-03-08) not precise enough for the day of pay_x" (window(2026-03-04, 2026-03-08)) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_x" (w)
   pinned: x = window(2026-03-04, 2026-03-07)
   unknown day: w
   unknown day: window(2026-03-04, 2026-03-08)
   cut 2026-01-01
-qd: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_x)
+qd: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_x" (w)
   pinned: x = window(2026-03-05, 2026-03-07)
   unknown day: w
   cut 2026-01-01
-qe: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_x)
+qe: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_x" (w)
   pinned: x = window(2026-03-05, 2026-03-07)
   unknown day: w
   cut 2026-01-01

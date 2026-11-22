@@ -3189,14 +3189,7 @@ class Engine:
             if b.where is not None and defer is not None:
                 d2 = defer + [b.where]
             elif b.where is not None:
-                try:
-                    w = self.ev(b.where, e2, ctx)
-                except WinDay as wd:
-                    if regs is None:
-                        raise
-                    # an ask's for domain is no line's own value: a window-dated decision it meets is the window's
-                    # hole, per tuple, never a stop (tally 2.2.1 P41, F5 and n3)
-                    w = imprecise_hole(wd.iv, wd.use)
+                w = self.ev(b.where, e2, ctx)
                 if w is False:
                     continue
                 if w is NONE:
@@ -4765,16 +4758,6 @@ def member_moves(m, b, x):
         return True
     from .joint import owns
     return owns(ow, move_owner(x))
-
-
-class WinDay(Exception):
-    """A decision dated by a window met by a flows or a binding over a span its window reaches (E §4.1 step 2): the
-    walk books it on no one day, so the line is read once per day of its window (ask.one; tally 2.2.1 P30, P32, N3)."""
-
-    def __init__(self, iv, use):
-        Exception.__init__(self, use)
-        self.iv = iv
-        self.use = use
 
 
 class HoleSignal(Exception):
