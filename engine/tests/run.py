@@ -721,6 +721,9 @@ def self_test(checks):
         p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/oracle.py', '--check'], capture_output=True,
                            text=True)
         say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8u. M4's vectors (issue #252): refcore's bytes for m4/vectors.tsv, each check tied to its stored baseline
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'm4/vectors.py', '--check'], capture_output=True, text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

@@ -1,0 +1,74 @@
+model pins
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+
+input base[k in ks]: money PLN
+input extra: money PLN
+input bump: money PLN
+input kh: key ks
+input lo: money PLN
+input hi: money PLN
+input stp: money PLN
+input target[k in ks]: money PLN
+input base2[k in ks, j in js]: money PLN
+
+def dbl[k in ks]: money PLN = base[k] + base[k]
+
+def lifted[k in ks]: money PLN = dbl[k] as if {base[k] = base[k] + extra}
+
+def other[k in ks]: money PLN = dbl[k1] as if {base[k] = extra}
+
+def dbl2[k in ks, j in js]: money PLN = base2[k, j] + base2[k, j]
+
+def lifted2[k in ks, j in js]: money PLN = dbl2[k, j] as if {base2[k, j] = base2[k, j] + extra}
+
+def half[k in ks, j in js]: money PLN = dbl[k] as if {base[k] = extra}
+
+def mix[k in ks, j in js]: money PLN = dbl[k] as if {base[k] = base2[k, j]}
+
+def flat2[k in ks, j in js]: money PLN = dbl2[k, j] as if {base2[k, j] = extra}
+
+def least[k in ks]: money PLN = min(t for t in lo .. hi step stp where dbl[k] as if {base[k] = t} >= target[k])
+
+ask a_def: lifted[k] for k in ks
+ask a_for: dbl[k] as if {base[k] = extra} for k in ks
+ask a_agg: sum((dbl[k] as if {base[k] = extra}) for k in ks)
+ask a_other: other[k] for k in ks
+ask a_least: least[k] for k in ks
+ask a_two: (dbl[k] as if {base[k] = extra}) - (dbl[k] as if {base[k] = bump}) for k in ks
+ask a_hole: dbl[k1] as if {base[kh] = extra}
+ask a_with: lifted[k] for k in ks with extra = bump
+ask a_explain: explain lifted[k2]
+ask b_def: lifted2[k, j] for k in ks, j in js
+ask b_for: dbl2[k, j] as if {base2[k, j] = extra} for k in ks, j in js
+ask b_one: half[k, j] for k in ks, j in js
+ask b_lit: lifted2[k2, j1]
+ask b_mix: mix[k, j] for k in ks, j in js
+ask b_flat: flat2[k, j] for k in ks, j in js
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base[k1] = 100 PLN "s"
+  base[k2] = 200 PLN "s"
+  base[k3] = 300 PLN "s"
+  extra = 10 PLN assumed "the extra is a guess"
+  bump = 5 PLN "s"
+  kh = ?"which key does the guide mean?" "s"
+  lo = 0 PLN "s"
+  hi = 100 PLN "s"
+  stp = 10 PLN "s"
+  target[k1] = 50 PLN "s"
+  target[k2] = 120 PLN "s"
+  target[k3] = 1000 PLN "s"
+  base2 = 50 PLN "s"

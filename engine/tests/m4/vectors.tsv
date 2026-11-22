@@ -1,0 +1,98 @@
+id	group	check	cwd	files	asks	options	for
+U:cur/CUR-03	checks-green	U:cur/CUR-03					-
+U:law/LAW-02	checks-green	U:law/LAW-02					-
+U:law/LAW-07	checks-green	U:law/LAW-07					-
+U:law/LAW-10	checks-green	U:law/LAW-10					-
+U:law/LAW-11	checks-green	U:law/LAW-11					-
+I:M:CB-01	checks-green	I:M:CB-01					-
+I:M:CB-02	checks-green	I:M:CB-02					-
+I:M:CB-03	checks-green	I:M:CB-03					-
+I:M:CB-04	checks-green	I:M:CB-04					-
+I:M:CB-06	checks-green	I:M:CB-06					-
+I:M:CB-07	checks-green	I:M:CB-07					-
+I:M:CB-08	checks-green	I:M:CB-08					-
+I:M:CB-11	checks-green	I:M:CB-11					-
+I:M:CB-12	checks-green	I:M:CB-12					-
+I:M:CH-05	checks-green	I:M:CH-05					-
+I:M:CMP-02	checks-green	I:M:CMP-02					-
+I:M:LH-07	checks-green	I:M:LH-07					-
+I:M:LH-08	checks-green	I:M:LH-08					-
+I:M:LH-12	checks-green	I:M:LH-12					-
+I:M:LH-13	checks-green	I:M:LH-13					-
+I:M:MP-05	checks-green	I:M:MP-05					-
+I:M:MP-06	checks-green	I:M:MP-06					-
+I:M:MP-07	checks-green	I:M:MP-07					-
+I:M:MP-08	checks-green	I:M:MP-08					-
+I:M:MP-10	checks-green	I:M:MP-10					-
+I:M:MP-11	checks-green	I:M:MP-11					-
+I:M:MP-13	checks-green	I:M:MP-13					-
+I:M:MP-14	checks-green	I:M:MP-14					-
+I:M:MP-16	checks-green	I:M:MP-16					-
+I:M:RC-02	checks-green	I:M:RC-02					-
+I:M:RC-04	checks-green	I:M:RC-04					-
+I:M:RC-05	checks-green	I:M:RC-05					-
+I:M:UL-03	checks-green	I:M:UL-03					-
+I:M:UL-04	checks-green	I:M:UL-04					-
+I:M:UL-10	checks-green	I:M:UL-10					-
+I:M:UL-11	checks-green	I:M:UL-11					-
+I:M:UL-12	checks-green	I:M:UL-12					-
+I:M:UL-14	checks-pins	I:M:UL-14					pins
+I:D:d04_check_advances	checks-green	I:D:d04_check_advances					-
+I:D:d04_check_paid	checks-green	I:D:d04_check_paid					-
+I:D:d04_check_payment	checks-green	I:D:d04_check_payment					-
+I:D:d04_check_rent_advance	checks-green	I:D:d04_check_rent_advance					-
+I:D:d04_pensions	checks-green	I:D:d04_pensions					-
+I:D:d04_rent	checks-green	I:D:d04_rent					-
+I:D:d04_total	checks-green	I:D:d04_total					-
+I:D:d04_without	checks-green	I:D:d04_without					-
+I:D:d09_advice	checks-green	I:D:d09_advice					-
+I:D:d09_all_spent	checks-green	I:D:d09_all_spent					-
+I:D:d09_keep	checks-green	I:D:d09_keep					-
+I:D:d09_nothing_spent	checks-green	I:D:d09_nothing_spent					-
+I:D:d09_sell	checks-green	I:D:d09_sell					-
+I:D:d09_parts	checks-green	I:D:d09_parts					-
+I:D:d11_follows	checks-green	I:D:d11_follows					-
+I:D:d11_follows_bonds	checks-green	I:D:d11_follows_bonds					-
+I:D:d11_isb	checks-green	I:D:d11_isb					-
+I:D:d11_pairs	checks-green	I:D:d11_pairs					-
+I:D:d11_register	checks-green	I:D:d11_register					-
+I:D:d11_not_follows_life	checks-green	I:D:d11_not_follows_life					-
+I:D:d11_not_follows_fund	checks-green	I:D:d11_not_follows_fund					M7
+I:D:d12_extremes	checks-green	I:D:d12_extremes					-
+I:D:d12_starts	checks-green	I:D:d12_starts					-
+I:X:wife_net@c5_fast	checks-green	I:X:wife_net@c5_fast					-
+I:X:social_and_health@c5_fast	checks-green	I:X:social_and_health@c5_fast					-
+I:X:pit37@c5_fast	checks-green	I:X:pit37@c5_fast					-
+I:X:wife_net@v5_fast	checks-green	I:X:wife_net@v5_fast					-
+I:X:social_and_health@v5_fast	checks-green	I:X:social_and_health@v5_fast					-
+I:X:pit37@v5_fast	checks-green	I:X:pit37@v5_fast					-
+I:C:C-01~c01	checks-green	I:C:C-01~c01					-
+I:C:C-02~c02	checks-green	I:C:C-02~c02					-
+I:C:C-04~c04	checks-pins	I:C:C-04~c04					pins
+I:C:C-06~c06	checks-green	I:C:C-06~c06					-
+I:C:C-08~c08	checks-green	I:C:C-08~c08					-
+I:E2:E2-01~e2c	checks-accrue	I:E2:E2-01~e2c					accrue
+constructs/pins/a_def	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_def		pins
+constructs/pins/a_for	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_for		pins
+constructs/pins/a_agg	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_agg		pins
+constructs/pins/a_other	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_other		pins
+constructs/pins/a_least	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_least		pins
+constructs/pins/a_two	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_two		pins
+constructs/pins/a_hole	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_hole		pins
+constructs/pins/a_with	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_with		pins
+constructs/pins/a_explain	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	a_explain		pins
+constructs/pins/b_def	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	b_def		pins
+constructs/pins/b_for	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	b_for		pins
+constructs/pins/b_one	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	b_one		pins
+constructs/pins/b_lit	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	b_lit		pins
+constructs/pins/b_mix	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	b_mix		pins
+constructs/pins/b_flat	constructs-pins		engine/tests/m4/constructs/pins	engine/tests/m4/constructs/pins/pins.tally	b_flat		pins
+constructs/accrue/c_day	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_day		accrue
+constructs/accrue/c_month	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_month		accrue
+constructs/accrue/c_year_eff	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_year_eff		accrue
+constructs/accrue/c_nominal	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_nominal		accrue
+constructs/accrue/c_back	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_back		accrue
+constructs/accrue/c_hole	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_hole		accrue
+constructs/accrue/c_dcf	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_dcf		accrue
+constructs/accrue/c_change	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_change		accrue
+constructs/accrue/c_sum	constructs-accrue		engine/tests/m4/constructs/accrue	engine/tests/m4/constructs/accrue/accrue.tally	c_sum		accrue
