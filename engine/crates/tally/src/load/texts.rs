@@ -298,7 +298,7 @@ fn mul_sign(op: MulOp) -> &'static str {
 }
 
 /// A comparison's operator as written.
-pub(super) fn cmp_sign(op: CmpOp) -> &'static str {
+pub(crate) fn cmp_sign(op: CmpOp) -> &'static str {
     match op {
         CmpOp::Eq => "==",
         CmpOp::Ne => "!=",

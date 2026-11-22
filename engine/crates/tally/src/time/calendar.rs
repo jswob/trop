@@ -1,11 +1,11 @@
 //! A business calendar: its weekends, its yearly days off from their first year, and its added days, fixed or not yet.
 //! Spec: L §4.2 (`calendar`, its `weekends`, `yearly … from Y` and `added`; a day not yet fixed
-//! in `added`), §7.6 item 5 (a calendar with no business day).
+//! in `added` is a hole), §7.6 item 5 (a calendar with no business day).
 //! Twin: engine/tools/refcore/evaluate.py (`business`), dates.py (`WEEKDAYS`); values.py
 //! (`Cal`, its `fmt`); loader.py (`convert_value`, its `calval` arm).
 //! Invariants: a day is off by the rules when its weekday is a weekend or it is a yearly day
-//! from the yearly list's first year; an added day that is a hole or a window is kept as
-//! written, and the evaluator decides it per day and per pass (`eval/business.rs`).
+//! from the yearly list's first year; an added day is a day or a hole, kept as written, and the
+//! evaluator decides a hole where it decides a result (`eval/business.rs`).
 
 use std::collections::BTreeSet;
 
@@ -79,64 +79,22 @@ impl FirstYear {
     }
 }
 
-/// A day a calendar adds as a day off (L §4.2 `added`).
+/// A day a calendar adds as a day off (L §4.2 `added`): a day or a hole, never a window; a
+/// day one of a few is a row marked `assumed`, or an axis keys the calendar (L §4.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Added {
     /// A day.
     Day(Day),
     /// A day not known yet, `?"…"`: its question.
     Hole(String),
-    /// `window(a, b)`: one day from a to b, not yet fixed.
-    Window(Day, Day),
-    /// `one_of([…])`: one of these days, sorted, each once.
-    OneOf(Vec<Day>),
 }
 
 impl Added {
-    /// Whether `day` is one the added entry may be, for a window or a choice of days.
-    #[must_use]
-    pub fn may_be(&self, day: Day) -> bool {
-        match self {
-            Added::Window(a, b) => *a <= day && day <= *b,
-            Added::OneOf(days) => days.contains(&day),
-            Added::Day(_) | Added::Hole(_) => false,
-        }
-    }
-
-    /// The days a window or a choice of days can take, in order; none for another entry. A
-    /// window's days stop at its last day before a step, so one that ends on the last day of
-    /// time, 9999-12-31, has its days too.
-    #[must_use]
-    pub fn days(&self) -> Option<Vec<Day>> {
-        match self {
-            Added::Window(a, b) => {
-                let mut out = Vec::new();
-                let mut day = *a;
-                while day < *b {
-                    out.push(day);
-                    day = day.next()?;
-                }
-                if day == *b {
-                    out.push(day);
-                }
-                Some(out)
-            }
-            Added::OneOf(days) => Some(days.clone()),
-            Added::Day(_) | Added::Hole(_) => None,
-        }
-    }
-
-    /// A window or a choice of days as written, `window(a, b)` or `one_of([a, b])`, which a
-    /// question names (refcore's `business`, its `wt`); a stated hole as a hole prints, its
-    /// question escaped (L §2.4; tally 2.2.1 P48 N5). L §4.2, §4.4.
+    /// The entry as written: a day, or a stated hole as a hole prints, its question escaped
+    /// (L §2.4; tally 2.2.1 P48 N5). L §4.2.
     #[must_use]
     pub fn text(&self) -> String {
         match self {
-            Added::Window(a, b) => format!("window({}, {})", a.text(), b.text()),
-            Added::OneOf(days) => {
-                let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
-                format!("one_of([{}])", texts.join(", "))
-            }
             Added::Day(d) => d.text(),
             Added::Hole(q) => crate::hole::atom_text(q, ""),
         }
@@ -204,7 +162,7 @@ impl Calendar {
     }
 
     /// The calendar as it prints, `calendar(weekends [sat, sun], yearly [12-25] from 2027,
-    /// added [window(2026-06-30, 2026-07-01)])`, with its added list as written (refcore's
+    /// added [2026-06-30, ?"which day?"])`, with its added list as written (refcore's
     /// `fmt` of a `Cal`). L §2.4, §5.18 (221.6 on #241).
     #[must_use]
     pub fn text(&self) -> String {
@@ -267,19 +225,20 @@ mod tests {
     }
 
     #[test]
-    fn an_added_window_names_its_days() {
-        let w = Added::Window(day(2026, 6, 22), day(2026, 6, 24));
-        assert_eq!(
-            w.days(),
-            Some(vec![day(2026, 6, 22), day(2026, 6, 23), day(2026, 6, 24)]),
-            "every day from a to b"
+    fn an_added_day_or_hole_prints_as_written() {
+        let cal = Calendar::new(
+            vec![6, 7],
+            Vec::new(),
+            None,
+            vec![
+                Added::Day(day(2026, 6, 22)),
+                Added::Hole("which \"day\"?".to_owned()),
+            ],
         );
-        assert!(w.may_be(day(2026, 6, 23)), "inside");
-        assert!(!w.may_be(day(2026, 6, 25)), "after");
-        assert_eq!(w.text(), "window(2026-06-22, 2026-06-24)", "as written");
-        let o = Added::OneOf(vec![day(2026, 6, 22), day(2026, 6, 26)]);
-        assert!(!o.may_be(day(2026, 6, 23)), "between, not one of them");
-        assert_eq!(o.text(), "one_of([2026-06-22, 2026-06-26])", "as written");
-        assert_eq!(Added::Day(day(2026, 1, 1)).days(), None, "a fixed day");
+        assert_eq!(
+            cal.text(),
+            "calendar(weekends [sat, sun], added [2026-06-22, ?\"which \\\"day\\\"?\"])",
+            "a day, and a hole with its question escaped"
+        );
     }
 }

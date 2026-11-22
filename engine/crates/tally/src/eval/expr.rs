@@ -21,7 +21,7 @@ use super::state::{
 };
 use super::time_arith::duration;
 use super::ty::{figure_like, sample};
-use super::windows::{as_window, window_arith, window_compare, window_negated};
+use super::windows::{as_window, unlisted, window_arith, window_compare};
 use super::years::{as_year, period_like, period_literal, year_literal};
 use crate::base::{Load, Run};
 use crate::book::inst_ref;
@@ -159,6 +159,7 @@ impl Engine {
             id,
             day: None,
             src: MvSrc::Missing,
+            member: false,
         })))
     }
 
@@ -712,12 +713,11 @@ impl Engine {
                 ),
             ));
         }
-        let negated = if let Value::Window(w) = &v {
-            window_negated(w)?
-        } else {
-            negate(&v)?
-        };
-        match negated {
+        // arithmetic, off the list: a ranged date is the hole (L §4.4)
+        if let Some(hole) = unlisted(&[&v], "arithmetic") {
+            return Ok(Value::Hole(hole));
+        }
+        match negate(&v)? {
             Some(n) => Ok(n),
             None => Err(refuse_load(
                 Load::Unit,
@@ -931,7 +931,7 @@ pub(super) fn binop(
         None => (lhs, rhs),
     };
     if as_window(a).is_some() || as_window(b).is_some() {
-        return window_arith(m, op, a, b);
+        return window_arith(m, op, (a, b));
     }
     arith(m, op, a, b)
 }
@@ -949,12 +949,10 @@ fn known_zero(v: &Value) -> bool {
 
 /// Key literals in arithmetic, resolved as load resolved them (L §2.5): by the key, thing or
 /// code beside them, or the index of a key arithmetic left outside it; else, moved by an
-/// offset (a number, or an interval of them, L §4.4), as a key of the one index that holds
-/// them (L §4.2 Key arithmetic).
+/// offset, a number, as a key of the one index that holds them (L §4.2 Key arithmetic).
 fn arith_words(m: &Reality, op: Op, lhs: &Value, rhs: &Value) -> Result<(Value, Value), Stop> {
     let (a, b) = resolve_pair(m, lhs.clone(), rhs.clone())?;
-    let offset =
-        matches!(op, Op::Add | Op::Sub) && matches!(b, Value::Number(_) | Value::Window(_));
+    let offset = matches!(op, Op::Add | Op::Sub) && matches!(b, Value::Number(_));
     match (&a, &b) {
         (Value::Word(word), _) if offset => Ok((held_key(m, word)?, b)),
         (Value::OutKey { index, .. }, Value::Word(word)) => {

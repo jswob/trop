@@ -152,7 +152,7 @@ impl Engine {
             // a range end is one value: a window is the hole of its imprecision (L §4.4),
             // `never` no day (L §3.1; refcore's `date_of(z, 'a range end')`)
             if let Some(w) = as_window(end) {
-                return Ok(Err(imprecise(m, w, "a range end")?));
+                return Ok(Err(imprecise(w, "a range end")));
             }
             if *end == Value::Never {
                 return Err(refuse(Run::None, "never in a range end".to_owned()));
@@ -160,7 +160,7 @@ impl Engine {
         }
         // and so is its step (tally 2.1.7 R3: a value needed whole)
         if let Some(w) = by.as_ref().and_then(as_window) {
-            return Ok(Err(imprecise(m, w, "a range step")?));
+            return Ok(Err(imprecise(w, "a range step")));
         }
         Ok(Ok((first, last, by)))
     }
@@ -191,7 +191,7 @@ impl Engine {
             return Err(refuse(Run::None, "a key is none here: a key".to_owned()));
         }
         if let Some(w) = as_window(&value) {
-            return Ok(Err(imprecise(m, w, "a key")?));
+            return Ok(Err(imprecise(w, "a key")));
         }
         let Written::Range(parts) = &bind.node.domain else {
             return Err(invariant("a bind over a stepped range written otherwise"));
@@ -702,17 +702,9 @@ fn not_positive(m: &Reality, by: &Value) -> Result<Stop, Stop> {
 
 /// The i-th day of a range from `start` stepped by `by`, `start + i·s`, computed from the
 /// start, so a month step from the 31st keeps the 31st where the month has it; refused as
-/// day arithmetic refuses it, `RUN-LIMIT` past 9999-12-31 (refcore's `day_step`). A step
-/// that is an interval of durations moves a day to no one day, `LOAD-UNIT` (L §4.4). L §2.5,
-/// §4.2.
+/// day arithmetic refuses it, `RUN-LIMIT` past 9999-12-31 (refcore's `day_step`); a ranged
+/// step is its hole before it gets here (L §4.4: no number is a range). L §2.5, §4.2.
 fn nth_day(m: &Reality, start: Day, by: &Value, i: i64) -> Result<Day, Stop> {
-    if let Value::Window(_) = by {
-        let shown = by.text(m).map_err(num_stop)?;
-        return Err(refuse_load(
-            Load::Unit,
-            format!("{} + {shown}", start.text()),
-        ));
-    }
     let scaled = if let Value::Number(n) = by {
         Value::Number(Number {
             q: n.q.checked_mul(&Num::int(i)).map_err(num_stop)?,

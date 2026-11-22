@@ -8,12 +8,14 @@ c11_gift_tax [release_money = money]: (48 735.415 DUK, false, none, false, 2026-
   reading: release_money = money
   law date 2026-09-30, cut 2026-09-30
 c11_gift_tax [release_money = not_money]: (48 735.415 DUK, true, 2027-03-17, ?"does Jan report Marta's release of the loan to the RO within 6 months of 2026-09-17 (IGT-4 .2)? no paper says" (jan_reported), ?"does Jan report Marta's release of the loan to the RO within 6 months of 2026-09-17 (IGT-4 .2)? no paper says" (jan_reported), ?"does Jan report Marta's release of the loan to the RO within 6 months of 2026-09-17 (IGT-4 .2)? no paper says" (jan_reported))
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
   reading: release_money = not_money
   law date 2026-09-30, cut 2026-09-30
 c11_gift_tax_reported [release_money = money]: (48 735.415 DUK, false, none, false, 2026-10-19, 142.00 DUK)
   reading: release_money = money
   law date 2026-09-30, cut 2026-09-30
 c11_gift_tax_reported [release_money = not_money]: (48 735.415 DUK, true, 2027-03-17, true, none, 0.00 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
   pinned: jan_reported = true
   reading: release_money = not_money
   law date 2026-09-30, cut 2026-09-30
@@ -21,6 +23,7 @@ c11_gift_tax_unreported [release_money = money]: (48 735.415 DUK, false, none, f
   reading: release_money = money
   law date 2026-09-30, cut 2026-09-30
 c11_gift_tax_unreported [release_money = not_money]: (48 735.415 DUK, true, 2027-03-17, false, 2026-10-19, 142.00 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
   pinned: jan_reported = false
   reading: release_money = not_money
   law date 2026-09-30, cut 2026-09-30

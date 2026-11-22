@@ -68,7 +68,7 @@ def deductible[s in sale]: num USD = loss[s] - disallowed[s] at reader
 def disallowed[s in sale]: num USD = loss_ps[s] * sum(wash.taken[s, l] for l in lot) at reader
 
 def in_window[s in sale, l in lot]: bool at reader
-  rule base = days_between(acq_on[l], sale_on[s]) <= window_days and days_between(sale_on[s], acq_on[l]) <= window_days
+  rule base = sale_on[s] <= add_days(acq_on[l], window_days) and acq_on[l] <= add_days(sale_on[s], window_days)
   rule stated beats base = stated_within[s, l] when stated_within[s, l] != none
 
 def loss[s in sale]: num USD at reader

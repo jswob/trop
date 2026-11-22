@@ -1,67 +1,33 @@
-//! The calendar built-ins: business days, their counts, a period's n-th last and a scheduled day's roll, over every day an added window takes.
+//! The calendar built-ins: business days, their counts, a period's n-th last and a scheduled day's roll.
 //! Spec: L §4.2 (`is_business`, `add_business` and `RUN-ZERO`, `last_business`, `schedule`
 //! and its rolls, ISDA 2006 section 4.12; the calendar read at the day asked; an added day
-//! that is a hole, `HOLE-CALENDAR`, or a window, every day known but one), §4.4 (a
-//! business-day function over a calendar whose `added` holds a window is evaluated for each
-//! day the window can take, its value the interval of those results; for `is_business`
-//! `HOLE-IMPRECISE` when they differ), §7.6 items 1 and 5 (the calendar's edge; a calendar
-//! with no business day), §8 head (R1), §8.4; E §3.2 (law-date classes).
-//! Twin: engine/tools/refcore/evaluate.py (`cal_at`, `business`, `over_added`,
-//! `c_is_business`, `c_add_business`, `c_last_business`, `c_schedule`, `rolled`).
-//! Invariants: every business-day function runs as passes, one per combination of the days
-//! the added windows it meets can take, nested in the order met; a pass that meets a window
-//! no choice names is run again once per day of it; the passes' state is restored after them.
-//! An `add_business` whose count outnumbers the days to the edge reads the calendar once per
-//! law-date class of its rows in day order, where those classes stand for its days, and
-//! refuses with the first read's refusal, else `RUN-LIMIT`, as refcore's walk day by day
-//! does; a hole on the way is left to that walk.
+//! that is a hole, `HOLE-CALENDAR` where it decides a result), §4.4 (a business-day function
+//! is off the readers' list, so a ranged date argument is the hole), §7.6 items 1 and 5 (the
+//! calendar's edge; a calendar with no business day), §8 head (R1), §8.4; E §3.2 (law-date
+//! classes).
+//! Twin: engine/tools/refcore/evaluate.py (`cal_at`, `business`, `c_is_business`,
+//! `c_add_business`, `c_last_business`, `c_schedule`, `rolled`).
+//! Invariants: every business-day function reads its calendar once per day it asks, each
+//! added day a day or a hole. An `add_business` whose count outnumbers the days to the edge
+//! reads the calendar once per law-date class of its rows in day order, where those classes
+//! stand for its days, and refuses with the first read's refusal, else `RUN-LIMIT`, as
+//! refcore's walk day by day does; a hole on the way is left to that walk.
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::BTreeSet;
 
 use super::arith::whole_of;
 use super::builtin::read_parts;
 use super::dates::period_arg;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
-use super::windows::{imprecise, interval, one_day, single, window_days};
+use super::windows::{one_day, single, unlisted};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Code, KeyVal, Reality, Value, Window};
+use crate::model::{Code, KeyVal, Reality, Value};
 use crate::num::Num;
-use crate::read::{Asked, Found, read_input, row_span};
+use crate::read::{Asked, row_span};
 use crate::syntax::{Call, Expr, Postfix, Stop, Value as Written};
 use crate::time::{Added, Day, Period};
-
-/// An added window of a calendar, by the calendar's input, the entry's place in its `added`,
-/// the window as written and the row that states it: two entries, or one entry of two rows,
-/// are two unknown days (tally 2.1.7 R3, F5; tally 2.1.8 R13, pick P32).
-type WindowId = (String, usize, String, String);
-
-/// The added windows the passes met, each with its days, in the order met.
-type MetWindows = Vec<(WindowId, Vec<Day>)>;
-
-/// One pass of a business-day function: the day each added window takes in it, and the
-/// windows it met that no choice names yet, with the days each can take (refcore's
-/// `cal_choice`, `cal_met`). L §4.2, §4.4.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct CalendarPass {
-    /// The day each window takes in this pass.
-    chosen: BTreeMap<WindowId, Day>,
-    /// The windows met that no choice names, in the order met, with their days in order.
-    met: MetWindows,
-}
-
-/// The unknown day of added window `id`, named `added <entry> of <calendar>`: two calendars'
-/// equal entries are two days, two lines (refcore's `added_carry`). L §4.4, §8.2 `unknown
-/// day:` (R21 on #241).
-fn added_unknown(id: &WindowId) -> crate::hole::Unknown {
-    let (name, entry, text, row) = id;
-    crate::hole::Unknown {
-        id: format!("calendar {name}#{entry} {row}"),
-        label: format!("added {text} of {name}"),
-        text: text.clone(),
-    }
-}
 
 /// A scheduled day's roll to a business day (L §4.2 `schedule`; ISDA 2006 section 4.12).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,8 +40,8 @@ enum Roll {
     ModifiedFollowing,
 }
 
-/// A business-day function, as one pass evaluates it (refcore's closures under
-/// `over_added`). L §4.2.
+/// A business-day function, its arguments read (refcore's `c_is_business`, `c_add_business`,
+/// `c_last_business`, `c_schedule`). L §4.2.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Business {
     /// `is_business(d, cal)`.
@@ -89,45 +55,25 @@ enum Business {
     Rolled(Day, Roll),
 }
 
-/// A business-day function of a day argument before its day is given: `is_business`, or
-/// `add_business` with its count (refcore's closures under `per_day`). L §4.2, §4.4.
-#[derive(Debug, Clone)]
-enum Daily {
-    /// `is_business(d, cal)`.
-    Is,
-    /// `add_business(d, n, cal)` with its n.
-    Add(Num),
-}
-
-impl Daily {
-    /// The function at day `day`: `add_business`'s n of 0 is `RUN-ZERO` there (refcore's
-    /// `add_business_at`). L §4.2, §8.4.
-    fn on(&self, day: Day, cal: &Expr) -> Result<Business, Stop> {
-        let k = match self {
-            Daily::Is => return Ok(Business::Is(day)),
-            Daily::Add(k) => k,
-        };
-        if k.is_zero() {
-            let text = crate::load::expr_text(cal);
-            return Err(refuse(
-                Run::Zero,
-                format!("add_business({}, 0, {text})", day.text()),
-            ));
-        }
-        let step = if k.is_negative() { -1 } else { 1 };
-        // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar
-        // day by day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
-        let count = k.to_i64().map(i64::unsigned_abs);
-        Ok(Business::Add(day, step, count))
+/// `add_business(day, k, cal)` as [`Engine::apply`] evaluates it: `k` of 0 is `RUN-ZERO`
+/// (refcore's `add_business_at`). L §4.2, §8.4.
+///
+/// # Errors
+///
+/// `RUN-ZERO` for a count of 0.
+fn business_days(day: Day, k: &Num, cal: &Expr) -> Result<Business, Stop> {
+    if k.is_zero() {
+        let text = crate::load::expr_text(cal);
+        return Err(refuse(
+            Run::Zero,
+            format!("add_business({}, 0, {text})", day.text()),
+        ));
     }
-}
-
-/// A value's day, if it is one.
-fn day_of(v: &Value) -> Option<Day> {
-    if let Value::Day(d) = v {
-        return Some(*d);
-    }
-    None
+    let step = if k.is_negative() { -1 } else { 1 };
+    // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar day by
+    // day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
+    let count = k.to_i64().map(i64::unsigned_abs);
+    Ok(Business::Add(day, step, count))
 }
 
 impl Engine {
@@ -144,59 +90,12 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        if let Value::Window(w) = single(&d) {
-            // a window argument: day by day, is_business isn't monotone in it (F4)
-            return self.per_day(m, w.as_ref(), (cal, env, ctx), (&Daily::Is, call));
-        }
+        // off the list: a ranged date is the hole (L §4.4)
         let day = match one_day(m, &d, "is_business")? {
             Ok(day) => day,
             Err(hole) => return Ok(Value::Hole(hole)),
         };
-        self.over_added(m, (cal, env, ctx), (&Business::Is(day), call))
-    }
-
-    /// Business-day function `f` of a window argument `w`, evaluated for each day `w` can
-    /// take, since it isn't monotone in it: one value where they agree, else the interval of
-    /// the days, or for `is_business` `HOLE-IMPRECISE` (refcore's `per_day`; tally 2.1.7 R3,
-    /// F4). L §4.4.
-    fn per_day(
-        &mut self,
-        m: &Reality,
-        w: &Window,
-        (cal, env, ctx): (&Expr, &Env, Ctx),
-        (f, call): (&Daily, &Call),
-    ) -> Result<Value, Stop> {
-        let mut outs: Vec<Value> = Vec::new();
-        let mut holes: Vec<Hole> = Vec::new();
-        for day in window_days(w)? {
-            let v = self.over_added(m, (cal, env, ctx), (&f.on(day, cal)?, call))?;
-            if let Value::Hole(h) = &v {
-                holes.push(h.clone());
-            } else {
-                outs.push(v);
-            }
-        }
-        if !holes.is_empty() {
-            let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
-            return hole_of(&operands);
-        }
-        let [first, rest @ ..] = outs.as_slice() else {
-            return Err(invariant("a window with no day"));
-        };
-        if rest.iter().all(|v| v == first) {
-            return Ok(first.clone());
-        }
-        if let Value::Bool(_) = first {
-            let call_text = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
-            return Ok(Value::Hole(imprecise(m, w, &call_text)?));
-        }
-        let (Some(lo), Some(hi)) = (
-            outs.iter().filter_map(day_of).min(),
-            outs.iter().filter_map(day_of).max(),
-        ) else {
-            return Err(invariant("a business-day function's day that is no day"));
-        };
-        interval(m, (Value::Day(lo), Value::Day(hi)), w)
+        self.apply(m, (cal, env, ctx), &Business::Is(day))
     }
 
     /// `add_business(d, n, cal)`: n business days after d, before it for a negative n,
@@ -214,18 +113,16 @@ impl Engine {
         if d.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
-        if let Value::Window(w) = single(&d) {
-            // a window argument: day by day, add_business isn't monotone in it (F4)
-            let k = whole_of(m, &k)?;
-            return self.per_day(m, w.as_ref(), (cal, env, ctx), (&Daily::Add(k), call));
-        }
+        // off the list: a ranged date is the hole (L §4.4)
         let day = match one_day(m, &d, "add_business")? {
             Ok(day) => day,
             Err(hole) => return Ok(Value::Hole(hole)),
         };
-        let k = whole_of(m, &k)?;
-        let f = Daily::Add(k).on(day, cal)?;
-        self.over_added(m, (cal, env, ctx), (&f, call))
+        if let Some(hole) = unlisted(&[&k], "add_business") {
+            return Ok(Value::Hole(hole));
+        }
+        let f = business_days(day, &whole_of(m, &k)?, cal)?;
+        self.apply(m, (cal, env, ctx), &f)
     }
 
     /// `last_business(p, n, cal)`: the n-th last business day of period p; n below 1 and a
@@ -244,7 +141,11 @@ impl Engine {
         if of.as_hole().is_some() || nth.as_hole().is_some() {
             return hole_of(&[of.as_hole(), nth.as_hole()]);
         }
-        let period = period_arg(m, (call.args.first(), &of), "last_business")?;
+        // off the list: a ranged date is the hole (L §4.4)
+        if let Some(hole) = unlisted(&[&of, &nth], "last_business") {
+            return Ok(Value::Hole(hole));
+        }
+        let period = period_arg(m, (call.args.first(), &single(&of)), "last_business")?;
         let count = whole_of(m, &nth)?;
         let text = count.integer_text().ok_or_else(|| invariant("a count"))?;
         if count.is_negative() || count.is_zero() {
@@ -254,7 +155,7 @@ impl Engine {
             ));
         }
         let last = Business::Last(period, count.to_i64().map(i64::unsigned_abs), text);
-        self.over_added(m, (cal, env, ctx), (&last, call))
+        self.apply(m, (cal, env, ctx), &last)
     }
 
     /// `schedule(p, e, roll, cal)`: day `e` of month `p`, none past its last day, moved by
@@ -278,7 +179,11 @@ impl Engine {
         if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), word.as_hole()]) {
             return Ok(Value::Hole(h));
         }
-        let period = period_arg(m, (call.args.first(), &month), "schedule")?;
+        // off the list: a ranged date is the hole (L §4.4)
+        if let Some(hole) = unlisted(&[&month, &dom], "schedule") {
+            return Ok(Value::Hole(hole));
+        }
+        let period = period_arg(m, (call.args.first(), &single(&month)), "schedule")?;
         let start = period.start();
         // a day number past the month's, 64 bits or not, is none
         let Some(day) = whole_of(m, &dom)?
@@ -302,116 +207,13 @@ impl Engine {
                 return Err(refuse_load(Load::Unit, message));
             }
         };
-        self.over_added(m, (cal, env, ctx), (&Business::Rolled(day, roll), call))
+        self.apply(m, (cal, env, ctx), &Business::Rolled(day, roll))
     }
 
-    /// Business-day function `f` evaluated at each day the added windows of its calendar can
-    /// take: one value when the passes agree; days that differ give their window; an
-    /// `is_business` that differs is `HOLE-IMPRECISE`, asked of the calendar; either carries
-    /// the windows the passes met, in the order met (refcore's `over_added`). L §4.2, §4.4;
-    /// tally 2.1.8 R13.
-    fn over_added(
-        &mut self,
-        m: &Reality,
-        (cal, env, ctx): (&Expr, &Env, Ctx),
-        (f, call): (&Business, &Call),
-    ) -> Result<Value, Stop> {
-        let outer = self.calendar_pass.take();
-        let start = match &outer {
-            Some(pass) => pass.chosen.clone(),
-            None => BTreeMap::new(),
-        };
-        let found = self.passes(m, (cal, env, ctx), f, start);
-        self.calendar_pass = outer;
-        let (out, met) = found?;
-        let holes: Vec<Option<&Hole>> = out.iter().map(Value::as_hole).collect();
-        if let Some(h) = spread(&holes) {
-            return Ok(Value::Hole(h));
-        }
-        let [first, rest @ ..] = out.as_slice() else {
-            return Err(invariant("a business-day function with no pass"));
-        };
-        if rest.iter().all(|v| v == first) {
-            return Ok(first.clone());
-        }
-        let ((cal_id, _, written, _), _) = met
-            .first()
-            .ok_or_else(|| invariant("passes with no window"))?;
-        let carry: Vec<crate::hole::Unknown> =
-            met.iter().map(|(id, _)| added_unknown(id)).collect();
-        if let Value::Bool(_) = first {
-            let call_text = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
-            let text = format!("date within {written} not precise enough for {call_text}");
-            return Ok(Value::Hole(Hole::asked(&text, cal_id).carrying(&carry)));
-        }
-        let mut days = Vec::with_capacity(out.len());
-        for v in &out {
-            let Value::Day(d) = v else {
-                return Err(invariant("a business-day function's day that is no day"));
-            };
-            days.push(*d);
-        }
-        let (Some(lo), Some(hi)) = (days.iter().min(), days.iter().max()) else {
-            return Err(invariant("a business-day function with no pass"));
-        };
-        Ok(Value::Window(Box::new(Window {
-            lo: Value::Day(*lo),
-            hi: Value::Day(*hi),
-            days: None,
-            src: None,
-            figure: None,
-            read: None,
-            carry,
-            whole: false,
-        })))
-    }
-
-    /// The passes of `f`, from the choices `start` names: each pass that meets a window no
-    /// choice names is run again once per day of the first such window; the values of the
-    /// others, in order, and the windows met, in the order the passes met them (refcore's
-    /// `over_added`, its loop, `met_order`). L §4.2, §4.4.
-    fn passes(
-        &mut self,
-        m: &Reality,
-        (cal, env, ctx): (&Expr, &Env, Ctx),
-        f: &Business,
-        start: BTreeMap<WindowId, Day>,
-    ) -> Result<(Vec<Value>, MetWindows), Stop> {
-        let mut todo = VecDeque::from([start]);
-        let mut out = Vec::new();
-        let mut order: MetWindows = Vec::new();
-        while let Some(chosen) = todo.pop_front() {
-            self.calendar_pass = Some(CalendarPass {
-                chosen: chosen.clone(),
-                met: Vec::new(),
-            });
-            let v = self.pass(m, (cal, env, ctx), f)?;
-            let met = self
-                .calendar_pass
-                .take()
-                .ok_or_else(|| invariant("a pass's windows taken while it ran"))?
-                .met;
-            for (id, days) in &met {
-                if !order.iter().any(|(k, _)| k == id) {
-                    order.push((id.clone(), days.clone()));
-                }
-            }
-            if let Some((id, days)) = met.into_iter().next() {
-                for d in days {
-                    let mut next = chosen.clone();
-                    next.insert(id.clone(), d);
-                    todo.push_back(next);
-                }
-                continue;
-            }
-            out.push(v);
-        }
-        Ok((out, order))
-    }
-
-    /// One pass of business-day function `f` (refcore's closures under `over_added`).
-    /// L §4.2.
-    fn pass(
+    /// Business-day function `f` over the calendar `cal` reads, at each day it asks: a day, a
+    /// count's or a roll's, `true` or `false`, or the hole met on the way (refcore's
+    /// `c_is_business`, `c_add_business`, `c_last_business`, `c_schedule`). L §4.2.
+    fn apply(
         &mut self,
         m: &Reality,
         (cal, env, ctx): (&Expr, &Env, Ctx),
@@ -591,10 +393,9 @@ impl Engine {
     }
 
     /// Whether `day` is a business day of the calendar `cal` reads, in force on that day:
-    /// off by its rules or an added day; an added hole is `HOLE-CALENDAR`; an added window
-    /// holding the day is off when this pass's choice for it, or its first day where the pass
-    /// meets it newly, is the day. Where the search for one asks (`seek`), a calendar with
-    /// none is `RUN-DOMAIN` (refcore's `cal_at`, `business`). L §4.2, §4.4, §7.6 item 5.
+    /// off by its rules or an added day; else an added hole is `HOLE-CALENDAR`. Where the
+    /// search for one asks (`seek`), a calendar with none is `RUN-DOMAIN` (refcore's `cal_at`,
+    /// `business`). L §4.2, §7.6 item 5.
     fn business(
         &mut self,
         m: &Reality,
@@ -614,15 +415,11 @@ impl Engine {
             return Ok(Value::Bool(false));
         }
         let mut unknown: Vec<Hole> = Vec::new();
-        for (entry, added) in c.added().iter().enumerate() {
-            if *added == Added::Day(day) {
-                return Ok(Value::Bool(false));
-            }
-            if let Added::Hole(question) = added {
-                unknown.push(Hole::asked(question, name));
-            }
-            if added.may_be(day) && self.window_takes(m, (name, &keys, entry), added, (day, ctx))? {
-                return Ok(Value::Bool(false));
+        for added in c.added() {
+            match added {
+                Added::Day(off) if *off == day => return Ok(Value::Bool(false)),
+                Added::Day(_) => {}
+                Added::Hole(question) => unknown.push(Hole::asked(question, name)),
             }
         }
         if unknown.is_empty() {
@@ -684,85 +481,6 @@ impl Engine {
             ));
         }
         Ok(value)
-    }
-
-    /// The row calendar `name`'s read at `keys` on `day` takes, by its stable id, or `pin`
-    /// where a pin gives the calendar: what names its added windows, each entry of each row
-    /// a read of its own, as the calendar's own read sees its rows (L §4.4, §4.6 step 1).
-    ///
-    /// # Errors
-    ///
-    /// The read rule's refusals; `ENGINE-INVARIANT` for a calendar whose read took no row.
-    fn calendar_row(
-        &mut self,
-        m: &Reality,
-        (name, keys): (&str, &[KeyVal]),
-        (day, ctx): (Day, Ctx),
-    ) -> Result<String, Stop> {
-        let ctx = ctx.at_law(Some(day));
-        if self.pin_of(name, keys, ctx)?.is_some() {
-            return Ok("pin".to_owned());
-        }
-        self.calendar_own_row(m, (name, keys), ctx)?
-            .ok_or_else(|| invariant("a calendar's added window read from no row"))
-    }
-
-    /// The row input `name`'s own read at `keys` in `ctx` takes, by its stable id; none where
-    /// it takes none (L §4.6 step 1).
-    ///
-    /// # Errors
-    ///
-    /// The read rule's refusals; `ENGINE-INVARIANT` for an input load didn't build.
-    fn calendar_own_row(
-        &mut self,
-        m: &Reality,
-        (name, keys): (&str, &[KeyVal]),
-        ctx: Ctx,
-    ) -> Result<Option<String>, Stop> {
-        let input = m
-            .inputs
-            .get(name)
-            .ok_or_else(|| invariant("a calendar input load didn't build"))?;
-        let clocks = self.clocks(ctx, name)?;
-        match read_input(m, input, keys, clocks, Asked::Calendar)? {
-            Found::Row(at) => input
-                .rows
-                .get(at)
-                .map(|row| Some(row.sid.clone()))
-                .ok_or_else(|| invariant("the read rule took a row the input lacks")),
-            Found::None | Found::Hole(_) => Ok(None),
-        }
-    }
-
-    /// Whether calendar `name`'s added window `added`, which may be `day`, takes it: this
-    /// pass's choice for it, or its first day where the pass meets it newly, which the pass
-    /// records (refcore's `business`, its `cal_choice`). Each entry of each row is a read of
-    /// its own: two rows' entries are two unknowns, whatever their text (L §4.4; pick P32;
-    /// tally 2.1.8 R13). L §4.2, §4.4.
-    fn window_takes(
-        &mut self,
-        m: &Reality,
-        (name, keys, entry): (&str, &[KeyVal], usize),
-        added: &Added,
-        (day, ctx): (Day, Ctx),
-    ) -> Result<bool, Stop> {
-        let row = self.calendar_row(m, (name, keys), (day, ctx))?;
-        let id: WindowId = (name.to_owned(), entry, added.text(), row);
-        let days = added
-            .days()
-            .ok_or_else(|| invariant("a window's days past the calendar"))?;
-        let pass = self
-            .calendar_pass
-            .as_mut()
-            .ok_or_else(|| invariant("a calendar's added window read outside a pass"))?;
-        if let Some(chosen) = pass.chosen.get(&id) {
-            return Ok(*chosen == day);
-        }
-        let first = days.first().copied();
-        if !pass.met.iter().any(|(k, _)| *k == id) {
-            pass.met.push((id, days));
-        }
-        Ok(first == Some(day))
     }
 }
 

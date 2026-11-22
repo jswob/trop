@@ -95,7 +95,7 @@ impl Walk {
 
     /// The legs of the modelled-past instances at place `place` in unit `unit`, by position
     /// (the instance's, the leg's), each with its sign there (−1 out, +1 in), dated (by the
-    /// instance's day, a window's first) through day `d` and standing after the reading at
+    /// instance's day) through day `d` and standing after the reading at
     /// `since` in the day walk's order (refcore's `m_bal_modelled`, its loop over
     /// `w.modelled`). E §6.2, §4.2 step 3.
     fn modelled_legs(
@@ -106,8 +106,8 @@ impl Walk {
     ) -> Result<Vec<(usize, usize, i64)>, Stop> {
         let mut out = Vec::new();
         for (ii, inst) in self.modelled.iter().enumerate() {
-            // its legs are on its day, a window's first
-            let Some(gd) = inst.day.as_ref().and_then(Dated::lo) else {
+            // its legs are on its day
+            let Some(gd) = inst.day.as_ref().and_then(Dated::day) else {
                 continue;
             };
             for (li, lg) in inst.legs.iter().enumerate() {
@@ -199,7 +199,7 @@ impl Engine {
                 Change::Bad(err) | Change::PermBad(err) => return Err(Stop::Refused(err.clone())),
                 Change::Delta(flow) => q = q.checked_add(flow).map_err(crate::eval::num_stop)?,
                 Change::Hole(hole) | Change::Perm(hole) => holes.push(hole.clone()),
-                Change::Reset { .. } | Change::ImpOn(_) | Change::Unperm(_) | Change::Mark => {}
+                Change::Reset { .. } | Change::Mark => {}
             }
             if let Some(coll) = &entry.coll {
                 met.push(coll.clone());

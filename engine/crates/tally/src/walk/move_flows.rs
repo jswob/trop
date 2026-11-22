@@ -11,12 +11,12 @@
 //! in it too, and a decision run there counts in its `flows`; a place's flows are `flows.rs`'s.
 
 use super::flows::span_last;
-use super::instance::{Amount, Dated, DayWindow, Exists, HoleSrc, Inst, Status};
+use super::instance::{Amount, Dated, Exists, HoleSrc, Inst, Status};
 use super::order::WalkAt;
 use super::plan::{invariant, qty_value};
 use super::reads::refuse;
-use super::state::{LegOut, Progress};
-use crate::base::Run;
+use super::state::Progress;
+use crate::base::{Refusal, Run};
 use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
 use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
@@ -45,7 +45,7 @@ impl Engine {
         };
         let last = span_last(m, sp)?;
         let insts = if mv.decision {
-            std::rc::Rc::new(self.decision_runs(m, mv, (sp, last), ctx)?)
+            std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
         } else {
             self.move_instances(m, mv, ctx.cut)?
         };
@@ -142,7 +142,12 @@ impl Engine {
                     // read to be left out: every entry its reads gave, `held:` lines too
                     // (refcore's `flows_move`; P35, P48 on #241)
                     acc.met.merge(&i.coll);
-                } else if i.day.as_ref().and_then(Dated::lo).is_none_or(|d| d <= last) {
+                } else if i
+                    .day
+                    .as_ref()
+                    .and_then(Dated::day)
+                    .is_none_or(|d| d <= last)
+                {
                     // a read of day t reads its prefix through t: one dated after the span's
                     // last day was never met (E §4.2; S4, P43 on #241)
                     acc.met.merge(&i.coll.deciding());
@@ -171,24 +176,6 @@ impl Engine {
                     acc.met.merge(&i.day_coll.deciding());
                     continue;
                 }
-                // a window inside the span counts, one outside it doesn't, one across its
-                // edge may fall either side (refcore's `flows_move`; L §4.4)
-                Some(Dated::Window(w)) => match window_in(w, sp, last) {
-                    Some(true) => None,
-                    Some(false) => {
-                        acc.met.merge(&i.day_coll.deciding());
-                        continue;
-                    }
-                    None => {
-                        let text = format!(
-                            "date within {} not precise enough for flows of {}",
-                            w.question, mv.id
-                        );
-                        acc.holes
-                            .push(Hole::asked(&text, &i.id).carrying(&w.value.carry));
-                        continue;
-                    }
-                },
                 None => {
                     return Err(i
                         .err
@@ -196,19 +183,6 @@ impl Engine {
                         .map_or_else(|| invariant("an instance with no day"), Stop::Refused));
                 }
             };
-            if i.depends.is_some()
-                && let Some(Dated::Window(w)) = &i.day
-            {
-                // booked on some of its window's days, modelled or left out on the rest
-                // (E §4.1 step 2, L §4.4; tally 2.1.8 item 77)
-                let text = format!(
-                    "date within {} not precise enough for flows of {}",
-                    w.question, mv.id
-                );
-                acc.holes
-                    .push(Hole::asked(&text, &i.id).carrying(&w.value.carry));
-                continue;
-            }
             if let Some(k) = fk
                 && !for_period_of(i, k, acc)
             {
@@ -269,17 +243,8 @@ impl Engine {
                 } else {
                     self.leg_refused(m, (&i.id, &lg.name), day, ctx)?
                 };
-                if let Some(LegOut::Refused(err)) = &out {
-                    return Err(Stop::Refused(err.clone()));
-                }
-                if let Some(LegOut::Hole(h)) = out {
-                    // a window leg's: the flows read's question; a fixed day's the window's
-                    // test reaches: its questions asked for this read (tally 2.1.8 item 77;
-                    // the review of group 2's fix, N-i)
-                    let read = format!("flows of {}", mv.id);
-                    acc.holes
-                        .push(flows_hole(mv, i).unwrap_or_else(|| h.for_read(&read)));
-                    continue;
+                if let Some(err) = out {
+                    return Err(Stop::Refused(err));
                 }
                 acc.add(q, lg.unit.as_ref())?;
             }
@@ -376,16 +341,13 @@ impl Engine {
     /// A decision move's runs a flows read counts: the main walk's, or inside a decision the
     /// running walk's and the walks' it continues, before its point; an instance whose day is
     /// a hole counted as that hole, and one whose day is refused as its refusal, in any span
-    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run; one dated by a window
-    /// no walk ran that span `sp` (its last day `last`) reaches, read per day of it at an ask
-    /// line's own read, else the window's hole, inside a decision too ([`Engine::window_met`])
-    /// (refcore's `flows_move`, its decisions; P41, F5). L §5.14.1, §5.14.3, E §4.3, §4.1
-    /// step 2.
+    /// (L §8.4, tally 2.1.6); one refused by its key's `where` is a run (refcore's
+    /// `flows_move`, its decisions). L §5.14.1, §5.14.3, E §4.3.
     fn decision_runs(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        (sp, last): (&Span, Day),
+        last: Day,
         ctx: Ctx,
     ) -> Result<Vec<Inst>, Stop> {
         let (id, limit) = match ctx.at {
@@ -409,22 +371,10 @@ impl Engine {
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
             let Some(run) = self.chain_run(id, &i.id)? else {
-                if let Some(Dated::Window(w)) = &i.day
-                    && i.exists != Exists::No
-                    && window_in(w, sp, last) != Some(false)
-                {
-                    // dated by a window no walk books on one day, which the span reaches:
-                    // what it counts is read per day of the window (E §4.1 step 2; N3)
-                    let what = format!("flows of {}", mv.id);
-                    let mut held = i.clone();
-                    held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
-                    out.push(held);
-                    continue;
-                }
                 // an instance no walk ran: its day a hole, or after the run's end (E §2)
                 let unwalked = match i.day {
                     Some(Dated::Day(d)) => d > m.end,
-                    Some(Dated::Window(_) | Dated::Hole(_)) | None => true,
+                    Some(Dated::Hole(_)) | None => true,
                 };
                 if unwalked && i.exists != Exists::No {
                     out.push(i.clone());
@@ -453,7 +403,7 @@ impl Engine {
         key: (&str, &str),
         day: Option<Day>,
         ctx: Ctx,
-    ) -> Result<Option<LegOut>, Stop> {
+    ) -> Result<Option<Refusal>, Stop> {
         let wanted = (key.0.to_owned(), key.1.to_owned());
         if let Some(WalkAt { walk, .. }) = ctx.at {
             return self.chain_refusal(walk, &wanted);
@@ -464,7 +414,7 @@ impl Engine {
             || !self.walking.is_empty();
         let ours = !busy && ctx.cut == self.ask_cut;
         if ours && let Some(read) = self.refused_by_each(&wanted, ctx.cut) {
-            return read.map(|r| r.map(LegOut::Refused));
+            return read;
         }
         let unfinished = match id {
             None => true,
@@ -494,9 +444,7 @@ impl Engine {
                 }
                 // the walk read an axis the timeline sets no option of (E §3.3)
                 Err(Stop::NotBuilt(why)) if why == UNSET_AXIS => {
-                    return self
-                        .refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why))
-                        .map(|r| r.map(LegOut::Refused));
+                    return self.refused_in_each(m, &wanted, ctx.cut, Stop::NotBuilt(why));
                 }
                 Err(stop) => return Err(stop),
             };
@@ -507,48 +455,29 @@ impl Engine {
         self.chain_refusal(w, &wanted)
     }
 
-    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first,
-    /// else the hole a test some of a window's days pass left it: a projection's walk keeps
-    /// what the walks it continues have refused so far (refcore's `leg_refused`, its loop over
-    /// `w.base`). E §4.2 step 5, §4.3 step 1; tally 2.1.8 item 77.
+    /// The refusal of leg `wanted` in walk `id` or in a walk it continues, the nearest first: a
+    /// projection's walk keeps what the walks it continues have refused so far (refcore's
+    /// `leg_refused`, its loop over `w.base`). E §4.2 step 5, §4.3 step 1.
     fn chain_refusal(
         &mut self,
         id: usize,
         wanted: &(String, String),
-    ) -> Result<Option<LegOut>, Stop> {
+    ) -> Result<Option<Refusal>, Stop> {
         for wid in self.chain(id)? {
             let walk = self.walk(wid)?;
             if let Some(refusal) = walk.bad_legs.get(wanted) {
                 // the refusal is read with what it rests on (L §8.2; B1 on #241)
                 let (refusal, read) = (refusal.clone(), walk.refused_reads(&wanted.0));
                 self.absorb(&read);
-                return Ok(Some(LegOut::Refused(refusal)));
-            }
-            if let Some(hole) = walk.hole_legs.get(wanted) {
-                return Ok(Some(LegOut::Hole(hole.clone())));
+                return Ok(Some(refusal));
             }
         }
         Ok(None)
     }
 }
 
-/// The hole `flows` of move `mv` reads in a leg of instance `i` where a test some of a
-/// window's days pass left it the window's hole: asked for flows of the move, of its
-/// instance's window; none for a leg of a fixed day (refcore's `flows_move`, its
-/// `leg_refused` hole). L §4.4; tally 2.1.8 item 77.
-fn flows_hole(mv: &MoveInfo, i: &Inst) -> Option<Hole> {
-    let Some(Dated::Window(w)) = &i.day else {
-        return None;
-    };
-    let text = format!(
-        "date within {} not precise enough for flows of {}",
-        w.question, mv.id
-    );
-    Some(Hole::asked(&text, &i.id).carrying(&w.value.carry))
-}
-
 /// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
-/// a period that is a hole (an `at` window across a law change, L §4.3) is that hole in
+/// a period that is a hole is that hole in
 /// `acc`, the instance unfulfilled where it is past (L §8.1, §8.2; P64). L §5.14.3.
 fn for_period_of(i: &Inst, k: &Value, acc: &mut Counted) -> bool {
     let Some(period) = &i.for_period else {
@@ -706,17 +635,6 @@ fn wanted(leg: Option<&str>, name: &str) -> bool {
         None => true,
         Some(l) => l == name,
     }
-}
-
-/// Whether window `w` lies inside span `sp`, whose last day is `last`: true inside it, false
-/// wholly outside it, none across its edge (refcore's `flows_move`). L §4.4, §5.14.3.
-fn window_in(w: &DayWindow, sp: &Span, last: Day) -> Option<bool> {
-    if sp.contains(w.lo) && w.hi <= last {
-        return Some(true);
-    }
-    let after = sp.end().is_some() && w.lo > last;
-    let before = sp.start().is_some_and(|start| w.hi < start);
-    (after || before).then_some(false)
 }
 
 #[cfg(test)]

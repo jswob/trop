@@ -19,7 +19,8 @@ b09_bartek: (2 500.00 DUK, promised)
   law date 2025-12-31, cut 2026-01-07
 b09_total: 62 816.66 DUK
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
-  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   unfulfilled: client_pay[fv_001_2022]
   unfulfilled: client_pay[fv_001_2023]
   unfulfilled: client_pay[fv_001_2024]
@@ -139,7 +140,9 @@ b11_worth: (421 860.35 DUK + -1 × ?"Were this month's contributions, health con
   assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
   assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
-  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
   anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
   anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR

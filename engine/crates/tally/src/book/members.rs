@@ -27,8 +27,7 @@ use crate::num::Num;
 use crate::syntax::{Bind, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, DayWindow, Depends, End, Exists, Inst, LegOut, LegVal, Status, Term, WalkAt,
-    invariant, qty_value,
+    Amount, At, Dated, End, Exists, Inst, Law, LegVal, Status, Term, WalkAt, invariant, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -92,12 +91,11 @@ impl Moving {
     }
 
     /// Its place among a binding's members: its day, a hole day as the last day there is, so
-    /// after every day, then its movement order, typed (refcore's `(day_lo(x.day) or
-    /// datetime.date.max, order_key(x.order))`; tally 2.1.2). L §5.19 Bindings, §2.5; E §4.1.
+    /// after every day, then its movement order, typed (tally 2.1.2). L §5.19 Bindings, §2.5;
+    /// E §4.1.
     fn sort_key(&self) -> Result<(Day, Term), Stop> {
         let day = match self.day() {
             Some(Dated::Day(d)) => d,
-            Some(Dated::Window(w)) => w.lo,
             Some(Dated::Hole(_)) | None => Day::LAST,
         };
         let order = match self {
@@ -124,6 +122,7 @@ impl Moving {
                 id: o.id.clone(),
                 day: Some(o.day),
                 src: MvSrc::Obs,
+                member: false,
             },
             Moving::Adj(a) => MvRef {
                 id: a.id.clone(),
@@ -135,11 +134,13 @@ impl Moving {
                     leg: a.leg.name.clone(),
                     vids: a.vids.clone(),
                 },
+                member: false,
             },
             Moving::Pad(p, at) => MvRef {
                 id: p.id.clone(),
                 day: Some(at.day),
                 src: MvSrc::Pad,
+                member: false,
             },
         }))
     }
@@ -291,42 +292,21 @@ impl Engine {
                     self.no_member(&x);
                     continue;
                 }
-                // a window inside the span is a member, one outside it isn't, one across its
-                // edge may be (refcore's `span_members`; L §4.4)
-                Some(Dated::Window(w)) => match window_member(&w, sp) {
-                    Some(true) => None,
-                    Some(false) => {
-                        self.no_member(&x);
-                        continue;
-                    }
-                    None => {
-                        let text = format!(
-                            "date within {} not precise enough for a binding over {}",
-                            w.question, dom.1
-                        );
-                        Some(Hole::asked(&text, x.id()).carrying(&w.value.carry))
-                    }
-                },
             };
             if let Moving::Plan(i) = &x {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
                 }
-                if matches!(i.depends, Some(Depends::Covered(_)))
-                    && let Some(Dated::Window(w)) = &i.day
-                {
-                    // modelled past on some of its window's days, booked on the rest: whether
-                    // it is a member is the window's hole (E §4.1 step 2; tally 2.1.8 item 77)
-                    let text = format!(
-                        "date within {} not precise enough for a binding over {}",
-                        w.question, dom.1
-                    );
-                    let h = Hole::asked(&text, &i.id).carrying(&w.value.carry);
-                    st = spread(&[st.as_ref(), Some(&h)]);
-                }
                 if let Some(e) = &i.err {
                     return Err(Stop::Refused(e.clone()));
                 }
+            }
+            // an adjustment of a hole-day instance is a member only where that day falls before
+            // its step's: its existence is the hole (E §5 step 1, tally 2.3 C-4)
+            if let Moving::Adj(a) = &x
+                && let Some(h) = &a.unknown
+            {
+                st = spread(&[st.as_ref(), Some(h)]);
             }
             if let Moving::Obs(o) = &x
                 && let Some(t) = self.obs_target(m, o, ctx.cut)?
@@ -366,8 +346,15 @@ impl Engine {
             let day = x
                 .day()
                 .ok_or_else(|| invariant("a member of a binding with no day"))?;
+            // a decision whose day is a hole has its legs read as the plan has them, on the
+            // member alone (B1; ruling 14; refcore's `hole_day_dec_body`)
+            let mut value = x.value();
+            if let (Value::Mv(r), Moving::Plan(i)) = (&mut value, &x) {
+                r.member = unread_hole(m, i).is_some()
+                    && m.moves.get(&i.move_id).is_some_and(|mv| mv.decision);
+            }
             res.push(MvMember {
-                value: x.value(),
+                value,
                 unknown,
                 coll,
                 day,
@@ -522,13 +509,20 @@ impl Engine {
                     .into_iter()
                     .map(Moving::Adj),
             );
+            // those of an instance whose day is a hole, which may or may not exist (E §5 step
+            // 1, tally 2.3 C-4)
+            out.extend(
+                self.unsure_adjustments(m, cut)?
+                    .into_iter()
+                    .map(Moving::Adj),
+            );
         }
         if sub.contains("pads") {
             // the walk's own movements, as it booked them (L §5.14.1 Running reads)
             let pads = self.walk_pads(m, ctx)?;
             out.extend(pads.into_iter().map(|(p, at)| Moving::Pad(p, at)));
         }
-        out.extend(self.decided_members(m, (&decided, kind), ctx)?);
+        out.extend(self.decided_members(m, &decided, ctx)?);
         let groups = self.same_groups(m, ctx.cut)?;
         let sides = self.same_sides(m, ctx.cut)?;
         in_order(once_by_same((&groups, &sides), out))
@@ -536,16 +530,14 @@ impl Engine {
 
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
     /// as the walk ran them: inside a decision, its walk's and those it continues', the ones
-    /// before its point; else the main walk's of the read's timeline, and an instance dated by
-    /// a window no walk ran, read per day of it ([`Engine::window_met`]); inside a walk that
-    /// one's hole names the binding by `kind`, what it ranges over (the lead's point 5(b) on
-    /// #241). One that doesn't exist or is modelled past is no member, nor is an uncertain
-    /// one without `with uncertain` (refcore's `movements_of`, its decisions, and its
-    /// membership's `imprecise_hole`). L §5.14.1 Running reads, §5.19 Bindings, E §4.1 step 2.
+    /// before its point; else the main walk's of the read's timeline. One that doesn't exist
+    /// or is modelled past is no member, nor is an uncertain one without `with uncertain`;
+    /// one whose day is a hole, which no walk runs, is a member with that hole (refcore's
+    /// `movements_of`, its decisions). L §5.14, §5.14.1 Running reads, §5.19 Bindings.
     fn decided_members(
         &mut self,
         m: &Reality,
-        (decided, kind): (&[&MoveInfo], &str),
+        decided: &[&MoveInfo],
         ctx: Ctx,
     ) -> Result<Vec<Moving>, Stop> {
         if decided.is_empty() {
@@ -557,11 +549,9 @@ impl Engine {
         };
         let mut out = Vec::new();
         for mv in decided {
-            // read per day outside a walk, the line names the move (refcore's `WinDay`)
-            let over = if limit.is_some() { kind } else { &mv.id };
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(self.unrun_window(m, over, inst)?);
+                    out.extend(hole_day_member(inst));
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -584,27 +574,33 @@ impl Engine {
         Ok(out)
     }
 
-    /// A decision's instance `inst` that no walk ran: dated by a window, a member whose day
-    /// is the window's hole, or the line read per day of the window ([`Engine::window_met`]),
-    /// inside a decision's walk too, where it is the hole, never left out; else none. What
-    /// met it is `a binding over <over>` (E §4.1 step 2; tally 2.2.1 N3, P41 F5; refcore's
-    /// `movements_of`, its `WinDay`).
-    fn unrun_window(
+    /// Field `name` of instance `i`, whose day is the hole `h`, that the plan pass didn't read
+    /// (`unread_hole`): a leg of a decision's instance that a binding met, `v` being its
+    /// member's value, is a record, its places read as the plan has them at cut `cut` and its
+    /// amount and day that hole, so a `where` on its places is decided; any other field, and
+    /// any field of the movement read by its name, is that hole (L §5.14, §5.19 Bindings; the
+    /// review of G1's fix, BF1, P10; ruling 14; refcore's `hole_day_dec_body`, `_body_hole`).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met reading its places.
+    fn unread_field(
         &mut self,
         m: &Reality,
-        over: &str,
-        inst: &Inst,
-    ) -> Result<Option<Moving>, Stop> {
-        let Some(Dated::Window(w)) = &inst.day else {
-            return Ok(None);
+        (v, i): (&MvRef, &Inst),
+        (name, is_leg): (&str, bool),
+        (h, cut): (Hole, Day),
+    ) -> Result<Value, Stop> {
+        let Some(mv) = m.moves.get(&i.move_id).filter(|_| is_leg && v.member) else {
+            return Ok(Value::Hole(h));
         };
-        if inst.exists == Exists::No {
-            return Ok(None);
-        }
-        let what = format!("a binding over {over}");
-        let mut held = inst.clone();
-        held.day = Some(Dated::Hole(self.window_met(m, &w.value, what)?));
-        Ok(Some(Moving::Plan(held)))
+        let Some(legs) = self.hole_day_legs(m, mv, i, cut)? else {
+            return Ok(Value::Hole(h));
+        };
+        Ok(match legs.iter().find(|lg| lg.name == name) {
+            Some(lg) => same_leg_record(lg, &h),
+            None => Value::Hole(h),
+        })
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
@@ -622,7 +618,12 @@ impl Engine {
                     return Ok(Some(Moving::Adj(a.clone())));
                 }
                 let all = self.unsettled_adjustments(m, cut)?;
-                Ok(all.into_iter().find(|a| a.id == v.id).map(Moving::Adj))
+                if let Some(a) = all.into_iter().find(|a| a.id == v.id) {
+                    return Ok(Some(Moving::Adj(a)));
+                }
+                // one of an instance whose day is a hole, a binding's member (tally 2.3 C-4)
+                let unsure = self.unsure_adjustments(m, cut)?;
+                Ok(unsure.into_iter().find(|a| a.id == v.id).map(Moving::Adj))
             }
             MvSrc::Kind(_) => Ok(None),
             MvSrc::Missing => {
@@ -656,9 +657,7 @@ impl Engine {
     /// A move's instance by id at the read's cut; a decision's as the walk ran it: inside a
     /// decision, in its walk or one it continues, `RUN-ORDER` where it hasn't run yet; else in
     /// the main walk of the read's timeline, or the instance as planned where that walk didn't
-    /// run it, one dated by a window as a binding's member is ([`Engine::unrun_window`])
-    /// (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2, E §4.1
-    /// step 2.
+    /// run it (refcore's `mv_by_id`, a move, and `mv_record`). L §5.14, §5.14.1, §5.14.2.
     fn instance_by_id(
         &mut self,
         m: &Reality,
@@ -683,17 +682,13 @@ impl Engine {
         };
         match self.chain_run(walk, id)? {
             Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),
-            // dated by a window no walk ran: its fields are the window's, read per day or its
-            // hole, as its membership is, inside a decision's walk too (E §4.1 step 2; tally
-            // 2.2.1 F4, F5, P41)
-            None => match self.unrun_window(m, &mv.id, &inst)? {
-                Some(held) => Ok(Some(held)),
-                None if running => Err(Stop::Refused(Refusal::new(
-                    Code::Run(Run::Order),
-                    format!("decision {id} is read before it has run"),
-                ))),
-                None => Ok(Some(Moving::Plan(inst))),
-            },
+            // one whose day is a hole runs on no day of the walk: it is never waited for, and
+            // a field no walk read is its hole (L §5.14; the review of G1's fix, BF1, P10)
+            None if running && unread_hole(m, &inst).is_none() => Err(Stop::Refused(Refusal::new(
+                Code::Run(Run::Order),
+                format!("decision {id} is read before it has run"),
+            ))),
+            None => Ok(Some(Moving::Plan(inst))),
         }
     }
 
@@ -765,6 +760,27 @@ impl Engine {
             }
             Moving::Adj(_) | Moving::Pad(..) => {}
         }
+        // a field the plan pass didn't read, of an instance whose day is a hole (a decision,
+        // which never runs without a day; one under a hole `at`), is that hole, but a
+        // decision's leg a binding met (L §5.14; the review of G1's fix, BF1, P10; ruling 14)
+        if name != "day"
+            && let Moving::Plan(i) = &src
+            && let Some(h) = unread_hole(m, i)
+        {
+            return self.unread_field(m, (v, i), (name, is_leg), (h, ctx.cut));
+        }
+        // a leg a later version changes, of an instance whose day is a hole, is read as that
+        // hole: its amount and day, and its places too where the version moves them, since
+        // its booking cut is a hole with its day (L §5.14; pick P12, by C-4's measure, P10)
+        if is_leg
+            && let Moving::Plan(i) = &src
+            && let Some((h, moved)) = self.changed_leg(m, i, name, ctx.cut)?
+        {
+            return Ok(match i.legs.iter().find(|lg| lg.name == name) {
+                Some(lg) if !moved => same_leg_record(lg, &h),
+                Some(_) | None => Value::Hole(h),
+            });
+        }
         if (name == "day" || is_leg)
             && let Some(h) =
                 self.same_rows_hole(m, &src, (name != "day").then_some(name), ctx.cut)?
@@ -790,6 +806,40 @@ impl Engine {
             _ if is_leg => self.leg_field(m, &src, name, ctx),
             _ => attr_field(m, &src, name),
         }
+    }
+
+    /// The hole of leg `leg` of instance `inst`, whose day is a hole, where a later version
+    /// known by cut `cut` changes it, and whether it moves the leg's places: C-4's measure
+    /// made an adjustment of it whose existence is that hole (`Engine::unsure_of`); none for
+    /// an instance with a day, or a leg no version changes (L §5.14, E §5 steps 1 and 2; pick
+    /// P12).
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the measuring.
+    fn changed_leg(
+        &mut self,
+        m: &Reality,
+        inst: &Inst,
+        leg: &str,
+        cut: Day,
+    ) -> Result<Option<(Hole, bool)>, Stop> {
+        let Some(Dated::Hole(h)) = &inst.day else {
+            return Ok(None);
+        };
+        let mv = m
+            .moves
+            .get(&inst.move_id)
+            .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
+        let mut changed = false;
+        let mut moved = false;
+        for a in self.unsure_of(m, mv, cut)? {
+            if a.inst_id == inst.id && a.leg.name == leg {
+                changed = true;
+                moved = moved || !a.new_ends.is_empty();
+            }
+        }
+        Ok(changed.then(|| (h.clone(), moved)))
     }
 
     /// A movement of a `same` group whose members state kinds not all inside the binding's
@@ -884,8 +934,8 @@ impl Engine {
 
     /// The `HOLE-SAME` of side `row` (an id, a day where it is one, legs) on fact `fact`, where
     /// the other members of its `same` group disagree with it, each side's reads of the fact
-    /// taken; the hole of a window the comparison doesn't decide (refcore's `same_rows_hole`;
-    /// tally 2.2.1's 219.1, B2, N4, Q1, Q3). L §6.1, §8.1, §8.2, §4.4.
+    /// taken; a side's hole day's hole (refcore's `same_rows_hole`; tally 2.2.1's 219.1, B2,
+    /// N4, Q1, Q3). L §6.1, §8.1, §8.2.
     ///
     /// # Errors
     ///
@@ -935,8 +985,7 @@ impl Engine {
 
     /// Whether span `sp` holds side `row` of a movement stated `same`, `day` its own day: none
     /// where every side's day is in the span or none is; else their day's hole, `HOLE-SAME` or
-    /// a window's the comparison doesn't decide, never one side's day (L §6.1, §5.19 Bindings;
-    /// N4, P36 on #241).
+    /// a side's hole day's, never one side's day (L §6.1, §5.19 Bindings; N4, P36 on #241).
     ///
     /// # Errors
     ///
@@ -1033,13 +1082,8 @@ impl Engine {
             // the walk is a cause an explanation prints in its own form only where it refused
             // the leg; else the leg is its instance's, traced as the instance was (E §10)
             let back = self.trace_walked();
-            match self.leg_refused(m, (src.id(), name), day, ctx)? {
-                Some(LegOut::Refused(err)) => return Err(Stop::Refused(err)),
-                Some(LegOut::Hole(h)) => {
-                    self.trace_walked_back(back);
-                    return Ok(Value::Hole(h));
-                }
-                None => {}
+            if let Some(err) = self.leg_refused(m, (src.id(), name), day, ctx)? {
+                return Err(Stop::Refused(err));
             }
             self.trace_walked_back(back);
             let record = leg_record(m, lg)?;
@@ -1174,8 +1218,9 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
         Moving::Adj(a) => match name {
             "adjusts" => Some(Value::Mv(Box::new(MvRef {
                 id: a.inst_id.clone(),
-                day: Some(a.inst_day),
+                day: a.inst_day,
                 src: MvSrc::Inst(a.move_id.clone(), a.inst_keys.clone()),
+                member: false,
             }))),
             "change" => Some(amount_value(m, &a.delta, a.leg.unit.as_deref())?),
             _ => None,
@@ -1208,7 +1253,7 @@ fn body_hole(src: &Moving) -> Option<Hole> {
     }
     match &i.day {
         Some(Dated::Hole(h)) => Some(h.clone()),
-        Some(Dated::Day(_) | Dated::Window(_)) | None => None,
+        Some(Dated::Day(_)) | None => None,
     }
 }
 
@@ -1248,9 +1293,10 @@ fn reads_of_fact(i: &Inst, fact: &Fact) -> Collected {
     }
 }
 
-/// A leg of a movement stated `same` whose sides disagree on its amount, as a record: its
-/// `from` and `to` its own, its `amount` and `day` the disagreement's hole (L §5.14, §6.1
-/// `HOLE-SAME` per fact; P42 on #241).
+/// A leg whose amount is a hole `same` as a record: its `from` and `to` its own, its `amount`
+/// and `day` that hole; for a movement stated `same` whose sides disagree on the amount (L
+/// §5.14, §6.1 `HOLE-SAME` per fact; P42 on #241), and for a hole-day instance's leg a later
+/// version changes (pick P12).
 fn same_leg_record(lg: &LegVal, same: &Hole) -> Value {
     let end = |e: &End| match e {
         End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
@@ -1280,8 +1326,9 @@ fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, St
 pub(crate) fn inst_ref(i: &Inst) -> MvRef {
     MvRef {
         id: i.id.clone(),
-        day: i.day.as_ref().and_then(Dated::lo),
+        day: i.day.as_ref().and_then(Dated::day),
         src: MvSrc::Inst(i.move_id.clone(), i.keys.clone()),
+        member: false,
     }
 }
 
@@ -1293,36 +1340,23 @@ pub(super) fn row_key(o: &Obs) -> &str {
         .unwrap_or(&o.id)
 }
 
-/// Whether span `sp` holds a movement on `day`: a day in it or not, a window as
-/// [`window_member`] takes it; none for a hole day or none. L §4.4, §5.19 Bindings.
+/// Whether span `sp` holds a movement on `day`: a day in it or not; none for a hole day or
+/// none. L §5.19 Bindings.
 fn day_in(day: Option<&Dated>, sp: &Span) -> Option<bool> {
     match day? {
         Dated::Day(d) => Some(sp.contains(*d)),
-        Dated::Window(w) => window_member(w, sp),
         Dated::Hole(_) => None,
     }
 }
 
-/// Whether a movement dated by window `w` is a member of a binding over span `sp`: true
-/// inside it, false wholly outside it, none across its edge (refcore's `span_members`).
-/// L §4.4, §5.19 Bindings.
-fn window_member(w: &DayWindow, sp: &Span) -> Option<bool> {
-    if sp.contains(w.lo) && sp.contains(w.hi) {
-        return Some(true);
-    }
-    let after = sp.end().is_some_and(|end| w.lo >= end);
-    let before = sp.start().is_some_and(|start| w.hi < start);
-    (after || before).then_some(false)
-}
-
 /// Whether a binding over span `sp` rests on movement `x`, so meets its S1 refusal: one dated
-/// on a day outside the span doesn't; one whose day is a window, a hole or refused may be a
+/// on a day outside the span doesn't; one whose day is a hole or refused may be a
 /// member, so does (refcore's `span_members`, its `s1_refusal` test). L §5.19 One movement on
 /// two statements, Bindings.
 fn rests_in(x: &Moving, sp: &Span) -> bool {
     match x.day() {
         Some(Dated::Day(d)) => sp.contains(d),
-        Some(Dated::Window(_) | Dated::Hole(_)) | None => true,
+        Some(Dated::Hole(_)) | None => true,
     }
 }
 
@@ -1370,7 +1404,7 @@ fn unfulfilled(m: &Reality, i: &Inst, cut: Day) -> bool {
         return false;
     }
     if m.moves.get(&i.move_id).is_some_and(|mv| mv.decision) {
-        return i.day.as_ref().and_then(Dated::lo).is_some_and(|d| d < cut);
+        return i.day.as_ref().and_then(Dated::day).is_some_and(|d| d < cut);
     }
     i.status == Status::Past
 }
@@ -1402,9 +1436,30 @@ fn once_by_same((groups, sides): (&Groups, &[String]), movements: Vec<Moving>) -
         .collect()
 }
 
-/// Movements in movement order: by day, then by their typed order, ties as they came (refcore's
-/// stable `sort` by `(day_lo(x.day) or datetime.date.max, order_key(x.order))`). L §5.19
-/// Bindings; E §4.1.
+/// The hole of instance `inst` when the plan pass read none of its fields: its day is a hole
+/// and it is a decision's, which never runs without a day, or its law date is a hole, under
+/// which nothing of it is read; else none (L §5.14; the review of G1's fix, BF1, P10).
+fn unread_hole(m: &Reality, inst: &Inst) -> Option<Hole> {
+    let Some(Dated::Hole(h)) = &inst.day else {
+        return None;
+    };
+    let decision = m.moves.get(&inst.move_id).is_some_and(|mv| mv.decision);
+    (decision || matches!(inst.law, Law::Hole(_))).then(|| h.clone())
+}
+
+/// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
+/// runs on no day of the walk, so it is a member with that hole, never left out; else none
+/// (L §5.14: a movement whose day is a hole makes every binding over a span it might fall in
+/// a hole; tally 2.3 review of G1, B1).
+fn hole_day_member(inst: &Inst) -> Option<Moving> {
+    match inst.day {
+        Some(Dated::Hole(_)) if inst.exists != Exists::No => Some(Moving::Plan(inst.clone())),
+        Some(Dated::Hole(_) | Dated::Day(_)) | None => None,
+    }
+}
+
+/// Movements in movement order: by day, a hole day after every day, then by their typed order,
+/// ties as they came (refcore's stable `sort`). L §5.19 Bindings; E §4.1.
 fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     let mut keyed = Vec::with_capacity(movements.len());
     for mv in movements {
@@ -1412,4 +1467,317 @@ fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     }
     keyed.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(keyed.into_iter().map(|(_, mv)| mv).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A sweep, a decision reading its place, on day `dd`: the day is written in for `DAY`.
+    const SWEEP: &str = r#"model sweep
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+kind sweeps: event certain
+  leg cash: PLN
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input dd: date
+
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its cap"
+  dd = DAY "its day"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "own"
+
+ask n: count(t in sweeps over 2026-05)
+
+ask n_jan: count(t in sweeps over 2026-01)
+
+ask s: sum(t.cash.amount for t in sweeps over 2026-05)
+
+ask n_p: count(t in sweeps over 2026-05) with dd = 2026-05-05
+
+ask w_to: count(t in sweeps over 2026-05 where t.cash.to == sav)
+
+ask w_from: count(t in sweeps over 2026-05 where t.cash.from == sav)
+
+ask d_to: sweep.cash.to
+"#;
+
+    /// A pay on day `pd`, written in for `DAY`, its amount raised by a version known on 15
+    /// March, inside the run (`hd1`'s twin; T's pin oracle, `known_in`).
+    const RAISE: &str = r#"model raise
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input pd: date
+
+move pay_x: transfers
+  on pd
+  leg cash from world to konto amount pay
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its amount"
+  pd = DAY "its day"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "own"
+
+version raise
+  cite fixture
+  governs always
+  known 2026-03-15
+  replace pay = 150.00 PLN "raised"
+
+ask amt: pay_x.cash.amount
+
+ask amt_p10: pay_x.cash.amount with pd = 2026-03-10
+
+ask amt_p20: pay_x.cash.amount with pd = 2026-03-20
+
+ask from: pay_x.cash.from
+"#;
+
+    /// A top-up, a decision that reads the sweeps of its month by their amounts, beside the
+    /// sweep of [`SWEEP`] on day `dd`, written in for `DAY` (the review of G1's fix, BF1).
+    const TOP: &str = r#"model top
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+kind sweeps: event certain
+  leg cash: PLN
+
+kind tops: event certain
+  leg cash: PLN
+
+place sav: accounts PLN lives 2026-01-01..
+
+place sv2: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input dd: date
+
+input dt: date
+
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+
+move top: tops
+  on dt
+  reads sv2, sweep
+  leg cash from world to sv2 amount sum(t.cash.amount for t in sweeps over month_of(dt)) + 0 * bal(sv2)
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its cap"
+  dt = 2026-05-31 "the top-up's day"
+  dd = DAY "the sweep's day"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "own"
+  opening[sv2] = 0.00 PLN at 2026-01-01 start "own"
+
+ask f: flows(top, 2026-05)
+
+ask b: bal(sv2, 2026-06-30)
+
+ask f_p: flows(top, 2026-05) with dd = 2026-05-04
+"#;
+
+    /// The lines of ask `ask` over [`SWEEP`] with its day `day`.
+    fn lines(day: &str, ask: &str) -> Vec<String> {
+        lines_of(SWEEP, day, ask)
+    }
+
+    /// The lines of ask `ask` over text `text` with its day `day`.
+    fn lines_of(text: &str, day: &str, ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "sweep.tally".to_owned(),
+            bytes: Some(text.replace("DAY", day).into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_decision_whose_day_is_a_hole_is_a_member_with_its_hole() {
+        // L §5.14: a movement whose day is a hole makes every binding over a span it might fall
+        // in a hole, a decision as any (tally 2.3 review of G1, B1): a window and a `?` alike
+        let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
+        for ask in ["n", "n_jan", "s"] {
+            assert_eq!(
+                lines("window(2026-05-04, 2026-05-06)", ask),
+                [
+                    format!("{ask}: {window}"),
+                    "  unknown day: dd".to_owned(),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the window's hole"
+            );
+            assert_eq!(
+                lines("?\"which day is the sweep?\"", ask),
+                [
+                    format!("{ask}: ?\"which day is the sweep?\" (dd)"),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the question's hole"
+            );
+        }
+        assert_eq!(
+            lines("window(2026-05-04, 2026-05-06)", "n_p"),
+            ["n_p: 1", "  pinned: dd = 2026-05-05", "  cut 2026-04-20"],
+            "a pinned day"
+        );
+    }
+
+    #[test]
+    fn a_where_on_a_hole_day_decisions_places_is_decided() {
+        // ruling 14 (P10): a binding reads a hole-day decision's places as the plan has them,
+        // so a member the `where` fails is counted on no day; one it takes is the day's hole;
+        // read by its name, the place is that hole (B1's body; refcore's `hole_day_dec_body`)
+        let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
+        let day = "window(2026-05-04, 2026-05-06)";
+        assert_eq!(
+            lines_of(SWEEP, day, "w_to"),
+            ["w_to: 0", "  cut 2026-04-20"],
+            "the where fails"
+        );
+        for ask in ["w_from", "d_to"] {
+            assert_eq!(
+                lines_of(SWEEP, day, ask),
+                [
+                    format!("{ask}: {window}"),
+                    "  unknown day: dd".to_owned(),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the window's hole"
+            );
+        }
+    }
+
+    #[test]
+    fn a_field_of_a_hole_day_decision_is_its_hole_never_run_order() {
+        // a hole-day decision is never waited for: read inside another decision, its leg's
+        // amount, which no walk read, is its hole (L §5.14; the review of G1's fix, BF1, P10)
+        let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
+        for ask in ["f", "b"] {
+            assert_eq!(
+                lines_of(TOP, "window(2026-05-04, 2026-05-06)", ask),
+                [
+                    format!("{ask}: {window}"),
+                    "  unknown day: dd".to_owned(),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the window's hole"
+            );
+            assert_eq!(
+                lines_of(TOP, "?\"which day?\"", ask),
+                [
+                    format!("{ask}: ?\"which day?\" (dd)"),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the question's hole"
+            );
+        }
+        assert_eq!(
+            lines_of(TOP, "window(2026-05-04, 2026-05-06)", "f_p"),
+            [
+                "f_p: 100.00 PLN",
+                "  pinned: dd = 2026-05-04",
+                "  cut 2026-04-20"
+            ],
+            "a pinned day"
+        );
+    }
+
+    #[test]
+    fn a_field_of_a_hole_day_instance_a_later_version_changes_is_its_hole() {
+        // its booking cut is a hole with its day (L §5.14), so the amount a later version
+        // changes isn't known; a field no version changes stays a value (pick P12)
+        for (day, hole) in [
+            (
+                "window(2026-03-01, 2026-03-31)",
+                vec![
+                    "amt: ?\"date within window(2026-03-01, 2026-03-31) not precise enough for the day of pay_x\" (pd)",
+                    "  unknown day: pd",
+                    "  cut 2026-04-20",
+                ],
+            ),
+            (
+                "?\"which day is the pay?\"",
+                vec!["amt: ?\"which day is the pay?\" (pd)", "  cut 2026-04-20"],
+            ),
+        ] {
+            assert_eq!(lines_of(RAISE, day, "amt"), hole, "{day}");
+            assert_eq!(
+                lines_of(RAISE, day, "from"),
+                ["from: world", "  cut 2026-04-20"],
+                "{day}: its from"
+            );
+            assert_eq!(
+                lines_of(RAISE, day, "amt_p10"),
+                [
+                    "amt_p10: 100.00 PLN",
+                    "  pinned: pd = 2026-03-10",
+                    "  cut 2026-04-20"
+                ],
+                "{day}: booked before the raise"
+            );
+            assert_eq!(
+                lines_of(RAISE, day, "amt_p20"),
+                [
+                    "amt_p20: 150.00 PLN",
+                    "  pinned: pd = 2026-03-20",
+                    "  cut 2026-04-20"
+                ],
+                "{day}: booked after it"
+            );
+        }
+    }
 }

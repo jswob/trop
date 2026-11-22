@@ -733,17 +733,6 @@ pub enum CalendarDay {
     Day(Day),
     /// `?"…"`.
     Hole(String),
-    /// A window or a choice of days.
-    Set(DaySet),
-}
-
-/// A day known only within a set (L §4.4).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DaySet {
-    /// `window(a, b)`.
-    Window(Day, Day),
-    /// `one_of([a, …])`.
-    OneOf(Vec<Day>),
 }
 
 /// A version's or row's span of literals (L §2.3 `lspan`).
@@ -1503,8 +1492,8 @@ pub enum Value {
     List(Vec<Lit>),
     /// A calendar.
     Calendar(Calendar),
-    /// A window or a choice of days.
-    Days(DaySet),
+    /// `window(a, b)`: one day from a to b, not yet known (L §4.4).
+    Window(Day, Day),
     /// A signed literal.
     Lit(Lit),
     /// A distribution, with its `to u` if written (L §5.16): an `Expr::Dist`, or an

@@ -1,7 +1,8 @@
 //! A band's reads: `b(x)`, the value of the row holding x; `marginal(b, x)`; `band_lo`, `band_hi`, that row's ends.
 //! Spec: L §5.9 (bands: rows by interval, every bare literal in a row a figure, a keyed band's
 //! key; `marginal`, `band_lo`, `band_hi`), §4.6 (the read rule over tables), §8.1
-//! (`HOLE-UNGOVERNED`: no table, no row), §8.2 (`assumed` and `held` of a band row).
+//! (`HOLE-UNGOVERNED`: no table, no row), §8.2 (`assumed` and `held` of a band row), §4.4 (a
+//! band's argument is off the readers' list: a ranged date there is the hole).
 //! Twin: engine/tools/refcore/evaluate.py (`call_band`, `band_key`, `band_rows`,
 //! `band_no_row`, `band_value`, `band_x`, `c_marginal`, `c_band_lo`, `band_end_value`,
 //! `interval_text`) and model.py (`BandRow.holds`).
@@ -19,6 +20,7 @@ use super::memo::{LawClass, Read, may_hold, tables_class};
 use super::state::{
     Ctx, Engine, Env, Rows, invariant, num_stop, refuse, refuse_load, unit_stop, wrong_type,
 };
+use super::windows::{single, unlisted};
 use crate::base::{Load, Run};
 use crate::hole::Hole;
 use crate::model::{
@@ -240,6 +242,16 @@ impl Engine {
                 "a value is none here: a band argument".to_owned(),
             ));
         }
+        // a band's argument is read at one value, off the readers' list: a ranged date is the
+        // hole (L §4.4; C-5); a window of one day is that day (F3)
+        if let Some(hole) = unlisted(&[&x], "a band argument") {
+            return Ok(Err(hole));
+        }
+        let x = if let Value::Window(_) = x {
+            single(&x).into_owned()
+        } else {
+            x
+        };
         self.read(Read::Band {
             id: band.id.clone(),
             key: key.clone(),
@@ -563,4 +575,60 @@ fn bare_figure(e: &Expr) -> bool {
         return n.unit.is_none();
     }
     false
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A band over dates read at a window (the critic's `p1.tally`).
+    const BAND_AT_WINDOW: &str = r#"model band_at_window
+  tally 2
+  on 2026-01-01
+  start 2020-01-01
+  end 2026-12-31
+
+source card "invented"
+
+input w: date
+
+band tier(d: date): int
+
+version v_card
+  cite card
+  governs always
+  known 2020-01-01
+  w = window(2026-03-02, 2026-03-20) "c"
+  tier: [2026-01-01, 2026-04-01) = 1
+  tier: [2026-04-01, 2027-01-01) = 2
+
+ask band_in: tier(w)
+"#;
+
+    fn answer(ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "band.tally".to_owned(),
+            bytes: Some(BAND_AT_WINDOW.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_band_read_at_a_ranged_date_is_the_hole() {
+        // L §4.4 (tally 2.3 S4, C-5): a band's argument is read at one value, off the list,
+        // so a ranged date there is the hole naming the day, not a refusal
+        assert_eq!(
+            answer("band_in"),
+            [
+                "band_in: ?\"date within window(2026-03-02, 2026-03-20) not precise enough for a band argument\" (w)",
+                "  unknown day: w",
+                "  cut 2026-01-01"
+            ],
+            "the band's argument"
+        );
+    }
 }

@@ -25,7 +25,7 @@ version card_2026
   known 2026-01-01
   w = window(2026-06-01, 2026-06-05) "c"
   wy = window(2026-12-30, 2027-01-02) "c"
-  o = one_of([2026-06-01, 2026-06-05]) "c"
+  o = window(2026-06-01, 2026-06-05) "c"
   wd = window(2026-06-01, 2026-06-01) "c"
   cal = calendar(weekends [sat, sun]) "c"
   caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"

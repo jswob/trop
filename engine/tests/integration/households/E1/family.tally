@@ -3,8 +3,8 @@ model family
   on 2026-09-30
   start 2021-01-01
   end 2064-12-31
-  use a = "../A" sha256 "9ef700be93e1a979e70381e3e77b47c456457487194de86b1ad3c726d2b92bb1"
-  use b = "../B" sha256 "c4c25f6289e86976cbab7100bed58e4711949dd276e74868ba5a1cbc91d44395"
+  use a = "../A" sha256 "9e83e044cd9ed872b116dbfba6bf4f21e417c950b33d85233df6272581928b88"
+  use b = "../B" sha256 "b73eb4fc365ffd7df3930e7206dee5254c90f83568e3de2cf831540c2f0edc36"
   use d = "../D" sha256 "2738c6dbbe7039e21e4f92c713f0835a9aa134365f6af9ea2e34caa5b0e47b11"
   note "Household E1 of the case set (tmp/cases/E1/story.md): Halina's family, households A (Ania and Tomek Lis), B (Piotr Sowa and Ola Wilk) and D (Halina Sowa) read together, in tally 2. It is a joint model (L §6.1): each household is a member, imported closed and unchanged under its prefix, a (households/A), b (households/B) and d (households/D); this directory holds only the family's own items and asks. Amounts are in DUK, the dukat of Lenia, of 100 orts, which the members declare (L §6.1, Currencies); B's florens are B's own."
   note "Each member is its household's directory tree, the law parts it reads copied into its own law/ (L §6.1: a law used by several realities is copied in, never linked; the reality is one directory tree): A/law holds the 27 parts its header names, B/law the 33 its header names, D/law all 63 of cases/law/, which D's own runs load. The copies are byte for byte cases/law/'s, so the members copy the same versions of each shared part (L §6.1, Shared law). The households' own runs still name cases/law/ and never their law/ (O:E1-1)."

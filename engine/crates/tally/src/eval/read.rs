@@ -204,8 +204,8 @@ impl Engine {
 
     /// A pinned value `value` of figure `figure` named as an unknown day: a window written
     /// there, which carries no name of its own, is the unknown day of the figure pinned, its
-    /// holes asked of it; one that came from a read, or was computed from one or from a
-    /// calendar's entry, keeps the names and the days it carries (refcore's `pinned_read`: a
+    /// holes asked of it; one that came from a read, or was computed from one, keeps the
+    /// names and the days it carries (refcore's `pinned_read`: a
     /// pin whose `Iv` has no origin; L §4.4 "a copy keeps the name", "a computed value …
     /// carries the names it was computed from"; picks P30, P32, P26).
     pub(super) fn pinned_window(value: Value, figure: &str) -> Value {

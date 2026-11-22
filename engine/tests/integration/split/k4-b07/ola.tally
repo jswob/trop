@@ -12,6 +12,8 @@ input ola_late[m in months]: date question "Is this month's pay paid on a day ot
 
 input ola_pay_dom: int question "On which day of the month is Ola's pay paid (B-D25)?"
 
+input ola_lag: int question "Where no calendar governs the month, how many days before the window's last day is Ola's pay booked?"
+
 input ola_pay_from: date question "From which month does the dossier state Ola's pay (B-D25)?"
 
 input ola_spends[m in months]: bool question "Is a spending of Ola's from Wrzos counted in this month (one her statements don't cover, from her first statement on)?"
@@ -52,7 +54,7 @@ def ola_net[m in months]: money DUK = ola_gross[m] - ola_social[m] - ola_health[
 def ola_pay_on[m in months]: date at start_of(m)
   note "B-D25: pay is paid on the 28th of the month it is for, or the last business day before it. Where no row of the calendar governs the month yet (2026's, at a cut before the gazette's hol_2026, known 2025-10-16), B-D25 still bounds the day: a day of that month, not after the 28th"
   rule rule28 = schedule(m, ola_pay_dom, preceding, holidays)
-  rule no_calendar beats rule28 v mewa_2024 = window(start_of(m), day_of(m, ola_pay_dom)) when missing(holidays)
+  rule no_calendar beats rule28 v mewa_2024 = add_days(day_of(m, ola_pay_dom), -ola_lag) when missing(holidays)
   rule moved beats rule28, no_calendar = ola_late[m] when ola_late[m] != none
 
 def ola_result[y in years]: money DUK = ola_advances[y] - ola_tax[y]
@@ -84,6 +86,7 @@ version mewa_2024
   ola_gross[2024-01..2024-12] = 7200.00 DUK "B-D25: from January 2024, 7 200.00 DUK"
   ola_late[*] = none "B-D25: pay is paid on the 28th, or the last business day before it"
   ola_pay_dom = 28 "B-D25: on the 28th of the month it is for"
+  ola_lag = 0 assumed "where no calendar governs the month yet, the pay day is not known: the window's last day is planned" "B-D25"
   ola_pay_from = 2024-01-01 "B-D25: pay from January 2024 (the dossier's first statement of it)"
 
 version mewa_october

@@ -129,7 +129,7 @@ impl Loader {
             | Written::Record(_)
             | Written::List(_)
             | Written::Calendar(_)
-            | Written::Days(_)
+            | Written::Window(..)
             | Written::Lit(_)
             | Written::Dist(_)
             | Written::Expr(_) => {

@@ -470,7 +470,7 @@ pub fn int_of(m: &Reality, v: &Value) -> Result<i64, Stop> {
             "a value is none here: an integer argument".to_owned(),
         ));
     }
-    // an interval reaches here where its caller takes no window (L §4.4)
+    // no number is a range (L §4.4): a caller asks a ranged date for its hole first
     Err(Stop::NotBuilt(
         "an integer argument that isn't a number, met at run",
     ))

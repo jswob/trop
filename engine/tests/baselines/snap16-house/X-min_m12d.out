@@ -1,9 +1,7 @@
-t (l = lot[x1], c = lot[x1]): 1
+t (l = lot[x2], c = lot[x2]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])
+  unknown day: day[x1]
   cut 2027-01-01
-t (l = lot[x1], c = lot[x2]): 0
-  cut 2027-01-01
-t (l = lot[x2], c = lot[x1]): 0
-  cut 2027-01-01
-t (l = lot[x2], c = lot[x2]): 1
-  cut 2027-01-01
+t (l = lot[x2], c = lot[x1]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])
+t (l = lot[x1], c = lot[x2]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])
+t (l = lot[x1], c = lot[x1]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])
 
