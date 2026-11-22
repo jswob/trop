@@ -25,7 +25,7 @@ WRITER2 = {'exp', 'ln', 'sqrt', 'periodic', 'factor', 'dcf', 'accrue', 'cdf', 'p
 WRITER3 = set()
 DATE_FNS = {'start_of', 'end_of', 'year_of', 'quarter_of', 'month_of', 'day_of', 'days_between', 'add_days',
             'add_months', 'add_years', 'overlap_days', 'age', 'age_months', 'weekday', 'pos',
-            'is_business', 'add_business', 'last_business', 'schedule', 'window', 'one_of'}
+            'is_business', 'add_business', 'last_business', 'schedule', 'window'}
 
 
 def shift_offset(keys, var):
@@ -2828,14 +2828,6 @@ class Checker:
         self.args(n, 2)
         self.tdate(n.args[0], sc, n)
         self.tdate(n.args[1], sc, n)
-        return T.DATE
-
-    def c_one_of(self, n, sc, expect):
-        self.args(n, 1)
-        a = n.args[0]
-        t = self.tc(a, sc)
-        if t.k not in ('dates', 'list'):
-            raise uerr('one_of takes a list of days', n.loc)
         return T.DATE
 
     def cal_arg(self, e, sc, n):

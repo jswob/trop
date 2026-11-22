@@ -1101,25 +1101,25 @@ mod tests {
     /// G13's fix vectors, part 1 of 4 (at 0 modulo 4).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g13_part_1() {
-        fixes_hold("fixes-g13", (0, 4), 85);
+        fixes_hold("fixes-g13", (0, 4), 86);
     }
 
     /// G13's fix vectors, part 2 of 4 (at 1 modulo 4).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g13_part_2() {
-        fixes_hold("fixes-g13", (1, 4), 84);
+        fixes_hold("fixes-g13", (1, 4), 86);
     }
 
     /// G13's fix vectors, part 3 of 4 (at 2 modulo 4).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g13_part_3() {
-        fixes_hold("fixes-g13", (2, 4), 84);
+        fixes_hold("fixes-g13", (2, 4), 86);
     }
 
     /// G13's fix vectors, part 4 of 4 (at 3 modulo 4).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_g13_part_4() {
-        fixes_hold("fixes-g13", (3, 4), 84);
+        fixes_hold("fixes-g13", (3, 4), 86);
     }
 
     /// G14's fix vectors, part 1 of 6 (at 0 modulo 6).
@@ -1179,7 +1179,7 @@ mod tests {
     /// 0 modulo 2).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_1() {
-        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 141);
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (0, 2), 142);
     }
 
     /// Gate 8's open survivors' texts (`m1/fixes/gate8/`) but `GATE8_ALONE`, part 2 of 2 (at
@@ -1188,7 +1188,7 @@ mod tests {
     /// both 155 after its readings after m went, S-3; 160 before.)
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_gate8_part_2() {
-        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 141);
+        fixes_hold_but("fixes-gate8", &GATE8_ALONE, (1, 2), 142);
     }
 
     /// Gate 8's `fixes/gate8/m2_g7_p1_cuts` alone (cuts past four kept walks, a walk planned past the read freed; `GATE8_ALONE`).
@@ -1236,7 +1236,7 @@ mod tests {
     /// tally 2.1.7's rule R3: its items' vectors and its reach (`m1/fixes/r3/`).
     #[test]
     fn m1_lows_the_tree_prints_the_walk_on_fixes_r3() {
-        fixes_hold("fixes-r3", (0, 1), 7);
+        fixes_hold("fixes-r3", (0, 1), 6);
     }
 
     /// tally 2.1.7's rule R4: its items' vectors and its reach (`m1/fixes/r4/`).

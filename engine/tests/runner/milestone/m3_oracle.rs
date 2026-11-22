@@ -209,13 +209,15 @@ mod tests {
     /// (`oracle.py`'s `names_w`).
     fn names_w(u: &str) -> bool {
         u.match_indices('(').any(|(i, _)| {
-            let after = u.get(i..).unwrap_or("").get(1..).unwrap_or("");
-            after.split_once(')').is_some_and(|(inner, rest)| {
-                !inner.contains('"')
-                    && !inner.contains('(')
-                    && inner.split(',').any(|x| matches!(x.trim(), "w" | "v2"))
-                    && (rest.is_empty() || rest.starts_with(' '))
-            })
+            u.get(i..)
+                .and_then(|s| s.strip_prefix('('))
+                .and_then(|after| after.split_once(')'))
+                .is_some_and(|(inner, rest)| {
+                    !inner.contains('"')
+                        && !inner.contains('(')
+                        && inner.split(',').any(|x| matches!(x.trim(), "w" | "v2"))
+                        && (rest.is_empty() || rest.starts_with(' '))
+                })
         })
     }
 
@@ -259,16 +261,17 @@ mod tests {
         } else {
             Kind::Value
         };
-        let one = vals.len() == 1;
-        match expect {
-            "false" if u != "false" => {
+        // The one value every unrefused pinned day prints, if they agree.
+        let only = vals.first().copied().filter(|_| vals.len() == 1);
+        match (expect, only) {
+            ("false", _) if u != "false" => {
                 return (
                     format!("printed {u} where a test of what is known is false"),
                     kind,
                 );
             }
-            "false" => return (String::new(), kind),
-            "off" if !(kind == Kind::Refusal && one && vals.contains(u)) => {
+            ("false", _) => return (String::new(), kind),
+            ("off", _) if !(kind == Kind::Refusal && only == Some(u)) => {
                 return if kind == Kind::Hole && names_w(u) {
                     (String::new(), kind)
                 } else {
@@ -278,8 +281,7 @@ mod tests {
                     )
                 };
             }
-            "list" if one && !vals.contains(u) && kind == Kind::Hole => {
-                let v = vals.first().copied().unwrap_or("");
+            ("list", Some(v)) if v != u && kind == Kind::Hole => {
                 return (
                     format!("the hole where every pinned day prints {v}: {u}"),
                     kind,
@@ -299,7 +301,7 @@ mod tests {
             }
             _ => {}
         }
-        if one && vals.contains(u) {
+        if only == Some(u) {
             return (String::new(), kind);
         }
         match (kind, stretch(u)) {
@@ -378,21 +380,24 @@ mod tests {
             let (why, k) = judge(ul.trim(), &line(i, true), &refused, cite, "");
             let k0 = *kind.get_or_insert(k);
             if !why.is_empty() {
-                return (
-                    format!("line {} of the block: {why}", i.saturating_add(1)),
-                    k0,
-                );
+                return (format!("line {} of the block: {why}", add(i, 1)), k0);
             }
         }
         (String::new(), kind.unwrap_or(Kind::Value))
     }
 
+    /// A count plus `by`; past `usize` the test fails (R-23: no clamping).
+    fn add(n: usize, by: usize) -> usize {
+        n.checked_add(by)
+            .expect("a count of the oracle's lines fits in usize")
+    }
+
     fn judge_text(t: &Text, sum: &mut Tally) {
         let run = run_args(&t.args, &t.files);
         let got = answers(&run.out);
-        sum.texts = sum.texts.saturating_add(1);
+        sum.texts = add(sum.texts, 1);
         if got.is_empty() {
-            let first = run.out.lines().next().unwrap_or("");
+            let first: String = run.out.lines().take(1).collect();
             sum.fails.push(format!(
                 "{}: refused at load or printed nothing: {first}",
                 t.id
@@ -412,15 +417,15 @@ mod tests {
                 .collect();
             let (Some(u), Some(pinned)) = (u, pinned) else {
                 sum.fails.push(format!("{} l{i:02}: no line printed", t.id));
-                fails = fails.saturating_add(1);
+                fails = add(fails, 1);
                 continue;
             };
-            sum.lines = sum.lines.saturating_add(1);
+            sum.lines = add(sum.lines, 1);
             let nref = pinned
                 .iter()
                 .filter(|(_, b)| b.first().is_some_and(|l| balance_check(l)))
                 .count();
-            sum.refused = sum.refused.saturating_add(nref);
+            sum.refused = add(sum.refused, nref);
             // An observation answers the day: the line is held to the pin on its day alone.
             let pinned: Vec<(String, Vec<String>)> = match t.anchors.get(&i) {
                 Some(day) => pinned.into_iter().filter(|(d, _)| d == day).collect(),
@@ -429,24 +434,24 @@ mod tests {
             let expect = t.expect.get(&i).map_or("", String::as_str);
             let (why, kind) = judge_block(u, &pinned, &window_of(t), expect);
             if why.is_empty() && matches!(kind, Kind::Value | Kind::Stretch) {
-                values = values.saturating_add(1);
+                values = add(values, 1);
             }
             match (why.is_empty(), t.held.get(&i)) {
                 (true, _) => {}
                 (false, Some(code)) => sum.held.push(format!("{} l{i:02} ({code}): {why}", t.id)),
                 (false, None) => {
                     sum.fails.push(format!("{} l{i:02}: {why}", t.id));
-                    fails = fails.saturating_add(1);
+                    fails = add(fails, 1);
                 }
             }
         }
-        sum.values = sum.values.saturating_add(values);
+        sum.values = add(sum.values, values);
         // A text whose every line is off the list or a test of what is known is held line by line.
         let teeth = (0..t.lines)
             .any(|i| !matches!(t.expect.get(&i).map(String::as_str), Some("off" | "false")));
         match (values == 0 && fails == 0 && teeth, &t.apart) {
             (false, _) => {}
-            (true, Some(_)) => sum.apart = sum.apart.saturating_add(1),
+            (true, Some(_)) => sum.apart = add(sum.apart, 1),
             (true, None) => sum
                 .fails
                 .push(format!("{}: empty, every line a hole or a refusal", t.id)),

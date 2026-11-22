@@ -1,9 +1,0 @@
-scenario sc over cb
-  tally 2
-  from 2026-05-01
-move extra: transfers
-  on w
-  leg cash from world to konto amount amt
-ask s_after: bal(konto, 2026-05-31) in sc
-ask s_d28: bal(konto, 2026-05-31) in sc with w = 2026-04-29
-ask s_d02: bal(konto, 2026-05-31) in sc with w = 2026-05-02

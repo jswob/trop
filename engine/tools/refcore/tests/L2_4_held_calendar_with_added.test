@@ -1,5 +1,7 @@
 # tally 2.2.1 (#221, 221.6), L §2.4: a calendar prints with its added list: the scenario's calendar is held as
 # calendar(weekends [sat, sun], added [2026-06-24]). tally 2.2 dropped the list (the 2.2 review's p3, m and c24).
+# tally 2.3 (G3, #247): one_of is gone (L §4.4); the calendar's added day not yet fixed is a hole, `?"which day is the bridge day?"`, and the
+# results re-stored.
 === m.tally
 model g4_p3
   tally 2
@@ -46,7 +48,7 @@ version v_card
   known 2026-01-01
   pay = 100.00 PLN "c"
   w = window(2026-03-05, 2026-03-07) "c"
-  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
+  cal = calendar(weekends [sat, sun], added [?"which day is the bridge day?"]) "c"
   from_day = 2026-06-19 "c"
   opening[konto] = 500.00 PLN at 2026-01-01 start "c"
   opening[sav] = 0.00 PLN at 2026-01-01 start "c"

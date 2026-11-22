@@ -7,6 +7,20 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.3, household A's speed and reads (T's re-run of the first pin; issue #247; 1 610 tests)
+
+- **The cause of A-13's 14× was C13, not C-4:** `partswalk.phole_day_legs` put every hole-day leg at a parts place
+  into every take batch there, and the fill computed its terms per arc (7.5 M `pterms` calls on `I:A:A-13~A4`). One
+  leg each way, the first arrival and the first outflow in the walk's order, leaves every take there undecided as
+  C13 says, at a cost per batch of two legs (A4 18.7 s, A5 20.1 s, `mca05_bal` 7.0 s on PyPy).
+- **C-4's measure left the walk anyway:** `adjust_move_compute` skips a hole-day instance; `moves.hole_adjustments`
+  measures them (`hole_day_steps`) only when a binding over `adjustments` asks (`mreads.movements_of`).
+- **`mca05_bal`'s 157 lines and SOC-CAP's question were W1's own additions to the hole day,** both gone: the balance
+  hole a hole day makes names its day's question and reads only (tally 2.2.1's `?` rule), not its hole amount's
+  questions (`walk.sched_hole`), and `walk.cum` no longer carries a hole day's reads past a reading (an O(n²) scan of
+  the log at every reset). 4 W1 re-stores went back with them.
+- `hole_day_dec_body` reads a decision's places on a collector of its own, not the binding's.
+
 ## tally 2.3, a `?` law date under C-4 (the lead's P8; issue #247; 1 610 tests)
 
 - Under a hole `at` with no days it carries (a `?`), `Engine.read_at_hole_law` registers every visible row the read

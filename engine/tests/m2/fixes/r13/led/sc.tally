@@ -1,9 +1,0 @@
-scenario sc over t
-  tally 2
-  from 2026-01-01
-
-version sc_v
-  cite s
-  governs 2026-01-01..
-  known 2026-01-01
-  replace amt = 20.00 PLN "s"

@@ -130,7 +130,7 @@ law known governs assumed none never check solve diff explain inputs-of readers-
 sum count min max any all first last argmin argmax share mean quantile prorata flows bal value
 covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
-age_months weekday add_business last_business is_business schedule calendar window one_of since
+age_months weekday add_business last_business is_business schedule calendar window since
 band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
 gamma poisson binomial negbin uniform discrete cdf pdf pmf crps
 ```
@@ -239,8 +239,8 @@ hole      = "?" STR
 code      = a code word of §2.2, or "nominal" INT
 calval    = "calendar" "(" "weekends" "[" ID {"," ID} "]" ["," "yearly" "[" MMDD {"," MMDD} "]" ["from" INT]]
             ["," "added" "[" cday {"," cday} "]"] ")"                      (§4.2)
-cday      = DAY | hole | dayset
-dayset    = "window" "(" DAY "," DAY ")" | "one_of" "(" "[" DAY {"," DAY} "]" ")"      (a window, §4.4)
+cday      = DAY | hole
+dayset    = "window" "(" DAY "," DAY ")"      (a window, §4.4)
 span      = expr ".." [expr] | ".." [expr] | expr        (each end a date or period; ".." alone is every day, §4.1)
 lspan     = lit ".." [lit] | ".." lit | lit            (a version's spans: literal dates or periods, §4.1)
 interval  = ("[" | "(") (slit | "-" "inf") "," (slit | "inf") ("]" | ")")
@@ -370,7 +370,7 @@ The loader accepts any spacing that the grammar allows: spaces between tokens ar
 | `int` | An integer. | `12` |
 | `bool` | `true` or `false`. | `true` |
 | `text` | A name or a note held as data. Nothing computes with it but `==` and `!=`. Its literal states a fact (§7.1). | `"Bank Pocztowy"` |
-| `date` | A day, or a **window** (§4.4); never an observation's `on` (§5.19). | `2026-07-14`, `window(2026-11-26, 2026-11-28)` |
+| `date` | A day; a row may state a **window** (§4.4), never as an observation's `on` (§5.19). | `2026-07-14`, `window(2026-11-26, 2026-11-28)` |
 | `dates` | A finite list of days. | `[2026-01-01, 2026-01-06]` |
 | `month`, `quarter`, `year` | A period value. | `2026-03`, `2026-Q1`, `2026` |
 | `monthday` | A day of the year without its year (13 April). `02-29` is no month-day, since not every year has it (refused, `LOAD-PARSE`). Month-days compare with `==` and `!=` only; any order or arithmetic on them is refused (§8.4). `day_of(y, md)` is its day in year y, and a calendar's `yearly` entries are month-days (§4.2). | `04-30` |
@@ -609,7 +609,7 @@ version len_ahead
 ```
 
 - **The value.** `calendar(weekends [...], yearly [...] [from Y], added [...])` lists the weekdays that are never business days (`mon tue wed thu fri sat sun`, ISO 8601's days 1 to 7; another word is refused, `LOAD-PARSE`), the month-days that are holidays every year (values of type `monthday`, §3.1; from year Y, if stated), and the days added in the row's span. A calendar whose `weekends` name all seven days has no business day (§7.6). A year whose days differ from the rules in any other way is stated by a version that replaces that year's row, as `len_2026` does.
-- **A day not yet fixed.** A day in `added` may be a hole (`HOLE-CALENDAR` where it decides a result) or a window (`one_of([…])`, `window(a, b)`): every day known but one (`O:A-3`).
+- **A day not yet fixed.** A day in `added` may be a hole (`HOLE-CALENDAR` where it decides a result). One of a few possible days is stated in a row marked `assumed`, or by an axis that keys the calendar where the options are wanted side by side (§5.5, `O:A-3`).
 - **Coverage.** A calendar's coverage is the span of the row that states it; a day outside it is a hole naming the calendar and the year (`HOLE-CALENDAR`), never a weekends-only guess. A calendar's years past the published ones are rows marked `assumed` (a forecast, §4.5), as `len_ahead` is; the published row replaces each when it is known.
 - **The day asked.** Every calendar read reads the calendar at the day it asks about: `add_business(d, n, len)` reads `len`'s row governing d (so it needs no law date, §4.3). The calendar a business-day function takes is therefore a read of a calendar input, at any keys (`cal[country[p]]`); any other calendar expression (a def, an `if`) is refused (`LOAD-UNIT`).
 
@@ -662,7 +662,7 @@ def charge[m in months]: money PLN = sum(charge_day[d] for d in days where month
 
 ### 4.4 Windows: a day not yet known
 
-A recorded day that nobody knows to the day is a **window** (P-9, D-7): `window(a, b)`, any day from a to b, or `one_of([d1, d2, …])`. A row states it, as a `date` input's value or a record row's `date` field: `x = window(2019-01-01, 2019-12-31)` is "some day in 2019" (a month or year literal is a period, never an imprecise date). A window of one day is that day.
+A recorded day that nobody knows to the day is a **window** (P-9, D-7): `window(a, b)`, any day from a to b. A row states it, as a `date` input's value or a record row's `date` field; written elsewhere, `window(e1, e2)` is a stretch with no cell. `x = window(2019-01-01, 2019-12-31)` is "some day in 2019" (a month or year literal is a period, never an imprecise date). A window of one day is that day.
 
 A window is one unknown day, named by the cell of its row. A copy keeps the name: a def whose value is the read, a pin whose value is the read, an `if` branch that passes it. A stretch computed from it has no name and carries the names it came from, as a hole made of either does.
 
@@ -866,7 +866,7 @@ axis ul05_cut
   exact "no rounding is stated"
 ```
 
-An axis lists readings no fact settles, each with a note (N-109, N-912): which text governs, which edge, a rounding the law leaves open. A convention a fact can set (a contract's day count, a payer's rounding) is a code value of an input, not an axis (D-12, `LC-24`); hypothetical facts are scenarios (§6.4).
+An axis lists readings no fact settles, or the few values a fact not yet known can take (§4.2), each with a note (N-109, N-912): which text governs, which edge, a rounding the law leaves open. A convention a fact can set (a contract's day count, a payer's rounding) is a code value of an input, not an axis (D-12, `LC-24`); hypothetical facts are scenarios (§6.4).
 - A rule may test it: `when ul05_cut == floor`. Several axes may be tested in one `when`.
 - An input may be keyed by it, and its rows for different options may sit in different versions. **The axis id in a key position** reads the input at the current option, and fans out: `selbstbehalt[dt_u_work]`, `friend_of[cmp_spouses, i]`.
 - `round(x, u, a)` and `prorata` may take it as the mode when every option is a rounding code (§2.2); otherwise `LOAD-UNIT`. An axis whose options mix modes with readings such as `exact` is tested by rules, each calling `round` with a mode or with none. Two axes may share option names; a bare option is resolved by its position (§2.5).
@@ -2260,7 +2260,7 @@ A hole is a fact that is missing: one a row could give (P-9). It is never 0, nev
 | `missing record counted by <version>` | a rule that won because a `missing` test read true (§5.11) |
 | `pinned: <pin>` | a `with` or `as if` pin (§5.11); a pinned axis is listed here only, never under `reading:`. A pin given by an expression prints its value, `pinned: <pin> = v`, and with it the register of what the expression read. Pins formed per binding tuple print once, as written, with their binding (`pinned: gross = g for g in gross_lo .. gross_hi step minor(DUK)`), never one line per tuple. The pins one def forms under many `as if` (a `known d` at each of its keys, as `cpi_yy[m] as if {known d}`) print once, their days merged into maximal spans |
 | `pinned sample: <address> = v` | a sample pin, or a pinned uniform (§5.16, §7.4) |
-| `unknown day: <name>` | each unknown day a hole of the result carries (§4.4), once, the lines sorted by their text as the lines of each kind are: the cell a caller pins, wherever a cell holds or copies the day, as its read names it (`w`, `held_from[b]` at its keys); `added <entry> of <calendar>` for a calendar's entry; where no cell does, its movement (`salary[2026-03]`), else the window's own text; two days never share a line |
+| `unknown day: <name>` | each unknown day a hole of the result carries (§4.4), once, the lines sorted by their text as the lines of each kind are: the cell a caller pins, wherever a cell holds or copies the day, as its read names it (`w`, `held_from[b]` at its keys); where no cell does, its movement (`salary[2026-03]`), else the window's own text; two days never share a line |
 | `sample: <address> = v (u = …)` | on a `path p` line, each sample it reached, in canonical order (§5.16) |
 | `world: <scenario or model>` | the ask's `in`, and any `as if {scenario s}` it reached (§6.4) |
 | `reading: <axis> = <option>` | each axis option that the line's result depends on (§5.5); options that give the line's result together are named together (`down \| half-up`). An axis the line prints as `*` has no `reading:` entry |

@@ -189,6 +189,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             if isinstance(d, Hole):
                 # the month of the observation holds the line (P37, N7)
                 dd = ful_last[i.id]
+            if getattr(i, 'day_coll', None) is not None and touches(i):
+                # the reads that place its day, a pin among them, are the ledger's (L §8.2; tally 2.3, the lead's
+                # ledger under a pin)
+                self.day_reads(i.day_coll)
             if not in_span(dd) or (not covered(dd) and i.id not in ful_ids):
                 continue
             if not touches(i):

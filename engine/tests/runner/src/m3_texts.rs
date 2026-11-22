@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 354] = [
+pub static TEXTS: [(&str, &str); 335] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -626,10 +626,6 @@ pub static TEXTS: [(&str, &str); 354] = [
         include_str!("../../m3/fixes/net_worth.tally"),
     ),
     (
-        "m3/fixes/t221/arith2/arith2.tally",
-        include_str!("../../m3/fixes/t221/arith2/arith2.tally"),
-    ),
-    (
         "m3/fixes/t221/ax/reality.tally",
         include_str!("../../m3/fixes/t221/ax/reality.tally"),
     ),
@@ -648,14 +644,6 @@ pub static TEXTS: [(&str, &str); 354] = [
     (
         "m3/fixes/t221/cbase/c_base.tally",
         include_str!("../../m3/fixes/t221/cbase/c_base.tally"),
-    ),
-    (
-        "m3/fixes/t221/cells/base.tally",
-        include_str!("../../m3/fixes/t221/cells/base.tally"),
-    ),
-    (
-        "m3/fixes/t221/cells/sc.tally",
-        include_str!("../../m3/fixes/t221/cells/sc.tally"),
     ),
     (
         "m3/fixes/t221/cov/cov.tally",
@@ -700,22 +688,6 @@ pub static TEXTS: [(&str, &str); 354] = [
     (
         "m3/fixes/t221/f1/f1_flows.tally",
         include_str!("../../m3/fixes/t221/f1/f1_flows.tally"),
-    ),
-    (
-        "m3/fixes/t221/from/base.tally",
-        include_str!("../../m3/fixes/t221/from/base.tally"),
-    ),
-    (
-        "m3/fixes/t221/from/sc.tally",
-        include_str!("../../m3/fixes/t221/from/sc.tally"),
-    ),
-    (
-        "m3/fixes/t221/from/sc_after.tally",
-        include_str!("../../m3/fixes/t221/from/sc_after.tally"),
-    ),
-    (
-        "m3/fixes/t221/from/sc_before.tally",
-        include_str!("../../m3/fixes/t221/from/sc_before.tally"),
     ),
     (
         "m3/fixes/t221/fx/fx.tally",
@@ -834,10 +806,6 @@ pub static TEXTS: [(&str, &str); 354] = [
         include_str!("../../m3/fixes/t221/mini5/statement.tally"),
     ),
     (
-        "m3/fixes/t221/misc/m1.tally",
-        include_str!("../../m3/fixes/t221/misc/m1.tally"),
-    ),
-    (
         "m3/fixes/t221/misc2/m2.tally",
         include_str!("../../m3/fixes/t221/misc2/m2.tally"),
     ),
@@ -938,10 +906,6 @@ pub static TEXTS: [(&str, &str); 354] = [
         include_str!("../../m3/fixes/t221/p237/cp.tally"),
     ),
     (
-        "m3/fixes/t221/p25/p25_list.tally",
-        include_str!("../../m3/fixes/t221/p25/p25_list.tally"),
-    ),
-    (
         "m3/fixes/t221/p3/c22.tally",
         include_str!("../../m3/fixes/t221/p3/c22.tally"),
     ),
@@ -1022,36 +986,12 @@ pub static TEXTS: [(&str, &str); 354] = [
         include_str!("../../m3/fixes/t221/rs5/b.tally"),
     ),
     (
-        "m3/fixes/t221/rv1/b1_pow.tally",
-        include_str!("../../m3/fixes/t221/rv1/b1_pow.tally"),
-    ),
-    (
-        "m3/fixes/t221/rv1/b2_dayof.tally",
-        include_str!("../../m3/fixes/t221/rv1/b2_dayof.tally"),
-    ),
-    (
-        "m3/fixes/t221/rv1/b3_div.tally",
-        include_str!("../../m3/fixes/t221/rv1/b3_div.tally"),
-    ),
-    (
-        "m3/fixes/t221/rv1/bk_20260321.tally",
-        include_str!("../../m3/fixes/t221/rv1/bk_20260321.tally"),
-    ),
-    (
-        "m3/fixes/t221/rv1/c1.tally",
-        include_str!("../../m3/fixes/t221/rv1/c1.tally"),
-    ),
-    (
         "m3/fixes/t221/rv1/e2.tally",
         include_str!("../../m3/fixes/t221/rv1/e2.tally"),
     ),
     (
         "m3/fixes/t221/rv1/inv_b.tally",
         include_str!("../../m3/fixes/t221/rv1/inv_b.tally"),
-    ),
-    (
-        "m3/fixes/t221/rv1/p25_round.tally",
-        include_str!("../../m3/fixes/t221/rv1/p25_round.tally"),
     ),
     (
         "m3/fixes/t221/rv1/so.tally",
@@ -1298,10 +1238,6 @@ pub static TEXTS: [(&str, &str); 354] = [
         include_str!("../../m3/fixes/t221/s5/r3_disagree.tally"),
     ),
     (
-        "m3/fixes/t221/sign/sign.tally",
-        include_str!("../../m3/fixes/t221/sign/sign.tally"),
-    ),
-    (
         "m3/fixes/t221/snone/w_snone.tally",
         include_str!("../../m3/fixes/t221/snone/w_snone.tally"),
     ),
@@ -1320,18 +1256,6 @@ pub static TEXTS: [(&str, &str); 354] = [
     (
         "m3/fixes/t221/u0/u0_etf_literal.tally",
         include_str!("../../m3/fixes/t221/u0/u0_etf_literal.tally"),
-    ),
-    (
-        "m3/fixes/t221/w218/a1_window_end.tally",
-        include_str!("../../m3/fixes/t221/w218/a1_window_end.tally"),
-    ),
-    (
-        "m3/fixes/t221/win/w1_differs_nowait.tally",
-        include_str!("../../m3/fixes/t221/win/w1_differs_nowait.tally"),
-    ),
-    (
-        "m3/fixes/t221/win/w4_agree_false_nowait.tally",
-        include_str!("../../m3/fixes/t221/win/w4_agree_false_nowait.tally"),
     ),
     (
         "m3/fixes/t23/c4/n1_q.tally",

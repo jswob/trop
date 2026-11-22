@@ -1,0 +1,35 @@
+# L §8.2 `unknown day:` (tally 2.3, #247; the lead's P9, Q4): a hole inside a record's field or a tuple's
+# item carries its unknown day as a whole result's hole does: `unknown day: w` under each. Before: no line.
+=== m.tally
+model rec
+  tally 2
+  on 2026-01-01
+  start 2019-01-01
+  end 2027-12-31
+source card "invented"
+input w: date
+input d0: date
+input n1: int
+version v_card
+  cite card
+  governs always
+  known 2019-01-01
+  w = window(2024-02-27, 2024-03-02) "c"
+  d0 = 2024-02-28 "c"
+  n1 = 1 "c"
+ask in_record: (a: w < d0, b: n1)
+ask in_tuple: w < d0, n1
+ask rec_month: (a: month_of(w), b: n1)
+ask list_month: [w, d0]
+=== expect
+in_record: (a: ?"date within window(2024-02-27, 2024-03-02) not precise enough for w < d0" (w), b: 1)
+  unknown day: w
+  cut 2026-01-01
+in_tuple: (?"date within window(2024-02-27, 2024-03-02) not precise enough for w < d0" (w), 1)
+  unknown day: w
+  cut 2026-01-01
+list_month: [window(2024-02-27, 2024-03-02), 2024-02-28]
+  cut 2026-01-01
+rec_month: (a: ?"date within window(2024-02-27, 2024-03-02) not precise enough for month_of" (w), b: 1)
+  unknown day: w
+  cut 2026-01-01

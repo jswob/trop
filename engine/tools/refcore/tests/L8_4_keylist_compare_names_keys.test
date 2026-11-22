@@ -1,0 +1,74 @@
+# L §8.4 (tally 2.3, #247; the lead's P9): a comparison of a key-list binding's keys refused names them
+# (`w and d0 compared`). Before: an object's address.
+=== m.tally
+model o_mon
+  tally 2
+  on 2026-01-01
+  start 2019-01-01
+  end 2027-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2019-01-01..
+place world: outside lives 1900-01-01..
+input w: date
+input d0: date
+input d1: date
+input b0: date
+input k: month
+input n1: int
+input n2: int
+input n3: int
+input nm1: int
+input pay: money PLN
+input rate: num
+input cal: calendar
+input drate[d in days]: num
+input mrate[m in months]: num
+move pay_x: transfers
+  on d0
+  leg cash from world to konto amount pay
+def cw: date = w
+def rr: num = rate at reader
+def nb: int = days_between(d0, w)
+def ag: int = age(b0, w)
+def wk: int = weekday(w)
+version v_card
+  cite card
+  governs always
+  known 2019-01-01
+  w = window(2026-11-02, 2026-11-09) "c"
+  d0 = 2026-10-30 "c"
+  d1 = 2026-11-12 "c"
+  b0 = 2020-11-05 "c"
+  k = 2026-11 "c"
+  n1 = 1 "c"
+  n2 = 2 "c"
+  n3 = 3 "c"
+  nm1 = -1 "c"
+  pay = 100.00 PLN "c"
+  rate = 7 "c"
+  cal = calendar(weekends [sat, sun], yearly [01-01, 11-11]) "c"
+  drate[*] = 3 "c"
+  mrate[*] = 2 "c"
+  opening[konto] = 500.00 PLN at 2019-01-01 start "c"
+ask r62: min(d for d in [d0, w])
+ask r62_p20261102: min(d for d in [d0, w]) with w = 2026-11-02
+=== expect
+r62: refused: RUN-DOMAIN w and d0 compared
+  cut 2026-01-01
+r62_p20261102: refused: RUN-DOMAIN w and d0 compared
+  cut 2026-01-01
+warning: WARN-UNREAD def ag is read by nothing
+warning: WARN-UNREAD def cw is read by nothing
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def rr is read by nothing
+warning: WARN-UNREAD def wk is read by nothing
+warning: WARN-UNREAD input cal is read by nothing
+warning: WARN-UNREAD input d1 is read by nothing
+warning: WARN-UNREAD input drate is read by nothing
+warning: WARN-UNREAD input k is read by nothing
+warning: WARN-UNREAD input mrate is read by nothing
+warning: WARN-UNREAD input n1 is read by nothing
+warning: WARN-UNREAD input n2 is read by nothing
+warning: WARN-UNREAD input n3 is read by nothing
+warning: WARN-UNREAD input nm1 is read by nothing

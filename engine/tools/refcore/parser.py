@@ -23,7 +23,7 @@ residuals'''.split())
 BUILTINS = set('''sum count min max any all first last argmin argmax share mean quantile prorata flows
 bal value covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
-age_months weekday add_business last_business is_business schedule calendar window one_of since
+age_months weekday add_business last_business is_business schedule calendar window since
 band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
 gamma poisson binomial negbin uniform discrete cdf pdf pmf crps'''.split())
 
@@ -1294,13 +1294,14 @@ class P:
             self.i += 1
             return self.N('date', v=tok.v)
         if tok is not None and tok.t == 'MMDD':
-            # L §2.3 cday = DAY | hole | dayset; L §4.2 "a month-day ... stands only in a calendar's yearly list and an
+            # L §2.3 cday = DAY | hole; L §4.2 "a month-day ... stands only in a calendar's yearly list and an
             # anchored index's from"
             raise LoadError('LOAD-PARSE', 'cannot parse: a month-day %s in added; added takes days' % tok.s, self.loc)
         if self.at('?') and self.at_t('STR', 1):
             self.i += 1
             return self.N('hole', text=self.string())
-        return self.dayset()
+        # tally 2.3 (L §2.3 cday = DAY | hole; G3): a window or a leftover one_of in added is refused here
+        self.err('a day or a hole')
 
     def dayset(self):
         if self.at('window') and self.at('(', 1):
@@ -1310,16 +1311,7 @@ class P:
             b = self.day()
             self.expect(')')
             return self.N('window', a=a, b=b)
-        if self.at('one_of') and self.at('(', 1):
-            self.i += 2
-            self.expect('[')
-            ds = [self.day()]
-            while self.accept(','):
-                ds.append(self.day())
-            self.expect(']')
-            self.expect(')')
-            return self.N('oneof', days=ds)
-        self.err('a window or one_of')
+        self.err('a window')
 
     # -- pins ----------------------------------------------------------------
     def pin(self):
@@ -1510,7 +1502,7 @@ class P:
             v = self.N('list', items=items)
         elif self.at('calendar') and self.at('(', 1):
             v = self.calval()
-        elif (self.at('window') or self.at('one_of')) and self.at('(', 1):
+        elif self.at('window') and self.at('(', 1):
             v = self.dayset()
         elif tok.t == 'ID' and (tok.s in DISTS or tok.s == 'discrete') and self.at('(', 1):
             v = self.builtin(tok.s)
