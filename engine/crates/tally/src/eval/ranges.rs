@@ -429,6 +429,7 @@ pub(crate) fn value_key(m: &Reality, v: &Value) -> Result<Option<KeyVal>, Stop> 
         | Value::Code(_)
         | Value::Record(_)
         | Value::List(_)
+        | Value::Tuple(_)
         | Value::Calendar(_)
         | Value::None
         | Value::Never

@@ -103,6 +103,10 @@ pub enum Value {
     Record(Vec<(String, Value)>),
     /// A list.
     List(Vec<Value>),
+    /// The keys an `argmin` or `argmax` over several bindings returns, one per binding in
+    /// written order, `(k1, 1)`: printed, never compared or keyed, as load's types refuse
+    /// (L §5.11 "the key or the tuple").
+    Tuple(Vec<Value>),
     /// A business calendar, with the input it was read from.
     Calendar(Box<Calendar>),
     /// `none`: not applicable.
@@ -175,7 +179,7 @@ impl Value {
             match v {
                 Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
                 Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
-                Value::List(items) => todo.extend(items.iter().rev()),
+                Value::List(items) | Value::Tuple(items) => todo.extend(items.iter().rev()),
                 Value::Window(_)
                 | Value::Number(_)
                 | Value::Money(_)
@@ -332,6 +336,13 @@ impl Value {
                     out.push(item.text(m)?);
                 }
                 Ok(format!("[{}]", out.join(", ")))
+            }
+            Value::Tuple(items) => {
+                let mut out = Vec::with_capacity(items.len());
+                for item in items {
+                    out.push(item.text(m)?);
+                }
+                Ok(format!("({})", out.join(", ")))
             }
             Value::Calendar(cal) => Ok(cal.text()),
             Value::None => Ok("none".to_owned()),

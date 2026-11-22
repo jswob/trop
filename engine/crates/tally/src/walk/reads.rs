@@ -204,6 +204,7 @@ impl Engine {
                 | Value::Code(_)
                 | Value::Record(_)
                 | Value::List(_)
+                | Value::Tuple(_)
                 | Value::Calendar(_)
                 | Value::None
                 | Value::Never
