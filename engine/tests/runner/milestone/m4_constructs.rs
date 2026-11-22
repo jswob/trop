@@ -16,7 +16,7 @@ mod tests {
     use tally_runner::m4::VECTORS;
 
     /// The groups this target tests, one `#[test]` each.
-    const GROUPS: [&str; 14] = [
+    const GROUPS: [&str; 13] = [
         "constructs-pins",
         "constructs-accrue",
         "constructs-round",
@@ -30,7 +30,6 @@ mod tests {
         "constructs-keydiff",
         "constructs-ratepin",
         "constructs-tuple",
-        "constructs-calrow",
     ];
 
     /// Runs every vector of `group` on the engine and holds it to refcore's run.
@@ -155,9 +154,9 @@ mod tests {
     }
 
     /// `m4/paper/`: the paper check's probes (`tmp/m4/paper-check.md`), one vector per ask, a
-    /// file refused whole as one; its decided cells D-1 to D-26 among them; #253's silent
-    /// items on refcore's bytes (pick P1), `cal__register` and the row meeting #250 row 6 too
-    /// (picks P2, P4).
+    /// file refused whole as one; its decided cells D-1 to D-26 among them; #253's items on
+    /// refcore's bytes (picks P1 and P6, item 3's count each day under its own row),
+    /// `cal__register` and the row meeting #250 row 6 too (picks P2, P4).
     #[test]
     fn m4_constructs_paper() {
         group_holds("constructs-paper");
@@ -181,13 +180,5 @@ mod tests {
     #[test]
     fn m4_constructs_tuple() {
         group_holds("constructs-tuple");
-    }
-
-    /// #253 item 3's vectors, a business-day count under the row governing d (pick P1: the
-    /// engine follows the text): held for #253 in `held.tsv`, their spec answers filled from
-    /// the engine's run after the builder's group (`for` = `calrow`).
-    #[test]
-    fn m4_constructs_calrow() {
-        group_holds("constructs-calrow");
     }
 }

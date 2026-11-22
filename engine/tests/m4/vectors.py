@@ -7,10 +7,12 @@ Reads vectors.tsv, one vector per row, in m2/vectors.tsv's columns:
 The first seven columns are kernel/vectors.py's, read and run by its own functions (imported, not copied): a vector
 names a check of checks.tsv (`check`; the other columns empty) or is a fixture of its own (`cwd`, `files`, `asks`,
 `options`). `group` is the runner test that holds it: `checks-…` in milestone/m4_checks.rs (73 of BUILD-ORDER § M4's 77
-checks), `constructs-…` in milestone/m4_constructs.rs (the corners of M4's constructs), one test per group. `for` is
-the construct that turns it green (MILESTONE-M4.md rows 1 and 2: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`,
-`calrow`), `M7` for the vector held to M7 by name (held.tsv), or `-` for a vector the engine already answers; it is
-the builder's work list and is not stored.
+checks), `constructs-…` in milestone/m4_constructs.rs (the corners of M4's constructs, the paper check), `items-…` in
+milestone/m4_items.rs (the in-scope backlog), one test per group. `for` is the construct that turns it green
+(MILESTONE-M4.md rows 1 to 3: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`, `monthcheck`, `explain`, `runnone`,
+`agemonths`, `middot`), `M7` for the vector held to M7 by name (held.tsv), or `-` for a vector the engine already
+answers; it is the builder's work list and is not stored. A joint model's members go into its file table as
+m3/vectors.py puts them (M0's `members`).
 
 Each vector is run on the frozen refcore (PyPy, plain refcore, never the fast layer: run.py's run_one, its 90 s
 budget, its cache, the watchdog) and written to vectors.refcore in kernel/vectors.refcore's six netstrings (id, group,
@@ -40,13 +42,34 @@ KV = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(KV)
 KV.JOBS = 2  # at most two heavy jobs on the machine (the run's rule)
 
+_m0 = importlib.util.spec_from_file_location('m0vectors', os.path.join(TESTS, 'm0', 'vectors.py'))
+M0 = importlib.util.module_from_spec(_m0)
+_m0.loader.exec_module(M0)
+_KV_TABLE = KV.table
+
+
+def table(c):
+    """kernel/vectors.py's file table, then a joint model's members as m3/vectors.py's `table_of` adds them (M0's
+    `members`, INTERFACE.md §2), so the engine reads a member from the table where refcore reads it from disk."""
+    names = [R.here(c, f) for f in c['files'].split()]
+    with_members = []
+    for key, repo in M0.members(c['cwd'], names):
+        with open(R.ROOT + repo, encoding='utf-8', newline='') as fh:
+            with_members.append(KV.ns(key) + KV.ns(fh.read()))
+    return _KV_TABLE(c) + b''.join(with_members)
+
+
+KV.table = table  # kernel/vectors.py's stored_bytes and engine_look write and run M4's tables with the members
+
 LIST = os.path.join(HERE, 'vectors.tsv')
 STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = KV.COLUMNS + ['for']
-# MILESTONE-M4.md rows 1 and 2: the constructs the builder's groups build (an `as if` pin at a two-key def's keys,
-# `accrue`, a `check` of two keys or periods, a rate pin's unit, `argmax`'s tuple), #253 item 3's held vectors (a
-# business-day count under the row governing d, pick P1), and M7's hold
-FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'calrow', 'M7'}
+# MILESTONE-M4.md rows 1 to 3: the constructs the builder's groups build (an `as if` pin at a two-key def's keys,
+# `accrue`, a `check` of two keys or periods, a rate pin's unit, `argmax`'s tuple; a plain `check` of two months,
+# `explain` of a decision's `flows` or `count`, `RUN-NONE` in L §8.4's form, `age_months` at 9999-12, a joint run
+# that leaves a member's `·` as written), and M7's hold
+FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'monthcheck', 'explain', 'runnone', 'agemonths',
+       'middot', 'M7'}
 
 
 def rows():

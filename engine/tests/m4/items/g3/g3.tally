@@ -1,0 +1,50 @@
+model g3
+  tally 2
+  on 2026-01-31
+  start 2026-01-01
+  end 2026-01-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+
+index wk = day 2026-01-05..2026-01-07
+index js = [j1, j2]
+
+input fee: money PLN
+input act_day: date
+input one: int
+input z[j in js]: int
+input dd[j in js]: date
+
+def rd: date = act_day at reader
+
+move pay[d in wk where d <= rd, j in js where one / z[j] > 0]: transfers
+  on d
+  at dd[j]
+  leg cash from konto to shop amount fee
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee = 10.00 PLN "s"
+  one = 1 "s"
+  z[j1] = 1 "s"
+  z[j2] = 0 "s"
+  dd[j1] = 2026-01-02 "s"
+  dd[j2] = 2026-01-03 "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+
+version c
+  cite s
+  governs 2026..
+  known 2026-01-01
+  act_day = 2026-01-05 "s"
+
+ask q: bal(konto, 2026-01-31)
+ask q_flows: flows(pay, 2026-01 .. 2026-01)
+ask q_none: bal(konto, 2026-01-31) with act_day = 2026-01-04

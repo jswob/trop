@@ -1,0 +1,52 @@
+model none_reads
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2025-01-01..
+
+input rate[k in ks]: num
+input fl[k in ks]: bool
+input acct[k in ks]: key accounts
+input one: num
+input step: num
+input md: date
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+  fl[k1] = true "s"
+  fl[k2] = none "s"
+  acct[k1] = konto "s"
+  acct[k2] = none "s"
+  one = 1 "s"
+  step = 1 "s"
+  md = 2026-03-01 "s"
+
+def n_sum: num = sum(rate[k] for k in ks)
+def n_min[k in ks]: num = min(rate[k], one)
+def n_abs[k in ks]: num = abs(rate[k])
+def n_round[k in ks]: num = round(rate[k], step, down)
+def n_if[k in ks]: num = if fl[k] then one else one
+def n_and[k in ks]: bool = fl[k] and fl[k1]
+def n_not[k in ks]: bool = not fl[k]
+def n_member[k in ks]: bool = acct[k] in accounts on md
+
+ask q_sum: n_sum
+ask q_min: n_min[k2]
+ask q_abs: n_abs[k2]
+ask q_round: n_round[k2]
+ask q_if: n_if[k2]
+ask q_and: n_and[k2]
+ask q_not: n_not[k2]
+ask q_member: n_member[k2]

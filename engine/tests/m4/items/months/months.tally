@@ -1,0 +1,24 @@
+model months
+  tally 2
+  on 2026-01-01
+  start 2019-01-01
+  end 2027-12-31
+
+source s "invented"
+
+input d0: date
+input d1: date
+input d2: date
+
+version v
+  cite s
+  governs always
+  known 2019-01-01
+  d0 = 2024-02-20 "s"
+  d1 = 2024-03-01 "s"
+  d2 = 2026-11-30 "s"
+
+ask m_same: check month_of(d0) == month_of(d0)
+ask m_differ: check month_of(d1) == month_of(d0)
+ask q_differ: check quarter_of(d2) == quarter_of(d0)
+ask y_differ: check year_of(d0) == year_of(d2)

@@ -1,0 +1,22 @@
+model age
+  tally 2
+  on 2026-01-01
+  start 2019-01-01
+  end 2027-12-31
+
+source s "invented"
+
+input b_last: date
+input d_last: date
+input b_prev: date
+
+version v
+  cite s
+  governs always
+  known 2019-01-01
+  b_last = 9999-12-01 "s"
+  d_last = 9999-12-27 "s"
+  b_prev = 9999-10-27 "s"
+
+ask a_last: age_months(b_last, d_last)
+ask a_prev: age_months(b_prev, b_last)
