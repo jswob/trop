@@ -69,7 +69,7 @@ BUILTIN_NAMES = set("""
 sum count min max any all first last argmin argmax share mean quantile prorata flows bal value
 covered round pow exp ln sqrt abs periodic factor dcf accrue days_between add_days
 add_months add_years start_of end_of year_of quarter_of month_of day_of overlap_days pos age
-age_months weekday add_business last_business is_business schedule calendar window one_of since
+age_months weekday add_business last_business is_business schedule calendar window since
 band_lo band_hi marginal unit minor lifespan gap observed missing normal lognormal exponential
 gamma poisson binomial negbin uniform discrete cdf pdf pmf crps
 """.split())

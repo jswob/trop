@@ -1,0 +1,101 @@
+# E §10, L §4.4 (tally 2.3, #247; the lead's P9, Q5): `explain` of a def `at` a window shows one step per
+# law-date class the window overlaps, at its first day inside it (r1 to 2024-02, r2 from 2024-03: two
+# steps), not one per day. Before: five steps.
+=== m.tally
+model f_forms
+  tally 2
+  on 2026-01-01
+  start 2019-01-01
+  end 2027-12-31
+source card "invented"
+axis ax
+  o1 "the first reading"
+  o2 "the second reading"
+index ks = [a, b]
+input w: date
+input wx[o in ax]: date
+input dd[g in ks]: date
+input d0: date
+input b0: date
+input ky: year
+input n1: int
+input rate: num
+def cw: date = w
+def ccw: date = cw
+def yw: year = year_of(w)
+def mw: month = month_of(w)
+def nb: int = days_between(d0, w)
+def ag: int = age(b0, w)
+def sh: date = add_days(w, n1)
+def pick: date = if d0 < w then w else d0
+def pick2: date = if yw == ky then cw else d0
+def rw: num = rate at w
+def agx: int = age(b0, wx[ax])
+version v_card
+  cite card
+  governs always
+  known 2019-01-01
+  w = window(2024-02-27, 2024-03-02) "c"
+  wx[o1] = window(2024-02-27, 2024-03-02) "c"
+  wx[o2] = 2024-05-05 "c"
+  dd[a] = window(2024-02-27, 2024-03-02) "c"
+  dd[b] = 2024-02-28 "c"
+  d0 = 2024-02-20 "c"
+  b0 = 2020-02-29 "c"
+  ky = 2024 "c"
+  n1 = 1 "c"
+version r1
+  cite card
+  governs ..2024-02
+  known 2019-01-01
+  rate = 1 "c"
+version r2
+  cite card
+  governs 2024-03..
+  known 2019-01-01
+  rate = 5 "c"
+ask r28: explain rw
+ask r28_p20240301: explain rw with w = 2024-03-01
+=== expect
+r28: ?"date within window(2024-02-27, 2024-03-02) not precise enough for the law date of rw" (rw)
+  [1] row v_card:w = window(2024-02-27, 2024-03-02)
+      version v_card, source card, "invented", locator "c", governs always, known 2019-01-01
+  [2] rw = 1, law date 2024-02-27
+      rule base: won
+        [3] row r1:rate = 1
+            version r1, source card, "invented", locator "c", governs ..2024-02-29, known 2019-01-01
+  [4] rw = 5, law date 2024-03-01
+      rule base: won
+        [5] row r2:rate = 5
+            version r2, source card, "invented", locator "c", governs 2024-03-01.., known 2019-01-01
+  unknown day: w
+  cut 2026-01-01
+r28_p20240301: 5
+  [1] the pins, evaluated outside them
+    [2] pin w = 2024-03-01
+  [3] inside the pins: 5
+    [4] rw = 5, law date 2024-03-01
+        rule base: won
+          [5] row r2:rate = 5
+              version r2, source card, "invented", locator "c", governs 2024-03-01.., known 2019-01-01
+  [6] outside the pins: ?"date within window(2024-02-27, 2024-03-02) not precise enough for the law date of rw" (rw)
+    [7] row v_card:w = window(2024-02-27, 2024-03-02)
+        version v_card, source card, "invented", locator "c", governs always, known 2019-01-01
+    [8] rw = 1, law date 2024-02-27
+        rule base: won
+          [9] row r1:rate = 1
+              version r1, source card, "invented", locator "c", governs ..2024-02-29, known 2019-01-01
+    [10] rw = 5, law date 2024-03-01
+        rule base: won
+          (r2:rate: see [5])
+  pinned: w = 2024-03-01
+  cut 2026-01-01
+warning: WARN-UNREAD def ag is read by nothing
+warning: WARN-UNREAD def agx is read by nothing
+warning: WARN-UNREAD def ccw is read by nothing
+warning: WARN-UNREAD def mw is read by nothing
+warning: WARN-UNREAD def nb is read by nothing
+warning: WARN-UNREAD def pick is read by nothing
+warning: WARN-UNREAD def pick2 is read by nothing
+warning: WARN-UNREAD def sh is read by nothing
+warning: WARN-UNREAD input dd is read by nothing

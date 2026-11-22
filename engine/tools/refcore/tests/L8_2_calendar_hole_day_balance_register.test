@@ -1,0 +1,85 @@
+# L §8.2 (tally 2.3, #247; the review of G3, N6 (i)): a balance that is a hole because a calendar's hole dates a
+# move (q4 in scenario sq, q13 under a pin of the calendar) lists no `held:` or `pinned:` line for the calendar's
+# reads on other days: as the engine, the first pin's refcore and tally 2.2.1's. Before (W2's refcore, 9d09228a):
+# a `pinned:` line and 34 `held:` lines; taken back with W1's two hole-day additions at 19763ae5.
+=== scn.tally
+model scn
+  tally 2
+  on 2027-01-01
+  start 2026-01-01
+  end 2028-12-31
+unit PLN: currency minor 0.01
+source s "invented"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input holidays: calendar
+input hol2: calendar
+input hol3: calendar
+def pay_on[m in months]: date = schedule(m, n_5, following, holidays)
+move salary[m in months]: transfers
+  on pay_on[m]
+  leg cash from world to konto amount pay
+input n_5: int
+input d_20270430: date
+input d_20270405: date
+input d_20260301: date
+input d_20270406: date
+input d_20270402: date
+input n_1: int
+version base
+  cite s
+  governs always
+  known 2025-01-01
+  pay = 1000.00 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+version pins
+  cite s
+  governs always
+  known 2025-01-01
+  hol2 = calendar(weekends [sat, sun, mon]) "c"
+  hol3 = calendar(weekends [sat, sun], added [?"hol3 day?"]) "c"
+version calv
+  cite s
+  governs always
+  known 2025-01-01
+  holidays = calendar(weekends [sat, sun], yearly [01-01, 05-03, 12-25], added [2027-04-05]) "c"
+version late
+  cite s
+  governs always
+  known 2026-06-01
+  replace holidays = calendar(weekends [sat, sun], yearly [01-01, 05-03, 12-25], added [2027-04-06]) "later"
+version autov
+  cite s
+  governs always
+  known 2025-01-01
+  n_5 = 5 "c"
+  d_20270430 = 2027-04-30 "c"
+  d_20270405 = 2027-04-05 "c"
+  d_20260301 = 2026-03-01 "c"
+  d_20270406 = 2027-04-06 "c"
+  d_20270402 = 2027-04-02 "c"
+  n_1 = 1 "c"
+ask q4: bal(konto, d_20270430) in sq
+ask q13: bal(konto, d_20270430) with holidays = hol3
+=== sq.tally
+scenario sq over scn
+  tally 2
+  from 2026-01-01
+version sqv
+  cite s
+  governs 2026-01-01..
+  known 2026-01-01
+  replace holidays = calendar(weekends [sat, sun], yearly [01-01, 05-03, 12-25], added [?"which Monday of April 2027 is Spring Day?"]) "s"
+=== expect q4 q13
+q4: ?"which Monday of April 2027 is Spring Day?" (holidays)
+  world: sq
+  cut 2027-01-01
+q13: ?"hol3 day?" (holidays)
+  cut 2027-01-01
+warning: WARN-UNREAD input d_20260301 is read by nothing
+warning: WARN-UNREAD input d_20270402 is read by nothing
+warning: WARN-UNREAD input d_20270405 is read by nothing
+warning: WARN-UNREAD input d_20270406 is read by nothing
+warning: WARN-UNREAD input hol2 is read by nothing
+warning: WARN-UNREAD input n_1 is read by nothing

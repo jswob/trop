@@ -1,0 +1,55 @@
+# L §5.14 / E §4.2 step 3 (tally 2.3, #247; the lead's P10, H1): a decision whose day is a hole (dd, a
+# window) never runs and is never waited for: `top`'s read of its leg (its month's sweeps) is the day's hole,
+# and so is the balance it books into; each pinned day gives 100.00 PLN. Before: RUN-ORDER.
+=== m.tally
+model b1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind sweeps: event certain
+  leg cash: PLN
+kind tops: event certain
+  leg cash: PLN
+place sav: accounts PLN lives 2026-01-01..
+place sv2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dd: date
+input dt: date
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+move top: tops
+  on dt
+  reads sv2, sweep
+  leg cash from world to sv2 amount sum(t.cash.amount for t in sweeps over month_of(dt)) + 0 * bal(sv2)
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dt = 2026-05-31 "c"
+  dd = window(2026-05-04, 2026-05-06) "c"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv2] = 0.00 PLN at 2026-01-01 start "c"
+ask f: flows(top, 2026-05)
+ask f_p4: flows(top, 2026-05) with dd = 2026-05-04
+ask b: bal(sv2, 2026-06-30)
+ask b_p5: bal(sv2, 2026-06-30) with dd = 2026-05-05
+=== expect
+b: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep" (dd)
+  unknown day: dd
+  cut 2026-04-20
+b_p5: 100.00 PLN
+  pinned: dd = 2026-05-05
+  cut 2026-04-20
+f: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep" (dd)
+  unknown day: dd
+  cut 2026-04-20
+f_p4: 100.00 PLN
+  pinned: dd = 2026-05-04
+  cut 2026-04-20

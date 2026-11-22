@@ -2037,6 +2037,7 @@ def hole_days(vals):
     question of a hole to the windows it was made of (evaluate.CARRY), by the label its read gives it (window_id). A
     window value that is no hole gives none."""
     from .evaluate import CARRY, iv_carry
+    from .values import Rec, Tup
     out = set()
 
     def walk(x, depth=0):
@@ -2052,8 +2053,13 @@ def hole_days(vals):
         elif isinstance(x, (tuple, list, frozenset, set)):
             for y in x:
                 walk(y, depth + 1)
-        elif isinstance(x, Lst):
+        elif isinstance(x, (Lst, Tup)):
             for y in x.items:
+                walk(y, depth + 1)
+        elif isinstance(x, Rec):
+            # a hole inside a record's field or a tuple's item carries its unknown days as a whole result's does
+            # (L §8.2 `unknown day:`; tally 2.3, the lead's P9, Q4)
+            for _f, y in x.fields:
                 walk(y, depth + 1)
         elif hasattr(x, 'carry_vals'):
             for y in x.carry_vals():

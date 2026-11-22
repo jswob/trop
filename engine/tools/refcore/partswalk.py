@@ -488,14 +488,18 @@ def _hole_leg(e, place):
 
 
 def w_phole_day_legs(self, place, unit, refused):
-    """The legs at (place, unit) of the movements whose day is a hole (the walk's perm entries from its start)."""
+    """The legs at (place, unit) of the movements whose day is a hole (the walk's perm entries from its start): the
+    first that arrives and the first that leaves, which make every take there undecided (C13)."""
     log = self.logs.get((place, unit))
     out = []
     for e in (log.ents if log is not None else ()):
         if e.kind == 'perm' and e.note is None and isinstance(getattr(e.mv, 'day', None), Hole) and \
                 getattr(e.mv, 'id', None) is not None:
             hl = _hole_leg(e, place)
-            if hl is not None and (e.mv.id, hl.note) not in refused and (e.mv.id, hl.note) not in self.bad_legs:
+            if hl is not None and (e.mv.id, hl.note) not in refused and (e.mv.id, hl.note) not in self.bad_legs and \
+                    not any(_is_out(x) == _is_out(hl) for x in out):
+                # one leg each way is enough to leave every take there undecided, and the fill pays per leg: the first
+                # arrival and the first outflow, in the walk's order
                 out.append(hl)
     return out
 

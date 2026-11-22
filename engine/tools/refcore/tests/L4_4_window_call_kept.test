@@ -1,0 +1,50 @@
+# L §4.4 (tally 2.3, #247; G3 under §12a: `window(e1, e2)` stays an expression): a window in a move's own
+# `on` is a hole day named by its movement (`unknown day: pay`); one computed in a def's rule sits in that
+# cell (`unknown day: gd`), and a pin of the cell answers it. A guard: the same bytes before.
+=== m.tally
+model onw
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input wd: date
+input lo: date
+input hi: date
+input k: int
+def gd: date
+  rule base = window(wd, add_days(wd, k))
+move pay: transfers
+  on window(lo, hi)
+  leg cash from world to konto amount amt
+move pay2: transfers
+  on gd
+  leg cash from world to konto amount amt
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "c"
+  wd = 2026-06-01 "c"
+  lo = 2026-05-04 "c"
+  hi = 2026-05-06 "c"
+  k = 2 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+ask b: bal(konto, 2026-05-31)
+ask b2_p: bal(konto, 2026-06-30) with gd = 2026-06-02
+ask g: gd
+=== expect
+b: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay" (pay) ?"date within window(2026-06-01, 2026-06-03) not precise enough for the day of pay2" (gd)
+  unknown day: gd
+  unknown day: pay
+  cut 2026-04-20
+b2_p: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay" (pay)
+  pinned: gd = 2026-06-02
+  unknown day: pay
+  cut 2026-04-20
+g: window(2026-06-01, 2026-06-03)
+  cut 2026-04-20

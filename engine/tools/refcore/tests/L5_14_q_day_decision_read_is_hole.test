@@ -1,0 +1,48 @@
+# The `?` twin of L5_14_hole_day_decision_read_is_hole (tally 2.3, #247; P10, H1): a decision on
+# `dd = ?"which day?"` is never waited for; a read of its leg is that `?`. Before: RUN-ORDER.
+=== m.tally
+model b1hq
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind sweeps: event certain
+  leg cash: PLN
+kind tops: event certain
+  leg cash: PLN
+place sav: accounts PLN lives 2026-01-01..
+place sv2: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dd: date
+input dt: date
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+move top: tops
+  on dt
+  reads sv2, sweep
+  leg cash from world to sv2 amount sum(t.cash.amount for t in sweeps over month_of(dt)) + 0 * bal(sv2)
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dt = 2026-05-31 "c"
+  dd = ?"which day?" "c"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv2] = 0.00 PLN at 2026-01-01 start "c"
+ask f: flows(top, 2026-05)
+ask b: bal(sv2, 2026-06-30)
+ask b_p5: bal(sv2, 2026-06-30) with dd = 2026-05-05
+=== expect
+b: ?"which day?" (dd)
+  cut 2026-04-20
+b_p5: 100.00 PLN
+  pinned: dd = 2026-05-05
+  cut 2026-04-20
+f: ?"which day?" (dd)
+  cut 2026-04-20

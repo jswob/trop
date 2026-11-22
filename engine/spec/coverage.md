@@ -20,7 +20,6 @@ Table 1 lists only the constructs some case uses, so its count is the constructs
 |---|---|---|---|
 | never | 3.1 | 4 | I:I-7, I:I-8, I:I-11, I:I-13 |
 | none value | 3.1 | 33 | CB-07, CMP-01, CMP-02, LH-01, LH-02, LH-04, LH-06, LH-10, MP-03, MP-05, MP-09, MP-14, RC-04, UL-05, UL-06, UL-07, UL-09, UL-14, UL-15, household, chg4, P:SURF-02, H:A, H:B, H:D, H:E1, I:I-10, I:I-7, I:I-8, I:I-9, I:I-11, I:I-12, I:I-14 |
-| one_of([…]) value | 4.4 | 1 | H:B |
 | window(a, b) value | 4.4 | 15 | CB-07, CMP-01, LH-01, LH-07, MP-05, MP-06, MP-07, MP-08, MP-13, UL-08, UL-10, P:TIME-01, H:A, H:D, I:I-12 |
 | last(…) within | 4.6 | 1 | UL-08 |
 | reading instant | 4.6 | 24 | household, chg5, P:ASK-01, P:ASK-02, P:CUR-03, P:FLOW-01, P:FLOW-02, P:OWN-01, P:OWN-02, P:OWN-03, P:REC-01, P:RULE-01, P:RULE-02, P:RULE-05, P:RULE-06, P:RULE-07, P:TIME-07, H:A, H:B, H:D, I:I-9, I:I-11, I:I-12, I:I-15 |
@@ -160,7 +159,6 @@ Table 1 lists only the constructs some case uses, so its count is the constructs
 | ask · solve | 5.18 | 6 | LH-10, LH-11, LH-17, MP-07, UL-08, P:ASK-04 |
 | ask · uncertain | 5.18 | 4 | household, household-bands, P:RULE-02, H:B |
 | ask · where | 5.18 | 41 | CB-05, CB-10, CB-12, CB-13, CH-01, CH-06, LH-01, LH-10, LH-13, LH-14, LH-15, LH-16, MP-15, UL-02, UL-09, UL-15, household, P:ASK-01, P:LIFE-01, P:LIFE-05, P:OWN-01, P:OWN-02, P:OWN-03, P:PTY-01, P:REC-05, P:REC-07, P:RULE-05, P:RULE-06, P:SCEN-04, H:A, H:B, H:D, H:E1, I:I-6, I:I-8, I:I-9, I:I-11, I:I-12, I:I-13, I:I-14, I:I-15 |
-| ask · windows | 5.18 | 2 | H:A, H:B |
 | ask · with | 5.18 | 30 | CB-07, LH-03, LH-04, LH-06, LH-15, MP-03, MP-04, MP-05, MP-07, MP-08, MP-10, UL-01, UL-03, UL-14, household, LH-17-mc, household-bands, P:LAW-10, P:LAW-13, P:PTY-04, P:RULE-02, P:SCEN-02, P:SCEN-03, P:SCEN-04, P:SURF-04, H:A, H:B, H:D, H:E1, I:I-8 |
 | bal … modelled | 5.19 | 1 | P:RULE-07 |
 | part | 6.1 | 11 | household, chg1, chg4, chg5, chg6, household-bands, H:A, H:B, H:D, H:E1, law |
@@ -230,7 +228,6 @@ Table 1 lists only the constructs some case uses, so its count is the constructs
 | call next | 1 | P:RULE-05 |
 | call normal | 7 | CH-01, CH-03, LH-17, LH-17-mc, household-bands, P:RAND-04, H:D |
 | call observed | 2 | H:B, H:D |
-| call one_of | 1 | H:B |
 | call overlap_days | 5 | CB-07, CB-14, P:TIME-04, H:A, H:B |
 | call pdf | 2 | CH-03, LH-17-mc |
 | call periodic | 10 | LH-10, LH-11, household, P:ASK-04, P:LIFE-03, P:NUM-01, P:OWN-09, H:A, H:B, I:I-6 |
