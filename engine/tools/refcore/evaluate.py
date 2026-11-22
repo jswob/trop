@@ -1506,16 +1506,28 @@ class Engine:
         """An at that gives a window reads the def once per law-date class the window overlaps
         (L §4.3); every day of the window gives the same values as its classes."""
         days = sorted(w.days) if w.days else [w.lo + datetime.timedelta(days=i) for i in range((w.hi - w.lo).days + 1)]
-        vals = []
-        for dd in days:
-            vals.append(self.def_cell(info, keys, env, ctx.but(law=dd)))
-        imprecise = carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (
-            w.window_text(), info.id), self.origin(info, keys))]), w)
 
         def same(a, b):
             if isinstance(a, Hole) or isinstance(b, Hole):
                 return isinstance(a, Hole) and isinstance(b, Hole) and set(a.qs) == set(b.qs)
             return vkey(a) == vkey(b)
+        vals = []
+        tracing, self.tracing = self.tracing, False
+        try:
+            for dd in days:
+                vals.append(self.def_cell(info, keys, env, ctx.but(law=dd)))
+        finally:
+            self.tracing = tracing
+        if tracing:
+            # `explain` shows one step per law-date class, at its first day inside the window (L §4.4, E §10; tally
+            # 2.3, the lead's P9, Q5): refcore takes a class to start where the value or a span of the reality does
+            starts = self.span_bounds()
+            for k, dd in enumerate(days):
+                if k == 0 or dd in starts or not same(vals[k], vals[k - 1]):
+                    vals[k] = self.def_cell(info, keys, env, ctx.but(law=dd))
+        imprecise = carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (
+            w.window_text(), info.id), self.origin(info, keys))]), w)
+
         if all(same(v, vals[0]) for v in vals):
             return vals[0]
         # L §4.3: "If all give one value, that is the value; otherwise it is HOLE-IMPRECISE" (round 18, C3-7: the
@@ -1548,15 +1560,20 @@ class Engine:
     def window_bounded(self, days):
         """Whether a span boundary of the reality falls inside the days (after the first): a version's governs, a row's
         or a rule's own span, a thing's entry (lifespan or membership)."""
-        m = self.m
         lo, hi = days[0], days[-1]
+        return any(lo < b <= hi for b in self.span_bounds())
+
+    def span_bounds(self):
+        """The days a span of the reality starts on or ends before (a span's end is its first day after): a version's
+        governs, a row's or a rule's own span, a thing's entry (lifespan or membership)."""
+        m = self.m
         bs = set()
 
         def add(sp):
             if sp is None or getattr(sp, 'always', False):
                 return
             for d in (sp.start, sp.end):
-                if d is not None:
+                if isinstance(d, datetime.date):
                     bs.add(d)
         for v in m.versions.values():
             add(getattr(v, 'governs', None))
@@ -1572,7 +1589,7 @@ class Engine:
         for th in m.things.values():
             for e in th.entries:
                 add(getattr(e, 'span', None))
-        return any(lo < b <= hi for b in bs if isinstance(b, datetime.date))
+        return bs
 
     def def_cell(self, info, keys, env, ctx):
         ck = ('def', info.id, tuple(_kv(k) for k in keys), ctx.key())
@@ -2492,7 +2509,9 @@ class Engine:
         if isinstance(a, Rec) or isinstance(b, Rec):
             # L §3.1 (round 12): "Two records are never compared" (L §8.4: RUN-DOMAIN at run)
             raise refuse('RUN-DOMAIN', 'a comparison of two records has no meaning (compare their fields)')
-        raise refuse('LOAD-UNIT', '%s and %s compared' % (fmt(a), fmt(b)))
+        # a key-list binding's key prints by its name, never as an object (tally 2.3, the lead's P9)
+        raise refuse('LOAD-UNIT', '%s and %s compared' % tuple(x.text if isinstance(x, ListKey) else fmt(x)
+                                                               for x in (a, b)))
 
     def iv_compare(self, op, a, b, n):
         """A comparison on a window is decided when the whole interval lies on one side;
