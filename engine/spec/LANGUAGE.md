@@ -672,7 +672,7 @@ A window is one unknown day, named by the cell of its row. A copy keeps the name
 |---|---|
 | `add_days`, `add_months`, `add_years`, `date ± duration`, `min`, `max` | the stretch from its result at the first day to its result at the last |
 | a comparison of dates, and `argmin`, `argmax`, which order by it | true or false where it holds for every day both sides can take; a window against its own name is one day (`x == x` is true) |
-| `year_of`, `quarter_of`, `month_of`, `age`, `age_months`, `overlap_days`; a period's key (§4.6) | its value, `none` too, where every combination of its arguments' first and last days gives the same |
+| `year_of`, `quarter_of`, `month_of`, `age`, `age_months`, `overlap_days` (its two days); a period's key (§4.6) | its value, `none` too, where every combination of its arguments' first and last days gives the same |
 | a def's `at` | one read per law-date class (§4.3) |
 | a print | the stretch (§5.18) |
 | a `with` pin of the cell | the pinned day (`pinned:`, §8.2) |
