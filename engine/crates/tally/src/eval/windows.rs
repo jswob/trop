@@ -50,10 +50,17 @@ pub(super) enum Takes {
 
 /// The readers that take a ranged date, by the word the text writes them with, each with how
 /// it takes one: the one list (L §4.4's table). `+` and `-` are `date ± duration`, which is
-/// `add_days`, `add_months` or `add_years` (L §4.2); a period's key is `month_of`'s rule
-/// (`keys.rs`); a def's `at` is read in `rules.rs`, a print in `model/value.rs`, a pin in
-/// `pins.rs`. A reader not here is the hole wherever it meets one ([`unlisted`], [`one_day`]):
-/// `weekday`, `days_between`, `dcf` among them (C3).
+/// `add_days`, `add_months` or `add_years` (L §4.2); a period's key is `month_of`'s rule.
+/// Three ways a row is read. The dispatch ([`takes`]): the date built-ins and `±` take a
+/// ranged date as their row says (`dates.rs` `read_dates`, [`window_arith`]). Asked by its
+/// own site ([`listed`], `ENGINE-INVARIANT` where the row isn't there): `min`, `max`
+/// (`extremes.rs` `min_max`), the comparisons ([`window_compare`]), `argmin`, `argmax`
+/// (`extremes.rs` `arg_extreme`), a key (`keys.rs`), `at` (`rules.rs` `def_window`). The
+/// record, which no stop can ask: a print (`model/value.rs`, a window prints as its stretch)
+/// and `with` (a pin replaces the cell before any reader meets it); the test
+/// `a_print_and_a_pin_are_the_lists_record` holds each to its site. A reader not here is the
+/// hole wherever it meets one ([`unlisted`], [`one_day`]): `weekday`, `days_between`, `dcf`
+/// among them (C3).
 const READERS: [(&str, Takes); 25] = [
     ("add_days", Takes::Ends),
     ("add_months", Takes::Ends),
@@ -90,6 +97,22 @@ pub(super) fn takes(reader: &str) -> Option<Takes> {
         .map(|(_, how)| *how)
 }
 
+/// Reader `reader`'s site asks the list before it reads a ranged date the way `how` says: the
+/// list is stated once (L §4.4's table), and a site whose row says otherwise is
+/// `ENGINE-INVARIANT`, never a reading the list doesn't hold.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where the list doesn't name `reader` as `how`.
+pub(super) fn listed(reader: &str, how: Takes) -> Result<(), Stop> {
+    if takes(reader) == Some(how) {
+        return Ok(());
+    }
+    Err(invariant(
+        "a reader of a ranged date the list doesn't name so",
+    ))
+}
+
 /// The hole of window `w` met where one value is needed, by `what`: `?"date within <w> not
 /// precise enough for <what>" (<its read>)`, one question per unknown day where it rests on
 /// two or more, each asked of the day's own name (refcore's `imprecise`, `imprecise_hole`).
@@ -113,6 +136,16 @@ pub(crate) enum End {
     Low,
     /// The highest: a window's last day, `max`'s pick.
     High,
+}
+
+impl End {
+    /// The reader that picks this end: `min` or `max` (L §5.11).
+    pub(super) fn word(self) -> &'static str {
+        match self {
+            End::Low => "min",
+            End::High => "max",
+        }
+    }
 }
 
 /// A window's end `end` as a day, any other value itself. L §4.4.
@@ -149,18 +182,26 @@ pub(super) fn as_read(v: Value, (item, keys): (&str, &[KeyVal]), cell: String) -
 /// The stretch from day `lo` to day `hi` a reader computed from window `from`: one day where
 /// they agree, else a window with `from`'s text, figure and unknown days and no read, a value
 /// computed (refcore's `lift`, its end). L §4.4.
-pub(super) fn stretch((lo, hi): (Day, Day), from: &Window) -> Value {
-    if lo == hi {
-        return Value::Day(lo);
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` where `hi` is before `lo`: no listed date-to-date reader falls as its
+/// day rises (L §4.4), so a reversed pair is a broken reader, never a stretch.
+pub(super) fn stretch((lo, hi): (Day, Day), from: &Window) -> Result<Value, Stop> {
+    match lo.cmp(&hi) {
+        Ordering::Equal => Ok(Value::Day(lo)),
+        Ordering::Greater => Err(invariant(
+            "a date-to-date reader that falls as its day rises",
+        )),
+        Ordering::Less => Ok(Value::Window(Box::new(Window {
+            lo,
+            hi,
+            src: from.src.clone(),
+            figure: from.figure.clone(),
+            read: None,
+            carry: from.carry.clone(),
+        }))),
     }
-    Value::Window(Box::new(Window {
-        lo: lo.min(hi),
-        hi: hi.max(lo),
-        src: from.src.clone(),
-        figure: from.figure.clone(),
-        read: None,
-        carry: from.carry.clone(),
-    }))
 }
 
 /// Whether a stop is a refusal per value, which a listed reader may meet at some ends and not
@@ -183,7 +224,7 @@ pub(super) fn by_ends(
     what: &str,
 ) -> Result<Value, Stop> {
     match ends {
-        (Ok(Value::Day(lo)), Ok(Value::Day(hi))) => Ok(stretch((lo, hi), from)),
+        (Ok(Value::Day(lo)), Ok(Value::Day(hi))) => stretch((lo, hi), from),
         (Ok(_), Ok(_)) => Err(invariant("a date-to-date reader that gives no day")),
         (Err(first), Err(last)) => {
             if refused_per_value(&first) && !refused_per_value(&last) {
@@ -308,8 +349,8 @@ pub(super) fn window_arith(
 }
 
 /// [`imprecise`] of the first of `windows`, carrying the unknown days of every one, each once:
-/// a hole a read makes of them names every window its operands carry (L §4.4 l.667, l.671;
-/// P41, F8); none for no window.
+/// a hole a read makes of them names every window its operands carry (L §4.4, its unknown
+/// day's name and the hole that carries it; P41, F8); none for no window.
 fn imprecise_all(windows: &[&Window], what: &str) -> Option<Hole> {
     let [first, rest @ ..] = windows else {
         return None;
@@ -331,6 +372,7 @@ pub(super) fn window_compare(
     (left, right): (&Value, &Value),
     text: &str,
 ) -> Result<Value, Stop> {
+    listed(crate::load::cmp_sign(op), Takes::Order)?;
     if one_read(left, right) {
         return Ok(Value::Bool(matches!(op, CmpOp::Eq | CmpOp::Le | CmpOp::Ge)));
     }
@@ -594,7 +636,8 @@ impl Engine {
 
 #[cfg(test)]
 mod tests {
-    use super::{Takes, Value, Window, ends, takes, unlisted};
+    use super::{Takes, Value, Window, ends, invariant, listed, stretch, takes, unlisted};
+    use crate::api::{Asks, Files, Given, Request, run};
     use crate::time::Day;
 
     fn day(y: u16, m: u8, d: u8) -> Day {
@@ -657,6 +700,105 @@ mod tests {
         assert!(
             unlisted(&[&one], "weekday").is_none(),
             "one day is that day"
+        );
+    }
+
+    /// A window printed and pinned (L §4.4's record rows).
+    const PRINT_AND_PIN: &str = r#"model print_and_pin
+  tally 2
+  on 2026-01-01
+  start 2020-01-01
+  end 2026-12-31
+
+source card "invented"
+
+input w: date
+
+version v_card
+  cite card
+  governs always
+  known 2020-01-01
+  w = window(2026-03-02, 2026-03-20) "c"
+
+ask printed: w
+ask pinned: w with w = 2026-03-05
+"#;
+
+    fn answer(ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "print_and_pin.tally".to_owned(),
+            bytes: Some(PRINT_AND_PIN.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_print_and_a_pin_are_the_lists_record() {
+        // L §4.4's table: a print and a `with` pin are rows no stop can ask, so this holds
+        // each row to its site: a window prints as its stretch, a pin gives the cell its day
+        assert_eq!(takes("a print"), Some(Takes::Print), "a print's row");
+        assert_eq!(
+            answer("printed"),
+            [
+                "printed: window(2026-03-02, 2026-03-20)",
+                "  cut 2026-01-01"
+            ],
+            "a print, the stretch"
+        );
+        assert_eq!(takes("with"), Some(Takes::Pin), "a pin's row");
+        assert_eq!(
+            answer("pinned"),
+            [
+                "pinned: 2026-03-05",
+                "  pinned: w = 2026-03-05",
+                "  cut 2026-01-01"
+            ],
+            "a pin, the day"
+        );
+    }
+
+    #[test]
+    fn a_site_asks_the_list_and_a_reversed_stretch_is_broken() {
+        // the sites that read a ranged date by their own code ask the list first
+        for (name, how) in [
+            ("min", Takes::Ends),
+            ("<", Takes::Order),
+            ("argmax", Takes::Order),
+            ("a key", Takes::Agreed),
+            ("at", Takes::LawDate),
+        ] {
+            assert_eq!(listed(name, how), Ok(()), "{name}");
+        }
+        let broken = Err(invariant(
+            "a reader of a ranged date the list doesn't name so",
+        ));
+        assert_eq!(listed("<", Takes::Ends), broken, "another class");
+        assert_eq!(listed("weekday", Takes::Agreed), broken, "off the list");
+        // no listed date-to-date reader falls as its day rises (L §4.4)
+        let (lo, hi) = (day(2026, 3, 2), day(2026, 3, 20));
+        let from = Window {
+            lo,
+            hi,
+            src: None,
+            figure: Some("w".to_owned()),
+            read: None,
+            carry: Vec::new(),
+        };
+        assert_eq!(stretch((lo, lo), &from), Ok(Value::Day(lo)), "one day");
+        assert!(
+            matches!(stretch((lo, hi), &from), Ok(Value::Window(w)) if (w.lo, w.hi) == (lo, hi)),
+            "the stretch"
+        );
+        assert_eq!(
+            stretch((hi, lo), &from),
+            Err(invariant(
+                "a date-to-date reader that falls as its day rises"
+            )),
+            "a reversed pair"
         );
     }
 

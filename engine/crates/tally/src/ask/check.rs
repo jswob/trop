@@ -217,8 +217,8 @@ fn keys_of_one_index(m: &Reality, a: &Value, b: &Value) -> bool {
 }
 
 /// A side as a check prints it in place of a decided comparison: a refusal as `refused: …`, a
-/// key outside its index as its `RUN-KEY`, an interval that isn't a window of days as its
-/// `HOLE-IMPRECISE`, under `partial` a hole in its linear form (tally 2.1.8 R15), any other
+/// key outside its index as its `RUN-KEY`, under `partial` a hole in its linear form (tally
+/// 2.1.8 R15), any other
 /// value as L §5.18 prints it (refcore's `fmt_value` with no static type and the line's
 /// `partial`).
 fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {

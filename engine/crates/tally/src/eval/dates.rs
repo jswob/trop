@@ -371,21 +371,44 @@ fn read_dates((f, name): (DateFn, &str), args: &[Value]) -> Result<Value, Stop> 
         return apply(f, &ones);
     };
     match takes(name) {
-        Some(Takes::Ends) => {
-            let mut outs = corners(&refs).into_iter().map(|t| apply(f, &t));
-            let (Some(lo), Some(hi), None) = (outs.next(), outs.next(), outs.next()) else {
-                return Err(invariant("a date-to-date reader of more than one date"));
-            };
-            by_ends((lo, hi), first, name)
-        }
-        Some(Takes::Agreed) => {
-            let outs = corners(&refs).iter().map(|t| apply(f, t)).collect();
-            agreed(outs, &windows, name)
-        }
-        Some(Takes::Order | Takes::LawDate | Takes::Print | Takes::Pin) | None => {
-            Ok(Value::Hole(hole_naming(&refs, name)?))
-        }
+        Some(Takes::Ends) => at_ends((f, name), &refs, first),
+        Some(Takes::Agreed) => at_corners((f, name), &refs, &windows),
+        None => hole_naming(&refs, name).map(Value::Hole),
+        Some(Takes::Order | Takes::LawDate | Takes::Print | Takes::Pin) => Err(invariant(
+            "a date built-in the list names as no date reader",
+        )),
     }
+}
+
+/// Date built-in `f`, called `name`, a date-to-date reader (`Takes::Ends`), at `refs`, one of
+/// them ranged, `first`: the stretch from its value at the window's first day to its value at
+/// its last ([`by_ends`]). L §4.4.
+///
+/// # Errors
+///
+/// As [`by_ends`]; `ENGINE-INVARIANT` for a reader of more than one ranged date.
+fn at_ends((f, name): (DateFn, &str), refs: &[&Value], first: &Window) -> Result<Value, Stop> {
+    let mut outs = corners(refs).into_iter().map(|t| apply(f, &t));
+    let (Some(lo), Some(hi), None) = (outs.next(), outs.next(), outs.next()) else {
+        return Err(invariant("a date-to-date reader of more than one date"));
+    };
+    by_ends((lo, hi), first, name)
+}
+
+/// Date built-in `f`, called `name`, a plain result (`Takes::Agreed`), at `refs`: the value
+/// every combination of the ranged arguments' first and last days gives ([`agreed`]), each
+/// window of `windows` by its own ends. L §4.4.
+///
+/// # Errors
+///
+/// As [`agreed`].
+fn at_corners(
+    (f, name): (DateFn, &str),
+    refs: &[&Value],
+    windows: &[&Window],
+) -> Result<Value, Stop> {
+    let outs = corners(refs).iter().map(|t| apply(f, t)).collect();
+    agreed(outs, windows, name)
 }
 
 /// Date built-in `f` at days (refcore's lambdas under `lift`). L §4.2.

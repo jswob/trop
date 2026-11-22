@@ -25,7 +25,9 @@ use super::arith::{Test, compare};
 use super::bindings::{reads_name, span_reads};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
-use super::windows::{End, as_window, decided_order, imprecise, one_day, stretch, window_end};
+use super::windows::{
+    End, Takes, as_window, decided_order, imprecise, listed, one_day, stretch, window_end,
+};
 use crate::base::Run;
 use crate::hole::{Hole, spread};
 use crate::model::{IndexForm, KindSpec, Reality, Value};
@@ -88,6 +90,7 @@ pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
     let Some(w) = vals.iter().find_map(as_window) else {
         return extreme_of(m, vals, pick);
     };
+    listed(pick.word(), Takes::Ends)?;
     // a computed stretch has no read, but its questions name the first window's figure
     // (L §8.1; tally 2.1.7 R3, T's SR-5)
     let mut from = w.clone();
@@ -108,7 +111,7 @@ pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
             "min or max of a window and a value that is no date",
         ));
     };
-    Ok(stretch((lo, hi), &from))
+    stretch((lo, hi), &from)
 }
 
 /// The least (`End::Low`) or greatest of values none of which is a window, the first of
@@ -305,6 +308,9 @@ impl Engine {
         let word = agg.func.word();
         if terms.is_empty() {
             return Err(refuse(Run::Empty, format!("{word} over no keys")));
+        }
+        if terms.iter().any(|(_, t)| as_window(t).is_some()) {
+            listed(word, Takes::Order)?;
         }
         let wanted = if agg.func == AggFn::Argmin {
             Ordering::Less

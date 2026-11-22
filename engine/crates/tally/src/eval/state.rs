@@ -1001,8 +1001,8 @@ pub(super) fn refuse_load(code: crate::base::Load, message: String) -> Stop {
 /// A value of a type its place doesn't take, at a place whose every run-time value load
 /// types: a test (a bool, a hole, `none`; a window's comparison is a hole), a date
 /// `date_or_window` checked, the number `round` takes, `pos`'s key, a schedule's roll code.
-/// Load refuses it first (`LOAD-UNIT`, L §8.4). A place that `never`, a window or an
-/// interval can reach answers them itself (L §3.1, §4.4), or stops "not implemented".
+/// Load refuses it first (`LOAD-UNIT`, L §8.4). A place that `never` or a window can reach
+/// answers them itself (L §3.1, §4.4), or stops "not implemented".
 pub(super) fn not_typed() -> Stop {
     invariant("a value of a type its place doesn't take: load's types refuse it first (LOAD-UNIT)")
 }

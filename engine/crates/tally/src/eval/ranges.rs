@@ -702,17 +702,9 @@ fn not_positive(m: &Reality, by: &Value) -> Result<Stop, Stop> {
 
 /// The i-th day of a range from `start` stepped by `by`, `start + i·s`, computed from the
 /// start, so a month step from the 31st keeps the 31st where the month has it; refused as
-/// day arithmetic refuses it, `RUN-LIMIT` past 9999-12-31 (refcore's `day_step`). A step
-/// that is an interval of durations moves a day to no one day, `LOAD-UNIT` (L §4.4). L §2.5,
-/// §4.2.
+/// day arithmetic refuses it, `RUN-LIMIT` past 9999-12-31 (refcore's `day_step`); a ranged
+/// step is its hole before it gets here (L §4.4: no number is a range). L §2.5, §4.2.
 fn nth_day(m: &Reality, start: Day, by: &Value, i: i64) -> Result<Day, Stop> {
-    if let Value::Window(_) = by {
-        let shown = by.text(m).map_err(num_stop)?;
-        return Err(refuse_load(
-            Load::Unit,
-            format!("{} + {shown}", start.text()),
-        ));
-    }
     let scaled = if let Value::Number(n) = by {
         Value::Number(Number {
             q: n.q.checked_mul(&Num::int(i)).map_err(num_stop)?,

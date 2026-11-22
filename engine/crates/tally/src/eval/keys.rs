@@ -14,7 +14,7 @@
 use super::arith::int_of;
 use super::ranges::value_key;
 use super::state::{Ctx, Engine, Env, Figures, a_day, invariant, num_stop, refuse};
-use super::windows::{imprecise, single};
+use super::windows::{Takes, imprecise, listed, single};
 use crate::base::Run;
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -94,10 +94,10 @@ impl Engine {
                 // a window where one key is needed is imprecise, the read its hole, but for a
                 // period's key that holds the whole window (L §4.4, §4.6, §8.1; tally 2.1.8
                 // R13; refcore's `to_key`)
-                Given::Value(Value::Window(w)) => match window_key(m, &bind.domain, &w) {
-                    Some(key) => Ok(key),
-                    None => Err(imprecise(&w, "a key")),
-                },
+                Given::Value(Value::Window(w)) => {
+                    listed("a key", Takes::Agreed)?;
+                    window_key(m, &bind.domain, &w).ok_or_else(|| imprecise(&w, "a key"))
+                }
                 at_range if bind.domain == Domain::Range => {
                     self.range_key(m, bind, at_range, (&earlier, ctx))?
                 }

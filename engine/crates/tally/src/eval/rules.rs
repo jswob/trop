@@ -30,7 +30,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
-use super::windows::{as_read, held_by, named_window, window_days};
+use super::windows::{Takes, as_read, held_by, listed, named_window, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -209,6 +209,7 @@ impl Engine {
         ctx: Ctx,
         w: &Window,
     ) -> Result<Value, Stop> {
+        listed("at", Takes::LawDate)?;
         // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
         let mut vals = Vec::new();
         let mut class: Option<LawClass> = None;
