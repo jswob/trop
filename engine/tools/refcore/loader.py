@@ -3066,15 +3066,11 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
         # an observed row's field is written as a call: a window belongs in an attribute (L §5.19; #221, 221.R2)
         return convert_value(m, Node('window', a=node.args[0].v, b=node.args[1].v, loc=node.loc), ty, loc, factor,
                              target)
-    if k == 'call' and node.name == 'one_of':
-        # tally 2.3 (L §4.4, G3): one_of is gone
-        raise LoadError('LOAD-PARSE', 'cannot parse: one_of is no form; state the stretch from its first day to its '
-                        'last, window(d1, dn), or one day in a row marked assumed', loc)
     if k == 'window':
         if tk != 'date':
             raise LoadError('LOAD-UNIT', 'a window is a date; %s is %s' % (target, T.show(ty)), loc)
         if node.a > node.b:
-            raise LoadError('LOAD-DOMAIN', 'window(a, b) with a after b (L §8.4)', loc)
+            raise LoadError('LOAD-DOMAIN', 'window(%s, %s) with a after b (L §8.4)' % (node.a, node.b), loc)
         return Iv(node.a, node.b, 'window(%s, %s)' % (node.a, node.b))
     if k == 'list':
         if tk != 'dates':

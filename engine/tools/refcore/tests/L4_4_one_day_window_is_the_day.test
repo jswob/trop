@@ -1,0 +1,179 @@
+# L §4.4 "A window of one day is that day" (tally 2.3, #247; the review of G3, N6 (ii)): `w1 =
+# window(2026-06-01, 2026-06-01)` read by `as known`, an ask's `law` and `bal(x, d)` is 2026-06-01, as on the
+# engine. Before: HOLE-IMPRECISE for each.
+=== m.tally
+model forms
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+unit PLN: currency minor 0.01
+source s "invented"
+place konto: accounts PLN lives 2026-01-01..
+place spar: accounts PLN lives 2026-01-01..
+place third: accounts PLN lives 2026-01-01..
+place one: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input a: date
+input b: date
+input told: date
+input late: date
+input w: date
+input w1: date
+input w2: date
+input wd: date
+input hol: calendar
+input rate[d in days]: num
+input mrate[m in months]: num
+input lawd: date
+input lrate: num
+def gift: date
+  rule base = window(told, late)
+def cp: date = w
+def sh: date = add_days(w, n_3)
+def one_c: date = window(a, a)
+def back: date = window(b, a)
+def lr: num = lrate at w
+move salary: transfers
+  on window(a, b)
+  leg cash from world to konto amount pay
+move bonus: transfers
+  on gift
+  leg cash from world to spar amount pay
+move lawm: transfers
+  on a
+  at window(a, b)
+  leg cash from world to third amount pay
+move oneday: transfers
+  on w1
+  leg cash from world to one amount pay
+input n_3: int
+input d_20260331: date
+input d_20260312: date
+input d_20260430: date
+input d_20260412: date
+input d_20260410: date
+input d_20260413: date
+input d_20260420: date
+input n_1: int
+input d_20260506: date
+input d_20260509: date
+input d_20261231: date
+input d_20200101: date
+input d_20260630: date
+input m_202605: month
+input n_5: int
+input d_20260302: date
+input n_m1: int
+input d_20260101: date
+input d_20260505: date
+input d_20260520: date
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 1 000.00 PLN "c"
+  a = 2026-03-10 "c"
+  b = 2026-03-12 "c"
+  told = 2026-04-10 "c"
+  late = 2026-04-13 "c"
+  w = window(2026-05-04, 2026-05-08) "c"
+  w1 = window(2026-06-01, 2026-06-01) "c"
+  w2 = window(2026-05-06, 2026-05-20) "c"
+  wd = 2026-06-01 "c"
+  rate[*] = 2 "c"
+  mrate[*] = 3 "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "c"
+  opening[spar] = 0.00 PLN at 2026-01-01 start "c"
+  opening[third] = 0.00 PLN at 2026-01-01 start "c"
+  opening[one] = 0.00 PLN at 2026-01-01 start "c"
+version calv
+  cite s
+  governs 2026
+  known 2026-01-01
+  hol = calendar(weekends [sat, sun], added [2026-05-05, ?"which day is the spring holiday?"]) governs 2026-04..2026-12 "c"
+  hol = calendar(weekends [sat, sun], added [2026-01-06]) governs 2026-01..2026-03 "c"
+version vl
+  cite s
+  governs always
+  known 2025-01-01
+  lawd = 2026-01-01 "c"
+version la
+  cite s
+  governs ..2026-05-05
+  known 2026-01-01
+  lrate = 1 "c"
+version lb
+  cite s
+  governs 2026-05-06..
+  known 2026-01-01
+  lrate = 2 "c"
+version autov
+  cite s
+  governs always
+  known 2025-01-01
+  n_3 = 3 "c"
+  d_20260331 = 2026-03-31 "c"
+  d_20260312 = 2026-03-12 "c"
+  d_20260430 = 2026-04-30 "c"
+  d_20260412 = 2026-04-12 "c"
+  d_20260410 = 2026-04-10 "c"
+  d_20260413 = 2026-04-13 "c"
+  d_20260420 = 2026-04-20 "c"
+  n_1 = 1 "c"
+  d_20260506 = 2026-05-06 "c"
+  d_20260509 = 2026-05-09 "c"
+  d_20261231 = 2026-12-31 "c"
+  d_20200101 = 2020-01-01 "c"
+  d_20260630 = 2026-06-30 "c"
+  m_202605 = 2026-05 "c"
+  n_5 = 5 "c"
+  d_20260302 = 2026-03-02 "c"
+  n_m1 = -1 "c"
+  d_20260101 = 2026-01-01 "c"
+  d_20260505 = 2026-05-05 "c"
+  d_20260520 = 2026-05-20 "c"
+ask q56: bal(one, w1)
+ask law2: lrate law w1
+ask kn: gift as known w1
+=== expect
+kn: window(2026-04-10, 2026-04-13)
+  cut 2026-06-01
+law2: 2
+  law date 2026-06-01, cut 2026-08-01
+q56: ?"date within window(2026-03-10, 2026-03-12) not precise enough for the law date of lawm"
+  unknown day: window(2026-03-10, 2026-03-12)
+  unfulfilled: oneday
+  cut 2026-08-01
+warning: WARN-UNREAD def back is read by nothing
+warning: WARN-UNREAD def cp is read by nothing
+warning: WARN-UNREAD def lr is read by nothing
+warning: WARN-UNREAD def one_c is read by nothing
+warning: WARN-UNREAD def sh is read by nothing
+warning: WARN-UNREAD input d_20200101 is read by nothing
+warning: WARN-UNREAD input d_20260101 is read by nothing
+warning: WARN-UNREAD input d_20260302 is read by nothing
+warning: WARN-UNREAD input d_20260312 is read by nothing
+warning: WARN-UNREAD input d_20260331 is read by nothing
+warning: WARN-UNREAD input d_20260410 is read by nothing
+warning: WARN-UNREAD input d_20260412 is read by nothing
+warning: WARN-UNREAD input d_20260413 is read by nothing
+warning: WARN-UNREAD input d_20260420 is read by nothing
+warning: WARN-UNREAD input d_20260430 is read by nothing
+warning: WARN-UNREAD input d_20260505 is read by nothing
+warning: WARN-UNREAD input d_20260506 is read by nothing
+warning: WARN-UNREAD input d_20260509 is read by nothing
+warning: WARN-UNREAD input d_20260520 is read by nothing
+warning: WARN-UNREAD input d_20260630 is read by nothing
+warning: WARN-UNREAD input d_20261231 is read by nothing
+warning: WARN-UNREAD input hol is read by nothing
+warning: WARN-UNREAD input lawd is read by nothing
+warning: WARN-UNREAD input m_202605 is read by nothing
+warning: WARN-UNREAD input mrate is read by nothing
+warning: WARN-UNREAD input n_1 is read by nothing
+warning: WARN-UNREAD input n_5 is read by nothing
+warning: WARN-UNREAD input n_m1 is read by nothing
+warning: WARN-UNREAD input rate is read by nothing
+warning: WARN-UNREAD input w2 is read by nothing
+warning: WARN-UNREAD input wd is read by nothing

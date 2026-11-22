@@ -1,0 +1,27 @@
+# MIGRATION 2.2.1 -> 2.3 (tally 2.3, #247; the review of G3, Q5): a leftover `one_of` in an observation's
+# attribute prints what an unknown word prints there, `LOAD-UNIT a value of the wrong type`. Before: W3's own
+# words.
+=== m.tally
+model ob
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+source s "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+kind wages: event certain
+  leg cash: PLN
+  attr period: date
+  attr cnt: int
+input bank: observed
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  opening[konto] = 0.00 PLN at 2026-03-01 start "s"
+  bank[r1] = (on: 2026-03-10, kind: wages, leg cash from world to konto amount 50.00 PLN, period: one_of([2026-04-06, 2026-04-13]), cnt: 3) "r1"
+=== expect
+refused: LOAD-UNIT a value of the wrong type for bank[r1] (m.tally:21)

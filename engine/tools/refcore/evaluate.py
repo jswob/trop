@@ -2591,6 +2591,9 @@ class Engine:
         if isinstance(v, datetime.date):
             return v
         if isinstance(v, Iv):
+            if isinstance(v.lo, datetime.date) and v.lo == v.hi:
+                # a window of one day is that day (L §4.4; tally 2.3, the review of G3, N6)
+                return v.lo
             raise self.imprecise(v, what)
         if v is NONE:
             raise refuse('RUN-NONE', 'a value is none here: %s' % what)
@@ -4184,7 +4187,11 @@ class Engine:
         c = Coll()
         self.stack.append(c)
         try:
-            keys, hole = self.key_values(info, r.keys if r.k == 'index' else [], r._convs, env, ctx)
+            try:
+                keys, hole = self.key_values(info, r.keys if r.k == 'index' else [], r._convs, env, ctx)
+            except HoleSignal as e:
+                # a key that is a window is a hole key: false, never the window's hole (L §8.1; tally 2.3, P7)
+                keys, hole = None, e
             if hole is not None:
                 res = False
             else:

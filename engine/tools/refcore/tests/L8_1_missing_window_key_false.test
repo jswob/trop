@@ -1,0 +1,33 @@
+# L §8.1 (tally 2.3, #247; P7): `missing(pnl[w])` with a window for a key is `false`, as with any hole key,
+# never the window's hole; pinned, the row's answer. Before: the window's hole (`a key`).
+=== m.tally
+model miss
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+input pnl[d in days]: num
+input w: date
+def mk: bool
+  rule base v v1 = false
+  rule no_record beats base v v1 = true when missing(pnl[w])
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  pnl[2026-03-02] = 1 "s"
+  w = window(2026-03-01, 2026-03-03) "s"
+ask k: mk
+ask k_in: mk with w = 2026-03-02
+ask k_out: mk with w = 2026-03-03
+=== expect
+k: false
+  cut 2026-12-31
+k_in: false
+  pinned: w = 2026-03-02
+  cut 2026-12-31
+k_out: true
+  missing record counted by v1
+  pinned: w = 2026-03-03
+  cut 2026-12-31

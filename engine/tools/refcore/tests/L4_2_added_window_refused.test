@@ -1,6 +1,6 @@
 # L §4.2 "A day not yet fixed", §2.3 `cday` (tally 2.3, #247; G3): a day in a calendar's `added` is a day or
-# a hole; a window there is refused at load, `LOAD-PARSE`, with the forms that say it (one day in a row
-# marked `assumed`, or an axis keying the calendar). Before: `window(2026-05-05, 2026-05-06)`.
+# a hole; a window there is `LOAD-PARSE … expected a day or a hole, got window` (MIGRATION 2.2.1 -> 2.3; the
+# review of G3, Q5). Before G3: `window(2026-05-05, 2026-05-06)`.
 === m.tally
 model addedw
   tally 2
@@ -20,4 +20,4 @@ version v
   n = 2 "c"
 ask a: add_business(d, n, cal)
 === expect
-refused: LOAD-PARSE cannot parse: a window in added; added takes a day or a hole: state one day in a row marked assumed, or key the calendar by an axis (m.tally:14)
+refused: LOAD-PARSE cannot parse: expected a day or a hole, got window (m.tally:14)

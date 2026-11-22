@@ -1134,7 +1134,7 @@ def m_e_bal(self, n, env, ctx):
     d = self.ev(n.args[-1], env, ctx)
     if isinstance(d, Hole):
         return d
-    if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
+    if isinstance(d, Iv) and isinstance(d.lo, datetime.date) and d.lo != d.hi:
         raise self.imprecise(d, 'the day of bal(%s, d)' % place)
     d = self.date_of(d, 'the day of bal')
     if self.tracing and self.trace_stack and form != 'proj' and getattr(self, 'explainer', None) is not None:
@@ -2359,7 +2359,13 @@ def m_c_covered(self, n, env, ctx):
     p = self.ev(n.args[0], env, ctx)
     if isinstance(p, Hole) or p is NONE:
         return False
-    sp = self.span_value(n.args[1], env, ctx)
+    from .evaluate import HoleSignal
+    try:
+        sp = self.span_value(n.args[1], env, ctx)
+    except HoleSignal:
+        # a span whose end is a window isn't known to be covered, as one whose end is a `?` isn't: false, never the
+        # window's hole (L §8.1; tally 2.3, the lead's P7, rulings item 12)
+        return False
     if isinstance(sp, Hole):
         return False
     if sp.start is None or sp.end is None:

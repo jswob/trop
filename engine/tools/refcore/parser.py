@@ -1300,10 +1300,7 @@ class P:
         if self.at('?') and self.at_t('STR', 1):
             self.i += 1
             return self.N('hole', text=self.string())
-        if (self.at('window') or self.at('one_of')) and self.at('(', 1):
-            # tally 2.3 (L §4.2 "A day not yet fixed", G3): a day in added is a day or a hole
-            raise LoadError('LOAD-PARSE', 'cannot parse: a %s in added; added takes a day or a hole: state one day '
-                            'in a row marked assumed, or key the calendar by an axis' % self.peek().s, self.loc)
+        # tally 2.3 (L §2.3 cday = DAY | hole; G3): a window or a leftover one_of in added is refused here
         self.err('a day or a hole')
 
     def dayset(self):
@@ -1507,10 +1504,6 @@ class P:
             v = self.calval()
         elif self.at('window') and self.at('(', 1):
             v = self.dayset()
-        elif self.at('one_of') and self.at('(', 1):
-            # tally 2.3 (L §4.4, G3): one_of is gone
-            raise LoadError('LOAD-PARSE', 'cannot parse: one_of is no form; state the stretch from its first day to '
-                            'its last, window(d1, dn), or one day in a row marked assumed', self.loc)
         elif tok.t == 'ID' and (tok.s in DISTS or tok.s == 'discrete') and self.at('(', 1):
             v = self.builtin(tok.s)
             if self.accept('to'):
