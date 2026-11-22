@@ -915,7 +915,7 @@ fn pin_exprs(pin: &Pin) -> Vec<&Expr> {
 mod tests {
     use super::{names_walked, order_text, reads_name};
     use crate::model::Thing;
-    use crate::syntax::{AddOp, Expr, Key, Postfix};
+    use crate::syntax::{AddOp, AskBody, Expr, Key, Postfix, Section};
 
     /// `id[keys]`, each key a name.
     fn read(id: &str, keys: &[&str]) -> Expr {
@@ -943,6 +943,53 @@ mod tests {
         let choice = Expr::If(Box::new(parts));
         let groups: Vec<Vec<&str>> = names_walked(&choice);
         assert_eq!(groups, [["c"], ["b"], ["a"]], "the if's parts, last first");
+    }
+
+    /// The expressions of the asks of model text `text`, parsed, not loaded.
+    fn asked(text: &str) -> Vec<Expr> {
+        let files = crate::syntax::parse_reality(&[crate::api::Source {
+            path: "walk.tally".to_owned(),
+            text: text.to_owned(),
+        }])
+        .expect("parses");
+        let mut out = Vec::new();
+        for section in files.into_iter().flat_map(|f| f.sections) {
+            if let Section::Ask(ask) = section
+                && let AskBody::Exprs(exprs) = ask.body
+            {
+                out.extend(exprs);
+            }
+        }
+        out
+    }
+
+    const WALKED: &str = "model walk
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+ask q: sum(x[i] + y[j] for i in a .. b step c where z[k] > d), (u[k] as if {v[j] = w[i]})
+";
+
+    #[test]
+    fn an_aggregate_and_an_as_if_are_walked_as_refcore_walks_them() {
+        let exprs = asked(WALKED);
+        let walked: Vec<Vec<&str>> = exprs
+            .iter()
+            .map(|e| names_walked(e).into_iter().flatten().collect())
+            .collect();
+        // the aggregate: its binding's `where` (the right side first), its step and ends,
+        // the last first, then its term; the `as if`: the pin's value, its keys, then its
+        // expression
+        assert_eq!(
+            walked,
+            [
+                vec!["d", "k", "z", "c", "b", "a", "j", "y", "i", "x"],
+                vec!["i", "w", "j", "k", "u"],
+            ],
+            "refcore's order"
+        );
     }
 
     #[test]

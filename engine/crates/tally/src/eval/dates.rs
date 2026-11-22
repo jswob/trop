@@ -245,23 +245,39 @@ impl Engine {
         if let Some(hole) = unlisted(&[&a, &b], "dcf") {
             return Ok(Value::Hole(hole));
         }
-        let (from, to) = (dcf_day(m, &single(&a))?, dcf_day(m, &single(&b))?);
-        let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = &dc {
-            w.clone()
-        } else {
-            dc.text(m).map_err(num_stop)?
-        };
-        if word != "act365" {
-            return Err(refuse_load(
-                Load::Unit,
-                format!("dcf: {word} is not a daycount code"),
-            ));
-        }
-        let days = from
-            .days_to(to)
-            .ok_or_else(|| invariant("a day count past the integers"))?;
-        year_fraction(days)
+        let q = year_fraction_of(m, (&single(&a), &single(&b)), &dc)?;
+        Ok(Value::Number(Number::plain(q, Unit::one())))
     }
+}
+
+/// The year fraction from date a to date b under day count `dc`, exact: `act365` gives the
+/// days from a, counted, to b, not, over 365, and b before a the negative of dcf(b, a)
+/// (refcore's `m_dcf_q`). L §3.3.
+///
+/// # Errors
+///
+/// `LOAD-UNIT` for a value that is no date or no daycount code; `RUN-NONE` for `none`.
+pub(super) fn year_fraction_of(
+    m: &Reality,
+    (a, b): (&Value, &Value),
+    dc: &Value,
+) -> Result<Num, Stop> {
+    let (from, to) = (dcf_day(m, a)?, dcf_day(m, b)?);
+    let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = dc {
+        w.clone()
+    } else {
+        dc.text(m).map_err(num_stop)?
+    };
+    if word != "act365" {
+        return Err(refuse_load(
+            Load::Unit,
+            format!("dcf: {word} is not a daycount code"),
+        ));
+    }
+    let days = from
+        .days_to(to)
+        .ok_or_else(|| invariant("a day count past the integers"))?;
+    Num::int(days).checked_div(&Num::int(365)).map_err(num_stop)
 }
 
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.
@@ -509,14 +525,6 @@ fn date_or_window(v: Value, what: &str) -> Result<Value, Stop> {
         return Err(refuse(Run::None, format!("never in {what}")));
     }
     Err(not_typed())
-}
-
-/// `days`/365 as a number, `act365`'s year fraction (refcore's `dcf_q`). L §3.3.
-fn year_fraction(days: i64) -> Result<Value, Stop> {
-    let q = Num::int(days)
-        .checked_div(&Num::int(365))
-        .map_err(num_stop)?;
-    Ok(Value::Number(Number::plain(q, Unit::one())))
 }
 
 /// The day a date of `dcf` is: a day, a day period's day (refcore's `m_as_day`). L §3.3.

@@ -6625,3 +6625,43 @@ The round's one whole mutation run (on 0dc2bbe9, `next`) left 28 survivors unlis
 - **Exceptions:** +0. **STOP-REPORTs:** none.
 - **Usage:** about 2.57 % of the week before this entry (2.42 % at the turn's start).
 - **Checks:** `check commit: green, 24 steps (134s)`, exit 0, on this tree but for this line.
+
+## 2026-11-22 M4 G1 `pins-accrue`: pins at bound keys, `accrue` (issue #252)
+
+The plan's group G1 (`tmp/m4/build-plan.md` §5), on T's chunk C1 (6962697b). No kernel file. Two commits: 7dea3a22 (pins) and this one (`accrue`, the rates' move, this entry).
+
+**What turned green:** `I:M:UL-14` and `I:C:C-04~c04` (`checks-pins`), `I:E2:E2-01~e2c` (`checks-accrue`); `constructs/pins/b_def`, `b_lit`, `b_mix`; `constructs/accrue/c_day`, `c_month`, `c_year_eff`, `c_nominal`, `c_back`, `c_hole`, `c_change`, `c_sum`. `milestone-report: M4: 7/7 green` (3/7 at C1). The only M4 check still red is `I:D:d11_not_follows_fund`, held to M7 by name.
+
+**1. A pin per binding tuple names its bindings as refcore walks them** (L §5.11 "A pin's keys", §8.2; 7dea3a22).
+- `binds_named` gave up where one part of a pin (its value or a key) named two bindings, or held an aggregate. It now takes refcore's `used` list (`check.py`, `_pertuple`): every written binding in scope that the value, then each key, names, once each, in the order refcore's `node.walk` meets the name.
+- That walk visits a node's fields last-written first and a list's items in order. So `b2[k, j] + c2[j, k]` prints `for j in js, k in ks`: a left-nested chain's last term comes first. `eval/bindings.rs`'s `walk_order` gives each form's parts in that order from `parser.py`'s field order (`bin(l, r)`, `index(obj, keys)`, `call(args, bkey)`, `agg(term, binds, tie)`, `bind(dom, on, over, where)`, `asif(e, pins)`, `pin(target, value)`).
+- A form whose parts' order this tree doesn't keep (a walk's read, a span, a query, a record, a distribution) is one group in no promised order. Two new bindings in such a group still stop `NotBuilt`, now the only give-up. No stored text reaches it.
+- The memo needed no change: each tuple's pin set is already its own interned layer, so its own key (E §3.2).
+- **Probes** (`tmp/m4/g1/order.tally`): ten pins whose value names two bindings in different orders (a sum, a difference chain, `if`, `max`, `sum(… for i in js)`, a `where`, a nested `as if`, an ask's `for j, k`). All byte-equal refcore. Two unit tests pin the order: a hand-built `b2[k, j] + c2[j, m]` and `if`, and a parsed aggregate and `as if`.
+
+**2. `accrue`** (L §3.3), in the new `eval/rates.rs` with `periodic` and `factor` moved out of `eval/builtin.rs` unchanged (refcore's `m_accrue_real`).
+- `simple`: p × r × dcf. `effective` and `nominal m`: p × (base^power − 1), exact where the power is an integer. The result is a `num` of p's unit, and nothing rounds.
+- A power that isn't an integer stops `NotBuilt` (`to u`, M6), as `pow`, `periodic` and `factor` do. Refcore prints `RUN-DOMAIN accrue needs to u` there, or an exact value where the root is rational (its `round_real` with no `to`). That is the transcendental kernel's question, M6's (Q6); T holds those corners there.
+- `discount` is `RUN-DOMAIN accrue under discount: its row states simple, effective and nominal m`, as refcore (Q5).
+- A rate whose period isn't a year, met at run, is `RUN-DOMAIN accrue takes a yearly rate, not … (L §3.3)` (Q4). Refcore prints the same line (its `LOAD-UNIT` raised at run reaches the output as `RUN-DOMAIN`), so no vector is held.
+- `none` is `RUN-NONE`, a hole argument the hole, and a ranged date the hole (off L §4.4's list).
+- `dcf`'s year fraction is now `dates.rs`'s `year_fraction_of`, shared by `dcf` and `accrue`.
+- One `Compounding` enum now serves both `rate_parts` and `accrue`, in place of the word match `rate_parts` held. The order of its refusals is unchanged.
+- **Probes** (`tmp/m4/g1/acc2.tally`, 17 asks, each run alone): `discount`; money, `num PLN` and int principals; a monthly rate per day; `none`; a window date; a zero span; `effective` back over a year (−36500/21); `effective` over 730 days; `nominal 2` over a year; `nominal 365` over a month (a 115-digit ratio). 12 are byte-equal refcore. The 5 fractional powers are the engine's `not implemented` against refcore's `RUN-DOMAIN accrue needs to u`, as planned.
+
+**The sweep** (`tmp/m4/g1/sweep.sh`): the paper check's 43 probes in 43 runs (`round__axis` with `given__scen`, `scen_base` with `scen_branch`), ask by ask, on refcore_fast and this tree's quick binary.
+- **154 asks: 150 same, 4 different.** The four are T's list in t-plan §2.3, measured on the engine before G1, and G2's work: `explain_check__rows` `b`, `axis__kleene_agg_argm` `chk`, `fx__hole_law_ver` `c`, `print__rows` `c`.
+- So **no line turned from same to different.**
+- My probes `pins.tally` (T's text) and `order.tally` are byte-equal.
+
+- **Size** (`git diff --shortstat 6962697b -- engine/crates`, `rates.rs` counted): 7 files, +619 −230, about 0.85 k changed against the plan's 0.65 k.
+  - About 180 lines of each side are the rates' move.
+  - About 110 added are the two unit tests and their text.
+  - The pins' walk is about 120 lines, `accrue` with `Compounding` about 140.
+- **Files:** `eval/rates.rs` (new, 342 lines), `eval/builtin.rs` (948 lines, from 1 122), `eval/bindings.rs`, `eval/state.rs`, `eval/pins.rs`, `eval/dates.rs`, `lib.rs`.
+- **Exceptions:** +0 (report-only hits 8, as before).
+- **Open STOP-REPORTs:** none.
+- **Mutants:** no local proof. The walk's order has the two unit tests. `accrue`'s `discount` arm and its `RUN-NONE` have no stored vector, only my probes (for T).
+- **Usage:** about 0.30 % of the week by `engine/tools/usage` before this entry.
+- **Leaves:** a literal pin's unit (G2); `to u` (M6).
+- **Checks:** `check commit: green, 24 steps (138s)`, exit 0, on this tree but for this line.

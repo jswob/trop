@@ -1,13 +1,12 @@
 //! The built-ins' dispatch, the number built-ins (`round`, `min`, `pow`, …) and `unit`, a key.
 //! Spec: L §4.2 (the dates' and calendars' built-ins, in `dates.rs` and `business.rs`; `pos`),
 //! §7.2 (`round` and the type of its result; a bare step takes the operand's unit), §5.11
-//! (`min`, `max`, `missing`), §5.10 (`unit(x)`, a key of a unit kind), §3.3 (`periodic`,
-//! `factor`: exact when the power is an integer), §7.1, §7.3 (`pow` by an integer, exact; a
-//! power that isn't one needs `to u`), §4.4 (`min` and `max` of windows by their ends;
-//! `round`, `abs`, `pow` off the list, a ranged date the hole).
+//! (`min`, `max`, `missing`), §5.10 (`unit(x)`, a key of a unit kind), §3.3 (the rate
+//! built-ins, in `rates.rs`), §7.1, §7.3 (`pow` by an integer, exact; a power that isn't one
+//! needs `to u`), §4.4 (`min` and `max` of windows by their ends; `round`, `abs`, `pow` off
+//! the list, a ranged date the hole).
 //! Twin: engine/tools/refcore/evaluate.py (`e_call`, `c_min`, `c_abs`, `c_pow`,
-//! `c_minor`, `c_round`, `c_pos`, `c_missing`), mreads.py (`m_c_unit`) and eval2.py
-//! (`m_rate_parts`, `m_periodic_real`).
+//! `c_minor`, `c_round`, `c_pos`, `c_missing`) and mreads.py (`m_c_unit`).
 //! Invariants: a hole argument makes the call that hole; a power by an integer is exact and
 //! its unit raised to it; a power that isn't an integer stops `NotBuilt` (the transcendental
 //! kernel is M6's); `unit` of a key of no unit kind is refused at the key, never guessed.
@@ -71,6 +70,7 @@ impl Engine {
             "since" => self.since_read(m, call, env, ctx),
             "gap" => self.gap_call(m, call, env, ctx),
             "periodic" | "factor" => self.rate_call(m, call, env, ctx),
+            "accrue" => self.accrue(m, call, env, ctx),
             "lifespan" => self.lifespan_of(m, call, env, ctx),
             "observed" => self.observed_call(m, call, env, ctx),
             "unit" => self.unit_call(m, call, env, ctx),
@@ -441,46 +441,6 @@ impl Engine {
     ) -> Result<Result<Vec<KeyVal>, crate::hole::Hole>, Stop> {
         let given = self.given_keys(m, keys, env, ctx)?;
         self.make_keys(m, item, binds, given, ctx)
-    }
-
-    /// `periodic(r, P, c)`, the rate per period P under compounding c, and `factor(r, n, P,
-    /// c)`, (1 + periodic)^n; exact when the power is an integer (refcore's `rate_parts`,
-    /// `periodic_real`). L §3.3.
-    fn rate_call(&mut self, m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
-        let vals = self.args(m, call, env, ctx)?;
-        let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
-        if holes.iter().any(Option::is_some) {
-            return hole_of(&holes);
-        }
-        if vals.contains(&Value::None) {
-            return Err(refuse(
-                Run::None,
-                format!("a value is none here: {}", call.name),
-            ));
-        }
-        let (rate, count, period, code) = match vals.as_slice() {
-            [rate, period, code] if call.name == "periodic" => (rate, None, period, code),
-            [rate, count, period, code] => (rate, Some(count), period, code),
-            _ => return Err(arity()),
-        };
-        let parts = rate_parts(m, rate, period, code, &call.name)?;
-        let q = match (parts, count) {
-            (Parts::Linear(per), None) => per,
-            (Parts::Power(base, exponent), None) => power(&base, &exponent)?
-                .checked_sub(&Num::int(1))
-                .map_err(num_stop)?,
-            (Parts::Linear(per), Some(times)) => {
-                let base = Num::int(1).checked_add(&per).map_err(num_stop)?;
-                power(&base, &plain_count(m, times)?)?
-            }
-            (Parts::Power(base, exponent), Some(times)) => {
-                let exponent = exponent
-                    .checked_mul(&plain_count(m, times)?)
-                    .map_err(num_stop)?;
-                power(&base, &exponent)?
-            }
-        };
-        Ok(Value::Number(Number::plain(q, Unit::one())))
     }
 }
 
@@ -966,144 +926,10 @@ enum Model {
     Class(Class),
 }
 
-/// The rate per period as a linear value or a power `base^e`, minus 1 (refcore's
-/// `rate_parts`). L §3.3.
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Parts {
-    /// The rate per period itself.
-    Linear(Num),
-    /// `base^e - 1`.
-    Power(Num, Num),
-}
-
-/// The months of a period word of the one dimension (L §3.2).
-fn period_months(word: &str) -> Option<i64> {
-    match word {
-        "year" => Some(12),
-        "quarter" => Some(3),
-        "month" => Some(1),
-        _ => None,
-    }
-}
-
-/// `<what>: <c> is not a compounding code` (refcore's `rate_parts`). L §3.3.
-fn no_compounding(m: &Reality, what: &str, code: &Value) -> Result<Stop, Stop> {
-    Ok(refuse_load(
-        Load::Unit,
-        format!(
-            "{what}: {} is not a compounding code",
-            code.text(m).map_err(num_stop)?
-        ),
-    ))
-}
-
-/// `periodic`'s parts of rate `r` per period `p` under compounding `c` (refcore's
-/// `rate_parts`). L §3.3.
-fn rate_parts(
-    m: &Reality,
-    rate: &Value,
-    period: &Value,
-    code: &Value,
-    what: &str,
-) -> Result<Parts, Stop> {
-    let Value::Number(Number {
-        q: rq,
-        class: Class::Rate(unit),
-    }) = rate
-    else {
-        return Err(refuse_load(
-            Load::Unit,
-            format!("{what}: {} is not a rate", rate.text(m).map_err(num_stop)?),
-        ));
-    };
-    let Some(per) = unit.period_of() else {
-        let shown = rate.text(m).map_err(num_stop)?;
-        return Err(refuse_load(
-            Load::Unit,
-            format!("{what}: {shown} states no period"),
-        ));
-    };
-    let Value::Word(target) = period else {
-        return Err(invariant(
-            "a period argument that isn't a period word: load's types refuse it first (LOAD-UNIT)",
-        ));
-    };
-    let share = if target == "day" || per == "day" {
-        if target != per {
-            return Err(refuse(
-                Run::Domain,
-                format!(
-                    "{what}: a {per} rate over a {target}: a day's share of a longer period is a day count (dcf), never a default (L §3.3)"
-                ),
-            ));
-        }
-        Num::int(1)
-    } else {
-        let months = period_months(target).ok_or_else(|| {
-            invariant("a period word that is no period: load takes only day, month, quarter, year")
-        })?;
-        let per_months = period_months(per).ok_or_else(|| invariant("a rate's period"))?;
-        Num::ratio(months, per_months).map_err(num_stop)?
-    };
-    let one = Num::int(1);
-    let plus = |x: &Num| one.checked_add(x).map_err(num_stop);
-    if let Value::Code(Code::Nominal(times)) = code {
-        let times = Num::int(*times);
-        let base = plus(&rq.checked_div(&times).map_err(num_stop)?)?;
-        return Ok(Parts::Power(
-            base,
-            times.checked_mul(&share).map_err(num_stop)?,
-        ));
-    }
-    let (Value::Word(word) | Value::Code(Code::Word(word))) = code else {
-        return Err(no_compounding(m, what, code)?);
-    };
-    match word.as_str() {
-        "simple" => Ok(Parts::Linear(rq.checked_mul(&share).map_err(num_stop)?)),
-        "effective" => Ok(Parts::Power(plus(rq)?, share)),
-        "discount" => {
-            if *rq == one {
-                return Err(refuse(
-                    Run::Div,
-                    "division by zero: a rate of discount of 1".to_owned(),
-                ));
-            }
-            let interest = rq
-                .checked_div(&one.checked_sub(rq).map_err(num_stop)?)
-                .map_err(num_stop)?;
-            Ok(Parts::Power(plus(&interest)?, share))
-        }
-        _ => Err(no_compounding(m, what, code)?),
-    }
-}
-
-/// `factor`'s n: a number with no unit (L §3.3).
-fn plain_count(m: &Reality, n: &Value) -> Result<Num, Stop> {
-    if let Value::Number(x) = n
-        && x.unit().is_one()
-        && !matches!(x.class, Class::Rate(_))
-    {
-        return Ok(x.q.clone());
-    }
-    Err(wrong_type(m, "factor: n is", n))
-}
-
-/// `base^e` exactly, for a whole e; a power that isn't whole needs the transcendental kernel,
-/// which S doesn't build (L §3.3, §7.3).
-fn power(base: &Num, e: &Num) -> Result<Num, Stop> {
-    if !e.is_integer() {
-        return Err(Stop::NotBuilt("a power that isn't an integer (`to u`)"));
-    }
-    let Some(k) = e.to_i64() else {
-        return power_past_64_bits(base, e);
-    };
-    base.checked_pow(k).map_err(num_stop)
-}
-
 /// `base^e` for a whole `e` past 64 bits, as refcore's Python integers: 1, 0 and -1 keep their
 /// size; any other base has a part of 2 or more, which such a power takes past the 4 096-digit
 /// cap, `RUN-DIGITS`. L §3.3, §7.1.
-fn power_past_64_bits(base: &Num, e: &Num) -> Result<Num, Stop> {
+pub(super) fn power_past_64_bits(base: &Num, e: &Num) -> Result<Num, Stop> {
     let one = Num::int(1);
     if *base == one {
         return Ok(one);

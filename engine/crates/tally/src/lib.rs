@@ -170,6 +170,7 @@ pub mod eval {
     mod prorata;
     mod queries;
     mod ranges;
+    mod rates;
     mod read;
     mod rules;
     mod solve;
