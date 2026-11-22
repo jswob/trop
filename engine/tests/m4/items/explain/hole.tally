@@ -1,0 +1,38 @@
+model ex_hole
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+input wh: date
+input sp: month
+input sp_end: month
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+
+move dh: transfers
+  on wh
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+
+def fl: money PLN = flows(dh, sp .. sp_end)
+def cn: int = count(m in transfers over sp .. sp_end)
+
+ask e_flows_hole: explain fl
+ask e_count_hole: explain cn

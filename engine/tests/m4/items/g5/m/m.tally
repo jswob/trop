@@ -1,0 +1,28 @@
+model mem
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T's member for #238's gate review 5 (invented): a question text and a source that hold a middle dot"
+
+source card "T's card · page 2 (invented)"
+
+unit PLN: currency minor 0.01
+
+input pay: money PLN
+input fee: money PLN
+input spare: int
+
+def twice: money PLN = pay + pay
+def net: money PLN = fee - fee
+
+ask q: twice
+ask q_dot: net
+ask q_explain: explain twice
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 4 000.00 PLN "the card · line 3"
+  fee = ?"the fee · as the bank states it" "the card"

@@ -230,9 +230,9 @@ paper/cal__hole_movement/c	constructs-paper		engine/tests/m4/paper	engine/tests/
 paper/cal__register/a	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__register.tally	a		-
 paper/cal__register/e	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__register.tally	e		-
 paper/cal__register/i	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__register.tally	i		-
-paper/cal__ver/a	constructs-calrow		engine/tests/m4/paper	engine/tests/m4/paper/cal__ver.tally	a		calrow
+paper/cal__ver/a	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__ver.tally	a		-
 paper/cal__ver/l	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__ver.tally	l		-
-paper/cal__ver/f	constructs-calrow		engine/tests/m4/paper	engine/tests/m4/paper/cal__ver.tally	f		calrow
+paper/cal__ver/f	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__ver.tally	f		-
 paper/cal__window_added	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/cal__window_added.tally			-
 paper/explain_check__rows/a	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/explain_check__rows.tally	a		-
 paper/explain_check__rows/b	constructs-keydiff		engine/tests/m4/paper	engine/tests/m4/paper/explain_check__rows.tally	b		keydiff
@@ -312,5 +312,33 @@ paper/scen_branch/b1	constructs-paper		engine/tests/m4/paper	engine/tests/m4/pap
 paper/scen_branch/d	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/scen_base.tally engine/tests/m4/paper/scen_branch.tally	d		-
 paper/scen_branch/d2	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/scen_base.tally engine/tests/m4/paper/scen_branch.tally	d2		-
 paper/scen_branch/dj	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/scen_base.tally engine/tests/m4/paper/scen_branch.tally	dj		-
-paper/scen_branch/n	constructs-calrow		engine/tests/m4/paper	engine/tests/m4/paper/scen_base.tally engine/tests/m4/paper/scen_branch.tally	n		calrow
+paper/scen_branch/n	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/scen_base.tally engine/tests/m4/paper/scen_branch.tally	n		-
 paper/scen_branch/n0	constructs-paper		engine/tests/m4/paper	engine/tests/m4/paper/scen_base.tally engine/tests/m4/paper/scen_branch.tally	n0		-
+items/months/m_same	items-paper		engine/tests/m4/items/months	engine/tests/m4/items/months/months.tally	m_same		-
+items/months/m_differ	items-paper		engine/tests/m4/items/months	engine/tests/m4/items/months/months.tally	m_differ		monthcheck
+items/months/q_differ	items-paper		engine/tests/m4/items/months	engine/tests/m4/items/months/months.tally	q_differ		monthcheck
+items/months/y_differ	items-paper		engine/tests/m4/items/months	engine/tests/m4/items/months/months.tally	y_differ		monthcheck
+items/explain/e_flows	items-walked		engine/tests/m4/items/explain	engine/tests/m4/items/explain/plain.tally	e_flows		explain
+items/explain/e_count	items-walked		engine/tests/m4/items/explain	engine/tests/m4/items/explain/plain.tally	e_count		explain
+items/explain/e_flows_hole	items-walked		engine/tests/m4/items/explain	engine/tests/m4/items/explain/hole.tally	e_flows_hole		explain
+items/explain/e_count_hole	items-walked		engine/tests/m4/items/explain	engine/tests/m4/items/explain/hole.tally	e_count_hole		explain
+items/g3/q	items-walked		engine/tests/m4/items/g3	engine/tests/m4/items/g3/g3.tally	q		-
+items/g3/q_flows	items-walked		engine/tests/m4/items/g3	engine/tests/m4/items/g3/g3.tally	q_flows		-
+items/g3/q_none	items-walked		engine/tests/m4/items/g3	engine/tests/m4/items/g3/g3.tally	q_none		-
+items/none/q_sum	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_sum		runnone
+items/none/q_min	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_min		runnone
+items/none/q_abs	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_abs		runnone
+items/none/q_round	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_round		runnone
+items/none/q_if	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_if		-
+items/none/q_and	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_and		-
+items/none/q_not	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_not		-
+items/none/q_member	items-backlog		engine/tests/m4/items/none	engine/tests/m4/items/none/none.tally	q_member		-
+items/age/a_last	items-backlog		engine/tests/m4/items/age	engine/tests/m4/items/age/age.tally	a_last		agemonths
+items/age/a_prev	items-backlog		engine/tests/m4/items/age	engine/tests/m4/items/age/age.tally	a_prev		-
+items/a4/e_off	items-backlog		engine/tests/m4/items/a4	engine/tests/m4/items/a4/a4.tally	e_off		-
+items/a4/e_cycle	items-backlog		engine/tests/m4/items/a4	engine/tests/m4/items/a4/a4.tally	e_cycle		-
+items/a4/v_cycle	items-backlog		engine/tests/m4/items/a4	engine/tests/m4/items/a4/a4.tally	v_cycle		-
+items/g5/q	items-backlog		engine/tests/m4/items/g5	engine/tests/m4/items/g5/j5.tally	a.q	--pin=bytes	-
+items/g5/q_dot	items-backlog		engine/tests/m4/items/g5	engine/tests/m4/items/g5/j5.tally	a.q_dot	--pin=bytes	middot
+items/g5/q_explain	items-backlog		engine/tests/m4/items/g5	engine/tests/m4/items/g5/j5.tally	a.q_explain	--pin=bytes	middot
+items/g7/run	items-backlog		engine/tests/m4/items/g7	engine/tests/m4/items/g7/j7.tally	a.q a.q_aa a.q_zulu_own		-

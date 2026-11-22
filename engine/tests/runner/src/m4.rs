@@ -1,8 +1,9 @@
 //! Milestone M4's vectors (issue #252; `MILESTONE-M4.md`): realities run on refcore by
 //! `m4/vectors.py`, stored in `m4/vectors.refcore` in `kernel/vectors.refcore`'s six
 //! netstrings and read by [`crate::kernel::vectors`]. The milestone targets
-//! `milestone/m4_checks.rs` (BUILD-ORDER § M4's 77 checks) and `milestone/m4_constructs.rs`
-//! (the corners of M4's constructs) hold the engine's whole output to them, byte for byte.
+//! `milestone/m4_checks.rs` (BUILD-ORDER § M4's 77 checks), `milestone/m4_constructs.rs`
+//! (the corners of M4's constructs and the paper check) and `milestone/m4_items.rs` (the
+//! in-scope backlog) hold the engine's whole output to them, byte for byte.
 //!
 //! - [`VECTORS`]: the stored vectors.
 
@@ -17,8 +18,8 @@ mod tests {
     use std::collections::BTreeSet;
 
     /// The runner tests' groups, `<target>-<group>`: `checks-…` for `m4_checks`,
-    /// `constructs-…` for `m4_constructs`.
-    const TARGETS: [&str; 2] = ["checks-", "constructs-"];
+    /// `constructs-…` for `m4_constructs`, `items-…` for `m4_items`.
+    const TARGETS: [&str; 3] = ["checks-", "constructs-", "items-"];
 
     #[test]
     fn the_m4_vectors_read_and_their_tables_hold_every_path_they_name() {

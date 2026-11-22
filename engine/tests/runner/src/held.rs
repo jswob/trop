@@ -13,7 +13,7 @@ pub const HELD: &str = include_str!("../../held.tsv");
 /// targets gate from M1's marker, M2's (issue #167), whose targets gate from M2's, M3's
 /// (issue #226), whose targets gate from M3's, and M4's (issue #252), whose targets gate from
 /// M4's.
-pub const TARGETS: [&str; 24] = [
+pub const TARGETS: [&str; 25] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -38,6 +38,7 @@ pub const TARGETS: [&str; 24] = [
     "m3_fixes",
     "m4_checks",
     "m4_constructs",
+    "m4_items",
 ];
 
 /// One held vector.
@@ -195,7 +196,7 @@ mod tests {
                 "m2_codes" => &m2_codes,
                 "m3_check" => &m3_check,
                 "m3_changes" | "m3_run" | "m3_fixes" => &m3_runs,
-                "m4_checks" | "m4_constructs" => &m4,
+                "m4_checks" | "m4_constructs" | "m4_items" => &m4,
                 _ => &cases,
             };
             assert!(
