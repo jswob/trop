@@ -1002,13 +1002,19 @@ def launch_usage_checks(root, expect, failures):
 
     r = launch("tests", prompt, root, "--ids", ids, "--dry-run")
     expect("launch --dry-run as lead", r.returncode, 0, r.stderr)
-    for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "CARGO_INCREMENTAL=0", "nice -n 10",
+    for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "nice -n 10",
                  "--output-format json", "--session-id", "--effort xhigh", "job tests", "--model claude-opus-5-5",
                  "dry run: nothing started"):
         if says not in r.stdout:
             failures.append(f"launch --dry-run: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     if os.path.exists(ids):
         failures.append("launch --dry-run wrote the ids file")
+    # check picks incremental builds per mode (R-82): launch passes no CARGO_INCREMENTAL, not
+    # even the caller's (the process step after tally 2.3: quick took 104 s with it at 0, 37 s without)
+    r = launch("build", prompt, root, "--ids", ids, "--dry-run", extra={"CARGO_INCREMENTAL": "0"})
+    expect("launch --dry-run with the caller's CARGO_INCREMENTAL", r.returncode, 0, r.stderr)
+    if "CARGO_INCREMENTAL" in r.stdout:
+        failures.append(f"launch --dry-run: passes CARGO_INCREMENTAL, which check chooses: {r.stdout.strip()[:300]}")
     r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--resume", "0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b", role="unset")
     expect("launch --dry-run --resume in app work", r.returncode, 0, r.stderr)
     if "--resume 0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b" not in r.stdout:
@@ -1021,12 +1027,19 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"launch --job critic: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     if "log it as a pick" in r.stdout:
         failures.append(f"launch --job critic: notes an override where there is none: {r.stdout.strip()[:300]}")
-    # a group's review on Fable, a fix's review on Opus (the process study after M2, change 5;
-    # the user's "Yes to changes 5, 6 and 7, go ahead", 2026-11-19)
-    for job, model in (("group-review", "claude-fable-5-2"), ("fix-review", "claude-opus-5-5")):
-        r = launch("lead", prompt, root, "--ids", ids, "--dry-run", "--job", job)
+    # Fable for the critic, the gate's review and a study; a round's lead, its planner, group
+    # and fix reviews and the paper check on Opus, the planner at xhigh (the process step
+    # after tally 2.3; the user's "Yes I want this", 2026-11-22)
+    for role, job, model, effort in (("lead", "group-review", "claude-opus-5-5", "high"),
+                                     ("lead", "fix-review", "claude-opus-5-5", "high"),
+                                     ("lead", "round-lead", "claude-opus-5-5", "high"),
+                                     ("lead", "gate-review", "claude-fable-5-2", "high"),
+                                     ("spec", "planner", "claude-opus-5-5", "xhigh"),
+                                     ("spec", "paper-check", "claude-opus-5-5", "high"),
+                                     ("rules", "study", "claude-fable-5-2", "high")):
+        r = launch(role, prompt, root, "--ids", ids, "--dry-run", "--job", job)
         expect(f"launch --dry-run --job {job}", r.returncode, 0, r.stderr)
-        for says in (f"job {job}", f"--model {model}", "--effort high", "TALLY_ROLE=lead"):
+        for says in (f"job {job}", f"--model {model}", f"--effort {effort}", f"TALLY_ROLE={role}"):
             if says not in r.stdout:
                 failures.append(f"launch --job {job}: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--effort", "high")
@@ -1089,7 +1102,10 @@ def launch_usage_checks(root, expect, failures):
     r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True, check=False)
     expect("usage of a planted ids file", r.returncode, 0, r.stderr)
     # a: msg_1 (1000 + 1000 + 5*200 = 3000) and msg_2 (1.25*800 = 1000); b: msg_1 again, counted once
-    for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls", "all 2 sessions"):
+    # a line says how many of its calls an earlier line counted (the process step after tally
+    # 2.3: tally 2.2.1 read a meter's line as a session's share)
+    for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls",
+                 "of the week (1 more counted in an earlier line)", "all 2 sessions"):
         if says not in r.stdout:
             failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
     if "by model" in r.stdout:
@@ -1101,16 +1117,19 @@ def launch_usage_checks(root, expect, failures):
     expect("usage of an ids file and a Fable session", r.returncode, 0, r.stderr)
     for says in (f"session {c}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "by model:", f"  {opus}: 2 calls",
                  f"  {fable}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "as Opus's tokens 0.35 %", "$18.00",
-                 "all 3 sessions: about 0.58 % of the week"):
+                 "all 3 sessions: about 0.58 % of the week, the run's share"):
         if says not in r.stdout:
             failures.append(f"usage with a Fable session: lacks {says!r}: {r.stdout.strip()[:400]}")
     tail = r.stdout.rstrip().splitlines()[-3:]
     if not tail or not tail[0].startswith("all 3 sessions"):
         failures.append(f"usage: the total isn't the third line from the end: {r.stdout.strip()[-300:]}")
-    # the account's two meters after the total (engine/PLAYBOOK.md, D10, 2026-11-19): the
-    # week meter 1.2 times the total (0.58 %), the Fable meter 4.2 times Fable's part (0.58 %)
-    for says in ("week meter: about 0.7 % (the total times 1.2; calibrated on one stretch, 2026-11-18)",
-                 "Fable meter: about 2.4 % (claude-fable-5-2's part, 0.58 %, times 4.2; calibrated on one stretch, 2026-11-18)"):
+    # the account's two meters after the total, in points (engine/PLAYBOOK.md, D10; the user's
+    # "Yes I want this", 2026-11-22): the week meter Opus's part (0.0005 %) times 1 and
+    # Fable's (0.58 %) times 2, 1.2; the Fable meter Fable's part times 4.2, 2.4
+    for says in ("week meter, the account's, not this run's share: about 1.2 points (claude-opus-5-5's part 0.00 % times 1 "
+                 "and claude-fable-5-2's part 0.58 % times 2; three readings to 2026-11-22, Fable 1.7 to 2.2)",
+                 "Fable meter, the account's, not this run's share: about 2.4 points (claude-fable-5-2's part 0.58 % times 4.2; "
+                 "one stretch, 2026-11-18)"):
         if says not in tail:
             failures.append(f"usage: its last lines lack {says!r}: {tail}")
     timeline_checks(root, expect, failures)
@@ -1150,6 +1169,10 @@ def timeline_checks(root, expect, failures):
                call("10:02:00", "m2", "engine/tools/check quick 2>&1 | tail -3"),
                result("10:02:50", "m2", "check quick: green, 11 steps (50s)"),
                {"type": "ai-title", "title": "x"}, call("10:10:00", "m3"),
+               # the entries since tally 2.2.1 (#246), read past like ai-title
+               {"type": "derived-from", "v": 1, "sessions": [{"type": "claude_code_session", "via": "compact"}]},
+               {"type": "data-flow-records", "v": 1, "records": [{"tool_name": "Bash", "tool_use_id": "tum1"}]},
+               {"type": "data-flow-incomplete", "v": 1, "codes": [6]},
                prompt("10:40:00", "# run, G1: the review's fixes (resume, gate 8 after)"), call("10:45:00", "m4")]
     review = [prompt("10:12:00", "# run, review of builder group G1 (fresh session, its own worktree)"), call("10:30:00", "m5")]
     for sid, lines, tail in ((d, builder, '{"type": "assistant", "timest'), (e, review, "")):
