@@ -1,0 +1,85 @@
+# L §5.14 Parts, A hole in a term (tally 2.3, #247; C13's clause, the lead's ruling 1; planner/c3/parts.tally): a
+# movement at x whose day is a hole makes every take at x undecided, as a hole amount's arrival does (L §5.10,
+# L5_10_parts_hole_arrival): inc's day is a hole, so out's take from acc is undecided and a read of it by owner is the
+# hole; pinned, each day gives its own answer (50.00 of ania's before the take, 0.00 after). Before: took_ania printed
+# 0.00 DUK, one day's answer, where a pin before the take gives 50.00 DUK.
+=== m.tally
+model parts
+  tally 2
+  on 2026-01-15
+  start 2025-01-01
+  end 2026-12-31
+
+source src "test"
+
+unit DUK: currency minor 0.01
+
+kind persons: parties
+
+kind cash_accounts: place one min 0
+  owned by arrive
+  step minor(DUK)
+  takes k for w order (if k.owner == ania then 0 else 1)
+
+place acc: cash_accounts DUK lives 2025-01-01..
+
+place world: outside lives 2000-01-01..
+
+input got: money DUK
+
+input d_in: date
+
+input d_out: date
+
+input a_out: money DUK
+
+def arrive[m in events, p in parties]: num at m.day
+  rule hers = (if p == ania then 1 else 0)
+
+move inc: transfers
+  on d_in
+  at d_out
+  leg cash from world to acc amount got
+
+move out: transfers
+  on d_out
+  at d_out
+  leg cash from acc to world amount a_out
+
+ask took_ania: out.cash.amount of ania
+ask took_tomek: out.cash.amount of tomek
+ask took_ania_before: out.cash.amount of ania with d_in = 2025-02-01
+ask took_ania_after: out.cash.amount of ania with d_in = 2025-04-01
+ask took_tomek_before: out.cash.amount of tomek with d_in = 2025-02-01
+ask took_tomek_after: out.cash.amount of tomek with d_in = 2025-04-01
+ask left_tomek: bal(acc, 2025-12-31) of tomek
+ask left_tomek_before: bal(acc, 2025-12-31) of tomek with d_in = 2025-02-01
+ask left_tomek_after: bal(acc, 2025-12-31) of tomek with d_in = 2025-04-01
+
+version cast
+  cite src
+  known 2021-01-01
+  persons + [ania] lives 1991-03-14..
+  persons + [tomek] lives 1989-07-02..
+
+version facts
+  cite src
+  governs always
+  known 2021-01-01
+  opening[acc] of tomek = 100.00 at 2025-01-01 start
+  opening[acc] = 100.00 at 2025-01-01 start
+  d_in = ?"which day did the money come in?"
+  d_out = 2025-03-01
+  a_out = 50.00
+  got = 100.00
+=== expect
+left_tomek: ?"which day did the money come in?" (d_in)
+...
+took_ania: ? ...
+...
+took_ania_after: 0.00 DUK
+  cut 2026-01-15
+took_ania_before: 50.00 DUK
+  cut 2026-01-15
+took_tomek: ? ...
+...

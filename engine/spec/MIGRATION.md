@@ -113,3 +113,12 @@ tally 2.2.1 is a patch of `tally 2.2` (`CHANGES.md`, 2.2 → 2.2.1): a text that
 | a pin of `opening` or `stated`, `with stated[x] = …` | a reading in a scenario's version | manual | none known | S-231.Q2, `LOAD-INSTANT` |
 | files that agree on `tally <N>` other than 2 | `tally 2`, or the engine of that version | manual | none known | S-224a, `LOAD-VERSION` |
 | a command line with an option the command doesn't take (`--pin=zzz`, `--ask` on `check`) | the option dropped: exit 2, a usage error | manual | scripts | S-usage, `OPERATIONS.md` §2 |
+
+## 2.2.1 → 2.3
+
+tally 2.3 narrows a day not yet known (`CHANGES.md`, 2.2.1 → 2.3; LANGUAGE §4.4): a window that reaches a move's `on` or `at` makes the movement a hole day, and a text whose answers rested on the window's stretch reads the hole on every day of the places it books.
+
+| 2.2.1 text | 2.3 form | Class | Reaches | Record |
+|---|---|---|---|---|
+| a window that dates a movement, written in its `on` (`on window(a, b)`) or reached from a row (`on w`, `w = window(a, b)`) | a plain day in a row marked `assumed` (LANGUAGE §5.8), which an observation corrects (§5.19): the window's last day where the amount is known, its first where the amount is a question too (`gap_lag = 0 assumed "…"`, `on add_days(gap_from, gap_lag)`); the window stays a row where it is a fact the text keeps | manual | model CMP-01 (`debts_day`, `maint_day`); households A (`cards`, A-14, A-15) and B (the gap's two moves, `ord_day`, `ola_pay_on`); I-7, I-9; their cut copies; T's vectors | 2.3, `HOLE-IMPRECISE` |
+| a window or `one_of` in a calendar's `added` list that dates a movement through a business-day function (`added [one_of([2027-04-05, 2027-04-12])]`) | the calendar's row states one day and is marked `assumed` (`added [2027-04-05]) assumed "…"`), or an axis keys the calendar where the options are wanted side by side (LANGUAGE §5.5) | manual | households B and C (Spring Day 2027 to 2029) and E1, E2 through them | 2.3, `HOLE-IMPRECISE` |

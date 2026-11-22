@@ -1,0 +1,48 @@
+# L §5.14 at e, §4.4 A movement takes a day (tally 2.3, #247; the plan's L14): an `at` that gives a window is a hole
+# `at`, read as a hole `at` is: the instance and its day are the hole, HOLE-IMPRECISE naming the day; a pin of the cell
+# answers it. Before: one evaluation per law-date class, and the instance booked on its `on` (o_may 600.00 PLN).
+=== m.tally
+model hat
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input rate: money PLN
+input lw: date
+input pday: date
+move pay_w: transfers
+  on pday
+  at lw
+  leg cash from world to other amount rate
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  rate = 100.00 PLN "c"
+  pday = 2026-04-15 "c"
+  lw = window(2026-02-01, 2026-02-10) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  opening[other] = 500.00 PLN at 2026-01-01 start "c"
+ask o_mar: bal(other, 2026-03-31)
+ask o_may: bal(other, 2026-05-31)
+ask o_pin: bal(other, 2026-05-31) with lw = 2026-02-05
+ask d_w: pay_w.day
+=== expect
+d_w: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the law date of pay_w" (lw)
+  unknown day: lw
+  cut 2026-04-20
+o_mar: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the law date of pay_w" (lw)
+  unknown day: lw
+  cut 2026-04-20
+o_may: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the law date of pay_w" (lw)
+  unknown day: lw
+  cut 2026-04-20
+o_pin: 600.00 PLN
+  pinned: lw = 2026-02-05
+  unfulfilled: pay_w
+  cut 2026-04-20

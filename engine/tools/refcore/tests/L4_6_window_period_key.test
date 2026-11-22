@@ -3,6 +3,8 @@
 # conv and convm are dated w = window(2026-03-10, 2026-03-12): fxm, keyed by months, holds the whole window in
 # 2026-03, so flows(convm, 2026-03) is 400.00 PLN; fx, keyed by days, is the hole (f2), and so is the balance that
 # books both (f1). tally 2.2 gave the hole for both (the critic's fx.tally).
+# tally 2.3 (G1, #247): restated so the moves are dated by a plain day and only their amounts read the
+# window as a key: a window that reaches a move's `on` is a hole day (L §4.4).
 === fx.tally
 model c_fx
   tally 2
@@ -20,6 +22,8 @@ place world: outside lives 1900-01-01..
 
 input w: date
 
+input pday: date
+
 input eur: num
 
 input fx[d in days]: num PLN
@@ -27,11 +31,11 @@ input fx[d in days]: num PLN
 input fxm[m in months]: num PLN
 
 move conv: transfers
-  on w
+  on pday
   leg cash from world to konto amount round(eur * fx[w], minor(PLN), half-up)
 
 move convm: transfers
-  on w
+  on pday
   leg cash from world to konto amount round(eur * fxm[w], minor(PLN), half-up)
 
 version v_card
@@ -39,6 +43,7 @@ version v_card
   governs always
   known 2026-01-01
   eur = 100 "c"
+  pday = 2026-03-12 "c"
   w = window(2026-03-10, 2026-03-12) "c"
   fx[2026-03-01..2026-03-31] = 4 PLN "c"
   fxm[2026-03] = 4 PLN "c"
