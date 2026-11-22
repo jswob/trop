@@ -1,0 +1,18 @@
+model c3_added
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 G3 (#247, rulings 2 and 13): a window in a calendar's `added` is refused, LOAD-PARSE at its row; an unannounced holiday is a stated day marked assumed (C9). Written at C2, stored at the third pin."
+source s "invented"
+input len: calendar
+input d0: date
+input n1: int
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01, 12-25], added [window(2026-06-01, 2026-06-05)]) "s"
+  d0 = 2026-05-29 "s"
+  n1 = 1 "s"
+ask a: add_business(d0, n1, len)

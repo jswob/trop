@@ -330,7 +330,7 @@ pub struct MoveInfo {
     /// Whether it is a decision that reads a place it changes itself.
     pub self_reads: bool,
     /// The positions of its keys whose `where` reads a law-dated fact, as load's law-date
-    /// check finds them: each is read at its tuple's `at` (L §4.3, E §4.1 step 1; P30).
+    /// check finds them: each is read at its tuple's `at` (L §4.3, E §4.1 step 1; #235's P30).
     pub dated_wheres: Vec<usize>,
     /// The section as written.
     pub decl: Move,

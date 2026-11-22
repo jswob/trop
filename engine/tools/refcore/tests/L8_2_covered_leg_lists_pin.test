@@ -1,6 +1,8 @@
 # tally 2.2.1 P35 (L §8.2 l.2248, "an entry is listed under a result exactly when a read in its set gave it", whatever
 # the form of the line, its outcome, or the way a movement came not to count): N1, a covered leg the pin puts after the read day lists the pin
 # (review g2 pad/r5). Before W8: no line.
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
 === r5.tally
 model r5
   tally 2
@@ -82,14 +84,17 @@ ask v13: explain bal(konto, 2026-04-05) with w5 = 2026-03-20
 ask v14: bal(konto, 2026-04-05) with w5 = 2026-03-20 as known 2026-04-20
 ask v15: bal(konto, 2026-05-20) with w6 = 2026-05-12, w5 = 2026-03-20
 === expect v3b v3c v8
-v3b: 700.00 PLN
+v3b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of pay_x" (w2)
   pinned: w5 = 2026-04-12
-  pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 105.00 PLN
+  unknown day: w2
+  pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of pay_x" (w2)
   cut 2026-06-20
-v3c: 700.00 PLN
+v3c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of pay_x" (w2)
   pinned: w5 = 2026-05-12
-  pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of 105.00 PLN
+  unknown day: w2
+  pad: konto 2026-03-31 end, pads:st:konto@2026-03-31 end of ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of pay_x" (w2)
   cut 2026-06-20
-v8: 600.00 PLN
+v8: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of pay_x" (w2)
   pinned: w5 = 2026-03-18
+  unknown day: w2
   cut 2026-06-20

@@ -166,9 +166,10 @@ ask t: taxed_at[i] for i in [1, 2, 3, 4, 5, 6]
         assert_eq!(answer(Memo::Exact).lines(), LINES, "the twin's lines");
     }
 
-    /// A def's and a move's `at` that give a window, across a span's end and inside one
-    /// span, read once per law-date class under `Memo::Classes` and at every law date under
-    /// `Memo::Exact` (L §4.4's cost line, §4.3; pick P33).
+    /// A def's `at` that gives a window, across a span's end and inside one span, read once
+    /// per law-date class under `Memo::Classes` and at every law date under `Memo::Exact`
+    /// (L §4.4's cost line, §4.3; pick P33). A move's window `at` is a hole law date since
+    /// tally 2.3 (S6), so only a def's reads a class.
     const WINDOWS: &str = r#"model memo_w
   tally 2
   on 2026-06-30
@@ -179,31 +180,15 @@ source card "a card"
 
 unit PLN: currency minor 0.01
 
-place konto: accounts PLN lives 2026-01-01..
-
-place world: outside lives 1900-01-01..
-
 input fee: money PLN
 
 input w: date
 
 input v: date
 
-input pd: date
-
 def due: money PLN = fee at w
 
 def flat: money PLN = fee at v
-
-move pay: transfers
-  on pd
-  at w
-  leg cash from world to konto amount fee
-
-move calm: transfers
-  on pd
-  at v
-  leg cash from world to konto amount fee
 
 version early
   cite card
@@ -223,8 +208,6 @@ version dated
   known 2026-01-01
   w = window(2026-03-29, 2026-04-02) "c"
   v = window(2026-01-05, 2026-02-20) "c"
-  pd = 2026-05-04 "c"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
 
 ask a: due
 
@@ -233,21 +216,11 @@ ask b1: due with w = 2026-03-31
 ask b2: due with w = 2026-04-01
 
 ask c: flat
-
-ask p: pay.cash.amount
-
-ask pw1: pay.cash.amount with w = 2026-03-31
-
-ask pw2: pay.cash.amount with w = 2026-04-01
-
-ask q: calm.cash.amount
-
-ask k: bal(konto, 2026-06-01)
 "#;
 
     /// refcore's lines for [`WINDOWS`]: a hole names the unknown day it carries, `w`
     /// (tally 2.2 S-4); a pinned day of `w` reads one law-date class.
-    const WINDOW_LINES: [&str; 27] = [
+    const WINDOW_LINES: [&str; 11] = [
         "a: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of due\" (due)",
         "  unknown day: w",
         "  cut 2026-06-30",
@@ -258,22 +231,6 @@ ask k: bal(konto, 2026-06-01)
         "  pinned: w = 2026-04-01",
         "  cut 2026-06-30",
         "c: 10.00 PLN",
-        "  cut 2026-06-30",
-        "k: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
-        "  unknown day: w",
-        "  unfulfilled: calm",
-        "  unfulfilled: pay",
-        "  cut 2026-06-30",
-        "p: ?\"date within window(2026-03-29, 2026-04-02) not precise enough for the law date of pay\" (pay)",
-        "  unknown day: w",
-        "  cut 2026-06-30",
-        "pw1: 10.00 PLN",
-        "  pinned: w = 2026-03-31",
-        "  cut 2026-06-30",
-        "pw2: 20.00 PLN",
-        "  pinned: w = 2026-04-01",
-        "  cut 2026-06-30",
-        "q: 10.00 PLN",
         "  cut 2026-06-30",
     ];
 

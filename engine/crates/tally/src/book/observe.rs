@@ -173,6 +173,7 @@ impl Engine {
             id,
             day,
             src: MvSrc::Obs,
+            member: false,
         })))
     }
 
@@ -232,20 +233,13 @@ impl Engine {
     }
 
     /// Whether an instance touches a place a version covers under cut `cut` on its leg's day,
-    /// or on day `on`, or the instance's (refcore's `touches_covered`). E §4.1 step 3,
-    /// L §5.19 Coverage.
-    pub(crate) fn touches_covered(
-        &mut self,
-        m: &Reality,
-        inst: &Inst,
-        (cut, on): (Day, Option<Day>),
-    ) -> bool {
+    /// or the instance's (refcore's `touches_covered`). E §4.1 step 3, L §5.19 Coverage.
+    pub(crate) fn touches_covered(&mut self, m: &Reality, inst: &Inst, cut: Day) -> bool {
         for leg in &inst.legs {
             let Some(day) = leg
                 .day
                 .day()
-                .or(on)
-                .or_else(|| inst.day.as_ref().and_then(Dated::lo))
+                .or_else(|| inst.day.as_ref().and_then(Dated::day))
             else {
                 continue;
             };

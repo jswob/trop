@@ -491,7 +491,7 @@ fn move_lawdate(m: &Reality, walked: &Walked, dated: &LawDated, mv: &MoveInfo) -
 /// day asked, a pin's target, nor a read inside `as if {law D}`), of a law-dated band, of a
 /// def that is law-dated or takes its reader's law date, or of a law-dated input (refcore's
 /// `m_check_move_lawdates`). The one rule a move's checks decide by: its reads with no `at`,
-/// a key's reads before its `at` (#235) and a key's `where` that waits for it (P30), each
+/// a key's reads before its `at` (#235) and a key's `where` that waits for it (#235's P30), each
 /// read as load typed it, with its relation. L §4.3 (whatever reads a law-dated fact states
 /// its law date; the two reads that aren't law-dated), §4.2 (a calendar read needs none).
 /// The spec holds this function's test as L §4.3's rule (tally 2.2.1, R18): a read isn't
@@ -535,7 +535,7 @@ fn at_reads_key(mv: &MoveInfo, pos: usize) -> Option<&str> {
 /// ([`move_read_dated`]) is refused, not met at run (#235, P28). A def that takes its
 /// reader's law date is named so: the chain of its readers ends at no written date (L §4.3
 /// `at reader`). Its `where` waits instead, and is read at its tuple's `at` once every key the
-/// `at` reads is bound (P30, [`dated_wheres`]). L §4.3 (a move's `at` dates what it reads;
+/// `at` reads is bound (#235's P30, [`dated_wheres`]). L §4.3 (a move's `at` dates what it reads;
 /// every chain of readers ends at a written date, P-6), §5.14 Keys.
 fn unbound_key_lawdate(
     m: &Reality,
@@ -573,7 +573,7 @@ fn unbound_key_lawdate(
 /// Each move's keys whose `where` waits for the move's `at` (`MoveInfo`'s `dated_wheres`), by
 /// position: the `at` reads that key or one bound after it, and the `where` makes a read that
 /// needs a law date ([`move_read_dated`]). The walk reads each at its tuple's `at` once the
-/// keys the `at` reads are bound (P30). A move with no `at` has none: [`move_lawdate`] refuses
+/// keys the `at` reads are bound (#235's P30). A move with no `at` has none: [`move_lawdate`] refuses
 /// its law-dated reads. L §4.3 (a key binding's `where` is read for each tuple at a move's
 /// `at`), E §4.1 step 1.
 pub(super) fn dated_wheres(

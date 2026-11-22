@@ -12,3 +12,4 @@ M5a/t221_fill_window	M5a	#241	tally 2.2.1 S-213 (L §5.12 step 2): a fill whose 
 M5a/t221_fill_window_pinned	M5a	#241	tally 2.2.1 S-213's twin: the same fill with its days pinned answers; fills are built at M5a
 M5a/t221_fill_hole_order	M5a	#241	tally 2.2.1 S-213's twin: a plain hole in a fill's order stays RUN-ORDER; fills are built at M5a
 M5a/t221_row_window	M5a	#241	tally 2.2.1 221.R2 (L §4.4, §5.19): an observed row's date attribute may hold a window; a window in an observed row's attribute is built at M5a (rulings 12)
+M5b/t23_c13_take	M5b	#247	tally 2.3 C13 (rulings 1; L §5.14, §8.1): a take at a place that keeps parts, beside a movement there whose day is a hole, is undecided (HOLE-PART); parts are built at M5b

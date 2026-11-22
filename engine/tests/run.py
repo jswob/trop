@@ -716,6 +716,11 @@ def self_test(checks):
         for script in ('m3/vectors.py', 'm3/purity.py'):
             p = subprocess.run([sys.executable, '-I', '-B', T + script, '--check'], capture_output=True, text=True)
             say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
+        # 8t. tally 2.3's pin oracle (#247, the plan's §9): its seeded texts on refcore, the places and the readers,
+        # each line held to its pinned days; no store, the lines found held by name until their pin, N2's counted apart
+        p = subprocess.run([sys.executable, '-I', '-B', T + 'properties/oracle.py', '--check'], capture_output=True,
+                           text=True)
+        say(p.returncode == 0, p.stdout.strip().split('\n')[-1] if p.stdout.strip() else p.stderr[-200:])
         # 9. U2 (4.5f): under fast, a check with no baseline runs on refcore (its cache entry is refcore's)
         nb = dict(fast, baseline='')
         _, r, _ = session([nb], checks, **dict(kw, runtimes=['pypy+fast']))

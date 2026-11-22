@@ -55,3 +55,12 @@ quick_leaves_out = [
   { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
   { package = "tally-runner", test = "m2_forks" },     # F6 on every store and corpus, T's
 ]
+# The gating targets' tests `check quick` runs too, each by a nextest filter that keeps every
+# other target's tests, while `check commit` runs the whole target as before (R-82; tally
+# 2.3's pick P12 on #247, 2026-11-22, under the user's standing rule of 2026-11-04): the pin
+# oracle's fixed tenth, 0.16 s, so an edit that moves a pinned day's answer is seen at once.
+# An entry names a target of a gating milestone and one test in it; it is inert until cargo
+# metadata shows the runner holds the target (T writes it on its own branch).
+quick_takes = [
+  { target = "m3_oracle", test = "m3_oracle_tenth" },
+]

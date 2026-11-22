@@ -1,0 +1,61 @@
+# L §4.4's list (tally 2.3, #247; S4, C7): an ask line's `law` or `as known` asks for one day, so a window there is
+# the hole naming it, the line's own (`the law of an ask`, `as known`). Before: REFCORE-NOT-YET (HoleSignal).
+=== m.tally
+model hd4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input w: date
+input wide: date
+input rate: num
+input apr: month
+input d2: date
+input n5: int
+input mrate[m in months]: num
+input drate[d in days]: num
+def r_at: num = rate at w
+def r_wide: num = rate at wide
+def r_reader: num = rate at reader
+def held: date = w
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-04-01, 2026-04-03) "c"
+  wide = window(2026-04-20, 2026-05-10) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  mrate[*] = 2 "c"
+  apr = 2026-04 "c"
+  d2 = 2026-04-02 "c"
+  n5 = 5 "c"
+  drate[*] = 3 "c"
+version r1
+  cite card
+  governs ..2026-04
+  known 2026-01-01
+  rate = 1 "c"
+version r2
+  cite card
+  governs 2026-05..
+  known 2026-01-01
+  rate = 5 "c"
+ask a_law: r_reader law w
+ask a_law_wide: r_reader law wide
+ask a_known2: bal(konto, d2) as known w
+=== expect
+a_known2: ?"date within window(2026-04-01, 2026-04-03) not precise enough for as known" (w)
+a_law: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the law of an ask" (w)
+a_law_wide: ?"date within window(2026-04-20, 2026-05-10) not precise enough for the law of an ask" (wide)
+warning: WARN-UNREAD def held is read by nothing
+warning: WARN-UNREAD def r_at is read by nothing
+warning: WARN-UNREAD def r_wide is read by nothing
+warning: WARN-UNREAD input apr is read by nothing
+warning: WARN-UNREAD input drate is read by nothing
+warning: WARN-UNREAD input mrate is read by nothing
+warning: WARN-UNREAD input n5 is read by nothing
+warning: WARN-UNREAD place world is read by nothing

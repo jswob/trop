@@ -296,7 +296,7 @@ impl Engine {
                 // a projection that books nothing at the place: its start, the base's balance
                 let st = walk.default_state(m, place, unit);
                 let plain = st.val.is_none() || st.bad.is_some() || st.perm.is_some();
-                let (Some(next), false) = (base, plain || !st.imp.is_empty()) else {
+                let (Some(next), false) = (base, plain) else {
                     return Ok(Value::Hole(v));
                 };
                 at = next;
@@ -831,7 +831,7 @@ impl Uncertain {
                 let dated = leg
                     .day
                     .day()
-                    .or_else(|| movement.day.as_ref().and_then(Dated::lo));
+                    .or_else(|| movement.day.as_ref().and_then(Dated::day));
                 if counted(dated, window) {
                     self.leg(place, movement, leg)?;
                 }

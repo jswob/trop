@@ -1,0 +1,19 @@
+# L §4.4, §2.3 (tally 2.3, #247; G3 under the plan's §12a): `one_of` is no form; a model's row that states it
+# prints what an unknown call prints there, `LOAD-SCENARIO an expression row outside a scenario` (MIGRATION 2.2.1
+# -> 2.3; the review of G3, Q5). Before G3: `one_of([2026-05-04, 2026-05-11])`.
+=== m.tally
+model oneof
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input d: date
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  d = one_of([2026-05-04, 2026-05-11]) "c"
+ask a: d
+=== expect
+refused: LOAD-SCENARIO an expression row outside a scenario (m.tally:12)

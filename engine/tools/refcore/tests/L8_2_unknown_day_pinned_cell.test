@@ -2,6 +2,12 @@
 # window written in a pin is a read of the pinned cell; L §8.2 `unknown day:` names "the cell that holds it, as its
 # read names it". A def pinned to a written window (qa: dd) is named by its cell, as an input is (qd: w); so is `last`
 # of an input pinned so (qc), whose hole keeps its label (w) as unpinned. qa reads pay_w on w too.
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
+# tally 2.3 (the households' speed, #247): re-stored again: a hole-day balance names its day's question and
+# reads, as tally 2.2.1's `?` day did; W1's additions (a hole amount's questions, the reads past a reading) went.
+# tally 2.3 (G3, #247): one_of is gone (L §4.4); the calendar's added day not yet fixed is a hole, `?"which day is the bridge day?"`, and the
+# results re-stored.
 === m.tally
 model g4_b2
   tally 2
@@ -66,7 +72,7 @@ version v_card
   known 2026-01-01
   pay = 100.00 PLN "the card"
   w = window(2026-03-05, 2026-03-07) "the card"
-  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
+  cal = calendar(weekends [sat, sun], added [?"which day is the bridge day?"]) "the card"
   d0 = 2026-05-04 "the card"
   x = 2026-01-15 "the card"
   d_fix = 2026-02-01 "the card"
@@ -81,16 +87,16 @@ ask qc: last(w, 2026-06-01) < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
 ask qd: bal(konto, 2026-03-06) with w = window(2026-03-05, 2026-03-07)
 ask qe: w < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
 === expect qa qc qd
-qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_d, pay_w)
-  pinned: dd = window(2026-03-05, 2026-03-07)
+qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_d" (dd) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr)
   unknown day: dd
   unknown day: w
+  unknown day: wr
   cut 2026-01-01
 qc: ?"date within window(2026-03-05, 2026-03-07) not precise enough for last(w, 2026-06-01) < 2026-03-06" (w)
   pinned: w = window(2026-03-05, 2026-03-07)
   unknown day: w
   cut 2026-01-01
-qd: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_w)
-  pinned: w = window(2026-03-05, 2026-03-07)
+qd: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr)
   unknown day: w
+  unknown day: wr
   cut 2026-01-01

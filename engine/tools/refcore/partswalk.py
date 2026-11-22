@@ -487,6 +487,23 @@ def _hole_leg(e, place):
     return _HoleLeg(e, lg, sg)
 
 
+def w_phole_day_legs(self, place, unit, refused):
+    """The legs at (place, unit) of the movements whose day is a hole (the walk's perm entries from its start): the
+    first that arrives and the first that leaves, which make every take there undecided (C13)."""
+    log = self.logs.get((place, unit))
+    out = []
+    for e in (log.ents if log is not None else ()):
+        if e.kind == 'perm' and e.note is None and isinstance(getattr(e.mv, 'day', None), Hole) and \
+                getattr(e.mv, 'id', None) is not None:
+            hl = _hole_leg(e, place)
+            if hl is not None and (e.mv.id, hl.note) not in refused and (e.mv.id, hl.note) not in self.bad_legs and \
+                    not any(_is_out(x) == _is_out(hl) for x in out):
+                # one leg each way is enough to leave every take there undecided, and the fill pays per leg: the first
+                # arrival and the first outflow, in the walk's order
+                out.append(hl)
+    return out
+
+
 def _is_out(e):
     return e.sgn < 0 if isinstance(e, _HoleLeg) else e.flow.q < 0
 
@@ -500,6 +517,11 @@ def w_pgroup_run(self, place, unit, grp, prev, refused):
     bad = {}
     batch = []
     pads = []
+    if any(e.kind == 'delta' and e.mv is not None and isinstance(e.flow, Num) and e.flow.q < 0 for e in grp):
+        # a movement at x whose day is a hole makes every take at x undecided (L §5.14 Parts, A hole in a term; tally
+        # 2.3, C13): it may fall at any point, so each group that takes at x takes its leg too, a hole part every take
+        # there may reach, as a hole amount's (L §5.10)
+        batch.extend(self.phole_day_legs(place, unit, refused))
     for e in grp:
         if e.kind == 'delta' and e.mv is not None and isinstance(e.flow, Num):
             if (e.mv.id, e.note) in refused or (e.mv.id, e.note) in self.bad_legs:

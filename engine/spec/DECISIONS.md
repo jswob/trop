@@ -498,6 +498,8 @@ version contract
 
 ---
 
+*Changed at tally 2.3: a window is read by a closed list, and a movement it dates is a hole day; see `CHANGES.md`, tally 2.2.1 → tally 2.3.*
+
 ## D-8. An observation is a movement, in any unit, and a statement's gap is a fact
 
 **Problem.** PR-8: observed movements are a separate construct with fixed positional fields in money only, so movements of units, the realised amount of a planned transfer and the gap between a statement and the booked balance can't be read as ordinary facts. Items (14): `P:PTY-05`, `P:RULE-07`, `P:REC-01`, `Q:A-05`, `Q:B-08`, `Q:B-09`, `Q:D-07`, `O:FLOW-01-1`, `O:A-2`, `S:7`, `S:9`, `S:10`, `S:11`, `G:C5-F9`. Axes: ten.

@@ -148,4 +148,12 @@ mod tests {
     fn m3_fixes_t221_refcore() {
         group_holds(RUNS, "t221-rc");
     }
+
+    /// tally 2.3's builder group G1 (#247): hole-day vectors for the six survivor rows that
+    /// stay (`ledger_model` 4, `same_end` 2, the plan's §8.4) and C-4's clause, each with its
+    /// day a window row (`m3/fixes/t23/`), refcore's bytes.
+    #[test]
+    fn m3_fixes_t23_g1() {
+        group_holds(RUNS, "t23-g1");
+    }
 }

@@ -1,24 +1,22 @@
-mca_a10_bal [px_round = *]: (?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01]), refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
+mca_a10_bal [px_round = *]: (6 979.98 DUK, refused: RUN-ORDER decisions hr1_take and zosia_save read each other on 2026-01-15)
   assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2026-02], payday_dom[sio, 2026-03], payday_dom[sio, 2026-04], payday_dom[sio, 2026-05], payday_dom[sio, 2026-06], payday_dom[sio, 2026-07], payday_dom[sio, 2026-08], payday_dom[sio, 2026-09], payday_dom[sio, 2026-10], payday_dom[sio, 2026-11], payday_dom[sio, 2026-12])
+  assumed: the card payments' days in a month are not known: the month's last day is planned (card_lag)
   assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2026-01-15
-  unknown day: cards[2026-01]
   anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
   unfulfilled: so_pay[nursery, 2026-01]
   unfulfilled: so_pay[rent, 2026-01]
   law date 2026-01-15, cut 2026-01-15
-mca_a10_explain [px_round = *]: ?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01])
+mca_a10_explain [px_round = *]: 6 979.98 DUK
   balance of joint (DUK) at the end of 2026-01-14
   from: anchor wrz_joint_2025_12:stated[joint] 2025-12-31 end = 11 579.98 DUK, 2025-12-31 end (version wrz_joint_2025_12, source wrz_joint, locator "wrz-joint-2025-12.csv line 45: balance after"), gap role anchor, gap 0.00 DUK
-  2026-01-01:
-    cards[2026-01] (past): its window window(2026-01-01, 2026-01-31) opens: ?"date within window(2026-01-01, 2026-01-31) not precise enough for a balance" (cards[2026-01]) ?"date within window(2026-01-01, 2026-01-31) not precise enough for the booking cut of cards[2026-01]" (cards[2026-01])
   2026-01-02:
     so_pay[rent, 2026-01].cash (past): -3 350.00 DUK
   2026-01-05:
     so_pay[nursery, 2026-01].cash (past): -1 250.00 DUK
   assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2026-02], payday_dom[sio, 2026-03], payday_dom[sio, 2026-04], payday_dom[sio, 2026-05], payday_dom[sio, 2026-06], payday_dom[sio, 2026-07], payday_dom[sio, 2026-08], payday_dom[sio, 2026-09], payday_dom[sio, 2026-10], payday_dom[sio, 2026-11], payday_dom[sio, 2026-12])
+  assumed: the card payments' days in a month are not known: the month's last day is planned (card_lag)
   assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
-  unknown day: cards[2026-01]
   anchor: joint 2025-12-31 end, stated 11 579.98 DUK, difference 0.00 DUK
   unfulfilled: so_pay[nursery, 2026-01]
   unfulfilled: so_pay[rent, 2026-01]

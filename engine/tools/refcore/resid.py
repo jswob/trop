@@ -147,8 +147,8 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     # the instances an observation (as known on `on`) fulfils: compared all the same on a day no statement covers,
     # their matched line on the instance's day (E §6.3)
     ful_ids = set()
-    # the last day of the observations that fulfil each instance, in any span: a window-dated instance's day once
-    # an observation fixes it (L §4.4 l.665, in every ledger; tally 2.2.1 P37, N7)
+    # the last day of the observations that fulfil each instance, in any span: a hole-day instance's day once an
+    # observation fixes it (E §6.3 Grouping, L §5.19, in every ledger; tally 2.2.1 P37, N7; tally 2.3)
     ful_last = {}
     for o in self.observations(octx):
         f = o.fulfils
@@ -173,17 +173,12 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             touches = may_touch if st == 'refused' else (lambda j: self_touch(j.legs, place))
             d = i.day
             # a refused instance whose day is refused may fall on any day, as a hole day's (tally 2.1.8 R11, #191 Q1)
-            # a window an observation fulfils, across two months too, takes its last fulfilling observation's day, in
-            # every ledger, once (tally 2.2.1 P43 S6, P45 (f)); only one nothing fulfils is a group of its own
-            if isinstance(d, Hole) or (st == 'refused' and day_lo(d) is None) or \
-                    (isinstance(d, Iv) and isinstance(d.lo, datetime.date) and i.id not in ful_last and
-                     (d.lo.year, d.lo.month) != (d.hi.year, d.hi.month)):
-                # E §6.3 Grouping (round 12): "An instance that nothing fulfils whose day is a hole, or a window not
-                # inside one month, prints an expected-but-missing line in a group of its own named ?, first among
-                # the groups, with its day's questions; it counts in no month's totals" (writer 5's T-102)
-                if isinstance(d, Iv) and ((span.end is not None and d.lo >= span.end) or
-                                          (span.start is not None and d.hi < span.start)):
-                    continue
+            # a hole day an observation fulfils takes its last fulfilling observation's day, in every ledger, once
+            # (tally 2.2.1 P43 S6, P45 (f); tally 2.3); only one nothing fulfils is a group of its own
+            if (isinstance(d, Hole) and i.id not in ful_last) or (st == 'refused' and day_lo(d) is None):
+                # E §6.3 Grouping (round 12): "An instance that nothing fulfils whose day is a hole prints an
+                # expected-but-missing line in a group of its own named ?, first among the groups, with its day's
+                # questions; it counts in no month's totals" (writer 5's T-102)
                 if not touches(i):
                     continue
                 if st == 'refused':
@@ -191,9 +186,13 @@ def m_residuals(self, place, span, by, ctx, unit=None):
                 undated.append(i)
                 continue
             dd = day_lo(d)
-            if isinstance(d, Iv) and i.id in ful_last:
-                # the month of the observation holds the line; the window's holds nothing of it (P37, N7)
+            if isinstance(d, Hole):
+                # the month of the observation holds the line (P37, N7)
                 dd = ful_last[i.id]
+            if getattr(i, 'day_coll', None) is not None and touches(i):
+                # the reads that place its day, a pin among them, are the ledger's (L §8.2; tally 2.3, the lead's
+                # ledger under a pin)
+                self.day_reads(i.day_coll)
             if not in_span(dd) or (not covered(dd) and i.id not in ful_ids):
                 continue
             if not touches(i):
@@ -214,7 +213,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         if not self_touch(run.legs, place):
             continue
         model.append(run)
-    model.sort(key=lambda i: (day_lo(i.day), i.order or ()))
+    model.sort(key=lambda i: (ful_last[i.id] if isinstance(i.day, Hole) else day_lo(i.day), i.order or ()))
     # the observations as known on `on`
     obs = [o for o in self.observations(octx) if self_touch(o.legs, place) and in_span(o.day)]
     # rows stated `same` are one movement (L §5.19, §6.1 SF-25): where their legs at x agree it is booked once, by the
@@ -314,7 +313,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         return 'move %s' % mid
 
     for i in model:
-        dd = day_lo(i.day)
+        dd = ful_last[i.id] if isinstance(i.day, Hole) else day_lo(i.day)
         mdl = self_flow(i.legs, place, unit)
         os = by_target.get(i.id, [])
         seen.update(o.id for o in os)
@@ -326,14 +325,10 @@ def m_residuals(self, place, span, by, ctx, unit=None):
             lines.append(RLine('expected but missing', dd, grp, mdl, None, diff,
                                'expected but missing %s on %s: model %s' % (i.id, dd, self.rtext(mdl, unit)),
                                i.order))
-            if isinstance(i.day, Iv):
-                # a window inside one month: the day it prints is an unknown day the ledger carries (tally 2.1.8
-                # R13, L §4.4)
-                lines[-1].carry_day = i.day
             continue
-        if isinstance(i.day, Iv):
-            # an observation that fulfils the movement fixes its day (L §4.4, §5.19): a window's is the last one's,
-            # as for a window not inside one month (E §6.3 Grouping; tally 2.2.1, #221)
+        if isinstance(i.day, Hole):
+            # an observation that fulfils the movement fixes its day (L §5.19): a hole day's is the last one's (E §6.3
+            # Grouping; tally 2.2.1, #221)
             dd = max(o.day for o in os)
         ob = None
         for o in os:
@@ -387,7 +382,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
     for i in undated:
         os = by_target.get(i.id)
         if os:
-            # E §6.3 Grouping: "for an instance whose day is a hole or a window not inside one month, the day of the
+            # E §6.3 Grouping: "for an instance whose day is a hole, the day of the
             # last observation that fulfils it, observed(m[k]).day, as an observation answers a hole movement's day"
             seen.update(o.id for o in os)
             dd = max(o.day for o in os)
@@ -407,7 +402,7 @@ def m_residuals(self, place, span, by, ctx, unit=None):
         if not isinstance(mdl, Hole) and mdl == 0:
             continue
         d = i.day
-        dtxt = fmt_hole(d) if isinstance(d, Hole) else d.window_text()
+        dtxt = fmt_hole(d)
         lines.append(RLine('expected but missing', None, (None, '?'), mdl, None, _sub(Fraction(0), mdl),
                            'expected but missing %s on %s: model %s' % (i.id, dtxt, self.rtext(mdl, unit)),
                            i.order))

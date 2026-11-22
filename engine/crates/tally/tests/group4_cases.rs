@@ -311,63 +311,6 @@ ask s5: bank[a1].cash.amount
         assert_eq!(lines, want, "every line of the run");
     }
 
-    /// N5 (refcore's `L4_4_window_booking_cut_key`, T's `fixes/g3/n7`): a key added inside a
-    /// windowed instance's day window leaves whether it existed at its booking cut open, so
-    /// its leg's amount is the window's hole as its balance is (L §4.4, §5.14.3; #169-e).
-    #[test]
-    fn a_key_added_inside_the_window_leaves_the_leg_a_hole() {
-        let text = r#"model pn7
-  tally 2
-  on 2026-06-30
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-index acct = [a1]
-
-place konto: accounts PLN lives 2026-01-01..
-place work: outside lives 1900-01-01..
-
-input wd: date
-input amt: money PLN
-
-move mw[k in acct]: transfers
-  on wd
-  leg cash from work to konto amount amt
-
-ask bw: bal(konto, 2026-04-30)
-ask aw: mw[a2].cash.amount
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  wd = window(2026-03-10, 2026-03-20) "c"
-  amt = 10.00 PLN "c"
-  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-
-version v2
-  cite card
-  governs always
-  known 2026-03-15
-  acct + [a2]
-"#;
-        let hole = "?\"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]\" (mw[a2])";
-        let lines = lines_of("pn7.tally", text);
-        let want = [
-            format!("aw: {hole}"),
-            "  unknown day: wd".to_owned(),
-            "  cut 2026-06-30".to_owned(),
-            format!("bw: {hole}"),
-            "  unknown day: wd".to_owned(),
-            "  unfulfilled: mw[a1]".to_owned(),
-            "  cut 2026-06-30".to_owned(),
-        ];
-        assert_eq!(lines, want, "every line of the run");
-    }
-
     /// F1 of the fix's review (`n2_range_9.tally`, `n2_list.tally`): the member that stands
     /// for a `same` class is its first in index order, a range or list keeping its own order:
     /// `pay[9]` before `pay[10]` on `1..12`, `pay[zz]` on `[zz, aa, mm]` (L §2.5, pick P50).

@@ -196,8 +196,6 @@ class Engine:
         self.tracing = False
         self.trace_stack = []
         self.trace_cells = {}
-        self.cal_choice = None      # the days chosen for calendars' added windows while a business-day function is
-        self.cal_met = None         # evaluated at each day they can take (over_added); the windows met there
 
     # -- collectors ---------------------------------------------------------
     @property
@@ -307,7 +305,7 @@ class Engine:
         if isinstance(v, Num):
             return Num(-v.q, v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_neg(v.enc))
         if isinstance(v, Iv):
-            return Iv(self.neg1(v.hi), self.neg1(v.lo), None, v.src, origin=v.origin, carry=iv_carry(v))
+            raise self.imprecise(v, 'arithmetic')
         raise refuse('LOAD-UNIT', 'unary minus on %s' % fmt(v))
 
     def neg1(self, x):
@@ -1067,7 +1065,7 @@ class Engine:
             return v
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
-            v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))
+            v = Iv(v.lo, v.hi, v.src, origin=(r.sid, org), name=('row', r.sid, org))
         if isinstance(v, Num) and any(b.startswith('$') for b, e in v.u):
             # a per-unit price num PLN/u takes the key it is read at (L §3.2)
             env = {b.var: key_text(k) for b, k in zip(info.binds, keys)}
@@ -1127,6 +1125,8 @@ class Engine:
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
             return self.read_reading(info, keys, ctx, probe)
+        if isinstance(d, Hole):
+            return self.read_at_hole_law(info, keys, ctx, d, calendar, probe)
         self.need_law(d, info)
         try:
             cands = self.candidates(info.rows, keys, d, ctx, info)
@@ -1145,6 +1145,37 @@ class Engine:
             v = self.prices(info, keys, ctx, v, d)
         v = self.apply_field_pins(info, keys, ctx, v)
         return v
+
+    def read_at_hole_law(self, info, keys, ctx, d, calendar, probe):
+        """An input read at a law date that is a hole (a hole `at` measured for C-4's clause, moves.law_hole_inst):
+        the value every day the hole may be gives, else the hole; a hole with no days it carries may be any day, so
+        it is the hole (L §5.14: "a day that is a hole … has no bound"; tally 2.3 review of G1, B2)."""
+        days = []
+        for q in d.qs:
+            ws = CARRY.get(q)
+            if not ws:
+                # a `?` law date may be any day: the read is its hole, and the rows it may take are its reads, so a
+                # later version that changes them changes what was measured (moves.hole_day_steps; the lead's P8)
+                self.law_hole_rows(info, keys, ctx)
+                return d
+            for w in ws:
+                days.extend(w[2])
+        out = None
+        if not days:
+            self.law_hole_rows(info, keys, ctx)
+            return d
+        for x in sorted(set(days)):
+            v = self.read_input(info, keys, ctx.but(law=x), calendar, probe)
+            if isinstance(v, (Hole, tuple, TallyError)) or (out is not None and vkey(v) != vkey(out)):
+                return d
+            out = v
+        return d if out is None else out
+
+    def law_hole_rows(self, info, keys, ctx):
+        """The rows a read at a law date that is a hole may take: every visible row at its keys."""
+        for r in info.rows:
+            if self.row_matches(r, keys, info) and self.unstated_ok(r, keys, info) and self.row_visible(r, ctx):
+                self.cur.rows[r.sid] = r
 
     def prices(self, info, keys, ctx, v, d):
         """A figure in Y prices (L §3.4)."""
@@ -1241,7 +1272,7 @@ class Engine:
         if isinstance(pv, Iv) and pv.origin is None and pv.carry is None and isinstance(pv.lo, datetime.date):
             # a computed window keeps the names it was computed from (L §4.4 l.667; tally 2.2.1, 221.C1)
             org = self.origin(info, keys)
-            return Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
+            return Iv(pv.lo, pv.hi, pv.src, origin=('pin %s' % org, org),
                       name=('pin', info.id, tuple(_kv(k) for k in keys)))
         return pv
 
@@ -1472,17 +1503,29 @@ class Engine:
     def def_window(self, info, keys, env, ctx, w):
         """An at that gives a window reads the def once per law-date class the window overlaps
         (L §4.3); every day of the window gives the same values as its classes."""
-        days = sorted(w.days) if w.days else [w.lo + datetime.timedelta(days=i) for i in range((w.hi - w.lo).days + 1)]
-        vals = []
-        for dd in days:
-            vals.append(self.def_cell(info, keys, env, ctx.but(law=dd)))
-        imprecise = carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (
-            w.window_text(), info.id), self.origin(info, keys))]), w)
+        days = [w.lo + datetime.timedelta(days=i) for i in range((w.hi - w.lo).days + 1)]
 
         def same(a, b):
             if isinstance(a, Hole) or isinstance(b, Hole):
                 return isinstance(a, Hole) and isinstance(b, Hole) and set(a.qs) == set(b.qs)
             return vkey(a) == vkey(b)
+        vals = []
+        tracing, self.tracing = self.tracing, False
+        try:
+            for dd in days:
+                vals.append(self.def_cell(info, keys, env, ctx.but(law=dd)))
+        finally:
+            self.tracing = tracing
+        if tracing:
+            # `explain` shows one step per law-date class, at its first day inside the window (L §4.4, E §10; tally
+            # 2.3, the lead's P9, Q5): refcore takes a class to start where the value or a span of the reality does
+            starts = self.span_bounds()
+            for k, dd in enumerate(days):
+                if k == 0 or dd in starts or not same(vals[k], vals[k - 1]):
+                    vals[k] = self.def_cell(info, keys, env, ctx.but(law=dd))
+        imprecise = carry_hole(Hole([('date within %s not precise enough for the law date of %s' % (
+            w.window_text(), info.id), self.origin(info, keys))]), w)
+
         if all(same(v, vals[0]) for v in vals):
             return vals[0]
         # L §4.3: "If all give one value, that is the value; otherwise it is HOLE-IMPRECISE" (round 18, C3-7: the
@@ -1515,15 +1558,20 @@ class Engine:
     def window_bounded(self, days):
         """Whether a span boundary of the reality falls inside the days (after the first): a version's governs, a row's
         or a rule's own span, a thing's entry (lifespan or membership)."""
-        m = self.m
         lo, hi = days[0], days[-1]
+        return any(lo < b <= hi for b in self.span_bounds())
+
+    def span_bounds(self):
+        """The days a span of the reality starts on or ends before (a span's end is its first day after): a version's
+        governs, a row's or a rule's own span, a thing's entry (lifespan or membership)."""
+        m = self.m
         bs = set()
 
         def add(sp):
             if sp is None or getattr(sp, 'always', False):
                 return
             for d in (sp.start, sp.end):
-                if d is not None:
+                if isinstance(d, datetime.date):
                     bs.add(d)
         for v in m.versions.values():
             add(getattr(v, 'governs', None))
@@ -1539,7 +1587,7 @@ class Engine:
         for th in m.things.values():
             for e in th.entries:
                 add(getattr(e, 'span', None))
-        return any(lo < b <= hi for b in bs if isinstance(b, datetime.date))
+        return bs
 
     def def_cell(self, info, keys, env, ctx):
         ck = ('def', info.id, tuple(_kv(k) for k in keys), ctx.key())
@@ -1613,7 +1661,7 @@ class Engine:
             cell = info.id + ('[%s]' % ', '.join(key_text(k) for k in keys) if keys else '')
             org = ('def ' + cell, cell)
             if v.name is not None:
-                return Iv(v.lo, v.hi, v.days, v.src, origin=org, name=v.name, carry=None)
+                return Iv(v.lo, v.hi, v.src, origin=org, name=v.name, carry=None)
         else:
             org = v.origin
             if v.name is not None:
@@ -1623,7 +1671,7 @@ class Engine:
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
               ctx.axes, ctx.world, ctx.path)
         # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
-        return Iv(v.lo, v.hi, v.days, v.src, origin=org, name=nm, carry=getattr(v, 'carry', None))
+        return Iv(v.lo, v.hi, v.src, origin=org, name=nm, carry=getattr(v, 'carry', None))
 
     def def_cone(self, qid):
         """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
@@ -2281,36 +2329,8 @@ class Engine:
         raise refuse('LOAD-UNIT', '%s %s %s' % (fmt(a), op, fmt(b)))
 
     def iv_arith(self, n, a, b, ctx):
-        """Arithmetic on a window gives an interval (L §4.4)."""
-        if n.op == '/' and isinstance(b, Iv) and isinstance(b.lo, Num) and b.lo.q <= 0 <= b.hi.q:
-            # a divisor whose interval holds 0: its ends don't stand for its values (L §4.4 l.668, l.671; P30, B3, N6),
-            # so each value in turn, or the hole
-            return self.lift_values('arithmetic', lambda x, y: self.binop_plain(n, x, y, ctx), a, b)
-        if isinstance(a, Iv) and not isinstance(b, Iv):
-            lo = self.binop_plain(n, a.lo, b, ctx)
-            hi = self.binop_plain(n, a.hi, b, ctx)
-            src = a.src
-        elif isinstance(b, Iv) and not isinstance(a, Iv):
-            lo = self.binop_plain(n, a, b.lo, ctx)
-            hi = self.binop_plain(n, a, b.hi, ctx)
-            src = b.src
-        else:
-            # two windows: the interval over every corner of their ends (tally 2.1.7 R3, the natural extension)
-            r = self.lift(lambda x, y: self.binop_plain(n, x, y, ctx), a, b, what='arithmetic')
-            if isinstance(r, Iv) and n.op in ('+', '-', '*') and whole_valued(a) and whole_valued(b):
-                r.whole = True
-            return r
-        if order_lt(hi, lo):
-            lo, hi = hi, lo
-        if self.cmp3(lo, hi, None) == 0:
-            # one value when its ends agree (L §4.4 l.668; P30: `days_between(d, w) * 0` is 0)
-            return lo
-        org = a.origin if isinstance(a, Iv) else b.origin
-        # a computed value: no name (tally 2.1.7 R3, L §4.4: only a copy is the same unknown)
-        res = Iv(lo, hi, None, src, origin=org, carry=carry_union(a, b))
-        # whole numbers stay whole under + - * by a whole number (P30: the whole numbers of a whole-number interval)
-        res.whole = n.op in ('+', '-', '*') and whole_valued(a) and whole_valued(b)
-        return res
+        """`date ± duration` on a window: by the ends, a stretch (L §4.4's list); any other arithmetic is the hole."""
+        return self.ends(lambda x, y: self.binop_plain(n, x, y, ctx), a, b, what='arithmetic', stretch=True)
 
     def binop_plain(self, n, a, b, ctx):
         da = getattr(n, '_datearith', None)
@@ -2487,7 +2507,9 @@ class Engine:
         if isinstance(a, Rec) or isinstance(b, Rec):
             # L §3.1 (round 12): "Two records are never compared" (L §8.4: RUN-DOMAIN at run)
             raise refuse('RUN-DOMAIN', 'a comparison of two records has no meaning (compare their fields)')
-        raise refuse('LOAD-UNIT', '%s and %s compared' % (fmt(a), fmt(b)))
+        # a key-list binding's key prints by its name, never as an object (tally 2.3, the lead's P9)
+        raise refuse('LOAD-UNIT', '%s and %s compared' % tuple(x.text if isinstance(x, ListKey) else fmt(x)
+                                                               for x in (a, b)))
 
     def iv_compare(self, op, a, b, n):
         """A comparison on a window is decided when the whole interval lies on one side;
@@ -2518,10 +2540,6 @@ class Engine:
                 return False
         else:
             disjoint = self.cmp3(ahi, blo, None) < 0 or self.cmp3(bhi, alo, None) < 0
-            if isinstance(a, Iv) and a.days is not None and not isinstance(b, Iv):
-                disjoint = b not in a.days
-            if isinstance(b, Iv) and b.days is not None and not isinstance(a, Iv):
-                disjoint = a not in b.days
             if disjoint:
                 return op == '!='
         w = a if isinstance(a, Iv) else b
@@ -2573,6 +2591,9 @@ class Engine:
         if isinstance(v, datetime.date):
             return v
         if isinstance(v, Iv):
+            if isinstance(v.lo, datetime.date) and v.lo == v.hi:
+                # a window of one day is that day (L §4.4; tally 2.3, the review of G3, N6)
+                return v.lo
             raise self.imprecise(v, what)
         if v is NONE:
             raise refuse('RUN-NONE', 'a value is none here: %s' % what)
@@ -3189,14 +3210,7 @@ class Engine:
             if b.where is not None and defer is not None:
                 d2 = defer + [b.where]
             elif b.where is not None:
-                try:
-                    w = self.ev(b.where, e2, ctx)
-                except WinDay as wd:
-                    if regs is None:
-                        raise
-                    # an ask's for domain is no line's own value: a window-dated decision it meets is the window's
-                    # hole, per tuple, never a stop (tally 2.2.1 P41, F5 and n3)
-                    w = imprecise_hole(wd.iv, wd.use)
+                w = self.ev(b.where, e2, ctx)
                 if w is False:
                     continue
                 if w is NONE:
@@ -3402,7 +3416,7 @@ class Engine:
                 return lo
             # a computed interval has no name, but its questions name the read it came from (L §8.1; tally 2.1.7
             # R3, T's SR-5): the first window's
-            return Iv(lo, hi, None, first.src, origin=first.origin, carry=carry_union(*ts))
+            return Iv(lo, hi, first.src, origin=first.origin, carry=carry_union(*ts))
         return self.extreme(ts, fn, n)
 
     def extreme(self, ts, fn, n=None):
@@ -3801,67 +3815,53 @@ class Engine:
             raise refuse('RUN-NONE', 'never in %s' % what)
         raise refuse('LOAD-UNIT', '%s is %s' % (what, fmt(v)))
 
-    def lift(self, fn, *vals, what='a built-in'):
-        """An operation monotone in its windows and giving a value on every day between their ends: its ends stand for
-        its days (L §4.4 l.668), through the one mechanism, lift_values."""
-        return self.lift_values(what, fn, *vals, mono=True)
-
-    def lift_values(self, what, fn, *vals, mono=False):
-        """An operation over an interval, the one mechanism every operator and built-in goes through (L §4.4 l.667 to
-        l.671, l.2217; tally 2.2.1 P30): it decides only what holds for every value the interval can hold. It takes
-        each value in turn where it can (the whole numbers of a whole-number interval: an int, or whole numbers kept
-        whole by + - *, as days_between(d, w) + 18), with no cap that falls back to the ends; its two ends, and 0 where a
-        number's interval crosses it (abs, an even pow: its shape), stand for the rest only where it is monotone
-        (mono). Then: one value when they agree, the refusal when every one refuses (the first value's), the hole when
-        only some refuse, else their interval; an interval it can't take in turn, where it isn't monotone, is the hole.
-        One window named in two arguments of one operation is one day, as in a comparison."""
+    def ends(self, fn, *vals, what='a built-in', stretch=False):
+        """A listed reader of a window (L §4.4's list; tally 2.3): each ranged argument at its first and last day,
+        whatever names they carry (S5). With `stretch` (add_days, add_months, add_years, date ± duration, min, max),
+        by the ends, a stretch: from the least result to the greatest, one day where they agree. Otherwise (year_of,
+        quarter_of, month_of, age, age_months, overlap_days), the value where every combination of ends gives the
+        same, `none` too, else the hole. Refused at every combination, the first's refusal; at some, the hole."""
         vals = [one_day(v) for v in vals]
         ivs = [v for v in vals if isinstance(v, Iv)]
         if not ivs:
             return fn(*vals)
-        named = [v.name for v in ivs if v.name is not None and isinstance(v.lo, datetime.date)]
-        if len(ivs) > 1 and len(named) == len(ivs) and len(set(repr(x) for x in named)) == 1:
-            w = ivs[0]
-            return self.per_day(w, lambda d: fn(*[d if isinstance(v, Iv) else v for v in vals]), what)
-        import itertools
-        # a hole it makes names every window its operands carry (L l.667; tally 2.2.1 P41, F8)
-        hw = ivs[0] if len(ivs) == 1 else Iv(ivs[0].lo, ivs[0].hi, ivs[0].days, ivs[0].src, origin=ivs[0].origin,
-                                              carry=carry_union(*ivs))
-        opts = []
-        size = 1
-        for v in vals:
-            if not isinstance(v, Iv):
-                opts.append([v])
-            elif isinstance(v.lo, Num) and whole_valued(v) and not mono:
-                # only an operation that isn't monotone takes the whole numbers in turn, up to the cap (P41, F1)
-                size *= int(v.hi.q - v.lo.q) + 1
-                # each whole number in its own unit: 0 PLN stays money (the builder's w15; tally 2.2.1 W10)
-                opts.append(None if size > LIFT_CAP else [num_at(v.lo, k) for k in range(int(v.lo.q), int(v.hi.q) + 1)])
-            elif mono:
-                opts.append([v.lo, v.hi] + ([zero_like(v.lo)] if isinstance(v.lo, Num) and v.lo.q < 0 < v.hi.q
-                                            else []))
-            else:
-                opts.append(None)
-        if any(o is None for o in opts):
-            # its values can't be taken in turn and it isn't monotone in them: not decided for the whole interval
+        hw = self.carrier(ivs)
+        if any(not isinstance(v.lo, datetime.date) for v in ivs):
             raise self.imprecise(hw, what)
+        import itertools
         outs, errs = [], []
-        for c in itertools.product(*opts):
+        for c in itertools.product(*[[v.lo, v.hi] if isinstance(v, Iv) else [v] for v in vals]):
             try:
-                r = fn(*c)
+                outs.append(fn(*c))
             except Refusal as e:
                 errs.append(e)
-                continue
-            if r is None or r is NONE:
-                raise self.imprecise(ivs[0], 'a built-in that is none on part of the window')
-            outs.append(r)
         if errs and not outs:
             raise errs[0]
-        if errs:
+        if errs or any(isinstance(r, (Iv, Hole)) for r in outs):
             raise self.imprecise(hw, what)
-        if any(isinstance(r, Iv) for r in outs):
-            outs = [x for r in outs for x in ((r.lo, r.hi) if isinstance(r, Iv) else (r,))]
-        return self.interval_of(outs, ivs[0], carry_union(*ivs))
+        if stretch:
+            if not all(isinstance(r, datetime.date) for r in outs):
+                raise self.imprecise(hw, what)
+            return self.interval_of(outs, ivs[0], carry_union(*ivs))
+        first = outs[0]
+        for r in outs[1:]:
+            if (r is NONE) != (first is NONE) or (r is not NONE and self.cmp3(r, first, None) != 0):
+                raise self.imprecise(hw, what)
+        return first
+
+    def carrier(self, ivs):
+        """The window a hole made of several ranged arguments names: every unknown day they carry."""
+        if len(ivs) == 1:
+            return ivs[0]
+        return Iv(ivs[0].lo, ivs[0].hi, ivs[0].src, origin=ivs[0].origin, carry=carry_union(*ivs))
+
+    def off_list(self, what, *vals):
+        """A reader off L §4.4's list: a ranged argument makes it the hole naming each unknown day (tally 2.3, S4)."""
+        vals = [one_day(x) for x in vals]
+        ivs = [v for v in vals if isinstance(v, Iv)]
+        if ivs:
+            raise self.imprecise(self.carrier(ivs), what)
+        return vals[0] if len(vals) == 1 else vals
 
     def interval_of(self, outs, iv, carry=None):
         """The values an operation takes over a window's days: one value when they agree, else their interval (a
@@ -3874,33 +3874,13 @@ class Engine:
                 b = r
         if self.cmp3(a, b, None) == 0:
             return a
-        return Iv(a, b, None, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
-
-    def per_day(self, iv, fn, n):
-        """An operation that isn't monotone in its window is evaluated for each day the window can take (L §4.4; tally
-        2.1.7 R3, F4): one value when they agree, else the interval of the results, or HOLE-IMPRECISE where they aren't
-        ordered (a truth value)."""
-        if iv.days is not None:
-            days = sorted(iv.days)
-        else:
-            days = [iv.lo + datetime.timedelta(days=i) for i in range((iv.hi - iv.lo).days + 1)]
-        outs = []
-        holes = []
-        for d in days:
-            r = fn(d)
-            if isinstance(r, Hole):
-                holes.append(r)
-            else:
-                outs.append(r)
-        if holes:
-            return merge(*holes)
-        if all(isinstance(r, bool) for r in outs):
-            if len(set(outs)) == 1:
-                return outs[0]
-            raise self.imprecise(iv, n if isinstance(n, str) else _ntxt(n))
-        return self.interval_of(outs, iv)
+        return Iv(a, b, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
 
     def period_arg(self, v, what):
+        if isinstance(v, Iv):
+            # a span or period read from a ranged date is off L §4.4's list (it can turn back across the window): the
+            # hole naming the day; a window of one day is that day (tally 2.3, the lead's P19)
+            v = self.off_list(what, v)
         if isinstance(v, Period):
             return v
         if isinstance(v, datetime.date):
@@ -3913,9 +3893,7 @@ class Engine:
         v, = self.args(n, env, ctx)
         if isinstance(v, Hole):
             return v
-        if isinstance(v, Iv):
-            # a window of days or of periods (`month_of(w)`): monotone, so its ends (L §4.4 l.668; P30, N5)
-            return self.lift(lambda d: self.period_arg(d, 'start_of').start, v, what='start_of')
+        v = self.off_list('start_of', v)
         p = self.period_arg(v, 'start_of')
         return p.start
 
@@ -3923,8 +3901,7 @@ class Engine:
         v, = self.args(n, env, ctx)
         if isinstance(v, Hole):
             return v
-        if isinstance(v, Iv):
-            return self.lift(lambda d: self.period_arg(d, 'end_of').end, v, what='end_of')
+        v = self.off_list('end_of', v)
         p = self.period_arg(v, 'end_of')
         return p.end
 
@@ -3933,7 +3910,7 @@ class Engine:
         if isinstance(v, Hole):
             return v
         if isinstance(v, Iv):
-            return self.lift(f, v, what=f.__name__)
+            return self.ends(f, v, what=f.__name__)
         if isinstance(v, Period):
             return f(v.start)
         return f(self.date_of(v, n.name))
@@ -3952,8 +3929,9 @@ class Engine:
         h = self.hole_args([a, b])
         if h:
             return h
+        a, b = self.off_list('day_of', a, b)
         if n._form == 'month':
-            return self.lift_values('day_of', lambda b: self.day_of_month(a, b), b)
+            return self.day_of_month(a, b)
         p = self.period_arg(a, 'day_of')
         if p.kind == 'year' and (p.start.month, p.start.day) != (1, 1):
             # L §4.2: "Of a key of an anchored index (§4.1) it is refused (RUN-DOMAIN)"
@@ -3984,11 +3962,9 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'days_between')
         b = self.as_date_or_iv(b, 'days_between')
-        if isinstance(a, Iv) and isinstance(b, Iv) and a.name is not None and a.name == b.name:
-            # a window taken with its own name once (L §4.4, as iv_compare): one unknown day, 0 days from itself
-            # (the third turn's note, the review of group 2's fix)
-            return Int(0)
-        return self.lift(lambda x, y: Int((y - x).days), a, b, what='days_between')
+        # off L §4.4's list (tally 2.3, C3): its ends never agree, so a ranged argument is the hole
+        a, b = self.off_list('days_between', a, b)
+        return Int((b - a).days)
 
     def c_add_days(self, n, env, ctx):
         a, k = self.args(n, env, ctx)
@@ -3996,7 +3972,8 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_days')
-        return self.lift_values('add_days', lambda k: self.lift(lambda x: add_days(x, self.int_of(k)), a, what='add_days'), k)
+        k = self.off_list('add_days', k)
+        return self.ends(lambda x: add_days(x, self.int_of(k)), a, what='add_days', stretch=True)
 
     def months_arg(self, k, per, mult):
         if isinstance(k, Num) and k.u:
@@ -4011,8 +3988,8 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_months')
-        return self.lift_values('add_months', lambda k: self.lift(
-            lambda x: add_months(x, self.months_arg(k, 'month', 1)), a, what='add_months'), k)
+        k = self.off_list('add_months', k)
+        return self.ends(lambda x: add_months(x, self.months_arg(k, 'month', 1)), a, what='add_months', stretch=True)
 
     def c_add_years(self, n, env, ctx):
         a, k = self.args(n, env, ctx)
@@ -4020,8 +3997,8 @@ class Engine:
         if h:
             return h
         a = self.as_date_or_iv(a, 'add_years')
-        return self.lift_values('add_years', lambda k: self.lift(
-            lambda x: add_months(x, self.months_arg(k, 'year', 12)), a, what='add_years'), k)
+        k = self.off_list('add_years', k)
+        return self.ends(lambda x: add_months(x, self.months_arg(k, 'year', 12)), a, what='add_years', stretch=True)
 
     def c_overlap_days(self, n, env, ctx):
         a, b, k = self.args(n, env, ctx)
@@ -4030,10 +4007,10 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'overlap_days')
         b = self.as_date_or_iv(b, 'overlap_days')
+        # its span is off L §4.4's list (period_arg): the count turns back across a window (0 at both ends, 1 between)
         p = self.period_arg(k, 'overlap_days')
-        # monotone in each window, so the interval of its values from their ends, two windows too (L §4.4 l.668;
-        # P25)
-        return self.lift(lambda x, y: Int(overlap_days(x, y, p)), a, b, what='overlap_days')
+        # on L §4.4's list for its two days: the value where every combination of their ends agrees (tally 2.3)
+        return self.ends(lambda x, y: Int(overlap_days(x, y, p)), a, b, what='overlap_days')
 
     def c_age(self, n, env, ctx):
         b, d = self.args(n, env, ctx)
@@ -4049,7 +4026,7 @@ class Engine:
             return NONE if r is None else Int(r)
         if not isinstance(b, Iv) and not isinstance(d, Iv):
             return f(b, d)
-        return self.lift(f, b, d, what=n.name)
+        return self.ends(f, b, d, what=n.name)
 
     c_age_months = c_age
 
@@ -4058,15 +4035,8 @@ class Engine:
         if isinstance(d, Hole):
             return d
         d = self.as_date_or_iv(d, 'weekday')
-        if isinstance(d, Iv):
-            if d.days is None and (d.hi - d.lo).days >= 6:
-                return Iv(Int(1), Int(7), None, d.src, origin=d.origin, carry=iv_carry(d))
-            days = sorted(d.days) if d.days else [d.lo + datetime.timedelta(days=i)
-                                                  for i in range((d.hi - d.lo).days + 1)]
-            ws = sorted(set(x.isoweekday() for x in days))
-            if len(ws) == 1:
-                return Int(ws[0])
-            return Iv(Int(min(ws)), Int(max(ws)), None, d.src, origin=d.origin, carry=iv_carry(d))
+        # off L §4.4's list: 1 at both ends of a Monday-to-Monday window, 6 inside (tally 2.3)
+        d = self.off_list('weekday', d)
         return Int(d.isoweekday())
 
     def c_pos(self, n, env, ctx):
@@ -4093,16 +4063,7 @@ class Engine:
         if a > b:
             # named in L §8.4 What isn't defined is refused
             raise refuse('RUN-DOMAIN', 'window(%s, %s) with a after b' % (a, b))
-        return Iv(a, b, None, 'window(%s, %s)' % (a, b))
-
-    def c_one_of(self, n, env, ctx):
-        v, = self.args(n, env, ctx)
-        if isinstance(v, Hole):
-            return v
-        ds = frozenset(self.date_of(x, 'one_of') for x in v.items)
-        if not ds:
-            raise refuse('RUN-DOMAIN', 'one_of of no days')
-        return Iv(min(ds), max(ds), ds, 'one_of([%s])' % ', '.join(d.isoformat() for d in sorted(ds)))
+        return Iv(a, b, 'window(%s, %s)' % (a, b))
 
     def c_min(self, n, env, ctx):
         snap = self.trace_snap()
@@ -4126,8 +4087,8 @@ class Engine:
         if isinstance(v, Hole):
             return v
         self.no_none(v, 'abs')
-        return self.lift_values('abs', lambda v: Num(abs(v.q), v.u, money=v.money, isint=v.isint, rate=v.rate,
-                                                     enc=enc_abs(v.enc)), v, mono=True)
+        v = self.off_list('abs', v)
+        return Num(abs(v.q), v.u, money=v.money, isint=v.isint, rate=v.rate, enc=enc_abs(v.enc))
 
     def c_pow(self, n, env, ctx):
         x, k = self.args(n, env, ctx)
@@ -4136,8 +4097,8 @@ class Engine:
             return h
         self.no_none(x, 'pow')
         self.no_none(k, 'pow')
-        # monotone in its base where the exponent is one number (odd), its shape where it is even (0 joins the ends)
-        return self.lift_values('pow', lambda x, k: self.pow_of(n, x, k, ctx), x, k, mono=not isinstance(k, Iv))
+        x, k = self.off_list('pow', x, k)
+        return self.pow_of(n, x, k, ctx)
 
     def pow_of(self, n, x, k, ctx):
         if getattr(n, '_realpow', False) and (k.q.denominator != 1 or k.enc is not None or x.enc is not None):
@@ -4172,9 +4133,7 @@ class Engine:
         self.no_none(x, 'round')
         self.no_none(u, 'round')
         self.no_none(mode, 'round')
-        if isinstance(x, Iv):
-            # round is monotone in x: the interval of its values (L §4.4 l.668; P25)
-            return self.lift_values('round', lambda xv: self.round_one(n, xv, u, mode), x, mono=True)
+        x = self.off_list('round', x)
         return self.round_one(n, x, u, mode)
 
     def round_one(self, n, x, u, mode):
@@ -4233,7 +4192,11 @@ class Engine:
         c = Coll()
         self.stack.append(c)
         try:
-            keys, hole = self.key_values(info, r.keys if r.k == 'index' else [], r._convs, env, ctx)
+            try:
+                keys, hole = self.key_values(info, r.keys if r.k == 'index' else [], r._convs, env, ctx)
+            except HoleSignal as e:
+                # a key that is a window is a hole key: false, never the window's hole (L §8.1; tally 2.3, P7)
+                keys, hole = None, e
             if hole is not None:
                 res = False
             else:
@@ -4278,96 +4241,18 @@ class Engine:
                 return False
             if a[0] == 'hole':
                 unknown.append(Hole([(a[1], node._r[2])]))
-            if (a[0] == 'window' and a[1] <= day <= a[2]) or (a[0] == 'oneof' and day in a[1]):
-                # L §4.2: a day in added may be a window, "every day known but one. Such a window is one the line
-                # meets, so a result that depends on its day is HOLE-IMPRECISE"
-                if a[0] == 'window':
-                    wt = 'window(%s, %s)' % (a[1], a[2])
-                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
-                            name=('added', node._r[2], ai))
-                    days = [a[1] + datetime.timedelta(days=i) for i in range((a[2] - a[1]).days + 1)]
-                else:
-                    wt = 'one_of([%s])' % ', '.join(str(x) for x in sorted(a[1]))
-                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
-                            name=('added', node._r[2], ai))
-                    days = sorted(a[1])
-                if self.cal_choice is not None:
-                    # evaluated at each day the window can take (over_added): this pass's day, or the first while
-                    # the window is newly met (that pass is run again per day)
-                    # each entry of the list is an unknown day of its own (tally 2.1.7 R3, F5)
-                    k = (node._r[2] + cal_at_text(cal), wt, ai)
-                    if k not in self.cal_choice:
-                        self.cal_met.setdefault(k, days)
-                        self.cal_met_days[k] = days
-                    if self.cal_choice.get(k, days[0]) == day:
-                        return False
-                    continue
-                unknown.append(carry_hole(Hole([('date within %s not precise enough for is_business(%s, %s)' % (
-                    wt, day, _ntxt(node)), node._r[2])]), iv))
         if unknown:
             return merge(*unknown)
         return True
-
-    def over_added(self, n, fn):
-        """A business-day function over a calendar whose added list holds a window, evaluated at each day the window
-        can take (L §4.2 "every day known but one"; one pass per day of each window it meets, nested where a pass meets
-        another). One value: that value. Dates that differ: the interval of the days it can take, a window like any
-        other (L §4.4: "Built-ins on a window ... give the interval of their values"; "Only a comparison decides an
-        interval"), so a movement dated by it counts in a span that holds the whole interval (L §4.4, §5.14).
-        is_business that differs: HOLE-IMPRECISE (L §4.2: "a result that depends on its day is HOLE-IMPRECISE";
-        L §8.1)."""
-        outer, outer_met = self.cal_choice, self.cal_met
-        todo = [dict(outer) if outer is not None else {}]
-        out = []
-        first_met = None
-        met_order = []
-        try:
-            while todo:
-                ch = todo.pop(0)
-                self.cal_choice = ch
-                self.cal_met = {}
-                v = fn()
-                new = sorted(k for k in self.cal_met if k not in ch)
-                if new:
-                    k = new[0]
-                    if first_met is None:
-                        first_met = k
-                    for k2 in new:
-                        if k2 not in met_order:
-                            met_order.append(k2)
-                    for d in self.cal_met[k]:
-                        c2 = dict(ch)
-                        c2[k] = d
-                        todo.append(c2)
-                    continue
-                out.append(v)
-        finally:
-            self.cal_choice, self.cal_met = outer, outer_met
-        holes = [v for v in out if isinstance(v, Hole)]
-        if holes:
-            return merge(*holes)
-        v0 = out[0]
-        if all(vkey(v) == vkey(v0) for v in out[1:]):
-            return v0
-        # the entries met, in the order the passes met them: the unknown days the result carries (tally 2.1.8 R13)
-        carry = tuple(added_carry(k, self.cal_met_days.get(k, ())) for k in met_order)
-        if isinstance(v0, bool):
-            cal_id, wt = first_met[0].split(' @')[0], first_met[1]
-            return carry_hole(Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)]),
-                              ids=carry)
-        return Iv(min(out), max(out), None, None, origin=(first_met[0].split(' @')[0], first_met[0].split(' @')[0]) if first_met else None,
-                  carry=carry)
 
     def c_is_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
         if isinstance(d, Hole):
             return d
         d = one_day(d)
-        if isinstance(d, Iv):
-            # a window argument: day by day, is_business isn't monotone in it (tally 2.1.7 R3, F4)
-            return self.per_day(d, lambda x: self.over_added(n, lambda: self.business(n.args[1], env, ctx, x)), n)
+        d = self.off_list('is_business', d)
         d = self.date_of(d, 'is_business')
-        return self.over_added(n, lambda: self.business(n.args[1], env, ctx, d))
+        return self.business(n.args[1], env, ctx, d)
 
     def c_add_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
@@ -4376,9 +4261,7 @@ class Engine:
         if h:
             return h
         d = one_day(d)
-        if isinstance(d, Iv):
-            # a window argument: day by day, add_business isn't monotone in it (tally 2.1.7 R3, F4)
-            return self.per_day(d, lambda x: self.add_business_at(n, x, k, env, ctx), n)
+        d, k = self.off_list('add_business', d, k)
         return self.add_business_at(n, d, k, env, ctx)
 
     def add_business_at(self, n, d, k, env, ctx):
@@ -4407,7 +4290,7 @@ class Engine:
                 if b:
                     left -= 1
             return cur
-        return self.over_added(n, count)
+        return count()
 
     def edge_first(self, n, d, step, env, ctx, edge):
         """add_business whose count passes the day range: the count can't end before the edge, so the outcome is the
@@ -4426,7 +4309,7 @@ class Engine:
         for x in days:
             b = self.business(n.args[2], env, ctx, x, seek=True)
             cal = self.cal_at(n.args[2], env, ctx, x)
-            if isinstance(b, Hole) or any(a[0] in ('window', 'oneof', 'hole') for a in getattr(cal, 'added', ())):
+            if isinstance(b, Hole) or any(a[0] == 'hole' for a in getattr(cal, 'added', ())):
                 raise edge
         raise edge
 
@@ -4457,7 +4340,7 @@ class Engine:
                 cur = cur + datetime.timedelta(days=step)
             # an argument outside the domain its row states (L §8.4 What isn't defined is refused)
             raise refuse('RUN-DOMAIN', '%s(%s, %d): the period has fewer business days' % (n.name, fmt(p), k))
-        return self.over_added(n, count)
+        return count()
 
     def c_schedule(self, n, env, ctx):
         p = self.ev(n.args[0], env, ctx)
@@ -4480,7 +4363,7 @@ class Engine:
             return day
         if w not in ('following', 'preceding', 'modified_following'):
             raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % w)
-        return self.over_added(n, lambda: self.rolled(n, env, ctx, day, w))
+        return self.rolled(n, env, ctx, day, w)
 
     def rolled(self, n, env, ctx, day, w):
         """schedule's day moved by its roll (L §4.2, ISDA 2006 section 4.12)."""
@@ -4663,10 +4546,7 @@ def window_id(v):
     register line prints, L §8.2 `unknown day:`)."""
     if not isinstance(v.lo, datetime.date):
         return None
-    if v.days:
-        days = sorted(v.days)
-    else:
-        days = [v.lo + datetime.timedelta(days=i) for i in range((v.hi - v.lo).days + 1)]
+    days = [v.lo + datetime.timedelta(days=i) for i in range((v.hi - v.lo).days + 1)]
     if v.origin:
         return ('row',) + tuple(str(x) for x in v.origin), str(v.origin[1]), days, v.window_text()
     return ('src', v.src), str(v.src), days, v.window_text()
@@ -4767,16 +4647,6 @@ def member_moves(m, b, x):
     return owns(ow, move_owner(x))
 
 
-class WinDay(Exception):
-    """A decision dated by a window met by a flows or a binding over a span its window reaches (E §4.1 step 2): the
-    walk books it on no one day, so the line is read once per day of its window (ask.one; tally 2.2.1 P30, P32, N3)."""
-
-    def __init__(self, iv, use):
-        Exception.__init__(self, use)
-        self.iv = iv
-        self.use = use
-
-
 class HoleSignal(Exception):
     """Raised inside a read to return a hole at once (an imprecise visibility)."""
 
@@ -4849,6 +4719,10 @@ def interval_text(r):
 
 
 def band_x(x, m=None):
+    x = one_day(x)
+    if isinstance(x, Iv):
+        # a band's argument isn't on L §4.4's list: a ranged one is the hole (tally 2.3, C-5)
+        raise HoleSignal(imprecise_hole(x, 'a band argument'))
     if isinstance(x, Num):
         return x.q
     if isinstance(x, datetime.date):
@@ -4859,40 +4733,9 @@ def band_x(x, m=None):
     raise refuse('LOAD-UNIT', 'a band argument %s' % fmt(x))
 
 
-def zero_like(x):
-    """0 in x's type and unit."""
-    import copy
-    z = copy.copy(x)
-    z.q = Fraction(0)
-    z.enc = None
-    return z
-
-
-# the values an operation takes in turn before an interval is the hole (P30: not a fallback to the ends)
-LIFT_CAP = 100000
-
-
-def num_at(x, k):
-    """The whole number k in x's type and unit (an int stays an Int)."""
-    if not x.u and not x.money and getattr(x, 'isint', False):
-        return Int(k)
-    import copy
-    z = copy.copy(x)
-    z.q = Fraction(k)
-    z.enc = None
-    return z
-
-
-def whole_valued(v):
-    """Every value it can hold is a whole number: an int, a whole number, or an interval kept whole (Iv.whole)."""
-    if isinstance(v, Iv):
-        return v.whole or isinstance(v.lo, Num) and v.lo.isint and v.hi.isint
-    return isinstance(v, Num) and (v.isint or v.q.denominator == 1)
-
-
 def one_day(v):
     """A window of one day is that day (tally 2.1.7 R3, L §4.4; F3)."""
-    if isinstance(v, Iv) and (v.days is None or len(v.days) == 1) and not order_lt(v.lo, v.hi) and \
+    if isinstance(v, Iv) and not order_lt(v.lo, v.hi) and \
             not order_lt(v.hi, v.lo):
         return v.lo
     return v

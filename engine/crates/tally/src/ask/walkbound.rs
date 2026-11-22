@@ -83,7 +83,7 @@ pub(super) fn walk_bound_line(
             .iter()
             .find(|r| r.point == *point)
             .cloned();
-        let law = run.as_ref().map_or(ctx.law, |r| r.inst.law.first());
+        let law = run.as_ref().map_or(ctx.law, |r| r.inst.law.day());
         let there = Ctx {
             at: Some(WalkAt {
                 walk: main,

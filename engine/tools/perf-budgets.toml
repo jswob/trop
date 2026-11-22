@@ -419,7 +419,7 @@ blocks = "tag"
 [[row]]
 id = "P8-L15"
 group = "L"
-what = "O:A-3's run: A's q12 asks with the one_of forecast copy"
+what = "O:A-3's run: A's q12 asks with the forecast copy, its calendar's unannounced day a row marked assumed (tally 2.3)"
 recipe = "waits: T's load runner (load.tsv L:15)"
 wall_s = 10.0
 footprint_mb = 4096

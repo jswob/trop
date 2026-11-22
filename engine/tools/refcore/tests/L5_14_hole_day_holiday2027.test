@@ -6,6 +6,10 @@
 # them (scratch/tx2/min/holiday2027.out).
 # tally 2.2.1 R21 (L §8.2 `unknown day:`): the name is the cell a caller pins, `added <entry> of <calendar>`, else
 # the movement; tally 2.2 printed the window's text or `added <entry>`.
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
+# tally 2.3 (G3, #247): one_of is gone (L §4.4); the calendar's added day not yet fixed is a hole, `?"which day is Spring Day 2027?"`, and the
+# results re-stored.
 === m.tally
 model holiday2027
   tally 2
@@ -97,12 +101,11 @@ version card_rows
   known 2025-01-01
   amt = 100.00 "card"
   cal = calendar(weekends [sat, sun]) governs 2025..2026 "card"
-  cal = calendar(weekends [sat, sun], added [one_of([2027-04-05, 2027-04-12])]) governs 2027 "card: Spring Day 2027 not yet set"
+  cal = calendar(weekends [sat, sun], added [?"which day is Spring Day 2027?"]) governs 2027 "card: Spring Day 2027 not yet set"
   dom = 5 "card"
   live = false "card: the payment never runs"
 === expect
-q_hand_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_hand_2025: ?"which day is Spring Day 2027?" (cal)
   unfulfilled: by_hand[2025-01]
   unfulfilled: by_hand[2025-02]
   unfulfilled: by_hand[2025-03]
@@ -116,8 +119,7 @@ q_hand_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough f
   unfulfilled: by_hand[2025-11]
   unfulfilled: by_hand[2025-12]
   law date 2025-12-31, cut 2026-01-15
-q_hand_at_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal), ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal))
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_hand_at_2025: (?"which day is Spring Day 2027?" (cal), ?"which day is Spring Day 2027?" (cal))
   unfulfilled: by_hand_at[2025-01]
   unfulfilled: by_hand_at[2025-02]
   unfulfilled: by_hand_at[2025-03]
@@ -131,8 +133,7 @@ q_hand_at_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enou
   unfulfilled: by_hand_at[2025-11]
   unfulfilled: by_hand_at[2025-12]
   law date 2025-12-31, cut 2026-01-15
-q_hand_dec_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_hand_dec_2025: ?"which day is Spring Day 2027?" (cal)
   unfulfilled: by_hand[2025-01]
   unfulfilled: by_hand[2025-02]
   unfulfilled: by_hand[2025-03]
@@ -170,8 +171,7 @@ q_hand_dec_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enou
   unfulfilled: by_schedule[2025-11]
   unfulfilled: by_schedule[2025-12]
   law date 2025-12-31, cut 2026-01-15
-q_hand_def_when_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal), ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal))
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_hand_def_when_2025: (?"which day is Spring Day 2027?" (cal), ?"which day is Spring Day 2027?" (cal))
   unfulfilled: by_hand_def_when[2025-01]
   unfulfilled: by_hand_def_when[2025-02]
   unfulfilled: by_hand_def_when[2025-03]
@@ -185,14 +185,11 @@ q_hand_def_when_2025: (?"date within one_of([2027-04-05, 2027-04-12]) not precis
   unfulfilled: by_hand_def_when[2025-11]
   unfulfilled: by_hand_def_when[2025-12]
   law date 2025-12-31, cut 2026-01-15
-q_hand_when_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_hand_when_2025: ?"which day is Spring Day 2027?" (cal)
   law date 2025-12-31, cut 2026-01-15
-q_konto2_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_konto2_2025: ?"which day is Spring Day 2027?" (cal)
   law date 2025-12-31, cut 2026-01-15
-q_konto_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough for is_business(day_of(m, dom), cal)" (cal)
-  unknown day: added one_of([2027-04-05, 2027-04-12]) of cal
+q_konto_2025: ?"which day is Spring Day 2027?" (cal)
   unfulfilled: by_hand[2025-01]
   unfulfilled: by_hand[2025-02]
   unfulfilled: by_hand[2025-03]
@@ -230,7 +227,7 @@ q_konto_2025: ?"date within one_of([2027-04-05, 2027-04-12]) not precise enough 
   unfulfilled: by_schedule[2025-11]
   unfulfilled: by_schedule[2025-12]
   law date 2025-12-31, cut 2026-01-15
-q_schedule_2025: 1 200.00 DUK
+q_schedule_2025: ?"which day is Spring Day 2027?" (cal)
   unfulfilled: by_schedule[2025-01]
   unfulfilled: by_schedule[2025-02]
   unfulfilled: by_schedule[2025-03]
@@ -244,5 +241,5 @@ q_schedule_2025: 1 200.00 DUK
   unfulfilled: by_schedule[2025-11]
   unfulfilled: by_schedule[2025-12]
   law date 2025-12-31, cut 2026-01-15
-q_schedule_day: window(2027-04-05, 2027-04-06)
+q_schedule_day: ?"which day is Spring Day 2027?" (cal)
   law date 2025-12-31, cut 2026-01-15

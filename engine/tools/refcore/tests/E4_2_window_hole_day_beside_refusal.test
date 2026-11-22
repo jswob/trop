@@ -1,0 +1,61 @@
+# E §4.2 Holes in the walk, L §4.4 A movement takes a day (tally 2.3, #247; the plan's §8.2, P31's carve-out goes whole;
+# planner/hd/hd5.tally): a refusal beside a hole day is what it is beside any hole day: the hole before the refused
+# movement's day, the refusal from it on, for a window's hole day (other) as for a ? day (konto). Before: o0420 and
+# o0509 were 500.00 and 600.00 PLN (the window had ended).
+=== m.tally
+model hd5
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input zero: num
+input pd: date
+input w: date
+input bad_day: date
+move pay_x: transfers
+  on pd
+  leg cash from world to konto amount pay
+move pay_w: transfers
+  on w
+  leg cash from world to other amount pay
+move bad: transfers
+  on bad_day
+  leg cash from world to konto amount round(pay / zero, minor(PLN), half-up)
+move bad2: transfers
+  on bad_day
+  leg cash from world to other amount round(pay / zero, minor(PLN), half-up)
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  zero = 0 "c"
+  pd = ?"which day is the pay?" "c"
+  w = window(2026-04-28, 2026-05-03) "c"
+  bad_day = 2026-05-10 "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  opening[other] = 500.00 PLN at 2026-01-01 start "c"
+ask k0509: bal(konto, 2026-05-09)
+ask k0531: bal(konto, 2026-05-31)
+ask o0509: bal(other, 2026-05-09)
+ask o0531: bal(other, 2026-05-31)
+ask o0420: bal(other, 2026-04-20)
+=== expect
+k0509: ?"which day is the pay?" (pd)
+  cut 2026-04-20
+k0531: refused: RUN-DIV division by zero
+  cut 2026-04-20
+o0420: ?"date within window(2026-04-28, 2026-05-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o0509: ?"date within window(2026-04-28, 2026-05-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o0531: refused: RUN-DIV division by zero
+  cut 2026-04-20

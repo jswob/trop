@@ -5629,4 +5629,239 @@ ask f4: flows(rent[2026-01].cash, 2025-12-01 .. 2026-01-31)
             "refcore's lines"
         );
     }
+
+    /// A window written in a move's `on`, one a rule of a `date` def computes, and a calendar
+    /// whose `added` holds a day and a hole: the forms tally 2.3 keeps (L §4.4, §4.2).
+    const ONE_FORM: &str = "model g3
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"invented\"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place spar: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+input a: date
+input b: date
+input told: date
+input late: date
+input d: date
+input hol: calendar
+
+def gift: date
+  rule base = window(told, late)
+
+move salary: transfers
+  on window(a, b)
+  leg cash from world to konto amount pay
+
+move bonus: transfers
+  on gift
+  leg cash from world to spar amount pay
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pay = 1 000.00 PLN \"c\"
+  a = 2026-03-10 \"c\"
+  b = 2026-03-12 \"c\"
+  told = 2026-04-10 \"c\"
+  late = 2026-04-13 \"c\"
+  d = 2026-04-06 \"c\"
+  hol = calendar(weekends [sat, sun], added [2026-04-06, ?\"which day is the spring holiday?\"]) \"c\"
+  opening[konto] = 0.00 PLN at 2026-01-01 start \"c\"
+  opening[spar] = 0.00 PLN at 2026-01-01 start \"c\"
+
+ask sal: bal(konto, 2026-03-31)
+ask sal_pin: bal(konto, 2026-03-31) with a = 2026-03-12
+ask gft: gift
+ask bon: bal(spar, 2026-04-30)
+ask bon_pin: bal(spar, 2026-04-30) with gift = 2026-04-12
+ask off: is_business(d, hol)
+ask next: add_business(d, 1, hol)
+";
+
+    /// An observed row with a date attribute (L §5.19), to write a day into its fields.
+    const OBSERVED_DATE: &str = "model ob
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s \"invented\"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+kind wages: event certain
+  leg cash: PLN
+  attr period: date
+
+input bank: observed
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-02
+  covers konto
+  opening[konto] = 0.00 PLN at 2026-03-01 start \"s\"
+  bank[r1] = (on: 2026-03-10, kind: wages, leg cash from world to konto amount 50.00 PLN, period: 2019-01-01) \"r1\"
+
+ask d: bank[r1].period
+";
+
+    #[test]
+    fn one_of_and_a_window_in_added_are_refused_at_load_with_their_line() {
+        // tally 2.3 G3 (L §4.4, §4.2): `one_of` is no name of the language, so each place
+        // refuses it as it refuses any word it lacks; `added` takes a day or a hole
+        let cases = [
+            (
+                ONE_FORM,
+                "  d = 2026-04-06 \"c\"",
+                "  d = one_of([2026-04-06, 2026-04-13]) \"c\"",
+                "LOAD-SCENARIO an expression row outside a scenario (a.tally:43)",
+            ),
+            (
+                ONE_FORM,
+                "rule base = window(told, late)",
+                "rule base = one_of([told, late])",
+                "LOAD-NAME unknown id one_of (a.tally:24)",
+            ),
+            (
+                ONE_FORM,
+                "  on window(a, b)",
+                "  on one_of([a, b])",
+                "LOAD-NAME unknown id one_of (a.tally:27)",
+            ),
+            (
+                ONE_FORM,
+                "added [2026-04-06, ?\"which day is the spring holiday?\"]",
+                "added [one_of([2026-04-06, 2026-04-13])]",
+                "LOAD-PARSE cannot parse: expected a day or a hole, got one_of (a.tally:44)",
+            ),
+            (
+                ONE_FORM,
+                "added [2026-04-06, ?\"which day is the spring holiday?\"]",
+                "added [2026-04-06, window(2026-04-13, 2026-04-14)]",
+                "LOAD-PARSE cannot parse: expected a day or a hole, got window (a.tally:44)",
+            ),
+            (
+                OBSERVED_DATE,
+                "(on: 2026-03-10,",
+                "(on: one_of([2026-03-10, 2026-03-11]),",
+                "LOAD-UNIT the on of bank[r1] is a day (a.tally:26)",
+            ),
+            (
+                OBSERVED_DATE,
+                "period: 2019-01-01)",
+                "period: one_of([2019-01-01, 2019-12-31]))",
+                "LOAD-UNIT a value of the wrong type for bank[r1] (a.tally:26)",
+            ),
+        ];
+        for (base, old, new, expected) in cases {
+            assert_eq!(refusal(&edited(base, &[(old, new)])), expected, "{new}");
+        }
+        // what stays: a window in an observation's `on` is LOAD-LEG's (L §5.19)
+        let on_window = edited(
+            OBSERVED_DATE,
+            &[("(on: 2026-03-10,", "(on: window(2026-03-10, 2026-03-11),")],
+        );
+        assert_eq!(
+            refusal(&on_window),
+            "LOAD-LEG the on of bank[r1] is a window; a window belongs in an attribute (a.tally:26)",
+            "a window in an observation's on"
+        );
+        assert_eq!(
+            answered(OBSERVED_DATE).first().map(String::as_str),
+            Some("d: 2019-01-01"),
+            "a day in a date attribute"
+        );
+    }
+
+    #[test]
+    fn a_window_a_move_writes_and_one_a_rule_computes_stay_as_they_were() {
+        // tally 2.3 (pick P11): `window(e1, e2)` in a move's `on` is a hole day named by its
+        // movement; computed in a rule of a `date` def it sits in that cell and a pin answers
+        // it; an added hole is HOLE-CALENDAR where it decides a result (L §4.4, §4.2)
+        let lines = answered(ONE_FORM);
+        let expected = [
+            "bon: ?\"date within window(2026-04-10, 2026-04-13) not precise enough for the day of bonus\" (gift)",
+            "  unknown day: gift",
+            "  cut 2026-08-01",
+            "bon_pin: 1 000.00 PLN",
+            "  pinned: gift = 2026-04-12",
+            "  unfulfilled: bonus",
+            "  cut 2026-08-01",
+            "gft: window(2026-04-10, 2026-04-13)",
+            "  cut 2026-08-01",
+            "next: ?\"which day is the spring holiday?\" (hol)",
+            "  cut 2026-08-01",
+            "off: false",
+            "  cut 2026-08-01",
+            "sal: ?\"date within window(2026-03-10, 2026-03-12) not precise enough for the day of salary\" (salary)",
+            "  unknown day: salary",
+            "  cut 2026-08-01",
+            "sal_pin: 1 000.00 PLN",
+            "  pinned: a = 2026-03-12",
+            "  unfulfilled: salary",
+            "  cut 2026-08-01",
+        ];
+        assert_eq!(lines, expected, "the lines of the commit G3 started from");
+    }
+
+    /// A record input's row with a `date` field (L §2.3 `field`), to write a day into it.
+    const RECORD_DATE: &str = "model r
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+source s \"invented\"
+input lot: (bought date, cnt int)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  lot = (bought: 2026-04-06, cnt: 3) \"c\"
+ask a1: lot.cnt
+";
+
+    #[test]
+    fn a_call_in_a_record_row_s_field_is_refused_at_load_but_a_window() {
+        // tally 2.3 G3's review, B1 (pick P14): a call but `window(a, b)` written in a record
+        // row's field is no value of a row, refcore's last line, `one_of` among them; a
+        // window there waits for M5a (2.2.1's ruling 12): load leaves it to the read
+        assert_eq!(refusal(RECORD_DATE), "loaded", "a day");
+        for call in [
+            "one_of([2026-04-06, 2026-04-13])",
+            "foo([2026-04-06, 2026-04-13])",
+            "add_days(2026-04-06, 1)",
+        ] {
+            let text = edited(
+                RECORD_DATE,
+                &[("bought: 2026-04-06", &format!("bought: {call}"))],
+            );
+            assert_eq!(
+                refusal(&text),
+                "LOAD-UNIT a value of the wrong type for lot (a.tally:12)",
+                "{call}"
+            );
+        }
+        let window = edited(
+            RECORD_DATE,
+            &[(
+                "bought: 2026-04-06",
+                "bought: window(2026-04-06, 2026-04-13)",
+            )],
+        );
+        assert_eq!(refusal(&window), "loaded", "a window, held to M5a");
+    }
 }

@@ -411,7 +411,10 @@ import milestones
 def selected(mode):
     env = check.mode_env(mode)
     argv, _ = check.local_tests(mode, env)
-    args = ["--profile" if a == "--cargo-profile" else a for a in argv[3:]]
+    # nextest's filter (`-E` and its expression, the marker's quick_takes) isn't cargo's
+    sel = argv[3:]
+    sel = [a for i, a in enumerate(sel) if a != "-E" and (i == 0 or sel[i - 1] != "-E")]
+    args = ["--profile" if a == "--cargo-profile" else a for a in sel]
     r = subprocess.run(["cargo", f"+{check.NIGHTLY}", "test", "--no-run", "-Z", "unstable-options", "--unit-graph",
                         *args], cwd=check.ENGINE, env=env, capture_output=True, text=True, check=False)
     lines = [l for l in r.stdout.splitlines() if l.startswith('{"version"')]
@@ -461,7 +464,10 @@ import milestones
 def selected(mode):
     env = check.mode_env(mode)
     argv, _ = check.local_tests(mode, env)
-    args = ["--profile" if a == "--cargo-profile" else a for a in argv[3:]]
+    # nextest's filter (`-E` and its expression, the marker's quick_takes) isn't cargo's
+    sel = argv[3:]
+    sel = [a for i, a in enumerate(sel) if a != "-E" and (i == 0 or sel[i - 1] != "-E")]
+    args = ["--profile" if a == "--cargo-profile" else a for a in sel]
     r = subprocess.run(["cargo", f"+{check.NIGHTLY}", "test", "--no-run", "-Z", "unstable-options", "--unit-graph",
                         *args], cwd=check.ENGINE, env=env, capture_output=True, text=True, check=False)
     lines = [l for l in r.stdout.splitlines() if l.startswith('{"version"')]
@@ -488,3 +494,85 @@ expect: commit builds the fuzz targets, quick doesn't
 --- run
 tools/check list > zz_list.txt
 grep -q '^commit: .* fuzz-build' zz_list.txt && ! grep -q '^quick: .* fuzz-build' zz_list.txt && echo "commit builds the fuzz targets, quick doesn't"
+
+# R-82 as amended 2026-11-22 (tally 2.3's pick P12 on #247): `check quick` runs one named test
+# of a gating target the marker's `quick_takes` lists, by a nextest filter that keeps every other
+# target's tests, and `check commit` runs that target whole. Planted on S's s_kernel, which
+# exists; the marker's own entry (m3_oracle) is T's, inert until the target exists.
+case: quick-takes-a-gating-test
+tool: run
+exit: any
+expect: quick runs s_kernel by name
+expect: quick's filter: not (binary_id(tally-runner::s_kernel)) or (binary_id(tally-runner::s_kernel) and test(/(^|::)s_kernel_corpus_whole_output$/))
+expect: commit runs s_kernel whole
+--- replace tools/milestones.toml
+  { target = "m3_oracle", test = "m3_oracle_tenth" },
+--- with
+  { target = "s_kernel", test = "s_kernel_corpus_whole_output" },
+--- write zz_takes.py
+"""Planted: the local modes' test argv with a quick_takes entry on a target that exists."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+quick, _ = check.local_tests("quick", check.mode_env("quick"))
+commit, _ = check.local_tests("commit", check.mode_env("commit"))
+if "--test=s_kernel" in quick:
+    print("quick runs s_kernel by name")
+if "-E" in quick:
+    print(f"quick's filter: {quick[quick.index('-E') + 1]}")
+if "--test=s_kernel" in commit and "-E" not in commit:
+    print("commit runs s_kernel whole")
+--- run
+python3 -I -B zz_takes.py
+
+# Its inert side: an entry whose target the runner doesn't hold yet changes no argv.
+case: quick-takes-nothing-before-the-target
+tool: run
+exit: any
+expect: quick's argv unchanged: True
+--- replace tools/milestones.toml
+  { target = "m3_oracle", test = "m3_oracle_tenth" },
+--- with
+  { target = "m3_absent", test = "m3_absent_tenth" },
+--- write zz_takes.py
+"""Planted: quick's argv with a quick_takes entry on a target not yet written."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+import milestones
+
+env = check.mode_env("quick")
+quick, _ = check.local_tests("quick", env)
+plain = [*check.QUICK_TESTS, *milestones.default_tests(env, milestones.quick_leaves_out())]
+print(f"quick's argv unchanged: {quick == plain}")
+--- run
+python3 -I -B zz_takes.py
+
+# The planted violation: an entry on a target of no gating milestone is refused, so the
+# marker can't pull a later milestone's red tests into `check quick`.
+case: quick-takes-only-a-gating-target
+tool: run
+exit: any
+expect: quick_takes names m4_oracle, which is no gating milestone's target
+--- replace tools/milestones.toml
+  { target = "m3_oracle", test = "m3_oracle_tenth" },
+--- with
+  { target = "m4_oracle", test = "m4_oracle_tenth" },
+--- write zz_takes.py
+"""Planted: quick's test step with a quick_takes entry on M4, which doesn't gate."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+import milestones
+
+try:
+    check.local_tests("quick", check.mode_env("quick"))
+    print("quick took a target of no gating milestone")
+except milestones.MilestoneError as e:
+    print(e)
+--- run
+python3 -I -B zz_takes.py

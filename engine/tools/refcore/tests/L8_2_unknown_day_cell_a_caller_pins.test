@@ -4,6 +4,10 @@
 # field copied by a def the def's cell (hf `held_from[bank[g1]]`), one written in a move's own `on` its movement (o1
 # `salary`), two moves with equal windows two lines (o3, pin), days_between of two windows two questions (two). tally
 # 2.2 printed the window's text, one line for equal windows, and the first window's question only.
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === r21.tally
 model r21
   tally 2
@@ -55,24 +59,24 @@ ask pin: bal(konto, 2026-03-29) with wr = 2026-03-28
 hf: ?"date within window(2019-01-01, 2019-12-31) not precise enough for held_from[bank[g1]] < 2019-06-01" (held_from[bank[g1]])
   unknown day: held_from[bank[g1]]
   cut 2026-08-01
-o1: ?"date within window(2026-03-27, 2026-03-31) not precise enough for flows of salary" (salary)
+o1: ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of salary" (salary)
   unknown day: salary
   cut 2026-08-01
-o2: ?"date within window(2026-03-27, 2026-03-31) not precise enough for flows of bonus" (bonus)
+o2: ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of bonus" (wr)
   unknown day: wr
   cut 2026-08-01
-o3: ?"date within window(2026-03-27, 2026-03-31) not precise enough for a balance" (bonus, salary, twin)
+o3: ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of bonus" (wr) ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of salary" (salary) ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of twin" (twin)
   unknown day: salary
   unknown day: twin
   unknown day: wr
   cut 2026-08-01
-pin: ?"date within window(2026-03-27, 2026-03-31) not precise enough for a balance" (salary, twin)
+pin: ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of salary" (salary) ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day of twin" (twin)
   pinned: wr = 2026-03-28
   unknown day: salary
   unknown day: twin
   unfulfilled: bonus
   cut 2026-08-01
-two: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w) ?"date within window(2026-03-12, 2026-03-14) not precise enough for a print" (w0)
+two: ?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between" (w) ?"date within window(2026-03-12, 2026-03-14) not precise enough for days_between" (w0)
   unknown day: w
   unknown day: w0
   cut 2026-08-01

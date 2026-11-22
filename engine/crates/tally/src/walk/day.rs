@@ -6,11 +6,7 @@
 //! `RUN-LIFESPAN`), §5.19 (an observed leg before K, each end from the observation of the
 //! version that covers its place that day, or from this one where none does; one that fulfils
 //! a decision dated its day at the decision's point; a record refused refuses its places),
-//! §4.4 (a leg dated by a window is `HOLE-IMPRECISE` from the window's first day and booked at
-//! its last; where its lifespan or sign test comes out one way on some of the window's days
-//! and another on the rest, it is the window's hole from the first day, and a refusal reaching
-//! its place after that doesn't outrank the hole; tally 2.1.8 item 77), §8.5; E §6.1. A leg's
-//! ends refused, a hole or a window's are `walk/ends.rs`'s.
+//! §8.5; E §6.1. A leg's ends refused or a hole are `walk/ends.rs`'s.
 //! Twin: engine/tools/refcore/walk.py (`run_to`, `walk_day`, `act`, `book_leg`,
 //! `book_obs_leg`, `book_obs_now`, `alive_day`, `close_day`).
 //! Invariants: a leg is booked at both its ends or refused at both; a refused leg is taken back
@@ -21,7 +17,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::{Act, Mv};
-use super::ends::leg_window;
 use super::fork::Forks;
 use super::instance::{Amount, Dated, End, Inst, LegVal, Status};
 use super::plan::{invariant, qty_value};
@@ -288,9 +283,8 @@ impl Engine {
             Act::Leg(mv, leg) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 if let Amount::Refused(r) = &lg.amount {
-                    // a plan's own refusal stands beside a window's hole (P31)
                     let walk = self.walk_mut(id)?;
-                    return walk.leg_bad_own(m, (&movement.id, &lg, &movement.coll), r, at);
+                    return walk.leg_bad(m, (&movement.id, &lg, &movement.coll), r, at);
                 }
                 let mut reg = Vec::new();
                 if movement.status == Status::Past && movement.obs.is_empty() {
@@ -302,16 +296,11 @@ impl Engine {
                 }
                 self.book_leg(m, id, (&movement, &lg), at, &reg)
             }
-            Act::ImpOn(mv, leg) => {
-                let (movement, lg) = self.movement_leg(id, mv, leg)?;
-                self.walk_mut(id)?
-                    .imprecise_ends(m, (&movement.id, &lg), at, &movement.coll)
-            }
             Act::LegHole(mv, leg, qs) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let h = match &lg.amount {
                     Amount::Refused(r) => {
-                        return self.walk_mut(id)?.leg_bad_own(
+                        return self.walk_mut(id)?.leg_bad(
                             m,
                             (&movement.id, &lg, &movement.coll),
                             r,
@@ -333,11 +322,11 @@ impl Engine {
             Act::LegBad(mv, leg, err) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
                 let walk = self.walk_mut(id)?;
-                if movement.day.as_ref().and_then(Dated::lo).is_none() {
+                if movement.day.as_ref().and_then(Dated::day).is_none() {
                     // its day is a hole or refused (tally 2.1.8, R11)
                     return walk.leg_bad_undated(m, (&movement.id, &lg, &movement.coll), &err, at);
                 }
-                walk.leg_bad_own(m, (&movement.id, &lg, &movement.coll), &err, at)
+                walk.leg_bad(m, (&movement.id, &lg, &movement.coll), &err, at)
             }
             Act::Perm(mv, leg, h) => {
                 let (movement, lg) = self.movement_leg(id, mv, leg)?;
@@ -357,8 +346,6 @@ impl Engine {
             Act::ChangeRefused(place, err, adj) => {
                 let mut ent = Ent::new(at, Change::Bad(err));
                 ent.mv = Some(adj);
-                // an adjustment's own refusal (refcore's `placebad_own`; P31)
-                ent.own = true;
                 self.walk_mut(id)?.add(m, &place, ALL, ent)
             }
             Act::PlaceHole(place, h, movement, coll) => {
@@ -375,12 +362,6 @@ impl Engine {
                 self.walk_mut(id)?
                     .add(m, ALL, ALL, Ent::new(at, Change::Bad(err)))
             }
-            Act::GlobalOwn(err) => {
-                let mut ent = Ent::new(at, Change::Bad(err));
-                ent.own = true;
-                self.walk_mut(id)?.add(m, ALL, ALL, ent)
-            }
-            Act::WindowEnd(mid, h) => self.window_end(m, id, at, (&mid, &h)),
             Act::Decide(..) => Err(invariant("a decision act taken as a plain act")),
         }
     }
@@ -419,22 +400,11 @@ impl Engine {
             (walk.world, walk.cut)
         };
         let mut reg = reg.to_vec();
-        // a leg is on its instance's day; a window-dated leg lists no `before from:` (L §8.2)
+        // a leg is on its instance's day (L §8.2)
         if let Some(day) = inst.day.as_ref().and_then(Dated::day) {
             reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
         }
         let coll = &inst.coll;
-        if let Amount::Refused(r) = &lg.amount
-            && let Some(mv) = m.moves.get(&inst.move_id).filter(|mv| mv.decision)
-        {
-            // a decision's refusal stands beside a window's hole unless a place it reads is
-            // under the hole (P31 said whole, P41; F6)
-            let walk = self.walk_mut(id)?;
-            if walk.reads_under_window(m, mv, at) {
-                return walk.leg_bad(m, (&inst.id, lg, coll), r, at);
-            }
-            return walk.leg_bad_own(m, (&inst.id, lg, coll), r, at);
-        }
         let mut mask = Ends::both();
         if self.stated_same(m, &inst.id, cut)? && !matches!(lg.amount, Amount::Refused(_)) {
             // one movement on two statements books each place once (L §6.1)
@@ -482,7 +452,6 @@ impl Engine {
                         src: lg.src.clone(),
                     });
                     ent.reg = reg.to_vec();
-                    ent.window = leg_window(movement, lg);
                     ent.coll = Some(coll.clone());
                     walk.add(m, p, &unit, ent)?;
                 }
@@ -493,25 +462,6 @@ impl Engine {
         if q.is_zero() {
             return Ok(());
         }
-        if let Some(h) = self.walk(id)?.lifespan_depends(m, (movement, lg))? {
-            // inside a lifespan on some of the window's days and outside it on the rest: the
-            // leg is the window's hole, and so is a read of it (E §4.1 step 2; tally 2.1.8
-            // item 77); booked so from the window's first day where that was walked
-            let walk = self.walk_mut(id)?;
-            if walk
-                .hole_legs
-                .contains_key(&(movement.to_owned(), lg.name.clone()))
-            {
-                return Ok(());
-            }
-            walk.open_tests = spread(&[walk.open_tests.as_ref(), Some(&h)]);
-            walk.hole_legs
-                .entry((movement.to_owned(), lg.name.clone()))
-                .or_insert_with(|| h.clone());
-            let mut hole_leg = lg.clone();
-            hole_leg.amount = Amount::Hole(h);
-            return self.book_leg_ends(m, id, (movement, &hole_leg), at, (reg, coll), mask);
-        }
         let unit = lg
             .unit
             .clone()
@@ -520,9 +470,6 @@ impl Engine {
         let sides = [(&lg.from, -1_i64, mask.from), (&lg.to, 1_i64, mask.to)];
         let mut on: Vec<(String, i64)> = Vec::new();
         let mut err = None;
-        // a lifespan's refusal rests on no balance, so it stands beside a window's hole; the
-        // sign rule's reads the balance (P31 said whole, P41; F6)
-        let mut rests_on_none = false;
         let (mut kept, mut dropped) = (false, !(mask.from && mask.to));
         for (end, sign, on_end) in sides {
             if !on_end {
@@ -563,7 +510,6 @@ impl Engine {
                         lg.name
                     ),
                 ));
-                rests_on_none = true;
                 break;
             }
             kept = true;
@@ -580,11 +526,6 @@ impl Engine {
             {
                 Alone::Passes => {}
                 Alone::Refused(e) => err = Some(e),
-                Alone::Depends(p) => {
-                    // not booked: the window's hole (tally 2.1.8 item 77)
-                    let legs = [(movement.to_owned(), lg.clone())];
-                    return self.walk_mut(id)?.imp_hole(m, at, (&p, &unit), &legs);
-                }
             }
         }
         #[cfg(feature = "counters")]
@@ -593,9 +534,6 @@ impl Engine {
         }
         let walk = self.walk_mut(id)?;
         if let Some(e) = err {
-            if rests_on_none {
-                return walk.refuse_leg_own(m, (movement, lg, coll), &e, at);
-            }
             return walk.refuse_leg(m, (movement, lg, coll), &e, at);
         }
         let whole = !dropped || mask.whole;
@@ -616,7 +554,6 @@ impl Engine {
             ent.mv = Some(movement.to_owned());
             ent.leg = Some(lg.name.clone());
             ent.reg = reg.to_vec();
-            ent.window = leg_window(movement, lg);
             ent.coll = Some(coll.clone());
             walk.add(m, p, &unit, ent)?;
         }
@@ -667,7 +604,6 @@ impl Engine {
         lg: &LegVal,
         at: At,
     ) -> Result<(), Stop> {
-        // an observation's own refusal stands beside a window's hole (refcore's `own`; P31)
         let refused = wo.err.as_ref().or(match &lg.amount {
             Amount::Refused(r) => Some(r),
             Amount::Qty(_) | Amount::Hole(_) => None,
@@ -675,7 +611,7 @@ impl Engine {
         if let Some(err) = refused {
             return self
                 .walk_mut(id)?
-                .leg_bad_own(m, (&wo.obs.id, lg, &wo.obs.coll), err, at);
+                .leg_bad(m, (&wo.obs.id, lg, &wo.obs.coll), err, at);
         }
         let cut = self.walk(id)?.cut;
         let day = lg
@@ -784,16 +720,6 @@ impl Engine {
         for place in ending {
             for unit in walk.units_of(&place) {
                 let st = walk.pstate(m, &place, &unit, at);
-                // legs dated by a window may still fall here: whether it holds nothing at its
-                // close is asked of each balance they allow, and its refusal prints the
-                // balance, so where they allow two the place is the windows' hole (E §4.1 step
-                // 2; tally 2.1.8 item 77, pick P30)
-                if let Some((lo, hi)) = st.imp_range()?
-                    && lo != hi
-                {
-                    walk.imp_hole(m, at, (&place, &unit), &[])?;
-                    continue;
-                }
                 let Some(v) = st.val.clone().filter(|v| !v.is_zero()) else {
                     continue;
                 };

@@ -2,9 +2,8 @@
 //! Spec: E §4.2 step 0 (readings at the start of the day), step 4 (readings at the end of the
 //! day), step 5 (the sign rule at its points; a reading's own place tested at its point; an
 //! anchor books no leg); L §5.10 (the sign rule and its three points; `RUN-PLACE`), §5.19
-//! (`opening` always anchors), §4.6 (a reading's instant), §4.4 (a decision dated by a
-//! window falls at its last day), §8.4; E §9 item 2 (an opening and a refused leg in the
-//! day's worth).
+//! (`opening` always anchors), §4.6 (a reading's instant), §8.4; E §9 item 2 (an opening and
+//! a refused leg in the day's worth).
 //! Twin: engine/tools/refcore/walk.py (`apply_reading`, its opening; `check_batch`,
 //! `check_group`, `reading_group`, `sign_anchor`, `unbook`, `book_leg`'s groups).
 //! Invariants: a leg booked in a group is tested with the group, at the balance the group
@@ -17,48 +16,16 @@ use std::collections::BTreeSet;
 
 use super::agenda::Reading;
 use super::day::ends;
-use super::instance::{Amount, End, LegVal};
+use super::instance::{End, LegVal};
 use super::plan::{invariant, qty_value};
 use super::point::At;
-use super::state::{ALL, Change, Ent, Group, St, Taken, Walk};
+use super::state::{ALL, Change, Ent, Group, Taken, Walk};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine};
-use crate::hole::Hole;
 use crate::model::Reality;
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
 use crate::time::Day;
-
-/// The logs where decision instance `mid`'s window left a hole no reading answers, each with
-/// the units its hole a reading ends goes to: the log's own, or for a place-wide log the
-/// place's units in the walk, else its unit (refcore's `dec_win_end`, its logs). L §5.19 Holes,
-/// E §4.2 Holes in the walk.
-fn fallen_places(m: &Reality, walk: &Walk, mid: &str) -> Vec<(String, String, Vec<String>)> {
-    let mut fallen = Vec::new();
-    for ((place, unit), log) in &walk.logs {
-        let held = log
-            .ents
-            .iter()
-            .any(|e| matches!(e.change, Change::Perm(_)) && e.mv.as_deref() == Some(mid));
-        if !held {
-            continue;
-        }
-        let mut units: Vec<String> = Vec::new();
-        if unit == ALL {
-            let others = walk.logs.keys().filter(|(p, u)| p == place && u != ALL);
-            units.extend(others.map(|(_, u)| u.clone()));
-            if units.is_empty()
-                && let Some(thing) = m.things.get(place)
-            {
-                units.extend(m.place_unit(thing));
-            }
-        } else {
-            units.push(unit.clone());
-        }
-        fallen.push((place.clone(), unit.clone(), units));
-    }
-    fallen
-}
 
 /// How a refusal of the sign rule names what broke it (refcore's `check_group` messages).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -86,33 +53,6 @@ impl Engine {
         } else {
             self.apply_stated(m, id, at, reading)
         }
-    }
-
-    /// The end of the last day of decision `mid`'s window, at point `at`: m has fallen, so the
-    /// hole `h` it left its places becomes each unit's, which a reading ends, and stays up to
-    /// the place's next reading (refcore's `dec_win_end`; pick P29 on #175). L §5.19
-    /// Holes, §4.4, E §4.2 Holes in the walk.
-    pub(super) fn window_end(
-        &mut self,
-        m: &Reality,
-        id: usize,
-        at: At,
-        (mid, h): (&str, &Hole),
-    ) -> Result<(), Stop> {
-        let fallen = fallen_places(m, self.walk(id)?, mid);
-        let walk = self.walk_mut(id)?;
-        for (place, unit, units) in fallen {
-            let mut back = Ent::new(at, Change::Unperm(h.clone()));
-            back.mv = Some(mid.to_owned());
-            walk.add(m, &place, &unit, back)?;
-            for each in units {
-                let mut ent = Ent::new(at, Change::Hole(h.clone()));
-                ent.mv = Some(mid.to_owned());
-                ent.flow = Some(Amount::Hole(h.clone()));
-                walk.add(m, &place, &each, ent)?;
-            }
-        }
-        Ok(())
     }
 
     /// The sign rule after the day's first batch, its legs taken together (refcore's
@@ -145,37 +85,13 @@ impl Engine {
         broke: &Broke,
     ) -> Result<(), Stop> {
         let mut bad = Vec::new();
-        let mut depends = Vec::new();
         for ((place, unit), legs) in group {
             let st = self.walk(id)?.pstate(m, place, unit, at);
-            // legs dated by a window may still fall here: the test asked of each balance they
-            // allow (E §4.1 step 2; tally 2.1.8 item 77)
-            let nv = match st.known() {
-                Some(nv) => Some(nv.clone()),
-                None => match self.group_three(m, id, broke, (place, unit), legs, &st)? {
-                    Three::Depends => {
-                        depends.push((place.clone(), unit.clone(), legs.clone()));
-                        None
-                    }
-                    Three::Every => st.val.clone(),
-                    Three::None => None,
-                },
-            };
-            if let Some(nv) = nv
-                && breaks(m, place, &nv)
+            if let Some(nv) = st.known()
+                && breaks(m, place, nv)
             {
-                bad.push((place.clone(), unit.clone(), nv, legs.clone()));
+                bad.push((place.clone(), unit.clone(), nv.clone(), legs.clone()));
             }
-        }
-        let pending_walk = self.walk_mut(id)?;
-        for (place, unit, mut legs) in depends {
-            if let Some(pending) = pending_walk.pend_at.get(&(place.clone(), unit.clone())) {
-                legs.extend(pending.iter().cloned());
-            }
-            pending_walk.imp_hole(m, at, (&place, &unit), &legs)?;
-        }
-        for key in group.keys() {
-            pending_walk.pend_at.remove(key);
         }
         for (place, unit, nv, legs) in bad {
             let words = self.refusal_words(m, id, broke, (&place, &unit), &legs, &nv)?;
@@ -220,37 +136,6 @@ impl Engine {
             }
         }
         Ok(())
-    }
-
-    /// The sign rule at a group's `place` in `unit`, whose state `st` has window-dated legs
-    /// pending, asked of each balance they allow: where every one breaks it, the refusal is the
-    /// windows' hole where the bytes it prints differ by the day, whatever its message's form
-    /// (`ob takes pot below 0` names no balance; refcore's `words_differ`, its `words`). E §4.1
-    /// step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77, pick P30.
-    ///
-    /// # Errors
-    ///
-    /// A number past the cap; `ENGINE-INVARIANT` for an anchored place with no instant.
-    fn group_three(
-        &self,
-        m: &Reality,
-        id: usize,
-        broke: &Broke,
-        (place, unit): (&str, &str),
-        legs: &[(String, LegVal)],
-        st: &St,
-    ) -> Result<Three, Stop> {
-        let three = imp_breaks(m, place, st, None)?;
-        let (Three::Every, Some((lo, hi))) = (three, st.imp_range()?) else {
-            return Ok(three);
-        };
-        let low = self.refusal_words(m, id, broke, (place, unit), legs, &lo)?;
-        let high = self.refusal_words(m, id, broke, (place, unit), legs, &hi)?;
-        Ok(if low == high {
-            Three::Every
-        } else {
-            Three::Depends
-        })
     }
 
     /// The bytes the sign rule's refusal at a group's `place` in `unit` prints for balance
@@ -346,24 +231,6 @@ impl Walk {
         self.refuse_leg_as(m, (movement, lg, read), (err, &like))
     }
 
-    /// [`Walk::refuse_leg`] of a refusal that rests on nothing under a window's hole, a
-    /// lifespan's, which stands beside one (P31 said whole, P41; F6). L §8 l.2217.
-    ///
-    /// # Errors
-    ///
-    /// As [`Walk::add`].
-    pub(crate) fn refuse_leg_own(
-        &mut self,
-        m: &Reality,
-        (movement, lg, read): (&str, &LegVal, &Collected),
-        err: &Refusal,
-        at: At,
-    ) -> Result<(), Stop> {
-        let mut like = Ent::new(at, Change::Bad(err.clone()));
-        like.own = true;
-        self.refuse_leg_as(m, (movement, lg, read), (err, &like))
-    }
-
     /// A leg refused as it is booked, its entry at each end made from `like` (refcore's
     /// `bad_legs`, `add`). E §4.2 step 5.
     fn refuse_leg_as(
@@ -406,19 +273,7 @@ impl Walk {
             let st = self.pstate(m, p, unit, at);
             let flow = super::day::signed(q, *sign)?;
             let Some(v) = st.known() else {
-                // legs dated by a window may still fall here: the test asked of each balance
-                // they allow; its refusal names no balance, so its words are every day's
-                // (tally 2.1.8 item 77)
-                match imp_breaks(m, p, &st, Some(&flow))? {
-                    Three::Depends => return Ok(Alone::Depends(p.clone())),
-                    Three::Every => {
-                        return Ok(Alone::Refused(Refusal::new(
-                            Code::Run(Run::Place),
-                            takes_text(m, movement, p),
-                        )));
-                    }
-                    Three::None => continue,
-                }
+                continue;
             };
             let moved = v.checked_add(&flow).map_err(crate::eval::num_stop)?;
             if breaks(m, p, &moved) {
@@ -533,48 +388,6 @@ pub(super) enum Alone {
     Passes,
     /// The leg is refused.
     Refused(Refusal),
-    /// Some of a pending window's days refuse it and some don't: the place named is the
-    /// window's hole (tally 2.1.8 item 77).
-    Depends(String),
-}
-
-/// A three-valued test (E §4.1 step 2; refcore's `three`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Three {
-    /// No balance the pending legs allow breaks the rule.
-    None,
-    /// Every one does.
-    Every,
-    /// Some do and some don't, or, at a group, all do in bytes that differ by the day.
-    Depends,
-}
-
-/// The sign rule at `place` asked of each balance the window-dated legs pending in `st` allow,
-/// a leg's `flow` added where one is being booked: the least and the greatest, the rule being
-/// monotone in the balance; none where the balance isn't known but for them (refcore's
-/// `imp_three`). E §4.1 step 2, §4.2 step 5; L §4.4; tally 2.1.8 item 77.
-///
-/// # Errors
-///
-/// A number past the cap.
-pub(super) fn imp_breaks(
-    m: &Reality,
-    place: &str,
-    st: &St,
-    flow: Option<&Num>,
-) -> Result<Three, Stop> {
-    let Some((mut lo, mut hi)) = st.imp_range()? else {
-        return Ok(Three::None);
-    };
-    if let Some(f) = flow {
-        lo = lo.checked_add(f).map_err(crate::eval::num_stop)?;
-        hi = hi.checked_add(f).map_err(crate::eval::num_stop)?;
-    }
-    Ok(match (breaks(m, place, &lo), breaks(m, place, &hi)) {
-        (false, false) => Three::None,
-        (true, true) => Three::Every,
-        _ => Three::Depends,
-    })
 }
 
 /// Whether balance `v` breaks its place's sign rule (L §5.10).

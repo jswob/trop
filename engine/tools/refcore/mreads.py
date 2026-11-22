@@ -9,7 +9,7 @@ from fractions import Fraction
 from . import units as U
 from .dates import Period, ONE_DAY, next_day, END
 from .errors import TallyError, Refusal, LoadError, Unspecified, NotYet, load_now, at_run
-from .evaluate import member_owns, member_moves, move_owner, carry_hole, WinDay, imprecise_hole, env_txt
+from .evaluate import member_owns, member_moves, move_owner, carry_hole, imprecise_hole, env_txt
 from .model import Span, _kv, key_text, Undecided
 from .values import (Num, Money, Int, Hole, Thing, Mv, Iv, Rec, Text, Key, NONE, CURRENCIES, fmt,
                      fmt_hole, vkey, day_text)
@@ -95,6 +95,10 @@ def m_mv_record(self, v, ctx):
         src = self.mv_by_id(v.id, ctx)
         if src is None:
             return None
+    if isinstance(src, Inst) and src.decision and not getattr(src, 'ran', False) and isinstance(src.day, Hole):
+        # a decision whose day is a hole never runs: never waited for, its fields read where the plan has them,
+        # else its hole (hole_day_dec_body; E §4.2 step 3; tally 2.3, the lead's P10, H1)
+        return src
     if isinstance(src, Inst) and src.decision and not getattr(src, 'ran', False):
         w = ctx.walk if ctx.walk is not None else None
         run = None
@@ -109,6 +113,24 @@ def m_mv_record(self, v, ctx):
             return src
         return run
     return src
+
+
+def m_hole_day_changed(self, src, name, rec, ctx):
+    """A leg of a hole-day instance read as a field: where a later version changes it (C-4's measure: an adjustment
+    of that leg among moves.hole_adjustments), the field it changes is the instance's day's hole, its amount, or its
+    places where it moves them; a field no later version changes stays a value (E §5 step 1; tally 2.3, the lead's
+    P12, N1). Read while those adjustments are measured (a move that reads the field), the field is the booking's."""
+    if ('hadjs', self.wkey(ctx)) + self.upto_tag() in self.inst_active:
+        return rec
+    amt = ends = False
+    for a in self.hole_inst_adjustments(src, ctx):
+        if a.leg.name == name:
+            amt = amt or isinstance(a.delta, Hole) or a.delta.q != 0
+            ends = ends or getattr(a, 'moved', False)
+    if not (amt or ends):
+        return rec
+    h = src.day
+    return Rec([(k, h if (k == 'amount' and amt) or (k in ('from', 'to') and ends) else v) for k, v in rec.fields])
 
 
 def m_mv_by_id(self, mid, ctx):
@@ -385,6 +407,8 @@ def m_mv_field(self, n, env, ctx):
                 if err is not None:
                     raise err
                 rec = lg.rec()
+                if isinstance(src, Inst) and isinstance(src.day, Hole):
+                    rec = self.hole_day_changed(src, name, rec, ctx)
                 if sh is not None and (sh[0] is not None or sh[1] is not None):
                     rec = Rec([(k, (sh[0] if k == 'amount' and sh[0] is not None else
                                     sh[1] if k == 'day' and sh[1] is not None else v)) for k, v in rec.fields])
@@ -502,7 +526,8 @@ def m_made_to_exist_leg(self, src, name, ctx):
     None when no adjustment at this cut made it exist."""
     if not isinstance(src, Inst) or src.decision or src.move.id not in self.m.moves:
         return None
-    hits = [a for a in self.adjust_move(src.move, ctx) if a.inst.id == src.id and a.leg.name == name]
+    hits = [a for a in self.adjust_move(src.move, ctx) if a.inst.id == src.id and a.leg.name == name and
+            not isinstance(a.exists, Hole)]
     if not hits:
         return None
     # E §5 step 1: "a read of its legs (a settlement's a.adjusts.cash.from) gives the places of the version that made
@@ -645,6 +670,7 @@ def m_movements_of(self, dom, ctx, owner=None):
             out.append(o)
     if 'adjustments' in sub:
         out.extend(self.adjustments(ctx, settled=False))
+        out.extend(self.hole_adjustments(ctx))
     decs = [q for q in sorted(m.moves) if m.moves[q].decision and m.moves[q].kind in sub and
             item_in_world(m.moves[q])]
     if 'pads' in sub or decs:
@@ -677,15 +703,14 @@ def m_movements_of(self, dom, ctx, owner=None):
                     ww = getattr(ww, 'base', None)
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
-                if r is None and isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date) and \
-                        i.exists is not False:
-                    if ctx.walk is not None:
-                        # inside a walk no line's days are taken in turn: a member the window's hole, never left out
-                        # (span_members; tally 2.2.1 P41, F5)
-                        out.append(i)
-                        continue
-                    # a decision dated by a window: a binding over its kind reads its days in turn (E §4.1 step 2; N3)
-                    raise WinDay(i.day, 'a binding over %s' % q)
+                if r is None and isinstance(i.day, Hole) and i.exists is not False and not getattr(i, 'err', None):
+                    # a decision whose day is a hole is never walked, and is a member with its hole: "a movement whose
+                    # day is a hole makes every flows and binding over a span it might fall in a hole" (L §5.14;
+                    # tally 2.3 review of G1, B1); its legs are read as a plain hole day's are, so a `where` on its
+                    # places is decided (a running read in its amount is the hole, its day being one)
+                    self.hole_day_dec_body(m.moves[q], i, ctx)
+                    out.append(i)
+                    continue
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
                     continue
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
@@ -698,6 +723,27 @@ def m_movements_of(self, dom, ctx, owner=None):
     out.sort(key=lambda x: (day_lo(x.day) or END, order_key(x.order)))
     self.run_cache[key] = out
     return out
+
+
+def m_hole_day_dec_body(self, mi, i, ctx):
+    """A hole-day decision's legs, read once outside the walk (B1): the walk never runs it, and a binding's `where`
+    reads its places. Its places are read as a refused instance's are (moves.refused_places); its amounts are its
+    day's hole, since a decision's amount is read in the walk at its day."""
+    if getattr(i, '_hd_body', False):
+        return
+    i._hd_body = True
+    # its reads are the member's, as a walked decision's are, not the binding's that met it
+    from .evaluate import Coll
+    self.stack.append(Coll())
+    try:
+        legs = self.refused_places(mi, i.env, i, self.tctx(ctx))
+    finally:
+        self.stack.pop()
+    decl = {ln.name: d for ln, d in mi.legs}
+    for lg in legs:
+        lg.amount = i.day
+        lg.unit = self.leg_unit_static(decl[lg.name], lg.frm, lg.to)
+    i.legs = legs
 
 
 def once_by_same(m, out, ctx, owner=None):
@@ -866,17 +912,6 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             raise x.err
         if isinstance(d, Hole):
             st = d
-        elif isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-            inside = sp.contains(d.lo) and sp.contains(d.hi)
-            outside = (sp.end is not None and d.lo >= sp.end) or (sp.start is not None and d.hi < sp.start)
-            if outside:
-                continue
-            if ctx.walk is not None and isinstance(x, Inst) and getattr(x.move, 'decision', False):
-                # a window-dated decision met inside a walk (movements_of): the window's hole (P41, F5)
-                st = imprecise_hole(d, 'a binding over %s' % b._dom[1])
-            elif not inside:
-                st = carry_hole(Hole([('date within %s not precise enough for a binding over %s' % (
-                    d.window_text(), b._dom[1]), x.id)]), d)
         elif isinstance(d, datetime.date):
             if not sp.contains(d):
                 if getattr(x, 'day_coll', None) is not None:
@@ -885,9 +920,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 continue
         else:
             continue
-        if isinstance(x, Inst) and isinstance(x.exists, Hole):
+        if isinstance(x, (Inst, AdjMv)) and isinstance(x.exists, Hole):
+            # an adjustment of a hole-day instance: its existence is the day's hole (E §5 step 1; tally 2.3, C-4)
             st = x.exists if st is True else merge(st, x.exists)
-        cq = getattr(x, 'class_member', False) if isinstance(x, Inst) else False
+        cq =getattr(x, 'class_member', False) if isinstance(x, Inst) else False
         if cq:
             # booked on some of its window's days, modelled or left out on the rest (moves.m_window_class_depends):
             # whether it is a member is the window's hole (E §4.1 step 2; item 10 of the follow-up)
@@ -1098,7 +1134,7 @@ def m_e_bal(self, n, env, ctx):
     d = self.ev(n.args[-1], env, ctx)
     if isinstance(d, Hole):
         return d
-    if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
+    if isinstance(d, Iv) and isinstance(d.lo, datetime.date) and d.lo != d.hi:
         raise self.imprecise(d, 'the day of bal(%s, d)' % place)
     d = self.date_of(d, 'the day of bal')
     if self.tracing and self.trace_stack and form != 'proj' and getattr(self, 'explainer', None) is not None:
@@ -1871,16 +1907,6 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 run = ww.decs.get(i.id)
                 ww = ww.base
             if run is None:
-                d = i.day
-                if isinstance(d, Iv) and isinstance(d.lo, datetime.date) and i.exists is not False and \
-                        not ((sp.end is not None and d.lo > last) or d.hi < sp.start):
-                    if ctx.walk is not None:
-                        # inside a walk no line's days are taken in turn: the window's hole, never 0 (tally 2.2.1
-                        # P41, F5)
-                        pre_holes.append(imprecise_hole(d, 'flows of %s' % mi.id))
-                        continue
-                    # a decision dated by a window the span reaches: its days in turn (E §4.1 step 2; N3)
-                    raise WinDay(d, 'flows of %s' % mi.id)
                 if isinstance(i.day, datetime.date) and i.day > m.E and i.exists is not False:
                     # a decision instance after E: never walked, so its amount is a hole flows counts (E §2 Movements
                     # outside [S, E], HOLE-POSTRUN; tally 2.1.7 S1, #93), as a place's flows does (flows_post_e)
@@ -1937,16 +1963,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
         if isinstance(d, Hole):
             holes.append(d)
             continue
-        if isinstance(d, Iv) and isinstance(d.lo, datetime.date):
-            if sp.contains(d.lo) and d.hi <= last:
-                pass
-            elif (sp.end is not None and d.lo > last) or d.hi < sp.start:
-                continue
-            else:
-                holes.append(carry_hole(Hole([('date within %s not precise enough for flows of %s' % (
-                    d.window_text(), mi.id), i.id)]), d))
-                continue
-        elif not sp.contains(d):
+        if not sp.contains(d):
             if getattr(i, 'day_coll', None) is not None:
                 # the reads that put its day outside the span (L §8.2; tally 2.2.1 P35, N1)
                 self.day_reads(i.day_coll)
@@ -2047,7 +2064,8 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     if own:
         self.settle(own, ctx)
         for a in own:
-            if a.inst.move.id != mi.id:
+            if a.inst.move.id != mi.id or isinstance(a.exists, Hole):
+                # a hole-day instance's adjustment (C-4): flows of its move is its day's hole already
                 continue
             if leg is not None and a.leg.name != leg:
                 continue
@@ -2341,7 +2359,13 @@ def m_c_covered(self, n, env, ctx):
     p = self.ev(n.args[0], env, ctx)
     if isinstance(p, Hole) or p is NONE:
         return False
-    sp = self.span_value(n.args[1], env, ctx)
+    from .evaluate import HoleSignal
+    try:
+        sp = self.span_value(n.args[1], env, ctx)
+    except HoleSignal:
+        # a span whose end is a window isn't known to be covered, as one whose end is a `?` isn't: false, never the
+        # window's hole (L §8.1; tally 2.3, the lead's P7, rulings item 12)
+        return False
     if isinstance(sp, Hole):
         return False
     if sp.start is None or sp.end is None:

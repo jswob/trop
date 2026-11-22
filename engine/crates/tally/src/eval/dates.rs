@@ -1,23 +1,24 @@
-//! The date built-ins: period edges, a day's period, day counts, moved days, ages, weekdays and the year fraction, each over a window too.
+//! The date built-ins: period edges, a day's period, day counts, moved days, ages, weekdays and the year fraction, and which of them take a window.
 //! Spec: L §4.2 (`start_of`, `end_of`, `year_of`, `quarter_of`, `month_of`, `day_of`,
 //! `days_between`, `add_days`, `add_months`, `add_years`, `overlap_days`, `age`, `age_months`,
-//! `weekday`), §4.4 (a built-in on a window gives the interval of its values at the window's
-//! first and last day; `weekday` is 1..7 on a window of seven days or more), §3.3 (`dcf` with
+//! `weekday`), §4.4 (the readers that take a window: `add_days`, `add_months`, `add_years` the
+//! stretch from their result at its first day to their result at its last; `year_of`,
+//! `quarter_of`, `month_of`, `age`, `age_months`, `overlap_days` the value every combination of
+//! their arguments' first and last days gives; every other read the hole), §3.3 (`dcf` with
 //! `act365`), §2.1 (a four-digit figure where a period is read), §7.6 item 1.
 //! Twin: engine/tools/refcore/evaluate.py (`c_start_of` to `c_weekday`, `as_date_or_iv`,
 //! `period_arg`, `months_arg`, `lift`) and eval2.py (`m_c_dcf`, `m_dcf_q`, `m_as_day`).
-//! Invariants: a hole argument makes the call that hole; one window among the arguments is
-//! lifted to its ends, two are `HOLE-IMPRECISE`; a built-in that is `none` at a window's end
-//! is `HOLE-IMPRECISE`.
-
-use std::collections::BTreeSet;
+//! Invariants: a hole argument makes the call that hole; a ranged date is read only by the
+//! listed built-ins, each at its ends ([`super::windows::takes`]); any other built-in of one,
+//! or a ranged date in a position no listed built-in reads it at, is `HOLE-IMPRECISE` naming
+//! the built-in and each unknown day.
 
 use super::arith::whole_of;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use super::state::{a_day, not_typed, past_days};
 use super::time_arith::step_count;
-use super::windows::{Choices, Shape, as_window, interval, single, value_choices, values_interval};
+use super::windows::{Takes, agreed, by_ends, corners, ranged, single, takes, unlisted};
 use super::years::as_year;
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, Window};
@@ -25,13 +26,13 @@ use crate::num::Num;
 use crate::syntax::{Call, Expr, Stop};
 use crate::time::{Day, Period, PeriodKind, age, age_months, overlap_days};
 
-/// A date built-in on values that are no windows, which a window lifts to its ends (L §4.2,
-/// §4.4; refcore's lambdas under `lift`).
+/// A date built-in at days, which a listed reader takes at a window's ends (L §4.2, §4.4;
+/// refcore's lambdas under `lift`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DateFn {
-    /// A window's day as `start_of` gives it: the day.
+    /// A day's `start_of`: the day.
     Start,
-    /// A window's day as `end_of` gives it: the day after.
+    /// A day's `end_of`: the day after.
     End,
     /// `year_of(d)`.
     Year,
@@ -51,25 +52,6 @@ enum DateFn {
     Age,
     /// `age_months(b, d)`: `none` before b.
     AgeMonths,
-}
-
-impl DateFn {
-    /// The built-in's name, which its hole over a window names (refcore's `what`).
-    fn name(self) -> &'static str {
-        match self {
-            DateFn::Start => "start_of",
-            DateFn::End => "end_of",
-            DateFn::Year => "year_of",
-            DateFn::Month => "month_of",
-            DateFn::Quarter => "quarter_of",
-            DateFn::Between => "days_between",
-            DateFn::AddDays(_) => "add_days",
-            DateFn::AddMonths(_) => "add_months",
-            DateFn::Overlap(_) => "overlap_days",
-            DateFn::Age => "age",
-            DateFn::AgeMonths => "age_months",
-        }
-    }
 }
 
 impl Engine {
@@ -100,7 +82,7 @@ impl Engine {
             _ => return Err(invariant("a period built-in dispatched by another name")),
         };
         if let Value::Window(_) = v {
-            return lifted(m, f, &[v]);
+            return read_dates((f, name), &[v]);
         }
         if v == Value::Never && matches!(f, DateFn::Year | DateFn::Month | DateFn::Quarter) {
             // refcore's `_of` reads its argument through `date_of`
@@ -114,7 +96,7 @@ impl Engine {
     }
 
     /// `day_of(m, n)`, the n-th day of month m clamped to its days; `day_of(y, md)`, a
-    /// month-day in year y (refcore's `c_day_of`). L §4.2.
+    /// month-day in year y (refcore's `c_day_of`). L §4.2, §4.4.
     pub(super) fn day_of(
         &mut self,
         m: &Reality,
@@ -129,35 +111,22 @@ impl Engine {
         if a.as_hole().is_some() || b.as_hole().is_some() {
             return hole_of(&[a.as_hole(), b.as_hole()]);
         }
-        let period = period_arg(m, (call.args.first(), &a), "day_of")?;
-        // a day number that is an interval: its whole numbers in turn, the interval of its
-        // days; the hole where only some of its values are refused, or where they can't be
-        // taken in turn, a window of days or of fractions (L §4.4 l.668, l.671; P30, B2)
-        match value_choices(m, ("day_of", Shape::Values), &[&b])? {
-            Choices::Plain => {}
-            Choices::Hole(h) => return Ok(Value::Hole(h)),
-            Choices::Tuples(tuples) => {
-                let mut outs = Vec::with_capacity(tuples.len());
-                for t in &tuples {
-                    let [n] = t.as_slice() else {
-                        return Err(arity());
-                    };
-                    outs.push(day_of_month(m, period, n));
-                }
-                return values_interval(m, "day_of", outs, &[&b]);
-            }
+        // off the list: a ranged date is the hole (L §4.4)
+        if let Some(hole) = unlisted(&[&a, &b], "day_of") {
+            return Ok(Value::Hole(hole));
         }
         // a window of one day is that day (F3)
-        let number = single(&b);
-        if !matches!(number, Value::MonthDay(..)) {
-            return day_of_month(m, period, number);
+        let (one_a, number) = (single(&a), single(&b));
+        let period = period_arg(m, (call.args.first(), &one_a), "day_of")?;
+        if !matches!(*number, Value::MonthDay(..)) {
+            return day_of_month(m, period, &number);
         }
         if period.kind() == PeriodKind::Year
             && (period.start().month(), period.start().day()) != (1, 1)
         {
             return Err(anchored(period));
         }
-        let &Value::MonthDay(month, day) = number else {
+        let Value::MonthDay(month, day) = *number else {
             return Err(invariant(
                 "day_of(y, md) with no month-day: load's types refuse it first (LOAD-UNIT)",
             ));
@@ -173,8 +142,8 @@ impl Engine {
     }
 
     /// `days_between(a, b)`, `add_days(d, n)`, `add_months(d, n)`, `add_years(d, n)`,
-    /// `age(b, d)`, `age_months(b, d)`, each over a window too (refcore's `c_days_between`,
-    /// `c_add_days`, `c_add_months`, `c_add_years`, `c_age`). L §4.2, §4.4.
+    /// `age(b, d)`, `age_months(b, d)`, each of a window by its rule (refcore's
+    /// `c_days_between`, `c_add_days`, `c_add_months`, `c_add_years`, `c_age`). L §4.2, §4.4.
     pub(super) fn day_count(
         &mut self,
         m: &Reality,
@@ -192,27 +161,22 @@ impl Engine {
         let name = call.name.as_str();
         let first = date_or_window(a, name)?;
         if matches!(name, "add_days" | "add_months" | "add_years") {
-            return moved_by(m, name, &first, &b);
+            return moved_by(m, name, first, &b);
         }
-        match name {
-            "days_between" => {
-                let second = date_or_window(b, name)?;
-                if super::windows::one_read(&first, &second) {
-                    // a window taken with its own name once: one unknown day, 0 days from
-                    // itself (L §4.4; refcore's `c_days_between`)
-                    return Ok(Value::int(0));
-                }
-                lifted(m, DateFn::Between, &[first, second])
-            }
-            "age_months" => lifted(m, DateFn::AgeMonths, &[first, date_or_window(b, name)?]),
-            "age" => lifted(m, DateFn::Age, &[first, date_or_window(b, name)?]),
-            _ => Err(invariant("a day-count built-in dispatched by another name")),
-        }
+        let f = match name {
+            "days_between" => DateFn::Between,
+            "age_months" => DateFn::AgeMonths,
+            "age" => DateFn::Age,
+            _ => return Err(invariant("a day-count built-in dispatched by another name")),
+        };
+        // each argument by its own ends, whatever names they carry: one window named twice is
+        // two (L §4.4)
+        read_dates((f, name), &[first, date_or_window(b, name)?])
     }
 
     /// `overlap_days(a, b, k)`: the days from a to b, both counted, that lie in period k; of
-    /// windows, the interval of its values at their ends' corners (refcore's `c_overlap_days`,
-    /// whose hole of two windows P25 lifts). L §4.2, §4.4 l.668.
+    /// windows, the count every combination of their ends gives (refcore's `c_overlap_days`).
+    /// L §4.2, §4.4.
     pub(super) fn overlap(
         &mut self,
         m: &Reality,
@@ -229,14 +193,16 @@ impl Engine {
         }
         let from = date_or_window(a, "overlap_days")?;
         let to = date_or_window(b, "overlap_days")?;
-        let period = period_arg(m, (call.args.get(2), &k), "overlap_days")?;
-        // of two windows too, the interval from the corners of their ends, where it is
-        // monotone in each (L §4.4 l.668; P25)
-        lifted(m, DateFn::Overlap(period), &[from, to])
+        // its period is read at no end: a ranged one is the hole (L §4.4)
+        if ranged(&k).is_some() {
+            return Ok(Value::Hole(hole_naming(&[&from, &to, &k], "overlap_days")?));
+        }
+        let period = period_arg(m, (call.args.get(2), &single(&k)), "overlap_days")?;
+        read_dates((DateFn::Overlap(period), "overlap_days"), &[from, to])
     }
 
-    /// `weekday(d)`: 1 for Monday to 7 for Sunday; of a window the interval of its days'
-    /// weekdays, 1..7 for a window of seven days or more (refcore's `c_weekday`). L §4.2, §4.4.
+    /// `weekday(d)`: 1 for Monday to 7 for Sunday; off the list, so a ranged date is the hole
+    /// (refcore's `c_weekday`). L §4.2, §4.4.
     pub(super) fn weekday(
         &mut self,
         m: &Reality,
@@ -252,15 +218,16 @@ impl Engine {
             return Ok(d);
         }
         let day = date_or_window(d, "weekday")?;
-        if let Value::Window(w) = &day {
-            return window_weekday(w);
+        if let Some(hole) = unlisted(&[&day], "weekday") {
+            return Ok(Value::Hole(hole));
         }
-        Ok(Value::int(i64::from(a_date(&day)?.weekday())))
+        Ok(Value::int(i64::from(a_date(&single(&day))?.weekday())))
     }
 
     /// `dcf(a, b, dc)`: the year fraction from a to b under day count dc, exact; `act365`
     /// gives the days from a, counted, to b, not, over 365; b before a the negative of
-    /// dcf(b, a) (refcore's `m_c_dcf`, `m_dcf_q`). L §3.3.
+    /// dcf(b, a); off the list, so a ranged date is the hole (refcore's `m_c_dcf`, `m_dcf_q`;
+    /// C3). L §3.3, §4.4.
     pub(super) fn dcf(
         &mut self,
         m: &Reality,
@@ -275,8 +242,10 @@ impl Engine {
         if let Some(h) = crate::hole::spread(&[a.as_hole(), b.as_hole(), dc.as_hole()]) {
             return Ok(Value::Hole(h));
         }
-        // the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
-        let (froms, tos) = (dcf_ends(m, &a)?, dcf_ends(m, &b)?);
+        if let Some(hole) = unlisted(&[&a, &b], "dcf") {
+            return Ok(Value::Hole(hole));
+        }
+        let (from, to) = (dcf_day(m, &single(&a))?, dcf_day(m, &single(&b))?);
         let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = &dc {
             w.clone()
         } else {
@@ -288,23 +257,10 @@ impl Engine {
                 format!("dcf: {word} is not a daycount code"),
             ));
         }
-        let mut counts: Vec<i64> = Vec::with_capacity(4);
-        for from in &froms {
-            for to in &tos {
-                counts.push(
-                    from.days_to(*to)
-                        .ok_or_else(|| invariant("a day count past the integers"))?,
-                );
-            }
-        }
-        let (Some(lo), Some(hi)) = (counts.iter().min(), counts.iter().max()) else {
-            return Err(invariant("dcf with no day"));
-        };
-        let (lo, hi) = (year_fraction(*lo)?, year_fraction(*hi)?);
-        match as_window(single(&a)).or_else(|| as_window(single(&b))) {
-            Some(w) => interval(m, (lo, hi), w),
-            None => Ok(lo),
-        }
+        let days = from
+            .days_to(to)
+            .ok_or_else(|| invariant("a day count past the integers"))?;
+        year_fraction(days)
     }
 }
 
@@ -313,46 +269,44 @@ fn arity() -> Stop {
     invariant("a built-in called with the wrong number of arguments")
 }
 
-/// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
-/// `first` and a count `b`; a count that is an interval gives the interval of the days it
-/// moves to (refcore's `lift_values` over the count). L §4.2, §4.4 l.668.
+/// The hole of a read off the list of the ranged dates among `args`, for `what` (L §4.4).
 ///
 /// # Errors
 ///
-/// As [`moved`]; a refusal at every value of the count.
-fn moved_by(m: &Reality, name: &str, first: &Value, b: &Value) -> Result<Value, Stop> {
-    // a count must be whole: its whole numbers in turn, the hole where they can't be taken,
-    // a window of days or of fractions (L §4.4 l.668, l.671; P30, B2)
-    let tuples = match value_choices(m, (name, Shape::Values), &[b])? {
-        Choices::Plain => return moved(m, name, first, single(b)),
-        Choices::Hole(h) => return Ok(Value::Hole(h)),
-        Choices::Tuples(tuples) => tuples,
-    };
-    let mut outs = Vec::with_capacity(tuples.len());
-    for t in &tuples {
-        let [n] = t.as_slice() else {
-            return Err(arity());
-        };
-        outs.push(moved(m, name, first, n));
-    }
-    values_interval(m, name, outs, &[b])
+/// `ENGINE-INVARIANT` where none is ranged.
+fn hole_naming(args: &[&Value], what: &str) -> Result<crate::hole::Hole, Stop> {
+    unlisted(args, what).ok_or_else(|| invariant("a ranged argument's hole with no window"))
 }
 
 /// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
-/// `first` and a count `n` that is no interval (refcore's `c_add_days`, `c_add_months`,
-/// `c_add_years`, their lambdas). L §4.2, §4.4.
+/// `first` and a count `b`; a count is read at no end, so a ranged one is the hole (L §4.2,
+/// §4.4: no number is a range).
+///
+/// # Errors
+///
+/// As [`moved`].
+fn moved_by(m: &Reality, name: &str, first: Value, b: &Value) -> Result<Value, Stop> {
+    if ranged(b).is_some() {
+        return Ok(Value::Hole(hole_naming(&[&first, b], name)?));
+    }
+    moved(m, name, first, &single(b))
+}
+
+/// `add_days(d, n)`, `add_months(d, n)` or `add_years(d, n)`, `name`, of a day or a window
+/// `first` and a count `n` (refcore's `c_add_days`, `c_add_months`, `c_add_years`, their
+/// lambdas). L §4.2, §4.4.
 ///
 /// # Errors
 ///
 /// The refusals of reading the count; `RUN-LIMIT` past the calendar.
-fn moved(m: &Reality, name: &str, first: &Value, n: &Value) -> Result<Value, Stop> {
+fn moved(m: &Reality, name: &str, first: Value, n: &Value) -> Result<Value, Stop> {
     let f = match name {
         "add_days" => DateFn::AddDays(step_count(m, n, 1)?),
         "add_months" => DateFn::AddMonths(months_arg(m, n, "month")?),
         "add_years" => DateFn::AddMonths(months_arg(m, n, "year")?),
         _ => return Err(invariant("a moved day dispatched by another name")),
     };
-    lifted(m, f, core::slice::from_ref(first))
+    read_dates((f, name), &[first])
 }
 
 /// `day_of` of a key of an anchored index: `RUN-DOMAIN` (L §4.2).
@@ -363,8 +317,8 @@ fn anchored(period: Period) -> Stop {
     )
 }
 
-/// `day_of(m, n)` of a day number that is no interval: the n-th day of month m, clamped to
-/// its days (refcore's `day_of_month`). L §4.2.
+/// `day_of(m, n)`: the n-th day of month m, clamped to its days (refcore's `day_of_month`).
+/// L §4.2.
 ///
 /// # Errors
 ///
@@ -400,36 +354,67 @@ fn day_of_month(m: &Reality, period: Period, b: &Value) -> Result<Value, Stop> {
         .ok_or_else(|| invariant("a day of a month"))
 }
 
-/// The value of date built-in `f` at `args`; where some are windows, through the one
-/// mechanism, [`value_choices`] with `f` monotone in them: the interval of its values at
-/// every corner of their first and last days, one window named in two arguments as one day,
-/// a computed value carrying each window's unknown day; `HOLE-IMPRECISE` where it is `none`
-/// or refused at only some of them (refcore's `lift`; tally 2.1.7 R3). L §4.4 l.668; P30.
-fn lifted(m: &Reality, f: DateFn, args: &[Value]) -> Result<Value, Stop> {
-    // a window of one day is that day (F3)
-    let refs: Vec<&Value> = args.iter().map(single).collect();
-    let tuples = match value_choices(m, (f.name(), Shape::Monotone), &refs)? {
-        Choices::Plain => {
-            let plain: Vec<Value> = refs.iter().map(|v| (*v).clone()).collect();
-            return apply(f, &plain);
-        }
-        Choices::Hole(h) => return Ok(Value::Hole(h)),
-        Choices::Tuples(tuples) => tuples,
-    };
-    let mut outs = Vec::with_capacity(tuples.len());
-    for t in &tuples {
-        outs.push(apply(f, t));
+/// Date built-in `f`, called `name`, at `args`: at days, its value; where some are ranged,
+/// by how the list says `name` takes them ([`takes`]): date to date, the stretch from its
+/// value at the window's first day to its value at its last; a plain result, the value every
+/// combination of the ranged arguments' first and last days gives, each by its own ends; off
+/// the list, the hole for `name` naming each unknown day (refcore's `lift`). L §4.4.
+fn read_dates((f, name): (DateFn, &str), args: &[Value]) -> Result<Value, Stop> {
+    if !args.iter().any(|v| matches!(v, Value::Window(_))) {
+        return apply(f, args);
     }
-    values_interval(m, f.name(), outs, &refs)
+    // a window of one day is that day (F3)
+    let ones: Vec<Value> = args.iter().map(|v| single(v).into_owned()).collect();
+    let refs: Vec<&Value> = ones.iter().collect();
+    let windows: Vec<&Window> = refs.iter().filter_map(|v| ranged(v)).collect();
+    let Some(first) = windows.first() else {
+        return apply(f, &ones);
+    };
+    match takes(name) {
+        Some(Takes::Ends) => at_ends((f, name), &refs, first),
+        Some(Takes::Agreed) => at_corners((f, name), &refs, &windows),
+        None => hole_naming(&refs, name).map(Value::Hole),
+        Some(Takes::Order | Takes::LawDate | Takes::Print | Takes::Pin) => Err(invariant(
+            "a date built-in the list names as no date reader",
+        )),
+    }
+}
+
+/// Date built-in `f`, called `name`, a date-to-date reader (`Takes::Ends`), at `refs`, one of
+/// them ranged, `first`: the stretch from its value at the window's first day to its value at
+/// its last ([`by_ends`]). L §4.4.
+///
+/// # Errors
+///
+/// As [`by_ends`]; `ENGINE-INVARIANT` for a reader of more than one ranged date.
+fn at_ends((f, name): (DateFn, &str), refs: &[&Value], first: &Window) -> Result<Value, Stop> {
+    let mut outs = corners(refs).into_iter().map(|t| apply(f, &t));
+    let (Some(lo), Some(hi), None) = (outs.next(), outs.next(), outs.next()) else {
+        return Err(invariant("a date-to-date reader of more than one date"));
+    };
+    by_ends((lo, hi), first, name)
+}
+
+/// Date built-in `f`, called `name`, a plain result (`Takes::Agreed`), at `refs`: the value
+/// every combination of the ranged arguments' first and last days gives ([`agreed`]), each
+/// window of `windows` by its own ends. L §4.4.
+///
+/// # Errors
+///
+/// As [`agreed`].
+fn at_corners(
+    (f, name): (DateFn, &str),
+    refs: &[&Value],
+    windows: &[&Window],
+) -> Result<Value, Stop> {
+    let outs = corners(refs).iter().map(|t| apply(f, t)).collect();
+    agreed(outs, windows, name)
 }
 
 /// Date built-in `f` at days (refcore's lambdas under `lift`). L §4.2.
 fn apply(f: DateFn, args: &[Value]) -> Result<Value, Stop> {
     let missing = || invariant("a period past the calendar's range");
     match (f, args) {
-        // of a period, as `month_of(w)` gives it over a window (refcore's `period_arg`; P30, N5)
-        (DateFn::Start, [Value::Period(p)]) => Ok(Value::Day(p.start())),
-        (DateFn::End, [Value::Period(p)]) => Ok(Value::Day(p.end())),
         (DateFn::Start, [d]) => Ok(Value::Day(a_date(d)?)),
         (DateFn::End, [d]) => a_day(a_date(d)?)?
             .next()
@@ -477,50 +462,11 @@ fn a_date(v: &Value) -> Result<Day, Stop> {
     Err(not_typed())
 }
 
-/// The weekdays of window `w`'s days: one when they all fall on it, else their interval, with
-/// the window's text and no read (refcore's `c_weekday`, its window). L §4.2, §4.4.
-fn window_weekday(w: &Window) -> Result<Value, Stop> {
-    let (first, last) = (a_date(&w.lo)?, a_date(&w.hi)?);
-    let span = first
-        .days_to(last)
-        .ok_or_else(|| invariant("a window's length"))?;
-    let all_week = w.days.is_none() && span >= 6;
-    let weekdays: BTreeSet<u8> = if all_week {
-        BTreeSet::from([1, 7])
-    } else if let Some(days) = &w.days {
-        days.iter().map(|d| d.weekday()).collect()
-    } else {
-        // stop at the last day before a step: a window may end on 9999-12-31
-        let mut out = BTreeSet::from([last.weekday()]);
-        let mut day = first;
-        while day < last {
-            out.insert(day.weekday());
-            day = day.next().ok_or_else(|| past_days(1))?;
-        }
-        out
-    };
-    let (Some(lo), Some(hi)) = (weekdays.first(), weekdays.last()) else {
-        return Err(invariant("a window with no day"));
-    };
-    if lo == hi {
-        return Ok(Value::int(i64::from(*lo)));
-    }
-    Ok(Value::Window(Box::new(Window {
-        lo: Value::int(i64::from(*lo)),
-        hi: Value::int(i64::from(*hi)),
-        days: None,
-        src: w.src.clone(),
-        figure: w.figure.clone(),
-        read: None,
-        carry: w.carry.clone(),
-        whole: false,
-    })))
-}
-
 /// A period argument: a period, a day as its day period, or a four-digit figure written as
 /// the argument, which the checker read as a year (refcore's `period_arg`, and the `_year`
-/// mark of `tdate_or_period`); another value, `never` or a window among them, is refcore's
-/// `LOAD-UNIT <what> is <v>, not a period`, met at run. L §2.1, §4.2, §8.4.
+/// mark of `tdate_or_period`); another value, `never` among them, is refcore's
+/// `LOAD-UNIT <what> is <v>, not a period`, met at run. A caller asks for a ranged date's
+/// hole first. L §2.1, §4.2, §8.4.
 pub(super) fn period_arg(
     m: &Reality,
     (arg, v): (Option<&Expr>, &Value),
@@ -573,22 +519,15 @@ fn year_fraction(days: i64) -> Result<Value, Stop> {
     Ok(Value::Number(Number::plain(q, Unit::one())))
 }
 
-/// The days a date of `dcf` stands for: a day, a day period's day, a window's two ends
-/// (refcore's `m_as_day` under `lift`; tally 2.1.7 R3, F4). L §3.3, §4.4.
-fn dcf_ends(m: &Reality, v: &Value) -> Result<Vec<Day>, Stop> {
-    let v = single(v);
-    if let Value::Window(w) = v
-        && let (Value::Day(lo), Value::Day(hi)) = (&w.lo, &w.hi)
-    {
-        return Ok(vec![*lo, *hi]);
-    }
+/// The day a date of `dcf` is: a day, a day period's day (refcore's `m_as_day`). L §3.3.
+fn dcf_day(m: &Reality, v: &Value) -> Result<Day, Stop> {
     if let Value::Period(p) = v
         && p.kind() == PeriodKind::Day
     {
-        return Ok(vec![p.start()]);
+        return Ok(p.start());
     }
     if let Value::Day(d) = v {
-        return Ok(vec![*d]);
+        return Ok(*d);
     }
     if *v == Value::None {
         return Err(refuse(Run::None, "a value is none here: dcf".to_owned()));
@@ -623,4 +562,134 @@ fn months_arg(m: &Reality, v: &Value, per: &str) -> Result<i64, Stop> {
         );
     }
     step_count(m, v, mult)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DateFn, read_dates};
+    use crate::model::{Value, Window};
+    use crate::syntax::Stop;
+    use crate::time::Day;
+
+    fn day(y: u16, m: u8, d: u8) -> Day {
+        Day::from_ymd(y, m, d).expect("a real day")
+    }
+
+    fn window((lo, hi): (Day, Day), name: &str) -> Value {
+        Value::Window(Box::new(Window {
+            lo,
+            hi,
+            src: Some(format!("window({}, {})", lo.text(), hi.text())),
+            figure: Some(name.to_owned()),
+            read: None,
+            carry: vec![crate::hole::Unknown {
+                id: format!("row {name}"),
+                label: name.to_owned(),
+                text: format!("window({}, {})", lo.text(), hi.text()),
+            }],
+        }))
+    }
+
+    fn text(v: &Result<Value, Stop>) -> String {
+        match v {
+            Ok(Value::Hole(h)) => h.text(),
+            Ok(Value::Day(d)) => d.text(),
+            Ok(Value::Window(w)) => format!("window({}, {})", w.lo.text(), w.hi.text()),
+            Ok(Value::Number(n)) => format!("{:?}", n.q.to_i64()),
+            Ok(Value::Period(p)) => p.label(),
+            Ok(Value::None) => "none".to_owned(),
+            Ok(_) => "another value".to_owned(),
+            Err(e) => format!("{e:?}"),
+        }
+    }
+
+    #[test]
+    fn a_listed_reader_reads_a_window_at_its_ends() {
+        let wb = window((day(2024, 2, 27), day(2024, 3, 2)), "wb");
+        let wc = window((day(2024, 1, 5), day(2024, 1, 25)), "wc");
+        // date to date: the stretch of its value at the first day and at the last
+        let moved = read_dates(
+            (DateFn::AddMonths(12), "add_months"),
+            core::slice::from_ref(&wb),
+        );
+        assert_eq!(text(&moved), "window(2025-02-27, 2025-03-02)", "add_months");
+        // a plain result: the value the ends agree on, else the hole naming the reader
+        let year = read_dates((DateFn::Year, "year_of"), core::slice::from_ref(&wb));
+        assert_eq!(text(&year), "2024", "year_of");
+        let month = read_dates((DateFn::Month, "month_of"), core::slice::from_ref(&wb));
+        assert_eq!(
+            text(&month),
+            "?\"date within window(2024-02-27, 2024-03-02) not precise enough for month_of\" (wb)",
+            "month_of"
+        );
+        let age = read_dates((DateFn::Age, "age"), &[Value::Day(day(2010, 6, 1)), wc]);
+        assert_eq!(text(&age), "Some(13)", "age");
+        // none too, where every end gives it
+        let late = window((day(2026, 11, 2), day(2026, 11, 9)), "wd");
+        let none = read_dates((DateFn::Age, "age"), &[late, Value::Day(day(2026, 1, 1))]);
+        assert_eq!(text(&none), "none", "age before birth");
+    }
+
+    #[test]
+    fn a_reader_off_the_list_is_the_hole() {
+        let wd = window((day(2026, 11, 2), day(2026, 11, 9)), "wd");
+        let start = read_dates((DateFn::Start, "start_of"), core::slice::from_ref(&wd));
+        assert_eq!(
+            text(&start),
+            "?\"date within window(2026-11-02, 2026-11-09) not precise enough for start_of\" (wd)",
+            "start_of"
+        );
+        let between = read_dates(
+            (DateFn::Between, "days_between"),
+            &[wd, Value::Day(day(2026, 12, 1))],
+        );
+        assert!(
+            text(&between).contains("not precise enough for days_between"),
+            "days_between: {}",
+            text(&between)
+        );
+        // a window of one day is that day
+        let one = window((day(2026, 11, 4), day(2026, 11, 4)), "w1");
+        let one_day = read_dates((DateFn::Start, "start_of"), &[one]);
+        assert_eq!(text(&one_day), "2026-11-04", "one day");
+    }
+
+    #[test]
+    fn one_window_in_two_arguments_goes_by_each_arguments_ends() {
+        let w = window((day(2026, 3, 2), day(2026, 3, 20)), "w");
+        // days_between(w, w), age(w, w): not one day, each argument by its own ends
+        let between = read_dates((DateFn::Between, "days_between"), &[w.clone(), w.clone()]);
+        let age = read_dates((DateFn::Age, "age"), &[w.clone(), w.clone()]);
+        let hole = |what: &str| {
+            format!(
+                "?\"date within window(2026-03-02, 2026-03-20) not precise enough for {what}\" (w)"
+            )
+        };
+        assert_eq!(text(&between), hole("days_between"), "days_between(w, w)");
+        assert_eq!(text(&age), hole("age"), "age(w, w)");
+        // its corners: four, first argument outermost
+        let refs = [&w, &w];
+        let corners = super::corners(&refs);
+        assert_eq!(corners.len(), 4, "two ranged arguments, four corners");
+    }
+
+    #[test]
+    fn a_listed_reader_refused_at_every_end_is_the_first_refusal() {
+        let late = window((day(9999, 12, 20), day(9999, 12, 30)), "late");
+        let past = read_dates(
+            (DateFn::AddDays(30), "add_days"),
+            core::slice::from_ref(&late),
+        );
+        assert!(
+            matches!(past, Err(Stop::Refused(_))),
+            "refused at both ends: {}",
+            text(&past)
+        );
+        let some = read_dates((DateFn::AddDays(5), "add_days"), &[late]);
+        assert!(
+            text(&some).contains("not precise enough for add_days"),
+            "refused at one end: {}",
+            text(&some)
+        );
+    }
 }

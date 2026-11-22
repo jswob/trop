@@ -331,7 +331,6 @@ fn same_days(kept: &Walk, fresh: &Walk) -> bool {
 fn same_act((one, act): (&Walk, &Act), (other, like): (&Walk, &Act)) -> bool {
     match (act, like) {
         (Act::Leg(mv, leg), Act::Leg(mv2, leg2))
-        | (Act::ImpOn(mv, leg), Act::ImpOn(mv2, leg2))
         | (Act::LegHole(mv, leg, _), Act::LegHole(mv2, leg2, _))
         | (Act::LegBad(mv, leg, _), Act::LegBad(mv2, leg2, _))
         | (Act::Perm(mv, leg, _), Act::Perm(mv2, leg2, _)) => {

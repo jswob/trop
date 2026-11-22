@@ -65,5 +65,5 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"

@@ -22,7 +22,6 @@ def install(E):
     E.xsub = None
     E.ask_paths = None
     E.path_cache = None
-    E.cal_met_days = {}
 
 
 def _ev():
@@ -166,9 +165,9 @@ def m_trans_call(self, n, vals, to, ctx, env=None):
     for v in vals:
         self.no_none(v, name)
     from .values import Iv
-    if any(isinstance(v, Iv) for v in vals):
-        # an argument computed from a window: the interval of its values (L §4.4 l.668; P25)
-        return self.lift_values(name, lambda *vs: self.trans_call(n, list(vs), to, ctx, env), *vals, mono=True)
+    # off L §4.4's list: a ranged argument is the hole (tally 2.3)
+    vals = self.off_list(name, *vals)
+    vals = vals if isinstance(vals, list) else [vals]
     idx = [i for i, v in enumerate(vals) if isinstance(v, Num)]
 
     def at(qs):
@@ -341,8 +340,9 @@ def m_c_dcf(self, n, env, ctx):
     h = self.hole_args(vals)
     if h:
         return h
-    # the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
-    return self.lift(lambda a, b, dc: Num(self.dcf_q(a, b, dc), ()), *vals, what='dcf')
+    # off L §4.4's list (tally 2.3, C3): its ends never agree, so a ranged argument is the hole
+    vals = self.off_list('dcf', *vals)
+    return Num(self.dcf_q(*vals), ())
 
 
 def m_call_args(self, n, env, ctx):
@@ -1871,6 +1871,11 @@ def m_fill_compute(self, qid, fkeys, ctx):
             ords, oc = run(lambda: [self.ev(o, env, ctx) for o in s.order])
             for o in ords:
                 if isinstance(o, Hole):
+                    from .evaluate import CARRY, HoleSignal
+                    if o.qs and all(CARRY.get(q) for q in o.qs):
+                        # only a window leaves the order open, through a reader that asks for one day: HOLE-IMPRECISE
+                        # (L §5.12 step 2, §4.4's list; tally 2.3)
+                        raise HoleSignal(o)
                     raise refuse('RUN-ORDER', 'fill %s: the order of the arc (%s; %s) is a hole' % (
                         qid, ', '.join(fmt(se[b.var]) for b in s.sbinds), ', '.join(fmt(de[b.var]) for b in s.dbinds)))
             ties, tc = run(lambda: [self.ev(o, env, ctx) for o in (s.tie or [])])
@@ -1999,11 +2004,8 @@ class _OpenOrder(Exception):
 
 
 def m_open_order_takes(self, qid, arcs, ordered_takes, iv):
-    """A fill whose order only a window leaves open (L §5.12 step 2, #213): each unknown the order terms carry is
-    taken at each value it can take, every combination (a window's days, an interval's whole numbers, another
-    interval's two ends; past 20 000 combinations every take is the hole), and a take is its value where every order
-    gives it, else the window's hole (HOLE-IMPRECISE, L §4.4); a refusal only some of them give is that hole too."""
-    import itertools
+    """A fill whose order only a window leaves open (L §5.12 step 2, #213): every take is the window's hole
+    (HOLE-IMPRECISE, L §4.4), carrying every unknown day the order rests on; no pass per day (tally 2.3, G3)."""
     from .values import Iv
     from .evaluate import carry_hole, iv_carry
 
@@ -2018,38 +2020,10 @@ def m_open_order_takes(self, qid, arcs, ordered_takes, iv):
     # the question the sort met, carrying every unknown day the order rests on
     hole = carry_hole(Hole([('date within %s not precise enough for the order of fill %s' % (iv.window_text(), qid),
                              iv.origin[1] if iv.origin else qid)]), iv, *[first[n] for n in names])
-
-    def values(v):
-        # each day a window of days can take, each whole number an interval of them can, else its two ends
-        if isinstance(v.lo, datetime.date):
-            return sorted(v.days) if v.days else [v.lo + datetime.timedelta(i) for i in range((v.hi - v.lo).days + 1)]
-        if isinstance(v.lo, Num) and v.lo.isint and v.hi.isint:
-            return [Num(k, v.lo.u, isint=True) for k in range(int(v.lo.q), int(v.hi.q) + 1)]
-        return [v.lo, v.hi]
-    opts = [values(first[n]) for n in names]
-    count = 1
-    for o in opts:
-        count *= len(o)
-    if count > 20000:
-        return dict((k, (hole, c)) for k, (v, c) in ordered_takes([dict(x, ord=[], tie=[]) for x in arcs]).items())
-    outs, errs = [], []
-    for choice in itertools.product(*opts):
-        end = dict(zip(names, choice))
-
-        def pick(v):
-            return end[unknown(v)] if isinstance(v, Iv) else v
-        try:
-            outs.append(ordered_takes([dict(x, ord=[pick(v) for v in x['ord']], tie=[pick(v) for v in x['tie']])
-                                       for x in arcs], every=True))
-        except Refusal as e:
-            errs.append(e)
-    if errs and not outs:
-        raise errs[0]
-    res = {}
-    for k, (v, c) in outs[0].items():
-        same = not errs and all(_vk(o[k][0]) == _vk(v) for o in outs[1:])
-        res[k] = (v if same else hole, c)
-    return res
+    # the arcs in a fixed order of their own, so no tie is asked: every take is the hole whatever the order (an
+    # undecided comparison is no tie; the reader's finding 2)
+    return dict((k, (hole, c)) for k, (v, c) in
+                ordered_takes([dict(x, ord=[Num(j, ())], tie=[]) for j, x in enumerate(arcs)]).items())
 
 
 def _vk(v):

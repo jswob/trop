@@ -962,7 +962,8 @@ ask fe: y[e]
     }
 
     /// A ledger per binding tuple and per option of an axis, one of each dividing by zero or
-    /// reading a hole key (the review of group 1's B4 and N8).
+    /// reading a hole key (the review of group 1's B4 and N8); `one[a]`, dated by a window, is a
+    /// hole day since tally 2.3 (S6).
     const LEDGER_REFUSED: &str = "model pw
   tally 2
   on 2026-04-25
@@ -1044,10 +1045,27 @@ ask r2: residuals jar[kh] 2026-03 law 2026-03-01
         );
         // a refused or hole ledger's line has nothing under it: no register (refcore's `one`)
         for (line, next) in lines.iter().zip(lines.iter().skip(1)) {
-            if line.contains("refused") || line.contains("?\"") {
+            let head = !line.starts_with(' ');
+            if head && (line.contains("refused") || line.contains("?\"")) {
                 assert!(!next.starts_with(' '), "{line} stands alone, not {next}");
             }
         }
+        // `one[a]`'s day is a window, so a hole day (tally 2.3 S6): each ledger of jar[a] holds
+        // it in the `?` group, naming the unknown day (E §6.3 Grouping)
+        let held = "    expected but missing one[a] on ?\"date within window(2026-03-01, 2026-03-02) not precise enough for the day of one[a]\" (dk[a]): model 10.00 PLN";
+        assert_eq!(
+            lines.iter().filter(|l| *l == held).count(),
+            3,
+            "the hole day's line in each of jar[a]'s three ledgers"
+        );
+        assert_eq!(
+            lines
+                .iter()
+                .filter(|l| *l == "  unknown day: dk[a]")
+                .count(),
+            3,
+            "each names the unknown day"
+        );
         assert!(
             lines.last().is_some_and(|l| l.starts_with("r2 [ax = hi]")),
             "the last line is the hole alone"

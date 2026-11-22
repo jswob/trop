@@ -1,0 +1,62 @@
+# L §8.1 "`missing(r)` and `covered(x, s)` are never holes" (tally 2.3, #247; the lead's P7, rulings item 12):
+# a span whose end is a window isn't known to be covered, as one whose end is a `?` isn't: `false`. Pinned
+# inside the cover, `true`; outside, `false`. Before: the window's hole (`a span end`).
+=== m.tally
+model cov
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input a: date
+input w: date
+input q: date
+def mw: bool
+  rule base v v0 = false
+  rule nope beats base v v0 = true when missing(w)
+def mq: bool
+  rule base v v0 = false
+  rule nope beats base v v0 = true when missing(q)
+version st
+  cite card
+  governs 2026-01-01..2026-05-01
+  known 2026-05-02
+  covers konto
+  bank[r1] = (on: 2026-01-05, kind: transfers, leg cash from konto to shop amount 100.00 PLN)
+version v0
+  cite card
+  governs always
+  known 2026-01-01
+  a = 2026-02-01 "c"
+  w = window(2026-03-01, 2026-03-10) "c"
+  q = ?"which end?" "c"
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "c"
+ask c_w: covered(konto, a .. w)
+ask c_q: covered(konto, a .. q)
+ask c_in: covered(konto, a .. w) with w = 2026-03-05
+ask c_out: covered(konto, a .. w) with w = 2026-06-05
+ask c_qin: covered(konto, a .. q) with q = 2026-03-05
+ask c_qout: covered(konto, a .. q) with q = 2026-06-05
+=== expect
+c_in: true
+  pinned: w = 2026-03-05
+  cut 2026-06-30
+c_out: false
+  pinned: w = 2026-06-05
+  cut 2026-06-30
+c_q: false
+  cut 2026-06-30
+c_qin: true
+  pinned: q = 2026-03-05
+  cut 2026-06-30
+c_qout: false
+  pinned: q = 2026-06-05
+  cut 2026-06-30
+c_w: false
+  cut 2026-06-30
+warning: WARN-UNREAD def mq is read by nothing
+warning: WARN-UNREAD def mw is read by nothing

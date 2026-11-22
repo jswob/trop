@@ -124,23 +124,21 @@ pub enum Value {
     /// A movement: a move's instance, an observation, an adjustment, by its stable id; a
     /// movement is a thing of its event kind (L §5.14, §2.5).
     Mv(Box<MvRef>),
-    /// A day not yet known, `window(a, b)` or `one_of([…])`, or the interval of values an
-    /// operation on one gives (L §4.4).
+    /// A day not yet known, `window(a, b)`, or the stretch of days a listed reader gives of one
+    /// (L §4.4).
     Window(Box<Window>),
 }
 
-/// A window: the interval of values a day not yet known can give, from its lowest to its
-/// highest (refcore's `Iv`). L §4.4.
+/// A window: a stretch of dates and nothing else, the days a day not yet known can be, from
+/// its first to its last (refcore's `Iv`). No number is a range. L §4.4.
 #[derive(Debug, Clone)]
 pub struct Window {
-    /// The lowest value.
-    pub lo: Value,
-    /// The highest value.
-    pub hi: Value,
-    /// A `one_of`'s days, sorted, each once; none for a window of every day between.
-    pub days: Option<Vec<Day>>,
-    /// The window as written, which a question names; none for an interval no one window
-    /// gives (a calendar's added window met by a business-day function).
+    /// The first day.
+    pub lo: Day,
+    /// The last day.
+    pub hi: Day,
+    /// The window as written, which a question names; none for a stretch no one window
+    /// gives.
     pub src: Option<String>,
     /// The figure of the row it came from (`bought[l1]`), which its holes are asked of, kept
     /// through the operations on it (L §8.1).
@@ -152,19 +150,13 @@ pub struct Window {
     /// own, an operation's operands' (L §4.4: "it carries the names it was computed from"),
     /// which a hole made of it carries too. No part of the value.
     pub carry: Vec<crate::hole::Unknown>,
-    /// Every value it can hold is a whole number, though its ends' class may not say so: an
-    /// interval kept whole by `+`, `-` and `*` of whole numbers (refcore's `Iv.whole`), whose
-    /// values an operation can take in turn (L §4.4 l.668; P30).
-    pub whole: bool,
 }
 
 impl PartialEq for Window {
-    /// The same interval, days, text, figure and read, whatever unknown days it carries
-    /// (L §4.4).
+    /// The same stretch, text, figure and read, whatever unknown days it carries (L §4.4).
     fn eq(&self, other: &Window) -> bool {
         self.lo == other.lo
             && self.hi == other.hi
-            && self.days == other.days
             && self.src == other.src
             && self.figure == other.figure
             && self.read == other.read
@@ -175,25 +167,15 @@ impl Eq for Window {}
 
 impl Value {
     /// The unknown days the holes the value prints carry, added to `into` in order, each
-    /// once: a hole's, and those of the holes a record or a list holds. A window that is no
-    /// window of days prints as the hole `not precise enough for a print` as the value itself,
-    /// a line's value, and as an entry of a list, so there it gives its days; inside a record
-    /// it prints as the window, as a window of days does anywhere, and gives none (refcore's
-    /// `hole_days`; tally 2.2, pick P25; tally 2.2.1, 221.C2). L §4.4, §8.2 `unknown day:`.
+    /// once: a hole's, and those of the holes a record or a list holds. A window prints as its
+    /// stretch and gives none (refcore's `hole_days`). L §4.4, §8.2 `unknown day:`.
     pub fn hole_days_into(&self, into: &mut Vec<crate::hole::Unknown>) {
-        // each value with whether it prints where one value is needed: the line's own, a
-        // list's entry
-        let mut todo: Vec<(&Value, bool)> = vec![(self, true)];
-        while let Some((v, one_needed)) = todo.pop() {
+        let mut todo: Vec<&Value> = vec![self];
+        while let Some(v) = todo.pop() {
             match v {
                 Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
-                Value::Window(w) if one_needed && !w.of_days() => {
-                    crate::hole::carry_union(into, &w.carry);
-                }
-                Value::Record(fields) => {
-                    todo.extend(fields.iter().rev().map(|(_, x)| (x, false)));
-                }
-                Value::List(items) => todo.extend(items.iter().rev().map(|x| (x, true))),
+                Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
+                Value::List(items) => todo.extend(items.iter().rev()),
                 Value::Window(_)
                 | Value::Number(_)
                 | Value::Money(_)
@@ -217,7 +199,7 @@ impl Value {
 
 /// One read of an item: the input or def, its keys and the cell it was read at. Two reads
 /// of one item at the same keys, with the law date, cut and pins it depends on, are one
-/// value, whatever variables bind the keys; equal intervals from different reads stay
+/// value, whatever variables bind the keys; equal windows from different reads stay
 /// undecided (L §4.4).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReadOf {
@@ -234,31 +216,18 @@ pub struct ReadOf {
 impl Window {
     /// The window as a question names it: as written, else `window(lo, hi)` (refcore's
     /// `window_text`). L §4.4.
-    ///
-    /// # Errors
-    ///
-    /// As [`Value::text`].
-    pub fn question_text(&self, m: &Reality) -> Result<String, NumError> {
+    #[must_use]
+    pub fn question_text(&self) -> String {
         if let Some(src) = &self.src {
-            return Ok(src.clone());
+            return src.clone();
         }
-        Ok(format!(
-            "window({}, {})",
-            self.lo.text(m)?,
-            self.hi.text(m)?
-        ))
+        format!("window({}, {})", self.lo.text(), self.hi.text())
     }
 
     /// The figure a question about it is asked of: its row's, or none (L §8.1).
     #[must_use]
     pub fn figure(&self) -> &str {
         self.figure.as_ref().map_or("", String::as_str)
-    }
-
-    /// Whether its values are days, a date (L §3.1, §4.4).
-    #[must_use]
-    pub fn of_days(&self) -> bool {
-        matches!(self.lo, Value::Day(_))
     }
 }
 
@@ -271,6 +240,10 @@ pub struct MvRef {
     pub day: Option<Day>,
     /// What it is.
     pub src: MvSrc,
+    /// Whether it is a binding's member of a decision whose day is a hole, whose legs the
+    /// binding read as the plan has them (refcore's `hole_day_dec_body`, on the member's own
+    /// record). L §5.19 Bindings.
+    pub member: bool,
 }
 
 /// What a movement value is, found again at the reader's cut (refcore's `Mv.src`). L §5.14.
@@ -367,7 +340,7 @@ impl Value {
             Value::OutKey { text, .. } => Ok(text.clone()),
             Value::Word(word) => Ok(word.clone()),
             Value::Mv(mv) => Ok(mv.id.clone()),
-            Value::Window(w) => window_text(m, w),
+            Value::Window(w) => Ok(window_text(w)),
         }
     }
 
@@ -390,14 +363,10 @@ impl Value {
     }
 }
 
-/// A window as it prints: `one_of([a, b])` of its days, else `window(lo, hi)` (refcore's
-/// `fmt` of an `Iv`). L §4.4, §5.18.
-fn window_text(m: &Reality, w: &Window) -> Result<String, NumError> {
-    if let Some(days) = &w.days {
-        let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
-        return Ok(format!("one_of([{}])", texts.join(", ")));
-    }
-    Ok(format!("window({}, {})", w.lo.text(m)?, w.hi.text(m)?))
+/// A window as it prints: `window(lo, hi)`, its stretch (refcore's `fmt` of an `Iv`).
+/// L §4.4, §5.18.
+fn window_text(w: &Window) -> String {
+    format!("window({}, {})", w.lo.text(), w.hi.text())
 }
 
 /// `(a: x, b: y)`.

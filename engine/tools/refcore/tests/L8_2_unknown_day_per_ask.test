@@ -1,6 +1,10 @@
 # tally 2.2 (CHANGES.md 2.2-11, pick P26). An ask's register doesn't depend on the asks before it: e2 pins the def
 # copy wc to the read of wb, so nothing reads wa under the pin and e2 names wb alone, run after e1 or alone (L §8.2:
 # an entry is listed exactly when a read in its set gives it). refcore kept e1's carried names across asks.
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
+# tally 2.3 (the households' speed, #247): re-stored again: a hole-day balance names its day's question and
+# reads, as tally 2.2.1's `?` day did; W1's additions (a hole amount's questions, the reads past a reading) went.
 === m.tally
 model g4_pin_copy3
   tally 2
@@ -45,11 +49,10 @@ version v_card
 ask e1: bal(konto, 2026-03-06)
 ask e2: bal(konto, 2026-03-06) with wc = wb
 === expect e1 e2
-e1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_a, pay_b)
+e1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wa) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
   unknown day: wa
   unknown day: wb
   cut 2026-01-10
-e2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_a, pay_b)
-  pinned: wc = window(2026-03-05, 2026-03-07)
+e2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wb) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
   unknown day: wb
   cut 2026-01-10

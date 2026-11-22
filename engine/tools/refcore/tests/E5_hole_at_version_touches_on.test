@@ -1,0 +1,45 @@
+# E §5 step 1 under a hole law date (tally 2.3, #247; the lead's P10, H2): `pay` is `at w`, a window; x2
+# (known 2026-03-20) states `dd`, which pay's `on` names, so it is in the instance's read set: its
+# adjustment's existence is the hole, and so is a count over `adjustments`. Before x2 is known, none; pinned,
+# the plain measure. Before: 0 (the law date's hole kept dd's change unseen).
+=== m.tally
+model b2fm
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input dd: date
+move pay: transfers
+  on dd
+  at w
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-01, 2026-03-05) "s"
+  dd = 2026-03-10 "s"
+  amt = 100.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+version x2
+  cite s
+  governs 2026-02-01..
+  known 2026-03-20
+  replace dd = 2026-03-11 "s"
+ask n: count(a in adjustments over ..)
+ask n_p03: count(a in adjustments over ..) with w = 2026-03-03
+ask n_k: count(a in adjustments over ..) as known 2026-03-15
+=== expect
+n: ?"date within window(2026-03-01, 2026-03-05) not precise enough for the law date of pay" (w)
+  unknown day: w
+  cut 2026-06-10
+n_k: 0
+  cut 2026-03-15
+n_p03: 0
+  cut 2026-06-10

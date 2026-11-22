@@ -75,6 +75,8 @@ input conv[x in conversion_ids]: (holder key persons, on_day date, tal money TAL
 
 input filed_on[y in years]: date question "Kiedy złożono zeznanie za ten rok?"
 
+input lot_lag: int
+
 input lot_terms[x in opening_lots]: (holder key persons, qty money TAL, cost money DUK, held_from date, held_to date)
 
 input receipt[x in receipts]: (holder key persons, inc_kind key income_kinds, received date, gross money TAL, wht_rate num)
@@ -103,7 +105,7 @@ move refund_in[r in foreign_income over .. where r.inc_kind == dividend]: wht_re
   note "the treaty refund of each dividend; its day, or none if refused, is a row read at the claim's date"
 
 move opening_lot[x in opening_lots]: lots
-  on window(lot_terms[x].held_from, lot_terms[x].held_to)
+  on add_days(lot_terms[x].held_to, -lot_lag)
   attr holder = lot_terms[x].holder
   attr qty = lot_terms[x].qty
   attr cost = lot_terms[x].cost
@@ -178,6 +180,7 @@ version card_story
   known 2027-01-01
   conv[cv1] = (holder: marek, on_day: 2027-12-13, tal: 3000.00 TAL, rate: 4.2300 DUK/TAL) "Mon 13 Dec: 3 000.00 TAL at the bank's 4.2300 DUK per TAL"
   lot_terms[lot0] = (holder: marek, qty: 1000.00 TAL, cost: 4050.00 DUK, held_from: 2020-01-01, held_to: 2026-12-31) assumed "the lot's acquisition day isn't given: some day before 2027, from the account's assumed opening" "one lot held on 1 January 2027"
+  lot_lag = 0 assumed "the lot's acquisition day isn't given: the stretch's last day is planned" "one lot held on 1 January 2027"
   receipt[div_mar] = (holder: marek, inc_kind: dividend, received: 2027-03-12, gross: 2000.00 TAL, wht_rate: 25 %) "Fri 12 Mar: Orvel dividend"
   receipt[div_sep] = (holder: marek, inc_kind: dividend, received: 2027-09-30, gross: 3000.00 TAL, wht_rate: 25 %) "Thu 30 Sep: Orvel dividend"
   receipt[int_jun] = (holder: marek, inc_kind: interest, received: 2027-06-28, gross: 120.00 TAL, wht_rate: 0 %) "Mon 28 Jun: interest, nothing withheld"

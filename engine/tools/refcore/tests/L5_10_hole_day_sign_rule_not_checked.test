@@ -1,0 +1,71 @@
+# L §5.10, E §4.2 step 5, L §4.4 A movement takes a day (tally 2.3, #247; the plan's S6 and the lead's ruling on C-3;
+# the critic's hd_sign.tally): a check the walk makes against a hole balance isn't made, for a hole day as for a hole
+# amount. pay_in, dated by a window, is a hole day, so owed is the hole on every day and pay_out, a plain movement out
+# of it, books: other prints a value where one pinned day (04-03) refuses. Before: other's lines were the window's hole.
+=== m.tally
+model hd_sign
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+  note "The critic: a hole-day movement into a place that can't go below zero, and a plain movement out of it. Whether the plain movement is refused depends on the unknown day; does the place it pays into still print a value?"
+source card "invented"
+unit PLN: currency minor 0.01
+place owed: claims PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input out: money PLN
+input pd: date
+input out_day: date
+move pay_in: transfers
+  on pd
+  leg cash from world to owed amount pay
+move pay_out: transfers
+  on out_day
+  leg cash from owed to other amount out
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  out = 80.00 PLN "c"
+  pd = window(2026-04-01, 2026-04-03) "c"
+  out_day = 2026-04-02 "c"
+  opening[owed] = 50.00 PLN at 2026-01-01 start "c"
+  opening[other] = 500.00 PLN at 2026-01-01 start "c"
+ask o_mar: bal(other, 2026-03-31)
+ask o_apr5: bal(other, 2026-04-05)
+ask o_apr5_p1: bal(other, 2026-04-05) with pd = 2026-04-01
+ask o_apr5_p2: bal(other, 2026-04-05) with pd = 2026-04-02
+ask o_apr5_p3: bal(other, 2026-04-05) with pd = 2026-04-03
+ask w_apr5: bal(owed, 2026-04-05)
+ask w_apr5_p3: bal(owed, 2026-04-05) with pd = 2026-04-03
+ask f_other: flows(other, 2026-04)
+ask f_other_p3: flows(other, 2026-04) with pd = 2026-04-03
+ask n_out: count(t in transfers over 2026-04 where t.cash.to == other)
+ask n_out_p3: count(t in transfers over 2026-04 where t.cash.to == other) with pd = 2026-04-03
+=== expect
+f_other: 80.00 PLN
+...
+f_other_p3: refused: RUN-PLACE owed is -30.00 PLN after the day's observations and plans of 2026-04-02
+...
+n_out: 1
+...
+n_out_p3: refused: RUN-PLACE owed is -30.00 PLN after the day's observations and plans of 2026-04-02
+...
+o_apr5: 580.00 PLN
+...
+o_apr5_p1: 580.00 PLN
+...
+o_apr5_p2: 580.00 PLN
+...
+o_apr5_p3: refused: RUN-PLACE owed is -30.00 PLN after the day's observations and plans of 2026-04-02
+...
+o_mar: 500.00 PLN
+  cut 2026-04-20
+w_apr5: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_in" (pd)
+  unknown day: pd
+...
+w_apr5_p3: refused: RUN-PLACE owed is -30.00 PLN after the day's observations and plans of 2026-04-02
+...

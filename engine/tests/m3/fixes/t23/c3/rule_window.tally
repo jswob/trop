@@ -1,0 +1,26 @@
+model c3_rule_window
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 (#247, ruling 13, C12 (b)): `window(e1, e2)` computed in a rule of a `date` def sits in that cell: the cell names the unknown day, its listed readers read it by the ends, and a `with` pin of the cell gives the pinned day (`pinned:`, L §4.4, §8.2). Written at C2, stored at the third pin."
+source s "invented"
+input d0: date
+input d9: date
+input n4: int
+def wd: date
+  rule base = window(d0, add_days(d0, n4))
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d0 = 2026-03-30 "s"
+  d9 = 2026-04-10 "s"
+  n4 = 4 "s"
+ask stretch: wd
+ask month: month_of(wd)
+ask year: year_of(wd)
+ask before: wd < d9
+ask off: weekday(wd)
+ask pinned: month_of(wd) with wd = 2026-04-02
+ask pinned_off: weekday(wd) with wd = 2026-04-02

@@ -797,8 +797,9 @@ fn value(q: &mut P<'_>) -> Result<(Value, Option<String>), Stop> {
         }
     } else if q.at("calendar", 0) && q.at("(", 1) {
         Value::Calendar(q.calendar()?)
-    } else if (q.at("window", 0) || q.at("one_of", 0)) && q.at("(", 1) {
-        Value::Days(q.day_set()?)
+    } else if q.at("window", 0) && q.at("(", 1) {
+        let (a, b) = q.window()?;
+        Value::Window(a, b)
     } else {
         plain_value(q)?
     };

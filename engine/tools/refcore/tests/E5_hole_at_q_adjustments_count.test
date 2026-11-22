@@ -1,0 +1,57 @@
+# E §5 step 1, C-4's clause under a `?` law date (tally 2.3, #247; the lead's P8): `at w` with
+# `w = ?"which law day?"` keeps the amounts at the booking cut unread, so whether a1 (known 2026-03-20, raising
+# `amt`) changes the instance isn't known: a binding over `adjustments` that could hold it is the hole, as under
+# the window twin (E5_hole_at_adjustments_count). Before: 0, where every answer to the `?` gives 1.
+=== m.tally
+model f9q
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input other: money PLN
+input w: date
+input d_at: date
+input dd: date
+move pay: transfers
+  on dd
+  at w
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d_at = 2026-03-01 "s"
+  other = 1.00 PLN "s"
+  w = ?"which law day?"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+version a0
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  dd = 2026-03-10 "s"
+version a1
+  cite s
+  governs 2026..
+  known 2026-03-20
+  replace amt = 150.00 PLN "s"
+ask adj: count(a in adjustments over 2026-03 .. 2026-04)
+ask asum: sum(a.change for a in adjustments over 2026-03 .. 2026-04)
+ask k19: count(a in adjustments over 2026-03 .. 2026-04) as known 2026-03-19
+ask k20: count(a in adjustments over 2026-03 .. 2026-04) as known 2026-03-20
+=== expect
+adj: ?"which law day?" (w)
+  cut 2026-06-10
+asum: ?"which law day?" (w)
+  cut 2026-06-10
+k19: 0
+  cut 2026-03-19
+k20: ?"which law day?" (w)
+  cut 2026-03-20
+warning: WARN-UNREAD input d_at is read by nothing
+warning: WARN-UNREAD input other is read by nothing

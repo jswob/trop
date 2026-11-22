@@ -1,0 +1,66 @@
+# E §5 step 1, C-4's clause on a removal (tally 2.3, #247; review of G1, Q3): a1 makes the hole-day instance's
+# `when` false, which changes it, so a binding over `adjustments` that could hold the adjustment is the hole.
+# Before: 0, where pins 18 and 19 give 1 (-100.00 PLN) and 20 to 22 give 0.
+=== m.tally
+model f8
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input other: money PLN
+input w: date
+input d_at: date
+input flag: bool
+move pay: transfers
+  on w
+  at d_at
+  when flag
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d_at = 2026-03-01 "s"
+  other = 1.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+version a0
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  flag = true "s"
+  w = window(2026-03-18, 2026-03-22) "s"
+version a1
+  cite s
+  governs 2026..
+  known 2026-03-20
+  replace flag = false "s"
+ask adj: count(a in adjustments over 2026-03 .. 2026-04)
+ask adj_p18: count(a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-18
+ask adj_p20: count(a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-20
+ask asum: sum(a.change for a in adjustments over 2026-03 .. 2026-04)
+ask asum_p19: sum(a.change for a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-19
+ask k19: count(a in adjustments over 2026-03 .. 2026-04) as known 2026-03-19
+=== expect
+adj: ?"date within window(2026-03-18, 2026-03-22) not precise enough for the day of pay" (w)
+  unknown day: w
+  cut 2026-06-10
+adj_p18: 1
+  pinned: w = 2026-03-18
+  cut 2026-06-10
+adj_p20: 0
+  cut 2026-06-10
+asum: ?"date within window(2026-03-18, 2026-03-22) not precise enough for the day of pay" (w)
+  unknown day: w
+  cut 2026-06-10
+asum_p19: -100.00 PLN
+  pinned: w = 2026-03-19
+  cut 2026-06-10
+k19: 0
+  cut 2026-03-19
+warning: WARN-UNREAD input other is read by nothing

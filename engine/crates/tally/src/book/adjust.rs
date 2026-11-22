@@ -1,6 +1,8 @@
 //! Adjustments: a booked instance measured again at each later version's cut, each change of a leg recorded with the versions that made it.
 //! Spec: E §5 (steps 1–5: the booked instance at its booking cut, one refused there never
-//! re-measured; each later step c with t < c ≤ K, δ per leg, refused where the step's
+//! re-measured, one whose day is a hole measured from the walk's start at every step after
+//! it, its adjustments existing as that hole, one whose law date is a hole that hole at each
+//! such step, tally 2.3 C-4; each later step c with t < c ≤ K, δ per leg, refused where the step's
 //! re-measurement is refused or the leg's amount is on either side, else a hole where its
 //! `when` is, tally 2.1.6, the next step measured against that state; an adjustment recorded
 //! for δ ≠ 0, a change of places, or a δ that is a hole or
@@ -23,10 +25,12 @@ use std::rc::Rc;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine};
 use crate::hole::{Hole, spread};
-use crate::model::{MoveInfo, Reality};
+use crate::model::{Domain, MoveInfo, Node, NodeKind, Reality};
 use crate::syntax::Stop;
 use crate::time::Day;
-use crate::walk::{Amount, End, Exists, Inst, LegVal, Seed, Status, Term, invariant, qty_value};
+use crate::walk::{
+    Amount, Dated, End, Exists, Inst, Law, LegVal, Seed, Status, Term, invariant, qty_value,
+};
 
 /// One adjustment: an instance's leg changed by a later version (refcore's `AdjMv`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,9 +44,9 @@ pub struct Adjustment {
     pub inst_keys: Vec<crate::model::KeyVal>,
     /// Its move.
     pub move_id: String,
-    /// Its day: a window's last day, by which every day of it was paid.
-    pub inst_day: Day,
-    /// Its day as its question names it: the day, or its window (refcore's `day_text`; N4).
+    /// Its day; none where it is a hole.
+    pub inst_day: Option<Day>,
+    /// Its day as its question names it: the day, or its hole (refcore's `day_text`).
     pub inst_on: String,
     /// The leg, as booked or as the step gives it.
     pub leg: LegVal,
@@ -67,6 +71,9 @@ pub struct Adjustment {
     /// Whether its step made the instance exist, the state before it not existing: the leg's
     /// places are then this version's (E §5 step 1).
     pub made: bool,
+    /// The hole its existence is: an instance whose day is a hole was booked before its step
+    /// only where that day falls before the step's (E §5 step 1, tally 2.3 C-4).
+    pub unknown: Option<Hole>,
 }
 
 /// A move's measure over one of its lists at a cut: its adjustments, and the hole bookings
@@ -78,6 +85,10 @@ pub struct Measured {
     pub adjustments: Vec<Adjustment>,
     /// The answered hole bookings.
     pub answered: Vec<Inst>,
+    /// The adjustments of its instances whose day is a hole, each existing as that hole
+    /// (E §5 step 1, tally 2.3 C-4): only a binding over `adjustments` reads them, every
+    /// place they book being that hole day's already.
+    pub unsure: Vec<Adjustment>,
 }
 
 /// A leg that settles an adjustment, or a waiver (refcore's `AdjMv.settled`). E §5 step 5.
@@ -230,17 +241,32 @@ impl Engine {
         let made = self.measure_move(m, mv, cut);
         self.reads_back(mark);
         self.adjust_active.remove(&key);
-        let (adjustments, answered) = made?;
-        self.answer_holes(&mv.id, (cut, upto), &answered);
-        let out = adjustments.clone();
-        self.adjustments.insert(
-            key,
-            Measured {
-                adjustments,
-                answered,
-            },
-        );
+        let measured = made?;
+        self.answer_holes(&mv.id, (cut, upto), &measured.answered);
+        let out = measured.adjustments.clone();
+        self.adjustments.insert(key, measured);
         Ok(out)
+    }
+
+    /// The adjustments of plan move `mv`'s instances whose day is a hole at cut `cut`, each
+    /// existing as that hole ([`Measured::unsure`]; E §5 step 1, tally 2.3 C-4).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::adjust_move`].
+    pub(crate) fn unsure_of(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Vec<Adjustment>, Stop> {
+        self.adjust_move(m, mv, cut)?;
+        let key = (mv.id.clone(), cut, self.list_upto(mv, cut));
+        let measured = self
+            .adjustments
+            .get(&key)
+            .ok_or_else(|| invariant("a move's measure not kept"))?;
+        Ok(measured.unsure.clone())
     }
 
     /// Plan move `mv`'s list at cut `cut` holds a hole booking before the cut: the move's
@@ -326,7 +352,7 @@ impl Engine {
         let steps_all = known_dates(m);
         let mut out = Vec::with_capacity(made.len());
         for inst in made {
-            let t = inst.day.as_ref().and_then(crate::walk::Dated::day);
+            let t = inst.day.as_ref().and_then(Dated::day);
             let Some(t) = t.filter(|t| *t < cut && is_hole_booking(&inst)) else {
                 out.push(inst);
                 continue;
@@ -343,17 +369,13 @@ impl Engine {
     }
 
     /// Each booked instance before the cut measured at each later step, with the hole
-    /// bookings a step answers, as the instances they become (refcore's
-    /// `adjust_move_compute`). E §5 steps 1–4.
-    fn measure_move(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-    ) -> Result<(Vec<Adjustment>, Vec<Inst>), Stop> {
+    /// bookings a step answers, as the instances they become, and each instance whose day is
+    /// a hole measured at every step (refcore's `adjust_move_compute`). E §5 steps 1–4.
+    fn measure_move(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Measured, Stop> {
         let steps_all = known_dates(m);
         let mut out = Vec::new();
         let mut answered = Vec::new();
+        let mut unsure = Vec::new();
         // a settlement's hole booking is answered like any instance's; steps 2–3 leave the
         // rest of it unmeasured (E §5 steps 1–2; tally 2.1.8 §4, item 28)
         let settles = super::settle::settlement_move(m, mv)?;
@@ -364,13 +386,13 @@ impl Engine {
             if settles && !is_hole_booking(inst) {
                 continue;
             }
-            // a window: every day of it is paid by a version known after its last day, which
-            // makes its adjustment; one known inside it is the booking cut's hole (E §5 step 2;
-            // P32, N4)
             let t = match &inst.day {
-                Some(crate::walk::Dated::Day(d)) => *d,
-                Some(crate::walk::Dated::Window(w)) => w.hi,
-                Some(crate::walk::Dated::Hole(_)) | None => continue,
+                Some(Dated::Day(d)) => *d,
+                Some(Dated::Hole(h)) if !settles && inst.exists != Exists::No => {
+                    unsure.extend(self.measure_hole_day(m, mv, (inst, h), (&steps_all, cut))?);
+                    continue;
+                }
+                Some(Dated::Hole(_)) | None => continue,
             };
             if t >= cut {
                 continue;
@@ -395,7 +417,69 @@ impl Engine {
                 &b.leg.name,
             ))
         });
-        Ok((out, answered))
+        Ok(Measured {
+            adjustments: out,
+            answered,
+            unsure,
+        })
+    }
+
+    /// Plan instance `inst` whose day is hole `h`, measured at the known dates `steps_all` up
+    /// to cut `cut`: κ₀ is that hole, a day of the walk, so the instance as the walk's start
+    /// gives it stands for its booking, and each known date after the start that changes it
+    /// makes an adjustment whose existence is the hole, the day falling before that step's or
+    /// not; one whose law date is a hole is that hole, changed or not at each such date (E §5
+    /// step 1, tally 2.3 C-4; the review of G1, B2).
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the measuring.
+    fn measure_hole_day(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (inst, h): (&Inst, &Hole),
+        (steps_all, cut): (&[(Day, BTreeSet<String>)], Day),
+    ) -> Result<Vec<Adjustment>, Stop> {
+        // the day falls in the walk: the versions known by its start are the booking's, each
+        // known after it and by the cut a step that may fall after the day
+        let start = m.start;
+        let later: Vec<&(Day, BTreeSet<String>)> = steps_all
+            .iter()
+            .filter(|(c, _)| start < *c && *c <= cut)
+            .collect();
+        if later.is_empty() {
+            return Ok(Vec::new());
+        }
+        // a hole `at`: the instance is that hole, its legs read at no law date, so whether a
+        // step that touches what its move names changes it is the hole too (the reviews of
+        // G1, B2, and its fix, BF2)
+        if matches!(inst.law, Law::Hole(_)) {
+            return Ok(law_hole_adjustments(m, mv, (inst, h), &later));
+        }
+        let seed = Seed {
+            env: inst.env.clone(),
+            keys: inst.keys.clone(),
+            exists: (*inst.exists0).clone(),
+            at_cut: Some(start),
+            upto: None,
+        };
+        let Some(booked) = self.eval_inst(m, mv, &seed, self.timeline_ctx(None, cut))? else {
+            return Ok(Vec::new());
+        };
+        // what a step answers of a hole booking here is dropped: the list keeps the instance
+        // as its hole day, which no version answers
+        let mut answered = Vec::new();
+        let made = self.measure_inst(m, mv, (&booked, start), (&later, cut), &mut answered)?;
+        Ok(made
+            .into_iter()
+            .map(|mut a| {
+                a.inst_day = None;
+                a.inst_on = h.text();
+                a.unknown = Some(h.clone());
+                a
+            })
+            .collect())
     }
 
     /// One instance measured at each step: δ per leg against the state before (refcore's
@@ -443,12 +527,7 @@ impl Engine {
                 inst_keys: inst.keys.clone(),
                 move_id: inst.move_id.clone(),
                 inst_day: t,
-                inst_on: match &inst.day {
-                    Some(crate::walk::Dated::Window(w)) => w.question.clone(),
-                    Some(crate::walk::Dated::Day(_) | crate::walk::Dated::Hole(_)) | None => {
-                        t.text()
-                    }
-                },
+                inst_on: t.text(),
                 day: c,
                 vids: step_versions(&j.coll, vids),
                 coll: j.coll.clone(),
@@ -775,6 +854,146 @@ fn leg_change(
     Ok(Some(adj))
 }
 
+/// The adjustments of plan instance `inst` of `mv`, whose law date is hole `h`, at the known
+/// dates `steps`: nothing of the instance was read, so a step touches its read set where
+/// one of its versions states a row of what its move names ([`named_reads`]); there each leg
+/// of the move has an adjustment whose existence, places and change are the hole, named by
+/// all the step's versions, and elsewhere none (E §5 steps 1 and 2; L §5.14 `at e`, an `at`
+/// that gives a window a hole `at`, §4.4; the reviews of G1, B2, and its fix, BF2, P10).
+fn law_hole_adjustments(
+    m: &Reality,
+    mv: &MoveInfo,
+    (inst, h): (&Inst, &Hole),
+    steps: &[&(Day, BTreeSet<String>)],
+) -> Vec<Adjustment> {
+    let reads = named_reads(m, mv);
+    let mut out = Vec::new();
+    for (day, versions) in steps {
+        if !reads.touched_by(m, versions) {
+            continue;
+        }
+        let step = Step {
+            inst_id: inst.id.clone(),
+            inst_keys: inst.keys.clone(),
+            move_id: mv.id.clone(),
+            inst_day: *day,
+            inst_on: h.text(),
+            day: *day,
+            vids: versions.iter().cloned().collect(),
+            coll: Collected::default(),
+        };
+        for leg in &mv.decl.legs {
+            let unread = LegVal {
+                name: leg.name.clone(),
+                from: End::Hole(h.clone()),
+                to: End::Hole(h.clone()),
+                amount: Amount::Hole(h.clone()),
+                unit: None,
+                day: Dated::Hole(h.clone()),
+                src: None,
+            };
+            let mut adj = make(
+                &step,
+                unread,
+                Amount::Hole(h.clone()),
+                (Vec::new(), Vec::new()),
+            );
+            adj.inst_day = None;
+            adj.unknown = Some(h.clone());
+            out.push(adj);
+        }
+    }
+    out
+}
+
+/// What a move names, its read set where nothing of an instance was read: the inputs its
+/// `on`, `at`, `when`, legs and attributes read through the item graph, defs and the items
+/// they read included, and the indexes of its keys (E §5 step 2; the review of G1's fix,
+/// BF2, P10).
+struct NamedReads {
+    /// Whether it reaches the balances, which every movement books into: then every version
+    /// touches it.
+    all: bool,
+    /// The inputs it reaches.
+    inputs: BTreeSet<String>,
+    /// The indexes whose keys it reads: its keys', and every index where it reaches a def.
+    indexes: BTreeSet<String>,
+    /// Whether it reaches a def, which may read any index's keys.
+    defs: bool,
+}
+
+impl NamedReads {
+    /// Whether one of `versions` states a row or a reading of an input it reaches, or adds a
+    /// key to an index it reads (E §5 step 2).
+    fn touched_by(&self, m: &Reality, versions: &BTreeSet<String>) -> bool {
+        if self.all {
+            return true;
+        }
+        for input in self.inputs.iter().filter_map(|id| m.inputs.get(id)) {
+            let rows = input.rows.iter().map(|r| &r.version);
+            let readings = input.observations.iter().map(|o| &o.version);
+            if rows.chain(readings).any(|v| versions.contains(v)) {
+                return true;
+            }
+        }
+        for (_, ix) in m.indexes.entries() {
+            let read = self.defs || self.indexes.contains(&ix.id);
+            if read && ix.added.iter().any(|(_, v)| versions.contains(v)) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+/// The read set move `mv` names ([`NamedReads`]): from its node and its day's node, every
+/// item the item graph says they read, and on through what those read, as a worklist
+/// (E §3.1 step 5, §5 step 2).
+fn named_reads(m: &Reality, mv: &MoveInfo) -> NamedReads {
+    let mut out = NamedReads {
+        all: false,
+        inputs: BTreeSet::new(),
+        indexes: BTreeSet::new(),
+        defs: false,
+    };
+    for bind in &mv.binds {
+        if let Domain::Index(ix) = &bind.domain {
+            out.indexes.insert(ix.clone());
+        }
+    }
+    let mut seen: BTreeSet<Node> = BTreeSet::new();
+    let mut work = vec![
+        Node::new(NodeKind::Move, &mv.id),
+        Node::new(NodeKind::MoveOn, &mv.id),
+    ];
+    while let Some(node) = work.pop() {
+        if !seen.insert(node.clone()) {
+            continue;
+        }
+        match node.kind {
+            NodeKind::Balances => out.all = true,
+            NodeKind::Input => {
+                out.inputs.insert(node.id.clone());
+            }
+            NodeKind::Def => out.defs = true,
+            NodeKind::Band
+            | NodeKind::Move
+            | NodeKind::MoveOn
+            | NodeKind::Place
+            | NodeKind::Ask
+            | NodeKind::Price
+            | NodeKind::Parts
+            | NodeKind::Axis
+            | NodeKind::Fill
+            | NodeKind::Srow => {}
+        }
+        if let Some(reads) = m.graph.edges.get(&node) {
+            work.extend(reads.keys().cloned());
+        }
+    }
+    out
+}
+
 /// An adjustment of `leg` by `delta` at a step, named by the step's versions, the first in
 /// text order (E §5 step 4, L §5.14.3); for a change of places, the places the step gives the
 /// leg and those it had before.
@@ -793,8 +1012,9 @@ fn make(
         settled: Vec::new(),
         waived: false,
         made: false,
+        unknown: None,
         move_id: step.move_id.clone(),
-        inst_day: step.inst_day,
+        inst_day: Some(step.inst_day),
         inst_on: step.inst_on.clone(),
         leg,
         new_ends,
@@ -852,7 +1072,7 @@ fn is_refused_leg(lg: &LegVal) -> bool {
 /// Whether an instance is a hole movement booked before cut `cut`: dated before it, past (or
 /// a hole, or none so far), its booking a hole (refcore's `hole0`). E §5 step 1.
 pub(crate) fn hole_booked_before(inst: &Inst, cut: Day) -> bool {
-    let day = inst.day.as_ref().and_then(crate::walk::Dated::day);
+    let day = inst.day.as_ref().and_then(Dated::day);
     matches!(inst.status, Status::Past | Status::Hole | Status::None)
         && day.is_some_and(|t| t < cut)
         && is_hole_booking(inst)
@@ -913,4 +1133,328 @@ fn step_versions(coll: &Collected, vids: &BTreeSet<String>) -> Vec<String> {
         return vids.iter().cloned().collect();
     }
     hit
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A pay on a window of March, its amount raised by a version known on 20 March (the
+    /// critic's `n1_q`, its window twin).
+    const RAISED: &str = r#"model raised
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input w: date
+
+input d_at: date
+
+move pay: transfers
+  on w
+  at d_at
+  leg cash from world to konto amount amt
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  w = window(2026-03-05, 2026-03-20) "a day in March"
+  d_at = 2026-03-01 "its law date"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+
+version a0
+  cite fixture
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "first"
+
+version a1
+  cite fixture
+  governs 2026..
+  known 2026-03-20
+  replace amt = 150.00 PLN "raised"
+
+ask n: count(a in adjustments over 2026-03 .. 2026-04)
+
+ask n_early: count(a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-05
+
+ask n_late: count(a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-20
+
+ask n_may: count(a in adjustments over 2026-05 .. 2026-06)
+
+ask s: sum(1 for a in adjustments over 2026-03 .. 2026-04)
+
+ask n_k: count(a in adjustments over 2026-03 .. 2026-04) as known 2026-03-19
+"#;
+
+    /// A pay on a day of March whose law date `w` is written in for `LAW`, its amount raised
+    /// by a version known on 20 March (the review's `f9`).
+    const AT_HOLE: &str = r#"model at_hole
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input w: date
+
+input dd: date
+
+move pay: transfers
+  on dd
+  at w
+  leg cash from world to konto amount amt
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  dd = 2026-03-10 "its day"
+  w = LAW "its law date"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+
+version a0
+  cite fixture
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "first"
+
+version a1
+  cite fixture
+  governs 2026..
+  known 2026-03-20
+  replace amt = 150.00 PLN "raised"
+
+ask n: count(a in adjustments over 2026-03 .. 2026-04)
+
+ask n_p: count(a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-03
+
+ask n_k: count(a in adjustments over 2026-03 .. 2026-04) as known 2026-03-19
+"#;
+
+    /// A pay on a day of March whose law date `w` is written in for `LAW`, and a version
+    /// known on 20 March that changes only an input the pay doesn't read (the review of G1's
+    /// fix, `b2b`).
+    const UNREAD_CHANGE: &str = r#"model unread_change
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input other: money PLN
+
+input w: date
+
+input dd: date
+
+move pay: transfers
+  on dd
+  at w
+  leg cash from world to konto amount amt
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  w = LAW "its law date"
+  amt = 100.00 PLN "its amount"
+  dd = 2026-03-10 "its day"
+  other = 1.00 PLN "another figure"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+
+version b_mid
+  cite fixture
+  governs always
+  known 2026-03-20
+  replace other = 4.00 PLN "changed"
+
+ask n: count(a in adjustments over ..)
+
+ask o: other
+"#;
+
+    /// A pay on a window of March, its amount raised by a version known in February, before
+    /// the walk's start.
+    const BEFORE_START: &str = r#"model before_start
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input w: date
+
+move pay: transfers
+  on w
+  leg cash from world to konto amount amt
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "first"
+  w = window(2026-03-05, 2026-03-20) "a day in March"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+
+version a1
+  cite fixture
+  governs always
+  known 2026-02-01
+  replace amt = 150.00 PLN "raised before the start"
+
+ask n_all: count(a in adjustments over ..)
+"#;
+
+    /// The lines of ask `ask` over text `text`.
+    fn lines_of(text: &str, ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "adjust.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    /// The lines of ask `ask` over [`RAISED`].
+    fn lines(ask: &str) -> Vec<String> {
+        lines_of(RAISED, ask)
+    }
+
+    #[test]
+    fn an_adjustment_of_a_hole_at_instance_exists_as_its_hole() {
+        // E §5 step 1 (tally 2.3 C-4; the review of G1, B2): a hole `at` makes the instance and
+        // its day holes, so a later version may change it: a binding over adjustments that
+        // could hold it is the hole, for a window and a `?` alike, where every pin gives 1
+        let window = "?\"date within window(2026-03-01, 2026-03-05) not precise enough for the law date of pay\" (w)";
+        let at_window = AT_HOLE.replace("LAW", "window(2026-03-01, 2026-03-05)");
+        assert_eq!(
+            lines_of(&at_window, "n"),
+            [
+                format!("n: {window}"),
+                "  unknown day: w".to_owned(),
+                "  cut 2026-06-10".to_owned()
+            ],
+            "the window's hole"
+        );
+        let at_question = AT_HOLE.replace("LAW", "?\"which law date?\"");
+        assert_eq!(
+            lines_of(&at_question, "n"),
+            ["n: ?\"which law date?\" (w)", "  cut 2026-06-10"],
+            "the question's hole"
+        );
+        assert_eq!(
+            lines_of(&at_window, "n_p"),
+            ["n_p: 1", "  pinned: w = 2026-03-03", "  cut 2026-06-10"],
+            "a pinned law date"
+        );
+        assert_eq!(
+            lines_of(&at_window, "n_k"),
+            ["n_k: 0", "  cut 2026-03-19"],
+            "before the version is known"
+        );
+    }
+
+    #[test]
+    fn a_version_that_touches_nothing_a_hole_at_move_reads_adjusts_nothing() {
+        // E §5 step 2: only a version that touches the read set can change the instance; under
+        // a hole `at` that set is the reads its move names (the review of G1's fix, BF2, P10)
+        for law in ["window(2026-03-01, 2026-03-05)", "?\"which law date?\""] {
+            assert_eq!(
+                lines_of(&UNREAD_CHANGE.replace("LAW", law), "n"),
+                ["n: 0", "  cut 2026-06-10"],
+                "{law}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_version_known_before_the_start_adjusts_no_hole_day_instance() {
+        // a hole day falls in the walk, after its start: a version known before it is in the
+        // booking, as every pinned day has it (E §5 step 1, tally 2.3 C-4)
+        assert_eq!(
+            lines_of(BEFORE_START, "n_all"),
+            ["n_all: 0", "  cut 2026-06-10"],
+            "no adjustment"
+        );
+    }
+
+    #[test]
+    fn an_adjustment_of_a_hole_day_instance_exists_as_its_hole() {
+        // E §5 step 1 (tally 2.3 C-4): pay's day is a hole, so a1 makes an adjustment on 20
+        // March only where the day falls before it: a binding over adjustments that could hold
+        // it is the hole, where a pinned day before gives 1 and the day itself 0
+        let imprecise = "?\"date within window(2026-03-05, 2026-03-20) not precise enough for the day of pay\" (w)";
+        for ask in ["n", "s"] {
+            assert_eq!(
+                lines(ask),
+                [
+                    format!("{ask}: {imprecise}"),
+                    "  unknown day: w".to_owned(),
+                    "  cut 2026-06-10".to_owned()
+                ],
+                "{ask}: the day's hole"
+            );
+        }
+        assert_eq!(
+            lines("n_early"),
+            ["n_early: 1", "  pinned: w = 2026-03-05", "  cut 2026-06-10"],
+            "a day before the version's"
+        );
+        // on the version's own day there is no adjustment, so nothing read w (as refcore)
+        assert_eq!(
+            lines("n_late"),
+            ["n_late: 0", "  cut 2026-06-10"],
+            "the version's own day"
+        );
+        // a span the adjustment's day isn't in, and a cut before the version, hold none
+        assert_eq!(lines("n_may"), ["n_may: 0", "  cut 2026-06-10"], "after it");
+        assert_eq!(
+            lines("n_k"),
+            ["n_k: 0", "  cut 2026-03-19"],
+            "before it is known"
+        );
+    }
 }

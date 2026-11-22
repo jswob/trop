@@ -82,7 +82,7 @@ Tally 2.1 keeps the plan pass (E §4.1). For each plan move, in the item graph's
 
 - **Per instance:** a few evaluations, mostly memo hits, since law and facts are shared cells; one more per later version that touches its read set. A version that touches nothing in the read set is skipped by an index lookup, with no evaluation (E §5 step 2).
 - **Total:** O(I · c) for I instances and c evaluations each, plus one sort of the booked movements by (day, stratum, move id, keys), O(M log M) (E §4.1, last paragraph).
-- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole and window movements, and the instance lists that `flows`, bindings and the projections read.
+- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole movements, and the instance lists that `flows`, bindings and the projections read.
 
 ### 2.2 The event-driven walk
 
@@ -100,8 +100,7 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 | N-8 | a reading at `t end` the cut sees, with t before K | a `reading` row, `at D end` | pads or anchors at the close | E §4.2 step 4, l.198 |
 | N-9 | the last day of a place's lifespan | an entry's `lives` span, a `place` section's | refuses the place from t on if a position isn't zero at the close (`RUN-LIFESPAN`) | E §4.2 step 5, l.201; L §5.7 l.942 |
 | N-10 | the last day of a party's lifespan, where some place keeps parts labelled to that party | `parties` and a parts kind | checks, after the day's whole order, that the party holds no part at the close; refuses that part's place from t on otherwise | E §4.2 parts, l.208; L §5.7 l.943 |
-| N-11 | the first day a hole movement may fall on: its day t when only its `when` is a hole; S when its day is a hole and not a window | a movement whose day or `when` is a hole | makes both ends' balances holes from t, with the movement's questions, up to each place's next reading | E §4.1 step 2, l.176; E §4.2 (holes), l.211; L §5.14 l.1348 |
-| N-12 | a window's first day, and the day after its last, for a movement dated by a window | a planned day `window(a, b)` | makes `bal(x, d)` a hole for d inside the window: the stretch begins on its first day and ends on the day after its last | E §4.1 step 2, l.177 |
+| N-11 | the first day a hole movement may fall on: its day t when only its `when` is a hole; S when its day is a hole | a movement whose day or `when` is a hole | makes both ends' balances holes from t, with the movement's questions, up to each place's next reading | E §4.1 step 2, l.189; E §4.2 (holes), l.221; L §5.14 l.1361 |
 | N-13 | V.known of an adjustment that nothing fulfils or waives at the cut | `adjustments` (E §5) | makes the adjusted leg's places' balances holes from t on, past later readings too (`HOLE-CHANGED`); the adjustment itself moves nothing | E §5 steps 4–5, l.258–261; L §5.14.3 l.1435 |
 | N-14 | the day of a joint model's own movement into a member's place that no `same` or `fulfils` links | a joint model's versions | books nothing there; makes the place's balance, read in the joint model, a hole from t until the member's next reading of it | L §6.1 l.1805 |
 
@@ -600,7 +599,7 @@ for H in (20,30,40): print(H, 10000/1000*H/30, 1000/1000*H/30)"
 | P8-L12 | LH-15, LH-16, LH-17-mc at their full axes, cohorts, paths and span | LH-17-mc only | — | LH-15, LH-16: ≤ 10 s each; LH-17-mc: deterministic part ≤ 10 s, each path ask at the rate for its N and H | ≤ 4 GB |
 | P8-L13 | the household's `explain_room`, M2's cut-downs at full span | no | — | ≤ 10 s each run | ≤ 4 GB |
 | P8-L14 | session 4's snap11 runs past 8 GB: `b12_det`, `b12_p3`, household-bands' `cut11/mc`, `c1_r2` | `b12_p3` (3 paths), `cut11/mc` | all four stopped at 8 GB on snap14; `b12_p3` finished on snap15 | `b12_det`, `c1_r2`: ≤ 10 s; `b12_p3`: ≤ 10 s plus 3 paths at the rate (under 1 ms); `cut11/mc`: as P8-L11 | ≤ 4 GB each |
-| P8-L15 | O:A-3's run: A's `q12` asks with the `one_of` forecast copy | no | stopped at 11.0 GB | ≤ 10 s | ≤ 4 GB |
+| P8-L15 | O:A-3's run: A's `q12` asks with the forecast copy, its calendar's unannounced day a row marked `assumed` (tally 2.3; the `one_of` copy's run stopped at 11.0 GB) | no | — | ≤ 10 s | ≤ 4 GB |
 | P8-L16 | household B, B-05's three asks known 2026-01-05 | no | 86.5 s, 90.6 s, 85.2 s on PyPy | ≤ 10 s | ≤ 4 GB |
 | P8-L17 | household A, A-13 (b)'s 2024 difference on its four pinned days | no | over 60 s for C2 | ≤ 10 s | ≤ 4 GB |
 | P8-L18 | decision 6: a joint model reading one row of a member whose walk is long; the three-member E2 | no | 1× twin `e2_01a` 33.5 s on refcore; session 5: 67.7 s with the third member against 17.1 s without, 73.1 s for one row of a long-walk member (fast layer) | ≤ 10 s | ≤ 4 GB |

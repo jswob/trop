@@ -252,7 +252,7 @@ impl Engine {
         (day, at): (Day, At),
     ) -> Result<CycleMember, Stop> {
         let cut = self.walk(id)?.cut;
-        let ctx = self.timeline_ctx(inst.law.first(), day.min(cut));
+        let ctx = self.timeline_ctx(inst.law.day(), day.min(cut));
         self.push();
         let read = self.cycle_reads(m, mv, &inst, ctx);
         let running = Ctx {
@@ -499,28 +499,6 @@ impl Engine {
         Ok(())
     }
 
-    /// Whether a window `at` gives instance `inst`'s `ties by` other values at a later law
-    /// date than `vals`, its first law date's (refcore's `tie_order`, its `lds`). L §4.3,
-    /// §5.14.2.
-    fn ties_differ(
-        &mut self,
-        m: &Reality,
-        ties: &[crate::syntax::Expr],
-        inst: &Inst,
-        (vals, ctx): (&[Value], Ctx),
-    ) -> Result<bool, Stop> {
-        for day in inst.law.rest() {
-            let mut other = Vec::with_capacity(ties.len());
-            for x in ties {
-                other.push(self.ev(m, x, &inst.env, ctx.at_law(Some(*day)))?);
-            }
-            if other != vals {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
     /// One move's instances due on a day, in the order of its `ties by`: a hole there is
     /// `RUN-TIE`, and so are two instances it doesn't tell apart (refcore's `tie_order`).
     /// L §5.14.2.
@@ -538,7 +516,7 @@ impl Engine {
         let cut = self.walk(id)?.cut.min(day);
         let mut scored: Vec<(Vec<Value>, Inst)> = Vec::with_capacity(insts.len());
         for inst in insts {
-            let ctx = self.timeline_ctx(inst.law.first(), cut);
+            let ctx = self.timeline_ctx(inst.law.day(), cut);
             let mut vals = Vec::with_capacity(ties.len());
             for x in ties {
                 let v = self.ev(m, x, &inst.env, ctx)?;
@@ -549,13 +527,6 @@ impl Engine {
                     ));
                 }
                 vals.push(v);
-            }
-            if self.ties_differ(m, ties, &inst, (&vals, ctx))? {
-                // `HOLE-IMPRECISE` for the ties by, a hole there (refcore's `tie_order`)
-                return Err(refuse(
-                    RunCode::Tie,
-                    format!("{}: its ties by is a hole", mv.id),
-                ));
             }
             scored.push((vals, inst));
         }
@@ -645,7 +616,13 @@ impl Engine {
             // refused before its point (its key's `where`): nothing of its body is read but its
             // places (tally 2.1.7 R2, #104)
             Some(err) => Err(Stop::Refused(err.clone())),
-            None => self.body_over_law(m, mv, &inst, ctx),
+            None => self.inst_body(
+                m,
+                mv,
+                &inst,
+                ctx.at_law(inst.law.day()),
+                inst.exists.clone(),
+            ),
         };
         let met = self.pop_alone();
         self.walk_mut(id)?.less_obs = prev_less;
@@ -681,7 +658,7 @@ impl Engine {
         // a refused instance's legs' places are still read, at its point, so the refusal
         // reaches the places its legs give (L §8.4; tally 2.1.7 R2, #104)
         if run.inst.err.is_some() && run.inst.legs.is_empty() && !mv.decl.legs.is_empty() {
-            let law = run.inst.law.first();
+            let law = run.inst.law.day();
             self.refused_at_point(m, mv, &mut run.inst, ctx.at_law(law))?;
         }
         self.walk_mut(id)?.group = Some(Group::new());
@@ -728,8 +705,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none())
         };
         let modelled = main
-            && ((t < cut && self.touches_covered(m, &run.inst, (cut, None)))
-                || !run.inst.obs.is_empty());
+            && ((t < cut && self.touches_covered(m, &run.inst, cut)) || !run.inst.obs.is_empty());
         let legless = m
             .moves
             .get(&run.inst.move_id)
