@@ -1,0 +1,20 @@
+model b1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+input a: key ks
+ask c2: check a == k1 with a = k2
+ask c3: check k1 == a with a = k2
+ask x1: a + 1 with a = k2
+ask x2: pos(a) with a = k2
+ask x3: a == k2 with a = k2
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"

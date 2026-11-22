@@ -11,9 +11,8 @@ checks), `constructs-…` in milestone/m4_constructs.rs (the corners of M4's con
 milestone/m4_items.rs (the in-scope backlog), `fixes-…` in milestone/m4_fixes.rs (a group review's findings; the
 spec's answers beside them are spec.py's), one test per group. `for` is the construct that turns it green
 (MILESTONE-M4.md rows 1 to 3 and 5: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`, `monthcheck`, `explain`,
-`runnone`, `agemonths`, `middot`, `pinwalk`), `M7` for the vector held to M7 by name (held.tsv), or `-` for a vector
-the engine already
-answers; it is the builder's work list and is not stored. A joint model's members go into its file table as
+`runnone`, `agemonths`, `middot`, `pinwalk`, `keypin`), `M7` for the vector held to M7 by name (held.tsv), or `-`
+for a vector the engine already answers; it is the builder's work list and is not stored. A joint model's members go into its file table as
 m3/vectors.py puts them (M0's `members`).
 
 Each vector is run on the frozen refcore (PyPy, plain refcore, never the fast layer: run.py's run_one, its 90 s
@@ -69,9 +68,10 @@ COLUMNS = KV.COLUMNS + ['for']
 # MILESTONE-M4.md rows 1 to 3: the constructs the builder's groups build (an `as if` pin at a two-key def's keys,
 # `accrue`, a `check` of two keys or periods, a rate pin's unit, `argmax`'s tuple; a plain `check` of two months,
 # `explain` of a decision's `flows` or `count`, `RUN-NONE` in L §8.4's form, `age_months` at 9999-12, a joint run
-# that leaves a member's `·` as written; G1's review B1, a per-tuple pin through a walk's read), and M7's hold
+# that leaves a member's `·` as written; G1's review B1, a per-tuple pin through a walk's read; G2's review B1 and
+# B4, a pin's bare key or four-digit figure read as its target's key or period), and M7's hold
 FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'monthcheck', 'explain', 'runnone', 'agemonths',
-       'middot', 'pinwalk', 'M7'}
+       'middot', 'pinwalk', 'keypin', 'M7'}
 
 
 def rows():

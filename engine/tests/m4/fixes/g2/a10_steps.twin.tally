@@ -1,0 +1,42 @@
+model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12
+index qt = month 2026-02..2026-12
+index wk = day 2026-01-05..2026-12-28
+index am = month 2026-01..2026-12
+index y2 = year 2020..2030
+input q: key qs
+input r: key qt
+input w1: key wk
+input w2: key wk
+input a1: key am
+input a2: key am
+input b1: key y2
+input b2: key y2
+input mo: month
+def dqr: int = q - r
+def dqm: int = q - mo
+ask c1: dqr, dqm
+ask c2: check w1 == w2
+ask c3: check a1 == a2
+ask c4: check b1 == b2
+ask c5: check b1 == 2024
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q = 2026-04 "s"
+  r = 2026-02 "s"
+  w1 = 2026-03-02 "s"
+  w2 = 2026-01-05 "s"
+  a1 = 2026-10 "s"
+  a2 = 2026-01 "s"
+  b1 = 2028 "s"
+  b2 = 2020 "s"
+  mo = 2026-01 "s"

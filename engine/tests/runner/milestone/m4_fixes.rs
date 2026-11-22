@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 2] = ["fixes-g1", "spec-g1"];
+    const GROUPS: [&str; 4] = ["fixes-g1", "fixes-g2", "spec-g1", "spec-g2"];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
     fn group_holds(store: &[u8], group: &str) {
@@ -69,6 +69,20 @@ mod tests {
         group_holds(VECTORS, "fixes-g1");
     }
 
+    /// G2 `paper`'s review (`tmp/m4/review-g2.md`), refcore's bytes for each probe's asks:
+    /// B1, a bare key pinned on a key input or def, whose keyed check prints its difference
+    /// and whose key arithmetic answers (`b1_pinkey`, `b1b`, `b15_pinkey2`, `a8_more`; L §4.2,
+    /// §5.18, §3.2 Inline figures); B3 across indexes, two `by 3` month keys differing by
+    /// months (`g3_min`, `a10_steps` `c1`); B4, a four-digit figure pinned on a `year` is the
+    /// year, on a date or month `LOAD-UNIT` (`b11_yearmin`, `b4_date`, `b13_ratety`); the
+    /// crossings both engines answer alike, a bare figure on `num %` among them; and, held for
+    /// #255, B3's step counts within one index, B4's `LOAD-KEY` on a year-index key, B5's
+    /// open-index difference and B6's `num %/year` pin.
+    #[test]
+    fn m4_fixes_g2() {
+        group_holds(VECTORS, "fixes-g2");
+    }
+
     /// G1's review, the spec's answers (#255): B2, a refusal outranks a hole in `accrue`,
     /// `periodic`, `factor` and `round` (L §8; each from refcore's run of a twin that states
     /// the hole); a second pin on one hole keeps its `pinned:` line (L §8.2); `explain`'s
@@ -78,5 +92,16 @@ mod tests {
     #[test]
     fn m4_fixes_spec_g1() {
         group_holds(SPEC, "spec-g1");
+    }
+
+    /// G2's review, the spec's answers: B2, a `none` side of a keyed check prints no
+    /// difference (L §5.18, §3.1; written, where refcore crashes); and for #255, B3, keys of a
+    /// range `by n` differ by its periods (L §4.2, from twins without `by n`); B4, the key
+    /// 2024 of a year index (a twin pinning it through an input); B5, an open index's keys
+    /// print no difference (L §5.6, written); B6, `with g = 5` on `num %/year` is
+    /// `0.05 1/year` (L §3.2, a twin pinning `5 %/year`). The written ones were checked by hand.
+    #[test]
+    fn m4_fixes_spec_g2() {
+        group_holds(SPEC, "spec-g2");
     }
 }

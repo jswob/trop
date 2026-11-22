@@ -1,0 +1,31 @@
+model b2
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ns = int 1..5
+index ms = month 2026-01..2026-12
+index ys = year 2020..2030
+input n1: key ns
+input m1: key ms
+input y1: key ys
+input d1: date
+def dl: key ks = k2
+ask c1: check n1 == 1 with n1 = 3
+ask c2: check m1 == 2026-01 with m1 = 2026-03
+ask c4: check dl == k1
+ask c5: n1 + 1, m1 + 1 with n1 = 3, m1 = 2026-03
+ask c7: check n1 == 1 with n1 = -(-3)
+ask c8: check d1 == 2026-01-01 with d1 = 2026-02-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n1 = 2 "s"
+  m1 = 2026-02 "s"
+  y1 = 2021 "s"
+  d1 = 2026-01-05 "s"

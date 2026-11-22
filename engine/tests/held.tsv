@@ -36,3 +36,14 @@ fixes/g1/a7_range_periodic/q_p	m4_fixes	#255	M4 G1's review, non-blocking: as fi
 fixes/g1/a10_zero/q	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/a6_inv/q_need, from 1 %/year; spec/g1/a10_zero/q
 fixes/g1/a10_zero/q_zs	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/a6_inv/q_need, a sum over rates from 0 %/year; spec/g1/a10_zero/q_zs
 fixes/g1/b1_reads/q_leg	m4_fixes	#255	M4 G1's review B1, found by T: refcore's order of a per-tuple pin's bindings through a leg read depends on its runtime: plain refcore on PyPy (the store) prints `for d in dd, k in ks`, refcore on CPython (refcore_fast too) and G1's build `for k in ks, d in dd` (check.py's walk over the node's attributes); the only one of 246 M4 fixture vectors that differs; held until #255 rules the order; no spec answer
+fixes/g2/a10_steps/c2	m4_fixes	#255	M4 G2's review B3, found by T: refcore counts the keys of a `day … by 7` index in steps (8), L §4.2 Differences in periods (56 days, a key of a range by n stands for its n periods); the engine gives refcore's today; spec/g2/a10_steps/c2
+fixes/g2/a10_steps/c3	m4_fixes	#255	M4 G2's review B3, found by T: as fixes/g2/a10_steps/c2, an anchored `month … by 3 from 15` index (3, not 9 months); spec/g2/a10_steps/c3
+fixes/g2/a10_steps/c4	m4_fixes	#255	M4 G2's review B3, found by T: as fixes/g2/a10_steps/c2, a `year … by 2` index (4, not 8 years); spec/g2/a10_steps/c4
+fixes/g2/a10_steps/c5	m4_fixes	#255	M4 G2's review B3, found by T: as fixes/g2/a10_steps/c4, a four-digit key on the right (2, not 4 years); spec/g2/a10_steps/c5
+fixes/g2/b3_one/c1	m4_fixes	#255	M4 G2's review B3: two keys of one `month … by 3` index differ in steps on refcore (2), in months by L §4.2 Differences and l.625 (6); the engine gives refcore's today; spec/g2/b3_one/c1
+fixes/g2/b3_one/c2	m4_fixes	#255	M4 G2's review B3: as fixes/g2/b3_one/c1, a keyed check's difference (2, not 6); spec/g2/b3_one/c2
+fixes/g2/b2_yearkey	m4_fixes	#255	M4 G2's review B4: refcore refuses a four-digit figure pinned on a key of a year index (LOAD-KEY … year4, not a key of ys), L §3.2 Inline figures and §2 l.110 read it as the key 2024; spec/g2/b2_yearkey/c3, c5, c6
+fixes/g2/a14_open/c1	m4_fixes	#255	M4 G2's review B5: a check of two keys of an open index prints a difference (-1) on refcore and the engine; L §5.6 l.896 refuses key arithmetic there, so L §5.18 prints none; spec/g2/a14_open/c1
+fixes/g2/a14_open/c2	m4_fixes	#255	M4 G2's review B5: as fixes/g2/a14_open/c1, a key literal on the right; spec/g2/a14_open/c2
+fixes/g2/b5_pctyear/a1	m4_fixes	#255	M4 G2's review B6: `with g = 5` on `num %/year` gives 5 1/year on refcore and the engine; L §3.2 reads it in the target's unit, 0.05 1/year, as a row h = 3 gives 0.03 1/year; spec/g2/b5_pctyear/a1
+fixes/g2/b4_units/a2	m4_fixes	#255	M4 G2's review B6: as fixes/g2/b5_pctyear/a1, the input and a def of it (5 and 10, not 0.05 and 0.1 1/year); spec/g2/b4_units/a2

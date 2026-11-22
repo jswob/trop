@@ -1,0 +1,21 @@
+model b11
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input y: year
+input y0: year
+def after: bool = y > y0
+ask a1: y with y = 2024
+ask a2: check y == 2025 with y = 2024
+ask a3: after with y = 2026
+ask a4: start_of(y) with y = 2024
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2021 "s"
+  y0 = 2025 "s"

@@ -1312,4 +1312,538 @@ q_w3 (k = k2, j = j2): 12.00 PLN
   pinned: b[k2] = 4.00 PLN
   pinned: x = c[k, j] for k in ks, j in js
   cut 2026-10-25
+,20:spec/g2/a10_steps/c2,7:spec-g2,28:run a10_steps.tally --ask c2,846:15:a10_steps.tally,822:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+index qt = month 2026-02..2026-12 by 3
+index wk = day 2026-01-05..2026-12-28 by 7
+index am = month 2026-01..2026-12 by 3 from 15
+index y2 = year 2020..2030 by 2
+input q: key qs
+input r: key qt
+input w1: key wk
+input w2: key wk
+input a1: key am
+input a2: key am
+input b1: key y2
+input b2: key y2
+input mo: month
+def dqr: int = q - r
+def dqm: int = q - mo
+ask c1: dqr, dqm
+ask c2: check w1 == w2
+ask c3: check a1 == a2
+ask c4: check b1 == b2
+ask c5: check b1 == 2024
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q = 2026-04 "s"
+  r = 2026-02 "s"
+  w1 = 2026-03-02 "s"
+  w2 = 2026-01-05 "s"
+  a1 = 2026-10 "s"
+  a2 = 2026-01 "s"
+  b1 = 2028 "s"
+  b2 = 2020 "s"
+  mo = 2026-01 "s"
+,,1:0,78:c2: differs: w1 = 2026-03-02, w2 = 2026-01-05, difference 56
+  cut 2026-10-25
+,20:spec/g2/a10_steps/c3,7:spec-g2,28:run a10_steps.tally --ask c3,846:15:a10_steps.tally,822:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+index qt = month 2026-02..2026-12 by 3
+index wk = day 2026-01-05..2026-12-28 by 7
+index am = month 2026-01..2026-12 by 3 from 15
+index y2 = year 2020..2030 by 2
+input q: key qs
+input r: key qt
+input w1: key wk
+input w2: key wk
+input a1: key am
+input a2: key am
+input b1: key y2
+input b2: key y2
+input mo: month
+def dqr: int = q - r
+def dqm: int = q - mo
+ask c1: dqr, dqm
+ask c2: check w1 == w2
+ask c3: check a1 == a2
+ask c4: check b1 == b2
+ask c5: check b1 == 2024
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q = 2026-04 "s"
+  r = 2026-02 "s"
+  w1 = 2026-03-02 "s"
+  w2 = 2026-01-05 "s"
+  a1 = 2026-10 "s"
+  a2 = 2026-01 "s"
+  b1 = 2028 "s"
+  b2 = 2020 "s"
+  mo = 2026-01 "s"
+,,1:0,71:c3: differs: a1 = 2026-10, a2 = 2026-01, difference 9
+  cut 2026-10-25
+,20:spec/g2/a10_steps/c4,7:spec-g2,28:run a10_steps.tally --ask c4,846:15:a10_steps.tally,822:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+index qt = month 2026-02..2026-12 by 3
+index wk = day 2026-01-05..2026-12-28 by 7
+index am = month 2026-01..2026-12 by 3 from 15
+index y2 = year 2020..2030 by 2
+input q: key qs
+input r: key qt
+input w1: key wk
+input w2: key wk
+input a1: key am
+input a2: key am
+input b1: key y2
+input b2: key y2
+input mo: month
+def dqr: int = q - r
+def dqm: int = q - mo
+ask c1: dqr, dqm
+ask c2: check w1 == w2
+ask c3: check a1 == a2
+ask c4: check b1 == b2
+ask c5: check b1 == 2024
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q = 2026-04 "s"
+  r = 2026-02 "s"
+  w1 = 2026-03-02 "s"
+  w2 = 2026-01-05 "s"
+  a1 = 2026-10 "s"
+  a2 = 2026-01 "s"
+  b1 = 2028 "s"
+  b2 = 2020 "s"
+  mo = 2026-01 "s"
+,,1:0,65:c4: differs: b1 = 2028, b2 = 2020, difference 8
+  cut 2026-10-25
+,20:spec/g2/a10_steps/c5,7:spec-g2,28:run a10_steps.tally --ask c5,846:15:a10_steps.tally,822:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+index qt = month 2026-02..2026-12 by 3
+index wk = day 2026-01-05..2026-12-28 by 7
+index am = month 2026-01..2026-12 by 3 from 15
+index y2 = year 2020..2030 by 2
+input q: key qs
+input r: key qt
+input w1: key wk
+input w2: key wk
+input a1: key am
+input a2: key am
+input b1: key y2
+input b2: key y2
+input mo: month
+def dqr: int = q - r
+def dqm: int = q - mo
+ask c1: dqr, dqm
+ask c2: check w1 == w2
+ask c3: check a1 == a2
+ask c4: check b1 == b2
+ask c5: check b1 == 2024
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q = 2026-04 "s"
+  r = 2026-02 "s"
+  w1 = 2026-03-02 "s"
+  w2 = 2026-01-05 "s"
+  a1 = 2026-10 "s"
+  a2 = 2026-01 "s"
+  b1 = 2028 "s"
+  b2 = 2020 "s"
+  mo = 2026-01 "s"
+,,1:0,67:c5: differs: b1 = 2028, 2024 = 2024, difference 4
+  cut 2026-10-25
+,17:spec/g2/b3_one/c1,7:spec-g2,25:run b3_one.tally --ask c1,353:12:b3_one.tally,332:model b3_one
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+
+input q1: key qs
+input q2: key qs
+
+def dq: int = q1 - q2
+
+ask c1: q1 - q2, dq
+ask c2: check q1 == q2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q1 = 2026-07 "s"
+  q2 = 2026-01 "s"
+,,1:0,28:c1: (6, 6)
+  cut 2026-10-25
+,17:spec/g2/b3_one/c2,7:spec-g2,25:run b3_one.tally --ask c2,353:12:b3_one.tally,332:model b3_one
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+
+input q1: key qs
+input q2: key qs
+
+def dq: int = q1 - q2
+
+ask c1: q1 - q2, dq
+ask c2: check q1 == q2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q1 = 2026-07 "s"
+  q2 = 2026-01 "s"
+,,1:0,71:c2: differs: q1 = 2026-07, q2 = 2026-01, difference 6
+  cut 2026-10-25
+,21:spec/g2/b2_yearkey/c3,7:spec-g2,29:run b2_yearkey.tally --ask c3,356:16:b2_yearkey.tally,331:model b2_yearkey
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ys = year 2020..2030
+
+input y1: key ys
+
+ask c3: check y1 == 2020 with y1 = 2024
+ask c5: y1 + 1 with y1 = 2024
+ask c6: check y1 == 2020 with y1 = (2024)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y1 = 2021 "s"
+,,1:0,87:c3: differs: y1 = 2024, 2020 = 2020, difference 4
+  pinned: y1 = 2024
+  cut 2026-10-25
+,21:spec/g2/b2_yearkey/c5,7:spec-g2,29:run b2_yearkey.tally --ask c5,356:16:b2_yearkey.tally,331:model b2_yearkey
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ys = year 2020..2030
+
+input y1: key ys
+
+ask c3: check y1 == 2020 with y1 = 2024
+ask c5: y1 + 1 with y1 = 2024
+ask c6: check y1 == 2020 with y1 = (2024)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y1 = 2021 "s"
+,,1:0,46:c5: 2025
+  pinned: y1 = 2024
+  cut 2026-10-25
+,21:spec/g2/b2_yearkey/c6,7:spec-g2,29:run b2_yearkey.tally --ask c6,356:16:b2_yearkey.tally,331:model b2_yearkey
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ys = year 2020..2030
+
+input y1: key ys
+
+ask c3: check y1 == 2020 with y1 = 2024
+ask c5: y1 + 1 with y1 = 2024
+ask c6: check y1 == 2020 with y1 = (2024)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y1 = 2021 "s"
+,,1:0,87:c6: differs: y1 = 2024, 2020 = 2020, difference 4
+  pinned: y1 = 2024
+  cut 2026-10-25
+,21:spec/g2/b5_pctyear/a1,7:spec-g2,29:run b5_pctyear.tally --ask a1,357:16:b5_pctyear.tally,332:model b5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input g: num %/year
+input h: num %/year
+input p: num %
+ask a0: g, h, p
+ask a1: g with g = 5
+ask a2: g with g = 5 %/year
+ask a3: p with p = 5
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  g = 2 %/year "s"
+  h = 3 "s"
+  p = 4 "s"
+,,1:0,59:a1: 0.05 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+,19:spec/g2/b4_units/a2,7:spec-g2,27:run b4_units.tally --ask a2,917:14:b4_units.tally,894:model b4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+input pct: num %
+input g: num %/year
+input fx: num PLN/EUR
+input wage: num PLN/hour
+input hrs: num hour
+input r: rate
+input x: money PLN
+input i: int
+input n: num
+def gm: num %/year = g + g
+ask a1: pct, pct + pct with pct = 5
+ask a2: g, gm with g = 5
+ask a3: fx, x / fx with fx = 4.5
+ask a4: wage * hrs with wage = 30, hrs = 2.5
+ask a5: x, x + x with x = 12.5
+ask a6: i + i with i = 7
+ask a7: n with n = 0.25
+ask a8: pct with pct = -(5)
+ask a9: pct with pct = (-5)
+ask a10: (pct + pct) as if {pct = 5}
+ask a11: x with x = -1.5
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pct = 1 % "s"
+  g = 2 %/year "s"
+  fx = 4.3 "s"
+  wage = 20 "s"
+  hrs = 1 "s"
+  r = 5 %/year "s"
+  x = 1 PLN "s"
+  i = 1 "s"
+  n = 1 "s"
+,,1:0,121:a2: (0.05 1/year, 0.1 1/year)
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+warning: WARN-UNREAD input r is read by nothing
+,18:spec/g2/a5_none/c1,7:spec-g2,26:run a5_none.tally --ask c1,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,48:c1: differs: a = none, k1 = k1
+  cut 2026-10-25
+,18:spec/g2/a5_none/c2,7:spec-g2,26:run a5_none.tally --ask c2,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,49:c2: differs: dn = none, k1 = k1
+  cut 2026-10-25
+,18:spec/g2/a5_none/c3,7:spec-g2,26:run a5_none.tally --ask c3,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,59:c3: differs: m1 = none, 2026-01 = 2026-01
+  cut 2026-10-25
+,18:spec/g2/a5_none/c4,7:spec-g2,26:run a5_none.tally --ask c4,458:13:a5_none.tally,436:model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"
+,,1:0,49:c4: differs: k1 = k1, dn = none
+  cut 2026-10-25
+,19:spec/g2/a14_open/c1,7:spec-g2,27:run a14_open.tally --ask c1,400:14:a14_open.tally,377:model a14
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index rows: open
+input amt[r in rows]: money PLN
+input a: key rows
+input b: key rows
+ask c1: check a == b
+ask c2: check a == r2
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 PLN "s"
+  amt[r2] = 2 PLN "s"
+  a = r1 "s"
+  b = r2 "s"
+,,1:0,95:c1: differs: a = r1, b = r2
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
+,19:spec/g2/a14_open/c2,7:spec-g2,27:run a14_open.tally --ask c2,400:14:a14_open.tally,377:model a14
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index rows: open
+input amt[r in rows]: money PLN
+input a: key rows
+input b: key rows
+ask c1: check a == b
+ask c2: check a == r2
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 PLN "s"
+  amt[r2] = 2 PLN "s"
+  a = r1 "s"
+  b = r2 "s"
+,,1:0,96:c2: differs: a = r1, r2 = r2
+  cut 2026-10-25
+warning: WARN-UNREAD input amt is read by nothing
 ,

@@ -1,0 +1,22 @@
+model g3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12 by 3
+index qu = month 2025-01..2027-12 by 3
+index qt = month 2026-02..2026-12 by 3
+input q: key qs
+input u: key qu
+input r: key qt
+ask c1: q - u, q - r
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q = 2026-07 "s"
+  u = 2026-04 "s"
+  r = 2026-02 "s"
