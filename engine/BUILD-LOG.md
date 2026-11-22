@@ -6665,3 +6665,51 @@ The plan's group G1 (`tmp/m4/build-plan.md` §5), on T's chunk C1 (6962697b). No
 - **Usage:** about 0.30 % of the week by `engine/tools/usage` before this entry.
 - **Leaves:** a literal pin's unit (G2); `to u` (M6).
 - **Checks:** `check commit: green, 24 steps (138s)`, exit 0, on this tree but for this line.
+
+## 2026-11-22 M4 G2 `paper`: a check's key difference, a pin's bare figure (issue #252)
+
+The plan's group G2 (`tmp/m4/build-plan.md` §3 rows 6 to 9 and 13, §5), on T's chunk C2 (9c8cc86d), under picks P1 to P7 (row 10 gone by P6: no change to `add_business`). No kernel file. Three commits: 12f7150d (row 6), 514651e9 (row 8) and this one (this entry). Row 9 is stopped (the STOP-REPORT below).
+
+**What turned green:** `paper/explain_check__rows/b`, `paper/axis__kleene_agg_argm/chk` (`constructs-keydiff`); `constructs/fx/r_pin_inv`, `constructs/fx/r_pin_fx`, `paper/fx__hole_law_ver/c` (`constructs-ratepin`). `milestone-report: M4: 18/19 green` (16/19 at C2). Red: `constructs-tuple` (`constructs/argm/t_tuple`, `paper/print__rows/c`), stopped. The 8 corner groups were green at C2 and stay green; no corner reached `num/` or `walk/`.
+
+**1. Row 6: a check of two keys of one index prints their difference** (L §5.18 `check`, §4.2 "Differences"; 12f7150d).
+- Refcore decides it by the sides' static types (`_check`: both `_t` are `key ix` of one index in `m.indexes`), not by the values. The engine now does the same: load's `cmp_sides` (the old `cmp`'s body) gives both sides' types after the bare key took the other side's index; `ask_body` records the check asks whose two sides are `key ix` of one index in `Reality::keyed_checks`; the run's `difference` subtracts there (`arith`, so `key_diff` and `period_diff`), and only numbers otherwise. The old run-time guess (`keys_of_one_index`) and the `NotBuilt` for two keys are gone.
+- A period literal beside a key of a period index is that key (refcore's `compare`, `side._t = T.key(ix)`): `compare` now gives that side's new type, so `check mk == 2026-03` on `key ms` prints `difference 3`.
+- **#250's month checks (row 7):** a plain `month`, `quarter` or `year` (no key) prints **no** difference, as refcore. T's plan stores refcore's bytes for those three asks (t-plan l.205: "3 asks (months, quarters, years), refcore's bytes"), so the engine follows refcore. **For the round:** L §4.2 says two values of one period type differ by an int "keys or not", and L §5.18 prints the difference "where e − f is defined"; both interpreters print none for plain periods. I noted it, not held it (P4: a fault both share gates on refcore's bytes).
+- The sides print as the comparison took them (`resolved_sides`, shared with `equal_sides`): a four-digit literal beside a year key prints `2024`, not `2 024` (refcore's values are evaluated as load resolved them).
+- **Found on the way, fixed:** two keys of an index that steps `by n` (`index qs = month 2026-01..2026-12 by 3`, L §4.1's quarters) differed by months, −6, where refcore's `key_diff` counts the index's steps, −2. `period_diff` now takes `steps_to` where both periods step by the same step that isn't their kind's own (`own_step`); in arithmetic too (`def dq: int = q0 - q1`). Unit test `keys_of_an_index_by_3_differ_by_their_steps`. No stored vector reaches it (for T).
+- **Found, not fixed (pre-existing, for T and the review):** a period literal in brackets or in an `if`'s branches beside a period-index key (`check q0 == (2026-07)`) isn't taken as the key: load's `period_literal` reads only a bare literal (`Operand::lit`), where refcore's `reach_leaves` goes through `( )` and both branches. So that check prints no difference (refcore: `difference -1`), and a bracketed literal outside the index isn't refused `LOAD-KEY` at load. Widening `Operand::lit` reaches `ops.rs`'s key offsets and the four-digit decisions, so I left it.
+- **Probes** (`tmp/m4/g2/keydiff.tally`, `keydiff2.tally`, `stepdiff.tally`): keys both ways, a literal on either side, a `for`-bound key, an axis, an int index, a year index and an anchored one (`from 04-06`), a `by 3` month index, a day index, plain months, quarters, years, dates, a key outside its index. All byte-equal refcore but `keydiff2`'s `c2`, the bracketed literal above.
+
+**2. Row 8: a bare figure in a pin takes its target's type and unit** (L §3.2 Inline figures; 514651e9).
+- Refcore's checker gives a pin's bare figure (through brackets and a minus) its target's type (`pin_literal`, `_flexto`), and the run makes it with `typed`. The engine's `pin_typed` only coerced ints and flex figures. It now calls `eval/expr.rs`'s `typed` (refcore's, already there) where the written value is a bare figure: `with fx = 4.5` on `num PLN/EUR` is 4.5 PLN/EUR.
+- **Found on the way, fixed by the same line:** `with pct = 5` on a `num %` input was 500 % on the engine, 5 % on refcore (`typed` takes a figure on `num %` as hundredths). No stored vector reached it (for T).
+- `bare_figure` is `eval/band.rs`'s, now `pub(super)` and shared.
+- **Found, not fixed (pre-existing, for T):** a def declared `num` whose value is a `num %` (`def share: num = pct + pct`) prints `10 %` on the engine, `0.1` on refcore, which prints a value by its static type (`fmt_typed`). Not a pin's; the def's declared type doesn't reach the printer. Probe `tmp/m4/g2/ratepin.tally` (`a5`, `a6`, `b3`); its 13 other asks are byte-equal.
+
+**3. Row 9: `argmax`'s tuple, stopped.** `bare_key` over two bindings needs a value refcore calls `Tup`, printed `(k1, 1)`. A `Value::Tuple` variant is the plain form (load already refuses a tuple as a key, in arithmetic and in a comparison, so it only prints). Adding it, the library failed to build at six exhaustive matches on `Value`; four are outside the kernel, but two are in kernel files, `walk/plan.rs:736` (an instance's day) and `walk/reads.rs:194` (a unit read), each needing `| Value::Tuple(_)` beside `Value::List(_)`. The brief says G2 changes no kernel file and stops if it needs one, so I reverted it. STOP-REPORT below. Refcore's answers for the tuple's corners are in `tmp/m4/g2/tuple.ref` (`(k1, 1)`, `(k2, 2)`, `RUN-TIE … at (k1, 1), (k1, 2)`, a hole, `RUN-EMPTY`, two tuples on one line) and `tuple_cmp.ref` (`LOAD-UNIT` comparing two tuples; byte-equal today).
+
+**The sweep** (`tmp/m4/g2/sweep.sh`, G1's script): the paper check's 43 probes in 43 runs, ask by ask, refcore_fast against this tree's quick binary.
+- **154 asks: 153 same, 1 different** (`print__rows` `c`, row 9). G1's was 150 and 4.
+- The three that turned from different to same: `axis__kleene_agg_argm` `chk`, `explain_check__rows` `b`, `fx__hole_law_ver` `c`. **No line turned from same to different.**
+- G1's probes `pins.tally` and `order.tally` are still byte-equal.
+
+- **Size** (`git diff --shortstat 9c8cc86d -- engine/crates`): 12 files, +152 −68, about 0.22 k changed against the plan's 0.5 k for rows 6 to 9 (row 9 not built; row 10 gone).
+- **Files:** `ask/check.rs`, `ask/answer.rs`, `load/compare.rs`, `load/check.rs`, `load/strata.rs`, `load/steps.rs`, `model/reality.rs`, `eval/expr.rs`, `eval/time_arith.rs`, `eval/pins.rs`, `eval/band.rs`, `lib.rs`.
+- **Forms added, and the built forms they meet (for the review):** the keyed check (a check ask's sides typed as keys of one index) meets the period-literal key (`period_literal`), the four-digit year (`year_beside`), key and period arithmetic (`key_diff`, `period_diff`, `steps_to`), axes and things (no difference); the pin's bare figure meets `typed`'s money, int, `num %` and `num u`, a pin per binding tuple (`at_pin_keys`), and `with` against `as if`.
+- **Exceptions:** +0.
+- **Open STOP-REPORTs:** the one below (row 9).
+- **Mutants:** no local proof. The keyed check's guard and `own_step` have T's vectors or my unit test; the `num %` pin has only my probe (for T).
+- **Usage:** about 0.39 % of the week by `engine/tools/usage` before this entry.
+- **Leaves:** row 9 (the STOP-REPORT); the two pre-existing faults above, for T.
+- **Checks:** `check commit: green, 24 steps (169s)`, exit 0, on this tree but for this line.
+
+## STOP-REPORT 2026-11-22: argmax's tuple needs a Value variant two kernel matches name
+
+- **Kind:** other (scope: the brief's "G2 changes no kernel file; if it needs one, stop and say so", D3)
+- **Where:** `eval/extremes.rs:138-145` (`bare_key`'s `NotBuilt`); the kernel matches `walk/plan.rs:736` and `walk/reads.rs:194`; vectors `constructs/argm/t_tuple`, `paper/print__rows/c` (`constructs-tuple`).
+- **Rule or gate:** PLAYBOOK D3 (a group touching the kernel runs at xhigh); L §5.11 ("return the key or the tuple"), #253 item 8 (refcore's print, pick P1).
+- **What happens:** `tally run argm.tally --ask t_tuple` prints `tally run: not implemented` (exit 2); refcore prints `t_tuple: (k2, j1)`.
+- **What I tried:** a `Value::Tuple(Vec<Value>)` printed `(a, b)`, `bare_key` returning it for several bindings (refcore's `Tup`). It compiles only with `| Value::Tuple(_)` added beside `Value::List(_)` in the two kernel matches (each an arm that doesn't apply to a tuple: an instance's `on` and a unit read, which load's types keep a tuple from). Reverted. Not tried: carrying the tuple in an existing variant (a `List` or a `Word` printed as `(…)`), which would be a disguise, not the plain form.
+- **What I ask:** whether the two one-token kernel additions may go in under G2 (then at high, as the rest of the group), or row 9 moves to G3 `walked`, the kernel group, as one more item.
+- **State:** last green commit is this entry's (`check commit` green); nothing uncommitted. The variant's code is about 40 lines (`model/value.rs`, `eval/extremes.rs`, the two kernel arms); refcore's answers for its corners are in `tmp/m4/g2/tuple.ref`.
