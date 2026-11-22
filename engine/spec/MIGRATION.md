@@ -116,7 +116,7 @@ tally 2.2.1 is a patch of `tally 2.2` (`CHANGES.md`, 2.2 → 2.2.1): a text that
 
 ## 2.2.1 → 2.3
 
-tally 2.3 narrows a day not yet known (`CHANGES.md`, 2.2.1 → 2.3; LANGUAGE §4.4): a window that reaches a move's `on` or `at` makes the movement a hole day, and a text whose answers rested on the window's stretch reads the hole on every day of the places it books.
+tally 2.3 narrows a day not yet known (`CHANGES.md`, 2.2.1 → 2.3; LANGUAGE §4.4): a window that reaches a move's `on` or `at` makes the movement a hole day, and a text whose answers rested on the window's stretch reads the hole on every day of the places it books. A window is read by LANGUAGE §4.4's closed list, every other reader the hole; `one_of` and a window in a calendar's `added` are cut. Every row below is **manual**: no rewrite keeps a meaning the text no longer has.
 
 | 2.2.1 text | 2.3 form | Class | Reaches | Record |
 |---|---|---|---|---|
