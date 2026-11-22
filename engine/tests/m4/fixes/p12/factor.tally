@@ -1,0 +1,43 @@
+model p12_factor
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input n_h: int
+input n_n: int
+input n_n2: int
+input n_ok: int
+input r_d: rate
+input r_h: rate
+input r_m: rate
+input r_n: rate
+input r_ok: rate
+
+ask h_r: factor(r_h, n_ok, year, simple)
+ask h_n: factor(r_ok, n_h, year, simple)
+ask h_r__h_n: factor(r_h, n_h, year, simple)
+ask h_r__n_n: factor(r_h, n_n, year, simple)
+ask h_n__n_r: factor(r_n, n_h, year, simple)
+ask h_n__m_r: factor(r_m, n_h, day, simple)
+ask h_n__d_r: factor(r_d, n_h, month, simple)
+ask m_r__n_n: factor(r_m, n_n2, day, simple)
+ask d_r__n_n: factor(r_d, n_n2, month, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n_h = ?"which n?" "s"
+  n_n = none "s"
+  n_n2 = none "s"
+  n_ok = 2 "s"
+  r_d = 0.01 %/day "s"
+  r_h = ?"which r?" "s"
+  r_m = 1 %/month "s"
+  r_n = none "s"
+  r_ok = 10 %/year "s"

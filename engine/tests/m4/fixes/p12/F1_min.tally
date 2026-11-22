@@ -1,0 +1,19 @@
+model f1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input r: rate
+input ch: compounding
+
+ask q_per: periodic(r, year, ch)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 12 %/year "s"
+  ch = ?"which compounding?" "s"

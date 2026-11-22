@@ -18,7 +18,14 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 4] = ["fixes-g1", "fixes-g2", "spec-g1", "spec-g2"];
+    const GROUPS: [&str; 6] = [
+        "fixes-g1",
+        "fixes-g2",
+        "fixes-p12",
+        "spec-g1",
+        "spec-g2",
+        "spec-p12",
+    ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
     fn group_holds(store: &[u8], group: &str) {
@@ -83,6 +90,18 @@ mod tests {
         group_holds(VECTORS, "fixes-g2");
     }
 
+    /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
+    /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
+    /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
+    /// `schedule` and `is_business` (a hole in each argument, alone, with another hole, or
+    /// beside each other argument's refusal; two refusals) where refcore gives the text's
+    /// answer; F1, a hole compounding code in `periodic` is the hole (`F1_min`, `F1_if`,
+    /// `c1_codehole`, `periodic` `h_c`); held for #255, the cells where refcore is hole-first.
+    #[test]
+    fn m4_fixes_p12() {
+        group_holds(VECTORS, "fixes-p12");
+    }
+
     /// G1's review, the spec's answers (#255): B2, a refusal outranks a hole in `accrue`,
     /// `periodic`, `factor` and `round` (L §8; each from refcore's run of a twin that states
     /// the hole); a second pin on one hole keeps its `pinned:` line (L §8.2); `explain`'s
@@ -103,5 +122,15 @@ mod tests {
     #[test]
     fn m4_fixes_spec_g2() {
         group_holds(SPEC, "spec-g2");
+    }
+
+    /// P12's answers (#255): a built-in's known argument that alone forces a refusal (`none`,
+    /// a monthly rate, `discount`, `nominal 0`, a step not positive, `n = 0`) refuses it before
+    /// any hole (L §8; from twins stating the hole; `RUN-DIV` and a `none` roll written); of
+    /// two refusals, the first argument in written order prints (#255 item 20; twins stating
+    /// the second argument good).
+    #[test]
+    fn m4_fixes_spec_p12() {
+        group_holds(SPEC, "spec-p12");
     }
 }

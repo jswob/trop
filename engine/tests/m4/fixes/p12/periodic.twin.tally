@@ -1,0 +1,52 @@
+model p12_periodic
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input c_h: compounding
+input c_n: compounding
+input c_n2: compounding
+input c_ok: compounding
+input c_z: compounding
+input c_z2: compounding
+input r_d: rate
+input r_h: rate
+input r_m: rate
+input r_n: rate
+input r_ok: rate
+
+ask h_r: periodic(r_h, year, c_ok)
+ask h_c: periodic(r_ok, year, c_h)
+ask h_r__h_c: periodic(r_h, year, c_h)
+ask h_r__n_c: periodic(r_h, year, c_n)
+ask h_r__z_c: periodic(r_h, year, c_z)
+ask h_c__n_r: periodic(r_n, year, c_h)
+ask h_c__m_r: periodic(r_m, day, c_h)
+ask h_c__d_r: periodic(r_d, month, c_h)
+ask n_r__z_c: periodic(r_n, year, c_z2)
+ask m_r__n_c: periodic(r_m, day, c_n2)
+ask m_r__z_c: periodic(r_m, day, c_z2)
+ask d_r__n_c: periodic(r_d, month, c_n2)
+ask d_r__z_c: periodic(r_d, month, c_z2)
+ask h_r_day: periodic(r_h, day, c_ok)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c_h = simple "s"
+  c_n = none "s"
+  c_n2 = simple "s"
+  c_ok = simple "s"
+  c_z = nominal 0 "s"
+  c_z2 = simple "s"
+  r_d = 0.01 %/day "s"
+  r_h = 10 %/year "s"
+  r_m = 1 %/month "s"
+  r_n = none "s"
+  r_ok = 10 %/year "s"

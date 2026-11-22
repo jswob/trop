@@ -1,0 +1,30 @@
+model f1i
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input r: rate
+input rd: rate
+input rh: rate
+input bh: bool
+input ch: compounding
+
+def per: num = periodic(r, month, if bh then simple else effective)
+def perd: num = periodic(rd, day, ch)
+def per2: num = periodic(rh, quarter, ch)
+def grows: bool = per > periodic(r, month, simple) or true
+
+ask q: per, perd, per2, grows
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 12 %/year "s"
+  rd = 0.01 %/day "s"
+  rh = ?"which rate?" "s"
+  bh = ?"simple or not?" "s"
+  ch = ?"which compounding?" "s"
