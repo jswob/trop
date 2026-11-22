@@ -88,7 +88,7 @@
 ../../households/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 ../../households/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 ../../households/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-../../households/A/plan.tally	13841	000dc4b7cffde6c91fd1d8ab269d4cd7
+../../households/A/plan.tally	14089	1075e2d27f0409b912fc403319f69e00
 ../../households/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 ../../households/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 ../../households/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -138,7 +138,7 @@
 ../../new/A-13/a13_calc.tally	3129	0fdc289c23b2c8591fcea30c926e0319
 ../../new/A-13/a13_jul.tally	481	08cc3e83d2ff490315b4530a189fdf64
 ../../new/A-13/a13_jul_sale.tally	4251	17ee3873188e8fcc09a9ff6a677ea7dc
-,72:sha256 8081032867e6de665cb1490644ec109b59c076eceacd4a133abc0a39819d2605
+,72:sha256 be4b3c58999a1a673743644567a14ecbb9d61cc4f2d5af20cd98dd595189e449
 ,11:I:A:A-14~A1,11:household-A,31:engine/tests/integration/cuts/A,2018:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../households/A/reality.tally ../../households/A/people.tally ../../households/A/places.tally ../../households/A/records.tally ../../households/A/prices.tally ../../households/A/payroll.tally ../../households/A/tax.tally ../../households/A/invest.tally ../../households/A/benefit.tally ../../households/A/gift.tally ../../households/A/car.tally ../../households/A/rules.tally ../../households/A/plan.tally ../../households/A/forecast.tally ../../households/A/worth.tally ../../households/A/statements/statements.tally ../../households/A/scenarios/forecast.tally ../../households/A/scenarios/base.tally ../../households/A/scenarios/crash.tally ../../households/A/scenarios/flat.tally ../../households/A/scenarios/switch.tally ../../households/A/scenarios/no_cut.tally ../../households/A/scenarios/t25_base.tally ../../households/A/scenarios/t25_crash.tally ../../households/A/scenarios/t25_flat.tally ../../households/A/scenarios/t25_switch.tally ../../households/A/asks/A-01.tally ../../households/A/asks/A-02.tally ../../households/A/asks/A-03.tally ../../households/A/asks/A-04.tally ../../households/A/asks/A-05.tally ../../households/A/asks/A-06.tally ../../households/A/asks/A-07.tally ../../households/A/asks/A-08.tally ../../households/A/asks/A-09.tally ../../households/A/asks/A-10.tally ../../households/A/asks/A-11.tally ../../households/A/asks/A-12.tally ../../households/A/scenarios/a14_withdrawal.tally,4418:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -225,12 +225,12 @@
 ../../households/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 ../../households/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 ../../households/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-../../households/A/plan.tally	13841	000dc4b7cffde6c91fd1d8ab269d4cd7
+../../households/A/plan.tally	14089	1075e2d27f0409b912fc403319f69e00
 ../../households/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 ../../households/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 ../../households/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
 ../../households/A/rules.tally	7816	0dcaeb7dbac3bc39018ed0e9a621d3e6
-../../households/A/scenarios/a14_withdrawal.tally	2902	1db845a4a5761c8909df63c3250d3ff3
+../../households/A/scenarios/a14_withdrawal.tally	3135	0bec0ae14d93760805fd060fdab6f667
 ../../households/A/scenarios/base.tally	313	12b5c03a4a5dd6580838f6c1760989b1
 ../../households/A/scenarios/crash.tally	731	01c913bc716bc08d1c33eb671d7dedd7
 ../../households/A/scenarios/flat.tally	275	0bb9a9404b797cbf0434b6058ea6e602
@@ -271,7 +271,7 @@
 ../../law/SOC-8.tally	1857	04ded23bb965b3591a738e0a5500c130
 ../../law/WCP-1.tally	1225	128e7ed5f3811b0716aa0900de028401
 ../../law/WCP-2.tally	622	03338347f31cae4705fca8e5c38b55f1
-,72:sha256 841b5b8257411c4fe455e3ea3a643ba6d39d5c1b6067e4a4f8a26508aef21875
+,72:sha256 074aa7bd7608146072ae0898ce202938c0c7b36ff6b52d24ae156d7f429ae6ed
 ,11:I:A:A-15~A1,11:household-A,31:engine/tests/integration/cuts/A,1994:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../households/A/reality.tally ../../households/A/people.tally ../../households/A/places.tally ../../households/A/records.tally ../../households/A/prices.tally ../../households/A/payroll.tally ../../households/A/tax.tally ../../households/A/invest.tally ../../households/A/benefit.tally ../../households/A/gift.tally ../../households/A/car.tally ../../households/A/rules.tally ../../households/A/plan.tally ../../households/A/forecast.tally ../../households/A/worth.tally ../../households/A/statements/statements.tally ../../households/A/scenarios/forecast.tally ../../households/A/scenarios/base.tally ../../households/A/scenarios/crash.tally ../../households/A/scenarios/flat.tally ../../households/A/scenarios/switch.tally ../../households/A/scenarios/no_cut.tally ../../households/A/scenarios/t25_base.tally ../../households/A/scenarios/t25_crash.tally ../../households/A/scenarios/t25_flat.tally ../../households/A/scenarios/t25_switch.tally ../../households/A/asks/A-01.tally ../../households/A/asks/A-02.tally ../../households/A/asks/A-03.tally ../../households/A/asks/A-04.tally ../../households/A/asks/A-05.tally ../../households/A/asks/A-06.tally ../../households/A/asks/A-07.tally ../../households/A/asks/A-08.tally ../../households/A/asks/A-09.tally ../../households/A/asks/A-10.tally ../../households/A/asks/A-11.tally ../../households/A/asks/A-12.tally ../../new/A-15/A-15.tally,4370:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -358,7 +358,7 @@
 ../../households/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 ../../households/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 ../../households/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-../../households/A/plan.tally	13841	000dc4b7cffde6c91fd1d8ab269d4cd7
+../../households/A/plan.tally	14089	1075e2d27f0409b912fc403319f69e00
 ../../households/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 ../../households/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 ../../households/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -403,8 +403,8 @@
 ../../law/SOC-8.tally	1857	04ded23bb965b3591a738e0a5500c130
 ../../law/WCP-1.tally	1225	128e7ed5f3811b0716aa0900de028401
 ../../law/WCP-2.tally	622	03338347f31cae4705fca8e5c38b55f1
-../../new/A-15/A-15.tally	2183	0859388a41de7336055e753577c253cc
-,72:sha256 9438b7aeeb6505ac135bc957fdaee4f8874e5e6186e307e13377e9cef9ad76cd
+../../new/A-15/A-15.tally	2416	0093cf9db2e452400688ace80a7640ca
+,72:sha256 94e00b725552445c872c13c24c7015d25e4004dc5b5eb7aea257ef216e0a8104
 ,12:I:A:a01_2021,11:household-A,31:engine/tests/integration/cuts/A,1968:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../households/A/reality.tally ../../households/A/people.tally ../../households/A/places.tally ../../households/A/records.tally ../../households/A/prices.tally ../../households/A/payroll.tally ../../households/A/tax.tally ../../households/A/invest.tally ../../households/A/benefit.tally ../../households/A/gift.tally ../../households/A/car.tally ../../households/A/rules.tally ../../households/A/plan.tally ../../households/A/forecast.tally ../../households/A/worth.tally ../../households/A/statements/statements.tally ../../households/A/scenarios/forecast.tally ../../households/A/scenarios/base.tally ../../households/A/scenarios/crash.tally ../../households/A/scenarios/flat.tally ../../households/A/scenarios/switch.tally ../../households/A/scenarios/no_cut.tally ../../households/A/scenarios/t25_base.tally ../../households/A/scenarios/t25_crash.tally ../../households/A/scenarios/t25_flat.tally ../../households/A/scenarios/t25_switch.tally ../../households/A/asks/A-01.tally ../../households/A/asks/A-02.tally ../../households/A/asks/A-03.tally ../../households/A/asks/A-04.tally ../../households/A/asks/A-05.tally ../../households/A/asks/A-06.tally ../../households/A/asks/A-07.tally ../../households/A/asks/A-08.tally ../../households/A/asks/A-09.tally ../../households/A/asks/A-10.tally ../../households/A/asks/A-11.tally ../../households/A/asks/A-12.tally,4312:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -490,7 +490,7 @@
 ../../households/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 ../../households/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 ../../households/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-../../households/A/plan.tally	13841	000dc4b7cffde6c91fd1d8ab269d4cd7
+../../households/A/plan.tally	14089	1075e2d27f0409b912fc403319f69e00
 ../../households/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 ../../households/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 ../../households/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -535,7 +535,7 @@
 ../../law/SOC-8.tally	1857	04ded23bb965b3591a738e0a5500c130
 ../../law/WCP-1.tally	1225	128e7ed5f3811b0716aa0900de028401
 ../../law/WCP-2.tally	622	03338347f31cae4705fca8e5c38b55f1
-,72:sha256 48c9431864bb088775360985222987b4573a02a1b212d84c9855c88fdeea4a1c
+,72:sha256 e1902b2ea76faa228c611ef9ecd0627d5b88e4b19e798ef42280cb1892f5fe50
 ,21:I:A:a05_ania@c05-ania,11:household-A,31:engine/tests/integration/cuts/A,1550:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally cut05/A/reality.tally cut05/A/people.tally cut05/A/places.tally cut05/A/records.tally cut05/A/prices.tally cut05/A/payroll.tally cut05/A/tax.tally cut05/A/invest.tally cut05/A/benefit.tally cut05/A/gift.tally cut05/A/car.tally cut05/A/rules.tally cut05/A/plan.tally cut05/A/forecast.tally cut05/A/worth.tally cut05/A/statements/statements.tally cut05/A/scenarios/forecast.tally cut05/A/scenarios/base.tally cut05/A/scenarios/crash.tally cut05/A/scenarios/flat.tally cut05/A/scenarios/switch.tally cut05/A/scenarios/no_cut.tally cut05/A/scenarios/t25_base.tally cut05/A/scenarios/t25_crash.tally cut05/A/scenarios/t25_flat.tally cut05/A/scenarios/t25_switch.tally cut05/A/asks/A-01.tally cut05/A/asks/A-02.tally cut05/A/asks/A-03.tally cut05/A/asks/A-04.tally cut05/A/asks/A-05.tally cut05/A/asks/A-06.tally cut05/A/asks/A-07.tally cut05/A/asks/A-08.tally cut05/A/asks/A-09.tally cut05/A/asks/A-10.tally cut05/A/asks/A-11.tally cut05/A/asks/A-12.tally,3970:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -648,7 +648,7 @@ cut05/A/invest.tally	10958	1333c89588ad67a11015fda3da160852
 cut05/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 cut05/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 cut05/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-cut05/A/plan.tally	13883	117759e9262c18da1210346fde7de9d4
+cut05/A/plan.tally	14131	11c4acd05cb89b6906380a9b4d9e3bba
 cut05/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 cut05/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 cut05/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -666,7 +666,7 @@ cut05/A/scenarios/t25_switch.tally	387	1e32305aa854d26d13626cdf7e554fbc
 cut05/A/statements/statements.tally	208269	0ba8e2df1bf6c6e91f46bf4216385a40
 cut05/A/tax.tally	13293	06a415b43c489310086ef5d87a884bbc
 cut05/A/worth.tally	3792	1850734a2a0d08000703c68d435ec3af
-,72:sha256 65f78a8f798bdd92d7a7e05ff4f933fe25a44ac0f34b9594e9ca1f2a25b220bc
+,72:sha256 46a19f5f1e44c6e3a916ee89b1089f8b85fe2d550528f348cfe90db1c4b1355f
 ,13:I:A:mca05_bal,11:household-A,31:engine/tests/integration/cuts/A,1989:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../households/A/reality.tally ../../households/A/people.tally ../../households/A/places.tally ../../households/A/records.tally ../../households/A/prices.tally ../../households/A/payroll.tally ../../households/A/tax.tally ../../households/A/invest.tally ../../households/A/benefit.tally ../../households/A/gift.tally ../../households/A/car.tally ../../households/A/rules.tally ../../households/A/plan.tally ../../households/A/forecast.tally ../../households/A/worth.tally ../../households/A/statements/statements.tally ../../households/A/scenarios/forecast.tally ../../households/A/scenarios/base.tally ../../households/A/scenarios/crash.tally ../../households/A/scenarios/flat.tally ../../households/A/scenarios/switch.tally ../../households/A/scenarios/no_cut.tally ../../households/A/scenarios/t25_base.tally ../../households/A/scenarios/t25_crash.tally ../../households/A/scenarios/t25_flat.tally ../../households/A/scenarios/t25_switch.tally ../../households/A/asks/A-01.tally ../../households/A/asks/A-02.tally ../../households/A/asks/A-03.tally ../../households/A/asks/A-04.tally ../../households/A/asks/A-05.tally ../../households/A/asks/A-06.tally ../../households/A/asks/A-07.tally ../../households/A/asks/A-08.tally ../../households/A/asks/A-09.tally ../../households/A/asks/A-10.tally ../../households/A/asks/A-11.tally ../../households/A/asks/A-12.tally diag/a05_probe.tally,4373:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -753,7 +753,7 @@ diag/a05_probe.tally	integration/cuts/A/diag/a05_probe.tally
 ../../households/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 ../../households/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 ../../households/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-../../households/A/plan.tally	13841	000dc4b7cffde6c91fd1d8ab269d4cd7
+../../households/A/plan.tally	14089	1075e2d27f0409b912fc403319f69e00
 ../../households/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 ../../households/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 ../../households/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -799,7 +799,7 @@ diag/a05_probe.tally	integration/cuts/A/diag/a05_probe.tally
 ../../law/WCP-1.tally	1225	128e7ed5f3811b0716aa0900de028401
 ../../law/WCP-2.tally	622	03338347f31cae4705fca8e5c38b55f1
 diag/a05_probe.tally	411	0736c6220682e50a07dfa311b68f1dd3
-,72:sha256 fe2ebb4e8aa8c33504498565e0d26646ea61cb7d5734024ce52057764c7122cf
+,72:sha256 3ca0eade10ac453c8fd54367f23565bc985abee94312d65c718238022aec6f49
 ,14:I:A:mca05_down,11:household-A,31:engine/tests/integration/cuts/A,1575:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally cut05/A/reality.tally cut05/A/people.tally cut05/A/places.tally cut05/A/records.tally cut05/A/prices.tally cut05/A/payroll.tally cut05/A/tax.tally cut05/A/invest.tally cut05/A/benefit.tally cut05/A/gift.tally cut05/A/car.tally cut05/A/rules.tally cut05/A/plan.tally cut05/A/forecast.tally cut05/A/worth.tally cut05/A/statements/statements.tally cut05/A/scenarios/forecast.tally cut05/A/scenarios/base.tally cut05/A/scenarios/crash.tally cut05/A/scenarios/flat.tally cut05/A/scenarios/switch.tally cut05/A/scenarios/no_cut.tally cut05/A/scenarios/t25_base.tally cut05/A/scenarios/t25_crash.tally cut05/A/scenarios/t25_flat.tally cut05/A/scenarios/t25_switch.tally cut05/A/asks/A-01.tally cut05/A/asks/A-02.tally cut05/A/asks/A-03.tally cut05/A/asks/A-04.tally cut05/A/asks/A-05.tally cut05/A/asks/A-06.tally cut05/A/asks/A-07.tally cut05/A/asks/A-08.tally cut05/A/asks/A-09.tally cut05/A/asks/A-10.tally cut05/A/asks/A-11.tally cut05/A/asks/A-12.tally cut05/A/asks/mca05.tally,4039:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -914,7 +914,7 @@ cut05/A/invest.tally	10958	1333c89588ad67a11015fda3da160852
 cut05/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 cut05/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 cut05/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-cut05/A/plan.tally	13883	117759e9262c18da1210346fde7de9d4
+cut05/A/plan.tally	14131	11c4acd05cb89b6906380a9b4d9e3bba
 cut05/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 cut05/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 cut05/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -932,7 +932,7 @@ cut05/A/scenarios/t25_switch.tally	387	1e32305aa854d26d13626cdf7e554fbc
 cut05/A/statements/statements.tally	208269	0ba8e2df1bf6c6e91f46bf4216385a40
 cut05/A/tax.tally	13293	06a415b43c489310086ef5d87a884bbc
 cut05/A/worth.tally	3792	1850734a2a0d08000703c68d435ec3af
-,72:sha256 6b3b6222b6743c6bdfa25777ef76cbd79728224bf4a4ee3ea123cce6de73bcce
+,72:sha256 25e51205ae3d5ab4d5979b04ce3eea3a507cdd97839a56dfae63a5883b5b0c9c
 ,15:I:A:mca_a10_bal,11:household-A,31:engine/tests/integration/cuts/A,1989:reprint ../../law/GEN-1.tally ../../law/GEN-3.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-7.tally ../../law/PIT-8.tally ../../law/PIT-9.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-8.tally ../../law/FAM-1.tally ../../law/WCP-1.tally ../../law/WCP-2.tally ../../law/CIV-1.tally ../../law/IGT-1.tally ../../law/IGT-2.tally ../../law/IGT-3.tally ../../law/IGT-4.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../households/A/reality.tally ../../households/A/people.tally ../../households/A/places.tally ../../households/A/records.tally ../../households/A/prices.tally ../../households/A/payroll.tally ../../households/A/tax.tally ../../households/A/invest.tally ../../households/A/benefit.tally ../../households/A/gift.tally ../../households/A/car.tally ../../households/A/rules.tally ../../households/A/plan.tally ../../households/A/forecast.tally ../../households/A/worth.tally ../../households/A/statements/statements.tally ../../households/A/scenarios/forecast.tally ../../households/A/scenarios/base.tally ../../households/A/scenarios/crash.tally ../../households/A/scenarios/flat.tally ../../households/A/scenarios/switch.tally ../../households/A/scenarios/no_cut.tally ../../households/A/scenarios/t25_base.tally ../../households/A/scenarios/t25_crash.tally ../../households/A/scenarios/t25_flat.tally ../../households/A/scenarios/t25_switch.tally ../../households/A/asks/A-01.tally ../../households/A/asks/A-02.tally ../../households/A/asks/A-03.tally ../../households/A/asks/A-04.tally ../../households/A/asks/A-05.tally ../../households/A/asks/A-06.tally ../../households/A/asks/A-07.tally ../../households/A/asks/A-08.tally ../../households/A/asks/A-09.tally ../../households/A/asks/A-10.tally ../../households/A/asks/A-11.tally ../../households/A/asks/A-12.tally diag/a10_probe.tally,4373:../../law/GEN-1.tally	integration/law/GEN-1.tally
 ../../law/GEN-3.tally	integration/law/GEN-3.tally
 ../../law/GEN-5.tally	integration/law/GEN-5.tally
@@ -1019,7 +1019,7 @@ diag/a10_probe.tally	integration/cuts/A/diag/a10_probe.tally
 ../../households/A/payroll.tally	13658	005ede19e43ff8161c7bc3c3f15a4bb4
 ../../households/A/people.tally	2811	02396a80f79342fe0908b38108fd9a8e
 ../../households/A/places.tally	6896	097efac503a5ca601f8c86bbfac7fe84
-../../households/A/plan.tally	13841	000dc4b7cffde6c91fd1d8ab269d4cd7
+../../households/A/plan.tally	14089	1075e2d27f0409b912fc403319f69e00
 ../../households/A/prices.tally	3430	0917d2d142e29d5f0ed1ac27a26b28db
 ../../households/A/reality.tally	15182	16e236218e5a53cb0f3e502d494d5858
 ../../households/A/records.tally	6896	0a329d6a6acb75381ac5342592da6007
@@ -1065,7 +1065,7 @@ diag/a10_probe.tally	integration/cuts/A/diag/a10_probe.tally
 ../../law/WCP-1.tally	1225	128e7ed5f3811b0716aa0900de028401
 ../../law/WCP-2.tally	622	03338347f31cae4705fca8e5c38b55f1
 diag/a10_probe.tally	379	104fb2f899ab472e1d2931c782515e3f
-,72:sha256 82cee06f207a45fa5d84624e7972b22b0e6376559cefe73ec0ef08b5d86e3075
+,72:sha256 db6cd6025cd43bfba5d36c05cc6e7e52ab463f2c857d15f6a2def4b8c7792ded
 ,11:I:B:B-13~B1,11:household-B,36:engine/tests/integration/cuts/B/cs11,1430:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally asks/B-11x.tally scenarios/nothing_more.tally scenarios/kitchen.tally ../../../law/CC-1.tally ../../../law/CC-2.tally ../../../law/GEN-1.tally ../../../law/GEN-2.tally ../../../law/GEN-3.tally ../../../law/GEN-4.tally ../../../law/GEN-5.tally ../../../law/GEN-6.tally ../../../law/MOT-1.tally ../../../law/MOT-2.tally ../../../law/MTG-1.tally ../../../law/MTG-2.tally ../../../law/PIT-2.tally ../../../law/PIT-3.tally ../../../law/PIT-4.tally ../../../law/PIT-5.tally ../../../law/PIT-6.tally ../../../law/PIT-10.tally ../../../law/PIT-11.tally ../../../law/PIT-12.tally ../../../law/PIT-15.tally ../../../law/SOC-1.tally ../../../law/SOC-2.tally ../../../law/SOC-3.tally ../../../law/SOC-4.tally ../../../law/TT-1.tally ../../../law/TT-2.tally ../../../law/VAT-1.tally ../../../law/VAT-2.tally ../../../law/VAT-3.tally ../../../law/VAT-4.tally ../../../law/VAT-5.tally ../../../law/VAT-6.tally ../../../new/B-13/b13_rows.tally ../../../new/B-13/b13_fx.tally ../../../new/B-13/b13_rule.tally ../../../new/B-13/B-13.tally,3629:business.tally	integration/cuts/B/cs11/business.tally
 flat.tally	integration/cuts/B/cs11/flat.tally
 lawrows.tally	integration/cuts/B/cs11/lawrows.tally
@@ -1181,10 +1181,10 @@ asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 asks/B-11x.tally	387	0d82ba44259977bd15b4f626dfc03f30
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	1bece19d54c631b707ef074130ffc4af
-ola.tally	8031	18dacf8321503a051e25b9b93731f77b
+ola.tally	8294	08a0313d22e1b1be040396bdbb0ececa
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	10482d6951b982230718db27059834fc
@@ -1193,10 +1193,10 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 a5d21df2fa50d9d0d4b051771361d3c7057a0e4c84f224a6804c5e62ccd63861
+,72:sha256 20a4312d2514012360b6223cbcf474947797d6987191009763a4951a2cab222c
 ,14:I:B:b01_form_b,11:household-B,37:engine/tests/integration/households/B,1188:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally scenarios/nothing_more.tally scenarios/kitchen.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/GEN-1.tally ../../law/GEN-2.tally ../../law/GEN-3.tally ../../law/GEN-4.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../law/MTG-1.tally ../../law/MTG-2.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-10.tally ../../law/PIT-11.tally ../../law/PIT-12.tally ../../law/PIT-15.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-3.tally ../../law/SOC-4.tally ../../law/TT-1.tally ../../law/TT-2.tally ../../law/VAT-1.tally ../../law/VAT-2.tally ../../law/VAT-3.tally ../../law/VAT-4.tally ../../law/VAT-5.tally ../../law/VAT-6.tally,3235:business.tally	integration/households/B/business.tally
 flat.tally	integration/households/B/flat.tally
 lawrows.tally	integration/households/B/lawrows.tally
@@ -1302,10 +1302,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	087208cf1ac77f3715ff3edddd1a51cd
-ola.tally	8031	17328ef9b063b8a2045327e040231740
+ola.tally	8294	06f7f0b3b1f5305b0a3104e4c3ffee70
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	07ace9d27708ddfd1e9208d6c1d87768
@@ -1314,10 +1314,10 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 b272950671fdd83bc732f29a02e9b8f6387ee1de8d09733f284e99a57d2fe767
+,72:sha256 8e8a025f65032525fb6e176101e1108d1eccf6a335be57e614b571bf620e23e1
 ,13:I:B:b03_lazur,11:household-B,36:engine/tests/integration/cuts/B/cs11,1304:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally asks/B-11x.tally scenarios/nothing_more.tally scenarios/kitchen.tally ../../../law/CC-1.tally ../../../law/CC-2.tally ../../../law/GEN-1.tally ../../../law/GEN-2.tally ../../../law/GEN-3.tally ../../../law/GEN-4.tally ../../../law/GEN-5.tally ../../../law/GEN-6.tally ../../../law/MOT-1.tally ../../../law/MOT-2.tally ../../../law/MTG-1.tally ../../../law/MTG-2.tally ../../../law/PIT-2.tally ../../../law/PIT-3.tally ../../../law/PIT-4.tally ../../../law/PIT-5.tally ../../../law/PIT-6.tally ../../../law/PIT-10.tally ../../../law/PIT-11.tally ../../../law/PIT-12.tally ../../../law/PIT-15.tally ../../../law/SOC-1.tally ../../../law/SOC-2.tally ../../../law/SOC-3.tally ../../../law/SOC-4.tally ../../../law/TT-1.tally ../../../law/TT-2.tally ../../../law/VAT-1.tally ../../../law/VAT-2.tally ../../../law/VAT-3.tally ../../../law/VAT-4.tally ../../../law/VAT-5.tally ../../../law/VAT-6.tally,3365:business.tally	integration/cuts/B/cs11/business.tally
 flat.tally	integration/cuts/B/cs11/flat.tally
 lawrows.tally	integration/cuts/B/cs11/lawrows.tally
@@ -1425,10 +1425,10 @@ asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 asks/B-11x.tally	387	0d82ba44259977bd15b4f626dfc03f30
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	1bece19d54c631b707ef074130ffc4af
-ola.tally	8031	18dacf8321503a051e25b9b93731f77b
+ola.tally	8294	08a0313d22e1b1be040396bdbb0ececa
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	10482d6951b982230718db27059834fc
@@ -1437,10 +1437,10 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 50cda731e211fd697260aabddb6a5d5b20cd139f5bc28eaab4752563d1606437
+,72:sha256 c86d4164db8689480e031572de18607e224b57ecf9f33d967f1d7c30f3364979
 ,16:I:B:b03_lazur@k3,11:household-B,35:engine/tests/integration/split/k3-b,1205:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally asks/B-11x.tally scenarios/nothing_more.tally scenarios/kitchen.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/GEN-1.tally ../../law/GEN-2.tally ../../law/GEN-3.tally ../../law/GEN-4.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../law/MTG-1.tally ../../law/MTG-2.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-10.tally ../../law/PIT-11.tally ../../law/PIT-12.tally ../../law/PIT-15.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-3.tally ../../law/SOC-4.tally ../../law/TT-1.tally ../../law/TT-2.tally ../../law/VAT-1.tally ../../law/VAT-2.tally ../../law/VAT-3.tally ../../law/VAT-4.tally ../../law/VAT-5.tally ../../law/VAT-6.tally,3238:business.tally	integration/split/k3-b/business.tally
 flat.tally	integration/split/k3-b/flat.tally
 lawrows.tally	integration/split/k3-b/lawrows.tally
@@ -1548,10 +1548,10 @@ asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 asks/B-11x.tally	387	0d82ba44259977bd15b4f626dfc03f30
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	0860faf0c4ccae6e1532be0967c62352
-ola.tally	8031	1311fd87fd671e30198ae5d8de135a09
+ola.tally	8294	02d75f41fef895e91f68c2dd61f03139
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	11d8cb2fdbce81ec15ef607f29db0de4
@@ -1560,10 +1560,10 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 4a351a429a23c1a6a584eb66b5dedd78d577c81b2e31ef69d72053a6025a1c49
+,72:sha256 fe40a9e132984c8700d6748a9664780c2c86ad9fc41acefc7204319421ce2a83
 ,27:I:B:b07_jointly@cd7full_b07,11:household-B,38:engine/tests/integration/cuts/B/cd7f11,1304:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-07x.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally scenarios/nothing_more.tally scenarios/kitchen.tally ../../../law/CC-1.tally ../../../law/CC-2.tally ../../../law/GEN-1.tally ../../../law/GEN-2.tally ../../../law/GEN-3.tally ../../../law/GEN-4.tally ../../../law/GEN-5.tally ../../../law/GEN-6.tally ../../../law/MOT-1.tally ../../../law/MOT-2.tally ../../../law/MTG-1.tally ../../../law/MTG-2.tally ../../../law/PIT-2.tally ../../../law/PIT-3.tally ../../../law/PIT-4.tally ../../../law/PIT-5.tally ../../../law/PIT-6.tally ../../../law/PIT-10.tally ../../../law/PIT-11.tally ../../../law/PIT-12.tally ../../../law/PIT-15.tally ../../../law/SOC-1.tally ../../../law/SOC-2.tally ../../../law/SOC-3.tally ../../../law/SOC-4.tally ../../../law/TT-1.tally ../../../law/TT-2.tally ../../../law/VAT-1.tally ../../../law/VAT-2.tally ../../../law/VAT-3.tally ../../../law/VAT-4.tally ../../../law/VAT-5.tally ../../../law/VAT-6.tally,3421:business.tally	integration/cuts/B/cd7f11/business.tally
 flat.tally	integration/cuts/B/cd7f11/flat.tally
 lawrows.tally	integration/cuts/B/cd7f11/lawrows.tally
@@ -1671,10 +1671,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	087208cf1ac77f3715ff3edddd1a51cd
-ola.tally	8032	100b30e173e5a946070438dbb64bae07
+ola.tally	8295	0de7f8704921e7d10ade204c3db740f4
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	07ace9d27708ddfd1e9208d6c1d87768
@@ -1683,10 +1683,10 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 5e5b32464454568db473b754d81f7beefbbcf5f8ac60665da62f632933aa10e0
+,72:sha256 5e06a3d7c158c2eef2c966b90eda96bf8a810cf57ddcc6a5ac9d17e9cd1e37f0
 ,18:I:B:b07_jointly@k4,11:household-B,37:engine/tests/integration/split/k4-b07,1205:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-07x.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally scenarios/nothing_more.tally scenarios/kitchen.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/GEN-1.tally ../../law/GEN-2.tally ../../law/GEN-3.tally ../../law/GEN-4.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../law/MTG-1.tally ../../law/MTG-2.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-10.tally ../../law/PIT-11.tally ../../law/PIT-12.tally ../../law/PIT-15.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-3.tally ../../law/SOC-4.tally ../../law/TT-1.tally ../../law/TT-2.tally ../../law/VAT-1.tally ../../law/VAT-2.tally ../../law/VAT-3.tally ../../law/VAT-4.tally ../../law/VAT-5.tally ../../law/VAT-6.tally,3294:business.tally	integration/split/k4-b07/business.tally
 flat.tally	integration/split/k4-b07/flat.tally
 lawrows.tally	integration/split/k4-b07/lawrows.tally
@@ -1794,10 +1794,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3196	0148d70437f99e3303254ab4a2e01fab
-ola.tally	8036	126e8e20d111bfd91ec4fb5140fcd1c5
+ola.tally	8299	19f286ccc19807610073d9c27183a619
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	1495cf34bf11d4361b5c444f277813a7
@@ -1806,10 +1806,10 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 51456e69b276ab3c2e2a91cfe821a8c3331408ded151c0ad3abbd9590dc5db2b
+,72:sha256 190889d9b79d97992aa7470811b0d5101da1a91efdcddf1c401acef1c71fcf71
 ,10:I:B:b10_v3,11:household-B,37:engine/tests/integration/households/B,1211:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally scenarios/nothing_more.tally scenarios/kitchen.tally scenarios/hr2_v3.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/GEN-1.tally ../../law/GEN-2.tally ../../law/GEN-3.tally ../../law/GEN-4.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../law/MTG-1.tally ../../law/MTG-2.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-10.tally ../../law/PIT-11.tally ../../law/PIT-12.tally ../../law/PIT-15.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-3.tally ../../law/SOC-4.tally ../../law/TT-1.tally ../../law/TT-2.tally ../../law/VAT-1.tally ../../law/VAT-2.tally ../../law/VAT-3.tally ../../law/VAT-4.tally ../../law/VAT-5.tally ../../law/VAT-6.tally,3306:business.tally	integration/households/B/business.tally
 flat.tally	integration/households/B/flat.tally
 lawrows.tally	integration/households/B/lawrows.tally
@@ -1916,10 +1916,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	087208cf1ac77f3715ff3edddd1a51cd
-ola.tally	8031	17328ef9b063b8a2045327e040231740
+ola.tally	8294	06f7f0b3b1f5305b0a3104e4c3ffee70
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	07ace9d27708ddfd1e9208d6c1d87768
@@ -1928,11 +1928,11 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/hr2_v3.tally	1135	116dd196f2d569e3050ab88b0e7f286a
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 a690455fa1d58c8170ee3086dfc5eaf6ab25e9ea16bc10c8ad8fba0054828d8c
+,72:sha256 a9674a5e6f6032bf38541bc1c1a8c512368d262c830b238a0a4994e350e1d35c
 ,14:I:B:b12_liquid,11:household-B,38:engine/tests/integration/cuts/B/b12_11,1339:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally scenarios/nothing_more.tally scenarios/kitchen.tally scenarios/forecast.tally scenarios/no_overpay.tally ../../../law/CC-1.tally ../../../law/CC-2.tally ../../../law/GEN-1.tally ../../../law/GEN-2.tally ../../../law/GEN-3.tally ../../../law/GEN-4.tally ../../../law/GEN-5.tally ../../../law/GEN-6.tally ../../../law/MOT-1.tally ../../../law/MOT-2.tally ../../../law/MTG-1.tally ../../../law/MTG-2.tally ../../../law/PIT-2.tally ../../../law/PIT-3.tally ../../../law/PIT-4.tally ../../../law/PIT-5.tally ../../../law/PIT-6.tally ../../../law/PIT-10.tally ../../../law/PIT-11.tally ../../../law/PIT-12.tally ../../../law/PIT-15.tally ../../../law/SOC-1.tally ../../../law/SOC-2.tally ../../../law/SOC-3.tally ../../../law/SOC-4.tally ../../../law/TT-1.tally ../../../law/TT-2.tally ../../../law/VAT-1.tally ../../../law/VAT-2.tally ../../../law/VAT-3.tally ../../../law/VAT-4.tally ../../../law/VAT-5.tally ../../../law/VAT-6.tally,3517:business.tally	integration/cuts/B/b12_11/business.tally
 flat.tally	integration/cuts/B/b12_11/flat.tally
 lawrows.tally	integration/cuts/B/b12_11/lawrows.tally
@@ -2040,10 +2040,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	087208cf1ac77f3715ff3edddd1a51cd
-ola.tally	8031	17328ef9b063b8a2045327e040231740
+ola.tally	8294	06f7f0b3b1f5305b0a3104e4c3ffee70
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	07ace9d27708ddfd1e9208d6c1d87768
@@ -2052,12 +2052,12 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/forecast.tally	12931	123d382c0da0978a1776ceb317b38fc3
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/no_overpay.tally	2595	142516592d5cf61f1cba702c2ecd777e
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 39f4193cd4f9af3e2910b758eee135a6195cdd060546d1a27cf06653e0f5c86d
+,72:sha256 bb80685cc72cc8715f82dd0dee8d3aa81eb37afd0819e30b2cb1b23f68550986
 ,17:I:B:b12_liquid@k5,11:household-B,37:engine/tests/integration/split/k5-b12,1240:reprint business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally registers.tally rules.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally scenarios/nothing_more.tally scenarios/kitchen.tally scenarios/forecast.tally scenarios/no_overpay.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/GEN-1.tally ../../law/GEN-2.tally ../../law/GEN-3.tally ../../law/GEN-4.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../law/MTG-1.tally ../../law/MTG-2.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-10.tally ../../law/PIT-11.tally ../../law/PIT-12.tally ../../law/PIT-15.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-3.tally ../../law/SOC-4.tally ../../law/TT-1.tally ../../law/TT-2.tally ../../law/VAT-1.tally ../../law/VAT-2.tally ../../law/VAT-3.tally ../../law/VAT-4.tally ../../law/VAT-5.tally ../../law/VAT-6.tally,3389:business.tally	integration/split/k5-b12/business.tally
 flat.tally	integration/split/k5-b12/flat.tally
 lawrows.tally	integration/split/k5-b12/lawrows.tally
@@ -2165,10 +2165,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	1ea38e89a7cd552d1c3ad9d7bdd369e1
-ola.tally	8031	023ddd4344f0dd7f1ca19cec628be9dc
+ola.tally	8294	12033efd46825537027f79f0e668c12b
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	0d8b29646e762fd901abf75707fb2f39
@@ -2177,12 +2177,12 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
 scenarios/forecast.tally	12931	123d382c0da0978a1776ceb317b38fc3
 scenarios/kitchen.tally	447	1a76a306699af85e19d3b157ac5cdc2c
 scenarios/no_overpay.tally	2596	1aa090e6242df1da0a1fbdaaab43341d
 scenarios/nothing_more.tally	451	011ee446f7f7633a0f710844649dac51
-,72:sha256 e0093b81f2a21d435f4b03afa79747c4034efa9b270ef4490f4dd45ae31aef71
+,72:sha256 b92ae9df427fdf0330caf769304840425e96999a0d5abefad64945454ee38075
 ,12:I:C:C-01~c01,11:household-C,35:engine/tests/integration/households,525:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/workshop.tally C/asks/C-01.tally,1703:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2228,7 +2228,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2241,7 +2241,7 @@ C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/workshop.tally	7790	1757e3440a0b7af8184e2cfa6d9b9e3c
-,72:sha256 a4efdde18fee6c0e9129d42c90c702b2e8af90eed9b631d0d5d95c5898285109
+,72:sha256 69c660dc6a701695a3a0ba7a430cdd01ad3835cfd0935d0cbde6d778211cb202
 ,12:I:C:C-02~c02,11:household-C,35:engine/tests/integration/households,528:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/rosvald_pay.tally C/asks/C-02.tally,1709:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2287,7 +2287,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2300,7 +2300,7 @@ C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/rosvald_pay.tally	14659	0665aa0ca6f9bfdd0cd0bd101abb7924
-,72:sha256 fc6ea483d100362ecf0adb56a5b76e3449ff1a3eb9354b6d72f2a5f3502aafd6
+,72:sha256 3439622662bf4923e6a6c000b327b2f4203edc7ae936a51e74b0e8323d1a13bd
 ,12:I:C:C-03~c03,11:household-C,35:engine/tests/integration/households,574:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/rosvald_pay.tally C/workshop.tally C/stas.tally C/returns.tally C/asks/C-03.tally,1870:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2349,7 +2349,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2365,7 +2365,7 @@ C/returns.tally	13403	0fc238e6d7ac9d1417cbd2014dee59a6
 C/rosvald_pay.tally	14659	0665aa0ca6f9bfdd0cd0bd101abb7924
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
 C/workshop.tally	7790	1757e3440a0b7af8184e2cfa6d9b9e3c
-,72:sha256 fefb0ec9bc6a8d0b98205de0dcd7f5dc66ee431d4799cd1bb61ea21fbd1ee9cc
+,72:sha256 84f00edf3a5fcc8139ece72fb77d501cb06f2f78bfab1592fbf94253d81d5c0d
 ,12:I:C:C-04~c04,11:household-C,35:engine/tests/integration/households,574:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/rosvald_pay.tally C/workshop.tally C/stas.tally C/returns.tally C/asks/C-04.tally,1870:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2414,7 +2414,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2430,7 +2430,7 @@ C/returns.tally	13403	0fc238e6d7ac9d1417cbd2014dee59a6
 C/rosvald_pay.tally	14659	0665aa0ca6f9bfdd0cd0bd101abb7924
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
 C/workshop.tally	7790	1757e3440a0b7af8184e2cfa6d9b9e3c
-,72:sha256 63cadb181f2643bac71186c702310f14dffc117bd52033cfe1ff07b41ba94949
+,72:sha256 d43ec9ddd66c070297cbda4e41e4befc20022c9b54481872e86fe8f733cd60cf
 ,12:I:C:C-05~c05,11:household-C,35:engine/tests/integration/households,537:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/stas.tally C/benefit.tally C/asks/C-05.tally,1750:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2478,7 +2478,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2491,7 +2491,7 @@ C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
-,72:sha256 2a1423c575e9b99842c8385fe8465d85b3f5fd6ef192be7afee3d245738a8d0b
+,72:sha256 7c3369b5e0b4d26378fe3d3667c7d3d54b779d6edf03e53764db901a491a403c
 ,12:I:C:C-06~c06,11:household-C,35:engine/tests/integration/households,524:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/florens.tally C/asks/C-06.tally,1701:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2538,7 +2538,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2550,7 +2550,7 @@ C/rec_log.tally	94528	1ff3f6d1f8ddd5991145777a89048160
 C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
-,72:sha256 ec1e92fb31cf4b7778a97786ae54d280df4e153bffe69b03fdd3772d9abbf0f5
+,72:sha256 0b2855c0fff7a3d6c80ce1c819a6d3f280f6e0472ecad80eb520cacbef307e60
 ,12:I:C:C-07~c07,11:household-C,35:engine/tests/integration/households,540:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/house.tally C/purchases.tally C/asks/C-07.tally,1756:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2598,7 +2598,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2611,7 +2611,7 @@ C/rec_log.tally	94528	1ff3f6d1f8ddd5991145777a89048160
 C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
-,72:sha256 375457fed522c627044fd1c465be404fb9e541eb014aec12c234189fd97efe2a
+,72:sha256 79270e0f07dc601fb4f9e26f2db0887e297c0b324a24d64d34d163c97d907431
 ,12:I:C:C-08~c08,11:household-C,35:engine/tests/integration/households,540:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/house.tally C/purchases.tally C/asks/C-08.tally,1756:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2659,7 +2659,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2672,7 +2672,7 @@ C/rec_log.tally	94528	1ff3f6d1f8ddd5991145777a89048160
 C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
-,72:sha256 b3e0258be91104fdd273bd148928df3e8268daeafbf7db02e2aff14948ab74a3
+,72:sha256 59250bc58983a601c26cfcf126fdea1edba9f68d5c9a93f9e01e9e1996c08ead
 ,12:I:C:C-09~c09,11:household-C,35:engine/tests/integration/households,521:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/stas.tally C/asks/C-09.tally,1695:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2718,7 +2718,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2731,7 +2731,7 @@ C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
-,72:sha256 f9a485f11a2b0204bdef2e9aa6f54428e2f9e0404d8e5fc4b4e6907268899539
+,72:sha256 9ca042031d9ae87decce44d9c8289cf1fdc46050f9ec9e89b9ad9eceddd253b2
 ,12:I:C:C-10~c10,11:household-C,35:engine/tests/integration/households,617:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/rosvald_pay.tally C/stas.tally C/loan.tally C/benefit.tally C/florens.tally C/forecast.tally C/worth.tally C/asks/C-10.tally,2025:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2786,7 +2786,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2802,7 +2802,7 @@ C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/rosvald_pay.tally	14659	0665aa0ca6f9bfdd0cd0bd101abb7924
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
 C/worth.tally	5957	09a8e3857b32b38e19566b369e3c3666
-,72:sha256 317c5c54dfecd27ee39dc64bdeb31e2a8ee10f4468d7d72c08d2d2d6eb09bac3
+,72:sha256 2773e239b341404b6b3656a2f08825721840a8d6152d66c63060b2a60c1e4e36
 ,12:I:C:C-11~c11,11:household-C,35:engine/tests/integration/households,534:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/loan.tally C/stas.tally C/asks/C-11.tally,1744:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2849,7 +2849,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2863,7 +2863,7 @@ C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
-,72:sha256 8a2923644b7ac4617c8ff15af049843ba07eaf5003c5d4225e9ea02d10a0ba4d
+,72:sha256 26b4891f80f959d51c408c1ee81541ad2a72f127031ab3be27e637f45379006f
 ,12:I:C:C-12~c12,11:household-C,35:engine/tests/integration/households,525:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/forecast.tally C/asks/C-12.tally,1703:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -2910,7 +2910,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -2922,7 +2922,7 @@ C/rec_log.tally	94528	1ff3f6d1f8ddd5991145777a89048160
 C/rec_marta.tally	11817	1b8d78c6c088f1c119eed000a1a3a607
 C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
-,72:sha256 ac858a81d3ee5f1111e02997fc5347b082d85bb4eede5bc2156321f04e7fc81d
+,72:sha256 b8c5f0764778e7d65b976a03662dbd12b9cad61a36f1bf2bb488f614614efb78
 ,11:I:D:D-13~D1,11:household-D,39:engine/tests/integration/cuts/D/p200_11,1223:reprint CC-1.tally CC-2.tally CIV-1.tally CIV-2.tally CIV-3.tally CIV-4.tally CIV-5.tally FAM-1.tally GEN-1.tally GEN-2.tally GEN-3.tally GEN-4.tally GEN-5.tally GEN-6.tally IGT-1.tally IGT-2.tally IGT-3.tally IGT-4.tally IGT-5.tally MOT-1.tally MOT-2.tally MTG-1.tally MTG-2.tally PIT-10.tally PIT-11.tally PIT-12.tally PIT-13.tally PIT-14.tally PIT-15.tally PIT-2.tally PIT-3.tally PIT-4.tally PIT-5.tally PIT-6.tally PIT-7.tally PIT-8.tally PIT-9.tally SOC-1.tally SOC-2.tally SOC-3.tally SOC-4.tally SOC-5.tally SOC-6.tally SOC-7.tally SOC-8.tally TSB-1.tally TSB-2.tally TSB-3.tally TSB-4.tally TSB-5.tally TSB-6.tally TSB-7.tally TSB-8.tally TT-1.tally TT-2.tally VAT-1.tally VAT-2.tally VAT-3.tally VAT-4.tally VAT-5.tally VAT-6.tally WCP-1.tally WCP-2.tally asks-D-01.tally asks-D-02.tally asks-D-03.tally asks-D-04.tally asks-D-05.tally asks-D-06.tally asks-D-07.tally asks-D-08.tally asks-D-09.tally asks-D-10.tally asks-D-11.tally asks-D-12.tally bonds.tally estate.tally fund.tally longview.tally ogrodowa.tally pensions.tally people.tally reality.tally records.tally sale.tally scenario-cpi103.tally scenario-infl8.tally tax.tally worth.tally ../../../new/D-13/longview_taxed.tally ../../../new/D-13/D-13.tally,4841:CC-1.tally	integration/cuts/D/p200_11/CC-1.tally
 CC-2.tally	integration/cuts/D/p200_11/CC-2.tally
 CIV-1.tally	integration/cuts/D/p200_11/CIV-1.tally
@@ -3633,12 +3633,12 @@ worth.tally	integration/cuts/E1/cdB/households/E1/worth.tally
 asks/E1-02.tally	901	1fdfa4c4357818ae1ed81258a27a61f7
 asks/E1-03.tally	1804	0ffe3f1dfe2a4df50a1b52ae19f8da59
 estate.tally	4529	161f3e17a84e183d153ff689e2ba9ed1
-family.tally	4140	029402f5cfb880400d91e95288ea086e
+family.tally	4140	1f93bf65a1c2da8613c71e6111052fbe
 gifts.tally	1767	172549823204986c120d761384f83ae5
 scenarios/e1_not_reported.tally	983	0deff7ecd11bda5c0a2b17650f7db3e0
 scenarios/e1_reported.tally	1627	12b1d2d04a4d559f1370f687767256c1
 worth.tally	3399	0c17aa5c2c11dbdc0c4ea89595354f29
-,72:sha256 97d326b24e29382b0b6841ed85a6d7c6340e4c51e3a58b9c538063056177adf9
+,72:sha256 3754feb565ae19f40064ad0b007d8eccea7a01db9fbc706440e2feb86f1c6b4c
 ,20:I:E1:tx2_cis_explain,12:household-E1,37:engine/tests/integration/households/B,1171:reprint asks/B-01.tally asks/B-02.tally asks/B-03.tally asks/B-04.tally asks/B-05.tally asks/B-06.tally asks/B-07.tally asks/B-08.tally asks/B-09.tally asks/B-10.tally asks/B-11.tally business.tally flat.tally lawrows.tally market.tally ola.tally people.tally places.tally reality.tally records/cis-2025.tally records/lazur-2025.tally records/savings-2025.tally records/wrzos.tally registers.tally rules.tally ../../law/CC-1.tally ../../law/CC-2.tally ../../law/GEN-1.tally ../../law/GEN-2.tally ../../law/GEN-3.tally ../../law/GEN-4.tally ../../law/GEN-5.tally ../../law/GEN-6.tally ../../law/MOT-1.tally ../../law/MOT-2.tally ../../law/MTG-1.tally ../../law/MTG-2.tally ../../law/PIT-2.tally ../../law/PIT-3.tally ../../law/PIT-4.tally ../../law/PIT-5.tally ../../law/PIT-6.tally ../../law/PIT-10.tally ../../law/PIT-11.tally ../../law/PIT-12.tally ../../law/PIT-15.tally ../../law/SOC-1.tally ../../law/SOC-2.tally ../../law/SOC-3.tally ../../law/SOC-4.tally ../../law/TT-1.tally ../../law/TT-2.tally ../../law/VAT-1.tally ../../law/VAT-2.tally ../../law/VAT-3.tally ../../law/VAT-4.tally ../../law/VAT-5.tally ../../law/VAT-6.tally ../../cuts/E1-02-B/B/asks-tx2.tally,3157:asks/B-01.tally	integration/households/B/asks/B-01.tally
 asks/B-02.tally	integration/households/B/asks/B-02.tally
 asks/B-03.tally	integration/households/B/asks/B-03.tally
@@ -3744,10 +3744,10 @@ asks/B-09.tally	735	188c2352c73baeb5194aa056e49a7dd5
 asks/B-10.tally	494	1d20f733b76fbfbc0f8b26774a55f404
 asks/B-11.tally	512	11da8058d24ddaec0e4329d86b8329e7
 business.tally	19996	140ed72cbdec0b230333ec816ff891a2
-flat.tally	23367	0c5c2003edb8e9d51a5859c582022e14
-lawrows.tally	4147	113f00217ba5913b12171711226e56e5
+flat.tally	23630	1a629eee12b1877f0e36c549d491d5be
+lawrows.tally	4318	1cf5d6c9ea83bdd20f7fbf1fdea45b49
 market.tally	3670	087208cf1ac77f3715ff3edddd1a51cd
-ola.tally	8031	17328ef9b063b8a2045327e040231740
+ola.tally	8294	06f7f0b3b1f5305b0a3104e4c3ffee70
 people.tally	542	03035b900d851bbf03eaea486d58140e
 places.tally	2018	093ff2265b334b8b00777e216b5d3627
 reality.tally	7781	07ace9d27708ddfd1e9208d6c1d87768
@@ -3756,8 +3756,8 @@ records/lazur-2025.tally	6796	0dc937ca732bbd53069c5f69dce0e80f
 records/savings-2025.tally	3776	0f1ce08660d7f27b12b631e96c04d952
 records/wrzos.tally	15851	1c42f01a8753d85009b8647ce06ac72e
 registers.tally	26423	0bc32e9c89399c6409f6bcc76de3e7e3
-rules.tally	15408	16895bd393fc21ea16fc0fa73e51744a
-,72:sha256 317834e2c3d4c729001cc6862a2a4a2b6844b50c17369a68071aa9e25adb614e
+rules.tally	15703	0186e2b2dc4cb2bd1b9a14c606825ae5
+,72:sha256 fda79d88dc04f77dd2567ede45d67fbb64e499548cea7d90bfa653e8d9065154
 ,17:I:E2:E2-01~e2_01a,12:household-E2,35:engine/tests/integration/households,149:reprint E2/family.tally E2/estate.tally E2/gifts.tally E2/asks/E2-01.tally E2/asks/E2-02.tally E2/asks/E2-03.tally E2/scenarios/e2_not_reported.tally,9646:E2/family.tally	integration/households/E2/family.tally
 E2/estate.tally	integration/households/E2/estate.tally
 E2/gifts.tally	integration/households/E2/gifts.tally
@@ -3924,10 +3924,10 @@ D/law/WCP-2.tally	integration/households/D/law/WCP-2.tally
 E2/asks/E2-02.tally	2069	1996a9b6ce3ea0250c700af224df6381
 E2/asks/E2-03.tally	509	1293a689184316710ea0e0cd4ff6fae0
 E2/estate.tally	7187	068f79123205585d00aff7da208b4f66
-E2/family.tally	4090	18a95674de35be000fbfde44c08e501e
+E2/family.tally	4090	1b197fa75df270c010e4a0201bd118c2
 E2/gifts.tally	2102	15c5f70bd8f4b1f50c81016e8fca3b14
 E2/scenarios/e2_not_reported.tally	1080	06bbdbd3b2efe0b1101934da7f71018a
-,72:sha256 3504c3545f331f1f315d31d76bb9ebc7ce5f26b3ea9af074f4fc8760d577a55b
+,72:sha256 1422340f0f934ef4cc435558bade357d550653baee6b51a625ea8c0eb6928bd0
 ,14:I:E2:E2-01~e2c,12:household-E2,35:engine/tests/integration/households,535:reprint C/c.tally C/law/GEN-1.tally C/law/GEN-5.tally C/law/GEN-6.tally C/law/gen1_ahead.tally C/law/holdout.tally C/law/IGT-3.tally C/law/IGT-4.tally C/law/IGT-5.tally C/law/PIT-10.tally C/law/PIT-2.tally C/law/PIT-3.tally C/law/PIT-5.tally C/law/PIT-7.tally C/law/rosvald.tally C/law/SOC-3.tally C/law/SOC-4.tally C/law/treaty.tally C/law/VAT-1.tally C/rec_biz.tally C/rec_joint.tally C/rec_lazur.tally C/rec_log.tally C/rec_marta.tally C/rec_pot.tally C/rec_registers.tally C/rates.tally C/loan.tally C/stas.tally E2/cside/e2c.tally,1746:C/c.tally	integration/households/C/c.tally
 C/law/GEN-1.tally	integration/households/C/law/GEN-1.tally
 C/law/GEN-5.tally	integration/households/C/law/GEN-5.tally
@@ -3973,7 +3973,7 @@ C/law/PIT-7.tally	956	046fd774d59efffd0b04616787a79a3c
 C/law/SOC-3.tally	3719	0f36dff068243c631d8d70d67c47b7e2
 C/law/SOC-4.tally	2330	1f41025fb89b6ef003b39f5801aca476
 C/law/VAT-1.tally	585	1a5127e1926385540b5eaab5f2f74b86
-C/law/gen1_ahead.tally	1466	07bfb7a3641eff411c23c4f85f5365d0
+C/law/gen1_ahead.tally	1637	14ee1f9a920731e10f74a85d8adc32f1
 C/law/holdout.tally	3554	004e2007dbbabc6c0f4377b8aeaa6d0e
 C/law/rosvald.tally	5217	0bfafe2ba0b79883100986abf2f679f5
 C/law/treaty.tally	1573	1431978fa426d65f1ca1b804412c15ee
@@ -3988,7 +3988,7 @@ C/rec_pot.tally	12200	1b8032f25b5807ab14a4385e99450b4c
 C/rec_registers.tally	18652	19cf82e82948313a0d1d380d2008b87f
 C/stas.tally	5775	1c5cfd909d3295f10935c8e63fa8afc8
 E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
-,72:sha256 2c3b0c9c348d59e5b02afe2eb73448efaf2a9c18c5c806ccc69a272f665cc365
+,72:sha256 6d67aba961ba894e20ac8cf2bf1a0cbff935429d974ee3948db55f543c4ab558
 ,9:I:M:CB-01,6:models,13:engine/tests/,38:reprint integration/models/CB-01.tally,62:integration/models/CB-01.tally	integration/models/CB-01.tally
 ,1:0,69:integration/models/CB-01.tally	4000	1c09ad419782740e1398fcca18fd0129
 ,72:sha256 d042848e91ac844dbe51e2298ad332440d728e5620472ff298ac654ffe82cb1e
@@ -4050,8 +4050,8 @@ E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
 ,1:0,70:integration/models/CH-06.tally	10605	14d1c9bb11716e6d1cd3cde02d53ac88
 ,72:sha256 180a5b50f27814e3fe930927987bf758d056a8a7907ce6727359cf62f5162ef9
 ,10:I:M:CMP-01,6:models,13:engine/tests/,39:reprint integration/models/CMP-01.tally,64:integration/models/CMP-01.tally	integration/models/CMP-01.tally
-,1:0,71:integration/models/CMP-01.tally	35786	0adaa2d42c97302210d46b24841eede6
-,72:sha256 d13e9d2653d45ed6af1bf7a331d04cb6ea45bc60e1cda6528ea3a3bf7532c0a4
+,1:0,71:integration/models/CMP-01.tally	35942	16029ad3f570b12f0eae2a605329d5e0
+,72:sha256 c90c942d2d23eeed6aea447642d6ad98d594628f481d159824287a74eb038dda
 ,10:I:M:CMP-02,6:models,13:engine/tests/,39:reprint integration/models/CMP-02.tally,64:integration/models/CMP-02.tally	integration/models/CMP-02.tally
 ,1:0,71:integration/models/CMP-02.tally	12778	1aad19419463194218645263a18bfe53
 ,72:sha256 b21ef2f81784102074a24fe4f18e83162506e8be74e0e44ce2557bdbbbd6fc8f
@@ -4715,8 +4715,8 @@ integration/blind/modeller-b1/I-7/leave_feb.tally	integration/blind/modeller-b1/
 integration/blind/modeller-b1/I-7/leave_mar.tally	integration/blind/modeller-b1/I-7/leave_mar.tally
 ,1:0,259:integration/blind/modeller-b1/I-7/leave_feb.tally	465	163616596c2394421e898db6feacd6e2
 integration/blind/modeller-b1/I-7/leave_mar.tally	465	0cb6f9bee433d64d144e10ae57a953d3
-integration/blind/modeller-b1/I-7/model.tally	11594	0c218504317cfc6a171c35b05eab9336
-,72:sha256 b80c72e0e0c55fa2b76f99a58d34b1d5c4d7df2890e2d140923762b74b1b07c9
+integration/blind/modeller-b1/I-7/model.tally	11742	1fa9d2e4a9122b0e1e7e62e5fd11998a
+,72:sha256 de04423a2235dcefd398b922887d2debf6b01b015a1ef0ba6a0a96c1d4010eb1
 ,31:I:hardset/modeller-b1/I-8/model,5:blind,13:engine/tests/,53:reprint integration/blind/modeller-b1/I-8/model.tally,92:integration/blind/modeller-b1/I-8/model.tally	integration/blind/modeller-b1/I-8/model.tally
 ,1:0,85:integration/blind/modeller-b1/I-8/model.tally	11463	0eb24be12458a88f1b802ad09fdcbdba
 ,72:sha256 cd33e018874537ff446f472e18d1fc5f15c7cdcdd3321b9503bac987e3009fac
@@ -4724,11 +4724,11 @@ integration/blind/modeller-b1/I-7/model.tally	11594	0c218504317cfc6a171c35b05eab
 integration/blind/modeller-b1/I-9/refund_early.tally	integration/blind/modeller-b1/I-9/refund_early.tally
 integration/blind/modeller-b1/I-9/refund_late.tally	integration/blind/modeller-b1/I-9/refund_late.tally
 integration/blind/modeller-b1/I-9/refund_refused.tally	integration/blind/modeller-b1/I-9/refund_refused.tally
-,1:0,355:integration/blind/modeller-b1/I-9/model.tally	9846	0e4acbd3c60ffcbb19f79ba22f997aa5
+,1:0,355:integration/blind/modeller-b1/I-9/model.tally	9984	14bbd6167c5991a80c82d2a6bb8f309d
 integration/blind/modeller-b1/I-9/refund_early.tally	669	1c8843fd48e79fc1136d87bd96d1b00b
 integration/blind/modeller-b1/I-9/refund_late.tally	656	1fc02d548307109b151647431a52847d
 integration/blind/modeller-b1/I-9/refund_refused.tally	668	1dc4db3cdeebd4d91c1dcece139d09e7
-,72:sha256 c3de37f38f175f2b45c6ece9f01408598cae2c2785558dad708e3dafbff05260
+,72:sha256 71a047ec5fcec1d96df0703077764912cc5789e0b0f3cb7c1b4904f3ed4684ec
 ,33:I:hardset/modeller-b2/I-11/budget,5:blind,13:engine/tests/,55:reprint integration/blind/modeller-b2/I-11/budget.tally,96:integration/blind/modeller-b2/I-11/budget.tally	integration/blind/modeller-b2/I-11/budget.tally
 ,1:0,87:integration/blind/modeller-b2/I-11/budget.tally	11398	14253c2dce3aee140437ef51147569ff
 ,72:sha256 7c593d210bbbe61da1216471931cdae0e4915d8a22904e06a2fdaae25ab58d69

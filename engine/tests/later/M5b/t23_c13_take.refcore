@@ -1,0 +1,27 @@
+exit 0
+left_tomek: ?"date within window(2025-02-01, 2025-04-01) not precise enough for the day of inc" (d_in)
+  unknown day: d_in
+  unfulfilled: out
+  cut 2026-01-15
+left_tomek_after: 50.00 DUK
+  pinned: d_in = 2025-04-01
+  unfulfilled: inc
+  unfulfilled: out
+  cut 2026-01-15
+left_tomek_before: 100.00 DUK
+  pinned: d_in = 2025-02-01
+  unfulfilled: inc
+  unfulfilled: out
+  cut 2026-01-15
+took_ania: ?"acc: 50.00 DUK may be ania's: date within window(2025-02-01, 2025-04-01) not precise enough for the day of inc" (acc)
+  cut 2026-01-15
+took_ania_after: 0.00 DUK
+  cut 2026-01-15
+took_ania_before: 50.00 DUK
+  cut 2026-01-15
+took_tomek: ?"acc: 50.00 DUK may be tomek's: date within window(2025-02-01, 2025-04-01) not precise enough for the day of inc" (acc)
+  cut 2026-01-15
+took_tomek_after: 50.00 DUK
+  cut 2026-01-15
+took_tomek_before: 0.00 DUK
+  cut 2026-01-15

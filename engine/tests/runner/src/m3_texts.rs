@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 347] = [
+pub static TEXTS: [(&str, &str); 354] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -1332,6 +1332,34 @@ pub static TEXTS: [(&str, &str); 347] = [
     (
         "m3/fixes/t221/win/w4_agree_false_nowait.tally",
         include_str!("../../m3/fixes/t221/win/w4_agree_false_nowait.tally"),
+    ),
+    (
+        "m3/fixes/t23/c4/n1_q.tally",
+        include_str!("../../m3/fixes/t23/c4/n1_q.tally"),
+    ),
+    (
+        "m3/fixes/t23/ledger/l1_fulfilled.tally",
+        include_str!("../../m3/fixes/t23/ledger/l1_fulfilled.tally"),
+    ),
+    (
+        "m3/fixes/t23/ledger/l2_left_out.tally",
+        include_str!("../../m3/fixes/t23/ledger/l2_left_out.tally"),
+    ),
+    (
+        "m3/fixes/t23/ledger/l3_never.tally",
+        include_str!("../../m3/fixes/t23/ledger/l3_never.tally"),
+    ),
+    (
+        "m3/fixes/t23/ledger/l4_span.tally",
+        include_str!("../../m3/fixes/t23/ledger/l4_span.tally"),
+    ),
+    (
+        "m3/fixes/t23/same/se_w_eq.tally",
+        include_str!("../../m3/fixes/t23/same/se_w_eq.tally"),
+    ),
+    (
+        "m3/fixes/t23/same/se_w_ne.tally",
+        include_str!("../../m3/fixes/t23/same/se_w_ne.tally"),
     ),
     (
         "m3/mini/acme_stops.tally",

@@ -1,10 +1,19 @@
 c12_plans (c = with_x): (with_x, 3 303.58 DUK, 2027-08-16, 2027-09-15, 2027-09-15, 1 948.66 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
   law date 2026-09-30, cut 2026-09-30
 c12_plans (c = without_x): (without_x, 12 103.58 DUK, 2026-10-01, 2028-01-17, 2028-01-17, 614.12 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
   law date 2026-09-30, cut 2026-09-30
 c12_october: (?"in which order does our plan decide October 2026's 800.00 and the later months' (C-HR8 .2 – .3 don't say)? the two orders decide October differently" (oct_extra_paid), true, false, 5 703.58 DUK, 4 903.58 DUK, 2027-09, 2026-10-16, 2027-10-16, 2027-09-30)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
+  assumed: Spring Day 2029 is not announced yet (GEN-1 .3): the first Monday of April, 2029-04-02, is taken (holidays)
   law date 2026-09-30, cut 2026-09-30
 c12_detail (c = with_x): (with_x, 38 378.73 DUK, 12 103.58 DUK, 11, 800.00 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
+  assumed: Spring Day 2029 is not announced yet (GEN-1 .3): the first Monday of April, 2029-04-02, is taken (holidays)
   law date 2026-09-30, cut 2026-09-30
 c12_detail (c = without_x): (without_x, 38 378.73 DUK, 12 103.58 DUK, 0, 0.00 DUK)
   law date 2026-09-30, cut 2026-09-30

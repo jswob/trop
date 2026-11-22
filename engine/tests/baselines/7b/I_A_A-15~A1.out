@@ -1,4 +1,5 @@
 a15 [px_round = *]: (9 894.71 DUK, 105.29 DUK, 28 855.29 DUK, 307.04 DUK)
+  assumed: the question gives the month, not the day: the month's last day is planned (a15_lag)
   world: a15_house_rule
   anchor: ania_sav 2025-12-31 end, stated 39 162.33 DUK, difference 0.00 DUK
   law date 2026-03-31, cut 2026-01-15
