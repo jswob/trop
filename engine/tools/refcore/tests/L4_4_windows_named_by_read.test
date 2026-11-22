@@ -3,6 +3,8 @@
 # comparing them with w, or with each other, isn't decided (HOLE-IMPRECISE); a copy keeps the name (same == w), two
 # reads of one def's cell are one value (paid == paid), and a pin the def doesn't read doesn't rename it (F8). 2.1.6's
 # refcore kept the row's origin through arithmetic: (true, false, true, false), and paid == w + 1 day true.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === m.tally
 model w
   tally 2
@@ -48,7 +50,13 @@ version v
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
 === expect a1 a2
-a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
-...
+a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of" (w))
+  unknown day: w
+  cut 2026-10-01
 a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
-...
+  unknown day: w
+  cut 2026-10-01
+warning: WARN-UNREAD input cal is read by nothing
+warning: WARN-UNREAD input d is read by nothing
+warning: WARN-UNREAD input u is read by nothing
+warning: WARN-UNREAD input wd is read by nothing

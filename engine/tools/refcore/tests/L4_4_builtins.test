@@ -3,6 +3,8 @@
 # add_months by one month gives window(2020-08-01, 2020-08-31).  "Only a comparison decides an interval. Wherever
 # one value is needed (a print ...), an undecided interval is HOLE-IMPRECISE": days_between(d, 2020-12-31) is
 # 153 to 183 days, and printing it is a hole.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === m.tally
 model t
   tally 2
@@ -25,6 +27,6 @@ ask q2: days_between(d, 2020-12-31)
 === expect
 q1: (2020, window(2020-08-01, 2020-08-31))
   cut 2026-12-31
-q2: ?"date within window(2020-07-01, 2020-07-31) not precise enough for a print" (d)
+q2: ?"date within window(2020-07-01, 2020-07-31) not precise enough for days_between" (d)
   unknown day: d
   cut 2026-12-31

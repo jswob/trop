@@ -1,0 +1,106 @@
+# L §4.4's list (tally 2.3, #247; the planner's pin table, window wd 2026-11-02 to 2026-11-09, a Monday to the
+# next): year_of, quarter_of, month_of, age, age_months, overlap_days give the value every combination of ends
+# gives, `none` too; days_between, dcf and weekday are off the list, the hole (weekday is 1 at both ends and 4
+# inside). Before: ranges of numbers, a weekday 1..7, and `none` on part of a window the hole.
+=== m.tally
+model wd
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input w: date
+input d0: date
+input d1: date
+input b0: date
+input k: month
+input n1: int
+input n4: int
+input n12: int
+input n30: int
+input nm1: int
+input nm40: int
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-11-02, 2026-11-09) "c"
+  d0 = 2024-02-29 "c"
+  d1 = 2025-02-28 "c"
+  b0 = 2020-02-29 "c"
+  k = 2024-02 "c"
+  n1 = 1 "c"
+  n4 = 4 "c"
+  n12 = 12 "c"
+  n30 = 30 "c"
+  nm1 = -1 "c"
+  nm40 = -40 "c"
+ask r16: year_of(w)
+ask r17: quarter_of(w)
+ask r18: month_of(w)
+ask r19: age(w, d1)
+ask r20: age(b0, w)
+ask r21: age_months(w, d1)
+ask r21_p20261102: age_months(w, d1) with w = 2026-11-02
+ask r21_p20261109: age_months(w, d1) with w = 2026-11-09
+ask r22: age_months(b0, w)
+ask r23: days_between(w, d0)
+ask r25: overlap_days(w, d1, k)
+ask r26: overlap_days(b0, w, k)
+ask r27: dcf(w, d1, act365)
+ask r29: weekday(w)
+ask r29_p20261102: weekday(w) with w = 2026-11-02
+ask r29_p20261105: weekday(w) with w = 2026-11-05
+ask r29_p20261109: weekday(w) with w = 2026-11-09
+ask r32: start_of(month_of(w))
+=== expect
+r16: 2026
+  cut 2026-01-01
+r17: 2026-Q4
+  cut 2026-01-01
+r18: 2026-11
+  cut 2026-01-01
+r19: none
+  cut 2026-01-01
+r20: 6
+  cut 2026-01-01
+r21: none
+  cut 2026-01-01
+r21_p20261102: none
+  pinned: w = 2026-11-02
+  cut 2026-01-01
+r21_p20261109: none
+  pinned: w = 2026-11-09
+  cut 2026-01-01
+r22: 80
+  cut 2026-01-01
+r23: ?"date within window(2026-11-02, 2026-11-09) not precise enough for days_between" (w)
+  unknown day: w
+  cut 2026-01-01
+r25: 0
+  cut 2026-01-01
+r26: 29
+  cut 2026-01-01
+r27: ?"date within window(2026-11-02, 2026-11-09) not precise enough for dcf" (w)
+  unknown day: w
+  cut 2026-01-01
+r29: ?"date within window(2026-11-02, 2026-11-09) not precise enough for weekday" (w)
+  unknown day: w
+  cut 2026-01-01
+r29_p20261102: 1
+  pinned: w = 2026-11-02
+  cut 2026-01-01
+r29_p20261105: 4
+  pinned: w = 2026-11-05
+  cut 2026-01-01
+r29_p20261109: 1
+  pinned: w = 2026-11-09
+  cut 2026-01-01
+r32: 2026-11-01
+  cut 2026-01-01
+warning: WARN-UNREAD input n1 is read by nothing
+warning: WARN-UNREAD input n12 is read by nothing
+warning: WARN-UNREAD input n30 is read by nothing
+warning: WARN-UNREAD input n4 is read by nothing
+warning: WARN-UNREAD input nm1 is read by nothing
+warning: WARN-UNREAD input nm40 is read by nothing

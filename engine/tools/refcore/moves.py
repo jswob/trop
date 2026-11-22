@@ -2155,14 +2155,42 @@ def m_hole_day_steps(self, mi, i, tctx, kds, K, out):
     steps = [(c, vs) for c, vs in kds if S < c <= K]
     if not steps:
         return
-    prev = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=S)
+    law = getattr(i, 'law', None)
+    if isinstance(law, Hole):
+        # a hole `at`: the instance and its day are its law date's hole (L §4.4; the plan's §4 row), and a step
+        # measures its legs with that hole for the law date: a read of it is a hole, every other read a value (tally
+        # 2.3 review of G1, B2)
+        def meas(c):
+            return self.law_hole_inst(mi, i, tctx, c)
+    else:
+        def meas(c):
+            return self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c)
+    prev = meas(S)
     for c, vids in steps:
-        j = self.eval_inst(mi, i.env, i.keys, tctx, at_cut=c)
+        j = meas(c)
         if j is None or j.err is not None or prev is None or prev.err is not None:
             prev = j
             continue
         if not self.keys_seen(mi, i.keys, c):
             j.exists = False
+        for x in (prev, j):
+            if x.exists is x.day:
+                # a `when` false at a hole day leaves the day's hole as its existence (inst_body); measured at a step,
+                # that state doesn't exist (tally 2.3 review of G1, Q3: a removal)
+                x.exists = False
+        if isinstance(law, Hole) and prev.exists is True and j.exists is True and \
+                self.law_hole_unread(law, prev, j):
+            # a hole `at` whose amounts its law date's hole keeps unread (a `?`): whether the step changes the
+            # instance isn't known, so where the rows its reads take differ, the step's adjustment is the hole, its
+            # δ and its existence (E §5 step 1, "t a hole"; tally 2.3, the lead's P8)
+            if self.read_rows(prev) != self.read_rows(j):
+                for lg in j.legs:
+                    adj = AdjMv(i, lg, law, c, self.step_versions(j, vids))
+                    adj.coll = j.coll
+                    adj.exists = i.day
+                    out.append(adj)
+            prev = j
+            continue
         if isinstance(prev.exists, Hole) or isinstance(j.exists, Hole) or \
                 any(isinstance(lg.amount, (Hole, TallyError)) for lg in list(prev.legs) + list(j.legs)):
             prev = j
@@ -2189,6 +2217,43 @@ def m_hole_day_steps(self, mi, i, tctx, kds, K, out):
             # not the instance's own (i.adjs): flows of the move and the walk already read its day's hole
             out.append(adj)
         prev = j
+
+
+def m_law_hole_unread(self, law, prev, j):
+    """Some leg amount of either state is a hole carrying only the law date's questions."""
+    qs = set(law.qs)
+    return any(isinstance(lg.amount, Hole) and set(lg.amount.qs) <= qs for lg in list(prev.legs) + list(j.legs))
+
+
+def m_read_rows(self, x):
+    """The rows a measured state's reads took (by row and value), the law date's hole's candidates included."""
+    from .evaluate import vkey_row
+    return sorted((str(sid), vkey_row(r)) for sid, r in x.coll.rows.items())
+
+
+def m_law_hole_inst(self, mi, i, tctx, c):
+    """A hole `at`'s instance measured at cut c (C-4's clause): its body with the law date's hole, which the
+    instance's existence is."""
+    inst = Inst(mi, i.keys, i.env)
+    inst.coll = _coll()
+    inst.law = i.law
+    inst.day = i.law
+    self.stack.append(inst.coll)
+    try:
+        try:
+            if not self.keys_seen(mi, i.keys, c):
+                inst.exists = False
+                inst.legs = []
+                return inst
+            b = self.inst_body(mi, i.env, inst, tctx.but(cut=c, law=i.law), True)
+            inst.exists, inst.legs, inst.attrs, inst.forp, inst.fulfils = b
+        except TallyError as e:
+            if isinstance(e, LoadError) or load_now(e):
+                raise
+            inst.err = e
+    finally:
+        self.stack.pop()
+    return inst
 
 
 def m_step_legs(self, i, prev, j):

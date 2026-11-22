@@ -678,6 +678,14 @@ def m_movements_of(self, dom, ctx, owner=None):
                     ww = getattr(ww, 'base', None)
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
+                if r is None and isinstance(i.day, Hole) and i.exists is not False and not getattr(i, 'err', None):
+                    # a decision whose day is a hole is never walked, and is a member with its hole: "a movement whose
+                    # day is a hole makes every flows and binding over a span it might fall in a hole" (L §5.14;
+                    # tally 2.3 review of G1, B1); its legs are read as a plain hole day's are, so a `where` on its
+                    # places is decided (a running read in its amount is the hole, its day being one)
+                    self.hole_day_dec_body(m.moves[q], i, ctx)
+                    out.append(i)
+                    continue
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
                     continue
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
@@ -690,6 +698,21 @@ def m_movements_of(self, dom, ctx, owner=None):
     out.sort(key=lambda x: (day_lo(x.day) or END, order_key(x.order)))
     self.run_cache[key] = out
     return out
+
+
+def m_hole_day_dec_body(self, mi, i, ctx):
+    """A hole-day decision's legs, read once outside the walk (B1): the walk never runs it, and a binding's `where`
+    reads its places. Its places are read as a refused instance's are (moves.refused_places); its amounts are its
+    day's hole, since a decision's amount is read in the walk at its day."""
+    if getattr(i, '_hd_body', False):
+        return
+    i._hd_body = True
+    legs = self.refused_places(mi, i.env, i, self.tctx(ctx))
+    decl = {ln.name: d for ln, d in mi.legs}
+    for lg in legs:
+        lg.amount = i.day
+        lg.unit = self.leg_unit_static(decl[lg.name], lg.frm, lg.to)
+    i.legs = legs
 
 
 def once_by_same(m, out, ctx, owner=None):

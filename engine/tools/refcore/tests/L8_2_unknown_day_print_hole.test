@@ -5,6 +5,8 @@
 # once, sorted with the rest (q1, q2: dx is computed from w and v; q3 beside a window value). A window value that
 # prints as a window is no hole and names none (q4).
 # tally 2.2.1 R21 (L §8.4 HOLE-IMPRECISE): one question per unknown day; tally 2.2 named the first window only.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === m.tally
 model ph
   tally 2
@@ -32,14 +34,14 @@ ask q2: dx
 ask q3: age(w, d2), w
 ask q4: w
 === expect
-q1: ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
+q1: ?"date within window(2000-03-01, 2000-03-31) not precise enough for age" (w)
   unknown day: w
   cut 2026-06-30
-q2: ?"date within window(1990-03-10, 1990-03-20) not precise enough for a print" (v) ?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w)
+q2: ?"date within window(1990-03-10, 1990-03-20) not precise enough for age" (v) ?"date within window(2000-03-01, 2000-03-31) not precise enough for age" (w)
   unknown day: v
   unknown day: w
   cut 2026-06-30
-q3: (?"date within window(2000-03-01, 2000-03-31) not precise enough for a print" (w), window(2000-03-01, 2000-03-31))
+q3: (?"date within window(2000-03-01, 2000-03-31) not precise enough for age" (w), window(2000-03-01, 2000-03-31))
   unknown day: w
   cut 2026-06-30
 q4: window(2000-03-01, 2000-03-31)

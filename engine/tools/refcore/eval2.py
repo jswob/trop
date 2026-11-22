@@ -166,9 +166,9 @@ def m_trans_call(self, n, vals, to, ctx, env=None):
     for v in vals:
         self.no_none(v, name)
     from .values import Iv
-    if any(isinstance(v, Iv) for v in vals):
-        # an argument computed from a window: the interval of its values (L §4.4 l.668; P25)
-        return self.lift_values(name, lambda *vs: self.trans_call(n, list(vs), to, ctx, env), *vals, mono=True)
+    # off L §4.4's list: a ranged argument is the hole (tally 2.3)
+    vals = self.off_list(name, *vals)
+    vals = vals if isinstance(vals, list) else [vals]
     idx = [i for i, v in enumerate(vals) if isinstance(v, Num)]
 
     def at(qs):
@@ -341,8 +341,9 @@ def m_c_dcf(self, n, env, ctx):
     h = self.hole_args(vals)
     if h:
         return h
-    # the year fraction is monotone in each day: a window by its ends (tally 2.1.7 R3, F4)
-    return self.lift(lambda a, b, dc: Num(self.dcf_q(a, b, dc), ()), *vals, what='dcf')
+    # off L §4.4's list (tally 2.3, C3): its ends never agree, so a ranged argument is the hole
+    vals = self.off_list('dcf', *vals)
+    return Num(self.dcf_q(*vals), ())
 
 
 def m_call_args(self, n, env, ctx):
@@ -1871,6 +1872,11 @@ def m_fill_compute(self, qid, fkeys, ctx):
             ords, oc = run(lambda: [self.ev(o, env, ctx) for o in s.order])
             for o in ords:
                 if isinstance(o, Hole):
+                    from .evaluate import CARRY, HoleSignal
+                    if o.qs and all(CARRY.get(q) for q in o.qs):
+                        # only a window leaves the order open, through a reader that asks for one day: HOLE-IMPRECISE
+                        # (L §5.12 step 2, §4.4's list; tally 2.3)
+                        raise HoleSignal(o)
                     raise refuse('RUN-ORDER', 'fill %s: the order of the arc (%s; %s) is a hole' % (
                         qid, ', '.join(fmt(se[b.var]) for b in s.sbinds), ', '.join(fmt(de[b.var]) for b in s.dbinds)))
             ties, tc = run(lambda: [self.ev(o, env, ctx) for o in (s.tie or [])])
