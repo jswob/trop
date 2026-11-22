@@ -1156,16 +1156,28 @@ class Engine:
         for q in d.qs:
             ws = CARRY.get(q)
             if not ws:
+                # a `?` law date may be any day: the read is its hole, and the rows it may take are its reads, so a
+                # later version that changes them changes what was measured (moves.hole_day_steps; the lead's P8)
+                self.law_hole_rows(info, keys, ctx)
                 return d
             for w in ws:
                 days.extend(w[2])
         out = None
+        if not days:
+            self.law_hole_rows(info, keys, ctx)
+            return d
         for x in sorted(set(days)):
             v = self.read_input(info, keys, ctx.but(law=x), calendar, probe)
             if isinstance(v, (Hole, tuple, TallyError)) or (out is not None and vkey(v) != vkey(out)):
                 return d
             out = v
         return d if out is None else out
+
+    def law_hole_rows(self, info, keys, ctx):
+        """The rows a read at a law date that is a hole may take: every visible row at its keys."""
+        for r in info.rows:
+            if self.row_matches(r, keys, info) and self.unstated_ok(r, keys, info) and self.row_visible(r, ctx):
+                self.cur.rows[r.sid] = r
 
     def prices(self, info, keys, ctx, v, d):
         """A figure in Y prices (L §3.4)."""

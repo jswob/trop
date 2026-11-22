@@ -7,6 +7,14 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.3, a `?` law date under C-4 (the lead's P8; issue #247; 1 610 tests)
+
+- Under a hole `at` with no days it carries (a `?`), `Engine.read_at_hole_law` registers every visible row the read
+  may take (`law_hole_rows`) and gives the hole; `moves.hole_day_steps` then compares the rows the two states' reads
+  took (`read_rows`): where they differ, the step's adjustment is the hole, δ and existence (`law_hole_unread`
+  marks a state whose amounts only the law date's hole keeps unread). A later version of an input the instance
+  doesn't read records nothing. The window `at` is as before (the value every day gives, else the hole).
+
 ## tally 2.3, group W2: the readers' list (the plan's G2; issue #247; 1 609 tests)
 
 - **The default is the hole, the list is stated once** (L §4.4): `Engine.ends` is the one helper of a listed reader,

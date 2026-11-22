@@ -2178,6 +2178,19 @@ def m_hole_day_steps(self, mi, i, tctx, kds, K, out):
                 # a `when` false at a hole day leaves the day's hole as its existence (inst_body); measured at a step,
                 # that state doesn't exist (tally 2.3 review of G1, Q3: a removal)
                 x.exists = False
+        if isinstance(law, Hole) and prev.exists is True and j.exists is True and \
+                self.law_hole_unread(law, prev, j):
+            # a hole `at` whose amounts its law date's hole keeps unread (a `?`): whether the step changes the
+            # instance isn't known, so where the rows its reads take differ, the step's adjustment is the hole, its
+            # δ and its existence (E §5 step 1, "t a hole"; tally 2.3, the lead's P8)
+            if self.read_rows(prev) != self.read_rows(j):
+                for lg in j.legs:
+                    adj = AdjMv(i, lg, law, c, self.step_versions(j, vids))
+                    adj.coll = j.coll
+                    adj.exists = i.day
+                    out.append(adj)
+            prev = j
+            continue
         if isinstance(prev.exists, Hole) or isinstance(j.exists, Hole) or \
                 any(isinstance(lg.amount, (Hole, TallyError)) for lg in list(prev.legs) + list(j.legs)):
             prev = j
@@ -2204,6 +2217,18 @@ def m_hole_day_steps(self, mi, i, tctx, kds, K, out):
             # not the instance's own (i.adjs): flows of the move and the walk already read its day's hole
             out.append(adj)
         prev = j
+
+
+def m_law_hole_unread(self, law, prev, j):
+    """Some leg amount of either state is a hole carrying only the law date's questions."""
+    qs = set(law.qs)
+    return any(isinstance(lg.amount, Hole) and set(lg.amount.qs) <= qs for lg in list(prev.legs) + list(j.legs))
+
+
+def m_read_rows(self, x):
+    """The rows a measured state's reads took (by row and value), the law date's hole's candidates included."""
+    from .evaluate import vkey_row
+    return sorted((str(sid), vkey_row(r)) for sid, r in x.coll.rows.items())
 
 
 def m_law_hole_inst(self, mi, i, tctx, c):
