@@ -25,7 +25,7 @@ use std::rc::Rc;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine};
 use crate::hole::{Hole, spread};
-use crate::model::{MoveInfo, Reality};
+use crate::model::{Domain, MoveInfo, Node, NodeKind, Reality};
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{
@@ -452,9 +452,10 @@ impl Engine {
             return Ok(Vec::new());
         }
         // a hole `at`: the instance is that hole, its legs read at no law date, so whether a
-        // step changes it is the hole too (the review of G1, B2)
+        // step that touches what its move names changes it is the hole too (the reviews of
+        // G1, B2, and its fix, BF2)
         if matches!(inst.law, Law::Hole(_)) {
-            return Ok(law_hole_adjustments(mv, (inst, h), &later));
+            return Ok(law_hole_adjustments(m, mv, (inst, h), &later));
         }
         let seed = Seed {
             env: inst.env.clone(),
@@ -854,47 +855,140 @@ fn leg_change(
 }
 
 /// The adjustments of plan instance `inst` of `mv`, whose law date is hole `h`, at the known
-/// dates `steps`: the instance is that hole, its legs read at no law date, so at each step
-/// each leg of its move has an adjustment whose existence, places and change are the hole,
-/// named by all the step's versions (E §5 step 1, tally 2.3 C-4; L §5.14 `at e`: "the
-/// instance and its day are holes"; the review of G1, B2).
+/// dates `steps`: nothing of the instance was read, so a step touches its read set where
+/// one of its versions states a row of what its move names ([`named_reads`]); there each leg
+/// of the move has an adjustment whose existence, places and change are the hole, named by
+/// all the step's versions, and elsewhere none (E §5 steps 1 and 2; L §5.14 `at e`, an `at`
+/// that gives a window a hole `at`, §4.4; the reviews of G1, B2, and its fix, BF2, P10).
 fn law_hole_adjustments(
+    m: &Reality,
     mv: &MoveInfo,
     (inst, h): (&Inst, &Hole),
     steps: &[&(Day, BTreeSet<String>)],
 ) -> Vec<Adjustment> {
+    let reads = named_reads(m, mv);
     let mut out = Vec::new();
     for (day, versions) in steps {
-        let vids: Vec<String> = versions.iter().cloned().collect();
-        let first = vids.first().map_or("", String::as_str);
+        if !reads.touched_by(m, versions) {
+            continue;
+        }
+        let step = Step {
+            inst_id: inst.id.clone(),
+            inst_keys: inst.keys.clone(),
+            move_id: mv.id.clone(),
+            inst_day: *day,
+            inst_on: h.text(),
+            day: *day,
+            vids: versions.iter().cloned().collect(),
+            coll: Collected::default(),
+        };
         for leg in &mv.decl.legs {
-            out.push(Adjustment {
-                id: format!("adjustments[{}.{}, {first}]", inst.id, leg.name),
-                inst_id: inst.id.clone(),
-                inst_keys: inst.keys.clone(),
-                move_id: mv.id.clone(),
-                inst_day: None,
-                inst_on: h.text(),
-                leg: LegVal {
-                    name: leg.name.clone(),
-                    from: End::Hole(h.clone()),
-                    to: End::Hole(h.clone()),
-                    amount: Amount::Hole(h.clone()),
-                    unit: None,
-                    day: Dated::Hole(h.clone()),
-                    src: None,
-                },
-                new_ends: Vec::new(),
-                before_ends: Vec::new(),
-                delta: Amount::Hole(h.clone()),
-                day: *day,
-                vids: vids.clone(),
-                coll: Collected::default(),
-                settled: Vec::new(),
-                waived: false,
-                made: false,
-                unknown: Some(h.clone()),
-            });
+            let unread = LegVal {
+                name: leg.name.clone(),
+                from: End::Hole(h.clone()),
+                to: End::Hole(h.clone()),
+                amount: Amount::Hole(h.clone()),
+                unit: None,
+                day: Dated::Hole(h.clone()),
+                src: None,
+            };
+            let mut adj = make(
+                &step,
+                unread,
+                Amount::Hole(h.clone()),
+                (Vec::new(), Vec::new()),
+            );
+            adj.inst_day = None;
+            adj.unknown = Some(h.clone());
+            out.push(adj);
+        }
+    }
+    out
+}
+
+/// What a move names, its read set where nothing of an instance was read: the inputs its
+/// `on`, `at`, `when`, legs and attributes read through the item graph, defs and the items
+/// they read included, and the indexes of its keys (E §5 step 2; the review of G1's fix,
+/// BF2, P10).
+struct NamedReads {
+    /// Whether it reaches the balances, which every movement books into: then every version
+    /// touches it.
+    all: bool,
+    /// The inputs it reaches.
+    inputs: BTreeSet<String>,
+    /// The indexes whose keys it reads: its keys', and every index where it reaches a def.
+    indexes: BTreeSet<String>,
+    /// Whether it reaches a def, which may read any index's keys.
+    defs: bool,
+}
+
+impl NamedReads {
+    /// Whether one of `versions` states a row or a reading of an input it reaches, or adds a
+    /// key to an index it reads (E §5 step 2).
+    fn touched_by(&self, m: &Reality, versions: &BTreeSet<String>) -> bool {
+        if self.all {
+            return true;
+        }
+        for input in self.inputs.iter().filter_map(|id| m.inputs.get(id)) {
+            let rows = input.rows.iter().map(|r| &r.version);
+            let readings = input.observations.iter().map(|o| &o.version);
+            if rows.chain(readings).any(|v| versions.contains(v)) {
+                return true;
+            }
+        }
+        for (_, ix) in m.indexes.entries() {
+            let read = self.defs || self.indexes.contains(&ix.id);
+            if read && ix.added.iter().any(|(_, v)| versions.contains(v)) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+/// The read set move `mv` names ([`NamedReads`]): from its node and its day's node, every
+/// item the item graph says they read, and on through what those read, as a worklist
+/// (E §3.1 step 5, §5 step 2).
+fn named_reads(m: &Reality, mv: &MoveInfo) -> NamedReads {
+    let mut out = NamedReads {
+        all: false,
+        inputs: BTreeSet::new(),
+        indexes: BTreeSet::new(),
+        defs: false,
+    };
+    for bind in &mv.binds {
+        if let Domain::Index(ix) = &bind.domain {
+            out.indexes.insert(ix.clone());
+        }
+    }
+    let mut seen: BTreeSet<Node> = BTreeSet::new();
+    let mut work = vec![
+        Node::new(NodeKind::Move, &mv.id),
+        Node::new(NodeKind::MoveOn, &mv.id),
+    ];
+    while let Some(node) = work.pop() {
+        if !seen.insert(node.clone()) {
+            continue;
+        }
+        match node.kind {
+            NodeKind::Balances => out.all = true,
+            NodeKind::Input => {
+                out.inputs.insert(node.id.clone());
+            }
+            NodeKind::Def => out.defs = true,
+            NodeKind::Band
+            | NodeKind::Move
+            | NodeKind::MoveOn
+            | NodeKind::Place
+            | NodeKind::Ask
+            | NodeKind::Price
+            | NodeKind::Parts
+            | NodeKind::Axis
+            | NodeKind::Fill
+            | NodeKind::Srow => {}
+        }
+        if let Some(reads) = m.graph.edges.get(&node) {
+            work.extend(reads.keys().cloned());
         }
     }
     out
@@ -1159,6 +1253,57 @@ ask n_p: count(a in adjustments over 2026-03 .. 2026-04) with w = 2026-03-03
 ask n_k: count(a in adjustments over 2026-03 .. 2026-04) as known 2026-03-19
 "#;
 
+    /// A pay on a day of March whose law date `w` is written in for `LAW`, and a version
+    /// known on 20 March that changes only an input the pay doesn't read (the review of G1's
+    /// fix, `b2b`).
+    const UNREAD_CHANGE: &str = r#"model unread_change
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input other: money PLN
+
+input w: date
+
+input dd: date
+
+move pay: transfers
+  on dd
+  at w
+  leg cash from world to konto amount amt
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  w = LAW "its law date"
+  amt = 100.00 PLN "its amount"
+  dd = 2026-03-10 "its day"
+  other = 1.00 PLN "another figure"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+
+version b_mid
+  cite fixture
+  governs always
+  known 2026-03-20
+  replace other = 4.00 PLN "changed"
+
+ask n: count(a in adjustments over ..)
+
+ask o: other
+"#;
+
     /// A pay on a window of March, its amount raised by a version known in February, before
     /// the walk's start.
     const BEFORE_START: &str = r#"model before_start
@@ -1250,6 +1395,19 @@ ask n_all: count(a in adjustments over ..)
             ["n_k: 0", "  cut 2026-03-19"],
             "before the version is known"
         );
+    }
+
+    #[test]
+    fn a_version_that_touches_nothing_a_hole_at_move_reads_adjusts_nothing() {
+        // E §5 step 2: only a version that touches the read set can change the instance; under
+        // a hole `at` that set is the reads its move names (the review of G1's fix, BF2, P10)
+        for law in ["window(2026-03-01, 2026-03-05)", "?\"which law date?\""] {
+            assert_eq!(
+                lines_of(&UNREAD_CHANGE.replace("LAW", law), "n"),
+                ["n: 0", "  cut 2026-06-10"],
+                "{law}"
+            );
+        }
     }
 
     #[test]

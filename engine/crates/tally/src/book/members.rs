@@ -27,7 +27,7 @@ use crate::num::Num;
 use crate::syntax::{Bind, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, End, Exists, Inst, LegVal, Status, Term, WalkAt, invariant, qty_value,
+    Amount, At, Dated, End, Exists, Inst, Law, LegVal, Status, Term, WalkAt, invariant, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -643,7 +643,9 @@ impl Engine {
         };
         match self.chain_run(walk, id)? {
             Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),
-            None if running => Err(Stop::Refused(Refusal::new(
+            // one whose day is a hole runs on no day of the walk: it is never waited for, and
+            // a field no walk read is its hole (L §5.14; the review of G1's fix, BF1, P10)
+            None if running && unread_hole(m, &inst).is_none() => Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Order),
                 format!("decision {id} is read before it has run"),
             ))),
@@ -718,6 +720,15 @@ impl Engine {
                 }
             }
             Moving::Adj(_) | Moving::Pad(..) => {}
+        }
+        // a field the plan pass didn't read, of an instance whose day is a hole (a decision,
+        // which never runs without a day; one under a hole `at`), is that hole (L §5.14; the
+        // review of G1's fix, BF1, P10)
+        if name != "day"
+            && let Moving::Plan(i) = &src
+            && let Some(h) = unread_hole(m, i)
+        {
+            return Ok(Value::Hole(h));
         }
         if (name == "day" || is_leg)
             && let Some(h) =
@@ -1348,6 +1359,17 @@ fn hole_day_member(inst: &Inst) -> Option<Moving> {
     }
 }
 
+/// The hole of instance `inst` when the plan pass read none of its fields: its day is a hole
+/// and it is a decision's, which never runs without a day, or its law date is a hole, under
+/// which nothing of it is read; else none (L §5.14; the review of G1's fix, BF1, P10).
+fn unread_hole(m: &Reality, inst: &Inst) -> Option<Hole> {
+    let Some(Dated::Hole(h)) = &inst.day else {
+        return None;
+    };
+    let decision = m.moves.get(&inst.move_id).is_some_and(|mv| mv.decision);
+    (decision || matches!(inst.law, Law::Hole(_))).then(|| h.clone())
+}
+
 /// Movements in movement order: by day, a hole day after every day, then by their typed order,
 /// ties as they came (refcore's stable `sort`). L §5.19 Bindings; E §4.1.
 fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
@@ -1407,11 +1429,73 @@ ask s: sum(t.cash.amount for t in sweeps over 2026-05)
 ask n_p: count(t in sweeps over 2026-05) with dd = 2026-05-05
 "#;
 
+    /// A top-up, a decision that reads the sweeps of its month by their amounts, beside the
+    /// sweep of [`SWEEP`] on day `dd`, written in for `DAY` (the review of G1's fix, BF1).
+    const TOP: &str = r#"model top
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+kind sweeps: event certain
+  leg cash: PLN
+
+kind tops: event certain
+  leg cash: PLN
+
+place sav: accounts PLN lives 2026-01-01..
+
+place sv2: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input dd: date
+
+input dt: date
+
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+
+move top: tops
+  on dt
+  reads sv2, sweep
+  leg cash from world to sv2 amount sum(t.cash.amount for t in sweeps over month_of(dt)) + 0 * bal(sv2)
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its cap"
+  dt = 2026-05-31 "the top-up's day"
+  dd = DAY "the sweep's day"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "own"
+  opening[sv2] = 0.00 PLN at 2026-01-01 start "own"
+
+ask f: flows(top, 2026-05)
+
+ask b: bal(sv2, 2026-06-30)
+
+ask f_p: flows(top, 2026-05) with dd = 2026-05-04
+"#;
+
     /// The lines of ask `ask` over [`SWEEP`] with its day `day`.
     fn lines(day: &str, ask: &str) -> Vec<String> {
+        lines_of(SWEEP, day, ask)
+    }
+
+    /// The lines of ask `ask` over text `text` with its day `day`.
+    fn lines_of(text: &str, day: &str, ask: &str) -> Vec<String> {
         let given = vec![Given {
             path: "sweep.tally".to_owned(),
-            bytes: Some(SWEEP.replace("DAY", day).into_bytes()),
+            bytes: Some(text.replace("DAY", day).into_bytes()),
         }];
         let request = Request::new(Asks::Named(vec![ask.to_owned()]));
         run(Files::new(given), &request)
@@ -1447,6 +1531,41 @@ ask n_p: count(t in sweeps over 2026-05) with dd = 2026-05-05
         assert_eq!(
             lines("window(2026-05-04, 2026-05-06)", "n_p"),
             ["n_p: 1", "  pinned: dd = 2026-05-05", "  cut 2026-04-20"],
+            "a pinned day"
+        );
+    }
+
+    #[test]
+    fn a_field_of_a_hole_day_decision_is_its_hole_never_run_order() {
+        // a hole-day decision is never waited for: read inside another decision, its leg's
+        // amount, which no walk read, is its hole (L §5.14; the review of G1's fix, BF1, P10)
+        let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
+        for ask in ["f", "b"] {
+            assert_eq!(
+                lines_of(TOP, "window(2026-05-04, 2026-05-06)", ask),
+                [
+                    format!("{ask}: {window}"),
+                    "  unknown day: dd".to_owned(),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the window's hole"
+            );
+            assert_eq!(
+                lines_of(TOP, "?\"which day?\"", ask),
+                [
+                    format!("{ask}: ?\"which day?\" (dd)"),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the question's hole"
+            );
+        }
+        assert_eq!(
+            lines_of(TOP, "window(2026-05-04, 2026-05-06)", "f_p"),
+            [
+                "f_p: 100.00 PLN",
+                "  pinned: dd = 2026-05-04",
+                "  cut 2026-04-20"
+            ],
             "a pinned day"
         );
     }

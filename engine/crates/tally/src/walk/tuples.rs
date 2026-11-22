@@ -4,7 +4,7 @@
 //! is a hole is a hole tuple; one whose `where` is refused ends its tuple there, a refused one;
 //! tally 2.1.6), §4.3 (a move's law date by its `at`; a key's `where` that reads a law-dated
 //! fact, while the `at` reads a key not yet bound, waits for the tuple's `at` and is read
-//! there, in binding order: P30, P31); L §5.19 Links (the tuple of a move at its keys under a
+//! there, in binding order: #235's P30, P31); L §5.19 Links (the tuple of a move at its keys under a
 //! cut, its `when` read at the cut, and the places its legs give).
 //! Twin: engine/tools/refcore/moves.py (`move_tuples` with its `go`, `move_law`,
 //! `link_tuple`, `link_places`); refcore guards a waiting `where` (#235).
@@ -15,7 +15,8 @@
 //! a later one), and is read at its tuple's law date once the `at`'s keys are bound, giving
 //! there what its law-free twin gives; where no law date can be had (the `at` refused or a
 //! hole, a later key's domain a hole or its `where` refused first) it is left unread and the
-//! tuple stands with that refusal or hole (P31's Q-3; the gate review's items 1, 15); a tuple
+//! tuple stands with that refusal or hole (#235's P31, its Q-3; the gate review's items 1,
+//! 15); a tuple
 //! with every key bound never leaves with it unread.
 
 use super::instance::{Exists, join};
@@ -46,7 +47,8 @@ pub(super) struct Tuple {
     /// instance, not to the reader of the move's instances.
     pub(super) coll: Collected,
     /// The positions of its keys whose `where` reads a law-dated fact and waits for the
-    /// tuple's `at`, which reads a key not bound when they were (L §4.3, E §4.1 step 1; P30).
+    /// tuple's `at`, which reads a key not bound when they were (L §4.3, E §4.1 step 1;
+    /// #235's P30).
     pub(super) waiting: Vec<usize>,
 }
 
@@ -103,7 +105,7 @@ impl Engine {
                 law @ (Law::Day(_) | Law::None) => law,
             };
             // a `where` that reads a law-dated fact, while the `at` reads a key not yet bound,
-            // waits for its tuple's `at` (L §4.3, E §4.1 step 1; P30)
+            // waits for its tuple's `at` (L §4.3, E §4.1 step 1; #235's P30)
             let pos = tuple.keys.len();
             let waits = mv.dated_wheres.contains(&pos);
             if waits && law != Law::None {
@@ -154,7 +156,7 @@ impl Engine {
     /// tuple as it was while the `at` still reads a key not yet bound, or where the `at` is
     /// refused: its instance then reads the `at` again and is refused alone, as on the path of
     /// a `where` that reads nothing law-dated. L §4.3 (a key binding's `where` is read for each
-    /// tuple at the move's `at`), E §4.1 steps 1 and 2 (P30, P31).
+    /// tuple at the move's `at`), E §4.1 steps 1 and 2 (#235's P30, P31).
     fn waiting_wheres(
         &mut self,
         m: &Reality,
@@ -172,7 +174,7 @@ impl Engine {
             Ok(law) => law,
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
                 // no law date to read the `where` at: the instance reads the `at` again and
-                // is refused alone, as a refused `at` is on the law-free path (P31, Q-3)
+                // is refused alone, as a refused `at` is on the law-free path (#235's P31, Q-3)
                 tuple.waiting.clear();
                 return Ok(Some(tuple));
             }

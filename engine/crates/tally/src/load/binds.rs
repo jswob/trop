@@ -224,7 +224,7 @@ impl Checker {
     /// A move's key binding, as [`Checker::bind`], with what its domain, `on` and span read
     /// and what its `where` reads kept apart, each read with its relation, for the law-date
     /// checks (`lawdates.rs`): a key read before the move's `at` can be has no law date
-    /// (L §4.3, §5.14 Keys; #235, P28, P30).
+    /// (L §4.3, §5.14 Keys; #235, its P28 and P30).
     ///
     /// # Errors
     ///
