@@ -521,8 +521,9 @@ impl Engine {
     /// The runs of the decision moves `decided` that a binding over their kind ranges over,
     /// as the walk ran them: inside a decision, its walk's and those it continues', the ones
     /// before its point; else the main walk's of the read's timeline. One that doesn't exist
-    /// or is modelled past is no member, nor is an uncertain one without `with uncertain`
-    /// (refcore's `movements_of`, its decisions). L §5.14.1 Running reads, §5.19 Bindings.
+    /// or is modelled past is no member, nor is an uncertain one without `with uncertain`;
+    /// one whose day is a hole, which no walk runs, is a member with that hole (refcore's
+    /// `movements_of`, its decisions). L §5.14, §5.14.1 Running reads, §5.19 Bindings.
     fn decided_members(
         &mut self,
         m: &Reality,
@@ -540,6 +541,7 @@ impl Engine {
         for mv in decided {
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
+                    out.extend(hole_day_member(inst));
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
@@ -1335,6 +1337,17 @@ fn once_by_same((groups, sides): (&Groups, &[String]), movements: Vec<Moving>) -
         .collect()
 }
 
+/// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
+/// runs on no day of the walk, so it is a member with that hole, never left out; else none
+/// (L §5.14: a movement whose day is a hole makes every binding over a span it might fall in
+/// a hole; tally 2.3 review of G1, B1).
+fn hole_day_member(inst: &Inst) -> Option<Moving> {
+    match inst.day {
+        Some(Dated::Hole(_)) if inst.exists != Exists::No => Some(Moving::Plan(inst.clone())),
+        Some(Dated::Hole(_) | Dated::Day(_)) | None => None,
+    }
+}
+
 /// Movements in movement order: by day, then by their typed order, ties as they came (refcore's
 /// stable `sort` by `(day_lo(x.day) or datetime.date.max, order_key(x.order))`). L §5.19
 /// Bindings; E §4.1.
@@ -1345,4 +1358,97 @@ fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     }
     keyed.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(keyed.into_iter().map(|(_, mv)| mv).collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A sweep, a decision reading its place, on day `dd`: the day is written in for `DAY`.
+    const SWEEP: &str = r#"model sweep
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+kind sweeps: event certain
+  leg cash: PLN
+
+place sav: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input dd: date
+
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its cap"
+  dd = DAY "its day"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "own"
+
+ask n: count(t in sweeps over 2026-05)
+
+ask n_jan: count(t in sweeps over 2026-01)
+
+ask s: sum(t.cash.amount for t in sweeps over 2026-05)
+
+ask n_p: count(t in sweeps over 2026-05) with dd = 2026-05-05
+"#;
+
+    /// The lines of ask `ask` over [`SWEEP`] with its day `day`.
+    fn lines(day: &str, ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "sweep.tally".to_owned(),
+            bytes: Some(SWEEP.replace("DAY", day).into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_decision_whose_day_is_a_hole_is_a_member_with_its_hole() {
+        // L §5.14: a movement whose day is a hole makes every binding over a span it might fall
+        // in a hole, a decision as any (tally 2.3 review of G1, B1): a window and a `?` alike
+        let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
+        for ask in ["n", "n_jan", "s"] {
+            assert_eq!(
+                lines("window(2026-05-04, 2026-05-06)", ask),
+                [
+                    format!("{ask}: {window}"),
+                    "  unknown day: dd".to_owned(),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the window's hole"
+            );
+            assert_eq!(
+                lines("?\"which day is the sweep?\"", ask),
+                [
+                    format!("{ask}: ?\"which day is the sweep?\" (dd)"),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the question's hole"
+            );
+        }
+        assert_eq!(
+            lines("window(2026-05-04, 2026-05-06)", "n_p"),
+            ["n_p: 1", "  pinned: dd = 2026-05-05", "  cut 2026-04-20"],
+            "a pinned day"
+        );
+    }
 }
