@@ -286,27 +286,19 @@ impl Env {
 
     /// The written bindings in scope that `parts`, a pin's value then its keys, name, each
     /// once, in the order refcore's walk meets their names (refcore's `_pertuple`, its
-    /// `used`); none where a form whose parts' order isn't kept here names two not met
-    /// before, whose order refcore's walk gives. L §8.2.
+    /// `used`). L §8.2.
     #[must_use]
-    pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Option<Vec<String>> {
+    pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
-        for group in parts.iter().flat_map(|part| names_walked(part)) {
-            let mut found: Vec<&str> = Vec::new();
-            for name in group {
-                let Some(text) = self.get(name).and_then(|v| v.written.as_deref()) else {
-                    continue;
-                };
-                if !found.contains(&text) && !out.iter().any(|o| o == text) {
-                    found.push(text);
-                }
+        for name in parts.iter().flat_map(|part| names_walked(part)) {
+            let Some(text) = self.get(name).and_then(|v| v.written.as_deref()) else {
+                continue;
+            };
+            if !out.iter().any(|o| o == text) {
+                out.push(text.to_owned());
             }
-            if found.len() > 1 {
-                return None;
-            }
-            out.extend(found.into_iter().map(str::to_owned));
         }
-        Some(out)
+        out
     }
 
     /// Binds `name` to `value` in this scope.

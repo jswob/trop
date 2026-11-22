@@ -263,6 +263,20 @@ pub(super) fn year_fraction_of(
     dc: &Value,
 ) -> Result<Num, Stop> {
     let (from, to) = (dcf_day(m, a)?, dcf_day(m, b)?);
+    daycount_of(m, dc)?;
+    let days = from
+        .days_to(to)
+        .ok_or_else(|| invariant("a day count past the integers"))?;
+    Num::int(days).checked_div(&Num::int(365)).map_err(num_stop)
+}
+
+/// A day count code `dc`: `act365`, the one L §3.3 states; anything else is `LOAD-UNIT dcf:
+/// <dc> is not a daycount code` (refcore's `m_dcf_q`). L §3.3.
+///
+/// # Errors
+///
+/// `LOAD-UNIT` for any other value.
+pub(super) fn daycount_of(m: &Reality, dc: &Value) -> Result<(), Stop> {
     let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = dc {
         w.clone()
     } else {
@@ -274,10 +288,7 @@ pub(super) fn year_fraction_of(
             format!("dcf: {word} is not a daycount code"),
         ));
     }
-    let days = from
-        .days_to(to)
-        .ok_or_else(|| invariant("a day count past the integers"))?;
-    Num::int(days).checked_div(&Num::int(365)).map_err(num_stop)
+    Ok(())
 }
 
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.

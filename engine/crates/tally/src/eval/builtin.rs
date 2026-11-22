@@ -183,13 +183,20 @@ impl Engine {
             .args(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
-        if x.as_hole().is_some() || u.as_hole().is_some() || mode.as_hole().is_some() {
-            return hole_of(&[x.as_hole(), u.as_hole(), mode.as_hole()]);
-        }
         for v in [&x, &u, &mode] {
             if *v == Value::None {
                 return Err(refuse(Run::None, "a value is none here: round".to_owned()));
             }
+        }
+        // refusals outrank holes (L §8): the mode's and the step's own refusals come first
+        if mode.as_hole().is_none() {
+            rounding_mode(m, "round", &mode)?;
+        }
+        if u.as_hole().is_none() {
+            positive_step(m, &u)?;
+        }
+        if x.as_hole().is_some() || u.as_hole().is_some() || mode.as_hole().is_some() {
+            return hole_of(&[x.as_hole(), u.as_hole(), mode.as_hole()]);
         }
         // off the list: a ranged date is the hole (L §4.4)
         if let Some(hole) = unlisted(&[&x, &u, &mode], "round") {
@@ -705,16 +712,7 @@ pub(super) fn minor_of(m: &Reality, call: &Call) -> Result<Value, Stop> {
 pub(super) fn round_values(m: &Reality, x: &Value, u: &Value, mode: &Value) -> Result<Value, Stop> {
     let mode = rounding_mode(m, "round", mode)?;
     let xs = Scalar::of(m, x)?;
-    let us = Scalar::of(m, u)?;
-    if us.q.compare(&Num::zero()).map_err(num_stop)? != core::cmp::Ordering::Greater {
-        return Err(refuse(
-            Run::Domain,
-            format!(
-                "round with a step {} that is not positive",
-                u.text(m).map_err(num_stop)?
-            ),
-        ));
-    }
+    let us = positive_step(m, u)?;
     let (step_q, step_unit) = match &us.class {
         Some(Class::Flex) if xs.percent() => (
             us.q.checked_mul(&Num::ratio(1, 100).map_err(num_stop)?)
@@ -743,6 +741,22 @@ pub(super) fn round_values(m: &Reality, x: &Value, u: &Value, mode: &Value) -> R
     let step = step_q.checked_mul(&factor).map_err(num_stop)?;
     let q = xs.q.round(&step, mode).map_err(num_stop)?;
     round_result(m, &xs, &us, u, q)
+}
+
+/// `round`'s step `u` as a number: one that isn't positive is `RUN-DOMAIN round with a step
+/// <u> that is not positive` (L §7.2, §8.4; refcore's `c_round`).
+fn positive_step(m: &Reality, u: &Value) -> Result<Scalar, Stop> {
+    let us = Scalar::of(m, u)?;
+    if us.q.compare(&Num::zero()).map_err(num_stop)? != core::cmp::Ordering::Greater {
+        return Err(refuse(
+            Run::Domain,
+            format!(
+                "round with a step {} that is not positive",
+                u.text(m).map_err(num_stop)?
+            ),
+        ));
+    }
+    Ok(us)
 }
 
 /// A rounding mode of function `what` (`round`, `prorata`): a code word of the rounding

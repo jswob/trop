@@ -358,9 +358,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals its keys and value meet; `NotBuilt` for a pin per binding tuple whose
-    /// value or a key names two bindings through a form whose parts' order isn't kept (a
-    /// walk's read, a span), whose bindings' order refcore's walk gives.
+    /// The refusals its keys and value meet.
     fn value_pin(
         &mut self,
         m: &Reality,
@@ -399,9 +397,7 @@ impl Engine {
                         parts.push(e);
                     }
                 }
-                let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
-                    "a pin per binding tuple naming two bindings through a walk's read",
-                ))?;
+                let named = env.binds_named(&parts);
                 (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
             } else {
                 None

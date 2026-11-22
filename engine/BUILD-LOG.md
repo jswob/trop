@@ -6713,3 +6713,45 @@ The plan's group G2 (`tmp/m4/build-plan.md` §3 rows 6 to 9 and 13, §5), on T's
 - **What I tried:** a `Value::Tuple(Vec<Value>)` printed `(a, b)`, `bare_key` returning it for several bindings (refcore's `Tup`). It compiles only with `| Value::Tuple(_)` added beside `Value::List(_)` in the two kernel matches (each an arm that doesn't apply to a tuple: an instance's `on` and a unit read, which load's types keep a tuple from). Reverted. Not tried: carrying the tuple in an existing variant (a `List` or a `Word` printed as `(…)`), which would be a disguise, not the plain form.
 - **What I ask:** whether the two one-token kernel additions may go in under G2 (then at high, as the rest of the group), or row 9 moves to G3 `walked`, the kernel group, as one more item.
 - **State:** last green commit is this entry's (`check commit` green); nothing uncommitted. The variant's code is about 40 lines (`model/value.rs`, `eval/extremes.rs`, the two kernel arms); refcore's answers for its corners are in `tmp/m4/g2/tuple.ref`.
+
+## 2026-11-22 M4 G1, the review's fixes: B1, B2 (issue #252)
+
+The review of G1 (`tmp/m4/review-g1.md`, range 6962697b..ed883763) found 2 blocking defects. Both are fixed here, on top of 6db1071f (T's C3). T's C4a vectors for B1 and B2 aren't merged yet, so the review's probes (`tmp/m4/review/g1/`) stand in for them.
+
+**B1. A per-tuple pin through a walk's read stopped the run `not implemented`.**
+- `eval/bindings.rs`'s `walk_order` now gives refcore's walk order for every form, so the walk never gives up. The groups, `names_under` and the `NotBuilt` in `eval/pins.rs` are gone, and `binds_named` returns its list.
+- The read forms' orders come from `parser.py`'s fields, the last field first:
+  - `last(x, d)`: d, then x. `bal`: its `of` (a pair's last first), its days, its place.
+  - `flows`: its `for`, its span's end, then its start, then what it reads. `covered`: x, then the span's end and start. `value`: its `of`, its `by`, its day, its place.
+  - The queries, `crps`, the distributions, `prorata`, `legof`, records (a leg's amount, `to`, `from`), and a binding's `over` span.
+- A balance read's projection (`from t`) stays out of the walk, as in refcore, where `proj` is a dict that `node.walk` doesn't enter.
+- The parsed unit test now also walks `last(q[j], d)`, `bal(x[k], e)` and `flows(f[k], a .. b, for j)`.
+
+**B2. A refusal outranks a hole** (L §8, "Refusals outrank holes"). `accrue`, `periodic`, `factor` and `round` returned the hole of any hole argument before their own refusals. Now each takes three steps: `none` (`RUN-NONE`); then each known argument's own refusal; then the holes.
+- **`accrue`:** the principal's type, `yearly` (a rate that isn't yearly), `daycount_of` (now split out of `dates.rs`'s `year_fraction_of`), and `accrual`.
+  - `accrual` maps a compounding code to `Accrual`, the narrower enum of the codes `accrue`'s row states. `discount` is `RUN-DOMAIN` and `nominal 0` is `RUN-DIV division by zero`, whatever r is.
+  - So `accrued` no longer matches `discount`.
+- **`periodic`/`factor`:** a known rate's `rate_parts` (the day pairing, a discount of 1, the code). With a hole rate, the code alone, `nominal 0` included. Then a known n's `plain_count`.
+- **`round`:** the mode's `rounding_mode` and the step's new `positive_step`, which `round_values` now shares. A unit mismatch needs x, so it waits for x.
+- No one place decides this: each built-in's arguments have their own domains. So each takes the same three steps, and `rates.rs`'s header states the order.
+
+**The sweep** (`tmp/m4/g1/sweep2.sh`). It ran ask by ask on refcore_fast, the engine before the fix (HEAD 6db1071f's quick binary, built from the reverted files) and the engine after it. It covered the paper check's 43 probes (43 runs) and the review's 32 probe texts (33 runs, `p9_scen` with `p9_alt`).
+- **277 asks: 246 same → same, 4 different → same, 8 same → different, 19 different → different.**
+- **Different → same, 4 (B1):** `B1_min` `q_lb`, `p14_bal` `q_two`, `p2_unordered` `q_two` and `q_for`.
+- **Same → different, 8, every one B2.** Refcore prints the hole; the engine now refuses, as L §8 says:
+  - `a11_refhole`: `q_disc` (`RUN-DOMAIN` discount), `q_month` and `q_monthp` (`RUN-DOMAIN` a monthly rate, with a hole date and a hole principal), `q_round` (`RUN-DOMAIN round with a step 0.00 PLN that is not positive`, with a hole x).
+  - `a12_nonehole` `q_acc` and `a8_holes` `q_nonehole` (`RUN-NONE`).
+  - `a2_refuse`: `q_dhole` (discount) and `q_mhole` (monthly rate).
+  - T holds these for #255 with the text's answers (C4a).
+- **Different → different, 19, each byte-identical before and after:**
+  - `print__rows` `c` (paper).
+  - The review's non-blocking findings, refcore's faults or its crash: `p3_memo` ×3, `p4_holeone` ×2, `p5_axhole` ×2, `p7_explnest` ×2, `p12_with` ×3, `a6_inv` `q_need`, `a7_range_periodic` `q_p`, `a10_zero` `q` and `q_zs`, `a9_nominal` `q_0`.
+  - `a2_refuse` `q_frac`, a fractional power, M6.
+- My G1 probes (`order`, `pins`, `accrue`) are still byte-equal.
+
+- **Size** (`git diff --shortstat HEAD -- engine/crates`): 6 files, +265 −143.
+- **Files:** `eval/bindings.rs`, `eval/state.rs`, `eval/pins.rs`, `eval/rates.rs`, `eval/dates.rs`, `eval/builtin.rs`.
+- **Exceptions:** +0. **Open STOP-REPORTs:** none.
+- **Not done:** the 7 non-blocking findings are on the run's list. The only one that was mine, `rates.rs:9`'s header line, is changed with B2.
+- **Usage:** about 0.23 % of the week for this turn (0.53 % for the session, by `engine/tools/usage`).
+- **Checks:** `check commit: green, 24 steps (227s)`, exit 0, on this tree but for this line.

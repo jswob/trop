@@ -20,8 +20,8 @@ use super::years::span_year;
 use crate::hole::Hole;
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
-    Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, OfQ, Pin, PinForm, Postfix, RChoice,
-    Span as SpanText, Step, Stop,
+    Bind, Domain as Over, Expr, Field, FieldValue, Key, Lit, OfQ, Pin, PinForm, Postfix, Prorata,
+    RChoice, Span as SpanText, Step, Stop,
 };
 use crate::time::{Day, Period};
 use std::collections::BTreeSet;
@@ -550,56 +550,39 @@ pub(crate) fn names_in(e: &Expr) -> Option<Vec<&str>> {
     Some(out)
 }
 
-/// The names expression `e` holds, in the order refcore's walk meets them (`node.walk`, a
-/// node before its parts, its parts last-written first, a list's items in order: `x[a] +
-/// y[b]` meets `b` before `a`), each name a group of its own. A form whose parts' order that
-/// walk gives from fields this tree doesn't keep (a walk's read, a span, a query) is one
-/// group of every name under it, in no promised order. L §8.2 (a pin formed per binding
-/// tuple prints with the bindings its value and keys name).
-pub(crate) fn names_walked(e: &Expr) -> Vec<Vec<&str>> {
-    let mut groups: Vec<Vec<&str>> = Vec::new();
+/// The names expression `e` holds, in the order refcore's walk meets them (`node.walk`: a
+/// node before its parts, its fields last-written first, a list's items in order, so the
+/// walk of `x[a] + y[b]` meets `b` before `a`). L §8.2 (a pin formed per binding tuple
+/// prints with the bindings its value and keys name).
+pub(crate) fn names_walked(e: &Expr) -> Vec<&str> {
+    let mut names: Vec<&str> = Vec::new();
     let mut work: Vec<&Expr> = vec![e];
     while let Some(x) = work.pop() {
         if let Expr::Name(n) = x {
-            groups.push(vec![n.as_str()]);
-            continue;
+            names.push(n.as_str());
         }
-        match walk_order(x) {
-            Some(parts) => work.extend(parts.into_iter().rev()),
-            None => groups.push(names_under(x)),
-        }
+        work.extend(walk_order(x).into_iter().rev());
     }
-    groups
-}
-
-/// Every name under expression `e`, every part walked ([`expr_parts`]), in no promised order.
-fn names_under(e: &Expr) -> Vec<&str> {
-    let mut out: Vec<&str> = Vec::new();
-    let mut work: Vec<&Expr> = vec![e];
-    while let Some(x) = work.pop() {
-        if let Expr::Name(n) = x {
-            out.push(n.as_str());
-        }
-        work.extend(expr_parts(x));
-    }
-    out
+    names
 }
 
 /// The parts of expression `e` in the order refcore's walk visits them, from its syntax
-/// tree's fields (`parser.py`): an operator chain is left-nested, so its last term first; a
-/// read's keys before its base; a call's band key before its arguments; an aggregate's `ties
-/// by`, then its bindings (each its `where`, `on`, step and ends, last first), then its
-/// term; an `as if`'s pins (each its value, then its keys) before its expression. None for a
-/// form whose order isn't kept here. L §8.2.
-fn walk_order(e: &Expr) -> Option<Vec<&Expr>> {
-    let parts: Vec<&Expr> = match e {
+/// tree's fields as `parser.py` writes them, the last field first: an operator chain is
+/// left-nested, so its last term first; a read's keys before its base; a call's band key
+/// before its arguments; an aggregate's `ties by`, its bindings, then its term; an `as if`'s
+/// pins (each its value, then its keys) before its expression; a walk's read its clauses
+/// before what it reads (`bal`: its `of`, its days, its place, never its projection, which
+/// refcore keeps out of the walk). L §8.2.
+fn walk_order(e: &Expr) -> Vec<&Expr> {
+    match e {
         Expr::Lit(_)
         | Expr::Str(_)
         | Expr::Name(_)
         | Expr::None
         | Expr::Never
         | Expr::Cut
-        | Expr::List(_) => Vec::new(),
+        | Expr::List(_)
+        | Expr::Calendar(_) => Vec::new(),
         Expr::If(parts) => parts.iter().rev().collect(),
         Expr::Or(terms) | Expr::And(terms) => terms.iter().rev().collect(),
         Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => vec![y],
@@ -630,11 +613,10 @@ fn walk_order(e: &Expr) -> Option<Vec<&Expr>> {
             .into_iter()
             .chain(core::iter::once(&**base))
             .collect(),
+        Expr::Record(fields) => fields.iter().flat_map(field_order).collect(),
         Expr::Agg(agg) => {
             let mut out: Vec<&Expr> = agg.ties.iter().flatten().collect();
-            for bind in &agg.binds {
-                out.extend(bind_order(bind)?);
-            }
+            out.extend(agg.binds.iter().flat_map(bind_order));
             out.extend(agg.term.iter());
             out
         }
@@ -643,36 +625,107 @@ fn walk_order(e: &Expr) -> Option<Vec<&Expr>> {
             .flat_map(pin_order)
             .chain(core::iter::once(&**inner))
             .collect(),
-        Expr::LegOf(..)
-        | Expr::Record(_)
-        | Expr::Last(_)
-        | Expr::Bal(_)
-        | Expr::Flows(_)
-        | Expr::Covered(_)
-        | Expr::Calendar(_)
-        | Expr::Value(_)
-        | Expr::Query(_)
-        | Expr::Crps(_)
-        | Expr::DistFn(_)
-        | Expr::Dist(_)
-        | Expr::Prorata(_) => return None,
-    };
-    Some(parts)
+        Expr::LegOf(base, of) => {
+            let mut out = of_order(of);
+            out.push(base);
+            out
+        }
+        Expr::Last(pair) => vec![&pair.1, &pair.0],
+        Expr::Bal(bal) => {
+            let mut out: Vec<&Expr> = bal.of.iter().flat_map(of_order).collect();
+            out.extend(bal.args.iter());
+            out.push(&bal.place);
+            out
+        }
+        Expr::Flows(flows) => {
+            let mut out: Vec<&Expr> = flows.for_key.iter().collect();
+            out.extend(span_order(&flows.span));
+            out.push(&flows.target);
+            out
+        }
+        Expr::Covered(pair) => {
+            let mut out: Vec<&Expr> = vec![&pair.0];
+            out.extend(span_order(&pair.1));
+            out
+        }
+        Expr::Value(v) => {
+            let mut out: Vec<&Expr> = v.of.iter().flat_map(of_order).collect();
+            out.extend(v.by.iter().map(|price| &price.input));
+            out.extend([&v.day, &v.place]);
+            out
+        }
+        Expr::Query(q) => {
+            let mut out: Vec<&Expr> = q.level.iter().chain(q.filter.iter()).collect();
+            out.extend(q.binds.iter().flatten().flat_map(bind_order));
+            out.push(&q.arg);
+            out
+        }
+        Expr::Crps(c) => {
+            let mut out: Vec<&Expr> = vec![&c.outcome];
+            out.extend(c.bind.iter().flat_map(bind_order));
+            out.extend(c.weight.iter());
+            out.push(&c.forecast);
+            out
+        }
+        Expr::DistFn(f) => vec![&f.value, &f.at],
+        Expr::Dist(d) => {
+            let mut out: Vec<&Expr> = d.bind.iter().flat_map(bind_order).collect();
+            out.extend(d.term.iter());
+            out.extend(d.args.iter());
+            out
+        }
+        Expr::Prorata(p) => prorata_order(p),
+    }
+}
+
+/// `prorata(total, w for binds, key, u, mode, rest, tie)`'s parts as refcore's walk visits
+/// them: its `ties by`, its mode, its step, its key, its bindings, its weight, its total.
+fn prorata_order(p: &Prorata) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = p.ties.iter().flatten().collect();
+    out.extend(p.mode.iter());
+    out.extend(step_expr(&p.unit));
+    out.push(&p.key);
+    out.extend(p.binds.iter().flat_map(bind_order));
+    out.extend([&p.weight, &p.total]);
+    out
 }
 
 /// A binding's parts as refcore's walk visits them (`bind(var, dom, on, over, where)`): its
-/// `where`, its `on`, its range's step and ends, the last first; none for a span, whose
-/// order isn't kept here.
-fn bind_order(bind: &Bind) -> Option<Vec<&Expr>> {
-    if bind.over.is_some() {
-        return None;
-    }
-    let mut out: Vec<&Expr> = bind.filter.iter().chain(bind.on.iter()).collect();
+/// `where`, its span's ends (the last first), its `on`, its range's step and ends (the last
+/// first).
+fn bind_order(bind: &Bind) -> Vec<&Expr> {
+    let mut out: Vec<&Expr> = bind.filter.iter().collect();
+    out.extend(bind.over.iter().flat_map(span_order));
+    out.extend(bind.on.iter());
     if let Over::Range(range) = &bind.domain {
         out.extend(range.2.iter());
         out.extend([&range.1, &range.0]);
     }
-    Some(out)
+    out
+}
+
+/// A span's ends as refcore's walk visits them (`span(a, b)`): the last first.
+fn span_order(span: &SpanText) -> Vec<&Expr> {
+    span.to.iter().chain(span.from.iter()).collect()
+}
+
+/// An `of`'s parts as refcore's walk visits them: one read, or a pair's last first
+/// (`ofpair(a, b)`).
+fn of_order(of: &OfQ) -> Vec<&Expr> {
+    match of {
+        OfQ::Ref(e) => vec![e],
+        OfQ::Pair(a, b) => vec![b, a],
+    }
+}
+
+/// A record field's parts as refcore's walk visits them: a named field's value; a leg's
+/// amount, its `to`, its `from` (`leg(name, frm, to, amount)`).
+fn field_order(f: &Field) -> Vec<&Expr> {
+    match f {
+        Field::Named(_, FieldValue::Expr(e)) => vec![e],
+        Field::Named(_, FieldValue::Lit(_) | FieldValue::Hole(_) | FieldValue::None) => Vec::new(),
+        Field::Leg(leg) => vec![&leg.amount, &leg.to, &leg.from],
+    }
 }
 
 /// A pin's parts as refcore's walk visits them (`pin(kind, target, value, sample)`): its
@@ -936,13 +989,13 @@ mod tests {
             Box::new(read("b2", &["k", "j"])),
             vec![(AddOp::Add, read("c2", &["j", "m"]))],
         );
-        let flat: Vec<&str> = names_walked(&e).into_iter().flatten().collect();
+        let flat: Vec<&str> = names_walked(&e);
         assert_eq!(flat, ["j", "m", "c2", "k", "j", "b2"], "refcore's order");
         // `if a then b else c`: the else first
         let parts = ["a", "b", "c"].map(|n| Expr::Name(n.to_owned()));
         let choice = Expr::If(Box::new(parts));
-        let groups: Vec<Vec<&str>> = names_walked(&choice);
-        assert_eq!(groups, [["c"], ["b"], ["a"]], "the if's parts, last first");
+        let names: Vec<&str> = names_walked(&choice);
+        assert_eq!(names, ["c", "b", "a"], "the if's parts, last first");
     }
 
     /// The expressions of the asks of model text `text`, parsed, not loaded.
@@ -970,15 +1023,13 @@ mod tests {
   end 2026-12-31
 
 ask q: sum(x[i] + y[j] for i in a .. b step c where z[k] > d), (u[k] as if {v[j] = w[i]})
+ask r: last(q[j], d), bal(x[k], e), flows(f[k], a .. b, for j)
 ";
 
     #[test]
     fn an_aggregate_and_an_as_if_are_walked_as_refcore_walks_them() {
         let exprs = asked(WALKED);
-        let walked: Vec<Vec<&str>> = exprs
-            .iter()
-            .map(|e| names_walked(e).into_iter().flatten().collect())
-            .collect();
+        let walked: Vec<Vec<&str>> = exprs.iter().map(|e| names_walked(e)).collect();
         // the aggregate: its binding's `where` (the right side first), its step and ends,
         // the last first, then its term; the `as if`: the pin's value, its keys, then its
         // expression
@@ -987,6 +1038,9 @@ ask q: sum(x[i] + y[j] for i in a .. b step c where z[k] > d), (u[k] as if {v[j]
             [
                 vec!["d", "k", "z", "c", "b", "a", "j", "y", "i", "x"],
                 vec!["i", "w", "j", "k", "u"],
+                vec!["d", "j", "q"],
+                vec!["e", "k", "x"],
+                vec!["j", "b", "a", "k", "f"],
             ],
             "refcore's order"
         );

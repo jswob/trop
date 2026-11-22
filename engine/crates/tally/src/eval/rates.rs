@@ -6,12 +6,13 @@
 //! domain that load couldn't see), §4.4 (`accrue` off the list: a ranged date is the hole).
 //! Twin: engine/tools/refcore/eval2.py (`m_trans_call`, `m_rate_parts`, `m_periodic_real`,
 //! `m_accrue_real`, `m_dcf_q`).
-//! Invariants: a hole argument makes the call that hole; a power by an integer is exact; a
+//! Invariants: a refusal outranks a hole: `none`, then each known argument's own refusal,
+//! then a hole argument makes the call that hole (L §8); a power by an integer is exact; a
 //! power that isn't an integer stops `NotBuilt` (`to u`, the transcendental kernel, is M6's);
 //! nothing here rounds.
 
 use super::builtin::power_past_64_bits;
-use super::dates::year_fraction_of;
+use super::dates::{daycount_of, year_fraction_of};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
 use super::windows::{single, unlisted};
@@ -32,10 +33,6 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let vals = self.args(m, call, env, ctx)?;
-        let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
-        if holes.iter().any(Option::is_some) {
-            return hole_of(&holes);
-        }
         if vals.contains(&Value::None) {
             return Err(refuse(
                 Run::None,
@@ -47,20 +44,33 @@ impl Engine {
             [rate, count, period, code] => (rate, Some(count), period, code),
             _ => return Err(arity()),
         };
-        let parts = rate_parts(m, rate, period, code, &call.name)?;
-        let q = match (parts, count) {
+        // refusals outrank holes (L §8): each known argument's own refusal comes first
+        let parts = if known(rate) {
+            Some(rate_parts(m, rate, period, code, &call.name)?)
+        } else {
+            not_divided_by_zero(compounding(m, &call.name, code)?)?;
+            None
+        };
+        let times = match count {
+            Some(n) if known(n) => Some(plain_count(m, n)?),
+            Some(_) | None => None,
+        };
+        let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
+        if holes.iter().any(Option::is_some) {
+            return hole_of(&holes);
+        }
+        let parts = parts.ok_or_else(|| invariant("a known rate's parts"))?;
+        let q = match (parts, times) {
             (Parts::Linear(per), None) => per,
             (Parts::Power(base, exponent), None) => power(&base, &exponent)?
                 .checked_sub(&Num::int(1))
                 .map_err(num_stop)?,
             (Parts::Linear(per), Some(times)) => {
                 let base = Num::int(1).checked_add(&per).map_err(num_stop)?;
-                power(&base, &plain_count(m, times)?)?
+                power(&base, &times)?
             }
             (Parts::Power(base, exponent), Some(times)) => {
-                let exponent = exponent
-                    .checked_mul(&plain_count(m, times)?)
-                    .map_err(num_stop)?;
+                let exponent = exponent.checked_mul(&times).map_err(num_stop)?;
                 power(&base, &exponent)?
             }
         };
@@ -82,23 +92,34 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let vals = self.args(m, call, env, ctx)?;
-        let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
-        if holes.iter().any(Option::is_some) {
-            return hole_of(&holes);
-        }
         if vals.contains(&Value::None) {
             return Err(refuse(Run::None, "a value is none here: accrue".to_owned()));
         }
         let [principal, rate, from, to, daycount, code] = vals.as_slice() else {
             return Err(arity());
         };
+        // refusals outrank holes (L §8): each known argument's own refusal comes first
+        let principal = known(principal)
+            .then(|| principal_of(m, principal))
+            .transpose()?;
+        let r = known(rate).then(|| yearly(m, rate)).transpose()?;
+        if known(daycount) {
+            daycount_of(m, daycount)?;
+        }
+        let how = known(code)
+            .then(|| accrual(compounding(m, "accrue", code)?))
+            .transpose()?;
+        let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
+        if holes.iter().any(Option::is_some) {
+            return hole_of(&holes);
+        }
         if let Some(hole) = unlisted(&[from, to], "accrue") {
             return Ok(Value::Hole(hole));
         }
-        let (p, unit) = principal_of(m, principal)?;
-        let r = yearly(m, rate)?;
+        let (Some((p, unit)), Some(r), Some(how)) = (principal, r, how) else {
+            return Err(invariant("accrue's known arguments"));
+        };
         let years = year_fraction_of(m, (&single(from), &single(to)), daycount)?;
-        let how = compounding(m, "accrue", code)?;
         let interest = accrued((&p, &r), &years, how)?;
         Ok(Value::Number(Number::plain(interest, unit)))
     }
@@ -149,36 +170,70 @@ fn yearly(m: &Reality, rate: &Value) -> Result<Num, Stop> {
     ))
 }
 
-/// The interest on `p` at yearly rate `r` over `years` under compounding `how` (refcore's
+/// The interest on `p` at yearly rate `r` over `years` under `how` (refcore's
 /// `m_accrue_real`). L §3.3.
-fn accrued((p, r): (&Num, &Num), years: &Num, how: Compounding) -> Result<Num, Stop> {
+fn accrued((p, r): (&Num, &Num), years: &Num, how: Accrual) -> Result<Num, Stop> {
     let one = Num::int(1);
     let (base, exponent) = match how {
-        Compounding::Simple => {
+        Accrual::Simple => {
             let per = r.checked_mul(years).map_err(num_stop)?;
             return p.checked_mul(&per).map_err(num_stop);
         }
-        Compounding::Effective => (one.checked_add(r).map_err(num_stop)?, years.clone()),
-        Compounding::Nominal(times) => {
+        Accrual::Effective => (one.checked_add(r).map_err(num_stop)?, years.clone()),
+        Accrual::Nominal(times) => {
             let times = Num::int(times);
             let base = one
                 .checked_add(&r.checked_div(&times).map_err(num_stop)?)
                 .map_err(num_stop)?;
             (base, times.checked_mul(years).map_err(num_stop)?)
         }
-        Compounding::Discount => {
-            // accrue's row states simple, effective and nominal m (L §3.3); discount is
-            // outside it (L §8.4)
-            return Err(refuse(
-                Run::Domain,
-                "accrue under discount: its row states simple, effective and nominal m".to_owned(),
-            ));
-        }
     };
     let grown = power(&base, &exponent)?
         .checked_sub(&one)
         .map_err(num_stop)?;
     p.checked_mul(&grown).map_err(num_stop)
+}
+
+/// The compounding codes `accrue`'s row states (L §3.3).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Accrual {
+    /// `simple`.
+    Simple,
+    /// `effective`.
+    Effective,
+    /// `nominal m`, m not 0.
+    Nominal(i64),
+}
+
+/// The accrual compounding `how` gives: `discount` is outside `accrue`'s row, `RUN-DOMAIN`
+/// (L §3.3, §8.4; refcore's `m_accrue_real`), and `nominal 0` divides by zero.
+fn accrual(how: Compounding) -> Result<Accrual, Stop> {
+    match not_divided_by_zero(how)? {
+        Compounding::Simple => Ok(Accrual::Simple),
+        Compounding::Effective => Ok(Accrual::Effective),
+        Compounding::Nominal(times) => Ok(Accrual::Nominal(times)),
+        // accrue's row states simple, effective and nominal m (L §3.3); discount is
+        // outside it (L §8.4)
+        Compounding::Discount => Err(refuse(
+            Run::Domain,
+            "accrue under discount: its row states simple, effective and nominal m".to_owned(),
+        )),
+    }
+}
+
+/// Compounding `how`, unless it is `nominal 0`, whose r/0 is `RUN-DIV division by zero`
+/// whatever r is, a hole too (L §7.1, §8: refusals outrank holes).
+fn not_divided_by_zero(how: Compounding) -> Result<Compounding, Stop> {
+    if how == Compounding::Nominal(0) {
+        return Err(refuse(Run::Div, "division by zero".to_owned()));
+    }
+    Ok(how)
+}
+
+/// Whether a value is known: no hole (L §8: the refusals of the known arguments outrank
+/// the holes of the others).
+fn known(v: &Value) -> bool {
+    v.as_hole().is_none()
 }
 
 /// A compounding code (L §3.3).
