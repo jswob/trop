@@ -1,0 +1,48 @@
+# L §4.4 A movement takes a day, L §5.14 (tally 2.3, #247; review of G1, B1): the window twin of
+# L5_14_hole_day_decision_in_binding: the decision is a hole day naming dd, and a member of the binding.
+=== m.tally
+model d1
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind sweeps: event certain
+  leg cash: PLN
+place sav: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dd: date
+move sweep: sweeps
+  on dd
+  reads sav
+  leg cash from sav to world amount min(bal(sav), pay)
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dd = window(2026-05-04, 2026-05-06) "c"
+  opening[sav] = 500.00 PLN at 2026-01-01 start "c"
+ask n: count(t in sweeps over 2026-05)
+ask n_p4: count(t in sweeps over 2026-05) with dd = 2026-05-04
+ask n_p6: count(t in sweeps over 2026-05) with dd = 2026-05-06
+ask s: sum(t.cash.amount for t in sweeps over 2026-05)
+ask s_p5: sum(t.cash.amount for t in sweeps over 2026-05) with dd = 2026-05-05
+=== expect
+n: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep" (dd)
+  unknown day: dd
+  cut 2026-04-20
+n_p4: 1
+  pinned: dd = 2026-05-04
+  cut 2026-04-20
+n_p6: 1
+  pinned: dd = 2026-05-06
+  cut 2026-04-20
+s: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep" (dd)
+  unknown day: dd
+  cut 2026-04-20
+s_p5: 100.00 PLN
+  pinned: dd = 2026-05-05
+  cut 2026-04-20

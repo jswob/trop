@@ -7,6 +7,20 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.3, the first group's review: three mends (P6; issue #247; 1 623 tests)
+
+- **B1, a hole-day decision is a member** (L §5.14): `mreads.movements_of` took a decision only from the walk, which
+  never runs one whose day is a hole, so a binding over its kind was 0 for a `?` day and a window alike. It is now a
+  member with its hole; `mreads.hole_day_dec_body` gives it its legs' places (as a refused instance's,
+  `moves.refused_places`) with its day's hole for amounts, so a `where` on its places is decided
+  (`L5_18_partial_not_linear` q6 keeps its bytes).
+- **B2, C-4 under a hole `at`** (E §5 step 1): `moves.law_hole_inst` measures the instance's body with the law date's
+  hole; `Engine.read_at_hole_law` reads an input there as the value every day the hole carries gives, else the
+  hole. A `?` law date carries no days, so its reads are the hole and the step records nothing (the `?`-`at` twin
+  stays 0, as on every engine before; a window `at` is the hole).
+- **Q3, a removal** (E §5 step 1): a `when` false at a hole day leaves the day's hole as the existence
+  (`inst_body`); `hole_day_steps` reads that state as not existing, so the step that ends it records δ = −A.
+
 ## tally 2.3, group W1: the timeline takes days (the plan's G1; issue #247; 1 619 tests)
 
 - **A movement takes a day** (L §4.4): `moves.hole_day`, where an instance's `on` and its law date are set, turns a

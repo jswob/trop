@@ -1127,6 +1127,8 @@ class Engine:
         d, period = self.time_point(info, keys, ctx)
         if info.reading:
             return self.read_reading(info, keys, ctx, probe)
+        if isinstance(d, Hole):
+            return self.read_at_hole_law(info, keys, ctx, d, calendar, probe)
         self.need_law(d, info)
         try:
             cands = self.candidates(info.rows, keys, d, ctx, info)
@@ -1145,6 +1147,25 @@ class Engine:
             v = self.prices(info, keys, ctx, v, d)
         v = self.apply_field_pins(info, keys, ctx, v)
         return v
+
+    def read_at_hole_law(self, info, keys, ctx, d, calendar, probe):
+        """An input read at a law date that is a hole (a hole `at` measured for C-4's clause, moves.law_hole_inst):
+        the value every day the hole may be gives, else the hole; a hole with no days it carries may be any day, so
+        it is the hole (L §5.14: "a day that is a hole … has no bound"; tally 2.3 review of G1, B2)."""
+        days = []
+        for q in d.qs:
+            ws = CARRY.get(q)
+            if not ws:
+                return d
+            for w in ws:
+                days.extend(w[2])
+        out = None
+        for x in sorted(set(days)):
+            v = self.read_input(info, keys, ctx.but(law=x), calendar, probe)
+            if isinstance(v, (Hole, tuple, TallyError)) or (out is not None and vkey(v) != vkey(out)):
+                return d
+            out = v
+        return d if out is None else out
 
     def prices(self, info, keys, ctx, v, d):
         """A figure in Y prices (L §3.4)."""
