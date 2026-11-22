@@ -1,0 +1,45 @@
+model b4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+unit hour "godzina"
+input pct: num %
+input g: num %/year
+input fx: num PLN/EUR
+input wage: num PLN/hour
+input hrs: num hour
+input r: rate
+input x: money PLN
+input i: int
+input n: num
+def gm: num %/year = g + g
+ask a1: pct, pct + pct with pct = 5
+ask a2: g, gm with g = 5
+ask a3: fx, x / fx with fx = 4.5
+ask a4: wage * hrs with wage = 30, hrs = 2.5
+ask a5: x, x + x with x = 12.5
+ask a6: i + i with i = 7
+ask a7: n with n = 0.25
+ask a8: pct with pct = -(5)
+ask a9: pct with pct = (-5)
+ask a10: (pct + pct) as if {pct = 5}
+ask a11: x with x = -1.5
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pct = 1 % "s"
+  g = 2 %/year "s"
+  fx = 4.3 "s"
+  wage = 20 "s"
+  hrs = 1 "s"
+  r = 5 %/year "s"
+  x = 1 PLN "s"
+  i = 1 "s"
+  n = 1 "s"

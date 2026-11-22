@@ -1,0 +1,44 @@
+model p12_dcf
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input a_h: date
+input a_n: date
+input a_ok: date
+input b_h: date
+input b_n: date
+input b_ok: date
+input dc_h: daycount
+input dc_n: daycount
+input dc_ok: daycount
+
+ask h_a: dcf(a_h, b_ok, dc_ok)
+ask h_b: dcf(a_ok, b_h, dc_ok)
+ask h_dc: dcf(a_ok, b_ok, dc_h)
+ask h_a__h_b: dcf(a_h, b_h, dc_ok)
+ask h_a__n_b: dcf(a_h, b_n, dc_ok)
+ask h_a__n_dc: dcf(a_h, b_ok, dc_n)
+ask h_b__n_a: dcf(a_n, b_h, dc_ok)
+ask h_b__n_dc: dcf(a_ok, b_h, dc_n)
+ask h_dc__n_a: dcf(a_n, b_ok, dc_h)
+ask h_dc__n_b: dcf(a_ok, b_n, dc_h)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a_h = 2026-01-01 "s"
+  a_n = none "s"
+  a_ok = 2026-01-01 "s"
+  b_h = 2027-01-01 "s"
+  b_n = none "s"
+  b_ok = 2027-01-01 "s"
+  dc_h = act365 "s"
+  dc_n = none "s"
+  dc_ok = act365 "s"

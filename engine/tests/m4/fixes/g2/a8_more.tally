@@ -1,0 +1,18 @@
+model a8
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+input a: key ks
+def da: key ks = a
+ask c2: check da == k1 with da = k3
+ask c3: check (a as if {a = k3}) == (a as if {a = k2})
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"

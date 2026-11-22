@@ -1,0 +1,33 @@
+model p12_is_business
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input cal_h: calendar
+input cal_n: calendar
+input cal_ok: calendar
+input d_h: date
+input d_n: date
+input d_ok: date
+
+ask h_d: is_business(d_h, cal_ok)
+ask h_cal: is_business(d_ok, cal_h)
+ask h_d__h_cal: is_business(d_h, cal_h)
+ask h_d__n_cal: is_business(d_h, cal_n)
+ask h_cal__n_d: is_business(d_n, cal_h)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun], yearly [01-01]) "s"
+  cal_n = none "s"
+  cal_ok = calendar(weekends [sat, sun], yearly [01-01]) "s"
+  d_h = 2026-03-06 "s"
+  d_n = none "s"
+  d_ok = 2026-03-06 "s"

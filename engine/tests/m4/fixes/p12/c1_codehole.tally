@@ -1,0 +1,40 @@
+model c1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input r: rate
+input rh: rate
+input ch: compounding
+input mh: rounding
+input dch: daycount
+input p0: money PLN
+input d0: date
+input d1: date
+input n2: int
+
+ask q_per: periodic(r, year, ch)
+ask q_per2: periodic(rh, year, ch)
+ask q_acc: accrue(p0, r, d0, d1, act365, ch)
+ask q_accdc: accrue(p0, r, d0, d1, dch, simple)
+ask q_round: round(p0, minor(PLN), mh)
+ask q_dcf: dcf(d0, d1, dch)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 12 %/year "s"
+  rh = ?"which rate?" "s"
+  ch = ?"which compounding?" "s"
+  mh = ?"which mode?" "s"
+  dch = ?"which daycount?" "s"
+  p0 = 100.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2026-07-01 "s"
+  n2 = 2 "s"

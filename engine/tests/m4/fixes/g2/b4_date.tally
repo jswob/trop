@@ -1,0 +1,17 @@
+model b4_date
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input d: date
+
+ask a1: d with d = 2026
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d = 2026-01-01 "s"

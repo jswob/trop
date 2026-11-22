@@ -1,0 +1,24 @@
+model b3_one
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index qs = month 2026-01..2026-12
+
+input q1: key qs
+input q2: key qs
+
+def dq: int = q1 - q2
+
+ask c1: q1 - q2, dq
+ask c2: check q1 == q2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  q1 = 2026-07 "s"
+  q2 = 2026-01 "s"

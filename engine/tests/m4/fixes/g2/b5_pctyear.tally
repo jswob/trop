@@ -1,0 +1,22 @@
+model b5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input g: num %/year
+input h: num %/year
+input p: num %
+ask a0: g, h, p
+ask a1: g with g = 5
+ask a2: g with g = 5 %/year
+ask a3: p with p = 5
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  g = 2 %/year "s"
+  h = 3 "s"
+  p = 4 "s"
