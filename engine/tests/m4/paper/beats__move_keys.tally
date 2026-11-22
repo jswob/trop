@@ -1,0 +1,39 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place zus: outside lives 2026-01-01..
+input amt: money PLN
+input dom: int
+input t: bool
+input f: bool
+def eligible[m in months]: bool at reader
+  rule yes beats no v v27 = t
+  rule no = f
+move benefit[m in months where eligible[m]]: transfers
+  on day_of(m, dom)
+  at start_of(m)
+  leg cash from zus to konto amount amt
+ask a: bal(konto, 2026-12-31)
+ask b: bal(konto, 2026-12-31) as known 2026-03-01
+ask c: count(x in transfers over 2026)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100 PLN "s"
+  dom = 10 "s"
+  t = true "s"
+  f = false "s"
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+version v27
+  cite s
+  governs 2026-07..
+  known 2026-05-01

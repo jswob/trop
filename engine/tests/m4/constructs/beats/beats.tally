@@ -1,0 +1,72 @@
+model beats
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ps = [p1, p2, p3]
+
+input c_top: bool
+input c_exc: bool
+input c_no: bool
+input v_top: money PLN
+input v_exc: money PLN
+input v_base: money PLN
+input amt[p in ps]: money PLN
+
+def list_: money PLN at reader
+  rule top beats exc, base = v_top when c_top
+  rule exc beats base = v_exc when c_exc
+  rule base = v_base
+
+def list_off: money PLN at reader
+  rule top beats exc, base = v_top when c_no
+  rule exc beats base = v_exc when c_exc
+  rule base = v_base
+
+def none_applies: money PLN at reader
+  rule only = v_base when c_no
+
+def both_win: money PLN at reader
+  rule one = v_base when c_top
+  rule two = v_base when c_exc
+
+def tax[p in ps]: money PLN at reader
+  rule base = amt[p]
+
+ask b_list: list_ law 2026-03-01
+ask b_list_off: list_off law 2026-03-01
+ask b_no_rule: none_applies law 2026-03-01
+ask b_equal: both_win law 2026-03-01
+ask g_wide: tax[p] for p in ps law 2026-03-01
+ask g_wide27: tax[p] for p in ps law 2027-03-01
+ask g_explain: explain tax[p3] law 2027-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c_top = true "s"
+  c_exc = true "s"
+  c_no = false "s"
+  v_top = 30 PLN "s"
+  v_exc = 20 PLN "s"
+  v_base = 10 PLN "s"
+  amt = 100 PLN "s"
+
+version guide
+  cite s
+  governs 2026
+  known 2026-01-01
+  given tax = 7 PLN "the guide's conclusion"
+
+version guide27
+  cite s
+  governs 2027
+  known 2026-06-01
+  given tax = 8 PLN "the guide's conclusion"
+  given tax[p2] = 9 PLN "the guide's conclusion for p2"

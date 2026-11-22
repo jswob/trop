@@ -1,0 +1,55 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [k1, k2, k3]
+input ca: bool
+input cb: bool
+input va: money PLN
+input vb: money PLN
+input xs[k in ks]: money PLN
+input lim: money PLN
+input len: calendar
+input d0: date
+input n1: int
+def x: money PLN at reader
+  rule top beats low = va when ca
+  rule low = vb when cb
+def lg: bool = ca and cb
+def lg2: bool = cb or ca
+def fi: key ks = first(k in ks where xs[k] > lim)
+def am: key ks = argmax(xs[k] for k in ks) ties by pos(k)
+def sm: money PLN = sum(xs[k] for k in ks where xs[k] > lim)
+def nb: date = add_business(d0, n1, len)
+ask a: x law 2026-03-01
+ask b: lg
+ask b2: lg2
+ask c: fi
+ask d: am
+ask f: sm
+ask g: nb
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ca = true "s"
+  cb = false assumed "the low rule's condition is a guess"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  xs[k1] = 5 PLN "s"
+  xs[k2] = 9 PLN assumed "k2 is a guess"
+  xs[k3] = 7 PLN assumed "k3 is a guess"
+  lim = 4 PLN "s"
+  d0 = 2026-06-30 "s"
+  n1 = 1 "s"
+version cal
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01]) assumed "the 2026 holidays are a guess"

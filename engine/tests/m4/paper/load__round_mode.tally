@@ -1,0 +1,21 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis ax
+  half-up "a"
+  sideways "b"
+input b: num PLN
+def r: money PLN = round(b, minor(PLN), ax)
+ask q: r
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b = 1.005 PLN "s"

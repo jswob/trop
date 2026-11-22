@@ -1,0 +1,56 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [k1, k2, k3]
+index ns = int 1..3
+input len: calendar
+input d0: date
+input exp_d: date
+input n2: int
+input xs[k in ks]: money PLN
+input ys[n in ns]: money PLN
+input fx: num PLN/EUR
+input fx2: num PLN/EUR
+input c1: bool
+input c2: bool
+def due: date = add_business(d0, n2, len)
+def am: key ks = argmin(xs[k] for k in ks) ties by pos(k)
+def an: key ns = argmin(ys[n] for n in ns) ties by n
+def lg: bool = c1 and c2
+def sm: money PLN = sum(xs[k] for k in ks where xs[k] > ys[1])
+ask a: check due == exp_d
+ask b: check am == k3
+ask b2: check an == 3
+ask c: check fx == fx2
+ask e1: explain am
+ask e2: explain lg
+ask e3: explain sm
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = 2026-06-04 "s"
+  exp_d = 2026-06-05 "s"
+  n2 = 2 "s"
+  xs[k1] = 5 PLN "s"
+  xs[k2] = 3 PLN "s"
+  xs[k3] = 3 PLN "s"
+  ys[1] = 4 PLN "s"
+  ys[2] = 1 PLN "s"
+  ys[3] = 7 PLN "s"
+  fx = 4.30 "s"
+  fx2 = 4.25 "s"
+  c1 = false "s"
+  c2 = true "s"
+version cal
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01])

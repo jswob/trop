@@ -1,0 +1,22 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input len: calendar
+input d0: date
+input n0: int
+def a: date = add_business(d0, n0, len)
+ask q: a
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = 2026-06-30 "s"
+  n0 = 0 "s"
+  len = calendar(weekends [sat, sun])

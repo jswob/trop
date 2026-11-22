@@ -1,0 +1,20 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input va: money PLN
+def x: money PLN
+  rule a beats zz = va
+  rule b = va
+ask q: x
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  va = 1 PLN "s"

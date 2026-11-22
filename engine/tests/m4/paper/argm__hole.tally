@@ -1,0 +1,29 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [k1, k2]
+input ds[i in ks]: date
+input ds2[i in ks]: date
+input cutoff: date
+def am: key ks = argmin(ds[i] for i in ks) ties by pos(i)
+def am2: key ks = argmin(ds2[i] for i in ks) ties by pos(i)
+def mn2: date = min(ds2[i] for i in ks)
+def fi: key ks = first(i in ks where ds[i] > cutoff)
+ask c: am, am2, mn2
+ask d: fi
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ds[k1] = 2026-05-25 "s"
+  ds[k2] = window(2026-05-20, 2026-06-10) "s"
+  ds2[k1] = 2026-07-01 "s"
+  ds2[k2] = window(2026-05-20, 2026-06-10) "s"
+  cutoff = 2026-05-22 "s"

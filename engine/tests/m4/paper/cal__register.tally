@@ -1,0 +1,31 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input len: calendar
+input d1: date
+input n3: int
+input stp: money PLN
+input base: num PLN
+def b3: date = add_business(d1, n3, len)
+def nb: bool = is_business(d1, len)
+ask a: b3, nb
+ask e: explain b3
+ask i: inputs-of b3
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d1 = 2027-06-01 "s"
+  n3 = 3 "s"
+version cal
+  cite s
+  governs 2026..
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01])

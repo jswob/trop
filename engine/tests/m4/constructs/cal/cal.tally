@@ -1,0 +1,68 @@
+model cal
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2028-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index countries = [pl, ae, xx]
+index who = [ola, omar]
+
+input cal[c in countries]: calendar
+input home[p in who]: key countries
+input thu: date
+input fri: date
+input sat: date
+input sun: date
+input nyd26: date
+input nyd27: date
+input added_day: date
+input far: date
+input dom: int
+input n1: int
+input n2: int
+input nm1: int
+
+ask c_fri: is_business(fri, cal[c]) for c in countries
+ask c_sat: is_business(sat, cal[c]) for c in countries
+ask c_sun: is_business(sun, cal[c]) for c in countries
+ask c_next: add_business(thu, n1, cal[c]) for c in countries
+ask c_back: add_business(sun, nm1, cal[c]) for c in countries
+ask c_home: add_business(fri, n1, cal[home[p]]) for p in who
+ask c_last: last_business(month_of(fri), n1, cal[pl]), last_business(month_of(fri), n2, cal[pl]), last_business(month_of(fri), n1, cal[ae])
+ask c_from: is_business(nyd26, cal[xx]), is_business(nyd27, cal[xx]), is_business(nyd26, cal[pl])
+ask c_added: is_business(added_day, cal[pl]), is_business(added_day, cal[ae])
+ask c_cover: is_business(far, cal[pl])
+ask r_rolls: schedule(month_of(sun), dom, following, cal[pl]), schedule(month_of(sun), dom, preceding, cal[pl]), schedule(month_of(sun), dom, modified_following, cal[pl]), schedule(month_of(sun), dom, unadjusted, cal[pl])
+ask r_ae: schedule(month_of(sun), dom, modified_following, cal[ae])
+ask r_feb: schedule(month_of(nyd26) + 1, dom, following, cal[pl])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  home[ola] = pl "s"
+  home[omar] = ae "s"
+  thu = 2026-05-28 "s"
+  fri = 2026-05-29 "s"
+  sat = 2026-05-30 "s"
+  sun = 2026-05-31 "s"
+  nyd26 = 2026-01-01 "s"
+  nyd27 = 2027-01-01 "s"
+  added_day = 2026-11-10 "s"
+  far = 2028-03-01 "s"
+  dom = 31 "s"
+  n1 = 1 "s"
+  n2 = 2 "s"
+  nm1 = -1 "s"
+
+version cals
+  cite s
+  governs 2026..2027
+  known 2026-01-01
+  cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-03], added [2026-11-10])
+  cal[ae] = calendar(weekends [fri, sat], yearly [12-02])
+  cal[xx] = calendar(weekends [sun], yearly [01-01] from 2027)

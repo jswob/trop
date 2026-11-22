@@ -1,0 +1,61 @@
+model argm
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+
+kind people
+
+input v[k in ks]: money PLN
+input w[k in ks, j in js]: money PLN
+input rank[k in ks]: int
+input b[k in ks]: bool
+input dd[k in ks]: date
+input inc[p in people]: money PLN
+input on_day: date
+
+def top: key ks = argmax(v[k] for k in ks) ties by pos(k)
+def top_rank: key ks = argmax(v[k] for k in ks) ties by rank[k]
+def first_true: key ks = argmax(b[k] for k in ks) ties by pos(k)
+def earliest: key ks = argmin(dd[k] for k in ks)
+def last_key: key ks = argmax(k for k in ks)
+def poorest: key people = argmin(inc[p] for p in people on on_day) ties by inc[p]
+
+ask t_pos: top, v[top]
+ask t_rank: top_rank
+ask t_tuple: argmin(w[k, j] for k in ks, j in js) ties by (rank[k], j)
+ask t_bool: first_true
+ask t_date: earliest
+ask t_key: last_key
+ask t_none: argmax(v[k] for k in ks)
+ask t_things: poorest
+
+version v_
+  cite s
+  governs always
+  known 2026-01-01
+  people + [ann] lives 2026-01-01..
+  people + [bob] lives 2026-01-01..
+  v[k1] = 5 PLN "s"
+  v[k2] = 5 PLN "s"
+  v[k3] = 1 PLN "s"
+  w = 7 PLN "s"
+  rank[k1] = 3 "s"
+  rank[k2] = 1 "s"
+  rank[k3] = 2 "s"
+  b[k1] = false "s"
+  b[k2] = true "s"
+  b[k3] = true "s"
+  dd[k1] = 2026-05-02 "s"
+  dd[k2] = 2026-05-01 "s"
+  dd[k3] = 2026-05-03 "s"
+  inc[ann] = 2 PLN "s"
+  inc[bob] = 1 PLN "s"
+  on_day = 2026-06-01 "s"
