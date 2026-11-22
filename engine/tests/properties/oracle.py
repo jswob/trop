@@ -22,9 +22,11 @@ it carries the day by design, and §9.4 keeps its words in hand-stored vectors. 
 refuses (C-3: `RUN-PLACE`, `RUN-LIFESPAN`, a take's); any other refusal is a value every day must agree on.
 
     python3 -I -B engine/tests/properties/oracle.py [--interp refcore|fast|engine] [--seed N] [--variants N]
-        [--sample K] [--only NAME[,NAME]] [--out DIR] [--keep]
-Exit 0 when every line holds and no text is empty or refused at load; 1 otherwise. Last line:
-`oracle: <t> texts, <l> lines, <v> value lines, <r> refused days, <f> failed`.
+        [--sample K] [--only NAME[,NAME]] [--out DIR] [--keep] [--check]
+`--check` is run.py --self-test's form (step 8t): the defaults, nothing written but out/oracle/. `--sample 10` runs a
+fixed tenth by seed. Exit 0 when every line holds and no text is empty or refused at load; 1 otherwise. A line that
+`HELD` names (a fault a review found, mended at the next pin) is reported held, not failed. Last line:
+`oracle: <t> texts, <l> lines, <v> value lines, <r> refused days, <f> failed, <h> held by name`.
 """
 import datetime
 import os
@@ -73,7 +75,7 @@ class Text:
                       'move px: transfers\n  on dx\n  leg cash from world to other amount amt']
         self.rows = ['amt = 100.00 PLN "s"', 'w = window(%s, %s) "s"' % (iso(self.a), iso(self.b)),
                      'dx = %s "s"' % iso(self.x)]
-        self.versions, self.extra_files, self.head_extra, self.lines = [], {}, [], []
+        self.versions, self.extra_files, self.head_extra, self.lines, self.anchor = [], {}, [], [], {}
         self.m, self.m1 = mon(self.x), mon(last_of_month(self.x) + DAY)
         self.after = self.b + 3 * DAY
 
@@ -217,6 +219,7 @@ def t_ledger(t):
         % iso(t.x)], governs=t.m, head=['covers konto', 'pad konto from unexplained']))
     t.common()
     t.line('residuals konto %s .. %s' % (t.m, t.m1))
+    t.anchor[len(t.lines) - 1] = t.x  # the observation answers the day: held to the pin on the observation's day
 
 
 def t_sign(t):
@@ -246,6 +249,33 @@ def t_div(t):
     t.common()
 
 
+def t_decision(t):
+    """A decision (a move with `reads`) whose day is the window: a hole day as any move (the plan's §8.3, row 159)."""
+    t.moves[0] = ('move pw: transfers\n  on w\n  when bal(other) >= 0.00 PLN\n  reads other\n'
+                  '  leg cash from world to konto amount amt')
+    t.common()
+    t.line('sum(m.cash.amount for m in transfers over %s)' % t.m)
+
+
+def t_known_at(t):
+    """C-4 beside a hole `at`: the instance on a plain day, its law date the window, its amount replaced after it."""
+    t.moves[0] = 'move pw: transfers\n  on dx\n  at w\n  leg cash from world to konto amount amt'
+    t.versions.append(version('a1', t.b + 2 * DAY, ['replace amt = 150.00 PLN "s"']))
+    t.common()
+    t.line('count(a in adjustments over %s .. %s)' % (t.m, t.m1))
+    t.line('sum(a.change for a in adjustments over %s .. %s)' % (t.m, t.m1))
+
+
+def t_when_gone(t):
+    """A later version, known inside the window, makes the hole-day instance's `when` false."""
+    t.inputs.append('input live: bool')
+    t.moves[0] = 'move pw: transfers\n  on w\n  when live\n  leg cash from world to konto amount amt'
+    t.rows.append('live = true "s"')
+    t.versions.append(version('gone', t.x, ['replace live = false "s"']))
+    t.common()
+    t.line('count(a in adjustments over %s .. %s)' % (t.m, t.m1))
+
+
 def t_parts(t):
     t.head_extra = ['kind persons: parties', 'kind cash_accounts: place one min 0\n  owned by arrive\n'
                     '  step minor(PLN)\n  takes k for w2 order (if k.owner == ania then 0 else 1)']
@@ -270,8 +300,30 @@ def t_parts(t):
 PLACES = [('start', t_start), ('cover', t_cover), ('known_in', t_known_in), ('known_after', t_known_after),
           ('scen', t_scen), ('class', t_class), ('reading', t_reading), ('life', t_life), ('same', t_same),
           ('register', t_register), ('ledger', t_ledger), ('sign', t_sign), ('sign_hole', t_sign_hole), ('div', t_div),
-          ('parts', t_parts)]
+          ('parts', t_parts), ('decision', t_decision), ('known_at', t_known_at), ('when_gone', t_when_gone)]
 WAITS = {'engine': {'parts': 'M5b: the engine keeps no parts before it'}}
+# Faults G1's review found on the first pin, on refcore and the engine alike, each mended at the next pin: a line of
+# the named place whose expression starts so is held by name (reported, not failed) while it differs; any other line
+# of the place is held to the rule as usual. Delete a row when its pin lands.
+HELD = {
+    ('decision', 'count(m in transfers over'): 'B1: a hole-day decision is left out of a binding over its kind',
+    ('decision', 'sum(m.cash.amount for m in transfers'): 'B1',
+    ('known_at', 'count(a in adjustments'): 'B2: C-4 misses a hole `at`',
+    ('known_at', 'sum(a.change for a in adjustments'): 'B2',
+    ('when_gone', 'count(a in adjustments'): 'Q3: refcore prints 0 where a later version makes the `when` false',
+    ('when_gone', 'pw.cash.amount'): 'Q3',
+    ('known_in', 'pw.cash.amount'): 'N1: a hole-day instance a later version changes prints the new amount',
+    ('known_after', 'pw.cash.amount'): 'N1',
+}
+# A place whose every line is the hole on this pin for a fault found, held by name the same way (not failed empty).
+HELD_EMPTY = {
+    'class': 'N2: a window `at` holes the places the movement doesn\'t book',
+    'known_at': 'N2',
+}
+
+
+def held(place, expr):
+    return next((why for (p, pre), why in HELD.items() if p == place and expr.startswith(pre)), '')
 
 
 # -- running and judging ------------------------------------------------------------------------------------------
@@ -285,7 +337,23 @@ def command(interp):
 
 
 HEAD = re.compile(r'^(l\d\d)(?:_p(\d{8}))?: (.*)$')
-NAMES_W = re.compile(r'\((?:[^()"]*,\s*)?w(?:,[^()"]*)?\)\s*$|\((?:[^()"]*,\s*)?w(?:,[^()"]*)?\) ')
+def names_w(u):
+    """A label list `(…)` with no quote or parenthesis inside, followed by a space or the line's end, one of whose
+    comma-separated names is `w` (the runner's `m3_oracle` reads labels the same way)."""
+    i = u.find('(')
+    while i >= 0:
+        j = u.find(')', i)
+        if j < 0:
+            return False
+        inner = u[i + 1:j]
+        if '"' not in inner and '(' not in inner and 'w' in [x.strip() for x in inner.split(',')] \
+                and (j + 1 == len(u) or u[j + 1] == ' '):
+            return True
+        i = u.find('(', i + 1)
+    return False
+
+
+
 DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 STRETCH = re.compile(r'^window\((\d{4}-\d{2}-\d{2}), (\d{4}-\d{2}-\d{2})\)$')
 
@@ -319,6 +387,9 @@ def judge_block(u, pinned):
     return '', kind, ''
 
 
+CITE = ['']  # the text being judged: its window as printed, `window(a, b)`
+
+
 def judge(u, pinned, refused_days=None):
     """(verdict, kind, fault): kind is value, hole, refusal or stretch; verdict '' when the line holds; fault, when it
     doesn't, is `label` (a hole naming no day: on 2.2.1 the movement's name stands where 2.3 names `w`), `refusal`,
@@ -331,8 +402,9 @@ def judge(u, pinned, refused_days=None):
     kind = 'hole' if u.startswith('?') else 'refusal' if u.startswith('refused:') else 'value'
     if vals == {u}:  # (1): every unrefused day prints it, a hole or refusal the window doesn't cause included
         return '', kind, ''
-    if kind == 'hole':
-        return ('', kind, '') if NAMES_W.search(u) else ('a hole that names no day: ' + u[:90], kind, 'label')
+    if kind == 'hole':  # names the day: `w` among its labels, or its words cite this window (C13's HOLE-PART)
+        ok = names_w(u) or (CITE[0] and 'date within %s' % CITE[0] in u)
+        return ('', kind, '') if ok else ('a hole that names no day: ' + u[:90], kind, 'label')
     if kind == 'refusal':
         return ('', kind, '') if u in refused.values() else ('a refusal no pinned day prints: ' + u[:90], kind, 'refusal')
     m = STRETCH.match(u)
@@ -343,7 +415,7 @@ def judge(u, pinned, refused_days=None):
             'value', 'value')
 
 
-def run_text(t, interp, out):
+def run_text(t, interp, out, place=''):
     d = os.path.join(out, t.name)
     os.makedirs(d, exist_ok=True)
     files = t.files()
@@ -364,7 +436,7 @@ def run_text(t, interp, out):
             cur.append(l)
         else:
             cur = None
-    res = {'lines': 0, 'values': 0, 'refused': 0, 'fails': [], 'refused_at': set(), 'faults': {}}
+    res = {'lines': 0, 'values': 0, 'refused': 0, 'fails': [], 'held': [], 'refused_at': set(), 'faults': {}}
     if not got:
         res['fails'].append('refused at load or printed nothing: ' + (o.splitlines() or [''])[0][:150])
         res['faults']['load'] = 1
@@ -381,15 +453,51 @@ def run_text(t, interp, out):
         res['refused'] += nref
         if nref:
             res['refused_at'].add(t.lines[i][0].split('(')[0])
+        CITE[0] = 'window(%s, %s)' % (iso(t.a), iso(t.b))
+        if i in t.anchor:  # an observation answers the day: the pin on its day is the reality it records
+            pinned = {t.anchor[i]: pinned[t.anchor[i]]}
         why, kind, fault = judge_block(u, pinned)
         res['values'] += kind in ('value', 'stretch') and not why
-        if why:
+        hold = why and held(place, t.lines[i][0])
+        if hold:
+            res['held'].append('%s `%s`: held (%s): %s' % (k, t.lines[i][0], hold.split(':')[0], why))
+        elif why:
             res['fails'].append('%s `%s`: %s' % (k, t.lines[i][0], why))
             res['faults'][fault] = res['faults'].get(fault, 0) + 1
-    if res['lines'] and not res['values'] and not res['fails']:
+    if res['lines'] and not res['values'] and not res['fails'] and place in HELD_EMPTY:
+        res['held'].append('empty: held (%s): every unpinned line is a hole or a refusal' % HELD_EMPTY[place].split(':')[0])
+    elif res['lines'] and not res['values'] and not res['fails']:
         res['fails'].append('empty: every unpinned line is a hole or a refusal')
         res['faults']['empty'] = 1
     return res
+
+
+CORPUS = os.path.join(TESTS, 'properties', 'oracle.corpus')
+
+
+def ns(b):
+    return b'%d:%s,' % (len(b), b)
+
+
+def corpus_bytes(texts):
+    """The texts the engine target `m3_oracle` runs (all but `WAITS['engine']`'s), eight netstrings each: id, place,
+    the command line's words (newline-joined), the file table (INTERFACE.md §4), the window's days (YYYYMMDD,
+    space-joined), the number of lines, the held lines (`<index> <code>`, and `empty <code>` for `HELD_EMPTY`'s place,
+    newline-joined), and the anchored lines (`<index> <YYYYMMDD>`, newline-joined)."""
+    out = b''
+    for name, t in texts:
+        if name in WAITS['engine']:
+            continue
+        files = t.files()
+        order = sorted(files, key=lambda f: f != t.name + '.tally')
+        table = b''.join(ns(f.encode()) + ns(files[f].encode()) for f in order)
+        hl = ['%d %s' % (i, held(name, t.lines[i][0]).split(':')[0]) for i in range(len(t.lines))
+              if held(name, t.lines[i][0])] + (['empty ' + HELD_EMPTY[name].split(':')[0]] if name in HELD_EMPTY else [])
+        an = ['%d %s' % (i, d.strftime('%Y%m%d')) for i, d in sorted(t.anchor.items())]
+        for part in (t.name, name, '\n'.join(['run'] + order), None, ' '.join(d.strftime('%Y%m%d') for d in t.days()),
+                     str(len(t.lines)), '\n'.join(hl), '\n'.join(an)):
+            out += ns(table) if part is None else ns(part.encode())
+    return out
 
 
 def main(argv):
@@ -398,8 +506,8 @@ def main(argv):
     i = 0
     while i < len(argv):
         a = argv[i].split('=', 1)
-        if a[0] == '--keep':
-            opt['--keep'] = '1'
+        if a[0] in ('--keep', '--check', '--corpus'):  # --check: run.py --self-test's form, and the corpus matches
+            opt[a[0]] = '1'
         elif a[0] in opt:
             opt[a[0]] = a[1] if len(a) > 1 else argv[i + 1]
             i += len(a) == 1
@@ -414,27 +522,34 @@ def main(argv):
             t = Text('o_%s_%d' % (name, v), random.Random(rng.random()))
             f(t)
             texts.append((name, t))
+    if '--corpus' in opt:
+        open(CORPUS, 'wb').write(corpus_bytes(texts))
+        print('wrote %s: %d texts' % (os.path.relpath(CORPUS, ROOT), sum(n not in WAITS['engine'] for n, _ in texts)))
+        return 0
+    stale = '--check' in opt and (not os.path.exists(CORPUS) or open(CORPUS, 'rb').read() != corpus_bytes(texts))
     k = int(opt['--sample'])
     texts = [x for j, x in enumerate(texts) if j % k == int(opt['--seed']) % k and (not only or x[0] in only)]
     if os.path.isdir(opt['--out']) and '--keep' not in opt:
         shutil.rmtree(opt['--out'])
-    tot = {'texts': 0, 'lines': 0, 'values': 0, 'refused': 0, 'failed': 0}
+    tot = {'texts': 0, 'lines': 0, 'values': 0, 'refused': 0, 'failed': 0, 'held': 0}
     faults, by_place = {}, {}
     for name, t in texts:
         wait = WAITS.get(opt['--interp'], {}).get(name)
         if wait:
             print('%-16s skipped: %s' % (t.name, wait))
             continue
-        r = run_text(t, opt['--interp'], opt['--out'])
+        r = run_text(t, opt['--interp'], opt['--out'], name)
         tot['texts'] += 1
         for key in ('lines', 'values', 'refused'):
             tot[key] += r[key]
         tot['failed'] += len(r['fails'])
-        print('%-16s window(%s, %s): %d lines, %d value lines, %d refused days%s, %s' % (
+        tot['held'] += len(r['held'])
+        print('%-16s window(%s, %s): %d lines, %d value lines, %d refused days%s, %s%s' % (
             t.name, iso(t.a), iso(t.b), r['lines'], r['values'], r['refused'],
             ' (at %s)' % ', '.join(sorted(r['refused_at'])) if r['refused_at'] else '',
-            'holds' if not r['fails'] else '%d FAILED' % len(r['fails'])))
-        for f in r['fails']:
+            'holds' if not r['fails'] else '%d FAILED' % len(r['fails']),
+            ', %d held' % len(r['held']) if r['held'] else ''))
+        for f in r['fails'] + r['held']:
             print('    ' + f)
         for fk, n in r['faults'].items():
             faults[fk] = faults.get(fk, 0) + n
@@ -442,9 +557,11 @@ def main(argv):
     if faults:
         print('faults: ' + '; '.join('%s %d (%s)' % (fk, faults[fk], ', '.join(sorted(by_place[fk])))
                                      for fk in sorted(faults)))
-    print('oracle: %d texts, %d lines, %d value lines, %d refused days, %d failed' % (
-        tot['texts'], tot['lines'], tot['values'], tot['refused'], tot['failed']))
-    return 1 if tot['failed'] else 0
+    if stale:
+        print('oracle.corpus is not what --corpus writes')
+    print('oracle: %d texts, %d lines, %d value lines, %d refused days, %d failed, %d held by name' % (
+        tot['texts'], tot['lines'], tot['values'], tot['refused'], tot['failed'], tot['held']))
+    return 1 if tot['failed'] or not tot['texts'] or stale else 0
 
 
 if __name__ == '__main__':

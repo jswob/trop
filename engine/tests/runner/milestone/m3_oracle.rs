@@ -1,0 +1,402 @@
+//! tally 2.3's pin oracle on the engine (#247, the plan's §9; `properties/oracle.py`). The
+//! generator's texts (`properties/oracle.corpus`, written by `oracle.py --corpus`): one input
+//! `w` holds a window, and each line is asked unpinned and under `with w = D` for every day D of
+//! it. The unpinned line must print what every pinned day prints that no balance check refuses
+//! (`RUN-PLACE`, `RUN-LIFESPAN`, a take's), or a hole that names `w`, or a refused day's
+//! refusal, or, for a date, the stretch `window(a, b)` holding every pinned day's print. An
+//! answer's register lines are left out and its body is held line by line, as `oracle.py` does.
+//! No stored answer: the engine's own lines are compared with each other. A line `oracle.py`'s
+//! `HELD` names (a fault a review found, mended at its pin) is reported, not failed; a text
+//! whose every line is a hole or a refusal fails. Gating with M3 (`check commit`);
+//! `m3_oracle_tenth` is the fixed tenth by seed a quick loop takes, `m3_oracle_rest` the rest.
+
+#![forbid(unsafe_code)]
+
+#[cfg(test)]
+mod tests {
+    use std::collections::{BTreeMap, BTreeSet};
+    use tally_runner::corpus::netstrings;
+    use tally_runner::engine::run_args;
+
+    const CORPUS: &[u8] = include_bytes!("../../properties/oracle.corpus");
+    /// `oracle.py`'s default seed, 20261121, modulo 10: the tenth `--sample 10` runs.
+    const TENTH: usize = 1;
+    const REGISTER: [&str; 11] = [
+        "cut",
+        "unfulfilled",
+        "pinned",
+        "assumed",
+        "adjustment",
+        "pad",
+        "unknown day",
+        "anchor",
+        "open",
+        "left out",
+        "world",
+    ];
+    const BALANCE_CHECKS: [&str; 4] = ["RUN-PLACE", "RUN-LIFESPAN", "RUN-TAKE", "RUN-PART"];
+
+    /// One generated text: the corpus record's eight fields.
+    struct Text {
+        id: String,
+        args: Vec<String>,
+        files: Vec<u8>,
+        days: Vec<String>,
+        lines: usize,
+        held: BTreeMap<usize, String>,
+        held_empty: Option<String>,
+        anchors: BTreeMap<usize, String>,
+    }
+
+    /// `YYYYMMDD` as printed, `YYYY-MM-DD`.
+    fn dashed(d: &str) -> String {
+        let (y, md) = d.split_at_checked(4).unwrap_or((d, ""));
+        let (m, dd) = md.split_at_checked(2).unwrap_or((md, ""));
+        format!("{y}-{m}-{dd}")
+    }
+
+    /// The text's window as an answer prints it, `window(a, b)`.
+    fn window_of(t: &Text) -> String {
+        let first = t.days.first().map_or(String::new(), |d| dashed(d));
+        let last = t.days.last().map_or(String::new(), |d| dashed(d));
+        format!("window({first}, {last})")
+    }
+
+    /// What one text gave: lines judged, value lines, refused days, failures, held lines.
+    #[derive(Default)]
+    struct Tally {
+        texts: usize,
+        lines: usize,
+        values: usize,
+        refused: usize,
+        fails: Vec<String>,
+        held: Vec<String>,
+    }
+
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Kind {
+        Value,
+        Hole,
+        Refusal,
+        Stretch,
+    }
+
+    fn text_of(b: &[u8]) -> String {
+        String::from_utf8_lossy(b).into_owned()
+    }
+
+    fn texts() -> Vec<Text> {
+        let parts = netstrings(CORPUS).expect("properties/oracle.corpus reads");
+        parts
+            .chunks(8)
+            .map(|r| {
+                let pairs = |b: &[u8]| -> Vec<(String, String)> {
+                    text_of(b)
+                        .lines()
+                        .filter_map(|l| l.split_once(' '))
+                        .map(|(a, b)| (a.to_owned(), b.to_owned()))
+                        .collect()
+                };
+                let held_rows = pairs(r[6]);
+                let index = |i: &str| -> usize { i.parse().expect("a line's index") };
+                Text {
+                    id: text_of(r[0]),
+                    args: text_of(r[2]).lines().map(str::to_owned).collect(),
+                    files: r[3].to_vec(),
+                    days: text_of(r[4]).split(' ').map(str::to_owned).collect(),
+                    lines: text_of(r[5]).parse().expect("a text's line count"),
+                    held: held_rows
+                        .iter()
+                        .filter(|(i, _)| i != "empty")
+                        .map(|(i, code)| (index(i), code.clone()))
+                        .collect(),
+                    held_empty: held_rows
+                        .iter()
+                        .find(|(i, _)| i == "empty")
+                        .map(|(_, code)| code.clone()),
+                    anchors: pairs(r[7])
+                        .into_iter()
+                        .map(|(i, day)| (index(&i), day))
+                        .collect(),
+                }
+            })
+            .collect()
+    }
+
+    fn digits(s: &str, n: usize) -> bool {
+        s.len() == n && s.bytes().all(|b| b.is_ascii_digit())
+    }
+
+    /// `lNN: answer` or `lNN_pYYYYMMDD: answer`: the line's index, its pinned day, its answer.
+    fn head(line: &str) -> Option<(usize, Option<String>, String)> {
+        let (name, answer) = line.strip_prefix('l')?.split_once(": ")?;
+        let (num, day) = name
+            .split_once("_p")
+            .map_or((name, None), |(n, d)| (n, Some(d)));
+        if !digits(num, 2) || day.is_some_and(|d| !digits(d, 8)) {
+            return None;
+        }
+        Some((num.parse().ok()?, day.map(str::to_owned), answer.to_owned()))
+    }
+
+    fn is_register(line: &str) -> bool {
+        line.strip_prefix("  ")
+            .filter(|rest| !rest.starts_with(' '))
+            .is_some_and(|rest| {
+                REGISTER.iter().any(|w| {
+                    rest.strip_prefix(w).is_some_and(|after| {
+                        !after.starts_with(|c: char| c.is_alphanumeric() || c == '_')
+                    })
+                })
+            })
+    }
+
+    /// Each ask's block: its head line's answer and the indented lines under it, the register
+    /// left out.
+    fn answers(out: &str) -> BTreeMap<(usize, Option<String>), Vec<String>> {
+        let mut got: BTreeMap<(usize, Option<String>), Vec<String>> = BTreeMap::new();
+        let mut cur: Option<(usize, Option<String>)> = None;
+        for line in out.split('\n') {
+            if let Some((i, day, answer)) = head(line) {
+                got.insert((i, day.clone()), vec![answer]);
+                cur = Some((i, day));
+            } else if cur.is_some() && is_register(line) {
+                continue;
+            } else if let Some(block) = cur
+                .as_ref()
+                .filter(|_| line.starts_with(' '))
+                .and_then(|k| got.get_mut(k))
+            {
+                block.push(line.to_owned());
+            } else {
+                cur = None;
+            }
+        }
+        got
+    }
+
+    fn balance_check(answer: &str) -> bool {
+        answer.strip_prefix("refused: ").is_some_and(|rest| {
+            BALANCE_CHECKS.iter().any(|code| {
+                rest.strip_prefix(code).is_some_and(|after| {
+                    !after.starts_with(|c: char| c.is_alphanumeric() || c == '_')
+                })
+            })
+        })
+    }
+
+    /// A label list `(…)` with no quote or parenthesis inside, followed by a space or the
+    /// line's end, one of whose comma-separated names is `w` (`oracle.py`'s `names_w`).
+    fn names_w(u: &str) -> bool {
+        u.match_indices('(').any(|(i, _)| {
+            let after = u.get(i..).unwrap_or("").get(1..).unwrap_or("");
+            after.split_once(')').is_some_and(|(inner, rest)| {
+                !inner.contains('"')
+                    && !inner.contains('(')
+                    && inner.split(',').any(|x| x.trim() == "w")
+                    && (rest.is_empty() || rest.starts_with(' '))
+            })
+        })
+    }
+
+    fn is_date(v: &str) -> bool {
+        let p: Vec<&str> = v.split('-').collect();
+        p.len() == 3
+            && p.first().is_some_and(|y| digits(y, 4))
+            && p.iter().skip(1).all(|x| digits(x, 2))
+    }
+
+    fn stretch(u: &str) -> Option<(&str, &str)> {
+        let (a, b) = u.strip_prefix("window(")?.strip_suffix(')')?.split_once(", ")?;
+        (is_date(a) && is_date(b)).then_some((a, b))
+    }
+
+    /// One line against its pinned days: `(why, kind)`, `why` empty where it holds. A hole names
+    /// the day by `w` among its labels or by citing the text's window (`cite`, C13's HOLE-PART).
+    fn judge(
+        u: &str,
+        pinned: &[(String, String)],
+        refused: &BTreeSet<String>,
+        cite: &str,
+    ) -> (String, Kind) {
+        let rest: Vec<&str> = pinned
+            .iter()
+            .filter(|(d, _)| !refused.contains(d))
+            .map(|(_, v)| v.as_str())
+            .collect();
+        let vals: BTreeSet<&str> = rest.iter().copied().collect();
+        let kind = if u.starts_with('?') {
+            Kind::Hole
+        } else if u.starts_with("refused:") {
+            Kind::Refusal
+        } else {
+            Kind::Value
+        };
+        if vals.len() == 1 && vals.contains(u) {
+            return (String::new(), kind);
+        }
+        match (kind, stretch(u)) {
+            (Kind::Hole, _) if names_w(u) || u.contains(&format!("date within {cite}")) => {
+                (String::new(), kind)
+            }
+            (Kind::Hole, _) => (format!("a hole that names no day: {u}"), kind),
+            (Kind::Refusal, _) if pinned.iter().any(|(d, v)| refused.contains(d) && v == u) => {
+                (String::new(), kind)
+            }
+            (Kind::Refusal, _) => (format!("a refusal no pinned day prints: {u}"), kind),
+            (_, Some((a, b)))
+                if !rest.is_empty()
+                    && rest.iter().all(|v| is_date(v) && a <= *v && *v <= b) =>
+            {
+                (String::new(), Kind::Stretch)
+            }
+            (_, Some(_)) => (
+                format!("a stretch that doesn't hold every pinned day: {u}"),
+                Kind::Stretch,
+            ),
+            (Kind::Value | Kind::Stretch, None) => (
+                format!(
+                    "printed {u} where the pinned days print {}",
+                    vals.iter().copied().collect::<Vec<_>>().join(" | ")
+                ),
+                Kind::Value,
+            ),
+        }
+    }
+
+    /// A block of several lines: line by line where every block has the same shape.
+    fn judge_block(u: &[String], pinned: &[(String, Vec<String>)], cite: &str) -> (String, Kind) {
+        let first = |b: &Vec<String>| b.first().cloned().unwrap_or_default();
+        let refused: BTreeSet<String> = pinned
+            .iter()
+            .filter(|(_, b)| balance_check(&first(b)))
+            .map(|(d, _)| d.clone())
+            .collect();
+        let line = |i: usize, trim: bool| -> Vec<(String, String)> {
+            pinned
+                .iter()
+                .map(|(d, b)| {
+                    let l = b.get(i).map_or("", String::as_str);
+                    (d.clone(), if trim { l.trim() } else { l }.to_owned())
+                })
+                .collect()
+        };
+        let u0 = u.first().cloned().unwrap_or_default();
+        if u.len() == 1 && pinned.iter().all(|(_, b)| b.len() == 1) {
+            return judge(&u0, &line(0, false), &refused, cite);
+        }
+        let rest: Vec<&Vec<String>> = pinned
+            .iter()
+            .filter(|(d, _)| !refused.contains(d))
+            .map(|(_, b)| b)
+            .collect();
+        if !rest.is_empty() && rest.iter().all(|b| b.as_slice() == u) {
+            return (String::new(), judge(&u0, &[], &refused, cite).1);
+        }
+        if pinned.iter().any(|(_, b)| b.len() != u.len()) {
+            return (
+                format!("a block of {} lines where the pinned days differ in shape", u.len()),
+                Kind::Value,
+            );
+        }
+        let mut kind = None;
+        for (i, ul) in u.iter().enumerate() {
+            let (why, k) = judge(ul.trim(), &line(i, true), &refused, cite);
+            let k0 = *kind.get_or_insert(k);
+            if !why.is_empty() {
+                return (format!("line {} of the block: {why}", i.saturating_add(1)), k0);
+            }
+        }
+        (String::new(), kind.unwrap_or(Kind::Value))
+    }
+
+    fn judge_text(t: &Text, sum: &mut Tally) {
+        let run = run_args(&t.args, &t.files);
+        let got = answers(&run.out);
+        sum.texts = sum.texts.saturating_add(1);
+        if got.is_empty() {
+            let first = run.out.lines().next().unwrap_or("");
+            sum.fails.push(format!("{}: refused at load or printed nothing: {first}", t.id));
+            return;
+        }
+        let (mut values, mut fails) = (0_usize, 0_usize);
+        for i in 0..t.lines {
+            let u = got.get(&(i, None));
+            let pinned: Option<Vec<(String, Vec<String>)>> = t
+                .days
+                .iter()
+                .map(|d| got.get(&(i, Some(d.clone()))).map(|b| (d.clone(), b.clone())))
+                .collect();
+            let (Some(u), Some(pinned)) = (u, pinned) else {
+                sum.fails.push(format!("{} l{i:02}: no line printed", t.id));
+                fails = fails.saturating_add(1);
+                continue;
+            };
+            sum.lines = sum.lines.saturating_add(1);
+            let nref = pinned
+                .iter()
+                .filter(|(_, b)| b.first().is_some_and(|l| balance_check(l)))
+                .count();
+            sum.refused = sum.refused.saturating_add(nref);
+            // An observation answers the day: the line is held to the pin on its day alone.
+            let pinned: Vec<(String, Vec<String>)> = match t.anchors.get(&i) {
+                Some(day) => pinned.into_iter().filter(|(d, _)| d == day).collect(),
+                None => pinned,
+            };
+            let (why, kind) = judge_block(u, &pinned, &window_of(t));
+            if why.is_empty() && matches!(kind, Kind::Value | Kind::Stretch) {
+                values = values.saturating_add(1);
+            }
+            match (why.is_empty(), t.held.get(&i)) {
+                (true, _) => {}
+                (false, Some(code)) => sum.held.push(format!("{} l{i:02} ({code}): {why}", t.id)),
+                (false, None) => {
+                    sum.fails.push(format!("{} l{i:02}: {why}", t.id));
+                    fails = fails.saturating_add(1);
+                }
+            }
+        }
+        sum.values = sum.values.saturating_add(values);
+        match (values == 0 && fails == 0, &t.held_empty) {
+            (false, _) => {}
+            (true, Some(code)) => sum.held.push(format!("{} ({code}): empty", t.id)),
+            (true, None) => sum.fails.push(format!("{}: empty, every line a hole or a refusal", t.id)),
+        }
+    }
+
+    fn oracle_holds(tenth: bool) {
+        let all = texts();
+        let mut sum = Tally::default();
+        for (_, t) in all
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| (i.checked_rem(10) == Some(TENTH)) == tenth)
+        {
+            judge_text(t, &mut sum);
+        }
+        assert!(sum.texts > 0, "the oracle's corpus has texts in this part");
+        assert!(
+            sum.fails.is_empty(),
+            "{} of {} lines fail ({} value lines, {} refused days, {} held by name):\n{}\nheld:\n{}",
+            sum.fails.len(),
+            sum.lines,
+            sum.values,
+            sum.refused,
+            sum.held.len(),
+            sum.fails.join("\n"),
+            sum.held.join("\n")
+        );
+    }
+
+    /// The fixed tenth by seed (`oracle.py --sample 10`): what a quick loop takes.
+    #[test]
+    fn m3_oracle_tenth() {
+        oracle_holds(true);
+    }
+
+    /// The other nine tenths.
+    #[test]
+    fn m3_oracle_rest() {
+        oracle_holds(false);
+    }
+}
