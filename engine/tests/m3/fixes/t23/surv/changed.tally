@@ -1,0 +1,59 @@
+model changed
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+  note "T, tally 2.3 (#247), the round's mutation run (book/members.rs changed_leg, mv_field): three hole-day instances; a1 changes k1's amount, so its leg is a record whose amount is the hole and whose places are its own; a2 moves k2's leg to another place, so its whole leg is the hole; k3, which no version changes, is read as the plan has it (L §5.14, pick P12 by C-4's measure)"
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+place konto: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+input amt[k in ks]: money PLN
+input dest[k in ks]: key accounts
+input w: date
+input d_at: date
+
+move pay[k in ks]: transfers
+  on w
+  at d_at
+  leg cash from world to dest[k] amount amt[k]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d_at = 2026-03-01 "s"
+  w = window(2026-03-05, 2026-03-25) "s"
+  amt[k1] = 100.00 PLN "s"
+  amt[k2] = 100.00 PLN "s"
+  amt[k3] = 100.00 PLN "s"
+  dest[k1] = konto "s"
+  dest[k2] = konto "s"
+  dest[k3] = konto "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+  opening[other] = 0.00 PLN at 2026-03-01 start "s"
+
+version a1
+  cite s
+  governs 2026..
+  known 2026-03-20
+  replace amt[k1] = 150.00 PLN "s"
+
+version a2
+  cite s
+  governs 2026..
+  known 2026-03-22
+  replace dest[k2] = other "s"
+
+ask k1_amt: pay[k1].cash.amount
+ask k1_to: pay[k1].cash.to
+ask k2_to: pay[k2].cash.to
+ask k3_amt: pay[k3].cash.amount
+ask k3_to: pay[k3].cash.to

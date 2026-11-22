@@ -1,0 +1,40 @@
+model zero_leg
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 (#247), the round's mutation run (walk/agenda.rs zero_leg, set to true and to false): an instance on a known day whose second leg's amount is a hole is a hole booking; its leg of amount 0 books nothing on any day (L §5.14), so only the hole leg's place is the hole"
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+kind pairs: event certain
+  leg fee: PLN
+  leg cash: PLN
+
+place k_fee: accounts PLN lives 2025-01-01..
+place k_cash: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN question "How much is paid?"
+input zero: money PLN
+input d1: date
+
+move pay: pairs
+  on d1
+  leg fee from world to k_fee amount zero
+  leg cash from world to k_cash amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  opening[k_fee] = 500.00 PLN at 2026-01-01 start "s"
+  opening[k_cash] = 500.00 PLN at 2026-01-01 start "s"
+  zero = 0.00 PLN "s"
+  d1 = 2026-03-04 "s"
+
+ask fee_bal: bal(k_fee, 2026-03-31)
+ask cash_bal: bal(k_cash, 2026-03-31)
+ask fee_flows: flows(pay.fee, 2026-03)

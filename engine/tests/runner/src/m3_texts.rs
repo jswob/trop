@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 336] = [
+pub static TEXTS: [(&str, &str); 345] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -1288,6 +1288,42 @@ pub static TEXTS: [(&str, &str); 336] = [
     (
         "m3/fixes/t23/same/se_w_ne.tally",
         include_str!("../../m3/fixes/t23/same/se_w_ne.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/c4_none.tally",
+        include_str!("../../m3/fixes/t23/surv/c4_none.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/c4_steps.tally",
+        include_str!("../../m3/fixes/t23/surv/c4_steps.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/changed.tally",
+        include_str!("../../m3/fixes/t23/surv/changed.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/changed_amt.tally",
+        include_str!("../../m3/fixes/t23/surv/changed_amt.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/for_hole.tally",
+        include_str!("../../m3/fixes/t23/surv/for_hole.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/hole_dec.tally",
+        include_str!("../../m3/fixes/t23/surv/hole_dec.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/law_defs.tally",
+        include_str!("../../m3/fixes/t23/surv/law_defs.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/law_hole.tally",
+        include_str!("../../m3/fixes/t23/surv/law_hole.tally"),
+    ),
+    (
+        "m3/fixes/t23/surv/zero_leg.tally",
+        include_str!("../../m3/fixes/t23/surv/zero_leg.tally"),
     ),
     (
         "m3/mini/acme_stops.tally",

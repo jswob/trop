@@ -6914,4 +6914,124 @@ plain: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the l
 plain_pinned: 600.00 PLN
   unfulfilled: px
   cut 2026-06-01
+,20:t23-g1/surv-zero-leg,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run zero_leg.tally,48:zero_leg.tally	m3/fixes/t23/surv/zero_leg.tally
+,1:0,166:cash_bal: ?"How much is paid?" (amt)
+  unfulfilled: pay
+  cut 2026-06-10
+fee_bal: 500.00 PLN
+  cut 2026-06-10
+fee_flows: 0.00 PLN
+  unfulfilled: pay
+  cut 2026-06-10
+,20:t23-g1/surv-hole-dec,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run hole_dec.tally,48:hole_dec.tally	m3/fixes/t23/surv/hole_dec.tally
+,1:0,1065:b_other: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w) ?"other has no opening or stated reading" (other)
+  unknown day: w
+  cut 2026-06-10
+b_third: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w) ?"third has no opening or stated reading" (third)
+  unknown day: w
+  cut 2026-06-10
+direct_amt: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
+  unknown day: w
+  cut 2026-06-10
+direct_to: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
+  unknown day: w
+  cut 2026-06-10
+dr_amt: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
+  unknown day: w
+  cut 2026-06-10
+from_world: 1
+  unfulfilled: dr
+  cut 2026-06-10
+to_other: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
+  unknown day: w
+  cut 2026-06-10
+to_third: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w)
+  unknown day: w
+  cut 2026-06-10
+,20:t23-g1/surv-c4-steps,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run c4_steps.tally,48:c4_steps.tally	m3/fixes/t23/surv/c4_steps.tally
+,1:0,524:adj: ?"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay" (w)
+  unknown day: w
+  cut 2026-06-10
+adj_k10: 0
+  cut 2026-03-10
+adj_p05: 20.00 PLN
+  pinned: w = 2026-03-05
+  cut 2026-06-10
+adj_sum: ?"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay" (w)
+  unknown day: w
+  cut 2026-06-10
+fl: ?"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay" (w)
+  unknown day: w
+  cut 2026-06-10
+warning: WARN-UNREAD input flag is read by nothing
+,19:t23-g1/surv-c4-none,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,17:run c4_none.tally,46:c4_none.tally	m3/fixes/t23/surv/c4_none.tally
+,1:0,108:adj: 0
+  cut 2026-06-10
+adj_k10: 0
+  cut 2026-03-10
+adj_p05: 0
+  cut 2026-06-10
+adj_sum: 0
+  cut 2026-06-10
+,19:t23-g1/surv-changed,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,17:run changed.tally,46:changed.tally	m3/fixes/t23/surv/changed.tally
+,1:0,363:k1_amt: ?"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay[k1]" (w)
+  unknown day: w
+  cut 2026-06-10
+k1_to: konto
+  cut 2026-06-10
+k2_to: ?"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay[k2]" (w)
+  unknown day: w
+  cut 2026-06-10
+k3_amt: 100.00 PLN
+  cut 2026-06-10
+k3_to: konto
+  cut 2026-06-10
+,20:t23-g1/surv-law-hole,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run law_hole.tally,48:law_hole.tally	m3/fixes/t23/surv/law_hole.tally
+,1:0,522:adj: 0
+  cut 2026-06-10
+direct_amt: ?"date within window(2026-03-01, 2026-03-03) not precise enough for the law date of pw" (wa)
+  unknown day: wa
+  cut 2026-06-10
+direct_to: ?"date within window(2026-03-01, 2026-03-03) not precise enough for the law date of pw" (wa)
+  unknown day: wa
+  cut 2026-06-10
+keys: 2
+  cut 2026-06-10
+to_other: ?"date within window(2026-03-01, 2026-03-03) not precise enough for the law date of pw" (wa)
+  unknown day: wa
+  cut 2026-06-10
+warning: WARN-UNREAD input unrelated is read by nothing
+,20:t23-g1/surv-law-defs,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run law_defs.tally,48:law_defs.tally	m3/fixes/t23/surv/law_defs.tally
+,1:0,101:adj: 0
+  cut 2026-06-10
+keys: 2
+  cut 2026-06-10
+warning: WARN-UNREAD place other is read by nothing
+,20:t23-g1/surv-for-hole,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run for_hole.tally,48:for_hole.tally	m3/fixes/t23/surv/for_hole.tally
+,1:0,366:past_mar: ?"date within window(2026-03-25, 2026-04-05) not precise enough for month_of" (w)
+  unknown day: w
+  unfulfilled: past_pay
+  cut 2026-06-10
+past_pinned: 100.00 PLN
+  pinned: w = 2026-03-30
+  unfulfilled: past_pay
+  cut 2026-06-10
+plan_mar: ?"date within window(2026-03-25, 2026-04-05) not precise enough for month_of" (w)
+  unknown day: w
+  cut 2026-06-10
+,23:t23-g1/surv-changed-amt,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,21:run changed_amt.tally,54:changed_amt.tally	m3/fixes/t23/surv/changed_amt.tally
+,1:0,284:k2_amt: 100.00 PLN
+  cut 2026-06-10
+k2_amt_p05: 100.00 PLN
+  pinned: w = 2026-03-05
+  cut 2026-06-10
+k2_amt_p25: 100.00 PLN
+  pinned: w = 2026-03-25
+  cut 2026-06-10
+k2_to_p05: konto
+  pinned: w = 2026-03-05
+  cut 2026-06-10
+k2_to_p25: other
+  pinned: w = 2026-03-25
+  cut 2026-06-10
 ,
