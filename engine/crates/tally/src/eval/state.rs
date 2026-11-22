@@ -24,7 +24,7 @@ use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{At, Inst, ProjKey, Walk, WalkAt};
 
-use super::bindings::{names_in, reads_name};
+use super::bindings::{names_walked, reads_name};
 use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
 use super::timelines::Timelines;
@@ -285,32 +285,26 @@ impl Env {
     }
 
     /// The written bindings in scope that `parts`, a pin's value then its keys, name, each
-    /// once, by the first part naming it (refcore's `_pertuple`); none where a part names
-    /// two, whose order refcore's walk gives, or holds a form whose names aren't walked here.
-    /// L §8.2.
+    /// once, in the order refcore's walk meets their names (refcore's `_pertuple`, its
+    /// `used`); none where a form whose parts' order isn't kept here names two not met
+    /// before, whose order refcore's walk gives. L §8.2.
     #[must_use]
     pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Option<Vec<String>> {
         let mut out: Vec<String> = Vec::new();
-        for part in parts {
-            let names = names_in(part)?;
+        for group in parts.iter().flat_map(|part| names_walked(part)) {
             let mut found: Vec<&str> = Vec::new();
-            for name in &names {
-                let written = self.get(name).and_then(|v| v.written.as_deref());
-                if let Some(text) = written
-                    && !found.contains(&text)
-                {
+            for name in group {
+                let Some(text) = self.get(name).and_then(|v| v.written.as_deref()) else {
+                    continue;
+                };
+                if !found.contains(&text) && !out.iter().any(|o| o == text) {
                     found.push(text);
                 }
             }
-            match found.as_slice() {
-                [] => {}
-                [one] => {
-                    if !out.iter().any(|o| o == one) {
-                        out.push((*one).to_owned());
-                    }
-                }
-                _ => return None,
+            if found.len() > 1 {
+                return None;
             }
+            out.extend(found.into_iter().map(str::to_owned));
         }
         Some(out)
     }

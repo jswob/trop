@@ -550,6 +550,149 @@ pub(crate) fn names_in(e: &Expr) -> Option<Vec<&str>> {
     Some(out)
 }
 
+/// The names expression `e` holds, in the order refcore's walk meets them (`node.walk`, a
+/// node before its parts, its parts last-written first, a list's items in order: `x[a] +
+/// y[b]` meets `b` before `a`), each name a group of its own. A form whose parts' order that
+/// walk gives from fields this tree doesn't keep (a walk's read, a span, a query) is one
+/// group of every name under it, in no promised order. L §8.2 (a pin formed per binding
+/// tuple prints with the bindings its value and keys name).
+pub(crate) fn names_walked(e: &Expr) -> Vec<Vec<&str>> {
+    let mut groups: Vec<Vec<&str>> = Vec::new();
+    let mut work: Vec<&Expr> = vec![e];
+    while let Some(x) = work.pop() {
+        if let Expr::Name(n) = x {
+            groups.push(vec![n.as_str()]);
+            continue;
+        }
+        match walk_order(x) {
+            Some(parts) => work.extend(parts.into_iter().rev()),
+            None => groups.push(names_under(x)),
+        }
+    }
+    groups
+}
+
+/// Every name under expression `e`, every part walked ([`expr_parts`]), in no promised order.
+fn names_under(e: &Expr) -> Vec<&str> {
+    let mut out: Vec<&str> = Vec::new();
+    let mut work: Vec<&Expr> = vec![e];
+    while let Some(x) = work.pop() {
+        if let Expr::Name(n) = x {
+            out.push(n.as_str());
+        }
+        work.extend(expr_parts(x));
+    }
+    out
+}
+
+/// The parts of expression `e` in the order refcore's walk visits them, from its syntax
+/// tree's fields (`parser.py`): an operator chain is left-nested, so its last term first; a
+/// read's keys before its base; a call's band key before its arguments; an aggregate's `ties
+/// by`, then its bindings (each its `where`, `on`, step and ends, last first), then its
+/// term; an `as if`'s pins (each its value, then its keys) before its expression. None for a
+/// form whose order isn't kept here. L §8.2.
+fn walk_order(e: &Expr) -> Option<Vec<&Expr>> {
+    let parts: Vec<&Expr> = match e {
+        Expr::Lit(_)
+        | Expr::Str(_)
+        | Expr::Name(_)
+        | Expr::None
+        | Expr::Never
+        | Expr::Cut
+        | Expr::List(_) => Vec::new(),
+        Expr::If(parts) => parts.iter().rev().collect(),
+        Expr::Or(terms) | Expr::And(terms) => terms.iter().rev().collect(),
+        Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => vec![y],
+        Expr::Cmp(c) => vec![&c.2, &c.0],
+        Expr::In(i) => i.on.iter().chain([&i.set, &i.member]).collect(),
+        // left-nested chains: the last term first
+        Expr::Sum(first, rest) => {
+            let mut out: Vec<&Expr> = rest.iter().rev().map(|(_, y)| y).collect();
+            out.push(first);
+            out
+        }
+        Expr::Prod(first, rest) => {
+            let mut out: Vec<&Expr> = rest.iter().rev().map(|(_, y)| y).collect();
+            out.push(first);
+            out
+        }
+        Expr::Post(base, posts) => {
+            // a read's keys, its last postfix first, before its base
+            let mut out: Vec<&Expr> = posts.iter().rev().flat_map(post_exprs).collect();
+            out.push(base);
+            out
+        }
+        Expr::Call(call) => key_expr(call.band_key.as_ref())
+            .into_iter()
+            .chain(call.args.iter())
+            .collect(),
+        Expr::To(base, step) => step_expr(step)
+            .into_iter()
+            .chain(core::iter::once(&**base))
+            .collect(),
+        Expr::Agg(agg) => {
+            let mut out: Vec<&Expr> = agg.ties.iter().flatten().collect();
+            for bind in &agg.binds {
+                out.extend(bind_order(bind)?);
+            }
+            out.extend(agg.term.iter());
+            out
+        }
+        Expr::AsIf(inner, pins) => pins
+            .iter()
+            .flat_map(pin_order)
+            .chain(core::iter::once(&**inner))
+            .collect(),
+        Expr::LegOf(..)
+        | Expr::Record(_)
+        | Expr::Last(_)
+        | Expr::Bal(_)
+        | Expr::Flows(_)
+        | Expr::Covered(_)
+        | Expr::Calendar(_)
+        | Expr::Value(_)
+        | Expr::Query(_)
+        | Expr::Crps(_)
+        | Expr::DistFn(_)
+        | Expr::Dist(_)
+        | Expr::Prorata(_) => return None,
+    };
+    Some(parts)
+}
+
+/// A binding's parts as refcore's walk visits them (`bind(var, dom, on, over, where)`): its
+/// `where`, its `on`, its range's step and ends, the last first; none for a span, whose
+/// order isn't kept here.
+fn bind_order(bind: &Bind) -> Option<Vec<&Expr>> {
+    if bind.over.is_some() {
+        return None;
+    }
+    let mut out: Vec<&Expr> = bind.filter.iter().chain(bind.on.iter()).collect();
+    if let Over::Range(range) = &bind.domain {
+        out.extend(range.2.iter());
+        out.extend([&range.1, &range.0]);
+    }
+    Some(out)
+}
+
+/// A pin's parts as refcore's walk visits them (`pin(kind, target, value, sample)`): its
+/// value, then its target's keys in order; a date pin's date.
+fn pin_order(pin: &Pin) -> Vec<&Expr> {
+    match &pin.form {
+        PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => vec![e],
+        PinForm::Scenario(_) => Vec::new(),
+        PinForm::Set { target, value, .. } => core::iter::once(value)
+            .chain(
+                target
+                    .keys
+                    .iter()
+                    .flatten()
+                    .filter_map(|k| key_expr(Some(k))),
+            )
+            .collect(),
+    }
+}
+
 /// The key expressions of a postfix.
 fn post_exprs(post: &Postfix) -> Vec<&Expr> {
     match post {
@@ -770,9 +913,37 @@ fn pin_exprs(pin: &Pin) -> Vec<&Expr> {
 
 #[cfg(test)]
 mod tests {
-    use super::{order_text, reads_name};
+    use super::{names_walked, order_text, reads_name};
     use crate::model::Thing;
-    use crate::syntax::Expr;
+    use crate::syntax::{AddOp, Expr, Key, Postfix};
+
+    /// `id[keys]`, each key a name.
+    fn read(id: &str, keys: &[&str]) -> Expr {
+        let keys = keys
+            .iter()
+            .map(|k| Key::Expr(Expr::Name((*k).to_owned())))
+            .collect();
+        Expr::Post(
+            Box::new(Expr::Name(id.to_owned())),
+            vec![Postfix::Keys(keys)],
+        )
+    }
+
+    #[test]
+    fn names_are_walked_as_refcore_walks_them() {
+        // `b2[k, j] + c2[j, m]`: the last term first, a read's keys in order, then its base
+        let e = Expr::Sum(
+            Box::new(read("b2", &["k", "j"])),
+            vec![(AddOp::Add, read("c2", &["j", "m"]))],
+        );
+        let flat: Vec<&str> = names_walked(&e).into_iter().flatten().collect();
+        assert_eq!(flat, ["j", "m", "c2", "k", "j", "b2"], "refcore's order");
+        // `if a then b else c`: the else first
+        let parts = ["a", "b", "c"].map(|n| Expr::Name(n.to_owned()));
+        let choice = Expr::If(Box::new(parts));
+        let groups: Vec<Vec<&str>> = names_walked(&choice);
+        assert_eq!(groups, [["c"], ["b"], ["a"]], "the if's parts, last first");
+    }
 
     #[test]
     fn things_bind_by_kind_and_key_text() {
