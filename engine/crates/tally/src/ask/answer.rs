@@ -952,7 +952,7 @@ pub(super) fn form_line(
                 unknown,
             })
         }
-        AskBody::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
+        AskBody::Check(left, right) => check_line(m, engine, (left, right), &ask.id, env, ctx),
         AskBody::Solve(solve) => {
             let (item, met) = engine.solve_line(m, solve, env, ctx)?;
             Ok(Printed {

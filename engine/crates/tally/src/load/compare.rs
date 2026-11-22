@@ -34,6 +34,22 @@ impl Checker {
         r: &Expr,
         depth: u32,
     ) -> Typed {
+        self.cmp_sides(m, scope, l, op, r, depth)?;
+        Ok(Ty::Bool)
+    }
+
+    /// A comparison typed as [`Self::cmp`] types it, giving its two sides' types, a bare key
+    /// resolved by the other side's (refcore's `t_cmp`, the `_t` it leaves on each side).
+    /// L §7.1, §5.11, §2.5.
+    pub(super) fn cmp_sides(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        l: &Expr,
+        op: CmpOp,
+        r: &Expr,
+        depth: u32,
+    ) -> Result<(Ty, Ty), Stop> {
         let mut left = self.operand(m, scope, l, None, depth)?;
         let mut right_scope = scope.clone();
         if let Expr::Lit(Lit::Num(n)) = r
@@ -52,8 +68,8 @@ impl Checker {
         if open(&left.ty) && !matches!(right.ty, Ty::KeyLit(_)) {
             left = self.operand(m, scope, l, Some(&right.ty), depth)?;
         }
-        self.compare(m, scope, op, &left, &right)?;
-        Ok(Ty::Bool)
+        let (lt, rt) = self.compare(m, scope, op, &left, &right)?;
+        Ok((lt.unwrap_or(left.ty), rt.unwrap_or(right.ty)))
     }
 
     /// `pos(k) > n` in a def: `n` an offset of the def's key arithmetic on `k` (refcore's
@@ -145,7 +161,8 @@ impl Checker {
         Ok(Some(ty))
     }
 
-    /// Two typed sides compared with `op` (refcore's `compare`). L §2.5, §3.2, §4.2, §5.7.
+    /// Two typed sides compared with `op`, giving the type a side takes where its period
+    /// literal is the other side's key (refcore's `compare`). L §2.5, §3.2, §4.2, §5.7.
     fn compare(
         &mut self,
         m: &Reality,
@@ -153,7 +170,7 @@ impl Checker {
         op: CmpOp,
         left: &Operand,
         right: &Operand,
-    ) -> Result<(), Stop> {
+    ) -> Result<(Option<Ty>, Option<Ty>), Stop> {
         let mut lt = left.ty.clone();
         let mut rt = right.ty.clone();
         if matches!(lt, Ty::KeyList)
@@ -169,7 +186,7 @@ impl Checker {
         let (lk, rk) = (lt.word(), rt.word());
         let eq = matches!(op, CmpOp::Eq | CmpOp::Ne);
         if lk == "unseen" || rk == "unseen" || lk == "none" || rk == "none" {
-            return Ok(());
+            return Ok((None, None));
         }
         if !eq {
             no_order(m, &lt, "an order")?;
@@ -178,17 +195,19 @@ impl Checker {
         if lk == "never" || rk == "never" {
             let other = if lk == "never" { &rt } else { &lt };
             if matches!(other, Ty::Date | Ty::Never) || key_value_kind(m, other) == Some("date") {
-                return Ok(());
+                return Ok((None, None));
             }
             return Err(uerr(format!(
                 "never is a date; compared with {}",
                 other.show()
             )));
         }
-        for (side, t, other) in [(left, &lt, &rt), (right, &rt, &lt)] {
-            if self.period_literal(m, scope, side, t, other)? {
-                return Ok(());
-            }
+        // a period literal that is the other side's key takes its type (refcore's `side._t`)
+        if self.period_literal(m, scope, left, &lt, &rt)? {
+            return Ok((Some(rt), None));
+        }
+        if self.period_literal(m, scope, right, &rt, &lt)? {
+            return Ok((None, Some(lt)));
         }
         if lk == "year4" || rk == "year4" {
             let (side, other) = if lk == "year4" {
@@ -200,16 +219,16 @@ impl Checker {
                 || key_pk(m, other) == Some(PeriodKind::Year);
             if year {
                 self.decide(side.year4, Reading::Year);
-                return Ok(());
+                return Ok((None, None));
             }
             if matches!(numcls(m, other), Some("int" | "num" | "flex")) {
                 self.decide(side.year4, Reading::Int);
-                return Ok(());
+                return Ok((None, None));
             }
             self.year4_now(side.year4, Reading::Int)?;
             return Err(uerr(format!("{} compared with {}", lt.show(), rt.show())));
         }
-        compare_rest(m, op, &lt, &rt)
+        compare_rest(m, op, &lt, &rt).map(|()| (None, None))
     }
 
     /// A period literal compared with a key of a period index of its granularity is that

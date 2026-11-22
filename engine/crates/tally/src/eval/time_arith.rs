@@ -191,10 +191,13 @@ pub(crate) fn periods_of(
     Ok(periods.is_integer().then_some(periods))
 }
 
-/// The int number of periods from `b` to `a`, two periods of one kind (refcore's `pdiff`,
-/// `key_diff`). L §4.2 Differences.
+/// The int number of periods from `b` to `a`, two periods of one kind; two keys of one index
+/// that steps by more than its kind's period count its steps, a quarter of `month … by 3`
+/// one (refcore's `pdiff`, `key_diff`). L §4.2 Differences, §4.1.
 fn period_diff(a: Period, b: Period) -> Result<Value, Stop> {
+    let stepped = a.step() == b.step() && a.step() != own_step(a.kind());
     let diff = match (a.kind(), b.kind()) {
+        _ if stepped => b.steps_to(a),
         (PeriodKind::Year, PeriodKind::Year) => {
             i64::from(a.start().year()).checked_sub(i64::from(b.start().year()))
         }
@@ -209,6 +212,16 @@ fn period_diff(a: Period, b: Period) -> Result<Value, Stop> {
     };
     diff.map(Value::int)
         .ok_or_else(|| refuse(Run::Domain, "the difference of two periods".to_owned()))
+}
+
+/// What a period of `kind` steps by where its index states no `by`. L §4.1.
+fn own_step(kind: PeriodKind) -> Step {
+    match kind {
+        PeriodKind::Day => Step::Days(1),
+        PeriodKind::Month => Step::Months(1),
+        PeriodKind::Quarter => Step::Months(3),
+        PeriodKind::Year => Step::Months(12),
+    }
 }
 
 /// The months from year 0 to a period's first month: year × 12 + month.
@@ -281,7 +294,7 @@ mod tests {
     use crate::eval::past_days;
     use crate::model::Value;
     use crate::num::Num;
-    use crate::time::{Period, PeriodKind, Step};
+    use crate::time::{Day, Period, PeriodKind, Step};
 
     #[test]
     fn a_duration_counts_the_periods_of_its_keys_by_n() {
@@ -353,5 +366,25 @@ mod tests {
         let b = Period::month(2025, 11).expect("November");
         assert_eq!(period_diff(a, b), Ok(Value::int(4)), "four months");
         assert_eq!(Op::Sub.text(), "-", "minus");
+    }
+
+    #[test]
+    fn keys_of_an_index_by_3_differ_by_their_steps() {
+        let quarter = |month: u8| {
+            let start = Day::from_ymd(2026, month, 1).expect("a day");
+            let end = start.end_months(3).expect("its end");
+            Period::new(PeriodKind::Month, start, end, Step::Months(3)).expect("a key")
+        };
+        let (april, october) = (quarter(4), quarter(10));
+        assert_eq!(
+            period_diff(april, october),
+            Ok(Value::int(-2)),
+            "two steps back"
+        );
+        assert_eq!(
+            period_diff(october, april),
+            Ok(Value::int(2)),
+            "two steps on"
+        );
     }
 }

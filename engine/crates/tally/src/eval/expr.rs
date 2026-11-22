@@ -564,11 +564,27 @@ pub(crate) fn equal_sides(
     (lhs, left): (&Expr, &Value),
     (rhs, right): (&Expr, &Value),
 ) -> Result<Value, Stop> {
-    let left_year = year_beside(lhs, left.clone(), right);
-    let right_year = year_beside(rhs, right.clone(), &left_year);
-    let (a, b) = resolve_pair(m, left_year, right_year)?;
+    let (a, b) = resolved_sides(m, (lhs, left), (rhs, right))?;
     let written = Expr::Cmp(Box::new((lhs.clone(), CmpOp::Eq, rhs.clone())));
     compare_values(m, CmpOp::Eq, (&a, &b), (&written, &Env::empty()))
+}
+
+/// Two values already read as the comparison of their expressions takes them: a four-digit
+/// literal beside a year as that year, a key literal as a key of the other side's index or
+/// kind (refcore's static resolution, the values `check` compares and subtracts). L §2.5,
+/// §5.18.
+///
+/// # Errors
+///
+/// `LOAD-KEY` where a key literal names no key of the other side's index.
+pub(crate) fn resolved_sides(
+    m: &Reality,
+    (lhs, left): (&Expr, &Value),
+    (rhs, right): (&Expr, &Value),
+) -> Result<(Value, Value), Stop> {
+    let left_year = year_beside(lhs, left.clone(), right);
+    let right_year = year_beside(rhs, right.clone(), &left_year);
+    resolve_pair(m, left_year, right_year)
 }
 
 impl Engine {

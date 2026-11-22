@@ -472,6 +472,10 @@ pub(super) struct Walked {
     /// where its evaluation meets `LOAD-KEY ambiguous key` (refcore's `e_name`, its `keylit`
     /// arm). L §2.5.
     pub(super) unresolved: BTreeMap<String, At>,
+    /// The `check` asks whose two sides are keys of one index: the asks whose
+    /// difference is the int of their positions (refcore's `_check`, the sides' `_t`). L §5.18,
+    /// §4.2.
+    pub(super) keyed_checks: BTreeSet<String>,
     /// The queries and path scores over random values, in the order typed (refcore's
     /// `queries`). L §5.16.
     pub(super) queries: Vec<QueryAt>,
@@ -575,6 +579,8 @@ pub(super) struct Checker {
     pub(super) tape: Option<Vec<(Node, Rel)>>,
     /// Each ask whose line can hold a key literal no position resolves, with its line.
     unresolved: BTreeMap<String, At>,
+    /// The `check` asks whose two sides are keys of one index.
+    keyed_checks: BTreeSet<String>,
     /// The decisions' plain balance reads.
     pub(super) day_reads: Vec<DayRead>,
     /// The fills: each one's sides, typed once (refcore's `fill_infos`).
@@ -709,6 +715,7 @@ pub(super) fn walk(m: &Reality, sections: &[(String, Section)]) -> Result<Walked
         ask_reads: checker.ask_reads,
         key_reads: checker.key_reads,
         unresolved: checker.unresolved,
+        keyed_checks: checker.keyed_checks,
         day_reads: checker.day_reads,
         range_keys: checker.range_keys,
         alone,
@@ -1178,8 +1185,16 @@ impl Checker {
                 Ok(())
             }
             AskBody::Check(left, right) => {
-                let compared = self.cmp(m, scope, left, CmpOp::Eq, right, 0);
-                compared.map(|_| ()).map_err(|stop| scope.place(stop))
+                let compared = self.cmp_sides(m, scope, left, CmpOp::Eq, right, 0);
+                let sides = compared.map_err(|stop| scope.place(stop))?;
+                // two keys of one index differ by an int (L §4.2); a kind's or an axis's don't
+                if let (Ty::Key(index), Ty::Key(other)) = &sides
+                    && index == other
+                    && m.indexes.get(index).is_some()
+                {
+                    self.keyed_checks.insert(ask.id.clone());
+                }
+                Ok(())
             }
             AskBody::Explain(reference) | AskBody::InputsOf(reference) => {
                 let typed = self.expr(m, scope, reference, None, 0)?;

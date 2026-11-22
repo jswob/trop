@@ -10,9 +10,10 @@
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
     Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop, partial_text,
+    resolved_sides,
 };
 use crate::hole::Unknown;
-use crate::model::{KeyVal, Reality, Value};
+use crate::model::{Reality, Value};
 use crate::syntax::{Expr, PinForm, Stop};
 use crate::time::Day;
 
@@ -78,8 +79,8 @@ pub(super) fn hole_days(items: &[&Item]) -> Vec<Unknown> {
     out
 }
 
-/// The line of `check left == right` in scope `env` and context `ctx` (refcore's `check`,
-/// `_check`). L §5.18.
+/// The line of `check left == right` of ask `ask` in scope `env` and context `ctx` (refcore's
+/// `check`, `_check`). L §5.18.
 ///
 /// # Errors
 ///
@@ -88,11 +89,12 @@ pub(super) fn check_line(
     m: &Reality,
     engine: &mut Engine,
     (left, right): (&Expr, &Expr),
+    ask: &str,
     env: &Env,
     ctx: Ctx,
 ) -> Result<Printed, Stop> {
     engine.push();
-    let read = sides_text(m, engine, (left, right), env, ctx).and_then(|text| {
+    let read = sides_text(m, engine, (left, right), ask, env, ctx).and_then(|text| {
         let laws = (
             side_law(m, engine, left, env, ctx)?,
             side_law(m, engine, right, env, ctx)?,
@@ -120,6 +122,7 @@ fn sides_text(
     m: &Reality,
     engine: &mut Engine,
     (left, right): (&Expr, &Expr),
+    ask: &str,
     env: &Env,
     ctx: Ctx,
 ) -> Result<(String, Vec<Unknown>), Stop> {
@@ -158,11 +161,14 @@ fn sides_text(
     if same {
         return Ok(("ok".to_owned(), Vec::new()));
     }
+    // each side as the comparison took it: a key literal the other side's key, a four-digit
+    // literal beside a year that year (refcore's sides, evaluated as load resolved them)
+    let (a, b) = resolved_sides(m, (left, a), (right, b))?;
     let text = format!(
         "differs: {lt} = {}, {rt} = {}{}",
-        plain(m, a)?,
-        plain(m, b)?,
-        difference(m, a, b)?
+        plain(m, &a)?,
+        plain(m, &b)?,
+        difference(m, (&a, &b), ask)?
     );
     Ok((text, Vec::new()))
 }
@@ -179,41 +185,22 @@ fn side(read: Result<Value, Stop>) -> Result<Item, Stop> {
 
 /// `, difference e − f` where e − f is defined, of two numbers or two money values; nothing
 /// for two dates, texts or codes; `, difference refused: …` where the subtraction is refused
-/// (refcore's `_check`). L §5.18, §3.2.
-fn difference(m: &Reality, a: &Value, b: &Value) -> Result<String, Stop> {
+/// (refcore's `_check`). Two keys differ only where load typed both sides as keys of one
+/// index (`keyed_checks`): the int of positions, or of periods for a period index (L §4.2
+/// "Differences"); a period typed as no key prints none, as on refcore. L §5.18, §3.2.
+fn difference(m: &Reality, (a, b): (&Value, &Value), ask: &str) -> Result<String, Stop> {
     let numbers = |v: &Value| matches!(v, Value::Number(_) | Value::Money(_));
-    if numbers(a) && numbers(b) || keys_of_one_index(m, a, b) {
-        return match arith(m, Op::Sub, a, b) {
-            Ok(d) => Ok(format!(", difference {}", plain(m, &d)?)),
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
-                Ok(format!(", difference refused: {}", r.text()))
-            }
-            Err(stop) => Err(stop),
-        };
-    }
-    if matches!(a, Value::Key(KeyVal::Thing(_))) && matches!(b, Value::Key(KeyVal::Thing(_))) {
-        // things of a kind: a kind is no index, so no difference (refcore's `_check`)
+    if !(numbers(a) && numbers(b) || m.keyed_checks.contains(ask)) {
+        // dates, periods load typed as no key, things, texts, codes: no difference
         return Ok(String::new());
     }
-    if matches!(a, Value::Key(_) | Value::Period(_))
-        && matches!(b, Value::Key(_) | Value::Period(_))
-    {
-        // two keys of one ordered index differ by an int (L §4.2); which index a key's
-        // static type names isn't kept at run
-        return Err(Stop::NotBuilt("a check's difference of two keys"));
+    match arith(m, Op::Sub, a, b) {
+        Ok(d) => Ok(format!(", difference {}", plain(m, &d)?)),
+        Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
+            Ok(format!(", difference refused: {}", r.text()))
+        }
+        Err(stop) => Err(stop),
     }
-    Ok(String::new())
-}
-
-/// Whether `a` and `b` are keys of one list index, which a key carries at run: their
-/// difference is the int of positions between them (L §4.2, refcore's `key_diff`).
-fn keys_of_one_index(m: &Reality, a: &Value, b: &Value) -> bool {
-    let (Value::Key(KeyVal::Key { index, .. }), Value::Key(KeyVal::Key { index: other, .. })) =
-        (a, b)
-    else {
-        return false;
-    };
-    index == other && m.indexes.get(index).is_some()
 }
 
 /// A side as a check prints it in place of a decided comparison: a refusal as `refused: …`, a
