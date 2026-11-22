@@ -1002,13 +1002,19 @@ def launch_usage_checks(root, expect, failures):
 
     r = launch("tests", prompt, root, "--ids", ids, "--dry-run")
     expect("launch --dry-run as lead", r.returncode, 0, r.stderr)
-    for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "CARGO_INCREMENTAL=0", "nice -n 10",
+    for says in ("TALLY_ROLE=tests", "CARGO_BUILD_JOBS=6", "NEXTEST_TEST_THREADS=6", "nice -n 10",
                  "--output-format json", "--session-id", "--effort xhigh", "job tests", "--model claude-opus-5-5",
                  "dry run: nothing started"):
         if says not in r.stdout:
             failures.append(f"launch --dry-run: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     if os.path.exists(ids):
         failures.append("launch --dry-run wrote the ids file")
+    # check picks incremental builds per mode (R-82): launch passes no CARGO_INCREMENTAL, not
+    # even the caller's (the process step after tally 2.3: quick took 104 s with it at 0, 37 s without)
+    r = launch("build", prompt, root, "--ids", ids, "--dry-run", extra={"CARGO_INCREMENTAL": "0"})
+    expect("launch --dry-run with the caller's CARGO_INCREMENTAL", r.returncode, 0, r.stderr)
+    if "CARGO_INCREMENTAL" in r.stdout:
+        failures.append(f"launch --dry-run: passes CARGO_INCREMENTAL, which check chooses: {r.stdout.strip()[:300]}")
     r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--resume", "0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b", role="unset")
     expect("launch --dry-run --resume in app work", r.returncode, 0, r.stderr)
     if "--resume 0e1d2c3b-4a59-4687-9a1b-2c3d4e5f6a7b" not in r.stdout:

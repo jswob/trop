@@ -21,7 +21,7 @@ ln -s "$PWD/node_modules" ~/projects/trop-worktrees/build-m1/node_modules
 git -C ~/projects/trop-worktrees/build-m1 push -u origin build/m1
 ```
 
-- Builds run with `CARGO_INCREMENTAL=0` (`engine/tools/check` sets it; `launch` too): incremental caches filled M0's disk.
+- `engine/tools/check` builds `quick`, `commit` and `fences` incrementally and `full` without (R-82); `launch` leaves `CARGO_INCREMENTAL` to it. A worktree's caches are about 2.7 GB; `launch` keeps 30 GB free.
 - While a pull request waits: `engine/tools/worktree-done --target-only <path>` frees its `engine/target/`.
 - After the merge: `engine/tools/worktree-done <path>` (clean, merged into `origin/master`; deletes the branch). A raw `git worktree remove` is refused. Save the worktree's `tmp/` notes to `tmp/<run>/` first.
 
@@ -33,7 +33,7 @@ engine/tools/launch <role> tmp/<run>/notes/<prompt>.txt <worktree> --ids tmp/<ru
 
 The session's **job** fixes its model and effort (the playbook's table, D2 and D3; `launch --jobs` prints it). With no `--job` a role runs its default job, on Opus: the `builder`, `tests`, a `rules-step`, the `spec-writer`, a `coordinator`. Name the job when it is another: `group-review`, `fix-review`, `gate`, `gate-review`, `planner`, `critic`, `paper-check`, `study`, `round-lead`. A `--model` or `--effort` against the job is a pick, logged; a model id `launch` doesn't know is refused. `--max-usd N` is a hard stop for that session (the playbook's D9).
 
-It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, then starts `claude -p … --output-format json` detached with `TALLY_ROLE`, `CARGO_BUILD_JOBS=6`, `NEXTEST_TEST_THREADS=6`, `CARGO_INCREMENTAL=0` and `nice -n 10`. It refuses under 30 GB free and warns when two heavy jobs already run. `--dry-run` shows the command. The answer lands in `tmp/<run>/out/<id>.<n>.json` (`.result` is the session's last message; when it is a one-line afterthought, the report is the transcript's last long message, #221); watch for it with Monitor, never sit idle on it.
+It fixes the session id in advance (`--session-id`) and adds it to `ids.txt`, then starts `claude -p … --output-format json` detached with `TALLY_ROLE`, `CARGO_BUILD_JOBS=6`, `NEXTEST_TEST_THREADS=6` and `nice -n 10`, without `CARGO_INCREMENTAL`. It refuses under 30 GB free and warns when two heavy jobs already run. `--dry-run` shows the command. The answer lands in `tmp/<run>/out/<id>.<n>.json` (`.result` is the session's last message; when it is a one-line afterthought, the report is the transcript's last long message, #221); watch for it with Monitor, never sit idle on it.
 
 - **One sub-session at a time,** unless the brief allows two; never more than two heavy jobs on the Mac (yours included).
 - **Every start message** opens with a heading line, `# <run>, <what>`, whose words `engine/tools/timeline` reads for a builder's turn: `plan only`, `builder group <g> (fresh session)`, `the review's fixes`, `the last fix`, `the gate`. It names: the run's issue; its part of the brief by absolute path (a worktree's `tmp/` is empty); the role, the job and the effort; what to read first; the step and where it ends ("until a green commit": a builder's last commit of its group on `check full`, its commits inside the group on `check fast`); "end your turn with N lines: …" (what you need back); and these rules, verbatim:

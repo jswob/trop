@@ -5,13 +5,17 @@ retro after M0, decision 4; the skill engine-coordinator).
                         [--model M] [--max-usd N] [--resume ID] [--dry-run]
     engine/tools/launch --jobs
 
-It runs, from WORKTREE, with the environment every M0 launch used:
+It runs, from WORKTREE, with this environment:
 
-    CARGO_BUILD_JOBS=6 NEXTEST_TEST_THREADS=6 CARGO_INCREMENTAL=0 TALLY_ROLE=ROLE \\
+    CARGO_BUILD_JOBS=6 NEXTEST_TEST_THREADS=6 TALLY_ROLE=ROLE \\
       nice -n 10 claude -p "<the prompt file's text>" --model M --effort E \\
       --output-format json --session-id <a new id> --add-dir <main>/tmp/active < /dev/null
 
 detached, its JSON answer in <ids file's folder>/out/<id>.json and its errors beside it.
+CARGO_INCREMENTAL is left out, the caller's too, so `check` chooses: incremental for
+`quick`, `commit` and `fences`, not for `full` (R-82). M0's launches set it to 0, which kept
+a builder's `check quick` at about 104 s after an edit against 37 s incremental (the process
+step after tally 2.3, 2026-11-22; about 2.7 GB of caches a worktree).
 The session id is fixed in advance (`--session-id`), so it is in the ids file before the
 session starts; `--resume ID` answers that session instead, under the same id.
 
@@ -73,7 +77,8 @@ JOBS = {
 }
 DEFAULT_JOB = {"build": "builder", "tests": "tests", "rules": "rules-step", "spec": "spec-writer", "lead": "coordinator"}
 MIN_FREE_GB = 30
-ENV = {"CARGO_BUILD_JOBS": "6", "NEXTEST_TEST_THREADS": "6", "CARGO_INCREMENTAL": "0"}
+ENV = {"CARGO_BUILD_JOBS": "6", "NEXTEST_TEST_THREADS": "6"}
+LEFT_TO_CHECK = ("TALLY_ROLE", "CARGO_INCREMENTAL")  # the role is set here; check picks incremental
 HEAVY = ("cargo build", "cargo test", "cargo nextest", "cargo clippy", "cargo fuzz", "cargo mutants", "cargo-nextest",
          "cargo-mutants", "cargo-fuzz", "claude -p")
 
@@ -197,7 +202,7 @@ def launch(argv, env_in):
               "--add-dir", os.path.join(main, "tmp", "active")]
     claude += ["--resume", sid] if opts["--resume"] else ["--session-id", sid]
     argv_ = ["nice", "-n", "10", *claude]
-    env = {k: v for k, v in env_in.items() if k != "TALLY_ROLE"} | ENV | {"TALLY_ROLE": role}
+    env = {k: v for k, v in env_in.items() if k not in LEFT_TO_CHECK} | ENV | {"TALLY_ROLE": role}
     jobs = heavy_jobs()
     shown = " ".join(f"{k}={v}" for k, v in {**ENV, "TALLY_ROLE": role}.items())
     print(f"launch: {role} session {sid} in {worktree} (job {job}, {model}, effort {effort}, {free_gb:.0f} GB free)")
