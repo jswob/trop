@@ -1,0 +1,72 @@
+# L §4.4's list (tally 2.3, #247; C-5): a band's argument isn't on the list, so a window there is the hole naming
+# it, where every day of `w` gives one row and `v`'s days give two; a pin gives the row. Before: RUN-DOMAIN a band
+# argument window(…).
+=== m.tally
+model p1
+  tally 2
+  on 2026-01-01
+  start 2020-01-01
+  end 2026-12-31
+source card "invented"
+unit glb "a fund unit"
+place kop: holdings glb lives 2000-01-01..
+place world: outside lives 1900-01-01..
+kind lots_in: event certain
+  leg units: glb
+kind gifts_in: lots_in
+  attr bought: date
+input kbank: observed
+input w: date
+input v: date
+input d0: date
+input n0: int
+input n40: int
+band tier(d: date): int
+def held_a[b in gifts_in]: date = b.bought
+def held_b[b in gifts_in]: date = b.bought
+def copy_w: date = w
+def shifted: date = add_days(w, n0)
+version v_card
+  cite card
+  governs always
+  known 2020-01-01
+  w = window(2026-03-02, 2026-03-20) "c"
+  v = window(2026-03-25, 2026-04-05) "c"
+  d0 = 2026-03-10 "c"
+  n0 = 0 "c"
+  n40 = 40 "c"
+  tier: [2026-01-01, 2026-04-01) = 1
+  tier: [2026-04-01, 2027-01-01) = 2
+  kbank[k4] = (on: 2023-09-12, kind: gifts_in, leg units from world to kop amount 60 glb, bought: window(2019-03-01, 2019-03-31)) "line 4"
+  opening[kop] = 0 glb at 2020-01-01 start "c"
+ask band_in: tier(w)
+ask band_in_p: tier(w) with w = 2026-03-05
+ask band_out: tier(v)
+ask band_out_p1: tier(v) with v = 2026-03-25
+ask band_out_p2: tier(v) with v = 2026-04-05
+ask wd_comp: weekday(add_days(w, n0))
+=== expect
+band_in: ?"date within window(2026-03-02, 2026-03-20) not precise enough for a band argument" (w)
+  unknown day: w
+  cut 2026-01-01
+band_in_p: 1
+  pinned: w = 2026-03-05
+  cut 2026-01-01
+band_out: ?"date within window(2026-03-25, 2026-04-05) not precise enough for a band argument" (v)
+  unknown day: v
+  cut 2026-01-01
+band_out_p1: 1
+  pinned: v = 2026-03-25
+  cut 2026-01-01
+band_out_p2: 2
+  pinned: v = 2026-04-05
+  cut 2026-01-01
+wd_comp: ?"date within window(2026-03-02, 2026-03-20) not precise enough for weekday" (w)
+  unknown day: w
+  cut 2026-01-01
+warning: WARN-UNREAD def copy_w is read by nothing
+warning: WARN-UNREAD def held_a is read by nothing
+warning: WARN-UNREAD def held_b is read by nothing
+warning: WARN-UNREAD def shifted is read by nothing
+warning: WARN-UNREAD input d0 is read by nothing
+warning: WARN-UNREAD input n40 is read by nothing

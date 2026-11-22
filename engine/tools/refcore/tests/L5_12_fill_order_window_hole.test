@@ -5,6 +5,8 @@
 # (RUN-ORDER fill matched: the order of the arc (buy_b; sell) is a hole) (the planner's 213/f1.tally).
 # tally 2.3 (G1, #247): restated so the window sits in an attribute, not the movement's day: a window that
 # reaches a move's `on` is a hole day (L §4.4), so the order the test is about reads the attribute.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === f1.tally
 model f1
   tally 2
@@ -87,16 +89,16 @@ ask c: cost[x] for x in sales over ..
 ask c_fifo: cost[x] for x in sales over .. with method = fifo
 ask t: matched.taken[b, x] for b in purchases over .., x in sales over ..
 === expect
-c (x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+c (x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for days_between" (d_a)
   unknown day: d_a
   cut 2026-01-01
-c_fifo (x = sell): ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+c_fifo (x = sell): ?"date within window(2026-02-01, 2026-02-28) not precise enough for days_between" (d_a)
   pinned: method = fifo
   unknown day: d_a
   cut 2026-01-01
-t (b = buy_a, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+t (b = buy_a, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for days_between" (d_a)
   unknown day: d_a
   cut 2026-01-01
-t (b = buy_b, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the order of fill matched" (d_a)
+t (b = buy_b, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for days_between" (d_a)
   unknown day: d_a
   cut 2026-01-01

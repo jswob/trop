@@ -246,10 +246,8 @@ def fmt_value(v, partial=False, t=None):
             return fmt_partial(v)
         return fmt_hole(v)
     if isinstance(v, Iv):
-        if isinstance(v.lo, datetime.date):
-            return fmt(v)
-        from .evaluate import imprecise_hole
-        return fmt_hole(imprecise_hole(v, 'a print'))
+        # a date prints its stretch (C2); no number is a range (tally 2.3)
+        return fmt(v)
     if isinstance(v, (OutKey,)):
         return 'refused: RUN-KEY %s is outside %s' % (v.text, v.index)
     if isinstance(v, ListKey):
@@ -586,7 +584,11 @@ class Asker:
                 # L §5.11: "an ask's law or as known that is a hole make ... the ask line, a hole carrying their
                 # questions, and nothing inside is evaluated"
                 return ['%s: %s' % (a.id, fmt_value(v))]
-            K = eng.date_of(v, 'as known')
+            try:
+                K = eng.date_of(v, 'as known')
+            except HoleSignal as h:
+                # a ranged date asks for one day: the hole (L §4.4's list; tally 2.3, C7)
+                return ['%s: %s' % (a.id, fmt_value(h.hole))]
             after_on(m, K)
         eng.ask_K = K
         law = None
@@ -597,7 +599,10 @@ class Asker:
             v = eng.ev(a.law, {}, Ctx(None, K))
             if isinstance(v, Hole):
                 return ['%s: %s' % (a.id, fmt_value(v))]
-            law = eng.date_of(v, 'the law of an ask')
+            try:
+                law = eng.date_of(v, 'the law of an ask')
+            except HoleSignal as h:
+                return ['%s: %s' % (a.id, fmt_value(h.hole))]
         # in S names the world (L §5.18, §6.4); the model's own id is the base
         w0 = a.world if (a.world is not None and a.world != m.header.id) else None
         ctx = Ctx(law, K, partial=a.partial, unc=bool(a.uncertain), world=w0)

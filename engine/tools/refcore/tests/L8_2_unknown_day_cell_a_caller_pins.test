@@ -6,6 +6,8 @@
 # 2.2 printed the window's text, one line for equal windows, and the first window's question only.
 # tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
 # day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === r21.tally
 model r21
   tally 2
@@ -74,7 +76,7 @@ pin: ?"date within window(2026-03-27, 2026-03-31) not precise enough for the day
   unknown day: twin
   unfulfilled: bonus
   cut 2026-08-01
-two: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w) ?"date within window(2026-03-12, 2026-03-14) not precise enough for a print" (w0)
+two: ?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between" (w) ?"date within window(2026-03-12, 2026-03-14) not precise enough for days_between" (w0)
   unknown day: w
   unknown day: w0
   cut 2026-08-01

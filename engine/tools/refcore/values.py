@@ -203,12 +203,11 @@ class Iv:
     cell, a calendar's added entry), kept by a copy, None for a computed value,
     so only a copy is the same unknown (a window compared with its own name is
     decided).  `carry` is the unknown days it was computed from, in the order the line's reads met them (tally
-    2.1.8 R13, L §4.4): None for a read, which carries its own (evaluate.iv_carry).  `whole`: every value it can hold is a
-    whole number, though its type isn't int (`days_between(d, w) + 18`; tally 2.2.1 P30: its values are taken in
-    turn)."""
-    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name', 'carry', 'whole')
+    2.1.8 R13, L §4.4): None for a read, which carries its own (evaluate.iv_carry).  Its ends are dates: no number
+    is a range (tally 2.3)."""
+    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name', 'carry')
 
-    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None, carry=None, whole=False):
+    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None, carry=None):
         self.lo = lo
         self.hi = hi
         self.days = days
@@ -216,7 +215,6 @@ class Iv:
         self.origin = origin
         self.name = name
         self.carry = carry
-        self.whole = whole
 
     def key(self):
         return ('iv', vkey(self.lo), vkey(self.hi), tuple(sorted(self.days)) if self.days else None)

@@ -1,5 +1,7 @@
 # tally 2.2.1 P41, the fix review's F8 (L l.667, l.671): a hole an operation makes names every window its operands carry:
 # div0some, x / (y - n20), refused on one day of w2 only: both w and w2 (review g1fix ops). Before W8: w alone.
+# tally 2.3 (G2, #247): re-stored: L §4.4's list reads a window by a closed list, and every other reader (days_between,
+# end_of, weekday, a number) is the hole naming the day, so the hole is made at that reader.
 === ops.tally
 model a1
   tally 2
@@ -88,7 +90,7 @@ ask ww: days_between(w, w) + days_between(w2, w2)
 ask frac_round: round(x / n3, 1, half-up)
 ask frac_round_c: round(x / n3, 1, half-up) >= n3
 === expect div0some
-div0some: ?"date within window(2026-03-10, 2026-03-12) not precise enough for arithmetic" (w) ?"date within window(2026-03-20, 2026-03-21) not precise enough for arithmetic" (w2)
+div0some: ?"date within window(2026-03-10, 2026-03-12) not precise enough for days_between" (w) ?"date within window(2026-03-20, 2026-03-21) not precise enough for days_between" (w2)
   unknown day: w
   unknown day: w2
   cut 2026-01-01

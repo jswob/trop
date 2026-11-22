@@ -7,6 +7,25 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.3, group W2: the readers' list (the plan's G2; issue #247; 1 609 tests)
+
+- **The default is the hole, the list is stated once** (L §4.4): `Engine.ends` is the one helper of a listed reader,
+  each ranged argument at its first and last day whatever names they carry (S5): with `stretch` (`add_days`,
+  `add_months`, `add_years`, `date ± duration` through `iv_arith`) the stretch of the results; otherwise (`year_of`,
+  `quarter_of`, `month_of`, `age`, `age_months`, `overlap_days`) the value every combination gives, `none` a value,
+  else the hole; refused at every combination, the first's refusal, at some the hole. `Engine.off_list` makes every
+  other reader of a ranged argument the hole naming each day it carries (`start_of`, `end_of`, `day_of`,
+  `days_between`, `dcf`, `weekday`, `abs`, `pow`, `round`, `is_business`, `add_business`, the transcendentals,
+  unary minus) and returns the one-day values. Kept: `iv_compare`, `agg_minmax`, `agg_arg`, `def_window`, `to_key`.
+- **Gone:** `lift`, `lift_values` and its pass per value with `LIFT_CAP`, `per_day`, `zero_like`, `num_at`,
+  `whole_valued`, `Iv.whole`, the number half of `iv_arith`, the `Iv` branches of `weekday`, `abs`, `pow`, `round`,
+  the same-name shortcut of `days_between`, the print's number branch (`ask.fmt_value`). Left until G3: `over_added`'s
+  pass over a calendar's unknown entries; `open_order_takes`' pass over a window's days in a fill's order.
+- **C-5:** `band_x` asks for one day: a ranged argument is `HOLE-IMPRECISE` (`a band argument`). **C7:** an ask
+  line's `law` or `as known` that is a window is the line's hole (`the law of an ask`, `as known`).
+- **A fill's order** that is a hole made only by windows (every question carried, `CARRY`) is that hole, not
+  `RUN-ORDER` (L §5.12 step 2): an order on `days_between` of a window is now such a hole.
+
 ## tally 2.3, the first group's review: three mends (P6; issue #247; 1 623 tests)
 
 - **B1, a hole-day decision is a member** (L §5.14): `mreads.movements_of` took a decision only from the walk, which
