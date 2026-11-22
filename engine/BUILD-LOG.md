@@ -6887,3 +6887,52 @@ The plan's group G5 (`tmp/m4/build-plan.md` §5), moved up by pick P9: P8-L10's 
   - **(c) (b), with (a)'s item (3) and a narrow `o.fulfils` as plain fixes in a kernel group (G3 is one).** That aims at `c1_r2`'s 10 s without deciding (1).
     - Unmeasured: whether those two bring 14.1 s under 10 s. (2) is 76 % of the base's time in `v1`; a one-year run's share is smaller, since its plans span one year.
 - **State:** the last commit is this group's (`--stats`), `check commit` green; nothing uncommitted; the temporary census reverted; my scratch is in `tmp/m4/g5/`.
+
+## 2026-11-22 M4 G2's review fix: B1 to B6, and P12's order for built-ins (issue #252)
+
+G2's review (`tmp/m4/review-g2.md`, pick P11) and G1's fix review's F1 with pick P12's one statement (`tmp/m4/review-g1fix.md`), on T's C4b and C4c (9d055cc4). No kernel file. Two commits: 45fbf5b9 (B1 to B6) and this one (P12, this entry).
+
+**What turned green:** `fixes-g2` 55/55 and `spec-g2` 17/17 (B1 to B6), `fixes-p12` 173/173 (F1), `spec-p12` 91/100. `milestone-report: M4: 26/29` (23/29 before). Red: `constructs-tuple` (row 9, the STOP-REPORT of G2's entry), `items-walked` (G3's), `spec-p12`'s 9 below (STOP-REPORT).
+
+**1. B1 to B6** (45fbf5b9).
+- **B1, B4, B6 share one site, `eval/pins.rs`'s `pin_typed`.** A literal pin now takes its target's declared type (`written_typed`): a bare figure on money or an int as `typed` makes it; on a `num` the figure times the `%` its unit holds (the declaration's `unit_factor`, which rows already used), so `num %` and `num %/year` agree (B6: `with g = 5` is 0.05 1/year); a four-digit figure on a `year` is that year (B4); a key literal on a `key` target, a bare name read as a word included, is the key of its index, kind or axis (`pinned_key`, `literal_key`), so a keyed check prints `difference 1` and `a - k1 with a = k2` answers (B1, non-blocking 4); a four-digit figure on a year index's key is the key 2024 (B4, the text's answer; refcore's `LOAD-KEY` held for #255). G2's `percent` path through `typed` is gone: the factor covers it.
+- **B4's load side** (`load/binds.rs`, `assign`): a four-digit figure pinned on a date, a month, a quarter or a day is `LOAD-UNIT the pin of d is year4, not date`, as refcore.
+- **B2** (`ask/check.rs`, `difference`): a `none` side prints no difference (L §5.18 "where e − f is defined", §3.1).
+- **B3** (`eval/time_arith.rs`, `period_diff`): G2's step count is gone. Two periods of one kind differ by their kind's periods whatever an index's `by` (L §4.2 l.626): months for `month … by 3` (−6), days for a week index (56), and across two indexes (`(3, 5)`); refcore's steps are held for #255. The unit test now says −6 and 6.
+- **B5** (`load/check.rs`): an open index's keys don't go in `keyed_checks` (L §5.6: no key arithmetic over an open index).
+- The doc comments of `period_diff` and `difference` (the review's item 7) say what the code now does.
+
+**2. P12: a built-in's checks in written order** (this commit).
+- `eval/state.rs`'s `given` is the statement's step for one argument: `none` refuses (`RUN-NONE a value is none here: <built-in>`), a hole answers "not known" so its check waits, any other value "known" so its own check runs now. Each built-in now walks its arguments in written order, runs each known one's own check, and only then lets a hole stand.
+- **`periodic`, `factor`** (`eval/rates.rs`): `rate_parts` is split into `rate_share` (the rate and its period's checks, at the rate's place) and `parts_under` (the compounding, a discount rate of 1's `RUN-DIV` at the code's place). A hole compounding code now waits: **F1** is fixed (`fixes/p12/periodic/h_c`, `F1_min`, `F1_if`, `c1_codehole`). A month rate over a day is refused before a `none` count or code.
+- **`accrue`**: the principal, the rate (`yearly`), both days, the day count and the code in that order; the up-front `none` test is gone, so a monthly rate before a `none` day prints `RUN-DOMAIN accrue takes a yearly rate`.
+- **`round`**: the step before the mode, as written (it was the mode first).
+- **`dcf`**: each day's check (`none` is `RUN-NONE … dcf`), then the day count (`none is not a daycount code`), before a hole; a window waits for its own hole.
+- **`add_business`, `last_business`, `schedule`**: the day or period (`period_arg`), the count (`count_given`: `none` is `RUN-NONE … an integer argument`; `last_business`'s n below 1 now refused before a hole), the roll, before a hole. `schedule` with a `none` roll is `RUN-NONE a value is none here: schedule`, no longer `ENGINE-INVARIANT` (T's `h_cal__n_roll`).
+- `is_business`'s day was already first; its only P12 row is the calendar's, below.
+
+**The sweep** (`tmp/m4/g2fix/sweep.sh`): the paper probes and `tmp/m4/review/g1/`, `g1fix/`, `g2/`, ask by ask, each text alone (a scenario probe in the review folders runs without its base, the same on all three), on refcore_fast, the engine before this fix (the release build of 21:42, before 45fbf5b9, kept as `tmp/m4/g2fix/tally-before`) and after (the quick binary).
+- **471 asks:** 243 same before and after, 145 different → same, 68 different both, **15 same → different**, each explained:
+  - B5 and B6 by the text, refcore's bytes held for #255: `g2/a14_open` `c1` (no difference over an open index), `g2/b4_units` `a2`, `g2/b5_pctyear` `a1`, `g2/b7_explpct` `a3` (0.05 and 0.03 1/year, in an `explain`'s pin line too).
+  - P12, where refcore is hole-first (#255) and a known argument now refuses: `g1/a11_refhole` `q_round` and `g1fix/b2_round` `q_ax` (a step of 0.00 beside a hole), `g1fix/b2_round` `q_u0`, `q_uh` (a zero step or a `none` x or step beside a hole mode or step, in written order), `g1fix/b2_logic` `q_if`, `q_or` (the same zero step and a `nominal 0` code under `if` and `or`: a refusal is no Kleene value), `g1fix/b2_order` `q_per0` (`nominal 0` with a hole rate, `RUN-DIV`), `g1fix/t_b2_rates` `q_fac_day`, `q_per_day` (a month rate over a day), `q_fac_none`, `q_per_none` (a `none` count or code beside a hole).
+- The paper probes: no line turned from same to different.
+
+- **Size** (`git diff --shortstat 9d055cc4 -- engine/crates`): 10 files, +242 −97, about 0.34 k changed.
+- **Files:** `eval/pins.rs`, `eval/time_arith.rs`, `ask/check.rs`, `load/check.rs`, `load/binds.rs` (45fbf5b9); `eval/state.rs`, `eval/rates.rs`, `eval/builtin.rs`, `eval/dates.rs`, `eval/business.rs` (this commit).
+- **Forms changed, and what they meet (for the review):** the literal pin meets every declared type (money, int, `num u`, `num %`, `num %/year`, year, a key of a list, int, period, kind or axis) and `with`/`as if`/per-tuple pins; P12's order meets `if`/`and`/`or` (a refusal stays a refusal there), windows (they wait for their own hole), and the calendar read below.
+- **Exceptions:** +0.
+- **Open STOP-REPORTs:** G2's row 9 (the tuple); the one below.
+- **Mutants:** no local proof. `given` and `count_given` are reached by T's p12 vectors; `pinned_key`'s kind and axis arms by no stored vector (for T).
+- **Usage:** about 0.6 % of the week this turn by `engine/tools/usage` (1.0 % for the session) before this entry.
+- **Checks:** `check commit: green, 24 steps (162s)`, exit 0, on this tree but for this line.
+
+## STOP-REPORT 2026-11-22: P12 over a calendar read at a day the line doesn't know
+
+- **Kind:** the spec seems silent (a test seems wrong for one vector)
+- **Where:** `eval/business.rs` (`apply`, `calendar_on`: a calendar is read at each day it asks about); T's `spec/p12/add_business/h_d__n_cal`, `h_n__n_cal`, `h_d__z_n`; `spec/p12/last_business/h_mo__n_cal`, `h_n__n_cal`; `spec/p12/schedule/h_mo__n_cal`, `h_e__n_cal`, `h_roll__n_cal`; `spec/p12/is_business/h_d__n_cal` (`engine/tests/m4/fixes/p12/`, twins beside them).
+- **Rule or gate:** pick P12 ("refused when a known argument alone forces a refusal"); L §4.2 ("every calendar read reads the calendar at the day it asks about"), §8.
+- **What happens:** `tally run add_business.tally --ask h_d__n_cal` prints `h_d__n_cal: ?"which d?" (d_h)`; T's spec answer, refcore on the twin (d_h known), is `refused: RUN-NONE the calendar is none here`.
+- **Why I stopped:** the calendar argument isn't a value the line holds: the engine (and refcore) read the calendar input at each day the built-in asks about. In all eight calendar vectors that day is unknown: d is a hole (`h_d`, `h_mo`, `h_e`), or the count's sign or size is (`add_business` `h_n`: the first day counted is d + 1 or d − 1), or the roll is (`schedule` `h_roll`: `unadjusted` reads no calendar, so a `none` calendar refuses only under the other three). Taking the calendar as "known" there means choosing a day to read it at (the line's law date? every row's?), and P12 doesn't say which; a calendar `none` on some rows and a calendar on others would refuse or not by that choice. The ninth, `h_d__z_n` (d a hole, n = 0), expects `RUN-ZERO add_business(2026-03-06, 0, cal_ok)`: the message names the twin's day, a value the hole d doesn't have, so no engine can print it.
+- **What I tried:** nothing built for these nine; the engine answers each with the hole, as before this fix. The other 91 of `spec-p12` are green.
+- **What I ask:** (1) for the eight: is the calendar read for P12's check at a day the line knows (which), or does a calendar read wait for the day it is asked at, so the hole stands (my reading of L §4.2: the hole); (2) for `h_d__z_n`: which message (`add_business(?"which d?" (d_h), 0, cal_ok)`, the written `d_h`, or the hole).
+- **State:** this entry's commit, `check commit` green; nothing uncommitted.

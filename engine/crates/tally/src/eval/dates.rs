@@ -239,6 +239,17 @@ impl Engine {
             .args(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
+        // refusals outrank holes (L §8; pick P12): each argument in written order, a known
+        // one's own check run (`none` among them), a hole or a window's waiting
+        for day in [&a, &b] {
+            let day = single(day);
+            if day.as_hole().is_none() && !matches!(*day, Value::Window(_)) {
+                dcf_day(m, &day)?;
+            }
+        }
+        if dc.as_hole().is_none() {
+            daycount_of(m, &dc)?;
+        }
         if let Some(h) = crate::hole::spread(&[a.as_hole(), b.as_hole(), dc.as_hole()]) {
             return Ok(Value::Hole(h));
         }

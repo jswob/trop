@@ -14,7 +14,7 @@
 use super::builtin::power_past_64_bits;
 use super::dates::{daycount_of, year_fraction_of};
 use super::expr::hole_of;
-use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load, wrong_type};
+use super::state::{Ctx, Engine, Env, given, invariant, num_stop, refuse, refuse_load, wrong_type};
 use super::windows::{single, unlisted};
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, currency_unit, money_num};
@@ -33,27 +33,28 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let vals = self.args(m, call, env, ctx)?;
-        if vals.contains(&Value::None) {
-            return Err(refuse(
-                Run::None,
-                format!("a value is none here: {}", call.name),
-            ));
-        }
         let (rate, count, period, code) = match vals.as_slice() {
             [rate, period, code] if call.name == "periodic" => (rate, None, period, code),
             [rate, count, period, code] => (rate, Some(count), period, code),
             _ => return Err(arity()),
         };
-        // refusals outrank holes (L §8): each known argument's own refusal comes first
-        let parts = if known(rate) {
-            Some(rate_parts(m, rate, period, code, &call.name)?)
-        } else {
-            not_divided_by_zero(compounding(m, &call.name, code)?)?;
-            None
-        };
+        let what = call.name.as_str();
+        // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
+        // refused, a known one's own check run, a hole's waiting; the rate's check reads the
+        // period word, which load fixes
+        let share = given(rate, what)?
+            .then(|| rate_share(m, rate, period, what))
+            .transpose()?;
         let times = match count {
-            Some(n) if known(n) => Some(plain_count(m, n)?),
-            Some(_) | None => None,
+            Some(n) => given(n, what)?.then(|| plain_count(m, n)).transpose()?,
+            None => None,
+        };
+        let how = given(code, what)?
+            .then(|| compounding(m, what, code).and_then(not_divided_by_zero))
+            .transpose()?;
+        let parts = match (share, how) {
+            (Some((rq, share)), Some(how)) => Some(parts_under(&rq, share, how)?),
+            _ => None,
         };
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
         if holes.iter().any(Option::is_some) {
@@ -92,22 +93,23 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let vals = self.args(m, call, env, ctx)?;
-        if vals.contains(&Value::None) {
-            return Err(refuse(Run::None, "a value is none here: accrue".to_owned()));
-        }
         let [principal, rate, from, to, daycount, code] = vals.as_slice() else {
             return Err(arity());
         };
-        // refusals outrank holes (L §8): each known argument's own refusal comes first
-        let principal = known(principal)
+        let what = "accrue";
+        // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
+        // refused, a known one's own check run, a hole's waiting
+        let principal = given(principal, what)?
             .then(|| principal_of(m, principal))
             .transpose()?;
-        let r = known(rate).then(|| yearly(m, rate)).transpose()?;
-        if known(daycount) {
+        let r = given(rate, what)?.then(|| yearly(m, rate)).transpose()?;
+        given(from, what)?;
+        given(to, what)?;
+        if given(daycount, what)? {
             daycount_of(m, daycount)?;
         }
-        let how = known(code)
-            .then(|| accrual(compounding(m, "accrue", code)?))
+        let how = given(code, what)?
+            .then(|| compounding(m, what, code).and_then(accrual))
             .transpose()?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
         if holes.iter().any(Option::is_some) {
@@ -230,12 +232,6 @@ fn not_divided_by_zero(how: Compounding) -> Result<Compounding, Stop> {
     Ok(how)
 }
 
-/// Whether a value is known: no hole (L §8: the refusals of the known arguments outrank
-/// the holes of the others).
-fn known(v: &Value) -> bool {
-    v.as_hole().is_none()
-}
-
 /// A compounding code (L §3.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Compounding {
@@ -297,15 +293,9 @@ fn no_compounding(m: &Reality, what: &str, code: &Value) -> Result<Stop, Stop> {
     ))
 }
 
-/// `periodic`'s parts of rate `r` per period `p` under compounding `c` (refcore's
-/// `rate_parts`). L §3.3.
-fn rate_parts(
-    m: &Reality,
-    rate: &Value,
-    period: &Value,
-    code: &Value,
-    what: &str,
-) -> Result<Parts, Stop> {
+/// Rate `r`'s figure and the share of its period that period `p` is, a day only over a day
+/// (refcore's `rate_parts`, its rate and period checks). L §3.3.
+fn rate_share(m: &Reality, rate: &Value, period: &Value, what: &str) -> Result<(Num, Num), Stop> {
     let Value::Number(Number {
         q: rq,
         class: Class::Rate(unit),
@@ -345,9 +335,15 @@ fn rate_parts(
         let per_months = period_months(per).ok_or_else(|| invariant("a rate's period"))?;
         Num::ratio(months, per_months).map_err(num_stop)?
     };
+    Ok((rq.clone(), share))
+}
+
+/// `periodic`'s parts of rate figure `rq` over `share` of its period under compounding `how`
+/// (refcore's `rate_parts`, its compounding): a discount rate of 1 divides by zero. L §3.3.
+fn parts_under(rq: &Num, share: Num, how: Compounding) -> Result<Parts, Stop> {
     let one = Num::int(1);
     let plus = |x: &Num| one.checked_add(x).map_err(num_stop);
-    match compounding(m, what, code)? {
+    match how {
         Compounding::Nominal(times) => {
             let times = Num::int(times);
             let base = plus(&rq.checked_div(&times).map_err(num_stop)?)?;

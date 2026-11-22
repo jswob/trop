@@ -16,7 +16,7 @@ use super::expr::hole_of;
 use super::extremes::min_max;
 use super::keys::Given;
 use super::state::{
-    Ctx, Engine, Env, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
+    Ctx, Engine, Env, given, invariant, not_typed, num_stop, refuse, refuse_load, wrong_type,
 };
 use super::ty::sample;
 use super::windows::{End, single, unlisted};
@@ -183,17 +183,14 @@ impl Engine {
             .args(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
-        for v in [&x, &u, &mode] {
-            if *v == Value::None {
-                return Err(refuse(Run::None, "a value is none here: round".to_owned()));
-            }
-        }
-        // refusals outrank holes (L §8): the mode's and the step's own refusals come first
-        if mode.as_hole().is_none() {
-            rounding_mode(m, "round", &mode)?;
-        }
-        if u.as_hole().is_none() {
+        // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
+        // refused, a known one's own check run, a hole's waiting
+        given(&x, "round")?;
+        if given(&u, "round")? {
             positive_step(m, &u)?;
+        }
+        if given(&mode, "round")? {
+            rounding_mode(m, "round", &mode)?;
         }
         if x.as_hole().is_some() || u.as_hole().is_some() || mode.as_hole().is_some() {
             return hole_of(&[x.as_hole(), u.as_hole(), mode.as_hole()]);

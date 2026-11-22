@@ -973,6 +973,21 @@ impl Engine {
     }
 }
 
+/// Whether argument `v` of built-in `what`, taken in written order, is known, so its own
+/// check runs now (L §8 "Refusals outrank holes"; pick P12): `none` refuses, `RUN-NONE a
+/// value is none here: <what>`; a hole isn't, so its check waits and the hole stands if no
+/// later argument refuses.
+///
+/// # Errors
+///
+/// `RUN-NONE` for `none`.
+pub(super) fn given(v: &Value, what: &str) -> Result<bool, Stop> {
+    if *v == Value::None {
+        return Err(refuse(Run::None, format!("a value is none here: {what}")));
+    }
+    Ok(v.as_hole().is_none())
+}
+
 /// A refusal with its code and message (L §8.4).
 pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))
