@@ -3877,6 +3877,10 @@ class Engine:
         return Iv(a, b, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
 
     def period_arg(self, v, what):
+        if isinstance(v, Iv):
+            # a span or period read from a ranged date is off L §4.4's list (it can turn back across the window): the
+            # hole naming the day; a window of one day is that day (tally 2.3, the lead's P19)
+            v = self.off_list(what, v)
         if isinstance(v, Period):
             return v
         if isinstance(v, datetime.date):
@@ -4003,8 +4007,9 @@ class Engine:
             return h
         a = self.as_date_or_iv(a, 'overlap_days')
         b = self.as_date_or_iv(b, 'overlap_days')
+        # its span is off L §4.4's list (period_arg): the count turns back across a window (0 at both ends, 1 between)
         p = self.period_arg(k, 'overlap_days')
-        # on L §4.4's list: the value where every combination of the two windows' ends agrees (tally 2.3)
+        # on L §4.4's list for its two days: the value where every combination of their ends agrees (tally 2.3)
         return self.ends(lambda x, y: Int(overlap_days(x, y, p)), a, b, what='overlap_days')
 
     def c_age(self, n, env, ctx):

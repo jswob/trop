@@ -1,0 +1,59 @@
+# L §5.12 step 2 (tally 2.3, #247; the fresh reader's finding 2, P18): two windows that overlap are an
+# undecided comparison, not a tie: a fill ordered by them is `HOLE-IMPRECISE` on every take, naming both
+# days; `ties by` isn't asked. Before: `RUN-TIE` (W3's pass with the order stripped met a tie).
+=== m.tally
+model p2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+
+index lots = [l1, l2]
+index outs = [o1]
+
+input acq[l in lots]: date
+input base: date
+input qty[l in lots]: num
+input need[x in outs]: num
+
+fill f
+  supply qty[l] for l in lots
+  demand need[x] for x in outs
+  arc true
+  order acq[l]
+
+fill g
+  supply qty[l] for l in lots
+  demand need[x] for x in outs
+  arc true
+  order days_between(base, acq[l])
+
+version v1
+  cite s
+  governs always
+  known 2026-01-01
+  acq[l1] = window(2019-01-01, 2019-12-31)
+  acq[l2] = window(2019-06-01, 2020-06-30)
+  base = 2019-01-01
+  qty = 10
+  need = 15
+
+ask a1: f.taken[l, x] for l in lots, x in outs
+ask a2: g.taken[l, x] for l in lots, x in outs
+=== expect
+a1 (l = l1, x = o1): ?"date within window(2019-06-01, 2020-06-30) not precise enough for the order of fill f" (acq[l2])
+  unknown day: acq[l1]
+  unknown day: acq[l2]
+  cut 2026-01-01
+a1 (l = l2, x = o1): ?"date within window(2019-06-01, 2020-06-30) not precise enough for the order of fill f" (acq[l2])
+  unknown day: acq[l1]
+  unknown day: acq[l2]
+  cut 2026-01-01
+a2 (l = l1, x = o1): ?"date within window(2019-01-01, 2019-12-31) not precise enough for days_between" (acq[l1])
+  unknown day: acq[l1]
+  cut 2026-01-01
+a2 (l = l2, x = o1): ?"date within window(2019-01-01, 2019-12-31) not precise enough for days_between" (acq[l1])
+  unknown day: acq[l1]
+  cut 2026-01-01

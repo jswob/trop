@@ -1,0 +1,38 @@
+# L §4.4 (tally 2.3, #247; the lead's P19, T's held g13 a7): `overlap_days` is on the list for its two days
+# only; a ranged date in its span can turn the count back (0 at both ends, 1 between), so it is the hole naming
+# the day; pinned inside the two days 1, outside 0. A ranged first day keeps the list's rule (o_days: its ends
+# differ, the hole). Before: `RUN-DOMAIN overlap_days is window(…), not a period`.
+=== m.tally
+model ov
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input w: date
+input d1: date
+input d2: date
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-03-03, 2026-03-20) "c"
+  d1 = 2026-03-05 "c"
+  d2 = 2026-03-12 "c"
+ask o_w: overlap_days(d1, d2, w)
+ask o_in: overlap_days(d1, d2, w) with w = 2026-03-10
+ask o_out: overlap_days(d1, d2, w) with w = 2026-03-15
+ask o_days: overlap_days(w, d2, 2026-03)
+=== expect
+o_days: ?"date within window(2026-03-03, 2026-03-20) not precise enough for overlap_days" (w)
+  unknown day: w
+  cut 2026-03-01
+o_in: 1
+  pinned: w = 2026-03-10
+  cut 2026-03-01
+o_out: 0
+  pinned: w = 2026-03-15
+  cut 2026-03-01
+o_w: ?"date within window(2026-03-03, 2026-03-20) not precise enough for overlap_days" (w)
+  unknown day: w
+  cut 2026-03-01
