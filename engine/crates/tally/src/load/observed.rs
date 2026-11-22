@@ -256,6 +256,7 @@ impl Loader {
                     id: movement.clone(),
                     day: None,
                     src: MvSrc::Missing,
+                    member: false,
                 };
                 observation
                     .values

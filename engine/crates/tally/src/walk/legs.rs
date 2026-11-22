@@ -148,7 +148,12 @@ fn amount_of(
 
 /// A hole amount's unit, where it can be seen: the kind's leg unit when it is one, else a
 /// place's (refcore's `leg_unit_static`). L §5.14.
-fn leg_unit_static(m: &Reality, kind_unit: &str, from: &End, to: &End) -> Option<String> {
+pub(super) fn leg_unit_static(
+    m: &Reality,
+    kind_unit: &str,
+    from: &End,
+    to: &End,
+) -> Option<String> {
     if m.currencies.contains_key(kind_unit) || m.units.contains(kind_unit) {
         return Some(kind_unit.to_owned());
     }

@@ -122,6 +122,7 @@ impl Moving {
                 id: o.id.clone(),
                 day: Some(o.day),
                 src: MvSrc::Obs,
+                member: false,
             },
             Moving::Adj(a) => MvRef {
                 id: a.id.clone(),
@@ -133,11 +134,13 @@ impl Moving {
                     leg: a.leg.name.clone(),
                     vids: a.vids.clone(),
                 },
+                member: false,
             },
             Moving::Pad(p, at) => MvRef {
                 id: p.id.clone(),
                 day: Some(at.day),
                 src: MvSrc::Pad,
+                member: false,
             },
         }))
     }
@@ -343,8 +346,15 @@ impl Engine {
             let day = x
                 .day()
                 .ok_or_else(|| invariant("a member of a binding with no day"))?;
+            // a decision whose day is a hole has its legs read as the plan has them, on the
+            // member alone (B1; ruling 14; refcore's `hole_day_dec_body`)
+            let mut value = x.value();
+            if let (Value::Mv(r), Moving::Plan(i)) = (&mut value, &x) {
+                r.member = unread_hole(m, i).is_some()
+                    && m.moves.get(&i.move_id).is_some_and(|mv| mv.decision);
+            }
             res.push(MvMember {
-                value: x.value(),
+                value,
                 unknown,
                 coll,
                 day,
@@ -564,6 +574,35 @@ impl Engine {
         Ok(out)
     }
 
+    /// Field `name` of instance `i`, whose day is the hole `h`, that the plan pass didn't read
+    /// (`unread_hole`): a leg of a decision's instance that a binding met, `v` being its
+    /// member's value, is a record, its places read as the plan has them at cut `cut` and its
+    /// amount and day that hole, so a `where` on its places is decided; any other field, and
+    /// any field of the movement read by its name, is that hole (L §5.14, §5.19 Bindings; the
+    /// review of G1's fix, BF1, P10; ruling 14; refcore's `hole_day_dec_body`, `_body_hole`).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met reading its places.
+    fn unread_field(
+        &mut self,
+        m: &Reality,
+        (v, i): (&MvRef, &Inst),
+        (name, is_leg): (&str, bool),
+        (h, cut): (Hole, Day),
+    ) -> Result<Value, Stop> {
+        let Some(mv) = m.moves.get(&i.move_id).filter(|_| is_leg && v.member) else {
+            return Ok(Value::Hole(h));
+        };
+        let Some(legs) = self.hole_day_legs(m, mv, i, cut)? else {
+            return Ok(Value::Hole(h));
+        };
+        Ok(match legs.iter().find(|lg| lg.name == name) {
+            Some(lg) => same_leg_record(lg, &h),
+            None => Value::Hole(h),
+        })
+    }
+
     /// The record behind a movement value at the reader's cut: an instance, an observation or
     /// an adjustment; none when the cut sees none (refcore's `mv_record`, `mv_by_id`).
     /// L §5.14, §3.1.
@@ -722,13 +761,13 @@ impl Engine {
             Moving::Adj(_) | Moving::Pad(..) => {}
         }
         // a field the plan pass didn't read, of an instance whose day is a hole (a decision,
-        // which never runs without a day; one under a hole `at`), is that hole (L §5.14; the
-        // review of G1's fix, BF1, P10)
+        // which never runs without a day; one under a hole `at`), is that hole, but a
+        // decision's leg a binding met (L §5.14; the review of G1's fix, BF1, P10; ruling 14)
         if name != "day"
             && let Moving::Plan(i) = &src
             && let Some(h) = unread_hole(m, i)
         {
-            return Ok(Value::Hole(h));
+            return self.unread_field(m, (v, i), (name, is_leg), (h, ctx.cut));
         }
         // a leg a later version changes, of an instance whose day is a hole, is read as that
         // hole: its amount and day, and its places too where the version moves them, since
@@ -1181,6 +1220,7 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
                 id: a.inst_id.clone(),
                 day: a.inst_day,
                 src: MvSrc::Inst(a.move_id.clone(), a.inst_keys.clone()),
+                member: false,
             }))),
             "change" => Some(amount_value(m, &a.delta, a.leg.unit.as_deref())?),
             _ => None,
@@ -1288,6 +1328,7 @@ pub(crate) fn inst_ref(i: &Inst) -> MvRef {
         id: i.id.clone(),
         day: i.day.as_ref().and_then(Dated::day),
         src: MvSrc::Inst(i.move_id.clone(), i.keys.clone()),
+        member: false,
     }
 }
 
@@ -1395,17 +1436,6 @@ fn once_by_same((groups, sides): (&Groups, &[String]), movements: Vec<Moving>) -
         .collect()
 }
 
-/// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
-/// runs on no day of the walk, so it is a member with that hole, never left out; else none
-/// (L §5.14: a movement whose day is a hole makes every binding over a span it might fall in
-/// a hole; tally 2.3 review of G1, B1).
-fn hole_day_member(inst: &Inst) -> Option<Moving> {
-    match inst.day {
-        Some(Dated::Hole(_)) if inst.exists != Exists::No => Some(Moving::Plan(inst.clone())),
-        Some(Dated::Hole(_) | Dated::Day(_)) | None => None,
-    }
-}
-
 /// The hole of instance `inst` when the plan pass read none of its fields: its day is a hole
 /// and it is a decision's, which never runs without a day, or its law date is a hole, under
 /// which nothing of it is read; else none (L §5.14; the review of G1's fix, BF1, P10).
@@ -1415,6 +1445,17 @@ fn unread_hole(m: &Reality, inst: &Inst) -> Option<Hole> {
     };
     let decision = m.moves.get(&inst.move_id).is_some_and(|mv| mv.decision);
     (decision || matches!(inst.law, Law::Hole(_))).then(|| h.clone())
+}
+
+/// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
+/// runs on no day of the walk, so it is a member with that hole, never left out; else none
+/// (L §5.14: a movement whose day is a hole makes every binding over a span it might fall in
+/// a hole; tally 2.3 review of G1, B1).
+fn hole_day_member(inst: &Inst) -> Option<Moving> {
+    match inst.day {
+        Some(Dated::Hole(_)) if inst.exists != Exists::No => Some(Moving::Plan(inst.clone())),
+        Some(Dated::Hole(_) | Dated::Day(_)) | None => None,
+    }
 }
 
 /// Movements in movement order: by day, a hole day after every day, then by their typed order,
@@ -1474,6 +1515,12 @@ ask n_jan: count(t in sweeps over 2026-01)
 ask s: sum(t.cash.amount for t in sweeps over 2026-05)
 
 ask n_p: count(t in sweeps over 2026-05) with dd = 2026-05-05
+
+ask w_to: count(t in sweeps over 2026-05 where t.cash.to == sav)
+
+ask w_from: count(t in sweeps over 2026-05 where t.cash.from == sav)
+
+ask d_to: sweep.cash.to
 "#;
 
     /// A pay on day `pd`, written in for `DAY`, its amount raised by a version known on 15
@@ -1627,6 +1674,31 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
             ["n_p: 1", "  pinned: dd = 2026-05-05", "  cut 2026-04-20"],
             "a pinned day"
         );
+    }
+
+    #[test]
+    fn a_where_on_a_hole_day_decisions_places_is_decided() {
+        // ruling 14 (P10): a binding reads a hole-day decision's places as the plan has them,
+        // so a member the `where` fails is counted on no day; one it takes is the day's hole;
+        // read by its name, the place is that hole (B1's body; refcore's `hole_day_dec_body`)
+        let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
+        let day = "window(2026-05-04, 2026-05-06)";
+        assert_eq!(
+            lines_of(SWEEP, day, "w_to"),
+            ["w_to: 0", "  cut 2026-04-20"],
+            "the where fails"
+        );
+        for ask in ["w_from", "d_to"] {
+            assert_eq!(
+                lines_of(SWEEP, day, ask),
+                [
+                    format!("{ask}: {window}"),
+                    "  unknown day: dd".to_owned(),
+                    "  cut 2026-04-20".to_owned()
+                ],
+                "{ask}: the window's hole"
+            );
+        }
     }
 
     #[test]
