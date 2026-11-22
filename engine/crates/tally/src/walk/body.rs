@@ -7,8 +7,10 @@
 
 use super::instance::{Dated, Exists, Inst, LegVal, join};
 use super::plan::{refuse, refuse_load, shown};
+use super::tuples::Law;
 use crate::base::{Load, Run};
 use crate::eval::{Collected, Ctx, Engine};
+use crate::hole::Hole;
 use crate::model::{MoveInfo, Node, NodeKind, Reality, Value};
 use crate::syntax::Stop;
 use std::collections::BTreeMap;
@@ -31,16 +33,26 @@ pub(super) struct Body {
 }
 
 impl Engine {
-    /// An instance's day: its `on` read at its law date (refcore's `eval_inst`). L §4.3,
+    /// An instance's law date by its move's `at`, kept on it, and its day, its `on` read at
+    /// that date; a law date that is a hole is its day's hole (refcore's `eval_inst`). L §4.3,
     /// §5.14 `at e`.
-    pub(super) fn day_over_law(
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the `at` and the `on`.
+    pub(super) fn law_and_day(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        inst: &Inst,
+        inst: &mut Inst,
         tctx: Ctx,
-    ) -> Result<Value, Stop> {
-        self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()))
+    ) -> Result<Result<Value, Hole>, Stop> {
+        inst.law = self.move_law(m, mv, &inst.env, tctx)?;
+        if let Law::Hole(h) = &inst.law {
+            return Ok(Err(h.clone()));
+        }
+        let day = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()))?;
+        Ok(Ok(day))
     }
 
     /// An instance's body at its law date in context `ctx`, its cut set, from its tuple's

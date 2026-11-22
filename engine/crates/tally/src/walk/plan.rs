@@ -20,7 +20,7 @@
 use super::instance::{
     Amount, Booked, BookedLeg, Dated, End, Exists, Inst, LegVal, Seed, Status, inst_order,
 };
-use super::tuples::{Law, Tuple};
+use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env, Snap, one_day, thing_seen};
 use crate::model::{
@@ -665,22 +665,21 @@ impl Engine {
         tctx: Ctx,
         seed: &Seed,
     ) -> Result<bool, Stop> {
-        let law = match self.move_law(m, mv, &inst.env, tctx)? {
-            Law::Hole(h) => {
-                inst.law = Law::Hole(h.clone());
+        // what reading its law date and its day met is what a read of its day brings, a pin
+        // of the law date too (refcore's `day_coll`; the review of G1, N1)
+        self.push();
+        let read = self.law_and_day(m, mv, inst, tctx);
+        let day_coll = self.pop_alone();
+        self.absorb(&day_coll);
+        inst.day_coll = day_coll;
+        let v = match read? {
+            Err(h) => {
                 inst.day = Some(Dated::Hole(h.clone()));
                 inst.exists = Exists::Unknown(h);
                 return Ok(true);
             }
-            law @ (Law::Day(_) | Law::None) => law,
+            Ok(v) => v,
         };
-        inst.law = law.clone();
-        self.push();
-        let v = self.day_over_law(m, mv, inst, tctx);
-        let day_coll = self.pop_alone();
-        self.absorb(&day_coll);
-        inst.day_coll = day_coll;
-        let v = v?;
         if matches!(v, Value::Never | Value::None) {
             return Ok(false);
         }
@@ -1344,7 +1343,27 @@ version v
 ask k: bal(konto, 2026-01-15), pay_at.day
 
 ask k_pin: bal(konto, 2026-12-31) with wl = 2026-02-10
+
+ask day_pin: pay_at.day with wl = 2026-02-10
 "#;
+
+    #[test]
+    fn a_days_read_brings_its_law_dates_pin() {
+        // what reading an instance's law date met is what a read of its day brings, as
+        // refcore's `day_coll` (the review of G1, N1): a plain law date, and a window's
+        let plain = HOLE_LAW.replace("window(2026-02-01, 2026-02-28)", "2026-02-15");
+        for (what, text) in [("a plain law date", plain.as_str()), ("a window", HOLE_LAW)] {
+            assert_eq!(
+                answer(&[("law.tally", text)], "day_pin"),
+                [
+                    "day_pin: 2026-03-10",
+                    "  pinned: wl = 2026-02-10",
+                    "  cut 2026-04-20"
+                ],
+                "{what}"
+            );
+        }
+    }
 
     #[test]
     fn a_window_at_makes_a_hole_law_date() {
