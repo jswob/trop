@@ -49,23 +49,24 @@ ROLES = ("build", "tests", "rules", "spec", "lead")
 OPUS, FABLE = "claude-opus-5-5", "claude-fable-5-2"
 MODELS = (OPUS, FABLE)
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
-# job: (role, model, effort), as engine/PLAYBOOK.md's table (D2, D3) has it: Fable for the
-# judgment a whole run builds on and for a group's review (since 2026-11-19: M2's and M3's
-# gate reviews found blocking defects in code group reviews had passed), Opus for the
-# volume and for a fix's review. Fable stays at high: Anthropic's
-# guidance starts there, and at xhigh it reviews its own work with subagents.
+# job: (role, model, effort), as engine/PLAYBOOK.md's table (D2, D3) has it: Fable for a
+# plan's critic, the gate's whole-diff review and a study, where it found what Opus had
+# passed (M2's and M3's gate reviews); Opus for the rest, a round's lead, planner, group
+# reviews and paper checks included (since 2026-11-22: no gain measured on Fable, and its
+# cost doubled the week's). Fable stays at high: Anthropic's guidance starts there, and at
+# xhigh it reviews its own work with subagents.
 JOBS = {
     "builder": ("build", OPUS, "xhigh"),
     "tests": ("tests", OPUS, "xhigh"),
     "rules-step": ("rules", OPUS, "high"),
     "study": ("rules", FABLE, "high"),
     "spec-writer": ("spec", OPUS, "high"),
-    "planner": ("spec", FABLE, "high"),
+    "planner": ("spec", OPUS, "xhigh"),
     "critic": ("spec", FABLE, "high"),
-    "paper-check": ("spec", FABLE, "high"),
+    "paper-check": ("spec", OPUS, "high"),
     "coordinator": ("lead", OPUS, "high"),
-    "round-lead": ("lead", FABLE, "high"),
-    "group-review": ("lead", FABLE, "high"),
+    "round-lead": ("lead", OPUS, "high"),
+    "group-review": ("lead", OPUS, "high"),
     "fix-review": ("lead", OPUS, "high"),
     "gate": ("lead", OPUS, "xhigh"),
     "gate-review": ("lead", FABLE, "high"),

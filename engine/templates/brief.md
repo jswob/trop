@@ -3,10 +3,10 @@
 <!-- A milestone brief, from engine/templates/brief.md. It holds only this run's scope;
      the procedure is the skill engine-coordinator, the conventions engine/CONVENTIONS.md.
      How a brief is written, and to which model, is engine/PLAYBOOK.md §3: a brief for a
-     Fable job (a spec round's lead, a planner, a critic, a study) gives the goal, the bar,
+     Fable job (a critic, the gate's review, a study) gives the goal, the bar,
      the inputs and the output's form, and leaves the method to the session. -->
 
-**You are the <run> coordinator,** a lead-role session: the job `coordinator`, Opus 5.5 at effort high (a spec round's is `round-lead`, Fable 5.2 at high: `--model claude-fable-5-2`). The master session wrote this brief on <date>. Invoke the skill `engine-coordinator` first; it holds the procedure. Your run folder is `tmp/<run>/`.
+**You are the <run> coordinator,** a lead-role session: the job `coordinator`, Opus 5.5 at effort high (a spec round's is `round-lead`, also Opus 5.5 at high). The master session wrote this brief on <date>. Invoke the skill `engine-coordinator` first; it holds the procedure. Your run folder is `tmp/<run>/`.
 
 **How the user starts you,** in the main folder, on an up-to-date master:
 
@@ -33,14 +33,14 @@ Then the user pastes: "You are the <run> coordinator. Your brief is tmp/active/<
 | ----------------- | -------------------- | ------------------------ | ------------------------------------------------------------------- |
 | T                 | `tests`              | tests, Opus, xhigh       | the tests first; for each group's review, the fixes as tests        |
 | the builder       | `builder`            | build, Opus, xhigh       | its plan; one fresh session per group                               |
-| the group review  | `group-review`       | lead, Fable, high        | `engine-reviewer` on each group's diff, crossing its forms          |
+| the group review  | `group-review`       | lead, Opus, high         | `engine-reviewer` on each group's diff, crossing its forms          |
 | the fix review    | `fix-review`         | lead, Opus, high         | `engine-reviewer` on each fix alone                                 |
 | rules steps       | `rules-step`         | rules, Opus, high        | fuzz targets, benches, the kernel list, `gating`                    |
 | the gate          | `gate`               | lead, Opus, xhigh, fresh | the evidence, fuzz, mutants, timing, the report                     |
 | the gate's review | `gate-review`        | lead, Fable, high, fresh | the one review of the whole diff                                    |
 | you               | `coordinator`        | lead, Opus, high         | the worktree, launches, merges in, picks, the pull request, the tag |
 
-A spec round has a `planner` and a fresh `critic` (spec, Fable, high) and a `spec-writer` (spec, Opus, high) for the ruled patch. The table every job comes from is `engine/PLAYBOOK.md` §1.
+A spec round has a `planner` (spec, Opus, xhigh), a fresh `critic` (spec, Fable, high) and a `spec-writer` (spec, Opus, high) for the ruled patch. The table every job comes from is `engine/PLAYBOOK.md` §1.
 
 ## 3. What differs in this run
 

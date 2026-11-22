@@ -1021,12 +1021,19 @@ def launch_usage_checks(root, expect, failures):
             failures.append(f"launch --job critic: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     if "log it as a pick" in r.stdout:
         failures.append(f"launch --job critic: notes an override where there is none: {r.stdout.strip()[:300]}")
-    # a group's review on Fable, a fix's review on Opus (the process study after M2, change 5;
-    # the user's "Yes to changes 5, 6 and 7, go ahead", 2026-11-19)
-    for job, model in (("group-review", "claude-fable-5-2"), ("fix-review", "claude-opus-5-5")):
-        r = launch("lead", prompt, root, "--ids", ids, "--dry-run", "--job", job)
+    # Fable for the critic, the gate's review and a study; a round's lead, its planner, group
+    # and fix reviews and the paper check on Opus, the planner at xhigh (the process step
+    # after tally 2.3; the user's "Yes I want this", 2026-11-22)
+    for role, job, model, effort in (("lead", "group-review", "claude-opus-5-5", "high"),
+                                     ("lead", "fix-review", "claude-opus-5-5", "high"),
+                                     ("lead", "round-lead", "claude-opus-5-5", "high"),
+                                     ("lead", "gate-review", "claude-fable-5-2", "high"),
+                                     ("spec", "planner", "claude-opus-5-5", "xhigh"),
+                                     ("spec", "paper-check", "claude-opus-5-5", "high"),
+                                     ("rules", "study", "claude-fable-5-2", "high")):
+        r = launch(role, prompt, root, "--ids", ids, "--dry-run", "--job", job)
         expect(f"launch --dry-run --job {job}", r.returncode, 0, r.stderr)
-        for says in (f"job {job}", f"--model {model}", "--effort high", "TALLY_ROLE=lead"):
+        for says in (f"job {job}", f"--model {model}", f"--effort {effort}", f"TALLY_ROLE={role}"):
             if says not in r.stdout:
                 failures.append(f"launch --job {job}: its command lacks {says!r}: {r.stdout.strip()[:300]}")
     r = launch("build", prompt, root, "--ids", ids, "--dry-run", "--effort", "high")
