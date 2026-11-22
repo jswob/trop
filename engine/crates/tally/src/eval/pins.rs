@@ -465,7 +465,7 @@ impl Engine {
         self.push();
         let v = self.ev(m, written, env, ctx);
         let met = self.pop_alone();
-        let value = at_pin_keys(pin_typed(m, v?, ty.as_ref())?, binds, &keys)?;
+        let value = at_pin_keys(pin_typed(m, written, v?, ty.as_ref())?, binds, &keys)?;
         if !plain_literal(m, written) {
             self.absorb(&met);
         }
@@ -587,10 +587,18 @@ fn at_pin_keys(v: Value, binds: &[BindInfo], keys: &[Option<KeyVal>]) -> Result<
     Ok(v)
 }
 
-/// A pin's value in its target's type: a number pinned on money is money where it is whole
-/// minor units, an int, a bare figure or money pinned on a `num` takes its unit (refcore's
-/// `coerce_to`). L §3.2 Inline figures, §5.11.
-fn pin_typed(m: &Reality, v: Value, ty: Option<&Ty>) -> Result<Value, Stop> {
+/// A pin's value in its target's type: a bare figure `written` (through brackets and a minus)
+/// takes the target's declared type and unit, `5` on a `num %` 5 % (refcore's `pin_literal`
+/// and `typed`); a number pinned on money is money where it is whole minor units, an int or
+/// money pinned on a `num` takes its unit (refcore's `coerce_to`). L §3.2 Inline figures,
+/// §5.11.
+fn pin_typed(m: &Reality, written: &Expr, v: Value, ty: Option<&Ty>) -> Result<Value, Stop> {
+    if let (Value::Number(n), Some(ty)) = (&v, ty)
+        && super::band::bare_figure(written)
+        && let Some(figure) = super::expr::typed(m, &n.q, ty)?
+    {
+        return Ok(figure);
+    }
     match (ty, v) {
         (Some(Ty::Money(cur)), Value::Number(n)) => {
             let minor = m

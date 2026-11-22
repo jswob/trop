@@ -564,9 +564,9 @@ fn band_typed(m: &Reality, band: &BandInfo, expr: &Expr, v: Value) -> Result<Val
     Ok(v)
 }
 
-/// Whether a row's value is a bare figure, through brackets and a minus (check.py's
+/// Whether a row's or a pin's value is a bare figure, through brackets and a minus (check.py's
 /// `flex_to`). L §3.2.
-fn bare_figure(e: &Expr) -> bool {
+pub(super) fn bare_figure(e: &Expr) -> bool {
     let mut at = e;
     while let Expr::Paren(x) | Expr::Neg(x) = at {
         at = x;
