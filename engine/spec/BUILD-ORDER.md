@@ -237,6 +237,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 - Ownership by shares, `owns[p, x]` with dated rows, and net worth per person over it (L §3.6; ASK-02).
 - Groups and relations with dated spans; a law that reads another party (L §3.5).
 - Long histories as input rows.
+- #213's engine half, and a window in an observed row's attribute, read by §4.4's list (tally 2.3).
 
 **Green (166)**
 - Household B (55): every B check that runs, but B-12's (M7): `I:B:b01_*` to `b11x_*` on their cut copies, `I:B:*@k4` (B-07's search at 101 steps, J marks), `I:B:B-13~*`.
@@ -263,6 +264,7 @@ Three named steps, each tagged as a milestone (M5a, M5b, M5c) when its checks ar
 - **Hole parts** (`HOLE-PART`, L §8.1) in seam U's one module (R-116), and `WARN-LABELS` in the register (L §8.2, §8.5); `RUN-LABEL` and the run codes widened for parts (L §8.4).
 - The parts in the day walk, in E §4.2's order: the first batch's takes, a decision's take at its point, the arrival rule at booking, lifespans after the day's whole order.
 - **The parts check** (R-115): after every arrival, take and relabel, parts sum to the balance, are at least 0 and whole steps; a failure refuses as an invariant. It is checked at run time, at O(labels) per booking (G1 item 8). E §9 doesn't list it (SO8-7), so it is the engine's own check, not a DONE gate 6 property.
+- A take beside a hole-day movement at its place is undecided (L §5.14; tally 2.3).
 
 **Green (80)**
 - Household A (47): every A check that runs (`I:A:*` but the 2 `not-run:` ones), A-13's, A-14's and A-15's included.
