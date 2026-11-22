@@ -1,18 +1,25 @@
 //! An instance's body: its existence, legs, attributes, period and what it fulfils, read at
-//! its law date.
+//! its law date; a decision's runs read again for a traced read that counts them.
 //! Spec: L §4.3, §5.14 (moves: `on`, `at e`, `when`, `for`, legs, attributes), §5.14.1,
-//! §5.14.3 (`fulfils`), §8.1; E §5 step 1 (the body at its booking cut).
-//! Twin: engine/tools/refcore/moves.py (`eval_inst`, `inst_body`).
-//! Invariants: a body's move holds the projections it meets.
+//! §5.14.3 (`fulfils`), §8.1; E §5 step 1 (the body at its booking cut); E §10 (`explain`
+//! re-evaluates the cone with tracing on; the traced value equals the stored one), L §5.18
+//! Explanation order (the rows that made the value).
+//! Twin: engine/tools/refcore/moves.py (`eval_inst`, `inst_body`); walk.py (`run_one_body`,
+//! run while an `explain` traces).
+//! Invariants: a body's move holds the projections it meets; a run read again is read at
+//! its point as it ran, with a register and a read set of its own, kept nowhere, so tracing
+//! changes no value and no line's register.
 
 use super::instance::{Dated, Exists, Inst, LegVal, join};
-use super::plan::{refuse, refuse_load, shown};
+use super::order::{Run as Ran, WalkAt};
+use super::plan::{invariant, refuse, refuse_load, shown};
 use super::tuples::Law;
-use crate::base::{Load, Run};
-use crate::eval::{Collected, Ctx, Engine};
+use crate::base::{Code, Load, Run};
+use crate::eval::{Collected, Ctx, Engine, Walked};
 use crate::hole::Hole;
 use crate::model::{MoveInfo, Node, NodeKind, Reality, Value};
 use crate::syntax::Stop;
+use crate::time::Day;
 use std::collections::BTreeMap;
 
 /// What an instance's body gives: whether it exists, its legs, attributes and period.
@@ -74,6 +81,119 @@ impl Engine {
         let body = self.move_body(m, mv, inst, ctx, exists);
         self.holder = outer;
         body
+    }
+
+    /// The main walk of cut `cut`, read by a read that counts the runs of the decision moves
+    /// `decided` in it; where the read is traced, what it prints of them (`trace_decided`).
+    /// E §10, §4.2.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::main_walk`] and [`Engine::trace_decided`].
+    pub(crate) fn decided_walk(
+        &mut self,
+        m: &Reality,
+        cut: Day,
+        decided: &[&MoveInfo],
+    ) -> Result<usize, Stop> {
+        let before = self.trace_walked();
+        let id = self.main_walk(m, cut)?;
+        self.trace_decided(m, (before, id), decided)?;
+        Ok(id)
+    }
+
+    /// What a traced read that counts the runs of the decision moves `decided` in main walk
+    /// `id` prints of them, the walk having been read: each move's instances again, with
+    /// their days, then each run's body again at its point (`trace_runs`), once per explain
+    /// for each move, as the walk runs each once (a read met again prints none). The walk's
+    /// own reads, the other moves' days and amounts, are none of the read's (L §5.18: the
+    /// rows that made the value; tally 2.1.8 P50), so the note of a walk read goes back to
+    /// `before`, as it stood before the read. E §10.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`] and [`Engine::trace_runs`].
+    fn trace_decided(
+        &mut self,
+        m: &Reality,
+        (before, id): (Walked, usize),
+        decided: &[&MoveInfo],
+    ) -> Result<(), Stop> {
+        if !self.tracing() {
+            return Ok(());
+        }
+        self.trace_walked_back(before);
+        let cut = self.walk(id)?.cut;
+        let mut first = Vec::with_capacity(decided.len());
+        for mv in decided {
+            if self.trace_first_runs(id, &mv.id) {
+                first.push(*mv);
+            }
+        }
+        for mv in &first {
+            self.trace_days(m, mv, cut)?;
+        }
+        self.trace_runs(m, id, &first)
+    }
+
+    /// Each run of the decision moves `decided` in walk `id`, in walk order, its body read
+    /// again at its point as the run read it (its law date, the state just before its own
+    /// booking, its own earlier observations left out), traced, kept nowhere: its `when`,
+    /// legs and attributes print their reads, its running reads as balances up to that
+    /// point. One refused before its point read nothing of its body (E §10: "the traced
+    /// value equals the stored one"; refcore traces the runs it walks while it explains).
+    /// E §10, §4.2 step 3; L §5.14.1.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run; `ENGINE-INVARIANT` for a run with no day.
+    fn trace_runs(&mut self, m: &Reality, id: usize, decided: &[&MoveInfo]) -> Result<(), Stop> {
+        let walk = self.walk(id)?;
+        let cut = walk.cut;
+        let mut runs: Vec<(&MoveInfo, Ran)> = Vec::new();
+        for run in &walk.runs {
+            if let Some(mv) = decided.iter().find(|mv| mv.id == run.inst.move_id) {
+                runs.push((*mv, run.clone()));
+            }
+        }
+        for (mv, run) in &runs {
+            let Some(Dated::Day(t)) = run.inst.day else {
+                return Err(invariant("a decision run with no day"));
+            };
+            let insts = self.move_instances(m, mv, cut)?;
+            let Some(inst) = insts
+                .iter()
+                .find(|i| i.id == run.inst.id && i.err.is_none())
+            else {
+                continue;
+            };
+            let ctx = Ctx {
+                at: Some(WalkAt {
+                    walk: id,
+                    point: run.point.just_before(),
+                }),
+                ..self.timeline_ctx(None, t.min(cut))
+            };
+            let prev = self.enter_run(m, id, run)?;
+            let outer = core::mem::replace(&mut self.rereading, true);
+            self.push();
+            self.trace_plan_open();
+            let law = inst.law.day();
+            let body = self.inst_body(m, mv, inst, ctx.at_law(law), inst.exists.clone());
+            let closed = self.trace_plan_close();
+            self.pop_alone();
+            self.rereading = outer;
+            self.leave_run(id, prev)?;
+            closed?;
+            match body {
+                Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => {
+                    return Err(Stop::Refused(r));
+                }
+                Ok(_) | Err(Stop::Refused(_)) => {}
+                Err(stop) => return Err(stop),
+            }
+        }
+        Ok(())
     }
 
     /// An instance's body: its `when`, period, legs and attributes (refcore's

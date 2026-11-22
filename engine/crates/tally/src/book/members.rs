@@ -545,7 +545,8 @@ impl Engine {
         }
         let (walk, limit) = match ctx.at {
             Some(WalkAt { walk, point }) => (walk, Some(point)),
-            None => (self.main_walk(m, ctx.cut)?, None),
+            // a traced read prints what the runs read, not the walk (E §10)
+            None => (self.decided_walk(m, ctx.cut, decided)?, None),
         };
         let mut out = Vec::new();
         for mv in decided {

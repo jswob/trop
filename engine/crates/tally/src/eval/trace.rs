@@ -20,7 +20,7 @@
 //! value the ask's other reads see; a helper keeps the first stop it meets for the trace's
 //! end, so the evaluator's recursive frames hold no more than a node's place (R-16).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
@@ -206,6 +206,9 @@ pub(crate) struct Trace {
     pub(crate) walked: bool,
     /// The first stop a helper met, the trace's end's.
     stop: Option<Stop>,
+    /// Each decision move whose runs a read traced, by its walk: a run's reads are traced
+    /// once per explain, as the walk runs it once (E §10).
+    decided: BTreeSet<(usize, String)>,
 }
 
 /// What a trace knows of a def cell a read reaches.
@@ -416,6 +419,7 @@ impl Engine {
             saved,
             walked: false,
             stop: None,
+            decided: BTreeSet::new(),
         });
     }
 
@@ -477,6 +481,14 @@ impl Engine {
     pub(crate) fn trace_plan_close(&mut self) -> Result<Walked, Stop> {
         self.close_reads()?;
         Ok(self.trace_walked())
+    }
+
+    /// Whether a read now is traced and hasn't yet traced the runs of decision move
+    /// `move_id` in walk `walk`; noted as traced from now on, so each run's reads print once
+    /// per explain, where first counted (E §10).
+    pub(crate) fn trace_first_runs(&mut self, walk: usize, move_id: &str) -> bool {
+        self.traced()
+            .is_some_and(|trace| trace.decided.insert((walk, move_id.to_owned())))
     }
 
     /// Whether the trace has noted a read of the walk, false with none: what a balance read

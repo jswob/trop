@@ -180,6 +180,25 @@ impl Engine {
         Ok((made?, Some(back?)))
     }
 
+    /// A decision's instances computed again while a read that counts its runs is traced,
+    /// kept nowhere: the rows and cells its bindings and days read print under the read, as
+    /// a plan's do where a read computes its instances first; its `when` and legs are its
+    /// runs' (`trace_runs`). E §10, §4.1; L §5.18 Explanation order.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    pub(crate) fn trace_days(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let made = self.make_instances_held(m, mv, (cut, None), None);
+        let closed = self.trace_plan_close();
+        self.holder = outer;
+        made?;
+        closed?;
+        Ok(())
+    }
+
     /// A move's instances for the walk being planned: all of them, or, for a walk up to a
     /// day, a plan's dated on or before it, the others' bodies never evaluated; a decision, or
     /// a move whose instances are all known already, is taken whole (refcore's `plan_list`).

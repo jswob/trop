@@ -238,6 +238,10 @@ impl Engine {
                     }
                     Amount::Qty(q) => q,
                 };
+                // the walk is a cause an explanation prints in its own form only where it
+                // refused the leg; else the leg is its instance's, traced as the instance was
+                // (E §10; tally 2.1.8 P50)
+                let back = self.trace_walked();
                 let out = if q.is_zero() {
                     None
                 } else {
@@ -246,6 +250,7 @@ impl Engine {
                 if let Some(err) = out {
                     return Err(Stop::Refused(err));
                 }
+                self.trace_walked_back(back);
                 acc.add(q, lg.unit.as_ref())?;
             }
         }
@@ -366,7 +371,8 @@ impl Engine {
                 }
                 (at.walk, (last == t).then_some(at.point))
             }
-            None => (self.main_walk(m, ctx.cut)?, None),
+            // a traced read prints what the runs read, not the walk (E §10)
+            None => (self.decided_walk(m, ctx.cut, &[mv])?, None),
         };
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
