@@ -103,14 +103,20 @@ struct BadTable;
 pub fn run(args: &[OsString], files: &[u8]) -> Output {
     #[cfg(feature = "counters")]
     if args.iter().any(|arg| arg.to_str() == Some("--stats")) {
-        let rest: Vec<OsString> = args
-            .iter()
-            .filter(|arg| arg.to_str() != Some("--stats"))
-            .cloned()
-            .collect();
-        return counted(&rest, files);
+        return counted(&without_stats(args), files);
     }
     command(args, files)
+}
+
+/// The arguments less every `--stats`: the `counters` build's switch, which [`run`] takes out
+/// before the command line is read, and [`paths`] too, so the binary reads the files a counted
+/// run names (D4-8).
+#[cfg(feature = "counters")]
+fn without_stats(args: &[OsString]) -> Vec<OsString> {
+    args.iter()
+        .filter(|arg| arg.to_str() != Some("--stats"))
+        .cloned()
+        .collect()
 }
 
 /// [`run`] with `fault` planted in the engine, its twin for the fixture of `ENGINE-INVARIANT`
@@ -167,9 +173,19 @@ fn counted(args: &[OsString], files: &[u8]) -> Output {
 }
 
 /// The paths the command line names, in the order given: what the binary reads into the file
-/// table. None for a command line the engine doesn't take.
+/// table. None for a command line the engine doesn't take. With the `counters` feature, a
+/// `--stats` argument names no path, as [`run`] reads it.
 #[must_use]
 pub fn paths(args: &[OsString]) -> Vec<String> {
+    #[cfg(feature = "counters")]
+    if args.iter().any(|arg| arg.to_str() == Some("--stats")) {
+        return command_paths(&without_stats(args));
+    }
+    command_paths(args)
+}
+
+/// The paths of a command line [`parse`] takes, in the order given; none for one it doesn't.
+fn command_paths(args: &[OsString]) -> Vec<String> {
     match parse(args) {
         Some(
             Command::Run { paths, .. }
@@ -767,5 +783,17 @@ mod tests {
             line.ends_with(" walks_shared=0 recomputed_locally=0 num_results=0\nstats-defs: \n"),
             "{line}"
         );
+    }
+
+    #[cfg(feature = "counters")]
+    #[test]
+    fn stats_names_no_path() {
+        for words in [
+            &["run", "--stats", "a.tally", "b.tally", "--ask", "q"][..],
+            &["run", "a.tally", "b.tally", "--stats", "--ask", "q"][..],
+            &["run", "a.tally", "b.tally", "--ask", "q", "--stats"][..],
+        ] {
+            assert_eq!(paths(&args(words)), ["a.tally", "b.tally"], "{words:?}");
+        }
     }
 }

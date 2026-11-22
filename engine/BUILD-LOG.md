@@ -6755,3 +6755,135 @@ The review of G1 (`tmp/m4/review-g1.md`, range 6962697b..ed883763) found 2 block
 - **Not done:** the 7 non-blocking findings are on the run's list. The only one that was mine, `rates.rs:9`'s header line, is changed with B2.
 - **Usage:** about 0.23 % of the week for this turn (0.53 % for the session, by `engine/tools/usage`).
 - **Checks:** `check commit: green, 24 steps (227s)`, exit 0, on this tree but for this line.
+
+## 2026-11-22 M4 G5 `budgets`: P8-L10's stage walks measured, the cause found (issue #252)
+
+The plan's group G5 (`tmp/m4/build-plan.md` §5), moved up by pick P9: P8-L10's 17 stage runs (`engine/tests/m4/load/runs.tsv`, T's C3) each pass 8 GB. The brief's step 1 (measure), step 2 (decide) and step 3 (time the 18 runs). One commit, the counted build's `--stats` (below); the rest is this entry and the STOP-REPORT after it. No kernel file changed. Scratch inputs, scripts and outputs are in `tmp/m4/g5/` (untracked).
+
+**1. The curve.** Stage b1's files (runs.tsv's `b1` row), each copy with its horizon cut short in `reality.tally` (`end`, and the `day`, `month` and `tax_year` indexes; no other line names a year past 2030). One run at a time, niced, under `memcap.py` at 8 GB, on this tree's quick binary. `k1` is my one-line ask `bal(konto, 2026-10-31)` (core.tally's asks name 2028, which a shorter index refuses). The ask doesn't matter: at 2028, `k1`, `konto_balance` and `taxes_paid` each cost 138 G instructions. The walk carries it.
+
+| Horizon | Ask | Wall | Footprint | Instructions |
+| --- | --- | --- | --- | --- |
+| 2026-12-31 | `k1` | 2.34 s | 344 MB | 34.2 G |
+| 2027-12-31 | `k1` | 5.58 s | 923 MB | 77.7 G |
+| 2028-12-31 | `k1` | 9.99 s | 1 560 MB | 138.0 G |
+| 2028-12-31 | `konto_balance` | 10.40 s | 1 563 MB | 138.1 G |
+| 2029-12-31 | `konto_balance` | 16.43 s | 2 348 MB | 218.5 G |
+| 2030-12-31 | `konto_balance` | 24.28 s | 3 195 MB | 322.8 G |
+| 2059-12-31 (b1 itself) | its 8 asks | stopped past 8 GB after 49.3 s (release binary, step 3) | 8.29 GB | 784.7 G by then |
+
+- **Year by year:** memory +579, +637, +788, +847 MB, instructions +44, +60, +81, +104 G: both grow faster than the horizon.
+- **The same at 2028 and 2030 with `room[m] = 0`** (variant `v1`: `room` reads no projection, so `invest` reads `invest` only): 4.27 s, 872 MB, 58.2 G; 8.62 s, 1 585 MB, 107.9 G. So about half is the monthly projection read and half a base that is nearly linear (exponent about 1.2 in memory, 1.4 in time).
+- **Fitted and carried to 34 years** (2026 to 2059), on the quick binary: the projection's part about n^1.85 in time and n^1.7 in memory, about 540 s and 42 GB; the base about 120 s and 15 GB. **About 11 minutes and 57 GB in all.** Even a perfectly linear walk at the first year's cost (2.34 s, 344 MB) would be 80 s and 11.7 GB.
+
+**What the counters say** (`perf counts`'s counted build, after the fix below; `k1` at 2026, 2027, 2028): ev 1.98, 5.08, 8.95 M; def misses 42, 87, 128 k; walks 47, 95, 143; days stepped 1 051, 2 146, 3 244; walks shared 655, 1 368, 2 076. **Every count is linear in the horizon.** The work isn't more evaluation: 138 G instructions over 8.95 M nodes is about 15 000 instructions a node. It is what each step copies and keeps.
+
+**What is kept** (a census of the kept structures, added to the counted build for these runs and reverted, never committed; elements of register sets): memo cells' registers 41 k, 484 k, 1 090 k; logs' `cum` copies 111 k, 356 k, 843 k; planned instances' registers 201 k, 799 k, 1 460 k (in 1 231, 1 436, 1 436 kept lists); decision runs' 33 k, 123 k, 270 k. **About 0.47, 2.0 and 4.3 M elements, about 360 B each** against the footprints.
+
+**Where the time goes** (`samply`, `tmp/m4/g5/tree.py` and `nearest.py`: self time given to the innermost engine function). From 2027 to 2030 these grow: `Entry::cmp` under `Collected::merge` 4.6 → 13.8 %, `Collected::merge` 6.1 → 10.4 %, `Inst::clone` 5.1 → 10.1 % (6.6 % in `advance_to` under a projection), `schedule_plan` 1.9 → 3.7 %. In `v1` at 2030, 92 % is the plan pass; the innermost callers that make instances are `fulfils_of` 52.7 %, `flows_move` 23.0 % and the main walk's own plan 16.2 %.
+
+**2. The cause: three defects, each a copy per day or per walk.**
+1. **A register is copied, never shared, and grows with the horizon.**
+   - `Collected` (`eval/state.rs:361`) is sets of owned strings, and `merge` (l.415) clones every entry.
+   - Each memo cell keeps one (`eval/memo.rs` `Kept`). Each instance keeps three (`coll`, `day_coll`, `leg_reads`). Each log entry keeps its movement's (`walk/state.rs:150`).
+   - The log's `cum` (`walk/state.rs:211`, filled by `Walk::cum`, l.796-823) keeps, per entry, a full copy of every entry's register since the place's last reading.
+   - konto's last reading is 2026-09-30, and none follows to the horizon. So `cum[i]` holds every `held:` and `assumed:` entry from then to entry i.
+   - A balance read (`read_state` → `chain_register` → `chain_link`, `walk/reads.rs:442-523`) clones that copy (l.519-520; `cum` returns `c.clone()`, `walk/state.rs:820`) into the reader's register.
+   - `room[m]` (household `pays.tally:84`, `min(bal(konto, d) from day_of(m, invest_dom) - vat_owed[d] for d in …)`) reads about 30 such balances a month, each register growing with m. It keeps their union in its cell, and so do `invest_amt[w, m]` and each `invest` instance and run.
+   - The sum over months of a register that grows with m is quadratic, in memory and in merge time.
+2. **A move's whole plan, out to the horizon, at every past booking cut.**
+   - An instance dated t before K is evaluated at cut t (E §5 step 1). Plans and memo cells are keyed by the exact cut (`walk/plan.rs:52`, `(mv.id, cut)`; `eval/memo.rs:206`, `CellKey.cut`), not by P §3.2's cut class ("a 33-year run costs about one evaluation set per law version, not one per day").
+   - `spend[d]` is daily, so from 2026-10-02 to K (2027-01-20) every day is a cut.
+   - Its `spend_month[c]` (`at reader`) sums the bank's observations `where o.fulfils == none` (`pays.tally:91`).
+   - `fulfils_of` (`book/members.rs:1044-1054`) answers `o.fulfils` by planning the named move's whole list at that cut, then finding one instance by its keys. Refcore's `find_inst` does the same.
+   - At 2028 that is 111 cuts × 10 moves, 48 k of the 52 k planned instances, each with its cells at that cut.
+   - `flows_move` (`walk/move_flows.rs:50`) does the same for `flows(health_pay, m)` and the like at a monthly instance's booking cut.
+   - Linear in the horizon, times about 110.
+3. **A projection's walk copies every move's whole list.**
+   - `plan_walk` copies each list (`walk/agenda.rs:187`, `plan_list(…).to_vec()`), and `schedule_plan` clones again what it schedules (l.623).
+   - That is O(horizon) per walk, with about 4 walks a month.
+
+**3. Decided: a STOP-REPORT (below), not a fix in this group.**
+- Each of the three is a plain defect, but together they are far more than "a few hundred lines".
+- The base after them still misses: `v1`'s about 2.1 s a year less the 76 % that (2) carries leaves about 0.5 s a year, about 17 s at 34 years on the quick binary. So 10 s also needs about 2× from the plan pass's constant: each key's text formatted per read (`Day::text`, `Period::label`, 9 %), `CellKey` compares (5 %), the version sets.
+- Estimate in the STOP-REPORT. No kernel file is changed: a partial fix would be redone by whatever the user decides.
+
+**The counted build's `--stats` read no file** (fixed, this group's commit).
+- `main` reads the paths `tally_cli::paths` names. That parsed the arguments with `--stats` still in them, found no command, and named none.
+- So every counted run of the binary refused `LOAD-PATH`, and printed `stats:` with every count 0, exit 1.
+- `engine/tools/perf counts P8-14` printed `ok P8-14 counts(1w): def_misses 0, days_stepped 0, walks_shared 0 (exit 1; …)`: the instrument passed every count budget by counting nothing.
+- T's runner calls `run` with its own file table, which strips `--stats` before parsing, so its count checks were unaffected (to confirm, T).
+- `paths` now takes `--stats` out as `run` does (`without_stats`, shared by both), with unit test `stats_names_no_path`. After it: `ok P8-14 counts(1w): def_misses 25450, days_stepped 960, walks_shared 582 (exit 0; …)`, under its 30 400.
+- **For the lead:** `perf counts` should fail a run whose exit isn't 0.
+
+**4. The 18 runs**, once each, cold, on the release binary built by `perf row P8-14` (`tmp/m4/g5/runs18.sh`: runs.tsv's cwd, files and asks; killed past 8 GB or 90 s; niced; the Mac's load average about 4 to 5 at the start, one other session's jobs beside it):
+
+| Run | Wall | Footprint | Instructions | |
+| --- | --- | --- | --- | --- |
+| `c1_r2` | 14.12 s | 633 MB | 211.6 G | answered (exit 0) |
+| `b1` | 49.30 s | 8.29 GB | 784.7 G | stopped by memcap past 8 GB (exit −15) |
+| `c1` | 49.28 s | 8.36 GB | 792.3 G | stopped, as b1 |
+| `b2` | 48.11 s | 8.30 GB | 777.9 G | stopped |
+| `c2` | 47.78 s | 8.26 GB | 775.2 G | stopped |
+| `b3` | 49.50 s | 8.05 GB | 765.2 G | stopped |
+| `c3` | 53.96 s | 8.04 GB | 762.0 G | stopped |
+| `b4a` | 47.80 s | 8.21 GB | 777.6 G | stopped |
+| `c4a` | 48.16 s | 8.19 GB | 778.4 G | stopped |
+| `b4b` | 47.68 s | 8.08 GB | 780.7 G | stopped |
+| `c4b` | 47.74 s | 8.06 GB | 785.6 G | stopped |
+| `b5` | 50.61 s | 8.46 GB | 830.3 G | stopped |
+| `b6a` | 47.51 s | 8.40 GB | 782.3 G | stopped |
+| `c6a` | 47.55 s | 8.41 GB | 783.1 G | stopped |
+| `b6b` | 47.58 s | 8.11 GB | 781.4 G | stopped |
+| `c6b` | 47.50 s | 8.11 GB | 780.0 G | stopped |
+| `b7` | 38.55 s | 8.50 GB | 590.4 G | stopped |
+| `c7` | 38.50 s | 8.46 GB | 588.1 G | stopped |
+
+(Footprints in GB are `time`'s peak over 1 024³; memcap reads top's MEM, which crosses 8 GB a little earlier.)
+- **Slowest run that answers:** `c1_r2`, 14.12 s, 633 MB. That is under 4 GB and **over 10 s**.
+- **The stages:** each of the 17 was stopped past 8 GB after 38.5 to 54.0 s (the slowest `c3`). The largest peak is `b7`, 8.50 GB, the household as written. None answers.
+
+- **c1_r2 against T's C3 figure (7.39 s, 362 MB on the quick binary):** not reproduced.
+  - This tree's quick binary: 17.87 s, 670 MB, 269.6 G instructions.
+  - Master's engine (fb3d596f, before G1, which is what T's worktree ran): built release by swapping `crates/tally/src` in and back out. 13.57 s, 662 MB, 211.07 G, against this tree's release at 211.56 G.
+  - All three print the same bytes. So **no group of this run regressed it**; T's figure was taken some other way (for T).
+  - P8-L2 does reproduce on this tree: 0.46 s, 61.6 MB, digest `47abb419…`, T's.
+- **P8-14 on the same release binary**, one run on a loaded Mac (load average about 12): 1.55 s, 211 MB, 14.27 G instructions; S measured 761 ms. A reading for the gate's timing run, not a judgement.
+
+- **Size:** 1 file, +35 −7 (`tally-cli/src/lib.rs`).
+- **Exceptions:** +0. **Mutants:** none proved (a counted-build path; no kernel file).
+- **Open STOP-REPORTs:** the one below.
+- **Usage:** about 0.6 % of the week by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (142s)`, exit 0, on this tree but for this entry; `stats_names_no_path` ran in it.
+
+## STOP-REPORT 2026-11-22: P8-L10's stage walks can't meet 10 s and 4 GB by a fix of a few hundred lines
+
+- **Kind:** other (a budget no fix in this group's scope can meet; the brief's step 2, third case)
+- **Where:**
+  - The register's copies: `eval/state.rs:361-423` (`Collected`, `merge`); `walk/state.rs:211`, `:796-823` (`Log.cum`, `Walk::cum`); `walk/reads.rs:442-523` (`read_state`, `chain_register`, `chain_link`).
+  - The plans per cut: `walk/plan.rs:52`, `eval/memo.rs:206`; `book/members.rs:1044-1054` (`fulfils_of`); `walk/move_flows.rs:50`.
+  - The copy per walk: `walk/agenda.rs:187`, `:623`.
+  - The runs: `engine/tests/m4/load/runs.tsv`, rows `P8-L10`.
+- **Rule or gate:** PERFORMANCE §8.3 P8-L10 (≤ 10 s each run, ≤ 4 GB); §3.2 (cut classes, booking cuts), §3.5 (memory per cell); R-130 (fences).
+- **What happens:**
+  - Stage b1 (2026 to 2059) is stopped past 8 GB after 49 s on the release binary, and so is each of the 17 stage runs (the table above).
+  - `c1_r2`, the one run that answers, takes 14.1 s: over 10 s too.
+  - Cut short, b1 costs 2.3, 5.6, 10.0, 16.4, 24.3 s and 0.34, 0.92, 1.56, 2.35, 3.19 GB for horizons of 1 to 5 years.
+  - Carried to 34 years: about 11 minutes and 57 GB on the quick binary.
+- **What I tried:**
+  - Measured (the entry above): counts, a census of the kept structures, profiles at two horizons, and a variant without the projection read.
+  - Found three plain defects, each a copy per day or per walk.
+  - Estimated each fix, and the base left after all three.
+  - Not tried: any fix. The three together are about 2 to 4 k lines, and the base would still miss 10 s by about 2×.
+- **What I ask:** the coordinator takes it to the user. Three ways, with my estimate:
+  - **(a) A performance round before M4's gate**, at xhigh, after a rules step for its fences:
+    - (1) registers shared instead of copied: entries interned once; a register that shares its past (a log's `cum` not one copy per entry, a cell's register sharing its reads'); the union formed where a line prints. About 1 to 2 k lines across the 34 files that name `Collected` (190 mentions, 178 of `.entries`). It changes what the memo stores, not a byte. A fence under R-130 (F2's memo, or a new one), with the plain copy as its twin.
+    - (2) plans and cells by cut class (P §3.2's layer, F2), or narrow reads: `o.fulfils` evaluating the instance it names, `flows` of a move planning only its span. About 0.3 to 1 k lines. A narrow read differs from refcore's bytes only where another instance's stop fails refcore's whole list.
+    - (3) no whole-list copy in a projection's plan pass. About 0.1 k lines, plain; `walk/agenda.rs` is fence F1's module, so `check fences`.
+    - Then about 2× more from the plan pass's constant (above), measured after (1) to (3).
+    - About 2 to 4 k lines in all, and about 5 to 10 % of the week with its reviews (M3's kernel groups at xhigh cost about 1.2 to 1.4 % per 1 000 lines, and a review loop about the same). It is a round of its own, not a group.
+  - **(b) P8-L10 judged at M4 on `c1_r2` alone**, the run PERFORMANCE §8.3's row names (`v5_r2` not rebuilt, P9). The 17 stage runs, which came from M3's pick Q8 and load.tsv L:10, go to a later milestone with this curve and the three causes, as P9's option (c) put it.
+    - Even so, `c1_r2` misses: 14.1 s on the release binary (the table above), against 10 s, with the Mac's load average about 4. The same three causes reach it at one year's horizon (its `spend[d]`, `room[m]` and `fulfils` are the same text).
+  - **(c) (b), with (a)'s item (3) and a narrow `o.fulfils` as plain fixes in a kernel group (G3 is one).** That aims at `c1_r2`'s 10 s without deciding (1).
+    - Unmeasured: whether those two bring 14.1 s under 10 s. (2) is 76 % of the base's time in `v1`; a one-year run's share is smaller, since its plans span one year.
+- **State:** the last commit is this group's (`--stats`), `check commit` green; nothing uncommitted; the temporary census reverted; my scratch is in `tmp/m4/g5/`.
