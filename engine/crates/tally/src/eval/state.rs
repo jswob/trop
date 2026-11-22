@@ -625,9 +625,6 @@ pub struct Engine {
     /// The legs each combination's main walk of a cut refused, where the main walk read an
     /// axis the timeline sets no option of (E §3.3, §4.2 step 5).
     pub(crate) each_refused: BTreeMap<Day, Vec<super::timelines::LegRefusals>>,
-    /// The pass a business-day function runs now over the days its calendar's added windows
-    /// can take (L §4.2, §4.4).
-    pub(super) calendar_pass: Option<super::business::CalendarPass>,
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
@@ -659,12 +656,6 @@ pub struct Engine {
     /// (`UNSET_AXIS`; refcore's guard's `axis`): an `explain` outside its pins fans out over
     /// it (E §10, L §5.5).
     pub(crate) unset_axis: Option<String>,
-    /// The decision's window the last `WINDOW_DAYS` stop met, and what read it, which the
-    /// line reads per day (E §4.1 step 2; `stack.rs`).
-    pub(crate) window_day: Option<super::stack::WindowDay>,
-    /// Where a read meeting a decision dated by a window stands: an ask line's own read
-    /// stops to be read per day, any other gives the window's hole (`stack.rs`).
-    pub(crate) window_reads: super::stack::WindowReads,
     /// The pins the ask's reads took, and those they met under an inner or narrower claim:
     /// an ask's `with` pin is listed where a read takes it (L §8.2 One read set).
     pub(crate) pins_read: PinsRead,
@@ -783,7 +774,6 @@ impl Engine {
             keep_walk_cells: false,
             rereading: false,
             each_refused: BTreeMap::new(),
-            calendar_pass: None,
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),
@@ -794,8 +784,6 @@ impl Engine {
             unpinned: None,
             ask_env: Env::empty(),
             unset_axis: None,
-            window_day: None,
-            window_reads: super::stack::WindowReads::Off,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
             #[cfg(feature = "counters")]
@@ -1013,8 +1001,8 @@ pub(super) fn refuse_load(code: crate::base::Load, message: String) -> Stop {
 /// A value of a type its place doesn't take, at a place whose every run-time value load
 /// types: a test (a bool, a hole, `none`; a window's comparison is a hole), a date
 /// `date_or_window` checked, the number `round` takes, `pos`'s key, a schedule's roll code.
-/// Load refuses it first (`LOAD-UNIT`, L §8.4). A place that `never`, a window or an
-/// interval can reach answers them itself (L §3.1, §4.4), or stops "not implemented".
+/// Load refuses it first (`LOAD-UNIT`, L §8.4). A place that `never` or a window can reach
+/// answers them itself (L §3.1, §4.4), or stops "not implemented".
 pub(super) fn not_typed() -> Stop {
     invariant("a value of a type its place doesn't take: load's types refuse it first (LOAD-UNIT)")
 }

@@ -55,7 +55,7 @@ impl Amount {
             });
         }
         let Value::Number(n) = v else {
-            // an interval among them (L §4.4), whose answer here no section gives
+            // a value that is no number among them, whose answer here no section gives
             return Err(Stop::NotBuilt(
                 "a prorata amount that is no number, met at run",
             ));

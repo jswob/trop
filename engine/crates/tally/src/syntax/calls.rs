@@ -1,4 +1,4 @@
-//! The built-in calls and the reads with clauses: `bal`, `value`, `flows`, `covered`, the aggregates, `calendar`, the day sets and `price`.
+//! The built-in calls and the reads with clauses: `bal`, `value`, `flows`, `covered`, the aggregates, `calendar`, a row's window and `price`.
 //! Spec: L §2.3 (`call`, `agg`, `AGG`, `balx`, `proj`, `valuex`, `flowsx`, `MODE`,
 //! `coveredx`, `calval`, `cday`, `dayset`, `price`), its parse rules 4 and 7, and its Calls
 //! (`min` and `max` with two or more plain arguments; a period word as the period argument of
@@ -13,8 +13,8 @@ use super::lex::{Kind, Read};
 use super::parse::{P, Stop};
 use super::reads::{dist_kind, query_fn};
 use super::tree::{
-    Agg, AggFn, Bal, Calendar, CalendarDay, Call, DaySet, DistFnKind, Expr, Flows, Lit, Price,
-    Proj, Valuation,
+    Agg, AggFn, Bal, Calendar, CalendarDay, Call, DistFnKind, Expr, Flows, Lit, Price, Proj,
+    Valuation,
 };
 use crate::time::Day;
 
@@ -403,7 +403,9 @@ impl P<'_> {
         Ok((month, day))
     }
 
-    /// An added day: a day, a hole, a window or a choice.
+    /// An added day: a day or a hole (L §2.3 `cday`); a window there, or any other word, is
+    /// `LOAD-PARSE`: a day one of a few is a row marked `assumed`, or an axis keys the
+    /// calendar (L §4.2).
     fn calendar_day(&mut self) -> Result<CalendarDay, Stop> {
         match self.peek(0).map(|tok| (&tok.kind, &tok.text)) {
             Some((Kind::Day(day), _)) => {
@@ -417,32 +419,20 @@ impl P<'_> {
                 self.skip(1)?;
                 Ok(CalendarDay::Hole(self.string()?))
             }
-            _ => Ok(CalendarDay::Set(self.day_set()?)),
+            _ => Err(self.err("a day or a hole")),
         }
     }
 
-    /// `window(a, b)` or `one_of([a, …])` (L §4.4).
-    pub(super) fn day_set(&mut self) -> Result<DaySet, Stop> {
-        if self.at("window", 0) && self.at("(", 1) {
-            self.skip(2)?;
-            let a = self.day()?;
-            self.expect(",")?;
-            let b = self.day()?;
-            self.expect(")")?;
-            return Ok(DaySet::Window(a, b));
-        }
-        if self.at("one_of", 0) && self.at("(", 1) {
-            self.skip(2)?;
-            self.expect("[")?;
-            let mut days = vec![self.day()?];
-            while self.accept(",")? {
-                days.push(self.day()?);
-            }
-            self.expect("]")?;
-            self.expect(")")?;
-            return Ok(DaySet::OneOf(days));
-        }
-        Err(self.err("a window or one_of"))
+    /// `window(a, b)` as a row's value (L §2.3 `value`'s `dayset`, §4.4; `syntax/item.rs`): its
+    /// first day and its last, as written. A field's window is an expression's call.
+    pub(super) fn window(&mut self) -> Result<(Day, Day), Stop> {
+        self.expect("window")?;
+        self.expect("(")?;
+        let a = self.day()?;
+        self.expect(",")?;
+        let b = self.day()?;
+        self.expect(")")?;
+        Ok((a, b))
     }
 
     /// `price = ref | "last" "(" ref ")"`.

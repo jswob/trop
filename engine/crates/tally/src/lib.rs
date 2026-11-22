@@ -76,10 +76,10 @@ pub mod syntax {
     pub use parse::Stop;
     pub use tree::{
         AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
-        Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
-        Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs,
-        Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
-        Item, ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Move, MoveLines, MulOp,
+        Call, Certainty, CmpOp, Crps, Def, Diff, Dist, DistFn, DistFnKind, DistKind, Domain, Edge,
+        Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs, Header,
+        HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
+        ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Move, MoveLines, MulOp,
         Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix, Price,
         Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule, RuleValue,
         Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit,
@@ -183,17 +183,16 @@ pub mod eval {
     mod windows;
     mod years;
 
+    pub(crate) use aggregate::Kept;
     pub use aggregate::Member;
-    pub(crate) use aggregate::{Decided, Kept};
     pub use arith::{Op, Test, arith, compare, currency_of, int_of, negate, same_value};
     pub(crate) use bindings::{names_in, order_text, reads_name, reads_var, written_bound};
     pub use context::Layer;
-    pub(crate) use context::{GUARDED, UNSET_AXIS, WINDOW_DAYS, world_named};
+    pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
     pub(crate) use expr::{equal_sides, hole_of};
     pub(crate) use extremes::min_max;
     pub(crate) use keys::{Given, thing_seen, to_key};
-    pub(crate) use memo::LawClass;
     pub use memo::Memo;
     pub(crate) use partial::{lin_balance, lin_fold, lin_negated, lin_times, partial_text};
     pub(crate) use pins::after_on;
@@ -206,7 +205,7 @@ pub mod eval {
     pub(crate) use trace::{
         Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
     };
-    pub(crate) use windows::{End, held_by, one_day, window_days};
+    pub(crate) use windows::{End, held_by, one_day};
     pub(crate) use years::year_form;
 }
 
@@ -243,8 +242,8 @@ pub mod walk {
     pub use fork::Forks;
     pub(crate) use fork::Parked;
     pub use instance::{
-        Amount, Booked, BookedLeg, Bookings, Dated, DayWindow, Depends, End, Exists, Inst, LegVal,
-        Order, Seed, Status, Term,
+        Amount, Booked, BookedLeg, Bookings, Dated, End, Exists, Inst, LegVal, Order, Seed, Status,
+        Term,
     };
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
@@ -258,8 +257,8 @@ pub mod walk {
     pub(crate) use reads::{place_of, state_value};
     pub(crate) use state::GapAt;
     pub use state::{
-        ALL, Change, Checkpoint, Ent, Group, LegOut, Log, Pending, Progress, Projected, SameSides,
-        St, Taken, Today, Walk, WalkObs,
+        ALL, Change, Checkpoint, Ent, Group, Log, Progress, Projected, St, Taken, Today, Walk,
+        WalkObs,
     };
     pub use tuples::Law;
 }
@@ -279,8 +278,8 @@ pub mod book {
     mod same_booking;
     mod settle;
 
+    pub(crate) use adjust::hole_booked_before;
     pub use adjust::{Adjustment, Measured, Settled};
-    pub(crate) use adjust::{hole_booked_before, known_dates};
     pub use ledger::{Fig, Ledger, Line, UnitLedger, fig_text};
     pub use ledger_order::{Group, GroupKey};
     pub(crate) use members::{MvDom, MvMember, inst_ref};
@@ -372,7 +371,7 @@ pub mod load {
     pub(crate) use srows::ask_worlds;
     pub use steps::load;
     pub(crate) use texts::{
-        Bound, bound_post_text, bound_span, bound_text, children as expr_children,
+        Bound, bound_post_text, bound_span, bound_text, children as expr_children, cmp_sign,
         text as expr_text,
     };
     pub use worlds::{Loaded, Split, Worlds, load_run, split_files};

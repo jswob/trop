@@ -27,7 +27,7 @@ use crate::syntax::{Call, Expr, Key, Lit, Postfix, Span, Stop};
 use crate::time::PeriodKind;
 
 /// The date functions whose names no band's call shadows (refcore's `DATE_FNS`).
-const DATE_FNS: [&str; 21] = [
+const DATE_FNS: [&str; 20] = [
     "start_of",
     "end_of",
     "year_of",
@@ -48,7 +48,6 @@ const DATE_FNS: [&str; 21] = [
     "last_business",
     "schedule",
     "window",
-    "one_of",
 ];
 
 /// A call naming no built-in with a typing arm: `LOAD-PARSE … is not called` for a name the
@@ -184,7 +183,6 @@ impl Checker {
             "overlap_days" => self.overlap_days(m, scope, call, depth),
             "pos" => self.pos(m, scope, call, depth),
             "lifespan" => self.lifespan(m, scope, call, depth),
-            "one_of" => self.one_of(m, scope, call, depth),
             "is_business" => self.is_business(m, scope, call, depth),
             "add_business" | "last_business" => self.business(m, scope, call, depth),
             "round" => self.round(m, scope, call, depth),
@@ -458,18 +456,6 @@ impl Checker {
             )));
         }
         Ok(span())
-    }
-
-    /// `one_of(list)` (refcore's `c_one_of`). L §4.2.
-    fn one_of(&mut self, m: &Reality, scope: &Scope, call: &Call, depth: u32) -> Typed {
-        arity(call, 1)?;
-        if let Some(arg) = call.args.first() {
-            let t = self.expr(m, scope, arg, None, depth)?;
-            if !matches!(t, Ty::Dates | Ty::List(_) | Ty::Unseen) {
-                return Err(uerr("one_of takes a list of days".to_owned()));
-            }
-        }
-        Ok(Ty::Date)
     }
 
     /// The calendar argument: a read of a calendar input, at each day asked about

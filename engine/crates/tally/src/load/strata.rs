@@ -850,7 +850,7 @@ fn row_things(m: &Reality, value: &Written, ty: &Ty, out: &mut Vec<String>) {
         | Written::None
         | Written::Str(_)
         | Written::Calendar(_)
-        | Written::Days(_)
+        | Written::Window(..)
         | Written::Expr(_)
         | Written::Dist(_) => {}
     }

@@ -14,7 +14,7 @@
 use super::arith::int_of;
 use super::ranges::value_key;
 use super::state::{Ctx, Engine, Env, Figures, a_day, invariant, num_stop, refuse};
-use super::windows::{imprecise, single};
+use super::windows::{Takes, imprecise, listed, single};
 use crate::base::Run;
 use crate::hole::Hole;
 use crate::load::index_key_of;
@@ -86,7 +86,7 @@ impl Engine {
         for (bind, written) in binds.iter().zip(given) {
             // a window of one day is that day (L §4.4; refcore's `one_day`)
             let written = match written {
-                Given::Value(v @ Value::Window(_)) => Given::Value(single(&v).clone()),
+                Given::Value(v @ Value::Window(_)) => Given::Value(single(&v).into_owned()),
                 other @ (Given::Value(_) | Given::Literal(_)) => other,
             };
             let made = match written {
@@ -94,10 +94,10 @@ impl Engine {
                 // a window where one key is needed is imprecise, the read its hole, but for a
                 // period's key that holds the whole window (L §4.4, §4.6, §8.1; tally 2.1.8
                 // R13; refcore's `to_key`)
-                Given::Value(Value::Window(w)) => match window_key(m, &bind.domain, &w) {
-                    Some(key) => Ok(key),
-                    None => Err(imprecise(m, &w, "a key")?),
-                },
+                Given::Value(Value::Window(w)) => {
+                    listed("a key", Takes::Agreed)?;
+                    window_key(m, &bind.domain, &w).ok_or_else(|| imprecise(&w, "a key"))
+                }
                 at_range if bind.domain == Domain::Range => {
                     self.range_key(m, bind, at_range, (&earlier, ctx))?
                 }
@@ -140,11 +140,8 @@ fn window_key(m: &Reality, domain: &Domain, w: &crate::model::Window) -> Option<
     };
     let ix = m.indexes.get(id)?;
     ix.period?;
-    let (Value::Day(first), Value::Day(last)) = (&w.lo, &w.hi) else {
-        return None;
-    };
-    let key = ix.holding(*first)?;
-    (ix.holding(*last)? == key).then(|| key.clone())
+    let key = ix.holding(w.lo)?;
+    (ix.holding(w.hi)? == key).then(|| key.clone())
 }
 
 /// A key literal at a read's key of `domain`: the key it names; at an index of periods, a

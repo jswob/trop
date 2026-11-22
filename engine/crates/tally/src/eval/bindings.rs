@@ -292,7 +292,7 @@ fn span_start(m: &Reality, v: &Value) -> Result<Result<Day, Hole>, Stop> {
         return Ok(Ok(p.start()));
     }
     if let Value::Window(w) = v {
-        return imprecise(m, w, "a span end").map(Err);
+        return Ok(Err(imprecise(w, "a span end")));
     }
     Err(wrong_type(m, "a span end is", v))
 }
@@ -311,7 +311,7 @@ fn span_end(m: &Reality, v: &Value) -> Result<Result<Day, Hole>, Stop> {
         return Ok(Ok(p.end()));
     }
     if let Value::Window(w) = v {
-        return imprecise(m, w, "a span end").map(Err);
+        return Ok(Err(imprecise(w, "a span end")));
     }
     Err(wrong_type(m, "a span end is", v))
 }

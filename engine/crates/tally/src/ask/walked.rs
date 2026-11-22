@@ -194,7 +194,7 @@ fn modelled_lines(
         let gd = lg
             .day
             .day()
-            .or_else(|| inst.day.as_ref().and_then(Dated::lo))
+            .or_else(|| inst.day.as_ref().and_then(Dated::day))
             .ok_or_else(|| invariant("a modelled leg with no day"))?;
         let side = if sign < 0 { Side::Out } else { Side::In };
         let amount = amount_text(m, lg, side)?;
@@ -479,8 +479,6 @@ fn reset_value(m: &Reality, e: &Ent, unit: &str) -> Result<String, Stop> {
         | Change::Perm(_)
         | Change::Bad(_)
         | Change::PermBad(_)
-        | Change::ImpOn(_)
-        | Change::Unperm(_)
         | Change::Mark => Err(invariant("a reading that is no reset")),
     }
 }
@@ -518,10 +516,6 @@ fn entry_text(
             format!("{head}: {sign}{}", quantity_text(m, f, unit)?)
         }
         Change::Hole(h) | Change::Perm(h) => format!("{head}: hole: {}", h.text()),
-        Change::ImpOn(h) => {
-            let window = e.window.as_ref().map_or("", |(_, w)| w.question.as_str());
-            format!("{head}: its window {window} opens: {}", h.text())
-        }
         Change::Bad(r) | Change::PermBad(r) => format!("{head}: refused: {}", r.text()),
         Change::Reset { .. } => {
             let sid = e
@@ -531,7 +525,7 @@ fn entry_text(
                 .map_or("", String::as_str);
             format!("{} {sid} = {}", reading_word(e), reset_value(m, e, unit)?)
         }
-        Change::Unperm(_) | Change::Mark => return Ok(None),
+        Change::Mark => return Ok(None),
     };
     Ok(Some(text))
 }
@@ -585,8 +579,8 @@ fn uncertain_rows(
     rows: &mut Vec<(Day, String)>,
 ) -> Result<(), Stop> {
     for inst in &walk.uncertain {
-        // its legs are on its day, a window's first
-        let Some(gd) = inst.day.as_ref().and_then(Dated::lo) else {
+        // its legs are on its day
+        let Some(gd) = inst.day.as_ref().and_then(Dated::day) else {
             continue;
         };
         if gd > end || since.is_some_and(|s| At::end(gd) <= s) {

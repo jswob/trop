@@ -37,11 +37,6 @@ mod tests {
         }
     }
 
-    /// `lines` are `expected`, every one, in order.
-    fn all_of(lines: &[String], expected: &[&str]) {
-        assert_eq!(lines, expected, "every line of the run");
-    }
-
     /// B3 (`t8.tally`): `with uncertain partial` over a projection whose balance is a hole: the uncertain repayments stay in its known part.
     #[test]
     fn a_projection_with_uncertain_partial_keeps_the_uncertain_amounts() {
@@ -129,60 +124,6 @@ ask q3: quantile(z[k] for k in [a], lv)
         holds(
             &lines_of("t7.tally", text),
             &["q1: refused: RUN-DOMAIN quantile has no meaning for the level 0"],
-        );
-    }
-
-    /// B5 (`t12.tally`): `flows` over spans after a window-day decision's window has ended: nothing moves there. Its reading stood `after save`, cut in tally 2.2 (S-3): it is stated at the month's end, refcore's lines at spec/2.2 300cda08.
-    #[test]
-    fn flows_after_a_window_days_end_is_decided() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input keep: money PLN
-input d_save: date
-input go: bool
-
-move save: transfers
-  on d_save
-  reads konto
-  when go
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-move mm[m in months]: transfers
-  on end_of(m) - 1 day
-  reads konto
-  leg cash from konto to sav amount max(0 PLN, bal(konto) - keep)
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  keep = 100.00 PLN "s"
-  d_save = window(2026-03-16, 2026-03-25) "s"
-  go = true "s"
-  opening[konto] = 1050.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-version st
-  cite s
-  governs 2026-03..2026-05
-  known 2026-01-02
-  anchor konto
-  stated[konto] = 90.00 PLN at 2026-03-31 end "saldo"
-
-ask b: bal(konto, 2026-03-31), bal(konto, 2026-04-30), flows(konto, 2026-04), flows(konto, 2026-04-01 .. 2026-04-10)
-"#;
-        holds(
-            &lines_of("t12.tally", text),
-            &["b: (90.00 PLN, 90.00 PLN, 0.00 PLN, 0.00 PLN)"],
         );
     }
 
@@ -274,63 +215,6 @@ ask b8: explain bal(k2, 2026-03-31) from 2026-03-05
                 "b3: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02]) + -1 × ?\"how much in Mar\" (hamt[2026-03])",
                 "b6: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02]) + -1 × ?\"how much in Mar\" (hamt[2026-03])",
                 "b7: 9 999.00 PLN + -1 × ?\"how much in Feb\" (hamt[2026-02])",
-            ],
-        );
-    }
-
-    /// N-f (`k9k10.tally`): two decisions' windows ending on one day, `save[k9]` and `save[k10]` of `ks = [k9, k10]`: their ends list k9 first, keys in index order, never as text (E §4.1). Its readings stood `after save[k9]` and `after save[k10]`, cut in tally 2.2 (S-3): the window ends are read through `explain`, refcore's lines at spec/2.2 300cda08.
-    #[test]
-    fn window_ends_at_one_point_apply_in_index_order() {
-        let text = r#"model t
-  tally 2
-  on 2026-06-10
-  start 2026-03-01
-  end 2026-06-30
-
-source s "s"
-unit PLN: currency minor 0.01
-index ks = [k9, k10]
-place konto: accounts PLN lives 2026-01-01..
-place sav: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input d_save: date
-input amt: money PLN
-
-move save[k in ks]: transfers
-  on d_save
-  reads konto
-  leg cash from konto to sav amount min(amt, bal(konto))
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 10.00 PLN "s"
-  d_save = window(2026-03-16, 2026-03-25) "s"
-  opening[konto] = 1000.00 PLN at 2026-03-01 start "s"
-  opening[sav] = 0.00 PLN at 2026-03-01 start "s"
-
-ask b: bal(konto, 2026-03-25), bal(konto, 2026-03-31), bal(sav, 2026-03-31)
-ask e: explain bal(konto, 2026-03-31)
-"#;
-        all_of(
-            &lines_of("k9k10.tally", text),
-            &[
-                "b: (?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]), ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]), ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9]))",
-                "  unknown day: d_save",
-                "  cut 2026-06-10",
-                "e: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10]) ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
-                "  balance of konto (PLN) at the end of 2026-03-31",
-                "  from: opening v:opening[konto] = 1 000.00 PLN, 2026-03-01 start (version v, source s, locator \"s\")",
-                "  2026-03-16:",
-                "    save[k9]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
-                "    save[k10]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10])",
-                "  2026-03-25:",
-                "    save[k9]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k9]\" (save[k9])",
-                "    save[k10]: hole: ?\"date within window(2026-03-16, 2026-03-25) not precise enough for the day of save[k10]\" (save[k10])",
-                "  unknown day: d_save",
-                "  cut 2026-06-10",
-                "warning: WARN-UNREAD place world is read by nothing",
             ],
         );
     }

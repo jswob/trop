@@ -14,7 +14,7 @@
 use std::collections::BTreeSet;
 
 use super::observe::Obs;
-use super::same::{DayCmp, and_list, compare_days, shown, undecided_hole};
+use super::same::{DayCmp, and_list, compare_days, shown};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine, Entry, num_stop};
 use crate::hole::Hole;
@@ -22,8 +22,7 @@ use crate::model::{Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, SameSides, Status, Step,
-    invariant,
+    ALL, Amount, At, Change, Dated, Ends, Ent, Exists, Inst, LegVal, Status, Step, invariant,
 };
 
 /// What one end of a leg books under the `same` lines (refcore's `consol`). L §6.1.
@@ -35,9 +34,9 @@ pub(crate) enum EndBook {
     Skip,
     /// At the point of the decision named, which hasn't run yet.
     Wait(String),
-    /// The group's disagreement there, a hole movement (`HOLE-SAME`), or the hole of days
-    /// left undecided where the amounts agree, with its sides (S1, P43; P45 (c) on #241).
-    Hole(Hole, Option<Box<SameSides>>),
+    /// The group's disagreement there, a hole movement (`HOLE-SAME`), or a side's hole day
+    /// where the amounts agree (S1, P43 on #241).
+    Hole(Hole),
 }
 
 /// A member of a `same` group as the walk meets it (refcore's `movement`, `decs`).
@@ -68,46 +67,17 @@ impl Member {
         }
     }
 
-    /// Its day, a window's first (refcore's `day_lo`). L §4.4.
+    /// Its day. L §6.1.
     fn day(&self) -> Option<Day> {
         match self {
             Member::Obs(o) => Some(o.day),
-            Member::Plan(i) | Member::Decision(i, _) => i.day.as_ref().and_then(Dated::lo),
+            Member::Plan(i) | Member::Decision(i, _) => i.day.as_ref().and_then(Dated::day),
         }
     }
 }
 
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
 pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
-
-/// The sides `touch` of a leg of movements stated `same` at one place, the mover's first, whose
-/// days are undecided and amounts agree: their legs as `<id>.<leg>`, sorted, which each side's
-/// entry names alike, the day each states, and the mover's amount signed as a flow into the
-/// place (side 0 its `from`). L §6.1, §4.4 (S2, P43; P45 (c) on #241).
-///
-/// # Errors
-///
-/// `ENGINE-INVARIANT` for no side; a number error negating the amount.
-fn same_sides(touch: &[(&Member, &LegVal, usize)]) -> Result<SameSides, Stop> {
-    let mut legs: Vec<String> = touch
-        .iter()
-        .map(|(x, g, _)| format!("{}.{}", x.id(), g.name))
-        .collect();
-    legs.sort();
-    let flow = match touch.first() {
-        Some((_, g, 0)) => match &g.amount {
-            Amount::Qty(a) => Amount::Qty(a.checked_neg().map_err(num_stop)?),
-            Amount::Hole(_) | Amount::Refused(_) => g.amount.clone(),
-        },
-        Some((_, g, _)) => g.amount.clone(),
-        None => return Err(invariant("a leg stated same with no side")),
-    };
-    Ok(SameSides {
-        key: legs.join(", "),
-        days: touch.iter().map(|(_, g, _)| g.day.clone()).collect(),
-        flow,
-    })
-}
 
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
 /// L §8.1.
@@ -152,16 +122,7 @@ impl Engine {
             }
             match book {
                 EndBook::Written => continue,
-                EndBook::Skip => {
-                    // a window side another member books ends its window here, booking
-                    // nothing: its day is the other's (refcore's `book_leg`; P45 (b) on #241)
-                    if let (Dated::Window(w), Some(p)) = (&lg.day, end.place()) {
-                        let mut ent = Ent::new(at, Change::Mark);
-                        ent.window = Some((format!("{}.{}", mover.id(), lg.name), w.clone()));
-                        let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
-                        self.walk_mut(id)?.add(m, p, &unit, ent)?;
-                    }
-                }
+                EndBook::Skip => {}
                 EndBook::Wait(decision) => {
                     let waiting = (
                         mover.id().to_owned(),
@@ -176,7 +137,7 @@ impl Engine {
                         .or_insert_with(Vec::new)
                         .push(waiting);
                 }
-                EndBook::Hole(h, same) => {
+                EndBook::Hole(h) => {
                     let Some(p) = end.place() else {
                         continue;
                     };
@@ -185,7 +146,6 @@ impl Engine {
                     ent.leg = Some(lg.name.clone());
                     ent.reg = reg.to_vec();
                     ent.coll = Some(coll.clone());
-                    ent.same = same;
                     let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
                     let walk = self.walk_mut(id)?;
                     walk.worth_add(&unit, None)?;
@@ -305,7 +265,7 @@ impl Engine {
             let Member::Decision(inst, _) = dec else {
                 continue;
             };
-            let Some(dday) = inst.day.as_ref().and_then(Dated::lo) else {
+            let Some(dday) = inst.day.as_ref().and_then(Dated::day) else {
                 return Ok(None);
             };
             if !self.decision_books(m, id, inst, (dday, p))? {
@@ -325,7 +285,7 @@ impl Engine {
                 inst.id
             );
             let figure = format!("{}, {}", mover.id(), inst.id);
-            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure), None)));
+            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure))));
         }
         Ok(None)
     }
@@ -345,7 +305,7 @@ impl Engine {
             .get(&inst.move_id)
             .ok_or_else(|| invariant("a decision of a move load didn't build"))?;
         let cut = self.walk(id)?.cut;
-        let ctx = self.timeline_ctx(inst.law.first(), day.min(cut));
+        let ctx = self.timeline_ctx(inst.law.day(), day.min(cut));
         self.push();
         let read = self.leg_places(m, mv, inst, ctx);
         self.pop_alone();
@@ -405,15 +365,9 @@ impl Engine {
             touch.iter().map(|(x, g, _)| (x.id(), &g.day)).collect();
         sides.sort_by_cached_key(|(x, _)| m.id_order(x));
         let agree = match compare_days(&sides) {
-            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h, None)),
-            DayCmp::Undecided(unknown) if amounts_agree => {
-                return Ok(match undecided_hole(&unknown, "a balance") {
-                    Some(h) => EndBook::Hole(h, Some(Box::new(same_sides(&touch)?))),
-                    None => EndBook::Written,
-                });
-            }
+            DayCmp::Hole(h) if amounts_agree => return Ok(EndBook::Hole(h)),
             DayCmp::Agree => amounts_agree,
-            DayCmp::Differ(_) | DayCmp::Hole(_) | DayCmp::Undecided(_) => false,
+            DayCmp::Differ(_) | DayCmp::Hole(_) => false,
         };
         if agree {
             let mut latest: Option<(Option<At>, &str)> = None;
@@ -453,7 +407,7 @@ impl Engine {
             days.join(", "),
             and_list(&parts)
         );
-        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", ")), None))
+        Ok(EndBook::Hole(Hole::asked(&text, &ids.join(", "))))
     }
 
     /// The legs of member `o` that touch place `p` in unit `unit`, by position, each with
@@ -491,7 +445,7 @@ impl Engine {
     /// plans before decisions, a decision at its point (refcore's `same_book_key`). E §4.2
     /// steps 1–3, L §6.1.
     fn book_key(&self, id: usize, x: &Member, lg: &LegVal) -> Result<Option<At>, Stop> {
-        // a leg is on its member's day, a window's first
+        // a leg is on its member's day
         let Some(day) = x.day() else {
             return Ok(None);
         };

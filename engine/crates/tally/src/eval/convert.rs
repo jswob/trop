@@ -1,7 +1,7 @@
 //! A row's value converted to its target's type: numbers in its unit, money in its currency, keys, days, lists, records and calendars.
 //! Spec: L §3.1 (the types and their values: dates, months, quarters, month-days, `dates`,
 //! `key K`, records, calendars), §3.2 (a number's unit, `%`, a keyed unit's `$v`), §3.3 (a
-//! rate's code words), §2.1, §4.2 (keys as values), §4.4 (a window or a choice of days), §5.7
+//! rate's code words), §2.1, §4.2 (keys as values), §4.4 (a window), §5.7
 //! (an event kind's keys are movements), §5.8 (inputs and their values), §5.19 (a reading's
 //! row), §7.1 (exact numbers), §8.3 (`LOAD-UNIT`), §8.4.
 //! Twin: engine/tools/refcore/loader.py (`convert_value` and its arms, `key_value`).
@@ -18,8 +18,7 @@ use crate::model::{
 };
 use crate::num::Num;
 use crate::syntax::{
-    Calendar as CalendarLit, CalendarDay, DaySet, Expr, Field, FieldValue, Lit, Stop,
-    Value as Written,
+    Calendar as CalendarLit, CalendarDay, Expr, Field, FieldValue, Lit, Stop, Value as Written,
 };
 use crate::time::{Added, Calendar, Day, FirstYear, Period, weekday_number};
 
@@ -151,7 +150,7 @@ pub(crate) fn convert(
         Written::Lit(lit) => convert_lit(m, lit, ty, target, of)?,
         Written::Str(s) if *ty == Ty::Text => Value::Text(s.clone()),
         Written::Str(_) => return Err(wrong_for("text", ty)),
-        Written::Days(days) => return days_value(days, ty, target),
+        Written::Window(a, b) => return window_value((*a, *b), ty, target),
         Written::List(items) => list_value(items, ty, target)?,
         Written::Record(fields) => convert_record(m, fields, ty, target)?,
         Written::Calendar(cal) if *ty == Ty::Calendar => calendar_value(cal)?,
@@ -213,60 +212,29 @@ fn wrong_for(what: &str, ty: &Ty) -> Stop {
     ))
 }
 
-/// A window or a choice of days as a row's value: a date, its window in order (refcore's
-/// `convert_value`, its `window` and `oneof` arms); the read that makes it names its origin.
-/// L §4.4, §8.4.
-fn days_value(days: &DaySet, ty: &Ty, target: &str) -> Result<Converted, Stop> {
+/// `window(a, b)` as a row's value: a date, any day from a to b (refcore's `convert_value`,
+/// its `window` arm); the read that makes it names its origin. L §4.4, §8.4.
+fn window_value((a, b): (Day, Day), ty: &Ty, target: &str) -> Result<Converted, Stop> {
     if *ty != Ty::Date {
         return Err(unit_refusal(format!(
             "a window is a date; {target} is {}",
             ty.show()
         )));
     }
-    let window = match days {
-        DaySet::Window(a, b) => {
-            if a > b {
-                return Err(refuse_load(
-                    Load::Domain,
-                    format!("window({}, {}) with a after b (L §8.4)", a.text(), b.text()),
-                ));
-            }
-            Window {
-                lo: Value::Day(*a),
-                hi: Value::Day(*b),
-                days: None,
-                src: Some(format!("window({}, {})", a.text(), b.text())),
-                figure: None,
-                read: None,
-                carry: Vec::new(),
-                whole: false,
-            }
-        }
-        DaySet::OneOf(written) => one_of(written)?,
-    };
-    Ok(Converted::Value(Value::Window(Box::new(window))))
-}
-
-/// `one_of([…])` of these days: their window, its days sorted and each once (refcore's
-/// `convert_value`, its `oneof` arm, and `c_one_of`). L §4.4.
-pub(super) fn one_of(written: &[Day]) -> Result<Window, Stop> {
-    let mut days = written.to_vec();
-    days.sort();
-    days.dedup();
-    let (Some(lo), Some(hi)) = (days.first().copied(), days.last().copied()) else {
-        return Err(Stop::NotBuilt("one_of of no days, met at run"));
-    };
-    let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
-    Ok(Window {
-        lo: Value::Day(lo),
-        hi: Value::Day(hi),
-        src: Some(format!("one_of([{}])", texts.join(", "))),
-        days: Some(days),
+    if a > b {
+        return Err(refuse_load(
+            Load::Domain,
+            format!("window({}, {}) with a after b (L §8.4)", a.text(), b.text()),
+        ));
+    }
+    Ok(Converted::Value(Value::Window(Box::new(Window {
+        lo: a,
+        hi: b,
+        src: Some(format!("window({}, {})", a.text(), b.text())),
         figure: None,
         read: None,
         carry: Vec::new(),
-        whole: false,
-    })
+    }))))
 }
 
 /// A list of days, the value of `dates` (refcore's `convert_value`, its `list` arm). L §3.1.
@@ -326,11 +294,20 @@ fn convert_record(m: &Reality, fields: &[Field], ty: &Ty, target: &str) -> Resul
     Ok(Value::Record(out))
 }
 
-/// A record field's value as a value of its field's type; a hole or an expression stops "not
-/// built" (refcore's `convert_value` on the field). L §3.1.
+/// A record field's value as a value of its field's type; a call but `window(a, b)` is no value
+/// of a row, `LOAD-UNIT` (refcore's `convert_value`, its last line; L §2.3 `field`: a window is
+/// a field's only call, and `one_of` is no name of the language, §4.4); a window, a hole or
+/// another expression stops "not built" (refcore's `convert_value` on the field). L §3.1.
 fn field_value(m: &Reality, written: &FieldValue, ty: &Ty, target: &str) -> Result<Value, Stop> {
     if let FieldValue::None | FieldValue::Expr(Expr::None) = written {
         return Ok(Value::None);
+    }
+    if let FieldValue::Expr(Expr::Call(call)) = written
+        && call.name != "window"
+    {
+        return Err(unit_refusal(format!(
+            "a value of the wrong type for {target}"
+        )));
     }
     if let FieldValue::Expr(Expr::Str(s)) = written {
         // a text field, as a row's text is (refcore's `convert_value`, its `str` arm)
@@ -707,13 +684,6 @@ fn calendar_value(cal: &CalendarLit) -> Result<Value, Stop> {
         added.push(match day {
             CalendarDay::Day(d) => Added::Day(*d),
             CalendarDay::Hole(q) => Added::Hole(q.clone()),
-            CalendarDay::Set(DaySet::Window(a, b)) => Added::Window(*a, *b),
-            CalendarDay::Set(DaySet::OneOf(days)) => {
-                let mut days = days.clone();
-                days.sort();
-                days.dedup();
-                Added::OneOf(days)
-            }
         });
     }
     let from = match &cal.yearly_from {

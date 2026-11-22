@@ -806,7 +806,7 @@ impl Gathered {
     /// it carried at x from its day, where a leg gives x, a position that moves nothing
     /// (refcore's `note_none`). L §8.2 One read set (tally 2.1.7 R7).
     fn decided(&mut self, inst: &Inst, (place, unit): (&str, &str), places: &[(String, String)]) {
-        let Some(d) = inst.day.as_ref().and_then(Dated::lo) else {
+        let Some(d) = inst.day.as_ref().and_then(Dated::day) else {
             return;
         };
         if places
@@ -885,12 +885,6 @@ impl Gathered {
         }
         let d = match lg.day {
             Dated::Day(d) => d,
-            // a leg dated by a window is imprecise at x until the window's last day (L §4.4):
-            // the sums don't hold that, so every read is the walk's
-            Dated::Window(_) => {
-                self.tree.open = false;
-                return Ok(());
-            }
             // a leg's day is its instance's, and a booked plan's is never a hole: an instance
             // whose day is one has the status `Hole`, which `hole` takes
             Dated::Hole(_) => return Ok(()),

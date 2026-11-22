@@ -182,19 +182,6 @@ impl Span {
         self.always || (self.start.is_none_or(|s| s <= day) && self.end.is_none_or(|e| day < e))
     }
 
-    /// Its first day on or after `day`, none where it has none (L §5.10 Lifespans).
-    #[must_use]
-    pub fn first_from(&self, day: Day) -> Option<Day> {
-        if self.always {
-            return Some(day);
-        }
-        let first = self.start.map_or(day, |s| s.max(day));
-        if self.end.is_some_and(|e| first >= e) {
-            return None;
-        }
-        Some(first)
-    }
-
     /// Whether it shares a day with `other` (refcore's `Span.overlaps`).
     #[must_use]
     pub fn overlaps(&self, other: &Span) -> bool {

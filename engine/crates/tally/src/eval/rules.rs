@@ -30,7 +30,7 @@ use super::convert::{ConvertFor, Converted, convert_read};
 use super::memo::{CellId, CellKey, LawClass, Read, rows_class, rules_class};
 use super::read::{at_keys, pinned_at, row_cell, shown};
 use super::trace::{RuleState, Seen};
-use super::windows::{as_read, held_by, named_window, window_days};
+use super::windows::{Takes, as_read, held_by, listed, named_window, window_days};
 
 impl Engine {
     /// A read of def `def` at keys already made keys (refcore's `read_def`): its law date by
@@ -116,6 +116,11 @@ impl Engine {
             Ok(cell) => cell,
         };
         let value = self.def_cell(m, def, keys, &env, cell)?;
+        // only a window is named by its read: any other value is itself, its cell's names
+        // never built (#244 row 8)
+        if !matches!(value, Value::Window(_)) {
+            return Ok(value);
+        }
         // a window the def computed is this read's value, in the world its cell is computed
         // in; one it passes on keeps the read that made it (L §4.4); one no cell held before,
         // written in its rule, is the unknown day of this cell, which a caller pins (R21)
@@ -174,9 +179,7 @@ impl Engine {
                 if let Value::Hole(_) = law {
                     return Ok(Err(law));
                 }
-                if let Value::Window(w) = &law
-                    && matches!(w.lo, Value::Day(_))
-                {
+                if let Value::Window(w) = &law {
                     // a window `at` reads the def at each law date the window can take
                     // (L §4.3, §5.14 `at e`); the memo shares a class's cells
                     return self.def_window(m, def, (keys, env), ctx, w).map(Err);
@@ -206,6 +209,7 @@ impl Engine {
         ctx: Ctx,
         w: &Window,
     ) -> Result<Value, Stop> {
+        listed("at", Takes::LawDate)?;
         // once per law-date class: a day its class holds gives what it gave (L §4.4's cost)
         let mut vals = Vec::new();
         let mut class: Option<LawClass> = None;
@@ -224,7 +228,7 @@ impl Engine {
         if rest.iter().all(|v| v == first) {
             return Ok(first.clone());
         }
-        let window = w.question_text(m).map_err(num_stop)?;
+        let window = w.question_text();
         let imprecise = Value::Hole(
             Hole::asked(
                 &format!(
@@ -384,11 +388,6 @@ impl Engine {
         self.active.remove(&id);
         if result == Err(Stop::NotBuilt(super::GUARDED)) {
             // a walk's attempt given up: nothing it reached is kept (refcore's journal)
-            return result;
-        }
-        if result == Err(Stop::NotBuilt(super::WINDOW_DAYS)) {
-            // the line is read again per day of a decision's window: a read of this cell
-            // meets the window again (E §4.1 step 2; refcore's `WinDay` keeps no cell)
             return result;
         }
         self.absorb(&met);
