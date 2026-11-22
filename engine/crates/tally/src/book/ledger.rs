@@ -334,10 +334,28 @@ impl Engine {
             .collect())
     }
 
+    /// The last day of the observations as known on the model's `on` date that touch the
+    /// ledger's place and fulfil each instance, in any span: the day of a hole-day instance
+    /// they fulfil, in every ledger (refcore's `ful_last`). E §6.3 Grouping, L §5.19.
+    fn last_fulfilled(&mut self, m: &Reality, of: &Of) -> Result<BTreeMap<String, Day>, Stop> {
+        let mut last: BTreeMap<String, Day> = BTreeMap::new();
+        for o in self.observations(m, m.on)? {
+            if !of.touches(&o.legs) {
+                continue;
+            }
+            if let Some(id) = o.target_id() {
+                let day = last.entry(id).or_insert(o.day);
+                *day = (*day).max(o.day);
+            }
+        }
+        Ok(last)
+    }
+
     /// The model: each plan instance at cut `cut` that touches the place, dated in the span
     /// on a day a statement covers it or fulfilled by an observation there, and each decision
     /// as the main walk at the cut ran it on a covered day, in the movement order; and apart,
-    /// the instances whose day is a hole (refcore's `model`, `undated`). E §6.3, §6.2.
+    /// the instances whose day is a hole, but one an observation dated outside the span
+    /// fulfils (refcore's `model`, `undated`). E §6.3, §6.2.
     fn ledger_model(
         &mut self,
         m: &Reality,
@@ -347,6 +365,7 @@ impl Engine {
         obs: &[Obs],
     ) -> Result<(Vec<Inst>, Vec<Inst>), Stop> {
         let fulfilled: BTreeSet<String> = obs.iter().filter_map(Obs::target_id).collect();
+        let last = self.last_fulfilled(m, of)?;
         let mut model = Vec::new();
         let mut undated = Vec::new();
         // the plan moves the timeline's world holds (L §6.4)
@@ -377,6 +396,11 @@ impl Engine {
                 if !(span.contains(day) && shown) {
                     continue;
                 }
+            }
+            // a hole day an observation fulfils is that observation's, in every ledger: a span
+            // that leaves it out holds no line of it, never one under `?` (E §6.3 Grouping)
+            if fulfilled_day(&inst, &last).is_some_and(|d| !span.contains(d)) {
+                continue;
             }
             if refused {
                 return Err(refusal_of(&inst));
@@ -561,6 +585,16 @@ fn model_day(inst: &Inst) -> Result<Modelled, Stop> {
         None if inst.status == Status::Refused => Ok(Modelled::Undated),
         None => Err(invariant("an instance with no day, not refused")),
     }
+}
+
+/// The day of a hole-day instance that observations fulfil: the last of their days, in
+/// `last` (refcore's `ful_last`); none for a refused instance, which may fall on any day.
+/// E §6.3 Grouping, L §5.19.
+fn fulfilled_day(inst: &Inst, last: &BTreeMap<String, Day>) -> Option<Day> {
+    if inst.status == Status::Refused || !matches!(inst.day, Some(Dated::Hole(_))) {
+        return None;
+    }
+    last.get(&inst.id).copied()
 }
 
 /// The observations that fulfil each instance and each adjustment, in the observations'
@@ -1057,5 +1091,99 @@ pub fn fig_text(m: &Reality, fig: &Fig, unit: &str) -> Result<String, Stop> {
     match fig {
         Fig::Hole(h) => Ok(h.text()),
         Fig::Qty(q) => qty_value(m, q, unit)?.text(m).map_err(num_stop),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// A pay on day `w`, written in for `DAY`, that an observation dated 30 March fulfils
+    /// (T's `t23-g1/ledger-fulfilled`, its twin).
+    const FULFILLED: &str = r#"model fulfilled
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+
+place unexplained: outside lives 1900-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+
+input w: date
+
+input bank: observed
+
+move pw: transfers
+  on w
+  leg cash from world to konto amount amt
+
+version v
+  cite fixture
+  governs always
+  known 2025-12-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "own"
+  amt = 100.00 PLN "its amount"
+  w = DAY "its day"
+
+version st
+  cite fixture
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  pad konto from unexplained
+  stated[konto] = 600.00 PLN at 2026-03-31 end "the statement"
+  bank[r1] = (on: 2026-03-30, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pw) "r1"
+
+ask r_mar: residuals konto 2026-03
+
+ask r_apr: residuals konto 2026-04
+"#;
+
+    /// The lines of ask `ask` over [`FULFILLED`] with its day `day`.
+    fn lines(day: &str, ask: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "fulfilled.tally".to_owned(),
+            bytes: Some(FULFILLED.replace("DAY", day).into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec![ask.to_owned()]));
+        run(Files::new(given), &request)
+            .expect("an answer")
+            .lines()
+            .to_vec()
+    }
+
+    #[test]
+    fn a_hole_day_an_observation_fulfils_stands_on_its_day_in_every_ledger() {
+        // L §5.19, E §6.3: an instance observations fulfil is matched once, on the last of
+        // their days; a ledger whose span leaves that day out holds no line of it, never an
+        // expected-but-missing one under `?` (T's t23-g1/ledger-fulfilled; a window and a `?`)
+        for day in ["window(2026-03-25, 2026-04-05)", "?\"which day?\""] {
+            assert_eq!(
+                lines(day, "r_apr"),
+                ["r_apr: residuals konto 2026-04", "  cut 2026-06-10"],
+                "{day}: April"
+            );
+            assert_eq!(
+                lines(day, "r_mar"),
+                [
+                    "r_mar: residuals konto 2026-03",
+                    "  2026-03 balance: model 600.00 PLN, observed 600.00 PLN, difference 0.00 PLN",
+                    "    balance konto 2026-03-31 end (padded): booked 600.00 PLN, stated 600.00 PLN, gap 0.00 PLN",
+                    "  2026-03 move pw: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN",
+                    "    matched pw on 2026-03-30: model 100.00 PLN, observed 100.00 PLN, difference 0.00 PLN, timing +0 days",
+                    "  cut 2026-06-10",
+                ],
+                "{day}: March"
+            );
+        }
     }
 }
