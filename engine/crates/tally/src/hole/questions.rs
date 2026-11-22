@@ -56,15 +56,15 @@ pub struct Hole {
     carry: BTreeMap<Asked, Vec<Unknown>>,
 }
 
-/// An unknown day a value or a hole carries: its identity (the read that gave it, or a
-/// calendar's entry), the name the register's `unknown day:` line prints and its window's
+/// An unknown day a value or a hole carries: its identity (the read that gave it, or the
+/// window as written), the name the register's `unknown day:` line prints and its window's
 /// own text, which its question names (refcore's `window_id`). L §4.4, §8.2.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unknown {
     /// Its identity.
     pub id: String,
-    /// Its name: the cell a caller pins as its read names it (`wd`, `held_from[b]`),
-    /// `added <entry> of <calendar>`, its movement, or the window's own text (R21 on #241).
+    /// Its name: the cell a caller pins as its read names it (`wd`, `held_from[b]`); where no
+    /// cell does, its movement (`salary[2026-03]`), else the window's own text (R21 on #241).
     pub label: String,
     /// Its window's own text (`window(2026-03-05, 2026-03-07)`).
     pub text: String,

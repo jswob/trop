@@ -625,9 +625,6 @@ pub struct Engine {
     /// The legs each combination's main walk of a cut refused, where the main walk read an
     /// axis the timeline sets no option of (E §3.3, §4.2 step 5).
     pub(crate) each_refused: BTreeMap<Day, Vec<super::timelines::LegRefusals>>,
-    /// The pass a business-day function runs now over the days its calendar's added windows
-    /// can take (L §4.2, §4.4).
-    pub(super) calendar_pass: Option<super::business::CalendarPass>,
     /// The splits `prorata`'s `rest largest` made, once per total, step and weights (L §5.13
     /// Cost).
     pub(super) splits: super::prorata::Splits,
@@ -777,7 +774,6 @@ impl Engine {
             keep_walk_cells: false,
             rereading: false,
             each_refused: BTreeMap::new(),
-            calendar_pass: None,
             splits: super::prorata::Splits::default(),
             layers: Layers::default(),
             timelines: Timelines::default(),

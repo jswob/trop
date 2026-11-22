@@ -556,7 +556,6 @@ mod tests {
         Value::Window(Box::new(Window {
             lo,
             hi,
-            days: None,
             src: Some(format!("window({}, {})", lo.text(), hi.text())),
             figure: Some(name.to_owned()),
             read: None,

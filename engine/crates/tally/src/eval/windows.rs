@@ -5,7 +5,7 @@
 //! print, a `with` pin; every other read is `HOLE-IMPRECISE` naming each unknown day; no number
 //! is a range), §3.1 (a window is a `date`), §8.1 (`HOLE-IMPRECISE`), §8.4.
 //! Twin: engine/tools/refcore/evaluate.py (`iv_compare`, `imprecise`, `lift`, `c_window`,
-//! `c_one_of`, `date_of`); ask.py (`fmt_value` of an `Iv`).
+//! `date_of`); ask.py (`fmt_value` of an `Iv`).
 //! Invariants: a window's first day is never after its last; a listed reader of a ranged date
 //! reads it at its ends only, two evaluations a ranged argument, each argument by its own ends
 //! whatever name it carries; every other read of one is its `HOLE-IMPRECISE`, asked of the row
@@ -156,7 +156,6 @@ pub(super) fn stretch((lo, hi): (Day, Day), from: &Window) -> Value {
     Value::Window(Box::new(Window {
         lo: lo.min(hi),
         hi: hi.max(lo),
-        days: None,
         src: from.src.clone(),
         figure: from.figure.clone(),
         read: None,
@@ -277,7 +276,7 @@ pub(super) fn ranged(v: &Value) -> Option<&Window> {
 
 /// Whether window `w` is of one day. L §4.4 ("A window of one day is that day").
 fn of_one_day(w: &Window) -> bool {
-    w.days.as_ref().is_none_or(|days| days.len() == 1) && w.lo == w.hi
+    w.lo == w.hi
 }
 
 /// `a op b` where a side is a window: `date ± duration`, a day moved by a number or a
@@ -378,14 +377,6 @@ pub(super) fn window_compare(
         CmpOp::Eq | CmpOp::Ne => {
             let apart =
                 order(&ahi, &blo)? == Ordering::Less || order(&bhi, &alo)? == Ordering::Less;
-            let apart = match (a, b) {
-                (Value::Window(x), other) | (other, Value::Window(x))
-                    if !matches!(other, Value::Window(_)) && x.days.is_some() =>
-                {
-                    !one_of_holds(x, other)
-                }
-                _ => apart,
-            };
             if apart {
                 return Ok(Value::Bool(op == CmpOp::Ne));
             }
@@ -456,14 +447,6 @@ fn ends(v: &Value) -> (Value, Value) {
     (v.clone(), v.clone())
 }
 
-/// Whether `one_of` window `w` holds the value `v` among its days. L §4.4.
-fn one_of_holds(w: &Window, v: &Value) -> bool {
-    match (&w.days, v) {
-        (Some(days), Value::Day(d)) => days.contains(d),
-        _ => false,
-    }
-}
-
 /// One day where one is needed, the one reader every such site uses (`what` names the reader
 /// that needs it): a day (the end of time is none), a day period's day; a window, a read off
 /// the list (L §4.4: "Every other read is the hole"), is its `HOLE-IMPRECISE` for `what`;
@@ -499,16 +482,13 @@ pub(crate) fn one_day(m: &Reality, value: &Value, what: &str) -> Result<Result<D
     ))
 }
 
-/// The days window `w` can take, which a def's `at` reads a law-date class at a time: a
-/// `one_of`'s, else every day from its first to its last. L §4.4, §4.3.
+/// The days window `w` can take, which a def's `at` reads a law-date class at a time: every
+/// day from its first to its last. L §4.4, §4.3.
 ///
 /// # Errors
 ///
 /// `RUN-LIMIT` past the calendar's edge.
 pub(crate) fn window_days(w: &Window) -> Result<Vec<Day>, Stop> {
-    if let Some(days) = &w.days {
-        return Ok(days.clone());
-    }
     let mut out = vec![w.lo];
     let mut day = w.lo;
     while day < w.hi {
@@ -544,7 +524,7 @@ pub(super) fn named_window(v: Value, (id, label): (String, &str)) -> Value {
 /// Value `value`, a window no cell holds or copies yet (written in the text, or computed from
 /// windows written there), as the cell `figure` that holds it, its unknown day `id` named by
 /// that cell and its holes asked of it; a window that came from a read, or was computed from
-/// one or from a calendar's entry, keeps the names and the days it carries; any other value is
+/// one, keeps the names and the days it carries; any other value is
 /// itself (refcore's `named`, `pinned_read`, a move's `on`). L §4.4 ("a copy keeps the name",
 /// "a computed value … carries the names it was computed from"), §8.2 `unknown day:` (R21:
 /// "the cell a caller pins, wherever a cell holds or copies the day"; P30, P32, P26).
@@ -566,8 +546,8 @@ fn written_id(text: &str) -> String {
 }
 
 /// Whether the unknown days `carry` holds are only windows written in the text, each named by
-/// its own text, so the value carries no name of its own: no read's, no calendar entry's
-/// (refcore's `Iv.origin is None`). L §4.4.
+/// its own text, so the value carries no name of its own, no read's (refcore's `Iv.origin is
+/// None`). L §4.4.
 pub(super) fn names_only_written(carry: &[Unknown]) -> bool {
     carry.iter().all(|u| u.id.starts_with(&written_id("")))
 }
@@ -603,7 +583,6 @@ impl Engine {
         let window = Value::Window(Box::new(Window {
             lo: first,
             hi: last,
-            days: None,
             src: Some(written.clone()),
             figure: None,
             read: None,
@@ -611,54 +590,11 @@ impl Engine {
         }));
         Ok(named_window(window, (written_id(&written), &written)))
     }
-
-    /// `one_of(ds)`: one of a list's days, not yet known (refcore's `c_one_of`). L §4.4, §8.4.
-    pub(super) fn one_of_call(
-        &mut self,
-        m: &Reality,
-        call: &Call,
-        env: &Env,
-        ctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let arg = call
-            .args
-            .first()
-            .ok_or_else(|| invariant("a built-in called with the wrong number of arguments"))?;
-        let v = self.ev(m, arg, env, ctx)?;
-        if let Value::Hole(_) = v {
-            return Ok(v);
-        }
-        let Value::List(items) = &v else {
-            // load's types refuse it; refcore's run has no twin of this text
-            return Err(Stop::NotBuilt(
-                "one_of of a value that isn't a list, met at run",
-            ));
-        };
-        let mut days = Vec::with_capacity(items.len());
-        for item in items {
-            match one_day(m, item, "one_of")? {
-                Ok(d) => days.push(d),
-                Err(hole) => return Ok(Value::Hole(hole)),
-            }
-        }
-        if days.is_empty() {
-            return Err(refuse(Run::Domain, "one_of of no days".to_owned()));
-        }
-        let window = super::convert::one_of(&days)?;
-        let written = window
-            .src
-            .clone()
-            .ok_or_else(|| invariant("a one_of with no text"))?;
-        Ok(named_window(
-            Value::Window(Box::new(window)),
-            (written_id(&written), &written),
-        ))
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Takes, Value, Window, ends, one_of_holds, takes, unlisted};
+    use super::{Takes, Value, Window, ends, takes, unlisted};
     use crate::time::Day;
 
     fn day(y: u16, m: u8, d: u8) -> Day {
@@ -699,7 +635,6 @@ mod tests {
         let ranged = Value::Window(Box::new(Window {
             lo: day(2026, 6, 1),
             hi: day(2026, 6, 5),
-            days: None,
             src: Some("window(2026-06-01, 2026-06-05)".to_owned()),
             figure: Some("w".to_owned()),
             read: None,
@@ -714,7 +649,6 @@ mod tests {
         let one = Value::Window(Box::new(Window {
             lo: day(2026, 6, 1),
             hi: day(2026, 6, 1),
-            days: None,
             src: None,
             figure: None,
             read: None,
@@ -727,21 +661,7 @@ mod tests {
     }
 
     #[test]
-    fn a_one_of_holds_only_its_days() {
-        let w = Window {
-            lo: day(2026, 6, 1),
-            hi: day(2026, 6, 5),
-            days: Some(vec![day(2026, 6, 1), day(2026, 6, 5)]),
-            src: None,
-            figure: None,
-            read: None,
-            carry: Vec::new(),
-        };
-        assert!(
-            one_of_holds(&w, &Value::Day(day(2026, 6, 5))),
-            "a day of it"
-        );
-        assert!(!one_of_holds(&w, &Value::Day(day(2026, 6, 3))), "between");
+    fn a_plain_value_is_its_own_stretch() {
         let plain = Value::Day(day(2026, 6, 3));
         let (lo, hi) = ends(&plain);
         assert_eq!(

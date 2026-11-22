@@ -76,10 +76,10 @@ pub mod syntax {
     pub use parse::Stop;
     pub use tree::{
         AddOp, Agg, AggFn, Ask, AskBody, Axis, Bal, Band, BandRow, Bind, Calendar, CalendarDay,
-        Call, Certainty, CmpOp, Crps, DaySet, Def, Diff, Dist, DistFn, DistFnKind, DistKind,
-        Domain, Edge, Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs,
-        Header, HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval,
-        Item, ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Move, MoveLines, MulOp,
+        Call, Certainty, CmpOp, Crps, Def, Diff, Dist, DistFn, DistFnKind, DistKind, Domain, Edge,
+        Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs, Header,
+        HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
+        ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Move, MoveLines, MulOp,
         Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix, Price,
         Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule, RuleValue,
         Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit,

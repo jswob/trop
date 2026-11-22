@@ -94,7 +94,7 @@ impl Loader {
             | Value::Str(_)
             | Value::List(_)
             | Value::Calendar(_)
-            | Value::Days(_)
+            | Value::Window(..)
             | Value::Lit(_)
             | Value::Expr(_)
             | Value::Dist(_) => {
@@ -300,18 +300,7 @@ impl Loader {
             // a text attribute, `payee: "BIEDRONKA"` (L §3.1 text)
             FieldValue::Expr(Expr::Str(text)) => Value::Str(text.clone()),
             FieldValue::None | FieldValue::Expr(Expr::None) => Value::None,
-            FieldValue::Expr(
-                Expr::Post(..)
-                | Expr::Sum(..)
-                | Expr::Prod(..)
-                | Expr::Cmp(_)
-                | Expr::And(_)
-                | Expr::Or(_)
-                | Expr::Not(_)
-                | Expr::In(_),
-            ) => {
-                // a read with keys or a field that names no movement, or an operation: no
-                // value of a row (refcore's `convert_value`, its last line)
+            FieldValue::Expr(e) if no_row_value(e) => {
                 return Err(at.refuse(
                     Load::Unit,
                     format!("a value of the wrong type for {}", at.sid),
@@ -669,6 +658,27 @@ fn written_amount(written: &Expr) -> Option<&crate::syntax::Number> {
     number.unit.is_some().then_some(number)
 }
 
+/// Whether an attribute written as expression `e` is no value of a row: a read with keys or a
+/// field that names no movement, an operation, or a call but `window(a, b)` (L §2.3 `field`:
+/// a window is a field's only call; `one_of` is no name of the language) (refcore's
+/// `convert_value`, its last line). L §5.19, §4.4.
+fn no_row_value(e: &Expr) -> bool {
+    if let Expr::Call(call) = e {
+        return call.name != "window";
+    }
+    matches!(
+        e,
+        Expr::Post(..)
+            | Expr::Sum(..)
+            | Expr::Prod(..)
+            | Expr::Cmp(_)
+            | Expr::And(_)
+            | Expr::Or(_)
+            | Expr::Not(_)
+            | Expr::In(_)
+    )
+}
+
 /// A field's day: a written date, never a window. L §5.19.
 fn field_day(value: &FieldValue, at: &At, what: &str) -> Result<Day, Stop> {
     match value {
@@ -686,7 +696,7 @@ fn expr_day(expr: &Expr, at: &At, what: &str) -> Result<Day, Stop> {
         return Ok(*day);
     }
     if let Expr::Call(call) = expr
-        && (call.name == "window" || call.name == "one_of")
+        && call.name == "window"
     {
         return Err(at.refuse(
             Load::Leg,

@@ -55,7 +55,6 @@ impl Engine {
             "weekday" => self.weekday(m, call, env, ctx),
             "dcf" => self.dcf(m, call, env, ctx),
             "window" => self.window_call(m, call, env, ctx),
-            "one_of" => self.one_of_call(m, call, env, ctx),
             "is_business" => self.is_business(m, call, env, ctx),
             "add_business" => self.add_business(m, call, env, ctx),
             "last_business" => self.last_business(m, call, env, ctx),

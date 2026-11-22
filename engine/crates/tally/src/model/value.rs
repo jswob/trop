@@ -124,8 +124,8 @@ pub enum Value {
     /// A movement: a move's instance, an observation, an adjustment, by its stable id; a
     /// movement is a thing of its event kind (L §5.14, §2.5).
     Mv(Box<MvRef>),
-    /// A day not yet known, `window(a, b)` or `one_of([…])`, or the stretch of days a listed
-    /// reader gives of one (L §4.4).
+    /// A day not yet known, `window(a, b)`, or the stretch of days a listed reader gives of one
+    /// (L §4.4).
     Window(Box<Window>),
 }
 
@@ -137,10 +137,8 @@ pub struct Window {
     pub lo: Day,
     /// The last day.
     pub hi: Day,
-    /// A `one_of`'s days, sorted, each once; none for a window of every day between.
-    pub days: Option<Vec<Day>>,
     /// The window as written, which a question names; none for a stretch no one window
-    /// gives (a calendar's added window met by a business-day function).
+    /// gives.
     pub src: Option<String>,
     /// The figure of the row it came from (`bought[l1]`), which its holes are asked of, kept
     /// through the operations on it (L §8.1).
@@ -155,12 +153,10 @@ pub struct Window {
 }
 
 impl PartialEq for Window {
-    /// The same stretch, days, text, figure and read, whatever unknown days it carries
-    /// (L §4.4).
+    /// The same stretch, text, figure and read, whatever unknown days it carries (L §4.4).
     fn eq(&self, other: &Window) -> bool {
         self.lo == other.lo
             && self.hi == other.hi
-            && self.days == other.days
             && self.src == other.src
             && self.figure == other.figure
             && self.read == other.read
@@ -363,13 +359,9 @@ impl Value {
     }
 }
 
-/// A window as it prints: `one_of([a, b])` of its days, else `window(lo, hi)` (refcore's
-/// `fmt` of an `Iv`). L §4.4, §5.18.
+/// A window as it prints: `window(lo, hi)`, its stretch (refcore's `fmt` of an `Iv`).
+/// L §4.4, §5.18.
 fn window_text(w: &Window) -> String {
-    if let Some(days) = &w.days {
-        let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
-        return format!("one_of([{}])", texts.join(", "));
-    }
     format!("window({}, {})", w.lo.text(), w.hi.text())
 }
 
