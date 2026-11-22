@@ -359,9 +359,9 @@ mod tests {
     }
 
     /// The runs store: ids once, groups `changes`, `run`, `operations`, `last`, `fixes`, `b192`,
-    /// `lawdate` and tally 2.2.1's `t221-gd`, `t221-g1`, `t221-rc`, `run` first but for a usage error
-    /// and `reprint` (O §2.2: its inputs are `run`'s, `--pin=bytes` too; G4's review B3, P50),
-    /// every text embedded.
+    /// `lawdate`, tally 2.2.1's `t221-gd`, `t221-g1`, `t221-rc` and 2.3's `t23-g1`, `run` first
+    /// but for a usage error and `reprint` (O §2.2: its inputs are `run`'s, `--pin=bytes` too;
+    /// G4's review B3, P50), every text embedded.
     #[test]
     fn the_runs_store_reads_and_every_text_is_embedded() {
         let vs = check_vectors(RUNS).expect("m3/runs.vectors reads");
@@ -383,7 +383,8 @@ mod tests {
                     "t221-g2",
                     "t221-g3",
                     "t221-g4",
-                    "t221-rc"
+                    "t221-rc",
+                    "t23-g1"
                 ]
                 .contains(&v.group.as_str()),
                 "{}",
