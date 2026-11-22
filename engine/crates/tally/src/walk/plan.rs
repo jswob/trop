@@ -667,6 +667,7 @@ impl Engine {
     ) -> Result<bool, Stop> {
         let law = match self.move_law(m, mv, &inst.env, tctx)? {
             Law::Hole(h) => {
+                inst.law = Law::Hole(h.clone());
                 inst.day = Some(Dated::Hole(h.clone()));
                 inst.exists = Exists::Unknown(h);
                 return Ok(true);
