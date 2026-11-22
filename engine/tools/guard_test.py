@@ -1163,6 +1163,10 @@ def timeline_checks(root, expect, failures):
                call("10:02:00", "m2", "engine/tools/check quick 2>&1 | tail -3"),
                result("10:02:50", "m2", "check quick: green, 11 steps (50s)"),
                {"type": "ai-title", "title": "x"}, call("10:10:00", "m3"),
+               # the entries since tally 2.2.1 (#246), read past like ai-title
+               {"type": "derived-from", "v": 1, "sessions": [{"type": "claude_code_session", "via": "compact"}]},
+               {"type": "data-flow-records", "v": 1, "records": [{"tool_name": "Bash", "tool_use_id": "tum1"}]},
+               {"type": "data-flow-incomplete", "v": 1, "codes": [6]},
                prompt("10:40:00", "# run, G1: the review's fixes (resume, gate 8 after)"), call("10:45:00", "m4")]
     review = [prompt("10:12:00", "# run, review of builder group G1 (fresh session, its own worktree)"), call("10:30:00", "m5")]
     for sid, lines, tail in ((d, builder, '{"type": "assistant", "timest'), (e, review, "")):

@@ -54,13 +54,15 @@ TOOLS = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, TOOLS)
 import usage  # noqa: E402  one set of weights and prices
 
-# The entries the transcripts held through M3 (2026-11-19). The first three are read; the
-# rest carry nothing this tool needs.
+# The entries the transcripts held through tally 2.3 (2026-11-22). The first three are read;
+# the rest carry nothing this tool needs. Since tally 2.2.1 (#246): `derived-from` names the
+# sessions one came from (a resume, a compaction, a launch), `data-flow-records` the tools
+# its calls used, `data-flow-incomplete` a list of codes; none has a time or a prompt.
 READ = ("user", "assistant", "system")
 KNOWN = READ + ("attachment", "api-request-blob", "api-request", "api-request-shape", "last-prompt", "session-owner",
                 "atis-latch", "mode", "permission-mode", "pr-link", "queue-operation", "ai-title", "custom-title",
                 "agent-name", "tools-used", "bridge-session", "cost-state", "file-history-delta",
-                "file-history-snapshot", "summary")
+                "file-history-snapshot", "summary", "derived-from", "data-flow-records", "data-flow-incomplete")
 GAP_MIN = 10
 RED = re.compile(r"^(FAIL \S|check (quick|commit): red\b)", re.M)
 CHECKS = (("quick", re.compile(r"tools/check(\.py)?\s+quick\b")), ("commit", re.compile(r"tools/check(\.py)?\s+commit\b")))
