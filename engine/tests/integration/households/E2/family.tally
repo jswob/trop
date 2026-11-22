@@ -3,7 +3,7 @@ model e2
   on 2026-09-30
   start 2021-01-01
   end 2064-12-31
-  use a = "../A" sha256 "b5cad919db65a0c0fcab40468a6be74471a8b59d26e68653a2c22e43bdd60dd0"
+  use a = "../A" sha256 "9e83e044cd9ed872b116dbfba6bf4f21e417c950b33d85233df6272581928b88"
   use d = "../D" sha256 "2738c6dbbe7039e21e4f92c713f0835a9aa134365f6af9ea2e34caa5b0e47b11"
   note "Household E2 of the hidden case set (tmp/cases-holdout/E2/story.md): Halina's family, households A (Ania and Tomek Lis), B (Piotr Sowa and Ola Wilk), C (Marta and Jan Wrona) and D (Halina Sowa) read together, in tally 2. It is a joint model (L §6.1), as E1 is: households A and D are members, imported closed and unchanged under their prefixes a and d (engine/tests/integration/households/A, D, pinned by the hashes E1 pins them by); this directory holds only the family's own items and asks."
   note "Household C (tmp/cases-holdout/tally-2.0/C/full, written by H1) is no member here. Its canonical pin is 9ecdd4d759ae69964b0cc877ac395880b75b3e20164485f6a1ee0f28c5c996ce (hrun --reprint), and as a member it loads and answers its own cells in 10 s on refcore_fast; but with C a member every cell that reaches D's day walk runs past the 90 s limit (D's payouts alone: 67.7 s on refcore_fast, against 17 s without C; W-E2-4). So what E2 reads of C is asked in a second run, ../cside: C's own files, unchanged, with E2's part e2c added beside them; that part only reads C's items and states rows of its own (ids e2c_…)."

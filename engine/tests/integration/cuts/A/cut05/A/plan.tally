@@ -229,6 +229,7 @@ version walk_start
   plan_until = 2025-12 "MC-A cut-down: the walk stops at 2025-12. GEN-1: the last year whose holidays a row gives (the 2026 row, known 2025-10-16); a 15th or a payday of a later year has a hole for its day, which would make every balance and binding over its kind a hole (G-MP-2, S:306). The scenario forecast assumes the holidays to 2035 and moves it there."
   walk_from = 2026-01-01 assumed "the records end on 2025-12-31 (story); the walk books the model's own movements from the next day" "story 2025-12-31"
   card_lag = 1 assumed "the card payments' days in a month are not known: the month's last day is planned" "story: no card records after 2025-12-31"
+  rule_roll = 0 assumed "where no row of the holiday list governs the month yet (2026's, at a cut before 2025-10-16), whether the 15th is a business day isn't known: the 15th itself is planned, unrolled" "A-HR2, GEN-1"
 
 version laz_rate_2021
   cite a_d31

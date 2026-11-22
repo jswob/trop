@@ -779,6 +779,8 @@ b08_residuals: residuals cis 2025
     matched social_pay[2025-11] on 2025-12-22: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
   2025-12 move vat_pay: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK
     matched vat_pay[2025-11] on 2025-12-29: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK, timing +0 days
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   law date 2025-12-31, cut 2026-01-07
 b08_unmatched (d = 2025-10-15): (2025-10-15, -111.27 DUK)
   assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)

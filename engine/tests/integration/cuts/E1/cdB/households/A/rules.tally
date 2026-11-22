@@ -22,6 +22,8 @@ input hr4_amount: money DUK question "How much goes to Zosia's savings on the 15
 input rule_day_15: int
   note "lifted from an inline figure of tally 1.0.1"
 
+input rule_roll: int question "Where no row of the holiday list governs the month, how many days after the 15th does the rule run?"
+
 input rzk_fee_min: money DUK question "What is Rzeka's least fee on a purchase (A-D12 .1)?"
 
 input rzk_fee_rate: num question "What fee does Rzeka take on the money placed (A-D12 .1)?"
@@ -68,9 +70,10 @@ def rule_amt[m in month]: money DUK at rule_day[m]
   rule v1 v hr1_v1 = hr1_fixed
   rule v2 v hr1_v2 = max(0, jbal_rule[m] - floor_at[m])
 
-def rule_day[m in month]: date
-  note "A-HR2: the 15th, or the next business day when it isn't one; each business-day test reads the holiday list governing the day it tests (L §4.2, D-4), so no law date is needed for it (O:A-5)"
+def rule_day[m in month]: date at start_of(m)
+  note "A-HR2: the 15th, or the next business day when it isn't one; each business-day test reads the holiday list governing the day it tests (L §4.2, D-4), so no law date is needed for it (O:A-5). Where no row of the holiday list governs the month yet (2026's, at a cut before the gazette's row, known 2025-10-16), the 15th itself is planned, unrolled, by an assumed row (rule_roll): missing() reads the list at the month's start, hence the at"
   rule base = if is_business(day_of(m, rule_day_15), holidays) then day_of(m, rule_day_15) else add_business(day_of(m, rule_day_15), 1, holidays)
+  rule no_calendar beats base v walk_start = add_days(day_of(m, rule_day_15), rule_roll) when missing(holidays)
 
 def so_day[o in so, k in month]: date
   note "A-D33: executed on the next business day when the due day isn't one; the holiday list read is the one governing the day tested (L §4.2, D-4)"

@@ -5,7 +5,7 @@ model cmp01
   end 2026-01-31
   note "Composed case: the union of MP-09 (Düsseldorfer Tabelle 2026, Teil C Beispiel), MP-11 restricted to the § 40 Exemple (key ex40 of foyer), and example (27) of MP-15, with the NBP table A rate of 2025-12-31 and the composition's facts."
   note "Items are copied from the three models unchanged, except: MP-11's income is fr_income, since MP-09 also has an income; MP-15's example key is dropped (only (27) is used), and its amounts are money PLN, since the composition reads them as złoty and the pays move money."
-  note "Eleven people are the keys of person. The composition's payments are pays dated January 2026 (an imprecise date): each child's maintenance from U's euro account to the child's, and each debt of (27) from the debtor's złoty account to the creditor's. Their law date is the month's first day, 2026-01-01 (LANGUAGE §4.3), and each counts whole in a flows over January (§4.4)."
+  note "Eleven people are the keys of person. The composition's payments are pays dated by debts_day and maint_day, each assumed 2026-01-31 (LANGUAGE §5.8): each child's maintenance from U's euro account to the child's, and each debt of (27) from the debtor's złoty account to the creditor's. That day is also their law date (LANGUAGE §4.3)."
   note "Known dates follow LANGUAGE §4.5: law from its publication; the examples' facts, the composition's facts and the modeller's assumption are stipulations, known from the model's start, 2026-01-01. So every version the January pays read is known by their date, and none is a correction."
   note "MP-11's defs are evaluated at the start of the income year (at start_of(income_year[f])), so the barème for revenus 2025 applies."
 

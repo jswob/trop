@@ -3,7 +3,7 @@ model family
   on 2026-09-30
   start 2021-01-01
   end 2064-12-31
-  use a = "../A" sha256 "b5cad919db65a0c0fcab40468a6be74471a8b59d26e68653a2c22e43bdd60dd0"
+  use a = "../A" sha256 "9e83e044cd9ed872b116dbfba6bf4f21e417c950b33d85233df6272581928b88"
   use b = "../B" sha256 "edded68b60de477cea5cef2ac4a7ade2ea18007a96c7aa90e9dd8917f577dc26"
   use d = "../D" sha256 "2738c6dbbe7039e21e4f92c713f0835a9aa134365f6af9ea2e34caa5b0e47b11"
   note "Household E1 of the case set (tmp/cases/E1/story.md): Halina's family, households A (Ania and Tomek Lis), B (Piotr Sowa and Ola Wilk) and D (Halina Sowa) read together, in tally 2. It is a joint model (L §6.1): each household is a member, imported closed and unchanged under its prefix, a (households/A), b (households/B) and d (households/D); this directory holds only the family's own items and asks. Amounts are in DUK, the dukat of Lenia, of 100 orts, which the members declare (L §6.1, Currencies); B's florens are B's own."

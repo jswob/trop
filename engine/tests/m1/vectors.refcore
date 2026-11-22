@@ -170068,7 +170068,8 @@ version card_2026
   tally 2
 
 ask a7: overlap_days(d1, d1, w)
-,,1:0,602:a7: refused: RUN-DOMAIN overlap_days is window(2026-03-03, 2026-03-20), not a period
+,,1:0,624:a7: ?"date within window(2026-03-03, 2026-03-20) not precise enough for overlap_days" (w)
+  unknown day: w
   cut 2026-03-01
 base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
