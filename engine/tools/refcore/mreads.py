@@ -646,6 +646,7 @@ def m_movements_of(self, dom, ctx, owner=None):
             out.append(o)
     if 'adjustments' in sub:
         out.extend(self.adjustments(ctx, settled=False))
+        out.extend(self.hole_adjustments(ctx))
     decs = [q for q in sorted(m.moves) if m.moves[q].decision and m.moves[q].kind in sub and
             item_in_world(m.moves[q])]
     if 'pads' in sub or decs:
@@ -707,7 +708,13 @@ def m_hole_day_dec_body(self, mi, i, ctx):
     if getattr(i, '_hd_body', False):
         return
     i._hd_body = True
-    legs = self.refused_places(mi, i.env, i, self.tctx(ctx))
+    # its reads are the member's, as a walked decision's are, not the binding's that met it
+    from .evaluate import Coll
+    self.stack.append(Coll())
+    try:
+        legs = self.refused_places(mi, i.env, i, self.tctx(ctx))
+    finally:
+        self.stack.pop()
     decl = {ln.name: d for ln, d in mi.legs}
     for lg in legs:
         lg.amount = i.day

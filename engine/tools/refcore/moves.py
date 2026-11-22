@@ -1952,6 +1952,35 @@ def m_adjustments(self, ctx, settled=True):
     return out
 
 
+def m_hole_adjustments(self, ctx):
+    """C-4's adjustments (E §5 step 1, "t a hole"): those of every hole-day instance, each existing as its hole,
+    measured only for a read of `adjustments` (a binding over them), never by the walk (moves.hole_day_steps)."""
+    key = ('hadjs', self.wkey(ctx)) + self.upto_tag()
+    out = self.run_cache.get(key)
+    if out is not None:
+        return out
+    if key in self.inst_active:
+        raise refuse('RUN-CYCLE', 'the adjustments read themselves (a measured move reads adjustments)')
+    self.inst_active.add(key)
+    tracing, self.tracing = self.tracing, False
+    try:
+        out = []
+        tctx = self.tctx(ctx)
+        kds = self.known_dates()
+        for mi in self.plan_moves():
+            if self.settlement_move(mi):
+                continue
+            for i in self.plan_list(mi, ctx):
+                if isinstance(i.day, Hole) and self.status(i, ctx) == 'hole':
+                    self.hole_day_steps(mi, i, tctx, kds, ctx.cut, out)
+        out.sort(key=lambda a: a.order)
+    finally:
+        self.inst_active.discard(key)
+        self.tracing = tracing
+    self.run_cache[key] = out
+    return out
+
+
 def m_adjust_all(self, ctx):
     out = []
     for mi in self.plan_moves():
@@ -1999,8 +2028,8 @@ def m_adjust_move_compute(self, mi, ctx):
             if st not in ('past', 'hole', 'none'):
                 continue
             if isinstance(i.day, Hole):
-                if st == 'hole':
-                    self.hole_day_steps(mi, i, tctx, kds, K, out)
+                # C-4's adjustments are measured only where a read of `adjustments` asks (hole_adjustments): the
+                # instance's places are its day's hole already, so the walk needs none of them
                 continue
             if isinstance(i.day, Iv) and isinstance(i.day.lo, datetime.date):
                 # a window: every day of it is paid by a version known after its last day, which makes its

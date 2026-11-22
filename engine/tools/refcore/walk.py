@@ -432,12 +432,6 @@ class Walk:
                 c.merge(lg.cum[j - 1])
             if e.coll is not None:
                 c.merge(e.coll)
-            if e.kind in ('reset', 'init') and e.st.perm:
-                # a movement whose day is a hole still holes the balance after a reading (L §5.19 Holes): its reads
-                # stay in the balance's read set (L §8.2 One read set; tally 2.3)
-                for x in lg.ents[:j]:
-                    if x.kind == 'perm' and x.coll is not None and x.qs & e.st.perm:
-                        c.merge(x.coll)
             for r in e.reg:
                 c.reg.add(r)
             lg.cum.append(c)
@@ -791,9 +785,7 @@ class Walk:
         if isinstance(d, Hole):
             qs = frozenset(d.qs)
             for lg in i.legs:
-                # every question the balance rests on is printed (L §8.1): a hole amount's too (J-A-2)
-                q = qs | frozenset(lg.amount.qs) if isinstance(lg.amount, Hole) else qs
-                self.at(K_before(self.start), 'perm', (i, lg, q))
+                self.at(K_before(self.start), 'perm', (i, lg, qs))
             if not i.legs:
                 self.at(K_before(self.start), 'global_hole', d)
             return

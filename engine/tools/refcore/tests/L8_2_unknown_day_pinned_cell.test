@@ -4,6 +4,8 @@
 # of an input pinned so (qc), whose hole keeps its label (w) as unpinned. qa reads pay_w on w too.
 # tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
 # day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
+# tally 2.3 (the households' speed, #247): re-stored again: a hole-day balance names its day's question and
+# reads, as tally 2.2.1's `?` day did; W1's additions (a hole amount's questions, the reads past a reading) went.
 === m.tally
 model g4_b2
   tally 2
@@ -84,7 +86,6 @@ ask qd: bal(konto, 2026-03-06) with w = window(2026-03-05, 2026-03-07)
 ask qe: w < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
 === expect qa qc qd
 qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_d" (dd) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr)
-  pinned: dd = window(2026-03-05, 2026-03-07)
   unknown day: dd
   unknown day: w
   unknown day: wr
@@ -94,7 +95,6 @@ qc: ?"date within window(2026-03-05, 2026-03-07) not precise enough for last(w, 
   unknown day: w
   cut 2026-01-01
 qd: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr)
-  pinned: w = window(2026-03-05, 2026-03-07)
   unknown day: w
   unknown day: wr
   cut 2026-01-01
