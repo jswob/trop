@@ -1,0 +1,49 @@
+model se_w_eq
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 (#247), the plan's §8.4: book/same_booking.rs same_end, the guard amounts_agree set to false (MUTANTS-SURVIVORS). Two movements stated same, equal amounts: i1's day a window row, a hole day in 2.3, i2's 2026-03-07 inside it. What the place takes from them, before, inside and after the window, plain and pinned at both ends"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place wal: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+input di: date
+input d7: date
+input a: money PLN
+
+move i1: transfers
+  on di
+  leg cash from world to wal amount a
+
+move i2: transfers
+  on d7
+  leg cash from world to wal amount a
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wal] = 0.00 PLN at 2026-01-01 start "s"
+  di = window(2026-03-03, 2026-03-09) "s"
+  d7 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same i1 = i2
+
+ask b_feb: bal(wal, 2026-02-28)
+ask b_in: bal(wal, 2026-03-05)
+ask b_mar: bal(wal, 2026-03-31)
+ask f_mar: flows(wal, 2026-03)
+ask n_mar: count(m in transfers over 2026-03)
+ask b_mar_p03: bal(wal, 2026-03-31) with di = 2026-03-03
+ask b_mar_p09: bal(wal, 2026-03-31) with di = 2026-03-09
+ask b_mar_k: bal(wal, 2026-03-31) as known 2026-04-15
