@@ -24,7 +24,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::agenda::left_out_lines;
-use super::fork::Held;
+use super::fork::{Forks, Held, horizon};
 use super::lows::{Base, Lows};
 use super::plan::invariant;
 use super::point::At;
@@ -360,6 +360,18 @@ impl Engine {
             }
         }
         Ok((self.walk(id)?.cut, id, At::start(t)))
+    }
+
+    /// The day a new projection's walk read through day `through` is planned through: with
+    /// forks on, the fence's month end (`fork.rs`'s `horizon`), so that a projection read day
+    /// by day plans once a month and its walk is continued; the twin plans each read's walk
+    /// through its own day (refcore's `proj_walk` plans through E: spec question Q-3 of #231)
+    /// (P §2.4, §2.5, §3.5; picks P54, P73). E §4.1, §4.3.
+    pub(super) fn planned_through(&self, m: &Reality, through: Day) -> Day {
+        match self.forks {
+            Forks::On => horizon(m, through),
+            Forks::Off => through,
+        }
     }
 
     /// The walk of a projection from day `t` through day `through`, from where
