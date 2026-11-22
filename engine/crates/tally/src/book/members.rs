@@ -91,8 +91,8 @@ impl Moving {
     }
 
     /// Its place among a binding's members: its day, a hole day as the last day there is, so
-    /// after every day, then its movement order, typed (refcore's `(day_lo(x.day) or
-    /// datetime.date.max, order_key(x.order))`; tally 2.1.2). L §5.19 Bindings, §2.5; E §4.1.
+    /// after every day, then its movement order, typed (tally 2.1.2). L §5.19 Bindings, §2.5;
+    /// E §4.1.
     fn sort_key(&self) -> Result<(Day, Term), Stop> {
         let day = match self.day() {
             Some(Dated::Day(d)) => d,
@@ -1348,9 +1348,8 @@ fn hole_day_member(inst: &Inst) -> Option<Moving> {
     }
 }
 
-/// Movements in movement order: by day, then by their typed order, ties as they came (refcore's
-/// stable `sort` by `(day_lo(x.day) or datetime.date.max, order_key(x.order))`). L §5.19
-/// Bindings; E §4.1.
+/// Movements in movement order: by day, a hole day after every day, then by their typed order,
+/// ties as they came (refcore's stable `sort`). L §5.19 Bindings; E §4.1.
 fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     let mut keyed = Vec::with_capacity(movements.len());
     for mv in movements {

@@ -67,7 +67,7 @@ impl Member {
         }
     }
 
-    /// Its day (refcore's `day_lo`). L §6.1.
+    /// Its day. L §6.1.
     fn day(&self) -> Option<Day> {
         match self {
             Member::Obs(o) => Some(o.day),
@@ -305,7 +305,7 @@ impl Engine {
             .get(&inst.move_id)
             .ok_or_else(|| invariant("a decision of a move load didn't build"))?;
         let cut = self.walk(id)?.cut;
-        let ctx = self.timeline_ctx(inst.law.first(), day.min(cut));
+        let ctx = self.timeline_ctx(inst.law.day(), day.min(cut));
         self.push();
         let read = self.leg_places(m, mv, inst, ctx);
         self.pop_alone();

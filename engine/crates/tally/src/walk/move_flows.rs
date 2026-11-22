@@ -477,7 +477,7 @@ impl Engine {
 }
 
 /// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
-/// a period that is a hole (an `at` window across a law change, L §4.3) is that hole in
+/// a period that is a hole is that hole in
 /// `acc`, the instance unfulfilled where it is past (L §8.1, §8.2; P64). L §5.14.3.
 fn for_period_of(i: &Inst, k: &Value, acc: &mut Counted) -> bool {
     let Some(period) = &i.for_period else {

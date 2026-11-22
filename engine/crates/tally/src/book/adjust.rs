@@ -46,7 +46,7 @@ pub struct Adjustment {
     pub move_id: String,
     /// Its day; none where it is a hole.
     pub inst_day: Option<Day>,
-    /// Its day as its question names it: the day, or its hole (refcore's `day_text`; N4).
+    /// Its day as its question names it: the day, or its hole (refcore's `day_text`).
     pub inst_on: String,
     /// The leg, as booked or as the step gives it.
     pub leg: LegVal,

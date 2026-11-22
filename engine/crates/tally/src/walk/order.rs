@@ -252,7 +252,7 @@ impl Engine {
         (day, at): (Day, At),
     ) -> Result<CycleMember, Stop> {
         let cut = self.walk(id)?.cut;
-        let ctx = self.timeline_ctx(inst.law.first(), day.min(cut));
+        let ctx = self.timeline_ctx(inst.law.day(), day.min(cut));
         self.push();
         let read = self.cycle_reads(m, mv, &inst, ctx);
         let running = Ctx {
@@ -516,7 +516,7 @@ impl Engine {
         let cut = self.walk(id)?.cut.min(day);
         let mut scored: Vec<(Vec<Value>, Inst)> = Vec::with_capacity(insts.len());
         for inst in insts {
-            let ctx = self.timeline_ctx(inst.law.first(), cut);
+            let ctx = self.timeline_ctx(inst.law.day(), cut);
             let mut vals = Vec::with_capacity(ties.len());
             for x in ties {
                 let v = self.ev(m, x, &inst.env, ctx)?;
@@ -616,7 +616,13 @@ impl Engine {
             // refused before its point (its key's `where`): nothing of its body is read but its
             // places (tally 2.1.7 R2, #104)
             Some(err) => Err(Stop::Refused(err.clone())),
-            None => self.body_over_law(m, mv, &inst, ctx),
+            None => self.inst_body(
+                m,
+                mv,
+                &inst,
+                ctx.at_law(inst.law.day()),
+                inst.exists.clone(),
+            ),
         };
         let met = self.pop_alone();
         self.walk_mut(id)?.less_obs = prev_less;
@@ -652,7 +658,7 @@ impl Engine {
         // a refused instance's legs' places are still read, at its point, so the refusal
         // reaches the places its legs give (L §8.4; tally 2.1.7 R2, #104)
         if run.inst.err.is_some() && run.inst.legs.is_empty() && !mv.decl.legs.is_empty() {
-            let law = run.inst.law.first();
+            let law = run.inst.law.day();
             self.refused_at_point(m, mv, &mut run.inst, ctx.at_law(law))?;
         }
         self.walk_mut(id)?.group = Some(Group::new());

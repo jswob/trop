@@ -51,25 +51,8 @@ impl Engine {
         if let Law::Hole(h) = &inst.law {
             return Ok(Err(h.clone()));
         }
-        let day = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.first()))?;
+        let day = self.ev(m, &mv.decl.on, &inst.env, tctx.at_law(inst.law.day()))?;
         Ok(Ok(day))
-    }
-
-    /// An instance's body at its law date in context `ctx`, its cut set, from its tuple's
-    /// existence (refcore's `body_over_law`). L §4.3, §5.14 `at e`, E §5 step 1.
-    ///
-    /// # Errors
-    ///
-    /// The refusals of its parts.
-    pub(super) fn body_over_law(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        inst: &Inst,
-        ctx: Ctx,
-    ) -> Result<Body, Stop> {
-        let exists = inst.exists.clone();
-        self.inst_body(m, mv, inst, ctx.at_law(inst.law.first()), exists)
     }
 
     /// An instance's body in context `ctx`, its law date and cut set: its `when`, period,

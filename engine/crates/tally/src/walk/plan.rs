@@ -510,7 +510,7 @@ impl Engine {
             (None, None) => tctx.cut,
         };
         if let Some(legs) =
-            self.refused_places(m, mv, inst, self.timeline_ctx(inst.law.first(), cut))?
+            self.refused_places(m, mv, inst, self.timeline_ctx(inst.law.day(), cut))?
         {
             inst.legs = legs;
         }
@@ -609,7 +609,7 @@ impl Engine {
         let mut ends: Vec<(String, Option<String>)> = Vec::new();
         if inst.legs.is_empty() {
             let day = inst.day.as_ref().and_then(Dated::day);
-            let ctx = self.timeline_ctx(inst.law.first(), day.map_or(cut, |d| d.min(cut)));
+            let ctx = self.timeline_ctx(inst.law.day(), day.map_or(cut, |d| d.min(cut)));
             let Some(places) = self.leg_ends(m, mv, inst, ctx)? else {
                 return Ok(Vec::new());
             };
@@ -734,7 +734,8 @@ impl Engine {
             inst.exists = Exists::No;
             return Ok(true);
         }
-        let body = self.body_over_law(m, mv, inst, self.timeline_ctx(None, cut))?;
+        let ctx = self.timeline_ctx(inst.law.day(), cut);
+        let body = self.inst_body(m, mv, inst, ctx, inst.exists.clone())?;
         inst.exists = body.exists;
         inst.legs = body.legs;
         inst.leg_reads = body.leg_reads;

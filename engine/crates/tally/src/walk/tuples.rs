@@ -120,19 +120,18 @@ impl Engine {
             } else {
                 &bind.node
             };
-            let members =
-                match self.binding_members(m, node, &tuple.env, ctx.at_law(law.first()))? {
-                    Err((h, read)) => {
-                        decided.merge(&read);
-                        out.push(Tuple {
-                            domain_hole: Some(h),
-                            coll: decided,
-                            ..tuple
-                        });
-                        continue;
-                    }
-                    Ok(members) => members,
-                };
+            let members = match self.binding_members(m, node, &tuple.env, ctx.at_law(law.day()))? {
+                Err((h, read)) => {
+                    decided.merge(&read);
+                    out.push(Tuple {
+                        domain_hole: Some(h),
+                        coll: decided,
+                        ..tuple
+                    });
+                    continue;
+                }
+                Ok(members) => members,
+            };
             let mut next = Vec::with_capacity(members.len());
             for (member, read, refused) in members {
                 let mut extended = extend(m, mv, &tuple, &bind.var, &bind.domain, member)?;
@@ -323,7 +322,7 @@ impl Engine {
     ) -> Result<bool, Stop> {
         let law = match self.move_law(m, mv, env, tctx)? {
             Law::Hole(_) => return Ok(true),
-            law @ (Law::Day(_) | Law::None) => law.first(),
+            law @ (Law::Day(_) | Law::None) => law.day(),
         };
         let w = self.ev(m, when, env, tctx.at_law(law))?;
         Ok(w != Value::Bool(false))
@@ -347,7 +346,7 @@ impl Engine {
         let none = std::collections::BTreeSet::new();
         let law = match self.move_law(m, mv, env, tctx) {
             Ok(Law::Hole(_)) => return Ok(none),
-            Ok(law @ (Law::Day(_) | Law::None)) => law.first(),
+            Ok(law @ (Law::Day(_) | Law::None)) => law.day(),
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(none),
             Err(stop) => return Err(stop),
         };
@@ -384,7 +383,7 @@ pub enum Law {
 impl Law {
     /// The law date an instance is read at: the day; none for no law date or a hole. L §4.3.
     #[must_use]
-    pub fn first(&self) -> Option<Day> {
+    pub fn day(&self) -> Option<Day> {
         match self {
             Law::Day(d) => Some(*d),
             Law::None | Law::Hole(_) => None,
