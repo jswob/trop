@@ -1,0 +1,23 @@
+# L §4.2 "A day not yet fixed", §2.3 `cday` (tally 2.3, #247; G3): a day in a calendar's `added` is a day or
+# a hole; a window there is refused at load, `LOAD-PARSE`, with the forms that say it (one day in a row
+# marked `assumed`, or an axis keying the calendar). Before: `window(2026-05-05, 2026-05-06)`.
+=== m.tally
+model addedw
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+input cal: calendar
+input d: date
+input n: int
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], added [window(2026-05-04, 2026-05-06)]) "c"
+  d = 2026-05-01 "c"
+  n = 2 "c"
+ask a: add_business(d, n, cal)
+=== expect
+refused: LOAD-PARSE cannot parse: a window in added; added takes a day or a hole: state one day in a row marked assumed, or key the calendar by an axis (m.tally:14)

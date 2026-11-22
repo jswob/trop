@@ -542,9 +542,7 @@ def hole_day(v, use):
     one day is that day; any other is the hole HOLE-IMPRECISE naming the day, and from there a hole day like any."""
     if not isinstance(v, Iv) or not isinstance(v.lo, datetime.date):
         return v
-    if v.days and len(v.days) == 1:
-        return next(iter(v.days))
-    if not v.days and v.lo == v.hi:
+    if v.lo == v.hi:
         return v.lo
     from .evaluate import imprecise_hole
     return imprecise_hole(v, use)
@@ -949,7 +947,7 @@ def m_eval_inst(self, mi, env, keys, tctx, exists0=True, at_cut=None, upto=None)
             if isinstance(day, Iv) and day.origin is None and day.carry is None and isinstance(day.lo, datetime.date):
                 # a window written in the move's own `on`, which no cell holds: its movement names the unknown day
                 # (L §8.2 `unknown day:`, "where no cell does, its movement"; tally 2.2.1 R21)
-                day = Iv(day.lo, day.hi, day.days, day.src, origin=('move ' + inst.id, inst.id), name=day.name)
+                day = Iv(day.lo, day.hi, day.src, origin=('move ' + inst.id, inst.id), name=day.name)
             # a window that reaches `on` makes the movement a hole day (L §4.4 A movement takes a day; tally 2.3)
             day = hole_day(day, 'the day of %s' % inst.id)
             if day is END:

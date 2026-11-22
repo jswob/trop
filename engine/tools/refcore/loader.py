@@ -1503,7 +1503,7 @@ class Loader:
         if 'kind' not in fields:
             raise LoadError('LOAD-FIELD', 'kind is a field of an observation; %s has none' % o.sid, loc)
         dn = fields.pop('on')
-        if dn.k in ('window', 'oneof') or (dn.k == 'call' and dn.name in ('window', 'one_of')):
+        if dn.k == 'window' or (dn.k == 'call' and dn.name == 'window'):
             # L §5.19: "A window belongs in an attribute ..., never in on, the observation's or a leg's (LOAD-LEG)"
             raise LoadError('LOAD-LEG', 'the on of %s is a window; a window belongs in an attribute' % o.sid, loc)
         if dn.k != 'date':
@@ -3066,19 +3066,16 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
         # an observed row's field is written as a call: a window belongs in an attribute (L §5.19; #221, 221.R2)
         return convert_value(m, Node('window', a=node.args[0].v, b=node.args[1].v, loc=node.loc), ty, loc, factor,
                              target)
-    if k == 'call' and node.name == 'one_of' and len(node.args) == 1 and node.args[0].k == 'list' and \
-            node.args[0].items and all(a.k == 'date' for a in node.args[0].items):
-        return convert_value(m, Node('oneof', days=[a.v for a in node.args[0].items], loc=node.loc), ty, loc, factor,
-                             target)
-    if k in ('window', 'oneof'):
+    if k == 'call' and node.name == 'one_of':
+        # tally 2.3 (L §4.4, G3): one_of is gone
+        raise LoadError('LOAD-PARSE', 'cannot parse: one_of is no form; state the stretch from its first day to its '
+                        'last, window(d1, dn), or one day in a row marked assumed', loc)
+    if k == 'window':
         if tk != 'date':
             raise LoadError('LOAD-UNIT', 'a window is a date; %s is %s' % (target, T.show(ty)), loc)
-        if k == 'window':
-            if node.a > node.b:
-                raise LoadError('LOAD-DOMAIN', 'window(a, b) with a after b (L §8.4)', loc)
-            return Iv(node.a, node.b, None, 'window(%s, %s)' % (node.a, node.b))
-        ds = frozenset(node.days)
-        return Iv(min(ds), max(ds), ds, 'one_of([%s])' % ', '.join(d.isoformat() for d in sorted(ds)))
+        if node.a > node.b:
+            raise LoadError('LOAD-DOMAIN', 'window(a, b) with a after b (L §8.4)', loc)
+        return Iv(node.a, node.b, 'window(%s, %s)' % (node.a, node.b))
     if k == 'list':
         if tk != 'dates':
             raise LoadError('LOAD-UNIT', 'a list is of type dates; %s is %s' % (target, T.show(ty)), loc)
@@ -3119,12 +3116,8 @@ def convert_value(m, node, ty, loc, factor, target, binds=None, pattern=None, al
         for a in node.added:
             if a.k == 'date':
                 added.append(('day', a.v))
-            elif a.k == 'hole':
-                added.append(('hole', a.text))
-            elif a.k == 'window':
-                added.append(('window', a.a, a.b))
             else:
-                added.append(('oneof', frozenset(a.days)))
+                added.append(('hole', a.text))
         return Cal(tuple(node.weekends), tuple(node.yearly), node.yfrom, tuple(added), at=repr(getattr(node, 'loc', None)))
     if tk == 'key' and ty.ix in m.kinds and ty.ix in m.kinds['events'].subtree(m) and k in ('index', 'name'):
         # a key of an event kind is a movement (L §3.1 `key K`, "a thing of kind K"; L §5.7; L §2.3 field: a ref): an

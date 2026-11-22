@@ -196,8 +196,7 @@ NEVER = Special('never')
 
 
 class Iv:
-    """An interval of ordered values from a window (L §4.4).  `days` is the
-    set of a one_of window; `src` names the window for a question; `origin`
+    """An interval of ordered values from a window (L §4.4).  `src` names the window for a question; `origin`
     is the read it came from, which its questions name; `name` is the unknown
     day it is (tally 2.1.7 R3, L §4.4): set by a read (an input's row, a def's
     cell, a calendar's added entry), kept by a copy, None for a computed value,
@@ -205,19 +204,18 @@ class Iv:
     decided).  `carry` is the unknown days it was computed from, in the order the line's reads met them (tally
     2.1.8 R13, L §4.4): None for a read, which carries its own (evaluate.iv_carry).  Its ends are dates: no number
     is a range (tally 2.3)."""
-    __slots__ = ('lo', 'hi', 'days', 'src', 'origin', 'name', 'carry')
+    __slots__ = ('lo', 'hi', 'src', 'origin', 'name', 'carry')
 
-    def __init__(self, lo, hi, days=None, src=None, origin=None, name=None, carry=None):
+    def __init__(self, lo, hi, src=None, origin=None, name=None, carry=None):
         self.lo = lo
         self.hi = hi
-        self.days = days
         self.src = src
         self.origin = origin
         self.name = name
         self.carry = carry
 
     def key(self):
-        return ('iv', vkey(self.lo), vkey(self.hi), tuple(sorted(self.days)) if self.days else None)
+        return ('iv', vkey(self.lo), vkey(self.hi))
 
     def window_text(self):
         if self.src:
@@ -465,8 +463,6 @@ def fmt(v):
     if isinstance(v, Special):
         return v.name
     if isinstance(v, Iv):
-        if v.days is not None:
-            return 'one_of([%s])' % ', '.join(d.isoformat() for d in sorted(v.days))
         return 'window(%s, %s)' % (fmt(v.lo), fmt(v.hi))
     if isinstance(v, Hole):
         return fmt_hole(v)
@@ -489,13 +485,9 @@ def fmt(v):
 
 
 def fmt_added(a):
-    """A calendar's added entry as written (L §2.4): a day, a window, one_of, a hole."""
+    """A calendar's added entry as written (L §2.4): a day or a hole."""
     if a[0] == 'day':
         return fmt(a[1])
-    if a[0] == 'window':
-        return 'window(%s, %s)' % (fmt(a[1]), fmt(a[2]))
-    if a[0] == 'oneof':
-        return 'one_of([%s])' % ', '.join(fmt(d) for d in sorted(a[1]))
     # a hole's question escaped, as every hole prints it (L §2.4; P48, N5)
     return '?"%s"' % a[1].replace('\\', '\\\\').replace('"', '\\"')
 

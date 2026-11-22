@@ -196,8 +196,6 @@ class Engine:
         self.tracing = False
         self.trace_stack = []
         self.trace_cells = {}
-        self.cal_choice = None      # the days chosen for calendars' added windows while a business-day function is
-        self.cal_met = None         # evaluated at each day they can take (over_added); the windows met there
 
     # -- collectors ---------------------------------------------------------
     @property
@@ -1067,7 +1065,7 @@ class Engine:
             return v
         if isinstance(v, Iv):
             # the read names the unknown day (tally 2.1.7 R3, L §4.4): its row and cell
-            v = Iv(v.lo, v.hi, v.days, v.src, origin=(r.sid, org), name=('row', r.sid, org))
+            v = Iv(v.lo, v.hi, v.src, origin=(r.sid, org), name=('row', r.sid, org))
         if isinstance(v, Num) and any(b.startswith('$') for b, e in v.u):
             # a per-unit price num PLN/u takes the key it is read at (L §3.2)
             env = {b.var: key_text(k) for b, k in zip(info.binds, keys)}
@@ -1274,7 +1272,7 @@ class Engine:
         if isinstance(pv, Iv) and pv.origin is None and pv.carry is None and isinstance(pv.lo, datetime.date):
             # a computed window keeps the names it was computed from (L §4.4 l.667; tally 2.2.1, 221.C1)
             org = self.origin(info, keys)
-            return Iv(pv.lo, pv.hi, pv.days, pv.src, origin=('pin %s' % org, org),
+            return Iv(pv.lo, pv.hi, pv.src, origin=('pin %s' % org, org),
                       name=('pin', info.id, tuple(_kv(k) for k in keys)))
         return pv
 
@@ -1505,7 +1503,7 @@ class Engine:
     def def_window(self, info, keys, env, ctx, w):
         """An at that gives a window reads the def once per law-date class the window overlaps
         (L §4.3); every day of the window gives the same values as its classes."""
-        days = sorted(w.days) if w.days else [w.lo + datetime.timedelta(days=i) for i in range((w.hi - w.lo).days + 1)]
+        days = [w.lo + datetime.timedelta(days=i) for i in range((w.hi - w.lo).days + 1)]
 
         def same(a, b):
             if isinstance(a, Hole) or isinstance(b, Hole):
@@ -1663,7 +1661,7 @@ class Engine:
             cell = info.id + ('[%s]' % ', '.join(key_text(k) for k in keys) if keys else '')
             org = ('def ' + cell, cell)
             if v.name is not None:
-                return Iv(v.lo, v.hi, v.days, v.src, origin=org, name=v.name, carry=None)
+                return Iv(v.lo, v.hi, v.src, origin=org, name=v.name, carry=None)
         else:
             org = v.origin
             if v.name is not None:
@@ -1673,7 +1671,7 @@ class Engine:
         nm = ('def', info.id, tuple(_kv(k) for k in keys), ctx.law, ctx.cut, tuple(repr(q.key()) for q in pins),
               ctx.axes, ctx.world, ctx.path)
         # the unknown days it was computed from travel with it (L §4.4 l.668, X2; item 11 of the follow-up)
-        return Iv(v.lo, v.hi, v.days, v.src, origin=org, name=nm, carry=getattr(v, 'carry', None))
+        return Iv(v.lo, v.hi, v.src, origin=org, name=nm, carry=getattr(v, 'carry', None))
 
     def def_cone(self, qid):
         """The ids of the items a def's cone reaches, or None when it reaches movements or balances (whose walk any pin
@@ -2542,10 +2540,6 @@ class Engine:
                 return False
         else:
             disjoint = self.cmp3(ahi, blo, None) < 0 or self.cmp3(bhi, alo, None) < 0
-            if isinstance(a, Iv) and a.days is not None and not isinstance(b, Iv):
-                disjoint = b not in a.days
-            if isinstance(b, Iv) and b.days is not None and not isinstance(a, Iv):
-                disjoint = a not in b.days
             if disjoint:
                 return op == '!='
         w = a if isinstance(a, Iv) else b
@@ -3419,7 +3413,7 @@ class Engine:
                 return lo
             # a computed interval has no name, but its questions name the read it came from (L §8.1; tally 2.1.7
             # R3, T's SR-5): the first window's
-            return Iv(lo, hi, None, first.src, origin=first.origin, carry=carry_union(*ts))
+            return Iv(lo, hi, first.src, origin=first.origin, carry=carry_union(*ts))
         return self.extreme(ts, fn, n)
 
     def extreme(self, ts, fn, n=None):
@@ -3856,7 +3850,7 @@ class Engine:
         """The window a hole made of several ranged arguments names: every unknown day they carry."""
         if len(ivs) == 1:
             return ivs[0]
-        return Iv(ivs[0].lo, ivs[0].hi, ivs[0].days, ivs[0].src, origin=ivs[0].origin, carry=carry_union(*ivs))
+        return Iv(ivs[0].lo, ivs[0].hi, ivs[0].src, origin=ivs[0].origin, carry=carry_union(*ivs))
 
     def off_list(self, what, *vals):
         """A reader off L §4.4's list: a ranged argument makes it the hole naming each unknown day (tally 2.3, S4)."""
@@ -3877,7 +3871,7 @@ class Engine:
                 b = r
         if self.cmp3(a, b, None) == 0:
             return a
-        return Iv(a, b, None, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
+        return Iv(a, b, iv.src, origin=iv.origin, carry=carry if carry is not None else iv_carry(iv))
 
     def period_arg(self, v, what):
         if isinstance(v, Period):
@@ -4061,16 +4055,7 @@ class Engine:
         if a > b:
             # named in L §8.4 What isn't defined is refused
             raise refuse('RUN-DOMAIN', 'window(%s, %s) with a after b' % (a, b))
-        return Iv(a, b, None, 'window(%s, %s)' % (a, b))
-
-    def c_one_of(self, n, env, ctx):
-        v, = self.args(n, env, ctx)
-        if isinstance(v, Hole):
-            return v
-        ds = frozenset(self.date_of(x, 'one_of') for x in v.items)
-        if not ds:
-            raise refuse('RUN-DOMAIN', 'one_of of no days')
-        return Iv(min(ds), max(ds), ds, 'one_of([%s])' % ', '.join(d.isoformat() for d in sorted(ds)))
+        return Iv(a, b, 'window(%s, %s)' % (a, b))
 
     def c_min(self, n, env, ctx):
         snap = self.trace_snap()
@@ -4244,85 +4229,9 @@ class Engine:
                 return False
             if a[0] == 'hole':
                 unknown.append(Hole([(a[1], node._r[2])]))
-            if (a[0] == 'window' and a[1] <= day <= a[2]) or (a[0] == 'oneof' and day in a[1]):
-                # L §4.2: a day in added may be a window, "every day known but one. Such a window is one the line
-                # meets, so a result that depends on its day is HOLE-IMPRECISE"
-                if a[0] == 'window':
-                    wt = 'window(%s, %s)' % (a[1], a[2])
-                    iv = Iv(a[1], a[2], None, wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
-                            name=('added', node._r[2], ai))
-                    days = [a[1] + datetime.timedelta(days=i) for i in range((a[2] - a[1]).days + 1)]
-                else:
-                    wt = 'one_of([%s])' % ', '.join(str(x) for x in sorted(a[1]))
-                    iv = Iv(min(a[1]), max(a[1]), set(a[1]), wt, origin=('calendar %s#%d%s' % (node._r[2], ai, cal_at_text(cal)), 'added %s' % wt),
-                            name=('added', node._r[2], ai))
-                    days = sorted(a[1])
-                if self.cal_choice is not None:
-                    # evaluated at each day the window can take (over_added): this pass's day, or the first while
-                    # the window is newly met (that pass is run again per day)
-                    # each entry of the list is an unknown day of its own (tally 2.1.7 R3, F5)
-                    k = (node._r[2] + cal_at_text(cal), wt, ai)
-                    if k not in self.cal_choice:
-                        self.cal_met.setdefault(k, days)
-                        self.cal_met_days[k] = days
-                    if self.cal_choice.get(k, days[0]) == day:
-                        return False
-                    continue
-                unknown.append(carry_hole(Hole([('date within %s not precise enough for is_business(%s, %s)' % (
-                    wt, day, _ntxt(node)), node._r[2])]), iv))
         if unknown:
             return merge(*unknown)
         return True
-
-    def over_added(self, n, fn):
-        """A business-day function over a calendar whose added list holds a window, evaluated at each day the window
-        can take (L §4.2 "every day known but one"; one pass per day of each window it meets, nested where a pass meets
-        another). One value: that value. Dates that differ: the interval of the days it can take, a window like any
-        other (L §4.4: "Built-ins on a window ... give the interval of their values"; "Only a comparison decides an
-        interval"), so a movement dated by it counts in a span that holds the whole interval (L §4.4, §5.14).
-        is_business that differs: HOLE-IMPRECISE (L §4.2: "a result that depends on its day is HOLE-IMPRECISE";
-        L §8.1)."""
-        outer, outer_met = self.cal_choice, self.cal_met
-        todo = [dict(outer) if outer is not None else {}]
-        out = []
-        first_met = None
-        met_order = []
-        try:
-            while todo:
-                ch = todo.pop(0)
-                self.cal_choice = ch
-                self.cal_met = {}
-                v = fn()
-                new = sorted(k for k in self.cal_met if k not in ch)
-                if new:
-                    k = new[0]
-                    if first_met is None:
-                        first_met = k
-                    for k2 in new:
-                        if k2 not in met_order:
-                            met_order.append(k2)
-                    for d in self.cal_met[k]:
-                        c2 = dict(ch)
-                        c2[k] = d
-                        todo.append(c2)
-                    continue
-                out.append(v)
-        finally:
-            self.cal_choice, self.cal_met = outer, outer_met
-        holes = [v for v in out if isinstance(v, Hole)]
-        if holes:
-            return merge(*holes)
-        v0 = out[0]
-        if all(vkey(v) == vkey(v0) for v in out[1:]):
-            return v0
-        # the entries met, in the order the passes met them: the unknown days the result carries (tally 2.1.8 R13)
-        carry = tuple(added_carry(k, self.cal_met_days.get(k, ())) for k in met_order)
-        if isinstance(v0, bool):
-            cal_id, wt = first_met[0].split(' @')[0], first_met[1]
-            return carry_hole(Hole([('date within %s not precise enough for %s' % (wt, _ntxt(n)), cal_id)]),
-                              ids=carry)
-        return Iv(min(out), max(out), None, None, origin=(first_met[0].split(' @')[0], first_met[0].split(' @')[0]) if first_met else None,
-                  carry=carry)
 
     def c_is_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
@@ -4331,7 +4240,7 @@ class Engine:
         d = one_day(d)
         d = self.off_list('is_business', d)
         d = self.date_of(d, 'is_business')
-        return self.over_added(n, lambda: self.business(n.args[1], env, ctx, d))
+        return self.business(n.args[1], env, ctx, d)
 
     def c_add_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
@@ -4369,7 +4278,7 @@ class Engine:
                 if b:
                     left -= 1
             return cur
-        return self.over_added(n, count)
+        return count()
 
     def edge_first(self, n, d, step, env, ctx, edge):
         """add_business whose count passes the day range: the count can't end before the edge, so the outcome is the
@@ -4388,7 +4297,7 @@ class Engine:
         for x in days:
             b = self.business(n.args[2], env, ctx, x, seek=True)
             cal = self.cal_at(n.args[2], env, ctx, x)
-            if isinstance(b, Hole) or any(a[0] in ('window', 'oneof', 'hole') for a in getattr(cal, 'added', ())):
+            if isinstance(b, Hole) or any(a[0] == 'hole' for a in getattr(cal, 'added', ())):
                 raise edge
         raise edge
 
@@ -4419,7 +4328,7 @@ class Engine:
                 cur = cur + datetime.timedelta(days=step)
             # an argument outside the domain its row states (L §8.4 What isn't defined is refused)
             raise refuse('RUN-DOMAIN', '%s(%s, %d): the period has fewer business days' % (n.name, fmt(p), k))
-        return self.over_added(n, count)
+        return count()
 
     def c_schedule(self, n, env, ctx):
         p = self.ev(n.args[0], env, ctx)
@@ -4442,7 +4351,7 @@ class Engine:
             return day
         if w not in ('following', 'preceding', 'modified_following'):
             raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % w)
-        return self.over_added(n, lambda: self.rolled(n, env, ctx, day, w))
+        return self.rolled(n, env, ctx, day, w)
 
     def rolled(self, n, env, ctx, day, w):
         """schedule's day moved by its roll (L §4.2, ISDA 2006 section 4.12)."""
@@ -4625,10 +4534,7 @@ def window_id(v):
     register line prints, L §8.2 `unknown day:`)."""
     if not isinstance(v.lo, datetime.date):
         return None
-    if v.days:
-        days = sorted(v.days)
-    else:
-        days = [v.lo + datetime.timedelta(days=i) for i in range((v.hi - v.lo).days + 1)]
+    days = [v.lo + datetime.timedelta(days=i) for i in range((v.hi - v.lo).days + 1)]
     if v.origin:
         return ('row',) + tuple(str(x) for x in v.origin), str(v.origin[1]), days, v.window_text()
     return ('src', v.src), str(v.src), days, v.window_text()
@@ -4817,7 +4723,7 @@ def band_x(x, m=None):
 
 def one_day(v):
     """A window of one day is that day (tally 2.1.7 R3, L §4.4; F3)."""
-    if isinstance(v, Iv) and (v.days is None or len(v.days) == 1) and not order_lt(v.lo, v.hi) and \
+    if isinstance(v, Iv) and not order_lt(v.lo, v.hi) and \
             not order_lt(v.hi, v.lo):
         return v.lo
     return v
