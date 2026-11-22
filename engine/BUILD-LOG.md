@@ -6450,3 +6450,18 @@ T's pin oracle found a field read of a hole-day instance that prints the latest 
 - **Checks at 4ac2c3b4's tree:**
   - `check quick: green, 11 steps (78s)`.
   - `check commit: red at tests, stopped after 10 of 24 steps (72s)`: the 176 ids. `doc` green alone.
+
+## 2026-11-22 tally 2.3 G2, the review's notes N1 to N3 (issue #247)
+
+G2's review (`tmp/spec-2.3/inputs/review-g2.md`): approve, blocking 0. The STOP-REPORT on `covered` is ruled (pick P7, `inputs/rulings.md` item 12): `false` stays, by L §8.1. Not pushed.
+
+**a88dac4a, every site of a listed reader asks the list:**
+- **N1, the way taken:** each site asks the table. `windows.rs` `listed(reader, how)` is `ENGINE-INVARIANT` where the table doesn't name the reader so; it is asked by `min_max` (`min`, `max` by `End::word`), `window_compare` (the six comparisons by `load::cmp_sign`), `arg_extreme` (`argmin`, `argmax`, where a term is a window), `keys.rs` (a key) and `def_window` (`at`). Why: a row removed or changed then stops the site it governs, so the list is stated once and stays true, at one line a site. The record, two rows no stop can ask: a print (`model/value.rs`, which returns no `Stop`) and `with` (a pin replaces the cell before a reader meets it); the table's doc names the three ways a row is read, and `a_print_and_a_pin_are_the_lists_record` holds each to its site. `read_dates`: a date built-in the table names as a class no date reader has is now `ENGINE-INVARIANT`, not the hole (no such name).
+- **N2:** `ask/check.rs` `side_text`'s doc; `eval/ranges.rs` `nth_day`'s arm and doc for a step of durations (dead: the step is its hole first); 2.2.1's line numbers in `imprecise_all`; the interval words in `eval/arith.rs`, `eval/prorata.rs`, `eval/state.rs`; `read_dates`' arms one call each (`at_ends`, `at_corners`, R-126). `engine/ARCHITECTURE.md` l.219–222 is the closing's (not a builder's file).
+- **N3:** `stretch` of a reversed pair is `ENGINE-INVARIANT` (no listed date-to-date reader falls as its day rises, L §4.4); its callers `by_ends` and `min_max` pass it on.
+- **Tests:** `windows.rs` `a_print_and_a_pin_are_the_lists_record`, `a_site_asks_the_list_and_a_reversed_stretch_is_broken`.
+- **Size** (`split.py` over the diff): library −58/+122 (code −43/+70, comments −15/+48, blanks +4); unit tests −1/+101.
+- **No answer moves:** `check commit`'s red ids (`tmp/spec-2.3/g2/red-3.txt`, by G3's `red.py`) are G3's 176 (`tmp/spec-2.3/g3/red-ids.txt`), the same set.
+- **Exceptions:** +0.
+- **Usage:** about 1.02 % of the week before this entry (this turn about 0.08 %).
+- **Checks at a88dac4a's tree:** `check quick: green, 11 steps (82s)`; `check commit: red at tests, stopped after 10 of 24 steps (77s)`: the 176 ids, 41 of 1 145 tests.
