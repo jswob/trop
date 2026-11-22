@@ -116,6 +116,11 @@ impl Engine {
             Ok(cell) => cell,
         };
         let value = self.def_cell(m, def, keys, &env, cell)?;
+        // only a window is named by its read: any other value is itself, its cell's names
+        // never built (#244 row 8)
+        if !matches!(value, Value::Window(_)) {
+            return Ok(value);
+        }
         // a window the def computed is this read's value, in the world its cell is computed
         // in; one it passes on keeps the read that made it (L §4.4); one no cell held before,
         // written in its rule, is the unknown day of this cell, which a caller pins (R21)
