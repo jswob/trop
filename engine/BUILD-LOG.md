@@ -6484,3 +6484,60 @@ The review is `tmp/spec-2.3/inputs/review-g3.md` (blocking 1), its probes `input
 - **Checks at a1a83b1c's tree:**
   - `check quick: green, 11 steps (79s)`.
   - `check commit: red at tests, stopped after 10 of 24 steps (73s)`: the 176 ids above. `doc` (5s) green alone.
+
+## 2026-11-22 tally 2.3 G1, a fulfilled hole day in every ledger (issue #247)
+
+T's vectors found a defect of the cut. When observations fulfil an instance whose day is a hole, and the ledger's span leaves out their days, the engine printed an expected-but-missing line under `?`; refcore printed no line. The texts are T's `m3/fixes/t23/ledger/l1_fulfilled` and `l4_span`: `pw` is `on w`, `w` is a window across March's end, and an observation dated 2026-03-30 fulfils it. Branch `build/2.3` after the lead's merge 2b0484ea. Not pushed.
+
+**4d4f3d0e:**
+- **The cause** (`book/ledger.rs` `ledger_model`): a hole-day instance was matched only through `undated_line`, which reads the observations dated in the ledger's span. With none in the span, it fell to the `?` group, whatever the other spans held.
+- **The rule** (E §6.3 Grouping, L §5.19; refcore's `ful_last`): such an instance stands on the last day of the observations that fulfil it. They are read as known on `on`, touching the place, in any span. `last_fulfilled` gathers those days and `fulfilled_day` reads one. A ledger whose span leaves that day out holds no line of the instance. One whose span holds it matches the instance there, as before.
+- **A `?` day and a window alike:** the rule reads `Dated::Hole`, the form both take. A refused instance keeps its refused day, and still refuses every ledger it may touch.
+- **Unit test** `a_hole_day_an_observation_fulfils_stands_on_its_day_in_every_ledger`, `l1_fulfilled`'s twin with `w` a window, then a `?`. Seen red first: April printed `?: model 100.00 PLN, observed 0.00 PLN, difference -100.00 PLN`. March's matched lines stand.
+
+**The sweep** (`g1fix/sweep-pin.sh`, `cmp2.py`; the reference is the pinned refcore, `engine/tools/refcore_fast` at the second pin). It covers both reviews' probes, mine, and copies of T's four ledger and two `same` texts (`g1fix/t23/`). The engine before (2b0484ea's tree) and after are both dev builds.
+- 130 texts, 2 656 asks. **3 asks moved**, each from refcore's lines being different to being the same:
+  - `l1_fulfilled` `r_apr`;
+  - `l4_span` `r_apr`;
+  - `l4_span` `r_late`, which now keeps only May's balance group.
+- No other ask moved. Asks that differ from the pinned refcore: 150 → 147.
+- T's six texts now differ from refcore only on two lines the lead already ruled:
+  - `pinned: w = …`, in `l1_fulfilled`'s `r_p05` and `r_p25` and `l4_span`'s `r_p05`. The engine is right; the fix doesn't change these lines.
+  - `unfulfilled: i2`, in `se_w_eq`'s `b_mar` and `f_mar`. This is #245's known difference.
+
+**T's runner and gating** (`check group dev-gating`, once; red, 186 s): 84 red ids (`g1fix/red-ids-ledger.txt`). They are the lead's 82 (`lead-red-now.txt` less the two ledger ids) and **the two ledger ids again**.
+- `t23-g1/ledger-fulfilled` and `t23-g1/ledger-span` now fail only on their pinned asks' `pinned: w = 2026-04-05` line (line 26 and line 20). Before, their first differing line was the `?` group.
+- Their stored lines are refcore's, without `pinned:`. They turn green when T's vectors or refcore print it, never through the engine.
+- None of the 82 is gone, and none is new.
+- `runner` is red on T's unit test `m3::tests::the_runs_store_reads_and_every_text_is_embedded` (`tests/runner/src/m3.rs:372`). It names `t23-g1/ledger-fulfilled`, since the group `t23-g1` isn't in the test's list of groups. It was red on 2b0484ea's tree before the fix.
+
+- **Size** (`git diff --shortstat 2b0484ea..4d4f3d0e -- engine/crates`): 1 file, +129/−1. The unit test and its text are about 95 of the lines.
+- **Exceptions:** +0.
+- **Open STOP-REPORTs:** the one below. `check quick` is red at ast-grep-scan on T's file, so the turn can't end without it.
+- **Usage:** about 1.98 % of the week by `engine/tools/usage` before this entry (1.82 % at the turn's start), against about 0.3 %.
+- **Checks at 4d4f3d0e's tree:**
+  - `check quick: red at ast-grep-scan, stopped after 9 of 11 steps (21s)`, on T's file only (below). The 8 steps before it are green.
+  - `check step test-dev: red, 1 of 1 steps failed (115s)`, on T's runner test above only. The new unit test is green; it was red at the first run.
+  - `check group dev-gating: red, 2 of 3 steps failed (186s)`: the 84 ids above.
+
+## STOP-REPORT 2026-11-22: check quick is red at ast-grep-scan on T's m3_oracle.rs
+
+- **Kind:** a test seems wrong (T's runner code trips a rule's error, and a runner test misses a group)
+- **Where:**
+  - `engine/tests/runner/milestone/m3_oracle.rs`, lines 382, 393, 415, 418, 423, 432, 439, 443 and 449: nine `saturating_add` calls. This is T's pin oracle, merged in 2b0484ea.
+  - `engine/tests/runner/src/m3.rs:372`, the test `the_runs_store_reads_and_every_text_is_embedded`.
+- **Rule or gate:**
+  - R-23 (`no-wrapping-arith`, error) and R-82 (`check quick` green).
+  - The lead's brief names only `check commit`'s `exceptions` step on this file, for two report-only lines. In `quick`, `exceptions` is green, and the next red step is `ast-grep-scan`, which the lead's brief doesn't name.
+- **What happens:**
+  - `engine/tools/check quick` → `check quick: red at ast-grep-scan, stopped after 9 of 11 steps (21s); not run: tests milestone-report`, exit 1.
+  - The first error is `error[no-wrapping-arith]: R-23: no silent wrapping or clamping; use checked_* and refuse` at `tests/runner/milestone/m3_oracle.rs:382:62`, `i.saturating_add(1)`. All nine errors are in that file.
+  - Run alone, the tests step (`check step test-dev`) is red only on `tally-runner m3::tests::the_runs_store_reads_and_every_text_is_embedded`, which panics naming `t23-g1/ledger-fulfilled`. The group `t23-g1` isn't in the test's list.
+  - Both were red on 2b0484ea's tree, before this turn's edit.
+- **What I tried:** nothing on T's files; the guard and rule 1 forbid it.
+  - I ran the steps after `ast-grep-scan` alone, so this turn's code is checked: the tests step through `check step test-dev`, and the lints through `check quick`'s first 8 steps, all green.
+  - I added no lock entry and no `ast-grep-ignore`.
+- **What I ask:**
+  - T: in `m3_oracle.rs`, `checked_add` with a refusal, or a counter that needs none, in place of the nine `saturating_add` calls; and `t23-g1` added to the runner test's list of groups.
+  - The lead: whether `t23-g1/ledger-fulfilled` and `t23-g1/ledger-span` are to hold the engine's `pinned:` line (the lead's ruling) in their stored lines. Until then they stay red on it alone.
+- **State:** the last green-by-my-steps commit is 4d4f3d0e (the fix), and this entry's commit follows it. Nothing is uncommitted but `tmp/`. Not pushed.
