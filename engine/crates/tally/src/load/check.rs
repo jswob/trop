@@ -24,8 +24,8 @@ use super::srows::{BaseWorld, SrowAt, ask_worlds, top_scenario};
 use super::types::{is_date, key_value_kind, lit_rule, refused, uerr};
 use crate::base::{Code, Load, Place as At, Reach, Refusal};
 use crate::model::{
-    BandInfo, BindInfo, Domain, Graph, KeyVal, Mark, NameKind, Node, NodeKind, Reality, Rel, Shift,
-    Target, Ty,
+    BandInfo, BindInfo, Domain, Graph, IndexForm, KeyVal, Mark, NameKind, Node, NodeKind, Reality,
+    Rel, Shift, Target, Ty,
 };
 use crate::num::Num;
 use crate::syntax::{
@@ -1187,10 +1187,13 @@ impl Checker {
             AskBody::Check(left, right) => {
                 let compared = self.cmp_sides(m, scope, left, CmpOp::Eq, right, 0);
                 let sides = compared.map_err(|stop| scope.place(stop))?;
-                // two keys of one index differ by an int (L §4.2); a kind's or an axis's don't
+                // two keys of one ordered index differ by an int (L §4.2); a kind's, an axis's
+                // or an open index's don't (L §5.6: no key arithmetic over an open index)
                 if let (Ty::Key(index), Ty::Key(other)) = &sides
                     && index == other
-                    && m.indexes.get(index).is_some()
+                    && m.indexes
+                        .get(index)
+                        .is_some_and(|ix| ix.form != IndexForm::Open)
                 {
                     self.keyed_checks.insert(ask.id.clone());
                 }

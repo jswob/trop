@@ -21,7 +21,7 @@ use super::types::{
     period_kind, uerr, unit_of,
 };
 use crate::base::{Code, Load, Refusal};
-use crate::model::{KindSpec, NameKind, Node, NodeKind, Reality, Rel, Shown, Ty};
+use crate::model::{KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Shown, Ty};
 use crate::syntax::{Bind, Domain as Written, Expr, Lit, Stop};
 use crate::time::PeriodKind;
 
@@ -491,6 +491,13 @@ impl Checker {
         t: &Ty,
         what: &str,
     ) -> Result<(), Stop> {
+        let not_a_year = matches!(target, Ty::Date)
+            || matches!(target, Ty::Period(word) if *word != PeriodWord::Year);
+        if matches!(t, Ty::Year4) && not_a_year {
+            // a four-digit figure is a year where a period is expected, so never a date, a
+            // month, a quarter or a day (L §2.1; refcore's `assign`, its date and period arms)
+            return Err(uerr(format!("{what} is year4, not {}", target.show())));
+        }
         if matches!(t, Ty::Unseen | Ty::None | Ty::Hole | Ty::Year4) || matches!(target, Ty::Unseen)
         {
             return Ok(());

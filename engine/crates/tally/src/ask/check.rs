@@ -184,12 +184,17 @@ fn side(read: Result<Value, Stop>) -> Result<Item, Stop> {
 }
 
 /// `, difference e − f` where e − f is defined, of two numbers or two money values; nothing
-/// for two dates, texts or codes; `, difference refused: …` where the subtraction is refused
-/// (refcore's `_check`). Two keys differ only where load typed both sides as keys of one
-/// index (`keyed_checks`): the int of positions, or of periods for a period index (L §4.2
-/// "Differences"); a period typed as no key prints none, as on refcore. L §5.18, §3.2.
+/// for two dates, texts or codes, or where a side is `none`; `, difference refused: …` where
+/// the subtraction is refused (refcore's `_check`). Two keys differ only where load typed both
+/// sides as keys of one ordered index (`keyed_checks`): the int of positions, of the integers
+/// for an integer index, or of the periods for a period index (L §4.2 "Differences"); a period
+/// typed as no key prints none, as on refcore. L §5.18, §3.2, §3.1.
 fn difference(m: &Reality, (a, b): (&Value, &Value), ask: &str) -> Result<String, Stop> {
     let numbers = |v: &Value| matches!(v, Value::Number(_) | Value::Money(_));
+    if *a == Value::None || *b == Value::None {
+        // `none` in arithmetic is `RUN-NONE`: e − f isn't defined (L §3.1)
+        return Ok(String::new());
+    }
     if !(numbers(a) && numbers(b) || m.keyed_checks.contains(ask)) {
         // dates, periods load typed as no key, things, texts, codes: no difference
         return Ok(String::new());
