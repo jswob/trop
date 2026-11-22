@@ -23,7 +23,9 @@ after the gate session tags it.
 never fails (`milestone-report`, a line such as `S: 3/7 green`). `check quick` leaves the
 gating targets out, and the fences' suites the marker's `quick_leaves_out` lists, which
 `check commit` runs (R-82, 2026-11-16); both name the targets from cargo metadata
-(default_tests), never by `--tests`. A runner test target with
+(default_tests), never by `--tests`. `check quick` takes one named test of a gating target
+the marker's `quick_takes` lists, by a nextest filter, once the target exists (R-82,
+2026-11-22: the pin oracle's fixed tenth, `m3_oracle_tenth`). A runner test target with
 `test = false` whose name starts with no milestone fails: it would run nowhere.
 
 A mutation run (R-84, R-88; the user, 2026-11-06) selects the same targets but those the
@@ -60,11 +62,14 @@ def marker():
             data = tomllib.load(f)
     except (OSError, tomllib.TOMLDecodeError) as e:
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
-    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()) and
-    # `quick_leaves_out` is `check`'s (quick_leaves_out()), so this reader doesn't ask for them
-    if sorted(set(data) - {"fence_catchers", "quick_leaves_out"}) != ["gating", "milestones", "mutants_leave_out"]:
+    # `fence_catchers` is `mutants-local --fences`'s alone (fence_catchers()), and
+    # `quick_leaves_out` and `quick_takes` are `check`'s (quick_leaves_out(), quick_takes()),
+    # so this reader doesn't ask for them
+    if sorted(set(data) - {"fence_catchers", "quick_leaves_out", "quick_takes"}) != ["gating", "milestones",
+                                                                                   "mutants_leave_out"]:
         raise MilestoneError("tools/milestones.toml holds exactly `milestones`, `gating` and `mutants_leave_out`, "
-                             "`mutants-local --fences`'s `fence_catchers` and `check`'s `quick_leaves_out`")
+                             "`mutants-local --fences`'s `fence_catchers` and `check`'s `quick_leaves_out` and "
+                             "`quick_takes`")
     milestones, gating, leave_out = data["milestones"], data["gating"], data["mutants_leave_out"]
     if not isinstance(leave_out, list) or not all(isinstance(t, str) for t in leave_out):
         raise MilestoneError("tools/milestones.toml: mutants_leave_out is a list of test target names")
@@ -131,6 +136,47 @@ def quick_leaves_out():
             raise MilestoneError(f"tools/milestones.toml: quick_leaves_out names {c['package']}'s {c['test']} twice")
         out.append((c["package"], c["test"]))
     return out
+
+
+def quick_takes(env):
+    """The gating targets' tests `check quick` runs too (R-82, 2026-11-22; tally 2.3's pick P12
+    on #247): each a (target, test) the marker's `quick_takes` lists, `check commit` running the
+    whole target as before. An entry's target must start with a gating milestone's name; it is
+    taken once cargo metadata shows the runner holds it, and until then it is inert (T writes the
+    target on its own branch). Checked; [] when the marker has none."""
+    try:
+        with open(MARKER, "rb") as f:
+            listed = tomllib.load(f).get("quick_takes", [])
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
+    if not isinstance(listed, list):
+        raise MilestoneError("tools/milestones.toml: quick_takes is a list of { target, test } tables")
+    ms, gating, _ = marker()
+    gated_prefixes = {m.casefold() for m in gating}
+    out = []
+    for c in listed:
+        ok = isinstance(c, dict) and sorted(c) == ["target", "test"] and all(isinstance(v, str) for v in c.values())
+        if not ok or not all(re.fullmatch(r"[A-Za-z0-9_]+", v) for v in c.values()):
+            raise MilestoneError(f"tools/milestones.toml: each quick_takes entry is {{ target, test }}, not {c!r}")
+        if c["target"].split("_", 1)[0].casefold() not in gated_prefixes or "_" not in c["target"]:
+            raise MilestoneError(f"tools/milestones.toml: quick_takes names {c['target']}, which is no gating "
+                                 "milestone's target (<milestone>_…)")
+        if (c["target"], c["test"]) in out:
+            raise MilestoneError(f"tools/milestones.toml: quick_takes names {c['target']}'s {c['test']} twice")
+        out.append((c["target"], c["test"]))
+    if not out:
+        return []
+    _, by_milestone = targets(env, ms)
+    present = {t for m in gating for t in by_milestone[m]}
+    return [(t, test) for t, test in out if t in present]
+
+
+def quick_takes_filter(taken):
+    """nextest's filterset for `check quick`'s run: every test of every other target, and of
+    each taken target only its named test (its last path segment)."""
+    binaries = [f"binary_id({RUNNER}::{t})" for t, _ in taken]
+    each = [f"(binary_id({RUNNER}::{t}) and test(/(^|::){test}$/))" for t, test in taken]
+    return " or ".join([f"not ({' or '.join(binaries)})", *each])
 
 
 # a default target's cargo argument, by its kind (a lib by `--lib`, the rest by name)

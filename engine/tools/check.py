@@ -5,7 +5,8 @@
                                 check-frozen, check-rules, headers, trace, the ast-grep scan, then
                                 every test of the workspace that runs by default but the fences'
                                 suites (the marker's `quick_leaves_out`) in the `quick` profile
-                                (`tests`), and the next milestone's report
+                                (`tests`), with the gating tests the marker's `quick_takes`
+                                names, and the next milestone's report
     engine/tools/check commit   before a group's last commit: quick with the counter in full, its
                                 `tests` adding the fences' suites and every gating milestone's
                                 targets (T's vectors), and build, doc, doctest, gungraun-build,
@@ -423,14 +424,22 @@ def memo_used():
 def local_tests(mode, env):
     """(argv, what it runs) of a local mode's test run (R-82, R-77; 2026-11-16): `quick`, every
     workspace target that runs by default but the fences' suites (the marker's
-    `quick_leaves_out`); `commit`, those suites too and every gating milestone's targets;
+    `quick_leaves_out`), with each test the marker's `quick_takes` names of a gating target
+    (by a nextest filter, once the target exists); `commit`, those suites too and every gating
+    milestone's targets, whole;
     `fences`, the suites alone. A MilestoneError when the marker or the targets can't be read."""
     leave_out = milestones.quick_leaves_out()
     suites = [f"--test={t}" for _, t in leave_out]
     if mode == "fences":
         return [*QUICK_TESTS, *suites], "the fences' suites"
     if mode == "quick":
-        return [*QUICK_TESTS, *milestones.default_tests(env, leave_out)], "the workspace's but the fences' suites"
+        argv = [*QUICK_TESTS, *milestones.default_tests(env, leave_out)]
+        taken = milestones.quick_takes(env)
+        if not taken:
+            return argv, "the workspace's but the fences' suites"
+        names = sorted({t for t, _ in taken})
+        which = f"the workspace's but the fences' suites, and {', '.join(test for _, test in taken)}"
+        return [*argv, *(f"--test={t}" for t in names), "-E", milestones.quick_takes_filter(taken)], which
     gates, names = milestones.gating_targets(env)
     which = f"the workspace's and the gating {', '.join(gates)}'s" if gates else "the workspace's"
     return [*QUICK_TESTS, *milestones.default_tests(env, []), *(f"--test={t}" for t in names)], which
