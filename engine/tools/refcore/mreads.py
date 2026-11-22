@@ -95,6 +95,10 @@ def m_mv_record(self, v, ctx):
         src = self.mv_by_id(v.id, ctx)
         if src is None:
             return None
+    if isinstance(src, Inst) and src.decision and not getattr(src, 'ran', False) and isinstance(src.day, Hole):
+        # a decision whose day is a hole never runs: never waited for, its fields read where the plan has them,
+        # else its hole (hole_day_dec_body; E §4.2 step 3; tally 2.3, the lead's P10, H1)
+        return src
     if isinstance(src, Inst) and src.decision and not getattr(src, 'ran', False):
         w = ctx.walk if ctx.walk is not None else None
         run = None
@@ -109,6 +113,24 @@ def m_mv_record(self, v, ctx):
             return src
         return run
     return src
+
+
+def m_hole_day_changed(self, src, name, rec, ctx):
+    """A leg of a hole-day instance read as a field: where a later version changes it (C-4's measure: an adjustment
+    of that leg among moves.hole_adjustments), the field it changes is the instance's day's hole, its amount, or its
+    places where it moves them; a field no later version changes stays a value (E §5 step 1; tally 2.3, the lead's
+    P12, N1). Read while those adjustments are measured (a move that reads the field), the field is the booking's."""
+    if ('hadjs', self.wkey(ctx)) + self.upto_tag() in self.inst_active:
+        return rec
+    amt = ends = False
+    for a in self.hole_inst_adjustments(src, ctx):
+        if a.leg.name == name:
+            amt = amt or isinstance(a.delta, Hole) or a.delta.q != 0
+            ends = ends or getattr(a, 'moved', False)
+    if not (amt or ends):
+        return rec
+    h = src.day
+    return Rec([(k, h if (k == 'amount' and amt) or (k in ('from', 'to') and ends) else v) for k, v in rec.fields])
 
 
 def m_mv_by_id(self, mid, ctx):
@@ -385,6 +407,8 @@ def m_mv_field(self, n, env, ctx):
                 if err is not None:
                     raise err
                 rec = lg.rec()
+                if isinstance(src, Inst) and isinstance(src.day, Hole):
+                    rec = self.hole_day_changed(src, name, rec, ctx)
                 if sh is not None and (sh[0] is not None or sh[1] is not None):
                     rec = Rec([(k, (sh[0] if k == 'amount' and sh[0] is not None else
                                     sh[1] if k == 'day' and sh[1] is not None else v)) for k, v in rec.fields])
