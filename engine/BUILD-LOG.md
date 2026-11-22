@@ -6599,3 +6599,29 @@ None writes no window, no `one_of` and no reader off the list.
 - **Checks at dd753cd3's tree:**
   - `check quick: green, 11 steps (96s)`.
   - `check group dev-gating: red, 1 of 3 steps failed (242s)`: the 61 ids above.
+
+## 2026-11-22 tally 2.3, the survivors of run 45009132619 listed (R-87, issue #247)
+
+The round's one whole mutation run (on 0dc2bbe9, `next`) left 28 survivors unlisted. I listed them in `engine/MUTANTS-SURVIVORS.md` from the run's shards, with T's sort (`tmp/spec-2.3/inputs/t-survivors.md`) as a help, reading the code of each. No code changed.
+- **Rows removed, 2:**
+  - `book/members.rs` `Engine::instance_by_id` `replace match guard running with true`: no run produced it, since the guard is now `running && unread_hole(…)`.
+  - `walk/readings.rs` `Walk::refuse_leg` `→ Ok(())`: caught now.
+- **Rows added, 28:**
+  - **1 equivalent:** `walk/plan.rs` `Engine::hole_day_legs` `replace == with !=`. It only changes the member leg's unit, and no reader reads it: `unread_field` reads a leg through `same_leg_record`, which takes its places only.
+  - **27 missed** (each key had one missed mutant in the run). 17 have T's vector, written after the run: 5 proved caught, 12 counted by M4's run. 10 have none.
+- **Where I differ from T's sort** (both of T's equivalents I list missed, each with the text that tells it apart):
+  - **`measure_hole_day` `<` → `<=`:** under a hole `at`, `law_hole_adjustments` makes an adjustment at every step that touches what the move names. So a version known on the model's start day makes one under the mutant. The text is `surv-law-hole` with such a version: `adj` is 0 in the code, the hole under the mutant.
+  - **`hole_day_member`'s guard → true:** a decision's planned instance takes its tuple's existence, so a key whose `where` fails gives an `Exists::No` instance with a hole day. The mutant makes it a member with its hole.
+  - **`measure_move`'s 391:50 `&&` and its guard → true,** where T found no text: a hole-`at` instance whose key `where` fails stays in the plan list as `Status::None`. `law_hole_adjustments` reads no existence, so the mutant gives it adjustments.
+- **Not corners but missing tests for a wrong result** (now covered by T's vectors, not yet proved):
+  - `zero_leg` → true: a balance that must be the hole prints a number.
+  - `zero_leg` → false: a 0 leg makes a balance the hole.
+  - `unread_hole` → None: every field of a hole-day decision, P10's H1, untested by a stored vector at the run.
+- **`mutants-survivors` on the shards:**
+  - `mutants-survivors: score 89.9% = caught 2458 / (caught 2458 + missed 434 + timed out 1 - equivalent 160); unviable 598, not counted`
+  - `mutants-survivors: the score 89.9% is under DONE gate 8's 90 %`
+
+  The score is the only complaint. The floor is 87.0 % (playbook D13), and M4's run removes the rows caught by then.
+- **Exceptions:** +0. **STOP-REPORTs:** none.
+- **Usage:** about 2.57 % of the week before this entry (2.42 % at the turn's start).
+- **Checks:** `check commit: green, 24 steps (134s)`, exit 0, on this tree but for this line.
