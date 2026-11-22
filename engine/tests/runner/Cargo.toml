@@ -239,3 +239,17 @@ test = false
 name = "m3_oracle"
 path = "milestone/m3_oracle.rs"
 test = false
+
+# M4: BUILD-ORDER § M4's 77 checks, refcore's whole output for each (m4/vectors.refcore;
+# MILESTONE-M4.md row 1), one test per builder group; `test = false` until M4 gates.
+[[test]]
+name = "m4_checks"
+path = "milestone/m4_checks.rs"
+test = false
+
+# M4: the corners of M4's constructs, invented texts in m4/constructs/ (m4/vectors.refcore;
+# MILESTONE-M4.md row 2), one test per construct; `test = false` until M4 gates.
+[[test]]
+name = "m4_constructs"
+path = "milestone/m4_constructs.rs"
+test = false

@@ -30,6 +30,8 @@
 //! - [`m3`]: milestone M3's `check` vectors (`m3/check.vectors`, issue #226), predicted from
 //!   refcore's `run` until refcore's `check` confirms them, and its `run` vectors (the seven
 //!   changes, the run function: `m3/runs.vectors`), with [`m3_texts`], their texts;
+//! - [`m4`]: milestone M4's vectors, refcore's whole output for each (`m4/vectors.refcore`,
+//!   issue #252);
 //! - [`engine`]: a run on the engine, in process;
 //! - [`held`]: the gating vectors T holds "for #n" (`held.tsv`), which the targets leave out.
 //!
@@ -40,7 +42,8 @@
 //! `milestone/m1_goldens.rs`, `milestone/m1_codes.rs`, `milestone/m1_carried.rs` and
 //! `milestone/m1_fixes.rs` and `milestone/m1_properties.rs` for M1, `milestone/m2_checks.rs`
 //! for M2, `milestone/m3_check.rs`, `milestone/m3_changes.rs`, `milestone/m3_run.rs` and
-//! `milestone/m3_fixes.rs` for M3),
+//! `milestone/m3_fixes.rs` for M3, `milestone/m4_checks.rs` and `milestone/m4_constructs.rs`
+//! for M4),
 //! with `test = false`:
 //! red until their milestone is built. The marker `engine/tools/milestones.toml` gates a
 //! milestone's targets once it is tagged, and `check` reports the next milestone's, never
@@ -66,4 +69,5 @@ pub mod m1;
 pub mod m2;
 pub mod m3;
 pub mod m3_texts;
+pub mod m4;
 pub mod output;
