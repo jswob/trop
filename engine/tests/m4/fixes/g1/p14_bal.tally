@@ -1,0 +1,30 @@
+model p14
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+place a1: accounts PLN lives 2026-01-01..
+place a2: accounts PLN lives 2026-01-01..
+index ks = [k1, k2]
+index dd = day 2026-03-01..2026-03-02
+
+input b[k in ks]: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def one[k in ks, d in dd]: money PLN = dbl[k] as if {b[k] = bal(a1, d)}
+
+ask q_one: one[k, d] for k in ks, d in dd
+ask q_two: sum((dbl[k] as if {b[k] = bal(x, d)}) for d in dd, x in accounts on d) for k in ks
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b = 10 PLN "s"
+  opening[a1] = 100 PLN at 2026-01-01 start "s"
+  opening[a2] = 200 PLN at 2026-01-01 start "s"

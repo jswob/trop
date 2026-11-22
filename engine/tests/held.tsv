@@ -13,3 +13,26 @@ items/none/q_round	m4_items	#245	M4 (#252), #245 (pick P3): round of a none read
 items/age/a_last	m4_items	#250	M4 (#252), #250's "The engine alone": age_months(9999-12-01, 9999-12-27); refcore refuses RUN-LIMIT (add_months passes 9999-12-31), L §4.2 gives 0 ("the largest n with add_months(b, n) <= d"), the engine prints none today; refcore's bytes stay stored, the spec's answer (0) filled from the engine's run after the builder's G4
 items/g5/q_dot	m4_items	#238	M4 (#252), #238's gate review 5: a member's hole question holding `·`, run through its joint model; both interpreters print `.` for it (refcore and api.rs's joint_lines replace every U+00B7), where the text prints a question as written (L §8.1, §2.4); the builder's G4 fixes the engine, refcore at the round; refcore's bytes stay stored, the spec's answer filled from the engine's run after G4
 items/g5/q_explain	m4_items	#238	M4 (#252), #238's gate review 5: the member's source and locator holding `·` in its explain lines; as items/g5/q_dot
+fixes/g1/a11_refhole/q_disc	m4_fixes	#255	M4 G1's review B2: accrue under discount with a hole rate; refcore (and the engine) give the hole where L §8 refuses (refusals outrank holes); refcore's bytes stay stored; the spec's answer is spec/g1/a11_refhole/q_disc (m4/spec.tsv, from a twin); refcore at the round
+fixes/g1/a11_refhole/q_month	m4_fixes	#255	M4 G1's review B2: accrue of a monthly rate to a hole day; the hole where L §8 refuses; spec/g1/a11_refhole/q_month
+fixes/g1/a11_refhole/q_monthp	m4_fixes	#255	M4 G1's review B2: accrue of a hole principal at a monthly rate; the hole where L §8 refuses; spec/g1/a11_refhole/q_monthp
+fixes/g1/a11_refhole/q_round	m4_fixes	#255	M4 G1's review B2: round of a hole by a step of 0; the hole where L §8 refuses; spec/g1/a11_refhole/q_round
+fixes/g1/a12_nonehole/q_acc	m4_fixes	#255	M4 G1's review B2: accrue of a none principal at a hole rate; the hole where L §8 refuses (RUN-NONE); spec/g1/a12_nonehole/q_acc
+fixes/g1/b2_rates/q_per_day	m4_fixes	#255	M4 G1's review B2: periodic of a monthly rate over a day under a hole compounding; the hole where L §8 refuses; spec/g1/b2_rates/q_per_day
+fixes/g1/b2_rates/q_fac_day	m4_fixes	#255	M4 G1's review B2: factor of a monthly rate over a day, a hole count; the hole where L §8 refuses; spec/g1/b2_rates/q_fac_day
+fixes/g1/b2_rates/q_per_none	m4_fixes	#255	M4 G1's review B2: periodic of a none rate under a hole compounding; the hole where L §8 refuses (RUN-NONE); spec/g1/b2_rates/q_per_none
+fixes/g1/b2_rates/q_fac_none	m4_fixes	#255	M4 G1's review B2: factor of a none rate, a hole count; the hole where L §8 refuses (RUN-NONE); spec/g1/b2_rates/q_fac_none
+fixes/g1/p3_memo/q_mix	m4_fixes	#255	M4 G1's review, non-blocking: refcore drops the second pinned: line of two pins whose values are one hole; L §8.2 lists each (the engine's answer, checked by hand, is spec/g1/p3_memo/q_mix); refcore at the round
+fixes/g1/p3_memo/q_ax	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p3_memo/q_mix, under an axis; spec/g1/p3_memo/q_ax
+fixes/g1/p3_memo/q_explw	m4_fixes	#255	M4 G1's review, non-blocking: refcore explains a cell again where E §10 refers to it, (dbl[k1]: see [16]), in one world; spec/g1/p3_memo/q_explw
+fixes/g1/p4_holeone/q_one	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p3_memo/q_mix, one key a hole; spec/g1/p4_holeone/q_one
+fixes/g1/p4_holeone/q_for	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p4_holeone/q_one, the pins in the ask; spec/g1/p4_holeone/q_for
+fixes/g1/p5_axhole/q_ax	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p3_memo/q_mix, under an axis; spec/g1/p5_axhole/q_ax
+fixes/g1/p5_axhole/q_axc	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p3_memo/q_mix, the axis merged [mode = *]; spec/g1/p5_axhole/q_axc
+fixes/g1/p7_explnest/q_e1	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p3_memo/q_explw; spec/g1/p7_explnest/q_e1
+fixes/g1/p7_explnest/q_e2	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/p3_memo/q_explw; spec/g1/p7_explnest/q_e2
+fixes/g1/a6_inv/q_need	m4_fixes	#255	M4 G1's review, non-blocking: refcore refuses each rate of a range over rates as not a rate (RUN-DOMAIN); L §3.3, §5.11 step by a rate; spec/g1/a6_inv/q_need
+fixes/g1/a7_range_periodic/q_p	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/a6_inv/q_need, through periodic; spec/g1/a7_range_periodic/q_p
+fixes/g1/a10_zero/q	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/a6_inv/q_need, from 1 %/year; spec/g1/a10_zero/q
+fixes/g1/a10_zero/q_zs	m4_fixes	#255	M4 G1's review, non-blocking: as fixes/g1/a6_inv/q_need, a sum over rates from 0 %/year; spec/g1/a10_zero/q_zs
+fixes/g1/b1_reads/q_leg	m4_fixes	#255	M4 G1's review B1, found by T: refcore's order of a per-tuple pin's bindings through a leg read depends on its runtime: plain refcore on PyPy (the store) prints `for d in dd, k in ks`, refcore on CPython (refcore_fast too) and G1's build `for k in ks, d in dd` (check.py's walk over the node's attributes); the only one of 246 M4 fixture vectors that differs; held until #255 rules the order; no spec answer

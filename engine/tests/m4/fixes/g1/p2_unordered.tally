@@ -1,0 +1,34 @@
+model p2
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index js = [j1, j2]
+index dd = day 2026-03-01..2026-03-02
+
+input b[k in ks]: money PLN
+input q[j in js]: money PLN
+input d0: date
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def one[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = last(q[j], d0)}
+def two[k in ks, j in js, d in dd]: money PLN = dbl[k] as if {b[k] = last(q[j], d)}
+
+ask q_one: one[k, j] for k in ks, j in js law 2026-03-01
+ask q_two: two[k, j, d] for k in ks, j in js, d in dd law 2026-03-01
+ask q_for: dbl[k] as if {b[k] = last(q[j], d)} for k in ks, j in js, d in dd law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b = 100 PLN "s"
+  d0 = 2026-03-01 "s"
+  q[j1] = 1 PLN governs 2026-01-01..2026-02-01 "s"
+  q[j2] = 2 PLN governs 2026-01-01..2026-02-01 "s"

@@ -1,0 +1,28 @@
+model a9
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input r: rate
+input d0: date
+input d1: date
+input p: num
+input c0: compounding
+input cn: compounding
+
+ask q_0: accrue(p, r, d0, d1, act365, c0)
+ask q_n: accrue(p, r, d0, d1, act365, cn)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 10 %/year "s"
+  p = 1000 "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  c0 = nominal 0 "s"
+  cn = nominal 4 "s"

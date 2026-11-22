@@ -1,0 +1,1315 @@
+26:spec/g1/a11_refhole/q_disc,7:spec-g1,34:run a11_refhole.tally --ask q_disc,804:17:a11_refhole.tally,778:model a11
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input ph: money PLN
+input rm: rate
+input rh: rate
+input d0: date
+input d1: date
+input dh: date
+input z: money PLN
+
+ask q_round: round(ph, z, half-even)
+ask q_disc: accrue(p0, rh, d0, d1, act365, discount)
+ask q_month: accrue(p0, rm, d0, dh, act365, simple)
+ask q_monthp: accrue(ph, rm, d0, d1, act365, simple)
+ask q_per: periodic(rm, day, simple), periodic(rh, day, simple)
+ask q_div: ph / (z / 1 PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  ph = ?"which p?" "s"
+  rm = 1 %/month "s"
+  rh = ?"which rate?" "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2026-07-01 "s"
+  dh = ?"which day?" "s"
+  z = 0 PLN "s"
+,,1:0,115:q_disc: refused: RUN-DOMAIN accrue under discount: its row states simple, effective and nominal m
+  cut 2026-10-25
+,27:spec/g1/a11_refhole/q_month,7:spec-g1,35:run a11_refhole.tally --ask q_month,804:17:a11_refhole.tally,778:model a11
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input ph: money PLN
+input rm: rate
+input rh: rate
+input d0: date
+input d1: date
+input dh: date
+input z: money PLN
+
+ask q_round: round(ph, z, half-even)
+ask q_disc: accrue(p0, rh, d0, d1, act365, discount)
+ask q_month: accrue(p0, rm, d0, dh, act365, simple)
+ask q_monthp: accrue(ph, rm, d0, d1, act365, simple)
+ask q_per: periodic(rm, day, simple), periodic(rh, day, simple)
+ask q_div: ph / (z / 1 PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  ph = ?"which p?" "s"
+  rm = 1 %/month "s"
+  rh = ?"which rate?" "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2026-07-01 "s"
+  dh = ?"which day?" "s"
+  z = 0 PLN "s"
+,,1:0,100:q_month: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
+  cut 2026-10-25
+,28:spec/g1/a11_refhole/q_monthp,7:spec-g1,36:run a11_refhole.tally --ask q_monthp,804:17:a11_refhole.tally,778:model a11
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input ph: money PLN
+input rm: rate
+input rh: rate
+input d0: date
+input d1: date
+input dh: date
+input z: money PLN
+
+ask q_round: round(ph, z, half-even)
+ask q_disc: accrue(p0, rh, d0, d1, act365, discount)
+ask q_month: accrue(p0, rm, d0, dh, act365, simple)
+ask q_monthp: accrue(ph, rm, d0, d1, act365, simple)
+ask q_per: periodic(rm, day, simple), periodic(rh, day, simple)
+ask q_div: ph / (z / 1 PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  ph = ?"which p?" "s"
+  rm = 1 %/month "s"
+  rh = ?"which rate?" "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2026-07-01 "s"
+  dh = ?"which day?" "s"
+  z = 0 PLN "s"
+,,1:0,101:q_monthp: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
+  cut 2026-10-25
+,27:spec/g1/a11_refhole/q_round,7:spec-g1,35:run a11_refhole.tally --ask q_round,804:17:a11_refhole.tally,778:model a11
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input ph: money PLN
+input rm: rate
+input rh: rate
+input d0: date
+input d1: date
+input dh: date
+input z: money PLN
+
+ask q_round: round(ph, z, half-even)
+ask q_disc: accrue(p0, rh, d0, d1, act365, discount)
+ask q_month: accrue(p0, rm, d0, dh, act365, simple)
+ask q_monthp: accrue(ph, rm, d0, d1, act365, simple)
+ask q_per: periodic(rm, day, simple), periodic(rh, day, simple)
+ask q_div: ph / (z / 1 PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  ph = ?"which p?" "s"
+  rm = 1 %/month "s"
+  rh = ?"which rate?" "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2026-07-01 "s"
+  dh = ?"which day?" "s"
+  z = 0 PLN "s"
+,,1:0,94:q_round: refused: RUN-DOMAIN round with a step 0.00 PLN that is not positive
+  cut 2026-10-25
+,26:spec/g1/a12_nonehole/q_acc,7:spec-g1,34:run a12_nonehole.tally --ask q_acc,652:18:a12_nonehole.tally,625:model a12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input pn: money PLN
+input ph: money PLN
+input rh: rate
+input r: rate
+input d0: date
+input d1: date
+
+ask q_arith: pn + ph
+ask q_arith2: max(pn, ph)
+ask q_acc: accrue(pn, rh, d0, d1, act365, simple)
+ask q_per: periodic(rh, year, simple) * accrue(pn, r, d0, d1, act365, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  pn = none "s"
+  ph = ?"which p?" "s"
+  rh = ?"which rate?" "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+,,1:0,120:q_acc: refused: RUN-NONE a value is none here: accrue
+  cut 2026-10-25
+warning: WARN-UNREAD input p0 is read by nothing
+,26:spec/g1/b2_rates/q_per_day,7:spec-g1,34:run b2_rates.tally --ask q_per_day,511:14:b2_rates.tally,488:model b2_rates
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input rm: rate
+input rn: rate
+input ch: compounding
+input nh: int
+
+ask q_per_day: periodic(rm, day, ch)
+ask q_fac_day: factor(rm, nh, day, simple)
+ask q_per_none: periodic(rn, year, ch)
+ask q_fac_none: factor(rn, nh, year, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rm = 1 %/month "s"
+  rn = none "s"
+  ch = ?"which compounding?" "s"
+  nh = ?"how many periods?" "s"
+,,1:0,164:q_per_day: refused: RUN-DOMAIN periodic: a month rate over a day: a day's share of a longer period is a day count (dcf), never a default (L §3.3)
+  cut 2026-10-25
+,26:spec/g1/b2_rates/q_fac_day,7:spec-g1,34:run b2_rates.tally --ask q_fac_day,511:14:b2_rates.tally,488:model b2_rates
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input rm: rate
+input rn: rate
+input ch: compounding
+input nh: int
+
+ask q_per_day: periodic(rm, day, ch)
+ask q_fac_day: factor(rm, nh, day, simple)
+ask q_per_none: periodic(rn, year, ch)
+ask q_fac_none: factor(rn, nh, year, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rm = 1 %/month "s"
+  rn = none "s"
+  ch = ?"which compounding?" "s"
+  nh = ?"how many periods?" "s"
+,,1:0,162:q_fac_day: refused: RUN-DOMAIN factor: a month rate over a day: a day's share of a longer period is a day count (dcf), never a default (L §3.3)
+  cut 2026-10-25
+,27:spec/g1/b2_rates/q_per_none,7:spec-g1,35:run b2_rates.tally --ask q_per_none,511:14:b2_rates.tally,488:model b2_rates
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input rm: rate
+input rn: rate
+input ch: compounding
+input nh: int
+
+ask q_per_day: periodic(rm, day, ch)
+ask q_fac_day: factor(rm, nh, day, simple)
+ask q_per_none: periodic(rn, year, ch)
+ask q_fac_none: factor(rn, nh, year, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rm = 1 %/month "s"
+  rn = none "s"
+  ch = ?"which compounding?" "s"
+  nh = ?"how many periods?" "s"
+,,1:0,78:q_per_none: refused: RUN-NONE a value is none here: periodic
+  cut 2026-10-25
+,27:spec/g1/b2_rates/q_fac_none,7:spec-g1,35:run b2_rates.tally --ask q_fac_none,511:14:b2_rates.tally,488:model b2_rates
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input rm: rate
+input rn: rate
+input ch: compounding
+input nh: int
+
+ask q_per_day: periodic(rm, day, ch)
+ask q_fac_day: factor(rm, nh, day, simple)
+ask q_per_none: periodic(rn, year, ch)
+ask q_fac_none: factor(rn, nh, year, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rm = 1 %/month "s"
+  rn = none "s"
+  ch = ?"which compounding?" "s"
+  nh = ?"how many periods?" "s"
+,,1:0,76:q_fac_none: refused: RUN-NONE a value is none here: factor
+  cut 2026-10-25
+,21:spec/g1/p3_memo/q_mix,7:spec-g1,29:run p3_memo.tally --ask q_mix,1640:13:p3_memo.tally,1617:model p3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+input lo: money PLN
+input hi: money PLN
+input stp: money PLN
+input tg[k in ks]: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+def two[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j]}) - (dbl[k] as if {b[k] = c[k, j] + x})
+def nest[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j] + x}) as if {x = c[k, j]}
+def inv[k in ks, j in js]: money PLN = min(t for t in lo .. hi step stp where dbl[k] as if {b[k] = t + c[k, j]} >= tg[k])
+def ax[k in ks, j in js]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k, j]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k, j] + x} when mode == high
+
+ask q_mix: tot[k, j], dbl[k], two[k, j] for k in ks, j in js
+ask q_with: tot[k, j] for k in ks, j in js with x = lo
+ask q_nest: nest[k, j] for k in ks, j in js
+ask q_inv: inv[k, j] for k in ks, j in js
+ask q_ax: ax[k, j] for k in ks, j in js law 2026-03-01
+ask q_expl: explain tot[k2, j1]
+ask q_explw: explain nest[k1, j2] with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = ?"which c?" "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"
+  hi = 100 PLN "s"
+  stp = 10 PLN "s"
+  tg = 50 PLN "s"
+,,1:0,716:q_mix (k = k1, j = j1): (2.00 PLN, 200.00 PLN, -10.00 PLN)
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+q_mix (k = k1, j = j2): (4.00 PLN, 200.00 PLN, -10.00 PLN)
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+q_mix (k = k2, j = j1): (6.00 PLN, 400.00 PLN, -10.00 PLN)
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+q_mix (k = k2, j = j2): (?"which c?" (c[k2, j2]), 400.00 PLN, ?"which c?" (c[k2, j2]))
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+,20:spec/g1/p3_memo/q_ax,7:spec-g1,28:run p3_memo.tally --ask q_ax,1640:13:p3_memo.tally,1617:model p3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+input lo: money PLN
+input hi: money PLN
+input stp: money PLN
+input tg[k in ks]: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+def two[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j]}) - (dbl[k] as if {b[k] = c[k, j] + x})
+def nest[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j] + x}) as if {x = c[k, j]}
+def inv[k in ks, j in js]: money PLN = min(t for t in lo .. hi step stp where dbl[k] as if {b[k] = t + c[k, j]} >= tg[k])
+def ax[k in ks, j in js]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k, j]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k, j] + x} when mode == high
+
+ask q_mix: tot[k, j], dbl[k], two[k, j] for k in ks, j in js
+ask q_with: tot[k, j] for k in ks, j in js with x = lo
+ask q_nest: nest[k, j] for k in ks, j in js
+ask q_inv: inv[k, j] for k in ks, j in js
+ask q_ax: ax[k, j] for k in ks, j in js law 2026-03-01
+ask q_expl: explain tot[k2, j1]
+ask q_explw: explain nest[k1, j2] with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = ?"which c?" "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"
+  hi = 100 PLN "s"
+  stp = 10 PLN "s"
+  tg = 50 PLN "s"
+,,1:0,1119:q_ax (k = k1, j = j1) [mode = low]: 2.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k1, j = j1) [mode = high]: 12.00 PLN
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  reading: mode = high
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k1, j = j2) [mode = low]: 4.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k1, j = j2) [mode = high]: 14.00 PLN
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  reading: mode = high
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k2, j = j1) [mode = low]: 6.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k2, j = j1) [mode = high]: 16.00 PLN
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  reading: mode = high
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k2, j = j2) [mode = *]: ?"which c?" (c[k2, j2])
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  law date 2026-03-01, cut 2026-10-25
+,23:spec/g1/p3_memo/q_explw,7:spec-g1,31:run p3_memo.tally --ask q_explw,1640:13:p3_memo.tally,1617:model p3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+input lo: money PLN
+input hi: money PLN
+input stp: money PLN
+input tg[k in ks]: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+def two[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j]}) - (dbl[k] as if {b[k] = c[k, j] + x})
+def nest[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j] + x}) as if {x = c[k, j]}
+def inv[k in ks, j in js]: money PLN = min(t for t in lo .. hi step stp where dbl[k] as if {b[k] = t + c[k, j]} >= tg[k])
+def ax[k in ks, j in js]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k, j]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k, j] + x} when mode == high
+
+ask q_mix: tot[k, j], dbl[k], two[k, j] for k in ks, j in js
+ask q_with: tot[k, j] for k in ks, j in js with x = lo
+ask q_nest: nest[k, j] for k in ks, j in js
+ask q_inv: inv[k, j] for k in ks, j in js
+ask q_ax: ax[k, j] for k in ks, j in js law 2026-03-01
+ask q_expl: explain tot[k2, j1]
+ask q_explw: explain nest[k1, j2] with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = ?"which c?" "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"
+  hi = 100 PLN "s"
+  stp = 10 PLN "s"
+  tg = 50 PLN "s"
+,,1:0,3091:q_explw: 8.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin x = 0.00 PLN
+  [3] inside the pins: 8.00 PLN
+    [4] nest[k1, j2] = 8.00 PLN
+        rule base: won
+          [5] as if {...}
+            [6] the pins, evaluated outside the as if
+              [7] row v:c[k1, j2] = 2.00 PLN
+                  version v, source s, "invented", locator "s", governs always, known 2026-01-01
+              [8] pin x = c[k, j] for k in ks, j in js
+            [9] inside the as if: 8.00 PLN
+              [10] as if {...}
+                [11] the pins, evaluated outside the as if
+                  (v:c[k1, j2]: see [7])
+                  [12] pin b[k] = c[k, j] + x for k in ks, j in js
+                [13] inside the as if: 8.00 PLN
+                  [14] dbl[k1] = 8.00 PLN
+                      rule base: won
+                [15] outside the as if: 200.00 PLN
+                  [16] dbl[k1] = 200.00 PLN
+                      rule base: won
+                        [17] row v:b[k1] = 100.00 PLN
+                            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+            [18] outside the as if: 4.00 PLN
+              [19] as if {...}
+                [20] the pins, evaluated outside the as if
+                  (v:c[k1, j2]: see [7])
+                  [21] pin b[k] = c[k, j] + x for k in ks, j in js
+                [22] inside the as if: 4.00 PLN
+                  [23] dbl[k1] = 4.00 PLN
+                      rule base: won
+                [24] outside the as if: 200.00 PLN
+                  (dbl[k1]: see [16])
+  [25] outside the pins: 8.00 PLN
+    [26] nest[k1, j2] = 8.00 PLN
+        rule base: won
+          [27] as if {...}
+            [28] the pins, evaluated outside the as if
+              (v:c[k1, j2]: see [7])
+              [29] pin x = c[k, j] for k in ks, j in js
+            [30] inside the as if: 8.00 PLN
+              [31] as if {...}
+                [32] the pins, evaluated outside the as if
+                  (v:c[k1, j2]: see [7])
+                  [33] pin b[k] = c[k, j] + x for k in ks, j in js
+                [34] inside the as if: 8.00 PLN
+                  [35] dbl[k1] = 8.00 PLN
+                      rule base: won
+                [36] outside the as if: 200.00 PLN
+                  [37] dbl[k1] = 200.00 PLN
+                      rule base: won
+                        (v:b[k1]: see [17])
+            [38] outside the as if: 14.00 PLN
+              [39] as if {...}
+                [40] the pins, evaluated outside the as if
+                  (v:c[k1, j2]: see [7])
+                  [41] row v:x = 5.00 PLN
+                      version v, source s, "invented", locator "s", governs always, known 2026-01-01
+                  [42] pin b[k] = c[k, j] + x for k in ks, j in js
+                [43] inside the as if: 14.00 PLN
+                  [44] dbl[k1] = 14.00 PLN
+                      rule base: won
+                [45] outside the as if: 200.00 PLN
+                  (dbl[k1]: see [37])
+  pinned: b[k] = c[k, j] + x for k in ks, j in js
+  pinned: x = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+,24:spec/g1/p4_holeone/q_one,7:spec-g1,32:run p4_holeone.tally --ask q_one,768:16:p4_holeone.tally,743:model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,241:q_one (k = k1): -10.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_one (k = k2): ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+,24:spec/g1/p4_holeone/q_for,7:spec-g1,32:run p4_holeone.tally --ask q_for,768:16:p4_holeone.tally,743:model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,241:q_for (k = k1): -10.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_for (k = k2): ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+,22:spec/g1/p5_axhole/q_ax,7:spec-g1,30:run p5_axhole.tally --ask q_ax,999:15:p5_axhole.tally,975:model p5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def ax[k in ks]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k] + x} when mode == high
+def axn: money PLN at reader
+  rule base = dbl[k2] as if {b[k2] = c[k2]}
+  rule hi beats base = dbl[k2] as if {b[k2] = c[k2] + x} when mode == high
+def hi_only[k in ks]: money PLN = dbl[k] as if {b[k] = c[k] + x}
+
+ask q_ax: ax[k] for k in ks law 2026-03-01
+ask q_hi: hi_only[k] for k in ks
+ask q_axn: axn law 2026-03-01
+ask q_axc: ax[k2] law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,425:q_ax (k = k1) [mode = low]: 2.00 PLN
+  pinned: b[k] = c[k] for k in ks
+  reading: mode = low
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k1) [mode = high]: 12.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  reading: mode = high
+  law date 2026-03-01, cut 2026-10-25
+q_ax (k = k2) [mode = *]: ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  law date 2026-03-01, cut 2026-10-25
+,23:spec/g1/p5_axhole/q_axc,7:spec-g1,31:run p5_axhole.tally --ask q_axc,999:15:p5_axhole.tally,975:model p5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def ax[k in ks]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k] + x} when mode == high
+def axn: money PLN at reader
+  rule base = dbl[k2] as if {b[k2] = c[k2]}
+  rule hi beats base = dbl[k2] as if {b[k2] = c[k2] + x} when mode == high
+def hi_only[k in ks]: money PLN = dbl[k] as if {b[k] = c[k] + x}
+
+ask q_ax: ax[k] for k in ks law 2026-03-01
+ask q_hi: hi_only[k] for k in ks
+ask q_axn: axn law 2026-03-01
+ask q_axc: ax[k2] law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+,,1:0,148:q_axc [mode = *]: ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  law date 2026-03-01, cut 2026-10-25
+,24:spec/g1/p7_explnest/q_e1,7:spec-g1,32:run p7_explnest.tally --ask q_e1,716:17:p7_explnest.tally,690:model p7
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+input lo: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def nest[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k] + x}) as if {x = c[k]}
+def nestc: money PLN = (dbl[k1] as if {b[k1] = c[k1] + x}) as if {x = c[k1]}
+
+ask q_e1: explain nest[k1] with x = lo
+ask q_e2: explain nestc with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 2 PLN "s"
+  c[k2] = 3 PLN "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"
+,,1:0,2960:q_e1: 8.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin x = 0.00 PLN
+  [3] inside the pins: 8.00 PLN
+    [4] nest[k1] = 8.00 PLN
+        rule base: won
+          [5] as if {...}
+            [6] the pins, evaluated outside the as if
+              [7] row v:c[k1] = 2.00 PLN
+                  version v, source s, "invented", locator "s", governs always, known 2026-01-01
+              [8] pin x = c[k] for k in ks
+            [9] inside the as if: 8.00 PLN
+              [10] as if {...}
+                [11] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [12] pin b[k] = c[k] + x for k in ks
+                [13] inside the as if: 8.00 PLN
+                  [14] dbl[k1] = 8.00 PLN
+                      rule base: won
+                [15] outside the as if: 200.00 PLN
+                  [16] dbl[k1] = 200.00 PLN
+                      rule base: won
+                        [17] row v:b[k1] = 100.00 PLN
+                            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+            [18] outside the as if: 4.00 PLN
+              [19] as if {...}
+                [20] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [21] pin b[k] = c[k] + x for k in ks
+                [22] inside the as if: 4.00 PLN
+                  [23] dbl[k1] = 4.00 PLN
+                      rule base: won
+                [24] outside the as if: 200.00 PLN
+                  (dbl[k1]: see [16])
+  [25] outside the pins: 8.00 PLN
+    [26] nest[k1] = 8.00 PLN
+        rule base: won
+          [27] as if {...}
+            [28] the pins, evaluated outside the as if
+              (v:c[k1]: see [7])
+              [29] pin x = c[k] for k in ks
+            [30] inside the as if: 8.00 PLN
+              [31] as if {...}
+                [32] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [33] pin b[k] = c[k] + x for k in ks
+                [34] inside the as if: 8.00 PLN
+                  [35] dbl[k1] = 8.00 PLN
+                      rule base: won
+                [36] outside the as if: 200.00 PLN
+                  [37] dbl[k1] = 200.00 PLN
+                      rule base: won
+                        (v:b[k1]: see [17])
+            [38] outside the as if: 14.00 PLN
+              [39] as if {...}
+                [40] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [41] row v:x = 5.00 PLN
+                      version v, source s, "invented", locator "s", governs always, known 2026-01-01
+                  [42] pin b[k] = c[k] + x for k in ks
+                [43] inside the as if: 14.00 PLN
+                  [44] dbl[k1] = 14.00 PLN
+                      rule base: won
+                [45] outside the as if: 200.00 PLN
+                  (dbl[k1]: see [37])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: x = c[k] for k in ks
+  cut 2026-10-25
+,24:spec/g1/p7_explnest/q_e2,7:spec-g1,32:run p7_explnest.tally --ask q_e2,716:17:p7_explnest.tally,690:model p7
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+input lo: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def nest[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k] + x}) as if {x = c[k]}
+def nestc: money PLN = (dbl[k1] as if {b[k1] = c[k1] + x}) as if {x = c[k1]}
+
+ask q_e1: explain nest[k1] with x = lo
+ask q_e2: explain nestc with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 2 PLN "s"
+  c[k2] = 3 PLN "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"
+,,1:0,2875:q_e2: 8.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin x = 0.00 PLN
+  [3] inside the pins: 8.00 PLN
+    [4] nestc = 8.00 PLN
+        rule base: won
+          [5] as if {...}
+            [6] the pins, evaluated outside the as if
+              [7] row v:c[k1] = 2.00 PLN
+                  version v, source s, "invented", locator "s", governs always, known 2026-01-01
+              [8] pin x = 2.00 PLN
+            [9] inside the as if: 8.00 PLN
+              [10] as if {...}
+                [11] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [12] pin b[k1] = 4.00 PLN
+                [13] inside the as if: 8.00 PLN
+                  [14] dbl[k1] = 8.00 PLN
+                      rule base: won
+                [15] outside the as if: 200.00 PLN
+                  [16] dbl[k1] = 200.00 PLN
+                      rule base: won
+                        [17] row v:b[k1] = 100.00 PLN
+                            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+            [18] outside the as if: 4.00 PLN
+              [19] as if {...}
+                [20] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [21] pin b[k1] = 2.00 PLN
+                [22] inside the as if: 4.00 PLN
+                  [23] dbl[k1] = 4.00 PLN
+                      rule base: won
+                [24] outside the as if: 200.00 PLN
+                  (dbl[k1]: see [16])
+  [25] outside the pins: 8.00 PLN
+    [26] nestc = 8.00 PLN
+        rule base: won
+          [27] as if {...}
+            [28] the pins, evaluated outside the as if
+              (v:c[k1]: see [7])
+              [29] pin x = 2.00 PLN
+            [30] inside the as if: 8.00 PLN
+              [31] as if {...}
+                [32] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [33] pin b[k1] = 4.00 PLN
+                [34] inside the as if: 8.00 PLN
+                  [35] dbl[k1] = 8.00 PLN
+                      rule base: won
+                [36] outside the as if: 200.00 PLN
+                  [37] dbl[k1] = 200.00 PLN
+                      rule base: won
+                        (v:b[k1]: see [17])
+            [38] outside the as if: 14.00 PLN
+              [39] as if {...}
+                [40] the pins, evaluated outside the as if
+                  (v:c[k1]: see [7])
+                  [41] row v:x = 5.00 PLN
+                      version v, source s, "invented", locator "s", governs always, known 2026-01-01
+                  [42] pin b[k1] = 7.00 PLN
+                [43] inside the as if: 14.00 PLN
+                  [44] dbl[k1] = 14.00 PLN
+                      rule base: won
+                [45] outside the as if: 200.00 PLN
+                  (dbl[k1]: see [37])
+  pinned: b[k1] = 4.00 PLN
+  pinned: x = 2.00 PLN
+  cut 2026-10-25
+,21:spec/g1/a6_inv/q_need,7:spec-g1,29:run a6_inv.tally --ask q_need,1102:12:a6_inv.tally,1080:model a6
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index js = [j1, j2]
+
+input p0: money PLN
+input r: rate
+input d0: date
+input d1: date
+input lo: rate
+input hi: rate
+input st: rate
+input tg: money PLN
+input pi: int
+input rj[j in js]: rate
+
+def need: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, effective) >= tg)
+def need2: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, nominal 12) >= tg)
+def ip: num = accrue(pi, r, d0, d1, act365, simple)
+def bigj: num PLN = max(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+def argj: key js = argmax(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+
+ask q_need: need, need2
+ask q_ip: ip
+ask q_big: bigj, argj
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 105 PLN "s"
+  pi = 7 "s"
+  rj[j1] = 4 %/year "s"
+  rj[j2] = 6 %/year "s"
+,,1:0,50:q_need: (0.11 /year, 0.11 /year)
+  cut 2026-10-25
+,29:spec/g1/a7_range_periodic/q_p,7:spec-g1,37:run a7_range_periodic.tally --ask q_p,427:23:a7_range_periodic.tally,395:model a7
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input lo: rate
+input hi: rate
+input st: rate
+input tg: num
+
+def needp: rate = min(t for t in lo .. hi step st where periodic(t, year, effective) >= tg)
+
+ask q_p: needp
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 0.105 "s"
+,,1:0,33:q_p: 0.11 /year
+  cut 2026-10-25
+,18:spec/g1/a10_zero/q,7:spec-g1,26:run a10_zero.tally --ask q,775:14:a10_zero.tally,752:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input z: rate
+input lo: rate
+input hi: rate
+input st: rate
+input p0: money PLN
+input tg: money PLN
+input d0: date
+input d1: date
+
+def direct: num PLN = accrue(p0, z, d0, d1, act365, effective)
+def fromone: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, simple) >= tg)
+def zsum: num = sum(periodic(t, year, effective) for t in z .. hi step st)
+
+ask q: direct, fromone
+ask q_zs: zsum
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 0 %/year "s"
+  lo = 1 %/year "s"
+  hi = 5 %/year "s"
+  st = 1 %/year "s"
+  p0 = 1000 PLN "s"
+  tg = 30 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+,,1:0,40:q: (0 PLN, 0.03 /year)
+  cut 2026-10-25
+,21:spec/g1/a10_zero/q_zs,7:spec-g1,29:run a10_zero.tally --ask q_zs,775:14:a10_zero.tally,752:model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input z: rate
+input lo: rate
+input hi: rate
+input st: rate
+input p0: money PLN
+input tg: money PLN
+input d0: date
+input d1: date
+
+def direct: num PLN = accrue(p0, z, d0, d1, act365, effective)
+def fromone: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, simple) >= tg)
+def zsum: num = sum(periodic(t, year, effective) for t in z .. hi step st)
+
+ask q: direct, fromone
+ask q_zs: zsum
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 0 %/year "s"
+  lo = 1 %/year "s"
+  hi = 5 %/year "s"
+  st = 1 %/year "s"
+  p0 = 1000 PLN "s"
+  tg = 30 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+,,1:0,28:q_zs: 0.15
+  cut 2026-10-25
+,22:spec/g1/a9_nominal/q_0,7:spec-g1,30:run a9_nominal.tally --ask q_0,481:16:a9_nominal.tally,456:model a9
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input r: rate
+input d0: date
+input d1: date
+input p: num
+input c0: compounding
+input cn: compounding
+
+ask q_0: accrue(p, r, d0, d1, act365, c0)
+ask q_n: accrue(p, r, d0, d1, act365, cn)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 10 %/year "s"
+  p = 1000 "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  c0 = nominal 0 "s"
+  cn = nominal 4 "s"
+,,1:0,56:q_0: refused: RUN-DIV division by zero
+  cut 2026-10-25
+,21:spec/g1/p12_with/q_w1,7:spec-g1,29:run p12_with.tally --ask q_w1,851:14:p12_with.tally,828:model p12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k] + x
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+
+ask q_w1: dbl[k] for k in ks, j in js with x = c[k, j]
+ask q_w2: tot[k, j] for k in ks, j in js with x = c[k, j] - b[k]
+ask q_w3: (dbl[k] as if {x = c[k, j]}) for k in ks, j in js with b[k] = c[k, j]
+ask q_w4: explain tot[k1, j2] with x = c[k1, j1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = 4 PLN "s"
+  x = 5 PLN "s"
+,,1:0,296:q_w1 (k = k1, j = j1): 201.00 PLN
+  pinned: x = 1.00 PLN
+  cut 2026-10-25
+q_w1 (k = k1, j = j2): 202.00 PLN
+  pinned: x = 2.00 PLN
+  cut 2026-10-25
+q_w1 (k = k2, j = j1): 403.00 PLN
+  pinned: x = 3.00 PLN
+  cut 2026-10-25
+q_w1 (k = k2, j = j2): 404.00 PLN
+  pinned: x = 4.00 PLN
+  cut 2026-10-25
+,21:spec/g1/p12_with/q_w2,7:spec-g1,29:run p12_with.tally --ask q_w2,851:14:p12_with.tally,828:model p12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k] + x
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+
+ask q_w1: dbl[k] for k in ks, j in js with x = c[k, j]
+ask q_w2: tot[k, j] for k in ks, j in js with x = c[k, j] - b[k]
+ask q_w3: (dbl[k] as if {x = c[k, j]}) for k in ks, j in js with b[k] = c[k, j]
+ask q_w4: explain tot[k1, j2] with x = c[k1, j1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = 4 PLN "s"
+  x = 5 PLN "s"
+,,1:0,492:q_w2 (k = k1, j = j1): -97.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  pinned: x = -99.00 PLN
+  cut 2026-10-25
+q_w2 (k = k1, j = j2): -94.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  pinned: x = -98.00 PLN
+  cut 2026-10-25
+q_w2 (k = k2, j = j1): -191.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  pinned: x = -197.00 PLN
+  cut 2026-10-25
+q_w2 (k = k2, j = j2): -188.00 PLN
+  pinned: b[k] = c[k, j] for k in ks, j in js
+  pinned: x = -196.00 PLN
+  cut 2026-10-25
+,21:spec/g1/p12_with/q_w3,7:spec-g1,29:run p12_with.tally --ask q_w3,851:14:p12_with.tally,828:model p12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k] + x
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+
+ask q_w1: dbl[k] for k in ks, j in js with x = c[k, j]
+ask q_w2: tot[k, j] for k in ks, j in js with x = c[k, j] - b[k]
+ask q_w3: (dbl[k] as if {x = c[k, j]}) for k in ks, j in js with b[k] = c[k, j]
+ask q_w4: explain tot[k1, j2] with x = c[k1, j1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = 4 PLN "s"
+  x = 5 PLN "s"
+,,1:0,477:q_w3 (k = k1, j = j1): 3.00 PLN
+  pinned: b[k1] = 1.00 PLN
+  pinned: x = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+q_w3 (k = k1, j = j2): 6.00 PLN
+  pinned: b[k1] = 2.00 PLN
+  pinned: x = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+q_w3 (k = k2, j = j1): 9.00 PLN
+  pinned: b[k2] = 3.00 PLN
+  pinned: x = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+q_w3 (k = k2, j = j2): 12.00 PLN
+  pinned: b[k2] = 4.00 PLN
+  pinned: x = c[k, j] for k in ks, j in js
+  cut 2026-10-25
+,
