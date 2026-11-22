@@ -82,7 +82,7 @@ Tally 2.1 keeps the plan pass (E §4.1). For each plan move, in the item graph's
 
 - **Per instance:** a few evaluations, mostly memo hits, since law and facts are shared cells; one more per later version that touches its read set. A version that touches nothing in the read set is skipped by an index lookup, with no evaluation (E §5 step 2).
 - **Total:** O(I · c) for I instances and c evaluations each, plus one sort of the booked movements by (day, stratum, move id, keys), O(M log M) (E §4.1, last paragraph).
-- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole and window movements, and the instance lists that `flows`, bindings and the projections read.
+- **What it hands the walk:** the booked legs by day, the decision instances by day (a decision's day reads no running state, L §5.14.1, so every decision day is known before the walk), the hole movements, and the instance lists that `flows`, bindings and the projections read.
 
 ### 2.2 The event-driven walk
 
@@ -100,7 +100,7 @@ No section of L or E lists what makes a day non-empty (SO8-1). The list was appr
 | N-8 | a reading at `t end` the cut sees, with t before K | a `reading` row, `at D end` | pads or anchors at the close | E §4.2 step 4, l.198 |
 | N-9 | the last day of a place's lifespan | an entry's `lives` span, a `place` section's | refuses the place from t on if a position isn't zero at the close (`RUN-LIFESPAN`) | E §4.2 step 5, l.201; L §5.7 l.942 |
 | N-10 | the last day of a party's lifespan, where some place keeps parts labelled to that party | `parties` and a parts kind | checks, after the day's whole order, that the party holds no part at the close; refuses that part's place from t on otherwise | E §4.2 parts, l.208; L §5.7 l.943 |
-| N-11 | the first day a hole movement may fall on: its day t when only its `when` is a hole; S when its day is a hole | a movement whose day or `when` is a hole | makes both ends' balances holes from t, with the movement's questions, up to each place's next reading | E §4.1 step 2, l.176; E §4.2 (holes), l.211; L §5.14 l.1348 |
+| N-11 | the first day a hole movement may fall on: its day t when only its `when` is a hole; S when its day is a hole | a movement whose day or `when` is a hole | makes both ends' balances holes from t, with the movement's questions, up to each place's next reading | E §4.1 step 2, l.189; E §4.2 (holes), l.221; L §5.14 l.1361 |
 | N-13 | V.known of an adjustment that nothing fulfils or waives at the cut | `adjustments` (E §5) | makes the adjusted leg's places' balances holes from t on, past later readings too (`HOLE-CHANGED`); the adjustment itself moves nothing | E §5 steps 4–5, l.258–261; L §5.14.3 l.1435 |
 | N-14 | the day of a joint model's own movement into a member's place that no `same` or `fulfils` links | a joint model's versions | books nothing there; makes the place's balance, read in the joint model, a hole from t until the member's next reading of it | L §6.1 l.1805 |
 

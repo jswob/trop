@@ -20,7 +20,7 @@ Table 1 lists only the constructs some case uses, so its count is the constructs
 |---|---|---|---|
 | never | 3.1 | 4 | I:I-7, I:I-8, I:I-11, I:I-13 |
 | none value | 3.1 | 33 | CB-07, CMP-01, CMP-02, LH-01, LH-02, LH-04, LH-06, LH-10, MP-03, MP-05, MP-09, MP-14, RC-04, UL-05, UL-06, UL-07, UL-09, UL-14, UL-15, household, chg4, P:SURF-02, H:A, H:B, H:D, H:E1, I:I-10, I:I-7, I:I-8, I:I-9, I:I-11, I:I-12, I:I-14 |
-| window(a, b) value | 4.4 | 15 | CB-07, CMP-01, LH-01, LH-07, MP-05, MP-06, MP-07, MP-08, MP-13, UL-08, UL-10, P:TIME-01, H:A, H:D, I:I-12 |
+| window(a, b) value | 4.4 | 14 | CB-07, LH-01, LH-07, MP-05, MP-06, MP-07, MP-08, MP-13, UL-08, UL-10, P:TIME-01, H:A, H:D, I:I-12 |
 | last(…) within | 4.6 | 1 | UL-08 |
 | reading instant | 4.6 | 24 | household, chg5, P:ASK-01, P:ASK-02, P:CUR-03, P:FLOW-01, P:FLOW-02, P:OWN-01, P:OWN-02, P:OWN-03, P:REC-01, P:RULE-01, P:RULE-02, P:RULE-05, P:RULE-06, P:RULE-07, P:TIME-07, H:A, H:B, H:D, I:I-9, I:I-11, I:I-12, I:I-15 |
 | since(…) | 4.6 | 1 | P:VAL-05 |
@@ -249,7 +249,7 @@ Table 1 lists only the constructs some case uses, so its count is the constructs
 | call unit | 2 | household, household-bands |
 | call value | 6 | household, household-bands, P:ASK-02, P:CUR-03, P:SCEN-01, H:A |
 | call weekday | 1 | UL-04 |
-| call window | 15 | CB-07, CMP-01, LH-01, LH-07, MP-05, MP-06, MP-07, MP-08, MP-13, UL-08, UL-10, P:TIME-01, H:A, H:D, I:I-12 |
+| call window | 14 | CB-07, LH-01, LH-07, MP-05, MP-06, MP-07, MP-08, MP-13, UL-08, UL-10, P:TIME-01, H:A, H:D, I:I-12 |
 | call year_of | 29 | CB-07, CB-14, LH-09, LH-16, MP-08, UL-08, household, P:LAW-04, P:LAW-10, P:LIFE-01, P:LIFE-05, P:OWN-08, P:PTY-01, P:SURF-04, P:TIME-05, P:TIME-06, H:A, H:B, H:D, H:E1, law, I:I-10, I:I-7, I:I-8, I:I-9, I:I-12, I:I-13, I:I-14, I:I-15 |
 | code act365 | 4 | P:NUM-02, H:A, H:B, I:I-12 |
 | code ceil | 7 | LH-02, LH-07, LH-10, LH-11, MP-13, RC-05, H:D |

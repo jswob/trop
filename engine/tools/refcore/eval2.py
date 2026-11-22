@@ -2020,7 +2020,10 @@ def m_open_order_takes(self, qid, arcs, ordered_takes, iv):
     # the question the sort met, carrying every unknown day the order rests on
     hole = carry_hole(Hole([('date within %s not precise enough for the order of fill %s' % (iv.window_text(), qid),
                              iv.origin[1] if iv.origin else qid)]), iv, *[first[n] for n in names])
-    return dict((k, (hole, c)) for k, (v, c) in ordered_takes([dict(x, ord=[], tie=[]) for x in arcs]).items())
+    # the arcs in a fixed order of their own, so no tie is asked: every take is the hole whatever the order (an
+    # undecided comparison is no tie; the reader's finding 2)
+    return dict((k, (hole, c)) for k, (v, c) in
+                ordered_takes([dict(x, ord=[Num(j, ())], tie=[]) for j, x in enumerate(arcs)]).items())
 
 
 def _vk(v):
