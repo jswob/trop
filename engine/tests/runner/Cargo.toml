@@ -232,3 +232,10 @@ test = false
 name = "m3_fixes"
 path = "milestone/m3_fixes.rs"
 test = false
+
+# tally 2.3's pin oracle (#247, the plan's §9): properties/oracle.corpus, oracle.py's texts, each
+# line held to its pinned days on the engine alone; gating with M3, red until G1's engine.
+[[test]]
+name = "m3_oracle"
+path = "milestone/m3_oracle.rs"
+test = false

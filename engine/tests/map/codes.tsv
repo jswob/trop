@@ -18,8 +18,8 @@ HOLE-PRICE	L §8.1	M1	<unit> has no price in <CUR> on <d>	6	M1	codes/m1/prices/n
 HOLE-PRICE	L §8.1	M1	<x> is in Y prices; no index moves it to <d>	1	M1	codes/m1/prices/price-year
 HOLE-CALENDAR	L §8.1	S	*	4	M2	m2/fixes/rv/g1_b2_fallback
 HOLE-CALENDAR	L §8.1	S	calendar <c> doesn't cover <year>	4	M2	m2/fixes/rv/g1_b2_fallback
-HOLE-IMPRECISE	L §8.1	M1	*	134	M1	U:time/TIME-01
-HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	134	M1	U:time/TIME-01
+HOLE-IMPRECISE	L §8.1	M1	*	122	M1	U:time/TIME-01
+HOLE-IMPRECISE	L §8.1	M1	date within <window> not precise enough for <comparison or use>	122	M1	U:time/TIME-01
 HOLE-CHANGED	L §8.1	S	*	22	S	kernel/g11/adjust
 HOLE-CHANGED	L §8.1	S	<move> on <t> changed after it was paid (version V); is back pay due, and when?	22	S	kernel/g11/adjust
 HOLE-SAME	L §8.1	M2	*	22	M1	m1/fixes/gate8/m2_d512_both_cover_day
@@ -298,11 +298,11 @@ RUN-NO-RULE	L §8.4	S	no rule applies to <x>[k] on <d>	4	S	kernel/g2/read
 RUN-LABEL	L §8.4	M5b	*	0	-	-
 RUN-LABEL	L §8.4	M5b	the shares of <movement>'s arrival at <place> sum to <s>, not 1	0	-	-
 RUN-LABEL	L §8.4	M5b	the share of <party> in <movement>'s arrival at <place> is below 0	0	-	-
-RUN-TIE	L §8.4	M5b	*	40	S	kernel/g5/order
+RUN-TIE	L §8.4	M5b	*	39	S	kernel/g5/order
 RUN-TIE	L §8.4	M5b	<aggregate, fill, move> has a tie at <keys> that changes the result, and no ties by	22	S	kernel/g5/order
 RUN-TIE	L §8.4	M5b	<outflows> tie for a part of <place> that can't cover both	1	M5b	U:own/OWN-11/p19
 RUN-TIE	L §8.4	M5b	the split of <movement> at <place> ties at <labels>	0	-	-
-RUN-TIE	L §8.4	M5b	?	17	M1	m1/fixes/g10/p_b3
+RUN-TIE	L §8.4	M5b	?	16	M1	m1/fixes/g10/p_b3
 RUN-EMPTY	L §8.4	M1	*	6	M1	codes/m1/decide/low-empty
 RUN-EMPTY	L §8.4	M1	<min, max, first, last, argmin, argmax, mean, share, quantile> over no keys	6	M1	codes/m1/decide/low-empty
 RUN-DIGITS	L §8.4	S	*	3	S	kernel/g1/cap
@@ -332,8 +332,8 @@ RUN-ZERO	L §8.4	M1	*	1	M1	codes/m1/rules/zero
 RUN-ZERO	L §8.4	M1	add_business(<d>, 0, <cal>)	1	M1	codes/m1/rules/zero
 RUN-NEG	L §8.4	S	*	10	S	kernel/g11/adjust
 RUN-NEG	L §8.4	S	negative amount <v> for <leg or fill>	10	S	kernel/g11/adjust
-RUN-ORDER	L §8.4	M1	*	31	M1	codes/m1/decide/order
-RUN-ORDER	L §8.4	M1	fill <f>: the order of <arc> is a hole	1	M5a	U:rule/RULE-03
+RUN-ORDER	L §8.4	M1	*	32	M1	codes/m1/decide/order
+RUN-ORDER	L §8.4	M1	fill <f>: the order of <arc> is a hole	2	M5a	I:X:t@min_m12d
 RUN-ORDER	L §8.4	M1	decisions <a> and <b> read each other on <d>	27	M1	codes/m1/decide/order
 RUN-ORDER	L §8.4	M1	?	3	M1	m1/fixes/g10/agent_projid_k
 RUN-WEIGHTS	L §8.4	M1	*	1	M1	codes/m1/rules/weights
@@ -341,9 +341,9 @@ RUN-WEIGHTS	L §8.4	M1	prorata weights <w> are negative or sum to 0	1	M1	codes/m
 RUN-PRORATA	L §8.4	M1	*	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<total> isn't a whole number of <u>	1	M1	codes/m1/rules/prorata
 RUN-PRORATA	L §8.4	M1	<amount> arriving at or taken from <place> isn't a whole number of its step <u>	0	-	-
-RUN-PLACE	L §8.4	S	*	73	S	kernel/U:ask/ASK-03
+RUN-PLACE	L §8.4	S	*	72	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<movement> takes <debt> above 0	1	M1	codes/m1/rules/debt-above
-RUN-PLACE	L §8.4	S	<claim> below 0	28	S	kernel/g9/reading_close
+RUN-PLACE	L §8.4	S	<claim> below 0	27	S	kernel/g9/reading_close
 RUN-PLACE	L §8.4	S	<holding> below 0 units	5	S	kernel/g9/sign
 RUN-PLACE	L §8.4	S	<place> is <b> after the day's observations and plans of <d>	61	S	kernel/U:ask/ASK-03
 RUN-PLACE	L §8.4	S	<place> is <b> after its reading at <instant>	30	S	kernel/g9/reading_close
@@ -371,8 +371,8 @@ RUN-RECORD	L §8.4	S	<r> and <r'> state one transfer and both fulfil <instance>:
 RUN-RECORD	L §8.4	S	<r> and <r'> are stated same and fulfil <a> and <b>	3	M2	m2/fixes/rv/g4_b2_s1_reach
 RUN-RECORD	L §8.4	S	the stated parts of <x> at <instant> sum to <a>, over its total <b>	0	-	-
 RUN-RECORD	L §8.4	S	reading <r> of <x> at <d> start pads and states parts while the day's first batch moves <x>	0	-	-
-WARN-NEGATIVE	L §8.5	S	*	185	S	I:X:konto_balance@b_r1
-WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	185	S	I:X:konto_balance@b_r1
+WARN-NEGATIVE	L §8.5	S	*	184	S	I:X:konto_balance@b_r1
+WARN-NEGATIVE	L §8.5	S	<account> is below zero from <d>	184	S	I:X:konto_balance@b_r1
 WARN-UNREAD	L §8.5	S	*	569	S	kernel/I:M:RC-06
 WARN-UNREAD	L §8.5	S	<source, input, def or place> is read by nothing	569	S	kernel/I:M:RC-06
 WARN-LEGS	L §8.5	S	*	31	S	kernel/g10/observe

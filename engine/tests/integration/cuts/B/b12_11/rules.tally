@@ -24,6 +24,8 @@ input gap_from: date question "From which day are the November Cis export's rows
 
 input gap_to: date question "To which day are the November Cis export's rows missing?"
 
+input gap_lag: int question "How many days after the gap's first day are the payments the export lacks booked?"
+
 input gap_cards: money DUK question "What did Piotr pay by card on the days the November Cis export lacks?"
 
 input ziarno_inv: key invoices question "Which invoice of Kawiarnia Ziarno may it have paid on the days the November Cis export lacks?"
@@ -152,11 +154,11 @@ move card_fee_pay[y in years]: transfers
   leg cash from cis to world amount card_fee
 
 move gap_card_pays: card_pays
-  on window(gap_from, gap_to)
+  on add_days(gap_from, gap_lag)
   leg cash from cis to shops amount gap_cards
 
 move gap_ziarno_pay: transfers
-  on window(gap_from, gap_to)
+  on add_days(gap_from, gap_lag)
   when gap_ziarno
   leg cash from inv_owed[ziarno_inv] to cis amount sale[ziarno_inv].net + sale[ziarno_inv].vat
 
@@ -253,6 +255,7 @@ version cis_gap
   gap_cards = ?"What did Piotr pay by card from 2025-11-14 to 2025-11-30? The November export stops on the 13th" "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
   gap_from = 2025-11-14 "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
   gap_to = 2025-11-30 "cis-5521-3380-0001-2025-12.csv line 5: the December export opens on 2025-12-01"
+  gap_lag = 0 assumed "the days of the payments the export lacks are not known: the gap's first day is planned" "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
   gap_ziarno = ?"Did Kawiarnia Ziarno pay FV 016/2025 from 2025-11-14 to 2025-11-30? Those Cis rows are missing" "cis-5521-3380-0001-2025-11.csv: the last row is of 2025-11-13"
 
 version bez_letter

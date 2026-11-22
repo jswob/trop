@@ -5,6 +5,7 @@ a10 [px_round = *]: (refused: RUN-ORDER decisions hr1_take and zosia_save read e
   law date 2026-01-15, cut 2026-01-15
 a11 [pit6_health = *, px_round = *]: (?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate), ?"the Bank Lazur savings rate from 2025-07-01: no statement after 2025-06-30 was downloaded" (laz_rate))
   assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2026-01], payday_dom[sio, 2026-02], payday_dom[sio, 2026-03], payday_dom[sio, 2026-04], payday_dom[sio, 2026-05], payday_dom[sio, 2026-06], payday_dom[sio, 2026-07], payday_dom[sio, 2026-08], payday_dom[sio, 2026-09], payday_dom[sio, 2026-10], payday_dom[sio, 2026-11], payday_dom[sio, 2026-12])
+  assumed: the card payments' days in a month are not known: the month's last day is planned (card_lag)
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14
@@ -40,6 +41,7 @@ a11 [pit6_health = *, px_round = *]: (?"the Bank Lazur savings rate from 2025-07
   law date 2026-01-15, cut 2026-01-15
 a11_known_part [pit6_health = *, px_round = *]: (209 642.97 DUK, 130 205.73 DUK, 339 848.70 DUK)
   assumed: A-D15 says by the 10th, not the day; the 10th is taken, on the last business day before it where it isn't one (payday_dom[sio, 2026-01], payday_dom[sio, 2026-02], payday_dom[sio, 2026-03], payday_dom[sio, 2026-04], payday_dom[sio, 2026-05], payday_dom[sio, 2026-06], payday_dom[sio, 2026-07], payday_dom[sio, 2026-08], payday_dom[sio, 2026-09], payday_dom[sio, 2026-10], payday_dom[sio, 2026-11], payday_dom[sio, 2026-12])
+  assumed: the card payments' days in a month are not known: the month's last day is planned (card_lag)
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-15
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-01-31
   pinned: wording pay_on[e, m] for [pit3_rate, pit3_reducing] = 2025-02-14

@@ -15,8 +15,11 @@ b03_november (d = 2025-12-31): (1 952.00 FLR, 8 258.33 DUK)
   open: kessel_pay[fv_026_2025]
   law date 2025-12-31, cut 2026-01-07
 b08_balances: (8 492.03 DUK, 398.70 DUK, 786.87 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   anchor: cis 2025-10-31 end, stated 8 492.03 DUK, difference 0.00 DUK
-  anchor: cis 2025-12-01 start, stated 398.70 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+  anchor: cis 2025-12-01 start, stated 398.70 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
   anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
   left out: health_pay, 1 instances, first 2027-01-20
   left out: health_settle_pay, 1 instances, first 2027-04-20
@@ -25,8 +28,8 @@ b08_balances: (8 492.03 DUK, 398.70 DUK, 786.87 DUK)
   left out: vat_pay, 1 instances, first 2027-01-25
   law date 2025-12-31, cut 2026-01-07
 b08_residuals: residuals cis 2025
-  2025-12 balance: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), observed 172 731.15 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
-    balance cis 2025-12-01 start (anchored): booked ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), stated 398.70 DUK, gap ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+  2025-12 balance: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards), observed 172 731.15 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
+    balance cis 2025-12-01 start (anchored): booked ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards), stated 398.70 DUK, gap ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
     balance cis 2025-12-10 end (anchored): booked 5 766.83 DUK, stated 5 517.83 DUK, gap -249.00 DUK
     balance cis 2025-12-01 end (anchored): booked 334.51 DUK, stated 334.51 DUK, gap 0.00 DUK
     balance cis 2025-12-02 end (anchored): booked 8 176.36 DUK, stated 8 176.36 DUK, gap 0.00 DUK
@@ -41,8 +44,8 @@ b08_residuals: residuals cis 2025
     balance cis 2025-12-24 end (anchored): booked 18 228.37 DUK, stated 18 228.37 DUK, gap 0.00 DUK
     balance cis 2025-12-29 end (anchored): booked 1 000.00 DUK, stated 1 000.00 DUK, gap 0.00 DUK
     balance cis 2025-12-30 end (anchored): booked 786.87 DUK, stated 786.87 DUK, gap 0.00 DUK
-  2025-12 move mtg_pay: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), observed -2 855.21 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
-    matched mtg_pay[2025-12] on 2025-12-05: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), observed -2 855.21 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays), timing +0 days
+  2025-12 move mtg_pay: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards), observed -2 855.21 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
+    matched mtg_pay[2025-12] on 2025-12-05: model ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards), observed -2 855.21 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards), timing +0 days
   2025-01 balance: model ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis]), observed 483 943.40 DUK, difference ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis])
     balance cis 2025-01-01 start (anchored): booked ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis]), stated 18 412.37 DUK, gap ?"How many monthly instalments (B-D07 .1)?" (mtg_terms) ?"In which month is the first instalment (B-D07 .1)?" (mtg_first) ?"Was this month's instalment suspended under MTG-1 (B-D08)?" (held[2022-03]) ?"What was on Piotr's Cis current account on 2022-03-01? The first export is January 2025's." (opening[cis])
     balance cis 2025-01-02 end (anchored): booked 18 358.30 DUK, stated 18 358.30 DUK, gap 0.00 DUK
@@ -776,9 +779,11 @@ b08_residuals: residuals cis 2025
     matched social_pay[2025-11] on 2025-12-22: model -1 758.01 DUK, observed -1 758.01 DUK, difference 0.00 DUK, timing +0 days
   2025-12 move vat_pay: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK
     matched vat_pay[2025-11] on 2025-12-29: model -5 008.00 DUK, observed -5 008.00 DUK, difference 0.00 DUK, timing +0 days
-  unknown day: gap_card_pays
   law date 2025-12-31, cut 2026-01-07
 b08_unmatched (d = 2025-10-15): (2025-10-15, -111.27 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   anchor: cis 2025-10-14 end, stated 37 450.44 DUK, difference 0.00 DUK
   anchor: cis 2025-10-15 end, stated 37 519.17 DUK, difference 0.00 DUK
   left out: health_pay, 1 instances, first 2027-01-20
@@ -788,6 +793,7 @@ b08_unmatched (d = 2025-10-15): (2025-10-15, -111.27 DUK)
   left out: vat_pay, 1 instances, first 2027-01-25
   law date 2025-12-31, cut 2026-01-07
 b08_unmatched (d = 2025-12-10): (2025-12-10, 249.00 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
   anchor: cis 2025-12-08 end, stated 6 608.84 DUK, difference 0.00 DUK
   anchor: cis 2025-12-10 end, stated 5 517.83 DUK, difference -249.00 DUK
   open: card_fee_pay[2025]
@@ -800,9 +806,11 @@ b08_unmatched (d = 2025-12-10): (2025-12-10, 249.00 DUK)
 b08_reversed (o = cisr[c20251113a]): (2025-11-13, -19 520.00 DUK)
   law date 2025-12-31, cut 2026-01-07
 b08_gap: (2025-11-14, -5 222.44 DUK)
-  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag, gap_to)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
-  anchor: cis 2025-12-01 start, stated 398.70 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for a balance" (gap_card_pays)
+  anchor: cis 2025-12-01 start, stated 398.70 DUK, difference ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
   left out: health_pay, 1 instances, first 2027-01-20
   left out: health_settle_pay, 1 instances, first 2027-04-20
   left out: pit_pay, 1 instances, first 2027-01-20
@@ -814,7 +822,8 @@ b08_no_row: (2025-12-09, -249.00 DUK, -249.00 DUK)
   open: card_fee_pay[2025]
   law date 2025-12-31, cut 2026-01-07
 b08_cards: 35 368.79 DUK + 1 × ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards)
-  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   unfulfilled: gap_card_pays
   law date 2025-12-31, cut 2026-01-07
 

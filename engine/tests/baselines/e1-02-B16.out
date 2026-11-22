@@ -1,6 +1,8 @@
 # tally 2.1.8 (T's re-run): the blocks of tx2_owes_explain from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
 # tally 2.1.8 (T's re-run): the blocks of tx2_mtg_live from refcore 2f019698 (tag tally-2.1.8), each move named by its rule
 tx2_owes: 9 227.29 DUK
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
   law date 2025-12-31, cut 2026-01-07
 tx2_owes_explain: 9 227.29 DUK
   [1] ola_owes_piotr[2025] = 9 227.29 DUK
@@ -461,7 +463,7 @@ tx2_owes_explain: 9 227.29 DUK
               [110] ord_day[2027-01] = 2027-01-05, law date 2027-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [111] row holidays_2027_2029:holidays 2027-01-01..2027-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2027-04-05, 2027-04-12, 2027-04-19, 2027-04-26])])
+                    [111] row holidays_2027_2029:holidays 2027-01-01..2027-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [2027-04-05])
                         version holidays_2027_2029, source gen_1, "General Provisions Act, GEN-1 Business days and public holidays (tmp/cases/law/acts.md)", locator "GEN-1 v2 .2, .3", governs 2027-01-01..2027-12-31, known 2024-06-18
                   rule no_calendar: not applicable
                     (holidays_2027_2029:holidays 2027-01-01..2027-12-31: see [111])
@@ -477,7 +479,7 @@ tx2_owes_explain: 9 227.29 DUK
                     (holidays_2027_2029:holidays 2027-01-01..2027-12-31: see [111])
                   rule no_calendar: not applicable
                     (holidays_2027_2029:holidays 2027-01-01..2027-12-31: see [111])
-              [114] ord_day[2027-04] = window(2027-04-05, 2027-04-06), law date 2027-04-01
+              [114] ord_day[2027-04] = 2027-04-06, law date 2027-04-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
                     (holidays_2027_2029:holidays 2027-01-01..2027-12-31: see [111])
@@ -534,7 +536,7 @@ tx2_owes_explain: 9 227.29 DUK
               [123] ord_day[2028-01] = 2028-01-05, law date 2028-01-01
                   rule hr1: won
                     (hr1:ord_dom: see [43])
-                    [124] row holidays_2027_2029:holidays 2028-01-01..2028-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [one_of([2028-04-03, 2028-04-10, 2028-04-17, 2028-04-24])])
+                    [124] row holidays_2027_2029:holidays 2028-01-01..2028-12-31 = calendar(weekends [sat, sun], yearly [01-01, 01-06, 05-01, 05-03, 06-23, 08-15, 11-01, 11-11, 12-25, 12-26], added [2028-04-03])
                         version holidays_2027_2029, source gen_1, "General Provisions Act, GEN-1 Business days and public holidays (tmp/cases/law/acts.md)", locator "GEN-1 v2 .2, .3", governs 2028-01-01..2028-12-31, known 2024-06-18
                   rule no_calendar: not applicable
                     (holidays_2027_2029:holidays 2028-01-01..2028-12-31: see [124])
@@ -608,12 +610,18 @@ tx2_owes_explain: 9 227.29 DUK
                   version flat_policy, source b_d10, "B-D10 TU Bocian · flat insurance policy WRZ-12/5 2025/26 (tmp/cases/B/docs/B-D10.md)", locator "B-D10: paid on 10.03.2025 by Aleksandra Wilk", governs always, known 2025-03-10
               (flat_policy:flat_ins_paid: see [38])
               (flat_policy:flat_insurance: see [39])
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
   law date 2025-12-31, cut 2026-01-07
 tx2_worth: (421 860.35 DUK + -1 × ?"Were this month's contributions, health contribution, PIT advance and VAT paid? Their days fall where no Cis export covers" (tax_owed_month[2025-10, 2025-12-31]), 142 786.33 DUK + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-04]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-05]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-06]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-07]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-08]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-09]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-10]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-11]) + -1 × ?"What did Ola spend from Wrzos from April 2025 on? She kept no statement after March 2025" (ola_spend[2025-12]))
   assumed: B-D07 .3 rounds the interest to the ort and names no mode; the instalment's rounding isn't stated: half up for both (mtg_round)
   assumed: B-D07 .4 says equal instalments (annuity) but names no periodic rate: the yearly rate over 12 months, nominal 12 (O:B-5) (mtg_inst.reset)
   assumed: B-HR4 .5 says each amount to the ort and names no mode (hr4_round)
-  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
+  assumed: Spring Day 2029 is not announced yet (GEN-1 .3): the first Monday of April, 2029-04-02, is taken (holidays)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   assumed: the dossier names no overpayment before the 26th rule starts (story, B-HR2 v1; B-D28 lists 2025 only) (overpay_from)
   anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
   anchor: lazur 2025-12-01 end, stated 3 904.00 FLR, difference 0.00 FLR
@@ -759,6 +767,9 @@ tx2_cis_explain: 786.87 DUK
   balance of cis (DUK) at the end of 2025-12-31
   from: anchor cis_2025_12:stated[cis] 2025-12-30 end = 786.87 DUK, 2025-12-30 end (version cis_2025_12, source cis_export, locator "cis-5521-3380-0001-2025-12.csv line 41 Balance"), gap role anchor, gap 0.00 DUK
   no movement
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
+  assumed: Spring Day 2029 is not announced yet (GEN-1 .3): the first Monday of April, 2029-04-02, is taken (holidays)
   anchor: cis 2025-12-30 end, stated 786.87 DUK, difference 0.00 DUK
   left out: health_pay, 1 instances, first 2029-01-22
   left out: health_settle_pay, 1 instances, first 2029-04-20
@@ -766,12 +777,17 @@ tx2_cis_explain: 786.87 DUK
   left out: social_pay, 1 instances, first 2029-01-22
   left out: vat_pay, 1 instances, first 2029-01-25
   law date 2025-12-31, cut 2026-01-07
-tx2_mtg_day: (window(2027-04-05, 2027-04-06), 2027-04-05, 36 326.10 DUK, 18 700.00 DUK)
+tx2_mtg_day: (2027-04-06, 2027-04-05, 36 326.10 DUK, 18 700.00 DUK)
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
   law date 2025-12-31, cut 2026-01-07
-tx2_mtg_live: (true, window(2027-04-05, 2027-04-06), ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards) ?"date within window(2025-11-14, 2025-11-30) not precise enough for flows of cis" (gap_card_pays), 14 652.96 DUK)
+tx2_mtg_live: (true, 2027-04-06, ?"Did Kawiarnia Ziarno pay its invoice on the days the November Cis export lacks?" (gap_ziarno) ?"What did Piotr pay by card on the days the November Cis export lacks?" (gap_cards), 14 652.96 DUK)
   assumed: B-HR2 .2 says 12 % of the net to the ort and names no mode (hr2_tax_round)
-  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_to)
-  unknown day: gap_card_pays
+  assumed: Spring Day 2027 is not announced yet (GEN-1 .3): the first Monday of April, 2027-04-05, is taken (holidays)
+  assumed: Spring Day 2028 is not announced yet (GEN-1 .3): the first Monday of April, 2028-04-03, is taken (holidays)
+  assumed: Spring Day 2029 is not announced yet (GEN-1 .3): the first Monday of April, 2029-04-02, is taken (holidays)
+  assumed: the November export's day is not stated: the 2nd of the next month (story) (gap_from, gap_lag)
+  assumed: the days of the payments the export lacks are not known: the gap's first day is planned (gap_lag)
   anchor: cis 2025-06-30 end, stated 14 652.96 DUK, difference 0.00 DUK
   anchor: cis 2025-11-13 end, stated 5 621.14 DUK, difference 0.00 DUK
   anchor: lazur 2025-10-30 end, stated 3 904.00 FLR, difference 0.00 FLR

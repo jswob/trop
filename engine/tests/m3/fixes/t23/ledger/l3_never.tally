@@ -1,0 +1,47 @@
+model l3_never
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 (#247), the plan's §8.4: book/ledger.rs ledger_model on a hole-day instance (MUTANTS-SURVIVORS, the guard exists set to true). pw's day is a window row across March's end, a hole day in 2.3, and it never exists (live false from the start), yet an observation dated 2026-03-30 names it: the ledger holds no model line for pw"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+place unexplained: outside lives 1900-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+input w: date
+input live: bool
+input bank: observed
+
+move pw: transfers
+  on w
+  when live
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  live = false "s"
+  w = window(2026-03-25, 2026-04-05) "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  pad konto from unexplained
+  stated[konto] = 600.00 PLN at 2026-03-31 end "s"
+  bank[r1] = (on: 2026-03-30, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pw) "r1"
+
+ask r_both: residuals konto 2026-03 .. 2026-04
+ask r_mar: residuals konto 2026-03
+ask b_mar: bal(konto, 2026-03-31)
+ask r_p25: residuals konto 2026-03 .. 2026-04 with w = 2026-03-25

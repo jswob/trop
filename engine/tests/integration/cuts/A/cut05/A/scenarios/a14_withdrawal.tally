@@ -13,8 +13,10 @@ input a14_month: month question "In which month does Ania withdraw from her savi
 
 input a14_amount: money DUK question "How much does Ania withdraw from her savings account (questions.md A-14)?"
 
+input a14_lag: int question "How many days before the month's end does Ania withdraw (questions.md A-14)?"
+
 move a14_withdraw[m in month where m == a14_month]: transfers
-  on window(start_of(m), end_of(m) - 1 day)
+  on add_days(end_of(m), -a14_lag)
   at start_of(m)
   leg cash from ania_sav to world amount a14_amount
   note "questions.md A-14: Ania withdraws from her savings account in March 2026"
@@ -28,6 +30,7 @@ version a14_withdrawal
   note "the question's withdrawal: its month and amount, inputs of this scenario alone (L §6.4: only a base item's rows govern from the scenario's from), stated as known when the question is asked"
   a14_month = 2026-03 "questions.md A-14: in March 2026"
   a14_amount = 10000.00 "questions.md A-14: 10 000.00 from her savings account"
+  a14_lag = 1 assumed "the question gives the month, not the day: the month's last day is planned" "questions.md A-14: in March 2026"
 
 version a14_question
   cite questions

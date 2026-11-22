@@ -1,0 +1,23 @@
+model c3_one_of
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 G3 (#247, rulings 2 and 13): `one_of` leaves the language and is refused anywhere, LOAD-PARSE at its row; a day one of a few is written as an axis or a stated day marked assumed (L §4.4). Written at C2, stored at the third pin."
+source s "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d: date
+input amt: money PLN
+move pay: transfers
+  on d
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2025-01-01
+  d = one_of([2026-03-02, 2026-03-09]) "s"
+  amt = 100.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+ask b: bal(konto, 2026-03-31)

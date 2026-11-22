@@ -204514,12 +204514,13 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = window(2027-01-25, 2027-02-05) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,348:fc: ?"date within window(2027-01-25, 2027-02-05) not precise enough for flows of konto" (h)
+,,1:0,519:fc: ?"date within window(2026-12-20, 2027-01-10) not precise enough for the day of g" (wd) ?"date within window(2027-01-25, 2027-02-05) not precise enough for the day of h" (wd2)
+  unknown day: wd
   unknown day: wd2
   cut 2026-03-01
-be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
+be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for the day of g" (wd) ?"date within window(2027-01-25, 2027-02-05) not precise enough for the day of h" (wd2)
   unknown day: wd
-  left out: h, 1 instances, first 2027-01-25
+  unknown day: wd2
   cut 2026-03-01
 bea: ?"after the run's end" (konto)
   cut 2026-03-01
@@ -204560,9 +204561,10 @@ version v
   wd = window(2026-12-20, 2027-01-10) "c"
   wd2 = 2027-03-01 "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,250:fc: 0.00 PLN
+,,1:0,350:fc: ?"date within window(2026-12-20, 2027-01-10) not precise enough for the day of g" (wd)
+  unknown day: wd
   cut 2026-03-01
-be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for a balance" (g)
+be: ?"date within window(2026-12-20, 2027-01-10) not precise enough for the day of g" (wd)
   unknown day: wd
   left out: h, 1 instances, first 2027-03-01
   cut 2026-03-01
@@ -204595,7 +204597,7 @@ version v
   amt = 10.00 PLN "c"
   wd = window(2026-03-30, 2026-04-02) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,136:q: ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
+,,1:0,125:q: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of g" (wd)
   unknown day: wd
   cut 2026-03-01
 ,20:fixes/gate8/m2_g3_g2,11:fixes-gate8,20:run g2.tally --ask q,578:8:g2.tally,562:model pg
@@ -204625,7 +204627,7 @@ version v
   amt = 10.00 PLN "c"
   wd = window(2026-03-30, 2026-04-02) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,109:q (m = g): ?"date within window(2026-03-30, 2026-04-02) not precise enough for a binding over transfers" (g)
+,,1:0,98:q (m = g): ?"date within window(2026-03-30, 2026-04-02) not precise enough for the day of g" (wd)
 ,19:fixes/gate8/m2_g3_h,11:fixes-gate8,11:run h.tally,323:7:h.tally,308:model ph
   tally 2
   on 2026-03-01
@@ -204990,10 +204992,10 @@ version v2
   governs always
   known 2026-03-15
   replace sz = 2 "c"
-,,1:0,80:aw: 10.00 PLN
+,,1:0,158:aw: 10.00 PLN
   cut 2026-06-30
-bw: 10.00 PLN
-  unfulfilled: mw
+bw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of mw" (wd)
+  unknown day: wd
   cut 2026-06-30
 ,20:fixes/gate8/m2_g3_n7,11:fixes-gate8,21:run n7.tally --ask aw,673:8:n7.tally,657:model pn7
   tally 2
@@ -205032,8 +205034,7 @@ version v2
   governs always
   known 2026-03-15
   acct + [a2]
-,,1:0,143:aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the booking cut of mw[a2]" (mw[a2])
-  unknown day: wd
+,,1:0,31:aw: 10.00 PLN
   cut 2026-06-30
 ,22:fixes/gate8/m2_g1_band,11:fixes-gate8,14:run band.tally,1591:10:band.tally,1571:model bm
   tally 2
@@ -209543,61 +209544,91 @@ version v
   zero = 0.00 PLN "s"
   a1 = 1.00 PLN "s"
   opening[konto] = 0.00 PLN at 2026-01-01 start "s"
-,,1:0,1989:f_aft: 0.00 PLN
+,,1:0,5901:f_aft: ?"date within window(2026-06-10, 2026-07-05) not precise enough for the day of aft" (w_aft)
+  unknown day: w_aft
   cut 2026-08-01
-f_bef: 0.00 PLN
+f_bef: ?"date within window(2026-02-10, 2026-03-05) not precise enough for the day of bef" (w_bef)
+  unknown day: w_bef
   cut 2026-08-01
-f_hist: ?"date within window(2026-03-25, 2026-04-01) not precise enough for flows of hist" (hist)
+f_hist: ?"date within window(2026-03-25, 2026-04-01) not precise enough for the day of hist" (w_hist)
   unknown day: w_hist
   cut 2026-08-01
-f_in1: 1.00 PLN
-  unfulfilled: in1
+f_in1: ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of in1" (w_in1)
+  unknown day: w_in1
   cut 2026-08-01
-f_in2: 1.00 PLN
-  unfulfilled: in2
+f_in2: ?"date within window(2026-04-25, 2026-05-05) not precise enough for the day of in2" (w_in2)
+  unknown day: w_in2
   cut 2026-08-01
-f_lastx: ?"date within window(2026-05-31, 2026-06-02) not precise enough for flows of lastx" (lastx)
+f_lastx: ?"date within window(2026-05-31, 2026-06-02) not precise enough for the day of lastx" (w_lastx)
   unknown day: w_lastx
   cut 2026-08-01
-f_strad: ?"date within window(2026-03-25, 2026-04-05) not precise enough for flows of strad" (strad)
+f_strad: ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of strad" (w_strad)
   unknown day: w_strad
   cut 2026-08-01
-fk: ?"date within window(2026-03-25, 2026-04-01) not precise enough for flows of konto" (hist) ?"date within window(2026-03-25, 2026-04-05) not precise enough for flows of konto" (strad) ?"date within window(2026-05-31, 2026-06-02) not precise enough for flows of konto" (lastx)
+fk: ?"date within window(2026-02-10, 2026-03-05) not precise enough for the day of bef" (w_bef) ?"date within window(2026-03-25, 2026-04-01) not precise enough for the day of hist" (w_hist) ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of strad" (w_strad) ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of in1" (w_in1) ?"date within window(2026-04-15, 2026-04-25) not precise enough for the day of zer" (w_zer) ?"date within window(2026-04-25, 2026-05-05) not precise enough for the day of in2" (w_in2) ?"date within window(2026-05-31, 2026-06-02) not precise enough for the day of lastx" (w_lastx) ?"date within window(2026-06-10, 2026-07-05) not precise enough for the day of aft" (w_aft)
+  unknown day: w_aft
+  unknown day: w_bef
   unknown day: w_hist
+  unknown day: w_in1
+  unknown day: w_in2
   unknown day: w_lastx
   unknown day: w_strad
-  unfulfilled: in1
-  unfulfilled: in2
+  unknown day: w_zer
   cut 2026-08-01
-fk_in: 1.00 PLN
-  unfulfilled: in1
-  cut 2026-08-01
-fk_z: 0.00 PLN
-  cut 2026-08-01
-n_aft: 0
-  cut 2026-08-01
-n_bef: 0
-  cut 2026-08-01
-n_hist: ?"date within window(2026-03-25, 2026-04-01) not precise enough for a binding over k_hist" (hist)
+fk_in: ?"date within window(2026-02-10, 2026-03-05) not precise enough for the day of bef" (w_bef) ?"date within window(2026-03-25, 2026-04-01) not precise enough for the day of hist" (w_hist) ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of strad" (w_strad) ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of in1" (w_in1) ?"date within window(2026-04-15, 2026-04-25) not precise enough for the day of zer" (w_zer) ?"date within window(2026-04-25, 2026-05-05) not precise enough for the day of in2" (w_in2) ?"date within window(2026-05-31, 2026-06-02) not precise enough for the day of lastx" (w_lastx) ?"date within window(2026-06-10, 2026-07-05) not precise enough for the day of aft" (w_aft)
+  unknown day: w_aft
+  unknown day: w_bef
   unknown day: w_hist
-  unfulfilled: hist
-  cut 2026-08-01
-n_in1: 1
-  unfulfilled: in1
-  cut 2026-08-01
-n_in2: 1
-  unfulfilled: in2
-  cut 2026-08-01
-n_strad: ?"date within window(2026-03-25, 2026-04-05) not precise enough for a binding over k_strad" (strad)
+  unknown day: w_in1
+  unknown day: w_in2
+  unknown day: w_lastx
   unknown day: w_strad
-  unfulfilled: strad
+  unknown day: w_zer
+  cut 2026-08-01
+fk_z: ?"date within window(2026-02-10, 2026-03-05) not precise enough for the day of bef" (w_bef) ?"date within window(2026-03-25, 2026-04-01) not precise enough for the day of hist" (w_hist) ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of strad" (w_strad) ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of in1" (w_in1) ?"date within window(2026-04-15, 2026-04-25) not precise enough for the day of zer" (w_zer) ?"date within window(2026-04-25, 2026-05-05) not precise enough for the day of in2" (w_in2) ?"date within window(2026-05-31, 2026-06-02) not precise enough for the day of lastx" (w_lastx) ?"date within window(2026-06-10, 2026-07-05) not precise enough for the day of aft" (w_aft)
+  unknown day: w_aft
+  unknown day: w_bef
+  unknown day: w_hist
+  unknown day: w_in1
+  unknown day: w_in2
+  unknown day: w_lastx
+  unknown day: w_strad
+  unknown day: w_zer
+  cut 2026-08-01
+n_aft: ?"date within window(2026-06-10, 2026-07-05) not precise enough for the day of aft" (w_aft)
+  unknown day: w_aft
+  cut 2026-08-01
+n_bef: ?"date within window(2026-02-10, 2026-03-05) not precise enough for the day of bef" (w_bef)
+  unknown day: w_bef
+  cut 2026-08-01
+n_hist: ?"date within window(2026-03-25, 2026-04-01) not precise enough for the day of hist" (w_hist)
+  unknown day: w_hist
+  cut 2026-08-01
+n_in1: ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of in1" (w_in1)
+  unknown day: w_in1
+  cut 2026-08-01
+n_in2: ?"date within window(2026-04-25, 2026-05-05) not precise enough for the day of in2" (w_in2)
+  unknown day: w_in2
+  cut 2026-08-01
+n_strad: ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of strad" (w_strad)
+  unknown day: w_strad
   cut 2026-08-01
 r: residuals konto 2026-04 .. 2026-05
-  ?: model 4.00 PLN, observed 0.00 PLN, difference -4.00 PLN
-    expected but missing hist on window(2026-03-25, 2026-04-01): model 1.00 PLN
-    expected but missing strad on window(2026-03-25, 2026-04-05): model 1.00 PLN
-    expected but missing in2 on window(2026-04-25, 2026-05-05): model 1.00 PLN
-    expected but missing lastx on window(2026-05-31, 2026-06-02): model 1.00 PLN
+  ?: model 7.00 PLN, observed 0.00 PLN, difference -7.00 PLN
+    expected but missing aft on ?"date within window(2026-06-10, 2026-07-05) not precise enough for the day of aft" (w_aft): model 1.00 PLN
+    expected but missing bef on ?"date within window(2026-02-10, 2026-03-05) not precise enough for the day of bef" (w_bef): model 1.00 PLN
+    expected but missing hist on ?"date within window(2026-03-25, 2026-04-01) not precise enough for the day of hist" (w_hist): model 1.00 PLN
+    expected but missing in1 on ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of in1" (w_in1): model 1.00 PLN
+    expected but missing in2 on ?"date within window(2026-04-25, 2026-05-05) not precise enough for the day of in2" (w_in2): model 1.00 PLN
+    expected but missing lastx on ?"date within window(2026-05-31, 2026-06-02) not precise enough for the day of lastx" (w_lastx): model 1.00 PLN
+    expected but missing strad on ?"date within window(2026-03-25, 2026-04-05) not precise enough for the day of strad" (w_strad): model 1.00 PLN
+  unknown day: w_aft
+  unknown day: w_bef
+  unknown day: w_hist
+  unknown day: w_in1
+  unknown day: w_in2
+  unknown day: w_lastx
+  unknown day: w_strad
   cut 2026-08-01
 ,30:fixes/gate8/m2_gate8_at_window,11:fixes-gate8,19:run at_window.tally,2474:15:at_window.tally,2449:model at_window
   tally 2
@@ -209705,19 +209736,17 @@ version new
   rank[q] = 2 "s"
   rank2[p] = 2 "s"
   rank2[q] = 1 "s"
-,,1:0,350:f_md: 1.00 PLN
-  unfulfilled: md
+,,1:0,638:f_md: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_mk: 1.00 PLN
-  unfulfilled: mk[p]
+f_mk: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mk" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_mq: 5.00 PLN
-  unfulfilled: mq
+f_mq: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mq" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_ta: 2.00 PLN
-  unfulfilled: mk[p]
-  unfulfilled: ta[p]
-  unfulfilled: ta[q]
+f_ta: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ta" (wl)
+  unknown day: wl
   cut 2026-08-01
 warning: WARN-UNREAD input on2 is read by nothing
 warning: WARN-UNREAD input rank2 is read by nothing
@@ -209835,18 +209864,20 @@ version new
   rank[q] = 2 "s"
   rank2[p] = 2 "s"
   rank2[q] = 1 "s"
-,,1:0,335:f_md: 1.00 PLN
-  unfulfilled: md
+,,1:0,720:f_md: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_mk: 1.00 PLN
-  unfulfilled: mk[p]
+f_mk: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mk" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_mq: 5.00 PLN
-  unfulfilled: mq
+f_mq: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mq" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_ta: refused: RUN-TIE tb: its ties by is a hole
+f_ta: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ta" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_tb: refused: RUN-TIE tb: its ties by is a hole
+f_tb: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of tb" (wl)
+  unknown day: wl
   cut 2026-08-01
 warning: WARN-UNREAD input on2 is read by nothing
 ,34:fixes/gate8/m2_gate8_explain_dated,11:fixes-gate8,43:run explain_dated.tally --ask e_konto e_sav,1247:19:explain_dated.tally,1218:model explain_dated
@@ -209984,7 +210015,8 @@ version v
   amt = 0.00 PLN "c"
   wd = window(2026-12-20, 2027-01-10) "c"
   opening[konto] = 0.00 PLN at 2026-01-01 start "own"
-,,1:0,30:fa: 0.00 PLN
+,,1:0,126:fa: ?"date within window(2026-12-20, 2027-01-10) not precise enough for the day of g" (wd)
+  unknown day: wd
   cut 2026-03-01
 ,25:fixes/gate8/m2_g3_fix2_r2,11:fixes-gate8,26:run fix2_r2.tally --ask q0,324:13:fix2_r2.tally,302:model px
   tally 2
@@ -218304,15 +218336,13 @@ version new
 ask kw: flows(mw, 2026-04-01 .. 2026-04-30) partial
 ask kp: bal(konto, 2026-04-30) partial
 ask kd: flows(md, 2026-04-01 .. 2026-04-30) partial
-,,1:0,379:kd: 0.00 PLN + 1 × ?"amt" (a1)
-  unfulfilled: md
-  cut 2026-08-01
-kp: ?"amt" (a1) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+,,1:0,582:kd: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl)
   unknown day: wl
-  unfulfilled: md
-  unfulfilled: me
   cut 2026-08-01
-kw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+kp: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of me" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
+  unknown day: wl
+  cut 2026-08-01
+kw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
   unknown day: wl
   cut 2026-08-01
 ,34:fixes/gate8/m2_r437_window_at_rest,11:fixes-gate8,49:run window_at_rest.tally --ask e5 e4 w k n kp mqf,1845:20:window_at_rest.tally,1815:model wa_for
@@ -218392,34 +218422,26 @@ version new
 ask kp: bal(konto, 2026-04-30) partial
 ask mqf: flows(mq, 2026-04-01 .. 2026-04-30)
 ask kpm: bal(konto, 2026-04-30) - bal(konto, 2026-03-01) partial
-,,1:0,814:e5: 1.00 PLN
-  unfulfilled: me
-  cut 2026-08-01
-e4: 0.00 PLN
-  cut 2026-08-01
-w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+,,1:0,1759:e5: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of me" (wl)
   unknown day: wl
   cut 2026-08-01
-k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+e4: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of me" (wl)
   unknown day: wl
-  unfulfilled: md
-  unfulfilled: me
-  unfulfilled: mq
   cut 2026-08-01
-n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+w: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
   unknown day: wl
-  unfulfilled: md
-  unfulfilled: me
-  unfulfilled: mq
   cut 2026-08-01
-kp: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+k: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of me" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mq" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
   unknown day: wl
-  unfulfilled: md
-  unfulfilled: me
-  unfulfilled: mq
   cut 2026-08-01
-mqf: 1.00 PLN
-  unfulfilled: mq
+n: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of me" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mq" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
+  unknown day: wl
+  cut 2026-08-01
+kp: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of md" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of me" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mq" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
+  unknown day: wl
+  cut 2026-08-01
+mqf: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mq" (wl)
+  unknown day: wl
   cut 2026-08-01
 ,27:r1/l8_reads_first_last_stop,8:fixes-r1,23:run m.tally --ask a b c,392:7:m.tally,377:model t
   tally 2
@@ -228167,13 +228189,14 @@ version st
   known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,571:q3: residuals konto 2026-03
+,,1:0,658:q3: residuals konto 2026-03
+  ?: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
+    expected but missing one on ?"date within window(2026-03-01, 2026-03-10) not precise enough for the day of one" (dk[a]): model 10.00 PLN
   2026-03 unexplained: model 0.00 PLN, observed 12.00 PLN, difference 12.00 PLN
     unexplained bank[r1] on 2026-03-10: observed 12.00 PLN
-  2026-03 move one: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
-    expected but missing one on 2026-03-01: model 10.00 PLN
   2026-03 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
     expected but missing pay[2026-03] on 2026-03-10: model 10.00 PLN
+  unknown day: dk[a]
   cut 2026-04-10
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
@@ -228226,11 +228249,12 @@ version st
   known 2026-04-20
   covers konto
   bank[r1] = (on: 2026-03-10, kind: transfers, leg cash from world to konto amount 12.00 PLN) "r1"
-,,1:0,437:q5: residuals konto 2026-04
+,,1:0,519:q5: residuals konto 2026-04
   ?: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
-    expected but missing one on window(2026-03-30, 2026-04-01): model 10.00 PLN
+    expected but missing one on ?"date within window(2026-03-30, 2026-04-01) not precise enough for the day of one" (dk[a]): model 10.00 PLN
   2026-04 move pay: model 10.00 PLN, observed 0.00 PLN, difference -10.00 PLN
     expected but missing pay[2026-04] on 2026-04-10: model 10.00 PLN
+  unknown day: dk[a]
   cut 2026-04-25
 warning: WARN-UNREAD input d0 is read by nothing
 warning: WARN-UNREAD place wallet is read by nothing
@@ -231161,25 +231185,22 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,1450:w15: 20.00 PLN
+,,1:0,1485:w15: 20.00 PLN
   pinned: ax = lo
   pinned: wd = 2026-03-30
   cut 2026-03-01
-w21: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balance" (gift) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+w21: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the day of gift" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
   unknown day: wd
   held: rate = 12.00 PLN (r2), read for 2026-04-01
   held: rate = 12.00 PLN (r2), read for 2026-04-02
   held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
-w22: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+w22: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the day of gift" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
   unknown day: wd
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
-w23: ?"date within window(2026-03-28, 2026-04-03) not precise enough for a balance" (gift) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (bonus) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+w23: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the day of gift" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
   pinned: ax = lo
   unknown day: wd
   held: rate = 12.00 PLN (r2), read for 2026-04-01
@@ -232024,26 +232045,23 @@ version new
   known 2026-01-01
   nv = 2 "s"
   on1 = 0 "s"
-,,1:0,593:n_mb: 7
-  cut 2026-08-01
-f_ma: 1.00 PLN
-  unfulfilled: ma
-  cut 2026-08-01
-f_mb: 1.00 PLN
-  unfulfilled: mb
-  cut 2026-08-01
-f_mw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+,,1:0,1170:n_mb: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl)
   unknown day: wl
   cut 2026-08-01
-c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+f_ma: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (wl)
   unknown day: wl
-  unfulfilled: ma
-  unfulfilled: mb
   cut 2026-08-01
-b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (mw)
+f_mb: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl)
   unknown day: wl
-  unfulfilled: ma
-  unfulfilled: mb
+  cut 2026-08-01
+f_mw: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
+  unknown day: wl
+  cut 2026-08-01
+c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
+  unknown day: wl
+  cut 2026-08-01
+b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mw" (wl)
+  unknown day: wl
   cut 2026-08-01
 ,22:fixes/gate8/m2_g8b_aw2,11:fixes-gate8,13:run aw2.tally,1250:9:aw2.tally,1232:model aw2
   tally 2
@@ -232103,18 +232121,17 @@ version new
   governs 2026-04-01..
   known 2026-01-01
   nv = 2 "s"
-,,1:0,198:b: 2.00 PLN
-  unfulfilled: ma
-  unfulfilled: mb
+,,1:0,716:b: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl)
+  unknown day: wl
   cut 2026-08-01
-c: 2
-  unfulfilled: ma
-  unfulfilled: mb
+c: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of ma" (wl) ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl)
+  unknown day: wl
   cut 2026-08-01
-f_mb: 1.00 PLN
-  unfulfilled: mb
+f_mb: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl)
+  unknown day: wl
   cut 2026-08-01
-n_mb: 7
+n_mb: ?"date within window(2026-03-30, 2026-04-02) not precise enough for the law date of mb" (wl)
+  unknown day: wl
   cut 2026-08-01
 ,21:fixes/gate8/m2_g8b_ot,11:fixes-gate8,12:run ot.tally,1534:8:ot.tally,1517:model ot
   tally 2
@@ -233456,33 +233473,38 @@ ask q_move: flows(cross, 2026-02-15 .. 2026-02-28) law cut
 ask q_move_whole: flows(early, 2026-02-01 .. 2026-02-28), flows(early, 2026-02-05 .. 2026-02-28) law cut
 
 ask q_odd: flows(odd, 2026-02-01 .. 2026-02-28) law cut
-,,1:0,1466:q_after_early: ?"date within window(2026-02-10, 2026-02-20) not precise enough for flows of konto" (cross) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
+,,1:0,2486:q_after_early: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of early" (early_day) ?"date within window(2026-02-10, 2026-02-20) not precise enough for the day of cross" (cross_day) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
   unknown day: cross_day
-  unfulfilled: odd
-  law date 2026-03-31, cut 2026-03-31
-q_bad: ?"when is the bad one paid?" (bad_when_day)
-  law date 2026-03-31, cut 2026-03-31
-q_bad_late: ?"when is the bad one paid?" (bad_when_day)
-  law date 2026-03-31, cut 2026-03-31
-q_late: ?"when is the maybe paid?" (when_day)
-  law date 2026-03-31, cut 2026-03-31
-q_mid: ?"date within window(2026-02-10, 2026-02-20) not precise enough for flows of konto" (cross) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
-  unknown day: cross_day
-  unfulfilled: odd
-  law date 2026-03-31, cut 2026-03-31
-q_move: ?"date within window(2026-02-10, 2026-02-20) not precise enough for flows of cross" (cross)
-  unknown day: cross_day
-  law date 2026-03-31, cut 2026-03-31
-q_move_whole: (100.00 PLN, ?"date within window(2026-02-01, 2026-02-10) not precise enough for flows of early" (early))
   unknown day: early_day
-  unfulfilled: early
+  unfulfilled: odd
+  law date 2026-03-31, cut 2026-03-31
+q_bad: ?"date within window(2026-02-01, 2026-02-12) not precise enough for the day of bad" (bad_day) ?"when is the bad one paid?" (bad_when_day)
+  unknown day: bad_day
+  law date 2026-03-31, cut 2026-03-31
+q_bad_late: ?"date within window(2026-02-01, 2026-02-12) not precise enough for the day of bad" (bad_day) ?"when is the bad one paid?" (bad_when_day)
+  unknown day: bad_day
+  law date 2026-03-31, cut 2026-03-31
+q_late: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of early" (early_day) ?"date within window(2026-02-10, 2026-02-20) not precise enough for the day of cross" (cross_day) ?"when is the maybe paid?" (when_day)
+  unknown day: cross_day
+  unknown day: early_day
+  law date 2026-03-31, cut 2026-03-31
+q_mid: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of early" (early_day) ?"date within window(2026-02-10, 2026-02-20) not precise enough for the day of cross" (cross_day) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
+  unknown day: cross_day
+  unknown day: early_day
+  unfulfilled: odd
+  law date 2026-03-31, cut 2026-03-31
+q_move: ?"date within window(2026-02-10, 2026-02-20) not precise enough for the day of cross" (cross_day)
+  unknown day: cross_day
+  law date 2026-03-31, cut 2026-03-31
+q_move_whole: (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of early" (early_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of early" (early_day))
+  unknown day: early_day
   law date 2026-03-31, cut 2026-03-31
 q_odd: ?"how much is kept for a balance" (odd_amt)
   unfulfilled: odd
   law date 2026-03-31, cut 2026-03-31
-q_whole: ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
-  unfulfilled: cross
-  unfulfilled: early
+q_whole: ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of early" (early_day) ?"date within window(2026-02-10, 2026-02-20) not precise enough for the day of cross" (cross_day) ?"how much is kept for a balance" (odd_amt) ?"when is the maybe paid?" (when_day)
+  unknown day: cross_day
+  unknown day: early_day
   unfulfilled: odd
   law date 2026-03-31, cut 2026-03-31
 ,26:fixes/gate8/m3_two_readers,11:fixes-gate8,14:run base.tally,1801:10:base.tally,1781:model tr
@@ -233724,26 +233746,32 @@ ask q_bal: bal(konto, d), bal(jar, d) for d in [2026-02-09, 2026-02-10, 2026-02-
 ask q_gap: gap(konto, 2026-02-10), gap(jar, 2026-02-11) law cut
 
 ask q_flows: flows(konto, 2026-02-11 .. 2026-02-28), flows(jar, 2026-02-11 .. 2026-02-28) law cut
-,,1:0,2274:q_bal (d = 2026-02-09): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+,,1:0,3374:q_bal (d = 2026-02-09): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day))
   unknown day: save_day
   unknown day: spend_day
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-10): (900.00 PLN, ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+q_bal (d = 2026-02-10): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day))
   unknown day: save_day
   unknown day: spend_day
-  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
+  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day)
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-11): (900.00 PLN, 500.00 PLN)
-  anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend)
-  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
+q_bal (d = 2026-02-11): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day))
+  unknown day: save_day
+  unknown day: spend_day
+  anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day)
+  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day)
   law date 2026-03-31, cut 2026-03-31
-q_bal (d = 2026-02-28): (900.00 PLN, 500.00 PLN)
-  anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend)
-  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save)
+q_bal (d = 2026-02-28): (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day))
+  unknown day: save_day
+  unknown day: spend_day
+  anchor: jar 2026-02-11 end, stated 500.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day)
+  anchor: konto 2026-02-10 end, stated 900.00 PLN, difference ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day)
   law date 2026-03-31, cut 2026-03-31
-q_flows: (0.00 PLN, 0.00 PLN)
+q_flows: (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day))
+  unknown day: save_day
+  unknown day: spend_day
   law date 2026-03-31, cut 2026-03-31
-q_gap: (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend))
+q_gap: (?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day), ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of save" (save_day) ?"date within window(2026-02-05, 2026-02-10) not precise enough for the day of spend" (spend_day))
   unknown day: save_day
   unknown day: spend_day
   law date 2026-03-31, cut 2026-03-31
@@ -234139,27 +234167,27 @@ ask x_first: explain first_gift
 ask x_covered: explain covered_pay
 
 ask x_new: explain new_gift
-,,1:0,3270:q_covered (d = 2026-02-04): 1 000.00 PLN
+,,1:0,3705:q_covered (d = 2026-02-04): 1 000.00 PLN
   law date 2026-03-15, cut 2026-03-15
 q_covered (d = 2026-02-28): 945.00 PLN
   anchor: konto 2026-02-28 end, stated 945.00 PLN, difference 0.00 PLN
   law date 2026-03-15, cut 2026-03-15
-q_first (d = 2026-01-05): ?"date within window(2026-01-01, 2026-01-10) not precise enough for a balance" (first_gift)
+q_first (d = 2026-01-05): ?"date within window(2026-01-01, 2026-01-10) not precise enough for the day of first_gift" (first_day)
   unknown day: first_day
   law date 2026-03-15, cut 2026-03-15
-q_first (d = 2026-01-10): 150.00 PLN
-  unfulfilled: first_gift
+q_first (d = 2026-01-10): ?"date within window(2026-01-01, 2026-01-10) not precise enough for the day of first_gift" (first_day)
+  unknown day: first_day
   law date 2026-03-15, cut 2026-03-15
-q_first (d = 2026-01-31): 150.00 PLN
-  unfulfilled: first_gift
+q_first (d = 2026-01-31): ?"date within window(2026-01-01, 2026-01-10) not precise enough for the day of first_gift" (first_day)
+  unknown day: first_day
   law date 2026-03-15, cut 2026-03-15
-q_new (d = 2026-02-07): ?"date within window(2026-02-01, 2026-02-10) not precise enough for a balance" (new_gift)
+q_new (d = 2026-02-07): ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of new_gift" (new_day)
   unknown day: new_day
   law date 2026-03-15, cut 2026-03-15
-q_new (d = 2026-02-10): ?"date within window(2026-02-01, 2026-02-10) not precise enough for a balance" (new_gift)
+q_new (d = 2026-02-10): ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of new_gift" (new_day)
   unknown day: new_day
   law date 2026-03-15, cut 2026-03-15
-q_new (d = 2026-02-28): ?"date within window(2026-02-01, 2026-02-10) not precise enough for a balance" (new_gift)
+q_new (d = 2026-02-28): ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of new_gift" (new_day)
   unknown day: new_day
   law date 2026-03-15, cut 2026-03-15
 q_res: residuals konto 2026-02
@@ -234169,27 +234197,27 @@ q_res: residuals konto 2026-02
     balance konto 2026-02-28 end (anchored): booked 945.00 PLN, stated 945.00 PLN, gap 0.00 PLN
   law date 2026-03-15, cut 2026-03-15
 x_covered: covered_pay
-  plan, day window(2026-02-03, 2026-02-08), booking cut 2026-02-03, status modelled
+  plan, day ?"date within window(2026-02-03, 2026-02-08) not precise enough for the day of covered_pay" (covered_day), booking cut 2026-03-15, status modelled
   leg cash from konto to world amount 50.00 PLN
-  derivation at 2026-02-03:
+  derivation at 2026-03-15:
     [1] row facts:covered_day = window(2026-02-03, 2026-02-08)
         version facts, source fixture, "T's fixture (invented values)", locator "some day in early February", governs always, known 2025-12-01
     [2] row facts:amt = 50.00 PLN
         version facts, source fixture, "T's fixture (invented values)", locator "the amount", governs always, known 2025-12-01
   cut 2026-03-15
 x_first: first_gift
-  plan, day window(2026-01-01, 2026-01-10), booking cut 2026-01-01, status past
+  plan, day ?"date within window(2026-01-01, 2026-01-10) not precise enough for the day of first_gift" (first_day), booking cut 2026-03-15, status hole
   leg cash from world to konto2 amount 50.00 PLN
-  derivation at 2026-01-01:
+  derivation at 2026-03-15:
     [1] row facts:first_day = window(2026-01-01, 2026-01-10)
         version facts, source fixture, "T's fixture (invented values)", locator "some day in the run's first ten days", governs always, known 2025-12-01
     [2] row facts:amt = 50.00 PLN
         version facts, source fixture, "T's fixture (invented values)", locator "the amount", governs always, known 2025-12-01
   cut 2026-03-15
 x_new: new_gift
-  plan, day window(2026-02-01, 2026-02-10), booking cut 2026-02-01, status past
+  plan, day ?"date within window(2026-02-01, 2026-02-10) not precise enough for the day of new_gift" (new_day), booking cut 2026-03-15, status hole
   leg cash from world to newacc amount 50.00 PLN
-  derivation at 2026-02-01:
+  derivation at 2026-03-15:
     [1] row facts:new_day = window(2026-02-01, 2026-02-10)
         version facts, source fixture, "T's fixture (invented values)", locator "some day early in February", governs always, known 2025-12-01
     [2] row facts:amt = 50.00 PLN

@@ -1,0 +1,47 @@
+model l1_fulfilled
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 (#247), the plan's §8.4: book/ledger.rs ledger_model on a hole-day instance (MUTANTS-SURVIVORS, the guard exists set to false). pw's day is a window row across March's end, a hole day in 2.3, and an observation dated 2026-03-30 fulfils it: the ledger's line for pw sits in the observation's month, March, and not in April"
+
+source s "s"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2025-01-01..
+place unexplained: outside lives 1900-01-01..
+place world: outside lives 1900-01-01..
+
+input amt: money PLN
+input w: date
+input bank: observed
+
+move pw: transfers
+  on w
+  leg cash from world to konto amount amt
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  w = window(2026-03-25, 2026-04-05) "s"
+
+version st
+  cite s
+  governs 2026-03
+  known 2026-04-10
+  covers konto
+  pad konto from unexplained
+  stated[konto] = 600.00 PLN at 2026-03-31 end "s"
+  bank[r1] = (on: 2026-03-30, kind: transfers, leg cash from world to konto amount 100.00 PLN, fulfils: pw) "r1"
+
+ask r_both: residuals konto 2026-03 .. 2026-04
+ask r_mar: residuals konto 2026-03
+ask r_apr: residuals konto 2026-04
+ask b_mar: bal(konto, 2026-03-31)
+ask b_apr: bal(konto, 2026-04-30)
+ask r_p25: residuals konto 2026-03 .. 2026-04 with w = 2026-03-25
+ask r_p05: residuals konto 2026-03 .. 2026-04 with w = 2026-04-05
