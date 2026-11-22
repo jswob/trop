@@ -2264,7 +2264,12 @@ def m_move_read_items(self, mi):
     if out is not None:
         return out
     E = self.m.checker.edges
-    out, stack = set(), [('move', mi.id)]
+    # its key domain too: a key a version enters makes an instance exist (E §5 step 2; n7)
+    doms = [getattr(b, 'dom', None) for b in getattr(mi, 'binds', ()) or ()]
+    out, stack = set(), [('move', mi.id)] + [
+        (d[0], d[1]) if d[0] in ('index', 'kind', 'axis') else ('index', d[2])
+        for d in doms if isinstance(d, tuple) and (d[0] in ('index', 'kind', 'axis') or
+                                                   (d[0] == 'list' and len(d) > 2 and isinstance(d[2], str)))]
     while stack:
         x = stack.pop()
         if x in out:
@@ -2295,6 +2300,16 @@ def m_version_items(self, vid):
         for bid, b in m.bands.items():
             for t in b.tables:
                 vi.setdefault(t.version.id, set()).add(('band', bid))
+        # a key a version enters into an index or a kind: what makes an instance over it exist (E §5 step 2; tally
+        # 2.3, the lead's N1 for an instance a later version brings into being, n7)
+        for iid, ix in m.indexes.items():
+            for v in getattr(ix, 'added', {}).values():
+                if v is not None:
+                    vi.setdefault(v.id, set()).add(('index', iid))
+        for th in m.things.values():
+            for e in th.entries:
+                if e.version is not None:
+                    vi.setdefault(e.version.id, set()).add(('kind', e.kind))
         m._version_items = vi
     return vi.get(vid, set())
 

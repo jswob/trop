@@ -1,0 +1,75 @@
+# E §5 step 1, N1 for an instance a later version brings into being (tally 2.3, #247; the lead's n7): `mw[a2]`
+# is `on wd`, a window, and v2 (known 2026-03-15) enters the key a2. Booked before v2 the instance counts as
+# nothing (A₀ = 0), after it 10.00 PLN, so its leg's amount read as a field is the day's hole, as the engine
+# prints; pinned, 0.00 PLN before 03-15 and 10.00 PLN from it. C-4's count over `adjustments`: the hole, pinned
+# 1 at 03-10 and 0 at 03-15. Before: `aw` 10.00 PLN (the key a version enters wasn't in the move's read set).
+=== m.tally
+model pn7
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source card "invented"
+unit PLN: currency minor 0.01
+
+index acct = [a1]
+
+place konto: accounts PLN lives 2026-01-01..
+place work: outside lives 1900-01-01..
+
+input wd: date
+input amt: money PLN
+
+move mw[k in acct]: transfers
+  on wd
+  leg cash from work to konto amount amt
+
+ask aw: mw[a2].cash.amount
+ask n: count(a in adjustments over ..)
+ask n_p10: count(a in adjustments over ..) with wd = 2026-03-10
+ask n_p15: count(a in adjustments over ..) with wd = 2026-03-15
+ask ids: a.change for a in adjustments over ..
+ask aw10: mw[a2].cash.amount with wd = 2026-03-10
+ask aw14: mw[a2].cash.amount with wd = 2026-03-14
+ask aw15: mw[a2].cash.amount with wd = 2026-03-15
+ask aw20: mw[a2].cash.amount with wd = 2026-03-20
+
+version v
+  cite card
+  governs always
+  known 2026-01-01
+  wd = window(2026-03-10, 2026-03-20) "c"
+  amt = 10.00 PLN "c"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "own"
+
+version v2
+  cite card
+  governs always
+  known 2026-03-15
+  acct + [a2]
+=== expect
+aw: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of mw[a2]" (wd)
+  unknown day: wd
+  cut 2026-06-30
+aw10: 0.00 PLN
+  pinned: wd = 2026-03-10
+  cut 2026-06-30
+aw14: 0.00 PLN
+  pinned: wd = 2026-03-14
+  cut 2026-06-30
+aw15: 10.00 PLN
+  pinned: wd = 2026-03-15
+  cut 2026-06-30
+aw20: 10.00 PLN
+  pinned: wd = 2026-03-20
+  cut 2026-06-30
+ids (a = adjustments[mw[a2].cash, v2]): ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of mw[a2]" (wd)
+n: ?"date within window(2026-03-10, 2026-03-20) not precise enough for the day of mw[a2]" (wd)
+  unknown day: wd
+  cut 2026-06-30
+n_p10: 1
+  pinned: wd = 2026-03-10
+  cut 2026-06-30
+n_p15: 0
+  cut 2026-06-30
