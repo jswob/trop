@@ -20,6 +20,7 @@
 use super::instance::{
     Amount, Booked, BookedLeg, Dated, End, Exists, Inst, LegVal, Seed, Status, inst_order,
 };
+use super::legs::leg_unit_static;
 use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Ctx, Engine, Env, Snap, one_day, thing_seen};
@@ -558,6 +559,52 @@ impl Engine {
                 src: None,
             })
             .collect();
+        Ok(Some(legs))
+    }
+
+    /// The legs of decision instance `inst`, whose day is a hole, as a binding meets it: the
+    /// walk never runs it, so its places are read as a refused instance's are, at cut `cut`,
+    /// their reads its own and no reader's, and each amount and day is the day's hole; none
+    /// where a place isn't a thing here, or for an instance with a day (refcore's
+    /// `hole_day_dec_body`). L §5.14, §5.19 Bindings.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    pub(crate) fn hole_day_legs(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        cut: Day,
+    ) -> Result<Option<Vec<LegVal>>, Stop> {
+        let Some(Dated::Hole(h)) = &inst.day else {
+            return Ok(None);
+        };
+        self.push();
+        let ends = self.leg_ends(m, mv, inst, self.timeline_ctx(inst.law.day(), cut));
+        self.pop_alone();
+        let Some(places) = ends? else {
+            return Ok(None);
+        };
+        let kind_legs = m.kind_legs(&mv.kind);
+        let mut legs = Vec::with_capacity(places.len());
+        for (leg, (from, to)) in mv.decl.legs.iter().zip(places) {
+            let (from, to) = (End::Place(from), End::Place(to));
+            let unit = kind_legs
+                .iter()
+                .find(|(name, _, _)| *name == leg.name)
+                .and_then(|(_, unit, _)| leg_unit_static(m, unit, &from, &to));
+            legs.push(LegVal {
+                name: leg.name.clone(),
+                from,
+                to,
+                amount: Amount::Hole(h.clone()),
+                unit,
+                day: Dated::Hole(h.clone()),
+                src: None,
+            });
+        }
         Ok(Some(legs))
     }
 

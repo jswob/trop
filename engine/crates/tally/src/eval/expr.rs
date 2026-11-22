@@ -159,6 +159,7 @@ impl Engine {
             id,
             day: None,
             src: MvSrc::Missing,
+            member: false,
         })))
     }
 

@@ -173,6 +173,7 @@ impl Engine {
             id,
             day,
             src: MvSrc::Obs,
+            member: false,
         })))
     }
 
