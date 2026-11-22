@@ -730,6 +730,18 @@ impl Engine {
         {
             return Ok(Value::Hole(h));
         }
+        // a leg a later version changes, of an instance whose day is a hole, is read as that
+        // hole: its amount and day, and its places too where the version moves them, since
+        // its booking cut is a hole with its day (L §5.14; pick P12, by C-4's measure, P10)
+        if is_leg
+            && let Moving::Plan(i) = &src
+            && let Some((h, moved)) = self.changed_leg(m, i, name, ctx.cut)?
+        {
+            return Ok(match i.legs.iter().find(|lg| lg.name == name) {
+                Some(lg) if !moved => same_leg_record(lg, &h),
+                Some(_) | None => Value::Hole(h),
+            });
+        }
         if (name == "day" || is_leg)
             && let Some(h) =
                 self.same_rows_hole(m, &src, (name != "day").then_some(name), ctx.cut)?
@@ -755,6 +767,40 @@ impl Engine {
             _ if is_leg => self.leg_field(m, &src, name, ctx),
             _ => attr_field(m, &src, name),
         }
+    }
+
+    /// The hole of leg `leg` of instance `inst`, whose day is a hole, where a later version
+    /// known by cut `cut` changes it, and whether it moves the leg's places: C-4's measure
+    /// made an adjustment of it whose existence is that hole (`Engine::unsure_of`); none for
+    /// an instance with a day, or a leg no version changes (L §5.14, E §5 steps 1 and 2; pick
+    /// P12).
+    ///
+    /// # Errors
+    ///
+    /// The refusals of the measuring.
+    fn changed_leg(
+        &mut self,
+        m: &Reality,
+        inst: &Inst,
+        leg: &str,
+        cut: Day,
+    ) -> Result<Option<(Hole, bool)>, Stop> {
+        let Some(Dated::Hole(h)) = &inst.day else {
+            return Ok(None);
+        };
+        let mv = m
+            .moves
+            .get(&inst.move_id)
+            .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
+        let mut changed = false;
+        let mut moved = false;
+        for a in self.unsure_of(m, mv, cut)? {
+            if a.inst_id == inst.id && a.leg.name == leg {
+                changed = true;
+                moved = moved || !a.new_ends.is_empty();
+            }
+        }
+        Ok(changed.then(|| (h.clone(), moved)))
     }
 
     /// A movement of a `same` group whose members state kinds not all inside the binding's
@@ -1207,9 +1253,10 @@ fn reads_of_fact(i: &Inst, fact: &Fact) -> Collected {
     }
 }
 
-/// A leg of a movement stated `same` whose sides disagree on its amount, as a record: its
-/// `from` and `to` its own, its `amount` and `day` the disagreement's hole (L §5.14, §6.1
-/// `HOLE-SAME` per fact; P42 on #241).
+/// A leg whose amount is a hole `same` as a record: its `from` and `to` its own, its `amount`
+/// and `day` that hole; for a movement stated `same` whose sides disagree on the amount (L
+/// §5.14, §6.1 `HOLE-SAME` per fact; P42 on #241), and for a hole-day instance's leg a later
+/// version changes (pick P12).
 fn same_leg_record(lg: &LegVal, same: &Hole) -> Value {
     let end = |e: &End| match e {
         End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
@@ -1429,6 +1476,53 @@ ask s: sum(t.cash.amount for t in sweeps over 2026-05)
 ask n_p: count(t in sweeps over 2026-05) with dd = 2026-05-05
 "#;
 
+    /// A pay on day `pd`, written in for `DAY`, its amount raised by a version known on 15
+    /// March, inside the run (`hd1`'s twin; T's pin oracle, `known_in`).
+    const RAISE: &str = r#"model raise
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input pd: date
+
+move pay_x: transfers
+  on pd
+  leg cash from world to konto amount pay
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its amount"
+  pd = DAY "its day"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "own"
+
+version raise
+  cite fixture
+  governs always
+  known 2026-03-15
+  replace pay = 150.00 PLN "raised"
+
+ask amt: pay_x.cash.amount
+
+ask amt_p10: pay_x.cash.amount with pd = 2026-03-10
+
+ask amt_p20: pay_x.cash.amount with pd = 2026-03-20
+
+ask from: pay_x.cash.from
+"#;
+
     /// A top-up, a decision that reads the sweeps of its month by their amounts, beside the
     /// sweep of [`SWEEP`] on day `dd`, written in for `DAY` (the review of G1's fix, BF1).
     const TOP: &str = r#"model top
@@ -1568,5 +1662,50 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
             ],
             "a pinned day"
         );
+    }
+
+    #[test]
+    fn a_field_of_a_hole_day_instance_a_later_version_changes_is_its_hole() {
+        // its booking cut is a hole with its day (L §5.14), so the amount a later version
+        // changes isn't known; a field no version changes stays a value (pick P12)
+        for (day, hole) in [
+            (
+                "window(2026-03-01, 2026-03-31)",
+                vec![
+                    "amt: ?\"date within window(2026-03-01, 2026-03-31) not precise enough for the day of pay_x\" (pd)",
+                    "  unknown day: pd",
+                    "  cut 2026-04-20",
+                ],
+            ),
+            (
+                "?\"which day is the pay?\"",
+                vec!["amt: ?\"which day is the pay?\" (pd)", "  cut 2026-04-20"],
+            ),
+        ] {
+            assert_eq!(lines_of(RAISE, day, "amt"), hole, "{day}");
+            assert_eq!(
+                lines_of(RAISE, day, "from"),
+                ["from: world", "  cut 2026-04-20"],
+                "{day}: its from"
+            );
+            assert_eq!(
+                lines_of(RAISE, day, "amt_p10"),
+                [
+                    "amt_p10: 100.00 PLN",
+                    "  pinned: pd = 2026-03-10",
+                    "  cut 2026-04-20"
+                ],
+                "{day}: booked before the raise"
+            );
+            assert_eq!(
+                lines_of(RAISE, day, "amt_p20"),
+                [
+                    "amt_p20: 150.00 PLN",
+                    "  pinned: pd = 2026-03-20",
+                    "  cut 2026-04-20"
+                ],
+                "{day}: booked after it"
+            );
+        }
     }
 }
