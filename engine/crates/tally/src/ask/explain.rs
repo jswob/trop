@@ -20,7 +20,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::answer::{computed_entry, entries_text, print_hole, unresolved_word};
+use super::answer::unresolved_word;
 use super::check::Printed;
 use super::instance::instance_line;
 use super::walked::balance_line;
@@ -796,8 +796,6 @@ pub(super) fn plain_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             "refused: {} {text} is outside {index}",
             Code::Run(Run::Key).as_str()
         )),
-        Item::Value(Value::Window(w)) if !w.of_days() => print_hole(m, w),
-        Item::Value(Value::List(items)) if computed_entry(items) => entries_text(m, items),
         Item::Value(v) => v.text(m).map_err(num_stop),
     }
 }

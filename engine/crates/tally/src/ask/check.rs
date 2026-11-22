@@ -7,7 +7,6 @@
 //! Invariants: each side is read once, as an ask line reads a value; a load refusal met at
 //! run refuses the run; a side's text is refcore's `_txt` of the expression.
 
-use super::answer::{computed_entry, entries_text, print_hole};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
     Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop, partial_text,
@@ -234,8 +233,6 @@ fn side_text(m: &Reality, item: &Item) -> Result<String, Stop> {
             "refused: {} {text} is outside {index}",
             Code::Run(Run::Key).as_str()
         )),
-        Item::Value(Value::Window(w)) if !w.of_days() => print_hole(m, w),
-        Item::Value(Value::List(items)) if computed_entry(items) => entries_text(m, items),
         Item::Value(v) => plain(m, v),
     }
 }

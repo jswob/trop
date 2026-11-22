@@ -6,7 +6,7 @@
 //! `RUN-EMPTY`; ties are stated: `ties by (e1, e2)` compares e1, then e2 among those still
 //! tied, `RUN-TIE` without one, and over things, movements or an open index's keys the `ties
 //! by` term is the order `first` and `last` run in), §4.4 (windows: `min`/`max` give the
-//! interval of the ends' extremes, `argmin`/`argmax` the key decided below or above every
+//! stretch of the ends' extremes, `argmin`/`argmax` the key decided below or above every
 //! other, two reads of one item one value, else `HOLE-IMPRECISE`, as an undecided comparison
 //! in a `ties by`), §5.6, §5.7 (things, movements and an open index's keys have no order a
 //! rule can read), §3.1, §8.1 (holes spread), §8.4 (`RUN-TIE`, `RUN-EMPTY`, `RUN-NONE`).
@@ -25,10 +25,10 @@ use super::arith::{Test, compare};
 use super::bindings::{reads_name, span_reads};
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, a_day, invariant, num_stop, refuse};
-use super::windows::{End, as_window, decided_order, imprecise, one_day, window_end};
+use super::windows::{End, as_window, decided_order, imprecise, one_day, stretch, window_end};
 use crate::base::Run;
 use crate::hole::{Hole, spread};
-use crate::model::{IndexForm, KindSpec, Reality, Value, Window};
+use crate::model::{IndexForm, KindSpec, Reality, Value};
 use crate::syntax::{Agg, AggFn, Bind, Domain as Over, Expr, Stop};
 use core::cmp::Ordering;
 
@@ -76,9 +76,9 @@ fn unordered(m: &Reality, bind: &Bind) -> Option<Unordered> {
         .then_some(Unordered::Movements)
 }
 
-/// The `min` or `max` of known values: of windows, the window from the extreme of their
-/// lowest ends to the extreme of their highest, one value where those are equal (refcore's
-/// `agg_minmax`, `extreme`). L §5.11, §4.4.
+/// The `min` or `max` of known values: of windows, a listed reader by the ends, the stretch
+/// from the extreme of their first days to the extreme of their last, one day where those are
+/// equal (refcore's `agg_minmax`, `extreme`). L §5.11, §4.4.
 ///
 /// # Errors
 ///
@@ -88,13 +88,12 @@ pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
     let Some(w) = vals.iter().find_map(as_window) else {
         return extreme_of(m, vals, pick);
     };
-    // a computed interval has no read, but its questions name the first window's figure
+    // a computed stretch has no read, but its questions name the first window's figure
     // (L §8.1; tally 2.1.7 R3, T's SR-5)
-    let (src, figure) = (w.src.clone(), w.figure.clone());
-    let mut carry = Vec::new();
+    let mut from = w.clone();
     for v in &vals {
         if let Some(one) = as_window(v) {
-            crate::hole::carry_union(&mut carry, &one.carry);
+            crate::hole::carry_union(&mut from.carry, &one.carry);
         }
     }
     let los: Vec<Value> = vals.iter().map(|v| window_end(v, End::Low)).collect();
@@ -103,16 +102,13 @@ pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
     if compare(m, &lo, &hi, Test::Order)? == Ordering::Equal {
         return Ok(lo);
     }
-    Ok(Value::Window(Box::new(Window {
-        lo,
-        hi,
-        days: None,
-        src,
-        figure,
-        read: None,
-        carry,
-        whole: false,
-    })))
+    let (Value::Day(lo), Value::Day(hi)) = (lo, hi) else {
+        // a window beside a value that is no date: load's types refuse it first
+        return Err(Stop::NotBuilt(
+            "min or max of a window and a value that is no date",
+        ));
+    };
+    Ok(stretch((lo, hi), &from))
 }
 
 /// The least (`End::Low`) or greatest of values none of which is a window, the first of
@@ -184,7 +180,7 @@ fn tie_order(
     let w = as_window(a)
         .or_else(|| as_window(b))
         .ok_or_else(|| invariant("an undecided order with no window"))?;
-    Ok(Err(imprecise(m, w, &format!("the ties by of {word}"))?))
+    Ok(Err(imprecise(w, &format!("the ties by of {word}"))))
 }
 
 /// The scored candidates whose value is the least (`Way::Forward`) or the greatest, in the
@@ -320,7 +316,7 @@ impl Engine {
                 .iter()
                 .find_map(|(_, t)| as_window(t))
                 .ok_or_else(|| invariant("an undecided extreme with no window"))?;
-            return Ok(Value::Hole(imprecise(m, w, word)?));
+            return Ok(Value::Hole(imprecise(w, word)));
         };
         let mut tied: Vec<&Env> = Vec::with_capacity(best.len());
         for at in best {

@@ -232,14 +232,13 @@ fn days_value(days: &DaySet, ty: &Ty, target: &str) -> Result<Converted, Stop> {
                 ));
             }
             Window {
-                lo: Value::Day(*a),
-                hi: Value::Day(*b),
+                lo: *a,
+                hi: *b,
                 days: None,
                 src: Some(format!("window({}, {})", a.text(), b.text())),
                 figure: None,
                 read: None,
                 carry: Vec::new(),
-                whole: false,
             }
         }
         DaySet::OneOf(written) => one_of(written)?,
@@ -258,14 +257,13 @@ pub(super) fn one_of(written: &[Day]) -> Result<Window, Stop> {
     };
     let texts: Vec<String> = days.iter().map(|d| d.text()).collect();
     Ok(Window {
-        lo: Value::Day(lo),
-        hi: Value::Day(hi),
+        lo,
+        hi,
         src: Some(format!("one_of([{}])", texts.join(", "))),
         days: Some(days),
         figure: None,
         read: None,
         carry: Vec::new(),
-        whole: false,
     })
 }
 

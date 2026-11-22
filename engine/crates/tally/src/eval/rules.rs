@@ -174,9 +174,7 @@ impl Engine {
                 if let Value::Hole(_) = law {
                     return Ok(Err(law));
                 }
-                if let Value::Window(w) = &law
-                    && matches!(w.lo, Value::Day(_))
-                {
+                if let Value::Window(w) = &law {
                     // a window `at` reads the def at each law date the window can take
                     // (L §4.3, §5.14 `at e`); the memo shares a class's cells
                     return self.def_window(m, def, (keys, env), ctx, w).map(Err);
@@ -224,7 +222,7 @@ impl Engine {
         if rest.iter().all(|v| v == first) {
             return Ok(first.clone());
         }
-        let window = w.question_text(m).map_err(num_stop)?;
+        let window = w.question_text();
         let imprecise = Value::Hole(
             Hole::asked(
                 &format!(

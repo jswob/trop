@@ -3,8 +3,9 @@
 //! and its rolls, ISDA 2006 section 4.12; the calendar read at the day asked; an added day
 //! that is a hole, `HOLE-CALENDAR`, or a window, every day known but one), §4.4 (a
 //! business-day function over a calendar whose `added` holds a window is evaluated for each
-//! day the window can take, its value the interval of those results; for `is_business`
-//! `HOLE-IMPRECISE` when they differ), §7.6 items 1 and 5 (the calendar's edge; a calendar
+//! day the window can take, its value the stretch of those results; for `is_business`
+//! `HOLE-IMPRECISE` when they differ; a business-day function is off the readers' list, so a
+//! ranged date argument is the hole), §7.6 items 1 and 5 (the calendar's edge; a calendar
 //! with no business day), §8 head (R1), §8.4; E §3.2 (law-date classes).
 //! Twin: engine/tools/refcore/evaluate.py (`cal_at`, `business`, `over_added`,
 //! `c_is_business`, `c_add_business`, `c_last_business`, `c_schedule`, `rolled`).
@@ -23,7 +24,7 @@ use super::builtin::read_parts;
 use super::dates::period_arg;
 use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
-use super::windows::{imprecise, interval, one_day, single, window_days};
+use super::windows::{one_day, single, unlisted};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{Code, KeyVal, Reality, Value, Window};
@@ -89,45 +90,25 @@ enum Business {
     Rolled(Day, Roll),
 }
 
-/// A business-day function of a day argument before its day is given: `is_business`, or
-/// `add_business` with its count (refcore's closures under `per_day`). L §4.2, §4.4.
-#[derive(Debug, Clone)]
-enum Daily {
-    /// `is_business(d, cal)`.
-    Is,
-    /// `add_business(d, n, cal)` with its n.
-    Add(Num),
-}
-
-impl Daily {
-    /// The function at day `day`: `add_business`'s n of 0 is `RUN-ZERO` there (refcore's
-    /// `add_business_at`). L §4.2, §8.4.
-    fn on(&self, day: Day, cal: &Expr) -> Result<Business, Stop> {
-        let k = match self {
-            Daily::Is => return Ok(Business::Is(day)),
-            Daily::Add(k) => k,
-        };
-        if k.is_zero() {
-            let text = crate::load::expr_text(cal);
-            return Err(refuse(
-                Run::Zero,
-                format!("add_business({}, 0, {text})", day.text()),
-            ));
-        }
-        let step = if k.is_negative() { -1 } else { 1 };
-        // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar
-        // day by day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
-        let count = k.to_i64().map(i64::unsigned_abs);
-        Ok(Business::Add(day, step, count))
+/// `add_business(day, k, cal)` as one pass evaluates it: `k` of 0 is `RUN-ZERO` (refcore's
+/// `add_business_at`). L §4.2, §8.4.
+///
+/// # Errors
+///
+/// `RUN-ZERO` for a count of 0.
+fn business_days(day: Day, k: &Num, cal: &Expr) -> Result<Business, Stop> {
+    if k.is_zero() {
+        let text = crate::load::expr_text(cal);
+        return Err(refuse(
+            Run::Zero,
+            format!("add_business({}, 0, {text})", day.text()),
+        ));
     }
-}
-
-/// A value's day, if it is one.
-fn day_of(v: &Value) -> Option<Day> {
-    if let Value::Day(d) = v {
-        return Some(*d);
-    }
-    None
+    let step = if k.is_negative() { -1 } else { 1 };
+    // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar day by
+    // day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
+    let count = k.to_i64().map(i64::unsigned_abs);
+    Ok(Business::Add(day, step, count))
 }
 
 impl Engine {
@@ -144,59 +125,12 @@ impl Engine {
         if let Value::Hole(_) = d {
             return Ok(d);
         }
-        if let Value::Window(w) = single(&d) {
-            // a window argument: day by day, is_business isn't monotone in it (F4)
-            return self.per_day(m, w.as_ref(), (cal, env, ctx), (&Daily::Is, call));
-        }
+        // off the list: a ranged date is the hole (L §4.4)
         let day = match one_day(m, &d, "is_business")? {
             Ok(day) => day,
             Err(hole) => return Ok(Value::Hole(hole)),
         };
         self.over_added(m, (cal, env, ctx), (&Business::Is(day), call))
-    }
-
-    /// Business-day function `f` of a window argument `w`, evaluated for each day `w` can
-    /// take, since it isn't monotone in it: one value where they agree, else the interval of
-    /// the days, or for `is_business` `HOLE-IMPRECISE` (refcore's `per_day`; tally 2.1.7 R3,
-    /// F4). L §4.4.
-    fn per_day(
-        &mut self,
-        m: &Reality,
-        w: &Window,
-        (cal, env, ctx): (&Expr, &Env, Ctx),
-        (f, call): (&Daily, &Call),
-    ) -> Result<Value, Stop> {
-        let mut outs: Vec<Value> = Vec::new();
-        let mut holes: Vec<Hole> = Vec::new();
-        for day in window_days(w)? {
-            let v = self.over_added(m, (cal, env, ctx), (&f.on(day, cal)?, call))?;
-            if let Value::Hole(h) = &v {
-                holes.push(h.clone());
-            } else {
-                outs.push(v);
-            }
-        }
-        if !holes.is_empty() {
-            let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
-            return hole_of(&operands);
-        }
-        let [first, rest @ ..] = outs.as_slice() else {
-            return Err(invariant("a window with no day"));
-        };
-        if rest.iter().all(|v| v == first) {
-            return Ok(first.clone());
-        }
-        if let Value::Bool(_) = first {
-            let call_text = crate::load::expr_text(&Expr::Call(Box::new(call.clone())));
-            return Ok(Value::Hole(imprecise(m, w, &call_text)?));
-        }
-        let (Some(lo), Some(hi)) = (
-            outs.iter().filter_map(day_of).min(),
-            outs.iter().filter_map(day_of).max(),
-        ) else {
-            return Err(invariant("a business-day function's day that is no day"));
-        };
-        interval(m, (Value::Day(lo), Value::Day(hi)), w)
     }
 
     /// `add_business(d, n, cal)`: n business days after d, before it for a negative n,
@@ -214,17 +148,15 @@ impl Engine {
         if d.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
-        if let Value::Window(w) = single(&d) {
-            // a window argument: day by day, add_business isn't monotone in it (F4)
-            let k = whole_of(m, &k)?;
-            return self.per_day(m, w.as_ref(), (cal, env, ctx), (&Daily::Add(k), call));
-        }
+        // off the list: a ranged date is the hole (L §4.4)
         let day = match one_day(m, &d, "add_business")? {
             Ok(day) => day,
             Err(hole) => return Ok(Value::Hole(hole)),
         };
-        let k = whole_of(m, &k)?;
-        let f = Daily::Add(k).on(day, cal)?;
+        if let Some(hole) = unlisted(&[&k], "add_business") {
+            return Ok(Value::Hole(hole));
+        }
+        let f = business_days(day, &whole_of(m, &k)?, cal)?;
         self.over_added(m, (cal, env, ctx), (&f, call))
     }
 
@@ -244,7 +176,11 @@ impl Engine {
         if of.as_hole().is_some() || nth.as_hole().is_some() {
             return hole_of(&[of.as_hole(), nth.as_hole()]);
         }
-        let period = period_arg(m, (call.args.first(), &of), "last_business")?;
+        // off the list: a ranged date is the hole (L §4.4)
+        if let Some(hole) = unlisted(&[&of, &nth], "last_business") {
+            return Ok(Value::Hole(hole));
+        }
+        let period = period_arg(m, (call.args.first(), &single(&of)), "last_business")?;
         let count = whole_of(m, &nth)?;
         let text = count.integer_text().ok_or_else(|| invariant("a count"))?;
         if count.is_negative() || count.is_zero() {
@@ -278,7 +214,11 @@ impl Engine {
         if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), word.as_hole()]) {
             return Ok(Value::Hole(h));
         }
-        let period = period_arg(m, (call.args.first(), &month), "schedule")?;
+        // off the list: a ranged date is the hole (L §4.4)
+        if let Some(hole) = unlisted(&[&month, &dom], "schedule") {
+            return Ok(Value::Hole(hole));
+        }
+        let period = period_arg(m, (call.args.first(), &single(&month)), "schedule")?;
         let start = period.start();
         // a day number past the month's, 64 bits or not, is none
         let Some(day) = whole_of(m, &dom)?
@@ -355,14 +295,13 @@ impl Engine {
             return Err(invariant("a business-day function with no pass"));
         };
         Ok(Value::Window(Box::new(Window {
-            lo: Value::Day(*lo),
-            hi: Value::Day(*hi),
+            lo: *lo,
+            hi: *hi,
             days: None,
             src: None,
             figure: None,
             read: None,
             carry,
-            whole: false,
         })))
     }
 

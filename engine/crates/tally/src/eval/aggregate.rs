@@ -22,7 +22,7 @@ use super::bindings::{Values, bind_domain};
 use super::expr::hole_of;
 use super::extremes::{bare_key, min_max};
 use super::partial;
-use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, num_stop, refuse};
+use super::state::{Collected, Ctx, Engine, Env, invariant, not_typed, refuse};
 use super::trace::Snap;
 use super::ty::zero_of;
 use super::windows::End;
@@ -261,9 +261,9 @@ impl Engine {
                     AggFn::Min | AggFn::Max | AggFn::Argmin | AggFn::Argmax
                 )
             {
-                // only a comparison decides an interval: a term of any other aggregate needs
+                // only a comparison decides a window: a term of any other aggregate needs
                 // its one value (L §4.4)
-                holes.push(window_term_hole(m, w, word)?);
+                holes.push(window_term_hole(w, word));
                 continue;
             }
             terms.push((&member.env, t));
@@ -714,18 +714,14 @@ fn count_members(members: &[Member]) -> Result<Value, Stop> {
     Ok(Value::int(n))
 }
 
-/// The hole of a term of aggregate `word` that is an undecided interval, window `w`: the term
-/// needs its one value, so `HOLE-IMPRECISE` named by the window's input and carrying its
-/// unknown days (refcore's `carry_hole`; §8.2 `unknown day:`). L §4.4 l.669 ("a term of an
-/// aggregate other than min, max, argmin and argmax").
-///
-/// # Errors
-///
-/// A number error writing the window's text.
-pub(super) fn window_term_hole(m: &Reality, w: &Window, word: &str) -> Result<Hole, Stop> {
-    let window = w.question_text(m).map_err(num_stop)?;
+/// The hole of a term of aggregate `word` that is a ranged date, window `w`: the term needs
+/// its one value, a read off the readers' list, so `HOLE-IMPRECISE` named by the window's
+/// input and carrying its unknown days (refcore's `carry_hole`; §8.2 `unknown day:`). L §4.4
+/// ("Every other read is the hole").
+pub(super) fn window_term_hole(w: &Window, word: &str) -> Hole {
+    let window = w.question_text();
     let text = format!("date within {window} not precise enough for a term of {word}");
-    Ok(Hole::asked(&text, w.figure()).carrying(&w.carry))
+    Hole::asked(&text, w.figure()).carrying(&w.carry)
 }
 
 /// Whether a term is zero: an unknown member's 0 adds nothing to a sum (L §5.11).
