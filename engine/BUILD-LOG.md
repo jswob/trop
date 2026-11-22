@@ -6465,3 +6465,22 @@ G2's review (`tmp/spec-2.3/inputs/review-g2.md`): approve, blocking 0. The STOP-
 - **Exceptions:** +0.
 - **Usage:** about 1.02 % of the week before this entry (this turn about 0.08 %).
 - **Checks at a88dac4a's tree:** `check quick: green, 11 steps (82s)`; `check commit: red at tests, stopped after 10 of 24 steps (77s)`: the 176 ids, 41 of 1 145 tests.
+
+## 2026-11-22 tally 2.3 G3, the review's fix: B1, N4 (issue #247)
+
+The review is `tmp/spec-2.3/inputs/review-g3.md` (blocking 1), its probes `inputs/review/g3/`; the lead's ruling is pick P14 (B1, N4; N1, N2, N3, N6 not this turn's). Branch `build/2.3` after G1's and G2's two commits each (7f44e94b), their code untouched. Not pushed: **waiting for T and the pin.**
+
+**a1a83b1c, B1:** `eval/convert.rs` `field_value`: a record row's field written as a call but `window(a, b)` is `LOAD-UNIT a value of the wrong type for <input>` at load, refcore's last line (`convert_value`), `one_of` among them; the hold (`NotBuilt`, which `load/values.rs` leaves to the read) keeps a window, a hole and the other expressions, as before. My first entry's "each place refuses it" was false here: the hold, older than G3, made `check` print `ok` and an ask that didn't read the row answer. It is the narrowing G3 made for an observed row's attribute (`no_row_value`), for a record row's field. **N4:** `syntax/calls.rs`' purpose line ("a row's window" for "the day sets") and `window`'s doc (a row's value only; a field's window is an expression's call).
+
+- **Unit test** (`tests/load_cases.rs`), seen red first (`left: "loaded"` for `one_of`): `a_call_in_a_record_row_s_field_is_refused_at_load_but_a_window`: a day loads; `one_of([…])`, `foo([…])`, `add_days(…)` in the field are `LOAD-UNIT a value of the wrong type for lot (a.tally:12)`; a window loads (held to M5a).
+- **B1's probes now** (`tmp/spec-2.3/g3fix/rerun.py --each`, `check` and `run`): `b1/foo`, `b1/one_of`, `b1/unread`, `lead/f_add`, `f_foo`, `f_foo_unread`, `f_oneof`, `f_oneof_unread`: `refused: LOAD-UNIT a value of the wrong type for lot (<file>:12)`, both commands (`check` printed `ok` before). `lead/f_win`, `f_win_read`: `ok`, `tally run: not implemented`, `f_win_unread`: `a1: 2`, `f_day`: `a1: 2026-04-06`, as before. A keyed record input (`g3fix/probes/keyed_foo.tally`): `LOAD-UNIT a value of the wrong type for lot (…:13)`, the writer's refcore w2 word for word.
+- **The review's `refuse/`** (`rerun.py`, each folder's `.tally` against its `after.out`): **224 of 234 folders the same; 10 moved, each a call in a record row's field, now the refusal:** `rec.check.one_of`, `rec.read.{add_days, foo, one_of}`, `row.record.date.{fooL, fooP, one_ofL}`, `row.record.int.{fooL, fooP, one_ofL}`; the `foo` and `add_days` ones equal the pinned refcore's and 2.2.1's refcore's lines; the `one_of` ones have no oracle (both refcores still read it). `rec.read.window` and `rec.read.hole` the same (held). So of the 53 places, `one_of` prints what `foo` prints at every one, the record field now included.
+- **Size:** 3 files, +61/−5: library +14/−5 (`convert.rs` +11/−2, `calls.rs` +3/−3), the unit test +47.
+- **`check commit`'s red ids** (`g3fix/red-ids.txt`, 176): **the 176 of G3's entry, none new, none gone.**
+- **Survivor rows removed:** none. **Exceptions:** +0.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.62 % of the week at this entry (0.53 % at the turn's start), against about 0.3 %.
+- **Time:** about 10 min from 03:45 local. Checks: 2 `check quick` (one red by design, the test seen failing), 1 `check commit`, 1 single step.
+- **Checks at a1a83b1c's tree:**
+  - `check quick: green, 11 steps (79s)`.
+  - `check commit: red at tests, stopped after 10 of 24 steps (73s)`: the 176 ids above. `doc` (5s) green alone.
