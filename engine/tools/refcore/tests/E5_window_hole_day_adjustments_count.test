@@ -1,0 +1,42 @@
+# E §5 step 1, L §4.4 A movement takes a day (tally 2.3, #247; C-4's clause on a window's hole day; 2.2.1's
+# n4_20260320): the window reaches pay's `on`, so pay is a hole day, and a binding over `adjustments` that could hold
+# the adjustment a1 makes is the hole naming w. Before: 0, or a count read per day of the window.
+=== m.tally
+model bk20260320
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input d_at: date
+move pay: transfers
+  on w
+  at d_at
+  leg cash from world to konto amount amt
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d_at = 2026-03-01 "s"
+  w = window(2026-03-03, 2026-03-25) "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+version a0
+  cite s
+  governs 2026..
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+version a1
+  cite s
+  governs 2026..
+  known 2026-03-20
+  replace amt = 150.00 PLN "s"
+ask adj: count(a in adjustments over 2026-03 .. 2026-04)
+=== expect
+adj: ?"date within window(2026-03-03, 2026-03-25) not precise enough for the day of pay" (w)
+  unknown day: w
+  cut 2026-06-10

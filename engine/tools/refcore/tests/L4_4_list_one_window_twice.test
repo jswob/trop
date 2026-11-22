@@ -1,0 +1,71 @@
+# L §4.4's list (tally 2.3, #247; S3 to S5): a reader takes each argument by its own ends, whatever names they
+# carry, so `days_between(w, w)` and `age(w, w)` are the hole (days_between is off the list, C3; age's ends differ),
+# `overlap_days(w, w, apr)` the value its ends agree on or the hole; `min`, `max` a stretch; `month_of` of a window
+# across two months the hole; `weekday` off the list, the hole. Before: 0, 1, 0 by one day taken in turn, a
+# stretch of months, a range of weekdays.
+=== m.tally
+model hd4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input w: date
+input wide: date
+input rate: num
+input apr: month
+input d2: date
+input n5: int
+input mrate[m in months]: num
+input drate[d in days]: num
+def r_at: num = rate at w
+def r_wide: num = rate at wide
+def r_reader: num = rate at reader
+def held: date = w
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  w = window(2026-04-01, 2026-04-03) "c"
+  wide = window(2026-04-20, 2026-05-10) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  mrate[*] = 2 "c"
+  apr = 2026-04 "c"
+  d2 = 2026-04-02 "c"
+  n5 = 5 "c"
+  drate[*] = 3 "c"
+version r1
+  cite card
+  governs ..2026-04
+  known 2026-01-01
+  rate = 1 "c"
+version r2
+  cite card
+  governs 2026-05..
+  known 2026-01-01
+  rate = 5 "c"
+ask a_start: start_of(month_of(w)), start_of(month_of(wide))
+ask a_two: days_between(w, w), overlap_days(w, w, apr), age(w, w), min(w, wide), max(w, d2)
+ask a_wd: weekday(w)
+=== expect
+a_start: (2026-04-01, ?"date within window(2026-04-20, 2026-05-10) not precise enough for month_of" (wide))
+  unknown day: wide
+  cut 2026-04-20
+a_two: (?"date within window(2026-04-01, 2026-04-03) not precise enough for days_between" (w), ?"date within window(2026-04-01, 2026-04-03) not precise enough for overlap_days" (w), ?"date within window(2026-04-01, 2026-04-03) not precise enough for age" (w), window(2026-04-01, 2026-04-03), window(2026-04-02, 2026-04-03))
+  unknown day: w
+  cut 2026-04-20
+a_wd: ?"date within window(2026-04-01, 2026-04-03) not precise enough for weekday" (w)
+  unknown day: w
+  cut 2026-04-20
+warning: WARN-UNREAD def held is read by nothing
+warning: WARN-UNREAD def r_at is read by nothing
+warning: WARN-UNREAD def r_reader is read by nothing
+warning: WARN-UNREAD def r_wide is read by nothing
+warning: WARN-UNREAD input drate is read by nothing
+warning: WARN-UNREAD input mrate is read by nothing
+warning: WARN-UNREAD input n5 is read by nothing
+warning: WARN-UNREAD place konto is read by nothing
+warning: WARN-UNREAD place world is read by nothing

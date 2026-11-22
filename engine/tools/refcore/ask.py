@@ -17,7 +17,7 @@ import re
 
 from .errors import TallyError, Unspecified, NotYet, Refusal
 from .evaluate import (Engine, Ctx, Coll, TraceNode, HoleSignal, OutKey, ListKey, merge, lin_of, after_on, new_ask,
-                       WinDay, PinVal, imprecise_hole)
+                       PinVal, imprecise_hole)
 from .model import key_text, set_world
 from .values import (CURRENCIES, fmt_typed, Num, Hole, Iv, Special, Thing, Key, Lst, Text, NONE, vkey, fmt, fmt_hole, fmt_q)
 from .check import _txt
@@ -246,10 +246,8 @@ def fmt_value(v, partial=False, t=None):
             return fmt_partial(v)
         return fmt_hole(v)
     if isinstance(v, Iv):
-        if isinstance(v.lo, datetime.date):
-            return fmt(v)
-        from .evaluate import imprecise_hole
-        return fmt_hole(imprecise_hole(v, 'a print'))
+        # a date prints its stretch (C2); no number is a range (tally 2.3)
+        return fmt(v)
     if isinstance(v, (OutKey,)):
         return 'refused: RUN-KEY %s is outside %s' % (v.text, v.index)
     if isinstance(v, ListKey):
@@ -586,7 +584,11 @@ class Asker:
                 # L §5.11: "an ask's law or as known that is a hole make ... the ask line, a hole carrying their
                 # questions, and nothing inside is evaluated"
                 return ['%s: %s' % (a.id, fmt_value(v))]
-            K = eng.date_of(v, 'as known')
+            try:
+                K = eng.date_of(v, 'as known')
+            except HoleSignal as h:
+                # a ranged date asks for one day: the hole (L §4.4's list; tally 2.3, C7)
+                return ['%s: %s' % (a.id, fmt_value(h.hole))]
             after_on(m, K)
         eng.ask_K = K
         law = None
@@ -597,7 +599,10 @@ class Asker:
             v = eng.ev(a.law, {}, Ctx(None, K))
             if isinstance(v, Hole):
                 return ['%s: %s' % (a.id, fmt_value(v))]
-            law = eng.date_of(v, 'the law of an ask')
+            try:
+                law = eng.date_of(v, 'the law of an ask')
+            except HoleSignal as h:
+                return ['%s: %s' % (a.id, fmt_value(h.hole))]
         # in S names the world (L §5.18, §6.4); the model's own id is the base
         w0 = a.world if (a.world is not None and a.world != m.header.id) else None
         ctx = Ctx(law, K, partial=a.partial, unc=bool(a.uncertain), world=w0)
@@ -1086,40 +1091,6 @@ class Asker:
             if is_load(err):
                 raise LoadAtRun(err)
             return err
-        except WinDay as wd:
-            return self.window_days(eng, e, env, ctx, line, wd)
-
-    def window_days(self, eng, e, env, ctx, line, wd):
-        """A line that meets a decision dated by a window, read once per day of the window, the cell its day is read
-        from pinned to that day (E §4.1 step 2: it counts in flows when the window lies inside the span; L §4.4 l.668:
-        the window's days in turn; tally 2.2.1 P30, N3): one value when they agree, the refusal when every day refuses,
-        else the window's hole. A window no cell names is its hole."""
-        import datetime
-        iv = wd.iv
-        nm = iv.name
-        if nm is not None and nm[0] == 'row' and '[' not in nm[2]:
-            item, keys = nm[2], None
-        elif nm is not None and nm[0] == 'pin':
-            item, keys = nm[1], (nm[2] or None)
-        else:
-            return imprecise_hole(iv, wd.use)
-        days = sorted(iv.days) if iv.days is not None else [
-            iv.lo + datetime.timedelta(days=k) for k in range((iv.hi - iv.lo).days + 1)]
-        layer = 1 + max((p.layer for p in ctx.pins), default=0)
-        outs = []
-        for d in days:
-            pv = PinVal('solve', item, keys, (), d, '', layer)
-            c2 = ctx.but(pins=tuple(sorted(list(ctx.pins) + [pv], key=lambda p: repr(p.key()))))
-            outs.append(self.one(eng, e, env, c2, line))
-        errs = [r for r in outs if isinstance(r, TallyError)]
-        if errs:
-            return errs[0] if len(errs) == len(outs) else imprecise_hole(iv, wd.use)
-        holes = [r for r in outs if isinstance(r, Hole)]
-        if holes:
-            return merge(*holes)
-        if len(set(repr(vkey(r)) for r in outs)) == 1:
-            return outs[0]
-        return imprecise_hole(iv, wd.use)
 
     def one_solve(self, eng, a, env, ctx):
         try:
@@ -1462,7 +1433,7 @@ class Asker:
                 out.extend(self.trace_inst(eng, inst, tctx, ctx, ans[0]))
         if not inst.decision:
             for adj in eng.adjustments(ctx):
-                if adj.inst.id != inst.id:
+                if adj.inst.id != inst.id or isinstance(adj.exists, Hole):
                     continue
                 if adj.err is not None:
                     # tally 2.1.2 (issue #34): a refused re-measurement's adjustment

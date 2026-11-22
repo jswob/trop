@@ -127,7 +127,7 @@ def left_pl[p in person]: bool at reader
 
 def long_stay[p in person, y in cy]: bool at start_of(y)
   note "art. 3 ust. 1a pkt 2: more than 183 days in Poland in the tax year"
-  rule base v pit_2006 = days_pl[p, y] > stay_limit
+  rule base v pit_2006 = add_days(max(arrived[p], start_of(y)), stay_limit) <= min(last_present[p], end_of(y) - 1 day)
 
 def method_change_day: date = start_of(first_mli_year) at reader
 

@@ -1,0 +1,83 @@
+# L §4.4 A movement takes a day (tally 2.3, #247; the plan's S6, planner/hd/hd1.tally): a window that reaches a move's
+# `on` makes it a hole day, HOLE-IMPRECISE naming the day, under L §5.14's rule for a hole day: the balance of each
+# place it books is the hole on every day, before the window and after it alike; every flows over any span is the hole;
+# its amount stays a value; a pin of the cell answers it (pay_x, on a ? day, is the twin).
+# Before: the window kept its stretch (o_mar 500.00, o_apr5 600.00, day_w the window).
+=== m.tally
+model hd1
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input pd: date
+input w: date
+move pay_x: transfers
+  on pd
+  leg cash from world to konto amount pay
+move pay_w: transfers
+  on w
+  leg cash from world to other amount pay
+input mar: month
+def n_x: int = count(t in transfers over mar)
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  mar = 2026-03 "c"
+  pd = ?"which day is the pay?" "c"
+  w = window(2026-04-01, 2026-04-03) "c"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "c"
+  opening[other] = 500.00 PLN at 2026-01-01 start "c"
+version st2
+  cite card
+  governs 2026-04
+  known 2026-04-10
+  anchor konto
+  stated[konto] = 700.00 PLN at 2026-04-02 end "s2"
+ask b_mar: bal(konto, 2026-03-31)
+ask amt_w: pay_w.cash.amount
+ask o_pin: bal(other, 2026-04-05) with w = 2026-04-02
+ask o_mar: bal(other, 2026-03-31)
+ask o_apr2: bal(other, 2026-04-02)
+ask o_apr5: bal(other, 2026-04-05)
+ask o_f_mar: flows(other, 2026-03)
+ask o_f_apr: flows(other, 2026-04)
+ask o_f_w: flows(other, 2026-04-02..2026-04-10)
+ask day_w: pay_w.day
+=== expect
+amt_w: 100.00 PLN
+  cut 2026-04-20
+b_mar: ?"which day is the pay?" (pd)
+  cut 2026-04-20
+day_w: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_apr2: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_apr5: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_f_apr: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_f_mar: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_f_w: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_mar: ?"date within window(2026-04-01, 2026-04-03) not precise enough for the day of pay_w" (w)
+  unknown day: w
+  cut 2026-04-20
+o_pin: 600.00 PLN
+  pinned: w = 2026-04-02
+  unfulfilled: pay_w
+  cut 2026-04-20

@@ -7,6 +7,69 @@ or unclear it refuses `REFCORE-UNSPECIFIED <section>: <what>` (the list is `UNSP
 interpreter doesn't build refuses `REFCORE-NOT-YET <construct>`. Nothing may crash: an internal error becomes
 `REFCORE-NOT-YET an input this interpreter can't handle (...)` unless `REFCORE_DEBUG` is set.
 
+## tally 2.3, a `?` law date under C-4 (the lead's P8; issue #247; 1 610 tests)
+
+- Under a hole `at` with no days it carries (a `?`), `Engine.read_at_hole_law` registers every visible row the read
+  may take (`law_hole_rows`) and gives the hole; `moves.hole_day_steps` then compares the rows the two states' reads
+  took (`read_rows`): where they differ, the step's adjustment is the hole, δ and existence (`law_hole_unread`
+  marks a state whose amounts only the law date's hole keeps unread). A later version of an input the instance
+  doesn't read records nothing. The window `at` is as before (the value every day gives, else the hole).
+
+## tally 2.3, group W2: the readers' list (the plan's G2; issue #247; 1 609 tests)
+
+- **The default is the hole, the list is stated once** (L §4.4): `Engine.ends` is the one helper of a listed reader,
+  each ranged argument at its first and last day whatever names they carry (S5): with `stretch` (`add_days`,
+  `add_months`, `add_years`, `date ± duration` through `iv_arith`) the stretch of the results; otherwise (`year_of`,
+  `quarter_of`, `month_of`, `age`, `age_months`, `overlap_days`) the value every combination gives, `none` a value,
+  else the hole; refused at every combination, the first's refusal, at some the hole. `Engine.off_list` makes every
+  other reader of a ranged argument the hole naming each day it carries (`start_of`, `end_of`, `day_of`,
+  `days_between`, `dcf`, `weekday`, `abs`, `pow`, `round`, `is_business`, `add_business`, the transcendentals,
+  unary minus) and returns the one-day values. Kept: `iv_compare`, `agg_minmax`, `agg_arg`, `def_window`, `to_key`.
+- **Gone:** `lift`, `lift_values` and its pass per value with `LIFT_CAP`, `per_day`, `zero_like`, `num_at`,
+  `whole_valued`, `Iv.whole`, the number half of `iv_arith`, the `Iv` branches of `weekday`, `abs`, `pow`, `round`,
+  the same-name shortcut of `days_between`, the print's number branch (`ask.fmt_value`). Left until G3: `over_added`'s
+  pass over a calendar's unknown entries; `open_order_takes`' pass over a window's days in a fill's order.
+- **C-5:** `band_x` asks for one day: a ranged argument is `HOLE-IMPRECISE` (`a band argument`). **C7:** an ask
+  line's `law` or `as known` that is a window is the line's hole (`the law of an ask`, `as known`).
+- **A fill's order** that is a hole made only by windows (every question carried, `CARRY`) is that hole, not
+  `RUN-ORDER` (L §5.12 step 2): an order on `days_between` of a window is now such a hole.
+
+## tally 2.3, the first group's review: three mends (P6; issue #247; 1 623 tests)
+
+- **B1, a hole-day decision is a member** (L §5.14): `mreads.movements_of` took a decision only from the walk, which
+  never runs one whose day is a hole, so a binding over its kind was 0 for a `?` day and a window alike. It is now a
+  member with its hole; `mreads.hole_day_dec_body` gives it its legs' places (as a refused instance's,
+  `moves.refused_places`) with its day's hole for amounts, so a `where` on its places is decided
+  (`L5_18_partial_not_linear` q6 keeps its bytes).
+- **B2, C-4 under a hole `at`** (E §5 step 1): `moves.law_hole_inst` measures the instance's body with the law date's
+  hole; `Engine.read_at_hole_law` reads an input there as the value every day the hole carries gives, else the
+  hole. A `?` law date carries no days, so its reads are the hole and the step records nothing (the `?`-`at` twin
+  stays 0, as on every engine before; a window `at` is the hole).
+- **Q3, a removal** (E §5 step 1): a `when` false at a hole day leaves the day's hole as the existence
+  (`inst_body`); `hole_day_steps` reads that state as not existing, so the step that ends it records δ = −A.
+
+## tally 2.3, group W1: the timeline takes days (the plan's G1; issue #247; 1 619 tests)
+
+- **A movement takes a day** (L §4.4): `moves.hole_day`, where an instance's `on` and its law date are set, turns a
+  ranged day into the hole `HOLE-IMPRECISE` naming the day ("the day of <move>", "the law date of <move>"); a window
+  of one day is that day. From there it is a hole day (`walk.sched_hole`'s `perm`, `mreads`' bindings and flows).
+- **Gone with it:** the window pieces and the class per day (`window_pieces`, `day_class`, `window_class_depends`),
+  the per-law-date body (`law_days`, `imprecise_law`, `body_over_law`, `agreed_body`), the booking cut per piece
+  (`inst.cuts`), `inst.wlo`, the decision's window and its end (`dec_win_end`), the pending window's tests
+  (`imp_cands` … `imp_tests`, `window_lifespan`, `apply`'s `imp_on` and the reset's reopened instant, `UNCERTAIN`),
+  P31's carve-out (`own`, `dec_refusal_stands`), the per-day line (`ask.window_days`, `evaluate.WinDay`), the window
+  branches of bindings and flows, the ledger's window months (`resid`), check3's window `on`.
+- **Left, dead and harmless** (for a later pass): `St.imp` (always empty), `Ent.wid`/`win` and the flows code that
+  reads them (`mreads` near "wins"), `Walk.hole_legs`/`hole_flows` (never set), `same_days`' list of undecided sides
+  and its callers (only a window side gave one). The readers of a window (`Iv`) are 2.2.1's until G2.
+- **C-4** (E §5 step 1): `moves.hole_day_steps` measures a hole-day instance at S and at each version known after S
+  and by K, once each; a step that changes it records each changed leg's adjustment, existence the day's hole
+  (`AdjMv.exists`, read by `mreads`' binding).
+- **C13** (L §5.14 Parts): `partswalk.phole_day_legs`; every group that takes at x takes the hole day's leg too.
+- **Hole days read as the spec says** (met re-storing): `resid` gives a fulfilled hole day its last observation's
+  day in every ledger; `walk.cum` keeps a hole day's reads past a reading; `sched_hole` prints a hole amount's
+  question beside the day's (J-A-2).
+
 ## tally 2.2.1, group W14: S-223's last corner (P53; issue #241; 1 668 tests)
 
 - `loader.check_correction_covers` takes every earlier statement of the row with a row, at the cuts from the

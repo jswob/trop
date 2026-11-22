@@ -1,6 +1,8 @@
 # tally 2.2 (CHANGES.md 2.2-11, pick P26). A line fanned over axis combinations that give one result prints it once,
 # under [pick = *] (L §5.5), and its register names the union of the unknown days of every combination it stands for,
 # by rule (L §8.2): wd[a] under a, wd[b] under b, one equal hole.
+# tally 2.3 (G1, #247): a window that reaches a move's `on` or `at` makes it a hole day (L §4.4 A movement takes a
+# day, §5.14): the movement's places are the hole on every day, HOLE-IMPRECISE naming the day; re-stored.
 === m.tally
 model fan
   tally 2
@@ -35,7 +37,11 @@ version v
 
 ask f1: bal(konto, 2026-03-06)
 === expect
-f1 [pick = *]: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a balance" (pay_p)
+f1 [pick = a]: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_p" (wd[a])
   unknown day: wd[a]
+  reading: pick = a
+  cut 2026-01-10
+f1 [pick = b]: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_p" (wd[b])
   unknown day: wd[b]
+  reading: pick = b
   cut 2026-01-10
