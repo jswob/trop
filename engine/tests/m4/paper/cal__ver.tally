@@ -1,0 +1,40 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input len: calendar
+input d0: date
+input d1: date
+input n3: int
+def a3: date = add_business(d0, n3, len)
+def b3: date = add_business(d1, n3, len)
+def nb: bool = is_business(d1, len)
+def lb: date = last_business(month_of(d1), n1, len)
+input n1: int
+ask a: a3, b3, nb
+ask l: lb
+ask f: a3 law 2026-01-01 as known 2026-06-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d0 = 2026-12-30 "s"
+  d1 = 2027-01-04 "s"
+  n3 = 3 "s"
+  n1 = 1 "s"
+version cal26
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01])
+version cal27
+  cite s
+  governs 2027
+  known 2026-09-01
+  len = calendar(weekends [sat, sun], yearly [01-01], added [2027-01-04])

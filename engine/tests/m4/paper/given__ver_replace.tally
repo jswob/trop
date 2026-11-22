@@ -1,0 +1,39 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ps = [p1, p2, p3]
+input inc[p in ps]: money PLN
+def tax[p in ps]: money PLN at reader
+  rule base = inc[p]
+ask h: tax[p] for p in ps law 2026-03-01
+ask l27: tax[p] for p in ps law 2027-03-01
+ask k_early: tax[p] for p in ps law 2027-03-01 as known 2026-02-01
+ask e: explain tax[p2] law 2027-03-01
+ask i: inputs-of tax[p2] law 2027-03-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  inc = 100 PLN "s"
+version guide
+  cite s
+  governs 2026
+  known 2026-01-01
+  given tax[p1] = ?"does the guide cover p1?" "s"
+version guide27
+  cite s
+  governs 2027
+  known 2026-06-01
+  given tax[p2] = 7 PLN "the guide's conclusion"
+version guide27b
+  cite s
+  governs 2027-03..2027-12
+  known 2026-07-01
+  given tax[p2] = 8 PLN "the guide's correction"

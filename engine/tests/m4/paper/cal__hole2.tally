@@ -1,0 +1,26 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input len: calendar
+input sat: date
+input d0: date
+def b_sat: bool = is_business(sat, len)
+ask a: b_sat
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  sat = 2026-06-06 "s"
+  d0 = 2026-06-04 "s"
+version cal
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01], added [?"is 06-05 a holiday?"])

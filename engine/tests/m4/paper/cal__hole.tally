@@ -1,0 +1,36 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input len: calendar
+input w: date
+input d0: date
+input n2: int
+input n5: int
+def b1: bool = is_business(w, len)
+def b2: date = add_business(w, 1, len)
+def b3: date = add_business(d0, n2, len)
+def b4: bool = is_business(d0, len)
+def b5: date = add_business(d0, n5, len)
+ask a: b1, b2
+ask b: b3, b4
+ask c: b5
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-06-02, 2026-06-03) "s"
+  d0 = 2026-06-04 "s"
+  n2 = 2 "s"
+  n5 = 5 "s"
+version cal
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01], added [?"is 06-05 a holiday?"])

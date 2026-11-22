@@ -1,0 +1,17 @@
+scenario reform over p
+  tally 2
+  from 2026-07-01
+
+version ref
+  cite s
+  governs 2026-07-01..2026-12-31
+  known 2026-01-01
+  replace rule x.proposed beats base = va when c
+  replace fx = 4.50 "the scenario's rate"
+  replace len = calendar(weekends [sat, sun], yearly [01-01], added [2026-07-01])
+
+ask d: diff(x) in reform against p law 2026-08-01
+ask d2: diff(conv) in reform against p law 2026-08-01
+ask dj: diff(x) in reform against p law 2026-06-01
+ask n: nb in reform
+ask n0: nb in p

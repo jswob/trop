@@ -1,0 +1,29 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place eur_acc: accounts EUR lives 2026-01-01..
+input fx[d in days]: num PLN/EUR
+input w: date
+input d2: date
+def val[d in days]: num PLN at d
+  rule base = value(eur_acc, d) in PLN by fx[d]
+def vw: num PLN = value(eur_acc, w) in PLN by fx[w] at w
+def vp: num PLN = value(eur_acc, w) in PLN by fx[d2] at w
+ask a: val[2026-03-02]
+ask b: vw
+ask c: vp
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-02, 2026-03-04) "s"
+  opening[eur_acc] = 100 EUR at 2026-01-01 start "s"
+  fx = 4.30 "s"
+  d2 = 2026-03-02 "s"

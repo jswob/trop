@@ -1,0 +1,42 @@
+model fx
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input fx: num PLN/EUR
+input margin: num PLN/EUR
+input inv: num EUR/PLN
+input pln: money PLN
+input eur: money EUR
+input k: num
+
+def to_pln: money PLN = round(eur * fx, minor(PLN), half-up)
+def to_eur: money EUR = round(pln * inv, minor(EUR), half-up)
+def back_eur: money EUR = round(pln / fx, minor(EUR), half-up)
+def sell: num PLN/EUR = fx + margin
+def scaled: num PLN/EUR = fx * k
+
+ask r_to_pln: to_pln
+ask r_to_eur: to_eur
+ask r_back: back_eur
+ask r_sum: sell, scaled, sell > fx
+ask r_pin_inv: to_eur with inv = 0.24
+ask r_pin_fx: to_pln with fx = 4.5
+ask r_ratio: fx * inv, eur * fx / pln
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fx = 4.30 "s"
+  margin = 0.05 "s"
+  inv = 0.25 "s"
+  pln = 1000 PLN "s"
+  eur = 100.05 EUR "s"
+  k = 2 "s"

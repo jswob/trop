@@ -1,0 +1,46 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor_eur: outside lives 2026-01-01..
+place kantor_pln: outside lives 2026-01-01..
+input amt: money EUR
+input fx: num PLN/EUR
+input xday: date
+move swap: exchanges
+  on xday
+  at xday
+  leg eur from konto_eur to kantor_eur amount amt
+  leg pln from kantor_pln to konto amount round(amt * fx, minor(PLN), half-up)
+ask a: bal(konto, 2026-12-31), bal(konto_eur, 2026-12-31)
+ask b: flows(swap.pln, 2026)
+ask e: explain swap
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.05 EUR "s"
+  xday = 2026-06-15 "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 500 EUR at 2026-01-01 start "s"
+version r1
+  cite s
+  governs 2026
+  known 2026-01-01
+  fx = 4.30 "s"
+version r2
+  cite s
+  governs 2026-06
+  known 2026-08-01
+  replace fx = 4.35 "the corrected June rate"

@@ -1,0 +1,24 @@
+model fx_add_two
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input pln: money PLN
+input eur: money EUR
+
+def mixed: money PLN = pln + eur
+
+ask a: mixed
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  pln = 1000 PLN "s"
+  eur = 100 EUR "s"

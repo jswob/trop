@@ -1,0 +1,52 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor_eur: outside lives 2026-01-01..
+place kantor_pln: outside lives 2026-01-01..
+input bank: observed
+input amt: money EUR
+input fx: num PLN/EUR
+input xday: date
+move swap: exchanges
+  on xday
+  at xday
+  leg eur from konto_eur to kantor_eur amount amt
+  leg pln from kantor_pln to konto amount round(amt * fx, minor(PLN), half-up)
+ask a: bal(konto_eur, 2026-06-30), bal(konto, 2026-06-30)
+ask b: flows(swap.pln, 2026), flows(swap.eur, 2026)
+ask c: observed(swap).pln.amount
+ask k: count(t in exchanges over 2026), count(o in bank over 2026)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100 EUR "s"
+  fx = 4.30 "s"
+  xday = 2026-06-15 "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 500 EUR at 2026-01-01 start "s"
+version st_eur
+  cite s
+  governs 2026-06
+  known 2026-07-02
+  covers konto_eur
+  bank[e1] = (on: 2026-06-15, kind: exchanges, leg eur from konto_eur to kantor_eur amount 100.00 EUR, leg pln from kantor_pln to konto amount 430.00 PLN, fulfils: swap) "eur line"
+version st_pln
+  cite s
+  governs 2026-06
+  known 2026-07-03
+  covers konto
+  bank[p1] = (on: 2026-06-15, kind: exchanges, leg eur from konto_eur to kantor_eur amount 100.00 EUR, leg pln from kantor_pln to konto amount 428.50 PLN, fulfils: swap) "pln line"
+  same bank[e1] = bank[p1]

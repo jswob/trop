@@ -1,0 +1,40 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [k1, k2]
+index js = int 1..2
+input len: calendar
+input fx: num PLN/EUR
+input e: money EUR
+input p: money PLN
+input v[k in ks, j in js]: money PLN
+input r: num
+def rate_back: num PLN/EUR = p / e
+def tie: key ks = argmax(v[k, 1] for k in ks)
+def pct: num = round(r, 1 %, half-up)
+ask a: len law 2026-03-01
+ask b: fx, rate_back, e * fx
+ask c: argmax(v[k, j] for k in ks, j in js) ties by (pos(k), j)
+ask d: tie
+ask f: pct, round(r, 0.001, half-even)
+version v0
+  cite s
+  governs always
+  known 2026-01-01
+  fx = 4.2857 "s"
+  e = 3 EUR "s"
+  p = 10 PLN "s"
+  v = 5 PLN "s"
+  r = 0.12345 "s"
+version cal26
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01, 12-25], added [2026-06-22])

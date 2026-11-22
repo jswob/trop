@@ -1,0 +1,33 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input rm: rounding
+input stp: money PLN
+input base: num PLN
+def r: money PLN = round(base, stp, rm) at reader
+ask l26: r law 2026-03-01
+ask l27: r law 2027-03-01
+ask k: r law 2027-03-01 as known 2026-02-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  stp = 0.10 PLN "s"
+  base = 12.25 PLN "s"
+version m26
+  cite s
+  governs 2026
+  known 2026-01-01
+  rm = half-up "s"
+version m27
+  cite s
+  governs 2027..
+  known 2026-06-01
+  rm = half-even "s"

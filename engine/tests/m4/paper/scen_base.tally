@@ -1,0 +1,43 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input c: bool
+input va: money PLN
+input vb: money PLN
+input fx: num PLN/EUR
+input e: money EUR
+input len: calendar
+input d0: date
+input n1: int
+def x: money PLN at reader
+  rule base = vb
+def conv: money PLN = round(e * fx, minor(PLN), half-up) at reader
+def nb: date = add_business(d0, n1, len)
+ask b1: x, conv law 2026-03-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  e = 10 EUR "s"
+  d0 = 2026-06-30 "s"
+  n1 = 1 "s"
+version r
+  cite s
+  governs 2026
+  known 2026-01-01
+  fx = 4.30 "s"
+version cal
+  cite s
+  governs 2026
+  known 2026-01-01
+  len = calendar(weekends [sat, sun], yearly [01-01])

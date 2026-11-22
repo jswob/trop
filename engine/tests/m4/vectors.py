@@ -8,9 +8,9 @@ The first seven columns are kernel/vectors.py's, read and run by its own functio
 names a check of checks.tsv (`check`; the other columns empty) or is a fixture of its own (`cwd`, `files`, `asks`,
 `options`). `group` is the runner test that holds it: `checks-…` in milestone/m4_checks.rs (73 of BUILD-ORDER § M4's 77
 checks), `constructs-…` in milestone/m4_constructs.rs (the corners of M4's constructs), one test per group. `for` is
-the construct that turns it green (`pins`: an `as if` pin at bound keys, L §5.11; `accrue`: L §3.3), `M7` for the
-vector held to M7 by name (held.tsv), or `-` for a vector the engine already answers; it is the builder's work list
-and is not stored.
+the construct that turns it green (MILESTONE-M4.md rows 1 and 2: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`,
+`calrow`), `M7` for the vector held to M7 by name (held.tsv), or `-` for a vector the engine already answers; it is
+the builder's work list and is not stored.
 
 Each vector is run on the frozen refcore (PyPy, plain refcore, never the fast layer: run.py's run_one, its 90 s
 budget, its cache, the watchdog) and written to vectors.refcore in kernel/vectors.refcore's six netstrings (id, group,
@@ -43,7 +43,10 @@ KV.JOBS = 2  # at most two heavy jobs on the machine (the run's rule)
 LIST = os.path.join(HERE, 'vectors.tsv')
 STORED = os.path.join(HERE, 'vectors.refcore')
 COLUMNS = KV.COLUMNS + ['for']
-FOR = {'-', 'pins', 'accrue', 'M7'}  # MILESTONE-M4.md row 1: the constructs the builder's groups build, M7's hold
+# MILESTONE-M4.md rows 1 and 2: the constructs the builder's groups build (an `as if` pin at a two-key def's keys,
+# `accrue`, a `check` of two keys or periods, a rate pin's unit, `argmax`'s tuple), #253 item 3's held vectors (a
+# business-day count under the row governing d, pick P1), and M7's hold
+FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'calrow', 'M7'}
 
 
 def rows():
