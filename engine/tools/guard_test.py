@@ -1096,7 +1096,10 @@ def launch_usage_checks(root, expect, failures):
     r = subprocess.run([os.path.join(root, "engine/tools/usage"), ids, "--projects", projects], capture_output=True, text=True, check=False)
     expect("usage of a planted ids file", r.returncode, 0, r.stderr)
     # a: msg_1 (1000 + 1000 + 5*200 = 3000) and msg_2 (1.25*800 = 1000); b: msg_1 again, counted once
-    for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls", "all 2 sessions"):
+    # a line says how many of its calls an earlier line counted (the process step after tally
+    # 2.3: tally 2.2.1 read a meter's line as a session's share)
+    for says in (f"session {a}: 2 calls, 0.00 M weighted", f"session {b}: 0 calls",
+                 "of the week (1 more counted in an earlier line)", "all 2 sessions"):
         if says not in r.stdout:
             failures.append(f"usage: lacks {says!r}: {r.stdout.strip()[:300]}")
     if "by model" in r.stdout:
@@ -1108,16 +1111,19 @@ def launch_usage_checks(root, expect, failures):
     expect("usage of an ids file and a Fable session", r.returncode, 0, r.stderr)
     for says in (f"session {c}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "by model:", f"  {opus}: 2 calls",
                  f"  {fable}: 1 calls, 5.00 M weighted, about 0.58 % of the week", "as Opus's tokens 0.35 %", "$18.00",
-                 "all 3 sessions: about 0.58 % of the week"):
+                 "all 3 sessions: about 0.58 % of the week, the run's share"):
         if says not in r.stdout:
             failures.append(f"usage with a Fable session: lacks {says!r}: {r.stdout.strip()[:400]}")
     tail = r.stdout.rstrip().splitlines()[-3:]
     if not tail or not tail[0].startswith("all 3 sessions"):
         failures.append(f"usage: the total isn't the third line from the end: {r.stdout.strip()[-300:]}")
-    # the account's two meters after the total (engine/PLAYBOOK.md, D10, 2026-11-19): the
-    # week meter 1.2 times the total (0.58 %), the Fable meter 4.2 times Fable's part (0.58 %)
-    for says in ("week meter: about 0.7 % (the total times 1.2; calibrated on one stretch, 2026-11-18)",
-                 "Fable meter: about 2.4 % (claude-fable-5-2's part, 0.58 %, times 4.2; calibrated on one stretch, 2026-11-18)"):
+    # the account's two meters after the total, in points (engine/PLAYBOOK.md, D10; the user's
+    # "Yes I want this", 2026-11-22): the week meter Opus's part (0.0005 %) times 1 and
+    # Fable's (0.58 %) times 2, 1.2; the Fable meter Fable's part times 4.2, 2.4
+    for says in ("week meter, the account's, not this run's share: about 1.2 points (claude-opus-5-5's part 0.00 % times 1 "
+                 "and claude-fable-5-2's part 0.58 % times 2; three readings to 2026-11-22, Fable 1.7 to 2.2)",
+                 "Fable meter, the account's, not this run's share: about 2.4 points (claude-fable-5-2's part 0.58 % times 4.2; "
+                 "one stretch, 2026-11-18)"):
         if says not in tail:
             failures.append(f"usage: its last lines lack {says!r}: {tail}")
     timeline_checks(root, expect, failures)
