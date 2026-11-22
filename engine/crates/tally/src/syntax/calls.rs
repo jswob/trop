@@ -1,4 +1,4 @@
-//! The built-in calls and the reads with clauses: `bal`, `value`, `flows`, `covered`, the aggregates, `calendar`, the day sets and `price`.
+//! The built-in calls and the reads with clauses: `bal`, `value`, `flows`, `covered`, the aggregates, `calendar`, a row's window and `price`.
 //! Spec: L §2.3 (`call`, `agg`, `AGG`, `balx`, `proj`, `valuex`, `flowsx`, `MODE`,
 //! `coveredx`, `calval`, `cday`, `dayset`, `price`), its parse rules 4 and 7, and its Calls
 //! (`min` and `max` with two or more plain arguments; a period word as the period argument of
@@ -423,8 +423,8 @@ impl P<'_> {
         }
     }
 
-    /// `window(a, b)`, a row's value or field (L §2.3 `dayset`, §4.4): its first day and its
-    /// last, as written.
+    /// `window(a, b)` as a row's value (L §2.3 `value`'s `dayset`, §4.4; `syntax/item.rs`): its
+    /// first day and its last, as written. A field's window is an expression's call.
     pub(super) fn window(&mut self) -> Result<(Day, Day), Stop> {
         self.expect("window")?;
         self.expect("(")?;

@@ -294,11 +294,20 @@ fn convert_record(m: &Reality, fields: &[Field], ty: &Ty, target: &str) -> Resul
     Ok(Value::Record(out))
 }
 
-/// A record field's value as a value of its field's type; a hole or an expression stops "not
-/// built" (refcore's `convert_value` on the field). L §3.1.
+/// A record field's value as a value of its field's type; a call but `window(a, b)` is no value
+/// of a row, `LOAD-UNIT` (refcore's `convert_value`, its last line; L §2.3 `field`: a window is
+/// a field's only call, and `one_of` is no name of the language, §4.4); a window, a hole or
+/// another expression stops "not built" (refcore's `convert_value` on the field). L §3.1.
 fn field_value(m: &Reality, written: &FieldValue, ty: &Ty, target: &str) -> Result<Value, Stop> {
     if let FieldValue::None | FieldValue::Expr(Expr::None) = written {
         return Ok(Value::None);
+    }
+    if let FieldValue::Expr(Expr::Call(call)) = written
+        && call.name != "window"
+    {
+        return Err(unit_refusal(format!(
+            "a value of the wrong type for {target}"
+        )));
     }
     if let FieldValue::Expr(Expr::Str(s)) = written {
         // a text field, as a row's text is (refcore's `convert_value`, its `str` arm)

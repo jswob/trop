@@ -5817,4 +5817,51 @@ ask d: bank[r1].period
         ];
         assert_eq!(lines, expected, "the lines of the commit G3 started from");
     }
+
+    /// A record input's row with a `date` field (L §2.3 `field`), to write a day into it.
+    const RECORD_DATE: &str = "model r
+  tally 2
+  on 2026-08-01
+  start 2026-01-01
+  end 2026-12-31
+source s \"invented\"
+input lot: (bought date, cnt int)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  lot = (bought: 2026-04-06, cnt: 3) \"c\"
+ask a1: lot.cnt
+";
+
+    #[test]
+    fn a_call_in_a_record_row_s_field_is_refused_at_load_but_a_window() {
+        // tally 2.3 G3's review, B1 (pick P14): a call but `window(a, b)` written in a record
+        // row's field is no value of a row, refcore's last line, `one_of` among them; a
+        // window there waits for M5a (2.2.1's ruling 12): load leaves it to the read
+        assert_eq!(refusal(RECORD_DATE), "loaded", "a day");
+        for call in [
+            "one_of([2026-04-06, 2026-04-13])",
+            "foo([2026-04-06, 2026-04-13])",
+            "add_days(2026-04-06, 1)",
+        ] {
+            let text = edited(
+                RECORD_DATE,
+                &[("bought: 2026-04-06", &format!("bought: {call}"))],
+            );
+            assert_eq!(
+                refusal(&text),
+                "LOAD-UNIT a value of the wrong type for lot (a.tally:12)",
+                "{call}"
+            );
+        }
+        let window = edited(
+            RECORD_DATE,
+            &[(
+                "bought: 2026-04-06",
+                "bought: window(2026-04-06, 2026-04-13)",
+            )],
+        );
+        assert_eq!(refusal(&window), "loaded", "a window, held to M5a");
+    }
 }
