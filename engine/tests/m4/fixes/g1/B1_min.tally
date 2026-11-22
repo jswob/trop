@@ -1,0 +1,26 @@
+model b1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index js = [j1, j2]
+index dd = day 2026-03-01..2026-03-02
+
+input b: num
+input q[j in js]: num
+
+def lb[j in js, d in dd]: num = b as if {b = last(q[j], d)}
+
+ask q_lb: lb[j, d] for j in js, d in dd law 2026-03-01
+ask q_plain: b
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b = 1 "s"
+  q[j1] = 2 governs 2026-01-01..2026-02-01 "s"
+  q[j2] = 3 governs 2026-01-01..2026-02-01 "s"

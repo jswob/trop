@@ -260,3 +260,10 @@ test = false
 name = "m4_items"
 path = "milestone/m4_items.rs"
 test = false
+
+# M4: the group reviews' findings, m4/fixes/<group>/ (refcore's bytes, m4/vectors.refcore) and the
+# spec's answers (m4/spec.vectors; MILESTONE-M4.md row 5); `test = false` until M4 gates.
+[[test]]
+name = "m4_fixes"
+path = "milestone/m4_fixes.rs"
+test = false

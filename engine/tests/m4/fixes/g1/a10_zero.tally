@@ -1,0 +1,38 @@
+model a10
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input z: rate
+input lo: rate
+input hi: rate
+input st: rate
+input p0: money PLN
+input tg: money PLN
+input d0: date
+input d1: date
+
+def direct: num PLN = accrue(p0, z, d0, d1, act365, effective)
+def fromone: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, simple) >= tg)
+def zsum: num = sum(periodic(t, year, effective) for t in z .. hi step st)
+
+ask q: direct, fromone
+ask q_zs: zsum
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z = 0 %/year "s"
+  lo = 1 %/year "s"
+  hi = 5 %/year "s"
+  st = 1 %/year "s"
+  p0 = 1000 PLN "s"
+  tg = 30 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"

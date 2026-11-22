@@ -8,9 +8,11 @@ The first seven columns are kernel/vectors.py's, read and run by its own functio
 names a check of checks.tsv (`check`; the other columns empty) or is a fixture of its own (`cwd`, `files`, `asks`,
 `options`). `group` is the runner test that holds it: `checks-…` in milestone/m4_checks.rs (73 of BUILD-ORDER § M4's 77
 checks), `constructs-…` in milestone/m4_constructs.rs (the corners of M4's constructs, the paper check), `items-…` in
-milestone/m4_items.rs (the in-scope backlog), one test per group. `for` is the construct that turns it green
-(MILESTONE-M4.md rows 1 to 3: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`, `monthcheck`, `explain`, `runnone`,
-`agemonths`, `middot`), `M7` for the vector held to M7 by name (held.tsv), or `-` for a vector the engine already
+milestone/m4_items.rs (the in-scope backlog), `fixes-…` in milestone/m4_fixes.rs (a group review's findings; the
+spec's answers beside them are spec.py's), one test per group. `for` is the construct that turns it green
+(MILESTONE-M4.md rows 1 to 3 and 5: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`, `monthcheck`, `explain`,
+`runnone`, `agemonths`, `middot`, `pinwalk`), `M7` for the vector held to M7 by name (held.tsv), or `-` for a vector
+the engine already
 answers; it is the builder's work list and is not stored. A joint model's members go into its file table as
 m3/vectors.py puts them (M0's `members`).
 
@@ -67,9 +69,9 @@ COLUMNS = KV.COLUMNS + ['for']
 # MILESTONE-M4.md rows 1 to 3: the constructs the builder's groups build (an `as if` pin at a two-key def's keys,
 # `accrue`, a `check` of two keys or periods, a rate pin's unit, `argmax`'s tuple; a plain `check` of two months,
 # `explain` of a decision's `flows` or `count`, `RUN-NONE` in L §8.4's form, `age_months` at 9999-12, a joint run
-# that leaves a member's `·` as written), and M7's hold
+# that leaves a member's `·` as written; G1's review B1, a per-tuple pin through a walk's read), and M7's hold
 FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'monthcheck', 'explain', 'runnone', 'agemonths',
-       'middot', 'M7'}
+       'middot', 'pinwalk', 'M7'}
 
 
 def rows():
