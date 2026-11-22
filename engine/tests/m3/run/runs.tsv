@@ -123,9 +123,7 @@ t221-g1/rv-n5-month-of	m3/fixes/t221/rv1	run so.tally	-	tally 2.2.1 (#241) the f
 t221-g1/rv-n9-overlap	m3/fixes/t221/rv1	run e2.tally --ask ovw ovw_a dbw dbw_c	-	tally 2.2.1 (#241) the first review's N9, l.668-669: one name in both arguments is taken once: overlap_days(w, w, k) 1, days_between(w, w) 0; pinned 03-10 1
 t221-g1/rv-p26-from	m3/fixes/t221/rv1	run w1_base.tally w1_sc.tally --ask b0430 b0501 b0531 p0501 p0503	-	tally 2.2.1 (#241) P26: a scenario's move on a window across from: 04-30 500.00 PLN, from 05-01 the hole; pinned 05-01 the HOLE-CHANGED question, 05-03 650.00 PLN
 t221-g2/208-10-quantile-none	m3/fixes/t221/misc2	run m2.tally --ask qn	-	tally 2.2.1 (#241) 208.10, L §8 l.2217: a none level of quantile is RUN-NONE
-t221-g3/221-3-two-calendars	m3/fixes/t221/g3t	run cal221_3.tally	-	tally 2.2.1 (#241) 221.3, R21 cl.1: two calendars' equal added entries, each named with its calendar
 t221-g3/221-4-def-window	m3/fixes/t221/onwin	run onwin.tally --ask o2	-	tally 2.2.1 (#241) 221.4, R21 cl.1: a def's window is named by its cell (wr)
-t221-g3/221-6-held-calendar	m3/fixes/t221/p3	run m.tally c22.tally c24.tally cw.tally --ask q2 q4 q13 q14	-	tally 2.2.1 (#241) 221.6, L §2.4: an added entry named with its calendar (of cal)
 t221-g3/221-C1-min-window	m3/fixes/t221/b2mix	run b2mix.tally --ask qa qb	-	tally 2.2.1 (#241) 221.C1, L §4.4 l.667: min of a window and w, both orders: both names, one question per unknown day (R21)
 t221-g3/235-6-bound-key	m3/fixes/t221/f1	run f1_flows.tally f1_flows.scen	-	tally 2.2.1 (#241) 235.6, L §8.1: a key's value under a binding names the hole's reader
 t221-g3/r21-c1-move-on	m3/fixes/t221/onwin	run onwin.tally --ask o1	-	tally 2.2.1 (#241) R21's cell 1: a move's own window is named by its movement (salary)
@@ -209,3 +207,9 @@ t23-g1/ledger-span	m3/fixes/t23/ledger	run l4_span.tally	-	tally 2.3 (#247), the
 t23-g1/same-end-equal	m3/fixes/t23/same	run se_w_eq.tally	-	tally 2.3 (#247), the plan's §8.4: book/same_booking.rs same_end (amounts_agree set to false): two movements stated same, equal amounts, one a hole day
 t23-g1/same-end-differ	m3/fixes/t23/same	run se_w_ne.tally	-	tally 2.3 (#247), the plan's §8.4: same_end (amounts_agree set to true): two movements stated same, different amounts, one a hole day
 t23-g1/c4-adjustments	m3/fixes/t23/c4	run n1_q.tally	-	tally 2.3 (#247) C-4, L §5.14, E §5 step 1: a later version that changes a hole-day instance makes an adjustment whose existence is that hole; a count and a sum over adjustments are the hole
+t23-g1/c3-one-of-row	m3/fixes/t23/c3	run one_of.tally	-	tally 2.3 G3 (#247, rulings 2 and 13): one_of is no form; in a version row it is an expression row outside a scenario, LOAD-SCENARIO
+t23-g1/c3-one-of-rule	m3/fixes/t23/c3	run one_of_rule.tally	-	tally 2.3 G3 (#247, rulings 2 and 13): one_of is no form; in a def's rule it is an unknown id, LOAD-NAME
+t23-g1/c3-added-window	m3/fixes/t23/c3	run added.tally	-	tally 2.3 G3 (#247, rulings 2 and 13): a calendar's added takes a day or a hole; a window there is LOAD-PARSE
+t23-g1/c3-on-window	m3/fixes/t23/c3	run on_window.tally	-	tally 2.3 (#247, ruling 13, C12 (b)): window(e1, e2) written in a move's on is a hole day named by its movement; a plain movement keeps its values
+t23-g1/c3-rule-window	m3/fixes/t23/c3	run rule_window.tally	-	tally 2.3 (#247, ruling 13, C12 (b)): window(e1, e2) computed in a date def's rule sits in that cell: listed readers by the ends, a pin of the cell gives its day
+t23-g1/n2-at	m3/fixes/t23/at	run n2_at.tally	-	tally 2.3 (#247, the lead's N2 ruling): a window at holes every place, a plain movement's beside it too; the oracle counts such texts apart, this keeps the words

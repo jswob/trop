@@ -1,4 +1,5 @@
-t (l = lot[x2], c = lot[x2]): refused: RUN-ORDER fill f: the order of the arc (lot[x2]; lot[x1]) is a hole
+t (l = lot[x2], c = lot[x2]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])
+  unknown day: day[x1]
   cut 2027-01-01
 t (l = lot[x2], c = lot[x1]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])
 t (l = lot[x1], c = lot[x2]): ?"date within window(2027-02-01, 2027-02-28) not precise enough for the day of lot[x1]" (day[x1])

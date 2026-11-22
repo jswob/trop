@@ -1,0 +1,14 @@
+model c3_one_of_rule
+  tally 2
+  on 2026-06-01
+  start 2026-01-01
+  end 2026-12-31
+  note "T, tally 2.3 G3 (#247, rulings 2 and 13): `one_of` is no form; written in a def's rule it is refused as any unknown word there is, by its place (one_of.tally holds it in a row). Written at C2, stored at the third pin."
+source s "invented"
+def dd: date
+  rule base = one_of([2026-03-02, 2026-03-09])
+version v
+  cite s
+  governs always
+  known 2025-01-01
+ask a: dd

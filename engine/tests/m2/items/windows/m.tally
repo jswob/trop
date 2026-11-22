@@ -39,7 +39,7 @@ version v
   cite card
   governs always
   known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+  cal = calendar(weekends [sat, sun], added [2026-06-01]) assumed "c"
   pd = 2026-04-01 "c"
   wd = window(2026-03-28, 2026-04-03) "c"
   twice = 2 "c"

@@ -1,8 +1,10 @@
 exit 0
-c (x = sell) [method = *]: refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+c (x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the day of buy_a" (d_a)
+  unknown day: d_a
   cut 2026-01-01
-c_fifo (x = sell): refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+c_fifo (x = sell): ?"date within window(2026-02-01, 2026-02-28) not precise enough for the day of buy_a" (d_a)
   pinned: method = fifo
+  unknown day: d_a
   cut 2026-01-01
 p05 (x = sell) [method = fifo]: 1 000.00 PLN
   pinned: d_a = 2026-02-05
@@ -20,6 +22,7 @@ p20 (x = sell) [method = lifo]: 1 000.00 PLN
   pinned: d_a = 2026-02-20
   reading: method = lifo
   cut 2026-01-01
-t (b = buy_b, x = sell) [method = *]: refused: RUN-ORDER fill matched: the order of the arc (buy_a; sell) is a hole
+t (b = buy_b, x = sell) [method = *]: ?"date within window(2026-02-01, 2026-02-28) not precise enough for the day of buy_a" (d_a)
+  unknown day: d_a
   cut 2026-01-01
 t (b = buy_a, x = sell): ?"date within window(2026-02-01, 2026-02-28) not precise enough for the day of buy_a" (d_a)

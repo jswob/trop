@@ -955,7 +955,7 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g2`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g2() {
-        group_holds(M1_VECTORS, "fixes-g2", (0, 1), 22);
+        group_holds(M1_VECTORS, "fixes-g2", (0, 1), 20);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g3`, every vector.
@@ -1141,7 +1141,7 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-g13`, part 2 of 6 (at 1 modulo 6).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_g13_part_2() {
-        group_holds(M1_VECTORS, "fixes-g13", (1, 6), 58);
+        group_holds(M1_VECTORS, "fixes-g13", (1, 6), 57);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-g13`, part 3 of 6 (at 2 modulo 6).
@@ -1201,7 +1201,7 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 3 of 11 (at 2 modulo 11).
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_gate8_part_3() {
-        group_holds(M1_VECTORS, "fixes-gate8", (2, 11), 27);
+        group_holds(M1_VECTORS, "fixes-gate8", (2, 11), 26);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-gate8`, part 4 of 11 (at 3 modulo 11).
@@ -1267,7 +1267,7 @@ mod tests {
     /// `m1/vectors.refcore`'s group `fixes-r3`, every vector.
     #[test]
     fn m2_forks_on_prints_off_on_m1_fixes_r3() {
-        group_holds(M1_VECTORS, "fixes-r3", (0, 1), 6);
+        group_holds(M1_VECTORS, "fixes-r3", (0, 1), 5);
     }
 
     /// `m1/vectors.refcore`'s group `fixes-r4`, every vector.
@@ -1568,7 +1568,7 @@ mod tests {
     /// def keyed by a movement (#211).
     #[test]
     fn m2_forks_on_prints_off_on_m2_fixes_22() {
-        group_holds(M2_VECTORS, "fixes-22", (0, 1), 45);
+        group_holds(M2_VECTORS, "fixes-22", (0, 1), 43);
     }
 
     /// `m2/vectors.refcore`'s group `hindcasts-h0`, part 1 of 2 (at 0 modulo 2).

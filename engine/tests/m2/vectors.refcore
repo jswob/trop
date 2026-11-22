@@ -14865,7 +14865,7 @@ fl: ?"date within window(2026-12-20, 2026-12-28) not precise enough for the day 
   before from: adv on 2026-12-15 reads amt
   held: amt = 20.00 PLN (late_amt), read for 2027-01-01
   cut 2026-10-20
-,15:items/windows/m,13:items-windows,11:run m.tally,1397:7:m.tally,1381:model w_each
+,15:items/windows/m,13:items-windows,11:run m.tally,1385:7:m.tally,1369:model w_each
   tally 2
   on 2026-03-01
   start 2026-01-01
@@ -14906,7 +14906,7 @@ version v
   cite card
   governs always
   known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02)]) "c"
+  cal = calendar(weekends [sat, sun], added [2026-06-01]) assumed "c"
   pd = 2026-04-01 "c"
   wd = window(2026-03-28, 2026-04-03) "c"
   twice = 2 "c"
@@ -14923,11 +14923,8 @@ version r2
   governs 2026-04-01..
   known 2026-01-01
   rate = 12.00 PLN "c"
-,,1:0,550:bw_plain [ax = *]: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the day of gift" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus_amt" (bonus_amt)
+,,1:0,290:bw_plain [ax = *]: ?"date within window(2026-03-28, 2026-04-03) not precise enough for the day of gift" (wd) ?"date within window(2026-03-28, 2026-04-03) not precise enough for the law date of bonus" (wd)
   unknown day: wd
-  held: rate = 12.00 PLN (r2), read for 2026-04-01
-  held: rate = 12.00 PLN (r2), read for 2026-04-02
-  held: rate = 12.00 PLN (r2), read for 2026-04-03
   cut 2026-03-01
 warning: WARN-UNREAD input cal is read by nothing
 ,14:fixes/g1/forks,11:fixes-forms,32:run base.tally sa.tally sb.tally,913:10:base.tally,562:model fk
@@ -103166,7 +103163,7 @@ version v
   opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
 
 ask q: sum(days_between(d0, dk[k]) for k in ks)
-,,1:0,185:q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for a term of sum" (dk[a])
+,,1:0,184:q: ?"date within window(2026-03-01, 2026-03-10) not precise enough for days_between" (dk[a])
   unknown day: dk[a]
   cut 2026-04-25
 warning: WARN-UNREAD place wallet is read by nothing
@@ -112745,7 +112742,7 @@ version v_card
 
 ask q: bal(konto, 2026-03-06) from 2026-01-01 windows each
 ,,1:1,81:refused: LOAD-PARSE cannot parse: expected end of line, got windows (m.tally:32)
-,27:fixes/t22/unknown_day_names,8:fixes-22,11:run m.tally,1682:7:m.tally,1666:model g22_unknown_day_names
+,27:fixes/t22/unknown_day_names,8:fixes-22,11:run m.tally,1668:7:m.tally,1652:model g22_unknown_day_names
   tally 2
   on 2026-01-01
   start 2026-01-01
@@ -112794,7 +112791,7 @@ version v_card
   known 2026-01-01
   pay = 100.00 PLN "the card"
   w = window(2026-03-05, 2026-03-07) "the card"
-  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
+  cal = calendar(weekends [sat, sun], added [2026-06-22]) assumed "the card"
   d0 = 2026-05-04 "the card"
   d1 = 2026-05-06 "the card"
   from_day = 2026-06-19 "the card"
@@ -112810,8 +112807,8 @@ ask n_rule: bal(konto, 2026-05-05)
 ask n_two: bal(konto, 2026-03-06) + bal(konto, 2026-05-05)
 
 ask n_win: w
-,,1:0,956:n_cal: ?"date within window(2026-06-22, 2026-06-23) not precise enough for the day of pay_cal" (cal)
-  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
+,,1:0,836:n_cal: 0.00 PLN
+  assumed: the card (cal)
   cut 2026-01-01
 n_cell: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr)
   unknown day: w
@@ -113292,187 +113289,6 @@ d_on2: (1 050.00 PLN, 950.00 PLN, 1, 950.00 PLN)
 e_after: (1 050.00 PLN, 950.00 PLN, 1, 950.00 PLN)
   cut 2026-04-30
 warning: WARN-UNREAD place world is read by nothing
-,21:fixes/t22/rv4_b2_pins,8:fixes-22,26:run m.tally --ask qa qb qc,2107:7:m.tally,2091:model g4_b2
-  tally 2
-  on 2026-01-01
-  start 2026-01-01
-  end 2026-12-31
-  note "T, tally 2.2 (N/a, #211): a hole made from a day not yet known names it in its register, unknown day: <name>: the cell that holds it (n_cell, w), a calendar's entry (n_cal, added one_of([2026-06-22, 2026-06-24])), a window a rule builds, by its own text (n_rule); two at once, sorted by their text (n_two); a window value that is no hole names none (n_win)."
-
-source card "T's card (invented)"
-
-unit PLN: currency minor 0.01
-
-place konto: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place world: outside lives 1900-01-01..
-
-input pay: money PLN
-
-input w: date
-
-input cal: calendar
-
-input d0: date
-
-input d1: date
-
-input from_day: date
-
-input x: date
-
-input d_fix: date
-
-def dd: date = d_fix
-
-def wr: date = window(d0, d1)
-
-move pay_w: transfers
-  on w
-  leg cash from world to konto amount pay
-
-move pay_cal: transfers
-  on add_business(from_day, 1, cal)
-  leg cash from world to sav amount pay
-
-move pay_r: transfers
-  on wr
-  leg cash from world to konto amount pay
-
-move pay_d: transfers
-  on dd
-  leg cash from world to konto amount pay
-
-move pay_x: transfers
-  on x
-  leg cash from world to konto amount pay
-
-version v_card
-  cite card
-  governs always
-  known 2026-01-01
-  pay = 100.00 PLN "the card"
-  w = window(2026-03-05, 2026-03-07) "the card"
-  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
-  d0 = 2026-05-04 "the card"
-  x = 2026-01-15 "the card"
-  d_fix = 2026-02-01 "the card"
-  d1 = 2026-05-06 "the card"
-  from_day = 2026-06-19 "the card"
-  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "the card"
-
-ask qa: bal(konto, 2026-03-06) with dd = window(2026-03-05, 2026-03-07)
-ask qb: bal(konto, 2026-06-22) with x = add_business(from_day, 1, cal)
-ask qc: last(w, 2026-06-01) < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
-ask qd: bal(konto, 2026-03-06) with w = window(2026-03-05, 2026-03-07)
-ask qe: w < 2026-03-06 with w = window(2026-03-05, 2026-03-07)
-,,1:0,1016:qa: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_d" (dd) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr)
-  pinned: dd = window(2026-03-05, 2026-03-07)
-  unknown day: dd
-  unknown day: w
-  unknown day: wr
-  cut 2026-01-01
-qb: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr) ?"date within window(2026-06-22, 2026-06-23) not precise enough for the day of pay_x" (cal)
-  pinned: x = window(2026-06-22, 2026-06-23)
-  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
-  unknown day: w
-  unknown day: wr
-  cut 2026-01-01
-qc: ?"date within window(2026-03-05, 2026-03-07) not precise enough for last(w, 2026-06-01) < 2026-03-06" (w)
-  pinned: w = window(2026-03-05, 2026-03-07)
-  unknown day: w
-  cut 2026-01-01
-,29:fixes/t22/rv4_b2_pin_calendar,8:fixes-22,20:run m.tally --ask r7,2140:7:m.tally,2124:model g4_b2b
-  tally 2
-  on 2026-01-01
-  start 2026-01-01
-  end 2026-12-31
-  note "T, tally 2.2 (N/a, #211): a hole made from a day not yet known names it in its register, unknown day: <name>: the cell that holds it (n_cell, w), a calendar's entry (n_cal, added one_of([2026-06-22, 2026-06-24])), a window a rule builds, by its own text (n_rule); two at once, sorted by their text (n_two); a window value that is no hole names none (n_win)."
-
-source card "T's card (invented)"
-
-unit PLN: currency minor 0.01
-
-place konto: accounts PLN lives 2026-01-01..
-
-place sav: accounts PLN lives 2026-01-01..
-
-place world: outside lives 1900-01-01..
-
-input pay: money PLN
-
-input w: date
-
-input cal: calendar
-
-input d0: date
-
-input d1: date
-
-input from_day: date
-
-input x: date
-
-input d_fix: date
-
-input lag: num
-
-def dd: date = d_fix
-
-def wr: date = window(d0, d1)
-
-move pay_w: transfers
-  on w
-  leg cash from world to konto amount pay
-
-move pay_cal: transfers
-  on add_business(from_day, 1, cal)
-  leg cash from world to sav amount pay
-
-move pay_r: transfers
-  on wr
-  leg cash from world to konto amount pay
-
-move pay_d: transfers
-  on dd
-  leg cash from world to konto amount pay
-
-move pay_x: transfers
-  on x
-  leg cash from world to konto amount pay
-
-version v_card
-  cite card
-  governs always
-  known 2026-01-01
-  pay = 100.00 PLN "the card"
-  w = window(2026-03-05, 2026-03-07) "the card"
-  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
-  d0 = 2026-05-04 "the card"
-  x = 2026-01-15 "the card"
-  d_fix = 2026-02-01 "the card"
-  lag = 1 "the card"
-  d1 = 2026-05-06 "the card"
-  from_day = 2026-06-19 "the card"
-  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-  opening[sav] = 0.00 PLN at 2026-01-01 start "the card"
-
-ask r1: bal(konto, 2026-03-06) with x = w
-ask r2: bal(konto, 2026-05-05) with x = window(d0, d1)
-ask r3: bal(konto, 2026-03-06) with x = add_days(w, lag)
-ask r4: bal(konto, 2026-05-05) with x = wr
-ask r5: last(w, 2026-06-01) < 2026-03-06
-ask r6: bal(konto, 2026-03-06) with dd = w
-ask r7: bal(konto, 2026-06-22) with dd = add_business(from_day, 1, cal)
-,,1:0,436:r7: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_w" (w) ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of pay_r" (wr) ?"date within window(2026-06-22, 2026-06-23) not precise enough for the day of pay_d" (cal)
-  pinned: dd = window(2026-06-22, 2026-06-23)
-  unknown day: added one_of([2026-06-22, 2026-06-24]) of cal
-  unknown day: w
-  unknown day: wr
-  cut 2026-01-01
 ,22:fixes/t22/rv4_pin_copy,8:fixes-22,23:run m.tally --ask e1 e2,861:7:m.tally,846:model g4_pin_copy3
   tally 2
   on 2026-01-10
@@ -113515,12 +113331,11 @@ version v_card
 
 ask e1: bal(konto, 2026-03-06)
 ask e2: bal(konto, 2026-03-06) with wc = wb
-,,1:0,506:e1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wa) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
+,,1:0,460:e1: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wa) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
   unknown day: wa
   unknown day: wb
   cut 2026-01-10
 e2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wb) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
-  pinned: wc = window(2026-03-05, 2026-03-07)
   unknown day: wb
   cut 2026-01-10
 ,28:fixes/t22/rv4_pin_copy_alone,8:fixes-22,20:run m.tally --ask e2,861:7:m.tally,846:model g4_pin_copy3
@@ -113565,8 +113380,7 @@ version v_card
 
 ask e1: bal(konto, 2026-03-06)
 ask e2: bal(konto, 2026-03-06) with wc = wb
-,,1:0,267:e2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wb) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
-  pinned: wc = window(2026-03-05, 2026-03-07)
+,,1:0,221:e2: ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_a" (wb) ?"date within window(2026-03-05, 2026-03-07) not precise enough for the day of pay_b" (wb)
   unknown day: wb
   cut 2026-01-10
 ,23:fixes/t22/min_step_week,8:fixes-22,11:run m.tally,1500:7:m.tally,1484:model g22_min_step_week
@@ -113661,13 +113475,13 @@ version v
 ask a: [gap, 1]
 ask b: gap
 ask t: gap, 1
-,,1:0,364:a: [?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1]
+,,1:0,379:a: [?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between" (w), 1]
   unknown day: w
   cut 2026-01-01
-b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w)
+b: ?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between" (w)
   unknown day: w
   cut 2026-01-01
-t: (?"date within window(2026-03-05, 2026-03-07) not precise enough for a print" (w), 1)
+t: (?"date within window(2026-03-05, 2026-03-07) not precise enough for days_between" (w), 1)
   unknown day: w
   cut 2026-01-01
 ,10:spec/g1/qn,11:fixes-forms,25:run qn.tally --ask q_none,447:8:qn.tally,431:model qn

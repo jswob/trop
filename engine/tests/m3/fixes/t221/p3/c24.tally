@@ -1,9 +1,0 @@
-scenario c24 over g4_p3
-  tally 2
-  from 2026-01-01
-
-version c24_v
-  cite card
-  governs 2026-01-01..
-  known 2026-01-01
-  replace cal = calendar(weekends [sat, sun], added [2026-06-24]) "s"

@@ -620,7 +620,7 @@ ask l11_p20260331: bal(konto, 2026-04-06) with w = 2026-03-31 as known 2026-04-0
 ask l11_p20260401: bal(konto, 2026-04-06) with w = 2026-04-01 as known 2026-04-08
 ask l11_p20260402: bal(konto, 2026-04-06) with w = 2026-04-02 as known 2026-04-08
 ask l11_p20260403: bal(konto, 2026-04-06) with w = 2026-04-03 as known 2026-04-08
-,,44:20260330 20260331 20260401 20260402 20260403,2:12,4:4 N1,0:,0:,12:o_known_in_1,8:known_in,22:run
+,,44:20260330 20260331 20260401 20260402 20260403,2:12,0:,0:,0:,12:o_known_in_1,8:known_in,22:run
 o_known_in_1.tally,6551:18:o_known_in_1.tally,6523:model o_known_in_1
   tally 2
   on 2026-07-19
@@ -741,7 +741,7 @@ ask l11_p20260514: bal(konto, 2026-05-20) with w = 2026-05-14 as known 2026-05-2
 ask l11_p20260515: bal(konto, 2026-05-20) with w = 2026-05-15 as known 2026-05-22
 ask l11_p20260516: bal(konto, 2026-05-20) with w = 2026-05-16 as known 2026-05-22
 ask l11_p20260517: bal(konto, 2026-05-20) with w = 2026-05-17 as known 2026-05-22
-,,53:20260512 20260513 20260514 20260515 20260516 20260517,2:12,4:4 N1,0:,0:,12:o_known_in_2,8:known_in,22:run
+,,53:20260512 20260513 20260514 20260515 20260516 20260517,2:12,0:,0:,0:,12:o_known_in_2,8:known_in,22:run
 o_known_in_2.tally,3959:18:o_known_in_2.tally,3931:model o_known_in_2
   tally 2
   on 2026-07-17
@@ -826,7 +826,7 @@ ask l11: bal(konto, 2026-05-18) as known 2026-05-20
 ask l11_p20260513: bal(konto, 2026-05-18) with w = 2026-05-13 as known 2026-05-20
 ask l11_p20260514: bal(konto, 2026-05-18) with w = 2026-05-14 as known 2026-05-20
 ask l11_p20260515: bal(konto, 2026-05-18) with w = 2026-05-15 as known 2026-05-20
-,,26:20260513 20260514 20260515,2:12,4:4 N1,0:,0:,15:o_known_after_0,11:known_after,25:run
+,,26:20260513 20260514 20260515,2:12,0:,0:,0:,15:o_known_after_0,11:known_after,25:run
 o_known_after_0.tally,6557:21:o_known_after_0.tally,6526:model o_known_after_0
   tally 2
   on 2026-07-18
@@ -947,7 +947,7 @@ ask l11_p20260513: bal(konto, 2026-05-19) with w = 2026-05-13 as known 2026-05-2
 ask l11_p20260514: bal(konto, 2026-05-19) with w = 2026-05-14 as known 2026-05-21
 ask l11_p20260515: bal(konto, 2026-05-19) with w = 2026-05-15 as known 2026-05-21
 ask l11_p20260516: bal(konto, 2026-05-19) with w = 2026-05-16 as known 2026-05-21
-,,53:20260511 20260512 20260513 20260514 20260515 20260516,2:12,4:4 N1,0:,0:,15:o_known_after_1,11:known_after,25:run
+,,53:20260511 20260512 20260513 20260514 20260515 20260516,2:12,0:,0:,0:,15:o_known_after_1,11:known_after,25:run
 o_known_after_1.tally,6557:21:o_known_after_1.tally,6526:model o_known_after_1
   tally 2
   on 2026-06-05
@@ -1068,7 +1068,7 @@ ask l11_p20260331: bal(konto, 2026-04-06) with w = 2026-03-31 as known 2026-04-0
 ask l11_p20260401: bal(konto, 2026-04-06) with w = 2026-04-01 as known 2026-04-08
 ask l11_p20260402: bal(konto, 2026-04-06) with w = 2026-04-02 as known 2026-04-08
 ask l11_p20260403: bal(konto, 2026-04-06) with w = 2026-04-03 as known 2026-04-08
-,,53:20260329 20260330 20260331 20260401 20260402 20260403,2:12,4:4 N1,0:,0:,15:o_known_after_2,11:known_after,25:run
+,,53:20260329 20260330 20260331 20260401 20260402 20260403,2:12,0:,0:,0:,15:o_known_after_2,11:known_after,25:run
 o_known_after_2.tally,7421:21:o_known_after_2.tally,7390:model o_known_after_2
   tally 2
   on 2026-07-19
@@ -1201,7 +1201,7 @@ ask l11_p20260514: bal(konto, 2026-05-20) with w = 2026-05-14 as known 2026-05-2
 ask l11_p20260515: bal(konto, 2026-05-20) with w = 2026-05-15 as known 2026-05-22
 ask l11_p20260516: bal(konto, 2026-05-20) with w = 2026-05-16 as known 2026-05-22
 ask l11_p20260517: bal(konto, 2026-05-20) with w = 2026-05-17 as known 2026-05-22
-,,62:20260511 20260512 20260513 20260514 20260515 20260516 20260517,2:12,4:4 N1,0:,0:,8:o_scen_0,4:scen,27:run
+,,62:20260511 20260512 20260513 20260514 20260515 20260516 20260517,2:12,0:,0:,0:,8:o_scen_0,4:scen,27:run
 o_scen_0.tally
 sc.tally,7711:14:o_scen_0.tally,5199:model o_scen_0
   tally 2
@@ -6731,7 +6731,7 @@ ask l16_p20260329: covered(konto, 2026-01-01 .. w) with w = 2026-03-29
 ask l16_p20260330: covered(konto, 2026-01-01 .. w) with w = 2026-03-30
 ask l16_p20260331: covered(konto, 2026-01-01 .. w) with w = 2026-03-31
 ask l16_p20260401: covered(konto, 2026-01-01 .. w) with w = 2026-04-01
-,,44:20260328 20260329 20260330 20260331 20260401,2:17,6:16 R12,0:,110:0 off
+,,44:20260328 20260329 20260330 20260331 20260401,2:17,0:,0:,110:0 off
 1 off
 2 off
 3 off
@@ -6910,7 +6910,7 @@ ask l16_p20260628: covered(konto, 2026-01-01 .. w) with w = 2026-06-28
 ask l16_p20260629: covered(konto, 2026-01-01 .. w) with w = 2026-06-29
 ask l16_p20260630: covered(konto, 2026-01-01 .. w) with w = 2026-06-30
 ask l16_p20260701: covered(konto, 2026-01-01 .. w) with w = 2026-07-01
-,,44:20260627 20260628 20260629 20260630 20260701,2:17,6:16 R12,0:,110:0 off
+,,44:20260627 20260628 20260629 20260630 20260701,2:17,0:,0:,110:0 off
 1 off
 2 off
 3 off
@@ -7089,7 +7089,7 @@ ask l16_p20260331: covered(konto, 2026-01-01 .. w) with w = 2026-03-31
 ask l16_p20260401: covered(konto, 2026-01-01 .. w) with w = 2026-04-01
 ask l16_p20260402: covered(konto, 2026-01-01 .. w) with w = 2026-04-02
 ask l16_p20260403: covered(konto, 2026-01-01 .. w) with w = 2026-04-03
-,,44:20260330 20260331 20260401 20260402 20260403,2:17,6:16 R12,0:,110:0 off
+,,44:20260330 20260331 20260401 20260402 20260403,2:17,0:,0:,110:0 off
 1 off
 2 off
 3 off

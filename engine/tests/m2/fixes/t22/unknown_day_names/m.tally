@@ -47,7 +47,7 @@ version v_card
   known 2026-01-01
   pay = 100.00 PLN "the card"
   w = window(2026-03-05, 2026-03-07) "the card"
-  cal = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "the card"
+  cal = calendar(weekends [sat, sun], added [2026-06-22]) assumed "the card"
   d0 = 2026-05-04 "the card"
   d1 = 2026-05-06 "the card"
   from_day = 2026-06-19 "the card"

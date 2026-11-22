@@ -28791,7 +28791,7 @@ ask n1_list: rate[y] for y in [2026, 2027]
   cut 2026-10-01
 n1_list (y = 2027): 0.2
   cut 2026-10-01
-,23:carried/steps/n4_inside,9:carried-6,31:run model.tally --ask n4_inside,1760:11:model.tally,1739:model steps
+,23:carried/steps/n4_inside,9:carried-6,31:run model.tally --ask n4_inside,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -28858,11 +28858,11 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,30:n4_inside: 3
   cut 2026-10-01
-,21:carried/steps/n4_past,9:carried-6,29:run model.tally --ask n4_past,1760:11:model.tally,1739:model steps
+,21:carried/steps/n4_past,9:carried-6,29:run model.tally --ask n4_past,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -28929,11 +28929,11 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,59:n4_past: refused: RUN-KEY 5 is outside ks
   cut 2026-10-01
-,22:carried/steps/n4_guard,9:carried-6,30:run model.tally --ask n4_guard,1760:11:model.tally,1739:model steps
+,22:carried/steps/n4_guard,9:carried-6,30:run model.tally --ask n4_guard,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29000,7 +29000,7 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,148:n4_guard (k = 1): 2
   cut 2026-10-01
@@ -29010,7 +29010,7 @@ n4_guard (k = 3): 4
   cut 2026-10-01
 n4_guard (k = 4): 4
   cut 2026-10-01
-,24:carried/steps/n7_weekday,9:carried-6,32:run model.tally --ask n7_weekday,1760:11:model.tally,1739:model steps
+,24:carried/steps/n7_weekday,9:carried-6,32:run model.tally --ask n7_weekday,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29077,11 +29077,11 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,36:n7_weekday: (1, 7)
   cut 2026-10-01
-,30:carried/steps/n7_last_business,9:carried-6,38:run model.tally --ask n7_last_business,1760:11:model.tally,1739:model steps
+,30:carried/steps/n7_last_business,9:carried-6,38:run model.tally --ask n7_last_business,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29148,12 +29148,12 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,108:n7_last_business: (2026-06-30, 2026-05-28)
   assumed: the card names no holiday (holidays)
   cut 2026-10-01
-,30:carried/steps/n7_window_agrees,9:carried-6,38:run model.tally --ask n7_window_agrees,1760:11:model.tally,1739:model steps
+,30:carried/steps/n7_window_agrees,9:carried-6,38:run model.tally --ask n7_window_agrees,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29220,11 +29220,12 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,46:n7_window_agrees: 2026-06-04
+,,1:0,141:n7_window_agrees: 2026-06-04
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
-,31:carried/steps/n7_window_differs,9:carried-6,39:run model.tally --ask n7_window_differs,1760:11:model.tally,1739:model steps
+,31:carried/steps/n7_window_differs,9:carried-6,39:run model.tally --ask n7_window_differs,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29291,11 +29292,12 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,67:n7_window_differs: window(2026-06-24, 2026-06-25)
+,,1:0,142:n7_window_differs: 2026-06-25
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
-,31:carried/steps/n7_explain_before,9:carried-6,39:run model.tally --ask n7_explain_before,1760:11:model.tally,1739:model steps
+,31:carried/steps/n7_explain_before,9:carried-6,39:run model.tally --ask n7_explain_before,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29362,14 +29364,14 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,236:n7_explain_before: 500.00 PLN
   balance of konto (PLN) at the end of 2026-06-09
   from: opening card_2026:opening[konto] = 500.00 PLN, 2026-01-01 start (version card_2026, source card, locator "the card")
   no movement
   cut 2026-10-01
-,30:carried/steps/n7_explain_after,9:carried-6,38:run model.tally --ask n7_explain_after,1760:11:model.tally,1739:model steps
+,30:carried/steps/n7_explain_after,9:carried-6,38:run model.tally --ask n7_explain_after,1748:11:model.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -29436,7 +29438,7 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 ,,1:0,286:n7_explain_after: 460.00 PLN
   balance of konto (PLN) at the end of 2026-06-30
@@ -32204,7 +32206,7 @@ version tips_2026_06_b
   known 2026-06-01
   replace tip = 0.2 "a second card of the same day replaces the tip"
 ,,1:1,130:refused: LOAD-OVERLAP rows same.tally:18 and same.tally:24 of tip overlap at no keys, neither replacing the other (same.tally:24)
-,14:fixes/g2/p1_a1,8:fixes-g2,21:run p1.tally --ask a1,1033:8:p1.tally,1016:model probes
+,14:fixes/g2/p1_a1,8:fixes-g2,21:run p1.tally --ask a1,1031:8:p1.tally,1014:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -32231,7 +32233,7 @@ version card_2026
   known 2026-01-01
   w = window(2026-06-01, 2026-06-05) "c"
   wy = window(2026-12-30, 2027-01-02) "c"
-  o = one_of([2026-06-01, 2026-06-05]) "c"
+  o = window(2026-06-01, 2026-06-05) "c"
   wd = window(2026-06-01, 2026-06-01) "c"
   cal = calendar(weekends [sat, sun]) "c"
   caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
@@ -32257,7 +32259,7 @@ warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
 warning: WARN-UNREAD input three is read by nothing
 warning: WARN-UNREAD input two is read by nothing
-,14:fixes/g2/p1_a2,8:fixes-g2,21:run p1.tally --ask a2,1033:8:p1.tally,1016:model probes
+,14:fixes/g2/p1_a2,8:fixes-g2,21:run p1.tally --ask a2,1031:8:p1.tally,1014:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -32284,7 +32286,7 @@ version card_2026
   known 2026-01-01
   w = window(2026-06-01, 2026-06-05) "c"
   wy = window(2026-12-30, 2027-01-02) "c"
-  o = one_of([2026-06-01, 2026-06-05]) "c"
+  o = window(2026-06-01, 2026-06-05) "c"
   wd = window(2026-06-01, 2026-06-01) "c"
   cal = calendar(weekends [sat, sun]) "c"
   caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
@@ -32310,7 +32312,7 @@ warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
 warning: WARN-UNREAD input three is read by nothing
 warning: WARN-UNREAD input two is read by nothing
-,14:fixes/g2/p1_a3,8:fixes-g2,21:run p1.tally --ask a3,1033:8:p1.tally,1016:model probes
+,14:fixes/g2/p1_a3,8:fixes-g2,21:run p1.tally --ask a3,1031:8:p1.tally,1014:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -32337,7 +32339,7 @@ version card_2026
   known 2026-01-01
   w = window(2026-06-01, 2026-06-05) "c"
   wy = window(2026-12-30, 2027-01-02) "c"
-  o = one_of([2026-06-01, 2026-06-05]) "c"
+  o = window(2026-06-01, 2026-06-05) "c"
   wd = window(2026-06-01, 2026-06-01) "c"
   cal = calendar(weekends [sat, sun]) "c"
   caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
@@ -32363,7 +32365,7 @@ warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
 warning: WARN-UNREAD input three is read by nothing
 warning: WARN-UNREAD input two is read by nothing
-,15:fixes/g2/p1_a10,8:fixes-g2,22:run p1.tally --ask a10,1033:8:p1.tally,1016:model probes
+,15:fixes/g2/p1_a10,8:fixes-g2,22:run p1.tally --ask a10,1031:8:p1.tally,1014:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -32390,7 +32392,7 @@ version card_2026
   known 2026-01-01
   w = window(2026-06-01, 2026-06-05) "c"
   wy = window(2026-12-30, 2027-01-02) "c"
-  o = one_of([2026-06-01, 2026-06-05]) "c"
+  o = window(2026-06-01, 2026-06-05) "c"
   wd = window(2026-06-01, 2026-06-01) "c"
   cal = calendar(weekends [sat, sun]) "c"
   caly = calendar(weekends [sat, sun], yearly [01-01] from 2027) "c"
@@ -32409,102 +32411,13 @@ ask a8: wd == 2026-06-01
 ask a9: add_business(w, 1, cal)
 ask a10: end_of(w) > w
 ask a11: start_of(w) == w
-,,1:0,334:a10: ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w)
+,,1:0,327:a10: ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of" (w)
   unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD input caly is read by nothing
 warning: WARN-UNREAD input n_months is read by nothing
 warning: WARN-UNREAD input three is read by nothing
 warning: WARN-UNREAD input two is read by nothing
-,14:fixes/g2/p3_e1,8:fixes-g2,21:run p3.tally --ask e1,1423:8:p3.tally,1406:model probes
-  tally 2
-  on 2026-10-01
-  start 2026-01-01
-  end 2026-12-31
-  note "review probes"
-
-source card "invented"
-
-unit PLN: currency minor 0.01
-
-input w: date
-input windowed: calendar
-input two_w: calendar
-input oo: calendar
-input three: int
-input mthree: int
-input from_day: date
-
-def later: date = add_days(w, 1)
-def paid: date = add_business(from_day, three, windowed)
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  w = window(2026-06-01, 2026-06-05) "c"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "c"
-  two_w = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26), one_of([2026-06-29, 2026-07-01])]) "c"
-  oo = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
-  three = 3 "c"
-  mthree = -3 "c"
-  from_day = 2026-06-19 "c"
-
-ask e1: later == w, later > w
-ask e2: paid == paid, paid < 2026-07-01
-ask e3: add_business(2026-07-01, mthree, windowed), add_business(2026-06-29, -1, windowed)
-ask e4: is_business(2026-06-23, windowed), is_business(2026-06-29, windowed)
-ask e5: add_business(2026-06-19, three, two_w), add_business(2026-06-26, three, two_w)
-ask e6: last_business(2026-06, three, windowed), last_business(2026-06, 1, windowed)
-ask e7: is_business(2026-06-23, oo), add_business(2026-06-21, 1, oo), add_business(2026-06-22, 1, oo)
-ask e8: schedule(2026-06, three, following, windowed)
-,,1:0,208:e1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for later == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for later > w" (w))
-  unknown day: w
-  cut 2026-10-01
-,14:fixes/g2/p3_e2,8:fixes-g2,21:run p3.tally --ask e2,1423:8:p3.tally,1406:model probes
-  tally 2
-  on 2026-10-01
-  start 2026-01-01
-  end 2026-12-31
-  note "review probes"
-
-source card "invented"
-
-unit PLN: currency minor 0.01
-
-input w: date
-input windowed: calendar
-input two_w: calendar
-input oo: calendar
-input three: int
-input mthree: int
-input from_day: date
-
-def later: date = add_days(w, 1)
-def paid: date = add_business(from_day, three, windowed)
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  w = window(2026-06-01, 2026-06-05) "c"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "c"
-  two_w = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26), one_of([2026-06-29, 2026-07-01])]) "c"
-  oo = calendar(weekends [sat, sun], added [one_of([2026-06-22, 2026-06-24])]) "c"
-  three = 3 "c"
-  mthree = -3 "c"
-  from_day = 2026-06-19 "c"
-
-ask e1: later == w, later > w
-ask e2: paid == paid, paid < 2026-07-01
-ask e3: add_business(2026-07-01, mthree, windowed), add_business(2026-06-29, -1, windowed)
-ask e4: is_business(2026-06-23, windowed), is_business(2026-06-29, windowed)
-ask e5: add_business(2026-06-19, three, two_w), add_business(2026-06-26, three, two_w)
-ask e6: last_business(2026-06, three, windowed), last_business(2026-06, 1, windowed)
-ask e7: is_business(2026-06-23, oo), add_business(2026-06-21, 1, oo), add_business(2026-06-22, 1, oo)
-ask e8: schedule(2026-06, three, following, windowed)
-,,1:0,34:e2: (true, true)
-  cut 2026-10-01
 ,14:fixes/g2/q1_s1,8:fixes-g2,21:run q1.tally --ask s1,968:8:q1.tally,952:model probes
   tally 2
   on 2026-10-01
@@ -32929,7 +32842,7 @@ ask l3: last(wr, 2026-07-01)
 ,,1:0,109:l2: (false, true)
   held: wr = window(2026-06-01, 2026-06-05) (spring), read for 2026-07-01
   cut 2026-10-01
-,14:fixes/g2/p4_f1,8:fixes-g2,21:run p4.tally --ask f1,521:8:p4.tally,505:model probes
+,14:fixes/g2/p4_f1,8:fixes-g2,21:run p4.tally --ask f1,509:8:p4.tally,493:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -32947,16 +32860,16 @@ version card_2026
   governs always
   known 2026-01-01
   wl = window(9999-12-29, 9999-12-31) "c"
-  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  endcal = calendar(weekends [sat, sun], added [9999-12-30]) assumed "c"
   last_day = 9999-12-31 "c"
 
 ask f1: weekday(wl)
 ask f2: is_business(last_day, endcal)
 ask f3: last_business(9999-12, 1, endcal)
-,,1:0,121:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for a print" (wl)
+,,1:0,121:f1: ?"date within window(9999-12-29, 9999-12-31) not precise enough for weekday" (wl)
   unknown day: wl
   cut 2026-10-01
-,14:fixes/g2/p4_f2,8:fixes-g2,21:run p4.tally --ask f2,521:8:p4.tally,505:model probes
+,14:fixes/g2/p4_f2,8:fixes-g2,21:run p4.tally --ask f2,509:8:p4.tally,493:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -32974,16 +32887,16 @@ version card_2026
   governs always
   known 2026-01-01
   wl = window(9999-12-29, 9999-12-31) "c"
-  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  endcal = calendar(weekends [sat, sun], added [9999-12-30]) assumed "c"
   last_day = 9999-12-31 "c"
 
 ask f1: weekday(wl)
 ask f2: is_business(last_day, endcal)
 ask f3: last_business(9999-12, 1, endcal)
-,,1:0,191:f2: ?"date within window(9999-12-29, 9999-12-31) not precise enough for is_business(last_day, endcal)" (endcal)
-  unknown day: added window(9999-12-29, 9999-12-31) of endcal
+,,1:0,48:f2: true
+  assumed: c (endcal)
   cut 2026-10-01
-,14:fixes/g2/p4_f3,8:fixes-g2,21:run p4.tally --ask f3,521:8:p4.tally,505:model probes
+,14:fixes/g2/p4_f3,8:fixes-g2,21:run p4.tally --ask f3,509:8:p4.tally,493:model probes
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -33001,13 +32914,14 @@ version card_2026
   governs always
   known 2026-01-01
   wl = window(9999-12-29, 9999-12-31) "c"
-  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  endcal = calendar(weekends [sat, sun], added [9999-12-30]) assumed "c"
   last_day = 9999-12-31 "c"
 
 ask f1: weekday(wl)
 ask f2: is_business(last_day, endcal)
 ask f3: last_business(9999-12, 1, endcal)
-,,1:0,52:f3: window(9999-12-30, 9999-12-31)
+,,1:0,54:f3: 9999-12-31
+  assumed: c (endcal)
   cut 2026-10-01
 ,15:fixes/g2/pow_m1,8:fixes-g2,22:run pow.tally --ask m1,690:9:pow.tally,673:model pows
   tally 2
@@ -101837,7 +101751,7 @@ zm3: spend10
         version facts, source fixture, "T's fixture for S's kernel tests (invented values)", locator "konto9 and konto10 go to -20", governs always, known 2025-12-01
   cut 2026-03-25
 warning: WARN-NEGATIVE konto10 is below zero from 2026-01-20
-,19:fixes/g12/pm4_mv_mv,9:fixes-g12,19:run pm4_mv_mv.tally,1810:15:pm4_mv_mv.tally,1785:model steps
+,19:fixes/g12/pm4_mv_mv,9:fixes-g12,19:run pm4_mv_mv.tally,1798:15:pm4_mv_mv.tally,1773:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -101904,13 +101818,13 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 
 ask e_pay: explain pay
 
 ask zm1: explain pay
-,,1:0,1968:e_pay: pay
+,,1:0,2138:e_pay: pay
   plan, day 2026-06-10, booking cut 2026-06-10, status past
   leg cash from konto to world amount 40.00 PLN
   derivation at 2026-06-10:
@@ -101949,8 +101863,10 @@ n7_last_business: (2026-06-30, 2026-05-28)
 n7_weekday: (1, 7)
   cut 2026-10-01
 n7_window_agrees: 2026-06-04
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
-n7_window_differs: window(2026-06-24, 2026-06-25)
+n7_window_differs: 2026-06-25
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
 zm1: pay
   plan, day 2026-06-10, booking cut 2026-06-10, status past
@@ -130008,7 +129924,7 @@ q_claims (d = 2026-03-31): (refused: RUN-PLACE lent is -30.00 PLN after the day'
 warning: WARN-NEGATIVE wallet is below zero from 2026-01-15
 warning: WARN-NEGATIVE wallet is below zero from 2026-02-15
 warning: WARN-UNREAD input fund_price is read by nothing
-,14:fixes/g12/v_mv,9:fixes-g12,14:run v_mv.tally,1783:10:v_mv.tally,1763:model steps
+,14:fixes/g12/v_mv,9:fixes-g12,14:run v_mv.tally,1771:10:v_mv.tally,1751:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -130075,11 +129991,11 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
 
 ask e_pay: explain pay
-,,1:0,1493:e_pay: pay
+,,1:0,1663:e_pay: pay
   plan, day 2026-06-10, booking cut 2026-06-10, status past
   leg cash from konto to world amount 40.00 PLN
   derivation at 2026-06-10:
@@ -130118,8 +130034,10 @@ n7_last_business: (2026-06-30, 2026-05-28)
 n7_weekday: (1, 7)
   cut 2026-10-01
 n7_window_agrees: 2026-06-04
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
-n7_window_differs: window(2026-06-24, 2026-06-25)
+n7_window_differs: 2026-06-25
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
 ,15:fixes/g12/v_mvq,9:fixes-g12,15:run v_mvq.tally,8187:11:v_mvq.tally,8166:model g10_ledger
   tally 2
@@ -130652,7 +130570,7 @@ zm9: sweep[2026-01]
   read at its walk point: konto
   leg cash from konto to save amount 10.00 PLN
   cut 2026-03-15
-,14:fixes/g12/v_n7,9:fixes-g12,14:run v_n7.tally,1759:10:v_n7.tally,1739:model steps
+,14:fixes/g12/v_n7,9:fixes-g12,14:run v_n7.tally,1747:10:v_n7.tally,1727:model steps
   tally 2
   on 2026-10-01
   start 2026-01-01
@@ -130719,9 +130637,9 @@ version card_2026
   n_add = 3 "the card"
   n_last = 2 "the card"
   pay_day = 2026-06-10 "the card"
-  windowed = calendar(weekends [sat, sun], added [window(2026-06-22, 2026-06-26)]) "the card: one more holiday in the week of 22 June, its day not yet fixed"
+  windowed = calendar(weekends [sat, sun], added [2026-06-24]) assumed "the card: one more holiday in the week of 22 June, its day not yet fixed"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,1016:n4_guard (k = 1): 2
+,,1:0,1186:n4_guard (k = 1): 2
   cut 2026-10-01
 n4_guard (k = 2): 3
   cut 2026-10-01
@@ -130751,8 +130669,10 @@ n7_last_business: (2026-06-30, 2026-05-28)
 n7_weekday: (1, 7)
   cut 2026-10-01
 n7_window_agrees: 2026-06-04
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
-n7_window_differs: window(2026-06-24, 2026-06-25)
+n7_window_differs: 2026-06-25
+  assumed: the card: one more holiday in the week of 22 June, its day not yet fixed (windowed)
   cut 2026-10-01
 ,25:fixes/g12/r_agent_dec_dec,9:fixes-g12,25:run r_agent_dec_dec.tally,1312:21:r_agent_dec_dec.tally,1281:model dec
   tally 2
@@ -170904,9 +170824,10 @@ version card_2026
 
 
 ask g3: lifespan(konto).from + age(w, d2)
-,,1:0,451:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,514:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-g3: window(2026-01-01, 2026-01-02)
+g3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -170970,9 +170891,9 @@ version card_2026
 
 
 ask g4: count(d in d1 .. d2 step age(w, d2) * 1 month)
-,,1:0,575:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,566:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-g4: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+g4: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -171038,9 +170959,9 @@ version card_2026
 
 
 ask g5: count(d in d1 .. d2 step (age(w, d2) + 1) * 1 month)
-,,1:0,575:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,566:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-g5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+g5: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -177667,81 +177588,15 @@ version card_2026
   tally 2
 
 ask w02: t[age(w, d2) * 1 %/year]
-,,1:0,521:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,519:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-w02: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
+w02: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
 warning: WARN-UNREAD input r2 is read by nothing
 warning: WARN-UNREAD input rr is read by nothing
-warning: WARN-UNREAD place konto is read by nothing
-warning: WARN-UNREAD place world is read by nothing
-,34:fixes/g13/rf_w_model_with_rf_w_w03,9:fixes-g13,35:run rf_w_model.tally rf_w_w03.tally,861:16:rf_w_model.tally,767:model rv
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "card"
-
-unit PLN: currency minor 0.01
-
-index qs = [q1, q2]
-
-place konto: accounts PLN lives 2026-01-01..
-
-place world: outside lives 1900-01-01..
-
-input w: date
-
-input wy: date
-
-input n5: int
-
-input n2: int
-
-input d1: date
-
-input d2: date
-
-input rr: rate
-
-input t[r in 1 %/year .. 5 %/year step 1 %/year]: num
-
-input kh: int
-
-input r2[n in 1 .. 3, f in 0 .. n step 0.5]: num
-
-ask base: w, wy, n5, d1
-
-version card_2026
-  cite card
-  governs always
-  known 2026-01-01
-  w = window(2026-03-03, 2026-03-20) "c"
-  wy = window(2026-12-20, 2027-01-10) "c"
-  n5 = 5 "c"
-  n2 = 2 "c"
-  d1 = 2026-01-01 "c"
-  d2 = 2027-03-10 "c"
-  rr = 2 %/year "c"
-  t[2 %/year] = 7 "c"
-  r2[1, 0.5] = 3 "c"
-,14:rf_w_w03.tally,47:part w03
-  tally 2
-
-ask w03: r2[age(w, d2), 1]
-,,1:0,520:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
-  cut 2026-03-01
-w03: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
-  unknown day: w
-  cut 2026-03-01
-warning: WARN-UNREAD input kh is read by nothing
-warning: WARN-UNREAD input n2 is read by nothing
-warning: WARN-UNREAD input rr is read by nothing
-warning: WARN-UNREAD input t is read by nothing
 warning: WARN-UNREAD place konto is read by nothing
 warning: WARN-UNREAD place world is read by nothing
 ,34:fixes/g13/rf_w_model_with_rf_w_w04,9:fixes-g13,35:run rf_w_model.tally rf_w_w04.tally,889:16:rf_w_model.tally,767:model rv
@@ -178033,9 +177888,9 @@ version card_2026
   tally 2
 
 ask w10: count(d in d1 .. d2 step age(w, d2) * 1 month)
-,,1:0,576:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,567:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-w10: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range step" (w)
+w10: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -178212,9 +178067,9 @@ version card_2026
   tally 2
 
 ask w15: round(age(w, d2) * 1.00 PLN, 0.01 PLN, down)
-,,1:0,571:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,567:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-w15: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+w15: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -178345,9 +178200,9 @@ version card_2026
   tally 2
 
 ask w18: r2[1, age(w, d2)]
-,,1:0,520:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,518:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-w18: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a key" (w)
+w18: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -178669,11 +178524,10 @@ version card_2026
   tally 2
 
 ask pn3: abs(age(d2, d1)) as if {d2 = window(2026-03-03, 2026-03-20)}
-,,1:0,657:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,563:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-pn3: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a built-in that is none on part of the window" (d2)
+pn3: refused: RUN-NONE a value is none here: abs
   pinned: d2 = window(2026-03-03, 2026-03-20)
-  unknown day: d2
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing
@@ -207320,7 +207174,7 @@ version v
   rank[q1] = 2 "c"
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
-,,1:0,880:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+,,1:0,873:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of" (w))
   unknown day: w
   cut 2026-10-01
 a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
@@ -207378,7 +207232,7 @@ version v
   rank[q1] = 2 "c"
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
-,,1:0,828:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of(w) > w" (w))
+,,1:0,821:a1: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_days(w, 1) == w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day > w" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for w + 1 day == w + 1 day" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for end_of" (w))
   unknown day: w
   cut 2026-10-01
 a2: (true, true, false, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for paid == w + 1 day" (w), true)
@@ -209325,41 +209179,6 @@ version v
   y = window(2026-01-01, 2026-01-02) "c"
 ,,1:0,71:q0: true
   pinned: x = window(2026-01-01, 2026-01-02)
-  cut 2026-03-01
-,25:fixes/gate8/m2_g3_fix2_c2,11:fixes-gate8,26:run fix2_c2.tally --ask qp,594:13:fix2_c2.tally,572:model pc
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-unit PLN: currency minor 0.01
-
-input cal: calendar
-input d1: date
-
-ask qp: add_business(d1, 1, cal)
-
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  d1 = 2026-06-29 "c"
-
-version c1
-  cite card
-  governs ..2026-06-30
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
-
-version c2
-  cite card
-  governs 2026-07-01..
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) "c"
-,,1:0,272:qp: window(2026-06-30, 2026-07-02)
-  held: cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) (c2), read for 2026-07-01
-  held: cal = calendar(weekends [sat, sun], added [window(2026-06-30, 2026-07-01)]) (c2), read for 2026-07-02
   cut 2026-03-01
 ,24:fixes/gate8/m2_g3_fix2_d,11:fixes-gate8,26:run fix2_d.tally --ask qd0,356:12:fix2_d.tally,335:model pd
   tally 2
@@ -218209,7 +218028,9 @@ version v
   rank[q1] = 2 "c"
   rank[q2] = 1 "c"
   rank[q3] = 0 "c"
-,,1:0,319:a4: (window(2026-06-02, 2026-06-08), true, false, true)
+,,1:0,639:a4: (?"date within window(2026-06-01, 2026-06-05) not precise enough for add_business" (w), ?"date within window(2026-06-01, 2026-06-05) not precise enough for is_business" (w), ?"date within window(2026-06-06, 2026-06-07) not precise enough for is_business" (u), ?"date within window(2026-06-01, 2026-06-05) not precise enough for dcf" (w))
+  unknown day: u
+  unknown day: w
   cut 2026-10-01
 warning: WARN-UNREAD def paid is read by nothing
 warning: WARN-UNREAD def same is read by nothing
@@ -218265,24 +218086,6 @@ warning: WARN-UNREAD def same is read by nothing
 warning: WARN-UNREAD input cal is read by nothing
 warning: WARN-UNREAD input u is read by nothing
 warning: WARN-UNREAD input wd is read by nothing
-,29:r3/l4_4_windows_added_entries,8:fixes-r3,11:run m.tally,346:7:m.tally,331:model f5
-  tally 2
-  on 2026-03-01
-  start 2026-01-01
-  end 2026-12-31
-
-source card "invented"
-
-input cal: calendar
-
-ask one: add_business(2026-05-29, 1, cal)
-version v
-  cite card
-  governs always
-  known 2026-01-01
-  cal = calendar(weekends [sat, sun], added [window(2026-06-01, 2026-06-02), window(2026-06-01, 2026-06-02)]) "c"
-,,1:0,53:one: window(2026-06-01, 2026-06-03)
-  cut 2026-03-01
 ,29:r3/l4_4_windows_ties_by_order,8:fixes-r3,11:run m.tally,896:7:m.tally,881:model f3
   tally 2
   on 2025-04-01
@@ -226549,7 +226352,7 @@ version card_2026
   tally 2
 
 ask w17: sum(r2[1, f] for f in 0 .. age(w, d2) step 0.5)
-,,1:0,423:w17: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a range end" (w)
+,,1:0,415:w17: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -232656,7 +232459,7 @@ version card_2026
 
 
 ask c1: abs(age(w, d2))
-,,1:0,467:c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for a print" (w)
+,,1:0,463:c1: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
   unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
@@ -232721,7 +232524,8 @@ version card_2026
   tally 2
 
 ask w13: add_years(w, age(w, d2))
-,,1:0,401:w13: window(2026-03-03, 2027-03-20)
+,,1:0,464:w13: ?"date within window(2026-03-03, 2026-03-20) not precise enough for age" (w)
+  unknown day: w
   cut 2026-03-01
 warning: WARN-UNREAD input kh is read by nothing
 warning: WARN-UNREAD input n2 is read by nothing

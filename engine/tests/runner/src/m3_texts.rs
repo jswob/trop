@@ -4,7 +4,7 @@
 //! (`INTERFACE.md` §4). Never edited by hand.
 
 /// Each text: its path under `engine/tests/` and its content.
-pub static TEXTS: [(&str, &str); 335] = [
+pub static TEXTS: [(&str, &str); 336] = [
     (
         "m3/changes/asks/c1.tally",
         include_str!("../../m3/changes/asks/c1.tally"),
@@ -714,10 +714,6 @@ pub static TEXTS: [(&str, &str); 335] = [
         include_str!("../../m3/fixes/t221/g3ef/p17t_domhole.tally"),
     ),
     (
-        "m3/fixes/t221/g3t/cal221_3.tally",
-        include_str!("../../m3/fixes/t221/g3t/cal221_3.tally"),
-    ),
-    (
         "m3/fixes/t221/g3t/s230_5a.tally",
         include_str!("../../m3/fixes/t221/g3t/s230_5a.tally"),
     ),
@@ -904,22 +900,6 @@ pub static TEXTS: [(&str, &str); 335] = [
     (
         "m3/fixes/t221/p237/cp.tally",
         include_str!("../../m3/fixes/t221/p237/cp.tally"),
-    ),
-    (
-        "m3/fixes/t221/p3/c22.tally",
-        include_str!("../../m3/fixes/t221/p3/c22.tally"),
-    ),
-    (
-        "m3/fixes/t221/p3/c24.tally",
-        include_str!("../../m3/fixes/t221/p3/c24.tally"),
-    ),
-    (
-        "m3/fixes/t221/p3/cw.tally",
-        include_str!("../../m3/fixes/t221/p3/cw.tally"),
-    ),
-    (
-        "m3/fixes/t221/p3/m.tally",
-        include_str!("../../m3/fixes/t221/p3/m.tally"),
     ),
     (
         "m3/fixes/t221/q10/m/m.tally",
@@ -1256,6 +1236,30 @@ pub static TEXTS: [(&str, &str); 335] = [
     (
         "m3/fixes/t221/u0/u0_etf_literal.tally",
         include_str!("../../m3/fixes/t221/u0/u0_etf_literal.tally"),
+    ),
+    (
+        "m3/fixes/t23/at/n2_at.tally",
+        include_str!("../../m3/fixes/t23/at/n2_at.tally"),
+    ),
+    (
+        "m3/fixes/t23/c3/added.tally",
+        include_str!("../../m3/fixes/t23/c3/added.tally"),
+    ),
+    (
+        "m3/fixes/t23/c3/on_window.tally",
+        include_str!("../../m3/fixes/t23/c3/on_window.tally"),
+    ),
+    (
+        "m3/fixes/t23/c3/one_of.tally",
+        include_str!("../../m3/fixes/t23/c3/one_of.tally"),
+    ),
+    (
+        "m3/fixes/t23/c3/one_of_rule.tally",
+        include_str!("../../m3/fixes/t23/c3/one_of_rule.tally"),
+    ),
+    (
+        "m3/fixes/t23/c3/rule_window.tally",
+        include_str!("../../m3/fixes/t23/c3/rule_window.tally"),
     ),
     (
         "m3/fixes/t23/c4/n1_q.tally",

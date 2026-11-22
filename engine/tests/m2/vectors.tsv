@@ -261,8 +261,6 @@ fixes/t22/rv3_cut_on_row	fixes-22		engine/tests/m2/fixes/t22/rv3_cut_on_row	engi
 fixes/t22/rv3_row_later	fixes-22		engine/tests/m2/fixes/t22/rv3_row_later	engine/tests/m2/fixes/t22/rv3_row_later/m.tally			S-5
 fixes/t22/rv3_line_later	fixes-22		engine/tests/m2/fixes/t22/rv3_line_later	engine/tests/m2/fixes/t22/rv3_line_later/m.tally			S-5
 fixes/t22/rv3_line_early	fixes-22		engine/tests/m2/fixes/t22/rv3_line_early	engine/tests/m2/fixes/t22/rv3_line_early/m.tally			S-5
-fixes/t22/rv4_b2_pins	fixes-22		engine/tests/m2/fixes/t22/rv4_b2_pins	engine/tests/m2/fixes/t22/rv4_b2_pins/m.tally	qa qb qc		S-4
-fixes/t22/rv4_b2_pin_calendar	fixes-22		engine/tests/m2/fixes/t22/rv4_b2_pin_calendar	engine/tests/m2/fixes/t22/rv4_b2_pin_calendar/m.tally	r7		S-4
 fixes/t22/rv4_pin_copy	fixes-22		engine/tests/m2/fixes/t22/rv4_pin_copy	engine/tests/m2/fixes/t22/rv4_pin_copy/m.tally	e1 e2		S-4
 fixes/t22/rv4_pin_copy_alone	fixes-22		engine/tests/m2/fixes/t22/rv4_pin_copy_alone	engine/tests/m2/fixes/t22/rv4_pin_copy_alone/m.tally	e2		S-4
 fixes/t22/min_step_week	fixes-22		engine/tests/m2/fixes/t22/min_step_week	engine/tests/m2/fixes/t22/min_step_week/m.tally			S-9

@@ -16,7 +16,7 @@ version card_2026
   governs always
   known 2026-01-01
   wl = window(9999-12-29, 9999-12-31) "c"
-  endcal = calendar(weekends [sat, sun], added [window(9999-12-29, 9999-12-31)]) "c"
+  endcal = calendar(weekends [sat, sun], added [9999-12-30]) assumed "c"
   last_day = 9999-12-31 "c"
 
 ask f1: weekday(wl)

@@ -20,16 +20,19 @@ a13_b_lots (s = a13b_sale, g = kbank[k20230912_05]) [px_round = *]: (2019-08, 50
   law date 2025-04-30, cut 2025-04-30
 a13_b_tax [px_round = *]: (237.00 DUK, 0.00 DUK)
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   world: a13_jul_sale
   unfulfilled: a13b_sale
   law date 2025-04-30, cut 2025-04-30
 a13_b_differs_2023 [px_round = *]: 237.00 DUK
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   world: a13_jul_sale
   unfulfilled: a13b_sale
   law date 2025-04-30, cut 2025-04-30
 a13_b_differs_2024_plain [px_round = *]: ?"date within window(2019-03-01, 2019-03-31) not precise enough for s.day > add_years(held_from[b], pit8_exempt_years)" (held_from[kbank[k20230912_04]])
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   unknown day: held_from[kbank[k20230912_04]]
   world: a13_jul_sale
   unfulfilled: a13b_sale

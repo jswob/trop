@@ -462,12 +462,9 @@ PLACES = [('start', t_start), ('cover', t_cover), ('known_in', t_known_in), ('kn
 WAITS = {'engine': {'parts': 'M5b: the engine keeps no parts before it'}}
 # Faults a review or this oracle found, on refcore and the engine alike, each mended at a later pin: a line of the
 # named place whose expression starts so is held by name (reported, not failed) while it differs; any other line of
-# the place is held to the rule as usual. Delete a row when its pin lands (B1, B2 and Q3 went with the second pin).
-HELD = {
-    ('known_in', 'pw.cash.amount'): 'N1: a hole-day instance a later version changes prints the new amount',
-    ('known_after', 'pw.cash.amount'): 'N1',
-    ('rd_off', 'covered('): 'R12: `covered` over a ranged end prints the hole, where ruling 12 makes it false',
-}
+# the place is held to the rule as usual. Delete a row when its pin lands (B1, B2 and Q3 went with the second pin, N1
+# and R12 with the third).
+HELD = {}
 # A place whose every line is the hole by a rule kept (N2, ruled: a window `at` holes every place, so a plain
 # movement's balance beside it is the hole too): counted apart, neither a pass nor a failure. One hand-stored vector
 # keeps its words (`m3/fixes/t23/at/n2_at.tally`).

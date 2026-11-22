@@ -4008,8 +4008,8 @@ E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
 ,1:0,70:integration/models/CB-06.tally	11373	19006a821bb56851156171cb5c945deb
 ,72:sha256 d8f0e0db43eeeddda0b1edba19eada5a25fe3229a665af4e872789a58191ce6f
 ,9:I:M:CB-07,6:models,13:engine/tests/,38:reprint integration/models/CB-07.tally,62:integration/models/CB-07.tally	integration/models/CB-07.tally
-,1:0,70:integration/models/CB-07.tally	26940	1ee1cbe22a3f33ba0cff820aa56e5e72
-,72:sha256 5ac00e9443e1477c13615cd2778ad36650ddc75659a896d6ede4c75017e6f4cb
+,1:0,70:integration/models/CB-07.tally	27007	125606242c27e7110f1c494c34eab80f
+,72:sha256 2372123f5d10b959fe878154de644e0c56a72eaaeeaff842bbfba00b6a65407e
 ,9:I:M:CB-08,6:models,13:engine/tests/,38:reprint integration/models/CB-08.tally,62:integration/models/CB-08.tally	integration/models/CB-08.tally
 ,1:0,69:integration/models/CB-08.tally	7972	1c029b65e0eefcde161c641f1f48fd16
 ,72:sha256 a2e6d5f85e0866ae48654c25f70a213e0a68f62ee0a2af9a1fd9d2172ee4da96
@@ -4056,8 +4056,8 @@ E2/cside/e2c.tally	5837	0d0eb26d03c35730072b31c250535367
 ,1:0,71:integration/models/CMP-02.tally	12778	1aad19419463194218645263a18bfe53
 ,72:sha256 b21ef2f81784102074a24fe4f18e83162506e8be74e0e44ce2557bdbbbd6fc8f
 ,9:I:M:LH-01,6:models,13:engine/tests/,38:reprint integration/models/LH-01.tally,62:integration/models/LH-01.tally	integration/models/LH-01.tally
-,1:0,70:integration/models/LH-01.tally	18380	1188653a96b267aa09a46b7179f8a5c8
-,72:sha256 9fa3317c75005ef318174747350aabb7ef5cea07afcfe63cb0630e9134697468
+,1:0,70:integration/models/LH-01.tally	18372	135676b5deb636f107bb9615063271b9
+,72:sha256 a133565e4b9991ad71916fe34eab37fb36fce5fc69ec49b771f94362d0c892ce
 ,9:I:M:LH-02,6:models,13:engine/tests/,38:reprint integration/models/LH-02.tally,62:integration/models/LH-02.tally	integration/models/LH-02.tally
 ,1:0,69:integration/models/LH-02.tally	9970	08d955d18b2f65cf0bc69b2c70849b52
 ,72:sha256 76e58e23b1062cf0140e6c7c764b06d2fd32a8a99d38c64a50e947264d5f96db

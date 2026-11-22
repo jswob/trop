@@ -139,8 +139,6 @@ fixes/g2/p1_a1	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/p1.ta
 fixes/g2/p1_a2	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/p1.tally	a2		G2
 fixes/g2/p1_a3	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/p1.tally	a3		G2
 fixes/g2/p1_a10	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/p1.tally	a10		G2
-fixes/g2/p3_e1	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/p3.tally	e1		G2
-fixes/g2/p3_e2	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/p3.tally	e2		G2
 fixes/g2/q1_s1	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/q1.tally	s1		G2
 fixes/g2/q1_s2	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/q1.tally	s2		G2
 fixes/g2/q1_s4	fixes-g2		engine/tests/m1/fixes/g2	engine/tests/m1/fixes/g2/q1.tally	s4		G2
@@ -1208,7 +1206,6 @@ fixes/g13/rf_w_model_with_rf_w_n18	fixes-g13		engine/tests/m1/fixes/g13	engine/t
 fixes/g13/rf_w_model_with_rf_w_n19	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_n19.tally			G13
 fixes/g13/rf_w_model_with_rf_w_n20	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_n20.tally			G13
 fixes/g13/rf_w_model_with_rf_w_w02	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w02.tally			G13
-fixes/g13/rf_w_model_with_rf_w_w03	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w03.tally			G13
 fixes/g13/rf_w_model_with_rf_w_w04	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w04.tally			G13
 fixes/g13/rf_w_model_with_rf_w_w05	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w05.tally			G13
 fixes/g13/rf_w_model_with_rf_w_w06	fixes-g13		engine/tests/m1/fixes/g13	engine/tests/m1/fixes/g13/rf_w_model.tally engine/tests/m1/fixes/g13/rf_w_w06.tally			G13
@@ -1581,7 +1578,6 @@ fixes/gate8/m2_gate8_at_ties	fixes-gate8		engine/tests/m2/fixes/gate8	engine/tes
 fixes/gate8/m2_gate8_explain_dated	fixes-gate8		engine/tests/m2/fixes/gate8	engine/tests/m2/fixes/gate8/explain_dated.tally	e_konto e_sav		-
 fixes/gate8/m2_g3_fix2_r1	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_r1.tally			-
 fixes/gate8/m2_g3_fix2_r2	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_r2.tally	q0		-
-fixes/gate8/m2_g3_fix2_c2	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_c2.tally	qp		-
 fixes/gate8/m2_g3_fix2_d	fixes-gate8		engine/tests/m2/fixes/g3	engine/tests/m2/fixes/g3/fix2_d.tally	qd0		-
 fixes/gate8/m2_g4_adj_amt	fixes-gate8		engine/tests/m2/fixes/g4	engine/tests/m2/fixes/g4/adj_amt.tally	led		-
 fixes/gate8/m2_g4_adj_both	fixes-gate8		engine/tests/m2/fixes/g4	engine/tests/m2/fixes/g4/adj_both.tally			-
@@ -1731,7 +1727,6 @@ r2/l8_refused_hole_answered	fixes-r2		engine/tests/m1/fixes/r2/l8_refused_hole_a
 r3/l4_4_windows_one_day	fixes-r3		engine/tests/m1/fixes/r3/l4_4_windows_one_day	engine/tests/m1/fixes/r3/l4_4_windows_one_day/m.tally	a3		R3
 r3/l4_4_windows_per_day	fixes-r3		engine/tests/m1/fixes/r3/l4_4_windows_per_day	engine/tests/m1/fixes/r3/l4_4_windows_per_day/m.tally	a4		R3
 r3/l4_4_windows_argmin_tie	fixes-r3		engine/tests/m1/fixes/r3/l4_4_windows_argmin_tie	engine/tests/m1/fixes/r3/l4_4_windows_argmin_tie/m.tally	a5		R3
-r3/l4_4_windows_added_entries	fixes-r3		engine/tests/m1/fixes/r3/l4_4_windows_added_entries	engine/tests/m1/fixes/r3/l4_4_windows_added_entries/m.tally			R3
 r3/l4_4_windows_ties_by_order	fixes-r3		engine/tests/m1/fixes/r3/l4_4_windows_ties_by_order	engine/tests/m1/fixes/r3/l4_4_windows_ties_by_order/m.tally			R3
 r4/l4_6_cascade_pins	fixes-r4		engine/tests/m1/fixes/r4/l4_6_cascade_pins	engine/tests/m1/fixes/r4/l4_6_cascade_pins/m.tally			R4
 r4/l4_6_cascade_pins_load_tie	fixes-r4		engine/tests/m1/fixes/r4/l4_6_cascade_pins_load_tie	engine/tests/m1/fixes/r4/l4_6_cascade_pins_load_tie/m.tally			R4

@@ -1,23 +1,27 @@
 a13_b_differs_2024_d01 [px_round = *]: -106.00 DUK
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   pinned: held_from[kbank[k20230912_04]] = 2019-03-01
   world: a13_jul_sale
   unfulfilled: a13b_sale
   law date 2025-04-30, cut 2025-04-30
 a13_b_differs_2024_d06 [px_round = *]: -106.00 DUK
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   pinned: held_from[kbank[k20230912_04]] = 2019-03-06
   world: a13_jul_sale
   unfulfilled: a13b_sale
   law date 2025-04-30, cut 2025-04-30
 a13_b_differs_2024_d07 [px_round = *]: -234.00 DUK
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   pinned: held_from[kbank[k20230912_04]] = 2019-03-07
   world: a13_jul_sale
   unfulfilled: a13b_sale
   law date 2025-04-30, cut 2025-04-30
 a13_b_differs_2024_d31 [px_round = *]: -234.00 DUK
   assumed: the question states no rounding of price times units; a price to 2 places times whole units is a whole number of orts, so no mode changes it (a13b_round)
+  assumed: the records end on 2025-12-31 (story); the walk books the model's own movements from the next day (walk_from)
   pinned: held_from[kbank[k20230912_04]] = 2019-03-31
   world: a13_jul_sale
   unfulfilled: a13b_sale

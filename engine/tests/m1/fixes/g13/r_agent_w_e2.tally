@@ -1,0 +1,14 @@
+part e2
+  tally 2
+
+input kq: key qs
+
+def dy: key qs = kq + age(w, d2)
+
+version vk
+  cite card
+  governs always
+  known 2026-01-01
+  kq = q1 "c"
+
+ask e2: dy
