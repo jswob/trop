@@ -307,14 +307,17 @@ blocks = "pr"
 # booking cut evaluates the instance or the span it names, not the move's whole list; its twin
 # is the whole list (Plans::Whole, refcore's find_inst). Its benchmark is P8-L10 through
 # tools/perf (R-91). This count row is c1_r2 at 1 worker, so a change that brings the whole list
-# back at every past cut fails a PR: a logged placeholder until G6c, which measures its
-# def_misses on the final code (`perf counts F7-c1r2`); a rules step then sets them x 1.2, as S
-# set P8-14's, and CI's counts step lists the row. Reported only until then.
+# back at every past cut fails a PR. Fixed 2026-11-23 (issue #252, after G6c's widening and
+# its last fix, 8683e4f6): the builder's final `perf counts F7-c1r2`, 188 841 def misses
+# (confirmed by the rules step on that tree; days stepped 6 918, walks shared 4 290, reported),
+# x 1.2 as S set P8-14's, so 226 609. CI's counts step lists the row; the counted run takes
+# about 39 s on the reference Mac, inside perf's 90 s per run.
 [[row]]
 id = "F7-c1r2"
 group = "C"
 what = "the narrow reads' counts on P8-L10's c1_r2 run (its six asks), 1 worker"
 recipe = "load:P8-L10 c1_r2"
+counts = { def_misses = 226609 }
 blocks = "pr"
 
 # 8.3 Group L: the load rows at full size; a Monte Carlo row's wall is its deterministic part

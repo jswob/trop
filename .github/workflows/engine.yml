@@ -243,8 +243,8 @@ jobs:
           fi
           echo "$HOME/.gungraun-tools/bin" >> "$GITHUB_PATH"
           echo "$HOME/valgrind/bin" >> "$GITHUB_PATH"
-      - name: The counts of the six checks (P8-10 to P8-15) and of fence F6's forks (F6-X)
-        run: engine/tools/perf counts P8-10 P8-11 P8-12 P8-13 P8-14 P8-15 F6-X
+      - name: The counts of the six checks (P8-10 to P8-15), fence F6's forks (F6-X) and F7's c1_r2 (F7-c1r2)
+        run: engine/tools/perf counts P8-10 P8-11 P8-12 P8-13 P8-14 P8-15 F6-X F7-c1r2
       - name: The instruction benches, with their hard limits from the budget table
         working-directory: engine
         run: |
