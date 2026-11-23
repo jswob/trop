@@ -19,6 +19,10 @@
 #     "test:<target> <name>…"  T's runner tests that hold the row's law (P8-9); they pass or
 #                    fail, never timed: check's `gating` step runs them from their
 #                    milestone's marker (R-77), and perf only names them
+#     "load:<row> [<run>…]"  the runs of T's run list engine/tests/m4/load/runs.tsv whose row
+#                    is <row> (or the named ones), each once, cold, a budget each: the row is
+#                    judged by its slowest run's wall and largest peak, each output by the
+#                    list's sha256 where it holds one (P8-L2, P8-L10; pick P5 (a) on #252)
 #     "waits: ..."   nothing runs it yet; the text says what it waits for
 #   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
 #   less: a micro row's criterion bench id whose median is subtracted from its own (P8-M4:
@@ -312,7 +316,7 @@ blocks = "tag"
 id = "P8-L2"
 group = "L"
 what = "household D, D-11's zero-volatility pair to the dry year"
-recipe = "waits: T's load runner (load.tsv L:2)"
+recipe = "load:P8-L2"
 wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"
@@ -375,7 +379,7 @@ blocks = "tag"
 id = "P8-L10"
 group = "L"
 what = "the amendments household's long-horizon walk cells, c1_r2, v5_r2"
-recipe = "waits: T's load runner (load.tsv L:10)"
+recipe = "load:P8-L10"
 wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"
