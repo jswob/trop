@@ -683,6 +683,18 @@ impl Engine {
         if m.scenarios.of(&row.version).is_some() {
             self.note_listed(&row.version, &def.id);
         }
+        // an assumed row, or a row of an assumed version, lists its reason as an input's row
+        // does (L §8.2, §5.3; pick P24)
+        if let Some(reason) = &row.assumed {
+            self.note("assumed", reason.clone(), figure.clone())?;
+        }
+        let version = m
+            .versions
+            .get(&row.version)
+            .ok_or_else(|| invariant("a given names a version load didn't build"))?;
+        if let Some(reason) = &version.assumed {
+            self.note("assumed", reason.clone(), figure.clone())?;
+        }
         self.read(Read::Row {
             version: row.version.clone(),
             sid: row.sid.clone(),
