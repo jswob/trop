@@ -95,14 +95,14 @@ print('R-88 --next: no filter from a baseline that didn\'t run' if e is None els
 # tools/milestones.toml's `fence_catchers`, as catchers of a local batch: F5's `walk_oracle`
 # whole and `tally`'s `walk::lows::tests`, and since M2 (pick P9) F6's `fork_oracle` whole and
 # `tally`'s `walk::fork::tests`, and since M4 (pick P17 on #252) F7's `walk::narrow::tests`
-# (its two test targets wait for G6c, below). The filter selects each test target by its binary
+# and T's `m4_narrow` whole (pick P27: F7's one suite; a target may wait, below). The filter selects each test target by its binary
 # and each lib module by its tests' path; an entry that names both a target and a module is
 # refused.
 
 case: fences-select-their-tests
 tool: run
 exit: any
-expect: R-88 --fences: binary_id(=tally-cli::walk_oracle) | (binary_id(=tally) & test(/^walk::lows::tests::/)) | binary_id(=tally-cli::fork_oracle) | (binary_id(=tally) & test(/^walk::fork::tests::/)) | (binary_id(=tally) & test(/^walk::narrow::tests::/))
+expect: R-88 --fences: binary_id(=tally-cli::walk_oracle) | (binary_id(=tally) & test(/^walk::lows::tests::/)) | binary_id(=tally-cli::fork_oracle) | (binary_id(=tally) & test(/^walk::fork::tests::/)) | binary_id(=tally-runner::m4_narrow) | (binary_id(=tally) & test(/^walk::narrow::tests::/))
 --- run
 python3 -I -B -c "
 import sys; sys.path.insert(0, 'tools'); import milestones, mutants_local as m
@@ -118,22 +118,23 @@ print('R-88 --fences: ' + m.fence_filter_of(milestones.fence_catchers()))
 case: fence-catcher-waits-for-its-target
 tool: run
 exit: any
-expect: R-88 waits: m4_narrow out True, narrow_oracle out True, fork_oracle in its place True
+expect: R-88 waits: m4_absent out True, m4_narrow in True, fork_oracle in its place True
 --- replace tools/milestones.toml
   { package = "tally-cli", test = "fork_oracle" },
   { package = "tally", lib = "walk::fork::tests::" },
 --- with
   { package = "tally-cli", test = "fork_oracle", waits = "planted: a target that exists" },
   { package = "tally", lib = "walk::fork::tests::" },
+  { package = "tally-runner", test = "m4_absent", waits = "planted: a suite not yet written" },
 --- write zz_waits.py
-"""Planted: the fences' catchers with F7's waiting targets and a present one that waits."""
+"""Planted: the fences' catchers with a waiting target and a present one that waits."""
 import sys
 
 sys.path.insert(0, "tools")
 import milestones
 
 tests = [t for _, t, _ in milestones.fence_catchers()]
-print(f"R-88 waits: m4_narrow out {'m4_narrow' not in tests}, narrow_oracle out {'narrow_oracle' not in tests}, "
+print(f"R-88 waits: m4_absent out {'m4_absent' not in tests}, m4_narrow in {'m4_narrow' in tests}, "
       f"fork_oracle in its place {tests.index('fork_oracle') == 2}")
 --- run
 python3 -I -B zz_waits.py

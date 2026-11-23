@@ -45,12 +45,10 @@ fence_catchers = [
   { package = "tally-cli", test = "fork_oracle" },
   { package = "tally", lib = "walk::fork::tests::" },
   # F7 (walk/narrow.rs, M4's G6c; P8-L10): the narrow read against the whole list
-  # (Plans::Narrow against Plans::Whole). Wired by M4's rules step before G6c writes it
-  # (issue #252, pick P17): an entry with `waits` is left out until cargo metadata lists its
-  # target, then counted with no rules step between; the lib module needs none, since a
-  # filter on a module not yet written selects no test.
-  { package = "tally-runner", test = "m4_narrow", waits = "T's suite, every store and corpus under both (G6c)" },
-  { package = "tally-cli", test = "narrow_oracle", waits = "crates/tally-cli/tests/narrow_oracle.rs (G6c)" },
+  # (Plans::Narrow against Plans::Whole), T's m4_narrow on every `run` store and corpus, F7's
+  # realities, c1_r2 and P8-14 under both (pick P27 on #252: its one equivalence suite, no
+  # CLI narrow_oracle), and the module's own tests
+  { package = "tally-runner", test = "m4_narrow" },
   { package = "tally", lib = "walk::narrow::tests::" },
 ]
 # The test targets that run by default which `check quick` leaves out and `check commit`
@@ -62,12 +60,11 @@ quick_leaves_out = [
   { package = "tally-cli", test = "walk_oracle" },     # F5, the CLI's
   { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
   { package = "tally-runner", test = "m2_forks" },     # F6 on every store and corpus, T's
-  # F7 (walk/narrow.rs, M4's G6c), wired before its group writes them (issue #252, pick P17):
-  # each waits, left out until cargo metadata lists the target and runs it by default, then
-  # left out of `quick` and run by `commit` and `fences` with no rules step between
-  { package = "tally-runner", test = "m4_narrow", waits = "T's suite, Plans::Narrow against Plans::Whole (G6c)" },
-  { package = "tally-cli", test = "narrow_oracle", waits = "crates/tally-cli/tests/narrow_oracle.rs (G6c)" },
+  { package = "tally-runner", test = "m4_narrow" },    # F7 on every store and corpus, T's (P27)
 ]
+# An entry here or in `fence_catchers` may say what it `waits` for (`waits = "…"`): a suite
+# named before its group writes it, left out until cargo metadata lists the target (here: and
+# runs it by default), then taken with no rules step between (M4's rules step, pick P17).
 # The gating targets' tests `check quick` runs too, each by a nextest filter that keeps every
 # other target's tests, while `check commit` runs the whole target as before (R-82; tally
 # 2.3's pick P12 on #247, 2026-11-22, under the user's standing rule of 2026-11-04): the pin
