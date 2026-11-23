@@ -227953,4 +227953,486 @@ version v
   v:w (source s "invented", locator "s")
   v:wl (source s "invented", locator "s")
   cut 2026-06-20
+,14:fixes/p21/o0/f,9:fixes-p21,20:run o0.tally --ask f,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,192:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+warning: WARN-UNREAD def by_inline is read by nothing
+,15:fixes/p21/o0/ra,9:fixes-p21,21:run o0.tally --ask ra,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,83:ra: by_helper, by_inline, i2
+warning: WARN-UNREAD def by_inline is read by nothing
+,15:fixes/p21/o0/r1,9:fixes-p21,21:run o0.tally --ask r1,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,90:r1: b, by_helper, by_inline, i1, i2
+warning: WARN-UNREAD def by_inline is read by nothing
+,15:fixes/p21/o0/r2,9:fixes-p21,21:run o0.tally --ask r2,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,83:r2: by_helper, by_inline, i2
+warning: WARN-UNREAD def by_inline is read by nothing
+,15:fixes/p21/o0/r3,9:fixes-p21,21:run o0.tally --ask r3,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,100:r3: pay, in1, b, by_helper, by_inline, i1, i2
+warning: WARN-UNREAD def by_inline is read by nothing
+,15:fixes/p21/o0/r4,9:fixes-p21,21:run o0.tally --ask r4,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,98:r4: b, by_inline, in_pln, by_helper, i1, i2
+warning: WARN-UNREAD def by_inline is read by nothing
+,15:fixes/p21/o0/i1,9:fixes-p21,21:run o0.tally --ask i1,1638:8:o0.tally,1621:model fxorder
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis work
+  yes "in work"
+  no "not in work"
+place wallet: accounts EUR lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input fx: num PLN/EUR
+input d1: date
+input amt[w in work]: money EUR
+input mo: month
+
+def pay: money EUR at reader
+  rule base = amt[work]
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount pay
+
+def in_pln[t in transfers]: money PLN = round(t.cash.amount * fx, minor(PLN), half-up) at t.day
+
+def by_inline: money PLN at reader
+  rule base = sum(round(t.cash.amount * fx, minor(PLN), half-up) for t in transfers over mo where t.cash.to == wallet)
+def by_helper: money PLN at reader
+  rule base = sum(in_pln[t] for t in transfers over mo where t.cash.to == wallet)
+
+move a: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from wallet to world amount bal(wallet)
+
+move b: transfers
+  on add_days(d1, 1)
+  at d1
+  reads wallet
+  leg cash from world to wallet amount max(bal(wallet), round(in_pln[in1] / fx, minor(EUR), half-up))
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  d1 = 2026-03-05 "s"
+  amt[yes] = 100.00 EUR "s"
+  amt[no] = 300.00 EUR "s"
+  mo = 2026-03 "s"
+  fx = 4.0 "s"
+  opening[wallet] = 0.00 EUR at 2026-01-01 start "s"
+
+ask f: bal(wallet, 2026-03-31) law 2026-06-01
+ask ra: readers-of a
+ask r1: readers-of in1
+ask r2: readers-of transfers
+ask r3: readers-of amt
+ask r4: readers-of fx
+ask i1: inputs-of in_pln[in1] law 2026-06-01
+ask i2: inputs-of by_helper law 2026-06-01
+,,1:0,427:i1 [work = yes]:
+  v:amt[yes] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
+  v:fx (source s "s", locator "s")
+  reading: work = yes
+  law date 2026-06-01, cut 2026-06-10
+i1 [work = no]:
+  v:amt[no] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
+  v:fx (source s "s", locator "s")
+  reading: work = no
+  law date 2026-06-01, cut 2026-06-10
+warning: WARN-UNREAD def by_inline is read by nothing
 ,

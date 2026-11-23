@@ -18,19 +18,21 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 12] = [
+    const GROUPS: [&str; 14] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
         "fixes-g3",
         "fixes-g3fix",
         "fixes-p12",
+        "fixes-p21",
         "spec-g1",
         "spec-g2",
         "spec-g2fix",
         "spec-g3",
         "spec-g3fix",
         "spec-p12",
+        "spec-p21",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -135,6 +137,14 @@ mod tests {
         group_holds(VECTORS, "fixes-g3fix");
     }
 
+    /// Pick P21 (G3's last fix's STOP-REPORT): M3's whole run `t221-gd/216-o0` is held for #255
+    /// for its `i2` (a refused member's reads, P20), so its other asks gate here one by one,
+    /// refcore's bytes (`m3/fixes/t221/o216/o0.tally`: `f`, `ra`, `r1` to `r4`, `i1`).
+    #[test]
+    fn m4_fixes_p21() {
+        group_holds(VECTORS, "fixes-p21");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -212,5 +222,13 @@ mod tests {
     #[test]
     fn m4_fixes_spec_g3fix() {
         group_holds(SPEC, "spec-g3fix");
+    }
+
+    /// P21's answer (#255): M1's `fixes/g12/r_p_mr3_z2`, held, lists the false-`when` run's
+    /// balance line `unfulfilled: rent[2026-01]` beside refcore's `rent[2026-02]` (P20; L §8.2,
+    /// E §10), written by hand.
+    #[test]
+    fn m4_fixes_spec_p21() {
+        group_holds(SPEC, "spec-p21");
     }
 }

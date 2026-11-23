@@ -15393,9 +15393,10 @@ version v
   pl = 900.00 PLN "s"
   sp = 2026-04 "s"
   opening[konto] = 500.00 PLN at 2026-03-01 start "s"
-,,1:0,203:i_ff:
+,,1:0,245:i_ff:
   v:lim (source s "invented", locator "s")
   v:opening[konto] (source s "invented", locator "s")
+  v:pl (source s "invented", locator "s")
   v:sp (source s "invented", locator "s")
   v:w (source s "invented", locator "s")
   cut 2026-06-20
@@ -15450,61 +15451,6 @@ version v
 ,,1:0,308:i_cn:
   v:amt (source s "invented", locator "s")
   v:lim (source s "invented", locator "s")
-  v:lim2 (source s "invented", locator "s")
-  v:opening[konto] (source s "invented", locator "s")
-  v:sp (source s "invented", locator "s")
-  v:w (source s "invented", locator "s")
-  unfulfilled: dt
-  cut 2026-06-20
-,35:spec/g3fix/c6_count_false_when/i_ff,10:spec-g3fix,40:run c6_count_false_when.tally --ask i_ff,1039:25:c6_count_false_when.tally,1004:model c5
-  tally 2
-  on 2026-06-20
-  start 2026-03-01
-  end 2026-06-30
-
-source s "invented"
-
-unit PLN: currency minor 0.01
-place konto: accounts PLN lives 2026-01-01..
-place kb: accounts PLN lives 2026-01-01..
-place world: outside lives 1900-01-01..
-input amt: money PLN
-input w: date
-input lim: money PLN
-input lim2: money PLN
-input sp: month
-
-move dt: transfers
-  on w
-  reads konto
-  when bal(konto) > lim
-  leg cash from world to konto amount amt
-move df: transfers
-  on w
-  reads konto
-  when bal(konto) > lim2
-  leg cash from world to kb amount amt
-
-def cn: int = count(m in transfers over sp .. sp)
-def ff: money PLN = flows(df, sp .. sp)
-
-ask e_cn: explain cn
-ask i_cn: inputs-of cn
-ask e_ff: explain ff
-ask i_ff: inputs-of ff
-
-version v
-  cite s
-  governs always
-  known 2026-01-01
-  amt = 100.00 PLN "s"
-  w = 2026-04-30 "s"
-  lim = 450.00 PLN "s"
-  lim2 = 900.00 PLN "s"
-  sp = 2026-04 "s"
-  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
-  opening[kb] = 0.00 PLN at 2026-03-01 start "s"
-,,1:0,222:i_ff:
   v:lim2 (source s "invented", locator "s")
   v:opening[konto] (source s "invented", locator "s")
   v:sp (source s "invented", locator "s")
@@ -15805,4 +15751,106 @@ version v
   v:w (source s "invented", locator "s")
   v:wl (source s "invented", locator "s")
   cut 2026-06-20
+,19:spec/p21/r_p_mr3/z2,8:spec-p21,26:run r_p_mr3.tally --ask z2,1996:13:r_p_mr3.tally,1973:model mr
+  tally 2
+  on 2026-10-01
+  start 2026-01-01
+  end 2026-12-31
+  note "review G12: a move read by its name outside explain"
+
+source card "card (invented)"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-03
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input fee: money PLN
+
+input pay_day: date
+
+input low_mark: money PLN
+
+input rent_dom: int
+
+input top_dom: int
+
+move pay: transfers
+  on pay_day
+  leg cash from konto to world amount fee
+
+move rent[m in month]: transfers
+  on day_of(m, rent_dom)
+  leg cash from konto to world amount fee
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  reads konto
+  when bal(konto) < low_mark
+  leg cash from world to konto amount fee
+
+def pay_amt: money PLN = pay.cash.amount
+
+def pay_on: date = pay.day
+
+
+
+ask q1: pay.cash.amount, pay.day
+
+ask q2: pay_amt, pay_on
+
+ask q3: rent[2026-03].cash.amount
+
+ask q4: top[2026-01].cash.amount, top[2026-02].day
+
+
+ask e1: explain pay
+
+ask e2: explain rent[2026-02]
+
+ask e3: explain top[2026-01]
+
+ask e4: explain top[2026-03]
+
+ask e5: explain pay_amt
+
+ask e6: explain bal(konto, 2026-02-20)
+
+ask e7: explain bal(konto, 2026-03-01) from 2026-02-01
+
+ask e8_day: argmin(bal(konto, d) for d in 2026-01-01 .. 2026-03-31 step 1 day) ties by d
+
+ask e8: explain bal(konto, 2026-03-05)
+
+ask e9: explain bal(konto, 2026-02-20 start)
+
+ask z1: sum(x.cash.amount for x in transfers over 2026-06-01 .. 2026-06-30 where x == pay)
+
+ask z2: sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-03-31 where x == rent[2026-02])
+
+ask z3: pay == pay
+
+ask z4: rent[2026-01] == rent[2026-02]
+
+ask z5: top[2026-01] == top[2026-01]
+
+ask z6: pay in transfers
+
+version card_2026
+  cite card
+  governs always
+  known 2026-01-01
+  fee = 40.00 PLN "the card"
+  pay_day = 2026-06-10 "the card"
+  low_mark = 400.00 PLN "the card"
+  rent_dom = 5 "the card"
+  top_dom = 20 "the card"
+  opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
+,,1:0,89:z2: 40.00 PLN
+  unfulfilled: rent[2026-01]
+  unfulfilled: rent[2026-02]
+  cut 2026-10-01
 ,

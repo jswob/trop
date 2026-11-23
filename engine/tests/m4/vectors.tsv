@@ -740,3 +740,10 @@ fixes/g3fix/t2_tie_inputs/e_fk1	fixes-g3fix		engine/tests/m4/fixes/g3fix	engine/
 fixes/g3fix/t2_tie_inputs/e_cn	fixes-g3fix		engine/tests/m4/fixes/g3fix	engine/tests/m4/fixes/g3fix/t2_tie_inputs.tally	e_cn		explain
 fixes/g3fix/t2_tie_inputs/i_cn	fixes-g3fix		engine/tests/m4/fixes/g3fix	engine/tests/m4/fixes/g3fix/t2_tie_inputs.tally	i_cn		-
 fixes/g3fix/t2_tie_inputs/i_fk1	fixes-g3fix		engine/tests/m4/fixes/g3fix	engine/tests/m4/fixes/g3fix/t2_tie_inputs.tally	i_fk1		-
+fixes/p21/o0/f	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	f		-
+fixes/p21/o0/ra	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	ra		-
+fixes/p21/o0/r1	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	r1		-
+fixes/p21/o0/r2	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	r2		-
+fixes/p21/o0/r3	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	r3		-
+fixes/p21/o0/r4	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	r4		-
+fixes/p21/o0/i1	fixes-p21		engine/tests/m3/fixes/t221/o216	engine/tests/m3/fixes/t221/o216/o0.tally	i1		-
