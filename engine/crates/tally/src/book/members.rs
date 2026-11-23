@@ -224,13 +224,13 @@ impl Engine {
             // one left out by its `when` is no candidate: the pins its day took are read
             // (L §8.2; tally 2.1.8 §4, #161)
             if let Moving::Plan(i) = x
-                && left_out(i)
+                && left_out(m, i)
             {
                 let pins = i.coll.deciding();
                 self.absorb(&pins);
             }
         }
-        movements.retain(|x| !matches!(x, Moving::Plan(i) if left_out(i)));
+        movements.retain(|x| !matches!(x, Moving::Plan(i) if left_out(m, i)));
         for x in &movements {
             // each could be a member: S1's refusal of one is the binding's (L §5.19, P42;
             // refcore's `possible_members`)
@@ -276,7 +276,7 @@ impl Engine {
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
         for x in self.movements_of(m, dom, ctx)? {
             if let Moving::Plan(i) = &x
-                && left_out(i)
+                && left_out(m, i)
             {
                 self.no_member(m, &x, sp, ctx)?;
                 continue;
@@ -323,6 +323,9 @@ impl Engine {
                     st = spread(&[st.as_ref(), Some(h)]);
                 }
                 if let Some(e) = &i.err {
+                    // a refused result lists what it read like a value (L §8.2 One read set;
+                    // 208.2; P21)
+                    self.absorb(&i.coll);
                     return Err(Stop::Refused(e.clone()));
                 }
             }
@@ -554,7 +557,7 @@ impl Engine {
         // one read to be left out stands for no `same` class: it is listed, never counted
         let (left, out): (Vec<Moving>, Vec<Moving>) = out
             .into_iter()
-            .partition(|x| matches!(x, Moving::Plan(i) if left_out(i)));
+            .partition(|x| matches!(x, Moving::Plan(i) if left_out(m, i)));
         let mut kept = once_by_same((&groups, &sides), out);
         kept.extend(left);
         in_order(kept)
@@ -587,7 +590,12 @@ impl Engine {
                     out.extend(hole_day_member(inst));
                     continue;
                 };
-                if limit.is_some_and(|point| run.point >= point) || run.inst.exists == Exists::No {
+                if limit.is_some_and(|point| run.point >= point) {
+                    continue;
+                }
+                if left_out(m, &run.inst) {
+                    // read to be left out, which `span_members` lists (L §8.2; P20, P21)
+                    out.push(Moving::Plan(run.inst.clone()));
                     continue;
                 }
                 match run.inst.status {
@@ -1482,11 +1490,12 @@ fn unread_hole(m: &Reality, inst: &Inst) -> Option<Hole> {
     (decision || matches!(inst.law, Law::Hole(_))).then(|| h.clone())
 }
 
-/// Whether a plan's instance `i` is one a binding reads to leave out: it doesn't exist (its
-/// `when` is false, its keys aren't there). L §8.2 One read set; P20. A decision's run whose
-/// `when` was false is no member and lists nothing yet: the STOP-REPORT of 2026-11-23.
-fn left_out(i: &Inst) -> bool {
-    i.status == Status::None
+/// Whether instance `i` is one a binding reads to leave out: a plan's that doesn't exist (its
+/// `when` is false, its keys aren't there), a decision's run whose `when` was false. L §8.2
+/// One read set; P20, P21.
+fn left_out(m: &Reality, i: &Inst) -> bool {
+    let run = m.moves.get(&i.move_id).is_some_and(|mv| mv.decision);
+    i.status == Status::None || (run && i.exists == Exists::No)
 }
 
 /// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
