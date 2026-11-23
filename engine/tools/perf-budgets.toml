@@ -393,6 +393,12 @@ wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"
 
+# P8-L10 at M4 (the user's U2, 2026-11-23, issue #252: "Try the 3 fixes, then decide", and
+# after G6c's widening the stage runs still missed): M4's gate times `c1_r2`, the one P8-L10 run
+# in engine/tests/m4/load/runs.tsv, against the budget below. The 17 stage runs (b1 .. c7) moved
+# to engine/tests/m4/load/stages.tsv for a later milestone, with their curve and profile on the
+# follow-up issue; the `load:` recipe doesn't read that file. `v5_r2` stays not run (pick P5).
+# No budget number changes.
 [[row]]
 id = "P8-L10"
 group = "L"
