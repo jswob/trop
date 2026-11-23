@@ -103,8 +103,6 @@ impl Engine {
         }
         let answered = self.plans.get(&key).map_or(shared, Rc::clone);
         if back.is_some() {
-            // a pass a later version answered keeps its reads where they printed
-            self.trace_marks_forget();
             self.trace_answers(m, mv, (&answered, &marks), cut)?;
         }
         Ok(answered)
@@ -150,6 +148,8 @@ impl Engine {
                 self.trace_move_to(since, *mark, &mut done);
             }
         }
+        // each answer is its instance's part of the pass (P20)
+        self.trace_marks_moved(&done);
         let closed = self.trace_plan_close();
         self.holder = outer;
         made?;
