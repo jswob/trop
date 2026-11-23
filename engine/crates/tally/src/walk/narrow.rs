@@ -28,8 +28,8 @@
 //! F7-c1r2 (`c1_r2`'s def misses, set from G6c's measure), and P8-14, whose def misses it
 //! must not raise past its budget;
 //! plain twin: plan.rs (`move_instances` under `Plans::Whole`, then the list's instances,
-//! refcore's `flows_move`); the equivalence tests: tally-runner's `m4_narrow`, tally-cli's
-//! `narrow_oracle.rs`, and this file's tests.
+//! refcore's `flows_move`); the equivalence tests: tally-runner's `m4_narrow`, T's (P27: no
+//! CLI suite), and this file's tests.
 
 use super::instance::{Dated, Inst, Status, inst_order};
 use super::plan::{date_of, invariant, kind_certainty};

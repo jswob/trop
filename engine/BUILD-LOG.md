@@ -8037,3 +8037,54 @@ z3: 100.00 PLN
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 0.12 % of the week this turn (2.60 % for the session) by `engine/tools/usage`.
 - **Checks:** `check commit: green, 24 steps (187s)`. Its report line is `milestone-report: M5a: no test target`, because M4 is gating and its tests ran green among the gating vectors.
+
+## 2026-11-23 M4 gate fix P37 (G3 `walked` resumed): settled back pay under explain (issue #252)
+
+On 697739b8 (X3). One commit, with this entry. P37 (`tmp/m4/auto-picks.md`, statement D12): a traced read of a span reads its adjustments, settled or not, and their settling movements as reads in P20's form, and gives the "walked" mark back. `explain` never stops `not implemented` where `run` answers the same cell (E §10).
+
+**The cause.** `tmp/m4/lead-x3/settled.tally` (X3's text plus `bank[r1]` fulfilling `adjustments[wage[2026-04].cash, raise]`) stopped for `z3`, `z4`, `z5` and `e5`. X3's fix gave the mark back only when no adjustment was a cause, and a settled adjustment reached by the span still was one, so the mark stayed.
+
+**The fix** (`walk/move_flows.rs` `count_move`, `settling_in`; `book/members.rs` `trace_settling`):
+- The mark from reading a move's adjustments (measured apart) now always goes back, settled or not. `count_adjustment` is back to its form before X3.
+- Each settling movement dated in the read's span, of each adjustment the read counts (its keys and leg), now prints under the read as its row, as an observation the read counts prints (`trace_observation`). Its value is its first leg's record; for a waiver, a movement with no leg, it is `(day: …)`.
+- A refused change still stops the read where its day is reached, as before.
+- A settlement by a modelled instance (a settlement move) prints nothing new: its reads are its plan's, made apart (`settle_candidates`), and no probe reaches one.
+
+**The probes, against refcore:**
+- **`settled.tally`:**
+  - `z3` and `z4` give 100.00 PLN, byte-equal to refcore.
+  - `z5` and `e5` give 10.00 PLN with refcore's value and rows. The engine adds `row settle:bank[r1] = (from: boss, to: konto, amount: 100.00 PLN, day: 2026-05-15)`, which is D12's settling movement; refcore prints no observation row (#169).
+  - `e5` and `e3`/`e4` also lack refcore's `v:d25`, which comes from refcore's whole pass (`m_leg_refused` preparing the main walk), held for #255 as at X3.
+- **Partly settled** (`tmp/m4/g3/p37/part.tally`: 60.00 on 2026-05-15 and 40.00 on 2026-06-05):
+  - the values are refcore's: `zf` is 100, 100, 6.00, 4.00 and 100.00 over 2026-04..07, and `e5` is 6.00;
+  - `z5` prints `bank[r1]` (60.00) and `z6` prints `bank[r2]` (40.00), each in its own month.
+- **Waiver** (`waive.tally`, `kind waivers: event certain`, `bank[w1]` with no leg on 2026-05-15):
+  - the values are refcore's: `z5` 0.00 and `z6` 100.00 (byte-equal), `e5` 0.00;
+  - `z5`/`e5` print `row settle:bank[w1] = (day: 2026-05-15)`.
+- **Settled after the cut** (`after.tally`: `bank[r1]` on 2026-07-05, the cut 2026-06-20):
+  - `z5` and `z6` are byte-equal to refcore (100.00);
+  - `z7` gives 110.00 with the July row.
+- **Found, not fixed: a P22 gap in nested passes.** With settled back pay, `explain zf[2026-07]` (part's and the waiver's `z7`, after's `z7`) gives refcore's value but leaves out `v:d20` and `v:d10`: the days of `top[2026-07]` and `wage[2026-07]`. Their bodies' rows (`pay`, `share`) print. It is no stop and no wrong number.
+  - Cause, judged from `trace_keep`'s calls and not proven:
+    - `top`'s pass at the cut is first traced fresh inside `zed[2026-06]`'s body. That reader keeps `top[2026-07]`'s day in place (Keep::Day) and sets aside only its body.
+    - `zed`'s own keep then sets aside `zed[2026-06]`'s body, burying that day.
+    - `zed[2026-07]`'s read takes back `top[2026-07]` whole, but only the body was stashed.
+  - Without back pay, or with it unsettled, the same asks are byte-equal (`noraise.tally`, `x3z7.tally`): there the passes were traced earlier and not kept fresh.
+  - It is in `eval/trace/parts.rs` (P20/P22's filter), outside D12. For the coordinator to place.
+
+**The sweep** (`tmp/m4/g3/sweep25.sh`): the paper probes, every `tmp/m4/review/*/` folder, G3's probes, the gate review's `p/` and `tmp/m4/lead-x3/`, each text alone, ask by ask. It ran on refcore_fast, 697739b8's quick binary (`git archive`, removed after) and this tree.
+- **1 378 asks:**
+  - 1 042 same → same;
+  - 3 different → same (`settled` `z2`–`z4`);
+  - 333 different → different, 4 with changed bytes (`settled` `e3`, `e4`, `e5`, `z5`), each `not implemented` → the forms above;
+  - **0 same → different**.
+
+**`walk/narrow.rs`'s header** no longer names a CLI `narrow_oracle.rs`. F7's suite is T's `m4_narrow` (P27).
+
+- **Size** (`git diff --shortstat -- engine/crates`): 3 files, +70 −26.
+- **Files:** `walk/move_flows.rs`, `book/members.rs`, `walk/narrow.rs`.
+- **Exceptions:** +0. The settlements' filter is a loop in `settling_in`, not a nested closure (the report-only scan).
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.15 % of the week this turn (2.75 % for the session).
+- **Checks:** `check commit: green, 24 steps (203s)`. M4 is gating, so its tests ran among the gating vectors.

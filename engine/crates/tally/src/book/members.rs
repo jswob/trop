@@ -1340,6 +1340,42 @@ fn leg_record(m: &Reality, lg: &LegVal) -> Result<Value, Stop> {
     ]))
 }
 
+impl Engine {
+    /// Adds, under the open node of a traced read, the observed rows among `by`, the
+    /// movements settling the adjustments the read counts, each once, as an observation the
+    /// read counts prints: its row, holding its first leg, or for a waiver, a movement with
+    /// no leg, its day (E §10; L §5.14.3, §5.14; P37).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::observations`]; `ENGINE-INVARIANT` for a row a load didn't build.
+    pub(crate) fn trace_settling(
+        &mut self,
+        m: &Reality,
+        by: &[String],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        if by.is_empty() || !self.tracing() {
+            return Ok(());
+        }
+        let mut rows = Vec::new();
+        for o in self.observations(m, cut)? {
+            if by.contains(&o.id) && !rows.iter().any(|(_, id, _)| *id == o.id) {
+                let first = o.legs.first().cloned();
+                rows.push((o.input.clone(), o.id.clone(), (first, o.day)));
+            }
+        }
+        for (input, id, (first, day)) in rows {
+            let record = match &first {
+                Some(lg) => leg_record(m, lg)?,
+                None => Value::Record(vec![("day".to_owned(), Value::Day(day))]),
+            };
+            self.trace_observation(m, (&input, &id), &record)?;
+        }
+        Ok(())
+    }
+}
+
 /// What instance `i` read for fact `fact` of a movement stated `same`: its day's reads, one
 /// leg's, every leg's, or all it read; a leg whose reads no evaluation kept gives all (L §8.2
 /// One read set; S3, P43 on #241).
