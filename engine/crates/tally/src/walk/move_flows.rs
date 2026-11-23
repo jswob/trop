@@ -286,18 +286,17 @@ impl Engine {
         }
         if !mv.decision {
             let before = self.trace_walked();
-            let mut counted = false;
+            let mut settling = Vec::new();
             for adj in self.settled_move(m, mv, ctx.cut)? {
                 if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
-                    counted = true;
                     count_adjustment(m, &adj, (sp, last), (acc, &mut self.entries))?;
+                    settling.extend(settling_in(&adj, sp));
                 }
             }
-            if !counted {
-                // no adjustment is a cause: the read holds none the walk's forms print
-                // (E §10; P20)
-                self.trace_walked_back(before);
-            }
+            // the adjustments are measured apart, a structure no walk form prints: a traced
+            // read holds their holes and the rows settling them in its span (E §10; P20, P37)
+            self.trace_walked_back(before);
+            self.trace_settling(m, &settling, ctx.cut)?;
         }
         Ok(())
     }
@@ -640,6 +639,20 @@ fn count_adjustment(
         }
     }
     Ok(())
+}
+
+/// The movements settling adjustment `adj` dated in span `sp`, waivers too: what a read of
+/// the span counts of its settlement (L §5.14.3; E §10, P37).
+fn settling_in(adj: &crate::book::Adjustment, sp: &Span) -> Vec<String> {
+    let mut out = Vec::new();
+    for s in &adj.settled {
+        if let Some(day) = s.day
+            && sp.contains(day)
+        {
+            out.push(s.by.clone());
+        }
+    }
+    out
 }
 
 /// A running total with `q` added. L §5.14.3.

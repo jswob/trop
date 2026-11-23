@@ -113,10 +113,15 @@ impl Num {
 
 impl Money {
     /// The amount as L §5.18 prints money: its minor-unit digits (`6 064.17` for a minor unit
-    /// of 0.01), without the currency's name. L §5.18.
+    /// of 0.01), without the currency's name; money off whole minor units (`solve`'s centre)
+    /// as its exact number, `450.005` (refcore's `fmt`). L §5.18, §5.18 step 3.
     pub fn to_text(&self, minor: &Num) -> Result<String, NumError> {
+        let value = self.to_num(minor)?;
+        if !self.minor_units().is_integer() {
+            return value.to_text();
+        }
         let places = minor.decimal_places()?.ok_or(NumError::Invariant)?;
-        self.to_num(minor)?.to_fixed(places)
+        value.to_fixed(places)
     }
 }
 

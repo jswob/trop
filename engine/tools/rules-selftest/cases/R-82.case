@@ -556,13 +556,14 @@ python3 -I -B zz_takes.py
 case: quick-takes-only-a-gating-target
 tool: run
 exit: any
-expect: quick_takes names m4_oracle, which is no gating milestone's target
+expect: quick_takes names m5a_oracle, which is no gating milestone's target
 --- replace tools/milestones.toml
   { target = "m3_oracle", test = "m3_oracle_tenth" },
 --- with
-  { target = "m4_oracle", test = "m4_oracle_tenth" },
+  { target = "m5a_oracle", test = "m5a_oracle_tenth" },
 --- write zz_takes.py
-"""Planted: quick's test step with a quick_takes entry on M4, which doesn't gate."""
+"""Planted: quick's test step with a quick_takes entry on M5a, which doesn't gate (M4 gates
+since 2026-11-23)."""
 import sys
 
 sys.path.insert(0, "tools")
@@ -577,30 +578,31 @@ except milestones.MilestoneError as e:
 --- run
 python3 -I -B zz_takes.py
 
-# M4's rules step (issue #252, pick P17): fence F7's suites are named in `quick_leaves_out`
-# before G6c writes them, each with a `waits`: left out of every local mode until cargo
+# M4's rules step (issue #252, pick P17): a fence's suite may be named in `quick_leaves_out`
+# before its group writes it, with a `waits`: left out of every local mode until cargo
 # metadata lists the target and runs it by default, then left out of `quick` and run by
-# `commit` and `fences` with no rules step between. Planted: F6's fork_oracle with a `waits`,
-# a target that exists, is taken as before.
+# `commit` and `fences` with no rules step between (F7's m4_narrow waited so until G6c).
+# Planted: a suite no target holds yet, and F6's fork_oracle with a `waits`, a target that
+# exists, taken as before.
 case: quick-leaves-out-waits-for-its-target
 tool: run
 exit: any
-expect: waiting: m4_narrow in no mode True, narrow_oracle in no mode True
+expect: waiting: m4_absent in no mode True
 expect: present with a waits: fences runs fork_oracle True, quick leaves it out True
 --- replace tools/milestones.toml
   { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
 --- with
   { package = "tally-cli", test = "fork_oracle", waits = "planted: a target that exists" },
+  { package = "tally-runner", test = "m4_absent", waits = "planted: a suite not yet written" },
 --- write zz_waits.py
-"""Planted: the local modes' test argv with F7's waiting suites and a present one that waits."""
+"""Planted: the local modes' test argv with a waiting suite and a present one that waits."""
 import sys
 
 sys.path.insert(0, "tools")
 import check
 
 argv = {m: check.local_tests(m, check.mode_env(m))[0] for m in ("quick", "commit", "fences")}
-gone = {t: all(f"--test={t}" not in a for a in argv.values()) for t in ("m4_narrow", "narrow_oracle")}
-print(f"waiting: m4_narrow in no mode {gone['m4_narrow']}, narrow_oracle in no mode {gone['narrow_oracle']}")
+print(f"waiting: m4_absent in no mode {all('--test=m4_absent' not in a for a in argv.values())}")
 print(f"present with a waits: fences runs fork_oracle {'--test=fork_oracle' in argv['fences']}, "
       f"quick leaves it out {'--test=fork_oracle' not in argv['quick']}")
 --- run
@@ -611,11 +613,12 @@ python3 -I -B zz_waits.py
 case: quick-leaves-out-without-waits-needs-its-target
 tool: run
 exit: any
-expect: quick_leaves_out names tally-runner's m4_narrow, which is no test target of it that runs by default
+expect: quick_leaves_out names tally-runner's m4_absent, which is no test target of it that runs by default
 --- replace tools/milestones.toml
-  { package = "tally-runner", test = "m4_narrow", waits = "T's suite, Plans::Narrow against Plans::Whole (G6c)" },
+  { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
 --- with
-  { package = "tally-runner", test = "m4_narrow" },
+  { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
+  { package = "tally-runner", test = "m4_absent" },
 --- write zz_waits.py
 """Planted: quick's test step with a suite that has no target and no waits."""
 import sys

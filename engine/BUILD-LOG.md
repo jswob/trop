@@ -7952,3 +7952,188 @@ e_feb: 250.00 PLN
 - **Open STOP-REPORTs:** none (the one above is ruled by P31).
 - **Usage:** about 0.17 % of the week this turn (2.48 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check commit: green, 24 steps (247s)` on 15d512ec; `milestone-report: M4: 47/49`.
+
+## 2026-11-23 M4 gate fixes B1, B2, X1 (G4 resumed; issue #252)
+
+Pick P34 gives the gate review's (`tmp/m4/gate-review.md`) B1, B2 and X1 to G4's builder, on `fix/m4-gate` from `origin/build/m4` (c95be0f8). Two commits before this entry: 127ffacf (B1, X1), 82c7f68f (B2). Scratch in `tmp/m4/gfix/` (untracked).
+
+**B1. A rate literal pinned on a `rate` input is a rate** (L §3.3, §3.2; P16). `eval/pins.rs` `pin_typed`: a number whose unit has a period, pinned on a `rate`, is that rate, as the same figure in a row is. Its face: `solve`'s `RUN-SOLVE` bracket over rates prints each end as a rate (`eval/solve.rs`). Probes: `agent/c02_ratepin` `w_lit` `3 650 PLN` with `pinned: ry = 0.1 /year`, `w_lit_per`, `ai_lit`, `w_row` `0.1 /year`, and the file's other six asks; `p/c1` `p16` `0.01`; `agent/s01_solve` `s8` `no sign change on [0 /year, 0.01 /year]`. All refcore's bytes.
+
+**X1. `solve`'s step 3 on money stepped by one minor unit** (L §5.18 step 3). The centre a + u/2 is half a minor unit, which `Money` can't hold; `Grid::point` pins it as the exact number of the currency's unit, as `pin_typed` keeps a non-whole number pinned on money. `agent/s02_solve_minor` `a2` `104.65 EUR`, as refcore, and the file's three other asks.
+
+**B2. The run-time type sampler takes M4's forms** (L §5.11's aggregate table, §7.1). `eval/ty.rs` gave no type to:
+- `round` with a mode read from an input or the axis. Now its class comes from x and the step, whatever the mode (L §7.2).
+- `accrue`, now a number in its principal's unit (`rates.rs` `principal_of`, shared), and `dcf`, now a plain number (L §3.3).
+- `add_years`, `last_business` and `schedule`, now dates; `age_months`, `overlap_days` and `weekday`, now ints (L §4.2).
+- An `as if`, which now has its expression's type (L §5.11).
+- `bal` and `flows` of a place, now in the place's one unit; `flows` of a move, now in the one unit the places its legs change have, places of `any` unit aside (L §5.10, §5.14).
+
+Probes, all refcore's bytes now:
+- `agent/B2_empty_sum_min`: `i_in`, `i_ax`, `i_ask`, `i_ask_ax`, `s_in`, `s_ax` and `s_pin` `0.00 PLN`; `s_acc` `0 PLN`.
+- `agent/o03_bare`: `i1` `0 PLN`, `i2` to `i5`, `i8`.
+- `agent/o02_emptysum`: its four asks.
+- `p/s1`: `q5`, `q6`, `q12`.
+- My `tmp/m4/gfix/b2_more.tally`: nine asks (`age_months`, `overlap_days`, `weekday`, `dcf`, `bal`, a place's `flows`, a move's `flows`, `round` with a read mode, `add_years`, `accrue + x` under an untaken `if`).
+
+**What the sampler still can't see**, so where reached the run stops `not implemented`, as before:
+- a place of `any` unit, a place named only by a binding, and a move whose places differ in unit: their unit is the walk's;
+- the bands (`marginal`, `band_lo`, `band_hi`), `pow`, `since`, `window`, `gap`, `observed`, `lifespan`, `unit`;
+- M6's `exp`, `ln` and `sqrt`.
+
+None is in a gate probe.
+
+**The sweep** (`tmp/m4/gfix/sweep.sh`, `sweep.txt`): the main folder's paper probes; its review folders g1, g1fix, g2, g2fix, g3, g3fix, g4, g6b, g6c, g6cfix; the gate review's `agent/` and `p/`; my `b2_more`. Each ask alone on refcore_fast, on c95be0f8's quick binary and on this tree.
+- **1 989 asks:** 1 516 same → same, 44 different → same, 429 different → different with unchanged bytes, **0 same → different**.
+- **Different → same (44), each one of the three fixes:** `agent/B2_empty_sum_min` 8, `c02_ratepin` 6, `o03_bare` 6, `o02_emptysum` 4, `s02_solve_minor` 4, `s01_solve` 2, `c01_rates` 1; `p/s1` 3, `p/c1` 1; `b2_more` 9.
+
+- **Size** (`git diff --shortstat c95be0f8 -- engine/crates`): 4 files, +102 −22.
+- **Files:** `eval/pins.rs`, `eval/solve.rs`, `eval/ty.rs`, `eval/rates.rs`. No kernel file.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.4 % of the week this turn (0.95 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green` on 127ffacf's tree; `check commit: green, 24 steps (326s)` on 82c7f68f's.
+
+## 2026-11-23 M4 gate fix X3 (G3 `walked` resumed): explain above back pay (issue #252)
+
+On cf1cf20b (M4 in `gating`; the gate fixes B1, B2, X1 and P35 merged). One commit, with this entry. P34 (`tmp/m4/auto-picks.md`) gives X3 of the gate review (`tmp/m4/gate-review.md`) to G3.
+
+**X3.** `explain` of a figure three `flows` reads above an instance with back pay stopped with `tally run: not implemented` (exit 69), for every month. The input was `X3_explain_backpay_min.tally --ask z3`: `zf` reads `flows(zed, m)`, `zed` reads `flows(top, m)`, `top` reads `flows(wage, m)`, and version `raise` changes the paid `wage[2026-04]`.
+- **The read that left the mark** (found with a backtrace on the mark, since removed):
+  - `zed`'s flows computes `top`'s whole plan, traced (`traced_instances`).
+  - `top[2026-05..08]`'s leg reads `flows(wage, m)`. Its count reads `wage`'s adjustments (`settled_move`, apart, so marked as walked) and meets the unsettled back pay of `wage[2026-04]` (`HOLE-CHANGED`, day 2026-04-10).
+  - `count_move` gave the mark back only when no adjustment matched the keys. A `flows(wage, m)` has no keys, so every adjustment matched and the mark stayed. The plan's close hands its mark out (`plan.rs` `move_instances`), so `traced` refused.
+- **The fix, in P20's form** (`walk/move_flows.rs`): `count_adjustment` now says whether the adjustment is a cause the walk's forms print. That is a settled one whose day the span reaches, or one with a settlement dated in the span. An unsettled one is only its hole, and its question is the read's. Refcore prints no form for it either: `explain wf[2026-05]` with `wf = flows(wage, m)` gives the hole and the rows. Otherwise the mark goes back as before.
+- **Not touched:** a refused change still stops the read where its day is reached, and a settled adjustment's cause still keeps the mark. No probe reaches either.
+- **z3 is refcore's, byte for byte:**
+
+```
+z3: 100.00 PLN
+  [1] zf[2026-03] = 100.00 PLN
+      rule base: won
+        [2] row v:d25 = 25 (…v, governs always, known 2026-01-01; likewise [3] v:d20 = 20, [4] v:d10 = 10, [5] v:pay = 1 000.00 PLN, [6] v:share = 0.1)
+  unfulfilled: top[2026-03]
+  unfulfilled: wage[2026-03]
+  unfulfilled: zed[2026-03]
+  cut 2026-06-20
+```
+
+- **g5x's two stops** (`q8`, `xx7`/`xx8`, the same form through `swap.pln`) and `g5*`'s `q8` now explain. Each gives refcore's value and first node.
+- **What still differs is refcore's whole pass (P22, held for #255):**
+  - `g5*`'s `q8` family: refcore lists `pln_of` again for each pass, 77 nodes against the engine's 25.
+  - `e3`/`e4`: refcore adds `v:d25`, which `m_leg_refused` reads by preparing the main walk's whole plan (`zed`'s day).
+
+**The sweep** (`tmp/m4/g3/sweep24.sh`): the paper probes, every `tmp/m4/review/*/` folder, G3's probes and the gate review's `p/` (copied to `tmp/m4/g3/x3/p`), each text alone, ask by ask. It ran on refcore_fast, cf1cf20b's quick binary (`git archive` in `tmp/m4/g3/before24`) and this tree.
+- **1 350 asks:**
+  - 1 004 same → same;
+  - 19 different → same: `z2`–`z5` of `X3_explain_backpay_min`, `m2`, `m2b` and `m2c`, plus `e5` of `m2b` and `m2c`;
+  - 327 different → different, 14 of them with changed bytes, each `not implemented` → an explanation with refcore's value and first node;
+  - **0 same → different**.
+
+- **Size** (`git diff --shortstat`): 1 file, +19 −14.
+- **Files:** `walk/move_flows.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.12 % of the week this turn (2.60 % for the session) by `engine/tools/usage`.
+- **Checks:** `check commit: green, 24 steps (187s)`. Its report line is `milestone-report: M5a: no test target`, because M4 is gating and its tests ran green among the gating vectors.
+
+## 2026-11-23 M4 gate fix P37 (G3 `walked` resumed): settled back pay under explain (issue #252)
+
+On 697739b8 (X3). One commit, with this entry. P37 (`tmp/m4/auto-picks.md`, statement D12): a traced read of a span reads its adjustments, settled or not, and their settling movements as reads in P20's form, and gives the "walked" mark back. `explain` never stops `not implemented` where `run` answers the same cell (E §10).
+
+**The cause.** `tmp/m4/lead-x3/settled.tally` (X3's text plus `bank[r1]` fulfilling `adjustments[wage[2026-04].cash, raise]`) stopped for `z3`, `z4`, `z5` and `e5`. X3's fix gave the mark back only when no adjustment was a cause, and a settled adjustment reached by the span still was one, so the mark stayed.
+
+**The fix** (`walk/move_flows.rs` `count_move`, `settling_in`; `book/members.rs` `trace_settling`):
+- The mark from reading a move's adjustments (measured apart) now always goes back, settled or not. `count_adjustment` is back to its form before X3.
+- Each settling movement dated in the read's span, of each adjustment the read counts (its keys and leg), now prints under the read as its row, as an observation the read counts prints (`trace_observation`). Its value is its first leg's record; for a waiver, a movement with no leg, it is `(day: …)`.
+- A refused change still stops the read where its day is reached, as before.
+- A settlement by a modelled instance (a settlement move) prints nothing new: its reads are its plan's, made apart (`settle_candidates`), and no probe reaches one.
+
+**The probes, against refcore:**
+- **`settled.tally`:**
+  - `z3` and `z4` give 100.00 PLN, byte-equal to refcore.
+  - `z5` and `e5` give 10.00 PLN with refcore's value and rows. The engine adds `row settle:bank[r1] = (from: boss, to: konto, amount: 100.00 PLN, day: 2026-05-15)`, which is D12's settling movement; refcore prints no observation row (#169).
+  - `e5` and `e3`/`e4` also lack refcore's `v:d25`, which comes from refcore's whole pass (`m_leg_refused` preparing the main walk), held for #255 as at X3.
+- **Partly settled** (`tmp/m4/g3/p37/part.tally`: 60.00 on 2026-05-15 and 40.00 on 2026-06-05):
+  - the values are refcore's: `zf` is 100, 100, 6.00, 4.00 and 100.00 over 2026-04..07, and `e5` is 6.00;
+  - `z5` prints `bank[r1]` (60.00) and `z6` prints `bank[r2]` (40.00), each in its own month.
+- **Waiver** (`waive.tally`, `kind waivers: event certain`, `bank[w1]` with no leg on 2026-05-15):
+  - the values are refcore's: `z5` 0.00 and `z6` 100.00 (byte-equal), `e5` 0.00;
+  - `z5`/`e5` print `row settle:bank[w1] = (day: 2026-05-15)`.
+- **Settled after the cut** (`after.tally`: `bank[r1]` on 2026-07-05, the cut 2026-06-20):
+  - `z5` and `z6` are byte-equal to refcore (100.00);
+  - `z7` gives 110.00 with the July row.
+- **Found, not fixed: a P22 gap in nested passes.** With settled back pay, `explain zf[2026-07]` (part's and the waiver's `z7`, after's `z7`) gives refcore's value but leaves out `v:d20` and `v:d10`: the days of `top[2026-07]` and `wage[2026-07]`. Their bodies' rows (`pay`, `share`) print. It is no stop and no wrong number.
+  - Cause, judged from `trace_keep`'s calls and not proven:
+    - `top`'s pass at the cut is first traced fresh inside `zed[2026-06]`'s body. That reader keeps `top[2026-07]`'s day in place (Keep::Day) and sets aside only its body.
+    - `zed`'s own keep then sets aside `zed[2026-06]`'s body, burying that day.
+    - `zed[2026-07]`'s read takes back `top[2026-07]` whole, but only the body was stashed.
+  - Without back pay, or with it unsettled, the same asks are byte-equal (`noraise.tally`, `x3z7.tally`): there the passes were traced earlier and not kept fresh.
+  - It is in `eval/trace/parts.rs` (P20/P22's filter), outside D12. For the coordinator to place.
+
+**The sweep** (`tmp/m4/g3/sweep25.sh`): the paper probes, every `tmp/m4/review/*/` folder, G3's probes, the gate review's `p/` and `tmp/m4/lead-x3/`, each text alone, ask by ask. It ran on refcore_fast, 697739b8's quick binary (`git archive`, removed after) and this tree.
+- **1 378 asks:**
+  - 1 042 same → same;
+  - 3 different → same (`settled` `z2`–`z4`);
+  - 333 different → different, 4 with changed bytes (`settled` `e3`, `e4`, `e5`, `z5`), each `not implemented` → the forms above;
+  - **0 same → different**.
+
+**`walk/narrow.rs`'s header** no longer names a CLI `narrow_oracle.rs`. F7's suite is T's `m4_narrow` (P27).
+
+- **Size** (`git diff --shortstat -- engine/crates`): 3 files, +70 −26.
+- **Files:** `walk/move_flows.rs`, `book/members.rs`, `walk/narrow.rs`.
+- **Exceptions:** +0. The settlements' filter is a loop in `settling_in`, not a nested closure (the report-only scan).
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.15 % of the week this turn (2.75 % for the session).
+- **Checks:** `check commit: green, 24 steps (203s)`. M4 is gating, so its tests ran among the gating vectors.
+
+## 2026-11-23 M4 gate's last fix, P36 (G4 resumed; issue #252)
+
+Pick P36 answers the fix review (`tmp/m4/review-gatefix.md`, probes `tmp/m4/review/gatefix/`): G2 and G3 (the sampler) and G1 (`solve`'s centre). On `fix/m4-gate` from cf1cf20b. Commit b7161501 (statement 1) and the commit before this entry (statement 2). Scratch in `tmp/m4/gfix/` (untracked).
+
+**Statement 1. A term's type is the type load's checker gives it** (L §7.1, §3.2, §5.11). The run no longer samples a value to learn a type for these two uses:
+- **Kept at load, read at run.** `syntax/tree.rs` `LoadType`, a slot on `Expr::If` and `Agg`. Load's checker fills it (`load/types.rs` for an `if`, `load/ops.rs` `aggregate` for a sum). It is never part of a node's equality. A `RefCell` like `Tok`'s `Cell` mark, since the parser has no state to number nodes and an address isn't deterministic. It makes `Expr` not `Sync`: no thread reads a tree today (R-42), but M7's threads will need it noted.
+- **An empty sum** is 0 in the sum's load type (`eval/aggregate.rs` `zero_in`, refcore's `zero_of` of `n._t`):
+  - money 0;
+  - a `num u` 0;
+  - an int 0 for an int, a figure, a key, `dyn`, or a unit over a kind's base;
+  - `RUN-DOMAIN` for rates;
+  - `not implemented` for a type load's checker doesn't work out (`Unseen`), where the run had guessed by sample before.
+- **A bare figure that is an `if`'s branch** takes the `if`'s load type (`eval/expr.rs` `flex_branch`, through `typed`).
+- **What remains of `eval/ty.rs`.** `zero_of` and `figure_like` are removed. `sample` stays for two questions about a read's class, not an expression's type: `partial`'s `reads_a_number` (whether a name or postfix read is a coefficient's operand) and `unit(x)`'s `quantity_typed`. Moving them to load's type would mean a slot on every name and postfix node, past this pick.
+- Size: 14 files, +167 −135.
+
+**Statement 2. `solve`'s centre is exact** (L §5.18 step 3). The centre a + u/2 is money that may hold half a minor unit, as refcore's `mk` pins it. Only the answer is on the grid.
+- `num/money.rs`: a third tier, `Units::Part`, a number of minor units that isn't whole (kernel, no new file). Only `Num::to_money_part` makes one. Sum, difference, negation and order are exact, and a whole result is a `Word` or `Big` again. `to_big` refuses a `Part` as an invariant break, since its callers take it first.
+- `num/text.rs`: a `Part` prints as its exact number (`450.005 PLN`, refcore's `fmt_q`).
+- `eval/arith.rs` `finish`: a money result keeps a fraction of a minor unit. A money result is off whole minor units only where an operand is, so whole money's results are unchanged.
+- `model/value.rs`: `num_money_part`.
+- `eval/solve.rs` `Grid::point`: money pinned as that money, which replaces the number of the currency's unit and the comment the review flagged. An `int` grid's centre off the integers is the plain number it is, as `mk` gives it.
+- Unit test `solves_centre_holds_part_of_a_minor_unit`.
+- Size: 6 files, +132 −24.
+
+**The review's probes** (`tmp/m4/gfix/gf.sh`): 65 files, each on refcore_fast, cf1cf20b's quick binary and this tree. All 65 are refcore's bytes now; before, 32 differed.
+- G1: `x1_min` q `0.33 EUR`, `x1_grossup2` q `1 234.58 PLN`, `r4` h5 `333.34 PLN`, `s1` a5 `104.65 EUR`, `s3` i3 `333 JPY`.
+- G2: `b_legflows_q1` `0.00 PLN`, `b_legflows_q2` `0.00 PLN`, `b_keyedbal` q1–q3.
+- G3: `b_roundband` `0.00 PLN`, `b_bandif` `0 PLN`; `b_bindbal` `0`.
+- `x1_m1` and `x1_m6`'s refusal names the centre `450.005 PLN`, as refcore.
+
+**The sweep** (`tmp/m4/gfix/sweep.sh`, `sweep36.txt`). Each ask alone on refcore_fast, cf1cf20b's quick binary and this tree, over:
+- the main folder's paper probes;
+- review folders g1, g1fix, g2, g2fix, g3, g3fix, g4, g6b, g6c, g6cfix, gatefix;
+- the gate review's `agent/` and `p/`;
+- my six texts in `tmp/m4/gfix/`.
+
+Results:
+- **2 176 asks:** 1 712 same → same, 39 different → same, 425 different → different with unchanged bytes, **0 same → different**.
+- **Different → same (39):** `gatefix` 35 (the asks above, `t1`/`t2` 15, `fx_1`, `fx_2`, `fx_6`, `b_keyedbal` and `b_legflows` whole), `agent/o02_emptysum` e01, e20, e26, and `agent/c04_ratemean` a_empty. All are empty sums or bare branches typed by load.
+
+- **Size** (`git diff --shortstat cf1cf20b -- engine/crates`): 20 files, +288 −164 (statement 1's load keeping is about 0.1 k of it).
+- **Kernel files:** `num/money.rs`, `num/text.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.43 % of the week this turn (1.38 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green, 11 steps (88s)` on b7161501's tree; `check commit: green, 24 steps (332s)` on statement 2's.

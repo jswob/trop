@@ -23,13 +23,13 @@ use super::expr::hole_of;
 use super::extremes::{bare_key, min_max};
 use super::partial;
 use super::register::Collected;
-use super::state::{Ctx, Engine, Env, invariant, not_typed, refuse};
+use super::state::{Ctx, Engine, Env, invariant, not_typed, num_stop, refuse};
 use super::trace::Snap;
-use super::ty::zero_of;
 use super::windows::End;
 use crate::base::{Code, Refusal, Run};
 use crate::hole::{Hole, spread};
-use crate::model::{Reality, Value, Window};
+use crate::model::{Class, Number, Reality, Ty, Value, Window, currency_id};
+use crate::num::{Money, Num};
 use crate::syntax::{Agg, AggFn, Bind, Expr, Stop};
 use crate::walk::lowest_shape;
 
@@ -212,7 +212,7 @@ impl Engine {
                 .ok_or_else(|| invariant("any or all with no term"))?;
             return self.any_all(m, agg.func, term, &members, ctx);
         }
-        self.terms_aggregate(m, agg, &members, env, ctx)
+        self.terms_aggregate(m, agg, &members, ctx)
     }
 
     /// `count`, `sum`, `min`, `max`, `argmin`, `argmax` over their terms (refcore's
@@ -222,7 +222,6 @@ impl Engine {
         m: &Reality,
         agg: &Agg,
         members: &[Member],
-        env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let word = agg.func.word();
@@ -275,7 +274,7 @@ impl Engine {
                 // whose `where` is a hole isn't a term it is linear in, so that sum is plain
                 // (L §5.18)
                 let known = terms.into_iter().map(|(_, t)| t).collect();
-                let known = sum_terms(m, agg, known, env, ctx)?;
+                let known = sum_terms(m, agg, known)?;
                 return partial::lin_sum(m, known, &holes);
             }
             let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
@@ -293,7 +292,7 @@ impl Engine {
             }
             AggFn::Sum => {
                 let terms = terms.into_iter().map(|(_, t)| t).collect();
-                return sum_terms(m, agg, terms, env, ctx);
+                return sum_terms(m, agg, terms);
             }
             AggFn::Argmin | AggFn::Argmax => {
                 let key = self.arg_extreme(m, agg, &terms, ctx)?;
@@ -746,28 +745,80 @@ fn is_zero(v: &Value) -> bool {
     false
 }
 
-/// The sum of known terms, left to right; 0 in the term's type over none (refcore's
-/// `zero_of`). L §5.11.
-fn sum_terms(
-    m: &Reality,
-    agg: &Agg,
-    terms: Vec<Value>,
-    env: &Env,
-    ctx: Ctx,
-) -> Result<Value, Stop> {
+/// The sum of known terms, left to right; 0 in the type load gave the sum over none
+/// (refcore's `zero_of`). L §5.11.
+fn sum_terms(m: &Reality, agg: &Agg, terms: Vec<Value>) -> Result<Value, Stop> {
     let mut it = terms.into_iter();
     let Some(first) = it.next() else {
-        let term = agg
-            .term
-            .as_ref()
-            .ok_or_else(|| invariant("a sum with no term"))?;
-        return zero_of(m, term, env, &agg.binds, ctx);
+        let ty = agg
+            .ty
+            .get()
+            .ok_or_else(|| invariant("a sum load didn't type"))?;
+        return zero_in(m, &ty);
     };
     let mut acc = first;
     for t in it {
         acc = arith(m, Op::Add, &acc, &t)?;
     }
     Ok(acc)
+}
+
+/// 0 in type `ty`, the type load's checker gave a sum (refcore's `zero_of`): money 0, a
+/// `num u` 0, an int 0 for a bare figure, a key, a unit only the run knows or a unit over a
+/// kind's base (what the 0 meets gives it that). L §5.11, §3.2, §7.1.
+///
+/// # Errors
+///
+/// `RUN-DOMAIN` for a sum of rates (a rate carries its period, and there is none);
+/// `NotBuilt` for a type load's checker doesn't work out.
+fn zero_in(m: &Reality, ty: &Ty) -> Result<Value, Stop> {
+    match ty {
+        Ty::Money(cur) => {
+            let id = currency_id(m, cur).map_err(num_stop)?;
+            Ok(Value::Money(Money::from_minor(0, id)))
+        }
+        Ty::Num(unit, _)
+            if unit
+                .terms()
+                .iter()
+                .any(|(base, _)| m.kinds.get(base).is_some()) =>
+        {
+            Ok(Value::int(0))
+        }
+        Ty::Num(unit, shown) => Ok(Value::Number(Number {
+            q: Num::zero(),
+            class: Class::Num(unit.clone(), *shown),
+        })),
+        Ty::Int | Ty::Flex(_) | Ty::Year4 | Ty::Key(_) | Ty::KeyLit(_) | Ty::Dyn => {
+            Ok(Value::int(0))
+        }
+        Ty::Rate => Err(refuse(
+            Run::Domain,
+            "the sum of rates over no keys (a rate carries its period)".to_owned(),
+        )),
+        Ty::Bool
+        | Ty::Text
+        | Ty::Date
+        | Ty::Dates
+        | Ty::Period(_)
+        | Ty::Dist(_)
+        | Ty::DistKeys(_)
+        | Ty::Calendar
+        | Ty::Code(_)
+        | Ty::MonthDay
+        | Ty::Record(_)
+        | Ty::List(_)
+        | Ty::Tuple(_)
+        | Ty::KeyList
+        | Ty::UnitKey
+        | Ty::Unseen
+        | Ty::None
+        | Ty::Hole
+        | Ty::Never
+        | Ty::KindName => Err(Stop::NotBuilt(
+            "a sum over no keys of a type load's checker doesn't work out",
+        )),
+    }
 }
 
 /// Two unknown-member holes as one.

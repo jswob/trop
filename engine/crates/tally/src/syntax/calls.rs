@@ -13,8 +13,8 @@ use super::lex::{Kind, Read};
 use super::parse::{P, Stop};
 use super::reads::{dist_kind, query_fn};
 use super::tree::{
-    Agg, AggFn, Bal, Calendar, CalendarDay, Call, DistFnKind, Expr, Flows, Lit, Price, Proj,
-    Valuation,
+    Agg, AggFn, Bal, Calendar, CalendarDay, Call, DistFnKind, Expr, Flows, Lit, LoadType, Price,
+    Proj, Valuation,
 };
 use crate::time::Day;
 
@@ -318,6 +318,7 @@ impl P<'_> {
             term,
             binds,
             ties,
+            ty: LoadType::default(),
         })))
     }
 

@@ -79,11 +79,11 @@ pub mod syntax {
         Call, Certainty, CmpOp, Crps, Def, Diff, Dist, DistFn, DistFnKind, DistKind, Domain, Edge,
         Enter, Expr, Field, FieldValue, File, Fill, FillLines, Flows, Gap, Governs, Header,
         HeaderKind, In, Index, IndexForm, IndexFrom, Input, InputForm, Instant, Interval, Item,
-        ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, Move, MoveLines, MulOp,
-        Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix, Price,
-        Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule, RuleValue,
-        Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type, TypedInput, Unit,
-        UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
+        ItemForm, Key, KindDecl, KindSpec, LSpan, LawDate, Leg, Lit, LoadType, Move, MoveLines,
+        MulOp, Number, OfQ, OfRow, Order, Orient, PRef, PartsClause, Pin, PinForm, Place, Postfix,
+        Price, Proj, Prorata, Query, QueryFn, RChoice, Residuals, Rest, Row, RowKey, Rule,
+        RuleValue, Section, Sign, Site, SiteKey, Solve, Source, Span, Step, Takes, Type,
+        TypedInput, Unit, UnitDecl, UnitForm, UnitTerm, Valuation, Value, Version,
     };
 }
 
@@ -135,7 +135,7 @@ pub mod model {
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
     pub use value::{
         Class, Code, MvRef, MvSrc, Number, ReadOf, Value, Window, currency, currency_id,
-        currency_unit, money_num, num_money,
+        currency_unit, money_num, num_money, num_money_part,
     };
     pub use world::{Scenarios, World};
 }

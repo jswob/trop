@@ -82,7 +82,7 @@ pub(crate) fn bound_text(e: &Expr, bound: &Bound) -> String {
         Expr::Or(terms) => joined(terms, "or", bound),
         Expr::And(terms) => joined(terms, "and", bound),
         Expr::Cmp(cmp) => format!("{} {} {}", t(&cmp.0), cmp_sign(cmp.1), t(&cmp.2)),
-        Expr::If(parts) => {
+        Expr::If(parts, _) => {
             let [cond, then, other] = parts.as_ref();
             format!("if {} then {} else {}", t(cond), t(then), t(other))
         }
@@ -337,7 +337,7 @@ pub(super) fn covered_spans(e: Option<&Expr>, out: &mut std::collections::BTreeS
 pub(crate) fn children(e: &Expr) -> Vec<&Expr> {
     let mut out = Vec::new();
     match e {
-        Expr::If(parts) => out.extend(parts.iter()),
+        Expr::If(parts, _) => out.extend(parts.iter()),
         Expr::Or(terms) | Expr::And(terms) => out.extend(terms.iter()),
         Expr::Not(inner)
         | Expr::Neg(inner)

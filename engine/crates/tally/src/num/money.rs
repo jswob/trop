@@ -1,7 +1,8 @@
-//! Money: a whole number of a currency's minor units, held in 64 bits or big.
+//! Money: a number of a currency's minor units, whole but at `solve`'s centre, in 64 bits or big.
 //! Spec: L §3.1 (`money CUR`), §5.4 (a currency's minor unit), §7.1, §7.2 (back to money).
 //! Twin: engine/tools/refcore/values.py (`Num` with `money`, `Money`).
-//! Invariants: always the smallest tier that fits; two amounts meet only in one currency
+//! Invariants: always the smallest tier that fits, a whole number never a `Part`; only
+//! `to_money_part` makes a `Part` (`solve`'s centre, L §5.18 step 3); two amounts meet only in one currency
 //! (a mismatch is an invariant break, since load checks units); the cap is the value's, its
 //! reduced fraction's digits, never the minor units' (L §7.1); no operator, `Default`, `Sum`
 //! or `From`, so the way from a number to money is a `round` (R-28).
@@ -28,16 +29,21 @@ impl Currency {
     }
 }
 
-/// A whole number of minor units: one machine word, or big when it doesn't fit (K8-3).
+/// A number of minor units: a whole one in a machine word, or big when it doesn't fit (K8-3);
+/// or, at `solve`'s centre alone, a fraction of one (L §5.18 step 3; pick P36).
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Units {
     /// Fits an `i64` (never `i64::MIN`, so its negation fits too).
     Word(i64),
     /// Too large for a word.
     Big(Box<Big>),
+    /// Not a whole number: money that holds a fraction of its minor unit, as `solve`'s
+    /// centre a + u/2 does, its value under the cap (L §5.18 step 3, §7.1).
+    Part(Box<Num>),
 }
 
-/// An amount of money: a whole number of minor units of one currency (L §3.1).
+/// An amount of money: a number of minor units of one currency, whole but at `solve`'s centre
+/// (L §3.1, §5.18 step 3).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Money {
     /// The minor units.
@@ -65,6 +71,7 @@ impl Money {
         match &self.units {
             Units::Word(v) => *v == 0,
             Units::Big(b) => b.is_zero(),
+            Units::Part(_) => false,
         }
     }
 
@@ -73,6 +80,7 @@ impl Money {
         match &self.units {
             Units::Word(v) => *v < 0,
             Units::Big(b) => b.is_negative(),
+            Units::Part(q) => q.is_negative(),
         }
     }
 
@@ -80,6 +88,10 @@ impl Money {
     /// no gcd (D2-2), the cap counted on the sum's value. L §7.1.
     pub fn checked_add(&self, o: &Money, minor: &Num) -> Result<Money, NumError> {
         let cur = self.same_currency(o)?;
+        if matches!(self.units, Units::Part(_)) || matches!(o.units, Units::Part(_)) {
+            let sum = self.minor_units().checked_add(&o.minor_units())?;
+            return sum.checked_mul(minor)?.to_money_part(minor, cur);
+        }
         if let (Units::Word(a), Units::Word(b)) = (&self.units, &o.units) {
             let sum = i128::from(*a)
                 .checked_add(i128::from(*b))
@@ -89,7 +101,7 @@ impl Money {
                 cur,
             });
         }
-        Money::from_big(self.units.to_big().add(&o.units.to_big())?, cur, minor)
+        Money::from_big(self.units.to_big()?.add(&o.units.to_big()?)?, cur, minor)
     }
 
     /// `self - o`, in a currency whose minor unit is `minor`. L §7.1.
@@ -105,6 +117,10 @@ impl Money {
                 cur: self.cur,
             }),
             Units::Big(b) => Ok(Money::held(b.neg()?, self.cur)),
+            Units::Part(q) => Ok(Money {
+                units: Units::Part(Box::new(q.checked_neg()?)),
+                cur: self.cur,
+            }),
         }
     }
 
@@ -112,9 +128,12 @@ impl Money {
     pub fn compare(&self, o: &Money) -> Result<Ordering, NumError> {
         self.same_currency(o)?;
         match (&self.units, &o.units) {
+            (Units::Part(_), _) | (_, Units::Part(_)) => {
+                self.minor_units().compare(&o.minor_units())
+            }
             (Units::Word(a), Units::Word(b)) => Ok(a.cmp(b)),
             (Units::Word(_) | Units::Big(_), Units::Big(_)) | (Units::Big(_), Units::Word(_)) => {
-                Ok(self.units.to_big().order(&o.units.to_big()))
+                Ok(self.units.to_big()?.order(&o.units.to_big()?))
             }
         }
     }
@@ -125,11 +144,12 @@ impl Money {
         self.minor_units().checked_mul(minor)
     }
 
-    /// The minor units as a whole number. L §3.1.
+    /// The minor units: a whole number, but at `solve`'s centre. L §3.1, §5.18 step 3.
     pub fn minor_units(&self) -> Num {
         match &self.units {
             Units::Word(v) => Num::int(*v),
             Units::Big(b) => Num(Repr::Big(Box::new(BigRat::integer(Big::clone(b))))),
+            Units::Part(q) => Num::clone(q),
         }
     }
 
@@ -171,11 +191,13 @@ impl Units {
         }
     }
 
-    /// The units as a big integer. L §3.1.
-    fn to_big(&self) -> Big {
+    /// The whole units as a big integer; a `Part`, which isn't whole, is an invariant break
+    /// here, since its callers take it first. L §3.1.
+    fn to_big(&self) -> Result<Big, NumError> {
         match self {
-            Units::Word(v) => Big::from_i128(i128::from(*v)),
-            Units::Big(b) => Big::clone(b),
+            Units::Word(v) => Ok(Big::from_i128(i128::from(*v))),
+            Units::Big(b) => Ok(Big::clone(b)),
+            Units::Part(_) => Err(NumError::Invariant),
         }
     }
 }
@@ -228,6 +250,23 @@ impl Num {
             return Err(NumError::Domain);
         }
         Ok(Money::held(units.numer().clone(), cur))
+    }
+
+    /// The value `self` as money of `cur`, whose minor unit is `minor`, exactly: whole minor
+    /// units as `to_money_in` gives them, else a `Part` holding the fraction of one. Only
+    /// `solve`'s centre a + u/2 takes a value off the minor grid (L §5.18 step 3; pick P36).
+    ///
+    /// # Errors
+    ///
+    /// A number error of the division.
+    pub fn to_money_part(&self, minor: &Num, cur: Currency) -> Result<Money, NumError> {
+        match self.to_money_in(minor, cur) {
+            Err(NumError::Domain) => Ok(Money {
+                units: Units::Part(Box::new(self.checked_div(minor)?)),
+                cur,
+            }),
+            money => money,
+        }
     }
 
     /// Whether the value `self` is a whole number of minor units `minor`, those units counted
@@ -340,6 +379,52 @@ mod tests {
             most.checked_add(&most, &grosz()),
             Err(NumError::Digits),
             "1.8e4096 PLN: 4 097 digits"
+        );
+    }
+
+    #[test]
+    fn solves_centre_holds_part_of_a_minor_unit() {
+        // L §5.18 step 3: the centre a + u/2 of 1.04 and 1.05 PLN is 1.045 PLN, exactly
+        let half = Num::parse_decimal("1.045").expect("1.045");
+        let centre = half.to_money_part(&grosz(), PLN).expect("a part");
+        assert!(matches!(centre.units, Units::Part(_)), "a part of a grosz");
+        assert!(!centre.is_zero(), "not 0");
+        assert!(!centre.is_negative(), "not below 0");
+        assert_eq!(centre.to_num(&grosz()), Ok(half.clone()), "1.045 back");
+        assert_eq!(
+            centre.to_text(&grosz()).expect("text"),
+            "1.045",
+            "printed exactly"
+        );
+        let tax = Money::from_minor(19, PLN);
+        let net = centre.checked_sub(&tax, &grosz()).expect("net");
+        assert_eq!(
+            net.to_num(&grosz()),
+            Ok(Num::parse_decimal("0.855").expect("0.855")),
+            "1.045 - 0.19"
+        );
+        assert_eq!(
+            net.compare(&tax).expect("cmp"),
+            Ordering::Greater,
+            "0.855 > 0.19"
+        );
+        assert_eq!(
+            tax.compare(&net).expect("cmp"),
+            Ordering::Less,
+            "0.19 < 0.855"
+        );
+        let back = centre.checked_add(&centre, &grosz()).expect("2.09");
+        assert_eq!(
+            back,
+            Money::from_minor(209, PLN),
+            "whole again: a word, not a part"
+        );
+        let neg = centre.checked_neg().expect("neg");
+        assert!(neg.is_negative(), "-1.045 is below 0");
+        assert_eq!(
+            Num::int(2).to_money_part(&grosz(), PLN),
+            Ok(Money::from_minor(200, PLN)),
+            "a whole value is never a part"
         );
     }
 

@@ -332,9 +332,22 @@ def selection(env):
     """The nextest arguments for a mutation run: the runner's default targets and every gating
     milestone's but the marker's `mutants_leave_out` (`--tests` can't be used: it leaves out
     every target with test = false), with the runner's features those targets require
-    (M1's m1_invariant: fault-injection), or cargo would refuse them (issue #108, R2)."""
+    (M1's m1_invariant: fault-injection), or cargo would refuse them (issue #108, R2). A
+    runner target the marker's `fence_catchers` names (F7's m4_narrow) is a fence's
+    equivalence suite, a local batch's catcher only, so it is left out of the defaults
+    too: gate 8's baseline, coverage map and shards never run it (R-84, R-88; M4's gate,
+    issue #252, where its c1_r2 test passed the baseline's 120 s)."""
     milestones, gating, leave_out = marker()
     defaults, by_milestone = targets(env, milestones)
+    try:
+        with open(MARKER, "rb") as f:
+            listed = "fence_catchers" in tomllib.load(f)
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
+    # a marker with no fence_catchers (mutants-local --fences's) leaves nothing out here
+    catchers = fence_catchers(env) if listed else []
+    fences = {f"--test={t}" for p, t, _ in catchers if p == RUNNER and t is not None}
+    defaults = [d for d in defaults if d not in fences]
     gated = [t for m in gating for t in by_milestone[m]]
     for t in leave_out:
         if t not in gated:

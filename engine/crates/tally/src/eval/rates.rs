@@ -136,7 +136,7 @@ fn arity() -> Stop {
 
 /// `accrue`'s principal as a number with its unit: money in its currency's unit, a number
 /// in its own, an int in none (refcore's `args[0].u`). L §3.3.
-fn principal_of(m: &Reality, p: &Value) -> Result<(Num, Unit), Stop> {
+pub(super) fn principal_of(m: &Reality, p: &Value) -> Result<(Num, Unit), Stop> {
     if let Value::Money(money) = p {
         return Ok((
             money_num(m, money).map_err(num_stop)?,
