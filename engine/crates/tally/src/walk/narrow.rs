@@ -86,6 +86,15 @@ pub(crate) enum Narrows {
     Always,
 }
 
+/// What a move's kept tuples at a cut give for some keys (P8-L10; [`Engine::kept_tuple`]).
+#[derive(Debug)]
+pub(super) enum KeptTuple {
+    /// None kept: `Plans::Whole`, or a decision; the reader makes its own.
+    Own,
+    /// The tuple at the keys, or none, and whether a tuple stops the move's list.
+    Kept(Option<Box<Tuple>>, bool),
+}
+
 /// What reading a tuple's day at the cut gave, before its body (L §5.14, E §4.1 step 2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Probe {
@@ -211,25 +220,9 @@ impl Engine {
     /// `RUN-CYCLE` for a move that reads its own instances; the stops of the tuples, as the
     /// list meets them; as [`Engine::obs_links_for`].
     fn narrowed(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<bool, Stop> {
+        self.plan_open(mv, cut)?;
         let key = (mv.id.clone(), cut);
-        if !self.prefixes.narrow.contains_key(&key) {
-            let tuples = self.plan_tuples(m, mv, cut)?;
-            let mut by_id: BTreeMap<String, Vec<usize>> = BTreeMap::new();
-            for (at, tuple) in tuples.iter().enumerate() {
-                let id = crate::book::inst_id(&mv.id, &tuple.keys);
-                by_id.entry(id).or_insert_with(Vec::new).push(at);
-            }
-            let whole = tuples
-                .iter()
-                .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len());
-            let entry = Narrowed {
-                tuples,
-                by_id,
-                whole,
-                ..Narrowed::default()
-            };
-            self.prefixes.narrow.insert(key.clone(), entry);
-        }
+        self.keep_tuples(m, mv, cut)?;
         let Some(entry) = self.prefixes.narrow.get(&key) else {
             return Err(invariant("a narrow read's tuples just kept"));
         };
@@ -240,6 +233,82 @@ impl Engine {
             self.judge_named(m, mv, cut)?;
         }
         Ok(true)
+    }
+
+    /// The tuple of plan move `mv` at keys `keys` under cut `cut`, as `move_tuples` gives it
+    /// there, from the move's tuples at that cut made once and kept, with whether one of them
+    /// is refused with its later keys unbound, which stops the move's list; a decision's, and
+    /// any under `Plans::Whole`, its reader makes (the twin: `link_tuple`'s and
+    /// `linked_instance`'s own). E §4.1 step 1, L §5.19 Links; P8-L10.
+    ///
+    /// # Errors
+    ///
+    /// The stops of the tuples, as `move_tuples` meets them.
+    pub(super) fn kept_tuple(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        keys: &[KeyVal],
+        cut: Day,
+    ) -> Result<KeptTuple, Stop> {
+        if self.plan_reads == Plans::Whole || mv.decision {
+            return Ok(KeptTuple::Own);
+        }
+        self.keep_tuples(m, mv, cut)?;
+        let Some(entry) = self.prefixes.narrow.get(&(mv.id.clone(), cut)) else {
+            return Err(invariant("a narrow read's tuples just kept"));
+        };
+        let places: &[usize] = entry
+            .by_id
+            .get(&crate::book::inst_id(&mv.id, keys))
+            .map_or(&[], Vec::as_slice);
+        let mut found = None;
+        for at in places {
+            if let Some(tuple) = entry.tuples.get(*at)
+                && tuple.keys == keys
+            {
+                found = Some(Box::new(tuple.clone()));
+                break;
+            }
+        }
+        Ok(KeptTuple::Kept(found, entry.whole))
+    }
+
+    /// Move `mv`'s binding tuples at cut `cut` made once and kept: under the move, their reads
+    /// the plan's, with no plan guard, since a link judged while the move's list is made takes
+    /// them too (each caller checks the guard where its twin does). E §4.1 step 1, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// The stops of the tuples, as `move_tuples` meets them; none is kept then.
+    fn keep_tuples(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+        let key = (mv.id.clone(), cut);
+        if self.prefixes.narrow.contains_key(&key) {
+            return Ok(());
+        }
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let mark = self.reads_apart();
+        let tctx = self.timeline_ctx(None, cut);
+        let made = self.move_tuples(m, mv, tctx);
+        self.reads_back(mark);
+        self.holder = outer;
+        let tuples = made?;
+        let mut by_id: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+        for (at, tuple) in tuples.iter().enumerate() {
+            let id = crate::book::inst_id(&mv.id, &tuple.keys);
+            by_id.entry(id).or_insert_with(Vec::new).push(at);
+        }
+        let whole = tuples
+            .iter()
+            .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len());
+        let entry = Narrowed {
+            tuples,
+            by_id,
+            whole,
+            ..Narrowed::default()
+        };
+        self.prefixes.narrow.insert(key, entry);
+        Ok(())
     }
 
     /// The links of every instance of move `mv` an observation at cut `cut` names, each
@@ -453,15 +522,25 @@ impl Engine {
     ///
     /// `RUN-CYCLE` where it already is.
     pub(super) fn enter_plan(&mut self, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
-        let key = (mv.id.clone(), cut);
-        if self.plan_active.contains(&key) {
+        self.plan_open(mv, cut)?;
+        self.plan_active.insert((mv.id.clone(), cut));
+        Ok(())
+    }
+
+    /// Move `mv`'s plan at cut `cut` not in progress, as a read of its list asks (refcore's
+    /// `move_instances`, its guard). L §5.11, E §4.1.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-CYCLE` where it is: a move that reads its own instances.
+    pub(super) fn plan_open(&mut self, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+        if self.plan_active.contains(&(mv.id.clone(), cut)) {
             self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Cycle),
                 format!("{} reads its own instances", mv.id),
             )));
         }
-        self.plan_active.insert(key);
         Ok(())
     }
 }

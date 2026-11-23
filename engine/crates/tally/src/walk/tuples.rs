@@ -20,6 +20,7 @@
 //! with every key bound never leaves with it unread.
 
 use super::instance::{Dated, Exists, Inst, join};
+use super::narrow::KeptTuple;
 use super::plan::{day_dated, invariant, refuse};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Kept, Member, reads_var};
@@ -286,31 +287,36 @@ impl Engine {
         cut: Day,
     ) -> Result<Option<Env>, Stop> {
         let tctx = self.timeline_ctx(None, cut);
-        for tuple in self.move_tuples(m, mv, tctx)? {
-            if tuple.keys != keys {
-                continue;
-            }
-            if tuple.exists == Exists::No {
-                return Ok(None);
-            }
-            if let (Some(when), Exists::Yes, None, None) = (
-                &mv.decl.when,
-                &tuple.exists,
-                &tuple.domain_hole,
-                &tuple.refused,
-            ) {
-                match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
-                    Ok(false) => return Ok(None),
-                    Ok(true) => {}
-                    // a cycle is never taken as existing: the link would stand unjudged
-                    Err(Stop::Refused(r))
-                        if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
-                    Err(stop) => return Err(stop),
-                }
-            }
-            return Ok(Some(tuple.env));
+        // the move's tuples at the cut, kept once for every link and read there (fence F7)
+        let found = match self.kept_tuple(m, mv, keys, cut)? {
+            KeptTuple::Kept(found, _) => found.map(|t| *t),
+            KeptTuple::Own => self
+                .move_tuples(m, mv, tctx)?
+                .into_iter()
+                .find(|t| t.keys == keys),
+        };
+        let Some(tuple) = found else {
+            return Ok(None);
+        };
+        if tuple.exists == Exists::No {
+            return Ok(None);
         }
-        Ok(None)
+        if let (Some(when), Exists::Yes, None, None) = (
+            &mv.decl.when,
+            &tuple.exists,
+            &tuple.domain_hole,
+            &tuple.refused,
+        ) {
+            match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
+                Ok(false) => return Ok(None),
+                Ok(true) => {}
+                // a cycle is never taken as existing: the link would stand unjudged
+                Err(Stop::Refused(r))
+                    if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
+                Err(stop) => return Err(stop),
+            }
+        }
+        Ok(Some(tuple.env))
     }
 
     /// What `o.fulfils` names at keys `keys` of move `mv` under cut `cut`: the instance the
@@ -333,12 +339,20 @@ impl Engine {
         cut: Day,
     ) -> Result<Option<MvRef>, Stop> {
         if !mv.decision {
-            let tuples = self.plan_tuples(m, mv, cut)?;
-            if !tuples
-                .iter()
-                .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len())
-            {
-                let Some(tuple) = tuples.into_iter().find(|t| t.keys == keys) else {
+            // the move's tuples at the cut, kept once for every link and read there (fence F7)
+            self.plan_open(mv, cut)?;
+            let (found, stops) = match self.kept_tuple(m, mv, keys, cut)? {
+                KeptTuple::Kept(found, stops) => (found.map(|t| *t), stops),
+                KeptTuple::Own => {
+                    let tuples = self.plan_tuples(m, mv, cut)?;
+                    let stops = tuples
+                        .iter()
+                        .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len());
+                    (tuples.into_iter().find(|t| t.keys == keys), stops)
+                }
+            };
+            if !stops {
+                let Some(tuple) = found else {
                     return Ok(None);
                 };
                 if tuple.refused.is_none() {

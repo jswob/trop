@@ -7565,3 +7565,44 @@ What making them meets:
 - *`Plans::Whole`:* every caller makes its own, as now.
 
 So no STOP-REPORT at step 0. *Judged:* b1 makes one plan's tuples per (move, cut) for its link, its `o.fulfils` and its narrow `flows`; they're made once now. No figure until the measures.
+
+### Site (i): built, and what the profile says it can save
+
+- **Built** (`walk/narrow.rs`):
+  - `kept_tuple` and `keep_tuples` keep a move's tuples per (move, cut), made with no plan guard; `link_tuple` and `linked_instance` take that set under `Plans::Narrow` and make their own under `Whole`, as before.
+  - `narrowed` checks the plan guard on every call (`plan_open`), as the twin's list does.
+  - `check quick` and `check fences` are green, and b1's bytes are G6c's.
+- **The profile** (quick binary, b1 at 2030, `tmp/m4/g6c/prof_i1.*`, `callees.py`):
+  - The link's tuples are now 0.6 % of the run (`obs_links_for → kept_tuple → keep_tuples`).
+  - The STOP-REPORT's attribution was wrong: of `obs_links_for`'s 21.9 %, 18.1 % is the link's `when` (`ev → read_def_at → def_cell → round`: a def such as `vat_due[m]` or `fee_net[c, m]`, read at each cut), not its tuples.
+  - Site (i) can't touch that cost: it is each cut's own evaluation, the kind cut classes collapse (P §3.2).
+- **B1's bound has a cost** (curve runs, quick binary, under my `memcap.py` at 8 GB, pid 41369):
+
+  | Point | With the bound | Bound off (a throwaway build, not committed) | G6c (00143f5a) |
+  | --- | --- | --- | --- |
+  | b1 at 2030 | 125.49 G, 9.15 s, 969 MB | 105.03 G, 7.18 s, 858 MB | 105.36 G |
+  | `v1` at 2030 | 42.12 G, 2.97 s, 402 MB | 34.65 G, 2.42 s, 369 MB | 34.95 G |
+
+  - The bytes are the same in all three.
+  - b1's linked rows are known on 2026-10-02 and K is 2027-01-20. From that day on, every move whose cone reaches a linked plan is read whole.
+  - The linked plans' `when`s read defs, so their link reads are never empty; no static narrowing of the bound would save these cuts.
+  - So X1 and site (i) together move b1 by under 1 %, and B1 adds 19.5 %.
+
+### Site (ii): step 0, before its code
+
+*Checked in the code.* `settled_move` → `adjust_move` (kept per (move, cut, upto), inside `reads_apart`, guarded by `adjust_active`) → `measure_move` → `plan_list` → the whole list at the cut.
+- `measure_move` keeps only two kinds of instance: one whose status is Past, Hole or None and whose day is a day before the cut, and one whose day is a hole (`measure_hole_day`).
+- Every instance dated on the cut or later is skipped (`t >= cut`), whatever its body gives. The bodies the whole list evaluates for those instances, to the horizon, are the cost: 19.2 % at 2030.
+
+*The narrow form* (`narrow.rs` `measured_list`, twin `plan_list`) runs under F7's conditions (`may_narrow`: the cone, the link bound, a plan, a cut before K, nothing traced, no whole list kept) and only with no walk up to a day (`list_upto` none).
+- Each tuple's day is read at the cut, as the narrow `flows` read reads it.
+- A day on the cut or later, `never` or `none`: skipped.
+- Anything else (a day before the cut, a hole, a window, a refusal, a refused or hole tuple, a `same` class): the instance by the list's own step (`narrow_inst`), with the list's status, in the list's order.
+
+Each kind of difference from the twin:
+- *Stops in a skipped body:* the skipped instances are of the kind F7's step 0 ruled on (the list's at a past cut, bodies at that cut), so its rulings hold unchanged: ruled out by the cone, or declined.
+- *First readers:* the link bound (B1). `narrowed` judges the links once, into the current reader, which is the reader the whole list's status loop gives them to here (`adjust_move` pushes no collector of its own). `links_judged` keeps a whole list made later from taking them again.
+- *Hole bookings:* a taken instance that is a hole booking before the cut is declined (`plan_list`), as the narrow `flows` read declines, so `answer_hole_bookings` runs as in the twin. A skipped instance is dated on the cut or later, so it is never a hole booking before the cut.
+- *`measure_inst`:* it reads each kept instance again at each known date after its day, from the instance as given, so it is the same either way.
+
+So no STOP-REPORT at step 0. *Judged:* at b1's cuts before 2026-10-02, a move's adjustments are measured over its 2026 instances rather than those to 2059.
