@@ -225,6 +225,57 @@ impl Engine {
         }
     }
 
+    /// Under a traced read, plan move `mv`'s `when` at its tuple at `keys`, read again at cut
+    /// `cut` and its law date, traced and kept nowhere: what a link's verdict that the instance
+    /// it names exists rests on, read where a binding judges the link (refcore's `link_tuple`;
+    /// L §5.19 Links, §8.2 One read set; E §10; P31).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run; as [`Engine::move_tuples`].
+    pub(crate) fn trace_link_when(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        keys: &[KeyVal],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        let Some(when) = &mv.decl.when else {
+            return Ok(());
+        };
+        if mv.decision || !self.tracing() {
+            return Ok(());
+        }
+        let before = self.trace_walked();
+        let tuples = self.plan_tuples(m, mv, cut);
+        self.trace_walked_back(before);
+        let Some(tuple) = tuples?
+            .into_iter()
+            .find(|t| t.keys == keys && t.refused.is_none() && t.domain_hole.is_none())
+        else {
+            return Ok(());
+        };
+        let tctx = self.timeline_ctx(None, cut);
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.push();
+        self.trace_plan_open();
+        let read = match self.move_law(m, mv, &tuple.env, tctx) {
+            Ok(Law::Hole(_)) => Ok(Value::None),
+            Ok(law) => self.ev(m, when, &tuple.env, tctx.at_law(law.day())),
+            Err(stop) => Err(stop),
+        };
+        let closed = self.trace_plan_close();
+        self.pop_alone();
+        self.holder = outer;
+        self.trace_walked_back(before);
+        closed?;
+        match read {
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
+            Ok(_) | Err(Stop::Refused(_)) => Ok(()),
+            Err(stop) => Err(stop),
+        }
+    }
+
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
     /// not yet bound, by the same walk load marks the keys by (`reads_var`; refcore's
     /// `move_law` counts any variable, an aggregate's own too). L §4.3, §5.14.
@@ -443,13 +494,28 @@ impl Engine {
             return Ok(Some(crate::book::inst_ref(&inst)));
         }
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
-        let mark = self.reads_apart();
+        // the day an existence read takes is an ordinary read: a traced read prints its rows,
+        // in a read set of its own, as the plan pass's (L §5.19, §8.2; E §10; P30, P31)
+        let traced = self.tracing();
+        let mark = if traced {
+            self.trace_plan_open();
+            None
+        } else {
+            Some(self.reads_apart())
+        };
         let tctx = self.timeline_ctx(None, cut);
         self.push();
         let read = self.law_and_day(m, mv, &mut inst, tctx);
         self.pop_alone();
-        self.reads_back(mark);
+        let closed = match mark {
+            Some(mark) => {
+                self.reads_back(mark);
+                Ok(())
+            }
+            None => self.trace_plan_close().map(|_| ()),
+        };
         self.holder = outer;
+        closed?;
         let dated = match read {
             Ok(Ok(Value::Never | Value::None)) => return Ok(None),
             Ok(Ok(v)) => day_dated(m, v, &inst.id),

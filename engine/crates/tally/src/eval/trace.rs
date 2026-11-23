@@ -573,6 +573,29 @@ impl Engine {
         trace.added(node);
     }
 
+    /// Opens the node of a written projection `read` from day `start` the walk refused, `r`,
+    /// under the open node, for what the refused balance rests on to print under it; returns
+    /// it, for [`Engine::trace_closed`] (L §8.2; E §10; P31).
+    pub(crate) fn trace_refused_balance(
+        &mut self,
+        read: Balance,
+        start: &str,
+        r: &crate::base::Refusal,
+    ) -> Option<usize> {
+        let trace = self.traced()?;
+        let label = format!("bal({}, {}) from {start}", read.place, read.day.text());
+        let mut node = Node::new(Kind::Balance(read), label);
+        node.value = Some(Item::Refused(r.clone()));
+        let at = trace.added(node)?;
+        trace.open.push(at);
+        Some(at)
+    }
+
+    /// Closes the node at `at`, opened last by a read outside this module.
+    pub(crate) fn trace_closed(&mut self, at: Option<usize>) {
+        self.trace_close(at);
+    }
+
     /// Whether a read now is traced and the trace has met def cell `key` at law date `law`,
     /// with its node, or met it under a term an extreme's explanation dropped.
     pub(super) fn trace_seen(&self, key: &CellKey, law: Option<Day>) -> Seen {

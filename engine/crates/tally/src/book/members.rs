@@ -342,6 +342,14 @@ impl Engine {
                 let before = self.trace_walked();
                 let target = self.obs_target(m, o, ctx.cut);
                 self.trace_walked_back(before);
+                // the verdict that its link names an instance rests on that instance's `when`,
+                // printed where the binding judges it (refcore's `link_tuple`; P31)
+                if let Some(Fulfils::Instance(mid, keys)) = &o.fulfils
+                    && let Some(mv) = m.moves.get(mid)
+                    && ctx.at.is_none()
+                {
+                    self.trace_link_when(m, mv, keys, ctx.cut)?;
+                }
                 if let Some(t) = target? {
                     fulfilled.insert(t);
                 }
