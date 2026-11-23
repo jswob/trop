@@ -129,6 +129,70 @@ impl Engine {
         self.move_instances(m, mv, cut)
     }
 
+    /// The instances of plan move `mv` at cut `cut` the measure of its adjustments takes, in
+    /// the list's order: at a past cut only those dated before it or whose day is a hole, a
+    /// window or a refusal, each as the list gives it, the others' bodies never evaluated,
+    /// since the measure skips every instance dated on the cut or later whatever its body
+    /// gives; else, and for a walk up to a day, `plan_list`'s (the twin). E §5 steps 1–4,
+    /// E §4.1; P8-L10.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::plan_list`].
+    pub(crate) fn measured_list(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
+        if self.list_upto(mv, cut).is_none()
+            && let Some(insts) = self.narrow_measured(m, mv, cut)?
+        {
+            return Ok(Rc::new(insts));
+        }
+        self.plan_list(m, mv, cut)
+    }
+
+    /// The instances a measure takes read narrowly (see [`Engine::measured_list`]), or none
+    /// where the read is declined: also where one it takes is a hole booking before the cut,
+    /// which a later version answers over the whole list. E §5 steps 1–4, §4.1.
+    fn narrow_measured(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Option<Vec<Inst>>, Stop> {
+        if !self.may_narrow(m, mv, cut)? || !self.narrowed(m, mv, cut)? {
+            return Ok(None);
+        }
+        let groups = self.same_groups(m, cut)?;
+        let mut out = Vec::new();
+        for at in self.tuples_from(mv, cut, &[]) {
+            let Some((plain, id)) = self.tuple_plain(mv, cut, at) else {
+                return Err(invariant("a narrow read's tuple past its tuples"));
+            };
+            let day = if plain && !groups.contains_key(&id) {
+                self.narrow_day(m, mv, cut, at)?
+            } else {
+                Probe::Taken
+            };
+            match day {
+                Probe::Gone => continue,
+                Probe::Day(d, _) if d >= cut => continue,
+                Probe::Day(..) | Probe::Taken => {}
+            }
+            let Some(inst) = self.narrow_inst(m, mv, cut, at)? else {
+                continue;
+            };
+            if crate::book::hole_booked_before(&inst, cut) {
+                return Ok(None);
+            }
+            out.push(inst);
+        }
+        out.sort_by(|a, b| a.order.cmp(&b.order));
+        Ok(Some(out))
+    }
+
     /// Whether a read of move `mv` at cut `cut` may be narrow: F7 on, a plan, a cut before
     /// the ask's, no ask traced or listing its inputs, no whole list kept at that cut, a cone
     /// that can't reach the move's own plan, and a cut before the first day a link to an

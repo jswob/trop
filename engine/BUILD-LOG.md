@@ -7606,3 +7606,38 @@ Each kind of difference from the twin:
 - *`measure_inst`:* it reads each kept instance again at each known date after its day, from the instance as given, so it is the same either way.
 
 So no STOP-REPORT at step 0. *Judged:* at b1's cuts before 2026-10-02, a move's adjustments are measured over its 2026 instances rather than those to 2059.
+
+### Site (ii): built, and what it gave
+
+- **Built:** `walk/narrow.rs` `measured_list` and `narrow_measured` (twin `plan_list`); `book/adjust.rs` `measure_move` takes `measured_list`. `check quick` and `check fences` are green.
+- **Measured** (curve runs at 2030, quick binary, under my `memcap.py`; bytes G6c's):
+  - b1: 125.49 G → 87.07 G (−31 %), 9.15 s → 5.96 s, 969 MB → 705 MB.
+  - `v1`: 42.12 G → 14.44 G (−66 %), 2.97 s → 0.97 s, 402 MB → 201 MB.
+  - `c1_r2` (`perf row --quick`): 118.65 G → 112.87 G, 8.66 s → 8.04 s.
+
+### Site (iii): step 0, before its code
+
+*Checked in the code.* `walk/lows.rs` `common_low` → `tree_at(c = min(t, K))` → `build_tree` → `move_instances` of every move in the world: the whole lists at the projection's cut, bodies to the horizon (21.2 % at 2030 before site (ii)). The tree is kept per (place, unit, left-out moves) at its cut. A read from t over the days `first` through `last` takes from it:
+- `lowest_change` and `register`: positions up to `last` only (`through(last)`);
+- `common`'s `acts` and `runs`: up to `last` only;
+- `common`'s `later`, the days of hole and refused movements that reach x: **from t on, past `last` too**;
+- `open`: a hole or a refusal with no day, a sign rule;
+- `adds`: the cap's bound over every leg the cut books;
+- `left_out`: the moves with instances outside the run [S, E], all of them;
+- `counted`: a left-out move's instance days, filtered to the window by `left_out_lines`.
+
+*The narrow form* (`narrow.rs` `window_list`, twin `move_instances`) runs under F7's conditions (`may_narrow`, then `narrowed`, which judges the links into the tree's own collector, which `tree_at` drops, as the whole list's status loop gives them there when the tree is the list's first reader).
+- Each tuple's day is read at the cut.
+- A plain tuple whose day is after the read's `last` and inside the run (on or before E): skipped, its body never evaluated.
+- Every other tuple: the instance by the list's own step (`narrow_inst`). That covers a day on or before `last`, a day outside the run (kept for `left_out`'s count), a hole, a window, a refusal, and a refused, hole or `same`-class tuple.
+- A taken instance that is a hole booking before the cut: declined (the whole list), as sites (ii) and F7 decline.
+- The tree keeps the last day it reaches (`reach`; none for one built of whole lists only), and a read with a later `last` at that cut builds it again.
+
+Each kind of difference from the twin:
+- *Stops and first readers in a skipped body:* F7's step 0 and the link bound, unchanged.
+- *What a skipped instance would have put in the tree:* positions, acts and `counted` days after `last` (no read looks there); a `later` day after `last`; legs in `adds`.
+  - So the narrow tree can call a read common where the whole tree sends it to the walk: a hole or refused movement after the window, or a cap bound only legs after the window break.
+  - *Judged, not proved:* the projection's walk gives the same answer there. refcore's `proj_bal` walks to d (`run_to(d)`), reads the state at the end of d, and lists left-out instances in [t, d] (`proj_regs`), so nothing dated after the window reaches the read. Where the tree answers, F5's invariant is that it gives the walk's value and register. F5's own check, `walk_oracle` (Tree against Walk over the kernel and M1 corpora, in `check fences`), runs with F7 on, so it reads this tree against the walk.
+- *Left out of the run:* instances outside [S, E] are kept, so `left_out`'s counts and first days are the twin's.
+
+So no STOP-REPORT at step 0; the one judgement is above.
