@@ -11,8 +11,9 @@
 //! changes no value and no line's register.
 
 use super::instance::{Dated, Exists, Inst, LegVal, join};
-use super::order::{Run as Ran, WalkAt};
+use super::order::{Run as Ran, Tested, WalkAt};
 use super::plan::{invariant, refuse, refuse_load, shown};
+use super::point::At;
 use super::tuples::Law;
 use crate::base::{Code, Load, Run};
 use crate::eval::{Collected, Ctx, Engine, Walked};
@@ -167,29 +168,115 @@ impl Engine {
     /// Instance `inst` of a decision, counted by a traced read at the ask's cut (a `flows`,
     /// a binding over its kind): its run's body read again at its point, once per explain,
     /// where it is first counted, so the explanation lists the one read set the value has,
-    /// the runs at the read's keys and in its span alone (L §8.2 One read set, §5.18; E §10).
-    /// None for a plan, inside a decision, or for a run whose body wasn't read at a point.
+    /// the runs at the read's keys and in its span alone (L §8.2 One read set, §5.18; E §10);
+    /// a run whose order the walk refused, what the refusal tested ([`Tested`]): each member's
+    /// `when` at the act's point, or each tied run as it ran (E §4.2 step 3; P20). None for a
+    /// plan, inside a decision, or for a run whose body wasn't read at a point.
     ///
     /// # Errors
     ///
     /// As [`Engine::trace_run`].
     pub(crate) fn trace_counted(&mut self, m: &Reality, inst: &Inst, ctx: Ctx) -> Result<(), Stop> {
-        let Some(mv) = m.moves.get(&inst.move_id).filter(|mv| mv.decision) else {
+        if !m.moves.get(&inst.move_id).is_some_and(|mv| mv.decision) {
             return Ok(());
-        };
+        }
         if ctx.at.is_some() || !self.tracing() {
             return Ok(());
         }
         let Some(id) = self.main_walks.get(&ctx.cut).copied() else {
             return Ok(());
         };
-        let Some(run) = self.chain_run(id, &inst.id)?.filter(|r| r.ran).cloned() else {
+        let Some(run) = self.chain_run(id, &inst.id)?.cloned() else {
             return Ok(());
         };
-        if !self.trace_first_run(id, &inst.id) {
+        self.trace_ran(m, id, &run)?;
+        match &run.tested {
+            Tested::Nothing => Ok(()),
+            Tested::Runs(tied) => {
+                for i in tied {
+                    if let Some(r) = self.chain_run(id, i)?.cloned() {
+                        self.trace_ran(m, id, &r)?;
+                    }
+                }
+                Ok(())
+            }
+            Tested::Whens(act, members) => {
+                for (q, i) in members {
+                    self.trace_when_at(m, (id, *act), (q, i))?;
+                }
+                Ok(())
+            }
+        }
+    }
+
+    /// Run `run` of walk `id` read again where it ran, once per explain (E §10).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::trace_run`].
+    fn trace_ran(&mut self, m: &Reality, id: usize, run: &Ran) -> Result<(), Stop> {
+        let Some(mv) = m.moves.get(&run.inst.move_id) else {
+            return Err(invariant("a run's move load didn't build"));
+        };
+        if !run.ran || !self.trace_first_run(id, &run.inst.id) {
             return Ok(());
         }
-        self.trace_run(m, (id, mv), &run)
+        self.trace_run(m, (id, mv), run)
+    }
+
+    /// The `when` of instance `inst_id` of decision `move_id`, read again at the act's point `act` of
+    /// walk `id`, before any of its cycle runs, traced, kept nowhere, once per explain: what
+    /// a refusal of the cycle's order tested of it (E §4.2 step 3, §10; L §5.14.2; P20).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run; `ENGINE-INVARIANT` for a move the load didn't build.
+    fn trace_when_at(
+        &mut self,
+        m: &Reality,
+        (id, act): (usize, At),
+        (move_id, inst_id): (&str, &str),
+    ) -> Result<(), Stop> {
+        let Some(mv) = m.moves.get(move_id) else {
+            return Err(invariant("a cycle's move load didn't build"));
+        };
+        let Some(when) = &mv.decl.when else {
+            return Ok(());
+        };
+        // its own key, apart from its run's, as the cycle read it before any ran
+        if !self.trace_first_run(id, &format!("{inst_id} before {}", act.day.text())) {
+            return Ok(());
+        }
+        let cut = self.walk(id)?.cut;
+        let insts = self.move_instances(m, mv, cut)?;
+        let Some(inst) = insts.iter().find(|x| x.id == inst_id) else {
+            return Ok(());
+        };
+        let Some(Dated::Day(t)) = inst.day else {
+            return Ok(());
+        };
+        let there = Ctx {
+            at: Some(WalkAt {
+                walk: id,
+                point: act,
+            }),
+            ..self.timeline_ctx(inst.law.day(), t.min(cut))
+        };
+        let outer = core::mem::replace(&mut self.rereading, true);
+        let holder = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.push();
+        self.trace_plan_open();
+        let read = self.ev(m, when, &inst.env, there);
+        let closed = self.trace_plan_close();
+        self.pop_alone();
+        self.holder = holder;
+        self.rereading = outer;
+        closed?;
+        match read {
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
+            Ok(_) | Err(Stop::Refused(_)) => Ok(()),
+            Err(stop) => Err(stop),
+        }
     }
 
     /// Run `run` of decision `mv` in walk `id`, its body read again at its point as it ran

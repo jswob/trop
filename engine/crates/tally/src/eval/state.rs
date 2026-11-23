@@ -437,6 +437,15 @@ impl Collected {
         out
     }
 
+    /// Adds the rows `other` read, nothing else: what a refusal of the order tested gives a
+    /// read of a refused run, its read set, not the register lines of the reads that
+    /// tested it (L §8.2 One read set; E §4.2 step 3; P20).
+    pub(crate) fn merge_rows(&mut self, other: &Collected) {
+        for (sid, seen) in &other.rows {
+            self.rows.insert(sid.clone(), seen.clone());
+        }
+    }
+
     /// What a movement's day that puts it outside a read's span gives that read: what decides
     /// it ([`Collected::deciding`]) and the rows the day read, which decided that it doesn't
     /// count, never its `when` or amount (L §8.2 One read set; P35 on #241; P20).
