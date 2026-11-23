@@ -83,6 +83,23 @@ impl Grid {
         }
     }
 
+    /// The value pinned on v at point `q`: the grid's, but money off whole minor units (step
+    /// 3's centre a + u/2 with u one minor unit) is the exact number of the currency's unit,
+    /// as a pin of such a number on money is (`pin_typed`; L §5.18 step 3, §3.2).
+    fn point(&self, m: &Reality, q: &Num) -> Result<Value, Stop> {
+        if let Grid::Money(cur) = self {
+            let minor = m
+                .currencies
+                .get(cur)
+                .ok_or_else(|| invariant("a currency load didn't declare"))?;
+            if !q.checked_div(minor).map_err(num_stop)?.is_integer() {
+                let unit = currency_unit(m, currency_of(m, cur)?).map_err(num_stop)?;
+                return Ok(Value::Number(Number::plain(q.clone(), unit)));
+            }
+        }
+        self.value(m, q)
+    }
+
     /// The unit the grid's numbers are in.
     fn unit(&self, m: &Reality) -> Result<Unit, Stop> {
         match self {
@@ -187,12 +204,12 @@ impl Engine {
             Sign::Of(sign) => sign,
         };
         if at_lo == at_hi {
-            // each end as v's type takes it, a bare figure included (refcore's `fmt` of the
-            // typed literal)
+            // each end as v's type takes it, a bare figure included, a rate's as a rate
+            // (refcore's `fmt` of the typed literal; L §3.3)
             let ends = [(&lo, &form.lo, &lq), (&hi, &form.hi, &hq)];
             let mut shown = Vec::with_capacity(ends.len());
             for (end, written, q) in ends {
-                let typed = if bare(written) {
+                let typed = if bare(written) || matches!(target.grid, Grid::Rate(_)) {
                     target.grid.value(m, q)?
                 } else {
                     end.clone()
@@ -335,7 +352,7 @@ impl Engine {
         point: &Num,
         (env, ctx): (&Env, Ctx),
     ) -> Result<Sign, Stop> {
-        let value = target.grid.value(m, point)?;
+        let value = target.grid.point(m, point)?;
         let step = self.solve_step((&target.aim.item, &target.aim.keys), value, ctx)?;
         self.open_layer(m, step)?;
         let sides = self.sides(m, form, env, step);
