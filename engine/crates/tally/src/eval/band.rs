@@ -341,7 +341,7 @@ impl Engine {
             .get(&table.version)
             .ok_or_else(|| invariant("a band table of a version load didn't build"))?;
         if let Some(reason) = &version.assumed {
-            self.note("assumed", reason.clone(), figure.to_owned());
+            self.note("assumed", reason.clone(), figure.to_owned())?;
         }
         if self.keep_rows == Rows::Kept || self.tracing() {
             // the band row as `inputs-of` lists it and `explain` prints it (refcore's
@@ -363,7 +363,7 @@ impl Engine {
                     table.version
                 ),
                 String::new(),
-            );
+            )?;
         } else {
             self.unheld_table_class(m, table, ctx)?;
         }
@@ -564,9 +564,9 @@ fn band_typed(m: &Reality, band: &BandInfo, expr: &Expr, v: Value) -> Result<Val
     Ok(v)
 }
 
-/// Whether a row's value is a bare figure, through brackets and a minus (check.py's
+/// Whether a row's or a pin's value is a bare figure, through brackets and a minus (check.py's
 /// `flex_to`). L §3.2.
-fn bare_figure(e: &Expr) -> bool {
+pub(super) fn bare_figure(e: &Expr) -> bool {
     let mut at = e;
     while let Expr::Paren(x) | Expr::Neg(x) = at {
         at = x;

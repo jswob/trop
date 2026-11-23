@@ -19,7 +19,10 @@ use super::arith::whole_of;
 use super::builtin::read_parts;
 use super::dates::period_arg;
 use super::expr::hole_of;
-use super::state::{Ctx, Engine, Env, invariant, not_typed, past_days, refuse, refuse_load};
+use super::state::{
+    Ctx, Engine, Env, day_given, given, invariant, not_typed, num_stop, past_days, refuse,
+    refuse_load,
+};
 use super::windows::{one_day, single, unlisted};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
@@ -55,25 +58,14 @@ enum Business {
     Rolled(Day, Roll),
 }
 
-/// `add_business(day, k, cal)` as [`Engine::apply`] evaluates it: `k` of 0 is `RUN-ZERO`
-/// (refcore's `add_business_at`). L §4.2, §8.4.
-///
-/// # Errors
-///
-/// `RUN-ZERO` for a count of 0.
-fn business_days(day: Day, k: &Num, cal: &Expr) -> Result<Business, Stop> {
-    if k.is_zero() {
-        let text = crate::load::expr_text(cal);
-        return Err(refuse(
-            Run::Zero,
-            format!("add_business({}, 0, {text})", day.text()),
-        ));
-    }
+/// `add_business(day, k, cal)` as [`Engine::apply`] evaluates it, `k` not 0 (its caller
+/// refuses 0 `RUN-ZERO`; refcore's `add_business_at`). L §4.2, §8.4.
+fn business_days(day: Day, k: &Num) -> Business {
     let step = if k.is_negative() { -1 } else { 1 };
     // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar day by
     // day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
     let count = k.to_i64().map(i64::unsigned_abs);
-    Ok(Business::Add(day, step, count))
+    Business::Add(day, step, count)
 }
 
 impl Engine {
@@ -110,6 +102,18 @@ impl Engine {
         let cal = call.args.last().ok_or_else(arity)?;
         let d = self.ev(m, call.args.first().ok_or_else(arity)?, env, ctx)?;
         let k = self.ev(m, call.args.get(1).ok_or_else(arity)?, env, ctx)?;
+        // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
+        // refused, a known one's own check run, a hole's or a window's waiting
+        day_given(&d, "add_business")?;
+        if count_given(m, &k)?.is_some_and(|n| n.is_zero()) {
+            // n = 0 refuses for every d (L §4.2), so a hole or a window d prints in the
+            // message (pick P14)
+            let (shown, text) = (d.text(m).map_err(num_stop)?, crate::load::expr_text(cal));
+            return Err(refuse(
+                Run::Zero,
+                format!("add_business({shown}, 0, {text})"),
+            ));
+        }
         if d.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
@@ -121,7 +125,7 @@ impl Engine {
         if let Some(hole) = unlisted(&[&k], "add_business") {
             return Ok(Value::Hole(hole));
         }
-        let f = business_days(day, &whole_of(m, &k)?, cal)?;
+        let f = business_days(day, &whole_of(m, &k)?);
         self.apply(m, (cal, env, ctx), &f)
     }
 
@@ -138,6 +142,18 @@ impl Engine {
             return Err(arity());
         };
         let (of, nth) = (self.ev(m, of, env, ctx)?, self.ev(m, nth, env, ctx)?);
+        // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
+        // refused, a known one's own check run, a hole's or a window's waiting
+        if !waits(&of) {
+            period_arg(m, (call.args.first(), &single(&of)), "last_business")?;
+        }
+        if let Some(count) = count_given(m, &nth)?
+            && (count.is_negative() || count.is_zero())
+        {
+            let text = count.integer_text().ok_or_else(|| invariant("a count"))?;
+            let message = format!("last_business with n = {text} below 1");
+            return Err(refuse(Run::Domain, message));
+        }
         if of.as_hole().is_some() || nth.as_hole().is_some() {
             return hole_of(&[of.as_hole(), nth.as_hole()]);
         }
@@ -176,6 +192,13 @@ impl Engine {
             self.ev(m, dom, env, ctx)?,
             self.ev(m, roll_arg, env, ctx)?,
         );
+        // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
+        // refused, a known one's own check run, a hole's or a window's waiting
+        if !waits(&month) {
+            period_arg(m, (call.args.first(), &single(&month)), "schedule")?;
+        }
+        count_given(m, &dom)?;
+        given(&word, "schedule")?;
         if let Some(h) = spread(&[month.as_hole(), dom.as_hole(), word.as_hole()]) {
             return Ok(Value::Hole(h));
         }
@@ -559,6 +582,26 @@ fn passes_edge(from: Day, step: i64, count: Option<u64>) -> bool {
         (Some(n), Some(days)) => i128::from(n) > i128::from(days),
         (Some(_), None) => false,
     }
+}
+
+/// Whether argument `v` waits in P12's order: a hole, or a window a later step takes, not a
+/// value known now. L §8, §4.4.
+fn waits(v: &Value) -> bool {
+    v.as_hole().is_some() || matches!(single(v).as_ref(), Value::Window(_))
+}
+
+/// A count argument in written order (`add_business`'s and `last_business`'s n,
+/// `schedule`'s day of the month; pick P12): `none` is `RUN-NONE a value is none here: an
+/// integer argument`, a known value its integer; none for one that waits. L §8, §4.2.
+///
+/// # Errors
+///
+/// `whole_of`'s refusals of a value that is no integer.
+fn count_given(m: &Reality, v: &Value) -> Result<Option<Num>, Stop> {
+    if waits(v) {
+        return Ok(None);
+    }
+    whole_of(m, v).map(Some)
 }
 
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.

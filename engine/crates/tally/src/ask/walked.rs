@@ -21,13 +21,13 @@ use super::check::Printed;
 use super::explain::{head_text, invariant};
 use crate::base::Code;
 use crate::book::{gap_text, instant_text};
-use crate::eval::{Ctx, Engine, Env, Item};
+use crate::eval::{Collected, Ctx, Engine, Entries, Env, Item};
 use crate::model::{GapRole, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Ask, Bal, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, qty_value, state_value,
+    ALL, Amount, At, Change, Dated, Ent, LegVal, Planned, Status, Walk, qty_value, state_value,
 };
 
 /// The line of `explain bal(…)`: its value as the read gives it, then, but for a refusal or a
@@ -170,7 +170,10 @@ fn modelled_lines(
             let e = log
                 .get(r)
                 .ok_or_else(|| invariant("a reading past its log"))?;
-            format!("from: {}", reading_text(m, walk, (place, unit), e)?)
+            format!(
+                "from: {}",
+                reading_text(m, (walk, &engine.entries), (place, unit), e)?
+            )
         }
         None => opening_text(m, walk, (place, unit))?,
     });
@@ -236,7 +239,10 @@ pub(crate) fn plain_lines(
     };
     let since = reset.map(|(_, e)| e.at);
     out.push(match reset {
-        Some((_, e)) => format!("from: {}", reading_text(m, walk, (place, unit), e)?),
+        Some((_, e)) => format!(
+            "from: {}",
+            reading_text(m, (walk, &engine.entries), (place, unit), e)?
+        ),
         None => opening_text(m, walk, (place, unit))?,
     });
     // the entries after the last reset, through the last the state counts
@@ -387,27 +393,32 @@ fn opening_text(m: &Reality, walk: &Walk, (place, unit): (&str, &str)) -> Result
 
 /// What a reset entry is, by what booked it: an opening, an anchor, or a pad's reading end
 /// (refcore's `Ent.note`). E §6.1.
-fn reading_word(e: &Ent) -> &'static str {
-    if e.reg.iter().any(|r| r.word == "pad") {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an entry the run's table `entries` lacks.
+fn reading_word(e: &Ent, entries: &Entries) -> Result<&'static str, Stop> {
+    Ok(if entries.any_word(&e.reg, "pad")? {
         "pad"
-    } else if e.reg.iter().any(|r| r.word == "anchor") {
+    } else if entries.any_word(&e.reg, "anchor")? {
         "anchor"
     } else {
         "opening"
-    }
+    })
 }
 
 /// A reading a balance starts from: `<what> <row> = <value>, <instant> (version v, source s[,
 /// locator "l"])`, an anchor's or a pad's gap after (refcore's `_reading_text`). E §10, §6.1.
 fn reading_text(
     m: &Reality,
-    walk: &Walk,
+    (walk, entries): (&Walk, &Entries),
     (place, unit): (&str, &str),
     e: &Ent,
 ) -> Result<String, Stop> {
     let value = reset_value(m, e, unit)?;
-    let word = reading_word(e);
-    let Some((sid, seen)) = e.coll.as_ref().and_then(|c| c.rows.iter().next()) else {
+    let word = reading_word(e, entries)?;
+    let rows = e.coll.as_ref().and_then(Collected::rows);
+    let Some((sid, seen)) = rows.and_then(|r| r.iter().next()) else {
         return Ok(format!("{word} = {value}"));
     };
     let cite = &m
@@ -493,7 +504,7 @@ fn entry_text(
     e: &Ent,
     unit: &str,
 ) -> Result<Option<String>, Stop> {
-    let pad = e.reg.iter().any(|r| r.word == "pad");
+    let pad = engine.entries.any_word(&e.reg, "pad")?;
     let mut head = e.mv.clone().unwrap_or_else(|| "the walk".to_owned());
     if let (Change::Delta(_) | Change::Hole(_), Some(leg), false) = (&e.change, &e.leg, pad) {
         head = format!("{head}.{leg}");
@@ -521,9 +532,11 @@ fn entry_text(
             let sid = e
                 .coll
                 .as_ref()
-                .and_then(|c| c.rows.keys().next())
+                .and_then(Collected::rows)
+                .and_then(|r| r.keys().next())
                 .map_or("", String::as_str);
-            format!("{} {sid} = {}", reading_word(e), reset_value(m, e, unit)?)
+            let word = reading_word(e, &engine.entries)?;
+            format!("{word} {sid} = {}", reset_value(m, e, unit)?)
         }
         Change::Mark => return Ok(None),
     };
@@ -537,7 +550,12 @@ fn status_word(engine: &Engine, walk: &Walk, id: &str) -> Option<&'static str> {
     let run = walk.run_ids.get(id).and_then(|i| walk.runs.get(*i));
     let status = match run {
         Some(r) => Some(r.inst.status),
-        None => walk.insts.iter().find(|i| i.id == id).map(|i| i.status),
+        None => walk
+            .insts
+            .iter()
+            .filter_map(Planned::inst)
+            .find(|i| i.id == id)
+            .map(|i| i.status),
     };
     if let Some(status) = status {
         return status_text(status);

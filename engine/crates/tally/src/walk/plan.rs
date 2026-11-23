@@ -23,7 +23,7 @@ use super::instance::{
 use super::legs::leg_unit_static;
 use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Ctx, Engine, Env, Snap, one_day, thing_seen};
+use crate::eval::{Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
     money_num, num_money,
@@ -71,9 +71,17 @@ impl Engine {
         let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
+        // the links a narrow read judged at this cut went to its first reader (fence F7)
+        let judged = self.links_judged(&mv.id, cut);
         let mut due = false;
         for inst in &mut out {
-            inst.status = self.status(m, mv, inst, cut)?;
+            self.push();
+            let status = self.status(m, mv, inst, cut);
+            let met = self.pop_alone();
+            if !judged {
+                self.absorb(&met);
+            }
+            inst.status = status?;
             due = due || crate::book::hole_booked_before(inst, cut);
         }
         if let Some(back) = &back {
@@ -95,6 +103,8 @@ impl Engine {
         }
         let answered = self.plans.get(&key).map_or(shared, Rc::clone);
         if back.is_some() {
+            // a pass a later version answered keeps its reads where they printed
+            self.trace_marks_forget();
             self.trace_answers(m, mv, (&answered, &marks), cut)?;
         }
         Ok(answered)
@@ -174,10 +184,33 @@ impl Engine {
     ) -> Result<(Vec<Inst>, Option<crate::eval::Walked>), Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.trace_plan_open();
+        let parts = self.trace_marks_open();
         let made = self.make_instances_held(m, mv, (cut, None), Some(marks));
+        self.trace_marks_close((&mv.id, cut), parts);
         let back = self.trace_plan_close();
         self.holder = outer;
         Ok((made?, Some(back?)))
+    }
+
+    /// A decision's instances computed again while a read that counts its runs is traced,
+    /// kept nowhere: the rows and cells its bindings and days read print under the read, as
+    /// a plan's do where a read computes its instances first; its `when` and legs are its
+    /// runs' (`trace_runs`). E §10, §4.1; L §5.18 Explanation order.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    pub(crate) fn trace_days(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let parts = self.trace_marks_open();
+        let made = self.make_instances_held(m, mv, (cut, None), None);
+        self.trace_marks_close((&mv.id, cut), parts);
+        let closed = self.trace_plan_close();
+        self.holder = outer;
+        made?;
+        closed?;
+        Ok(())
     }
 
     /// A move's instances for the walk being planned: all of them, or, for a walk up to a
@@ -337,44 +370,75 @@ impl Engine {
         let tctx = self.timeline_ctx(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
-            if let Some(err) = tuple.refused.clone() {
-                out.extend(self.refused_tuple(m, mv, (tuple, upto), err, tctx)?);
-                continue;
-            }
-            if let Some(hole) = tuple.domain_hole {
-                let mut inst = Inst::new(mv, tuple.keys, tuple.env);
-                inst.day = Some(Dated::Hole(hole.clone()));
-                inst.exists = Exists::Unknown(hole);
-                inst.coll = tuple.coll;
-                out.push(inst);
-                continue;
-            }
-            let seed = Seed {
-                env: tuple.env,
-                keys: tuple.keys,
-                exists: tuple.exists,
-                at_cut: None,
-                upto,
-            };
-            if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
-                if !mv.decision
-                    && inst.err.is_none()
-                    && let Some(booking) = inst.cut
-                {
-                    self.check_booked(&inst, (booking, cut), upto)?;
-                }
-                inst.coll.merge(&tuple.coll);
-                if let (Some(marks), Some(mark)) = (marks.as_deref_mut(), self.trace_snap()) {
-                    marks.push((inst.id.clone(), mark));
-                }
-                out.push(inst);
-            }
+            let made = self.tuple_instance(m, mv, (tuple, cut, upto), tctx, marks.as_deref_mut());
+            out.extend(made?);
         }
         for inst in &mut out {
             inst.order = inst_order(m, mv, inst);
         }
         out.sort_by(|a, b| a.order.cmp(&b.order));
         Ok(out)
+    }
+
+    /// The instance of one binding tuple of a list at cut `cut`, as the plan pass makes it: a
+    /// refused tuple's refused instance, a hole tuple's hole instance, else its day at the cut
+    /// and its body at its booking cut, its booked amount checked; none where its day is
+    /// `never` or `none` (refcore's `insts_of_tuples`, its loop). E §4.1 steps 1–2, §5 step 1.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::refused_tuple`] and [`Engine::eval_inst`]; `ENGINE-INVARIANT` for a booked
+    /// amount that changed.
+    pub(super) fn tuple_instance(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (tuple, cut, upto): (Tuple, Day, Option<Day>),
+        tctx: Ctx,
+        marks: Option<&mut Vec<(String, Snap)>>,
+    ) -> Result<Option<Inst>, Stop> {
+        if let Some(err) = tuple.refused.clone() {
+            return self.refused_tuple(m, mv, (tuple, upto), err, tctx);
+        }
+        if let Some(hole) = tuple.domain_hole {
+            let mut inst = Inst::new(mv, tuple.keys, tuple.env);
+            inst.day = Some(Dated::Hole(hole.clone()));
+            inst.exists = Exists::Unknown(hole);
+            inst.coll = tuple.coll;
+            return Ok(Some(inst));
+        }
+        let seed = Seed {
+            env: tuple.env,
+            keys: tuple.keys,
+            exists: tuple.exists,
+            at_cut: None,
+            upto,
+        };
+        // where its reads begin and end, while a read traces the pass (P20)
+        let id = self
+            .trace_marking()
+            .then(|| crate::book::inst_id(&mv.id, &seed.keys));
+        if let Some(id) = &id {
+            self.trace_part(id, TracePart::Begin);
+        }
+        let made = self.eval_inst(m, mv, &seed, tctx)?;
+        if let Some(id) = &id {
+            self.trace_part(id, TracePart::End);
+        }
+        let Some(mut inst) = made else {
+            return Ok(None);
+        };
+        if !mv.decision
+            && inst.err.is_none()
+            && let Some(booking) = inst.cut
+        {
+            self.check_booked(&inst, (booking, cut), upto)?;
+        }
+        inst.coll.merge(&tuple.coll);
+        if let (Some(marks), Some(mark)) = (marks, self.trace_snap()) {
+            marks.push((inst.id.clone(), mark));
+        }
+        Ok(Some(inst))
     }
 
     /// The instance of a tuple whose last key's `where` is refused: a refused instance, its
@@ -719,6 +783,9 @@ impl Engine {
         let day_coll = self.pop_alone();
         self.absorb(&day_coll);
         inst.day_coll = day_coll;
+        if self.trace_marking() {
+            self.trace_part(&inst.id, TracePart::Day);
+        }
         let v = match read? {
             Err(h) => {
                 inst.day = Some(Dated::Hole(h.clone()));
@@ -752,6 +819,7 @@ impl Engine {
             | Value::Code(_)
             | Value::Record(_)
             | Value::List(_)
+            | Value::Tuple(_)
             | Value::Calendar(_)
             | Value::None
             | Value::Never

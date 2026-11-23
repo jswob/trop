@@ -144,7 +144,7 @@ impl Engine {
         } else {
             Ctx { at: None, ..ctx }
         };
-        self.index_assumed(m, &def.binds);
+        self.index_assumed(m, &def.binds)?;
         // a pin wins over the def's rules and givens (L §5.11); the def's cell keeps only the
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
@@ -477,7 +477,7 @@ impl Engine {
             self.trace_close(group);
             let met = self.pop_alone();
             self.absorb(&met);
-            if met.missing {
+            if met.missing_held() {
                 missing_true.push(at);
             }
             let tested = w?;
@@ -633,13 +633,13 @@ impl Engine {
                     "assumed",
                     reason.clone(),
                     format!("{}.{}", def.id, rule.label),
-                );
+                )?;
             }
         }
         if missing_held.contains(&win)
             && let Some(v) = &rule.v
         {
-            self.note("missing", v.clone(), String::new());
+            self.note("missing", v.clone(), String::new())?;
         }
         Ok(())
     }
@@ -704,7 +704,7 @@ impl Engine {
             "given",
             format!("{}{keys_text} = {shown} ({})", def.id, row.version),
             String::new(),
-        );
+        )?;
         if traced.is_some() {
             self.trace_value(traced, &Ok(value.clone()));
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);

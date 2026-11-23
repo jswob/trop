@@ -117,6 +117,7 @@ fn reads_a_number(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> bool {
             | Value::Code(_)
             | Value::Record(_)
             | Value::List(_)
+            | Value::Tuple(_)
             | Value::Calendar(_)
             | Value::None
             | Value::Never
@@ -145,6 +146,7 @@ fn lin_of(v: &Value) -> Option<Linear> {
         | Value::Code(_)
         | Value::Record(_)
         | Value::List(_)
+        | Value::Tuple(_)
         | Value::Calendar(_)
         | Value::None
         | Value::Never

@@ -123,15 +123,20 @@ impl Engine {
 
     /// An index with `assumed` lists `assumed: <index>: <reason>` for every figure keyed by
     /// it (refcore's `index_assumed`). L §5.6, §8.2.
-    pub(super) fn index_assumed(&mut self, m: &Reality, binds: &[BindInfo]) {
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past 2^31 register entries in one run.
+    pub(super) fn index_assumed(&mut self, m: &Reality, binds: &[BindInfo]) -> Result<(), Stop> {
         for bind in binds {
             if let Domain::Index(id) = &bind.domain
                 && let Some(ix) = m.indexes.get(id)
                 && let Some(reason) = &ix.assumed
             {
-                self.note("assumed", format!("{}: {reason}", ix.id), String::new());
+                self.note("assumed", format!("{}: {reason}", ix.id), String::new())?;
             }
         }
+        Ok(())
     }
 
     /// A read of input `input` at keys already made keys (refcore's `read_input`): the row
@@ -149,7 +154,7 @@ impl Engine {
         ctx: Ctx,
         asked: Asked,
     ) -> Result<Value, Stop> {
-        self.index_assumed(m, &input.binds);
+        self.index_assumed(m, &input.binds)?;
         // a `with` or `as if` pin replaces every read of the input at its keys (L §5.11)
         if let Some(pinned) = self.pin_of(&input.id, keys, ctx)? {
             let value = pinned_at(pinned, &input.binds, keys)?;
@@ -278,7 +283,7 @@ impl Engine {
                 "held",
                 format!("{figure} = {shown} ({}), read for {read_for}", row.version),
                 String::new(),
-            );
+            )?;
         }
         Ok(value)
     }
@@ -329,7 +334,7 @@ impl Engine {
                 row.version,
                 latest.day.text()
             );
-            self.note("held", text, String::new());
+            self.note("held", text, String::new())?;
         }
         // a read of x at its keys, named by the row it took, whatever day d took it (L §4.4)
         let value = as_read(value, (&input.id, &latest.keys), row_cell(row));
@@ -590,16 +595,16 @@ impl Engine {
             self.note_listed(&row.version, &input.id);
         }
         if let Some(reason) = &row.assumed {
-            self.note("assumed", reason.clone(), figure.clone());
+            self.note("assumed", reason.clone(), figure.clone())?;
         }
         let version = m
             .versions
             .get(&row.version)
             .ok_or_else(|| invariant("a row names a version load didn't build"))?;
         if let Some(reason) = &version.assumed {
-            self.note("assumed", reason.clone(), figure.clone());
+            self.note("assumed", reason.clone(), figure.clone())?;
         }
-        self.index_assumed(m, &input.binds);
+        self.index_assumed(m, &input.binds)?;
         // the row's node under a trace, its value once known (E §10)
         let traced = self.trace_row(m, row);
         let value = if let Written::Expr(e) = &row.value {

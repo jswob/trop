@@ -15,8 +15,9 @@ use core::cmp::Ordering;
 
 use super::arith::{Op, arith, currency_of};
 use super::expr::literal;
+use super::register::Collected;
 use super::stack::Item;
-use super::state::{Collected, Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
+use super::state::{Ctx, Engine, Env, invariant, num_stop, refuse, refuse_load};
 use crate::base::{Code, Load, Run};
 use crate::hole::{Hole, spread};
 use crate::model::{

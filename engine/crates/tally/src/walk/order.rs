@@ -43,6 +43,12 @@ pub struct Run {
     pub read: BTreeSet<String>,
     /// The places its legs name.
     pub changed: BTreeSet<String>,
+    /// Whether its body was read at its point: not for one refused before its point (its
+    /// key's `where`), nor for a cycle's member refused before it runs (`RUN-ORDER`,
+    /// `RUN-TIE`), which had no point to read it at (E §4.2 step 3; E §10).
+    pub ran: bool,
+    /// What a refusal of its order tested (`RUN-ORDER`, `RUN-TIE`), which a read of it lists.
+    pub tested: Tested,
 }
 
 /// Where a running read stands: the walk and the point (refcore's `ctx.walk`, `ctx.wp`).
@@ -147,7 +153,13 @@ impl Engine {
                 .ok_or_else(|| invariant("an instance's rank"))?;
             match item.refused {
                 Some(err) => {
-                    self.refused_run(m, id, item.inst, key, (err, item.changes, &item.met))?;
+                    self.refused_run(
+                        m,
+                        id,
+                        item.inst,
+                        key,
+                        (err, item.changes, &item.met, item.tested),
+                    )?;
                 }
                 None => {
                     self.run_one(m, id, item.inst, key)?;
@@ -210,8 +222,10 @@ impl Engine {
         // pins and assumptions those reads took are listed with it (L §8.2 One read set;
         // tally 2.1.8 §4, #161; refcore's `run_group`, `ord_reads`)
         let mut rests = Collected::default();
+        let mut whens = Vec::with_capacity(members.len());
         for member in &members {
             rests.merge(&member.met);
+            whens.push((member.inst.move_id.clone(), member.inst.id.clone()));
         }
         let mut items = Vec::with_capacity(members.len());
         for (x, err) in refused {
@@ -223,6 +237,7 @@ impl Engine {
                 refused: Some(err),
                 changes: member.changes.clone(),
                 met: rests.clone(),
+                tested: Tested::Whens(at, whens.clone()),
             });
         }
         for x in order {
@@ -234,6 +249,7 @@ impl Engine {
                 refused: None,
                 changes: member.changes.clone(),
                 met: Collected::default(),
+                tested: Tested::Nothing,
             });
         }
         Ok(items)
@@ -393,7 +409,7 @@ impl Engine {
         id: usize,
         mut inst: Inst,
         key: At,
-        (err, changes, met): (Refusal, Option<BTreeSet<String>>, &Collected),
+        (err, changes, met, tested): (Refusal, Option<BTreeSet<String>>, &Collected, Tested),
     ) -> Result<(), Stop> {
         let walk = self.walk_mut(id)?;
         let refused = || {
@@ -418,12 +434,16 @@ impl Engine {
         inst.attrs = Vec::new();
         inst.err = Some(err);
         inst.status = Status::Refused;
+        // what the refusal rests on is what a read of the run lists (L §8.2; P20)
+        inst.coll.merge_rows(met);
         walk.record(Run {
             inst,
             point: key,
             live: BTreeSet::new(),
             read: BTreeSet::new(),
             changed: BTreeSet::new(),
+            ran: false,
+            tested,
         });
         Ok(())
     }
@@ -481,8 +501,17 @@ impl Engine {
         }
         // the tie refuses each tied instance, so every read of it is refused, its legs and
         // its flows, not only the balances it changes (L §8, §5.14.2; tally 2.1.7 R2, G7)
+        // and rests on every tied run as it ran, which a read of each lists (L §8.2; P20)
         let tied = self.today(id)?.runs.clone();
         let tied_walk = self.walk_mut(id)?;
+        let mut rests = Collected::default();
+        let mut tested = Vec::with_capacity(tied.len());
+        for ix in &tied {
+            if let Some(run) = tied_walk.runs.get(*ix) {
+                rests.merge(&run.inst.coll);
+                tested.push(run.inst.id.clone());
+            }
+        }
         for ix in tied {
             let run = tied_walk
                 .runs
@@ -490,6 +519,8 @@ impl Engine {
                 .ok_or_else(|| invariant("a tied run past the walk's runs"))?;
             run.inst.err = Some(err.clone());
             run.inst.status = Status::Refused;
+            run.inst.coll.merge_rows(&rests);
+            run.tested = Tested::Runs(tested.clone());
             let (movement, legs) = (run.inst.id.clone(), run.inst.legs.clone());
             let read = run.inst.coll.clone();
             for lg in &legs {
@@ -633,12 +664,15 @@ impl Engine {
             return Err(invariant("a run's reads taken"));
         };
         let linked = self.obs_links_for(m, &inst.id, cut)?;
+        let ran = inst.err.is_none();
         let mut run = Run {
             inst,
             point: key,
             live,
             read,
             changed: BTreeSet::new(),
+            ran,
+            tested: Tested::Nothing,
         };
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
@@ -713,7 +747,11 @@ impl Engine {
             .decl
             .legs
             .is_empty();
-        let walk = self.walk_mut(id)?;
+        // the walk and the run's register entries, apart: a past run notes `unfulfilled:`
+        let walk = self
+            .walks
+            .get_mut(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))?;
         let ix = walk.runs.len();
         if let Some(err) = run.inst.err.clone() {
             // refused: the places its legs give, every place where one can't be read, none for
@@ -790,11 +828,11 @@ impl Engine {
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
         if t < cut && run.inst.obs.is_empty() {
-            reg.push(Entry {
+            reg.push(self.entries.intern(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),
                 figure: String::new(),
-            });
+            })?);
         }
         let legs = run.inst.legs.clone();
         let inst = run.inst.clone();
@@ -939,6 +977,21 @@ pub struct CycleItem {
     /// What its refusal rests on: what every instance due read to be ordered; empty for one
     /// that runs.
     pub met: Collected,
+    /// What its refusal tested; nothing for one that runs.
+    pub tested: Tested,
+}
+
+/// What a refusal of the order tested, which a read of a refused run lists (L §8.2 One read
+/// set; E §4.2 step 3; P20).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Tested {
+    /// No refusal of the order.
+    Nothing,
+    /// A cycle's refusal, `RUN-ORDER` or `RUN-TIE`: each member's `when` (its move's id, its
+    /// instance's), read at the act's point, before any of them runs.
+    Whens(At, Vec<(String, String)>),
+    /// A tie of one move's runs, `RUN-TIE`: each tied run, by its instance, as it ran.
+    Runs(Vec<String>),
 }
 
 /// What orders one instance of a cycle (refcore's `run_group`, its `info`). L §5.14.2.

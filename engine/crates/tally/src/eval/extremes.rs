@@ -134,14 +134,22 @@ fn extreme_of(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value, Stop> {
     best.ok_or_else(|| invariant("an extreme of no values"))
 }
 
-/// A bare binding's value in scope `env`: its one variable's (refcore's `bare_key`). L §5.11.
+/// A bare binding's value in scope `env`: its one variable's, or over several bindings the
+/// tuple of theirs in written order (refcore's `bare_key`, its `Tup`). L §5.11 ("return the
+/// key or the tuple").
 pub(super) fn bare_key(agg: &Agg, env: &Env) -> Result<Value, Stop> {
-    let [bind] = agg.binds.as_slice() else {
-        return Err(Stop::NotBuilt("a bare aggregate over a tuple of keys"));
-    };
-    env.get(&bind.var)
-        .map(|v| v.value.clone())
-        .ok_or_else(|| invariant("a bound variable the scope lacks"))
+    let mut keys = Vec::with_capacity(agg.binds.len());
+    for bind in &agg.binds {
+        let key = env
+            .get(&bind.var)
+            .map(|v| v.value.clone())
+            .ok_or_else(|| invariant("a bound variable the scope lacks"))?;
+        keys.push(key);
+    }
+    match <[Value; 1]>::try_from(keys) {
+        Ok([key]) => Ok(key),
+        Err(keys) => Ok(Value::Tuple(keys)),
+    }
 }
 
 /// The keys of tied candidates as `RUN-TIE` lists them, `b, c` (refcore's `fmt` of each

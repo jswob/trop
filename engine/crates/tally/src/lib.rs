@@ -170,7 +170,9 @@ pub mod eval {
     mod prorata;
     mod queries;
     mod ranges;
+    mod rates;
     mod read;
+    mod register;
     mod rules;
     mod solve;
     mod srows;
@@ -190,20 +192,22 @@ pub mod eval {
     pub use context::Layer;
     pub(crate) use context::{GUARDED, UNSET_AXIS, world_named};
     pub(crate) use convert::{ConvertFor, Converted, convert, convert_row, field_literal};
-    pub(crate) use expr::{equal_sides, hole_of};
+    pub(crate) use expr::{equal_sides, hole_of, resolved_sides};
     pub(crate) use extremes::min_max;
     pub(crate) use keys::{Given, thing_seen, to_key};
     pub use memo::Memo;
     pub(crate) use partial::{lin_balance, lin_fold, lin_negated, lin_times, partial_text};
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
+    pub use register::{Collected, Entries, Entry, EntryId, RowSeen};
     pub use stack::Item;
-    pub use state::{Collected, Ctx, Engine, Entry, Env, How, RowSeen, Rows};
+    pub use state::{Ctx, Engine, Env, How, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
-    pub(crate) use time_arith::periods_of;
+    pub(crate) use time_arith::{keys_differ, periods_of};
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{
-        Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,
+        Balance as TracedBalance, Keep as TraceKeep, Kind as TraceKind, Part as TracePart,
+        RuleLine, Snap, Trace, Walked,
     };
     pub(crate) use windows::{End, held_by, one_day};
     pub(crate) use years::year_form;
@@ -225,6 +229,7 @@ pub mod walk {
     mod lows;
     mod modelled;
     mod move_flows;
+    mod narrow;
     mod order;
     mod plan;
     mod point;
@@ -235,6 +240,7 @@ pub mod walk {
     mod tuples;
     mod value;
 
+    pub(crate) use agenda::Planned;
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::Ends;
     #[cfg(feature = "fault-injection")]
@@ -247,6 +253,8 @@ pub mod walk {
     };
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
+    pub(crate) use narrow::Narrowed;
+    pub use narrow::Plans;
     pub use order::{Run, WalkAt};
     pub(crate) use plan::{invariant, quantity};
     pub use plan::{kind_certainty, qty_value};

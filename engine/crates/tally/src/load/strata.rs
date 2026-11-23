@@ -60,6 +60,7 @@ impl Loader {
         self.m.asks.retain(|ask| !walked.dropped.contains(&ask.id));
         self.m.asks_alone = core::mem::take(&mut walked.alone);
         self.m.asks_unresolved = core::mem::take(&mut walked.unresolved);
+        self.m.keyed_checks = core::mem::take(&mut walked.keyed_checks);
         self.m.list_keys = core::mem::take(&mut walked.list_keys);
         self.m.narrow_tests = core::mem::take(&mut walked.narrow_used);
         // a literal read anywhere is load's to check, whatever the asks, after the rows' (R5)

@@ -241,6 +241,7 @@ impl Loader {
                 elsewhere: BTreeMap::new(),
                 asks_alone: BTreeMap::new(),
                 asks_unresolved: BTreeMap::new(),
+                keyed_checks: BTreeSet::new(),
                 list_keys: BTreeMap::new(),
                 narrow_tests: BTreeSet::new(),
                 sames: Vec::new(),

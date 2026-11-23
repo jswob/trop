@@ -24,7 +24,9 @@ use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{At, Inst, ProjKey, Walk, WalkAt};
 
-use super::bindings::{names_in, reads_name};
+use super::register::{Collected, Entries, Entry, EntryId};
+
+use super::bindings::{names_walked, reads_name};
 use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
 use super::timelines::Timelines;
@@ -75,6 +77,13 @@ pub(crate) struct Prefixes {
     /// The cells in progress when each cut's main walk was last given up: while one of them
     /// still is, a leg's read takes the walk up to its day without trying the main walk.
     pub(crate) blocked: BTreeMap<Day, BTreeSet<CellId>>,
+    /// Fence F7's narrow reads: each plan move's binding tuples at a past booking cut, with the
+    /// instances and days read of them, by (move, cut), kept like the lists (P8-L10;
+    /// `walk/narrow.rs`).
+    pub(crate) narrow: BTreeMap<(String, Day), crate::walk::Narrowed>,
+    /// Whether each move's cone can't reach its own plan, so a narrow read may take it
+    /// (`walk/narrow.rs`).
+    pub(crate) narrows: BTreeMap<String, bool>,
 }
 
 impl Ctx {
@@ -285,34 +294,20 @@ impl Env {
     }
 
     /// The written bindings in scope that `parts`, a pin's value then its keys, name, each
-    /// once, by the first part naming it (refcore's `_pertuple`); none where a part names
-    /// two, whose order refcore's walk gives, or holds a form whose names aren't walked here.
-    /// L §8.2.
+    /// once, in the order refcore's walk meets their names (refcore's `_pertuple`, its
+    /// `used`). L §8.2.
     #[must_use]
-    pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Option<Vec<String>> {
+    pub(crate) fn binds_named(&self, parts: &[&Expr]) -> Vec<String> {
         let mut out: Vec<String> = Vec::new();
-        for part in parts {
-            let names = names_in(part)?;
-            let mut found: Vec<&str> = Vec::new();
-            for name in &names {
-                let written = self.get(name).and_then(|v| v.written.as_deref());
-                if let Some(text) = written
-                    && !found.contains(&text)
-                {
-                    found.push(text);
-                }
-            }
-            match found.as_slice() {
-                [] => {}
-                [one] => {
-                    if !out.iter().any(|o| o == one) {
-                        out.push((*one).to_owned());
-                    }
-                }
-                _ => return None,
+        for name in parts.iter().flat_map(|part| names_walked(part)) {
+            let Some(text) = self.get(name).and_then(|v| v.written.as_deref()) else {
+                continue;
+            };
+            if !out.iter().any(|o| o == text) {
+                out.push(text.to_owned());
             }
         }
-        Some(out)
+        out
     }
 
     /// Binds `name` to `value` in this scope.
@@ -341,68 +336,6 @@ impl Env {
     }
 }
 
-/// A register entry a read meets (L §8.2): its word (`assumed`, `held`, `given`, `missing`),
-/// its text and the figure it was met at.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Entry {
-    /// The register word.
-    pub word: &'static str,
-    /// Its text.
-    pub text: String,
-    /// The figure, or the empty text.
-    pub figure: String,
-}
-
-impl Ord for Entry {
-    /// The set's order: the word, the text, the figure, by code point.
-    fn cmp(&self, other: &Entry) -> core::cmp::Ordering {
-        self.word
-            .cmp(other.word)
-            .then_with(|| self.text.cmp(&other.text))
-            .then_with(|| self.figure.cmp(&other.figure))
-    }
-}
-
-impl PartialOrd for Entry {
-    fn partial_cmp(&self, other: &Entry) -> Option<core::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-/// What a cell's evaluation met: its register entries (refcore's `Coll.reg`), and whether a
-/// `missing(…)` read directly in it held (refcore's `Coll.missing`, never merged outward).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Collected {
-    /// The register entries.
-    pub entries: BTreeSet<Entry>,
-    /// Whether a `missing(r)` evaluated in this collector, not in a cell below it, was true.
-    pub missing: bool,
-    /// The versions of the rows read (refcore's `Coll.rows`, their versions): which versions
-    /// a later step's adjustment names (E §5 step 4).
-    pub versions: BTreeSet<String>,
-    /// The scenarios' facts read, each (its section, its item): a row of a scenario's
-    /// version, a thing's entry or place a scenario states, a scenario's move a binding
-    /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
-    pub scenario: BTreeSet<(String, String)>,
-    /// Of those, each (its section, its item) a movement booked before the scenario's `from`
-    /// lists: a row of a scenario's version, and a thing's entry a `lifespan` read met
-    /// (refcore's `Coll.rows` and `lifeof` entries; L §8.2 `before from:`, tally 2.1.7 R7).
-    pub listed: BTreeSet<(String, String)>,
-    /// The rows read, by stable id, each with its version and locator: an input's, a given,
-    /// a band row, a reading and an observed row, the walk's counted movements' included
-    /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
-    pub rows: BTreeMap<String, RowSeen>,
-}
-
-/// A row read, as `inputs-of` lists it: its version and its locator (E §10).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RowSeen {
-    /// The version that states it.
-    pub version: String,
-    /// Its locator, where it states one.
-    pub locator: Option<String>,
-}
-
 /// How a read met a thing: its `lifespan` read, which a movement before a scenario's `from`
 /// lists, or its membership tested or bound, which only explains it (L §8.2 `before from:`;
 /// E §9 item 3; tally 2.1.7 R7).
@@ -422,45 +355,6 @@ pub enum Rows {
     Kept,
     /// They aren't.
     Unkept,
-}
-
-impl Collected {
-    /// Adds the register entries, versions and rows `other` met (its `missing` stays its own).
-    pub fn merge(&mut self, other: &Collected) {
-        self.entries.extend(other.entries.iter().cloned());
-        self.versions.extend(other.versions.iter().cloned());
-        self.scenario.extend(other.scenario.iter().cloned());
-        self.listed.extend(other.listed.iter().cloned());
-        for (sid, seen) in &other.rows {
-            self.rows.insert(sid.clone(), seen.clone());
-        }
-    }
-
-    /// What of these reads decides whether a movement counts where it isn't counted (a
-    /// refused one, a day outside a read's span, left out, covered, a false `when`): its pins,
-    /// `solve`'s and its assumptions; never a `held:` value of its day (L §8.2 One read set,
-    /// one statement for every form and outcome: P35 on #241).
-    #[must_use]
-    pub(crate) fn deciding(&self) -> Collected {
-        let mut out = Collected::default();
-        for e in &self.entries {
-            if matches!(e.word, "pinned" | "pin met" | "assumed") {
-                out.entries.insert(e.clone());
-            }
-        }
-        out
-    }
-
-    /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
-    pub(crate) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
-        self.rows.insert(
-            sid.to_owned(),
-            RowSeen {
-                version: version.to_owned(),
-                locator: locator.cloned(),
-            },
-        );
-    }
 }
 
 /// A memo cell: the result of a def at its keys in one context, with what it met and what it
@@ -570,6 +464,9 @@ pub struct Engine {
     /// Whether a projection's walk read again through a later day continues from where it
     /// stood: fence F6, or its plain twin, a new walk per read (P §2.5; `walk/fork.rs`).
     pub(crate) forks: crate::walk::Forks,
+    /// Whether a read at a past booking cut evaluates only the instances it names: fence F7,
+    /// or its plain twin, the move's whole list at that cut (P8-L10; `walk/narrow.rs`).
+    pub(crate) plan_reads: crate::walk::Plans,
     /// The projections' walks the timeline in force keeps past their reads, for fence F6
     /// (P §2.5, §3.5; `walk/fork.rs`).
     pub(crate) parked: crate::walk::Parked,
@@ -662,6 +559,9 @@ pub struct Engine {
     /// Each binding's written text, once: the member scopes of its aggregate share it, up to
     /// 1 000 000 of them (L §7.6 item 2, §8.2).
     pub(super) bind_texts: BTreeMap<String, Rc<str>>,
+    /// The run's register entries, each once: lent to this engine by the run and handed back
+    /// after its ask (E §1; `eval/register.rs`).
+    pub(crate) entries: Entries,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -682,6 +582,8 @@ pub struct How {
     pub lows: crate::walk::Lows,
     /// Whether the engines continue a projection's walk read again through a later day.
     pub forks: crate::walk::Forks,
+    /// Whether a read at a past booking cut evaluates only the instances it names.
+    pub plans: crate::walk::Plans,
     /// The fault planted, if any.
     #[cfg(feature = "fault-injection")]
     pub fault: Option<crate::walk::Fault>,
@@ -690,15 +592,16 @@ pub struct How {
 impl How {
     /// How `run` computes: every fence's form, the cells shared by a law date class (E §3.2),
     /// a projection's common case from F5's tree (P §2.3), a projection's walk read again
-    /// continued by F6 (P §2.5), the event walk's days (P §2.2).
+    /// continued by F6 (P §2.5), a past booking cut's reads narrowed by F7 (P8-L10), the event
+    /// walk's days (P §2.2).
     pub const FENCES: How = How::new(
         Memo::Classes,
         crate::walk::Lows::Tree,
         crate::walk::Forks::On,
     );
 
-    /// The engines computing as `memo`, `lows` and `forks` say, walking the event walk's days,
-    /// no fault planted.
+    /// The engines computing as `memo`, `lows` and `forks` say, a past booking cut's reads
+    /// narrowed by F7, walking the event walk's days, no fault planted.
     #[must_use]
     pub const fn new(memo: Memo, lows: crate::walk::Lows, forks: crate::walk::Forks) -> How {
         How {
@@ -706,6 +609,7 @@ impl How {
             days: Days::Events,
             lows,
             forks,
+            plans: crate::walk::Plans::Narrow,
             #[cfg(feature = "fault-injection")]
             fault: None,
         }
@@ -718,6 +622,7 @@ impl How {
     pub(crate) fn engine(self, ask_cut: Day) -> Engine {
         Engine::new(ask_cut)
             .with_how((self.memo, self.lows, self.forks))
+            .with_plans(self.plans)
             .with_days(self.days)
     }
 }
@@ -751,6 +656,7 @@ impl Engine {
             proj_walks: BTreeMap::new(),
             lows: crate::walk::Lows::Tree,
             forks: crate::walk::Forks::On,
+            plan_reads: crate::walk::Plans::Narrow,
             parked: crate::walk::Parked::default(),
             #[cfg(feature = "fault-injection")]
             plant: None,
@@ -786,6 +692,7 @@ impl Engine {
             unset_axis: None,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
+            entries: Entries::default(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
@@ -813,6 +720,17 @@ impl Engine {
     #[must_use]
     pub fn with_days(self, days: Days) -> Engine {
         Engine { days, ..self }
+    }
+
+    /// The engine reading a move's instances at a past booking cut as `plans` says: only the
+    /// instances a read names, fence F7, or the move's whole list at that cut, the plain twin
+    /// (P8-L10).
+    #[must_use]
+    pub fn with_plans(self, plans: crate::walk::Plans) -> Engine {
+        Engine {
+            plan_reads: plans,
+            ..self
+        }
     }
 
     /// The engine computing as its fences say: keeping its cells as `memo` says, shared by a
@@ -891,17 +809,49 @@ impl Engine {
     }
 
     /// Records a register entry in the innermost collector (L §8.2).
-    pub(crate) fn note(&mut self, word: &'static str, text: String, figure: String) {
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past 2^31 entries in one run.
+    pub(crate) fn note(
+        &mut self,
+        word: &'static str,
+        text: String,
+        figure: String,
+    ) -> Result<(), Stop> {
+        let id = self.entries.intern(Entry { word, text, figure })?;
         if let Some(top) = self.stack.last_mut() {
-            top.entries.insert(Entry { word, text, figure });
+            top.note(id);
         }
+        Ok(())
+    }
+
+    /// The id of register entry `entry` in the run's table (L §8.2).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past 2^31 entries in one run.
+    pub(crate) fn entry_id(&mut self, entry: Entry) -> Result<EntryId, Stop> {
+        self.entries.intern(entry)
+    }
+
+    /// The run's register entries this engine holds, where a register's ids are found (E §1).
+    #[must_use]
+    pub fn entries(&self) -> &Entries {
+        &self.entries
+    }
+
+    /// The run's register entries, handed back after this engine's ask, which every ask's
+    /// engine adds to in turn (E §1).
+    pub(crate) fn take_entries(&mut self) -> Entries {
+        core::mem::take(&mut self.entries)
     }
 
     /// Records that a scenario's fact was read, its section and its item, in the innermost
     /// collector: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
     pub(crate) fn note_scenario(&mut self, section: &str, item: &str) {
         if let Some(top) = self.stack.last_mut() {
-            top.scenario.insert((section.to_owned(), item.to_owned()));
+            top.note_scenario((section, item));
         }
     }
 
@@ -911,8 +861,7 @@ impl Engine {
     /// 2.1.7 R7). E §9 item 3.
     pub(crate) fn note_listed(&mut self, section: &str, item: &str) {
         if let Some(top) = self.stack.last_mut() {
-            top.scenario.insert((section.to_owned(), item.to_owned()));
-            top.listed.insert((section.to_owned(), item.to_owned()));
+            top.note_listed((section, item));
         }
     }
 
@@ -932,7 +881,7 @@ impl Engine {
     /// step 4: the versions an adjustment names).
     pub(super) fn note_version(&mut self, version: &str) {
         if let Some(top) = self.stack.last_mut() {
-            top.versions.insert(version.to_owned());
+            top.note_version(version);
         }
     }
 
@@ -950,7 +899,7 @@ impl Engine {
     /// Marks that a `missing(…)` read in the innermost collector held (L §8.2 `missing`).
     pub(super) fn note_missing(&mut self) {
         if let Some(top) = self.stack.last_mut() {
-            top.missing = true;
+            top.note_missing();
         }
     }
 
@@ -985,6 +934,30 @@ impl Engine {
             None => Collected::default(),
         }
     }
+}
+
+/// Whether argument `v` of built-in `what`, taken in written order, is known, so its own
+/// check runs now (L §8 "Refusals outrank holes"; pick P12): `none` refuses, `RUN-NONE a
+/// value is none here: <what>`; a hole isn't, so its check waits and the hole stands if no
+/// later argument refuses.
+///
+/// # Errors
+///
+/// `RUN-NONE` for `none`.
+pub(super) fn given(v: &Value, what: &str) -> Result<bool, Stop> {
+    if *v == Value::None {
+        return Err(refuse(Run::None, format!("a value is none here: {what}")));
+    }
+    Ok(v.as_hole().is_none())
+}
+
+/// A day argument [`given`]: `never` refused `RUN-NONE` too, as `none` is, whatever the other
+/// arguments are (P12, P16). L §3.1, §8.
+pub(super) fn day_given(v: &Value, what: &str) -> Result<bool, Stop> {
+    if *v == Value::Never {
+        return Err(refuse(Run::None, format!("never in {what}")));
+    }
+    given(v, what)
 }
 
 /// A refusal with its code and message (L §8.4).

@@ -31,6 +31,7 @@ use crate::time::Day;
 /// A binding tuple of a move: its scope, keys, and the hole of a `where` that is one, or of a
 /// domain or law date that is one, and what deciding it read (refcore's `move_tuples`
 /// statuses and colls).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Tuple {
     /// The scope.
     pub(super) env: Env,

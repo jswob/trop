@@ -576,3 +576,58 @@ except milestones.MilestoneError as e:
     print(e)
 --- run
 python3 -I -B zz_takes.py
+
+# M4's rules step (issue #252, pick P17): fence F7's suites are named in `quick_leaves_out`
+# before G6c writes them, each with a `waits`: left out of every local mode until cargo
+# metadata lists the target and runs it by default, then left out of `quick` and run by
+# `commit` and `fences` with no rules step between. Planted: F6's fork_oracle with a `waits`,
+# a target that exists, is taken as before.
+case: quick-leaves-out-waits-for-its-target
+tool: run
+exit: any
+expect: waiting: m4_narrow in no mode True, narrow_oracle in no mode True
+expect: present with a waits: fences runs fork_oracle True, quick leaves it out True
+--- replace tools/milestones.toml
+  { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
+--- with
+  { package = "tally-cli", test = "fork_oracle", waits = "planted: a target that exists" },
+--- write zz_waits.py
+"""Planted: the local modes' test argv with F7's waiting suites and a present one that waits."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+
+argv = {m: check.local_tests(m, check.mode_env(m))[0] for m in ("quick", "commit", "fences")}
+gone = {t: all(f"--test={t}" not in a for a in argv.values()) for t in ("m4_narrow", "narrow_oracle")}
+print(f"waiting: m4_narrow in no mode {gone['m4_narrow']}, narrow_oracle in no mode {gone['narrow_oracle']}")
+print(f"present with a waits: fences runs fork_oracle {'--test=fork_oracle' in argv['fences']}, "
+      f"quick leaves it out {'--test=fork_oracle' not in argv['quick']}")
+--- run
+python3 -I -B zz_waits.py
+
+# The planted violation: without its `waits`, a suite not yet written stops every local mode,
+# so a misspelt name can't sit there unseen.
+case: quick-leaves-out-without-waits-needs-its-target
+tool: run
+exit: any
+expect: quick_leaves_out names tally-runner's m4_narrow, which is no test target of it that runs by default
+--- replace tools/milestones.toml
+  { package = "tally-runner", test = "m4_narrow", waits = "T's suite, Plans::Narrow against Plans::Whole (G6c)" },
+--- with
+  { package = "tally-runner", test = "m4_narrow" },
+--- write zz_waits.py
+"""Planted: quick's test step with a suite that has no target and no waits."""
+import sys
+
+sys.path.insert(0, "tools")
+import check
+import milestones
+
+try:
+    check.local_tests("quick", check.mode_env("quick"))
+    print("quick ran with a suite that doesn't exist")
+except milestones.MilestoneError as e:
+    print(e)
+--- run
+python3 -I -B zz_waits.py
