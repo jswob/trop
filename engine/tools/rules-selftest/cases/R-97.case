@@ -88,14 +88,19 @@ expect: BUDGET P8-L2 WRONG output: d11_full
 --- run
 tools/perf row P8-L2 --bin /usr/bin/true
 
+# Planted runs of P8-L10 beside T's (since U2, 2026-11-23, T's list holds c1_r2 alone), so
+# the case doesn't hang on how many runs the list holds.
 case: load-runs-by-name
 tool: run
 exit: any
-expect: P8-L10 b1: wall
+expect: P8-L10 zz_a: wall
 expect: sha256 e3b0c44298fc reported (runs.tsv holds -)
-expect: 2 of 18 runs (--runs), each once, cold; 2 unjudged (sha256 -)
+expect: 2 of 3 runs (--runs), each once, cold; 2 unjudged (sha256 -)
+--- append tests/m4/load/runs.tsv
+P8-L10	zz_a	engine	a.tally	zz	-
+P8-L10	zz_b	engine	b.tally	zz	-
 --- run
-tools/perf row P8-L10 --runs c1_r2,b1 --bin /usr/bin/true
+tools/perf row P8-L10 --runs c1_r2,zz_a --bin /usr/bin/true
 
 case: load-run-name-unknown
 tool: run
@@ -118,3 +123,17 @@ kill -TERM $$
 --- run
 chmod +x zz-term.sh
 tools/perf row P8-L10 --runs c1_r2 --bin "$PWD/zz-term.sh"
+
+# F7's count row (issue #252, 2026-11-23): F7-c1r2 runs P8-L10's c1_r2 on the counted build and
+# holds its def misses to 1.2 x G6c's final count (226 609), so a change that brings the move's
+# whole list back at every past cut fails a PR. The planted binary prints a counters' line over it.
+case: load-count-over-budget
+tool: run
+exit: any
+expect: COUNT F7-c1r2 c1_r2 def_misses 300 000 > 226 609
+--- write zz-stats.sh
+#!/bin/sh
+echo "stats: def_misses=300000 days_stepped=1 walks_shared=0"
+--- run
+chmod +x zz-stats.sh
+tools/perf counts F7-c1r2 --bin "$PWD/zz-stats.sh"

@@ -743,11 +743,12 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
     instead of the move's whole list at that cut, and declines under a trace (`explain`,
     `inputs-of`) and for a move whose skipped instances could stop the whole list. The switch
     is `How`'s `plans` (`Plans::Narrow` in `How::FENCES`), the twin `Plans::Whole`, today's
-    `move_instances` and `find` (refcore's `find_inst`), compared on every store and corpus by
-    T's `m4_narrow` and by `tally-cli/tests/narrow_oracle.rs` on F7's own realities; both wait
-    in `tools/milestones.toml` (`quick_leaves_out`, `fence_catchers`) until G6c writes them.
-    Its benchmark is P8-L10 through `tools/perf` (`load:`); its count row `F7-c1r2` is a
-    placeholder until G6c's def misses on the final code set it.
+    `move_instances` and `find` (refcore's `find_inst`), compared by T's `m4_narrow`, its one
+    equivalence suite (294 tests: every `run` store and corpus, F7's own realities in both ask
+    orders, `c1_r2` and P8-14, each under both; pick P27, no CLI `narrow_oracle`), with
+    `walk::narrow::tests` (`tools/milestones.toml`'s `quick_leaves_out` and `fence_catchers`).
+    Its benchmark is P8-L10 through `tools/perf` (`load:`, judged on `c1_r2` by the user's U2);
+    its count row `F7-c1r2` holds `c1_r2`'s def misses to 226 609 (1.2 × G6c's final 188 841).
 
 ## Where the next milestones plug in
 
