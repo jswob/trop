@@ -428,7 +428,7 @@ def local_tests(mode, env):
     (by a nextest filter, once the target exists); `commit`, those suites too and every gating
     milestone's targets, whole;
     `fences`, the suites alone. A MilestoneError when the marker or the targets can't be read."""
-    leave_out = milestones.quick_leaves_out()
+    leave_out = milestones.quick_leaves_out(env)
     suites = [f"--test={t}" for _, t in leave_out]
     if mode == "fences":
         return [*QUICK_TESTS, *suites], "the fences' suites"

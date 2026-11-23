@@ -302,6 +302,21 @@ recipe = "check:I:X:replay_september@b_r1"
 counts = { days_stepped = 1152 }
 blocks = "pr"
 
+# Fence F7, the narrow reads (walk/narrow.rs, M4's group G6c; P8-L10; the user's U1 and pick
+# P17 on #252, 2026-11-23): a read of `o.fulfils` or of a move's `flows` over a span at a past
+# booking cut evaluates the instance or the span it names, not the move's whole list; its twin
+# is the whole list (Plans::Whole, refcore's find_inst). Its benchmark is P8-L10 through
+# tools/perf (R-91). This count row is c1_r2 at 1 worker, so a change that brings the whole list
+# back at every past cut fails a PR: a logged placeholder until G6c, which measures its
+# def_misses on the final code (`perf counts F7-c1r2`); a rules step then sets them x 1.2, as S
+# set P8-14's, and CI's counts step lists the row. Reported only until then.
+[[row]]
+id = "F7-c1r2"
+group = "C"
+what = "the narrow reads' counts on P8-L10's c1_r2 run (its six asks), 1 worker"
+recipe = "load:P8-L10 c1_r2"
+blocks = "pr"
+
 # 8.3 Group L: the load rows at full size; a Monte Carlo row's wall is its deterministic part
 [[row]]
 id = "P8-L1"

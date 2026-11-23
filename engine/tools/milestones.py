@@ -91,12 +91,37 @@ def marker():
     return milestones, gating, leave_out
 
 
-def fence_catchers():
+def workspace_tests(env=None, runs_by_default=False):
+    """Every workspace (package, test target) pair cargo metadata lists, or only those that run
+    by default (`test = true`)."""
+    r = subprocess.run(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"], cwd=ENGINE,
+                       env=env if env is not None else dict(os.environ), capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise MilestoneError(f"cargo metadata failed: {(r.stderr.strip().splitlines() or ['(no output)'])[-1]}")
+    return {(p["name"], t["name"]) for p in json.loads(r.stdout)["packages"] for t in p["targets"]
+            if t["kind"][0] == "test" and (t.get("test", True) or not runs_by_default)}
+
+
+def waits_of(key, c):
+    """An entry's `waits` (M4's rules step for fence F7, issue #252): the text of what it waits
+    for, or None when it has none. An entry with one names a test target its fence's group
+    writes later; it is inert until cargo metadata lists the target, then taken as any other,
+    with no rules step between (the marker's own entries say how each waits)."""
+    if "waits" not in c:
+        return None
+    if not isinstance(c["waits"], str) or not c["waits"].strip():
+        raise MilestoneError(f"tools/milestones.toml: a {key} entry's waits says what it waits for, not {c!r}")
+    return c["waits"]
+
+
+def fence_catchers(env=None):
     """The fences' equivalence tests that `mutants-local --fences` adds as catchers (R-88,
     R-130; pick P55, 2026-11-09), as (package, test target or None, lib module prefix or
     None), checked: each names a package and exactly one of a test target (every test in it)
-    and a module of the package's lib (`walk::lows::tests::`, its tests). Not CI's: gate 8
-    counts T's tests only (R-84)."""
+    and a module of the package's lib (`walk::lows::tests::`, its tests; a module not yet
+    written selects no test). A test target's entry may say what it `waits` for: left out
+    until the workspace holds the target (waiting()). Not CI's: gate 8 counts T's tests only
+    (R-84)."""
     try:
         with open(MARKER, "rb") as f:
             listed = tomllib.load(f).get("fence_catchers")
@@ -105,21 +130,29 @@ def fence_catchers():
     if not isinstance(listed, list) or not listed:
         raise MilestoneError("tools/milestones.toml: fence_catchers, `mutants-local --fences`'s, is a "
                              "non-empty list of tables")
-    out = []
+    out, waiting_ones = [], []
     for c in listed:
-        ok = isinstance(c, dict) and isinstance(c.get("package"), str) and sorted(c) in (["package", "test"], ["lib", "package"])
+        ok = isinstance(c, dict) and isinstance(c.get("package"), str) and sorted(c) in (
+            ["package", "test"], ["lib", "package"], ["package", "test", "waits"])
         name = c.get("test", c.get("lib")) if isinstance(c, dict) else None
         if not ok or not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]+|([a-z0-9_]+::)+", name):
             raise MilestoneError("tools/milestones.toml: each fence_catchers entry is { package, test } or "
-                                 f"{{ package, lib = \"<module>::\" }}, not {c!r}")
-        out.append((c["package"], c.get("test"), c.get("lib")))
+                                 f"{{ package, lib = \"<module>::\" }}, a test's with a waits if need be, not {c!r}")
+        (waiting_ones if waits_of("fence_catchers", c) else out).append((c["package"], c.get("test"), c.get("lib")))
+    if waiting_ones:
+        present = workspace_tests(env)
+        out += [w for w in waiting_ones if (w[0], w[1]) in present]
+        order = [(c["package"], c.get("test"), c.get("lib")) for c in listed]
+        out.sort(key=order.index)
     return out
 
 
-def quick_leaves_out():
+def quick_leaves_out(env=None):
     """The test targets that run by default which `check quick` leaves out and `check commit`
     runs (R-82, 2026-11-16): the fences' equivalence suites, 97 % of quick's test time in M2,
-    as (package, test target), checked; [] when the marker has none."""
+    as (package, test target), checked; [] when the marker has none. An entry that says what it
+    `waits` for is left out until the workspace holds the target and runs it by default
+    (waiting()), so a suite named before its group writes it keeps every local mode green."""
     try:
         with open(MARKER, "rb") as f:
             listed = tomllib.load(f).get("quick_leaves_out", [])
@@ -127,15 +160,37 @@ def quick_leaves_out():
         raise MilestoneError(f"tools/milestones.toml can't be read: {e}") from e
     if not isinstance(listed, list):
         raise MilestoneError("tools/milestones.toml: quick_leaves_out is a list of { package, test } tables")
-    out = []
+    out, waits = [], []
     for c in listed:
-        ok = isinstance(c, dict) and sorted(c) == ["package", "test"] and all(isinstance(v, str) for v in c.values())
+        ok = isinstance(c, dict) and sorted(c) in (["package", "test"], ["package", "test", "waits"]) and all(
+            isinstance(c[k], str) for k in ("package", "test"))
         if not ok or not re.fullmatch(r"[A-Za-z0-9_-]+", c["test"]):
-            raise MilestoneError(f"tools/milestones.toml: each quick_leaves_out entry is {{ package, test }}, not {c!r}")
+            raise MilestoneError(f"tools/milestones.toml: each quick_leaves_out entry is {{ package, test }}, with a "
+                                 f"waits if need be, not {c!r}")
         if (c["package"], c["test"]) in out:
             raise MilestoneError(f"tools/milestones.toml: quick_leaves_out names {c['package']}'s {c['test']} twice")
         out.append((c["package"], c["test"]))
+        waits.append(waits_of("quick_leaves_out", c))
+    if any(waits):
+        present = workspace_tests(env, runs_by_default=True)
+        out = [t for t, w in zip(out, waits) if not w or t in present]
     return out
+
+
+def waiting(env=None):
+    """The entries of `quick_leaves_out` and `fence_catchers` still waiting, as lines: the
+    list, the package's target and what it waits for (the marker's report, `milestones`)."""
+    with open(MARKER, "rb") as f:
+        data = tomllib.load(f)
+    lines = []
+    for key, by_default in (("quick_leaves_out", True), ("fence_catchers", False)):
+        listed = [c for c in data.get(key, []) if isinstance(c, dict) and "waits" in c]
+        if not listed:
+            continue
+        present = workspace_tests(env, runs_by_default=by_default)
+        lines += [f"{key}: {c['package']}'s {c['test']} waits: {c['waits']}" for c in listed
+                  if (c["package"], c["test"]) not in present]
+    return lines
 
 
 def quick_takes(env):
@@ -317,6 +372,12 @@ def main():
         state = "gating" if m in gating else "next" if n == len(gating) else "later"
         names = [f"{t} (not in mutation runs)" if t in leave_out else t for t in by_milestone[m]]
         print(f"{m}: {state}: {', '.join(names) or 'no Rust test target'}")
+    try:
+        for line in waiting(env):
+            print(line)
+    except (OSError, tomllib.TOMLDecodeError, KeyError, MilestoneError) as e:
+        print(f"FAIL milestones: the waiting entries can't be read: {e}", file=sys.stderr)
+        return 1
     return 0
 
 

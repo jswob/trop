@@ -702,6 +702,8 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
 - **The kernel** (`num`, `read`, `walk`, `book`, `hole`): the code gate 8's mutants run
   over, with an exception budget of its own; one exception (the big-integer wrapper in
   `num/big.rs`, R-29). M1 to M3 added thirteen kernel files and no exception; tally 2.3 none.
+  M4 adds `walk/narrow.rs` (fence F7, group G6c; R-85's record, under `walk/**`), counted by
+  the gate's mutation run.
 - **The parser and the library** have an exception budget of 0, kept at 0 through tally 2.3.
 - **The big-integer crate** is named in one file, `num/big.rs`; the hash uses the `sha2`
   crate, already a dependency, in `syntax/canon.rs`.
@@ -735,6 +737,17 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
     under the projection's own walk; a local single-mutant proof in `walk/fork.rs` counts
     both (`fence_catchers` in `tools/milestones.toml`). Its benchmark is X end to end, the
     `F6-*` rows through `tools/perf`; the counter "walks shared" shows it at work.
+  - F7 the narrow reads (`walk/narrow.rs`, P8-L10; the user's U1 and pick P17 on #252),
+    wired by M4's rules step before group G6c builds it: a read of `o.fulfils`, or of a move's
+    `flows` over a span, at a past booking cut evaluates the one instance or the span it names
+    instead of the move's whole list at that cut, and declines under a trace (`explain`,
+    `inputs-of`) and for a move whose skipped instances could stop the whole list. The switch
+    is `How`'s `plans` (`Plans::Narrow` in `How::FENCES`), the twin `Plans::Whole`, today's
+    `move_instances` and `find` (refcore's `find_inst`), compared on every store and corpus by
+    T's `m4_narrow` and by `tally-cli/tests/narrow_oracle.rs` on F7's own realities; both wait
+    in `tools/milestones.toml` (`quick_leaves_out`, `fence_catchers`) until G6c writes them.
+    Its benchmark is P8-L10 through `tools/perf` (`load:`); its count row `F7-c1r2` is a
+    placeholder until G6c's def misses on the final code set it.
 
 ## Where the next milestones plug in
 
