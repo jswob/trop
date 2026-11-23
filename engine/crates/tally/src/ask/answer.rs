@@ -155,8 +155,7 @@ pub(crate) enum Turn {
 /// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
 /// (E §11); a load refusal met at run; `NotBuilt` for a construct not built yet.
 pub fn answer(m: &Reality, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
-    let turns = members::resolve(m, reality_turns(m, asks)?, (days, how))?;
-    req_clocks(&[m], &turns)?;
+    let turns = members::resolve(&[m], reality_turns(m, asks)?, (days, how))?;
     answer_turns(&[m], &turns, m.warnings.clone(), days, how)
 }
 
@@ -193,47 +192,6 @@ pub(super) fn reality_turns(m: &Reality, asks: &Asks) -> Result<Vec<Turn>, Stop>
         }
     };
     Ok(turns)
-}
-
-/// `REQ-CLOCK` before any ask is answered, in the run's order: the first ask whose literal cut
-/// is after its model's `on` refuses the request (E §11), whether it is an ask of the run's
-/// realities (`realities`, the base's first), a side of a diff on two stacks, a member's ask
-/// answered in the member's world, or one whose member alone refused the request.
-///
-/// # Errors
-///
-/// `REQ-CLOCK`, or the member alone's request refusal, as the run's one result.
-pub(super) fn req_clocks(realities: &[&Reality], turns: &[Turn]) -> Result<(), Stop> {
-    let base = realities.first().ok_or_else(no_turn)?;
-    for turn in turns {
-        match turn {
-            Turn::Ask(world, at) => req_clock_at(realities, *world, *at)?,
-            Turn::Cross(sides) => {
-                for (world, at, _) in sides {
-                    req_clock_at(realities, *world, *at)?;
-                }
-            }
-            Turn::OfMember(aliases, at) => {
-                let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
-                req_clock(m, m.asks.get(*at).ok_or_else(no_turn)?)?;
-            }
-            Turn::Stopped(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
-                return Err(Stop::Refused(refusal.clone()));
-            }
-            Turn::Line(_)
-            | Turn::Scenario(_)
-            | Turn::Lifted(..)
-            | Turn::Member(_)
-            | Turn::Stopped(_) => {}
-        }
-    }
-    Ok(())
-}
-
-/// `REQ-CLOCK` for the ask at `at` of the reality at `world` among `realities`. E §11.
-fn req_clock_at(realities: &[&Reality], world: usize, at: usize) -> Result<(), Stop> {
-    let m = realities.get(world).ok_or_else(no_turn)?;
-    req_clock(m, m.asks.get(at).ok_or_else(no_turn)?)
 }
 
 /// `REQ-ASK no ask <q>`: the request names an ask that doesn't exist. E §11 (tally 2.1.3).
@@ -630,7 +588,7 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
 }
 
 /// A turn whose ask the reality doesn't hold: the turns are built from its asks.
-fn no_turn() -> Stop {
+pub(super) fn no_turn() -> Stop {
     Stop::Refused(Refusal::new(
         Code::EngineInvariant,
         "a turn names an ask the reality doesn't hold".to_owned(),
@@ -716,7 +674,7 @@ fn ask_lines(
 /// refcore's `req_clock`). A computed cut is refused at its value (`after_on`). Only an ask
 /// load left standing is judged: one load refused alone prints its own line (E §11 "in an ask
 /// load left standing"; OPERATIONS §2.1; G4's review B1).
-fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
+pub(super) fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
     if m.asks_alone.contains_key(&ask.id) {
         return Ok(());
     }

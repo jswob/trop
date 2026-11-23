@@ -12,6 +12,7 @@
 //! kernel is M6's); `unit` of a key of no unit kind is refused at the key, never guessed.
 
 use super::arith::int_of;
+use super::bindings::none_here;
 use super::expr::{hole_of, key_index};
 use super::extremes::min_max;
 use super::keys::Given;
@@ -184,8 +185,14 @@ impl Engine {
             .try_into()
             .map_err(|_| arity())?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
-        // refused, a known one's own check run, a hole's waiting
-        given(&x, "round")?;
+        // refused (an operand named as written, P3), a known one's own check run, a hole's
+        // waiting
+        if x == Value::None {
+            return Err(none_arg(m, call, 0, env, "arithmetic"));
+        }
+        if u == Value::None {
+            return Err(none_arg(m, call, 1, env, "arithmetic"));
+        }
         if given(&u, "round")? {
             positive_step(m, &u)?;
         }
@@ -211,13 +218,10 @@ impl Engine {
         let snap = self.trace_snap();
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
-        if holes.iter().any(Option::is_some) || vals.contains(&Value::None) {
-            if vals.contains(&Value::None) {
-                return Err(refuse(
-                    Run::None,
-                    format!("a value is none here: {}", call.name),
-                ));
-            }
+        if let Some(i) = vals.iter().position(|v| *v == Value::None) {
+            return Err(none_arg(m, call, i, env, "an ordering"));
+        }
+        if holes.iter().any(Option::is_some) {
             return hole_of(&holes);
         }
         if vals.is_empty() {
@@ -337,7 +341,7 @@ impl Engine {
             return Ok(v);
         }
         if v == Value::None {
-            return Err(refuse(Run::None, "a value is none here: abs".to_owned()));
+            return Err(none_arg(m, call, 0, env, "arithmetic"));
         }
         // off the list: a ranged date is the hole (L §4.4)
         if let Some(hole) = unlisted(&[&v], "abs") {
@@ -445,6 +449,16 @@ impl Engine {
     ) -> Result<Result<Vec<KeyVal>, crate::hole::Hole>, Stop> {
         let given = self.given_keys(m, keys, env, ctx)?;
         self.make_keys(m, item, binds, given, ctx)
+    }
+}
+
+/// The refusal of argument `i` of `call`, which is `none`, to `use_word`: the argument as
+/// written, each variable by its value (`rate[k2] is none here: arithmetic`). L §8.4
+/// `RUN-NONE`'s row, §3.1 (pick P3).
+fn none_arg(m: &Reality, call: &Call, i: usize, env: &Env, use_word: &str) -> Stop {
+    match call.args.get(i) {
+        Some(e) => none_here(m, e, env, use_word),
+        None => invariant("a value of an argument the call doesn't hold"),
     }
 }
 

@@ -7457,3 +7457,75 @@ The runs (release binary, `perf row`, `tmp/m4/g6c/rows18.txt`; load 4 to 6):
   - Not indicated by the profile: the union-tree fence for registers (`Collected::merge` 2.0 % at 2030).
   - My recommendation: (3) for M4's gate, and (1) as its own group after the gate, or before it if the limit allows; (1) is needed by any later plan for the stage runs.
 - **State:** the last commit is this entry's, on `check commit`; nothing uncommitted; my scratch is in `tmp/m4/g6c/`.
+
+## 2026-11-23 M4 G4 `backlog`: RUN-NONE names its read, age_months at 9999-12, #238's items, P24 (issue #252)
+
+The builder's plan §5 G4 (rows 16, 18, 20), with picks P23 and P24. On 00143f5a (G6c's entry). Three commits before this entry: 68571ca4, 8c011969, 84d3f8c2. Scratch in `tmp/m4/g4/` (untracked).
+
+**Item 1, row 16 (P3, #245): `RUN-NONE` in L §8.4's form.** A `none` read as written, each bound variable by its value (`eval/bindings.rs` `none_here`):
+- a term of an aggregate: `rate[k2] is none here: an aggregate` (sum, min, max, argmin, argmax, any, all: one site each in `eval/aggregate.rs`);
+- an argument of two-argument `min` or `max`: `… an ordering`;
+- `abs`'s operand, `round`'s x and step: `… arithmetic`. `round`'s mode keeps refcore's `a value is none here: round` (no use word in §8.4's list fits a mode).
+- `if`, `and`, `not` and membership keep refcore's line (P3).
+- Two choices for the coordinator: two-argument `max` takes the text's form with `min` (P3 names `min`; §8.4's "ordering" covers both, and splitting them would branch on the name). The wording is `an aggregate`, `an ordering`, as the engine's `an ordering` (tally 2.2.1 235.6) and T's held notes write it; §8.4's list writes the bare words. Noted for the round.
+- `m4_items` `none/q_sum`, `q_min`, `q_abs`, `q_round` (held for #245) print the text's lines.
+- **For T: seven stored vectors not held print refcore's old lines,** so `m4_fixes_g1`, `m4_fixes_p12` and `m4_fixes_spec_p12` are red in the milestone report (39/40 → 36/40; M4 doesn't gate yet): `fixes/g1/a12_nonehole/q_arith2` (`pn is none here: an ordering`, two-argument `max`); `fixes/p12/round/n_x__z_step`, `n_x__g_step`; `spec/p12/round/h_x__n_step`, `h_step__n_x`, `h_mode__n_x`, `h_mode__n_step` (`x_n` / `step_n is none here: arithmetic`). Each is P3's change; each needs a hold for #245 (and a new spec answer, the engine's line, for the four `spec/p12` ones) before M4 joins `gating`.
+
+**Item 2, row 18 (#250): `age_months` in the calendar's last month is 0.** An `add_months` past 9999-12-31 is no day, so not `<= d` (L §4.2; `time/period.rs`). `items/age/a_last` prints `0` (held for #250); two inline asserts.
+
+**Item 3, row 20 (#238).**
+- **N5:** `members::resolve` checks each turn's `REQ-CLOCK` as it resolves, in the run's order, so no member runs alone after a turn that refuses the request. **N3:** `req_clock_turn`, one expression per arm. **N4:** one `Parts` and one `realities()` for `answer_worlds` and a member's alone run. **N1, N2:** `worlds.rs`'s header and `realities()` cite `REQ-CLOCK` and L §6.4. `req_clocks` moved to `ask/worlds.rs` (plan §4): `ask/answer.rs` is 33 code lines shorter.
+- **N-9:** `ask::worlds::tests`, two inline tests of `check_lines`.
+- **N-6** (the log line #238 asked for): since M3, the CLI's `run_faulted` (the `fault-injection` build only) reads a joint model's members from the file table, as `run` does; no code change.
+- **N-3, not built:** `tally::Files` owns its table, so a borrow changes the library's public type; not plain (the plan: built only if plain). Stays listed.
+- **A-4, not built:** T's probe (`items/a4`) shows no fault; both interpreters print the same bytes.
+- **Gate review 5, not built:** a STOP-REPORT below.
+
+**Item 4 (P23), not built:** a STOP-REPORT below; the arms are in the kernel.
+
+**Item 5 (P24): a `given` row's `assumed`.** `eval/rules.rs` `given` notes the row's and its version's `assumed` before its `given` entry, as an input's row does (L §8.2, §5.3).
+
+**Checked by hand on refcore_fast** (T stores the bytes with C6):
+- P24: `review/g6b/g1_given_assumed` `q`; `g6b/r1_order` and `r1_order_rev` `q4`; my `tmp/m4/g4/p24_more.tally` `q`, `q_h`, `e_g`, `e_h` (a keyed given, an assumed version). All equal refcore.
+- P23: `g3/f5_cross` `e_pr`, `g3fix/h2_plan_hole_axis` `e_cw`, `e_sm`, `fixes/narrow/n1_fulfils/e_feb`: all still `not implemented` (refcore answers each).
+
+**The sweep** (`tmp/m4/g4/sweep.sh`, `sweep.txt`): the paper probes; the main folder's review folders g1, g1fix, g2, g2fix, g3, g3fix, g6b, g6c; my probes; T's `items/none` and `items/age`. Each ask alone on refcore_fast, on 00143f5a's quick binary (built from `git archive` in `tmp/m4/g4/before`) and on this tree.
+- **916 asks:** 678 same → same, 8 different → same, 221 different → different (4 with changed bytes), 5 same → different.
+- **Same → different (5):** `items/none` `q_sum`, `q_min`, `q_abs`, `q_round` (held for #245) and `review/g1/a12_nonehole` `q_arith2` (`max`, T's unheld `fixes/g1` vector above). All item 1.
+- **Different → same (8):** P24's `assumed` lines: `g6b/g1_given_assumed` `q`, `g6b/r1_order` and `r1_order_rev` `q4`, my `g1_given_assumed` and `p24_more`'s four.
+- **Different → different with changed bytes (4):** `g1fix/b2_round` `q_u0`, `q_uh` and `g2fix/q2_values` `c6`, `round`'s new line where the engine already refused before refcore's hole (P12's order, held for #255); `items/age/a_last` (`none` → `0`; refcore `RUN-LIMIT`, held for #250).
+- Not swept: `items/g5` (a joint model pinned by bytes; the engine is unchanged there).
+
+- **Size** (`git diff --shortstat 00143f5a -- engine/crates`): 8 files, +288 −116 (about 0.4 k changed against the plan's 0.35 k), of which about 60 lines are tests.
+- **Files:** `eval/aggregate.rs`, `eval/bindings.rs`, `eval/builtin.rs`, `eval/rules.rs`, `time/period.rs`, `ask/answer.rs`, `ask/members.rs`, `ask/worlds.rs`. No kernel file.
+- **Exceptions:** +0. The exceptions step's two report-only hits (a named lifetime on `Parts`, a closure in a closure in `age_months`) restructured away.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** the two below.
+- **Usage:** about 0.55 % of the week by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green` on 68571ca4's tree; `check quick: green` on 8c011969 and 84d3f8c2; this entry's commit on `check commit` (its line in the commit's body).
+
+## STOP-REPORT 2026-11-23: a member's `·` has no exact fix at the line (#238 gate review 5)
+
+- **Kind:** other (the plan's "a few lines" doesn't hold; a design choice for the lead)
+- **Where:** `api.rs` `joint_lines` (and `base/refusal.rs` `Refusal::shown`) replace every U+00B7 in a joint run's printed lines with `.`; `load/joint.rs` `SEP` joins a member's alias to its names with that same character. T's `items/g5/q_dot`, `q_explain` (held for #238).
+- **Rule or gate:** L §8.1, §2.4 (a question prints as written); L §6.1.
+- **What happens:** `·` in a member's question, source or locator prints as `.`, both interpreters alike.
+- **What I tried:** reading where the separator lives. A printed line holds names (with `SEP`) and written texts side by side, so no map at the line can tell them apart. A string may hold any character but a newline (`syntax/lex.rs` `string`), so no other separator is free of the texts. Changing `SEP` to `\n` would free it, but names order by code point (a kind's things by the text of `kind:key`, L §2.5), and `\n` sorts before letters where `·` sorts after them, so binding order could move against refcore's.
+- **What I ask:** one of:
+  - (a) at a joint load, every string token's `·` becomes `\n` (`load/merge.rs`, the merged files, and each member's alone files), and the printed lines map `SEP` to `.`, then `\n` back to `·`. Exact for the printed bytes; a text holding `·` then compares and sorts as one holding `\n`. About 0.1 k, in `load/` and `api.rs`.
+  - (b) names printed through a member-aware printer, `SEP` never in a printed line: wider, every name printer.
+  - (c) leave it to the round with refcore (both interpreters agree today; the two vectors stay held). My recommendation: (c) for M4, (a) at the round if the spec keeps the text's reading.
+- **State:** nothing built for it; the last commit is this entry's.
+
+## STOP-REPORT 2026-11-23: P23's explain asks stop in kernel reads that leave the trace "walked"
+
+- **Kind:** other (P23: "if the arm sits in a kernel file, STOP-REPORT it")
+- **Where:** the stop is `ask/explain.rs` `traced`, `if trace.walked { NotBuilt }`; the mark is set by `Engine::trace_walk` (`walk/reads.rs` `main_walk`, `eval/memo.rs` `reads_apart`) on a path that doesn't give it back.
+- **Rule or gate:** E §10; L §5.18.
+- **What happens:** `tally run … --ask <a>` prints `tally run: not implemented` (exit 69); refcore answers:
+  - `review/g3fix/h2_plan_hole_axis` `e_sm`, `e_cw`; smallest, my `tmp/m4/g4/x_min.tally` `e_sm`: `explain sum(t.cash.amount for t in transfers over sp .. sp)` where the one plan's `on` is a window. `count` over the same binding answers (byte-equal); with a plain day `sum` answers too. So the leg read of a hole-day instance (`book/members.rs` `leg_field`, `walk/move_flows.rs` `leg_refused` → `main_walk`) leaves the mark set.
+  - `review/g3/f5_cross` `e_pr` (`[rd = *]`): `bal(konto, dday) from w` where the walk refuses (`RUN-DIV`). Refcore prints the walk's running reads under the refusal; the engine has no node for a refused balance read (`explain` of a balance the walk answers is byte-equal: my `x_bal.tally`).
+  - `fixes/narrow/n1_fulfils/e_feb`: a rule reading observed rows at past cuts (`book/observe.rs`, fence F7's `walk/narrow.rs`).
+- **What I tried:** one non-kernel guess, judged and run, then taken out: an outermost read's `Deep` replay (`eval/stack.rs`) setting the mark back to its value at the read's start. All four asks still stop, so the mark isn't an unwound attempt's; it is set by the reads above, each in `walk/` or `book/`. Not tried: any edit there.
+- **What I ask:** a kernel group (G3's kind) takes the three paths, each with refcore's form: a hole-day leg read gives the mark back where it gives its hole; a refused balance read becomes a node with the walk's running reads; a past cut's observation reads as their rows.
+- **State:** nothing built for it; the last commit is this entry's.

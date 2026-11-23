@@ -14,9 +14,10 @@
 //! cut is no value.
 
 use super::keys::{lacks_at_run, literal_key};
-use super::state::{Ctx, Engine, Env, a_day, invariant, wrong_type};
+use super::state::{Ctx, Engine, Env, a_day, invariant, refuse, wrong_type};
 use super::windows::{imprecise, one_day};
 use super::years::span_year;
+use crate::base::Run;
 use crate::hole::Hole;
 use crate::model::{Class, Domain, IndexInfo, KeyVal, Number, Reality, Span, Thing, Value, World};
 use crate::syntax::{
@@ -491,6 +492,17 @@ pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
 /// A number error printing a value.
 pub(crate) fn written_bound(m: &Reality, e: &Expr, env: &Env) -> Result<String, Stop> {
     Ok(crate::load::bound_text(e, &env.bound_texts(m)?))
+}
+
+/// The refusal of a `none` that expression `e` gave to `use_word` (`an aggregate`, `an
+/// ordering`, `arithmetic`): `RUN-NONE <x>[k] is none here: <use>`, `e` named as
+/// [`written_bound`] writes it. A number error printing a bound value is that error instead.
+/// L §8.4 `RUN-NONE`'s row, §3.1 (pick P3).
+pub(super) fn none_here(m: &Reality, e: &Expr, env: &Env, use_word: &str) -> Stop {
+    match written_bound(m, e, env) {
+        Ok(shown) => refuse(Run::None, format!("{shown} is none here: {use_word}")),
+        Err(stop) => stop,
+    }
 }
 
 /// The names expression `e` reads, its parts walked as [`reads_name`] walks them; none for a

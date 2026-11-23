@@ -222,19 +222,21 @@ pub fn age(birth: Day, day: Day) -> Option<i64> {
 }
 
 /// The largest `n` with `add_months(birth, n) <= day`; `None` before `birth` (refcore's
-/// `age_months`). L §4.2 `age_months`.
+/// `age_months`). A month past 9999-12-31 is no day, so not `<= day`: in the calendar's last
+/// month the count stops there, never `None` (#250). L §4.2 `age_months`.
 #[must_use]
 pub fn age_months(birth: Day, day: Day) -> Option<i64> {
     if day < birth {
         return None;
     }
+    let reached = |n: i64| matches!(birth.add_months(n), Some(d) if d <= day);
     let years = i64::from(day.year()).checked_sub(i64::from(birth.year()))?;
     let months = i64::from(day.month()).checked_sub(i64::from(birth.month()))?;
     let mut n = years.checked_mul(12)?.checked_add(months)?;
-    while n > 0 && birth.add_months(n)? > day {
+    while n > 0 && !reached(n) {
         n = n.checked_sub(1)?;
     }
-    while birth.add_months(n.checked_add(1)?)? <= day {
+    while reached(n.checked_add(1)?) {
         n = n.checked_add(1)?;
     }
     Some(n)
@@ -355,6 +357,16 @@ mod tests {
             age_months(day(2026, 1, 31), day(2026, 2, 27)),
             Some(0),
             "not yet"
+        );
+        assert_eq!(
+            age_months(day(9999, 12, 1), day(9999, 12, 27)),
+            Some(0),
+            "the calendar's last month"
+        );
+        assert_eq!(
+            age_months(day(9999, 10, 27), day(9999, 12, 1)),
+            Some(1),
+            "a month before it"
         );
     }
 

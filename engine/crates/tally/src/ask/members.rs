@@ -19,8 +19,8 @@
 //! (R20 clause 3); a member that is itself a joint model answers none of its own asks yet
 //! (M5c).
 
-use super::answer::{Turn, answer_turns_apart, reality_turns, req_clocks};
-use super::worlds::{merged_warnings, refused_in_order, refused_line};
+use super::answer::{Turn, answer_turns_apart};
+use super::worlds::{Parts, realities, refused_line, req_clock_turn, req_clocks};
 use crate::base::{Code, Refusal, Warn};
 use crate::eval::How;
 use crate::load::{Loaded, load_run, split_files};
@@ -31,27 +31,32 @@ use crate::walk::invariant;
 use crate::{Asks, Pin};
 use std::collections::BTreeMap;
 
-/// The run's turns with each member's ask resolved (refcore's `member_ask`): a base ask of the
-/// member that names none of its scenarios, refused alone or not, is answered at its turn in
-/// the member's own world; any other is the lines of the member alone, or the stop its run
-/// met, a request refusal among them (`REQ-CLOCK`) raised before any ask is answered
-/// (`req_clocks`). The ids were checked before, so no run of a member alone precedes a
-/// `REQ-ASK`. L §6.1, §6.4; E §11.
+/// The run's turns with each member's ask resolved (refcore's `member_ask`), each turn's
+/// `REQ-CLOCK` checked in the run's order before any ask is answered (`req_clock_turn`), so no
+/// member runs alone after a turn that refuses the request: a base ask of the member that
+/// names none of its scenarios, refused alone or not, is answered at its turn in the member's
+/// own world; any other is the lines of the member alone, or the stop its run met, a request
+/// refusal among them (`REQ-CLOCK`). The ids were checked before, so no run of a member alone
+/// precedes a `REQ-ASK`. `realities` are the run's, the base's first. L §6.1, §6.4; E §11.
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for an ask the run's check knew that no member holds.
+/// `REQ-CLOCK`, or a member alone's request refusal (E §11); `ENGINE-INVARIANT` for an ask
+/// the run's check knew that no member holds.
 pub(super) fn resolve(
-    base: &Reality,
+    realities: &[&Reality],
     turns: Vec<Turn>,
     (days, how): (Days, How),
 ) -> Result<Vec<Turn>, Stop> {
-    let mut out = Vec::with_capacity(turns.len());
+    let base = realities.first().ok_or_else(unknown)?;
+    let mut out: Vec<Turn> = Vec::with_capacity(turns.len());
     for turn in turns {
         let Turn::Member(id) = turn else {
+            req_clock_turn(realities, &turn)?;
             out.push(turn);
             continue;
         };
+        let from = out.len();
         let (aliases, own) = found(base, &id)?;
         let member = base.member_alone(&aliases).ok_or_else(unknown)?;
         let m = &member.reality;
@@ -69,6 +74,9 @@ pub(super) fn resolve(
                 Err(stop) => out.push(Turn::Stopped(stop)),
             },
         }
+        out.iter()
+            .skip(from)
+            .try_for_each(|t| req_clock_turn(realities, t))?;
     }
     Ok(out)
 }
@@ -258,30 +266,16 @@ fn alone_run(
     (days, how): (Days, How),
 ) -> Result<Alone, Stop> {
     let prefix = aliases.join(".");
-    let (realities, turns, warnings, level) = match loaded {
-        Loaded::One(m) => {
-            let m: &Reality = m;
-            (
-                vec![m],
-                reality_turns(m, asks)?,
-                m.warnings.clone(),
-                Vec::new(),
-            )
-        }
-        Loaded::Worlds(w) => {
-            let refused = refused_in_order(w)?
-                .into_iter()
-                .map(|(s, r)| format!("scenario {prefix}.{s}: refused: {}", r.text()))
-                .collect();
-            let turns = super::worlds::ask_turns(w, asks)?;
-            (
-                super::worlds::realities(w),
-                turns,
-                merged_warnings(w),
-                refused,
-            )
-        }
-    };
+    let Parts {
+        refused,
+        turns,
+        warnings,
+    } = Parts::of(loaded, asks)?;
+    let realities = realities(loaded);
+    let level = refused
+        .into_iter()
+        .map(|(s, r)| format!("scenario {prefix}.{s}: refused: {}", r.text()))
+        .collect();
     req_clocks(&realities, &turns)?;
     let (answered, warned) = answer_turns_apart(&realities, &turns, warnings, days, how)?;
     Ok(Alone {
