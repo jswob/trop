@@ -562,6 +562,10 @@ fn dcf_day(m: &Reality, v: &Value) -> Result<Day, Stop> {
     if *v == Value::None {
         return Err(refuse(Run::None, "a value is none here: dcf".to_owned()));
     }
+    if *v == Value::Never {
+        // `never` in arithmetic is `RUN-NONE` (L §3.1; P16)
+        return Err(refuse(Run::None, "never in dcf".to_owned()));
+    }
     let shown = v.text(m).map_err(num_stop)?;
     Err(refuse_load(
         Load::Unit,

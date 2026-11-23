@@ -988,6 +988,15 @@ pub(super) fn given(v: &Value, what: &str) -> Result<bool, Stop> {
     Ok(v.as_hole().is_none())
 }
 
+/// A day argument [`given`]: `never` refused `RUN-NONE` too, as `none` is, whatever the other
+/// arguments are (P12, P16). L §3.1, §8.
+pub(super) fn day_given(v: &Value, what: &str) -> Result<bool, Stop> {
+    if *v == Value::Never {
+        return Err(refuse(Run::None, format!("never in {what}")));
+    }
+    given(v, what)
+}
+
 /// A refusal with its code and message (L §8.4).
 pub(super) fn refuse(code: Run, message: String) -> Stop {
     Stop::Refused(Refusal::new(Code::Run(code), message))

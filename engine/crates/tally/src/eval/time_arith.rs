@@ -193,7 +193,8 @@ pub(crate) fn periods_of(
 
 /// The int number of periods from `b` to `a`, two periods of one kind: years, months,
 /// quarters or days, whatever an index's `by` (a key of a range `by n` stands for its n
-/// periods), so keys of two indexes differ as periods too (refcore's `pdiff`). L §4.2
+/// periods), for two periods not typed as keys of one index, two indexes' keys among them
+/// (refcore's `pdiff`; keys of one index differ by its steps, [`keys_differ`]). L §4.2
 /// Differences ("the difference of their positions, for an integer or period index of the
 /// integers or periods"), §4.1.
 fn period_diff(a: Period, b: Period) -> Result<Value, Stop> {
@@ -213,6 +214,28 @@ fn period_diff(a: Period, b: Period) -> Result<Value, Stop> {
     };
     diff.map(Value::int)
         .ok_or_else(|| refuse(Run::Domain, "the difference of two periods".to_owned()))
+}
+
+/// `a - b` for two keys of one index, by its steps: a plain day index's days, a period
+/// index's steps of its `by`, so `b + (a - b)` is `a`; two periods off its grid are refused
+/// (refcore's `key_diff`; P15). None for other keys, which `arith` subtracts. L §4.2
+/// Differences, §5.6.
+pub(crate) fn keys_differ(m: &Reality, a: &Value, b: &Value) -> Result<Option<Value>, Stop> {
+    if let (Value::Day(late), Value::Day(early)) = (a, b) {
+        let days = early
+            .days_to(*late)
+            .ok_or_else(|| refuse(Run::Domain, "the difference of two days".to_owned()))?;
+        return Ok(Some(Value::int(days)));
+    }
+    let (Value::Period(late), Value::Period(early)) = (a, b) else {
+        return Ok(None);
+    };
+    if let Some(steps) = early.steps_to(*late) {
+        return Ok(Some(Value::int(steps)));
+    }
+    let shown = |v: &Value| v.text(m).map_err(num_stop);
+    let message = format!("the difference of periods {} and {}", shown(a)?, shown(b)?);
+    Err(refuse(Run::Domain, message))
 }
 
 /// The months from year 0 to a period's first month: year × 12 + month.
@@ -360,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn keys_of_an_index_by_3_differ_by_their_months() {
+    fn periods_by_3_typed_as_no_one_index_differ_by_months() {
         let quarter = |month: u8| {
             let start = Day::from_ymd(2026, month, 1).expect("a day");
             let end = start.end_months(3).expect("its end");

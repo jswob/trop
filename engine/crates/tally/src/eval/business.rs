@@ -19,7 +19,10 @@ use super::arith::whole_of;
 use super::builtin::read_parts;
 use super::dates::period_arg;
 use super::expr::hole_of;
-use super::state::{Ctx, Engine, Env, given, invariant, not_typed, past_days, refuse, refuse_load};
+use super::state::{
+    Ctx, Engine, Env, day_given, given, invariant, not_typed, num_stop, past_days, refuse,
+    refuse_load,
+};
 use super::windows::{one_day, single, unlisted};
 use crate::base::{Load, Run};
 use crate::hole::{Hole, spread};
@@ -55,25 +58,14 @@ enum Business {
     Rolled(Day, Roll),
 }
 
-/// `add_business(day, k, cal)` as [`Engine::apply`] evaluates it: `k` of 0 is `RUN-ZERO`
-/// (refcore's `add_business_at`). L §4.2, §8.4.
-///
-/// # Errors
-///
-/// `RUN-ZERO` for a count of 0.
-fn business_days(day: Day, k: &Num, cal: &Expr) -> Result<Business, Stop> {
-    if k.is_zero() {
-        let text = crate::load::expr_text(cal);
-        return Err(refuse(
-            Run::Zero,
-            format!("add_business({}, 0, {text})", day.text()),
-        ));
-    }
+/// `add_business(day, k, cal)` as [`Engine::apply`] evaluates it, `k` not 0 (its caller
+/// refuses 0 `RUN-ZERO`; refcore's `add_business_at`). L §4.2, §8.4.
+fn business_days(day: Day, k: &Num) -> Business {
     let step = if k.is_negative() { -1 } else { 1 };
     // a count past 64 bits outnumbers the calendar's days: the walk reads the calendar day by
     // day until it meets 0001-01-01 or 9999-12-31 (L §7.6 item 1)
     let count = k.to_i64().map(i64::unsigned_abs);
-    Ok(Business::Add(day, step, count))
+    Business::Add(day, step, count)
 }
 
 impl Engine {
@@ -112,8 +104,16 @@ impl Engine {
         let k = self.ev(m, call.args.get(1).ok_or_else(arity)?, env, ctx)?;
         // refusals outrank holes (L §8; pick P12): each argument in written order, `none`
         // refused, a known one's own check run, a hole's or a window's waiting
-        given(&d, "add_business")?;
-        count_given(m, &k)?;
+        day_given(&d, "add_business")?;
+        if count_given(m, &k)?.is_some_and(|n| n.is_zero()) {
+            // n = 0 refuses for every d (L §4.2), so a hole or a window d prints in the
+            // message (pick P14)
+            let (shown, text) = (d.text(m).map_err(num_stop)?, crate::load::expr_text(cal));
+            return Err(refuse(
+                Run::Zero,
+                format!("add_business({shown}, 0, {text})"),
+            ));
+        }
         if d.as_hole().is_some() || k.as_hole().is_some() {
             return hole_of(&[d.as_hole(), k.as_hole()]);
         }
@@ -125,7 +125,7 @@ impl Engine {
         if let Some(hole) = unlisted(&[&k], "add_business") {
             return Ok(Value::Hole(hole));
         }
-        let f = business_days(day, &whole_of(m, &k)?, cal)?;
+        let f = business_days(day, &whole_of(m, &k)?);
         self.apply(m, (cal, env, ctx), &f)
     }
 

@@ -201,7 +201,7 @@ pub mod eval {
     pub use stack::Item;
     pub use state::{Collected, Ctx, Engine, Entry, Env, How, RowSeen, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
-    pub(crate) use time_arith::periods_of;
+    pub(crate) use time_arith::{keys_differ, periods_of};
     pub(crate) use timelines::combinations;
     pub(crate) use trace::{
         Balance as TracedBalance, Kind as TraceKind, RuleLine, Snap, Trace, Walked,

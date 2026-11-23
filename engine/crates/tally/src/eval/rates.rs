@@ -14,7 +14,9 @@
 use super::builtin::power_past_64_bits;
 use super::dates::{daycount_of, year_fraction_of};
 use super::expr::hole_of;
-use super::state::{Ctx, Engine, Env, given, invariant, num_stop, refuse, refuse_load, wrong_type};
+use super::state::{
+    Ctx, Engine, Env, day_given, given, invariant, num_stop, refuse, refuse_load, wrong_type,
+};
 use super::windows::{single, unlisted};
 use crate::base::{Load, Run};
 use crate::model::{Class, Code, Number, Reality, Unit, Value, currency_unit, money_num};
@@ -103,8 +105,8 @@ impl Engine {
             .then(|| principal_of(m, principal))
             .transpose()?;
         let r = given(rate, what)?.then(|| yearly(m, rate)).transpose()?;
-        given(from, what)?;
-        given(to, what)?;
+        day_given(from, what)?;
+        day_given(to, what)?;
         if given(daycount, what)? {
             daycount_of(m, daycount)?;
         }

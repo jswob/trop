@@ -9,7 +9,7 @@
 
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{
-    Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, num_stop, partial_text,
+    Collected, Ctx, Engine, Env, Item, Op, arith, equal_sides, keys_differ, num_stop, partial_text,
     resolved_sides,
 };
 use crate::hole::Unknown;
@@ -199,7 +199,12 @@ fn difference(m: &Reality, (a, b): (&Value, &Value), ask: &str) -> Result<String
         // dates, periods load typed as no key, things, texts, codes: no difference
         return Ok(String::new());
     }
-    match arith(m, Op::Sub, a, b) {
+    let keyed = if m.keyed_checks.contains(ask) {
+        keys_differ(m, a, b).transpose()
+    } else {
+        None
+    };
+    match keyed.unwrap_or_else(|| arith(m, Op::Sub, a, b)) {
         Ok(d) => Ok(format!(", difference {}", plain(m, &d)?)),
         Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {
             Ok(format!(", difference refused: {}", r.text()))

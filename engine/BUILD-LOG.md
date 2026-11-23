@@ -6975,3 +6975,35 @@ The plan's group G3 (`tmp/m4/build-plan.md` §3 rows 14, 15, §5), at high (D3's
 - **Open STOP-REPORTs:** none new. G2's on row 9 is answered by 3be861ff (P10).
 - **For T:** no stored vector reaches a decision's flows read twice in one explain (once per explain), a decision's `when` or an attribute under `explain`, keyed `flows(dk[j2], …)` of a decision, `count` over several decision moves, or `explain` of a plan move's `flows` in a model with decisions (`p2`'s `e_fp`); A-2's `Off` branch has `fork.rs`'s unit test.
 - **Checks:** `check commit: green, 24 steps (212s)`, exit 0, on this tree but for this line.
+
+## 2026-11-23 M4 G2's last fix: `never` days, pinned key literals, key differences (issue #252)
+
+G2's fix review (`tmp/m4/review-g2fix.md`) and picks P14 to P16, on 46aad57b; no third review, the coordinator's probes check it (D12). One commit, this one.
+
+**What it builds:**
+- **F1 (P16):** a day argument's own check runs before any hole: `never` is refused `RUN-NONE never in …` in `accrue` (`from`, `to`), `add_business` (`d`) and `dcf` (was `RUN-DOMAIN dcf: never is not a date`, L §3.1). `eval/state.rs` `day_given`; `eval/dates.rs` `dcf_day`.
+- **F2 (P16):** a bare figure, month, quarter or day pinned on a key of an index reads as the same literal in a row of it (`load/pins.rs` `pin_key`, the one place a value pin's literal is checked): one the index lacks is `LOAD-KEY`, a four-digit figure in refcore's words (`the pin of yk is year4, not a key of ys`: `p7_yk_out`, `p5_b4`, `r3_y4_mk`, `r3_y4_dk`), an off-grid period in the row's (`2026-08 is not a key of ms`, `p5_b3`, non-blocking 5; refcore accepts it, held for #255). A four-digit key of a year index is still its key (B4; refcore's refusal is held, `fixes/g2/b2_yearkey`).
+- **P15 (B3 reverted):** two operands of `-` typed as keys of one index (a variable bound over it, an input or def typed `key ix`, read whole or at keys; refcore's `_keydiff`) differ by its steps: a plain day index's days, a period index's steps (`eval/time_arith.rs` `keys_differ`, `eval/expr.rs` `key_index` in `sum`; a check's keyed difference the same, `ask/check.rs`). Periods not typed as keys of one index differ by their kind's periods (`period_diff`, B3's). So `b + (a - b)` is `a` (`r1_by3` e1, e2). Off the grid: `RUN-DOMAIN the difference of periods a and b`.
+- **Non-blocking 2:** keys of a plain day index subtract by the same path (`r2_dayidx` f1 2, f2 `difference 2`, f4 0).
+- **P14:** `add_business(d, 0, cal)` is refused `RUN-ZERO` once `d`'s own check passes, whatever `d` is: `add_business(?"which d?" (d_h), 0, cal)`, a window `add_business(window(2026-03-02, 2026-03-04), 0, cal)` (`eval/business.rs`; `business_days` no longer checks 0).
+- **Non-blocking 6:** `pos(yk)` of an input or def typed `key ix` sees its index (`eval/builtin.rs` `written_index` through `key_index`): `p4_yk` y1 5, y2 2 (was `not implemented`).
+
+**The sweep** (`tmp/m4/g2fix2/sweep.sh`): the paper probes and `tmp/m4/review/g1/`, `g1fix/`, `g2/`, `g2fix/` (with `s1`), ask by ask, on refcore_fast, the engine at 46aad57b (`tmp/m4/g2fix2/tally-before`, the quick binary a green `check quick` confirmed current) and this tree's.
+- **615 asks: 447 same → same, 23 different → same, 133 different → different (128 unchanged), 12 same → different.**
+- Different → same (23): `g2/a1_keys` c5 c6, `a3_forms` c7, `a10_steps` c2..c5, `r1_by3` e1 e2 e3 e5, `r2_dayidx` f1 f2 f4 (P15, nb 2); `p5_b2`, `p5_b4`, `p7_yk_out` o1..o5, `r3_y4_dk`, `r3_y4_mk` (F2).
+- Same → different (12), each a held refcore answer: `p5_b3` b3 (F2: `LOAD-KEY`, refcore accepts; #255); `q1_never` n1 n2 n4 n5 n8, `q4_never_min` n1 n1t n2 (F1: `RUN-NONE never in …`, refcore gives the hole or `RUN-DOMAIN`; P16, #255); `q3_ctx` w2, `q5_zero` z2 z3 (P14: `RUN-ZERO`, refcore the hole).
+- Different → different, changed (5): `p2_types` w3, `p4_yk` y1 y2 (`not implemented` → computed; refcore refuses the year-index pin, held, B4); `q1_never` n3, `q4_never_min` n3 (`RUN-DOMAIN` → `RUN-NONE never in dcf`, F1; refcore's hole is held).
+
+**Stored answers this fix and T's pending rewrite disagree on (red for one turn, not gating):**
+- `spec-g2` (P15's un-hold; stored with B3's periods): `spec/g2/a10_steps/c2`, `c3`, `c4`, `c5`, `spec/g2/b3_one/c1`, `c2`.
+- `spec-p12` (P13, P14): `spec/p12/add_business/h_d__z_n` (now `RUN-ZERO add_business(?"which d?" (d_h), 0, cal_ok)`), and P13's eight calendar ones, red since G2's fix: `add_business/h_d__n_cal`, `h_n__n_cal`, `last_business/h_mo__n_cal`, `h_n__n_cal`, `schedule/h_mo__n_cal`, `h_e__n_cal`, `h_roll__n_cal`, `is_business/h_d__n_cal`.
+- `milestone-report: M4: 27/29` (28/29 at the start: `spec-g2` joins `spec-p12`).
+
+- **Size** (`git diff --shortstat 46aad57b -- engine/crates`): 10 files, +171 −43.
+- **Forms added, and the built forms they meet:** a static key index meets `with` and `as if` pins, `for` bindings, aggregates' variables (their `Domain`), keyed inputs read at keys, a key moved by an int (`(a + 1) - b` stays a key difference), list and int indexes (still `arith`), holes (no difference, `binop`'s hole), checks; `day_given` meets windows (they wait, as before) and `none`; `pin_key` meets int, list, open and period indexes, kinds and axes (untouched).
+- **Left for the follow-up list (P16):** non-blocking 1, 3, 4.
+- **Exceptions:** +0.
+- **Mutants:** none proved (no kernel file touched).
+- **Usage:** this session, its three turns, about 1.29 % of the week by `engine/tools/usage`.
+- **Open STOP-REPORTs:** none new.
+- **Checks:** `check commit: green, 24 steps (191s)`, exit 0, on this tree but for this entry.

@@ -12,7 +12,7 @@
 //! kernel is M6's); `unit` of a key of no unit kind is refused at the key, never guessed.
 
 use super::arith::int_of;
-use super::expr::hole_of;
+use super::expr::{hole_of, key_index};
 use super::extremes::min_max;
 use super::keys::Given;
 use super::state::{
@@ -22,8 +22,8 @@ use super::ty::sample;
 use super::windows::{End, single, unlisted};
 use crate::base::{Load, Run};
 use crate::model::{
-    BindInfo, Class, Code, Domain, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit,
-    money_num, num_money,
+    BindInfo, Class, Code, KeyVal, Number, Reality, Shown, Unit, Value, currency_unit, money_num,
+    num_money,
 };
 use crate::num::{Mode, Num, NumError};
 use crate::read::{Asked, Found, read_input};
@@ -357,7 +357,7 @@ impl Engine {
         if let Value::OutKey { index, text } = &v {
             return Err(refuse(Run::Key, format!("{text} is outside {index}")));
         }
-        let (index, key) = if let Some(ix) = written_index(arg, env) {
+        let (index, key) = if let Some(ix) = written_index(m, arg, env) {
             (ix, pos_key(m, &v)?)
         } else if let Value::Key(KeyVal::Key { index, .. }) = &v {
             (index.clone(), pos_key(m, &v)?)
@@ -632,21 +632,16 @@ pub(super) fn read_parts(e: &Expr) -> Option<(&str, &[Key])> {
     None
 }
 
-/// The index of `pos`'s argument as written: a variable bound over an index, or a key moved
-/// by steps from one, `k ± n`, which keeps its index's type (refcore's `n.args[0]._t.ix`;
-/// check.py types `k + n` as k's key). L §4.2, §5.11 Recurrences.
-fn written_index(arg: &Expr, env: &Env) -> Option<String> {
+/// The index of `pos`'s argument as written: a variable bound over an index, an input or def
+/// typed `key ix`, or a key moved by steps from one, `k ± n`, which keeps its index's type
+/// (refcore's `n.args[0]._t.ix`; check.py types `k + n` as k's key). L §4.2, §5.11
+/// Recurrences.
+fn written_index(m: &Reality, arg: &Expr, env: &Env) -> Option<String> {
     let mut at = arg;
     while let Expr::Paren(x) | Expr::Sum(x, _) = at {
         at = x;
     }
-    let Expr::Name(name) = at else {
-        return None;
-    };
-    let Some(Domain::Index(ix)) = &env.get(name)?.domain else {
-        return None;
-    };
-    Some(ix.clone())
+    key_index(m, at, env)
 }
 
 /// A bare key literal's index and key, `pos(b)`: the one list index holding its text, as

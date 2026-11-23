@@ -19,7 +19,7 @@ use super::partial;
 use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
-use super::time_arith::duration;
+use super::time_arith::{duration, keys_differ};
 use super::ty::{figure_like, sample};
 use super::windows::{as_window, unlisted, window_arith, window_compare};
 use super::years::{as_year, period_like, period_literal, year_literal};
@@ -668,6 +668,7 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let mut acc = self.ev(m, first, env, ctx)?;
         let mut written = Some(first);
+        let mut keys_of = key_index(m, first, env);
         for (op, x) in rest {
             let b = self.ev(m, x, env, ctx)?;
             none_operand(m, (&acc, &b), (written, x), env)?;
@@ -676,6 +677,14 @@ impl Engine {
                 && let Some(year) = as_year(Some(e), &acc)
             {
                 acc = Value::Period(year);
+            }
+            let other = key_index(m, x, env);
+            let differ = *op == AddOp::Sub && keys_of.is_some() && keys_of == other;
+            // a key moved by an int stays a key of its index; any other sum is none's
+            keys_of = keys_of.filter(|_| other.is_none());
+            if differ && let Some(d) = keys_differ(m, &acc, &b)? {
+                acc = d;
+                continue;
             }
             let op = match op {
                 AddOp::Add => Op::Add,
@@ -822,6 +831,43 @@ fn moves_a_year(v: &Value) -> bool {
         return duration(n).is_some();
     }
     matches!(v, Value::Period(_))
+}
+
+/// The index `e` is a key of by its declaration, so two such keys differ by its steps: a
+/// variable bound over the index, an input or def typed `key ix`, read whole or at its keys
+/// (refcore's static `key ix` type, its `_keydiff`; P15). L §4.2 Differences.
+pub(super) fn key_index(m: &Reality, e: &Expr, env: &Env) -> Option<String> {
+    let mut e = e;
+    while let Expr::Paren(inner) = e {
+        e = inner;
+    }
+    let mut name = None;
+    if let Expr::Name(n) = e {
+        if let Some(var) = env.get(n) {
+            return if let Some(Domain::Index(ix)) = &var.domain {
+                Some(ix.clone())
+            } else {
+                None
+            };
+        }
+        name = Some(n);
+    }
+    if let Expr::Post(base, post) = e
+        && let [Postfix::Keys(_)] = post.as_slice()
+        && let Expr::Name(n) = base.as_ref()
+    {
+        name = Some(n);
+    }
+    let name = name?;
+    let declared = if let Some(input) = m.inputs.get(name) {
+        input.ty.as_ref()
+    } else {
+        m.defs.get(name).map(|def| &def.ty)
+    };
+    if let Some(Ty::Key(ix)) = declared {
+        return Some(ix.clone());
+    }
+    None
 }
 
 /// A bare figure that is an `if`'s branch, in the type of the other branch (refcore's

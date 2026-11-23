@@ -10,6 +10,7 @@
 //! refcore's order, each refusal at the pin's line.
 
 use super::check::{Checker, Figure, Files, Scope, Stands};
+use super::keys::index_key_of;
 use super::random::sample_type;
 use super::steps::refuse;
 use super::texts::text;
@@ -18,6 +19,7 @@ use crate::base::{Code, Load, Reach, Refusal};
 use crate::model::{BindInfo, Graph, NameKind, Node, NodeKind, Reality, Rel, Ty};
 use crate::num::{Num, NumError};
 use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
+use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The most axis combinations one ask may reach. L §5.5.
@@ -395,6 +397,7 @@ impl Checker {
             ty = inner;
         }
         let pinned = Node::new(node, name);
+        pin_key(m, value, &ty, name).map_err(|stop| sc.place(stop))?;
         if !pin_literal(m, sc, value, &ty)? {
             if matches!(ty, Ty::Dist(_)) {
                 self.expr(m, sc, value, None, depth)?;
@@ -408,6 +411,47 @@ impl Checker {
         self.edge(&sc.item, pinned, Rel::Pin);
         Ok(())
     }
+}
+
+/// A bare figure, month, quarter or day pinned on a key of an index is read as the same
+/// literal written in a row of it: one the index lacks is refused `LOAD-KEY`, a four-digit
+/// figure in refcore's words, the rest in the row's (refcore's `assign`, its key arm; P16).
+/// L §3.2 Inline figures, §2.5.
+fn pin_key(m: &Reality, node: &Expr, ty: &Ty, name: &str) -> Result<(), Stop> {
+    let (Ty::Key(id), Expr::Lit(lit)) = (ty, node) else {
+        return Ok(());
+    };
+    let read_as_key = matches!(lit, Lit::Month(..) | Lit::Quarter(..) | Lit::Day(_))
+        || matches!(lit, Lit::Num(n) if n.whole && n.unit.is_none());
+    if !read_as_key || m.names.kind(id) != Some(NameKind::Index) {
+        return Ok(());
+    }
+    let index = m.indexes.at(m.names.index_id(id)?)?;
+    if index_key_of(index, lit).is_some() {
+        return Ok(());
+    }
+    let four = matches!(lit, Lit::Num(n) if n.four);
+    let period = match lit {
+        Lit::Month(..) => Some(PeriodKind::Month),
+        Lit::Quarter(..) => Some(PeriodKind::Quarter),
+        Lit::Day(_) => Some(PeriodKind::Day),
+        Lit::Num(_)
+        | Lit::MonthDay(..)
+        | Lit::Key(_)
+        | Lit::Cur(_)
+        | Lit::Bool(_)
+        | Lit::Inf { .. }
+        | Lit::Nominal(_)
+        | Lit::Name(_) => None,
+    };
+    let message = if four && !index.is_int {
+        format!("the pin of {name} is year4, not a key of {id}")
+    } else if (index.is_int && period.is_none()) || (period.is_some() && index.period == period) {
+        format!("{} is not a key of {id}", text(node))
+    } else {
+        return Ok(());
+    };
+    Err(refused(Load::Key, message))
 }
 
 /// An axis pin, `ax = option`: no keys or fields, an option of the axis (refcore's `pin`,
