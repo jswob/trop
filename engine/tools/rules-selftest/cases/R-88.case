@@ -411,7 +411,7 @@ exit: any
 expect: ::notice title=R-88::M9 has no test target yet, so this dispatch with next counts the gating set alone
 expect: "extra": []
 --- replace tools/milestones.toml
-gating = ["S", "M0", "M1", "M2", "M3"]
+gating = ["S", "M0", "M1", "M2", "M3", "M4"]
 --- with
 gating = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8"]
 --- run
