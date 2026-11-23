@@ -288,14 +288,16 @@ impl Engine {
             let before = self.trace_walked();
             let mut counted = false;
             for adj in self.settled_move(m, mv, ctx.cut)? {
-                if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
+                if leg.is_none_or(|l| l == adj.leg.name)
+                    && adj.inst_keys.starts_with(want)
+                    && count_adjustment(m, &adj, (sp, last), (acc, &mut self.entries))?
+                {
                     counted = true;
-                    count_adjustment(m, &adj, (sp, last), (acc, &mut self.entries))?;
                 }
             }
             if !counted {
-                // no adjustment is a cause: the read holds none the walk's forms print
-                // (E §10; P20)
+                // no adjustment is a cause the walk's forms print: none settled reached the
+                // span, an unsettled one is its hole alone (E §10; P20, X3)
                 self.trace_walked_back(before);
             }
         }
@@ -591,29 +593,31 @@ impl Counted {
 /// One adjustment of a move's flows: refused over a span reaching its day when its change
 /// is; `HOLE-CHANGED` from its day when nothing settles it; else its remainder in the
 /// register and its settlements dated in the span, each signed by the way it runs
-/// (refcore's `flows_move`, its adjustments). E §5 steps 5–6, L §5.14.3.
+/// (refcore's `flows_move`, its adjustments). Whether it is a cause the walk's forms print:
+/// a settled one whose day the span reaches or with a settlement in it; an unsettled one is
+/// its hole alone, its question the read's (E §10). E §5 steps 5–6, L §5.14.3.
 fn count_adjustment(
     m: &Reality,
     adj: &crate::book::Adjustment,
     (sp, last): (&Span, Day),
     (acc, entries): (&mut Counted, &mut Entries),
-) -> Result<(), Stop> {
+) -> Result<bool, Stop> {
+    let reached = last >= adj.day;
     if let Amount::Refused(err) = &adj.delta {
         // tally 2.1.2: settled or not, as an unsettled one is the HOLE-CHANGED hole
-        if last >= adj.day {
+        if reached {
             return Err(Stop::Refused(err.clone()));
         }
-        return Ok(());
+        return Ok(false);
     }
     if adj.settled.is_empty() {
-        if last >= adj.day {
+        if reached {
             acc.holes.push(adj.question());
         }
-        return Ok(());
+        return Ok(false);
     }
-    if last >= adj.day
-        && let Some(text) = adj.remainder_text(m)?
-    {
+    let mut cause = reached;
+    if reached && let Some(text) = adj.remainder_text(m)? {
         acc.met.note(entries.intern(Entry {
             word: "adjustment",
             text,
@@ -624,6 +628,7 @@ fn count_adjustment(
         if s.sign == 0 || !s.day.is_some_and(|d| sp.contains(d)) {
             continue;
         }
+        cause = true;
         let q = match &s.amount {
             Amount::Refused(r) => return Err(Stop::Refused(r.clone())),
             Amount::Hole(h) => {
@@ -639,7 +644,7 @@ fn count_adjustment(
             acc.settle_unit.clone_from(&adj.leg.unit);
         }
     }
-    Ok(())
+    Ok(cause)
 }
 
 /// A running total with `q` added. L §5.14.3.

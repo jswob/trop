@@ -7993,3 +7993,47 @@ None is in a gate probe.
 - **Open STOP-REPORTs:** none new.
 - **Usage:** about 0.4 % of the week this turn (0.95 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check quick: green` on 127ffacf's tree; `check commit: green, 24 steps (326s)` on 82c7f68f's.
+
+## 2026-11-23 M4 gate fix X3 (G3 `walked` resumed): explain above back pay (issue #252)
+
+On cf1cf20b (M4 in `gating`; the gate fixes B1, B2, X1 and P35 merged). One commit, with this entry. P34 (`tmp/m4/auto-picks.md`) gives X3 of the gate review (`tmp/m4/gate-review.md`) to G3.
+
+**X3.** `explain` of a figure three `flows` reads above an instance with back pay stopped with `tally run: not implemented` (exit 69), for every month. The input was `X3_explain_backpay_min.tally --ask z3`: `zf` reads `flows(zed, m)`, `zed` reads `flows(top, m)`, `top` reads `flows(wage, m)`, and version `raise` changes the paid `wage[2026-04]`.
+- **The read that left the mark** (found with a backtrace on the mark, since removed):
+  - `zed`'s flows computes `top`'s whole plan, traced (`traced_instances`).
+  - `top[2026-05..08]`'s leg reads `flows(wage, m)`. Its count reads `wage`'s adjustments (`settled_move`, apart, so marked as walked) and meets the unsettled back pay of `wage[2026-04]` (`HOLE-CHANGED`, day 2026-04-10).
+  - `count_move` gave the mark back only when no adjustment matched the keys. A `flows(wage, m)` has no keys, so every adjustment matched and the mark stayed. The plan's close hands its mark out (`plan.rs` `move_instances`), so `traced` refused.
+- **The fix, in P20's form** (`walk/move_flows.rs`): `count_adjustment` now says whether the adjustment is a cause the walk's forms print. That is a settled one whose day the span reaches, or one with a settlement dated in the span. An unsettled one is only its hole, and its question is the read's. Refcore prints no form for it either: `explain wf[2026-05]` with `wf = flows(wage, m)` gives the hole and the rows. Otherwise the mark goes back as before.
+- **Not touched:** a refused change still stops the read where its day is reached, and a settled adjustment's cause still keeps the mark. No probe reaches either.
+- **z3 is refcore's, byte for byte:**
+
+```
+z3: 100.00 PLN
+  [1] zf[2026-03] = 100.00 PLN
+      rule base: won
+        [2] row v:d25 = 25 (…v, governs always, known 2026-01-01; likewise [3] v:d20 = 20, [4] v:d10 = 10, [5] v:pay = 1 000.00 PLN, [6] v:share = 0.1)
+  unfulfilled: top[2026-03]
+  unfulfilled: wage[2026-03]
+  unfulfilled: zed[2026-03]
+  cut 2026-06-20
+```
+
+- **g5x's two stops** (`q8`, `xx7`/`xx8`, the same form through `swap.pln`) and `g5*`'s `q8` now explain. Each gives refcore's value and first node.
+- **What still differs is refcore's whole pass (P22, held for #255):**
+  - `g5*`'s `q8` family: refcore lists `pln_of` again for each pass, 77 nodes against the engine's 25.
+  - `e3`/`e4`: refcore adds `v:d25`, which `m_leg_refused` reads by preparing the main walk's whole plan (`zed`'s day).
+
+**The sweep** (`tmp/m4/g3/sweep24.sh`): the paper probes, every `tmp/m4/review/*/` folder, G3's probes and the gate review's `p/` (copied to `tmp/m4/g3/x3/p`), each text alone, ask by ask. It ran on refcore_fast, cf1cf20b's quick binary (`git archive` in `tmp/m4/g3/before24`) and this tree.
+- **1 350 asks:**
+  - 1 004 same → same;
+  - 19 different → same: `z2`–`z5` of `X3_explain_backpay_min`, `m2`, `m2b` and `m2c`, plus `e5` of `m2b` and `m2c`;
+  - 327 different → different, 14 of them with changed bytes, each `not implemented` → an explanation with refcore's value and first node;
+  - **0 same → different**.
+
+- **Size** (`git diff --shortstat`): 1 file, +19 −14.
+- **Files:** `walk/move_flows.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.12 % of the week this turn (2.60 % for the session) by `engine/tools/usage`.
+- **Checks:** `check commit: green, 24 steps (187s)`. Its report line is `milestone-report: M5a: no test target`, because M4 is gating and its tests ran green among the gating vectors.
