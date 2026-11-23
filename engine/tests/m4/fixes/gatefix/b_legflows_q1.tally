@@ -1,0 +1,44 @@
+model bl
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+index ks = [k1, k2]
+
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor: outside lives 2026-01-01..
+
+input el[k in ks]: bool
+input no: bool
+input d0: date
+input ae: money EUR
+input ap: money PLN
+
+move swap: exchanges
+  on d0
+  leg eur from konto_eur to kantor amount ae
+  leg pln from kantor to konto amount ap
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  el = false "s"
+  no = false "s"
+  d0 = 2026-03-02 "s"
+  ae = 10 EUR "s"
+  ap = 43 PLN "s"
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 100 EUR at 2026-01-01 start "s"
+ask q1: sum(flows(swap.pln, 2026) for k in ks where el[k])

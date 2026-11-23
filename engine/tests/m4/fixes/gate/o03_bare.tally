@@ -1,0 +1,57 @@
+model o03
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+input no: bool
+input yes: bool
+input r: rate
+input x[k in ks]: money PLN
+input e: money EUR
+input fx: num PLN/EUR
+input d0: date
+input d1: date
+input md: rounding
+input stp: money PLN
+
+def acc: num PLN = accrue(x[k1], r, d0, d1, act365, simple)
+def flo: num PLN = max(0, accrue(x[k1], r, d0, d1, act365, simple) - x[k2])
+def br: num PLN = if no then accrue(x[k1], r, d0, d1, act365, simple) else 0
+def rn: money PLN = round(e * fx, 1, md)
+def br2: money PLN = if no then round(e * fx, stp, md) else 0
+def br3: num PLN = if no then x[k1] as if {x[k1] = x[k2]} else 0
+
+ask i1: if no then accrue(x[k1], r, d0, d1, act365, simple) else 0
+ask i2: if no then dcf(d0, d1, act365) else 0, if no then round(e * fx, minor(PLN), md) else 0
+ask i3: if no then bal(konto, d0) else 0, if no then flows(konto, 2026-01) else 0
+ask i4: if no then (x[k1] as if {x[k1] = x[k2]}) else 0
+ask i5: if yes then 0 else accrue(x[k1], r, d0, d1, act365, simple), if yes then 1 else r
+ask i6: max(0, accrue(x[k1], r, d0, d1, act365, simple)), min(accrue(x[k1], r, d0, d1, act365, simple), 0), accrue(x[k1], r, d0, d1, act365, simple) > 0, accrue(x[k1], r, d0, d1, act365, simple) + 0
+ask i7: round(accrue(x[k1], r, d0, d1, act365, simple), 1, down), round(e * fx, 1, md), dcf(d0, d1, act365) + 1, dcf(d0, d1, act365) > 0
+ask i8: acc, flo, br, rn, br2, br3
+ask i9: max(0, bal(konto, d0)), bal(konto, d0) + 0, max(0, x[k1] as if {x[k1] = x[k2]}), if no then e * fx else 0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  no = false "s"
+  yes = true "s"
+  r = 5 %/year "s"
+  x = 7300 PLN "s"
+  e = 10 EUR "s"
+  fx = 4.3 "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2026-03-11 "s"
+  md = half-up "s"
+  stp = 0.01 PLN "s"
+  opening[konto] = 5 PLN at 2026-01-01 start "s"

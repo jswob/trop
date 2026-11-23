@@ -1,0 +1,76 @@
+model s1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+index ks = [k1, k2]
+
+input x[k in ks]: num PLN
+input y: money PLN
+input elig[k in ks]: bool
+input md: rounding
+input r: rate
+input d0: date
+input d1: date
+input fx: num PLN/EUR
+input eur: money EUR
+input cal: calendar
+input n: int
+
+def rx[k in ks]: money PLN = round(x[k], minor(PLN), md)
+def a1[k in ks]: money PLN = max(0, round(x[k], minor(PLN), md) - y)
+def a2[k in ks]: money PLN = if elig[k] then 0 else round(x[k], minor(PLN), md)
+def a3[k in ks]: num PLN = if elig[k] then accrue(x[k], r, d0, d1, act365, simple) else 0
+def a4[k in ks]: bool = accrue(x[k], r, d0, d1, act365, simple) > 0
+def a5[k in ks]: money PLN = if elig[k] then round(eur * fx, minor(PLN), rmode) else 0
+def a6[k in ks]: money PLN = min(y, round(x[k], minor(PLN), rmode)) - (if elig[k] then round(x[k], y, md) else 0)
+def a7[k in ks]: num = if elig[k] then periodic(r, month, simple) else 0
+def a8[k in ks]: num = if elig[k] then dcf(d0, d1, act365) else 0
+def a9[k in ks]: int = if elig[k] then age_months(d0, d1) else 0
+def a10[k in ks]: money PLN = if elig[k] then rx[k] else 0
+def a11[k in ks]: num PLN = if elig[k] then x[k] * factor(r, n, year, effective) else 0
+def a12: money PLN = sum(round(x[k], minor(PLN), md) for k in ks where elig[k]) + y
+def a13: money PLN = max(0, sum(rx[k] for k in ks where elig[k]) - y)
+def a14[k in ks]: money PLN = if elig[k] then (rx[k] as if {md = md}) else 0
+
+ask q1: a1[k] for k in ks
+ask q2: a2[k] for k in ks
+ask q3: a3[k] for k in ks
+ask q4: a4[k] for k in ks
+ask q5: a5[k] for k in ks
+ask q6: a6[k] for k in ks
+ask q7: a7[k] for k in ks
+ask q8: a8[k] for k in ks
+ask q9: a9[k] for k in ks
+ask q10: a10[k] for k in ks
+ask q11: a11[k] for k in ks
+ask q12: a12
+ask q13: a13
+ask q14: a14[k] for k in ks
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[k1] = 10.005 "s"
+  x[k2] = 20.005 "s"
+  y = 5.00 PLN "s"
+  elig[k1] = false "s"
+  elig[k2] = false "s"
+  md = half-up "s"
+  r = 5 %/year "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2026-03-11 "s"
+  fx = 4.3 "s"
+  eur = 10 EUR "s"
+  n = 2 "s"
+  cal = calendar(weekends [sat, sun])

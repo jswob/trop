@@ -1,0 +1,23 @@
+model bk
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+place kp[k in ks]: accounts PLN lives 2026-01-01..
+
+input el[k in ks]: bool
+input d0: date
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  el = false "s"
+  d0 = 2026-03-01 "s"
+ask q2: if el[k1] then bal(kp[k1], d0) else 0

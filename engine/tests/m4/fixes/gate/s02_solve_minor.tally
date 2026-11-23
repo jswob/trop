@@ -1,0 +1,38 @@
+model s02
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+input e: money EUR
+input fx: num PLN/EUR
+input tg: money PLN
+input tgn: num PLN
+input k: num
+input te: money EUR
+
+def conv: money PLN = round(e * fx, minor(PLN), down)
+def lin: num PLN = e * fx
+def dbl: num EUR = e * k
+
+ask a1: solve conv == tg for e in [0 EUR, 1000 EUR] to 0.01 EUR
+ask a2: solve lin == tgn for e in [0 EUR, 1000 EUR] to 0.01 EUR
+ask a3: solve dbl == te for e in [0 EUR, 1000 EUR] to 0.01 EUR
+ask a4: solve lin == tgn for e in [0 EUR, 1000 EUR] to 0.02 EUR
+ask a5: solve conv == tg for e in [0 EUR, 1000 EUR] to 1 EUR
+ask a6: solve e * k == te for e in [0 EUR, 1000 EUR] to 0.01 EUR
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  e = 1 EUR "s"
+  fx = 4.3 "s"
+  tg = 450 PLN "s"
+  tgn = 450 "s"
+  k = 2 "s"
+  te = 209.31 EUR "s"

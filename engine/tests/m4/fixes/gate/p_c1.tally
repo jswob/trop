@@ -1,0 +1,71 @@
+model c1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+index cs = [pl, ae]
+
+input r: rate
+input r2: rate
+input pct: num %
+input fx: num PLN/EUR
+input eur: money EUR
+input pln: money PLN
+input cal[c in cs]: calendar
+input d: date
+input n: int
+input md: rounding
+input comp: compounding
+input p0: money PLN
+input d0: date
+input d1: date
+
+def nb[c in cs]: date = add_business(d, n, cal[c])
+def isb[c in cs]: bool = is_business(d, cal[c])
+def conv: money PLN = round(eur * fx, minor(PLN), md)
+def acc: num PLN = accrue(p0, r, d0, d1, act365, comp)
+def per: num = periodic(r, month, comp)
+
+ask k1: check r == r2
+ask k4: check conv == pln
+ask k5: check nb[pl] == nb[ae]
+ask k8: check isb[pl] == isb[ae]
+ask p2: nb[c] for c in cs with d = 2026-05-01
+ask p3: conv with md = down
+ask p4: conv with eur = 7
+ask p6: acc with comp = effective
+ask p7: acc with p0 = 2000
+ask p8: acc, per with r = r2
+ask p9: conv with fx = 4 PLN/EUR
+ask p10: nb[pl] with n = 0
+ask p11: conv + pln partial
+ask p12: acc partial
+ask p13: conv as if {md = half-even}, conv as if {eur = eur + eur}
+ask p14: acc as if {d1 = d0}, acc as if {d1 = never}
+ask p15: r + r2, r2 - r, r * n, r > r2
+ask p16: per with r = 1 %/month
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 12 %/year "s"
+  r2 = 10 %/year "s"
+  pct = 4 % "s"
+  fx = 4.3 "s"
+  eur = 10.05 EUR "s"
+  pln = 43.00 PLN "s"
+  d = 2026-05-28 "s"
+  n = 2 "s"
+  md = half-up "s"
+  comp = simple "s"
+  p0 = 1000.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  cal[pl] = calendar(weekends [sat, sun], yearly [05-01])
+  cal[ae] = calendar(weekends [fri, sat])
