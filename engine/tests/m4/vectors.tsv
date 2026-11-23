@@ -859,3 +859,18 @@ fixes/g6cfix/x1g_order/l4__l24	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/te
 fixes/g6cfix/x1d_selfk_min/f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	f		-
 fixes/g6cfix/x1d_selfk_min/f__l	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	f l		-
 fixes/g6cfix/x1d_selfk_min/l__f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	l f		-
+fixes/p32/e_selfcycle/l4	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	l4		-
+fixes/p32/e_selfcycle/f	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	f		-
+fixes/p32/e_selfcycle/l24	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	l24		-
+fixes/p32/e_selfcycle/l4__f	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	l4 f		-
+fixes/p32/e_selfcycle/f__l4	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	f l4		-
+fixes/p32/e_selfcycle/l24__f	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	l24 f		-
+fixes/p32/e_selfcycle/f__l24	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/e_selfcycle.tally	f l24		-
+fixes/p32/b_whencycle/l4	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/b_whencycle.tally	l4		-
+fixes/p32/b_whencycle/l24	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/b_whencycle.tally	l24		-
+fixes/p32/b_whencycle/f	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/b_whencycle.tally	f		-
+fixes/p32/c_nowhen/l24	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/c_nowhen.tally	l24		-
+fixes/p32/c_nowhen/l4	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/c_nowhen.tally	l4		-
+fixes/p32/c_nowhen/f	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/c_nowhen.tally	f		-
+fixes/p32/d_pin/fw	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/d_pin.tally	fw		-
+fixes/p32/d_pin/fa	fixes-p32		engine/tests/m4/fixes/p32	engine/tests/m4/fixes/p32/d_pin.tally	fa		-

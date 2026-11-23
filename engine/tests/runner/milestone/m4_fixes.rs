@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 26] = [
+    const GROUPS: [&str; 29] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -34,6 +34,7 @@ mod tests {
         "fixes-p22",
         "fixes-p23",
         "fixes-p30",
+        "fixes-p32",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -45,6 +46,8 @@ mod tests {
         "spec-p22",
         "spec-p26",
         "spec-p30",
+        "spec-p31",
+        "spec-p32",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -229,19 +232,32 @@ mod tests {
         group_holds(VECTORS, "fixes-p30");
     }
 
+    /// P32, the coordinator's probes on P30 (`m4/fixes/p32/`), refcore's bytes: an observation
+    /// naming its own reader, whose day reads the reading cell (`e_selfcycle`, held for #255:
+    /// refcore answers `loose[2026-04]` 0.00 PLN where L §5.11 refuses the cycle); a `when`
+    /// reading the cell (`b_whencycle`: `l4`, and `l24`, `f` held, where refcore refuses with its
+    /// old list guard); a `when` false on the named instance (`c_nowhen`, `RUN-RECORD`); a pin of
+    /// the day by `with` and `as if` (`d_pin` `fw`, `fa`). The text's lines are `spec-p32`'s.
+    #[test]
+    fn m4_fixes_p32() {
+        group_holds(VECTORS, "fixes-p32");
+    }
+
     /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
-    /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`) and under a hole axis (`fixes/g3fix/
-    /// h2_plan_hole_axis` `e_cw`, `e_sm`), which stop "not implemented", and a `given` row marked
-    /// `assumed` printing its `assumed:` line (`fixes/g6b/g1_given_assumed` `q`; L §8.2).
+    /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`, held for #255 since P31: the text's lines are
+    /// `spec-p31`'s) and under a hole axis (`fixes/g3fix/h2_plan_hole_axis` `e_cw`, `e_sm`), and
+    /// a `given` row marked `assumed` printing its `assumed:` line (`fixes/g6b/g1_given_assumed`
+    /// `q`; L §8.2).
     #[test]
     fn m4_fixes_p23() {
         group_holds(VECTORS, "fixes-p23");
     }
 
-    /// F7's traced read the engine doesn't answer yet, apart so `fixes-narrow` gates green:
-    /// `explain` of a `flows` whose plan reads `o.fulfils` at its day's cut, every instance's
-    /// reads listed (`n1_fulfils` `e_feb`; the narrow read declines under a trace), which stops
-    /// "not implemented" on master's and build/m4's engines; refcore's bytes.
+    /// F7's traced reads, apart so `fixes-narrow` gated green while the engine stopped them "not
+    /// implemented": `explain` of a `flows` whose plan reads `o.fulfils` at its day's cut
+    /// (`n1_fulfils` `e_feb`) and of a hole booking's skipped read (`p06_holebook_io` `e1`);
+    /// refcore's bytes, which list the named move's whole list, both held for #255 since P31
+    /// (the text's lines are `spec-p31`'s).
     #[test]
     fn m4_fixes_traced() {
         group_holds(VECTORS, "fixes-traced");
@@ -365,5 +381,26 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p30() {
         group_holds(SPEC, "spec-p30");
+    }
+
+    /// P31's answers (#255; P20, P22, P30): `explain` lists one read set (L §8.2), a refused
+    /// projection a balance node for its refusal with the main walk's runs that name its place
+    /// through the refused one (`fixes/g3/f5_cross` `e_pr`), a binding the `when` it reads
+    /// judging a link and an existence read its day's rows, no other instance's
+    /// (`fixes/g6c/p06_holebook_io` `e1`, `fixes/narrow/n1_fulfils` `e_feb`). Written from
+    /// build/m4's run at 15d512ec (G3's P31 turn), checked by hand.
+    #[test]
+    fn m4_fixes_spec_p31() {
+        group_holds(SPEC, "spec-p31");
+    }
+
+    /// P32's answers (#255): a `RUN-CYCLE` met reading a linked instance's day refuses the
+    /// reading cell (L §5.11), `loose[2026-04] reads itself through a computed key` in every
+    /// ask order (`e_selfcycle`, written from build/m4's run at de29cabc, checked by hand); and
+    /// by P30 a `when` that returns to no cell being evaluated is read, 30.00 PLN and 270.00 PLN
+    /// (`b_whencycle` `l24`, `f`, from refcore's run of a twin reading the rows by their place).
+    #[test]
+    fn m4_fixes_spec_p32() {
+        group_holds(SPEC, "spec-p32");
     }
 }
