@@ -504,7 +504,10 @@ impl Checker {
                 self.expr(m, &inner, tie, None, depth)?;
             }
         }
-        aggregate_type(m, agg.func, &tt, &tys)
+        let t = aggregate_type(m, agg.func, &tt, &tys)?;
+        // kept for the run: a sum over no keys is 0 in this type (L §5.11; pick P36)
+        agg.ty.set(&t);
+        Ok(t)
     }
 
     /// An aggregate with no term: `count`, or `first`, `last`, `min`, `max` of the binding

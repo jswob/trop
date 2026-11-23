@@ -62,7 +62,7 @@ fn keeps_linear(e: &Expr) -> bool {
         | Expr::Prod(..)
         | Expr::Neg(_)
         | Expr::Bal(_)
-        | Expr::If(_)
+        | Expr::If(..)
         | Expr::Last(_)
         | Expr::AsIf(..) => true,
         Expr::Agg(agg) => matches!(agg.func, AggFn::Sum | AggFn::First | AggFn::Last),

@@ -452,7 +452,11 @@ impl Checker {
                     .to_owned(),
             )),
             Expr::List(items) => self.list(m, scope, items, depth),
-            Expr::If(parts) => self.conditional(m, scope, parts, expect, depth),
+            Expr::If(parts, kept) => {
+                let t = self.conditional(m, scope, parts, expect, depth)?;
+                kept.set(&t);
+                Ok(t)
+            }
             Expr::Or(terms) | Expr::And(terms) => self.junction(m, scope, terms, depth),
             Expr::Not(inner) => self.not(m, scope, inner, depth),
             Expr::Paren(inner) => self.expr(m, scope, inner, expect, depth),

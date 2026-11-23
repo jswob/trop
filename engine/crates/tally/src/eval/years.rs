@@ -26,7 +26,7 @@ pub(crate) fn year_form(e: &Expr) -> bool {
         {
             return true;
         }
-        if let Expr::If(parts) = node {
+        if let Expr::If(parts, _) = node {
             let [_, yes, no] = parts.as_ref();
             work.push(yes);
             work.push(no);

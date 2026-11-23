@@ -83,19 +83,23 @@ impl Grid {
         }
     }
 
-    /// The value pinned on v at point `q`: the grid's, but money off whole minor units (step
-    /// 3's centre a + u/2 with u one minor unit) is the exact number of the currency's unit,
-    /// as a pin of such a number on money is (`pin_typed`; L §5.18 step 3, §3.2).
+    /// The value pinned on v at point `q`, exactly, in v's type: step 3's centre a + u/2 is
+    /// money that may hold a fraction of its minor unit, as refcore's `mk` pins it; only the
+    /// answer is on the grid (L §5.18 step 3; pick P36).
     fn point(&self, m: &Reality, q: &Num) -> Result<Value, Stop> {
         if let Grid::Money(cur) = self {
             let minor = m
                 .currencies
                 .get(cur)
                 .ok_or_else(|| invariant("a currency load didn't declare"))?;
-            if !q.checked_div(minor).map_err(num_stop)?.is_integer() {
-                let unit = currency_unit(m, currency_of(m, cur)?).map_err(num_stop)?;
-                return Ok(Value::Number(Number::plain(q.clone(), unit)));
-            }
+            let money = q
+                .to_money_part(minor, currency_of(m, cur)?)
+                .map_err(num_stop)?;
+            return Ok(Value::Money(money));
+        }
+        if *self == Grid::Int && !q.is_integer() {
+            // an int's centre is the plain number it is, never an int (refcore's `mk`)
+            return Ok(Value::Number(Number::plain(q.clone(), Unit::one())));
         }
         self.value(m, q)
     }

@@ -8088,3 +8088,52 @@ On 697739b8 (X3). One commit, with this entry. P37 (`tmp/m4/auto-picks.md`, stat
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 0.15 % of the week this turn (2.75 % for the session).
 - **Checks:** `check commit: green, 24 steps (203s)`. M4 is gating, so its tests ran among the gating vectors.
+
+## 2026-11-23 M4 gate's last fix, P36 (G4 resumed; issue #252)
+
+Pick P36 answers the fix review (`tmp/m4/review-gatefix.md`, probes `tmp/m4/review/gatefix/`): G2 and G3 (the sampler) and G1 (`solve`'s centre). On `fix/m4-gate` from cf1cf20b. Commit b7161501 (statement 1) and the commit before this entry (statement 2). Scratch in `tmp/m4/gfix/` (untracked).
+
+**Statement 1. A term's type is the type load's checker gives it** (L §7.1, §3.2, §5.11). The run no longer samples a value to learn a type for these two uses:
+- **Kept at load, read at run.** `syntax/tree.rs` `LoadType`, a slot on `Expr::If` and `Agg`. Load's checker fills it (`load/types.rs` for an `if`, `load/ops.rs` `aggregate` for a sum). It is never part of a node's equality. A `RefCell` like `Tok`'s `Cell` mark, since the parser has no state to number nodes and an address isn't deterministic. It makes `Expr` not `Sync`: no thread reads a tree today (R-42), but M7's threads will need it noted.
+- **An empty sum** is 0 in the sum's load type (`eval/aggregate.rs` `zero_in`, refcore's `zero_of` of `n._t`):
+  - money 0;
+  - a `num u` 0;
+  - an int 0 for an int, a figure, a key, `dyn`, or a unit over a kind's base;
+  - `RUN-DOMAIN` for rates;
+  - `not implemented` for a type load's checker doesn't work out (`Unseen`), where the run had guessed by sample before.
+- **A bare figure that is an `if`'s branch** takes the `if`'s load type (`eval/expr.rs` `flex_branch`, through `typed`).
+- **What remains of `eval/ty.rs`.** `zero_of` and `figure_like` are removed. `sample` stays for two questions about a read's class, not an expression's type: `partial`'s `reads_a_number` (whether a name or postfix read is a coefficient's operand) and `unit(x)`'s `quantity_typed`. Moving them to load's type would mean a slot on every name and postfix node, past this pick.
+- Size: 14 files, +167 −135.
+
+**Statement 2. `solve`'s centre is exact** (L §5.18 step 3). The centre a + u/2 is money that may hold half a minor unit, as refcore's `mk` pins it. Only the answer is on the grid.
+- `num/money.rs`: a third tier, `Units::Part`, a number of minor units that isn't whole (kernel, no new file). Only `Num::to_money_part` makes one. Sum, difference, negation and order are exact, and a whole result is a `Word` or `Big` again. `to_big` refuses a `Part` as an invariant break, since its callers take it first.
+- `num/text.rs`: a `Part` prints as its exact number (`450.005 PLN`, refcore's `fmt_q`).
+- `eval/arith.rs` `finish`: a money result keeps a fraction of a minor unit. A money result is off whole minor units only where an operand is, so whole money's results are unchanged.
+- `model/value.rs`: `num_money_part`.
+- `eval/solve.rs` `Grid::point`: money pinned as that money, which replaces the number of the currency's unit and the comment the review flagged. An `int` grid's centre off the integers is the plain number it is, as `mk` gives it.
+- Unit test `solves_centre_holds_part_of_a_minor_unit`.
+- Size: 6 files, +132 −24.
+
+**The review's probes** (`tmp/m4/gfix/gf.sh`): 65 files, each on refcore_fast, cf1cf20b's quick binary and this tree. All 65 are refcore's bytes now; before, 32 differed.
+- G1: `x1_min` q `0.33 EUR`, `x1_grossup2` q `1 234.58 PLN`, `r4` h5 `333.34 PLN`, `s1` a5 `104.65 EUR`, `s3` i3 `333 JPY`.
+- G2: `b_legflows_q1` `0.00 PLN`, `b_legflows_q2` `0.00 PLN`, `b_keyedbal` q1–q3.
+- G3: `b_roundband` `0.00 PLN`, `b_bandif` `0 PLN`; `b_bindbal` `0`.
+- `x1_m1` and `x1_m6`'s refusal names the centre `450.005 PLN`, as refcore.
+
+**The sweep** (`tmp/m4/gfix/sweep.sh`, `sweep36.txt`). Each ask alone on refcore_fast, cf1cf20b's quick binary and this tree, over:
+- the main folder's paper probes;
+- review folders g1, g1fix, g2, g2fix, g3, g3fix, g4, g6b, g6c, g6cfix, gatefix;
+- the gate review's `agent/` and `p/`;
+- my six texts in `tmp/m4/gfix/`.
+
+Results:
+- **2 176 asks:** 1 712 same → same, 39 different → same, 425 different → different with unchanged bytes, **0 same → different**.
+- **Different → same (39):** `gatefix` 35 (the asks above, `t1`/`t2` 15, `fx_1`, `fx_2`, `fx_6`, `b_keyedbal` and `b_legflows` whole), `agent/o02_emptysum` e01, e20, e26, and `agent/c04_ratemean` a_empty. All are empty sums or bare branches typed by load.
+
+- **Size** (`git diff --shortstat cf1cf20b -- engine/crates`): 20 files, +288 −164 (statement 1's load keeping is about 0.1 k of it).
+- **Kernel files:** `num/money.rs`, `num/text.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.43 % of the week this turn (1.38 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green, 11 steps (88s)` on b7161501's tree; `check commit: green, 24 steps (332s)` on statement 2's.

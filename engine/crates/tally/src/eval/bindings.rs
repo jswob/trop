@@ -434,7 +434,7 @@ pub(crate) fn reads_name(e: &Expr, name: &str) -> bool {
             | Expr::Never
             | Expr::Cut
             | Expr::List(_) => {}
-            Expr::If(parts) => work.extend(parts.iter()),
+            Expr::If(parts, _) => work.extend(parts.iter()),
             Expr::Or(terms) | Expr::And(terms) => work.extend(terms.iter()),
             Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => work.push(y),
             Expr::Cmp(c) => work.extend([&c.0, &c.2]),
@@ -515,7 +515,7 @@ pub(crate) fn names_in(e: &Expr) -> Option<Vec<&str>> {
         match x {
             Expr::Name(n) => out.push(n.as_str()),
             Expr::Lit(_) | Expr::Str(_) | Expr::None | Expr::Never | Expr::Cut | Expr::List(_) => {}
-            Expr::If(parts) => work.extend(parts.iter()),
+            Expr::If(parts, _) => work.extend(parts.iter()),
             Expr::Or(terms) | Expr::And(terms) => work.extend(terms.iter()),
             Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => work.push(y),
             Expr::Cmp(c) => work.extend([&c.0, &c.2]),
@@ -595,7 +595,7 @@ fn walk_order(e: &Expr) -> Vec<&Expr> {
         | Expr::Cut
         | Expr::List(_)
         | Expr::Calendar(_) => Vec::new(),
-        Expr::If(parts) => parts.iter().rev().collect(),
+        Expr::If(parts, _) => parts.iter().rev().collect(),
         Expr::Or(terms) | Expr::And(terms) => terms.iter().rev().collect(),
         Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => vec![y],
         Expr::Cmp(c) => vec![&c.2, &c.0],
@@ -813,7 +813,7 @@ fn expr_parts(e: &Expr) -> Vec<&Expr> {
         | Expr::Cut
         | Expr::List(_)
         | Expr::Calendar(_) => {}
-        Expr::If(parts) => out.extend(parts.iter()),
+        Expr::If(parts, _) => out.extend(parts.iter()),
         Expr::Or(terms) | Expr::And(terms) => out.extend(terms.iter()),
         Expr::Not(y) | Expr::Neg(y) | Expr::Paren(y) => out.push(y),
         Expr::Cmp(c) => out.extend([&c.0, &c.2]),
@@ -1005,7 +1005,7 @@ mod tests {
         assert_eq!(flat, ["j", "m", "c2", "k", "j", "b2"], "refcore's order");
         // `if a then b else c`: the else first
         let parts = ["a", "b", "c"].map(|n| Expr::Name(n.to_owned()));
-        let choice = Expr::If(Box::new(parts));
+        let choice = Expr::If(Box::new(parts), crate::syntax::LoadType::default());
         let names: Vec<&str> = names_walked(&choice);
         assert_eq!(names, ["c", "b", "a"], "the if's parts, last first");
     }
