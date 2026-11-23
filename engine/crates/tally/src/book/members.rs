@@ -1089,11 +1089,9 @@ impl Engine {
                     .moves
                     .get(&mid)
                     .ok_or_else(|| invariant("a link to a move load didn't build"))?;
-                let insts = self.move_instances(m, mv, cut)?;
-                Ok(insts
-                    .iter()
-                    .find(|i| i.keys == keys)
-                    .map_or(Value::None, |i| Moving::Plan(i.clone()).value()))
+                // the one instance at the keys, read narrowly at a past cut (fence F7)
+                let inst = self.instance_at(m, mv, &keys, cut)?;
+                Ok(inst.map_or(Value::None, |i| Moving::Plan(i).value()))
             }
         }
     }

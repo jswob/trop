@@ -77,6 +77,13 @@ pub(crate) struct Prefixes {
     /// The cells in progress when each cut's main walk was last given up: while one of them
     /// still is, a leg's read takes the walk up to its day without trying the main walk.
     pub(crate) blocked: BTreeMap<Day, BTreeSet<CellId>>,
+    /// Fence F7's narrow reads: each plan move's binding tuples at a past booking cut, with the
+    /// instances and days read of them, by (move, cut), kept like the lists (P8-L10;
+    /// `walk/narrow.rs`).
+    pub(crate) narrow: BTreeMap<(String, Day), crate::walk::Narrowed>,
+    /// Whether each move's cone can't reach its own plan, so a narrow read may take it
+    /// (`walk/narrow.rs`).
+    pub(crate) narrows: BTreeMap<String, bool>,
 }
 
 impl Ctx {
@@ -457,6 +464,9 @@ pub struct Engine {
     /// Whether a projection's walk read again through a later day continues from where it
     /// stood: fence F6, or its plain twin, a new walk per read (P §2.5; `walk/fork.rs`).
     pub(crate) forks: crate::walk::Forks,
+    /// Whether a read at a past booking cut evaluates only the instances it names: fence F7,
+    /// or its plain twin, the move's whole list at that cut (P8-L10; `walk/narrow.rs`).
+    pub(crate) plan_reads: crate::walk::Plans,
     /// The projections' walks the timeline in force keeps past their reads, for fence F6
     /// (P §2.5, §3.5; `walk/fork.rs`).
     pub(crate) parked: crate::walk::Parked,
@@ -572,6 +582,8 @@ pub struct How {
     pub lows: crate::walk::Lows,
     /// Whether the engines continue a projection's walk read again through a later day.
     pub forks: crate::walk::Forks,
+    /// Whether a read at a past booking cut evaluates only the instances it names.
+    pub plans: crate::walk::Plans,
     /// The fault planted, if any.
     #[cfg(feature = "fault-injection")]
     pub fault: Option<crate::walk::Fault>,
@@ -580,15 +592,16 @@ pub struct How {
 impl How {
     /// How `run` computes: every fence's form, the cells shared by a law date class (E §3.2),
     /// a projection's common case from F5's tree (P §2.3), a projection's walk read again
-    /// continued by F6 (P §2.5), the event walk's days (P §2.2).
+    /// continued by F6 (P §2.5), a past booking cut's reads narrowed by F7 (P8-L10), the event
+    /// walk's days (P §2.2).
     pub const FENCES: How = How::new(
         Memo::Classes,
         crate::walk::Lows::Tree,
         crate::walk::Forks::On,
     );
 
-    /// The engines computing as `memo`, `lows` and `forks` say, walking the event walk's days,
-    /// no fault planted.
+    /// The engines computing as `memo`, `lows` and `forks` say, a past booking cut's reads
+    /// narrowed by F7, walking the event walk's days, no fault planted.
     #[must_use]
     pub const fn new(memo: Memo, lows: crate::walk::Lows, forks: crate::walk::Forks) -> How {
         How {
@@ -596,6 +609,7 @@ impl How {
             days: Days::Events,
             lows,
             forks,
+            plans: crate::walk::Plans::Narrow,
             #[cfg(feature = "fault-injection")]
             fault: None,
         }
@@ -608,6 +622,7 @@ impl How {
     pub(crate) fn engine(self, ask_cut: Day) -> Engine {
         Engine::new(ask_cut)
             .with_how((self.memo, self.lows, self.forks))
+            .with_plans(self.plans)
             .with_days(self.days)
     }
 }
@@ -641,6 +656,7 @@ impl Engine {
             proj_walks: BTreeMap::new(),
             lows: crate::walk::Lows::Tree,
             forks: crate::walk::Forks::On,
+            plan_reads: crate::walk::Plans::Narrow,
             parked: crate::walk::Parked::default(),
             #[cfg(feature = "fault-injection")]
             plant: None,
@@ -704,6 +720,17 @@ impl Engine {
     #[must_use]
     pub fn with_days(self, days: Days) -> Engine {
         Engine { days, ..self }
+    }
+
+    /// The engine reading a move's instances at a past booking cut as `plans` says: only the
+    /// instances a read names, fence F7, or the move's whole list at that cut, the plain twin
+    /// (P8-L10).
+    #[must_use]
+    pub fn with_plans(self, plans: crate::walk::Plans) -> Engine {
+        Engine {
+            plan_reads: plans,
+            ..self
+        }
     }
 
     /// The engine computing as its fences say: keeping its cells as `memo` says, shared by a

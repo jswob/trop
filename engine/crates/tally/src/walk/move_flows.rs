@@ -48,7 +48,8 @@ impl Engine {
         let insts = if mv.decision {
             std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
         } else {
-            self.move_instances(m, mv, ctx.cut)?
+            // the instances at its keys, read narrowly at a past cut (fence F7)
+            self.flows_instances(m, mv, (&want, sp), ctx.cut)?
         };
         self.trace_at_key(m, mv, (&want, sp), ctx)?;
         let mut acc = Counted::default();

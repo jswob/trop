@@ -68,6 +68,8 @@ struct Seen {
     lows: Lows,
     /// Whether each ask's engine continues a projection's walk read again (P §2.5).
     forks: Forks,
+    /// Whether each ask's engine narrows a past booking cut's reads (F7, P8-L10).
+    plans: crate::walk::Plans,
     /// The side of a diff across two stacks the next ask answers, its cells once answered.
     side: Option<Side>,
     /// The run's register entries while this world's ask is answered, lent to each of its
@@ -555,6 +557,7 @@ impl World {
                 memo: how.memo,
                 lows: how.lows,
                 forks: how.forks,
+                plans: how.plans,
                 side: None,
                 entries: Entries::default(),
                 #[cfg(feature = "fault-injection")]
@@ -1152,6 +1155,7 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
         .with_how((seen.memo, seen.lows, seen.forks))
         .for_ask(ask)
         .in_tuple(env);
+    engine.plan_reads = seen.plans;
     engine.booked = core::mem::take(&mut seen.booked);
     engine.entries = core::mem::take(&mut seen.entries);
     #[cfg(feature = "fault-injection")]

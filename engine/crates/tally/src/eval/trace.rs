@@ -393,6 +393,12 @@ impl Trace {
 }
 
 impl Engine {
+    /// Whether the ask is traced, an `explain` or an `inputs-of`, whatever is evaluating now
+    /// (E §10).
+    pub(crate) fn explaining(&self) -> bool {
+        self.trace.is_some()
+    }
+
     /// Whether a read now is traced: an `explain` is being traced and no shared structure is
     /// evaluating (E §3.2, §10).
     pub(crate) fn tracing(&self) -> bool {
