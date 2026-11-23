@@ -22,7 +22,7 @@ use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
     Window, pattern_text,
 };
-use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, held, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
@@ -717,6 +717,22 @@ impl Engine {
             format!("{}{keys_text} = {shown} ({})", def.id, row.version),
             String::new(),
         )?;
+        // a row with a start and no end, read for a law date after the ask's cut, is held
+        // there, as an input's row is (L §8.2 `held`; P28)
+        if let Some(day) = ctx.law
+            && held(m, row, ctx.law, clocks)?
+        {
+            self.narrow_to_day(ctx.law);
+            self.note(
+                "held",
+                format!(
+                    "{figure} = {shown} ({}), read for {}",
+                    row.version,
+                    day.text()
+                ),
+                String::new(),
+            )?;
+        }
         if traced.is_some() {
             self.trace_value(traced, &Ok(value.clone()));
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);

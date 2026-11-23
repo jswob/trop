@@ -219,7 +219,7 @@ impl Engine {
         let vals = self.args(m, call, env, ctx)?;
         let holes: Vec<Option<&crate::hole::Hole>> = vals.iter().map(Value::as_hole).collect();
         if let Some(i) = vals.iter().position(|v| *v == Value::None) {
-            return Err(none_arg(m, call, i, env, "an ordering"));
+            return Err(none_arg(m, call, i, env, "ordering"));
         }
         if holes.iter().any(Option::is_some) {
             return hole_of(&holes);

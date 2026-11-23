@@ -1128,7 +1128,7 @@ pub(super) fn compare_values(
             return Err(refuse(
                 Run::None,
                 format!(
-                    "{} is none here: an ordering",
+                    "{} is none here: ordering",
                     none_side(m, (a, written), env)?
                 ),
             ));

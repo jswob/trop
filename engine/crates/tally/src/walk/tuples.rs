@@ -338,7 +338,9 @@ impl Engine {
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<Option<MvRef>, Stop> {
-        if !mv.decision {
+        // a traced read takes the whole list, whose pass prints the rows the link rests on
+        // (E §10; P26)
+        if !mv.decision && !self.tracing() {
             // the move's tuples at the cut, kept once for every link and read there (fence F7)
             self.plan_open(mv, cut)?;
             let (found, stops) = match self.kept_tuple(m, mv, keys, cut)? {

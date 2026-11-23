@@ -336,10 +336,15 @@ impl Engine {
             {
                 st = spread(&[st.as_ref(), Some(h)]);
             }
-            if let Moving::Obs(o) = &x
-                && let Some(t) = self.obs_target(m, o, ctx.cut)?
-            {
-                fulfilled.insert(t);
+            if let Moving::Obs(o) = &x {
+                // the links an observation's target reads are no cause the walk's forms
+                // print: the member prints as its row where a read takes its leg (E §10; P26)
+                let before = self.trace_walked();
+                let target = self.obs_target(m, o, ctx.cut);
+                self.trace_walked_back(before);
+                if let Some(t) = target? {
+                    fulfilled.insert(t);
+                }
             }
             if dom.0 == MvDom::Event
                 && let Some(h) = self.same_kind_hole(m, &x, dom.1, ctx)?
@@ -876,7 +881,12 @@ impl Engine {
             .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
         let mut changed = false;
         let mut moved = false;
-        for a in self.unsure_of(m, mv, cut)? {
+        // the measure is no cause the walk's forms print: the read gives the day's hole, which
+        // prints as a hole (E §10; P26)
+        let before = self.trace_walked();
+        let unsure = self.unsure_of(m, mv, cut);
+        self.trace_walked_back(before);
+        for a in unsure? {
             if a.inst_id == inst.id && a.leg.name == leg {
                 changed = true;
                 moved = moved || !a.new_ends.is_empty();
@@ -1091,7 +1101,12 @@ impl Engine {
                     .ok_or_else(|| invariant("a link to a move load didn't build"))?;
                 // the instance by its existence alone, never its amounts: a field read of it
                 // takes it again at the reader's cut (L §5.19 Links; P22)
-                let named = self.linked_instance(m, mv, &keys, cut)?;
+                // the plan's list it reads is no cause the walk's forms print: the link prints
+                // as the observation's row (E §10; P26)
+                let before = self.trace_walked();
+                let named = self.linked_instance(m, mv, &keys, cut);
+                self.trace_walked_back(before);
+                let named = named?;
                 Ok(named.map_or(Value::None, |r| Value::Mv(Box::new(r))))
             }
         }
