@@ -206,8 +206,9 @@ whole = 2
         };
         let mut out = vec![format!("{label} {shown}")];
         let met = engine.collected();
-        let mut entries: Vec<String> = met
-            .entries_sorted(engine.entries())
+        let mut entries: Vec<String> = engine
+            .entries()
+            .sorted(&met)
             .expect("the run's entries")
             .iter()
             .map(|e| format!("  + {}|{}|{}", e.word, e.text, e.figure))

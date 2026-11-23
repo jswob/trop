@@ -7158,3 +7158,114 @@ P20: the read set of a decision's `flows` or `count` (what `explain` prints and 
 - **What I tried:** the binding half built, `check commit` red on `r_p_mr3_z2` only; taken back (`decided_members` skips the run as before), so the code is as it was there. The patch: `tmp/m4/g3/f20/p20-wip1.patch`, `decided_members`'s hunk (push `Moving::Plan(run.inst)` when `left_out`).
 - **What I ask:** 1. Is `unfulfilled: rent[2026-01]` right for `r_p_mr3_z2` under P20? If so, T holds M1's vector for #255 and the hunk goes in (`c5`, `c6` e_cn, i_cn green). 2. Does a running read in a left-out run's `when` list the rows behind its balance (E §10, as every balance does), or only the opening and its register lines (T's `c6` i_ff, `c1` i_ff)?
 - **State:** the last green commit is this entry's; nothing uncommitted.
+
+## 2026-11-23 M4 G6b `registers`: a register's entries kept once per run, its sets shared (issue #252)
+
+The perf plan's group G6b (`tmp/m4/perf-plan.md` §1 cause 1, steps 1–6, §4), on a2193ad4. Plain code, no fence opened. Three commits: 24739fed (step 1, the API, no behaviour change), 381a324a (steps 2–5) and this entry's (the exceptions step's three report-only hits restructured away). Scratch, scripts and outputs in `tmp/m4/g6b/` (untracked).
+
+**What moved** (no printed byte: T's vectors, the fences' suites, the whole pin oracle in `check commit`; every curve run, `c1_r2` and `d11_full` byte-identical before and after).
+- *Step 1:* `eval/register.rs` (new, non-kernel) holds `Collected` (what a read met), `Entry` and `RowSeen`, moved from `eval/state.rs`, with private fields. Every caller reads and writes through its methods (`note`, `merge`, `deciding`, `note_version`, `note_scenario`, `note_listed`, `note_row`, …).
+- *Step 2:* the entries are interned per run in `Entries`, the run's table. It is `Engine.entries`, carried through `ask/answer.rs`'s worlds and never global. A register holds `EntryId`s.
+  - An id has no `Ord`, and a line never prints by it. `Entries::sorted` gives a register's entries sorted by the entry's word, text and figure (R-47); `ids()` is for membership only.
+  - Past 2^31 entries a run stops with ENGINE-INVARIANT.
+- *Step 3:* a register's entries are one immutable shared list (`Rc<Vec<EntryId>>`, kept sorted by number for membership only). `merge` handles four cases:
+  - the same list: nothing to do;
+  - a few ids (up to 1/16 of the other's length) into many: found by bisection;
+  - one list holds the other: that list is kept or taken, with no copy;
+  - otherwise: one new union.
+  - `note` pushes when the id is the newest in the table.
+- *Step 4:* the deciding part (`pinned`, `pin met`, `assumed`) is kept apart. Its ids carry the top bit, set at interning, and each register keeps its own `deciding` list. So `deciding()` is a read and `decides()` a test, where `deciding()` filtered and cloned every entry.
+- *Step 5:* versions, scenario facts, listed facts and rows are each an `Rc`-shared set, copied only when a register writes into a set another one holds. They are not interned. This differs from the plan's "the same way": after steps 2–4 the profile shows none of them (judged).
+- *Step 6:* `cum` is kept per entry, with no stride. Its distinct ids are 79 k, 117 k, 152 k, 194 k and 243 k from 2026 to 2030, about +41 k a year. That makes about 1.5 M ids, about 6 MB, at 2059 (judged, linear), under the step's 0.3 GB. So F1's file (`walk/state.rs`) changes only in its types (`Ent.reg`, `adj_regs`); its checkpoints are untouched.
+- *The callers:*
+  - walk/** and book/** pass the table where an entry is made (`entry_id`, `intern`) or tested by its word (`any_word`).
+  - 19 `note` calls are now fallible (`?`), and so is `index_assumed`.
+  - The builder's test `tests/eval_cases.rs` reads through the API.
+  - Three unit tests in `register.rs` cover the text order, sharing and the deciding part.
+
+**Measures** (the plan's §4; one heavy run at a time, niced). Before is a2193ad4, measured today on the same binary profile. G5's and G6a's columns are from their entries. Load was about 9 to 14 during the curve, so instructions are the figure to compare; walls are shown as measured.
+
+The curve (b1 cut short, `tmp/m4/g5/b1_<year>`, quick binary; `tmp/m4/g6b/curve.sh`):
+
+| Horizon | Ask | G5 (9d055cc4) | G6a | Before (a2193ad4) | After (381a324a) | Instructions |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026 | `k1` | 2.34 s, 344 MB, 34.2 G | 2.75 s, 318 MB, 33.1 G | 2.45 s, 305 MB, 30.0 G | 1.81 s, 203 MB, 21.2 G | −29.4 % |
+| 2027 | `k1` | 5.58 s, 923 MB, 77.7 G | 5.11 s, 877 MB, 73.0 G | 4.94 s, 836 MB, 65.1 G | 3.28 s, 443 MB, 46.4 G | −28.7 % |
+| 2028 | `k1` | 9.99 s, 1 560 MB, 138.0 G | 9.05 s, 1 523 MB, 128.4 G | 8.71 s, 1 451 MB, 114.5 G | 5.46 s, 675 MB, 74.6 G | −34.9 % |
+| 2029 | `konto_balance` | 16.43 s, 2 348 MB, 218.5 G | 14.43 s, 2 309 MB, 202.7 G | 13.52 s, 2 202 MB, 181.8 G | 7.82 s, 937 MB, 107.8 G | −40.7 % |
+| 2030 | `konto_balance` | 24.28 s, 3 195 MB, 322.8 G | 20.99 s, 3 209 MB, 298.2 G | 19.88 s, 3 061 MB, 268.7 G | 10.46 s, 1 212 MB, 146.7 G | −45.4 % |
+| `v1` 2028 | `k1` | 4.27 s, 872 MB, 58.2 G | 4.24 s, 858 MB, 58.3 G | 3.86 s, 818 MB, 50.0 G | 3.03 s, 431 MB, 41.8 G | −16.5 % |
+| `v1` 2030 | `k1` | 8.62 s, 1 585 MB, 107.9 G | 7.86 s, 1 568 MB, 108.0 G | 7.00 s, 1 497 MB, 92.6 G | 5.53 s, 744 MB, 77.3 G | −16.5 % |
+
+- Footprint is −33 % at 2026 and −60 % at 2030. Each year adds 240, 232, 262 and 275 MB.
+- From 2028 to 2030 the footprint grows 1.80×, the instructions 1.97× and the wall 1.92×. Before, the footprint grew 2.11× and the instructions 2.35×; G5's footprint grew 2.05×.
+- *Fit (judged, not run),* a + b·n + c·n² over the five points:
+  - footprint about −10 + 208 n + 7.1 n² MB, about 15 GB at 34 years (before: 348 n + 57 n², 77 GB);
+  - instructions about 1.8 + 17.4 n + 2.31 n² G, about 3.3 T at 34 years (before: 10.3 T).
+
+The runs (release binary `engine/target/g6bafterr`; `perf row`, and `tmp/m4/g6b/b1.sh` for one longer b1):
+
+| Run | G5 | G6a | Before (a2193ad4) | After (381a324a) |
+| --- | --- | --- | --- | --- |
+| `c1_r2` | 14.12 s, 633 MB, 211.6 G | 13.03 s, 581 MB, 202.4 G | 16.10 s, 582 MB, 202.5 G | 8.80 s at load 2.8, 360 MB, 125.3 G (the plan: 8–11 s) |
+| `b1` | stopped past 8 GB after 49.3 s | stopped at 8.9 GB after 52.2 s, 846 G | not run | `perf row`: stopped at its 90 s, under 8 GB; run1.py at 300 s: stopped at 8 GB resident after 212.5 s, 13.5 GB footprint, 3 269.5 G, no answer |
+| P8-L2 `d11_full` | 0.46 s, 61.6 MB | 0.41 s, 57.7 MB, 5.66 G | 397–433 ms warm, 58.3 MB, 5.64 G | 283–300 ms warm (616 ms cold in the `perf row` pass), 36.2 MB, 4.43 G, digest T's |
+| P8-14 (`perf row`) | 1.55 s on load 12 | 896 ms, 191.1 MB, 13.40 G | (G6a's) | 614.82 ms median, 115.3 MB, 9.23 G (−31 %) |
+
+- P8-14's counts are unchanged (`perf counts P8-14`): `def_misses 25450, days_stepped 960, walks_shared 582`.
+- `c1_r2` prints the same bytes (sha `9defd731bf0f`).
+
+**The census** (temporary code, reverted before this entry; quick binary). Each triple counts the ids referenced, the ids stored (each shared list counted once) and the lists.
+- At 2030:
+  - the memo cells' registers: 2.74 M, 2.57 M in 128 738 lists;
+  - the walks' `cum`: 2.69 M, 243 k in 556;
+  - the walks' log entries: 435 k, 1 113 in 122;
+  - the plan instances' registers: 1.82 M, 141 k in 16 201.
+  - The run's table holds 2 757 entries.
+  - So the registers now store about 3 M ids, about 12 MB. They are no longer the footprint.
+- From 2026 to 2030, every structure grows linearly:
+  - main walks 43 → 235 (+48 a year); projection walks 4;
+  - agenda acts about 13–14 k, flat; plan handles 3.3 k → 13 k; orders 6.5 k → 18.4 k; log entries 1.3 k → 6.1 k;
+  - plan lists 1 436; plan instances 26 k → 125 k; kept memo cells 42.8 k → 210 k.
+- The kept cells' read sets, 2028 → 2030:
+  - 903 k reads (7.0 a cell, the largest 239) → 1.82 M (8.6 a cell, the largest 407);
+  - keys inside those reads: 453 k → 1.03 M.
+  - The largest set grows with the horizon (×1.70 for ×1.67). Cells × reads per cell is the one product here that grows faster than linear. I judge it the seat of the fit's n² term; it is not measured in bytes. G6c's cut in cells (cause 2) cuts it too.
+
+**The profile** (samply, quick binary, `tmp/m4/g6b/prof_2028`, `prof_2030`):
+- At 2030, inclusive: `move_instances` 67.3 %, `walk_members`/`next_tuple` 59.5 % (through `where_keeps` → `logic`), `fulfils_of` 32.7 %, `flows_move` 16.8 %, `projected_bal` 6.9 %, `Collected::merge` 2.1 %.
+- Self time: `Entries::intern` 1.2 %, `union` 1.1 %. The top self items are G6d's constants (`CellKey::cmp` 3.8 %, table lookups, `key_order`).
+- From 2028: samples 5 205 → 10 457 (×2.0); `next_tuple` 52.3 % → 59.5 %, the rest flat.
+
+**For the lead: stop point 1, as I read it. No STOP-REPORT.**
+- From 2028 to 2030 the footprint grows 1.80×, for 1.67× the horizon (3 → 5 years) and 1.92× the wall. That is 1.08× against the horizon and 0.94× against the time, both under 1.3×.
+- The plain reading (any growth past 1.3×) would also stop on the plan's own G6b line (≤ 1.6×), and on any footprint that grows linearly (1.67×). So I took it as not meant. If it was meant, the census above is that STOP-REPORT's content.
+- *Against the plan's G6b line,* met:
+  - memory 1.21 GB at 2030 (1.0–1.6 GB);
+  - instructions −45 % (−30 to −45 %);
+  - `c1_r2` 8.80 s (8–11 s).
+- *Missed:*
+  - the 2028→2030 ratio is 1.80× (expected ≤ 1.6×);
+  - b1 doesn't answer (expected 1–3 min at 3–8 GB).
+  - The fit puts b1 near 15 GB at 34 years. Whether 2059 fits 4 GB is G6c's to decide (plan §3, stop point 2).
+
+**For the lead: one b1 run passed 8 GB.** The run1.py run (300 s limit) of `engine/target/g6bafterr/tally` ran before I had started a memcap. run1.py's own check reads resident memory, which misses compressed pages. So the run reached a 13.5 GB footprint before run1.py stopped it at 8 GB resident, after 212.5 s. From then on `memcap.py` ran at 8 GB (pid 90283, mine, stopped at the end). This is G6a's note again: the `load:` recipe should cap by footprint.
+
+**For the review and T:**
+- The print order of ids (the plan's §5 risk) is guarded by every golden and check vector in `check commit`, and by the curve runs, `c1_r2` and `d11_full`, all byte-identical.
+- Not probed: a run past 2^31 entries (ENGINE-INVARIANT).
+
+- **Size** (`git diff --shortstat` from a2193ad4 on `engine/crates`): 37 files, +1 083 −381, against the plan's 1.6 k (1.2–2.0). Step 1 is +326 −198; steps 2–5 are +879 −308; this entry's commit is +35 −32.
+- **The exceptions step:** `check commit` first stopped there, on three report-only hits the group added. They were two chains past four steps (`Ids::without`; `ask/answer.rs`'s pinned list for `pins_read.ask`) and one named lifetime (`Collected::entries_sorted`). They are restructured away, not locked: two loops, and the sort moved to the table as `Entries::sorted(met)`. `check quick` doesn't run that step, so the group's two earlier commits passed it unseen.
+- **Files:**
+  - `eval/register.rs` (new, 640 lines) and `eval/state.rs`;
+  - the callers in ask/** (6 files), book/** (6), eval/** (9 more) and walk/** (11, with F1's `walk/state.rs` in its types only);
+  - `invariant.rs`, `lib.rs` (the re-exports) and `tests/eval_cases.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+  - `register.rs` is non-kernel. In walk/** and book/** the changes are the entry's type and where it is interned.
+  - Two conditions are rewritten, for the gate-8 run: `walk/state.rs`'s `note` (`!read.decides()`) and `walk/agenda.rs` (`inst.day_coll.decides()`).
+- **Open STOP-REPORTs:** none from this group. G3's P20 report above is the lead's.
+- **Next:** G6c.
+- **Usage:** about 1.06 % of the week by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (228s)` on this tree but for this entry; `milestone-report: M4: 32/35 green`.

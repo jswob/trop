@@ -20,7 +20,7 @@
 //! it, never a guessed line; a joint model's member's ask, `a.q`, is answered by the member
 //! alone at its place in the run's order (`members.rs`).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line, hole_days};
@@ -823,12 +823,14 @@ fn ask_body(
         engine.ask_cut = inside.cut;
         engine.unpinned = Some(ctx);
         engine.pins_read.keeping = true;
-        engine.pins_read.ask = pinned
-            .entries_sorted(&engine.entries)?
-            .into_iter()
-            .filter(|e| e.word == "pinned")
-            .map(|e| e.text.clone())
-            .collect();
+        let mut asked = BTreeSet::new();
+        for id in pinned.ids() {
+            let entry = engine.entries.entry(*id)?;
+            if entry.word == "pinned" {
+                asked.insert(entry.text.clone());
+            }
+        }
+        engine.pins_read.ask = asked;
         engine.open_layer(m, inside)?;
         inside
     };

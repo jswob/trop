@@ -156,6 +156,21 @@ impl Entries {
         }
         Ok(false)
     }
+
+    /// The register entries `met` holds, in their text order: the word, the text, the
+    /// figure, by code point (L §8.2; R-47).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an entry this table lacks.
+    pub fn sorted(&self, met: &Collected) -> Result<Vec<&Entry>, Stop> {
+        let mut out = Vec::with_capacity(met.ids().len());
+        for id in met.ids() {
+            out.push(self.entry(*id)?);
+        }
+        out.sort();
+        Ok(out)
+    }
 }
 
 /// Entry ids sorted by number, none or a shared non-empty list: a clone is a count, never a
@@ -226,12 +241,12 @@ impl Ids {
 
     /// The ids but those of `gone`, none where none is left.
     fn without(&self, gone: &[EntryId]) -> Ids {
-        let kept: Vec<EntryId> = self
-            .as_slice()
-            .iter()
-            .copied()
-            .filter(|id| !gone.contains(id))
-            .collect();
+        let mut kept = Vec::new();
+        for id in self.as_slice() {
+            if !gone.contains(id) {
+                kept.push(*id);
+            }
+        }
         Ids((!kept.is_empty()).then(|| Rc::new(kept)))
     }
 }
@@ -436,21 +451,6 @@ impl Collected {
         self.entries.as_slice()
     }
 
-    /// The register entries, found in the run's table `entries`, in their text order: the
-    /// word, the text, the figure, by code point (L §8.2; R-47).
-    ///
-    /// # Errors
-    ///
-    /// `ENGINE-INVARIANT` for an entry the table lacks.
-    pub fn entries_sorted<'t>(&self, entries: &'t Entries) -> Result<Vec<&'t Entry>, Stop> {
-        let mut out = Vec::with_capacity(self.ids().len());
-        for id in self.ids() {
-            out.push(entries.entry(*id)?);
-        }
-        out.sort();
-        Ok(out)
-    }
-
     /// Records that a `missing(…)` read in this collector held (L §8.2 `missing`).
     pub(crate) fn note_missing(&mut self) {
         self.missing = true;
@@ -591,7 +591,7 @@ mod tests {
         for (word, text) in [("held", "b"), ("assumed", "z"), ("held", "a")] {
             met.note(table.intern(entry(word, text)).expect("an id"));
         }
-        let sorted = met.entries_sorted(&table).expect("entries");
+        let sorted = table.sorted(&met).expect("entries");
         let texts: Vec<&str> = sorted.iter().map(|e| e.text.as_str()).collect();
         assert_eq!(texts, ["z", "a", "b"], "assumed before held, then by text");
     }

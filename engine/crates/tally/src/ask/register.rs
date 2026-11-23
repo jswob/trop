@@ -123,7 +123,7 @@ fn entry_lines(met: &Collected, entries: &Entries) -> Result<Vec<String>, Stop> 
     let mut assumed: BTreeSet<(&str, &str)> = BTreeSet::new();
     let mut by_word: BTreeSet<(usize, String)> = BTreeSet::new();
     let mut pins: Vec<&str> = Vec::new();
-    for entry in met.entries_sorted(entries)? {
+    for entry in entries.sorted(met)? {
         // an ask pin a read met under another claim: in the read set, printed by no view
         // (L §8.2 One read set; P45); an ask's pin of a cell, which says which pins a read
         // must take to be listed, likewise (tally 2.1.8 §4, #161)
