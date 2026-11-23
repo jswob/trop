@@ -7641,3 +7641,93 @@ Each kind of difference from the twin:
 - *Left out of the run:* instances outside [S, E] are kept, so `left_out`'s counts and first days are the twin's.
 
 So no STOP-REPORT at step 0; the one judgement is above.
+
+### Site (iii): built, measured, not kept
+
+- **Built** as its step 0 says: `narrow.rs` `window_list`, and F5's tree keeping its reach (`walk/lows.rs`). `check quick` and `check fences` (`walk_oracle`) were green, and b1's bytes were G6c's.
+- **Measured** against site (ii) alone (quick binary):
+
+  | Run | After site (ii) | With site (iii) too |
+  | --- | --- | --- |
+  | b1 at 2030 | 87.07 G | 89.72 G (+3 %) |
+  | `v1` at 2030 | 14.44 G | 14.47 G |
+  | `c1_r2` | 112.87 G | 120.20 G (+6.5 %) |
+
+- **Why** (profile `tmp/m4/g6c/prof_iii.*`): `tree_at` was 24.1 %, of which 16 % is still whole lists of moves the narrow read declines (the link bound from 2026-10-02, decisions, cuts at K). The narrow part's day probes and rebuilds added about 6 %.
+- **Reverted:** it costs more than it saves, on `c1_r2` too, the run the gate may judge P8-L10 on. Not committed; its diff is kept in `tmp/m4/g6c/site3.patch` (untracked).
+
+### What moved
+
+Three commits before this entry:
+- c35fdf25: the review's fixes.
+- 187da98d: site (i).
+- 8186cc1a: site (ii).
+
+No printed byte moved:
+- `check commit` before each (T's vectors, the pin oracle, the fences' suites);
+- b1's seven curve runs, `c1_r2`, `d11_full` and P8-14, all byte-identical to G6c's;
+- the 68 probe texts (`review/g6c/p/`, `tmp/m4/paper-probes/`), equal to the before-binary. Against refcore 61 are equal; the 7 that differ are older, each equal on the before-binary (`p01_never`, `p01b_nonever_io`, `p01c_nowhen`, `p02_cycle_io`, `p06_holebook_io`, `p07_same`, `p11_explain`).
+
+### Measures (one heavy run at a time, niced, under my `memcap.py` at 8 GB, pid 41369, stopped at the end)
+
+The curve (b1 cut short, quick binary, `tmp/m4/g6c/curve.sh`; `curve_w2.txt`):
+
+| Horizon | Ask | G6c (00143f5a) | Now (8186cc1a) | Instructions |
+| --- | --- | --- | --- | --- |
+| 2026 | `k1` | 1.79 s, 175 MB, 18.07 G | 1.20 s, 157 MB, 17.27 G | −4.4 % |
+| 2027 | `k1` | 2.55 s, 335 MB, 35.02 G | 2.13 s, 278 MB, 30.37 G | −13.3 % |
+| 2028 | `k1` | 3.97 s, 499 MB, 54.02 G | 3.13 s, 407 MB, 45.32 G | −16.1 % |
+| 2029 | `konto_balance` | 5.77 s, 674 MB, 77.65 G | 4.38 s, 545 MB, 64.06 G | −17.5 % |
+| 2030 | `konto_balance` | 7.77 s, 866 MB, 105.36 G | 5.98 s, 704 MB, 87.09 G | −17.3 % |
+| `v1` 2028 | `k1` | 1.56 s, 246 MB, 20.72 G | 0.74 s, 142 MB, 10.95 G | −47.2 % |
+| `v1` 2030 | `k1` | 2.60 s, 377 MB, 34.95 G | 1.01 s, 198 MB, 14.46 G | −58.6 % |
+
+- Per step at 2030: the review's fixes and site (i), +19.1 % (B1's bound +19.5 %; X1 and site (i) under 1 % back); site (ii), −30.6 %; site (iii), +3 %, reverted.
+- *Fit (judged, not run)*, a + b·n + c·n² by least squares over the five full points (n = 1 at 2026):
+  - instructions 8.65 + 7.20 n + 1.69 n² G, about 2.2 T at 34 years (G6c's fit 2.5 T). At `c1_r2`'s 13.9 G/s on quick, that is about 160 s, and about 125 s on release at turn 1's 0.79×;
+  - footprint 53 + 99 n + 6.2 n² MB, about 10.5 GB at 34 years (3.4 GB on its linear part).
+
+The runs (release binary, `perf row P8-L10`, `tmp/m4/g6c/rows18_w2.txt`):
+
+| Run | G6c | Now |
+| --- | --- | --- |
+| `c1_r2` | 7.29 s, 289 MB, 104.0 G | **6.95 s, 265.0 MB, 98.98 G**, sha `9defd731bf0f` |
+| `b1`, `c1`, `b2`, `c2`, `b3`, `c3`, `b6a`, `c6a`, `b7`, `c7` | stopped | each stopped at the tool's 90 s |
+| `b4a`, `c4a`, `b4b`, `c4b`, `b5`, `b6b`, `c6b` | stopped | each stopped by memcap past 8 GB: `b5` after 37.7 s (612.7 G instructions), the others after 54 to 70 s; largest `b4a`, 8 493.5 MB after 55.9 s |
+| P8-L2 `d11_full` | 721 ms cold, 35.4 MB, 4.43 G | 672 ms cold, 35.4 MB, 4.43 G, digest T's |
+| P8-14 (`perf row`) | 608.7 ms, 111.3 MB, 8.86 G | 597.2 ms, 106.9 MB, 8.67 G |
+
+- `perf counts F7-c1r2`: `def_misses 188841` (G6c 206 577), `days_stepped 6918`, `walks_shared 4290`.
+- `perf counts P8-14`: `def_misses 22880` (G6c 23 675; budget 30 400), `days_stepped 960`, `walks_shared 582`.
+
+**U2's decide point:** after sites (ii) and (iii) every stage run still stops, and the fit projects about 125 s and 10.5 GB at 2059, past 25 s and 3 GB. So, by U2, the stage runs move to a later milestone and M4's gate judges P8-L10 on `c1_r2` (6.95 s, 265 MB on release). G6d `constant` doesn't follow: it was sized at about 2×, and this is about 5× from 25 s.
+
+**The profile's top five** (quick binary, b1 at 2030, 6 234 samples, inclusive; `tmp/m4/g6c/prof_w2.*`):
+1. `walk_members` / `next_tuple` / `where_keeps`, 42.5 %: bindings over an index's members with a `where`, in defs' aggregates (`walk_members ← aggregate ← ev ← def_cell` 36.4 %), the n² form the STOP-REPORT named (`count(m in month where year_of(m) == y …)`).
+2. F5's `tree_at` → `move_instances`, 30.1 %: the whole lists at a projection's cut, of moves the narrow read declines (the link bound from 2026-10-02, decisions, cuts at K).
+3. The main walk's lists at K (`plan_list ← advance_to ← main_walk`), 10.3 %, as planned.
+4. `obs_links_for`, 8.1 %: the link's `when` read at each cut (a def such as `vat_due[m]`), each cut's own evaluation, the kind cut classes collapse (P §3.2).
+5. `flows_move`, 7.2 %.
+
+`settled_move` is 2.2 % now (20.4 % before site (ii)), and `fulfils_of` 3.6 % (2.9 % of it the decision `invest`'s whole list). The largest self item is `_platform_memcmp`, 10.0 %, with the name table's `search_tree::<str>` at 5.3 % (string keys).
+
+- **Size** (`git diff --shortstat 702bdcd3 -- engine/crates`): 8 files, +586 −210.
+- **Files:**
+  - `walk/narrow.rs` (F7);
+  - `walk/tuples.rs` (`linked_instance`, `linked_day`, `plan_tuples`, `link_tuple` on the kept set);
+  - `walk/plan.rs` (`day_dated`);
+  - `book/members.rs` (`fulfils_of`), `book/adjust.rs` (`measure_move`);
+  - `eval/trace.rs` (`explaining`), `eval/state.rs` (`Prefixes.narrows`), `lib.rs`.
+- **Exceptions:** +0 (the exceptions step's report-only long chain in `kept_tuple` restructured as a loop).
+- **Mutants:** none proved.
+- **For T (C6):**
+  - B1's shape (`walk::narrow::tests::a_link_in_another_moves_list_goes_to_that_lists_first_reader`, after `p09b_pin`), under `zp` and under `inputs-of`;
+  - `n4_own --ask l` and `k f l` give the text's answers in any order;
+  - a link reader whose list is first built later (X1's judged change of who absorbs a link's reads);
+  - a measure at a past cut over a move with a hole booking (declined) and over one in a `same` class (taken);
+  - an `o.fulfils` naming a refused tuple and one naming a move whose tuples stop its list (both taken from the whole list).
+- **Open STOP-REPORTs:** none new. The decide point is U2's own rule, so no STOP-REPORT was filed for it.
+- **Next:** the lead's turn: the gate judges P8-L10 on `c1_r2`, and the stage runs, this curve and the top five go to a later milestone; G6c's fix review covers 702bdcd3..this commit.
+- **Usage:** about 1.62 % of the week for the session by `engine/tools/usage` before this entry, about 0.85 % of it this turn.
+- **Checks:** `check commit: green, 24 steps (199s)` and `check fences: green, 1 step (21s)` on this tree but for this line; `milestone-report: M4: 36/40 green`.
+- **Note:** site (ii)'s commit, 8186cc1a above, was reworded before the push as 8f763173 (its subject was 74 characters; `commit-check`), the same tree.
