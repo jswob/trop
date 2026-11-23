@@ -184,7 +184,7 @@ def fence_targets(env):
     once they pass unmutated; None when they can't be read or fail there. The builder's own
     tests: advisory, never gate 8's (R-84)."""
     try:
-        catchers = milestones.fence_catchers()
+        catchers = milestones.fence_catchers(env)
     except milestones.MilestoneError as e:
         print(f"mutants-local: --fences: {e}", file=sys.stderr)
         return None
