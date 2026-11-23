@@ -20,12 +20,15 @@
 # words and the M2 brief): it joins in build/m2's commit before its gate, all its tests green;
 # the gate's fixes may follow it on the branch. M3 likewise (issue #226, 2026-11-19, under those
 # words and the M3 brief): it joins in build/m3's commit before its gate, all 36 tests green;
-# the gate's fixes may follow it on the branch.
+# the gate's fixes may follow it on the branch. M4 likewise (issue #252, 2026-11-23, under those
+# words and the M4 brief): it joins in the rules step's last commit before its gate, 47 of its 49
+# tests green there; the two red (m4_fixes_p23, m4_fixes_traced) are G3's last turn's, green or
+# held before the gate.
 
 # BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 # the milestones whose tests gate
-gating = ["S", "M0", "M1", "M2", "M3"]
+gating = ["S", "M0", "M1", "M2", "M3", "M4"]
 # the gating targets a mutation run leaves out, from its build as well as its run (R-84,
 # R-88; the user, 2026-11-06, "Yes, approve it, add it to the 2.1.6 brief"): M0's load
 # tests exercise load, not the kernel, and took about 55 % of each shard's time; of run
