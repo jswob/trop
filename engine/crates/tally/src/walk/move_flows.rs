@@ -248,10 +248,18 @@ impl Engine {
             }
         }
         if !mv.decision {
+            let before = self.trace_walked();
+            let mut counted = false;
             for adj in self.settled_move(m, mv, ctx.cut)? {
                 if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
+                    counted = true;
                     count_adjustment(m, &adj, sp, last, acc)?;
                 }
+            }
+            if !counted {
+                // no adjustment is a cause: the read holds none the walk's forms print
+                // (E §10; P20)
+                self.trace_walked_back(before);
             }
         }
         Ok(())

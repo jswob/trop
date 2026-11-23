@@ -7118,3 +7118,43 @@ The runs (release binary; `tmp/m4/g6a/rows.sh`, runs.tsv's rows):
 - **Next:** G6b `registers`.
 - **Usage:** about 0.45 % of the week by `engine/tools/usage` before this entry.
 - **Checks:** `check commit: green, 24 steps (221s)` and `check fences: green, 1 step (22s)`, exit 0, on this tree but for this entry; `milestone-report: M4: 31/33` (G3's two reds, under its fix review).
+
+## 2026-11-23 M4 G3's last fix: one statement for a decision's read set, P20 (issue #252)
+
+P20: the read set of a decision's `flows` or `count` (what `explain` prints and `inputs-of` lists) is, for each due instance at the cell's key and in its span, every read that decided whether it counts and how much; when the walk refuses an order, the reads of each instance the refusal tested; nothing at another key or outside the span; the day that put an instance outside the span is listed, never its `when` or amount. On 411bbc08 (T's C4f). Three commits: 261c08d2, 5afc93d4 and this one.
+
+**Where the statement is formed.** `walk/body.rs` `uncounted_reads`: what a read over a span takes of a due instance at its key that it doesn't count. In the span, read to be left out: every read it made, a run's printed by `trace_counted`. Outside it: the day that put it there, `Collected::outside` (its rows and pins, never a `held:` value, P35 on #241). `count_move` (`flows`) and `span_members` (a binding over a kind) both take it. It replaced three forms: `count_move`'s `deciding()` of a day outside the span, and its rule that a day after the span's last day was never met (S4, P43 on #241); `no_member`'s `deciding()`; `movements_of`'s pins of a plan whose `when` is false (#161). A plan whose `when` is false is now a binding's left-out instance: listed, never a member, never a `same` class's stand-in. A refused order's reads: `walk/order.rs` `Tested`, recorded on the refused run (a cycle's members' `when` at the act's point, a tie's runs as they ran); its register takes their rows only (`Collected::merge_rows`), and `trace_counted` prints them once per explain (`trace_when_at`, `trace_ran`). The `explain flows` of a plan whose `when` is false (the fix review's non-blocking failure): the adjustments pass marked the trace as walked; one that counts no adjustment now gives the note back (`count_move`), as `movements_of` does for observations.
+
+**Green this turn (`tmp/m4/g3/f20/vs.sh`, T's g3 and g3fix texts, 60 of 69 asks):** the six `f11_runorder`/`f12_order` vectors as stored; `o1_order_inputs` e/i fa, fb; `t1_tie` e_cn, e_fk1, i_fk1; `t2_tie_inputs` e_cn, e_fk1, i_fk1; `c1_false_when` e_cn, e_ff, e_fp; `c2_plan_false` e_fp; `c7_count_plan_false` i_cn; `f4_min` i_fl; `f3_span` i_fk, i_cn. `milestone-report: M4: 32/35`.
+
+**Red, left (9 asks; T's reds `fixes-g3`, `fixes-g3fix`, `spec-g3`, `spec-g3fix` stay red):**
+- Another key's day rows in `explain`, 4: `f2_keyed` e_fp1, e_fk1, e_fk2, `f3_span` e_fk1. The plan pass prints every instance's reads as it computes them, every key's, a plain plan's too (a keyed plan with no decision in the file lists the other key's day and amount, as refcore does). Filtering it per read is the next step: `make_instances_held` already marks where each instance's reads end (`marks`); a read that counts at one key would drop the others' segments it traced. Not built in this turn (budget).
+- A decision's run whose `when` is false, in a binding, 3: `c5_dec_false` e_cn, `c6_count_false_when` e_cn, i_cn. Built and taken back: the STOP-REPORT below.
+- Rows behind a running read's balance, 2: `c6_count_false_when` i_ff, `c1_false_when` i_ff: the STOP-REPORT below, question 2.
+- Not left: `c1_false_when` i_cn, `t2_tie_inputs` i_cn (a refused member of a `count` lists what it read before the refusal returns). Tried: it turns M3's gating `t221-gd/216-o0` red (a refused plan member's reads); taken back, for the next turn.
+
+**Correction to the entry before (B4's open item):** `v:wb` is db's own `when`, not "the other decision's"; this fix lists it under both `f12_order` asks.
+
+**The sweep** (`tmp/m4/g3/sweep20.sh`): the paper probes, every `tmp/m4/review/*/` folder and my probes in `tmp/m4/g3/`, ask by ask, each text alone, on refcore_fast, 411bbc08's quick binary (built from `git archive` in `tmp/m4/g3/before20`) and after.
+- **902 asks: 636 same → same, 16 different → same, 238 different → different (8 with changed bytes), 12 same → different.**
+- Paper probes and review folders g1, g1fix, g2, g2fix: every line byte-identical before and after.
+- **Same → different, 12, each explained:** P20's spec answers where refcore differs (held for #255), now the engine's: `f3_span` i_cn, i_fk; `f4_min` i_fl (the day outside the span); `o1_order_inputs` i_fa, i_fb; `t1_tie` i_fk1; `t2_tie_inputs` i_fk1 (a refused order's reads); `c7_count_plan_false` i_cn (a plan's false `when` in a `count`). Toward the spec answer, not yet at it: `c1_false_when` i_cn (lists `pl`, `lim`; lacks `opening[konto]`, the refused member above), i_ff (question 2). My probe `p5` i_all, i_c: `dd[j3]` and `hd`, days outside the span.
+- **Different → same, 16:** the six `f11`/`f12` vectors, `o1` e_fa, e_fb, `t1`/`t2` e_cn, e_fk1, `c1` e_cn, e_fp, `c2` e_fp, my `p3` e_c.
+- **Different → different with changed bytes, 8:** `c1_false_when` e_ff, now T's spec answer; `review/g3fix/h2_plan_hole_axis` e_fl, e_flk, `not implemented` → an answer (the adjustments note; refcore `REFCORE-NOT-YET` beside it); my `p3` e_all, e_one, e_pin, e_s, e_z, each `RUN-ORDER` (dk and dz), now listing dk[j2]'s `when` the refusal tested.
+
+- **Size** (`git diff --shortstat 411bbc08 -- engine/crates`): 5 files, +249 −40.
+- **Files:** `walk/body.rs`, `walk/move_flows.rs`, `walk/order.rs`, `book/members.rs` (kernel); `eval/state.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved this turn.
+- **Usage:** about 0.55 % of the week this turn (1.6 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps` before this entry; `milestone-report: M4: 32/35`.
+
+## STOP-REPORT 2026-11-23: P20 lists a false-when run's balance lines; M1's stored bytes don't
+
+- **Kind:** a test seems wrong (two gating vectors under P20), and a question on P20's reach.
+- **Where:** `book/members.rs` `decided_members` (a run whose `when` is false is skipped there); gating `fixes/g12/r_p_mr3_z2` (`engine/tests/m1/fixes/g12/r_p_mr3.tally`, ask `z2`) and `t221-g3/mut-same-chain-line` (`engine/tests/m3/fixes/t221/rv6/q5.tally`); T's `spec/g3fix/c6_count_false_when/i_ff` and `c1_false_when/i_ff`.
+- **Rule or gate:** L §8.2 One read set; E §10; P20 and its clarification ("a balance read's own register lines stay").
+- **What happens:** 1. With a binding taking a decision's run whose `when` is false as a left-out instance (`uncounted_reads`, as `flows` already does), `c5`/`c6` e_cn and i_cn turn green, and `r_p_mr3_z2` (`sum(x.cash.amount for x in transfers over 2026-01-01 .. 2026-03-31 where x == rent[2026-02])`) prints `unfulfilled: rent[2026-01]` beside refcore's `unfulfilled: rent[2026-02]`: `top[2026-01]`'s `when bal(konto) < low_mark` is false, and its balance read reads `rent[2026-01]` (the balance's own register line). Under P20 the engine's line is right; M1 stored refcore's bytes from before decisions were members. The second vector (`q5`) was the engine's own slip, fixed (a left-out instance never stands for a `same` class). 2. T's `c6` i_ff (flows of df, `when` false) leaves out `v:amt`, `v:lim`, and `c1` i_ff leaves out `v:pl`: rows behind the running read's balance (dt's booking, pf's `when`), where it keeps `v:opening[konto]` and `unfulfilled: dt`. Every other balance read lists the rows of the movements it sums (E §10), and refcore does here too.
+- **What I tried:** the binding half built, `check commit` red on `r_p_mr3_z2` only; taken back (`decided_members` skips the run as before), so the code is as it was there. The patch: `tmp/m4/g3/f20/p20-wip1.patch`, `decided_members`'s hunk (push `Moving::Plan(run.inst)` when `left_out`).
+- **What I ask:** 1. Is `unfulfilled: rent[2026-01]` right for `r_p_mr3_z2` under P20? If so, T holds M1's vector for #255 and the hunk goes in (`c5`, `c6` e_cn, i_cn green). 2. Does a running read in a left-out run's `when` list the rows behind its balance (E §10, as every balance does), or only the opening and its register lines (T's `c6` i_ff, `c1` i_ff)?
+- **State:** the last green commit is this entry's; nothing uncommitted.
