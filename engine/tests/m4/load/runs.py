@@ -20,8 +20,13 @@ from refcore alone, or `-` where no refcore run judges the output (timed only):
   `v5_r2` isn't listed: change 5's own lines all start 2029-05-01, after c1_r2's horizon (2027-01-14), so a run of
   change 5 at that horizon is change 1's; the gate reports it not run (P5).
 
-    python3 -I -B engine/tests/m4/load/runs.py           -> writes runs.tsv (runs refcore's `check` of D's full text)
-    python3 -I -B engine/tests/m4/load/runs.py --check   -> exit 1 if runs.tsv isn't what it writes
+The user's U2 (2026-11-23, after G6c's widening; auto-picks "U2 applied"): the 17 stage runs move to a later
+milestone, and M4's gate judges P8-L10 on c1_r2 alone. So runs.tsv, which the `load:` recipe reads (`perf row`,
+`perf milestone M4`), holds P8-L2's run and c1_r2, and stages.tsv beside it holds the 17 stage rows in the same
+columns, unread by any tool until the later milestone's run list takes them (the follow-up issue carries them).
+
+    python3 -I -B engine/tests/m4/load/runs.py           -> writes runs.tsv and stages.tsv (runs refcore's `check` of D)
+    python3 -I -B engine/tests/m4/load/runs.py --check   -> exit 1 if either isn't what it writes
 """
 import csv
 import hashlib
@@ -36,6 +41,7 @@ sys.path.insert(0, TESTS)
 import run as R  # noqa: E402
 
 OUT = os.path.join(HERE, 'runs.tsv')
+LATER = os.path.join(HERE, 'stages.tsv')  # U2: the stage runs, for a later milestone
 D_FULL = 'engine/tests/integration/households/D'
 D11 = ['d11_follows', 'd11_follows_bonds', 'd11_isb', 'd11_pairs', 'd11_register', 'd11_not_follows_life']
 C1_R2 = ['I:X:explain_room', 'I:X:ike_left', 'I:X:konto_balance@c1_r2', 'I:X:net_worth', 'I:X:replay_september@c1_r2',
@@ -88,19 +94,22 @@ def l10(checks):
 
 def main(argv):
     checks = R.load_checks()
-    rows = [l2(checks)] + l10(checks)
-    data = '\t'.join(['row', 'run', 'cwd', 'files', 'asks', 'sha256']) + '\n' + ''.join(
-        '\t'.join(r) + '\n' for r in rows)
+    l10s = l10(checks)
+    head = '\t'.join(['row', 'run', 'cwd', 'files', 'asks', 'sha256']) + '\n'
+    files = [(OUT, 'm4/load/runs.tsv', [l2(checks)] + l10s[:1]), (LATER, 'm4/load/stages.tsv', l10s[1:])]
     if '--check' in argv:
-        old = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else ''
-        if old != data:
-            print('m4/load/runs.tsv is not what runs.py writes: run m4/load/runs.py')
-            return 1
-        print('m4/load/runs.tsv: %d runs, P8-L2 judged by refcore' % len(rows))
+        for path, name, rows in files:
+            old = open(path, encoding='utf-8').read() if os.path.exists(path) else ''
+            if old != head + ''.join('\t'.join(r) + '\n' for r in rows):
+                print('%s is not what runs.py writes: run m4/load/runs.py' % name)
+                return 1
+        print('m4/load/runs.tsv: %d runs, P8-L2 judged by refcore; m4/load/stages.tsv: %d stage runs (U2)' % (
+            len(files[0][2]), len(files[1][2])))
         return 0
-    with open(OUT, 'w', encoding='utf-8') as f:
-        f.write(data)
-    print('m4/load/runs.tsv: %d runs written' % len(rows))
+    for path, name, rows in files:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(head + ''.join('\t'.join(r) + '\n' for r in rows))
+        print('%s: %d runs written' % (name, len(rows)))
     return 0
 
 

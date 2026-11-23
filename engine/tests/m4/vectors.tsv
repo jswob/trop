@@ -829,3 +829,33 @@ fixes/g3fix/h2_plan_hole_axis/e_sm	fixes-p23		engine/tests/m4/fixes/g3fix	engine
 fixes/g6b/g1_given_assumed/q	fixes-p23		engine/tests/m4/fixes/g6b	engine/tests/m4/fixes/g6b/g1_given_assumed.tally	q		backlog
 fixes/g4/h1_held/q_late	fixes-g4		engine/tests/m4/fixes/g4	engine/tests/m4/fixes/g4/h1_held.tally	q_late		backlog
 fixes/g4/h1_held/q_x	fixes-g4		engine/tests/m4/fixes/g4	engine/tests/m4/fixes/g4/h1_held.tally	q_x		-
+fixes/g6cfix/x1a_amounts/k	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1a_amounts.tally	k		-
+fixes/g6cfix/x1a_amounts/f	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1a_amounts.tally	f		-
+fixes/g6cfix/x1a_amounts/l	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1a_amounts.tally	l		-
+fixes/g6cfix/x1a_amounts/n	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1a_amounts.tally	n		-
+fixes/g6cfix/x1b_when/k	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1b_when.tally	k		-
+fixes/g6cfix/x1b_when/f	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1b_when.tally	f		-
+fixes/g6cfix/x1b_when/l	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1b_when.tally	l		-
+fixes/g6cfix/x1b_when/n	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1b_when.tally	n		-
+fixes/g6cfix/x1d_selfk_min/l	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	l		-
+fixes/g6cfix/x1e_nofulfils/f	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1e_nofulfils.tally	f		-
+fixes/g6cfix/x1e_nofulfils/l	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1e_nofulfils.tally	l		-
+fixes/g6cfix/x1g_order/l1	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l1		-
+fixes/g6cfix/x1g_order/l3	fixes-g6cfix		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l3		-
+fixes/g6cfix/x1h_order_min/f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1h_order_min.tally	f		-
+fixes/g6cfix/x1h_order_min/l4	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1h_order_min.tally	l4		-
+fixes/g6cfix/x1h_order_min/l24	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1h_order_min.tally	l24		-
+fixes/g6cfix/x1h_order_min/f__l4	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1h_order_min.tally	f l4		-
+fixes/g6cfix/x1h_order_min/l4__f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1h_order_min.tally	l4 f		-
+fixes/g6cfix/x1g_order/k	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	k		-
+fixes/g6cfix/x1g_order/f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	f		-
+fixes/g6cfix/x1g_order/l2	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l2		-
+fixes/g6cfix/x1g_order/l4	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l4		-
+fixes/g6cfix/x1g_order/l24	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l24		-
+fixes/g6cfix/x1g_order/l34	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l34		-
+fixes/g6cfix/x1g_order/l	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l		-
+fixes/g6cfix/x1g_order/l24__l4	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l24 l4		-
+fixes/g6cfix/x1g_order/l4__l24	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1g_order.tally	l4 l24		-
+fixes/g6cfix/x1d_selfk_min/f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	f		-
+fixes/g6cfix/x1d_selfk_min/f__l	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	f l		-
+fixes/g6cfix/x1d_selfk_min/l__f	fixes-p30		engine/tests/m4/fixes/g6cfix	engine/tests/m4/fixes/g6cfix/x1d_selfk_min.tally	l f		-
