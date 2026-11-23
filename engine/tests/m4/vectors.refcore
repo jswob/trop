@@ -239451,4 +239451,55 @@ version v
   assumed: a given guess (g)
   given: g = 9.00 PLN (v)
   cut 2026-10-25
+,23:fixes/g4/h1_held/q_late,8:fixes-g4,30:run h1_held.tally --ask q_late,346:13:h1_held.tally,324:model h1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input x: money PLN
+def g: money PLN = x at reader
+
+ask q_late: g law 2026-11-30
+ask q_x: x law 2026-11-30
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 PLN "s"
+  given g = 9 PLN "s"
+,,1:0,127:q_late: 9.00 PLN
+  given: g = 9.00 PLN (v)
+  held: g = 9.00 PLN (v), read for 2026-11-30
+  law date 2026-11-30, cut 2026-10-25
+,20:fixes/g4/h1_held/q_x,8:fixes-g4,27:run h1_held.tally --ask q_x,346:13:h1_held.tally,324:model h1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input x: money PLN
+def g: money PLN = x at reader
+
+ask q_late: g law 2026-11-30
+ask q_x: x law 2026-11-30
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 PLN "s"
+  given g = 9 PLN "s"
+,,1:0,98:q_x: 1.00 PLN
+  held: x = 1.00 PLN (v), read for 2026-11-30
+  law date 2026-11-30, cut 2026-10-25
 ,

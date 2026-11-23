@@ -827,3 +827,5 @@ fixes/g3/f5_cross/e_pr	fixes-p23		engine/tests/m4/fixes/g3	engine/tests/m4/fixes
 fixes/g3fix/h2_plan_hole_axis/e_cw	fixes-p23		engine/tests/m4/fixes/g3fix	engine/tests/m4/fixes/g3fix/h2_plan_hole_axis.tally	e_cw		backlog
 fixes/g3fix/h2_plan_hole_axis/e_sm	fixes-p23		engine/tests/m4/fixes/g3fix	engine/tests/m4/fixes/g3fix/h2_plan_hole_axis.tally	e_sm		backlog
 fixes/g6b/g1_given_assumed/q	fixes-p23		engine/tests/m4/fixes/g6b	engine/tests/m4/fixes/g6b/g1_given_assumed.tally	q		backlog
+fixes/g4/h1_held/q_late	fixes-g4		engine/tests/m4/fixes/g4	engine/tests/m4/fixes/g4/h1_held.tally	q_late		backlog
+fixes/g4/h1_held/q_x	fixes-g4		engine/tests/m4/fixes/g4	engine/tests/m4/fixes/g4/h1_held.tally	q_x		-

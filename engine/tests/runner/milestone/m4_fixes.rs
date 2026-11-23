@@ -18,12 +18,13 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 21] = [
+    const GROUPS: [&str; 23] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
         "fixes-g3",
         "fixes-g3fix",
+        "fixes-g4",
         "fixes-g6",
         "fixes-g6c",
         "fixes-narrow",
@@ -40,6 +41,7 @@ mod tests {
         "spec-p12",
         "spec-p21",
         "spec-p22",
+        "spec-p26",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -150,6 +152,15 @@ mod tests {
     #[test]
     fn m4_fixes_p21() {
         group_holds(VECTORS, "fixes-p21");
+    }
+
+    /// G4 `backlog`'s review X1, pick P28 (`tmp/m4/review-g4.md`), refcore's bytes: a `given`
+    /// row in a version that governs from 2026 on, read at a law date after the cut, prints its
+    /// `held:` line as an `input` there does (`m4/fixes/g4/h1_held` `q_late`, and `q_x`, the
+    /// input; L §8.2's `held:` row).
+    #[test]
+    fn m4_fixes_g4() {
+        group_holds(VECTORS, "fixes-g4");
     }
 
     /// The performance groups' guard (U1, `tmp/m4/perf-plan.md` §5 items 1 and 4), refcore's
@@ -307,5 +318,16 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p22() {
         group_holds(SPEC, "spec-p22");
+    }
+
+    /// P26's answers (#245, pick P3): `RUN-NONE` in L §8.4's form names the read, `<x>[k] is
+    /// none here: <arithmetic, ordering, aggregate, …>`, the catalogue's words bare, in the seven
+    /// vectors G4's wording changed (`fixes/g1/a12_nonehole/q_arith2`, `fixes/p12/round`'s
+    /// `n_x__z_step`, `n_x__g_step`, and P12's answers `spec/p12/round/h_x__n_step`,
+    /// `h_step__n_x`, `h_mode__n_x`, `h_mode__n_step`, all held) and C3's four `items/none` asks;
+    /// written from build/m4's run (702bdcd3), which differs only in that line.
+    #[test]
+    fn m4_fixes_spec_p26() {
+        group_holds(SPEC, "spec-p26");
     }
 }

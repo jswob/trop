@@ -553,6 +553,7 @@ mod tests {
                 "fixes-g2fix",
                 "fixes-g3",
                 "fixes-g3fix",
+                "fixes-g4",
                 "fixes-g6",
                 "fixes-g6c",
                 "fixes-narrow",
@@ -580,7 +581,8 @@ mod tests {
                 "spec-g3fix",
                 "spec-p12",
                 "spec-p21",
-                "spec-p22"
+                "spec-p22",
+                "spec-p26"
             ]
             .iter()
             .map(|g| (*g).to_owned())
@@ -589,52 +591,46 @@ mod tests {
         );
     }
 
-    /// `kernel`'s group `checks`, part 1 of 8 (its vectors at 0 modulo 8).
+    /// `kernel`'s group `checks`, part 1 of 7 (its vectors at 0 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_1() {
-        group_holds(KERNEL, "checks", (0, 8), 6);
+        group_holds(KERNEL, "checks", (0, 7), 7);
     }
 
-    /// `kernel`'s group `checks`, part 2 of 8 (its vectors at 1 modulo 8).
+    /// `kernel`'s group `checks`, part 2 of 7 (its vectors at 1 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_2() {
-        group_holds(KERNEL, "checks", (1, 8), 6);
+        group_holds(KERNEL, "checks", (1, 7), 6);
     }
 
-    /// `kernel`'s group `checks`, part 3 of 8 (its vectors at 2 modulo 8).
+    /// `kernel`'s group `checks`, part 3 of 7 (its vectors at 2 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_3() {
-        group_holds(KERNEL, "checks", (2, 8), 6);
+        group_holds(KERNEL, "checks", (2, 7), 6);
     }
 
-    /// `kernel`'s group `checks`, part 4 of 8 (its vectors at 3 modulo 8).
+    /// `kernel`'s group `checks`, part 4 of 7 (its vectors at 3 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_4() {
-        group_holds(KERNEL, "checks", (3, 8), 5);
+        group_holds(KERNEL, "checks", (3, 7), 6);
     }
 
-    /// `kernel`'s group `checks`, part 5 of 8 (its vectors at 4 modulo 8).
+    /// `kernel`'s group `checks`, part 5 of 7 (its vectors at 4 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_5() {
-        group_holds(KERNEL, "checks", (4, 8), 5);
+        group_holds(KERNEL, "checks", (4, 7), 6);
     }
 
-    /// `kernel`'s group `checks`, part 6 of 8 (its vectors at 5 modulo 8).
+    /// `kernel`'s group `checks`, part 6 of 7 (its vectors at 5 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_6() {
-        group_holds(KERNEL, "checks", (5, 8), 5);
+        group_holds(KERNEL, "checks", (5, 7), 6);
     }
 
-    /// `kernel`'s group `checks`, part 7 of 8 (its vectors at 6 modulo 8).
+    /// `kernel`'s group `checks`, part 7 of 7 (its vectors at 6 modulo 7).
     #[test]
     fn m4_narrow_kernel_checks_part_7() {
-        group_holds(KERNEL, "checks", (6, 8), 5);
-    }
-
-    /// `kernel`'s group `checks`, part 8 of 8 (its vectors at 7 modulo 8).
-    #[test]
-    fn m4_narrow_kernel_checks_part_8() {
-        group_holds(KERNEL, "checks", (7, 8), 5);
+        group_holds(KERNEL, "checks", (6, 7), 6);
     }
 
     /// `kernel`'s group `g1`, part 1 of 1 (its vectors at 0 modulo 1).
@@ -1075,16 +1071,10 @@ mod tests {
         group_holds(M1, "fixes-g10", (1, 2), 50);
     }
 
-    /// `m1`'s group `fixes-g11`, part 1 of 2 (its vectors at 0 modulo 2).
+    /// `m1`'s group `fixes-g11`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m1_fixes_g11_part_1() {
-        group_holds(M1, "fixes-g11", (0, 2), 46);
-    }
-
-    /// `m1`'s group `fixes-g11`, part 2 of 2 (its vectors at 1 modulo 2).
-    #[test]
-    fn m4_narrow_m1_fixes_g11_part_2() {
-        group_holds(M1, "fixes-g11", (1, 2), 45);
+        group_holds(M1, "fixes-g11", (0, 1), 91);
     }
 
     /// `m1`'s group `fixes-g12`, part 1 of 6 (its vectors at 0 modulo 6).
@@ -1123,40 +1113,34 @@ mod tests {
         group_holds(M1, "fixes-g12", (5, 6), 36);
     }
 
-    /// `m1`'s group `fixes-g13`, part 1 of 6 (its vectors at 0 modulo 6).
+    /// `m1`'s group `fixes-g13`, part 1 of 5 (its vectors at 0 modulo 5).
     #[test]
     fn m4_narrow_m1_fixes_g13_part_1() {
-        group_holds(M1, "fixes-g13", (0, 6), 58);
+        group_holds(M1, "fixes-g13", (0, 5), 69);
     }
 
-    /// `m1`'s group `fixes-g13`, part 2 of 6 (its vectors at 1 modulo 6).
+    /// `m1`'s group `fixes-g13`, part 2 of 5 (its vectors at 1 modulo 5).
     #[test]
     fn m4_narrow_m1_fixes_g13_part_2() {
-        group_holds(M1, "fixes-g13", (1, 6), 57);
+        group_holds(M1, "fixes-g13", (1, 5), 69);
     }
 
-    /// `m1`'s group `fixes-g13`, part 3 of 6 (its vectors at 2 modulo 6).
+    /// `m1`'s group `fixes-g13`, part 3 of 5 (its vectors at 2 modulo 5).
     #[test]
     fn m4_narrow_m1_fixes_g13_part_3() {
-        group_holds(M1, "fixes-g13", (2, 6), 57);
+        group_holds(M1, "fixes-g13", (2, 5), 69);
     }
 
-    /// `m1`'s group `fixes-g13`, part 4 of 6 (its vectors at 3 modulo 6).
+    /// `m1`'s group `fixes-g13`, part 4 of 5 (its vectors at 3 modulo 5).
     #[test]
     fn m4_narrow_m1_fixes_g13_part_4() {
-        group_holds(M1, "fixes-g13", (3, 6), 57);
+        group_holds(M1, "fixes-g13", (3, 5), 68);
     }
 
-    /// `m1`'s group `fixes-g13`, part 5 of 6 (its vectors at 4 modulo 6).
+    /// `m1`'s group `fixes-g13`, part 5 of 5 (its vectors at 4 modulo 5).
     #[test]
     fn m4_narrow_m1_fixes_g13_part_5() {
-        group_holds(M1, "fixes-g13", (4, 6), 57);
-    }
-
-    /// `m1`'s group `fixes-g13`, part 6 of 6 (its vectors at 5 modulo 6).
-    #[test]
-    fn m4_narrow_m1_fixes_g13_part_6() {
-        group_holds(M1, "fixes-g13", (5, 6), 57);
+        group_holds(M1, "fixes-g13", (4, 5), 68);
     }
 
     /// `m1`'s group `fixes-g14`, part 1 of 2 (its vectors at 0 modulo 2).
@@ -1471,16 +1455,10 @@ mod tests {
         group_holds(M2, "goldens-records", (8, 9), 1);
     }
 
-    /// `m2`'s group `goldens-ledger`, part 1 of 2 (its vectors at 0 modulo 2).
+    /// `m2`'s group `goldens-ledger`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m2_goldens_ledger_part_1() {
-        group_holds(M2, "goldens-ledger", (0, 2), 2);
-    }
-
-    /// `m2`'s group `goldens-ledger`, part 2 of 2 (its vectors at 1 modulo 2).
-    #[test]
-    fn m4_narrow_m2_goldens_ledger_part_2() {
-        group_holds(M2, "goldens-ledger", (1, 2), 1);
+        group_holds(M2, "goldens-ledger", (0, 1), 3);
     }
 
     /// `m2`'s group `fixes-records`, part 1 of 1 (its vectors at 0 modulo 1).
@@ -2023,22 +2001,16 @@ mod tests {
         group_holds(M4, "fixes-g2", (0, 1), 55);
     }
 
-    /// `m4`'s group `fixes-p12`, part 1 of 3 (its vectors at 0 modulo 3).
+    /// `m4`'s group `fixes-p12`, part 1 of 2 (its vectors at 0 modulo 2).
     #[test]
     fn m4_narrow_m4_fixes_p12_part_1() {
-        group_holds(M4, "fixes-p12", (0, 3), 64);
+        group_holds(M4, "fixes-p12", (0, 2), 95);
     }
 
-    /// `m4`'s group `fixes-p12`, part 2 of 3 (its vectors at 1 modulo 3).
+    /// `m4`'s group `fixes-p12`, part 2 of 2 (its vectors at 1 modulo 2).
     #[test]
     fn m4_narrow_m4_fixes_p12_part_2() {
-        group_holds(M4, "fixes-p12", (1, 3), 63);
-    }
-
-    /// `m4`'s group `fixes-p12`, part 3 of 3 (its vectors at 2 modulo 3).
-    #[test]
-    fn m4_narrow_m4_fixes_p12_part_3() {
-        group_holds(M4, "fixes-p12", (2, 3), 63);
+        group_holds(M4, "fixes-p12", (1, 2), 95);
     }
 
     /// `m4`'s group `fixes-g2fix`, part 1 of 1 (its vectors at 0 modulo 1).
@@ -2095,6 +2067,12 @@ mod tests {
         group_holds(M4, "fixes-p23", (0, 1), 1);
     }
 
+    /// `m4`'s group `fixes-g4`, part 1 of 1 (its vectors at 0 modulo 1).
+    #[test]
+    fn m4_narrow_m4_fixes_g4_part_1() {
+        group_holds(M4, "fixes-g4", (0, 1), 2);
+    }
+
     /// `m4_spec`'s group `spec-g1`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_spec_spec_g1_part_1() {
@@ -2147,6 +2125,12 @@ mod tests {
     #[test]
     fn m4_narrow_m4_spec_spec_p22_part_1() {
         group_holds(M4_SPEC, "spec-p22", (0, 1), 5);
+    }
+
+    /// `m4_spec`'s group `spec-p26`, part 1 of 1 (its vectors at 0 modulo 1).
+    #[test]
+    fn m4_narrow_m4_spec_spec_p26_part_1() {
+        group_holds(M4_SPEC, "spec-p26", (0, 1), 11);
     }
 
     /// M3's `runs.vectors`, part 1 of 7 (its run vectors at 0 modulo 7).
