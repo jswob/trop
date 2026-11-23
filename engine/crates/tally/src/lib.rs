@@ -135,7 +135,7 @@ pub mod model {
     pub use unit::{PERIODS, Scaled, Unit, UnitError, is_currency_code};
     pub use value::{
         Class, Code, MvRef, MvSrc, Number, ReadOf, Value, Window, currency, currency_id,
-        currency_unit, money_num, num_money,
+        currency_unit, money_num, num_money, num_money_part,
     };
     pub use world::{Scenarios, World};
 }

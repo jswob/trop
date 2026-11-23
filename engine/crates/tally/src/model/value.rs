@@ -462,6 +462,18 @@ pub fn num_money(m: &Reality, q: &Num, cur: Currency) -> Result<Money, NumError>
     q.to_money_in(minor, cur)
 }
 
+/// `q` units of currency `cur` as money, exactly: whole minor units as [`num_money`] gives
+/// them, else money holding a fraction of one, which only `solve`'s centre makes (L §5.18
+/// step 3; pick P36).
+///
+/// # Errors
+///
+/// As [`currency`]; a number error.
+pub fn num_money_part(m: &Reality, q: &Num, cur: Currency) -> Result<Money, NumError> {
+    let (_, minor) = currency(m, cur)?;
+    q.to_money_part(minor, cur)
+}
+
 /// The unit of a currency, `PLN` to the first power (L §3.2).
 ///
 /// # Errors

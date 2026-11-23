@@ -16,7 +16,7 @@ use super::time_arith::time_arith;
 use crate::base::{Load, Run};
 use crate::model::{
     Class, KeyVal, Number, Reality, Shown, Unit, Value, currency_id, currency_unit, money_num,
-    num_money,
+    num_money_part,
 };
 use crate::num::{Currency, Num};
 use crate::syntax::Stop;
@@ -97,10 +97,12 @@ pub(super) fn operand(m: &Reality, v: &Value) -> Result<Option<Operand>, Stop> {
     Ok(None)
 }
 
-/// An operand of class `kind` and value `q` as a value: money in its minor units.
+/// An operand of class `kind` and value `q` as a value: money in its minor units, exactly
+/// (a money result is off them only where an operand is, as `solve`'s centre is: refcore's
+/// `arith` keeps the money it types; L §3.2, §5.18 step 3).
 pub(super) fn finish(m: &Reality, q: Num, kind: Kind) -> Result<Value, Stop> {
     match kind {
-        Kind::Money(cur) => Ok(Value::Money(num_money(m, &q, cur).map_err(num_stop)?)),
+        Kind::Money(cur) => Ok(Value::Money(num_money_part(m, &q, cur).map_err(num_stop)?)),
         Kind::Plain(class) => Ok(Value::Number(Number { q, class })),
     }
 }
