@@ -7269,3 +7269,61 @@ The runs (release binary `engine/target/g6bafterr`; `perf row`, and `tmp/m4/g6b/
 - **Next:** G6c.
 - **Usage:** about 1.06 % of the week by `engine/tools/usage` before this entry.
 - **Checks:** `check commit: green, 24 steps (228s)` on this tree but for this entry; `milestone-report: M4: 32/35 green`.
+
+## 2026-11-23 M4 G3's remaining turn: P20's last cases under P21, P22 (issue #252)
+
+P21 rules the STOP-REPORT above, and P22 extends P20 to every `flows` and `count` read, a plan's as a decision's (`tmp/m4/auto-picks.md`). The work is on 111b3b7d (G6b and T's C4g, C5): two commits, 1f308f14 and d511c489, then this entry's. Item 1 uses G6b's register API (`Collected::merge`, `deciding`, `outside`, `merge_rows`).
+
+**Item 1. A false-`when` run and a refused member in a binding.**
+- The run is a left-out instance (`book/members.rs` `left_out`, `decided_members`).
+  - A `count` lists it through `uncounted_reads`, as `flows` does.
+  - Its `when`'s balance read keeps its own register line: M1's `r_p_mr3` z2 prints `unfulfilled: rent[2026-01]`, which is T's `spec/p21/r_p_mr3/z2`.
+- A refused member of a binding lists what it read before the refusal returns (`span_members`), as `count_move` does. This is M3's `t221-gd/216-o0`, which T holds; its other asks are `fixes/p21/o0/*`.
+- 1f308f14 (+19 −10).
+
+**Item 2. The rows behind a left-out run's running read.** No code change: the engine already lists them (E §10). T's corrected `c1_false_when/i_ff` (with `v:pl`) and refcore's `c6` answer both hold.
+
+**Item 3. Another key's day rows (P20's per-read filter, with P22).**
+- The plan pass a traced read asks for marks each instance's reads (`eval/trace/parts.rs`, new, non-kernel):
+  - where they begin (`walk/plan.rs` `make_instances_held`);
+  - where its day's reads end (`inst_parts`);
+  - where they end.
+- The `flows` read that asked (`walk/move_flows.rs` `trace_at_key`, before it counts) keeps:
+  - an instance at its key in the span, or with a hole day: whole;
+  - one at its key outside the span: its day's reads only;
+  - one at another key: nothing.
+- A part it doesn't keep is set aside, by instance and cut. A later read that counts that instance takes it back where it reads, so each instance's reads print once per explain, under the read that counts them. For example, `sum(flows(dk[j], …) for j in js)` prints `dd[j2]` under j2's read.
+- A cell traced in a part set aside is met again as a dropped one (`trace_drop`'s rule).
+- A pass that a later version answered (`trace_answers`) keeps every part where it printed.
+- A decision's pass (`trace_days`) is marked the same way; its parts are its days.
+- d511c489 (+295 −4).
+- Not done under P22: a `count`'s plan instances outside the span still print their bodies, as a binding's plan pass traces them. No vector holds this yet; T writes `n2_flows`' answers by P22 later.
+
+**Green:** T's g3 and g3fix texts, 69 of 69 asks (`tmp/m4/g3/f20/vs.sh`):
+- `f2_keyed` e_fp1, e_fk1, e_fk2;
+- `f3_span` e_fk1;
+- `c5_dec_false` e_cn;
+- `c6_count_false_when` e_cn, i_cn;
+- `c1_false_when` i_cn, i_ff;
+- `t2_tie_inputs` i_cn;
+- and `spec/p21/r_p_mr3/z2`.
+
+`milestone-report: M4: 39/40`. The red one is `fixes-traced` (`fixes/narrow/n1_fulfils/e_feb`, `not implemented`), red on master and at 24739fed by T's table: G6's, not G3's.
+
+**The sweep** (`tmp/m4/g3/sweep21.sh`): the paper probes, every `tmp/m4/review/*/` folder and my probes in `tmp/m4/g3/`. Each text is run alone, ask by ask, on refcore_fast, on 111b3b7d's quick binary (built from `git archive` in `tmp/m4/g3/before21`) and on this tree.
+- **902 asks:** 650 same → same, 5 different → same, 245 different → different (21 with changed bytes), 2 same → different.
+- **Unchanged:** the paper probes and review folders g1, g1fix, g2, g2fix, byte-identical before and after.
+- **Same → different (2):** `c6_count_false_when` i_cn and `t2_tie_inputs` i_cn. Both are T's spec cells (held for #255), and both now equal T's answers.
+- **Different → same (5):** `review/g3/f10_more` e_cn, `c5` e_cn, `c6` e_cn, my `p4` e_c and `p5` e_c. Each is a count that now lists a false-`when` run's reads (item 1).
+- **Different → different with changed bytes (21):**
+  - The other key's day rows are gone, or moved under the read that counts them (item 3): `review/g3/f1_multi` e_fk, e_fk1; `f2_keyed` e_fp1, e_fk1, e_fk2; `f3_span` e_fk1; `f10_more` e_f, e_fpin, e_known, e_law; `review/g3fix/k1_keyed_inputs` e_fk1, e_fk2, e_fp1; my `p3`, `p4`, `p5` e_one and e_s.
+  - The spec cells now equal T's answers: `c1_false_when` i_cn and `f2_keyed`'s three.
+  - My `p5` i_c lists `dd[j2]`, the day of a run whose `when` is false (item 1).
+
+- **Size** (`git diff --shortstat 111b3b7d -- engine/crates`): 6 files, +314 −14.
+- **Files:** `book/members.rs`, `walk/plan.rs`, `walk/move_flows.rs` (kernel); `eval/trace/parts.rs` (new), `eval/trace.rs`, `lib.rs`.
+- **Exceptions:** +0. The exceptions step's one hit, `silent-default-call` (`or_default`), was written out as a match.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none; the one above is ruled by P21.
+- **Usage:** about 0.2 % of the week this turn (1.85 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (246s)` on d511c489; `milestone-report: M4: 39/40`.
