@@ -7731,3 +7731,68 @@ The runs (release binary, `perf row P8-L10`, `tmp/m4/g6c/rows18_w2.txt`):
 - **Usage:** about 1.62 % of the week for the session by `engine/tools/usage` before this entry, about 0.85 % of it this turn.
 - **Checks:** `check commit: green, 24 steps (199s)` and `check fences: green, 1 step (21s)` on this tree but for this line; `milestone-report: M4: 36/40 green`.
 - **Note:** site (ii)'s commit, 8186cc1a above, was reworded before the push as 8f763173 (its subject was 74 characters; `commit-check`), the same tree.
+
+## 2026-11-23 M4 G3 `walked`: the review's fixes, P26's explain paths, P28, P29 (issue #252)
+
+On ab236ddf (G6b, G6c widened, G4, T's C6 and C7). Two commits, db4fea8c and 645a07de, then this entry's. Rulings in `tmp/m4/auto-picks.md` (P26, P28, P29).
+
+**Item 1. P26's `explain` paths.** Each stopped `not implemented`: a kernel read left the trace marked as walked. I found the marking reads with a temporary backtrace in `trace_walk`, reverted before each commit.
+- **(a) A hole-day leg read.** The mark that stayed came from neither `leg_field` nor `leg_refused`. It came from `mv_field` → `changed_leg` → `unsure_of` → `adjust_move`: the measure of the adjustments that may change a hole-day instance's leg. `changed_leg` (`book/members.rs`) now gives the mark back where it gives the day's hole.
+  - `fixes/g3fix/h2_plan_hole_axis` e_sm and e_cw now equal refcore's bytes, as do G4's `tmp/m4/g4/x_min.tally` e_sm and e_cn.
+- **(b) A refused balance read (`fixes/g3/f5_cross/e_pr`): not built, see the STOP-REPORT below.**
+- **(c) A past cut's observation reads.** Two marks stayed.
+  - A binding's observation member reads the links its target rests on (`span_members` → `obs_target`).
+  - `o.fulfils` reads the plan's list (`fulfils_of` → `linked_instance` → `linked_day`).
+  - Both now give the mark back; the row prints where a read takes its leg.
+  - Under a trace, a link now takes the whole list (`walk/tuples.rs` `linked_instance`: the kept-tuple path only untraced). Its traced pass prints the rows the link rests on, as refcore does. `walk/tuples.rs` is no fence module; `check commit` ran F7's suites green.
+  - `fixes/narrow/n1_fulfils/e_feb` answers. It differs from refcore only by P22's filter: refcore lists every month's `spend` instance (`loose[2026-01]`, …), the engine February's alone. By P22 the engine's bytes are right, so T would hold the vector for #255.
+  - `fixes/g6c/p06_holebook_io/e1` answers, refcore's rows but one place: refcore prints `v:skip_m` (rent's `when`, `m != skip_m`) before `v:rent_day[2026-01]`; the engine prints it after, in the pass's order, day then `when`. Refcore's `eval_inst` reads the day first too, so another read of refcore's takes `skip_m` first (likely the link to `rent[2026-04]`, whose `when` is false). Not found in this turn.
+- **The filter's hole case (645a07de, found on `spec/p22/n2_flows/e_jan`).** A pass whose hole bookings a later version answers kept every part where it printed (my rule of d511c489). So `flows(top, …)`, whose amount reads `flows(rent, m)`, listed every `rent` instance's amount.
+  - `trace_answers` lists each answer where its instance's reads end. The pass's marks now move past each answer it puts in (`trace_marks_moved`), so the answer is that instance's part.
+  - `spec/p22/n2_flows/e_jan` is now T's P22 answer.
+
+**Item 2. P28.** A `given` row with a start and no end, read at a law date after the ask's cut, now lists its `held:` line as an input's row does (`eval/rules.rs` `given`, with `narrow_to_day`). `fixes/g4/h1_held/q_late` is green.
+
+**Item 3. P29.** `RUN-NONE`'s use words are now bare, as L §8.4 writes them: `ordering` (`eval/expr.rs`, `eval/builtin.rs`) and `aggregate` (`eval/aggregate.rs`). `spec/p26/g1/a12_nonehole/q_arith2` and `spec/p26/items/none` q_sum and q_min are green.
+
+**`milestone-report: M4: 44/46`.** Red, all three in `fixes-p23` and `fixes-traced`:
+- `fixes/g3/f5_cross/e_pr`: (b), the STOP-REPORT below.
+- `fixes/narrow/n1_fulfils/e_feb`: P22's filter against refcore's whole pass.
+- `fixes/g6c/p06_holebook_io/e1`: one row's place.
+
+T's g3 and g3fix texts: 69 of 69 asks still green (`tmp/m4/g3/f20/vs.sh`).
+
+**The sweep** (`tmp/m4/g3/sweep22.sh`). The paper probes, every `tmp/m4/review/*/` folder (`g6c` holds no text) and my probes in `tmp/m4/g3/`, each text alone, ask by ask, on refcore_fast, ab236ddf's quick binary (built from `git archive` in `tmp/m4/g3/before22`) and this tree.
+- **903 asks:** 655 same → same, 2 different → same, 246 different → different (1 with changed bytes), **0 same → different**.
+- **Different → same:** `review/g3fix/h2_plan_hole_axis` e_sm and e_cw (path (a)).
+- **Changed bytes:** `review/g1/a12_nonehole` q_arith2, `an ordering` → `ordering` (P29; refcore prints `a value is none here: max`, T's spec cell).
+
+- **Size** (`git diff --shortstat ab236ddf -- engine/crates`): 8 files, +68 −17.
+- **Files:**
+  - kernel: `book/members.rs`, `walk/tuples.rs`, `walk/plan.rs`;
+  - `eval/rules.rs`, `eval/trace/parts.rs`, `eval/aggregate.rs`, `eval/builtin.rs`, `eval/expr.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** the one below.
+- **Usage:** about 0.34 % of the week this turn (2.28 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (184s)` on 645a07de; `milestone-report: M4: 44/46`.
+
+## STOP-REPORT 2026-11-23: a refused balance read's explain is refcore's whole walk, listed twice under an axis fan-out
+
+- **Kind:** other: the form to build is unclear, and too uncertain to guess within the turn.
+- **Where:** `fixes/g3/f5_cross/e_pr`: `explain pr`, `def pr = bal(konto, dday) from w + flows(dx, sp .. sp_end)`, where the walk refuses `RUN-DIV` at `ddiv` (2026-05-10) and `ra` reads the unset axis `rd` (`[rd = *]`). The mark comes from `walk/reads.rs` `main_walk`, reached through `bal` → `projection` → `common_case` → `proj_base`.
+- **Rule or gate:** E §10; L §5.18; P26 ("a refused balance read becomes a node with the walk's running reads under the refusal").
+- **What happens:** the engine stops `not implemented` (exit 69). Refcore prints, under `[1] pr = refused: RUN-DIV division by zero`, with no balance node:
+  - the rows `dday`, `w`, `wdiv`, `wh`, `wlate` (every decision's day);
+  - then dx's run (its running read, a hole; `ra`'s rules; `(v:amt: see [9])`);
+  - then ddiv's run (its running read, `v:z`);
+  - then dx's run again and ddiv's running read again without `v:z` ([12] to [14]).
+
+  This is the walk traced whole: every move's day and every run up to the refusal, at keys and spans the read never names. The second listing looks like the fan-out over `rd`'s options, its rows deduped by the printer.
+- **What I tried:** nothing built; the code is as it was on this path. A build would be `trace_days` for every decision and `trace_run` for each run of the main walk up to the refused point, under the balance read, once per walk the fan-out reads. It is near the 0.3 k bound, and refcore's second block (which runs, which rows) is the part I can't derive from the text.
+- **What I ask:**
+  1. Is the form refcore's whole walk (every day, every run up to the refusal, per fan-out option), or P20's (the runs the refused balance rests on, the refusal's point and what decided it)?
+  2. If refcore's, which runs does the second block hold?
+
+  A ruling on 1 lets the next builder turn take it.
+- **State:** the last green commit is this entry's; nothing uncommitted.
