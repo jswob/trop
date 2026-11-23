@@ -38,8 +38,10 @@ mutants_leave_out = ["m0_load"]
 # The fences' equivalence tests (R-130), catchers of a local mutation batch only, with
 # `mutants-local --fences` (R-88; pick P55, issue #108, 2026-11-09): once a fence answers T's
 # reads, only its equivalence test reaches its plain twin. Not the mutants shards' or their
-# baseline's: gate 8 counts T's tests only (R-84). Each entry names a package and a test
-# target (every test in it) or a module of its lib (the tests under it).
+# baseline's: gate 8 counts T's tests only (R-84), and a runner target listed here (F7's
+# m4_narrow, which runs by default) is left out of the runner's defaults in gate 8's
+# selection (`tools/milestones args`; M4's gate, issue #252). Each entry names a package and
+# a test target (every test in it) or a module of its lib (the tests under it).
 fence_catchers = [
   # F5 (walk/lows.rs): the tree against the projection's walk on T's corpora, byte for byte
   { package = "tally-cli", test = "walk_oracle" },
