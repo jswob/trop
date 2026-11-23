@@ -1,31 +1,34 @@
-//! Fence F7: a read at a past booking cut evaluates the instances it names, not its move's whole list at that cut.
+//! Fence F7: a `flows` read at a past booking cut evaluates the instances it counts, not its move's whole list at that cut.
 //! Spec: E §5 step 1 (an instance dated t before the cut is booked at min(t, K), so every day
 //! before K is a cut its readers read the move at); E §4.1 (the plan pass: the binding tuples,
-//! each instance's day at the cut, its body at its booking cut, its status); L §5.19 Links
-//! (`o.fulfils` names one instance at its keys), §5.14.3 (`flows(m, span)` counts the
-//! instances dated in the span; one outside it brings the day that put it there, P20 and
-//! P22), §8.2 One read set; E §3.2 (a shared structure's reads are none of its reader's).
-//! Twin: `Plans::Whole`: plan.rs's `move_instances`, the move's whole list at the cut, then the
-//! instance at the keys (`book/members.rs` `fulfils_of`, refcore's `find_inst`) or every
-//! instance at the keys (`move_flows.rs` `flows_move`, refcore's `flows_move`).
+//! each instance's day at the cut, its body at its booking cut, its status); L §5.14.3
+//! (`flows(m, span)` counts the instances dated in the span; one outside it brings the day
+//! that put it there, P20 and P22), §5.19 Links, §8.2 One read set; E §3.2 (a shared
+//! structure's reads are none of its reader's).
+//! Twin: `Plans::Whole`: plan.rs's `move_instances`, the move's whole list at the cut, then
+//! every instance at the keys (`move_flows.rs` `flows_move`, refcore's `flows_move`).
 //! Invariants: a narrow read makes the move's binding tuples as the list does and each
 //! instance it takes by the list's own step (`tuple_instance`), with the move's plan at that
 //! cut in progress, so what it gives an instance is what the list gives it; a stop the list
 //! could meet in an instance it skips is either ruled out by the move's cone (it can't reach
 //! the move's own plan, a walk or an observation's link) or declined: a refused tuple whose
-//! later keys are unbound, a named instance that is a hole booking, a decision, an uncertain
-//! kind's `flows`, a traced ask, a read at the ask's cut K or later, and a move whose whole
-//! list at that cut is kept are all read whole; the links of every instance an observation
-//! at the cut names are judged once per (move, cut), their reads absorbed by the first
-//! reader, as the list's status loop absorbs them, and by no later one (the BUILD-LOG's G6c
-//! step 0 lists every stop and its ruling).
+//! later keys are unbound, an instance that is a hole booking, a decision, an uncertain kind,
+//! an `explain` or an `inputs-of`, a read at the ask's cut K or later, and a move whose whole
+//! list at that cut is kept are all read whole; the links of every instance an observation at
+//! the cut names are judged once per (move, cut), their reads absorbed by the first reader,
+//! as the list's status loop absorbs them, and by no later one; and since which reader is a
+//! list's first is the whole evaluation's order, a move is read narrowly only at cuts before
+//! the first day a link to another move in its cone is known, where no instance it skips can
+//! be a first reader that takes a link's reads (group 6c's review, B1). `o.fulfils` takes no
+//! list in either mode: it reads the instance's existence alone (`tuples.rs`
+//! `linked_instance`, P22). The BUILD-LOG's G6c entries list every stop and its ruling.
 //! PERF: P8-L10 (the stage runs: `spend[d]` is daily, so every day before K is a cut its
-//! `o.fulfils` reads the named move at, and each whole list ran to the horizon: at G6b's
-//! profile `move_instances` held 67 % of b1's time at 2030, `fulfils_of` 33 %, `flows_move`
-//! 17 %), the count row F7-c1r2 (`c1_r2`'s def misses, set from G6c's measure), and P8-14,
-//! whose def misses it must not raise past its budget;
-//! plain twin: plan.rs (`move_instances` under `Plans::Whole`, then the list's instance,
-//! refcore's `find_inst`); the equivalence tests: tally-runner's `m4_narrow`, tally-cli's
+//! reads take the moves at, and each whole list ran to the horizon: at G6b's profile
+//! `move_instances` held 67 % of b1's time at 2030, `flows_move` 17 %), the count row
+//! F7-c1r2 (`c1_r2`'s def misses, set from G6c's measure), and P8-14, whose def misses it
+//! must not raise past its budget;
+//! plain twin: plan.rs (`move_instances` under `Plans::Whole`, then the list's instances,
+//! refcore's `flows_move`); the equivalence tests: tally-runner's `m4_narrow`, tally-cli's
 //! `narrow_oracle.rs`, and this file's tests.
 
 use super::instance::{Dated, Inst, Status, inst_order};
@@ -33,7 +36,7 @@ use super::plan::{date_of, invariant, kind_certainty};
 use super::tuples::Tuple;
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Engine};
-use crate::model::{KeyVal, MoveInfo, Node, NodeKind, Reality, Rel, Span, Value};
+use crate::model::{Fulfils, KeyVal, MoveInfo, Node, NodeKind, Reality, Rel, Span, Value};
 use crate::syntax::{Certainty, Stop};
 use crate::time::Day;
 use std::collections::{BTreeMap, BTreeSet};
@@ -71,6 +74,18 @@ pub(crate) struct Narrowed {
     judged: bool,
 }
 
+/// At which cuts a read of a move may be narrow, by its cone (P8-L10; [`narrows`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Narrows {
+    /// At none: its cone reaches its own plan, a walk or an observation.
+    No,
+    /// At every cut before the day: the first a link to an instance of another move in its
+    /// cone is known on.
+    Before(Day),
+    /// At every cut: no link to another move in its cone.
+    Always,
+}
+
 /// What reading a tuple's day at the cut gave, before its body (L §5.14, E §4.1 step 2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Probe {
@@ -82,36 +97,7 @@ enum Probe {
     Taken,
 }
 
-/// What a narrow read of the instance at some keys gives.
-enum Named {
-    /// The instance there, or none.
-    Found(Option<Box<Inst>>),
-    /// Declined: read the move's whole list.
-    Whole,
-}
-
 impl Engine {
-    /// The instance of move `mv` at keys `keys` under cut `cut`, with its status, as the
-    /// move's list at that cut gives it, or none (refcore's `find_inst`). L §5.19 Links,
-    /// E §4.1, §5 step 1.
-    ///
-    /// # Errors
-    ///
-    /// As [`Engine::move_instances`].
-    pub(crate) fn instance_at(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        keys: &[KeyVal],
-        cut: Day,
-    ) -> Result<Option<Inst>, Stop> {
-        if let Named::Found(found) = self.narrow_instance(m, mv, keys, cut)? {
-            return Ok(found.map(|inst| *inst));
-        }
-        let insts = self.move_instances(m, mv, cut)?;
-        Ok(insts.iter().find(|i| i.keys == keys).cloned())
-    }
-
     /// The instances of plan move `mv` at keys starting `want` that a `flows` over span `sp`
     /// at cut `cut` counts, in the list's order: each one's as the list gives it, but one
     /// whose day at the cut is a day outside the span, which brings only that day's reads
@@ -135,51 +121,35 @@ impl Engine {
     }
 
     /// Whether a read of move `mv` at cut `cut` may be narrow: F7 on, a plan, a cut before
-    /// the ask's, no ask traced, no whole list kept at that cut, and a cone that can't reach
-    /// the move's own plan ([`narrows`]). E §4.1, §5 step 1, §10; P8-L10.
-    fn may_narrow(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> bool {
+    /// the ask's, no ask traced or listing its inputs, no whole list kept at that cut, a cone
+    /// that can't reach the move's own plan, and a cut before the first day a link to an
+    /// instance of another move in that cone is known ([`narrows`]). E §4.1, §5 step 1, §10;
+    /// L §5.19 Links, §8.2 One read set; P8-L10.
+    ///
+    /// # Errors
+    ///
+    /// As [`narrows`].
+    fn may_narrow(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<bool, Stop> {
         if self.plan_reads == Plans::Whole
             || mv.decision
             || cut >= self.ask_cut
             || self.explaining()
             || self.plans.contains_key(&(mv.id.clone(), cut))
         {
-            return false;
+            return Ok(false);
         }
-        if let Some(known) = self.prefixes.narrows.get(&mv.id) {
-            return *known;
-        }
-        let narrow = narrows(m, mv);
-        self.prefixes.narrows.insert(mv.id.clone(), narrow);
-        narrow
-    }
-
-    /// The instance at keys `keys` read narrowly (see [`Engine::instance_at`]), or declined;
-    /// declined too for a named instance that is a hole booking before the cut, which a later
-    /// version answers over the whole list. L §5.19 Links, E §4.1, §5 step 1.
-    fn narrow_instance(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        keys: &[KeyVal],
-        cut: Day,
-    ) -> Result<Named, Stop> {
-        if !self.may_narrow(m, mv, cut) || !self.narrowed(m, mv, cut)? {
-            return Ok(Named::Whole);
-        }
-        let id = crate::book::inst_id(&mv.id, keys);
-        let Some(at) = self.tuple_at(mv, cut, (&id, keys)) else {
-            return Ok(Named::Found(None));
+        let reach = if let Some(known) = self.prefixes.narrows.get(&mv.id) {
+            *known
+        } else {
+            let found = narrows(m, mv)?;
+            self.prefixes.narrows.insert(mv.id.clone(), found);
+            found
         };
-        let made = self.narrow_inst(m, mv, cut, at)?;
-        if made
-            .as_ref()
-            .is_some_and(|i| crate::book::hole_booked_before(i, cut))
-        {
-            // a hole booking a later version answers is answered over the whole list
-            return Ok(Named::Whole);
-        }
-        Ok(Named::Found(made.map(Box::new)))
+        Ok(match reach {
+            Narrows::No => false,
+            Narrows::Before(day) => cut < day,
+            Narrows::Always => true,
+        })
     }
 
     /// The instances a `flows` counts read narrowly (see [`Engine::flows_instances`]), or
@@ -192,7 +162,7 @@ impl Engine {
         (want, sp): (&[KeyVal], &Span),
         cut: Day,
     ) -> Result<Option<Vec<Inst>>, Stop> {
-        if !self.may_narrow(m, mv, cut)
+        if !self.may_narrow(m, mv, cut)?
             || kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain)
             || !self.narrowed(m, mv, cut)?
         {
@@ -243,15 +213,7 @@ impl Engine {
     fn narrowed(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<bool, Stop> {
         let key = (mv.id.clone(), cut);
         if !self.prefixes.narrow.contains_key(&key) {
-            self.enter_plan(mv, cut)?;
-            let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
-            let mark = self.reads_apart();
-            let tctx = self.timeline_ctx(None, cut);
-            let made = self.move_tuples(m, mv, tctx);
-            self.reads_back(mark);
-            self.holder = outer;
-            self.plan_active.remove(&key);
-            let tuples = made?;
+            let tuples = self.plan_tuples(m, mv, cut)?;
             let mut by_id: BTreeMap<String, Vec<usize>> = BTreeMap::new();
             for (at, tuple) in tuples.iter().enumerate() {
                 let id = crate::book::inst_id(&mv.id, &tuple.keys);
@@ -470,18 +432,6 @@ impl Engine {
         out
     }
 
-    /// The place among move `mv`'s tuples at cut `cut` whose id is `id` and keys `keys`: the
-    /// instance a link names. L §5.19 Links, E §4.1 step 1.
-    fn tuple_at(&self, mv: &MoveInfo, cut: Day, (id, keys): (&str, &[KeyVal])) -> Option<usize> {
-        let entry = self.prefixes.narrow.get(&(mv.id.clone(), cut))?;
-        entry
-            .by_id
-            .get(id)?
-            .iter()
-            .copied()
-            .find(|at| keys_at(&entry.tuples, *at, keys))
-    }
-
     /// Whether tuple `at` of move `mv` at cut `cut` is a plain one, neither refused nor a
     /// hole, whose day a read may take alone; with its instance's id. L §5.14 Keys, §8.4.
     fn tuple_plain(&self, mv: &MoveInfo, cut: Day, at: usize) -> Option<(bool, String)> {
@@ -502,7 +452,7 @@ impl Engine {
     /// # Errors
     ///
     /// `RUN-CYCLE` where it already is.
-    fn enter_plan(&mut self, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+    pub(super) fn enter_plan(&mut self, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
         let key = (mv.id.clone(), cut);
         if self.plan_active.contains(&key) {
             self.narrow_open_to_days();
@@ -524,10 +474,21 @@ impl Engine {
 /// (`marks`). A `flows` of another move is followed into that move's cone; its edge to the
 /// balances, the walk that refuses a guarded leg, is never walked inside a plan pass
 /// (`leg_refused` reads only a walk already kept there). E §3.1 steps 6–8, L §5.11.
-fn narrows(m: &Reality, mv: &MoveInfo) -> bool {
+///
+/// And from which cut on it is read whole: the first day a link to an instance of another
+/// move in that cone is known. The list of such a move at a cut where its observations name
+/// instances gives the links' reads to its first reader, which a narrow read of this move
+/// there could change by skipping the instance that is that reader (L §5.19 Links, §8.2 One
+/// read set; group 6c's review, B1). Before that day no list in the cone has a link to give.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an observation of a version load didn't build.
+fn narrows(m: &Reality, mv: &MoveInfo) -> Result<Narrows, Stop> {
     let body = Node::new(NodeKind::Move, &mv.id);
     let day = Node::new(NodeKind::MoveOn, &mv.id);
     let mut seen = BTreeSet::new();
+    let mut reached = BTreeSet::new();
     let mut stack = vec![body.clone(), day.clone()];
     while let Some(next) = stack.pop() {
         if !seen.insert(next.clone()) {
@@ -542,7 +503,10 @@ fn narrows(m: &Reality, mv: &MoveInfo) -> bool {
                 NodeKind::Balances | NodeKind::Price | NodeKind::Parts | NodeKind::Fill
             )
         {
-            return false;
+            return Ok(Narrows::No);
+        }
+        if matches!(next.kind, NodeKind::Move | NodeKind::MoveOn) && next.id != mv.id {
+            reached.insert(next.id.clone());
         }
         let Some(reads) = m.graph.reads(&next) else {
             continue;
@@ -550,13 +514,13 @@ fn narrows(m: &Reality, mv: &MoveInfo) -> bool {
         for (target, rels) in reads {
             let own_day = next == body && *target == day;
             if !own_day && (*target == body || *target == day) {
-                return false;
+                return Ok(Narrows::No);
             }
             if rels
                 .iter()
                 .any(|r| matches!(r, Rel::Bind | Rel::Named | Rel::Observed | Rel::Bal))
             {
-                return false;
+                return Ok(Narrows::No);
             }
             if target.kind == NodeKind::Balances && rels.iter().all(|r| *r == Rel::Flows) {
                 continue;
@@ -564,12 +528,35 @@ fn narrows(m: &Reality, mv: &MoveInfo) -> bool {
             stack.push(target.clone());
         }
     }
-    true
+    Ok(first_link(m, &reached)?.map_or(Narrows::Always, Narrows::Before))
 }
 
-/// Whether tuple `at` among `tuples` is at keys `keys`. L §5.19 Links.
-fn keys_at(tuples: &[Tuple], at: usize, keys: &[KeyVal]) -> bool {
-    tuples.get(at).is_some_and(|t| t.keys == keys)
+/// The first day a link to an instance of one of `moves` is known: the earliest `known` of a
+/// row that states a `fulfils` naming one, in any version and any world, or none (L §5.19
+/// Links, §6.4). A row stated `same` with one takes that row's `fulfils`, known by then.
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an observation of a version load didn't build.
+fn first_link(m: &Reality, moves: &BTreeSet<String>) -> Result<Option<Day>, Stop> {
+    let mut first: Option<Day> = None;
+    for (_, input) in m.inputs.entries() {
+        for o in &input.observations {
+            let Some(Fulfils::Instance(named, _)) = &o.fulfils else {
+                continue;
+            };
+            if !moves.contains(named) {
+                continue;
+            }
+            let version = m
+                .versions
+                .get(&o.version)
+                .ok_or_else(|| invariant("an observation of a version load didn't build"))?;
+            let known = o.own_known.unwrap_or(version.known);
+            first = Some(first.map_or(known, |d| d.min(known)));
+        }
+    }
+    Ok(first)
 }
 
 /// A stop met reading an instance's day: a run-time refusal is the instance's own, its `err`,
@@ -588,11 +575,12 @@ fn taken(stop: Stop) -> Result<Probe, Stop> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Plans, narrows};
+    use super::{Narrows, Plans, narrows};
     use crate::api::{Asks, Files, Given, Request, Source, run_with_how};
     use crate::eval::How;
     use crate::load::load;
     use crate::syntax::parse_reality;
+    use crate::time::Day;
 
     /// A month's spending, booked on its 25th, reads the loose card spending of the month: the
     /// observations whose `fulfils` is none. The rent's observations name its instances: one
@@ -840,10 +828,94 @@ version v
     }
 
     #[test]
+    fn a_link_in_another_moves_list_goes_to_that_lists_first_reader() {
+        // L §5.19 Links, §8.2 (group 6c's review, B1): zed[2026-02], booked on its 25th, reads
+        // the flows of top in April, each top[m] those of rent in its month; an observation
+        // known on 2026-01-21 names rent[2026-01], whose `when` reads the pinned ok[2026-01].
+        // The whole list of top there gives that read to top[2026-03], its first reader of
+        // rent at that cut, which the flows of April don't count: no `pinned:` line
+        let text = r#"model pin
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input ok[m in month]: bool
+
+move rent[m in month]: transfers
+  on day_of(m, 5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount 100.00 PLN
+
+move top[m in month]: transfers
+  on day_of(m, 20)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent, m)
+
+move zed[m in month]: transfers
+  on day_of(m, 25)
+  at start_of(m)
+  leg cash from konto to shop amount flows(top, (m + 2) .. (m + 2))
+
+def zz: money PLN = flows(zed, 2026-02 .. 2026-02)
+
+ask zp: zz with ok[2026-01] = true
+
+ask zi: inputs-of zz
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ok[2026-01] = true "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+"#;
+        let asks = ["zp", "zi"];
+        let narrow = lines(text, &asks, Plans::Narrow);
+        assert_eq!(narrow, lines(text, &asks, Plans::Whole), "the twin's lines");
+        assert!(
+            narrow.iter().all(|l| !l.contains("pinned")),
+            "no pin read: {narrow:?}"
+        );
+    }
+
+    #[test]
     fn a_move_whose_cone_reaches_its_own_plan_is_read_whole() {
-        // E §3.1 (the item graph): a plain move narrows, and one reading another plain move's
-        // instance; one reading the observations, and one reading another move that reads it
-        // back, don't (a plan can't read a balance: load refuses it, LOAD-READS)
+        // E §3.1 (the item graph): a plain move narrows at every cut, its own instance named
+        // by an observation; one reading another plain move's instance narrows before the
+        // first day a link to that move is known (L §5.19, §8.2; B1); one reading the
+        // observations, and one reading another move that reads it back, don't (a plan can't
+        // read a balance: load refuses it, LOAD-READS)
         let text = r#"model cone
   tally 2
   on 2026-03-20
@@ -895,6 +967,12 @@ version v
   amt = 1.00 PLN "s"
   from_m = 2026-01 "s"
   opening[konto] = 10.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  bank[b1] = (on: 2026-02-01, kind: transfers, leg cash from world to konto amount 1.00 PLN, fulfils: plain[2026-02]) "s"
 "#;
         let files = parse_reality(&[Source {
             path: "cone.tally".to_owned(),
@@ -902,11 +980,29 @@ version v
         }])
         .expect("parses");
         let m = load(files).expect("loads");
-        let narrows_of = |id: &str| narrows(&m, m.moves.get(id).expect("the move"));
-        assert!(narrows_of("plain"), "plain");
-        assert!(narrows_of("by_field"), "another plain move's instance");
-        assert!(!narrows_of("by_obs"), "a binding over observed rows");
-        assert!(!narrows_of("ping"), "ping reads pong, which reads ping");
-        assert!(!narrows_of("pong"), "pong reads ping, which reads pong");
+        let narrows_of =
+            |id: &str| narrows(&m, m.moves.get(id).expect("the move")).expect("judged");
+        let linked = Day::from_ymd(2026, 2, 10).expect("a day");
+        assert_eq!(narrows_of("plain"), Narrows::Always, "plain");
+        assert_eq!(
+            narrows_of("by_field"),
+            Narrows::Before(linked),
+            "another plain move's instance"
+        );
+        assert_eq!(
+            narrows_of("by_obs"),
+            Narrows::No,
+            "a binding over observed rows"
+        );
+        assert_eq!(
+            narrows_of("ping"),
+            Narrows::No,
+            "ping reads pong, which reads ping"
+        );
+        assert_eq!(
+            narrows_of("pong"),
+            Narrows::No,
+            "pong reads ping, which reads pong"
+        );
     }
 }

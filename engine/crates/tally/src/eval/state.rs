@@ -81,9 +81,10 @@ pub(crate) struct Prefixes {
     /// instances and days read of them, by (move, cut), kept like the lists (P8-L10;
     /// `walk/narrow.rs`).
     pub(crate) narrow: BTreeMap<(String, Day), crate::walk::Narrowed>,
-    /// Whether each move's cone can't reach its own plan, so a narrow read may take it
+    /// At which cuts each move's cone lets a narrow read take it: none where it reaches the
+    /// move's own plan, else those before the first link to another move in it is known
     /// (`walk/narrow.rs`).
-    pub(crate) narrows: BTreeMap<String, bool>,
+    pub(crate) narrows: BTreeMap<String, crate::walk::Narrows>,
 }
 
 impl Ctx {

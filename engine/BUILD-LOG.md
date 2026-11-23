@@ -7529,3 +7529,39 @@ The builder's plan §5 G4 (rows 16, 18, 20), with picks P23 and P24. On 00143f5a
 - **What I tried:** one non-kernel guess, judged and run, then taken out: an outermost read's `Deep` replay (`eval/stack.rs`) setting the mark back to its value at the read's start. All four asks still stop, so the mark isn't an unwound attempt's; it is set by the reads above, each in `walk/` or `book/`. Not tried: any edit there.
 - **What I ask:** a kernel group (G3's kind) takes the three paths, each with refcore's form: a hole-day leg read gives the mark back where it gives its hole; a refused balance read becomes a node with the walk's running reads; a past cut's observation reads as their rows.
 - **State:** nothing built for it; the last commit is this entry's.
+
+## 2026-11-23 M4 G6c widened (U2): the review's fixes, then F7 at three more sites (issue #252)
+
+On 702bdcd3 (G4's entry, after G6c's 00143f5a). The user's U2, "Try the 3 fixes, then decide"; P25. Scratch in `tmp/m4/g6c/` (untracked).
+
+### The review's fixes (`tmp/m4/review-g6c.md`)
+
+- **B1** (`walk/narrow.rs` `narrowed` → `judge_named`):
+  - *Cause.* A move's list at a cut gives its observations' link reads to its first reader. Which reader comes first is the whole evaluation's order, and a narrow read of another move changes that order. In `p09b_pin`, top's list at 2026-02-25 gives rent's link reads (`ok[2026-01]`) to top[2026-03]; a narrow read from zed[2026-02] takes top[2026-04] alone, so they reached `zz`.
+  - *Fix.* `narrows` also gives the first day a link to another move in the cone is known: the earliest `known` of a row whose `fulfils` names such a move, over every version and world (`Narrows::Before`). A move is read narrowly only at cuts before that day.
+  - *Why sound (judged).* A skipped instance of a move Y at cut c reads the moves in Y's cone only at cuts up to c. Before that day no list in the cone has a link to give, so the instance it skips can't be a first reader that takes a link's reads. From that day on, Y and every move whose cone holds a linked move are read whole, so the readers of a linked move X keep the whole evaluation's order, and X's own narrow read gives its links to that same first reader.
+  - *Checked.* `p09b_pin --ask zp` and `p09_first_min --ask i` are refcore's bytes now. Every probe text in `review/g6c/p/` (25 texts, every ask) is byte-equal to the before-binary (73e75856). New inline test `walk::narrow::tests::a_link_in_another_moves_list_goes_to_that_lists_first_reader` (p09b's shape, `zp` and an `inputs-of`, Narrow against Whole); the cone test checks `Before`.
+- **Non-blocking 1:** `explaining()` is `trace.is_some() || keep_rows == Rows::Kept`, so `inputs-of` reads whole as `explain` does; the header and the code agree.
+- **X1** (`n4_own --ask l`, `ENGINE-INVARIANT … spend[2026-02]`):
+  - *Cause.* `o.fulfils` built the named move's whole list, amounts included (refcore's `find_inst`). Inside spend[2026-02]'s booking at 2026-02-25, its own `loose[2026-02]` reads `o.fulfils` of a row naming spend[2026-01]. The list at 2026-02-25 then meets loose[2026-02] in progress (`RUN-CYCLE`, kept as that instance's refusal), while the list at K books it at 250.00 PLN: E §9 item 5.
+  - *Fix*, P22's pick, in both forms: `o.fulfils` reads the instance's existence alone (`walk/tuples.rs` `linked_instance`): its tuple at the keys and its day at the cut, as the list holds it, never its body. A decision, a refused tuple (whose `when` decides whether the list holds it) and a move whose tuples stop its list still take the whole list.
+  - The value is a reference (id, day, keys), which a field read resolves again at the reader's cut, so no other read changes. `walk/plan.rs` `day_dated` is the one step from an `on` value to a day, which `inst_parts` and `linked_instance` share.
+  - *Result.* `l` gives 40.00, 50.00, 60.00 and 100.00 PLN, both alone and after `k` and `f` (refcore: 40.00, then `ENGINE-INVARIANT` twice, then 100.00). F7's `instance_at` path had no other caller and is removed: F7 is the `flows` read alone now.
+  - *Judged.* A reader of `o.fulfils` is no longer the named list's first reader for its link reads; whoever builds that list later is. No stored vector moved (`check commit` green), and no probe moved (the 25 texts above and the 43 in `tmp/m4/paper-probes/`, against refcore and the before-binary).
+- The older differences the sweep shows, all equal on the before-binary: `p01_never` (X2), `p07_same` (X3, refcore's side, #255), `p02_cycle_io` and `p06_holebook_io` (`not implemented`, P26's kernel turn), `p11_explain` (an `explain`'s rows).
+
+### Site (i): step 0, before its code
+
+*Checked in the code.*
+- `link_tuple` (`walk/tuples.rs`) makes every tuple of the move at the cut (`move_tuples`) for each link it judges (`judge_links`, once per (cut, instance) in `obs_links_for`), under its reader's holder and with no plan guard.
+- X1's `linked_instance` makes them again for each `o.fulfils` read, under the move, with the guard.
+- F7's narrow `flows` read makes them once per (move, cut).
+
+What making them meets:
+- *Reads:* each tuple's own `coll` (`push`/`pop_alone` around each binding), none the reader's. All three callers make them inside `reads_apart` (a link's judging is apart in `obs_links_for`), so a kept set gives each caller what a fresh one gives.
+- *Stops:* the law date, the members and the `where`s (`move_tuples`' `?`). These go to the link's judging, to `o.fulfils` and to the list. A set whose making stops isn't kept, and the next caller meets the same stop.
+- *The holder:* a link's tuples are made under its reader, the list's under the move. The holder decides only what a projection leaves out (L §5.14.1), and a plan can't read a balance (`LOAD-READS`), so a plan's tuples are the same under any holder. A decision's could differ, so decisions keep making their own.
+- *The guard:* the kept set is made with no `enter_plan`, so a link judged while its move's list is being made (a binding over observed rows inside a body) meets no new `RUN-CYCLE`. `linked_instance` checks the guard itself before it takes the set.
+- *`Plans::Whole`:* every caller makes its own, as now.
+
+So no STOP-REPORT at step 0. *Judged:* b1 makes one plan's tuples per (move, cut) for its link, its `o.fulfils` and its narrow `flows`; they're made once now. No figure until the measures.
