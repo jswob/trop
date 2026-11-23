@@ -1,6 +1,8 @@
 //! A sample value of an expression's class, made without reading, for the zero of an empty sum and a bare figure that is an `if`'s branch.
 //! Spec: L §5.11 (a sum over no keys is 0 in its term's type), §3.2 (inline figures take the
-//! type of what they meet; `if`'s branches unify), §3.1 (the types).
+//! type of what they meet; `if`'s branches unify), §3.1 (the types), §3.3 (`accrue` in its
+//! principal's unit, `dcf` a number), §4.2 (the date functions), §7.2 (`round`'s class is
+//! its x's and step's, whatever the mode), §5.10 (a balance in its place's unit).
 //! Twin: engine/tools/refcore/check.py (the static types `_t` the checker gives: `_arith`,
 //! `t_if`, `c_round`) and evaluate.py (`zero_of`, `typed`).
 //! Invariants: a sample is computed from declared types, literals and bound values only: no
@@ -12,6 +14,7 @@ use super::builtin::{minor_of, round_values};
 use super::expr::{literal, typed};
 use super::state::{Ctx, Env, num_stop, refuse};
 use crate::base::Run;
+use crate::model::Target;
 use crate::model::{
     Class, Code, IndexInfo, KeyVal, MvRef, MvSrc, Number, Reality, Shown, Ty, Unit, Value,
     currency_id, currency_unit, num_money,
@@ -21,6 +24,7 @@ use crate::syntax::{
     AddOp, Agg, AggFn, Bind, Call, Domain as Over, Expr, MulOp, Postfix, Stop, Type,
 };
 use crate::time::{Day, Period};
+use std::collections::BTreeSet;
 
 /// The class of a term the run can't see stops here.
 fn unseen() -> Stop {
@@ -139,13 +143,15 @@ pub(super) fn sample(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Optio
         Expr::Post(base, posts) => post_sample(m, base, posts, env, ctx),
         Expr::Call(call) => call_sample(m, call, env, ctx),
         Expr::Agg(agg) => agg_sample(m, agg, env, ctx),
+        // an `as if` has its expression's type (L §5.11)
+        Expr::AsIf(inner, _) => sample(m, inner, env, ctx),
+        Expr::Bal(b) => place_sample(m, &b.place, env, ctx),
+        Expr::Flows(f) => place_sample(m, &f.target, env, ctx),
         Expr::Record(_)
         | Expr::List(_)
         | Expr::LegOf(..)
         | Expr::To(..)
         | Expr::Last(_)
-        | Expr::Bal(_)
-        | Expr::Flows(_)
         | Expr::Covered(_)
         | Expr::Calendar(_)
         | Expr::Value(_)
@@ -153,9 +159,46 @@ pub(super) fn sample(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Optio
         | Expr::Crps(_)
         | Expr::DistFn(_)
         | Expr::Dist(_)
-        | Expr::Prorata(_)
-        | Expr::AsIf(..) => Ok(None),
+        | Expr::Prorata(_) => Ok(None),
     }
+}
+
+/// A sample of a balance or a `flows` read of a place or a move: a quantity of the place's
+/// one unit, or of the one unit the places a move's legs change have, `any` places aside
+/// (L §5.10, §5.14); none for a place of `any` unit, a move whose places differ in unit or
+/// aren't all seen at load, or a place the run names only by a binding: their unit is the
+/// walk's.
+fn place_sample(m: &Reality, place: &Expr, env: &Env, ctx: Ctx) -> Result<Option<Value>, Stop> {
+    if let Expr::Name(id) = place
+        && let Some(mv) = m.moves.get(id)
+    {
+        let mut units = BTreeSet::new();
+        for target in &mv.changes {
+            let Target::Thing(name) = target else {
+                return Ok(None);
+            };
+            // a place of `any` unit takes the leg's, so it decides nothing
+            if let Some(unit) = m.things.get(name).and_then(|t| m.place_unit(t))
+                && unit != "any"
+            {
+                units.insert(unit);
+            }
+        }
+        return match units.into_iter().collect::<Vec<String>>().as_slice() {
+            [unit] => unit_sample(m, unit).map(Some),
+            _ => Ok(None),
+        };
+    }
+    let Some(Value::Key(KeyVal::Thing(name))) = sample(m, place, env, ctx)? else {
+        return Ok(None);
+    };
+    let Some(unit) = m.things.get(&name).and_then(|t| m.place_unit(t)) else {
+        return Ok(None);
+    };
+    if unit == "any" {
+        return Ok(None);
+    }
+    unit_sample(m, &unit).map(Some)
 }
 
 /// Whether a sample is a bare figure.
@@ -286,15 +329,26 @@ fn call_sample(m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Option<V
     };
     let day = Value::Day(ctx.cut);
     match call.name.as_str() {
-        "start_of" | "end_of" | "day_of" | "add_days" | "add_months" | "add_business" => {
-            Ok(Some(day))
-        }
+        "start_of" | "end_of" | "day_of" | "add_days" | "add_months" | "add_years"
+        | "add_business" | "last_business" | "schedule" => Ok(Some(day)),
         "year_of" => Ok(Period::year_of(ctx.cut).map(Value::Period)),
         "month_of" => Ok(Period::month_of(ctx.cut).map(Value::Period)),
         "quarter_of" => Ok(Period::quarter_of(ctx.cut).map(Value::Period)),
-        "days_between" | "age" | "pos" => Ok(Some(Value::int(1))),
+        "days_between" | "age" | "age_months" | "overlap_days" | "weekday" | "pos" => {
+            Ok(Some(Value::int(1)))
+        }
         "is_business" | "missing" => Ok(Some(Value::Bool(true))),
-        "periodic" | "factor" => Ok(Some(Value::Number(Number::plain(Num::int(1), Unit::one())))),
+        "periodic" | "factor" | "dcf" => {
+            Ok(Some(Value::Number(Number::plain(Num::int(1), Unit::one()))))
+        }
+        // `accrue`: a number in its principal's unit (L §3.3)
+        "accrue" => Ok(match first {
+            Some(p) => {
+                let (_, unit) = super::rates::principal_of(m, &p).map_err(|_| unseen())?;
+                Some(Value::Number(Number::plain(Num::int(1), unit)))
+            }
+            None => None,
+        }),
         "minor" => minor_of(m, call).map(Some),
         "abs" => Ok(first),
         "min" | "max" => {
@@ -306,17 +360,15 @@ fn call_sample(m: &Reality, call: &Call, env: &Env, ctx: Ctx) -> Result<Option<V
             Ok(with_unit.or(first))
         }
         "round" => {
-            let [x, u, mode] = call.args.as_slice() else {
+            // the result's class is x's and u's, whatever the mode: a mode read from an
+            // input or an axis is taken as any one mode (L §7.2)
+            let [x, u, _] = call.args.as_slice() else {
                 return Ok(None);
             };
-            let (Some(x), Some(u), Some(mode)) = (
-                sample(m, x, env, ctx)?,
-                sample(m, u, env, ctx)?,
-                sample(m, mode, env, ctx)?,
-            ) else {
+            let (Some(x), Some(u)) = (sample(m, x, env, ctx)?, sample(m, u, env, ctx)?) else {
                 return Ok(None);
             };
-            round_values(m, &x, &u, &mode)
+            round_values(m, &x, &u, &Value::Word("down".to_owned()))
                 .map(Some)
                 .map_err(|_| unseen())
         }
