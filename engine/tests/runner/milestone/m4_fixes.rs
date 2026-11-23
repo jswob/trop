@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 23] = [
+    const GROUPS: [&str; 26] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -27,11 +27,13 @@ mod tests {
         "fixes-g4",
         "fixes-g6",
         "fixes-g6c",
+        "fixes-g6cfix",
         "fixes-narrow",
         "fixes-p12",
         "fixes-p21",
         "fixes-p22",
         "fixes-p23",
+        "fixes-p30",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -42,6 +44,7 @@ mod tests {
         "spec-p21",
         "spec-p22",
         "spec-p26",
+        "spec-p30",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -205,6 +208,27 @@ mod tests {
         group_holds(VECTORS, "fixes-p22");
     }
 
+    /// The widening's fix review (`tmp/m4/review-g6cfix.md`), X1's corners where refcore answers
+    /// and reads no link at the ask's cut that names the reader's own instance: an amount that
+    /// refuses (`RUN-NEG`) or is a hole, a day that is a hole, a `when` false (`RUN-RECORD`) or a
+    /// hole (`x1a_amounts`, `x1b_when` `k`, `f`, `l`, `n`); the control reading the rows by their
+    /// place (`x1e_nofulfils`); `loose` alone at the cut and at months no link names
+    /// (`x1d_selfk_min` `l`, `x1g_order` `l1`, `l3`).
+    #[test]
+    fn m4_fixes_g6cfix() {
+        group_holds(VECTORS, "fixes-g6cfix");
+    }
+
+    /// P30's refcore bytes, every one held for #255 (so the group holds none today): `o.fulfils`
+    /// naming the reading move's own instance at the ask's cut, where refcore builds the move's
+    /// plan and stops `ENGINE-INVARIANT` (`RUN-CYCLE` for `x1d_selfk_min` `f`), alone and in both
+    /// ask orders (`x1h_order_min`, `x1g_order`, `x1d_selfk_min`); the statement's answers are
+    /// `spec-p30`'s.
+    #[test]
+    fn m4_fixes_p30() {
+        group_holds(VECTORS, "fixes-p30");
+    }
+
     /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
     /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`) and under a hole axis (`fixes/g3fix/
     /// h2_plan_hole_axis` `e_cw`, `e_sm`), which stop "not implemented", and a `given` row marked
@@ -329,5 +353,17 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p26() {
         group_holds(SPEC, "spec-p26");
+    }
+
+    /// P30's answers (#255, the widening's fix review G1): an existence read of an instance
+    /// evaluates only its `where`, its `when` and its day, takes no guard on the move's plan list
+    /// or bodies, and is `RUN-CYCLE` only where one of those returns to a cell being evaluated;
+    /// its answer never depends on ask order (L §5.19, §5.11, §8.2). So `flows(spend, 2026-04)`
+    /// is 270.00 PLN and `loose[2026-04]` 30.00 PLN in every order (`x1h_order_min`,
+    /// `x1g_order`, `x1d_selfk_min`, alone and in both orders), from refcore's run of twins
+    /// reading the same rows by their place.
+    #[test]
+    fn m4_fixes_spec_p30() {
+        group_holds(SPEC, "spec-p30");
     }
 }
