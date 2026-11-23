@@ -1,0 +1,99 @@
+model r1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented for G6b's registers: a register that grows month by month through nested balance reads"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-08
+
+place konto: accounts PLN lives 2026-01-01..
+
+place box: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input z1_amt: money PLN
+
+input z_1_amt: money PLN
+
+input z10_amt: money PLN
+
+input aa_amt: money PLN
+
+input floor: money PLN
+
+input d_z1: int
+
+input d_z_1: int
+
+input d_z10: int
+
+input d_aa: int
+
+input d_save: int
+
+move z1[m in month]: transfers
+  on day_of(m, d_z1)
+  at start_of(m)
+  leg cash from konto to world amount z1_amt
+
+move z_1[m in month]: transfers
+  on day_of(m, d_z_1)
+  at start_of(m)
+  leg cash from world to konto amount z_1_amt
+
+move z10[m in month]: transfers
+  on day_of(m, d_z10)
+  at start_of(m)
+  leg cash from konto to world amount z10_amt
+
+move aa[m in month]: transfers
+  on day_of(m, d_aa)
+  at start_of(m)
+  leg cash from world to konto amount aa_amt
+
+move save[m in month]: transfers
+  on day_of(m, d_save)
+  at start_of(m)
+  reads konto
+  leg cash from konto to box amount max(0, bal(konto, day_of(m, d_aa)) - floor)
+
+def room[m in month]: money PLN = bal(konto, end_of(m) - 1 day)
+
+ask k: bal(konto, 2026-06-19)
+
+ask sv: flows(save, m) for m in [2026-01, 2026-03, 2026-06, 2026-07, 2026-08]
+
+ask sv_all: flows(save, 2026-01 .. 2026-08)
+
+ask b: bal(box, 2026-08-31)
+
+ask r_sum: sum(room[m] for m in month)
+
+ask r_min: min(room[m] for m in month)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  z1_amt = 10.00 PLN "s"
+  z_1_amt = 100.00 PLN "s"
+  z10_amt = 20.00 PLN "s"
+  aa_amt = 50.00 PLN "s"
+  d_z1 = 2 "seen first each month"
+  d_z_1 = 5 "s"
+  d_z10 = 12 "seen after z1, sorts before it by code point"
+  d_aa = 20 "seen last, sorts first"
+  d_save = 25 "s"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[box] = 0.00 PLN at 2026-01-01 start "s"
+
+version floor_v
+  cite s
+  governs 2026-01..
+  known 2026-01-01
+  floor = 1000.00 PLN "an open span, read past the cut: held"

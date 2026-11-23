@@ -18,19 +18,24 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 12] = [
+    const GROUPS: [&str; 17] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
         "fixes-g3",
         "fixes-g3fix",
+        "fixes-g6",
+        "fixes-narrow",
         "fixes-p12",
+        "fixes-p21",
+        "fixes-traced",
         "spec-g1",
         "spec-g2",
         "spec-g2fix",
         "spec-g3",
         "spec-g3fix",
         "spec-p12",
+        "spec-p21",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -135,6 +140,47 @@ mod tests {
         group_holds(VECTORS, "fixes-g3fix");
     }
 
+    /// Pick P21 (G3's last fix's STOP-REPORT): M3's whole run `t221-gd/216-o0` is held for #255
+    /// for its `i2` (a refused member's reads, P20), so its other asks gate here one by one,
+    /// refcore's bytes (`m3/fixes/t221/o216/o0.tally`: `f`, `ra`, `r1` to `r4`, `i1`).
+    #[test]
+    fn m4_fixes_p21() {
+        group_holds(VECTORS, "fixes-p21");
+    }
+
+    /// The performance groups' guard (U1, `tmp/m4/perf-plan.md` §5 items 1 and 4), refcore's
+    /// bytes, which no G6 group may move: a register that grows month by month through a
+    /// decision's nested balance reads, printed in code-point order where a key seen later
+    /// sorts first (`z10[…]` before `z1[…]` before `z_1[…]`, `aa[…]` first; `held:` past the
+    /// cut; `r1_register`); `with uncertain` across a projection's window, an uncertain
+    /// movement on its first and last days, the days beside them, one fulfilled, one with a
+    /// hole day (`u1_uncertain`).
+    #[test]
+    fn m4_fixes_g6() {
+        group_holds(VECTORS, "fixes-g6");
+    }
+
+    /// Fence F7's own realities (`m4/narrow/`, perf plan §5 items 2 and 3; the CLI's
+    /// `narrow_oracle` runs them under `Plans::Narrow` and `Plans::Whole`), refcore's bytes:
+    /// `o.fulfils` read at a past booking cut while another instance of the named move refuses,
+    /// is a hole or has a hole day, and where the named instance itself does (`n1_fulfils`);
+    /// `flows(mv, span)` read so, on a span's first and last days, a window day inside a span
+    /// and a missing day that may fall in any (`n2_flows`); projections whose window holds or
+    /// excludes a hole-day instance and instances on its first and last days (`n3_window`).
+    #[test]
+    fn m4_fixes_narrow() {
+        group_holds(VECTORS, "fixes-narrow");
+    }
+
+    /// F7's traced read the engine doesn't answer yet, apart so `fixes-narrow` gates green:
+    /// `explain` of a `flows` whose plan reads `o.fulfils` at its day's cut, every instance's
+    /// reads listed (`n1_fulfils` `e_feb`; the narrow read declines under a trace), which stops
+    /// "not implemented" on master's and build/m4's engines; refcore's bytes.
+    #[test]
+    fn m4_fixes_traced() {
+        group_holds(VECTORS, "fixes-traced");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -212,5 +258,13 @@ mod tests {
     #[test]
     fn m4_fixes_spec_g3fix() {
         group_holds(SPEC, "spec-g3fix");
+    }
+
+    /// P21's answer (#255): M1's `fixes/g12/r_p_mr3_z2`, held, lists the false-`when` run's
+    /// balance line `unfulfilled: rent[2026-01]` beside refcore's `rent[2026-02]` (P20; L §8.2,
+    /// E §10), written by hand.
+    #[test]
+    fn m4_fixes_spec_p21() {
+        group_holds(SPEC, "spec-p21");
     }
 }
