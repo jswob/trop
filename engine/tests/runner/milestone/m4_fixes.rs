@@ -18,12 +18,14 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 6] = [
+    const GROUPS: [&str; 8] = [
         "fixes-g1",
         "fixes-g2",
+        "fixes-g2fix",
         "fixes-p12",
         "spec-g1",
         "spec-g2",
+        "spec-g2fix",
         "spec-p12",
     ];
 
@@ -90,13 +92,28 @@ mod tests {
         group_holds(VECTORS, "fixes-g2");
     }
 
+    /// G2's fix review (`tmp/m4/review-g2fix.md`) under picks P13 to P16, refcore's bytes:
+    /// a four-digit pin on a key target outside its index, or of another period, is refused
+    /// `LOAD-KEY` as the same row is (P16 F2: `p7_yk_out`, `p5_b4`, `r3_y4_mk`, `r3_y4_dk`;
+    /// the rows `p6_row_*`); keys of a plain day index subtract (`r2_dayidx`); `b + (a - b)`
+    /// is `a` on a `by 3` index (`r1_by3`, P15); `n = 0` with a known day refuses `RUN-ZERO`
+    /// (`q5_zero`); a known `never` alone in `add_business` and `is_business`; held for #255,
+    /// refcore's hole beside a `never` day or `n = 0`, its `RUN-DOMAIN` for `never`, its
+    /// `with mk = 2026-08` on a `by 3` key, and its `LOAD-KEY` on `p4_yk`'s in-index pins.
+    #[test]
+    fn m4_fixes_g2fix() {
+        group_holds(VECTORS, "fixes-g2fix");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
     /// `schedule` and `is_business` (a hole in each argument, alone, with another hole, or
-    /// beside each other argument's refusal; two refusals) where refcore gives the text's
-    /// answer; F1, a hole compounding code in `periodic` is the hole (`F1_min`, `F1_if`,
-    /// `c1_codehole`, `periodic` `h_c`); held for #255, the cells where refcore is hole-first.
+    /// beside each other argument's refusal or a `never` day; two refusals) where refcore
+    /// gives the text's answer, a `none` calendar read at a day the line doesn't know among
+    /// them (P13: the hole); F1, a hole compounding code in `periodic` is the hole (`F1_min`,
+    /// `F1_if`, `c1_codehole`, `periodic` `h_c`); held for #255, the cells where refcore is
+    /// hole-first.
     #[test]
     fn m4_fixes_p12() {
         group_holds(VECTORS, "fixes-p12");
@@ -125,12 +142,24 @@ mod tests {
     }
 
     /// P12's answers (#255): a built-in's known argument that alone forces a refusal (`none`,
-    /// a monthly rate, `discount`, `nominal 0`, a step not positive, `n = 0`) refuses it before
-    /// any hole (L §8; from twins stating the hole; `RUN-DIV` and a `none` roll written); of
-    /// two refusals, the first argument in written order prints (#255 item 20; twins stating
-    /// the second argument good).
+    /// a monthly rate, `discount`, `nominal 0`, a step not positive, `n = 0`, a `never` day)
+    /// refuses it before any hole (L §8; from twins stating the hole; `RUN-DIV`, a `none`
+    /// roll, `RUN-NONE never in …` (P16) and `RUN-ZERO` with the hole printed (P14) written);
+    /// of two refusals, the first argument in written order prints (#255 item 20; twins
+    /// stating the second argument good).
     #[test]
     fn m4_fixes_spec_p12() {
         group_holds(SPEC, "spec-p12");
+    }
+
+    /// G2's fix review, the spec's answers (#255): a known `never` day refuses `accrue`,
+    /// `dcf` and `add_business` beside a hole, `RUN-NONE never in …` (P16 F1, L §3.1);
+    /// `add_business(d, 0, cal)` with d a hole refuses `RUN-ZERO`, the hole printed (P14);
+    /// `with mk = 2026-08` on a `by 3` key is refused `LOAD-KEY` as its row is (P16 F2);
+    /// `pos(yk)` and the key 2024 on a year index (a twin pinning keys through inputs). The
+    /// written ones were checked by hand.
+    #[test]
+    fn m4_fixes_spec_g2fix() {
+        group_holds(SPEC, "spec-g2fix");
     }
 }

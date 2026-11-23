@@ -1,0 +1,21 @@
+model p7
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ys = year 2020..2030
+input yk: key ys
+input x[y in ys]: int
+ask o1: yk with yk = 2040
+ask o2: yk + 1 with yk = 2040
+ask o3: x[yk] with yk = 2040
+ask o4: start_of(yk) with yk = 2040
+ask o5: yk == yk as if {yk = 2040}
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  x[*] = 1 "s"

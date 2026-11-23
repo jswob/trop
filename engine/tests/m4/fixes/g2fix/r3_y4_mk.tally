@@ -1,0 +1,23 @@
+model r3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ms = month 2026-01..2026-12
+index ds = day 2026-01-01..2026-01-31
+index ns = int 2020..2030
+input mk: key ms
+input dk: key ds
+input nk: key ns
+input q: quarter
+ask z1: mk, dk, nk, q with mk = 2026
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mk = 2026-03 "s"
+  dk = 2026-01-02 "s"
+  nk = 2021 "s"
+  q = 2026-Q2 "s"

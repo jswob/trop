@@ -1,0 +1,27 @@
+model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ys = year 2020..2030
+input yk: key ys
+input y: year
+input y24: key ys
+input y21: key ys
+ask y1: pos(yk) with yk = y24
+ask y2: pos(yk)
+ask y3: yk + 1 with yk = y24
+ask y4: check yk == yk as if {yk = y21} with yk = y24
+ask y5: yk > y with yk = y24
+ask y6: yk - y with yk = y24
+ask y7: start_of(yk) with yk = y24
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  y = 2022 "s"
+  y24 = 2024 "s"
+  y21 = 2021 "s"
