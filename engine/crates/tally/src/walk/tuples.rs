@@ -422,12 +422,14 @@ impl Engine {
     /// The instance of a link's plain or hole tuple as the list holds it, its day read at cut
     /// `cut` as the list reads it, with no guard on the move's list (P30), and nothing of its
     /// body; none where the day is `never` or `none` (refcore's `eval_inst`, its day). A run-time
-    /// refusal reading the day is the instance's own: the list holds it refused, with no day.
-    /// E §4.1 step 2, L §5.19 Links.
+    /// refusal reading the day is the instance's own: the list holds it refused, with no day;
+    /// but a cycle, which is refused at the cell it returns to. E §4.1 step 2, L §5.19 Links,
+    /// §5.11 (P32).
     ///
     /// # Errors
     ///
-    /// A load refusal met at run.
+    /// A load refusal met at run; `RUN-CYCLE` where reading the day returns to a cell still
+    /// being evaluated.
     fn linked_day(
         &mut self,
         m: &Reality,
@@ -456,7 +458,10 @@ impl Engine {
         };
         match dated {
             Ok(day) => inst.day = Some(day),
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
+            // a cycle is never the instance's own: the chain is refused at the cell it returns
+            // to (L §5.11; P32)
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {
+            }
             Err(stop) => return Err(stop),
         }
         Ok(Some(crate::book::inst_ref(&inst)))

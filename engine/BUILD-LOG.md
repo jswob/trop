@@ -7832,3 +7832,20 @@ The builder of group G6c `narrow`, resumed on 60fc65d1 for the fix review's bloc
 - **Open STOP-REPORTs:** G3's above (e_pr), not this group's.
 - **Usage:** about 0.23 % of the week this turn (1.85 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check fences: green, 1 step (82s)`; `check commit: green, 24 steps (236s)`; `milestone-report: M4: 44/46 green`.
+
+## 2026-11-23 M4 G6c P32: a cycle in an existence read is refused at its cell (issue #252)
+
+The builder of group G6c `narrow`, resumed on 20d4fa79 (T's C8 merged, M4 47/49) for P32 (`tmp/m4/auto-picks.md`), found by the coordinator's probes on P30.
+
+- **Step 0:** `tmp/m4/lead-probes/p30/e_selfcycle.tally`: r0406 `fulfils: spend[2026-04]` and spend's `on` reads `loose[m]`. On the build before (`tmp/m4/g6c/bin/tally-p30final`), `l4` gave `0.00 PLN` and `f` gave `30.00 PLN`: `linked_day` kept the day's `RUN-CYCLE` as the instance's own refusal, so the chain answered. The pre-F7 binary and refcore give `l4: 0.00 PLN` too, and `f` `RUN-CYCLE spend reads its own instances` (the old list guard).
+- **What changed** (`walk/tuples.rs` `linked_day`): a `RUN-CYCLE` met reading the day now propagates, as a load refusal does; every other run refusal stays the instance's own. This is P30's statement ("`RUN-CYCLE` where one of those reads returns to a (def, keys) still being evaluated"), L §5.11 ("refused at that key"), and `link_tuple`'s `when` rule in the same file. It is the same in Narrow and Whole: both take `linked_day` for a plain tuple.
+- **Probes** (`tmp/m4/g6c/bin/tally-p32`): `e_selfcycle` `l4`, `f` and `l24` at 2026-04 are each `refused: RUN-CYCLE loose[2026-04] reads itself through a computed key`, and `l24` at 2026-02 is `0.00 PLN`. Each order tried agrees: `l4 f`, `f l4`, `f l24`, `l24 f l4`.
+- **Sweep** (`tmp/m4/g6c/sweep2.sh`, the build before against this one, every ask), over `lead-probes/p30/`, `review/g6c/p/`, `p/p05/`, `review/g6cfix/p/`, `p/sc/`, `paper-probes/` and `tmp/m4/g6c/p30/`: 100 texts same, 2 differ, both `e_selfcycle` (the lead's and my copy), as above. `b_whencycle`, `c_nowhen`, `d_pin`, `f_noday` and the X1 corners are unchanged.
+- **For T:** `e_selfcycle`'s three asks, the cycle refused at loose[2026-04]. Refcore answers `l4` `0.00 PLN`, the fault #255 names.
+- **Measures:** `perf counts F7-c1r2`: def_misses 188 841, days_stepped 6 918, walks_shared 4 290 (def misses as at U2). P8-L10 `c1_r2` on the quick binary: 112.84 G instructions.
+- **Size** (`git diff --shortstat 20d4fa79 -- engine/crates`): 1 file, +9 −4.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none of this group's.
+- **Usage:** about 0.07 % of the week this turn (1.92 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check fences: green, 1 step (59s)`; `check commit: green, 24 steps (182s)`; `milestone-report: M4: 47/49 green`.
