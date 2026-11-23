@@ -223988,4 +223988,2130 @@ version v
 ,,1:0,125:e5: differs: w1 = 2026-01-19, w2 = 2026-01-05, difference 2
   cut 2026-10-25
 warning: WARN-UNREAD input q is read by nothing
+,20:fixes/g3/f4_min/e_fl,8:fixes-g3,27:run f4_min.tally --ask e_fl,655:12:f4_min.tally,634:model f4
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input sp: month
+
+move dx: transfers
+  on w
+  reads konto
+  leg cash from konto to world amount if bal(konto) > amt then amt else amt
+
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl
+ask i_fl: inputs-of fl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  w = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,537:e_fl: 0.00 PLN
+  [1] fl = 0.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-06-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-06-06
+        [5] row v:amt = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-20
+,20:fixes/g3/f4_min/i_fl,8:fixes-g3,27:run f4_min.tally --ask i_fl,655:12:f4_min.tally,634:model f4
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input sp: month
+
+move dx: transfers
+  on w
+  reads konto
+  leg cash from konto to world amount if bal(konto) > amt then amt else amt
+
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl
+ask i_fl: inputs-of fl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  w = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,65:i_fl:
+  v:sp (source s "invented", locator "s")
+  cut 2026-06-20
+,21:fixes/g3/f3_span/e_fk,8:fixes-g3,28:run f3_span.tally --ask e_fk,997:13:f3_span.tally,975:model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1049:e_fk: 10.00 PLN
+  [1] fk = 10.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2[j1] = 2026-04-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j2] = 2026-06-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-05
+        [6] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] running read bal(konto) = 490.00 PLN, the balance up to this point of 2026-06-06
+        [9] row v:amt2[j2] = 20.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+,22:fixes/g3/f3_span/e_fk1,8:fixes-g3,29:run f3_span.tally --ask e_fk1,997:13:f3_span.tally,975:model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1051:e_fk1: 10.00 PLN
+  [1] fk1 = 10.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2[j1] = 2026-04-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j2] = 2026-06-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-05
+        [6] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] running read bal(konto) = 490.00 PLN, the balance up to this point of 2026-06-06
+        [9] row v:amt2[j2] = 20.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+,21:fixes/g3/f3_span/e_cn,8:fixes-g3,28:run f3_span.tally --ask e_cn,997:13:f3_span.tally,975:model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1033:e_cn: 1
+  [1] cn = 1
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2[j1] = 2026-04-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j2] = 2026-06-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-05
+        [6] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] running read bal(konto) = 490.00 PLN, the balance up to this point of 2026-06-06
+        [9] row v:amt2[j2] = 20.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+,21:fixes/g3/f3_span/i_fk,8:fixes-g3,28:run f3_span.tally --ask i_fk,997:13:f3_span.tally,975:model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,278:i_fk:
+  v:amt2[j1] (source s "invented", locator "s")
+  v:lim (source s "invented", locator "s")
+  v:opening[konto] (source s "invented", locator "s")
+  v:sp (source s "invented", locator "s")
+  v:w2[j1] (source s "invented", locator "s")
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+,22:fixes/g3/f3_span/i_fk1,8:fixes-g3,29:run f3_span.tally --ask i_fk1,997:13:f3_span.tally,975:model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,279:i_fk1:
+  v:amt2[j1] (source s "invented", locator "s")
+  v:lim (source s "invented", locator "s")
+  v:opening[konto] (source s "invented", locator "s")
+  v:sp (source s "invented", locator "s")
+  v:w2[j1] (source s "invented", locator "s")
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+,21:fixes/g3/f3_span/i_cn,8:fixes-g3,28:run f3_span.tally --ask i_cn,997:13:f3_span.tally,975:model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,278:i_cn:
+  v:amt2[j1] (source s "invented", locator "s")
+  v:lim (source s "invented", locator "s")
+  v:opening[konto] (source s "invented", locator "s")
+  v:sp (source s "invented", locator "s")
+  v:w2[j1] (source s "invented", locator "s")
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+,23:fixes/g3/f2_keyed/e_fp1,8:fixes-g3,30:run f2_keyed.tally --ask e_fp1,1072:14:f2_keyed.tally,1048:model f2
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input sp_end: month
+input lim: money PLN
+
+move pk[j in js]: transfers
+  on w2[j]
+  leg cash from konto to world amount amt2[j]
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fp1: money PLN = flows(pk[j1], sp .. sp_end)
+def fk1: money PLN = flows(dk[j1], sp .. sp_end)
+def fk2: money PLN = flows(dk[j2], sp .. sp_end)
+
+ask e_fp1: explain fp1
+ask e_fk1: explain fk1
+ask e_fk2: explain fk2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-05-05 "s"
+  w2[j2] = 2026-05-06 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1178:e_fp1: 10.00 PLN
+  [1] fp1 = 10.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:sp_end = 2026-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j1] = 2026-05-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row v:w2[j2] = 2026-05-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j2] = 20.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] running read bal(konto) = 490.00 PLN, the balance up to this point of 2026-05-05
+        [9] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [10] running read bal(konto) = 460.00 PLN, the balance up to this point of 2026-05-06
+  unfulfilled: pk[j1]
+  cut 2026-06-10
+,23:fixes/g3/f2_keyed/e_fk1,8:fixes-g3,30:run f2_keyed.tally --ask e_fk1,1072:14:f2_keyed.tally,1048:model f2
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input sp_end: month
+input lim: money PLN
+
+move pk[j in js]: transfers
+  on w2[j]
+  leg cash from konto to world amount amt2[j]
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fp1: money PLN = flows(pk[j1], sp .. sp_end)
+def fk1: money PLN = flows(dk[j1], sp .. sp_end)
+def fk2: money PLN = flows(dk[j2], sp .. sp_end)
+
+ask e_fp1: explain fp1
+ask e_fk1: explain fk1
+ask e_fk2: explain fk2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-05-05 "s"
+  w2[j2] = 2026-05-06 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1200:e_fk1: 10.00 PLN
+  [1] fk1 = 10.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:sp_end = 2026-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j1] = 2026-05-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row v:w2[j2] = 2026-05-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j2] = 20.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] running read bal(konto) = 490.00 PLN, the balance up to this point of 2026-05-05
+        [9] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [10] running read bal(konto) = 460.00 PLN, the balance up to this point of 2026-05-06
+  unfulfilled: dk[j1]
+  unfulfilled: pk[j1]
+  cut 2026-06-10
+,23:fixes/g3/f2_keyed/e_fk2,8:fixes-g3,30:run f2_keyed.tally --ask e_fk2,1072:14:f2_keyed.tally,1048:model f2
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input sp_end: month
+input lim: money PLN
+
+move pk[j in js]: transfers
+  on w2[j]
+  leg cash from konto to world amount amt2[j]
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fp1: money PLN = flows(pk[j1], sp .. sp_end)
+def fk1: money PLN = flows(dk[j1], sp .. sp_end)
+def fk2: money PLN = flows(dk[j2], sp .. sp_end)
+
+ask e_fp1: explain fp1
+ask e_fk1: explain fk1
+ask e_fk2: explain fk2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-05-05 "s"
+  w2[j2] = 2026-05-06 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1244:e_fk2: 20.00 PLN
+  [1] fk2 = 20.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:sp_end = 2026-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j1] = 2026-05-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row v:w2[j2] = 2026-05-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j2] = 20.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] running read bal(konto) = 490.00 PLN, the balance up to this point of 2026-05-05
+        [9] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [10] running read bal(konto) = 460.00 PLN, the balance up to this point of 2026-05-06
+  unfulfilled: dk[j1]
+  unfulfilled: dk[j2]
+  unfulfilled: pk[j1]
+  unfulfilled: pk[j2]
+  cut 2026-06-10
+,24:fixes/g3/f6_holerun/e_fl,8:fixes-g3,31:run f6_holerun.tally --ask e_fl,864:16:f6_holerun.tally,839:model f6
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input wh: date
+input sp: month
+
+move dh: transfers
+  on wh
+  leg cash from world to konto amount amt
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if wb then amt else amt_b
+
+def wb: bool = bal(konto) > amt
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl
+ask e_wb: explain wb
+ask v_fl: fl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1250:e_fl: ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+  [1] fl = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:wh = window(2026-04-29, 2026-05-02)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] wb = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+            rule base: won
+              [7] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-04-30
+              (v:amt: see [4])
+        [8] row v:amt_b = 70.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unknown day: wh
+  unfulfilled: dx
+  cut 2026-06-10
+,24:fixes/g3/f6_holerun/e_wb,8:fixes-g3,31:run f6_holerun.tally --ask e_wb,864:16:f6_holerun.tally,839:model f6
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input wh: date
+input sp: month
+
+move dh: transfers
+  on wh
+  leg cash from world to konto amount amt
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if wb then amt else amt_b
+
+def wb: bool = bal(konto) > amt
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl
+ask e_wb: explain wb
+ask v_fl: fl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,617:e_wb: walk-bound, read at 1 walk point
+  wb at (2026-04-30, stratum 1, dx): ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+      [1] wb = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+          rule base: won
+            [2] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-04-30
+            [3] row v:amt = 100.00 PLN
+                version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,24:fixes/g3/f6_holerun/v_fl,8:fixes-g3,31:run f6_holerun.tally --ask v_fl,864:16:f6_holerun.tally,839:model f6
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input wh: date
+input sp: month
+
+move dh: transfers
+  on wh
+  leg cash from world to konto amount amt
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if wb then amt else amt_b
+
+def wb: bool = bal(konto) > amt
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl
+ask e_wb: explain wb
+ask v_fl: fl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,147:v_fl: ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+  unknown day: wh
+  unfulfilled: dx
+  cut 2026-06-10
+,24:fixes/g3/f11_window/e_fy,8:fixes-g3,31:run f11_window.tally --ask e_fy,1144:16:f11_window.tally,1118:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input w2: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w2
+  reads konto
+  when wb < w2
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-29 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1141:e_fy: 100.00 PLN
+  [1] fy = 100.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2 = 2026-04-29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wb = window(2026-04-20, 2026-05-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-29
+        [7] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:wa = window(2026-04-01, 2026-04-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] running read bal(konto) = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb), the balance up to this point of 2026-04-30
+  unfulfilled: dyes
+  cut 2026-06-10
+,24:fixes/g3/f11_window/e_fu,8:fixes-g3,31:run f11_window.tally --ask e_fu,1144:16:f11_window.tally,1118:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input w2: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w2
+  reads konto
+  when wb < w2
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-29 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1281:e_fu: ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb)
+  [1] fu = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb)
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2 = 2026-04-29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wb = window(2026-04-20, 2026-05-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-29
+        [7] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:wa = window(2026-04-01, 2026-04-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] running read bal(konto) = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb), the balance up to this point of 2026-04-30
+  unknown day: wb
+  cut 2026-06-10
+,24:fixes/g3/f11_window/e_cu,8:fixes-g3,31:run f11_window.tally --ask e_cu,1144:16:f11_window.tally,1118:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input w2: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w2
+  reads konto
+  when wb < w2
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-29 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1321:e_cu: ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb)
+  [1] cu = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb)
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2 = 2026-04-29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wb = window(2026-04-20, 2026-05-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-29
+        [7] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:wa = window(2026-04-01, 2026-04-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] running read bal(konto) = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb), the balance up to this point of 2026-04-30
+  unknown day: wb
+  unfulfilled: dund
+  unfulfilled: dyes
+  cut 2026-06-10
+,28:fixes/g3/f11_window/e_fy_pin,8:fixes-g3,35:run f11_window.tally --ask e_fy_pin,1144:16:f11_window.tally,1118:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input w2: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w2
+  reads konto
+  when wb < w2
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-29 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1856:e_fy_pin: 100.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin wb = 2026-04-01
+  [3] inside the pins: 100.00 PLN
+    [4] fu = 100.00 PLN
+        rule base: won
+          [5] row v:sp = 2026-04
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [6] row v:w2 = 2026-04-29
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [7] row v:w = 2026-04-30
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [8] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-29
+          [9] row v:amt = 100.00 PLN
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [10] row v:wa = window(2026-04-01, 2026-04-10)
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [11] running read bal(konto) = 600.00 PLN, the balance up to this point of 2026-04-30
+  [12] outside the pins: ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb)
+    [13] fu = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb)
+        rule base: won
+          (v:sp: see [5])
+          (v:w2: see [6])
+          (v:w: see [7])
+          [14] row v:wb = window(2026-04-20, 2026-05-10)
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [15] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-29
+          (v:amt: see [9])
+          (v:wa: see [10])
+          [16] running read bal(konto) = ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb), the balance up to this point of 2026-04-30
+  pinned: wb = 2026-04-01
+  unfulfilled: dund
+  cut 2026-06-10
+,25:fixes/g3/f11_window/v_all,8:fixes-g3,32:run f11_window.tally --ask v_all,1144:16:f11_window.tally,1118:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input w2: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w2
+  reads konto
+  when wb < w2
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-29 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,261:v_all: (100.00 PLN, ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb), ?"date within window(2026-04-20, 2026-05-10) not precise enough for wb < w2" (wb))
+  unknown day: wb
+  unfulfilled: dund
+  unfulfilled: dyes
+  cut 2026-06-10
+,26:fixes/g3/f11_runorder/e_fy,8:fixes-g3,33:run f11_runorder.tally --ask e_fy,1107:18:f11_runorder.tally,1079:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,737:e_fy: refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+  [1] fy = refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:wb = window(2026-04-20, 2026-05-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wa = window(2026-04-01, 2026-04-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,26:fixes/g3/f11_runorder/e_fu,8:fixes-g3,33:run f11_runorder.tally --ask e_fu,1107:18:f11_runorder.tally,1079:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,737:e_fu: refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+  [1] fu = refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:wb = window(2026-04-20, 2026-05-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wa = window(2026-04-01, 2026-04-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,26:fixes/g3/f11_runorder/e_cu,8:fixes-g3,33:run f11_runorder.tally --ask e_cu,1107:18:f11_runorder.tally,1079:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,737:e_cu: refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+  [1] cu = refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:wb = window(2026-04-20, 2026-05-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wa = window(2026-04-01, 2026-04-10)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,30:fixes/g3/f11_runorder/e_fy_pin,8:fixes-g3,37:run f11_runorder.tally --ask e_fy_pin,1107:18:f11_runorder.tally,1079:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1208:e_fy_pin: refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+  [1] the pins, evaluated outside them
+    [2] pin wb = 2026-04-01
+  [3] inside the pins: refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+    [4] fu = refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+        rule base: won
+          [5] row v:sp = 2026-04
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [6] row v:w = 2026-04-30
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [7] row v:wa = window(2026-04-01, 2026-04-10)
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  [8] outside the pins: refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+    [9] fu = refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30
+        rule base: won
+          (v:sp: see [5])
+          (v:w: see [6])
+          [10] row v:wb = window(2026-04-20, 2026-05-10)
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          (v:wa: see [7])
+  cut 2026-06-10
+,27:fixes/g3/f11_runorder/v_all,8:fixes-g3,34:run f11_runorder.tally --ask v_all,1107:18:f11_runorder.tally,1079:model f11
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wa: date
+input wb: date
+input sp: month
+
+move dyes: transfers
+  on w
+  reads konto
+  when wa < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move dund: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fy: money PLN = flows(dyes, sp .. sp)
+def fu: money PLN = flows(dund, sp .. sp)
+def cu: int = count(m in transfers over sp .. sp)
+
+ask e_fy: explain fy
+ask e_fu: explain fu
+ask e_cu: explain cu
+ask e_fy_pin: explain fu with wb = 2026-04-01
+ask v_all: fy, fu, cu
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wa = window(2026-04-01, 2026-04-10) "s"
+  wb = window(2026-04-20, 2026-05-10) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,247:v_all: (refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30, refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30, refused: RUN-ORDER decisions dund and dyes read each other on 2026-04-30)
+  cut 2026-06-10
+,23:fixes/g3/f12_order/e_fa,8:fixes-g3,30:run f12_order.tally --ask e_fa,865:15:f12_order.tally,841:model f12
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wb: date
+input sp: month
+
+move da: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move db: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fa: money PLN = flows(da, sp .. sp)
+def fb: money PLN = flows(db, sp .. sp)
+
+ask e_fa: explain fa
+ask e_fb: explain fb
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wb = 2026-04-20 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,564:e_fa: refused: RUN-ORDER decisions da and db read each other on 2026-04-30
+  [1] fa = refused: RUN-ORDER decisions da and db read each other on 2026-04-30
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:wb = 2026-04-20
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,23:fixes/g3/f12_order/e_fb,8:fixes-g3,30:run f12_order.tally --ask e_fb,865:15:f12_order.tally,841:model f12
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input wb: date
+input sp: month
+
+move da: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move db: transfers
+  on w
+  reads konto
+  when wb < w
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+
+def fa: money PLN = flows(da, sp .. sp)
+def fb: money PLN = flows(db, sp .. sp)
+
+ask e_fa: explain fa
+ask e_fb: explain fb
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  wb = 2026-04-20 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,564:e_fb: refused: RUN-ORDER decisions da and db read each other on 2026-04-30
+  [1] fb = refused: RUN-ORDER decisions da and db read each other on 2026-04-30
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:wb = 2026-04-20
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,22:fixes/g3/f7_axpin/e_fl,8:fixes-g3,29:run f7_axpin.tally --ask e_fl,854:14:f7_axpin.tally,831:model f7
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input sp: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then ra else amt
+
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl with rd = r2
+ask e_fl2: explain fl
+ask v_fl: fl with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1443:e_fl: 70.00 PLN
+  [1] the pins, evaluated outside them
+    [2] pin rd = r2
+  [3] inside the pins: 70.00 PLN
+    [4] fl = 70.00 PLN
+        rule base: won
+          [5] row v:sp = 2026-04
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [6] row v:w = 2026-04-30
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [7] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-30
+          [8] row v:amt = 100.00 PLN
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [9] ra = 70.00 PLN
+              rule one: not applicable
+              rule two: won
+                [10] row v:amt_b = 70.00 PLN
+                    version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  [11] outside the pins [rd = r1]: 100.00 PLN
+    [12] fl = 100.00 PLN
+        rule base: won
+          (v:sp: see [5])
+          (v:w: see [6])
+          [13] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-30
+          (v:amt: see [8])
+          [14] ra = 100.00 PLN
+              rule one: won
+                (v:amt: see [8])
+              rule two: not applicable
+  [15] outside the pins [rd = r2]: 70.00 PLN
+    [16] fl = 70.00 PLN
+        rule base: won
+          (v:sp: see [5])
+  pinned: rd = r2
+  unfulfilled: dx
+  cut 2026-06-10
+,23:fixes/g3/f7_axpin/e_fl2,8:fixes-g3,30:run f7_axpin.tally --ask e_fl2,854:14:f7_axpin.tally,831:model f7
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input sp: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then ra else amt
+
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl with rd = r2
+ask e_fl2: explain fl
+ask v_fl: fl with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1529:e_fl2 [rd = r1]: 100.00 PLN
+  [1] fl = 100.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-30
+        [5] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] ra = 100.00 PLN
+            rule one: won
+              (v:amt: see [5])
+            rule two: not applicable
+  reading: rd = r1
+  unfulfilled: dx
+  cut 2026-06-10
+e_fl2 [rd = r2]: 70.00 PLN
+  [1] fl = 70.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-30
+        [5] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] ra = 70.00 PLN
+            rule one: not applicable
+            rule two: won
+              [7] row v:amt_b = 70.00 PLN
+                  version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  reading: rd = r2
+  unfulfilled: dx
+  cut 2026-06-10
+,22:fixes/g3/f7_axpin/v_fl,8:fixes-g3,29:run f7_axpin.tally --ask v_fl,854:14:f7_axpin.tally,831:model f7
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input sp: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then ra else amt
+
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl with rd = r2
+ask e_fl2: explain fl
+ask v_fl: fl with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,69:v_fl: 70.00 PLN
+  pinned: rd = r2
+  unfulfilled: dx
+  cut 2026-06-10
+,30:fixes/g3/f13c_count_where/e_cw,8:fixes-g3,37:run f13c_count_where.tally --ask e_cw,905:22:f13c_count_where.tally,874:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+
+ask e_cw: explain cw
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,858:e_cw: 1
+  [1] cw = 1
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2 = 2026-04-10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:amt2 = 30.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] running read bal(konto) = 530.00 PLN, the balance up to this point of 2026-04-30
+        [7] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: da
+  unfulfilled: pb
+  cut 2026-06-10
+warning: WARN-UNREAD def sm is read by nothing
+,22:fixes/g3/f13_bind/e_sm,8:fixes-g3,29:run f13_bind.tally --ask e_sm,936:14:f13_bind.tally,913:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+ask e_sm: explain sm
+ask e_cw: explain cw
+ask v_all: sm, cw
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,829:e_sm: 130.00 PLN
+  [1] sm = 130.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2 = 2026-04-10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:amt2 = 30.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] running read bal(konto) = 530.00 PLN, the balance up to this point of 2026-04-30
+        [7] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: da
+  unfulfilled: pb
+  cut 2026-06-10
+,22:fixes/g3/f13_bind/e_cw,8:fixes-g3,29:run f13_bind.tally --ask e_cw,936:14:f13_bind.tally,913:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+ask e_sm: explain sm
+ask e_cw: explain cw
+ask v_all: sm, cw
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,811:e_cw: 1
+  [1] cw = 1
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2 = 2026-04-10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:amt2 = 30.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] running read bal(konto) = 530.00 PLN, the balance up to this point of 2026-04-30
+        [7] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: da
+  unfulfilled: pb
+  cut 2026-06-10
+,23:fixes/g3/f13_bind/v_all,8:fixes-g3,30:run f13_bind.tally --ask v_all,936:14:f13_bind.tally,913:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > amt then amt else amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+ask e_sm: explain sm
+ask e_cw: explain cw
+ask v_all: sm, cw
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,76:v_all: (130.00 PLN, 1)
+  unfulfilled: da
+  unfulfilled: pb
+  cut 2026-06-10
+,28:fixes/g3/f13b_bind_plan/e_sm,8:fixes-g3,35:run f13b_bind_plan.tally --ask e_sm,894:20:f13b_bind_plan.tally,865:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  leg cash from world to konto amount amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+ask e_sm: explain sm
+ask e_cw: explain cw
+ask v_all: sm, cw
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,736:e_sm: 130.00 PLN
+  [1] sm = 130.00 PLN
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:w2 = 2026-04-10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row v:amt2 = 30.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: da
+  unfulfilled: pb
+  cut 2026-06-10
+,28:fixes/g3/f13b_bind_plan/e_cw,8:fixes-g3,35:run f13b_bind_plan.tally --ask e_cw,894:20:f13b_bind_plan.tally,865:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  leg cash from world to konto amount amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+ask e_sm: explain sm
+ask e_cw: explain cw
+ask v_all: sm, cw
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,700:e_cw: 1
+  [1] cw = 1
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:amt = 100.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:w2 = 2026-04-10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row v:amt2 = 30.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: da
+  cut 2026-06-10
+,29:fixes/g3/f13b_bind_plan/v_all,8:fixes-g3,36:run f13b_bind_plan.tally --ask v_all,894:20:f13b_bind_plan.tally,865:model f13
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt2: money PLN
+input w: date
+input w2: date
+input sp: month
+
+move da: transfers
+  on w
+  leg cash from world to konto amount amt
+move pb: transfers
+  on w2
+  leg cash from world to konto amount amt2
+
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt2)
+
+ask e_sm: explain sm
+ask e_cw: explain cw
+ask v_all: sm, cw
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt2 = 30.00 PLN "s"
+  w = 2026-04-30 "s"
+  w2 = 2026-04-10 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,76:v_all: (130.00 PLN, 1)
+  unfulfilled: da
+  unfulfilled: pb
+  cut 2026-06-10
 ,

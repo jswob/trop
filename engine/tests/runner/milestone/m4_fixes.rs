@@ -18,14 +18,16 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 8] = [
+    const GROUPS: [&str; 10] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
+        "fixes-g3",
         "fixes-p12",
         "spec-g1",
         "spec-g2",
         "spec-g2fix",
+        "spec-g3",
         "spec-p12",
     ];
 
@@ -105,6 +107,19 @@ mod tests {
         group_holds(VECTORS, "fixes-g2fix");
     }
 
+    /// G3 `walked`'s review (`tmp/m4/review-g3.md`, pick P18), refcore's bytes for `explain`
+    /// of a decision's `flows` or `count`: B2, a hole running read prints its question
+    /// (`f6_holerun` `e_wb`, `f11_window` `e_cu`); B3, under a `with` axis pin (`f7_axpin`);
+    /// B4, two decisions refused `RUN-ORDER` print no body (`f12_order`, `f11_runorder`); B5
+    /// and non-blocking 1, `count` and `sum` over transfers with a decision member and a
+    /// `where` (`f13c_count_where`, `f13_bind`, `f13b_bind_plan`); the `inputs-of` asks;
+    /// held for #255, B1's explains, where refcore lists runs outside the cell's key or span
+    /// or another move's.
+    #[test]
+    fn m4_fixes_g3() {
+        group_holds(VECTORS, "fixes-g3");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -161,5 +176,15 @@ mod tests {
     #[test]
     fn m4_fixes_spec_g2fix() {
         group_holds(SPEC, "spec-g2fix");
+    }
+
+    /// G3's review, the spec's answers (#255, P18): B1, `explain` of a decision's `flows` or
+    /// `count` lists L §8.2's one read set, the days that decided a movement doesn't count but
+    /// no run outside the cell's key or span and no other move's runs (`f4_min`, `f3_span`,
+    /// `f6_holerun`, `f11_window`); with B2, the hole running read's question. Written by
+    /// hand from refcore's and G3's build's lines.
+    #[test]
+    fn m4_fixes_spec_g3() {
+        group_holds(SPEC, "spec-g3");
     }
 }

@@ -1,0 +1,33 @@
+model f4
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input sp: month
+
+move dx: transfers
+  on w
+  reads konto
+  leg cash from konto to world amount if bal(konto) > amt then amt else amt
+
+def fl: money PLN = flows(dx, sp .. sp)
+
+ask e_fl: explain fl
+ask i_fl: inputs-of fl
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 10.00 PLN "s"
+  w = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
