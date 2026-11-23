@@ -8,8 +8,9 @@ The first seven columns are kernel/vectors.py's, read and run by its own functio
 names a check of checks.tsv (`check`; the other columns empty) or is a fixture of its own (`cwd`, `files`, `asks`,
 `options`). `group` is the runner test that holds it: `checks-…` in milestone/m4_checks.rs (73 of BUILD-ORDER § M4's 77
 checks), `constructs-…` in milestone/m4_constructs.rs (the corners of M4's constructs, the paper check), `items-…` in
-milestone/m4_items.rs (the in-scope backlog), `fixes-…` in milestone/m4_fixes.rs (a group review's findings; the
-spec's answers beside them are spec.py's), one test per group. `for` is the construct that turns it green
+milestone/m4_items.rs (the in-scope backlog), `fixes-…` in milestone/m4_fixes.rs (a group review's findings, the spec's
+answers beside them are spec.py's; and the performance groups' guard, `fixes-g6` and fence F7's `fixes-narrow`), one
+test per group. `for` is the construct that turns it green
 (MILESTONE-M4.md rows 1 to 3 and 5: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`, `monthcheck`, `explain`,
 `runnone`, `agemonths`, `middot`, `pinwalk`, `keypin`, `oneref`), `M7` for the vector held to M7 by name
 (held.tsv), or `-` for a vector the engine already answers; it is the builder's work list and is not stored. A joint
