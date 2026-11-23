@@ -692,6 +692,17 @@ fn pin_typed(
                 class: Class::Num(unit.clone(), *shown),
             }))
         }
+        // a figure with a period's unit pinned on a rate is that rate, as a row's figure is
+        // (`10 %/year` is 0.1 /year; L §3.3, pick P16)
+        (Some(Ty::Rate), Value::Number(n))
+            if matches!(n.class, Class::Num(..)) && n.unit().period_of().is_some() =>
+        {
+            let unit = n.unit();
+            Ok(Value::Number(Number {
+                q: n.q,
+                class: Class::Rate(unit),
+            }))
+        }
         (Some(Ty::Num(..)), Value::Money(money)) => {
             let q = money_num(m, &money).map_err(num_stop)?;
             let unit: Unit = crate::model::currency_unit(m, money.currency()).map_err(num_stop)?;
