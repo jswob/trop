@@ -186,8 +186,9 @@ const NOT_IMPLEMENTED: u8 = 69;
 
 /// A `run` or `check` command line's words after the command, as INTERFACE §1 reads them: its
 /// paths (the words before `--ask` that aren't `--pin=`), its asks (every ask when none is
-/// named) and its pin.
-fn request_words(rest: &[String]) -> (Vec<String>, Asks, Pin) {
+/// named) and its pin. Public for M4's fence F7 suite (`milestone/m4_narrow.rs`).
+#[must_use]
+pub fn request_words(rest: &[String]) -> (Vec<String>, Asks, Pin) {
     let (mut paths, mut asks, mut pin, mut after_ask) =
         (Vec::new(), Vec::new(), Pin::Canonical, false);
     for word in rest {
@@ -215,8 +216,10 @@ fn request_words(rest: &[String]) -> (Vec<String>, Asks, Pin) {
 
 /// The library's files for `paths` against the file table `table`, INTERFACE §4's reading,
 /// written here apart from the CLI's: a key is that file; a directory is every key under it
-/// that ends `.tally`, in path order; anything else names nothing (`LOAD-PATH`).
-fn library_files(paths: &[String], table: BTreeMap<String, Vec<u8>>, pin: Pin) -> Files {
+/// that ends `.tally`, in path order; anything else names nothing (`LOAD-PATH`). Public for
+/// M4's fence F7 suite (`milestone/m4_narrow.rs`).
+#[must_use]
+pub fn library_files(paths: &[String], table: BTreeMap<String, Vec<u8>>, pin: Pin) -> Files {
     let mut given = Vec::new();
     for path in paths {
         if let Some(bytes) = table.get(path) {

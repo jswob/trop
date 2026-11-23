@@ -15853,4 +15853,1137 @@ version card_2026
   unfulfilled: rent[2026-01]
   unfulfilled: rent[2026-02]
   cut 2026-10-01
+,17:spec/p22/n4_own/k,8:spec-p22,24:run n4_own.tally --ask k,2095:12:n4_own.tally,2073:model n4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented for fence F7: o.fulfils naming the reading move's own instance at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask k: bal(konto, 2026-04-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance of the reading move"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0320] = (on: 2026-03-20, kind: transfers, leg cash from konto to shop amount 240.00 PLN, fulfils: spend[2026-03]) "names the reading instance itself, before its day"
+,,1:0,63:k: 4 260.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-04-20
+,17:spec/p22/n4_own/f,8:spec-p22,24:run n4_own.tally --ask f,2095:12:n4_own.tally,2073:model n4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented for fence F7: o.fulfils naming the reading move's own instance at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask k: bal(konto, 2026-04-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance of the reading move"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0320] = (on: 2026-03-20, kind: transfers, leg cash from konto to shop amount 240.00 PLN, fulfils: spend[2026-03]) "names the reading instance itself, before its day"
+,,1:0,255:f (m = 2026-01): 250.00 PLN
+  cut 2026-04-20
+f (m = 2026-02): 250.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-04-20
+f (m = 2026-03): 240.00 PLN
+  cut 2026-04-20
+f (m = 2026-04): 200.00 PLN
+  cut 2026-04-20
+f (m = 2026-05): 200.00 PLN
+  cut 2026-04-20
+,17:spec/p22/n4_own/l,8:spec-p22,24:run n4_own.tally --ask l,2095:12:n4_own.tally,2073:model n4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented for fence F7: o.fulfils naming the reading move's own instance at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask k: bal(konto, 2026-04-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance of the reading move"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0320] = (on: 2026-03-20, kind: transfers, leg cash from konto to shop amount 240.00 PLN, fulfils: spend[2026-03]) "names the reading instance itself, before its day"
+,,1:0,177:l (m = 2026-01): 40.00 PLN
+  cut 2026-04-20
+l (m = 2026-02): 50.00 PLN
+  cut 2026-04-20
+l (m = 2026-03): 60.00 PLN
+  cut 2026-04-20
+l (m = 2026-04): 100.00 PLN
+  cut 2026-04-20
+,23:spec/p22/n2_flows/e_jan,8:spec-p22,30:run n2_flows.tally --ask e_jan,2943:14:n2_flows.tally,2919:model n2
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-07-31
+
+source s "invented for fence F7: flows(mv, span) read at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-07
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input rent_amt[m in month]: money PLN
+
+input fee_day[m in month]: date
+
+input gift_day[m in month]: date
+
+input fee_amt: money PLN
+
+input top_dom: int
+
+input share: num
+
+input sp_jan: month
+
+input sp_may: month
+
+move rent[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount fee_amt
+
+move gift[m in month]: transfers
+  on gift_day[m]
+  at start_of(m)
+  leg cash from pot to shop amount fee_amt
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top_fee[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m .. (m + 1))
+
+move top_gift[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(gift, m)
+
+def t_jan: money PLN = flows(top, sp_jan .. sp_jan)
+
+def f_may: money PLN = flows(top_fee, sp_may .. sp_may)
+
+ask r: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06, 2026-07]
+
+ask fe: flows(top_fee, m) for m in [2026-01, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask g: flows(top_gift, m) for m in [2026-01, 2026-04]
+
+ask k: bal(konto, 2026-06-19)
+
+ask e_jan: explain t_jan
+
+ask i_jan: inputs-of t_jan
+
+ask i_may: inputs-of f_may
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_amt = 7.00 PLN "s"
+  top_dom = 20 "s"
+  share = 0.1 "s"
+  sp_jan = 2026-01 "s"
+  sp_may = 2026-05 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "a refused instance: its amount is negative"
+  rent_amt[2026-04] = 910.00 PLN "s"
+  rent_amt[2026-05] = 920.00 PLN "s"
+  rent_amt[2026-06] = 930.00 PLN "s"
+  rent_amt[2026-07] = 940.00 PLN "s"
+  fee_day[2026-01] = 2026-01-01 "the span's first day"
+  fee_day[2026-02] = 2026-02-28 "the span's last day"
+  fee_day[2026-03] = 2026-03-15 "s"
+  fee_day[2026-04] = 2026-04-30 "s"
+  fee_day[2026-05] = window(2026-05-03, 2026-05-08) "a hole day: a window"
+  fee_day[2026-06] = 2026-06-01 "s"
+  fee_day[2026-07] = 2026-07-31 "s"
+  gift_day[2026-01] = 2026-01-10 "s"
+  gift_day[2026-02] = 2026-02-10 "s"
+  gift_day[2026-03] = 2026-03-10 "s"
+  gift_day[2026-05] = 2026-05-10 "s"
+  gift_day[2026-06] = 2026-06-10 "s"
+  gift_day[2026-07] = 2026-07-10 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+,,1:0,873:e_jan: 90.00 PLN
+  [1] t_jan = 90.00 PLN
+      rule base: won
+        [2] row v:sp_jan = 2026-01
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [3] row v:top_dom = 20
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [4] row v:rent_amt[2026-01] = 900.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [5] row v:share = 0.1
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+  unfulfilled: rent[2026-01]
+  unfulfilled: top[2026-01]
+  cut 2026-06-20
+,23:spec/p22/n2_flows/i_may,8:spec-p22,30:run n2_flows.tally --ask i_may,2943:14:n2_flows.tally,2919:model n2
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-07-31
+
+source s "invented for fence F7: flows(mv, span) read at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-07
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input rent_amt[m in month]: money PLN
+
+input fee_day[m in month]: date
+
+input gift_day[m in month]: date
+
+input fee_amt: money PLN
+
+input top_dom: int
+
+input share: num
+
+input sp_jan: month
+
+input sp_may: month
+
+move rent[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount fee_amt
+
+move gift[m in month]: transfers
+  on gift_day[m]
+  at start_of(m)
+  leg cash from pot to shop amount fee_amt
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top_fee[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m .. (m + 1))
+
+move top_gift[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(gift, m)
+
+def t_jan: money PLN = flows(top, sp_jan .. sp_jan)
+
+def f_may: money PLN = flows(top_fee, sp_may .. sp_may)
+
+ask r: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06, 2026-07]
+
+ask fe: flows(top_fee, m) for m in [2026-01, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask g: flows(top_gift, m) for m in [2026-01, 2026-04]
+
+ask k: bal(konto, 2026-06-19)
+
+ask e_jan: explain t_jan
+
+ask i_jan: inputs-of t_jan
+
+ask i_may: inputs-of f_may
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_amt = 7.00 PLN "s"
+  top_dom = 20 "s"
+  share = 0.1 "s"
+  sp_jan = 2026-01 "s"
+  sp_may = 2026-05 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "a refused instance: its amount is negative"
+  rent_amt[2026-04] = 910.00 PLN "s"
+  rent_amt[2026-05] = 920.00 PLN "s"
+  rent_amt[2026-06] = 930.00 PLN "s"
+  rent_amt[2026-07] = 940.00 PLN "s"
+  fee_day[2026-01] = 2026-01-01 "the span's first day"
+  fee_day[2026-02] = 2026-02-28 "the span's last day"
+  fee_day[2026-03] = 2026-03-15 "s"
+  fee_day[2026-04] = 2026-04-30 "s"
+  fee_day[2026-05] = window(2026-05-03, 2026-05-08) "a hole day: a window"
+  fee_day[2026-06] = 2026-06-01 "s"
+  fee_day[2026-07] = 2026-07-31 "s"
+  gift_day[2026-01] = 2026-01-10 "s"
+  gift_day[2026-02] = 2026-02-10 "s"
+  gift_day[2026-03] = 2026-03-10 "s"
+  gift_day[2026-05] = 2026-05-10 "s"
+  gift_day[2026-06] = 2026-06-10 "s"
+  gift_day[2026-07] = 2026-07-10 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+,,1:0,1114:i_may:
+  v:fee_amt (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:fee_day[2026-01] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "the span's first day")
+  v:fee_day[2026-02] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "the span's last day")
+  v:fee_day[2026-03] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:fee_day[2026-04] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:fee_day[2026-06] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:fee_day[2026-07] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:sp_may (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:top_dom (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  unknown day: fee_day[2026-05]
+  unfulfilled: top_fee[2026-05]
+  cut 2026-06-20
+,33:spec/p26/g1/a12_nonehole/q_arith2,8:spec-p26,37:run a12_nonehole.tally --ask q_arith2,652:18:a12_nonehole.tally,625:model a12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input pn: money PLN
+input ph: money PLN
+input rh: rate
+input r: rate
+input d0: date
+input d1: date
+
+ask q_arith: pn + ph
+ask q_arith2: max(pn, ph)
+ask q_acc: accrue(pn, rh, d0, d1, act365, simple)
+ask q_per: periodic(rh, year, simple) * accrue(pn, r, d0, d1, act365, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  pn = none "s"
+  ph = ?"which p?" "s"
+  rh = ?"which rate?" "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+,,1:0,120:q_arith2: refused: RUN-NONE pn is none here: ordering
+  cut 2026-10-25
+warning: WARN-UNREAD input p0 is read by nothing
+,30:spec/p26/p12/round/n_x__z_step,8:spec-p26,33:run round.tally --ask n_x__z_step,1684:11:round.tally,1663:model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"
+,,1:0,77:n_x__z_step: refused: RUN-NONE x_n is none here: arithmetic
+  cut 2026-10-25
+,30:spec/p26/p12/round/n_x__g_step,8:spec-p26,33:run round.tally --ask n_x__g_step,1684:11:round.tally,1663:model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"
+,,1:0,77:n_x__g_step: refused: RUN-NONE x_n is none here: arithmetic
+  cut 2026-10-25
+,30:spec/p26/p12/round/h_x__n_step,8:spec-p26,33:run round.tally --ask h_x__n_step,1684:11:round.tally,1663:model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"
+,,1:0,80:h_x__n_step: refused: RUN-NONE step_n is none here: arithmetic
+  cut 2026-10-25
+,30:spec/p26/p12/round/h_step__n_x,8:spec-p26,33:run round.tally --ask h_step__n_x,1684:11:round.tally,1663:model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"
+,,1:0,77:h_step__n_x: refused: RUN-NONE x_n is none here: arithmetic
+  cut 2026-10-25
+,30:spec/p26/p12/round/h_mode__n_x,8:spec-p26,33:run round.tally --ask h_mode__n_x,1684:11:round.tally,1663:model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"
+,,1:0,77:h_mode__n_x: refused: RUN-NONE x_n is none here: arithmetic
+  cut 2026-10-25
+,33:spec/p26/p12/round/h_mode__n_step,8:spec-p26,36:run round.tally --ask h_mode__n_step,1684:11:round.tally,1663:model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"
+,,1:0,83:h_mode__n_step: refused: RUN-NONE step_n is none here: arithmetic
+  cut 2026-10-25
+,25:spec/p26/items/none/q_sum,8:spec-p26,26:run none.tally --ask q_sum,1124:10:none.tally,1104:model none_reads
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2025-01-01..
+
+input rate[k in ks]: num
+input fl[k in ks]: bool
+input acct[k in ks]: key accounts
+input one: num
+input step: num
+input md: date
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+  fl[k1] = true "s"
+  fl[k2] = none "s"
+  acct[k1] = konto "s"
+  acct[k2] = none "s"
+  one = 1 "s"
+  step = 1 "s"
+  md = 2026-03-01 "s"
+
+def n_sum: num = sum(rate[k] for k in ks)
+def n_min[k in ks]: num = min(rate[k], one)
+def n_abs[k in ks]: num = abs(rate[k])
+def n_round[k in ks]: num = round(rate[k], step, down)
+def n_if[k in ks]: num = if fl[k] then one else one
+def n_and[k in ks]: bool = fl[k] and fl[k1]
+def n_not[k in ks]: bool = not fl[k]
+def n_member[k in ks]: bool = acct[k] in accounts on md
+
+ask q_sum: n_sum
+ask q_min: n_min[k2]
+ask q_abs: n_abs[k2]
+ask q_round: n_round[k2]
+ask q_if: n_if[k2]
+ask q_and: n_and[k2]
+ask q_not: n_not[k2]
+ask q_member: n_member[k2]
+,,1:0,75:q_sum: refused: RUN-NONE rate[k2] is none here: aggregate
+  cut 2026-06-10
+,25:spec/p26/items/none/q_min,8:spec-p26,26:run none.tally --ask q_min,1124:10:none.tally,1104:model none_reads
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2025-01-01..
+
+input rate[k in ks]: num
+input fl[k in ks]: bool
+input acct[k in ks]: key accounts
+input one: num
+input step: num
+input md: date
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+  fl[k1] = true "s"
+  fl[k2] = none "s"
+  acct[k1] = konto "s"
+  acct[k2] = none "s"
+  one = 1 "s"
+  step = 1 "s"
+  md = 2026-03-01 "s"
+
+def n_sum: num = sum(rate[k] for k in ks)
+def n_min[k in ks]: num = min(rate[k], one)
+def n_abs[k in ks]: num = abs(rate[k])
+def n_round[k in ks]: num = round(rate[k], step, down)
+def n_if[k in ks]: num = if fl[k] then one else one
+def n_and[k in ks]: bool = fl[k] and fl[k1]
+def n_not[k in ks]: bool = not fl[k]
+def n_member[k in ks]: bool = acct[k] in accounts on md
+
+ask q_sum: n_sum
+ask q_min: n_min[k2]
+ask q_abs: n_abs[k2]
+ask q_round: n_round[k2]
+ask q_if: n_if[k2]
+ask q_and: n_and[k2]
+ask q_not: n_not[k2]
+ask q_member: n_member[k2]
+,,1:0,74:q_min: refused: RUN-NONE rate[k2] is none here: ordering
+  cut 2026-06-10
+,25:spec/p26/items/none/q_abs,8:spec-p26,26:run none.tally --ask q_abs,1124:10:none.tally,1104:model none_reads
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2025-01-01..
+
+input rate[k in ks]: num
+input fl[k in ks]: bool
+input acct[k in ks]: key accounts
+input one: num
+input step: num
+input md: date
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+  fl[k1] = true "s"
+  fl[k2] = none "s"
+  acct[k1] = konto "s"
+  acct[k2] = none "s"
+  one = 1 "s"
+  step = 1 "s"
+  md = 2026-03-01 "s"
+
+def n_sum: num = sum(rate[k] for k in ks)
+def n_min[k in ks]: num = min(rate[k], one)
+def n_abs[k in ks]: num = abs(rate[k])
+def n_round[k in ks]: num = round(rate[k], step, down)
+def n_if[k in ks]: num = if fl[k] then one else one
+def n_and[k in ks]: bool = fl[k] and fl[k1]
+def n_not[k in ks]: bool = not fl[k]
+def n_member[k in ks]: bool = acct[k] in accounts on md
+
+ask q_sum: n_sum
+ask q_min: n_min[k2]
+ask q_abs: n_abs[k2]
+ask q_round: n_round[k2]
+ask q_if: n_if[k2]
+ask q_and: n_and[k2]
+ask q_not: n_not[k2]
+ask q_member: n_member[k2]
+,,1:0,76:q_abs: refused: RUN-NONE rate[k2] is none here: arithmetic
+  cut 2026-06-10
+,27:spec/p26/items/none/q_round,8:spec-p26,28:run none.tally --ask q_round,1124:10:none.tally,1104:model none_reads
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2025-01-01..
+
+input rate[k in ks]: num
+input fl[k in ks]: bool
+input acct[k in ks]: key accounts
+input one: num
+input step: num
+input md: date
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  rate[k1] = 1 "s"
+  rate[k2] = none "s"
+  fl[k1] = true "s"
+  fl[k2] = none "s"
+  acct[k1] = konto "s"
+  acct[k2] = none "s"
+  one = 1 "s"
+  step = 1 "s"
+  md = 2026-03-01 "s"
+
+def n_sum: num = sum(rate[k] for k in ks)
+def n_min[k in ks]: num = min(rate[k], one)
+def n_abs[k in ks]: num = abs(rate[k])
+def n_round[k in ks]: num = round(rate[k], step, down)
+def n_if[k in ks]: num = if fl[k] then one else one
+def n_and[k in ks]: bool = fl[k] and fl[k1]
+def n_not[k in ks]: bool = not fl[k]
+def n_member[k in ks]: bool = acct[k] in accounts on md
+
+ask q_sum: n_sum
+ask q_min: n_min[k2]
+ask q_abs: n_abs[k2]
+ask q_round: n_round[k2]
+ask q_if: n_if[k2]
+ask q_and: n_and[k2]
+ask q_not: n_not[k2]
+ask q_member: n_member[k2]
+,,1:0,78:q_round: refused: RUN-NONE rate[k2] is none here: arithmetic
+  cut 2026-06-10
 ,

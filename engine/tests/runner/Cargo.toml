@@ -267,3 +267,10 @@ test = false
 name = "m4_fixes"
 path = "milestone/m4_fixes.rs"
 test = false
+
+# M4: fence F7 on every store and corpus, Plans::Narrow against Plans::Whole through the CLI's
+# re-export of the library (picks P17, U1; MILESTONE-M4.md row 6): a fence's equivalence test
+# (R-130), run by default since G6c built the switch (6c0ed597); `check quick` leaves it out.
+[[test]]
+name = "m4_narrow"
+path = "milestone/m4_narrow.rs"

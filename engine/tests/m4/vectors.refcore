@@ -235923,4 +235923,3583 @@ version obs
 ,,1:0,141:w_plain: ?"date within window(2026-04-10, 2026-04-20) not precise enough for the day of u_win" (d_win)
   unknown day: d_win
   cut 2026-03-01
+,24:fixes/g6c/p06_holebook/k,12:fixes-narrow,30:run p06_holebook.tally --ask k,3046:18:p06_holebook.tally,3018:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,251:k: refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: rent[2026-05]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+,24:fixes/g6c/p06_holebook/f,12:fixes-narrow,30:run p06_holebook.tally --ask f,3046:18:p06_holebook.tally,3018:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,446:f (m = 2026-01): 260.00 PLN
+  unfulfilled: spend[2026-01]
+  cut 2026-05-20
+f (m = 2026-02): 250.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-05-20
+f (m = 2026-03): 240.00 PLN
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+f (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: spend[2026-04]
+  cut 2026-05-20
+f (m = 2026-05): 200.00 PLN
+  cut 2026-05-20
+,24:fixes/g6c/p06_holebook/l,12:fixes-narrow,30:run p06_holebook.tally --ask l,3046:18:p06_holebook.tally,3018:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,278:l (m = 2026-01): 40.00 PLN
+  cut 2026-05-20
+l (m = 2026-02): 50.00 PLN
+  cut 2026-05-20
+l (m = 2026-03): 60.00 PLN
+  cut 2026-05-20
+l (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
+,27:fixes/g6c/p06_holebook_io/k,12:fixes-narrow,33:run p06_holebook_io.tally --ask k,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,251:k: refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: rent[2026-05]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+,27:fixes/g6c/p06_holebook_io/f,12:fixes-narrow,33:run p06_holebook_io.tally --ask f,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,446:f (m = 2026-01): 260.00 PLN
+  unfulfilled: spend[2026-01]
+  cut 2026-05-20
+f (m = 2026-02): 250.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-05-20
+f (m = 2026-03): 240.00 PLN
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+f (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: spend[2026-04]
+  cut 2026-05-20
+f (m = 2026-05): 200.00 PLN
+  cut 2026-05-20
+,28:fixes/g6c/p06_holebook_io/i1,12:fixes-narrow,34:run p06_holebook_io.tally --ask i1,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,380:i1:
+  bank[c1] (source s "invented values", locator "loose")
+  bank[c2] (source s "invented values", locator "names mar")
+  v:base (source s "invented values", locator "s")
+  v:skip_m (source s "invented values", locator "s")
+  v:sp_m (source s "invented values", locator "s")
+  v:spend_dom (source s "invented values", locator "s")
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+,28:fixes/g6c/p06_holebook_io/i2,12:fixes-narrow,34:run p06_holebook_io.tally --ask i2,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,192:i2:
+  bank[c1] (source s "invented values", locator "loose")
+  bank[c2] (source s "invented values", locator "names mar")
+  v:skip_m (source s "invented values", locator "s")
+  cut 2026-05-20
+,28:fixes/g6c/p06_holebook_io/e1,12:fixes-traced,34:run p06_holebook_io.tally --ask e1,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,1981:e1: 60.00 PLN
+  [1] loose[2026-03] = 60.00 PLN, law date 2026-03-01
+      rule guessed: beaten by seen
+      rule seen: won
+        [2] row v:skip_m = 2026-04
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [3] row v:rent_day[2026-01] = 2026-01-05
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [4] row v:rent_amt[2026-01] = 800.00 PLN
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [5] row ans:rent_amt[2026-02] = 810.00 PLN
+            version ans, source s, "invented values", locator "the answer", governs always, known 2026-02-15
+        [6] row v:rent_day[2026-03] = window(2026-03-03, 2026-03-08)
+            version v, source s, "invented values", locator "a window", governs always, known 2026-01-01
+        [7] row v:rent_amt[2026-03] = 800.00 PLN
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [8] row v:rent_day[2026-04] = 2026-04-06
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [9] row v:rent_day[2026-05] = 2026-05-05
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [10] row v:rent_amt[2026-05] = 800.00 PLN
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [11] row v:rent_day[2026-06] = 2026-06-05
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [12] row v:rent_amt[2026-06] = 800.00 PLN
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [13] row mar:bank[c1] = (from: card, to: shop, amount: 60.00 PLN, day: 2026-03-04)
+            version mar, source s, "invented values", locator "loose", on 2026-03-04, known 2026-03-21
+  cut 2026-05-20
+,27:fixes/g6c/p06_holebook_io/l,12:fixes-narrow,33:run p06_holebook_io.tally --ask l,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,278:l (m = 2026-01): 40.00 PLN
+  cut 2026-05-20
+l (m = 2026-02): 50.00 PLN
+  cut 2026-05-20
+l (m = 2026-03): 60.00 PLN
+  cut 2026-05-20
+l (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
+,30:fixes/g6c/p06b_holebook_late/k,12:fixes-narrow,36:run p06b_holebook_late.tally --ask k,3052:24:p06b_holebook_late.tally,3018:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-05-01
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,251:k: refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: rent[2026-05]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+,30:fixes/g6c/p06b_holebook_late/f,12:fixes-narrow,36:run p06b_holebook_late.tally --ask f,3052:24:p06b_holebook_late.tally,3018:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-05-01
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,446:f (m = 2026-01): 260.00 PLN
+  unfulfilled: spend[2026-01]
+  cut 2026-05-20
+f (m = 2026-02): 250.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-05-20
+f (m = 2026-03): 240.00 PLN
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+f (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: spend[2026-04]
+  cut 2026-05-20
+f (m = 2026-05): 200.00 PLN
+  cut 2026-05-20
+,30:fixes/g6c/p06b_holebook_late/l,12:fixes-narrow,36:run p06b_holebook_late.tally --ask l,3052:24:p06b_holebook_late.tally,3018:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-05-01
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,278:l (m = 2026-01): 40.00 PLN
+  cut 2026-05-20
+l (m = 2026-02): 50.00 PLN
+  cut 2026-05-20
+l (m = 2026-03): 60.00 PLN
+  cut 2026-05-20
+l (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
+,31:fixes/g6c/p06c_holebook_named/k,12:fixes-narrow,37:run p06c_holebook_named.tally --ask k,3187:25:p06c_holebook_named.tally,3152:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,251:k: refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: rent[2026-05]
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+,31:fixes/g6c/p06c_holebook_named/f,12:fixes-narrow,37:run p06c_holebook_named.tally --ask f,3187:25:p06c_holebook_named.tally,3152:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,446:f (m = 2026-01): 260.00 PLN
+  unfulfilled: spend[2026-01]
+  cut 2026-05-20
+f (m = 2026-02): 250.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-05-20
+f (m = 2026-03): 240.00 PLN
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+f (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: spend[2026-04]
+  cut 2026-05-20
+f (m = 2026-05): 200.00 PLN
+  cut 2026-05-20
+,31:fixes/g6c/p06c_holebook_named/l,12:fixes-narrow,37:run p06c_holebook_named.tally --ask l,3187:25:p06c_holebook_named.tally,3152:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,278:l (m = 2026-01): 40.00 PLN
+  cut 2026-05-20
+l (m = 2026-02): 50.00 PLN
+  cut 2026-05-20
+l (m = 2026-03): 60.00 PLN
+  cut 2026-05-20
+l (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
+,25:fixes/g6c/p08_uncertain/a,12:fixes-narrow,31:run p08_uncertain.tally --ask a,2121:19:p08_uncertain.tally,2092:model p8
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,890:a (m = 2026-01): 0.00 PLN
+  unfulfilled: top[2026-01]
+  cut 2026-05-20
+a (m = 2026-02): ?"top[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top[2026-01])
+  unfulfilled: top[2026-02]
+  cut 2026-05-20
+a (m = 2026-03): ?"top[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top[2026-01])
+  unfulfilled: top[2026-03]
+  cut 2026-05-20
+a (m = 2026-04): ?"top[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top[2026-01])
+  unfulfilled: top[2026-04]
+  cut 2026-05-20
+a (m = 2026-05): ?"top[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top[2026-01])
+  cut 2026-05-20
+a (m = 2026-06): ?"top[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top[2026-01])
+  cut 2026-05-20
+,25:fixes/g6c/p08_uncertain/b,12:fixes-narrow,31:run p08_uncertain.tally --ask b,2121:19:p08_uncertain.tally,2092:model p8
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,755:b (m = 2026-01): 0.00 PLN
+  unfulfilled: top2[2026-01]
+  cut 2026-05-20
+b (m = 2026-02): ?"top2[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top2[2026-01])
+  unfulfilled: top2[2026-02]
+  cut 2026-05-20
+b (m = 2026-03): ?"top2[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top2[2026-01])
+  unfulfilled: top2[2026-03]
+  cut 2026-05-20
+b (m = 2026-04): ?"top2[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top2[2026-01])
+  unfulfilled: top2[2026-04]
+  cut 2026-05-20
+b (m = 2026-05): ?"top2[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top2[2026-01])
+  cut 2026-05-20
+,25:fixes/g6c/p08_uncertain/k,12:fixes-narrow,31:run p08_uncertain.tally --ask k,2121:19:p08_uncertain.tally,2092:model p8
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,429:k: ?"top2[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top2[2026-01]) ?"top[2026-01] on 2026-01-20 changed after it was paid (version feb); is back pay due, and when?" (top[2026-01])
+  adjustment: top2[2026-01] by 901.00 PLN on 2026-02-21 (version feb), remaining 901.00 PLN
+  adjustment: top[2026-01] by 90.10 PLN on 2026-02-21 (version feb), remaining 90.10 PLN
+  cut 2026-05-20
+,31:fixes/g6c/p08b_uncertain_link/k,12:fixes-narrow,37:run p08b_uncertain_link.tally --ask k,3161:25:p08b_uncertain_link.tally,3126:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-02] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+,,1:0,222:k: refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: spend[2026-01]
+  unfulfilled: spend[2026-02]
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+,31:fixes/g6c/p08b_uncertain_link/f,12:fixes-narrow,37:run p08b_uncertain_link.tally --ask f,3161:25:p08b_uncertain_link.tally,3126:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-02] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+,,1:0,446:f (m = 2026-01): 260.00 PLN
+  unfulfilled: spend[2026-01]
+  cut 2026-05-20
+f (m = 2026-02): 250.00 PLN
+  unfulfilled: spend[2026-02]
+  cut 2026-05-20
+f (m = 2026-03): 240.00 PLN
+  unfulfilled: spend[2026-03]
+  cut 2026-05-20
+f (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  unfulfilled: spend[2026-04]
+  cut 2026-05-20
+f (m = 2026-05): 200.00 PLN
+  cut 2026-05-20
+,31:fixes/g6c/p08b_uncertain_link/l,12:fixes-narrow,37:run p08b_uncertain_link.tally --ask l,3161:25:p08b_uncertain_link.tally,3126:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-02] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+,,1:0,278:l (m = 2026-01): 40.00 PLN
+  cut 2026-05-20
+l (m = 2026-02): 50.00 PLN
+  cut 2026-05-20
+l (m = 2026-03): 60.00 PLN
+  cut 2026-05-20
+l (m = 2026-04): refused: RUN-RECORD observation bank[d1] fulfils rent[2026-04], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
+,21:fixes/g6c/p09b_pin/zp,9:fixes-g6c,27:run p09b_pin.tally --ask zp,1648:14:p09b_pin.tally,1624:model p9
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input ok[m in month]: bool
+
+input d5: int
+
+input d20: int
+
+input d25: int
+
+input sp: month
+
+input two: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent, m)
+
+move zed[m in month]: transfers
+  on day_of(m, d25)
+  at start_of(m)
+  leg cash from konto to shop amount flows(top, (m + two) .. (m + two))
+
+def zz: money PLN = flows(zed, sp .. sp)
+
+ask zp: zz with ok[2026-01] = true
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  d20 = 20 "s"
+  d25 = 25 "s"
+  sp = 2026-02 "s"
+  two = 2 "s"
+  ok[2026-01] = true "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,60:zp: 100.00 PLN
+  unfulfilled: zed[2026-02]
+  cut 2026-05-20
+,25:fixes/g6c/p09_first_min/i,9:fixes-g6c,31:run p09_first_min.tally --ask i,1638:19:p09_first_min.tally,1609:model p9
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input ok[m in month]: bool
+
+input d5: int
+
+input d20: int
+
+input d25: int
+
+input sp: month
+
+input two: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent, m)
+
+move zed[m in month]: transfers
+  on day_of(m, d25)
+  at start_of(m)
+  leg cash from konto to shop amount flows(top, (m + two) .. (m + two))
+
+def zz: money PLN = flows(zed, sp .. sp)
+
+ask i: inputs-of zz
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  d20 = 20 "s"
+  d25 = 25 "s"
+  sp = 2026-02 "s"
+  two = 2 "s"
+  ok[2026-01] = true "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,414:i:
+  v:d20 (source s "invented values", locator "s")
+  v:d25 (source s "invented values", locator "s")
+  v:d5 (source s "invented values", locator "s")
+  v:ok[2026-04] (source s "invented values", locator "ok apr")
+  v:rent_amt (source s "invented values", locator "s")
+  v:sp (source s "invented values", locator "s")
+  v:two (source s "invented values", locator "s")
+  unfulfilled: zed[2026-02]
+  cut 2026-05-20
+,21:fixes/narrow/n4_own/k,9:fixes-p22,24:run n4_own.tally --ask k,2095:12:n4_own.tally,2073:model n4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented for fence F7: o.fulfils naming the reading move's own instance at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask k: bal(konto, 2026-04-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance of the reading move"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0320] = (on: 2026-03-20, kind: transfers, leg cash from konto to shop amount 240.00 PLN, fulfils: spend[2026-03]) "names the reading instance itself, before its day"
+,,1:0,183:k: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+,21:fixes/narrow/n4_own/f,9:fixes-p22,24:run n4_own.tally --ask f,2095:12:n4_own.tally,2073:model n4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented for fence F7: o.fulfils naming the reading move's own instance at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask k: bal(konto, 2026-04-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance of the reading move"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0320] = (on: 2026-03-20, kind: transfers, leg cash from konto to shop amount 240.00 PLN, fulfils: spend[2026-03]) "names the reading instance itself, before its day"
+,,1:0,985:f (m = 2026-01): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+f (m = 2026-02): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+f (m = 2026-03): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+f (m = 2026-04): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+f (m = 2026-05): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+,21:fixes/narrow/n4_own/l,9:fixes-p22,24:run n4_own.tally --ask l,2095:12:n4_own.tally,2073:model n4
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "invented for fence F7: o.fulfils naming the reading move's own instance at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask k: bal(konto, 2026-04-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance of the reading move"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0320] = (on: 2026-03-20, kind: transfers, leg cash from konto to shop amount 240.00 PLN, fulfils: spend[2026-03]) "names the reading instance itself, before its day"
+,,1:0,483:l (m = 2026-01): 40.00 PLN
+  cut 2026-04-20
+l (m = 2026-02): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+l (m = 2026-03): refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02] booked at 2026-02-25 differs between the cuts 2026-02-25 and 2026-04-20 (E §9 invariant 5)
+  cut 2026-04-20
+l (m = 2026-04): 100.00 PLN
+  cut 2026-04-20
+,27:fixes/narrow/n2_flows/e_jan,9:fixes-p22,30:run n2_flows.tally --ask e_jan,2943:14:n2_flows.tally,2919:model n2
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-07-31
+
+source s "invented for fence F7: flows(mv, span) read at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-07
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input rent_amt[m in month]: money PLN
+
+input fee_day[m in month]: date
+
+input gift_day[m in month]: date
+
+input fee_amt: money PLN
+
+input top_dom: int
+
+input share: num
+
+input sp_jan: month
+
+input sp_may: month
+
+move rent[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount fee_amt
+
+move gift[m in month]: transfers
+  on gift_day[m]
+  at start_of(m)
+  leg cash from pot to shop amount fee_amt
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top_fee[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m .. (m + 1))
+
+move top_gift[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(gift, m)
+
+def t_jan: money PLN = flows(top, sp_jan .. sp_jan)
+
+def f_may: money PLN = flows(top_fee, sp_may .. sp_may)
+
+ask r: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06, 2026-07]
+
+ask fe: flows(top_fee, m) for m in [2026-01, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask g: flows(top_gift, m) for m in [2026-01, 2026-04]
+
+ask k: bal(konto, 2026-06-19)
+
+ask e_jan: explain t_jan
+
+ask i_jan: inputs-of t_jan
+
+ask i_may: inputs-of f_may
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_amt = 7.00 PLN "s"
+  top_dom = 20 "s"
+  share = 0.1 "s"
+  sp_jan = 2026-01 "s"
+  sp_may = 2026-05 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "a refused instance: its amount is negative"
+  rent_amt[2026-04] = 910.00 PLN "s"
+  rent_amt[2026-05] = 920.00 PLN "s"
+  rent_amt[2026-06] = 930.00 PLN "s"
+  rent_amt[2026-07] = 940.00 PLN "s"
+  fee_day[2026-01] = 2026-01-01 "the span's first day"
+  fee_day[2026-02] = 2026-02-28 "the span's last day"
+  fee_day[2026-03] = 2026-03-15 "s"
+  fee_day[2026-04] = 2026-04-30 "s"
+  fee_day[2026-05] = window(2026-05-03, 2026-05-08) "a hole day: a window"
+  fee_day[2026-06] = 2026-06-01 "s"
+  fee_day[2026-07] = 2026-07-31 "s"
+  gift_day[2026-01] = 2026-01-10 "s"
+  gift_day[2026-02] = 2026-02-10 "s"
+  gift_day[2026-03] = 2026-03-10 "s"
+  gift_day[2026-05] = 2026-05-10 "s"
+  gift_day[2026-06] = 2026-06-10 "s"
+  gift_day[2026-07] = 2026-07-10 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+,,1:0,4728:e_jan: 90.00 PLN
+  [1] t_jan = 90.00 PLN
+      rule base: won
+        [2] row v:sp_jan = 2026-01
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [3] row v:top_dom = 20
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [4] row v:rent_amt[2026-01] = 900.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [5] row v:rent_amt[2026-02] = -5.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "a refused instance: its amount is negative", governs always, known 2026-01-01
+        [6] row v:rent_amt[2026-04] = 910.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [7] row v:rent_amt[2026-05] = 920.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [8] row v:rent_amt[2026-06] = 930.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [9] row v:rent_amt[2026-07] = 940.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [10] row v:share = 0.1
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [11] row v:fee_day[2026-01] = 2026-01-01
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "the span's first day", governs always, known 2026-01-01
+        [12] row v:fee_amt = 7.00 PLN
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [13] row v:fee_day[2026-02] = 2026-02-28
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "the span's last day", governs always, known 2026-01-01
+        [14] row v:fee_day[2026-03] = 2026-03-15
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [15] row v:fee_day[2026-04] = 2026-04-30
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [16] row v:fee_day[2026-05] = window(2026-05-03, 2026-05-08)
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "a hole day: a window", governs always, known 2026-01-01
+        [17] row v:fee_day[2026-06] = 2026-06-01
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [18] row v:fee_day[2026-07] = 2026-07-31
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [19] row v:gift_day[2026-01] = 2026-01-10
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [20] row v:gift_day[2026-02] = 2026-02-10
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [21] row v:gift_day[2026-03] = 2026-03-10
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [22] row v:gift_day[2026-05] = 2026-05-10
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [23] row v:gift_day[2026-06] = 2026-06-10
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [24] row v:gift_day[2026-07] = 2026-07-10
+            version v, source s, "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s", governs always, known 2026-01-01
+  unfulfilled: rent[2026-01]
+  unfulfilled: top[2026-01]
+  cut 2026-06-20
+,27:fixes/narrow/n2_flows/i_may,9:fixes-p22,30:run n2_flows.tally --ask i_may,2943:14:n2_flows.tally,2919:model n2
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-07-31
+
+source s "invented for fence F7: flows(mv, span) read at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-07
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input rent_amt[m in month]: money PLN
+
+input fee_day[m in month]: date
+
+input gift_day[m in month]: date
+
+input fee_amt: money PLN
+
+input top_dom: int
+
+input share: num
+
+input sp_jan: month
+
+input sp_may: month
+
+move rent[m in month]: transfers
+  on start_of(m)
+  at start_of(m)
+  leg cash from pot to landlord amount rent_amt[m]
+
+move fee[m in month]: transfers
+  on fee_day[m]
+  at start_of(m)
+  leg cash from pot to landlord amount fee_amt
+
+move gift[m in month]: transfers
+  on gift_day[m]
+  at start_of(m)
+  leg cash from pot to shop amount fee_amt
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top_fee[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(fee, m .. (m + 1))
+
+move top_gift[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(gift, m)
+
+def t_jan: money PLN = flows(top, sp_jan .. sp_jan)
+
+def f_may: money PLN = flows(top_fee, sp_may .. sp_may)
+
+ask r: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06, 2026-07]
+
+ask fe: flows(top_fee, m) for m in [2026-01, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask g: flows(top_gift, m) for m in [2026-01, 2026-04]
+
+ask k: bal(konto, 2026-06-19)
+
+ask e_jan: explain t_jan
+
+ask i_jan: inputs-of t_jan
+
+ask i_may: inputs-of f_may
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fee_amt = 7.00 PLN "s"
+  top_dom = 20 "s"
+  share = 0.1 "s"
+  sp_jan = 2026-01 "s"
+  sp_may = 2026-05 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "a refused instance: its amount is negative"
+  rent_amt[2026-04] = 910.00 PLN "s"
+  rent_amt[2026-05] = 920.00 PLN "s"
+  rent_amt[2026-06] = 930.00 PLN "s"
+  rent_amt[2026-07] = 940.00 PLN "s"
+  fee_day[2026-01] = 2026-01-01 "the span's first day"
+  fee_day[2026-02] = 2026-02-28 "the span's last day"
+  fee_day[2026-03] = 2026-03-15 "s"
+  fee_day[2026-04] = 2026-04-30 "s"
+  fee_day[2026-05] = window(2026-05-03, 2026-05-08) "a hole day: a window"
+  fee_day[2026-06] = 2026-06-01 "s"
+  fee_day[2026-07] = 2026-07-31 "s"
+  gift_day[2026-01] = 2026-01-10 "s"
+  gift_day[2026-02] = 2026-02-10 "s"
+  gift_day[2026-03] = 2026-03-10 "s"
+  gift_day[2026-05] = 2026-05-10 "s"
+  gift_day[2026-06] = 2026-06-10 "s"
+  gift_day[2026-07] = 2026-07-10 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+,,1:0,512:i_may:
+  v:fee_amt (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:fee_day[2026-06] (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:sp_may (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  v:top_dom (source s "invented for fence F7: flows(mv, span) read at a past booking cut", locator "s")
+  unknown day: fee_day[2026-05]
+  unfulfilled: top_fee[2026-05]
+  cut 2026-06-20
+,22:fixes/g3/f5_cross/e_pr,9:fixes-p23,29:run f5_cross.tally --ask e_pr,2074:14:f5_cross.tally,2050:model f5
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input z: int
+input w: date
+input wh: date
+input wlate: date
+input sp: month
+input sp_end: month
+input dday: date
+input wdiv: date
+input sp_late: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then ra else amt
+move dh: transfers
+  on wh
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+move dlate: transfers
+  on wlate
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+move ddiv: transfers
+  on wdiv
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then round(amt / z, minor(PLN), half-even) else amt
+
+def fl: money PLN = flows(dx, sp .. sp_end)
+def fh: money PLN = flows(dh, sp .. sp_end) + flows(dx, sp .. sp_end)
+def flate: money PLN = flows(dlate, sp_late .. sp_late)
+def fdiv: money PLN = flows(ddiv, sp .. sp_end)
+def cn: int = count(m in transfers over sp .. sp_end)
+def pr: money PLN = bal(konto, dday) from w + flows(dx, sp .. sp_end)
+
+ask e_fl: explain fl
+ask e_fl_pin: explain fl with amt = 5 PLN
+ask e_fl_axpin: explain fl with rd = r2
+ask e_fh: explain fh
+ask e_flate: explain flate
+ask e_fdiv: explain fdiv
+ask e_cn: explain cn
+ask e_pr: explain pr
+ask e_known: explain fl as known 2026-04-01
+ask v_all: fl, fh, flate, fdiv, cn, pr
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  z = 0 "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  wlate = 2026-07-15 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  dday = 2026-05-31 "s"
+  wdiv = 2026-05-10 "s"
+  sp_late = 2026-07 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1959:e_pr [rd = *]: refused: RUN-DIV division by zero
+  [1] pr = refused: RUN-DIV division by zero
+      rule base: won
+        [2] row v:dday = 2026-05-31
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:wdiv = 2026-05-10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:wh = window(2026-04-29, 2026-05-02)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row v:wlate = 2026-07-15
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-04-30
+        [8] ra = 100.00 PLN
+            rule one: won
+              [9] row v:amt = 100.00 PLN
+                  version v, source s, "invented", locator "s", governs always, known 2026-01-01
+            rule two: not applicable
+        (v:amt: see [9])
+        [10] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-05-10
+        [11] row v:z = 0
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [12] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-04-30
+        [13] ra = 100.00 PLN
+            rule one: won
+              (v:amt: see [9])
+            rule two: not applicable
+        [14] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-05-10
+  cut 2026-06-10
+,34:fixes/g3fix/h2_plan_hole_axis/e_cw,9:fixes-p23,38:run h2_plan_hole_axis.tally --ask e_cw,1116:23:h2_plan_hole_axis.tally,1083:model h1
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input wh: date
+input sp: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dh: transfers
+  on wh
+  leg cash from world to konto amount ra
+
+def fl: money PLN = flows(dh, sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt)
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+
+ask e_fl: explain fl with rd = r2
+ask e_cw: explain cw with rd = r1
+ask e_sm: explain sm
+ask e_flk: explain fl with rd = r2, wh = 2026-04-01
+ask v_all: fl, cw, sm with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1278:e_cw: 0
+  [1] the pins, evaluated outside them
+    [2] pin rd = r1
+  [3] inside the pins: 0
+    [4] cw = 0
+        rule base: won
+          [5] row v:sp = 2026-04
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [6] row v:wh = window(2026-04-29, 2026-05-02)
+              version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          [7] ra = 100.00 PLN
+              rule one: won
+                [8] row v:amt = 100.00 PLN
+                    version v, source s, "invented", locator "s", governs always, known 2026-01-01
+              rule two: not applicable
+          (v:amt: see [8])
+  [9] outside the pins [rd = r1]: 0
+    [10] cw = 0
+        rule base: won
+          (v:sp: see [5])
+          (v:amt: see [8])
+  [11] outside the pins [rd = r2]: 0
+    [12] cw = 0
+        rule base: won
+          (v:sp: see [5])
+          (v:wh: see [6])
+          [13] ra = 70.00 PLN
+              rule one: not applicable
+              rule two: won
+                [14] row v:amt_b = 70.00 PLN
+                    version v, source s, "invented", locator "s", governs always, known 2026-01-01
+          (v:amt: see [8])
+  pinned: rd = r1
+  cut 2026-06-10
+warning: WARN-UNREAD input w is read by nothing
+,34:fixes/g3fix/h2_plan_hole_axis/e_sm,9:fixes-p23,38:run h2_plan_hole_axis.tally --ask e_sm,1116:23:h2_plan_hole_axis.tally,1083:model h1
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input wh: date
+input sp: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dh: transfers
+  on wh
+  leg cash from world to konto amount ra
+
+def fl: money PLN = flows(dh, sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt)
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+
+ask e_fl: explain fl with rd = r2
+ask e_cw: explain cw with rd = r1
+ask e_sm: explain sm
+ask e_flk: explain fl with rd = r2, wh = 2026-04-01
+ask v_all: fl, cw, sm with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,802:e_sm [rd = *]: ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+  [1] sm = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh)
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:wh = window(2026-04-29, 2026-05-02)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] ra = 100.00 PLN
+            rule one: won
+              [5] row v:amt = 100.00 PLN
+                  version v, source s, "invented", locator "s", governs always, known 2026-01-01
+            rule two: not applicable
+  unknown day: wh
+  cut 2026-06-10
+warning: WARN-UNREAD input w is read by nothing
+,28:fixes/g6b/g1_given_assumed/q,9:fixes-p23,34:run g1_given_assumed.tally --ask q,316:22:g1_given_assumed.tally,285:model g1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+input x: money PLN
+def g: money PLN = x
+ask q: g
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 1 PLN "s"
+  given g = 9 PLN assumed "a given guess"
+,,1:0,84:q: 9.00 PLN
+  assumed: a given guess (g)
+  given: g = 9.00 PLN (v)
+  cut 2026-10-25
+,23:fixes/g4/h1_held/q_late,8:fixes-g4,30:run h1_held.tally --ask q_late,346:13:h1_held.tally,324:model h1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input x: money PLN
+def g: money PLN = x at reader
+
+ask q_late: g law 2026-11-30
+ask q_x: x law 2026-11-30
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 PLN "s"
+  given g = 9 PLN "s"
+,,1:0,127:q_late: 9.00 PLN
+  given: g = 9.00 PLN (v)
+  held: g = 9.00 PLN (v), read for 2026-11-30
+  law date 2026-11-30, cut 2026-10-25
+,20:fixes/g4/h1_held/q_x,8:fixes-g4,27:run h1_held.tally --ask q_x,346:13:h1_held.tally,324:model h1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input x: money PLN
+def g: money PLN = x at reader
+
+ask q_late: g law 2026-11-30
+ask q_x: x law 2026-11-30
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 PLN "s"
+  given g = 9 PLN "s"
+,,1:0,98:q_x: 1.00 PLN
+  held: x = 1.00 PLN (v), read for 2026-11-30
+  law date 2026-11-30, cut 2026-10-25
 ,

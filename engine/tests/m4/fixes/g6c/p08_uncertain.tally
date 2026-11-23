@@ -1,0 +1,84 @@
+model p8
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input share: num
+
+input skip_m: month
+
+input top_dom: int
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from pot to landlord amount rent_amt[m]
+
+move top[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount round(flows(rent, m) * share, minor(PLN), half-up)
+
+move top2[m in month]: transfers
+  on day_of(m, top_dom)
+  at start_of(m)
+  leg cash from konto to shop amount flows(rent[m].cash, m .. (m + 1))
+
+ask a: flows(top, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask b: flows(top2, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask k: bal(konto, 2026-05-19)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  skip_m = 2026-03 "s"
+  top_dom = 20 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "refused"
+  rent_amt[2026-03] = 910.00 PLN "s"
+  rent_amt[2026-04] = 920.00 PLN "s"
+  rent_amt[2026-06] = 940.00 PLN "s"
+  rent_day[2026-01] = 2026-01-31 "last day"
+  rent_day[2026-02] = 2026-03-01 "next month's first day"
+  rent_day[2026-03] = 2026-03-20 "when false"
+  rent_day[2026-04] = 2025-12-31 "before the run"
+  rent_day[2026-05] = 2026-05-01 "amount a hole"
+  rent_day[2026-06] = 2026-07-01 "after the run"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-01
+  known 2026-02-21
+  covers pot
+  bank[x1] = (on: 2026-01-31, kind: transfers, leg cash from pot to landlord amount 901.00 PLN, fulfils: rent[2026-01]) "names jan"

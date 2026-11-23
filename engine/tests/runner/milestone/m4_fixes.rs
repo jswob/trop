@@ -18,16 +18,20 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 17] = [
+    const GROUPS: [&str; 23] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
         "fixes-g3",
         "fixes-g3fix",
+        "fixes-g4",
         "fixes-g6",
+        "fixes-g6c",
         "fixes-narrow",
         "fixes-p12",
         "fixes-p21",
+        "fixes-p22",
+        "fixes-p23",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -36,6 +40,8 @@ mod tests {
         "spec-g3fix",
         "spec-p12",
         "spec-p21",
+        "spec-p22",
+        "spec-p26",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -148,6 +154,15 @@ mod tests {
         group_holds(VECTORS, "fixes-p21");
     }
 
+    /// G4 `backlog`'s review X1, pick P28 (`tmp/m4/review-g4.md`), refcore's bytes: a `given`
+    /// row in a version that governs from 2026 on, read at a law date after the cut, prints its
+    /// `held:` line as an `input` there does (`m4/fixes/g4/h1_held` `q_late`, and `q_x`, the
+    /// input; L §8.2's `held:` row).
+    #[test]
+    fn m4_fixes_g4() {
+        group_holds(VECTORS, "fixes-g4");
+    }
+
     /// The performance groups' guard (U1, `tmp/m4/perf-plan.md` §5 items 1 and 4), refcore's
     /// bytes, which no G6 group may move: a register that grows month by month through a
     /// decision's nested balance reads, printed in code-point order where a key seen later
@@ -170,6 +185,33 @@ mod tests {
     #[test]
     fn m4_fixes_narrow() {
         group_holds(VECTORS, "fixes-narrow");
+    }
+
+    /// G6c's review B1 (`tmp/m4/review-g6c.md`), refcore's bytes: the links an observation names
+    /// at a past cut give their reads to the reader that reads them, whichever instance first
+    /// enters the narrow read there (`p09b_pin` `zp`: no `pinned:` line; `p09_first_min` `i`: no
+    /// `v:ok[2026-01]`; L §8.2 One read set, R-130).
+    #[test]
+    fn m4_fixes_g6c() {
+        group_holds(VECTORS, "fixes-g6c");
+    }
+
+    /// P22's refcore bytes, every one held for #255 (so the group holds none today): `n4_own`'s
+    /// asks, where refcore's `o.fulfils` builds the named move's whole list with its amounts, and
+    /// `n2_flows`' `e_jan` and `i_may`, a plan's `flows` read set; the text's answers are
+    /// `spec-p22`'s.
+    #[test]
+    fn m4_fixes_p22() {
+        group_holds(VECTORS, "fixes-p22");
+    }
+
+    /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
+    /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`) and under a hole axis (`fixes/g3fix/
+    /// h2_plan_hole_axis` `e_cw`, `e_sm`), which stop "not implemented", and a `given` row marked
+    /// `assumed` printing its `assumed:` line (`fixes/g6b/g1_given_assumed` `q`; L §8.2).
+    #[test]
+    fn m4_fixes_p23() {
+        group_holds(VECTORS, "fixes-p23");
     }
 
     /// F7's traced read the engine doesn't answer yet, apart so `fixes-narrow` gates green:
@@ -266,5 +308,26 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p21() {
         group_holds(SPEC, "spec-p21");
+    }
+
+    /// P22's answers (#255): a link reads only its instance's existence (L §5.19), so a plan
+    /// reading `o.fulfils` of rows naming its own instances reads none of their amounts
+    /// (`n4_own` `k`, `f`, `l`, from refcore's run of a twin reading the rows by their place);
+    /// a plan's `flows` read set is P20's (`n2_flows` `e_jan`, `i_may`, written from build/m4's
+    /// lines at 00143f5a and checked by hand).
+    #[test]
+    fn m4_fixes_spec_p22() {
+        group_holds(SPEC, "spec-p22");
+    }
+
+    /// P26's answers (#245, pick P3): `RUN-NONE` in L §8.4's form names the read, `<x>[k] is
+    /// none here: <arithmetic, ordering, aggregate, …>`, the catalogue's words bare, in the seven
+    /// vectors G4's wording changed (`fixes/g1/a12_nonehole/q_arith2`, `fixes/p12/round`'s
+    /// `n_x__z_step`, `n_x__g_step`, and P12's answers `spec/p12/round/h_x__n_step`,
+    /// `h_step__n_x`, `h_mode__n_x`, `h_mode__n_step`, all held) and C3's four `items/none` asks;
+    /// written from build/m4's run (702bdcd3), which differs only in that line.
+    #[test]
+    fn m4_fixes_spec_p26() {
+        group_holds(SPEC, "spec-p26");
     }
 }

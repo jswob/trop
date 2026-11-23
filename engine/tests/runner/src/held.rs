@@ -99,7 +99,7 @@ mod tests {
     use crate::m1::VECTORS as M1_VECTORS;
     use crate::m2::VECTORS as M2_VECTORS;
     use crate::m3::{CHECK, RUNS, SPEC, check_vectors};
-    use crate::m4::VECTORS as M4_VECTORS;
+    use crate::m4::{SPEC as M4_SPEC, VECTORS as M4_VECTORS};
     use std::collections::BTreeSet;
 
     /// Every row reads, names its id once, and names a vector its target's store holds, so a
@@ -178,9 +178,11 @@ mod tests {
             .chain(check_vectors(SPEC).expect("m3 spec"))
             .map(|v| v.id)
             .collect();
+        // M4's spec answers are held too where a later wording changes them (P26), as M3's are
         let m4: BTreeSet<String> = vectors(M4_VECTORS)
             .expect("m4")
             .into_iter()
+            .chain(vectors(M4_SPEC).expect("m4 spec"))
             .map(|v| v.id)
             .collect();
         for h in &rs {

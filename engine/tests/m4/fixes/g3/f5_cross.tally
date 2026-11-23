@@ -1,0 +1,80 @@
+model f5
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input z: int
+input w: date
+input wh: date
+input wlate: date
+input sp: month
+input sp_end: month
+input dday: date
+input wdiv: date
+input sp_late: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then ra else amt
+move dh: transfers
+  on wh
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+move dlate: transfers
+  on wlate
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+move ddiv: transfers
+  on wdiv
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then round(amt / z, minor(PLN), half-even) else amt
+
+def fl: money PLN = flows(dx, sp .. sp_end)
+def fh: money PLN = flows(dh, sp .. sp_end) + flows(dx, sp .. sp_end)
+def flate: money PLN = flows(dlate, sp_late .. sp_late)
+def fdiv: money PLN = flows(ddiv, sp .. sp_end)
+def cn: int = count(m in transfers over sp .. sp_end)
+def pr: money PLN = bal(konto, dday) from w + flows(dx, sp .. sp_end)
+
+ask e_fl: explain fl
+ask e_fl_pin: explain fl with amt = 5 PLN
+ask e_fl_axpin: explain fl with rd = r2
+ask e_fh: explain fh
+ask e_flate: explain flate
+ask e_fdiv: explain fdiv
+ask e_cn: explain cn
+ask e_pr: explain pr
+ask e_known: explain fl as known 2026-04-01
+ask v_all: fl, fh, flate, fdiv, cn, pr
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  z = 0 "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  wlate = 2026-07-15 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  dday = 2026-05-31 "s"
+  wdiv = 2026-05-10 "s"
+  sp_late = 2026-07 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
