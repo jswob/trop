@@ -450,7 +450,7 @@ impl Engine {
     /// # Errors
     ///
     /// The refusal, for a tuple whose later keys are unbound; a load refusal met at run.
-    fn refused_tuple(
+    pub(super) fn refused_tuple(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
