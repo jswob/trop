@@ -7952,3 +7952,44 @@ e_feb: 250.00 PLN
 - **Open STOP-REPORTs:** none (the one above is ruled by P31).
 - **Usage:** about 0.17 % of the week this turn (2.48 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check commit: green, 24 steps (247s)` on 15d512ec; `milestone-report: M4: 47/49`.
+
+## 2026-11-23 M4 gate fixes B1, B2, X1 (G4 resumed; issue #252)
+
+Pick P34 gives the gate review's (`tmp/m4/gate-review.md`) B1, B2 and X1 to G4's builder, on `fix/m4-gate` from `origin/build/m4` (c95be0f8). Two commits before this entry: 127ffacf (B1, X1), 82c7f68f (B2). Scratch in `tmp/m4/gfix/` (untracked).
+
+**B1. A rate literal pinned on a `rate` input is a rate** (L §3.3, §3.2; P16). `eval/pins.rs` `pin_typed`: a number whose unit has a period, pinned on a `rate`, is that rate, as the same figure in a row is. Its face: `solve`'s `RUN-SOLVE` bracket over rates prints each end as a rate (`eval/solve.rs`). Probes: `agent/c02_ratepin` `w_lit` `3 650 PLN` with `pinned: ry = 0.1 /year`, `w_lit_per`, `ai_lit`, `w_row` `0.1 /year`, and the file's other six asks; `p/c1` `p16` `0.01`; `agent/s01_solve` `s8` `no sign change on [0 /year, 0.01 /year]`. All refcore's bytes.
+
+**X1. `solve`'s step 3 on money stepped by one minor unit** (L §5.18 step 3). The centre a + u/2 is half a minor unit, which `Money` can't hold; `Grid::point` pins it as the exact number of the currency's unit, as `pin_typed` keeps a non-whole number pinned on money. `agent/s02_solve_minor` `a2` `104.65 EUR`, as refcore, and the file's three other asks.
+
+**B2. The run-time type sampler takes M4's forms** (L §5.11's aggregate table, §7.1). `eval/ty.rs` gave no type to:
+- `round` with a mode read from an input or the axis. Now its class comes from x and the step, whatever the mode (L §7.2).
+- `accrue`, now a number in its principal's unit (`rates.rs` `principal_of`, shared), and `dcf`, now a plain number (L §3.3).
+- `add_years`, `last_business` and `schedule`, now dates; `age_months`, `overlap_days` and `weekday`, now ints (L §4.2).
+- An `as if`, which now has its expression's type (L §5.11).
+- `bal` and `flows` of a place, now in the place's one unit; `flows` of a move, now in the one unit the places its legs change have, places of `any` unit aside (L §5.10, §5.14).
+
+Probes, all refcore's bytes now:
+- `agent/B2_empty_sum_min`: `i_in`, `i_ax`, `i_ask`, `i_ask_ax`, `s_in`, `s_ax` and `s_pin` `0.00 PLN`; `s_acc` `0 PLN`.
+- `agent/o03_bare`: `i1` `0 PLN`, `i2` to `i5`, `i8`.
+- `agent/o02_emptysum`: its four asks.
+- `p/s1`: `q5`, `q6`, `q12`.
+- My `tmp/m4/gfix/b2_more.tally`: nine asks (`age_months`, `overlap_days`, `weekday`, `dcf`, `bal`, a place's `flows`, a move's `flows`, `round` with a read mode, `add_years`, `accrue + x` under an untaken `if`).
+
+**What the sampler still can't see**, so where reached the run stops `not implemented`, as before:
+- a place of `any` unit, a place named only by a binding, and a move whose places differ in unit: their unit is the walk's;
+- the bands (`marginal`, `band_lo`, `band_hi`), `pow`, `since`, `window`, `gap`, `observed`, `lifespan`, `unit`;
+- M6's `exp`, `ln` and `sqrt`.
+
+None is in a gate probe.
+
+**The sweep** (`tmp/m4/gfix/sweep.sh`, `sweep.txt`): the main folder's paper probes; its review folders g1, g1fix, g2, g2fix, g3, g3fix, g4, g6b, g6c, g6cfix; the gate review's `agent/` and `p/`; my `b2_more`. Each ask alone on refcore_fast, on c95be0f8's quick binary and on this tree.
+- **1 989 asks:** 1 516 same → same, 44 different → same, 429 different → different with unchanged bytes, **0 same → different**.
+- **Different → same (44), each one of the three fixes:** `agent/B2_empty_sum_min` 8, `c02_ratepin` 6, `o03_bare` 6, `o02_emptysum` 4, `s02_solve_minor` 4, `s01_solve` 2, `c01_rates` 1; `p/s1` 3, `p/c1` 1; `b2_more` 9.
+
+- **Size** (`git diff --shortstat c95be0f8 -- engine/crates`): 4 files, +102 −22.
+- **Files:** `eval/pins.rs`, `eval/solve.rs`, `eval/ty.rs`, `eval/rates.rs`. No kernel file.
+- **Exceptions:** +0.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.4 % of the week this turn (0.95 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green` on 127ffacf's tree; `check commit: green, 24 steps (326s)` on 82c7f68f's.
