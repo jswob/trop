@@ -330,7 +330,7 @@ impl Engine {
             let early = matches!((&inst.day, from), (Some(Dated::Day(d)), Some(f)) if *d < f);
             // a day a pin or an assumption decided: a read its span leaves out lists them at
             // the places its legs name (L §8.2 One read set; N1 on #241)
-            let decided = !inst.day_coll.deciding().entries.is_empty();
+            let decided = inst.day_coll.deciding().has_entries();
             if inst.exists != Exists::No
                 && (early || decided || matches!(inst.day, Some(Dated::Hole(_))))
             {

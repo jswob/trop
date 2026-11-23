@@ -163,9 +163,9 @@ impl Engine {
             return Ok(Value::None);
         };
         let mut met = Collected::default();
-        met.versions.insert(o.version.clone());
-        if let Some(seen) = o.coll.rows.get(&id) {
-            met.rows.insert(id.clone(), seen.clone());
+        met.note_version(&o.version);
+        if let Some(seen) = o.coll.rows().get(&id) {
+            met.note_row(&id, &seen.version, seen.locator.as_ref());
         }
         let day = Some(o.day);
         self.absorb(&met);
@@ -971,7 +971,7 @@ fn observation(o: &crate::model::Observation) -> Result<Obs, Stop> {
         })
         .collect();
     let mut coll = Collected::default();
-    coll.versions.insert(o.version.clone());
+    coll.note_version(&o.version);
     Ok(Obs {
         id: o.sid(),
         input: o.input.clone(),

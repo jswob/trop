@@ -49,7 +49,7 @@ const WORDS: [(&str, Style); 15] = [
 /// refcore's `register`, its `unknown`).
 pub(super) fn name_unknown_days(met: &mut Collected, unknown: &[Unknown]) {
     for day in unknown {
-        met.entries.insert(Entry {
+        met.note(Entry {
             word: "unknown day",
             text: day.label.clone(),
             figure: String::new(),
@@ -110,7 +110,7 @@ fn entry_lines(met: &Collected) -> Result<Vec<String>, Stop> {
     let mut assumed: BTreeSet<(&str, &str)> = BTreeSet::new();
     let mut by_word: BTreeSet<(usize, String)> = BTreeSet::new();
     let mut pins: Vec<&str> = Vec::new();
-    for entry in &met.entries {
+    for entry in met.entries_sorted() {
         // an ask pin a read met under another claim: in the read set, printed by no view
         // (L §8.2 One read set; P45); an ask's pin of a cell, which says which pins a read
         // must take to be listed, likewise (tally 2.1.8 §4, #161)
@@ -303,13 +303,12 @@ mod tests {
     #[test]
     fn the_register_prints_in_its_order() {
         let mut met = Collected::default();
-        met.entries
-            .insert(entry("held", "x = 1 (v), read for 2027-01-01", ""));
-        met.entries.insert(entry("assumed", "a guess", "b[2]"));
-        met.entries.insert(entry("assumed", "a guess", "a[1]"));
-        met.entries.insert(entry("assumed", "ix: open keys", ""));
-        met.entries.insert(entry("missing", "v1", ""));
-        met.entries.insert(entry("given", "g = 2 (v)", ""));
+        met.note(entry("held", "x = 1 (v), read for 2027-01-01", ""));
+        met.note(entry("assumed", "a guess", "b[2]"));
+        met.note(entry("assumed", "a guess", "a[1]"));
+        met.note(entry("assumed", "ix: open keys", ""));
+        met.note(entry("missing", "v1", ""));
+        met.note(entry("given", "g = 2 (v)", ""));
         let day = Day::from_ymd(2026, 3, 1).expect("a day");
         let law = Day::from_ymd(2026, 2, 1).expect("a day");
         let lines = register_lines(&met, Ctx::new(Some(law), day)).expect("lines");
@@ -332,7 +331,7 @@ mod tests {
     #[test]
     fn a_word_the_register_does_not_print_is_an_invariant() {
         let mut met = Collected::default();
-        met.entries.insert(entry("sample", "x", ""));
+        met.note(entry("sample", "x", ""));
         let day = Day::from_ymd(2026, 3, 1).expect("a day");
         assert!(
             register_lines(&met, Ctx::new(None, day)).is_err(),

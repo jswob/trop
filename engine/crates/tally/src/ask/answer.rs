@@ -756,7 +756,7 @@ fn ask_body(
     // reality's own hides the layers over it (L §5.18, §6.4)
     let world = match &ask.world {
         Some(id) => {
-            pinned.entries.insert(Entry {
+            pinned.note(Entry {
                 word: "world",
                 text: id.clone(),
                 figure: String::new(),
@@ -792,8 +792,7 @@ fn ask_body(
         engine.unpinned = Some(ctx);
         engine.pins_read.keeping = true;
         engine.pins_read.ask = pinned
-            .entries
-            .iter()
+            .entries_sorted()
             .filter(|e| e.word == "pinned")
             .map(|e| e.text.clone())
             .collect();
@@ -902,13 +901,14 @@ fn tuple_lines(
 /// listed (L §8.2 One read set; tally 2.1.7 R7, P45; tally 2.1.8 §4, #161; refcore's
 /// `print_line`, `pin_value`).
 pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected {
-    let mut kept = pinned.clone();
-    kept.entries.retain(|e| {
-        e.word != "pinned"
-            || !pinned.entries.contains(&pin_entry("pin cell", &e.text))
-            || line.entries.contains(e)
-    });
-    kept
+    let unread: Vec<Entry> = pinned
+        .entries_sorted()
+        .filter(|e| {
+            e.word == "pinned" && pinned.holds(&pin_entry("pin cell", &e.text)) && !line.holds(e)
+        })
+        .cloned()
+        .collect();
+    pinned.without(&unread)
 }
 
 /// The register entry `word` of pin `text`, as a read set notes it (L §8.2).

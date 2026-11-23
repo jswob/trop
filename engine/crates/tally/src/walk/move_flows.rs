@@ -205,7 +205,7 @@ impl Engine {
                 continue;
             }
             if i.status == Status::Past {
-                acc.met.entries.insert(Entry {
+                acc.met.note(Entry {
                     word: "unfulfilled",
                     text: i.id.clone(),
                     figure: String::new(),
@@ -283,7 +283,7 @@ impl Engine {
             return Err(Stop::Refused(bad.clone()));
         }
         if obs.is_empty() {
-            acc.met.entries.insert(Entry {
+            acc.met.note(Entry {
                 word: "open",
                 text: i.id.clone(),
                 figure: String::new(),
@@ -492,7 +492,7 @@ fn for_period_of(i: &Inst, k: &Value, acc: &mut Counted) -> bool {
     };
     if let Value::Hole(h) = period {
         if i.status == Status::Past {
-            acc.met.entries.insert(Entry {
+            acc.met.note(Entry {
                 word: "unfulfilled",
                 text: i.id.clone(),
                 figure: String::new(),
@@ -570,7 +570,7 @@ fn count_adjustment(
     if last >= adj.day
         && let Some(text) = adj.remainder_text(m)?
     {
-        acc.met.entries.insert(Entry {
+        acc.met.note(Entry {
             word: "adjustment",
             text,
             figure: String::new(),

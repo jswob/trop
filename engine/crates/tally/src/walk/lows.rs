@@ -194,9 +194,7 @@ impl Tree {
                 met.merge(coll);
             }
         }
-        for entry in &self.left_out {
-            met.entries.insert(entry.clone());
-        }
+        met.note_all(&self.left_out);
         met
     }
 }

@@ -845,7 +845,7 @@ fn before_from(
     coll: &Collected,
 ) -> Option<Entry> {
     let items: BTreeSet<&str> = coll
-        .listed
+        .listed()
         .iter()
         .filter(|(section, _)| changed_after(m, world, section, day))
         .map(|(_, item)| item.as_str())

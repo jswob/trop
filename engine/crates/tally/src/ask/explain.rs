@@ -265,8 +265,8 @@ pub(super) fn inputs_line(
 /// The rows `met` read, one line each in their stable ids' order: `<sid> (source <s>
 /// "<title>"[, locator "<l>"])` (refcore's `row_line`). L §5.18, §3.7.
 fn row_lines(m: &Reality, met: &Collected) -> Result<Vec<String>, Stop> {
-    let mut out = Vec::with_capacity(met.rows.len());
-    for (sid, seen) in &met.rows {
+    let mut out = Vec::with_capacity(met.rows().len());
+    for (sid, seen) in met.rows() {
         let cite = &m
             .versions
             .get(&seen.version)

@@ -283,7 +283,7 @@ fn answers_itself(inst: &Inst) -> bool {
 /// doesn't see (L §6.4). E §9 item 3.
 fn scenario_items(m: &Reality, coll: &Collected, under: World) -> BTreeSet<String> {
     let unseen = coll
-        .scenario
+        .scenario()
         .iter()
         .filter(|(section, _)| !m.scenarios.sees(under, Some(section.as_str())));
     unseen.map(|(_, item)| item.clone()).collect()

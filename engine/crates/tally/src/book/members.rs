@@ -353,10 +353,10 @@ impl Engine {
             match &x {
                 Moving::Plan(i) => {
                     if unfulfilled(m, i, ctx.cut) {
-                        coll.entries.insert(entry("unfulfilled", &i.id));
+                        coll.note(entry("unfulfilled", &i.id));
                     }
                     if i.status == Status::Uncertain {
-                        coll.entries.insert(entry("uncertain", &i.id));
+                        coll.note(entry("uncertain", &i.id));
                     }
                     coll.merge(&i.coll);
                 }
@@ -486,7 +486,7 @@ impl Engine {
         moves.retain(|mv| sub.contains(&mv.kind));
         let mut out = Vec::new();
         let mut decided = Vec::new();
-        let mut pins = Vec::new();
+        let mut pins = Collected::default();
         for mv in moves {
             // a scenario's move the binding ranges over is a fact of it (E §9 item 3)
             if m.scenarios.of(&mv.id).is_some() {
@@ -500,7 +500,7 @@ impl Engine {
                 match i.status {
                     // the modelled past: the pins its day took are the binding's reads too
                     // (L §8.2 One read set; tally 2.1.8 §4, #161)
-                    Status::Modelled => pins.extend(i.coll.deciding().entries),
+                    Status::Modelled => pins.merge(&i.coll.deciding()),
                     Status::Uncertain if !ctx.unc => {}
                     // one that doesn't exist the binding read to leave out, which
                     // `span_members` lists (L §8.2 One read set; P20)
@@ -516,9 +516,7 @@ impl Engine {
                 }
             }
         }
-        for e in pins {
-            self.note(e.word, e.text, e.figure);
-        }
+        self.absorb(&pins);
         let before = self.trace_walked();
         let planned = out.len();
         for o in self.observations(m, cut)? {

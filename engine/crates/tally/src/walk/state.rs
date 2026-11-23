@@ -787,7 +787,7 @@ impl Walk {
                 if let Some(c) = &e.coll {
                     into.merge(c);
                 }
-                into.entries.extend(e.reg.iter().cloned());
+                into.note_all(&e.reg);
             }
         }
     }
@@ -814,7 +814,7 @@ impl Walk {
             if let Some(own) = &e.coll {
                 c.merge(own);
             }
-            c.entries.extend(e.reg.iter().cloned());
+            c.note_all(&e.reg);
             log.cum.push(c);
         }
         match log.cum.get(i) {
@@ -884,7 +884,7 @@ impl Walk {
     /// where it has none. L §8.2.
     fn note(&mut self, places: &[&str], noted: Noted, read: &Collected) {
         let deciding = read.deciding();
-        if deciding.entries.is_empty() {
+        if !deciding.has_entries() {
             return;
         }
         for p in places {

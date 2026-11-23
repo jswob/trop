@@ -804,7 +804,8 @@ pub(super) fn may_hold(span: &Span) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{CellId, CellKey, Cells, LawClass, Memo, Read, Reads, keys_order};
-    use crate::eval::state::{Cell, Collected, Ctx};
+    use crate::eval::Collected;
+    use crate::eval::state::{Cell, Ctx};
     use crate::model::{KeyVal, Span, Value};
     use crate::time::Day;
     use core::cmp::Ordering;

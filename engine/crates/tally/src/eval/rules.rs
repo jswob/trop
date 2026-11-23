@@ -477,7 +477,7 @@ impl Engine {
             self.trace_close(group);
             let met = self.pop_alone();
             self.absorb(&met);
-            if met.missing {
+            if met.missing_held() {
                 missing_true.push(at);
             }
             let tested = w?;

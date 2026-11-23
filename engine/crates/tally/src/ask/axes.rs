@@ -387,7 +387,7 @@ pub(super) fn result_lines(
         let mut met = line.met;
         met.merge(&super::answer::ask_pins_listed(pinned, &met));
         for reading in axes.readings(&line.product)? {
-            met.entries.insert(Entry {
+            met.note(Entry {
                 word: "reading",
                 text: reading,
                 figure: String::new(),

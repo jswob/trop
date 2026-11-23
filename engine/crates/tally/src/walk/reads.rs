@@ -457,7 +457,7 @@ impl Engine {
         let mut met = Collected::default();
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= at.day {
-                met.entries.insert(entry.clone());
+                met.note(entry.clone());
             }
         }
         // a movement the balance doesn't count: what decided it is in its read set (L §8.2
@@ -507,7 +507,7 @@ impl Engine {
                 .left_out
                 .get(mid)
                 .ok_or_else(|| invariant("a move left out with no count"))?;
-            met.entries.insert(Entry {
+            met.note(Entry {
                 word: "left out",
                 text: format!("{mid}, {n} instances, first {}", first.text()),
                 figure: String::new(),
@@ -853,7 +853,7 @@ impl Uncertain {
             if end.place() != Some(place) {
                 continue;
             }
-            self.met.entries.insert(Entry {
+            self.met.note(Entry {
                 word: "uncertain",
                 text: movement.id.clone(),
                 figure: String::new(),

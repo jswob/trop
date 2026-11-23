@@ -172,6 +172,7 @@ pub mod eval {
     mod ranges;
     mod rates;
     mod read;
+    mod register;
     mod rules;
     mod solve;
     mod srows;
@@ -198,8 +199,9 @@ pub mod eval {
     pub(crate) use partial::{lin_balance, lin_fold, lin_negated, lin_times, partial_text};
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
+    pub use register::{Collected, EntriesSorted, Entry, RowSeen};
     pub use stack::Item;
-    pub use state::{Collected, Ctx, Engine, Entry, Env, How, RowSeen, Rows};
+    pub use state::{Ctx, Engine, Env, How, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};
     pub(crate) use time_arith::{keys_differ, periods_of};
     pub(crate) use timelines::combinations;

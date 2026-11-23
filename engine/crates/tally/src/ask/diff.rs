@@ -336,7 +336,7 @@ fn side(
     engine: &mut Engine,
     (env, ctx, met): (&Env, Ctx, &mut Collected),
 ) -> Result<Side, Stop> {
-    met.entries.insert(Entry {
+    met.note(Entry {
         word: "world",
         text: world.to_owned(),
         figure: String::new(),

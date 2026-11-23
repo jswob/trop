@@ -407,7 +407,7 @@ fn reading_text(
 ) -> Result<String, Stop> {
     let value = reset_value(m, e, unit)?;
     let word = reading_word(e);
-    let Some((sid, seen)) = e.coll.as_ref().and_then(|c| c.rows.iter().next()) else {
+    let Some((sid, seen)) = e.coll.as_ref().and_then(|c| c.rows().iter().next()) else {
         return Ok(format!("{word} = {value}"));
     };
     let cite = &m
@@ -521,7 +521,7 @@ fn entry_text(
             let sid = e
                 .coll
                 .as_ref()
-                .and_then(|c| c.rows.keys().next())
+                .and_then(|c| c.rows().keys().next())
                 .map_or("", String::as_str);
             format!("{} {sid} = {}", reading_word(e), reset_value(m, e, unit)?)
         }

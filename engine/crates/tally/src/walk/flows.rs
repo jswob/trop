@@ -158,7 +158,7 @@ impl Engine {
         let walk = self.walk(id)?;
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= last {
-                sums.met.entries.insert(entry.clone());
+                sums.met.note(entry.clone());
             }
         }
         self.absorb(&sums.met);
@@ -527,7 +527,7 @@ impl Sums {
     /// An entry the span meets, its register and its reads into the read set, whatever it
     /// gives: a flow, a hole or a refusal (L §8.2 One read set; P35 on #241).
     fn meet(&mut self, e: &Ent) {
-        self.met.entries.extend(e.reg.iter().cloned());
+        self.met.note_all(&e.reg);
         if let Some(c) = &e.coll {
             self.met.merge(c);
         }

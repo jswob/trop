@@ -24,6 +24,8 @@ use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{At, Inst, ProjKey, Walk, WalkAt};
 
+use super::register::{Collected, Entry};
+
 use super::bindings::{names_walked, reads_name};
 use super::context::{Layer, Layers};
 use super::memo::{CellId, Cells, Frame, Memo, Open, Reads};
@@ -327,68 +329,6 @@ impl Env {
     }
 }
 
-/// A register entry a read meets (L §8.2): its word (`assumed`, `held`, `given`, `missing`),
-/// its text and the figure it was met at.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Entry {
-    /// The register word.
-    pub word: &'static str,
-    /// Its text.
-    pub text: String,
-    /// The figure, or the empty text.
-    pub figure: String,
-}
-
-impl Ord for Entry {
-    /// The set's order: the word, the text, the figure, by code point.
-    fn cmp(&self, other: &Entry) -> core::cmp::Ordering {
-        self.word
-            .cmp(other.word)
-            .then_with(|| self.text.cmp(&other.text))
-            .then_with(|| self.figure.cmp(&other.figure))
-    }
-}
-
-impl PartialOrd for Entry {
-    fn partial_cmp(&self, other: &Entry) -> Option<core::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-/// What a cell's evaluation met: its register entries (refcore's `Coll.reg`), and whether a
-/// `missing(…)` read directly in it held (refcore's `Coll.missing`, never merged outward).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Collected {
-    /// The register entries.
-    pub entries: BTreeSet<Entry>,
-    /// Whether a `missing(r)` evaluated in this collector, not in a cell below it, was true.
-    pub missing: bool,
-    /// The versions of the rows read (refcore's `Coll.rows`, their versions): which versions
-    /// a later step's adjustment names (E §5 step 4).
-    pub versions: BTreeSet<String>,
-    /// The scenarios' facts read, each (its section, its item): a row of a scenario's
-    /// version, a thing's entry or place a scenario states, a scenario's move a binding
-    /// ranges over: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
-    pub scenario: BTreeSet<(String, String)>,
-    /// Of those, each (its section, its item) a movement booked before the scenario's `from`
-    /// lists: a row of a scenario's version, and a thing's entry a `lifespan` read met
-    /// (refcore's `Coll.rows` and `lifeof` entries; L §8.2 `before from:`, tally 2.1.7 R7).
-    pub listed: BTreeSet<(String, String)>,
-    /// The rows read, by stable id, each with its version and locator: an input's, a given,
-    /// a band row, a reading and an observed row, the walk's counted movements' included
-    /// (refcore's `Coll.rows`). Kept only by an engine answering `inputs-of` (E §3.2, §10).
-    pub rows: BTreeMap<String, RowSeen>,
-}
-
-/// A row read, as `inputs-of` lists it: its version and its locator (E §10).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RowSeen {
-    /// The version that states it.
-    pub version: String,
-    /// Its locator, where it states one.
-    pub locator: Option<String>,
-}
-
 /// How a read met a thing: its `lifespan` read, which a movement before a scenario's `from`
 /// lists, or its membership tested or bound, which only explains it (L §8.2 `before from:`;
 /// E §9 item 3; tally 2.1.7 R7).
@@ -408,64 +348,6 @@ pub enum Rows {
     Kept,
     /// They aren't.
     Unkept,
-}
-
-impl Collected {
-    /// Adds the register entries, versions and rows `other` met (its `missing` stays its own).
-    pub fn merge(&mut self, other: &Collected) {
-        self.entries.extend(other.entries.iter().cloned());
-        self.versions.extend(other.versions.iter().cloned());
-        self.scenario.extend(other.scenario.iter().cloned());
-        self.listed.extend(other.listed.iter().cloned());
-        for (sid, seen) in &other.rows {
-            self.rows.insert(sid.clone(), seen.clone());
-        }
-    }
-
-    /// What of these reads decides whether a movement counts where it isn't counted (a
-    /// refused one, a day outside a read's span, left out, covered, a false `when`): its pins,
-    /// `solve`'s and its assumptions; never a `held:` value of its day (L §8.2 One read set,
-    /// one statement for every form and outcome: P35 on #241).
-    #[must_use]
-    pub(crate) fn deciding(&self) -> Collected {
-        let mut out = Collected::default();
-        for e in &self.entries {
-            if matches!(e.word, "pinned" | "pin met" | "assumed") {
-                out.entries.insert(e.clone());
-            }
-        }
-        out
-    }
-
-    /// Adds the rows `other` read, nothing else: what a refusal of the order tested gives a
-    /// read of a refused run, its read set, not the register lines of the reads that
-    /// tested it (L §8.2 One read set; E §4.2 step 3; P20).
-    pub(crate) fn merge_rows(&mut self, other: &Collected) {
-        for (sid, seen) in &other.rows {
-            self.rows.insert(sid.clone(), seen.clone());
-        }
-    }
-
-    /// What a movement's day that puts it outside a read's span gives that read: what decides
-    /// it ([`Collected::deciding`]) and the rows the day read, which decided that it doesn't
-    /// count, never its `when` or amount (L §8.2 One read set; P35 on #241; P20).
-    #[must_use]
-    pub(crate) fn outside(&self) -> Collected {
-        let mut out = self.deciding();
-        out.rows.clone_from(&self.rows);
-        out
-    }
-
-    /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
-    pub(crate) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
-        self.rows.insert(
-            sid.to_owned(),
-            RowSeen {
-                version: version.to_owned(),
-                locator: locator.cloned(),
-            },
-        );
-    }
 }
 
 /// A memo cell: the result of a def at its keys in one context, with what it met and what it
@@ -898,7 +780,7 @@ impl Engine {
     /// Records a register entry in the innermost collector (L §8.2).
     pub(crate) fn note(&mut self, word: &'static str, text: String, figure: String) {
         if let Some(top) = self.stack.last_mut() {
-            top.entries.insert(Entry { word, text, figure });
+            top.note(Entry { word, text, figure });
         }
     }
 
@@ -906,7 +788,7 @@ impl Engine {
     /// collector: the read set E §9 item 3 lists a movement by (L §6.4, ruling P45).
     pub(crate) fn note_scenario(&mut self, section: &str, item: &str) {
         if let Some(top) = self.stack.last_mut() {
-            top.scenario.insert((section.to_owned(), item.to_owned()));
+            top.note_scenario((section, item));
         }
     }
 
@@ -916,8 +798,7 @@ impl Engine {
     /// 2.1.7 R7). E §9 item 3.
     pub(crate) fn note_listed(&mut self, section: &str, item: &str) {
         if let Some(top) = self.stack.last_mut() {
-            top.scenario.insert((section.to_owned(), item.to_owned()));
-            top.listed.insert((section.to_owned(), item.to_owned()));
+            top.note_listed((section, item));
         }
     }
 
@@ -937,7 +818,7 @@ impl Engine {
     /// step 4: the versions an adjustment names).
     pub(super) fn note_version(&mut self, version: &str) {
         if let Some(top) = self.stack.last_mut() {
-            top.versions.insert(version.to_owned());
+            top.note_version(version);
         }
     }
 
@@ -955,7 +836,7 @@ impl Engine {
     /// Marks that a `missing(…)` read in the innermost collector held (L §8.2 `missing`).
     pub(super) fn note_missing(&mut self) {
         if let Some(top) = self.stack.last_mut() {
-            top.missing = true;
+            top.note_missing();
         }
     }
 

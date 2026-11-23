@@ -233,9 +233,9 @@ fn reading_of(
         Ok(v) => Ok(crate::walk::quantity(m, &v)?.0),
     };
     let mut coll = Collected::default();
-    coll.versions.insert(row.version.clone());
+    coll.note_version(&row.version);
     if let Some(reason) = &row.assumed {
-        coll.entries.insert(Entry {
+        coll.note(Entry {
             word: "assumed",
             text: reason.clone(),
             figure: String::new(),
@@ -369,7 +369,7 @@ impl Engine {
                     text,
                     figure: String::new(),
                 }];
-                pad.reg.entries.extend(reg.iter().cloned());
+                pad.reg.note_all(&reg);
                 // a member of a binding over pads from its point (L §5.14.1)
                 self.walk_mut(id)?.pads.push((pad.clone(), at));
                 let ends = Ends {
@@ -439,7 +439,7 @@ impl Engine {
         let walk = self.walk(id)?;
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= at.day {
-                out.entries.insert(entry.clone());
+                out.note(entry.clone());
             }
         }
         Ok(out)

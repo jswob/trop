@@ -1128,7 +1128,7 @@ pub(crate) fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
 /// The versions a step names: those of its versions the instance read, else all of them, in
 /// text order (refcore's `step_versions`). E §5 step 4.
 fn step_versions(coll: &Collected, vids: &BTreeSet<String>) -> Vec<String> {
-    let hit: Vec<String> = vids.intersection(&coll.versions).cloned().collect();
+    let hit: Vec<String> = vids.intersection(coll.versions()).cloned().collect();
     if hit.is_empty() {
         return vids.iter().cloned().collect();
     }
