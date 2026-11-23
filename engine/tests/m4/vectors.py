@@ -12,7 +12,8 @@ milestone/m4_items.rs (the in-scope backlog), `fixes-…` in milestone/m4_fixes.
 answers beside them are spec.py's; and the performance groups' guard, `fixes-g6` and fence F7's `fixes-narrow`), one
 test per group. `for` is the construct that turns it green
 (MILESTONE-M4.md rows 1 to 3 and 5: `pins`, `accrue`, `keydiff`, `ratepin`, `tuple`, `monthcheck`, `explain`,
-`runnone`, `agemonths`, `middot`, `pinwalk`, `keypin`, `oneref`), `M7` for the vector held to M7 by name
+`runnone`, `agemonths`, `middot`, `pinwalk`, `keypin`, `oneref`; `narrow` for G6c's review B1, `backlog` for P23 and
+P24's, G4's), `M7` for the vector held to M7 by name
 (held.tsv), or `-` for a vector the engine already answers; it is the builder's work list and is not stored. A joint
 model's members go into its file table as m3/vectors.py puts them (M0's `members`).
 
@@ -73,7 +74,7 @@ COLUMNS = KV.COLUMNS + ['for']
 # B4, a pin's bare key or four-digit figure read as its target's key or period; P12, a built-in's known
 # refusal before its holes, F1 a hole compounding code), and M7's hold
 FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'monthcheck', 'explain', 'runnone', 'agemonths',
-       'middot', 'pinwalk', 'keypin', 'oneref', 'M7'}
+       'middot', 'pinwalk', 'keypin', 'oneref', 'narrow', 'backlog', 'M7'}
 
 
 def rows():

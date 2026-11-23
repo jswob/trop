@@ -18,16 +18,19 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 17] = [
+    const GROUPS: [&str; 21] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
         "fixes-g3",
         "fixes-g3fix",
         "fixes-g6",
+        "fixes-g6c",
         "fixes-narrow",
         "fixes-p12",
         "fixes-p21",
+        "fixes-p22",
+        "fixes-p23",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -36,6 +39,7 @@ mod tests {
         "spec-g3fix",
         "spec-p12",
         "spec-p21",
+        "spec-p22",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -172,6 +176,33 @@ mod tests {
         group_holds(VECTORS, "fixes-narrow");
     }
 
+    /// G6c's review B1 (`tmp/m4/review-g6c.md`), refcore's bytes: the links an observation names
+    /// at a past cut give their reads to the reader that reads them, whichever instance first
+    /// enters the narrow read there (`p09b_pin` `zp`: no `pinned:` line; `p09_first_min` `i`: no
+    /// `v:ok[2026-01]`; L §8.2 One read set, R-130).
+    #[test]
+    fn m4_fixes_g6c() {
+        group_holds(VECTORS, "fixes-g6c");
+    }
+
+    /// P22's refcore bytes, every one held for #255 (so the group holds none today): `n4_own`'s
+    /// asks, where refcore's `o.fulfils` builds the named move's whole list with its amounts, and
+    /// `n2_flows`' `e_jan` and `i_may`, a plan's `flows` read set; the text's answers are
+    /// `spec-p22`'s.
+    #[test]
+    fn m4_fixes_p22() {
+        group_holds(VECTORS, "fixes-p22");
+    }
+
+    /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
+    /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`) and under a hole axis (`fixes/g3fix/
+    /// h2_plan_hole_axis` `e_cw`, `e_sm`), which stop "not implemented", and a `given` row marked
+    /// `assumed` printing its `assumed:` line (`fixes/g6b/g1_given_assumed` `q`; L §8.2).
+    #[test]
+    fn m4_fixes_p23() {
+        group_holds(VECTORS, "fixes-p23");
+    }
+
     /// F7's traced read the engine doesn't answer yet, apart so `fixes-narrow` gates green:
     /// `explain` of a `flows` whose plan reads `o.fulfils` at its day's cut, every instance's
     /// reads listed (`n1_fulfils` `e_feb`; the narrow read declines under a trace), which stops
@@ -266,5 +297,15 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p21() {
         group_holds(SPEC, "spec-p21");
+    }
+
+    /// P22's answers (#255): a link reads only its instance's existence (L §5.19), so a plan
+    /// reading `o.fulfils` of rows naming its own instances reads none of their amounts
+    /// (`n4_own` `k`, `f`, `l`, from refcore's run of a twin reading the rows by their place);
+    /// a plan's `flows` read set is P20's (`n2_flows` `e_jan`, `i_may`, written from build/m4's
+    /// lines at 00143f5a and checked by hand).
+    #[test]
+    fn m4_fixes_spec_p22() {
+        group_holds(SPEC, "spec-p22");
     }
 }
