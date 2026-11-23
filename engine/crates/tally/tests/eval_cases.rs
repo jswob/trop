@@ -205,9 +205,11 @@ whole = 2
             Err(Stop::Deep) => "~ deep".to_owned(),
         };
         let mut out = vec![format!("{label} {shown}")];
-        let mut entries: Vec<String> = engine
-            .collected()
-            .entries_sorted()
+        let met = engine.collected();
+        let mut entries: Vec<String> = met
+            .entries_sorted(engine.entries())
+            .expect("the run's entries")
+            .iter()
             .map(|e| format!("  + {}|{}|{}", e.word, e.text, e.figure))
             .collect();
         entries.sort();
@@ -263,7 +265,7 @@ whole = 2
         let second = engine.read_def(&m, def, &[], ctx);
         assert_eq!(first, second, "the memo gives the same result");
         assert_eq!(engine.collected(), met, "the register is the same set");
-        assert_eq!(met.entries_sorted().count(), 1, "one missing entry");
+        assert_eq!(met.ids().len(), 1, "one missing entry");
     }
 
     /// The plan's §3 text (`fx3.tally`): a def keyed by a movement whose amount reads an axis

@@ -24,7 +24,7 @@ use crate::syntax::{Ask, AskBody, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{At, Inst, ProjKey, Walk, WalkAt};
 
-use super::register::{Collected, Entry};
+use super::register::{Collected, Entries, Entry, EntryId};
 
 use super::bindings::{names_walked, reads_name};
 use super::context::{Layer, Layers};
@@ -549,6 +549,9 @@ pub struct Engine {
     /// Each binding's written text, once: the member scopes of its aggregate share it, up to
     /// 1 000 000 of them (L §7.6 item 2, §8.2).
     pub(super) bind_texts: BTreeMap<String, Rc<str>>,
+    /// The run's register entries, each once: lent to this engine by the run and handed back
+    /// after its ask (E §1; `eval/register.rs`).
+    pub(crate) entries: Entries,
     /// What this engine did, in P §1.1's units: the `counters` build only (BUILDER §13.2).
     #[cfg(feature = "counters")]
     pub(crate) counts: crate::Counters,
@@ -673,6 +676,7 @@ impl Engine {
             unset_axis: None,
             pins_read: PinsRead::default(),
             bind_texts: BTreeMap::new(),
+            entries: Entries::default(),
             #[cfg(feature = "counters")]
             counts: crate::Counters::default(),
         }
@@ -778,10 +782,42 @@ impl Engine {
     }
 
     /// Records a register entry in the innermost collector (L §8.2).
-    pub(crate) fn note(&mut self, word: &'static str, text: String, figure: String) {
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past 2^31 entries in one run.
+    pub(crate) fn note(
+        &mut self,
+        word: &'static str,
+        text: String,
+        figure: String,
+    ) -> Result<(), Stop> {
+        let id = self.entries.intern(Entry { word, text, figure })?;
         if let Some(top) = self.stack.last_mut() {
-            top.note(Entry { word, text, figure });
+            top.note(id);
         }
+        Ok(())
+    }
+
+    /// The id of register entry `entry` in the run's table (L §8.2).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past 2^31 entries in one run.
+    pub(crate) fn entry_id(&mut self, entry: Entry) -> Result<EntryId, Stop> {
+        self.entries.intern(entry)
+    }
+
+    /// The run's register entries this engine holds, where a register's ids are found (E §1).
+    #[must_use]
+    pub fn entries(&self) -> &Entries {
+        &self.entries
+    }
+
+    /// The run's register entries, handed back after this engine's ask, which every ask's
+    /// engine adds to in turn (E §1).
+    pub(crate) fn take_entries(&mut self) -> Entries {
+        core::mem::take(&mut self.entries)
     }
 
     /// Records that a scenario's fact was read, its section and its item, in the innermost

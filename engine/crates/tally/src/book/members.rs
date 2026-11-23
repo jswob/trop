@@ -353,10 +353,10 @@ impl Engine {
             match &x {
                 Moving::Plan(i) => {
                     if unfulfilled(m, i, ctx.cut) {
-                        coll.note(entry("unfulfilled", &i.id));
+                        coll.note(self.entry_id(entry("unfulfilled", &i.id))?);
                     }
                     if i.status == Status::Uncertain {
-                        coll.note(entry("uncertain", &i.id));
+                        coll.note(self.entry_id(entry("uncertain", &i.id))?);
                     }
                     coll.merge(&i.coll);
                 }

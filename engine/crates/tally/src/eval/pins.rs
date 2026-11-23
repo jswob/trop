@@ -240,7 +240,7 @@ impl Engine {
                 PinForm::Scenario(id) => {
                     // `x as if {scenario s}` is x in s (L §6.4 Asking; refcore's `apply_pins_`)
                     inside.world = world_named(m, id)?;
-                    self.note("world", id.clone(), String::new());
+                    self.note("world", id.clone(), String::new())?;
                 }
                 PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => {
                     let Some(day) = self.date_pin(m, pin, e, env, ctx, &mut holes)? else {
@@ -266,7 +266,7 @@ impl Engine {
                         let option = axis_pinned(value)?;
                         let text = format!("{} = {option}", target.id);
                         data.axes.insert(target.id.clone(), option);
-                        self.note("pinned", text, String::new());
+                        self.note("pinned", text, String::new())?;
                         continue;
                     }
                     let set = (target, value, pin.text.as_str());
@@ -346,7 +346,7 @@ impl Engine {
         } else {
             head
         };
-        self.note("pinned", text, String::new());
+        self.note("pinned", text, String::new())?;
         Ok(Some(day))
     }
 
@@ -483,8 +483,8 @@ impl Engine {
         if how == Pinning::Ask {
             // an ask's `with` pin of a cell is listed where a read of the line took it (L
             // §8.2 One read set; tally 2.1.8 §4, #161)
-            self.note("pinned", text.clone(), String::new());
-            self.note("pin cell", text.clone(), String::new());
+            self.note("pinned", text.clone(), String::new())?;
+            self.note("pin cell", text.clone(), String::new())?;
         }
         Ok(Some(Pinned {
             solve: false,

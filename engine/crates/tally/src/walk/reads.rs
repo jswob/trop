@@ -20,7 +20,7 @@ use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Rows};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, Rows};
 use crate::hole::{Hole, Linear, spread};
 use crate::model::{KeyVal, Reality, Value};
 use crate::num::Num;
@@ -457,7 +457,7 @@ impl Engine {
         let mut met = Collected::default();
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= at.day {
-                met.note(entry.clone());
+                met.note(*entry);
             }
         }
         // a movement the balance doesn't count: what decided it is in its read set (L §8.2
@@ -501,17 +501,21 @@ impl Engine {
         (place, unit): (&str, &str),
         met: &mut Collected,
     ) -> Result<Option<(usize, At)>, Stop> {
-        let walk = self.walk(id)?;
+        // the walk and the run's register entries, apart: each `left out:` entry is noted
+        let walk = self
+            .walks
+            .get(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))?;
         for mid in walk.left_out_at.get(place).into_iter().flatten() {
             let (n, first) = walk
                 .left_out
                 .get(mid)
                 .ok_or_else(|| invariant("a move left out with no count"))?;
-            met.note(Entry {
+            met.note(self.entries.intern(Entry {
                 word: "left out",
                 text: format!("{mid}, {n} instances, first {}", first.text()),
                 figure: String::new(),
-            });
+            })?);
         }
         let (st, last) = walk.state(m, place, unit, at);
         let reset_seen = last.is_some() && st.rst.is_some();
@@ -571,14 +575,18 @@ impl Engine {
         read: &Value,
         (window, ctx): (Window, Ctx),
     ) -> Result<Value, Stop> {
-        let walk = self.walk(id)?;
+        // the walk and the run's register entries, apart: each `uncertain:` entry is noted
+        let walk = self
+            .walks
+            .get(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))?;
         let mut acc = Uncertain {
             add: Num::zero(),
             holes: Vec::new(),
             legs: Vec::new(),
             met: Collected::default(),
         };
-        let added = acc.movements(&walk.uncertain, place, window);
+        let added = acc.movements(&walk.uncertain, (place, window), &mut self.entries);
         // refcore registers as it adds: a refusal keeps the `uncertain:` entries before it
         self.absorb(&acc.met);
         added?;
@@ -795,7 +803,7 @@ impl Engine {
     /// As [`crate::book::readings`].
     fn stated_on(&mut self, m: &Reality, place: &str, day: Day, cut: Day) -> Result<bool, Stop> {
         let world = self.timeline_world();
-        let seen = crate::book::readings(m, (cut, world), Rows::Unkept)?;
+        let seen = crate::book::readings(m, (cut, world), (Rows::Unkept, &mut self.entries))?;
         Ok(seen
             .iter()
             .any(|s| s.input == "stated" && s.place == place && s.day == day))
@@ -826,7 +834,12 @@ impl Uncertain {
     /// The legs at `place` of the uncertain movements dated inside `window`, each added; a
     /// refusal stops the sum, what it met before kept here (refcore's `with_uncertain`, its
     /// loop). L §5.14, §8.2.
-    fn movements(&mut self, movements: &[Inst], place: &str, window: Window) -> Result<(), Stop> {
+    fn movements(
+        &mut self,
+        movements: &[Inst],
+        (place, window): (&str, Window),
+        entries: &mut Entries,
+    ) -> Result<(), Stop> {
         for movement in movements {
             for leg in &movement.legs {
                 let dated = leg
@@ -834,7 +847,7 @@ impl Uncertain {
                     .day()
                     .or_else(|| movement.day.as_ref().and_then(Dated::day));
                 if counted(dated, window) {
-                    self.leg(place, movement, leg)?;
+                    self.leg((place, movement, leg), entries)?;
                 }
             }
         }
@@ -845,19 +858,18 @@ impl Uncertain {
     /// signed by its direction (refcore's `with_uncertain`, a leg). L §5.14.
     fn leg(
         &mut self,
-        place: &str,
-        movement: &Inst,
-        leg: &super::instance::LegVal,
+        (place, movement, leg): (&str, &Inst, &super::instance::LegVal),
+        entries: &mut Entries,
     ) -> Result<(), Stop> {
         for (end, sign) in [(&leg.from, -1_i64), (&leg.to, 1_i64)] {
             if end.place() != Some(place) {
                 continue;
             }
-            self.met.note(Entry {
+            self.met.note(entries.intern(Entry {
                 word: "uncertain",
                 text: movement.id.clone(),
                 figure: String::new(),
-            });
+            })?);
             self.met.merge(&movement.coll);
             let q = match &leg.amount {
                 Amount::Hole(h) => {

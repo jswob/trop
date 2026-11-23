@@ -31,7 +31,7 @@ use super::order::{CycleItem, Run};
 use super::plan::invariant;
 use super::point::{At, Step};
 use crate::base::{Refusal, Warn};
-use crate::eval::{Collected, Entry};
+use crate::eval::{Collected, Entries, EntryId};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, World};
 use crate::num::Num;
@@ -144,8 +144,8 @@ pub struct Ent {
     pub mv: Option<String>,
     /// The leg it books, by name.
     pub leg: Option<String>,
-    /// The register entries it makes (`unfulfilled:`).
-    pub reg: Vec<Entry>,
+    /// The register entries it makes (`unfulfilled:`), by id in the run's table.
+    pub reg: Vec<EntryId>,
     /// What its movement's evaluation met.
     pub coll: Option<Collected>,
     /// A pad's flow at its reading's own place, where the reset books it: the gap, a number
@@ -306,7 +306,7 @@ pub struct Walk {
     /// The moves left out that touch each place.
     pub(crate) left_out_at: BTreeMap<String, BTreeSet<String>>,
     /// The adjustments with a remainder, per place, from their day (L §8.2 `adjustment:`).
-    pub(crate) adj_regs: BTreeMap<String, Vec<(Day, Entry)>>,
+    pub(crate) adj_regs: BTreeMap<String, Vec<(Day, EntryId)>>,
     /// The movements that don't count where a read of a place reaches, by each place their
     /// legs name: the day a leg is on, none where no day of the walk holds it (left out, past
     /// a projection's plans, a false `when`), and what decided it ([`Collected::deciding`]).
@@ -766,13 +766,17 @@ impl Walk {
     /// since the place's last reset, in its unit and in every unit, with its `open:` line, for
     /// the gap a movement left unbooked is the pad's size (refcore's `open_kept`; L §8.2 One
     /// read set, the `open:` row; 220.2 on #241). E §6.1.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an entry the run's table `entries` lacks.
     pub(crate) fn open_kept(
         &self,
         m: &Reality,
         (place, unit): (&str, &str),
         at: At,
-        into: &mut Collected,
-    ) {
+        (into, entries): (&mut Collected, &Entries),
+    ) -> Result<(), Stop> {
         for u in [unit, ALL] {
             let Some(log) = self.logs.get(&(place.to_owned(), u.to_owned())) else {
                 continue;
@@ -780,8 +784,10 @@ impl Walk {
             let (st, _) = self.state(m, place, u, at);
             for (j, e) in log.ents.iter().enumerate().take_while(|(_, e)| e.at <= at) {
                 let before_reset = st.rst.is_some_and(|r| j < r);
-                let open = e.reg.iter().any(|r| r.word == "open");
-                if before_reset || !matches!(e.change, Change::Mark) || !open {
+                if before_reset
+                    || !matches!(e.change, Change::Mark)
+                    || !entries.any_word(&e.reg, "open")?
+                {
                     continue;
                 }
                 if let Some(c) = &e.coll {
@@ -790,6 +796,7 @@ impl Walk {
                 into.note_all(&e.reg);
             }
         }
+        Ok(())
     }
 
     /// The register of a place's log through entry `i`: every entry's since the last reset,
@@ -883,10 +890,10 @@ impl Walk {
     /// Keeps `read`'s deciding entries at `places` as `noted` says they join a read, none kept
     /// where it has none. L §8.2.
     fn note(&mut self, places: &[&str], noted: Noted, read: &Collected) {
-        let deciding = read.deciding();
-        if !deciding.has_entries() {
+        if !read.decides() {
             return;
         }
+        let deciding = read.deciding();
         for p in places {
             self.uncounted
                 .entry((*p).to_owned())

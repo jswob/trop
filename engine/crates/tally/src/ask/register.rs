@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::base::{Code, Refusal, Warn};
-use crate::eval::{Collected, Ctx, Entry};
+use crate::eval::{Collected, Ctx, Entries, Entry};
 use crate::hole::Unknown;
 use crate::syntax::Stop;
 use crate::time::Day;
@@ -47,14 +47,22 @@ const WORDS: [(&str, Style); 15] = [
 /// Adds to `met` an `unknown day:` entry for each unknown day of `unknown`, by its name: one
 /// line per name, sorted with the other lines of its word (L §8.2 `unknown day:`, §4.4;
 /// refcore's `register`, its `unknown`).
-pub(super) fn name_unknown_days(met: &mut Collected, unknown: &[Unknown]) {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` past 2^31 entries in one run.
+pub(super) fn name_unknown_days(
+    (met, entries): (&mut Collected, &mut Entries),
+    unknown: &[Unknown],
+) -> Result<(), Stop> {
     for day in unknown {
-        met.note(Entry {
+        met.note(entries.intern(Entry {
             word: "unknown day",
             text: day.label.clone(),
             figure: String::new(),
-        });
+        })?);
     }
+    Ok(())
 }
 
 /// The register's lines for what a line met, in context `ctx`, without their indent: the
@@ -63,9 +71,13 @@ pub(super) fn name_unknown_days(met: &mut Collected, unknown: &[Unknown]) {
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for an entry of a word the register doesn't print.
-pub fn register_lines(met: &Collected, ctx: Ctx) -> Result<Vec<String>, Stop> {
-    let mut out = entry_lines(met)?;
+/// `ENGINE-INVARIANT` for an entry of a word the register doesn't print, or one the run's
+/// table `entries` lacks.
+pub fn register_lines(
+    (met, entries): (&Collected, &Entries),
+    ctx: Ctx,
+) -> Result<Vec<String>, Stop> {
+    let mut out = entry_lines(met, entries)?;
     out.push(match ctx.law {
         Some(law) => format!("law date {}, cut {}", law.text(), ctx.cut.text()),
         None => format!("cut {}", ctx.cut.text()),
@@ -78,13 +90,14 @@ pub fn register_lines(met: &Collected, ctx: Ctx) -> Result<Vec<String>, Stop> {
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for an entry of a word the register doesn't print.
+/// `ENGINE-INVARIANT` for an entry of a word the register doesn't print, or one the run's
+/// table `entries` lacks.
 pub(crate) fn check_register_lines(
-    met: &Collected,
+    (met, entries): (&Collected, &Entries),
     ctx: Ctx,
     (left, right): (Option<Day>, Option<Day>),
 ) -> Result<Vec<String>, Stop> {
-    let mut out = entry_lines(met)?;
+    let mut out = entry_lines(met, entries)?;
     out.push(format!(
         "law date {} (left), {} (right), cut {}",
         side_law_text(left),
@@ -106,11 +119,11 @@ fn side_law_text(day: Option<Day>) -> String {
 /// The register's entries' lines: `assumed` merged by reason, then the other words in their
 /// order, each sorted, a `pinned:` date pin's days merged into spans (refcore's `register`).
 /// L §8.2.
-fn entry_lines(met: &Collected) -> Result<Vec<String>, Stop> {
+fn entry_lines(met: &Collected, entries: &Entries) -> Result<Vec<String>, Stop> {
     let mut assumed: BTreeSet<(&str, &str)> = BTreeSet::new();
     let mut by_word: BTreeSet<(usize, String)> = BTreeSet::new();
     let mut pins: Vec<&str> = Vec::new();
-    for entry in met.entries_sorted() {
+    for entry in met.entries_sorted(entries)? {
         // an ask pin a read met under another claim: in the read set, printed by no view
         // (L §8.2 One read set; P45); an ask's pin of a cell, which says which pins a read
         // must take to be listed, likewise (tally 2.1.8 §4, #161)
@@ -289,7 +302,7 @@ pub fn warning_lines(warnings: &[(Warn, String)]) -> Vec<String> {
 mod tests {
     use super::{register_lines, warning_lines};
     use crate::base::Warn;
-    use crate::eval::{Collected, Ctx, Entry};
+    use crate::eval::{Collected, Ctx, Entries, Entry};
     use crate::time::Day;
 
     fn entry(word: &'static str, text: &str, figure: &str) -> Entry {
@@ -302,16 +315,21 @@ mod tests {
 
     #[test]
     fn the_register_prints_in_its_order() {
+        let mut table = Entries::default();
         let mut met = Collected::default();
-        met.note(entry("held", "x = 1 (v), read for 2027-01-01", ""));
-        met.note(entry("assumed", "a guess", "b[2]"));
-        met.note(entry("assumed", "a guess", "a[1]"));
-        met.note(entry("assumed", "ix: open keys", ""));
-        met.note(entry("missing", "v1", ""));
-        met.note(entry("given", "g = 2 (v)", ""));
+        for e in [
+            entry("held", "x = 1 (v), read for 2027-01-01", ""),
+            entry("assumed", "a guess", "b[2]"),
+            entry("assumed", "a guess", "a[1]"),
+            entry("assumed", "ix: open keys", ""),
+            entry("missing", "v1", ""),
+            entry("given", "g = 2 (v)", ""),
+        ] {
+            met.note(table.intern(e).expect("an id"));
+        }
         let day = Day::from_ymd(2026, 3, 1).expect("a day");
         let law = Day::from_ymd(2026, 2, 1).expect("a day");
-        let lines = register_lines(&met, Ctx::new(Some(law), day)).expect("lines");
+        let lines = register_lines((&met, &table), Ctx::new(Some(law), day)).expect("lines");
         assert_eq!(
             lines,
             [
@@ -324,17 +342,18 @@ mod tests {
             ],
             "refcore's order"
         );
-        let bare = register_lines(&Collected::default(), Ctx::new(None, day));
+        let bare = register_lines((&Collected::default(), &table), Ctx::new(None, day));
         assert_eq!(bare.expect("lines"), ["cut 2026-03-01"], "no law date");
     }
 
     #[test]
     fn a_word_the_register_does_not_print_is_an_invariant() {
+        let mut table = Entries::default();
         let mut met = Collected::default();
-        met.note(entry("sample", "x", ""));
+        met.note(table.intern(entry("sample", "x", "")).expect("an id"));
         let day = Day::from_ymd(2026, 3, 1).expect("a day");
         assert!(
-            register_lines(&met, Ctx::new(None, day)).is_err(),
+            register_lines((&met, &table), Ctx::new(None, day)).is_err(),
             "never dropped"
         );
     }

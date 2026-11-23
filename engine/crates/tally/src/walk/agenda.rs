@@ -34,7 +34,7 @@ use super::state::{Progress, Walk, WalkObs};
 use crate::Days;
 use crate::base::Refusal;
 use crate::book::Seen;
-use crate::eval::{Collected, Engine, Entry};
+use crate::eval::{Collected, Engine, Entries, Entry, EntryId};
 use crate::hole::Hole;
 use crate::model::{KeyVal, MoveInfo, Reality, Value};
 use crate::num::Num;
@@ -144,7 +144,7 @@ pub enum Act {
     /// A register entry at a place, with what its movement met: a modelled-past instance
     /// nothing fulfils is `open` (L §5.19); with no entry, what decided an instance doesn't
     /// exist (L §8.2).
-    Mark(String, String, Option<Entry>, Collected),
+    Mark(String, String, Option<EntryId>, Collected),
 }
 
 impl Walk {
@@ -212,7 +212,7 @@ impl Engine {
             (walk.cut, walk.proj.is_none(), walk.world)
         };
         let readings = if main {
-            crate::book::readings(m, (cut, world), self.keep_rows)?
+            crate::book::readings(m, (cut, world), (self.keep_rows, &mut self.entries))?
         } else {
             Vec::new()
         };
@@ -263,7 +263,12 @@ impl Engine {
         for wo in &mut observed {
             wo.err = self.obs_err(m, &wo.obs, cut)?;
         }
-        let walk = self.walk_mut(id)?;
+        // the walk and the run's register entries, apart, so a scheduled act notes its own
+        let entries = &mut self.entries;
+        let walk = self
+            .walks
+            .get_mut(id)
+            .ok_or_else(|| super::plan::invariant("a walk the engine lacks"))?;
         walk.orders = orders;
         for w in legs_warned {
             if !walk.warnings.contains(&w) {
@@ -285,7 +290,7 @@ impl Engine {
             if let Some(places) = decided.remove(&inst.id) {
                 schedule_decided(walk, inst, places)?;
             }
-            schedule_plan(walk, &planned)?;
+            schedule_plan(walk, &planned, entries)?;
         }
         for (rank, (move_id, stratum, list)) in ranked3(decisions).into_iter().enumerate() {
             for inst in list.iter() {
@@ -298,7 +303,7 @@ impl Engine {
             }
         }
         for adj in adjustments {
-            schedule_adjustment(m, walk, &adj)?;
+            schedule_adjustment(m, walk, &adj, entries)?;
         }
         if let Some(p) = walk.proj.as_mut() {
             // sorted, so a read finds its window's by halving (`left_out_lines`)
@@ -330,7 +335,7 @@ impl Engine {
             let early = matches!((&inst.day, from), (Some(Dated::Day(d)), Some(f)) if *d < f);
             // a day a pin or an assumption decided: a read its span leaves out lists them at
             // the places its legs name (L §8.2 One read set; N1 on #241)
-            let decided = inst.day_coll.deciding().has_entries();
+            let decided = inst.day_coll.decides();
             if inst.exists != Exists::No
                 && (early || decided || matches!(inst.day, Some(Dated::Hole(_))))
             {
@@ -566,7 +571,7 @@ fn leg_text(id: &str, leg: &str) -> String {
 /// A modelled-past instance: kept for the ledger, and one nothing fulfils marks its places
 /// `open` from its legs' days (refcore's `prepare`, its modelled plans; its `same_observed`
 /// clause serves a joint model's lines, M5c). E §4.1 step 3, L §5.19, §6.1.
-fn schedule_modelled(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
+fn schedule_modelled(walk: &mut Walk, inst: &Inst, entries: &mut Entries) -> Result<(), Stop> {
     if inst.obs.is_empty() {
         let rank = walk.plan_rank(&inst.order)?;
         for lg in &inst.legs {
@@ -581,11 +586,11 @@ fn schedule_modelled(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
                 .clone()
                 .unwrap_or_else(|| super::state::ALL.to_owned());
             for place in [&lg.from, &lg.to].into_iter().filter_map(End::place) {
-                let entry = Entry {
+                let entry = entries.intern(Entry {
                     word: "open",
                     text: inst.id.clone(),
                     figure: String::new(),
-                };
+                })?;
                 let act = Act::Mark(
                     place.to_owned(),
                     unit.clone(),
@@ -652,7 +657,7 @@ fn outside_window(walk: &Walk, inst: &Inst) -> bool {
 /// `prepare`, its plans; tally 2.1.6, #57). A refused instance refuses the places its legs
 /// give from its day, and every place where a leg's place can't be read (L §8.4). E §4.1
 /// step 3, §4.2.
-fn schedule_plan(walk: &mut Walk, planned: &Planned) -> Result<(), Stop> {
+fn schedule_plan(walk: &mut Walk, planned: &Planned, entries: &mut Entries) -> Result<(), Stop> {
     let inst = planned
         .inst()
         .ok_or_else(|| super::plan::invariant("a plan instance its list lacks"))?;
@@ -663,7 +668,7 @@ fn schedule_plan(walk: &mut Walk, planned: &Planned) -> Result<(), Stop> {
         }
         Status::Modelled => {
             note_uncounted(walk, inst, &inst.day_coll);
-            return schedule_modelled(walk, inst);
+            return schedule_modelled(walk, inst, entries);
         }
         Status::None | Status::Decision | Status::Open => return Ok(()),
         Status::Uncertain => {
@@ -907,6 +912,7 @@ fn schedule_adjustment(
     m: &Reality,
     walk: &mut Walk,
     adj: &crate::book::Adjustment,
+    entries: &mut Entries,
 ) -> Result<(), Stop> {
     let day = adj.day.max(walk.start);
     if let Amount::Refused(err) = &adj.delta {
@@ -949,11 +955,11 @@ fn schedule_adjustment(
         return Ok(());
     };
     for place in places {
-        let entry = Entry {
+        let entry = entries.intern(Entry {
             word: "adjustment",
             text: text.clone(),
             figure: String::new(),
-        };
+        })?;
         walk.adj_regs
             .entry(place.to_owned())
             .or_insert_with(Vec::new)

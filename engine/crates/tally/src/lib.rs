@@ -199,7 +199,7 @@ pub mod eval {
     pub(crate) use partial::{lin_balance, lin_fold, lin_negated, lin_times, partial_text};
     pub(crate) use pins::after_on;
     pub(crate) use ranges::{range_literal_key, value_key};
-    pub use register::{Collected, EntriesSorted, Entry, RowSeen};
+    pub use register::{Collected, Entries, Entry, EntryId, RowSeen};
     pub use stack::Item;
     pub use state::{Ctx, Engine, Env, How, Rows};
     pub(crate) use state::{a_day, num_stop, past_days};

@@ -23,7 +23,7 @@ use super::answer::{env_text, form_line};
 use super::check::Printed;
 use super::register::{check_register_lines, name_unknown_days, register_lines};
 use crate::base::{Code, Refusal};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Member, combinations};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, Member, combinations};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, Stop};
@@ -233,7 +233,8 @@ pub(super) fn fanned_lines(
     }
     let mut out = Vec::new();
     for tuple in &bound {
-        out.extend(tuple_lines(m, (ask, axes, &combos), tuple, (ctx, pinned))?);
+        let printing = (ctx, pinned, &mut engine.entries);
+        out.extend(tuple_lines(m, (ask, axes, &combos), tuple, printing)?);
     }
     Ok(out)
 }
@@ -349,7 +350,7 @@ fn tuple_lines(
     m: &Reality,
     (ask, axes, combos): (&Ask, &Axes, &[Combo]),
     tuple: &Bound,
-    (ctx, pinned): (Ctx, &Collected),
+    printing: (Ctx, &Collected, &mut Entries),
 ) -> Result<Vec<String>, Stop> {
     let head = format!("{}{}", ask.id, env_text(m, &ask.binds, &tuple.env)?);
     if !tuple.unknown.is_empty() {
@@ -357,7 +358,7 @@ fn tuple_lines(
         let hole = spread(&operands).ok_or_else(|| invariant("a where's hole that is none"))?;
         return Ok(vec![format!("{head}: {}", hole.text())]);
     }
-    result_lines((axes, combos), &head, &tuple.results, (ctx, pinned))
+    result_lines((axes, combos), &head, &tuple.results, printing)
 }
 
 /// The lines of one head's `results`, each by its combination's place in `combos`: one line
@@ -367,15 +368,16 @@ fn tuple_lines(
 ///
 /// # Errors
 ///
-/// `ENGINE-INVARIANT` for a result past the combinations.
+/// `ENGINE-INVARIANT` for a result past the combinations, or an entry the run's table
+/// `entries` lacks.
 pub(super) fn result_lines(
     (axes, combos): (&Axes, &[Combo]),
     head: &str,
     results: &[(usize, Printed)],
-    (ctx, pinned): (Ctx, &Collected),
+    (ctx, pinned, entries): (Ctx, &Collected, &mut Entries),
 ) -> Result<Vec<String>, Stop> {
     let mut out = Vec::new();
-    for line in grouped(axes, combos, results)? {
+    for line in grouped((axes, combos), results, entries)? {
         let (_, first) = results
             .get(line.first)
             .ok_or_else(|| invariant("a line's result past the results"))?;
@@ -385,17 +387,17 @@ pub(super) fn result_lines(
             continue;
         }
         let mut met = line.met;
-        met.merge(&super::answer::ask_pins_listed(pinned, &met));
+        met.merge(&super::answer::ask_pins_listed((pinned, &met), entries)?);
         for reading in axes.readings(&line.product)? {
-            met.note(Entry {
+            met.note(entries.intern(Entry {
                 word: "reading",
                 text: reading,
                 figure: String::new(),
-            });
+            })?);
         }
         let register = match line.laws {
-            Some(laws) => check_register_lines(&met, ctx, laws)?,
-            None => register_lines(&met, ctx)?,
+            Some(laws) => check_register_lines((&met, entries), ctx, laws)?,
+            None => register_lines((&met, entries), ctx)?,
         };
         out.extend(register.into_iter().map(|l| format!("  {l}")));
     }
@@ -420,9 +422,9 @@ struct Grouped {
 /// products by the axes in id order; then every line sorted by each axis's first option, `*`
 /// first, the sort keeping the order made between equal keys (refcore's `group`). L §5.5.
 fn grouped(
-    axes: &Axes,
-    combos: &[Combo],
+    (axes, combos): (&Axes, &[Combo]),
     results: &[(usize, Printed)],
+    entries: &mut Entries,
 ) -> Result<Vec<Grouped>, Stop> {
     let mut by_text: Vec<(&Printed, Vec<usize>)> = Vec::new();
     for (at, (_, printed)) in results.iter().enumerate() {
@@ -438,7 +440,7 @@ fn grouped(
             given.push(combo_of(combos, results, *at)?);
         }
         for product in split(axes, given) {
-            lines.push(product_line(product, members, (combos, results))?);
+            lines.push(product_line(product, members, (combos, results), entries)?);
         }
     }
     lines.sort_by_key(|line| axes.order_key(&line.product));
@@ -463,6 +465,7 @@ fn product_line(
     product: Product,
     members: &[usize],
     (combos, results): (&[Combo], &[(usize, Printed)]),
+    entries: &mut Entries,
 ) -> Result<Grouped, Stop> {
     let mut met = Collected::default();
     let mut first: Option<(usize, &Printed)> = None;
@@ -481,7 +484,7 @@ fn product_line(
         met.merge(&printed.met);
         // each combination's holes name their unknown days (refcore's `diff_print`, its
         // `days`; L §8.2)
-        name_unknown_days(&mut met, &printed.unknown);
+        name_unknown_days((&mut met, entries), &printed.unknown)?;
         if first.is_none() {
             first = Some((*at, printed));
         }

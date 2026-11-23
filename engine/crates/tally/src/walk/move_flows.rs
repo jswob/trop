@@ -18,7 +18,7 @@ use super::reads::refuse;
 use super::state::Progress;
 use crate::base::{Refusal, Run};
 use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, GUARDED, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
@@ -175,7 +175,7 @@ impl Engine {
                 }
             };
             if let Some(k) = fk
-                && !for_period_of(i, k, acc)
+                && !for_period_of(i, k, (acc, &mut self.entries))?
             {
                 continue;
             }
@@ -205,11 +205,11 @@ impl Engine {
                 continue;
             }
             if i.status == Status::Past {
-                acc.met.note(Entry {
+                acc.met.note(self.entry_id(Entry {
                     word: "unfulfilled",
                     text: i.id.clone(),
                     figure: String::new(),
-                });
+                })?);
             }
             // flows of a movement stated same reads it from both sides: where they disagree it
             // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241); the day only for
@@ -253,7 +253,7 @@ impl Engine {
             for adj in self.settled_move(m, mv, ctx.cut)? {
                 if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
                     counted = true;
-                    count_adjustment(m, &adj, sp, last, acc)?;
+                    count_adjustment(m, &adj, (sp, last), (acc, &mut self.entries))?;
                 }
             }
             if !counted {
@@ -283,11 +283,11 @@ impl Engine {
             return Err(Stop::Refused(bad.clone()));
         }
         if obs.is_empty() {
-            acc.met.note(Entry {
+            acc.met.note(self.entry_id(Entry {
                 word: "open",
                 text: i.id.clone(),
                 figure: String::new(),
-            });
+            })?);
             // what the balance lists of it: its reads, as its mark carries them (S5, P43 on
             // #241; L §8.2 One read set)
             acc.met.merge(&i.coll);
@@ -486,22 +486,30 @@ impl Engine {
 /// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
 /// a period that is a hole is that hole in
 /// `acc`, the instance unfulfilled where it is past (L §8.1, §8.2; P64). L §5.14.3.
-fn for_period_of(i: &Inst, k: &Value, acc: &mut Counted) -> bool {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` past 2^31 register entries in one run.
+fn for_period_of(
+    i: &Inst,
+    k: &Value,
+    (acc, entries): (&mut Counted, &mut Entries),
+) -> Result<bool, Stop> {
     let Some(period) = &i.for_period else {
-        return false;
+        return Ok(false);
     };
     if let Value::Hole(h) = period {
         if i.status == Status::Past {
-            acc.met.note(Entry {
+            acc.met.note(entries.intern(Entry {
                 word: "unfulfilled",
                 text: i.id.clone(),
                 figure: String::new(),
-            });
+            })?);
         }
         acc.holes.push(h.clone());
-        return false;
+        return Ok(false);
     }
-    period == k
+    Ok(period == k)
 }
 
 /// What a move's flows gather: the total, the units its legs are in, the holes, the
@@ -550,9 +558,8 @@ impl Counted {
 fn count_adjustment(
     m: &Reality,
     adj: &crate::book::Adjustment,
-    sp: &Span,
-    last: Day,
-    acc: &mut Counted,
+    (sp, last): (&Span, Day),
+    (acc, entries): (&mut Counted, &mut Entries),
 ) -> Result<(), Stop> {
     if let Amount::Refused(err) = &adj.delta {
         // tally 2.1.2: settled or not, as an unsettled one is the HOLE-CHANGED hole
@@ -570,11 +577,11 @@ fn count_adjustment(
     if last >= adj.day
         && let Some(text) = adj.remainder_text(m)?
     {
-        acc.met.note(Entry {
+        acc.met.note(entries.intern(Entry {
             word: "adjustment",
             text,
             figure: String::new(),
-        });
+        })?);
     }
     for s in &adj.settled {
         if s.sign == 0 || !s.day.is_some_and(|d| sp.contains(d)) {

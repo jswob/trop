@@ -158,7 +158,7 @@ impl Engine {
         let walk = self.walk(id)?;
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= last {
-                sums.met.note(entry.clone());
+                sums.met.note(*entry);
             }
         }
         self.absorb(&sums.met);

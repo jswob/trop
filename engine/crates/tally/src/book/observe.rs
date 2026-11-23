@@ -164,7 +164,7 @@ impl Engine {
         };
         let mut met = Collected::default();
         met.note_version(&o.version);
-        if let Some(seen) = o.coll.rows().get(&id) {
+        if let Some(seen) = o.coll.rows().and_then(|r| r.get(&id)) {
             met.note_row(&id, &seen.version, seen.locator.as_ref());
         }
         let day = Some(o.day);

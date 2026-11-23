@@ -126,10 +126,14 @@ impl Engine {
             return Ok(());
         };
         let removed = listed(scenario, (&ours, &base), &facts)?;
-        let scenario_walk = self.walk_mut(id)?;
+        let mut noted = Vec::with_capacity(removed.len());
         for (place, day, entry) in removed {
+            noted.push((place, day, self.entry_id(entry)?));
+        }
+        let scenario_walk = self.walk_mut(id)?;
+        for (place, day, entry) in noted {
             let at_place = scenario_walk.adj_regs.entry(place).or_insert_with(Vec::new);
-            if !at_place.contains(&(day, entry.clone())) {
+            if !at_place.contains(&(day, entry)) {
                 at_place.push((day, entry));
             }
         }
@@ -282,8 +286,10 @@ fn answers_itself(inst: &Inst) -> bool {
 /// The items of the scenario's facts read set `coll` holds whose sections world `under`
 /// doesn't see (L §6.4). E §9 item 3.
 fn scenario_items(m: &Reality, coll: &Collected, under: World) -> BTreeSet<String> {
-    let unseen = coll
-        .scenario()
+    let Some(read) = coll.scenario() else {
+        return BTreeSet::new();
+    };
+    let unseen = read
         .iter()
         .filter(|(section, _)| !m.scenarios.sees(under, Some(section.as_str())));
     unseen.map(|(_, item)| item.clone()).collect()

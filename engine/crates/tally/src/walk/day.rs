@@ -25,7 +25,7 @@ use super::readings::{Alone, Broke};
 use super::state::{ALL, Change, Ent, Group, HoleLeg, Progress, Taken, Today, Walk, WalkObs};
 use crate::base::{Code, Refusal, Run, Warn};
 use crate::book::Member;
-use crate::eval::{Collected, Engine, Entry, GUARDED};
+use crate::eval::{Collected, Engine, Entry, EntryId, GUARDED};
 use crate::hole::{Hole, spread};
 use crate::model::{Reality, World};
 use crate::num::Num;
@@ -289,11 +289,11 @@ impl Engine {
                 }
                 let mut reg = Vec::new();
                 if movement.status == Status::Past && movement.obs.is_empty() {
-                    reg.push(Entry {
+                    reg.push(self.entry_id(Entry {
                         word: "unfulfilled",
                         text: movement.id.clone(),
                         figure: String::new(),
-                    });
+                    })?);
                 }
                 self.book_leg(m, id, (movement, lg), at, &reg)
             }
@@ -392,7 +392,7 @@ impl Engine {
         id: usize,
         (inst, lg): (&Inst, &LegVal),
         at: At,
-        reg: &[Entry],
+        reg: &[EntryId],
     ) -> Result<(), Stop> {
         let (world, cut) = {
             let walk = self.walk(id)?;
@@ -400,8 +400,10 @@ impl Engine {
         };
         let mut reg = reg.to_vec();
         // a leg is on its instance's day (L §8.2)
-        if let Some(day) = inst.day.as_ref().and_then(Dated::day) {
-            reg.extend(before_from(m, world, (&inst.move_id, day), &inst.coll));
+        if let Some(day) = inst.day.as_ref().and_then(Dated::day)
+            && let Some(entry) = before_from(m, world, (&inst.move_id, day), &inst.coll)
+        {
+            reg.push(self.entry_id(entry)?);
         }
         let coll = &inst.coll;
         let mut mask = Ends::both();
@@ -426,7 +428,7 @@ impl Engine {
         id: usize,
         (movement, lg): (&str, &LegVal),
         at: At,
-        (reg, coll): (&[Entry], &Collected),
+        (reg, coll): (&[EntryId], &Collected),
         mask: Ends,
     ) -> Result<(), Stop> {
         let q = match &lg.amount {
@@ -844,8 +846,8 @@ fn before_from(
     (move_id, day): (&str, Day),
     coll: &Collected,
 ) -> Option<Entry> {
-    let items: BTreeSet<&str> = coll
-        .listed()
+    let listed = coll.listed()?;
+    let items: BTreeSet<&str> = listed
         .iter()
         .filter(|(section, _)| changed_after(m, world, section, day))
         .map(|(_, item)| item.as_str())

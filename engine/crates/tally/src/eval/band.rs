@@ -341,7 +341,7 @@ impl Engine {
             .get(&table.version)
             .ok_or_else(|| invariant("a band table of a version load didn't build"))?;
         if let Some(reason) = &version.assumed {
-            self.note("assumed", reason.clone(), figure.to_owned());
+            self.note("assumed", reason.clone(), figure.to_owned())?;
         }
         if self.keep_rows == Rows::Kept || self.tracing() {
             // the band row as `inputs-of` lists it and `explain` prints it (refcore's
@@ -363,7 +363,7 @@ impl Engine {
                     table.version
                 ),
                 String::new(),
-            );
+            )?;
         } else {
             self.unheld_table_class(m, table, ctx)?;
         }

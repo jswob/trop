@@ -481,7 +481,7 @@ impl Engine {
         left_out: &BTreeSet<String>,
     ) -> Result<Walk, Stop> {
         let world = self.walk(base)?.world;
-        let mut first_reading = crate::book::first_readings(m, (c, world))?;
+        let mut first_reading = crate::book::first_readings(m, (c, world), &mut self.entries)?;
         let from = self.walk(base)?;
         let mut states: BTreeMap<(String, String), St> = BTreeMap::new();
         for (place, unit) in from.logs.keys() {
@@ -539,7 +539,7 @@ impl Engine {
             .ok_or_else(|| invariant("a projection read of a main walk"))?;
         let lines = left_out_lines(&p.counted, (t, (d, d)))?;
         for line in lines {
-            self.note("left out", line, String::new());
+            self.note("left out", line, String::new())?;
         }
         Ok(())
     }

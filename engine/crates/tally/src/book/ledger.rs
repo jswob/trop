@@ -498,8 +498,8 @@ impl Engine {
     ) -> Result<(), Stop> {
         let id = self.main_walk(m, cut)?;
         let world = self.timeline_world();
-        let walked = readings(m, (cut, world), Rows::Unkept)?;
-        for seen in readings(m, (m.on, world), Rows::Unkept)? {
+        let walked = readings(m, (cut, world), (Rows::Unkept, &mut self.entries))?;
+        for seen in readings(m, (m.on, world), (Rows::Unkept, &mut self.entries))? {
             if seen.input != "stated" || seen.place != lines.of.place {
                 continue;
             }

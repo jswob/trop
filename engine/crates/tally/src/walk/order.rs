@@ -747,7 +747,11 @@ impl Engine {
             .decl
             .legs
             .is_empty();
-        let walk = self.walk_mut(id)?;
+        // the walk and the run's register entries, apart: a past run notes `unfulfilled:`
+        let walk = self
+            .walks
+            .get_mut(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))?;
         let ix = walk.runs.len();
         if let Some(err) = run.inst.err.clone() {
             // refused: the places its legs give, every place where one can't be read, none for
@@ -824,11 +828,11 @@ impl Engine {
         run.inst.status = if t < cut { Status::Past } else { Status::Plan };
         let mut reg = Vec::new();
         if t < cut && run.inst.obs.is_empty() {
-            reg.push(Entry {
+            reg.push(self.entries.intern(Entry {
                 word: "unfulfilled",
                 text: run.inst.id.clone(),
                 figure: String::new(),
-            });
+            })?);
         }
         let legs = run.inst.legs.clone();
         let inst = run.inst.clone();
