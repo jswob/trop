@@ -18253,4 +18253,1005 @@ version apr
   cut 2026-04-20
 f: 270.00 PLN
   cut 2026-04-20
+,23:spec/p32/e_selfcycle/l4,8:spec-p32,30:run e_selfcycle.tally --ask l4,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,91:l4: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,22:spec/p32/e_selfcycle/f,8:spec-p32,29:run e_selfcycle.tally --ask f,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,90:f: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,24:spec/p32/e_selfcycle/l24,8:spec-p32,31:run e_selfcycle.tally --ask l24,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,151:l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,26:spec/p32/e_selfcycle/l4__f,8:spec-p32,32:run e_selfcycle.tally --ask l4 f,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,181:l4: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+f: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,26:spec/p32/e_selfcycle/f__l4,8:spec-p32,32:run e_selfcycle.tally --ask f l4,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,181:f: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+l4: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,27:spec/p32/e_selfcycle/l24__f,8:spec-p32,33:run e_selfcycle.tally --ask l24 f,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,241:l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+f: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,27:spec/p32/e_selfcycle/f__l24,8:spec-p32,33:run e_selfcycle.tally --ask f l24,1790:17:e_selfcycle.tally,1763:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom + (if loose[m] > base then 0 else 1))
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
+,,1:0,241:f: refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): refused: RUN-CYCLE loose[2026-04] reads itself through a computed key
+  cut 2026-04-20
+,24:spec/p32/b_whencycle/l24,8:spec-p32,31:run b_whencycle.tally --ask l24,1736:17:b_whencycle.tally,1709:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  when loose[m] < base
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,91:l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): 30.00 PLN
+  cut 2026-04-20
+,22:spec/p32/b_whencycle/f,8:spec-p32,29:run b_whencycle.tally --ask f,1736:17:b_whencycle.tally,1709:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  when loose[m] < base
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,31:f: 270.00 PLN
+  cut 2026-04-20
+,25:spec/p31/g3/f5_cross/e_pr,8:spec-p31,29:run f5_cross.tally --ask e_pr,2074:14:f5_cross.tally,2050:model f5
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input z: int
+input w: date
+input wh: date
+input wlate: date
+input sp: month
+input sp_end: month
+input dday: date
+input wdiv: date
+input sp_late: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dx: transfers
+  on w
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then ra else amt
+move dh: transfers
+  on wh
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+move dlate: transfers
+  on wlate
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then amt else amt
+move ddiv: transfers
+  on wdiv
+  reads konto
+  leg cash from world to konto amount if bal(konto) > 0 PLN then round(amt / z, minor(PLN), half-even) else amt
+
+def fl: money PLN = flows(dx, sp .. sp_end)
+def fh: money PLN = flows(dh, sp .. sp_end) + flows(dx, sp .. sp_end)
+def flate: money PLN = flows(dlate, sp_late .. sp_late)
+def fdiv: money PLN = flows(ddiv, sp .. sp_end)
+def cn: int = count(m in transfers over sp .. sp_end)
+def pr: money PLN = bal(konto, dday) from w + flows(dx, sp .. sp_end)
+
+ask e_fl: explain fl
+ask e_fl_pin: explain fl with amt = 5 PLN
+ask e_fl_axpin: explain fl with rd = r2
+ask e_fh: explain fh
+ask e_flate: explain flate
+ask e_fdiv: explain fdiv
+ask e_cn: explain cn
+ask e_pr: explain pr
+ask e_known: explain fl as known 2026-04-01
+ask v_all: fl, fh, flate, fdiv, cn, pr
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  z = 0 "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  wlate = 2026-07-15 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  dday = 2026-05-31 "s"
+  wdiv = 2026-05-10 "s"
+  sp_late = 2026-07 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+,,1:0,1219:e_pr [rd = *]: refused: RUN-DIV division by zero
+  [1] pr = refused: RUN-DIV division by zero
+      rule base: won
+        [2] row v:dday = 2026-05-31
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w = 2026-04-30
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] bal(konto, 2026-05-31) from 2026-04-30 = refused: RUN-DIV division by zero
+            [5] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-04-30
+            [6] ra = 100.00 PLN
+                rule one: won
+                  [7] row v:amt = 100.00 PLN
+                      version v, source s, "invented", locator "s", governs always, known 2026-01-01
+                rule two: not applicable
+            (v:amt: see [7])
+            [8] running read bal(konto) = ?"date within window(2026-04-29, 2026-05-02) not precise enough for the day of dh" (wh), the balance up to this point of 2026-05-10
+            [9] row v:z = 0
+                version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  cut 2026-06-10
+,31:spec/p31/g6c/p06_holebook_io/e1,8:spec-p31,34:run p06_holebook_io.tally --ask e1,3233:21:p06_holebook_io.tally,3202:model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+def sp_mar: money PLN = flows(spend, sp_m .. sp_m)
+
+input sp_m: month
+
+ask i1: inputs-of sp_mar
+
+ask i2: inputs-of loose[2026-03]
+
+ask e1: explain loose[2026-03]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_m = 2026-03 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version ans
+  cite s
+  governs always
+  known 2026-02-15
+  rent_amt[2026-02] = 810.00 PLN "the answer"
+,,1:0,641:e1: 60.00 PLN
+  [1] loose[2026-03] = 60.00 PLN, law date 2026-03-01
+      rule guessed: beaten by seen
+      rule seen: won
+        [2] row v:skip_m = 2026-04
+            version v, source s, "invented values", locator "s", governs always, known 2026-01-01
+        [3] row v:rent_day[2026-03] = window(2026-03-03, 2026-03-08)
+            version v, source s, "invented values", locator "a window", governs always, known 2026-01-01
+        [4] row mar:bank[c1] = (from: card, to: shop, amount: 60.00 PLN, day: 2026-03-04)
+            version mar, source s, "invented values", locator "loose", on 2026-03-04, known 2026-03-21
+  cut 2026-05-20
+,32:spec/p31/narrow/n1_fulfils/e_feb,8:spec-p31,32:run n1_fulfils.tally --ask e_feb,3958:16:n1_fulfils.tally,3932:model n1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-07-31
+
+source s "invented for fence F7: o.fulfils read at a past booking cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-07
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input sp_feb: month
+
+input sp_may: month
+
+move rent[m in month]: transfers
+  on rent_day[m]
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt[m]
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def s_feb: money PLN = flows(spend, sp_feb .. sp_feb)
+
+def s_may: money PLN = flows(spend, sp_may .. sp_may)
+
+ask k: bal(konto, 2026-06-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+
+ask e_feb: explain s_feb
+
+ask i_feb: inputs-of s_feb
+
+ask i_may: inputs-of s_may
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  sp_feb = 2026-02 "s"
+  sp_may = 2026-05 "s"
+  rent_amt[2026-01] = 900.00 PLN "s"
+  rent_amt[2026-02] = -5.00 PLN "a refused instance: its amount is negative"
+  rent_amt[2026-04] = 900.00 PLN "s"
+  rent_amt[2026-05] = 900.00 PLN "s"
+  rent_amt[2026-06] = 900.00 PLN "s"
+  rent_amt[2026-07] = 900.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-02] = 2026-02-05 "s"
+  rent_day[2026-03] = 2026-03-05 "s"
+  rent_day[2026-05] = window(2026-05-03, 2026-05-08) "a hole day: a window"
+  rent_day[2026-06] = 2026-06-05 "s"
+  rent_day[2026-07] = 2026-07-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[r0102] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[r0105] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-01]) "the rent, its own instance whole"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0203] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[r0205] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-02]) "names the refused instance"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[r0304] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[r0305] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-03]) "names the instance whose amount is a hole"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-04]) "names the instance whose day is a hole"
+  bank[r0410] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"
+
+version may
+  cite s
+  governs 2026-05
+  known 2026-05-21
+  covers card
+  bank[r0506] = (on: 2026-05-06, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-05]) "names the instance whose day is a window"
+  bank[r0511] = (on: 2026-05-11, kind: transfers, leg cash from card to shop amount 80.00 PLN) "loose"
+,,1:0,1224:e_feb: 250.00 PLN
+  [1] s_feb = 250.00 PLN
+      rule base: won
+        [2] row v:sp_feb = 2026-02
+            version v, source s, "invented for fence F7: o.fulfils read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [3] row v:spend_dom = 25
+            version v, source s, "invented for fence F7: o.fulfils read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [4] row v:base = 300.00 PLN
+            version v, source s, "invented for fence F7: o.fulfils read at a past booking cut", locator "s", governs always, known 2026-01-01
+        [5] loose[2026-02] = 50.00 PLN, law date 2026-02-01
+            rule guessed: beaten by seen
+            rule seen: won
+              [6] row v:rent_day[2026-02] = 2026-02-05
+                  version v, source s, "invented for fence F7: o.fulfils read at a past booking cut", locator "s", governs always, known 2026-01-01
+              [7] row feb:bank[r0203] = (from: card, to: shop, amount: 50.00 PLN, day: 2026-02-03)
+                  version feb, source s, "invented for fence F7: o.fulfils read at a past booking cut", locator "loose", on 2026-02-03, known 2026-02-21
+  unfulfilled: spend[2026-02]
+  cut 2026-06-20
 ,
