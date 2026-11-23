@@ -7044,3 +7044,77 @@ G3's review (`tmp/m4/review-g3.md`, probes `tmp/m4/review/g3/`) found 5 blocking
 - **Open STOP-REPORTs:** none new.
 - **Usage:** about 0.4 % of the week this turn (1.05 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check commit: green, 24 steps (266s)`, exit 0, on this tree but for this line; `milestone-report: M4: 31/31`.
+
+## 2026-11-23 M4 G6a `lists`: a walk reads its plan instances where the plan keeps them (issue #252)
+
+The perf plan's group G6a (`tmp/m4/perf-plan.md` §1 cause 3, §3, §4), U1 (`tmp/m4/auto-picks.md`), on a4bbc404. Plain code, no fence opened. Scratch, scripts and outputs in `tmp/m4/g6a/` (untracked).
+
+**What moved** (no printed byte: T's vectors, the fences' suites, the whole pin oracle in `check commit`; every curve run, `c1_r2` and `d11_full` byte-identical before and after).
+- `plan_walk` (`walk/agenda.rs`) keeps each move's list as the plan cache's shared `Rc` (`plan_list`), where it took `.to_vec()`, a deep copy of every instance with its three registers, per walk.
+- `walk.insts` holds `Planned` (new, `agenda.rs`): a move's shared list and the instance's place in it. `schedule_plan` pushes that handle where it pushed `inst.clone()`; `Walk::inst(mv)` reads it.
+- The day walk's leg acts (`walk/day.rs` `movement`, `Planned::leg`) read the instance and its leg in the list, where `movement_leg` cloned the instance and the leg once per leg act: G5's `Inst::clone` under `advance_to`, 6.0 % at 2030.
+- The walk never changes a plan instance, so no copy-on-write site is needed. The copies left are named where they are made: a decision's instance into `due` (its run is made from it), an uncertain one into `uncertain` and a modelled one into `modelled` (those lists also hold runs a decision makes).
+- F6: `same_mv` (`walk/fork.rs`) compares the instances through `Walk::inst`, as it compared the copies. `ask/walked.rs`'s status word reads the handles.
+- A projection's walk takes a rank for an instance past its window no more (`plan_rank` after the window test; nothing used it).
+
+**The bisection: not taken; the loop is kept, as the plan's step 3 says when an outside instance can reach a read.**
+- *Checked in the code:* `outside_window` → `note_uncounted` keeps, at each place a leg names, what decided the instance's day (`deciding()`: pins, `pin met`, `assumed`) as `Noted::Out(day)`. `uncounted_in(place, (walk.start, at.day))` merges it into a read whose last day is before that day, and every read of a projection's walk ends on or before `plans_through`. So each such instance past the window reaches every read of its places.
+- *In b1 itself:* `costs_pay`'s day reads `holidays_pl`, assumed past 2030. `konto_balance (d = 2026-10-31)` at the 2030 horizon prints `assumed: kalendarz świąt po 2030 nie jest wpisany …` from such instances, through the same `Noted::Out` path the outside branch takes.
+- *Three more things a bisection on the window's days would drop:* an instance dated before t that refuses or is a hole acts at t (`max(day, start)`); F6's `agrees` compares the walk's `orders` and the projection's `counted` whole, kept against fresh, so both must stay whole; and a `none` instance's `From` note is kept past the window for a walk F6 continues (`continue_with` keeps the kept walk's notes).
+- *Tried and reverted* (both measured worse at 2028): a first pass noting the past-window and left-out instances unsorted, only the window's sorted (+0.9 G); a pre-check before `note_uncounted` (+1.0 G, as `deciding()` clones what it finds).
+
+**What the kept loop still costs: cause 3's quadratic, smaller, not gone.**
+- Per projection walk, every instance of every list is still visited: its order is cloned into `orders` and sorted (`movement_orders`), the plan handles are sorted, each one past the window is noted, each `none` one's places are read (`decided_places`) and marked.
+- samply on this group's quick binary (`tmp/m4/g6a/prof_a1_2028`, `prof_a1_2030`): `schedule_plan` 60 → 142 and `movement_orders` 41 → 106 samples, out of 11 189 and 23 747, from 2028 to 2030. That is ×2.5 for ×1.67 the horizon, about n^1.8.
+- `schedule_decided` 86 → 165 and `decided_places` 188 → 298 grow about linearly.
+- *Judged, not run:* carried at n^1.8 to 2059, the first two are about 8 s on the quick binary (11 s at n²).
+- What would remove it, all touching F6's comparisons or F1's state, so a step of its own (G6d's profile, or the lead's):
+  - (1) rank by the lists, each already sorted in the movement order, with `agrees` comparing the lists pointer first rather than their merged orders;
+  - (2) keep what decided each place's later days once per list, as a suffix union `uncounted_in` reads, not one note per instance per walk.
+
+**Measures** (the plan's §4; one heavy run at a time, niced; `memcap.py` at 8 GB, pid 53628, mine, stopped at the end). Before is a4bbc404, measured today at the same load (about 2 to 3); G5's column is 9d055cc4's, from its entry.
+
+The curve (b1 cut short, `tmp/m4/g5/b1_<year>`, quick binary; `tmp/m4/g6a/curve.sh`):
+
+| Horizon | Ask | G5 (9d055cc4) | Before (a4bbc404) | After (G6a) | Instructions |
+| --- | --- | --- | --- | --- | --- |
+| 2026 | `k1` | 2.34 s, 344 MB, 34.2 G | 2.88 s, 346 MB, 34.9 G | 2.75 s, 318 MB, 33.1 G | −5.0 % |
+| 2027 | `k1` | 5.58 s, 923 MB, 77.7 G | 5.70 s, 933 MB, 80.1 G | 5.11 s, 877 MB, 73.0 G | −8.9 % |
+| 2028 | `k1` | 9.99 s, 1 560 MB, 138.0 G | 10.46 s, 1 592 MB, 144.3 G | 9.05 s, 1 523 MB, 128.4 G | −11.0 % |
+| 2029 | `konto_balance` | 16.43 s, 2 348 MB, 218.5 G | 16.90 s, 2 424 MB, 231.6 G | 14.43 s, 2 309 MB, 202.7 G | −12.5 % |
+| 2030 | `konto_balance` | 24.28 s, 3 195 MB, 322.8 G | 25.32 s, 3 323 MB, 344.8 G | 20.99 s, 3 209 MB, 298.2 G | −13.5 % |
+| `v1` 2028 | `k1` | 4.27 s, 872 MB, 58.2 G | 4.39 s, 875 MB, 59.4 G | 4.24 s, 858 MB, 58.3 G | −1.8 % |
+| `v1` 2030 | `k1` | 8.62 s, 1 585 MB, 107.9 G | 8.00 s, 1 590 MB, 109.9 G | 7.86 s, 1 568 MB, 108.0 G | −1.8 % |
+
+- The saving grows with the horizon: 1.7, 7.1, 15.9, 28.9, 46.6 G, about n^2.1 from 2028 to 2030. So the copies were a quadratic term, and it is gone.
+- `v1` (no projection read) barely moves, as cause 3 predicts. Instructions repeat within about 1 % run to run (2030 before: 347.3 G, then 344.8 G).
+- At 2030: time −17 %, footprint −3.4 %, against the plan's −10 to −15 % and −5 to −15 %. The footprint is mostly the registers (G6b).
+
+The runs (release binary; `tmp/m4/g6a/rows.sh`, runs.tsv's rows):
+
+| Run | G5 | Before | After |
+| --- | --- | --- | --- |
+| `c1_r2` | 14.12 s, 633 MB, 211.6 G | 14.37 s, 632 MB, 212.0 G | 13.03 s, 581 MB, 202.4 G (the plan: 12–13.5 s) |
+| `b1` | stopped past 8 GB after 49.3 s, 784.7 G | (G5's) | stopped by memcap at 8.9 GB after 52.2 s, 846.0 G by then |
+| P8-L2 `d11_full` | 0.46 s, 61.6 MB | 0.40 s, 58.9 MB, 5.66 G | 0.41 s, 57.7 MB, 5.66 G, digest `47abb419…` (T's) |
+| P8-14 (`perf row`) | 1.55 s on load 12 | 1.02 s, 213.9 MB, 14.28 G | 896 ms, 191.1 MB, 13.40 G |
+
+- P8-14's counts are unchanged (`perf counts P8-14`): `def_misses 25450, days_stepped 960, walks_shared 582`.
+- `c1_r2` prints the same bytes (sha `9defd731bf0f`).
+
+**For the lead: one b1 run was not capped at 8 GB.** My first b1 used a copy of the binary under `tmp/m4/g6a/`. memcap's pattern matches only `…/target/<profile>/tally run`, and run1.py's own check reads RSS, which misses compressed pages. That run reached a 16.6 GB peak footprint and was stopped at run1.py's 90 s. The table's run used `engine/target/g6aafter/tally` and was stopped by memcap. The `load:` recipe (rules step) should cap by footprint, or run only binaries under `target/`.
+
+**For the review and T (not checked):**
+- Under F6 a new walk is planned through its read's month end (`horizon`); the twin plans through the read's day.
+- So an instance that is refused or a hole, dated after the read's day in the same month, is noted (`Noted::Out`) under the twin and booked, not noted, under F6.
+- If that instance's day is decided by a pin or an assumption, a read before its day would list it under the twin only.
+- Not probed in this group.
+
+- **Size** (`git diff --shortstat` on `engine/crates`): 6 files, +140 −67, against the plan's 0.3 k (0.2–0.4).
+- **Files:** `walk/agenda.rs` (F1's module), `walk/day.rs`, `walk/fork.rs` (F6), `walk/state.rs` (F1's checkpoint fence: the field type), `ask/walked.rs`, `lib.rs` (the re-export).
+- **Exceptions:** +0.
+- **Mutants:** none proved. `Planned`'s equality is derived; no new operator in F6's `same_mv`.
+- **Open STOP-REPORTs:** none from this group.
+- **Next:** G6b `registers`.
+- **Usage:** about 0.45 % of the week by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (221s)` and `check fences: green, 1 step (22s)`, exit 0, on this tree but for this entry; `milestone-report: M4: 31/33` (G3's two reds, under its fix review).

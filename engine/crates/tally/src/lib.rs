@@ -236,6 +236,7 @@ pub mod walk {
     mod tuples;
     mod value;
 
+    pub(crate) use agenda::Planned;
     pub use agenda::{Act, Mv, Reading, endings, reading_point};
     pub use day::Ends;
     #[cfg(feature = "fault-injection")]

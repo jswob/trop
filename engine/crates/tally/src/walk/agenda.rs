@@ -16,7 +16,8 @@
 //! Invariants: every act is scheduled on its day at its point before the walk reaches that
 //! day; the event walk steps the days with an act, the run's first day and each lifespan's
 //! last; the oracle steps every day from S to E through the same steps; a projection's walk
-//! books nothing of a move its holder's dependents hold.
+//! books nothing of a move its holder's dependents hold; a walk reads each plan instance where
+//! the plan pass keeps its move's list and never copies one, as it never changes one.
 //! PERF: P8-14 (days stepped: the event walk opens only the run's first day, the days with an
 //! act and each lifespan's last, where refcore steps every day; X's replay steps 926 days in
 //! 21 walks); plain twin: crates/tally/src/oracle.rs (`Days::Every`, every day from S to E
@@ -25,6 +26,7 @@
 //! the same bytes under both).
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::rc::Rc;
 
 use super::instance::{Amount, Dated, End, Exists, Inst, LegVal, Order, Status};
 use super::point::{At, Step};
@@ -43,6 +45,48 @@ use crate::time::Day;
 /// a decision's run books its legs at its point (E §4.2 step 3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Mv(pub usize);
+
+/// A plan instance the walk books, read where the plan pass keeps it: its move's list at the
+/// walk's cut, shared with every other read of that plan, and its place there. The walk never
+/// changes a plan instance, so it never copies one (E §4.1, §4.2 step 2; P §3.5, the memory a
+/// walk holds).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Planned {
+    /// The move's list, as the plan pass keeps it.
+    list: Rc<Vec<Inst>>,
+    /// The instance's place in it.
+    ix: usize,
+}
+
+impl Planned {
+    /// The instance. E §4.1.
+    #[must_use]
+    pub(crate) fn inst(&self) -> Option<&Inst> {
+        self.list.get(self.ix)
+    }
+
+    /// The instance's place in the movement order, which ranks it among the day's plans.
+    /// E §4.1.
+    fn order(&self) -> Option<&Order> {
+        self.inst().map(|i| &i.order)
+    }
+
+    /// The instance and its leg `leg`. E §4.2 step 2.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for an instance or a leg its list lacks.
+    pub(crate) fn leg(&self, leg: usize) -> Result<(&Inst, &LegVal), Stop> {
+        let inst = self
+            .inst()
+            .ok_or_else(|| super::plan::invariant("an act of a movement the walk lacks"))?;
+        let lg = inst
+            .legs
+            .get(leg)
+            .ok_or_else(|| super::plan::invariant("an act of a leg the movement lacks"))?;
+        Ok((inst, lg))
+    }
+}
 
 /// A reading the cut sees, as the walk applies it (refcore's `readings` entries). L §5.19.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -104,6 +148,12 @@ pub enum Act {
 }
 
 impl Walk {
+    /// Plan instance `mv` of the walk, where its plan pass's list holds it. E §4.1, §4.2.
+    #[must_use]
+    pub(crate) fn inst(&self, mv: Mv) -> Option<&Inst> {
+        self.insts.get(mv.0).and_then(Planned::inst)
+    }
+
     /// Puts an act on its day's agenda. E §4.2.
     pub(crate) fn at(&mut self, at: At, act: Act) {
         self.agenda
@@ -184,21 +234,26 @@ impl Engine {
         let mut hole_places = BTreeMap::new();
         let mut decided = BTreeMap::new();
         for mv in m.moves_in(world) {
-            let insts = self.plan_list(m, mv, cut)?.to_vec();
+            // the list the plan pass keeps, shared, never copied: a projection's walk reads
+            // every move's whole list, about four walks a month (P §3.5)
+            let list = self.plan_list(m, mv, cut)?;
             if mv.decision {
                 if !left_out_of(self.walk(id)?, &mv.id) {
-                    hole_places.extend(self.hole_days(m, mv, &insts, cut)?);
+                    hole_places.extend(self.hole_days(m, mv, &list, cut)?);
                 }
-                decisions.push((mv.id.clone(), mv.stratum, insts));
+                decisions.push((mv.id.clone(), mv.stratum, list));
                 continue;
             }
-            for inst in insts.iter().filter(|i| i.status == Status::None) {
+            for inst in list.iter().filter(|i| i.status == Status::None) {
                 let places = self.decided_places(m, mv, inst, cut)?;
                 decided.insert(inst.id.clone(), places);
             }
-            plans.extend(insts);
+            plans.extend((0..list.len()).map(|ix| Planned {
+                list: Rc::clone(&list),
+                ix,
+            }));
         }
-        plans.sort_by(|a, b| a.order.cmp(&b.order));
+        plans.sort_by(|a, b| a.order().cmp(&b.order()));
         let orders = movement_orders(&plans, &decisions);
         let adjustments = if main {
             self.all_adjustments(m, cut)?
@@ -217,22 +272,25 @@ impl Engine {
         }
         schedule_readings(walk, &readings)?;
         schedule_observations(walk, observed)?;
-        for inst in plans {
+        for planned in plans {
+            let inst = planned
+                .inst()
+                .ok_or_else(|| super::plan::invariant("a plan instance its list lacks"))?;
             if left_out_of(walk, &inst.move_id) {
                 if inst.status != Status::None {
-                    count_left_out(walk, &inst)?;
+                    count_left_out(walk, inst)?;
                 }
                 continue;
             }
             if let Some(places) = decided.remove(&inst.id) {
-                schedule_decided(walk, &inst, places)?;
+                schedule_decided(walk, inst, places)?;
             }
-            schedule_plan(walk, inst)?;
+            schedule_plan(walk, &planned)?;
         }
-        for (rank, (move_id, stratum, insts)) in ranked3(decisions).into_iter().enumerate() {
-            for inst in insts {
+        for (rank, (move_id, stratum, list)) in ranked3(decisions).into_iter().enumerate() {
+            for inst in list.iter() {
                 if left_out_of(walk, &move_id) {
-                    count_left_out(walk, &inst)?;
+                    count_left_out(walk, inst)?;
                     continue;
                 }
                 let places = hole_places.remove(&inst.id);
@@ -317,13 +375,10 @@ impl Engine {
 /// The movement orders of a walk's plan and decision instances, sorted in the typed movement
 /// order, each once since an instance is its move and keys: the ranks of the day's plans
 /// (refcore's `plan_key`; tally 2.1.6, #57). E §4.1.
-fn movement_orders(plans: &[Inst], decisions: &[(String, u32, Vec<Inst>)]) -> Vec<Order> {
-    let decided = decisions.iter().flat_map(|(_, _, insts)| insts);
-    let mut orders: Vec<Order> = plans
-        .iter()
-        .chain(decided)
-        .map(|i| i.order.clone())
-        .collect();
+fn movement_orders(plans: &[Planned], decisions: &[(String, u32, Rc<Vec<Inst>>)]) -> Vec<Order> {
+    let planned = plans.iter().filter_map(Planned::inst);
+    let decided = decisions.iter().flat_map(|(_, _, list)| list.iter());
+    let mut orders: Vec<Order> = planned.chain(decided).map(|i| i.order.clone()).collect();
     orders.sort();
     orders
 }
@@ -419,7 +474,7 @@ fn after_the_point(walk: &mut Walk) {
 }
 
 /// The decision moves by id (refcore's decision day keys). E §4.2 step 3.
-fn ranked3(mut decisions: Vec<(String, u32, Vec<Inst>)>) -> Vec<(String, u32, Vec<Inst>)> {
+fn ranked3(mut decisions: Vec<(String, u32, Rc<Vec<Inst>>)>) -> Vec<(String, u32, Rc<Vec<Inst>>)> {
     decisions.sort_by(|a, b| a.0.cmp(&b.0));
     decisions
 }
@@ -511,7 +566,7 @@ fn leg_text(id: &str, leg: &str) -> String {
 /// A modelled-past instance: kept for the ledger, and one nothing fulfils marks its places
 /// `open` from its legs' days (refcore's `prepare`, its modelled plans; its `same_observed`
 /// clause serves a joint model's lines, M5c). E §4.1 step 3, L §5.19, §6.1.
-fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
+fn schedule_modelled(walk: &mut Walk, inst: &Inst) -> Result<(), Stop> {
     if inst.obs.is_empty() {
         let rank = walk.plan_rank(&inst.order)?;
         for lg in &inst.legs {
@@ -547,7 +602,8 @@ fn schedule_modelled(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
             }
         }
     }
-    walk.modelled.push(inst);
+    // a copy: the ledger's list also holds the modelled runs a decision makes as it runs
+    walk.modelled.push(inst.clone());
     Ok(())
 }
 
@@ -596,31 +652,38 @@ fn outside_window(walk: &Walk, inst: &Inst) -> bool {
 /// `prepare`, its plans; tally 2.1.6, #57). A refused instance refuses the places its legs
 /// give from its day, and every place where a leg's place can't be read (L §8.4). E §4.1
 /// step 3, §4.2.
-fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
-    let rank = walk.plan_rank(&inst.order)?;
+fn schedule_plan(walk: &mut Walk, planned: &Planned) -> Result<(), Stop> {
+    let inst = planned
+        .inst()
+        .ok_or_else(|| super::plan::invariant("a plan instance its list lacks"))?;
     match inst.status {
         Status::LeftOut => {
-            note_never(walk, &inst, &inst.day_coll);
-            return note_left_out(walk, &inst);
+            note_never(walk, inst, &inst.day_coll);
+            return note_left_out(walk, inst);
         }
         Status::Modelled => {
-            note_uncounted(walk, &inst, &inst.day_coll);
+            note_uncounted(walk, inst, &inst.day_coll);
             return schedule_modelled(walk, inst);
         }
         Status::None | Status::Decision | Status::Open => return Ok(()),
         Status::Uncertain => {
-            walk.uncertain.push(inst);
+            // a copy: the list also holds the uncertain runs a decision makes as it runs
+            walk.uncertain.push(inst.clone());
             return Ok(());
         }
         Status::Refused | Status::Hole | Status::Past | Status::Plan => {}
     }
-    if walk.proj.is_some() && outside_window(walk, &inst) {
-        note_uncounted(walk, &inst, &inst.day_coll);
+    if walk.proj.is_some() && outside_window(walk, inst) {
+        // books nothing, but what decided its day joins a read whose days leave it out, so a
+        // projection's walk visits every instance of a list, not its window's alone (L §8.2
+        // One read set)
+        note_uncounted(walk, inst, &inst.day_coll);
         return Ok(());
     }
+    let rank = walk.plan_rank(&inst.order)?;
     let ix = walk.insts.len();
     let status = inst.status;
-    walk.insts.push(inst.clone());
+    walk.insts.push(planned.clone());
     let mv = Mv(ix);
     let point = |day: Day| At {
         rank,
@@ -682,7 +745,7 @@ fn schedule_plan(walk: &mut Walk, inst: Inst) -> Result<(), Stop> {
         }
         Status::Past | Status::Plan => {
             // a read whose span leaves a leg's day out doesn't count it (221.1)
-            note_uncounted(walk, &inst, &inst.day_coll);
+            note_uncounted(walk, inst, &inst.day_coll);
             for (leg, lg) in inst.legs.iter().enumerate() {
                 match &lg.day {
                     Dated::Day(d) if *d >= start => walk.at(point(*d), Act::Leg(mv, leg)),
@@ -760,7 +823,7 @@ fn schedule_decision(
     m: &Reality,
     walk: &mut Walk,
     (move_id, stratum, rank): (&str, u32, usize),
-    (inst, places): (Inst, Option<HolePlaces>),
+    (inst, places): (&Inst, Option<HolePlaces>),
 ) -> Result<(), Stop> {
     if inst.exists == Exists::No {
         return Ok(());
@@ -773,7 +836,7 @@ fn schedule_decision(
                 // places its legs name
                 if walk.proj.is_none() {
                     note_decision(walk, places.as_ref(), None, &inst.day_coll);
-                    note_left_out_at(walk, &inst, places.flatten())?;
+                    note_left_out_at(walk, inst, places.flatten())?;
                 }
                 return Ok(());
             }
@@ -781,7 +844,7 @@ fn schedule_decision(
             note_decision(walk, places.as_ref(), Some(d), &inst.day_coll);
             if d < walk.start || d > walk.plans_through() {
                 if walk.proj.is_none() && (d < m.start || d > m.end) {
-                    note_left_out(walk, &inst)?;
+                    note_left_out(walk, inst)?;
                 }
                 return Ok(());
             }
@@ -794,11 +857,15 @@ fn schedule_decision(
                 };
                 walk.at(at, Act::Decide(move_id.to_owned(), d));
             }
-            walk.due.entry(key).or_insert_with(Vec::new).push(inst);
+            // the one copy of a decision's instance a walk makes: it runs from it
+            walk.due
+                .entry(key)
+                .or_insert_with(Vec::new)
+                .push(inst.clone());
         }
         Some(Dated::Hole(h)) => {
             let at = At::before(walk.start);
-            decision_hole(walk, (at, h), &inst, places)?;
+            decision_hole(walk, (at, h), inst, places)?;
         }
         None => {
             let err = inst

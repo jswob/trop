@@ -334,7 +334,7 @@ fn same_act((one, act): (&Walk, &Act), (other, like): (&Walk, &Act)) -> bool {
 
 /// Whether two movements are one: plan instances by their bodies (E §4.1).
 fn same_mv((one, mv): (&Walk, Mv), (other, mv2): (&Walk, Mv)) -> bool {
-    one.insts.get(mv.0).is_some() && one.insts.get(mv.0) == other.insts.get(mv2.0)
+    one.inst(mv).is_some() && one.inst(mv) == other.inst(mv2)
 }
 
 /// Whether two leg acts of one movement carry the same hole or refusal. E §4.2.

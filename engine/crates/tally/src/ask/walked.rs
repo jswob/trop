@@ -27,7 +27,7 @@ use crate::num::Num;
 use crate::syntax::{Ask, Bal, Expr, Stop};
 use crate::time::Day;
 use crate::walk::{
-    ALL, Amount, At, Change, Dated, Ent, LegVal, Status, Walk, qty_value, state_value,
+    ALL, Amount, At, Change, Dated, Ent, LegVal, Planned, Status, Walk, qty_value, state_value,
 };
 
 /// The line of `explain bal(…)`: its value as the read gives it, then, but for a refusal or a
@@ -537,7 +537,12 @@ fn status_word(engine: &Engine, walk: &Walk, id: &str) -> Option<&'static str> {
     let run = walk.run_ids.get(id).and_then(|i| walk.runs.get(*i));
     let status = match run {
         Some(r) => Some(r.inst.status),
-        None => walk.insts.iter().find(|i| i.id == id).map(|i| i.status),
+        None => walk
+            .insts
+            .iter()
+            .filter_map(Planned::inst)
+            .find(|i| i.id == id)
+            .map(|i| i.status),
     };
     if let Some(status) = status {
         return status_text(status);

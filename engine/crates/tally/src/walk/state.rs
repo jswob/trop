@@ -25,7 +25,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::agenda::Act;
+use super::agenda::{Act, Planned};
 use super::instance::{Amount, Dated, HoleSrc, Inst, LegVal, Order};
 use super::order::{CycleItem, Run};
 use super::plan::invariant;
@@ -283,8 +283,9 @@ pub struct Walk {
     pub(crate) progress: Progress,
     /// The day being walked.
     pub(crate) today: Option<Today>,
-    /// The plan instances it books, by their place in its list.
-    pub(crate) insts: Vec<Inst>,
+    /// The plan instances it books, by their place in its list, each where its plan pass's
+    /// list holds it.
+    pub(crate) insts: Vec<Planned>,
     /// The decision instances due each (move, day).
     pub(crate) due: BTreeMap<(String, Day), Vec<Inst>>,
     /// The decision instances it ran.

@@ -16,7 +16,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use super::agenda::{Act, Mv};
+use super::agenda::{Act, Mv, Planned};
 use super::fork::Forks;
 use super::instance::{Amount, Dated, End, Inst, LegVal, Status};
 use super::plan::{invariant, qty_value};
@@ -281,10 +281,11 @@ impl Engine {
                 self.walk_mut(id)?.add(m, &place, &unit, ent)
             }
             Act::Leg(mv, leg) => {
-                let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                let planned = self.movement(id, mv)?;
+                let (movement, lg) = planned.leg(leg)?;
                 if let Amount::Refused(r) = &lg.amount {
                     let walk = self.walk_mut(id)?;
-                    return walk.leg_bad(m, (&movement.id, &lg, &movement.coll), r, at);
+                    return walk.leg_bad(m, (&movement.id, lg, &movement.coll), r, at);
                 }
                 let mut reg = Vec::new();
                 if movement.status == Status::Past && movement.obs.is_empty() {
@@ -294,15 +295,16 @@ impl Engine {
                         figure: String::new(),
                     });
                 }
-                self.book_leg(m, id, (&movement, &lg), at, &reg)
+                self.book_leg(m, id, (movement, lg), at, &reg)
             }
             Act::LegHole(mv, leg, qs) => {
-                let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                let planned = self.movement(id, mv)?;
+                let (movement, lg) = planned.leg(leg)?;
                 let h = match &lg.amount {
                     Amount::Refused(r) => {
                         return self.walk_mut(id)?.leg_bad(
                             m,
-                            (&movement.id, &lg, &movement.coll),
+                            (&movement.id, lg, &movement.coll),
                             r,
                             at,
                         );
@@ -313,26 +315,28 @@ impl Engine {
                 let h = h.ok_or_else(|| invariant("a hole movement with no question"))?;
                 self.walk_mut(id)?.hole_ends(
                     m,
-                    (&movement.id, &lg),
+                    (&movement.id, lg),
                     at,
                     &Change::Hole(h),
                     &movement.coll,
                 )
             }
             Act::LegBad(mv, leg, err) => {
-                let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                let planned = self.movement(id, mv)?;
+                let (movement, lg) = planned.leg(leg)?;
                 let walk = self.walk_mut(id)?;
                 if movement.day.as_ref().and_then(Dated::day).is_none() {
                     // its day is a hole or refused (tally 2.1.8, R11)
-                    return walk.leg_bad_undated(m, (&movement.id, &lg, &movement.coll), &err, at);
+                    return walk.leg_bad_undated(m, (&movement.id, lg, &movement.coll), &err, at);
                 }
-                walk.leg_bad(m, (&movement.id, &lg, &movement.coll), &err, at)
+                walk.leg_bad(m, (&movement.id, lg, &movement.coll), &err, at)
             }
             Act::Perm(mv, leg, h) => {
-                let (movement, lg) = self.movement_leg(id, mv, leg)?;
+                let planned = self.movement(id, mv)?;
+                let (movement, lg) = planned.leg(leg)?;
                 self.walk_mut(id)?.hole_ends(
                     m,
-                    (&movement.id, &lg),
+                    (&movement.id, lg),
                     at,
                     &Change::Perm(h),
                     &movement.coll,
@@ -366,19 +370,14 @@ impl Engine {
         }
     }
 
-    /// A movement of the walk and one of its legs. E §4.2.
-    fn movement_leg(&self, id: usize, mv: Mv, leg: usize) -> Result<(Inst, LegVal), Stop> {
-        let inst = self
-            .walk(id)?
+    /// A movement of the walk, where its plan pass's list holds it: a leg is read there, never
+    /// from a copy. E §4.2.
+    fn movement(&self, id: usize, mv: Mv) -> Result<Planned, Stop> {
+        self.walk(id)?
             .insts
             .get(mv.0)
-            .ok_or_else(|| invariant("an act of a movement the walk lacks"))?;
-        let lg = inst
-            .legs
-            .get(leg)
             .cloned()
-            .ok_or_else(|| invariant("an act of a leg the movement lacks"))?;
-        Ok((inst.clone(), lg))
+            .ok_or_else(|| invariant("an act of a movement the walk lacks"))
     }
 
     /// Books instance `inst`'s leg `lg`'s two ends: a hole at both for a hole amount, nothing
