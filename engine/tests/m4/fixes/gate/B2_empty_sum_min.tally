@@ -1,0 +1,49 @@
+model b2
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+index ks = [k1, k2]
+
+input x[k in ks]: num PLN
+input elig[k in ks]: bool
+input md: rounding
+input r: rate
+input d0: date
+input d1: date
+
+def tax[k in ks]: money PLN = round(x[k], minor(PLN), md)
+def tax_ax[k in ks]: money PLN = round(x[k], minor(PLN), rmode)
+def due[k in ks]: money PLN = if elig[k] then round(x[k], minor(PLN), md) else 0
+def due_ax[k in ks]: money PLN = if elig[k] then round(x[k], minor(PLN), rmode) else 0
+
+ask s_in: sum(round(x[k], minor(PLN), md) for k in ks where elig[k])
+ask s_ax: sum(round(x[k], minor(PLN), rmode) for k in ks where elig[k])
+ask s_def: sum(tax[k] for k in ks where elig[k]), sum(tax_ax[k] for k in ks where elig[k])
+ask s_acc: sum(accrue(x[k], r, d0, d1, act365, simple) for k in ks where elig[k])
+ask s_pin: sum((tax[k] as if {x[k] = x[k1]}) for k in ks where elig[k])
+ask i_in: due[k] for k in ks
+ask i_ax: due_ax[k] for k in ks
+ask i_ask: if elig[k1] then round(x[k1], minor(PLN), md) else 0
+ask i_ask_ax: if elig[k1] then round(x[k1], minor(PLN), rmode) else 0
+ask i_lit: if elig[k1] then round(x[k1], minor(PLN), half-up) else 0
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[k1] = 10.005 "s"
+  x[k2] = 20.005 "s"
+  elig = false "s"
+  md = half-up "s"
+  r = 5 %/year "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2026-03-11 "s"

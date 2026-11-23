@@ -1,0 +1,25 @@
+model rb
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+band scale(x: money PLN): num %
+
+input el[k in ks]: bool
+input inc[k in ks]: money PLN
+
+ask q1: sum(round(marginal(scale, inc[k]), minor(PLN), half-up) for k in ks where el[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  el = false "s"
+  inc = 500 PLN "s"
+  scale: [0, 100) = 10 "s"
+  scale: [100, inf) = 20 "s"

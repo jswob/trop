@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 29] = [
+    const GROUPS: [&str; 33] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -28,6 +28,9 @@ mod tests {
         "fixes-g6",
         "fixes-g6c",
         "fixes-g6cfix",
+        "fixes-gate",
+        "fixes-gatefix",
+        "fixes-gatelead",
         "fixes-narrow",
         "fixes-p12",
         "fixes-p21",
@@ -41,6 +44,7 @@ mod tests {
         "spec-g2fix",
         "spec-g3",
         "spec-g3fix",
+        "spec-gate",
         "spec-p12",
         "spec-p21",
         "spec-p22",
@@ -243,6 +247,39 @@ mod tests {
         group_holds(VECTORS, "fixes-p32");
     }
 
+    /// The gate review's probes (`tmp/m4/gate-review.md`, `m4/fixes/gate/`), refcore's bytes:
+    /// B1, a rate literal pinned on a `rate` by `with` and `as if` (`c02_ratepin`, `p_c1` `p16`,
+    /// `s01_solve` `s8`); B2, an untaken or empty term holding `round` with a read mode,
+    /// `accrue` or a per-tuple pin (`B2_empty_sum_min`, `o03_bare`, `p_s1` `q5`, `q6`, `q12`);
+    /// X1, `solve`'s centre to a minor unit (`s02_solve_minor` `a2`); X3, `explain` above back
+    /// pay (`p_X3_explain_backpay_min` `z2` to `z5`), and `p_g5x`'s three stops, held for #255
+    /// (P31: refcore lists swap's whole list; the text's lines are `spec-gate`'s).
+    #[test]
+    fn m4_fixes_gate() {
+        group_holds(VECTORS, "fixes-gate");
+    }
+
+    /// The gate fix's review (`tmp/m4/review-gatefix.md`, `m4/fixes/gatefix/`), refcore's bytes:
+    /// G1, `solve` through a money def at step 3's centre (`x1_min`, `x1_grossup2`, `r4` `h5`,
+    /// `s3` `i3`; P36); G2 and G3, an empty `sum` or a bare branch beside a leg's `flows`, a keyed
+    /// place's `bal`, a band read, `band_lo`, a place of `any` unit, `pow`, `accrue` of a band
+    /// (`b_legflows*`, `b_keyedbal*`, `b_roundband`, `b_bandif`, `t1_*`, `t2_*`), each 0 in its
+    /// term's load type (P36); `b_bindbal`, a place bound by `for p in accounts` (a bare 0).
+    #[test]
+    fn m4_fixes_gatefix() {
+        group_holds(VECTORS, "fixes-gatefix");
+    }
+
+    /// The coordinator's probes on the gate's fixes (`m4/fixes/gatelead/`), refcore's bytes:
+    /// P36's bare 0s and empty terms (`p36_t1`, every ask; `a7` held for #255, where refcore
+    /// prints `0` for money PLN; `a12`, a rate's bare 0, prints `0` on both), and P37's settled
+    /// back pay (`x3_settled` `z3`, `z4`; `z5`, `e5` held for #255, where refcore's `explain`
+    /// leaves out the settling movement). The text's lines are `spec-gate`'s.
+    #[test]
+    fn m4_fixes_gatelead() {
+        group_holds(VECTORS, "fixes-gatelead");
+    }
+
     /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
     /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`, held for #255 since P31: the text's lines are
     /// `spec-p31`'s) and under a hole axis (`fixes/g3fix/h2_plan_hole_axis` `e_cw`, `e_sm`), and
@@ -402,5 +439,15 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p32() {
         group_holds(SPEC, "spec-p32");
+    }
+
+    /// The gate's answers (#255, #250), written from build/m4's run at 4b450ec8: `p_g5x`'s
+    /// three `explain` stops in P31's read set (their answer lines refcore's); P36, a bare 0
+    /// beside money is money (`p36_t1` `a7`, 0.00 PLN); P37, `explain` of a span lists the
+    /// movement that settles its adjustment (`x3_settled` `z5`, `e5`); L §4.2, `age_months` in
+    /// the calendar's last month is 0 (`items/age` `a_last`, held for #250 since C3).
+    #[test]
+    fn m4_fixes_spec_gate() {
+        group_holds(SPEC, "spec-gate");
     }
 }

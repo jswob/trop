@@ -1,0 +1,42 @@
+model c02
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+input ry: rate
+input rm: rate
+input other: rate
+input p0: money PLN
+input d0: date
+input d1: date
+
+def acc: num PLN = accrue(p0, ry, d0, d1, act365, simple)
+def per: num = periodic(ry, month, simple)
+def perm: num = periodic(rm, year, simple)
+def lifted: num PLN = accrue(p0, ry, d0, d1, act365, simple) as if {ry = other}
+
+ask base: acc, per
+ask w_lit: acc with ry = 10 %/year
+ask w_lit_per: per with ry = 10 %/year
+ask w_expr: acc with ry = other
+ask w_sum: acc with ry = other + other
+ask ai_lit: acc as if {ry = 10 %/year}
+ask ai_def: lifted
+ask w_row: ry with ry = 10 %/year
+ask w_month: perm with rm = 2 %/month
+ask w_wrongp: per with ry = 2 %/month
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ry = 12 %/year "s"
+  rm = 1 %/month "s"
+  other = 10 %/year "s"
+  p0 = 36500 PLN "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2027-03-01 "s"

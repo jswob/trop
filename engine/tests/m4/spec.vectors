@@ -19254,4 +19254,991 @@ version may
                   version feb, source s, "invented for fence F7: o.fulfils read at a past booking cut", locator "loose", on 2026-02-03, known 2026-02-21
   unfulfilled: spend[2026-02]
   cut 2026-06-20
+,28:spec/gate/gatelead/p36_t1/a7,9:spec-gate,25:run p36_t1.tally --ask a7,1673:12:p36_t1.tally,1651:model p36
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+index ks = [k1, k2]
+index month = month 2026-01..2026-12
+
+place konto: accounts PLN lives 2026-01-01..
+place boss: outside lives 1900-01-01..
+
+input el[k in ks]: bool
+input pc[k in ks]: num %
+input ry: rate
+input n[k in ks]: int
+input x[k in ks]: money PLN
+input e[k in ks]: money EUR
+input fx: num PLN/EUR
+input md: rounding
+input dd: int
+
+move wage[m in month]: transfers
+  on day_of(m, dd)
+  at start_of(m)
+  leg cash from boss to konto amount x[k1]
+
+def dx[k in ks]: money PLN = x[k] * n[k]
+
+ask a1: sum(pc[k] for k in ks where el[k])
+ask a2: sum(ry for k in ks where el[k])
+ask a3: sum(n[k] for k in ks where el[k])
+ask a4: sum(dx[k] for k in ks where el[k])
+ask a5: sum(round(e[k] * fx, minor(PLN), md) for k in ks where el[k])
+ask a6: if el[k1] then 0 else x[k1]
+ask a7: if el[k1] then x[k1] else if el[k2] then 0 else 0
+ask a8: sum(if el[k] then x[k] else 0 for k in ks)
+ask a9: sum(flows(konto, m) for m in month where el[k1])
+ask a10: sum(x[k] for k in ks where el[k]) + x[k2]
+ask a11: if el[k1] then pc[k1] else 0
+ask a12: if el[k1] then ry else 0
+ask a13: max(0, sum(x[k] for k in ks where el[k]))
+ask a14: sum(e[k] for k in ks where el[k]) * fx
+def s4: money PLN = sum(dx[k] for k in ks where el[k])
+ask a15: explain s4
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  el = false "s"
+  pc = 5 "s"
+  ry = 3 %/year "s"
+  n = 2 "s"
+  x = 10.00 PLN "s"
+  e = 10.00 EUR "s"
+  fx = 4.30 PLN/EUR "s"
+  md = half-up "s"
+  dd = 10 "s"
+  opening[konto] = 0 PLN at 2026-01-01 start "s"
+,,1:0,30:a7: 0.00 PLN
+  cut 2026-10-25
+,32:spec/gate/gatelead/x3_settled/z5,9:spec-gate,29:run x3_settled.tally --ask z5,2012:16:x3_settled.tally,1986:model m1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-08
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place boss: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input pay[m in month]: money PLN
+input share: num
+input one: int
+input d10: int
+input d20: int
+input d25: int
+
+move wage[m in month]: transfers
+  on day_of(m, d10)
+  at start_of(m)
+  leg cash from boss to konto amount pay[m]
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(wage, m) * share, minor(PLN), half-up)
+
+move zed[m in month]: transfers
+  on day_of(m, d25)
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m)
+
+def tf[m in month]: money PLN = flows(top, m)
+def zf[m in month]: money PLN = flows(zed, m)
+
+ask a: tf[m] for m in [2026-03, 2026-04, 2026-05]
+ask e3: explain tf[2026-03]
+ask e4: explain tf[2026-04]
+ask e5: explain tf[2026-05]
+ask i3: inputs-of tf[2026-03]
+ask i4: inputs-of tf[2026-04]
+ask et: explain top[2026-04]
+ask z: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05]
+ask z2: explain zf[2026-02]
+ask z3: explain zf[2026-03]
+ask z4: explain zf[2026-04]
+ask z5: explain zf[2026-05]
+ask j3: inputs-of zf[2026-03]
+ask ez: explain zed[2026-03]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  one = 1 "s"
+  d10 = 10 "s"
+  d20 = 20 "s"
+  d25 = 25 "s"
+  pay = 1000.00 PLN "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+
+version raise
+  cite s
+  governs 2026-04..
+  known 2026-05-02
+  pay[2026-04] = 1100.00 PLN "raise"
+
+version settle
+  cite s
+  governs 2026-05
+  known 2026-05-20
+  covers konto
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from boss to konto amount 100.00 PLN, fulfils: adjustments[wage[2026-04].cash, raise]) "settles"
+,,1:0,1009:z5: 10.00 PLN
+  [1] zf[2026-05] = 10.00 PLN
+      rule base: won
+        [2] row v:d25 = 25
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:d20 = 20
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:d10 = 10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:pay = 1 000.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row settle:bank[r1] = (from: boss, to: konto, amount: 100.00 PLN, day: 2026-05-15)
+            version settle, source s, "invented", locator "settles", on 2026-05-15, known 2026-05-20
+        [7] row v:share = 0.1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: top[2026-05]
+  unfulfilled: zed[2026-05]
+  open: wage[2026-05]
+  cut 2026-06-20
+warning: WARN-UNREAD input one is read by nothing
+,32:spec/gate/gatelead/x3_settled/e5,9:spec-gate,29:run x3_settled.tally --ask e5,2012:16:x3_settled.tally,1986:model m1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-08
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place boss: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input pay[m in month]: money PLN
+input share: num
+input one: int
+input d10: int
+input d20: int
+input d25: int
+
+move wage[m in month]: transfers
+  on day_of(m, d10)
+  at start_of(m)
+  leg cash from boss to konto amount pay[m]
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(wage, m) * share, minor(PLN), half-up)
+
+move zed[m in month]: transfers
+  on day_of(m, d25)
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m)
+
+def tf[m in month]: money PLN = flows(top, m)
+def zf[m in month]: money PLN = flows(zed, m)
+
+ask a: tf[m] for m in [2026-03, 2026-04, 2026-05]
+ask e3: explain tf[2026-03]
+ask e4: explain tf[2026-04]
+ask e5: explain tf[2026-05]
+ask i3: inputs-of tf[2026-03]
+ask i4: inputs-of tf[2026-04]
+ask et: explain top[2026-04]
+ask z: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05]
+ask z2: explain zf[2026-02]
+ask z3: explain zf[2026-03]
+ask z4: explain zf[2026-04]
+ask z5: explain zf[2026-05]
+ask j3: inputs-of zf[2026-03]
+ask ez: explain zed[2026-03]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  one = 1 "s"
+  d10 = 10 "s"
+  d20 = 20 "s"
+  d25 = 25 "s"
+  pay = 1000.00 PLN "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+
+version raise
+  cite s
+  governs 2026-04..
+  known 2026-05-02
+  pay[2026-04] = 1100.00 PLN "raise"
+
+version settle
+  cite s
+  governs 2026-05
+  known 2026-05-20
+  covers konto
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from boss to konto amount 100.00 PLN, fulfils: adjustments[wage[2026-04].cash, raise]) "settles"
+,,1:0,863:e5: 10.00 PLN
+  [1] tf[2026-05] = 10.00 PLN
+      rule base: won
+        [2] row v:d20 = 20
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:d10 = 10
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:pay = 1 000.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row settle:bank[r1] = (from: boss, to: konto, amount: 100.00 PLN, day: 2026-05-15)
+            version settle, source s, "invented", locator "settles", on 2026-05-15, known 2026-05-20
+        [6] row v:share = 0.1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: top[2026-05]
+  open: wage[2026-05]
+  cut 2026-06-20
+warning: WARN-UNREAD input one is read by nothing
+,23:spec/gate/gate/p_g5x/q8,9:spec-gate,24:run p_g5x.tally --ask q8,4289:11:p_g5x.tally,4268:model g5
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+
+index month = month 2026-01..2026-08
+index cs = [pl, ae]
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor_eur: outside lives 1900-01-01..
+place kantor_pln: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input amt[m in month]: money EUR
+input fx[m in month]: num PLN/EUR
+input dom: int
+input cal[c in cs]: calendar
+input home[m in month]: key cs
+input share: num
+input top_dom: int
+input n1: int
+
+def pln_of[m in month]: money PLN = round(amt[m] * fx[m], minor(PLN), rmode)
+
+move swap[m in month]: exchanges
+  on schedule(m, dom, modified_following, cal[home[m]])
+  at start_of(m)
+  leg eur from konto_eur to kantor_eur amount amt[m]
+  leg pln from kantor_pln to konto amount pln_of[m]
+
+move top[m in month]: transfers
+  on add_business(day_of(m, top_dom), n1, cal[home[m]])
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(swap.pln, m) * share, minor(PLN), rmode)
+
+move zed[m in month]: transfers
+  on last_business(m, n1, cal[pl])
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m .. m) + flows(swap.pln, m - n1 .. m - n1)
+
+def zf[m in month]: money PLN = flows(zed, m)
+def ef[m in month]: money EUR = flows(swap.eur, m)
+
+ask q1: flows(top, m) for m in month
+ask q2: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+ask q3: bal(pot, 2026-06-19), bal(konto, 2026-06-19), bal(konto_eur, 2026-06-19)
+ask q4: swap[m].day, top[m].day, zed[m].day for m in [2026-01, 2026-02, 2026-03, 2026-05]
+ask q5: bal(pot, 2026-06-19) with rmode = down
+ask q6: bal(pot, 2026-06-19) as known 2026-03-10
+ask q7: zf[2026-03], (zf[2026-03] as if {known 2026-03-10}), (zf[2026-03] as if {home[2026-03] = ae})
+ask q8: explain zf[2026-03]
+ask q9: inputs-of zf[2026-03]
+ask q10: count(t in exchanges over 2026-01-01 .. 2026-06-30), sum(t.pln.amount for t in exchanges over 2026-01-01 .. 2026-06-30)
+ask q11: ef[m] for m in [2026-01, 2026-02, 2026-03]
+ask q12: explain swap[2026-02]
+ask q13: bal(pot, 2026-08-31), bal(konto, 2026-08-31)
+
+ask xx0: explain top[2026-04]
+ask ii0: inputs-of top[2026-04]
+ask xx1: explain zed[2026-05]
+ask ii1: inputs-of zed[2026-05]
+ask xx2: explain zed[2026-02]
+ask ii2: inputs-of zed[2026-02]
+ask xx3: explain ef[2026-01]
+ask ii3: inputs-of ef[2026-01]
+ask xx4: explain pln_of[2026-04]
+ask ii4: inputs-of pln_of[2026-04]
+ask xx5: explain swap[2026-04]
+ask ii5: inputs-of swap[2026-04]
+ask xx6: explain top[2026-05]
+ask ii6: inputs-of top[2026-05]
+ask xx7: explain zf[2026-06]
+ask ii7: inputs-of zf[2026-06]
+ask xx8: explain zf[2026-02]
+ask ii8: inputs-of zf[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 29 "s"
+  top_dom = 27 "s"
+  n1 = 1 "s"
+  share = 0.1 "s"
+  amt = 100.05 EUR "s"
+  home = pl "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 5000 EUR at 2026-01-01 start "s"
+
+version c1
+  cite s
+  governs 2026
+  known 2026-01-01
+  cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+  cal[ae] = calendar(weekends [fri, sat], yearly [12-02])
+
+version c2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+
+version r1
+  cite s
+  governs 2026
+  known 2026-01-01
+  fx[2026-01] = 4.30 "s"
+  fx[2026-02] = 4.3333 "s"
+  fx[2026-03] = 4.35 "s"
+  fx[2026-04] = 4.50 "s"
+  fx[2026-05] = 4.55 "s"
+  fx[2026-06] = 4.60 "s"
+  fx[2026-07] = 4.65 "s"
+  fx[2026-08] = 4.70 "s"
+
+version r2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace fx[2026-02] = 4.9999 "corrected later"
+  replace fx[2026-04] = 4.0101 "corrected before its month"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  covers konto
+  bank[r1] = (on: 2026-04-28, kind: exchanges, leg eur from konto_eur to kantor_eur amount 100.05 EUR, leg pln from kantor_pln to konto amount 401.00 PLN, fulfils: swap[2026-04]) "april's exchange"
+,,1:0,3445:q8 [rmode = *]: 43.52 PLN
+  [1] zf[2026-03] = 43.52 PLN
+      rule base: won
+        [2] row v:n1 = 1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row c2:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+            version c2, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [4] row v:top_dom = 27
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:home = pl
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row c1:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+            version c1, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [7] row v:dom = 29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:amt = 100.05 EUR
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] pln_of[2026-01] = 430.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [10] row r1:fx[2026-01] = 4.3 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [11] row v:share = 0.1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [12] pln_of[2026-01] = 430.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r1:fx[2026-01]: see [10])
+        [13] pln_of[2026-03] = 435.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [14] row r1:fx[2026-03] = 4.35 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [15] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              [16] row r2:fx[2026-04] = 4.0101 PLN/EUR
+                  version r2, source s, "invented", locator "corrected before its month", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [17] pln_of[2026-05] = 455.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [18] row r1:fx[2026-05] = 4.55 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [19] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r2:fx[2026-04]: see [16])
+        [20] pln_of[2026-06] = 460.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [21] row r1:fx[2026-06] = 4.6 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [22] pln_of[2026-07] = 465.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [23] row r1:fx[2026-07] = 4.65 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [24] pln_of[2026-08] = 470.24 PLN
+            rule base: won
+              (v:amt: see [8])
+              [25] row r1:fx[2026-08] = 4.7 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+  unfulfilled: top[2026-02]
+  unfulfilled: zed[2026-03]
+  cut 2026-06-20
+,24:spec/gate/gate/p_g5x/xx7,9:spec-gate,25:run p_g5x.tally --ask xx7,4289:11:p_g5x.tally,4268:model g5
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+
+index month = month 2026-01..2026-08
+index cs = [pl, ae]
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor_eur: outside lives 1900-01-01..
+place kantor_pln: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input amt[m in month]: money EUR
+input fx[m in month]: num PLN/EUR
+input dom: int
+input cal[c in cs]: calendar
+input home[m in month]: key cs
+input share: num
+input top_dom: int
+input n1: int
+
+def pln_of[m in month]: money PLN = round(amt[m] * fx[m], minor(PLN), rmode)
+
+move swap[m in month]: exchanges
+  on schedule(m, dom, modified_following, cal[home[m]])
+  at start_of(m)
+  leg eur from konto_eur to kantor_eur amount amt[m]
+  leg pln from kantor_pln to konto amount pln_of[m]
+
+move top[m in month]: transfers
+  on add_business(day_of(m, top_dom), n1, cal[home[m]])
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(swap.pln, m) * share, minor(PLN), rmode)
+
+move zed[m in month]: transfers
+  on last_business(m, n1, cal[pl])
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m .. m) + flows(swap.pln, m - n1 .. m - n1)
+
+def zf[m in month]: money PLN = flows(zed, m)
+def ef[m in month]: money EUR = flows(swap.eur, m)
+
+ask q1: flows(top, m) for m in month
+ask q2: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+ask q3: bal(pot, 2026-06-19), bal(konto, 2026-06-19), bal(konto_eur, 2026-06-19)
+ask q4: swap[m].day, top[m].day, zed[m].day for m in [2026-01, 2026-02, 2026-03, 2026-05]
+ask q5: bal(pot, 2026-06-19) with rmode = down
+ask q6: bal(pot, 2026-06-19) as known 2026-03-10
+ask q7: zf[2026-03], (zf[2026-03] as if {known 2026-03-10}), (zf[2026-03] as if {home[2026-03] = ae})
+ask q8: explain zf[2026-03]
+ask q9: inputs-of zf[2026-03]
+ask q10: count(t in exchanges over 2026-01-01 .. 2026-06-30), sum(t.pln.amount for t in exchanges over 2026-01-01 .. 2026-06-30)
+ask q11: ef[m] for m in [2026-01, 2026-02, 2026-03]
+ask q12: explain swap[2026-02]
+ask q13: bal(pot, 2026-08-31), bal(konto, 2026-08-31)
+
+ask xx0: explain top[2026-04]
+ask ii0: inputs-of top[2026-04]
+ask xx1: explain zed[2026-05]
+ask ii1: inputs-of zed[2026-05]
+ask xx2: explain zed[2026-02]
+ask ii2: inputs-of zed[2026-02]
+ask xx3: explain ef[2026-01]
+ask ii3: inputs-of ef[2026-01]
+ask xx4: explain pln_of[2026-04]
+ask ii4: inputs-of pln_of[2026-04]
+ask xx5: explain swap[2026-04]
+ask ii5: inputs-of swap[2026-04]
+ask xx6: explain top[2026-05]
+ask ii6: inputs-of top[2026-05]
+ask xx7: explain zf[2026-06]
+ask ii7: inputs-of zf[2026-06]
+ask xx8: explain zf[2026-02]
+ask ii8: inputs-of zf[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 29 "s"
+  top_dom = 27 "s"
+  n1 = 1 "s"
+  share = 0.1 "s"
+  amt = 100.05 EUR "s"
+  home = pl "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 5000 EUR at 2026-01-01 start "s"
+
+version c1
+  cite s
+  governs 2026
+  known 2026-01-01
+  cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+  cal[ae] = calendar(weekends [fri, sat], yearly [12-02])
+
+version c2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+
+version r1
+  cite s
+  governs 2026
+  known 2026-01-01
+  fx[2026-01] = 4.30 "s"
+  fx[2026-02] = 4.3333 "s"
+  fx[2026-03] = 4.35 "s"
+  fx[2026-04] = 4.50 "s"
+  fx[2026-05] = 4.55 "s"
+  fx[2026-06] = 4.60 "s"
+  fx[2026-07] = 4.65 "s"
+  fx[2026-08] = 4.70 "s"
+
+version r2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace fx[2026-02] = 4.9999 "corrected later"
+  replace fx[2026-04] = 4.0101 "corrected before its month"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  covers konto
+  bank[r1] = (on: 2026-04-28, kind: exchanges, leg eur from konto_eur to kantor_eur amount 100.05 EUR, leg pln from kantor_pln to konto amount 401.00 PLN, fulfils: swap[2026-04]) "april's exchange"
+,,1:0,3623:xx7 [rmode = *]: ?"top[2026-04] on 2026-04-28 changed after it was paid (version st); is back pay due, and when?" (top[2026-04])
+  [1] zf[2026-06] = ?"top[2026-04] on 2026-04-28 changed after it was paid (version st); is back pay due, and when?" (top[2026-04])
+      rule base: won
+        [2] row v:n1 = 1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row c2:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+            version c2, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [4] row v:top_dom = 27
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:home = pl
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row c1:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+            version c1, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [7] row v:dom = 29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:amt = 100.05 EUR
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] pln_of[2026-01] = 430.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [10] row r1:fx[2026-01] = 4.3 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [11] row v:share = 0.1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [12] pln_of[2026-01] = 430.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r1:fx[2026-01]: see [10])
+        [13] pln_of[2026-03] = 435.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [14] row r1:fx[2026-03] = 4.35 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [15] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              [16] row r2:fx[2026-04] = 4.0101 PLN/EUR
+                  version r2, source s, "invented", locator "corrected before its month", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [17] pln_of[2026-05] = 455.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [18] row r1:fx[2026-05] = 4.55 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [19] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r2:fx[2026-04]: see [16])
+        [20] pln_of[2026-06] = 460.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [21] row r1:fx[2026-06] = 4.6 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [22] pln_of[2026-07] = 465.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [23] row r1:fx[2026-07] = 4.65 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [24] pln_of[2026-08] = 470.24 PLN
+            rule base: won
+              (v:amt: see [8])
+              [25] row r1:fx[2026-08] = 4.7 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+  unfulfilled: swap[2026-05]
+  cut 2026-06-20
+,24:spec/gate/gate/p_g5x/xx8,9:spec-gate,25:run p_g5x.tally --ask xx8,4289:11:p_g5x.tally,4268:model g5
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+
+index month = month 2026-01..2026-08
+index cs = [pl, ae]
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor_eur: outside lives 1900-01-01..
+place kantor_pln: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input amt[m in month]: money EUR
+input fx[m in month]: num PLN/EUR
+input dom: int
+input cal[c in cs]: calendar
+input home[m in month]: key cs
+input share: num
+input top_dom: int
+input n1: int
+
+def pln_of[m in month]: money PLN = round(amt[m] * fx[m], minor(PLN), rmode)
+
+move swap[m in month]: exchanges
+  on schedule(m, dom, modified_following, cal[home[m]])
+  at start_of(m)
+  leg eur from konto_eur to kantor_eur amount amt[m]
+  leg pln from kantor_pln to konto amount pln_of[m]
+
+move top[m in month]: transfers
+  on add_business(day_of(m, top_dom), n1, cal[home[m]])
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(swap.pln, m) * share, minor(PLN), rmode)
+
+move zed[m in month]: transfers
+  on last_business(m, n1, cal[pl])
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m .. m) + flows(swap.pln, m - n1 .. m - n1)
+
+def zf[m in month]: money PLN = flows(zed, m)
+def ef[m in month]: money EUR = flows(swap.eur, m)
+
+ask q1: flows(top, m) for m in month
+ask q2: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+ask q3: bal(pot, 2026-06-19), bal(konto, 2026-06-19), bal(konto_eur, 2026-06-19)
+ask q4: swap[m].day, top[m].day, zed[m].day for m in [2026-01, 2026-02, 2026-03, 2026-05]
+ask q5: bal(pot, 2026-06-19) with rmode = down
+ask q6: bal(pot, 2026-06-19) as known 2026-03-10
+ask q7: zf[2026-03], (zf[2026-03] as if {known 2026-03-10}), (zf[2026-03] as if {home[2026-03] = ae})
+ask q8: explain zf[2026-03]
+ask q9: inputs-of zf[2026-03]
+ask q10: count(t in exchanges over 2026-01-01 .. 2026-06-30), sum(t.pln.amount for t in exchanges over 2026-01-01 .. 2026-06-30)
+ask q11: ef[m] for m in [2026-01, 2026-02, 2026-03]
+ask q12: explain swap[2026-02]
+ask q13: bal(pot, 2026-08-31), bal(konto, 2026-08-31)
+
+ask xx0: explain top[2026-04]
+ask ii0: inputs-of top[2026-04]
+ask xx1: explain zed[2026-05]
+ask ii1: inputs-of zed[2026-05]
+ask xx2: explain zed[2026-02]
+ask ii2: inputs-of zed[2026-02]
+ask xx3: explain ef[2026-01]
+ask ii3: inputs-of ef[2026-01]
+ask xx4: explain pln_of[2026-04]
+ask ii4: inputs-of pln_of[2026-04]
+ask xx5: explain swap[2026-04]
+ask ii5: inputs-of swap[2026-04]
+ask xx6: explain top[2026-05]
+ask ii6: inputs-of top[2026-05]
+ask xx7: explain zf[2026-06]
+ask ii7: inputs-of zf[2026-06]
+ask xx8: explain zf[2026-02]
+ask ii8: inputs-of zf[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 29 "s"
+  top_dom = 27 "s"
+  n1 = 1 "s"
+  share = 0.1 "s"
+  amt = 100.05 EUR "s"
+  home = pl "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 5000 EUR at 2026-01-01 start "s"
+
+version c1
+  cite s
+  governs 2026
+  known 2026-01-01
+  cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+  cal[ae] = calendar(weekends [fri, sat], yearly [12-02])
+
+version c2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+
+version r1
+  cite s
+  governs 2026
+  known 2026-01-01
+  fx[2026-01] = 4.30 "s"
+  fx[2026-02] = 4.3333 "s"
+  fx[2026-03] = 4.35 "s"
+  fx[2026-04] = 4.50 "s"
+  fx[2026-05] = 4.55 "s"
+  fx[2026-06] = 4.60 "s"
+  fx[2026-07] = 4.65 "s"
+  fx[2026-08] = 4.70 "s"
+
+version r2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace fx[2026-02] = 4.9999 "corrected later"
+  replace fx[2026-04] = 4.0101 "corrected before its month"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  covers konto
+  bank[r1] = (on: 2026-04-28, kind: exchanges, leg eur from konto_eur to kantor_eur amount 100.05 EUR, leg pln from kantor_pln to konto amount 401.00 PLN, fulfils: swap[2026-04]) "april's exchange"
+,,1:0,6958:xx8 [rmode = half-up]: 430.22 PLN
+  [1] zf[2026-02] = 430.22 PLN
+      rule base: won
+        [2] row v:n1 = 1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row c2:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+            version c2, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [4] row v:top_dom = 27
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:home = pl
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row c1:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+            version c1, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [7] row v:dom = 29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:amt = 100.05 EUR
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] pln_of[2026-01] = 430.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [10] row r1:fx[2026-01] = 4.3 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [11] row v:share = 0.1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [12] pln_of[2026-01] = 430.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r1:fx[2026-01]: see [10])
+        [13] pln_of[2026-03] = 435.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [14] row r1:fx[2026-03] = 4.35 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [15] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              [16] row r2:fx[2026-04] = 4.0101 PLN/EUR
+                  version r2, source s, "invented", locator "corrected before its month", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [17] pln_of[2026-05] = 455.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [18] row r1:fx[2026-05] = 4.55 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [19] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r2:fx[2026-04]: see [16])
+        [20] pln_of[2026-06] = 460.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [21] row r1:fx[2026-06] = 4.6 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [22] pln_of[2026-07] = 465.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [23] row r1:fx[2026-07] = 4.65 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [24] pln_of[2026-08] = 470.24 PLN
+            rule base: won
+              (v:amt: see [8])
+              [25] row r1:fx[2026-08] = 4.7 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+  reading: rmode = half-up
+  unfulfilled: swap[2026-01]
+  unfulfilled: zed[2026-02]
+  cut 2026-06-20
+xx8 [rmode = down]: 430.21 PLN
+  [1] zf[2026-02] = 430.21 PLN
+      rule base: won
+        [2] row v:n1 = 1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row c2:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+            version c2, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [4] row v:top_dom = 27
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] row v:home = pl
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [6] row c1:cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+            version c1, source s, "invented", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [7] row v:dom = 29
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [8] row v:amt = 100.05 EUR
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [9] pln_of[2026-01] = 430.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              [10] row r1:fx[2026-01] = 4.3 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [11] row v:share = 0.1
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [12] pln_of[2026-01] = 430.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r1:fx[2026-01]: see [10])
+        [13] pln_of[2026-03] = 435.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              [14] row r1:fx[2026-03] = 4.35 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [15] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              [16] row r2:fx[2026-04] = 4.0101 PLN/EUR
+                  version r2, source s, "invented", locator "corrected before its month", governs 2026-01-01..2026-12-31, known 2026-03-15
+        [17] pln_of[2026-05] = 455.22 PLN
+            rule base: won
+              (v:amt: see [8])
+              [18] row r1:fx[2026-05] = 4.55 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [19] pln_of[2026-04] = 401.21 PLN
+            rule base: won
+              (v:amt: see [8])
+              (r2:fx[2026-04]: see [16])
+        [20] pln_of[2026-06] = 460.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [21] row r1:fx[2026-06] = 4.6 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [22] pln_of[2026-07] = 465.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [23] row r1:fx[2026-07] = 4.65 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+        [24] pln_of[2026-08] = 470.23 PLN
+            rule base: won
+              (v:amt: see [8])
+              [25] row r1:fx[2026-08] = 4.7 PLN/EUR
+                  version r1, source s, "invented", locator "s", governs 2026-01-01..2026-12-31, known 2026-01-01
+  reading: rmode = down
+  unfulfilled: swap[2026-01]
+  unfulfilled: zed[2026-02]
+  cut 2026-06-20
+,26:spec/gate/items/age/a_last,9:spec-gate,26:run age.tally --ask a_last,381:9:age.tally,364:model age
+  tally 2
+  on 2026-01-01
+  start 2019-01-01
+  end 2027-12-31
+
+source s "invented"
+
+input b_last: date
+input d_last: date
+input b_prev: date
+
+version v
+  cite s
+  governs always
+  known 2019-01-01
+  b_last = 9999-12-01 "s"
+  d_last = 9999-12-27 "s"
+  b_prev = 9999-10-27 "s"
+
+ask a_last: age_months(b_last, d_last)
+ask a_prev: age_months(b_prev, b_last)
+,,1:0,27:a_last: 0
+  cut 2026-01-01
 ,

@@ -1,0 +1,38 @@
+model s3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit JPY: currency minor 1
+
+input n: int
+input k: num
+input t: num
+input tp: num PLN
+input y: money JPY
+input ty: num JPY
+input fx: num PLN/JPY
+
+def nk: num = n * k
+def yh: money JPY = y
+def yp: num PLN = y * fx
+
+ask i1: solve nk == t for n in [0, 100] to 1
+ask i2: solve n * k == t for n in [0, 100] to 1
+ask i3: solve yh == ty for y in [0 JPY, 1000 JPY] to 1 JPY
+ask i4: solve yp == tp for y in [0 JPY, 1000 JPY] to 1 JPY
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  n = 1 "s"
+  k = 3 "s"
+  t = 100 "s"
+  tp = 10.005 "s"
+  y = 1 JPY "s"
+  ty = 333.4 "s"
+  fx = 0.03 "s"

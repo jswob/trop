@@ -1,0 +1,68 @@
+model s01
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+input p0: money PLN
+input rv: rate
+input d0: date
+input d1: date
+input tg: money PLN
+input tgn: num PLN
+input e: money EUR
+input fx: num PLN/EUR
+input gross: money PLN
+input pct: num %
+input net_t: money PLN
+input cal: calendar
+input nn: int
+input dd: date
+
+def interest: num PLN = accrue(p0, rv, d0, d1, act365, simple)
+def conv: money PLN = round(e * fx, minor(PLN), rmode)
+def net: money PLN = round(gross * (1 - pct), 1, down)
+def comp12: num = periodic(rv, year, nominal 12)
+
+ask s1: solve interest == tgn for rv in [0 %/year, 20 %/year] to 0.01 %/year
+ask s2: solve conv == tg for fx in [4, 5] to 0.0001
+ask s3: solve net == net_t for gross in [0 PLN, 2000 PLN] to 0.01 PLN
+ask s4: solve comp12 == pct for rv in [0 %/year, 20 %/year] to 0.001 %/year
+ask s5: solve interest == tgn for p0 in [0 PLN, 100000 PLN] to 1 PLN
+ask s6: solve conv == tg for e in [0 EUR, 1000 EUR] to 0.01 EUR with rmode = down
+ask s7: min(g for g in 0 PLN .. 2000 PLN step 1 PLN where net as if {gross = g} >= net_t)
+ask s8: solve interest == tgn for rv in [0 %/year, 1 %/year] to 0.01 %/year
+ask s9: min(n for n in 1 .. 30 step 1 where add_business(dd, n, cal) >= d1)
+ask s10: argmin(abs(conv as if {fx = g} - tg) for g in 4 PLN/EUR .. 5 PLN/EUR step 0.05 PLN/EUR) ties by g
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 36500 PLN "s"
+  rv = 5 %/year "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2026-03-11 "s"
+  tg = 450 PLN "s"
+  tgn = 77 "s"
+  e = 100 EUR "s"
+  fx = 4.3 "s"
+  gross = 1000 PLN "s"
+  pct = 12.5 % "s"
+  net_t = 1000 PLN "s"
+  nn = 3 "s"
+  dd = 2026-03-01 "s"
+
+version c
+  cite s
+  governs 2026
+  known 2026-01-01
+  cal = calendar(weekends [sat, sun], yearly [01-01])

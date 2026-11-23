@@ -1,0 +1,82 @@
+model m1
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-08
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place boss: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input pay[m in month]: money PLN
+input share: num
+input one: int
+input d10: int
+input d20: int
+input d25: int
+
+move wage[m in month]: transfers
+  on day_of(m, d10)
+  at start_of(m)
+  leg cash from boss to konto amount pay[m]
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(wage, m) * share, minor(PLN), half-up)
+
+move zed[m in month]: transfers
+  on day_of(m, d25)
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m)
+
+def tf[m in month]: money PLN = flows(top, m)
+def zf[m in month]: money PLN = flows(zed, m)
+
+ask a: tf[m] for m in [2026-03, 2026-04, 2026-05]
+ask e3: explain tf[2026-03]
+ask e4: explain tf[2026-04]
+ask e5: explain tf[2026-05]
+ask i3: inputs-of tf[2026-03]
+ask i4: inputs-of tf[2026-04]
+ask et: explain top[2026-04]
+ask z: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05]
+ask z2: explain zf[2026-02]
+ask z3: explain zf[2026-03]
+ask z4: explain zf[2026-04]
+ask z5: explain zf[2026-05]
+ask j3: inputs-of zf[2026-03]
+ask ez: explain zed[2026-03]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  share = 0.1 "s"
+  one = 1 "s"
+  d10 = 10 "s"
+  d20 = 20 "s"
+  d25 = 25 "s"
+  pay = 1000.00 PLN "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+
+version raise
+  cite s
+  governs 2026-04..
+  known 2026-05-02
+  pay[2026-04] = 1100.00 PLN "raise"
+
+version settle
+  cite s
+  governs 2026-05
+  known 2026-05-20
+  covers konto
+  bank[r1] = (on: 2026-05-15, kind: transfers, leg cash from boss to konto amount 100.00 PLN, fulfils: adjustments[wage[2026-04].cash, raise]) "settles"
