@@ -15,6 +15,19 @@ fail-fast = false
 slow-timeout = { period = "60s", terminate-after = 5 }
 failure-output = "immediate-final"
 
+# One test's own cap (issue #252, pick P35): fence F7's equivalence suite runs P8-L10's run
+# `c1_r2` under both forms (Plans::Narrow and Plans::Whole, m4_narrow_c1_r2), 19.7 s on the
+# Mac's release build and near the 300 s cap in CI's debug build (2 reds in 4 runs at the
+# cap). A test is never split, retried or filtered out for its time alone (R-88), so this one
+# test ends at 900 s instead; every other test keeps the 300 s above.
+[[profile.default.overrides]]
+filter = "binary_id(tally-runner::m4_narrow) & test(=tests::m4_narrow_c1_r2)"
+slow-timeout = { period = "60s", terminate-after = 15 }
+
+[[profile.ci.overrides]]
+filter = "binary_id(tally-runner::m4_narrow) & test(=tests::m4_narrow_c1_r2)"
+slow-timeout = { period = "60s", terminate-after = 15 }
+
 # A mutant is caught at its first failing test, and the tests still running are ended
 # then, not waited for (R-88; the user, 2026-11-06): a caught mutant took as long as its
 # slowest running test
