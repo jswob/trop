@@ -1288,7 +1288,7 @@ fn extra_parts(x: &Expr) -> Vec<&Expr> {
         | Expr::Never
         | Expr::Cut
         | Expr::List(_)
-        | Expr::If(_)
+        | Expr::If(..)
         | Expr::Or(_)
         | Expr::And(_)
         | Expr::Not(_)

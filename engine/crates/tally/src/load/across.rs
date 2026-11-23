@@ -794,7 +794,7 @@ fn random_reads(
         }
         let mut stack = vec![&leg.amount];
         while let Some(x) = stack.pop() {
-            if matches!(x, Expr::If(_)) {
+            if matches!(x, Expr::If(..)) {
                 return Ok(None);
             }
             if let Expr::DistFn(f) = x

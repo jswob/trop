@@ -20,7 +20,6 @@ use super::state::{
     Ctx, Engine, Env, Figures, invariant, not_typed, num_stop, refuse, refuse_load, unit_stop,
 };
 use super::time_arith::{duration, keys_differ};
-use super::ty::{figure_like, sample};
 use super::windows::{as_window, unlisted, window_arith, window_compare};
 use super::years::{as_year, period_like, period_literal, year_literal};
 use crate::base::{Load, Run};
@@ -31,7 +30,9 @@ use crate::model::{
     currency_id, num_money,
 };
 use crate::read::{Asked, member_span};
-use crate::syntax::{AddOp, CmpOp, Expr, Field, FieldValue, In, Key, Lit, MulOp, Postfix, Stop};
+use crate::syntax::{
+    AddOp, CmpOp, Expr, Field, FieldValue, In, Key, Lit, LoadType, MulOp, Postfix, Stop,
+};
 use crate::time::Period;
 
 impl Engine {
@@ -66,7 +67,7 @@ impl Engine {
             Expr::None => Ok(Value::None),
             Expr::Never => Ok(Value::Never),
             Expr::Cut => Ok(Value::Day(ctx.cut)),
-            Expr::If(parts) => self.choice(m, parts, env, ctx),
+            Expr::If(parts, kept) => self.choice(m, parts, kept, env, ctx),
             Expr::Or(terms) => self.logic(m, terms, Logic::Any, env, ctx),
             Expr::And(terms) => self.logic(m, terms, Logic::All, env, ctx),
             Expr::Not(x) => self.not(m, x, env, ctx),
@@ -280,7 +281,7 @@ impl Engine {
             | Expr::None
             | Expr::Never
             | Expr::Cut
-            | Expr::If(_)
+            | Expr::If(..)
             | Expr::Or(_)
             | Expr::And(_)
             | Expr::Not(_)
@@ -386,20 +387,21 @@ impl Engine {
 
     /// `if c then a else b` (refcore's `e_if`): a hole condition evaluates both branches, and
     /// the `if` is a hole unless they are equal (L §5.11 Logic, §8.1). A bare figure as a
-    /// branch takes the other branch's type (L §3.2 Inline figures).
+    /// branch takes the type load's checker gave the `if`, `kept` (L §3.2 Inline figures).
     fn choice(
         &mut self,
         m: &Reality,
         parts: &[Expr; 3],
+        kept: &LoadType,
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let [cond, yes, no] = parts;
         let test = self.ev(m, cond, env, ctx)?;
         if let Value::Bool(holds) = test {
-            let (taken, other) = if holds { (yes, no) } else { (no, yes) };
+            let taken = if holds { yes } else { no };
             let value = self.ev(m, taken, env, ctx)?;
-            return flex_branch(m, value, other, env, ctx);
+            return flex_branch(m, value, kept);
         }
         if test == Value::None {
             return Err(refuse(Run::None, "a value is none here: if".to_owned()));
@@ -409,7 +411,7 @@ impl Engine {
         };
         // both branches are read in a frame of their own, so a decided `if` keeps a small one
         // (R-16)
-        self.choice_unknown(m, (&cond_hole, yes, no), env, ctx)
+        self.choice_unknown(m, (&cond_hole, yes, no), kept, env, ctx)
     }
 
     /// `if c then a else b` with hole condition `cond_hole`: both branches evaluated, the
@@ -418,13 +420,14 @@ impl Engine {
         &mut self,
         m: &Reality,
         (cond_hole, yes, no): (&Hole, &Expr, &Expr),
+        kept: &LoadType,
         env: &Env,
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let first = self.ev(m, yes, env, ctx)?;
         let second = self.ev(m, no, env, ctx)?;
-        let first = flex_branch(m, first, no, env, ctx)?;
-        let second = flex_branch(m, second, yes, env, ctx)?;
+        let first = flex_branch(m, first, kept)?;
+        let second = flex_branch(m, second, kept)?;
         if first.as_hole().is_none()
             && second.as_hole().is_none()
             && same_value(m, &first, &second)?
@@ -872,9 +875,13 @@ pub(super) fn key_index(m: &Reality, e: &Expr, env: &Env) -> Option<String> {
     None
 }
 
-/// A bare figure that is an `if`'s branch, in the type of the other branch (refcore's
-/// `flex_to` of `t_if`). L §3.2.
-fn flex_branch(m: &Reality, v: Value, other: &Expr, env: &Env, ctx: Ctx) -> Result<Value, Stop> {
+/// A bare figure that is an `if`'s branch, in the type load's checker gave the `if`, `kept`
+/// (refcore's `flex_to` of `t_if`); still bare where that type takes no figure. L §3.2.
+///
+/// # Errors
+///
+/// `NotBuilt` for an `if` load didn't type; a number error.
+fn flex_branch(m: &Reality, v: Value, kept: &LoadType) -> Result<Value, Stop> {
     let Value::Number(Number {
         q,
         class: Class::Flex,
@@ -882,10 +889,10 @@ fn flex_branch(m: &Reality, v: Value, other: &Expr, env: &Env, ctx: Ctx) -> Resu
     else {
         return Ok(v);
     };
-    let Some(like) = sample(m, other, env, ctx)? else {
-        return Ok(v);
-    };
-    Ok(figure_like(m, q, &like)?.unwrap_or(v))
+    let ty = kept.get().ok_or(Stop::NotBuilt(
+        "the type of an `if` load's checker didn't give",
+    ))?;
+    Ok(typed(m, q, &ty)?.unwrap_or(v))
 }
 
 /// Whether a thing's base kind is `kind` or below it (L §5.7).

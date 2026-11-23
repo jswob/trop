@@ -1,4 +1,4 @@
-//! A sample value of an expression's class, made without reading, for the zero of an empty sum and a bare figure that is an `if`'s branch.
+//! A sample of a read's class, made without reading, for a `partial` line's coefficient and `unit(x)`'s operand.
 //! Spec: L §5.11 (a sum over no keys is 0 in its term's type), §3.2 (inline figures take the
 //! type of what they meet; `if`'s branches unify), §3.1 (the types), §3.3 (`accrue` in its
 //! principal's unit, `dcf` a number), §4.2 (the date functions), §7.2 (`round`'s class is
@@ -7,19 +7,20 @@
 //! `t_if`, `c_round`) and evaluate.py (`zero_of`, `typed`).
 //! Invariants: a sample is computed from declared types, literals and bound values only: no
 //! read, no register entry, no memo cell; where the class can't be seen the run stops
-//! `NotBuilt`, never guesses a zero.
+//! `NotBuilt`, never guesses a zero. No type is learned here for an empty sum's 0 or a bare
+//! figure that is an `if`'s branch: those take the type load's checker gave them (`LoadType`,
+//! pick P36).
 
 use super::arith::{Op, arith, negate};
 use super::builtin::{minor_of, round_values};
-use super::expr::{literal, typed};
-use super::state::{Ctx, Env, num_stop, refuse};
-use crate::base::Run;
+use super::expr::literal;
+use super::state::{Ctx, Env, num_stop};
 use crate::model::Target;
 use crate::model::{
     Class, Code, IndexInfo, KeyVal, MvRef, MvSrc, Number, Reality, Shown, Ty, Unit, Value,
     currency_id, currency_unit, num_money,
 };
-use crate::num::{Money, Num};
+use crate::num::Num;
 use crate::syntax::{
     AddOp, Agg, AggFn, Bind, Call, Domain as Over, Expr, MulOp, Postfix, Stop, Type,
 };
@@ -29,76 +30,6 @@ use std::collections::BTreeSet;
 /// The class of a term the run can't see stops here.
 fn unseen() -> Stop {
     Stop::NotBuilt("the type of an expression the run can't see without reading")
-}
-
-/// 0 in the type of a sum's term, for a sum over no keys (refcore's `zero_of`). L §5.11.
-///
-/// # Errors
-///
-/// `RUN-DOMAIN` for a sum of rates; `NotBuilt` where the term's class can't be seen.
-pub(super) fn zero_of(
-    m: &Reality,
-    term: &Expr,
-    env: &Env,
-    binds: &[Bind],
-    ctx: Ctx,
-) -> Result<Value, Stop> {
-    let mut scope = env.clone();
-    for bind in binds {
-        let v = bind_sample(m, bind, &scope, ctx)?.ok_or_else(unseen)?;
-        scope.bind(&bind.var, v, None);
-    }
-    let like = sample(m, term, &scope, ctx)?.ok_or_else(unseen)?;
-    if let Value::Money(money) = &like {
-        return Ok(Value::Money(Money::from_minor(0, money.currency())));
-    }
-    if let Value::Key(_) = like {
-        return Ok(Value::int(0));
-    }
-    let Value::Number(Number { class, .. }) = like else {
-        return Err(unseen());
-    };
-    if let Class::Rate(_) = class {
-        return Err(refuse(
-            Run::Domain,
-            "the sum of rates over no keys (a rate carries its period)".to_owned(),
-        ));
-    }
-    let Class::Num(unit, shown) = class else {
-        return Ok(Value::int(0));
-    };
-    if unit
-        .terms()
-        .iter()
-        .any(|(base, _)| m.kinds.get(base).is_some())
-    {
-        return Ok(Value::int(0));
-    }
-    Ok(Value::Number(Number {
-        q: Num::zero(),
-        class: Class::Num(unit, shown),
-    }))
-}
-
-/// Bare figure `q` in the class of sample `like` (refcore's `typed` of the type `flex_to`
-/// gives it); none where the class takes no figure. L §3.2.
-///
-/// # Errors
-///
-/// `LOAD-PRECISION` for money finer than its minor unit; a number error.
-pub(super) fn figure_like(m: &Reality, q: &Num, like: &Value) -> Result<Option<Value>, Stop> {
-    if let Value::Money(money) = like {
-        let (name, _) = crate::model::currency(m, money.currency()).map_err(num_stop)?;
-        return typed(m, q, &Ty::Money(name.to_owned()));
-    }
-    let Value::Number(Number { class, .. }) = like else {
-        return Ok(None);
-    };
-    match class {
-        Class::Int => typed(m, q, &Ty::Int),
-        Class::Num(unit, shown) => typed(m, q, &Ty::Num(unit.clone(), *shown)),
-        Class::Rate(_) | Class::Flex => Ok(None),
-    }
 }
 
 /// A sample of expression `e`'s class: literals and bound values as they are, a read as a
@@ -115,7 +46,7 @@ pub(super) fn sample(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> Result<Optio
         Expr::Never => Ok(Some(Value::Never)),
         Expr::Cut => Ok(Some(Value::Day(ctx.cut))),
         Expr::Name(name) => name_sample(m, name, env),
-        Expr::If(parts) => {
+        Expr::If(parts, _) => {
             let [_, yes, no] = parts.as_ref();
             let a = sample(m, yes, env, ctx)?;
             if a.as_ref().is_some_and(|v| !is_flex(v)) {
