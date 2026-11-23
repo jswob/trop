@@ -797,36 +797,7 @@ impl Engine {
         if matches!(v, Value::Never | Value::None) {
             return Ok(false);
         }
-        // a window written in its own `on`, which no cell holds, is named by its movement
-        // (L §8.2 `unknown day:`, "where no cell does, its movement"; R21 on #241)
-        let v = crate::eval::held_by(v, (format!("move {}", inst.id), &inst.id));
-        let day = match v {
-            Value::Hole(h) => Dated::Hole(h),
-            // a window: a hole day, `HOLE-IMPRECISE` for the day of the instance, as any
-            // movement's whose day is a hole from there (L §4.4, §5.14; tally 2.3 S6)
-            Value::Window(_) => match one_day(m, &v, &format!("the day of {}", inst.id))? {
-                Ok(d) => Dated::Day(d),
-                Err(h) => Dated::Hole(h),
-            },
-            Value::Number(_)
-            | Value::Money(_)
-            | Value::Bool(_)
-            | Value::Day(_)
-            | Value::Period(_)
-            | Value::MonthDay(..)
-            | Value::Key(_)
-            | Value::Text(_)
-            | Value::Code(_)
-            | Value::Record(_)
-            | Value::List(_)
-            | Value::Tuple(_)
-            | Value::Calendar(_)
-            | Value::None
-            | Value::Never
-            | Value::Word(_)
-            | Value::Mv(_)
-            | Value::OutKey { .. } => Dated::Day(date_of(&v)?),
-        };
+        let day = day_dated(m, v, &inst.id)?;
         inst.day = Some(day.clone());
         inst.exists = seed.exists.clone();
         if mv.decision {
@@ -971,6 +942,46 @@ pub fn qty_value(m: &Reality, q: &Num, unit: &str) -> Result<Value, Stop> {
     }
     let u = crate::model::Unit::make(vec![(unit.to_owned(), 1)]).map_err(num_err)?;
     Ok(Value::Number(Number::plain(q.clone(), u)))
+}
+
+/// The day of instance `id` that its `on` gives as `v`, neither `never` nor `none`: a day, a
+/// hole, or a window's day, a hole where it is imprecise (refcore's `eval_inst`, its day).
+/// L §4.4, §5.14, E §4.1 step 2.
+///
+/// # Errors
+///
+/// A load refusal met at run, for a value that isn't a day.
+pub(super) fn day_dated(m: &Reality, v: Value, id: &str) -> Result<Dated, Stop> {
+    // a window written in its own `on`, which no cell holds, is named by its movement
+    // (L §8.2 `unknown day:`, "where no cell does, its movement"; R21 on #241)
+    let v = crate::eval::held_by(v, (format!("move {id}"), id));
+    Ok(match v {
+        Value::Hole(h) => Dated::Hole(h),
+        // a window: a hole day, `HOLE-IMPRECISE` for the day of the instance, as any
+        // movement's whose day is a hole from there (L §4.4, §5.14; tally 2.3 S6)
+        Value::Window(_) => match one_day(m, &v, &format!("the day of {id}"))? {
+            Ok(d) => Dated::Day(d),
+            Err(h) => Dated::Hole(h),
+        },
+        Value::Number(_)
+        | Value::Money(_)
+        | Value::Bool(_)
+        | Value::Day(_)
+        | Value::Period(_)
+        | Value::MonthDay(..)
+        | Value::Key(_)
+        | Value::Text(_)
+        | Value::Code(_)
+        | Value::Record(_)
+        | Value::List(_)
+        | Value::Tuple(_)
+        | Value::Calendar(_)
+        | Value::None
+        | Value::Never
+        | Value::Word(_)
+        | Value::Mv(_)
+        | Value::OutKey { .. } => Dated::Day(date_of(&v)?),
+    })
 }
 
 /// The day a value names: a day, or a day period's (refcore's `date_of`); a value that isn't

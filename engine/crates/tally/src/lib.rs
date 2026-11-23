@@ -253,8 +253,8 @@ pub mod walk {
     };
     pub(crate) use lows::Trees;
     pub use lows::{Lows, RangeMinimum};
-    pub(crate) use narrow::Narrowed;
     pub use narrow::Plans;
+    pub(crate) use narrow::{Narrowed, Narrows};
     pub use order::{Run, WalkAt};
     pub(crate) use plan::{invariant, quantity};
     pub use plan::{kind_certainty, qty_value};

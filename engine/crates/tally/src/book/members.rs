@@ -1089,9 +1089,10 @@ impl Engine {
                     .moves
                     .get(&mid)
                     .ok_or_else(|| invariant("a link to a move load didn't build"))?;
-                // the one instance at the keys, read narrowly at a past cut (fence F7)
-                let inst = self.instance_at(m, mv, &keys, cut)?;
-                Ok(inst.map_or(Value::None, |i| Moving::Plan(i).value()))
+                // the instance by its existence alone, never its amounts: a field read of it
+                // takes it again at the reader's cut (L §5.19 Links; P22)
+                let named = self.linked_instance(m, mv, &keys, cut)?;
+                Ok(named.map_or(Value::None, |r| Value::Mv(Box::new(r))))
             }
         }
     }

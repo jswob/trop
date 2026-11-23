@@ -19,12 +19,13 @@
 //! 15); a tuple
 //! with every key bound never leaves with it unread.
 
-use super::instance::{Exists, join};
-use super::plan::{invariant, refuse};
+use super::instance::{Dated, Exists, Inst, join};
+use super::narrow::KeptTuple;
+use super::plan::{day_dated, invariant, refuse};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Kept, Member, reads_var};
 use crate::hole::Hole;
-use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
+use crate::model::{Domain, KeyVal, MoveInfo, MvRef, Node, NodeKind, Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 
@@ -286,31 +287,153 @@ impl Engine {
         cut: Day,
     ) -> Result<Option<Env>, Stop> {
         let tctx = self.timeline_ctx(None, cut);
-        for tuple in self.move_tuples(m, mv, tctx)? {
-            if tuple.keys != keys {
-                continue;
+        // the move's tuples at the cut, kept once for every link and read there (fence F7)
+        let found = match self.kept_tuple(m, mv, keys, cut)? {
+            KeptTuple::Kept(found, _) => found.map(|t| *t),
+            KeptTuple::Own => self
+                .move_tuples(m, mv, tctx)?
+                .into_iter()
+                .find(|t| t.keys == keys),
+        };
+        let Some(tuple) = found else {
+            return Ok(None);
+        };
+        if tuple.exists == Exists::No {
+            return Ok(None);
+        }
+        if let (Some(when), Exists::Yes, None, None) = (
+            &mv.decl.when,
+            &tuple.exists,
+            &tuple.domain_hole,
+            &tuple.refused,
+        ) {
+            match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
+                Ok(false) => return Ok(None),
+                Ok(true) => {}
+                // a cycle is never taken as existing: the link would stand unjudged
+                Err(Stop::Refused(r))
+                    if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
+                Err(stop) => return Err(stop),
             }
-            if tuple.exists == Exists::No {
-                return Ok(None);
-            }
-            if let (Some(when), Exists::Yes, None, None) = (
-                &mv.decl.when,
-                &tuple.exists,
-                &tuple.domain_hole,
-                &tuple.refused,
-            ) {
-                match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
-                    Ok(false) => return Ok(None),
-                    Ok(true) => {}
-                    // a cycle is never taken as existing: the link would stand unjudged
-                    Err(Stop::Refused(r))
-                        if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
-                    Err(stop) => return Err(stop),
+        }
+        Ok(Some(tuple.env))
+    }
+
+    /// What `o.fulfils` names at keys `keys` of move `mv` under cut `cut`: the instance the
+    /// move's list holds there, by its tuple and its day at the cut alone, never its body,
+    /// since a link reads only the instance's existence, never its amounts; none where the
+    /// list holds none (no tuple at the keys, or a day `never` or `none`). A decision's, a
+    /// refused tuple's, whose `when` decides whether the list holds it, and one of a move whose
+    /// tuples stop its list are taken from the whole list (refcore's `find_inst`). What reading
+    /// them meets is the plan's, no reader's. L §5.19 Links, E §4.1 steps 1–2, §3.2 (P22).
+    ///
+    /// # Errors
+    ///
+    /// `RUN-CYCLE` for a move that reads its own instances; a load refusal met at run; as
+    /// [`Engine::move_instances`] for those taken from the whole list.
+    pub(crate) fn linked_instance(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        keys: &[KeyVal],
+        cut: Day,
+    ) -> Result<Option<MvRef>, Stop> {
+        if !mv.decision {
+            // the move's tuples at the cut, kept once for every link and read there (fence F7)
+            self.plan_open(mv, cut)?;
+            let (found, stops) = match self.kept_tuple(m, mv, keys, cut)? {
+                KeptTuple::Kept(found, stops) => (found.map(|t| *t), stops),
+                KeptTuple::Own => {
+                    let tuples = self.plan_tuples(m, mv, cut)?;
+                    let stops = tuples
+                        .iter()
+                        .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len());
+                    (tuples.into_iter().find(|t| t.keys == keys), stops)
+                }
+            };
+            if !stops {
+                let Some(tuple) = found else {
+                    return Ok(None);
+                };
+                if tuple.refused.is_none() {
+                    return self.linked_day(m, mv, tuple, cut);
                 }
             }
-            return Ok(Some(tuple.env));
         }
-        Ok(None)
+        let insts = self.move_instances(m, mv, cut)?;
+        Ok(insts
+            .iter()
+            .find(|i| i.keys == keys)
+            .map(crate::book::inst_ref))
+    }
+
+    /// The instance of a link's plain or hole tuple as the list holds it, its day read at cut
+    /// `cut` as the list reads it, with the move's plan there in progress, and nothing of its
+    /// body; none where the day is `never` or `none` (refcore's `eval_inst`, its day). A run-time
+    /// refusal reading the day is the instance's own: the list holds it refused, with no day.
+    /// E §4.1 step 2, L §5.19 Links.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-CYCLE` for a move that reads its own instances; a load refusal met at run.
+    fn linked_day(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        tuple: Tuple,
+        cut: Day,
+    ) -> Result<Option<MvRef>, Stop> {
+        let mut inst = Inst::new(mv, tuple.keys, tuple.env);
+        if let Some(hole) = tuple.domain_hole {
+            inst.day = Some(Dated::Hole(hole));
+            return Ok(Some(crate::book::inst_ref(&inst)));
+        }
+        self.enter_plan(mv, cut)?;
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let mark = self.reads_apart();
+        let tctx = self.timeline_ctx(None, cut);
+        self.push();
+        let read = self.law_and_day(m, mv, &mut inst, tctx);
+        self.pop_alone();
+        self.reads_back(mark);
+        self.holder = outer;
+        self.plan_active.remove(&(mv.id.clone(), cut));
+        let dated = match read {
+            Ok(Ok(Value::Never | Value::None)) => return Ok(None),
+            Ok(Ok(v)) => day_dated(m, v, &inst.id),
+            Ok(Err(h)) => Ok(Dated::Hole(h)),
+            Err(stop) => Err(stop),
+        };
+        match dated {
+            Ok(day) => inst.day = Some(day),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
+            Err(stop) => return Err(stop),
+        }
+        Ok(Some(crate::book::inst_ref(&inst)))
+    }
+
+    /// Move `mv`'s binding tuples at cut `cut`, with its plan there in progress and what
+    /// making them reads the plan's, as its list makes them. E §4.1 step 1, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// `RUN-CYCLE` for a move that reads its own instances; the refusals the binding tuples
+    /// meet.
+    pub(super) fn plan_tuples(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Vec<Tuple>, Stop> {
+        self.enter_plan(mv, cut)?;
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let mark = self.reads_apart();
+        let tctx = self.timeline_ctx(None, cut);
+        let made = self.move_tuples(m, mv, tctx);
+        self.reads_back(mark);
+        self.holder = outer;
+        self.plan_active.remove(&(mv.id.clone(), cut));
+        made
     }
 
     /// Whether a link's instance may exist by its `when` at the ask's cut: false only for a

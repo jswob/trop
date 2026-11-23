@@ -7529,3 +7529,205 @@ The builder's plan §5 G4 (rows 16, 18, 20), with picks P23 and P24. On 00143f5a
 - **What I tried:** one non-kernel guess, judged and run, then taken out: an outermost read's `Deep` replay (`eval/stack.rs`) setting the mark back to its value at the read's start. All four asks still stop, so the mark isn't an unwound attempt's; it is set by the reads above, each in `walk/` or `book/`. Not tried: any edit there.
 - **What I ask:** a kernel group (G3's kind) takes the three paths, each with refcore's form: a hole-day leg read gives the mark back where it gives its hole; a refused balance read becomes a node with the walk's running reads; a past cut's observation reads as their rows.
 - **State:** nothing built for it; the last commit is this entry's.
+
+## 2026-11-23 M4 G6c widened (U2): the review's fixes, then F7 at three more sites (issue #252)
+
+On 702bdcd3 (G4's entry, after G6c's 00143f5a). The user's U2, "Try the 3 fixes, then decide"; P25. Scratch in `tmp/m4/g6c/` (untracked).
+
+### The review's fixes (`tmp/m4/review-g6c.md`)
+
+- **B1** (`walk/narrow.rs` `narrowed` → `judge_named`):
+  - *Cause.* A move's list at a cut gives its observations' link reads to its first reader. Which reader comes first is the whole evaluation's order, and a narrow read of another move changes that order. In `p09b_pin`, top's list at 2026-02-25 gives rent's link reads (`ok[2026-01]`) to top[2026-03]; a narrow read from zed[2026-02] takes top[2026-04] alone, so they reached `zz`.
+  - *Fix.* `narrows` also gives the first day a link to another move in the cone is known: the earliest `known` of a row whose `fulfils` names such a move, over every version and world (`Narrows::Before`). A move is read narrowly only at cuts before that day.
+  - *Why sound (judged).* A skipped instance of a move Y at cut c reads the moves in Y's cone only at cuts up to c. Before that day no list in the cone has a link to give, so the instance it skips can't be a first reader that takes a link's reads. From that day on, Y and every move whose cone holds a linked move are read whole, so the readers of a linked move X keep the whole evaluation's order, and X's own narrow read gives its links to that same first reader.
+  - *Checked.* `p09b_pin --ask zp` and `p09_first_min --ask i` are refcore's bytes now. Every probe text in `review/g6c/p/` (25 texts, every ask) is byte-equal to the before-binary (73e75856). New inline test `walk::narrow::tests::a_link_in_another_moves_list_goes_to_that_lists_first_reader` (p09b's shape, `zp` and an `inputs-of`, Narrow against Whole); the cone test checks `Before`.
+- **Non-blocking 1:** `explaining()` is `trace.is_some() || keep_rows == Rows::Kept`, so `inputs-of` reads whole as `explain` does; the header and the code agree.
+- **X1** (`n4_own --ask l`, `ENGINE-INVARIANT … spend[2026-02]`):
+  - *Cause.* `o.fulfils` built the named move's whole list, amounts included (refcore's `find_inst`). Inside spend[2026-02]'s booking at 2026-02-25, its own `loose[2026-02]` reads `o.fulfils` of a row naming spend[2026-01]. The list at 2026-02-25 then meets loose[2026-02] in progress (`RUN-CYCLE`, kept as that instance's refusal), while the list at K books it at 250.00 PLN: E §9 item 5.
+  - *Fix*, P22's pick, in both forms: `o.fulfils` reads the instance's existence alone (`walk/tuples.rs` `linked_instance`): its tuple at the keys and its day at the cut, as the list holds it, never its body. A decision, a refused tuple (whose `when` decides whether the list holds it) and a move whose tuples stop its list still take the whole list.
+  - The value is a reference (id, day, keys), which a field read resolves again at the reader's cut, so no other read changes. `walk/plan.rs` `day_dated` is the one step from an `on` value to a day, which `inst_parts` and `linked_instance` share.
+  - *Result.* `l` gives 40.00, 50.00, 60.00 and 100.00 PLN, both alone and after `k` and `f` (refcore: 40.00, then `ENGINE-INVARIANT` twice, then 100.00). F7's `instance_at` path had no other caller and is removed: F7 is the `flows` read alone now.
+  - *Judged.* A reader of `o.fulfils` is no longer the named list's first reader for its link reads; whoever builds that list later is. No stored vector moved (`check commit` green), and no probe moved (the 25 texts above and the 43 in `tmp/m4/paper-probes/`, against refcore and the before-binary).
+- The older differences the sweep shows, all equal on the before-binary: `p01_never` (X2), `p07_same` (X3, refcore's side, #255), `p02_cycle_io` and `p06_holebook_io` (`not implemented`, P26's kernel turn), `p11_explain` (an `explain`'s rows).
+
+### Site (i): step 0, before its code
+
+*Checked in the code.*
+- `link_tuple` (`walk/tuples.rs`) makes every tuple of the move at the cut (`move_tuples`) for each link it judges (`judge_links`, once per (cut, instance) in `obs_links_for`), under its reader's holder and with no plan guard.
+- X1's `linked_instance` makes them again for each `o.fulfils` read, under the move, with the guard.
+- F7's narrow `flows` read makes them once per (move, cut).
+
+What making them meets:
+- *Reads:* each tuple's own `coll` (`push`/`pop_alone` around each binding), none the reader's. All three callers make them inside `reads_apart` (a link's judging is apart in `obs_links_for`), so a kept set gives each caller what a fresh one gives.
+- *Stops:* the law date, the members and the `where`s (`move_tuples`' `?`). These go to the link's judging, to `o.fulfils` and to the list. A set whose making stops isn't kept, and the next caller meets the same stop.
+- *The holder:* a link's tuples are made under its reader, the list's under the move. The holder decides only what a projection leaves out (L §5.14.1), and a plan can't read a balance (`LOAD-READS`), so a plan's tuples are the same under any holder. A decision's could differ, so decisions keep making their own.
+- *The guard:* the kept set is made with no `enter_plan`, so a link judged while its move's list is being made (a binding over observed rows inside a body) meets no new `RUN-CYCLE`. `linked_instance` checks the guard itself before it takes the set.
+- *`Plans::Whole`:* every caller makes its own, as now.
+
+So no STOP-REPORT at step 0. *Judged:* b1 makes one plan's tuples per (move, cut) for its link, its `o.fulfils` and its narrow `flows`; they're made once now. No figure until the measures.
+
+### Site (i): built, and what the profile says it can save
+
+- **Built** (`walk/narrow.rs`):
+  - `kept_tuple` and `keep_tuples` keep a move's tuples per (move, cut), made with no plan guard; `link_tuple` and `linked_instance` take that set under `Plans::Narrow` and make their own under `Whole`, as before.
+  - `narrowed` checks the plan guard on every call (`plan_open`), as the twin's list does.
+  - `check quick` and `check fences` are green, and b1's bytes are G6c's.
+- **The profile** (quick binary, b1 at 2030, `tmp/m4/g6c/prof_i1.*`, `callees.py`):
+  - The link's tuples are now 0.6 % of the run (`obs_links_for → kept_tuple → keep_tuples`).
+  - The STOP-REPORT's attribution was wrong: of `obs_links_for`'s 21.9 %, 18.1 % is the link's `when` (`ev → read_def_at → def_cell → round`: a def such as `vat_due[m]` or `fee_net[c, m]`, read at each cut), not its tuples.
+  - Site (i) can't touch that cost: it is each cut's own evaluation, the kind cut classes collapse (P §3.2).
+- **B1's bound has a cost** (curve runs, quick binary, under my `memcap.py` at 8 GB, pid 41369):
+
+  | Point | With the bound | Bound off (a throwaway build, not committed) | G6c (00143f5a) |
+  | --- | --- | --- | --- |
+  | b1 at 2030 | 125.49 G, 9.15 s, 969 MB | 105.03 G, 7.18 s, 858 MB | 105.36 G |
+  | `v1` at 2030 | 42.12 G, 2.97 s, 402 MB | 34.65 G, 2.42 s, 369 MB | 34.95 G |
+
+  - The bytes are the same in all three.
+  - b1's linked rows are known on 2026-10-02 and K is 2027-01-20. From that day on, every move whose cone reaches a linked plan is read whole.
+  - The linked plans' `when`s read defs, so their link reads are never empty; no static narrowing of the bound would save these cuts.
+  - So X1 and site (i) together move b1 by under 1 %, and B1 adds 19.5 %.
+
+### Site (ii): step 0, before its code
+
+*Checked in the code.* `settled_move` → `adjust_move` (kept per (move, cut, upto), inside `reads_apart`, guarded by `adjust_active`) → `measure_move` → `plan_list` → the whole list at the cut.
+- `measure_move` keeps only two kinds of instance: one whose status is Past, Hole or None and whose day is a day before the cut, and one whose day is a hole (`measure_hole_day`).
+- Every instance dated on the cut or later is skipped (`t >= cut`), whatever its body gives. The bodies the whole list evaluates for those instances, to the horizon, are the cost: 19.2 % at 2030.
+
+*The narrow form* (`narrow.rs` `measured_list`, twin `plan_list`) runs under F7's conditions (`may_narrow`: the cone, the link bound, a plan, a cut before K, nothing traced, no whole list kept) and only with no walk up to a day (`list_upto` none).
+- Each tuple's day is read at the cut, as the narrow `flows` read reads it.
+- A day on the cut or later, `never` or `none`: skipped.
+- Anything else (a day before the cut, a hole, a window, a refusal, a refused or hole tuple, a `same` class): the instance by the list's own step (`narrow_inst`), with the list's status, in the list's order.
+
+Each kind of difference from the twin:
+- *Stops in a skipped body:* the skipped instances are of the kind F7's step 0 ruled on (the list's at a past cut, bodies at that cut), so its rulings hold unchanged: ruled out by the cone, or declined.
+- *First readers:* the link bound (B1). `narrowed` judges the links once, into the current reader, which is the reader the whole list's status loop gives them to here (`adjust_move` pushes no collector of its own). `links_judged` keeps a whole list made later from taking them again.
+- *Hole bookings:* a taken instance that is a hole booking before the cut is declined (`plan_list`), as the narrow `flows` read declines, so `answer_hole_bookings` runs as in the twin. A skipped instance is dated on the cut or later, so it is never a hole booking before the cut.
+- *`measure_inst`:* it reads each kept instance again at each known date after its day, from the instance as given, so it is the same either way.
+
+So no STOP-REPORT at step 0. *Judged:* at b1's cuts before 2026-10-02, a move's adjustments are measured over its 2026 instances rather than those to 2059.
+
+### Site (ii): built, and what it gave
+
+- **Built:** `walk/narrow.rs` `measured_list` and `narrow_measured` (twin `plan_list`); `book/adjust.rs` `measure_move` takes `measured_list`. `check quick` and `check fences` are green.
+- **Measured** (curve runs at 2030, quick binary, under my `memcap.py`; bytes G6c's):
+  - b1: 125.49 G → 87.07 G (−31 %), 9.15 s → 5.96 s, 969 MB → 705 MB.
+  - `v1`: 42.12 G → 14.44 G (−66 %), 2.97 s → 0.97 s, 402 MB → 201 MB.
+  - `c1_r2` (`perf row --quick`): 118.65 G → 112.87 G, 8.66 s → 8.04 s.
+
+### Site (iii): step 0, before its code
+
+*Checked in the code.* `walk/lows.rs` `common_low` → `tree_at(c = min(t, K))` → `build_tree` → `move_instances` of every move in the world: the whole lists at the projection's cut, bodies to the horizon (21.2 % at 2030 before site (ii)). The tree is kept per (place, unit, left-out moves) at its cut. A read from t over the days `first` through `last` takes from it:
+- `lowest_change` and `register`: positions up to `last` only (`through(last)`);
+- `common`'s `acts` and `runs`: up to `last` only;
+- `common`'s `later`, the days of hole and refused movements that reach x: **from t on, past `last` too**;
+- `open`: a hole or a refusal with no day, a sign rule;
+- `adds`: the cap's bound over every leg the cut books;
+- `left_out`: the moves with instances outside the run [S, E], all of them;
+- `counted`: a left-out move's instance days, filtered to the window by `left_out_lines`.
+
+*The narrow form* (`narrow.rs` `window_list`, twin `move_instances`) runs under F7's conditions (`may_narrow`, then `narrowed`, which judges the links into the tree's own collector, which `tree_at` drops, as the whole list's status loop gives them there when the tree is the list's first reader).
+- Each tuple's day is read at the cut.
+- A plain tuple whose day is after the read's `last` and inside the run (on or before E): skipped, its body never evaluated.
+- Every other tuple: the instance by the list's own step (`narrow_inst`). That covers a day on or before `last`, a day outside the run (kept for `left_out`'s count), a hole, a window, a refusal, and a refused, hole or `same`-class tuple.
+- A taken instance that is a hole booking before the cut: declined (the whole list), as sites (ii) and F7 decline.
+- The tree keeps the last day it reaches (`reach`; none for one built of whole lists only), and a read with a later `last` at that cut builds it again.
+
+Each kind of difference from the twin:
+- *Stops and first readers in a skipped body:* F7's step 0 and the link bound, unchanged.
+- *What a skipped instance would have put in the tree:* positions, acts and `counted` days after `last` (no read looks there); a `later` day after `last`; legs in `adds`.
+  - So the narrow tree can call a read common where the whole tree sends it to the walk: a hole or refused movement after the window, or a cap bound only legs after the window break.
+  - *Judged, not proved:* the projection's walk gives the same answer there. refcore's `proj_bal` walks to d (`run_to(d)`), reads the state at the end of d, and lists left-out instances in [t, d] (`proj_regs`), so nothing dated after the window reaches the read. Where the tree answers, F5's invariant is that it gives the walk's value and register. F5's own check, `walk_oracle` (Tree against Walk over the kernel and M1 corpora, in `check fences`), runs with F7 on, so it reads this tree against the walk.
+- *Left out of the run:* instances outside [S, E] are kept, so `left_out`'s counts and first days are the twin's.
+
+So no STOP-REPORT at step 0; the one judgement is above.
+
+### Site (iii): built, measured, not kept
+
+- **Built** as its step 0 says: `narrow.rs` `window_list`, and F5's tree keeping its reach (`walk/lows.rs`). `check quick` and `check fences` (`walk_oracle`) were green, and b1's bytes were G6c's.
+- **Measured** against site (ii) alone (quick binary):
+
+  | Run | After site (ii) | With site (iii) too |
+  | --- | --- | --- |
+  | b1 at 2030 | 87.07 G | 89.72 G (+3 %) |
+  | `v1` at 2030 | 14.44 G | 14.47 G |
+  | `c1_r2` | 112.87 G | 120.20 G (+6.5 %) |
+
+- **Why** (profile `tmp/m4/g6c/prof_iii.*`): `tree_at` was 24.1 %, of which 16 % is still whole lists of moves the narrow read declines (the link bound from 2026-10-02, decisions, cuts at K). The narrow part's day probes and rebuilds added about 6 %.
+- **Reverted:** it costs more than it saves, on `c1_r2` too, the run the gate may judge P8-L10 on. Not committed; its diff is kept in `tmp/m4/g6c/site3.patch` (untracked).
+
+### What moved
+
+Three commits before this entry:
+- c35fdf25: the review's fixes.
+- 187da98d: site (i).
+- 8186cc1a: site (ii).
+
+No printed byte moved:
+- `check commit` before each (T's vectors, the pin oracle, the fences' suites);
+- b1's seven curve runs, `c1_r2`, `d11_full` and P8-14, all byte-identical to G6c's;
+- the 68 probe texts (`review/g6c/p/`, `tmp/m4/paper-probes/`), equal to the before-binary. Against refcore 61 are equal; the 7 that differ are older, each equal on the before-binary (`p01_never`, `p01b_nonever_io`, `p01c_nowhen`, `p02_cycle_io`, `p06_holebook_io`, `p07_same`, `p11_explain`).
+
+### Measures (one heavy run at a time, niced, under my `memcap.py` at 8 GB, pid 41369, stopped at the end)
+
+The curve (b1 cut short, quick binary, `tmp/m4/g6c/curve.sh`; `curve_w2.txt`):
+
+| Horizon | Ask | G6c (00143f5a) | Now (8186cc1a) | Instructions |
+| --- | --- | --- | --- | --- |
+| 2026 | `k1` | 1.79 s, 175 MB, 18.07 G | 1.20 s, 157 MB, 17.27 G | −4.4 % |
+| 2027 | `k1` | 2.55 s, 335 MB, 35.02 G | 2.13 s, 278 MB, 30.37 G | −13.3 % |
+| 2028 | `k1` | 3.97 s, 499 MB, 54.02 G | 3.13 s, 407 MB, 45.32 G | −16.1 % |
+| 2029 | `konto_balance` | 5.77 s, 674 MB, 77.65 G | 4.38 s, 545 MB, 64.06 G | −17.5 % |
+| 2030 | `konto_balance` | 7.77 s, 866 MB, 105.36 G | 5.98 s, 704 MB, 87.09 G | −17.3 % |
+| `v1` 2028 | `k1` | 1.56 s, 246 MB, 20.72 G | 0.74 s, 142 MB, 10.95 G | −47.2 % |
+| `v1` 2030 | `k1` | 2.60 s, 377 MB, 34.95 G | 1.01 s, 198 MB, 14.46 G | −58.6 % |
+
+- Per step at 2030: the review's fixes and site (i), +19.1 % (B1's bound +19.5 %; X1 and site (i) under 1 % back); site (ii), −30.6 %; site (iii), +3 %, reverted.
+- *Fit (judged, not run)*, a + b·n + c·n² by least squares over the five full points (n = 1 at 2026):
+  - instructions 8.65 + 7.20 n + 1.69 n² G, about 2.2 T at 34 years (G6c's fit 2.5 T). At `c1_r2`'s 13.9 G/s on quick, that is about 160 s, and about 125 s on release at turn 1's 0.79×;
+  - footprint 53 + 99 n + 6.2 n² MB, about 10.5 GB at 34 years (3.4 GB on its linear part).
+
+The runs (release binary, `perf row P8-L10`, `tmp/m4/g6c/rows18_w2.txt`):
+
+| Run | G6c | Now |
+| --- | --- | --- |
+| `c1_r2` | 7.29 s, 289 MB, 104.0 G | **6.95 s, 265.0 MB, 98.98 G**, sha `9defd731bf0f` |
+| `b1`, `c1`, `b2`, `c2`, `b3`, `c3`, `b6a`, `c6a`, `b7`, `c7` | stopped | each stopped at the tool's 90 s |
+| `b4a`, `c4a`, `b4b`, `c4b`, `b5`, `b6b`, `c6b` | stopped | each stopped by memcap past 8 GB: `b5` after 37.7 s (612.7 G instructions), the others after 54 to 70 s; largest `b4a`, 8 493.5 MB after 55.9 s |
+| P8-L2 `d11_full` | 721 ms cold, 35.4 MB, 4.43 G | 672 ms cold, 35.4 MB, 4.43 G, digest T's |
+| P8-14 (`perf row`) | 608.7 ms, 111.3 MB, 8.86 G | 597.2 ms, 106.9 MB, 8.67 G |
+
+- `perf counts F7-c1r2`: `def_misses 188841` (G6c 206 577), `days_stepped 6918`, `walks_shared 4290`.
+- `perf counts P8-14`: `def_misses 22880` (G6c 23 675; budget 30 400), `days_stepped 960`, `walks_shared 582`.
+
+**U2's decide point:** after sites (ii) and (iii) every stage run still stops, and the fit projects about 125 s and 10.5 GB at 2059, past 25 s and 3 GB. So, by U2, the stage runs move to a later milestone and M4's gate judges P8-L10 on `c1_r2` (6.95 s, 265 MB on release). G6d `constant` doesn't follow: it was sized at about 2×, and this is about 5× from 25 s.
+
+**The profile's top five** (quick binary, b1 at 2030, 6 234 samples, inclusive; `tmp/m4/g6c/prof_w2.*`):
+1. `walk_members` / `next_tuple` / `where_keeps`, 42.5 %: bindings over an index's members with a `where`, in defs' aggregates (`walk_members ← aggregate ← ev ← def_cell` 36.4 %), the n² form the STOP-REPORT named (`count(m in month where year_of(m) == y …)`).
+2. F5's `tree_at` → `move_instances`, 30.1 %: the whole lists at a projection's cut, of moves the narrow read declines (the link bound from 2026-10-02, decisions, cuts at K).
+3. The main walk's lists at K (`plan_list ← advance_to ← main_walk`), 10.3 %, as planned.
+4. `obs_links_for`, 8.1 %: the link's `when` read at each cut (a def such as `vat_due[m]`), each cut's own evaluation, the kind cut classes collapse (P §3.2).
+5. `flows_move`, 7.2 %.
+
+`settled_move` is 2.2 % now (20.4 % before site (ii)), and `fulfils_of` 3.6 % (2.9 % of it the decision `invest`'s whole list). The largest self item is `_platform_memcmp`, 10.0 %, with the name table's `search_tree::<str>` at 5.3 % (string keys).
+
+- **Size** (`git diff --shortstat 702bdcd3 -- engine/crates`): 8 files, +586 −210.
+- **Files:**
+  - `walk/narrow.rs` (F7);
+  - `walk/tuples.rs` (`linked_instance`, `linked_day`, `plan_tuples`, `link_tuple` on the kept set);
+  - `walk/plan.rs` (`day_dated`);
+  - `book/members.rs` (`fulfils_of`), `book/adjust.rs` (`measure_move`);
+  - `eval/trace.rs` (`explaining`), `eval/state.rs` (`Prefixes.narrows`), `lib.rs`.
+- **Exceptions:** +0 (the exceptions step's report-only long chain in `kept_tuple` restructured as a loop).
+- **Mutants:** none proved.
+- **For T (C6):**
+  - B1's shape (`walk::narrow::tests::a_link_in_another_moves_list_goes_to_that_lists_first_reader`, after `p09b_pin`), under `zp` and under `inputs-of`;
+  - `n4_own --ask l` and `k f l` give the text's answers in any order;
+  - a link reader whose list is first built later (X1's judged change of who absorbs a link's reads);
+  - a measure at a past cut over a move with a hole booking (declined) and over one in a `same` class (taken);
+  - an `o.fulfils` naming a refused tuple and one naming a move whose tuples stop its list (both taken from the whole list).
+- **Open STOP-REPORTs:** none new. The decide point is U2's own rule, so no STOP-REPORT was filed for it.
+- **Next:** the lead's turn: the gate judges P8-L10 on `c1_r2`, and the stage runs, this curve and the top five go to a later milestone; G6c's fix review covers 702bdcd3..this commit.
+- **Usage:** about 1.62 % of the week for the session by `engine/tools/usage` before this entry, about 0.85 % of it this turn.
+- **Checks:** `check commit: green, 24 steps (199s)` and `check fences: green, 1 step (21s)` on this tree but for this line; `milestone-report: M4: 36/40 green`.
+- **Note:** site (ii)'s commit, 8186cc1a above, was reworded before the push as 8f763173 (its subject was 74 characters; `commit-check`), the same tree.
