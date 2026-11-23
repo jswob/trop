@@ -23,7 +23,7 @@ use super::instance::{
 use super::legs::leg_unit_static;
 use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Ctx, Engine, Env, Snap, one_day, thing_seen};
+use crate::eval::{Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
     money_num, num_money,
@@ -95,6 +95,8 @@ impl Engine {
         }
         let answered = self.plans.get(&key).map_or(shared, Rc::clone);
         if back.is_some() {
+            // a pass a later version answered keeps its reads where they printed
+            self.trace_marks_forget();
             self.trace_answers(m, mv, (&answered, &marks), cut)?;
         }
         Ok(answered)
@@ -174,7 +176,9 @@ impl Engine {
     ) -> Result<(Vec<Inst>, Option<crate::eval::Walked>), Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.trace_plan_open();
+        let parts = self.trace_marks_open();
         let made = self.make_instances_held(m, mv, (cut, None), Some(marks));
+        self.trace_marks_close((&mv.id, cut), parts);
         let back = self.trace_plan_close();
         self.holder = outer;
         Ok((made?, Some(back?)))
@@ -191,7 +195,9 @@ impl Engine {
     pub(crate) fn trace_days(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.trace_plan_open();
+        let parts = self.trace_marks_open();
         let made = self.make_instances_held(m, mv, (cut, None), None);
+        self.trace_marks_close((&mv.id, cut), parts);
         let closed = self.trace_plan_close();
         self.holder = outer;
         made?;
@@ -375,7 +381,18 @@ impl Engine {
                 at_cut: None,
                 upto,
             };
-            if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
+            // where its reads begin and end, while a read traces the pass (P20)
+            let id = self
+                .trace_marking()
+                .then(|| crate::book::inst_id(&mv.id, &seed.keys));
+            if let Some(id) = &id {
+                self.trace_part(id, TracePart::Begin);
+            }
+            let made = self.eval_inst(m, mv, &seed, tctx)?;
+            if let Some(id) = &id {
+                self.trace_part(id, TracePart::End);
+            }
+            if let Some(mut inst) = made {
                 if !mv.decision
                     && inst.err.is_none()
                     && let Some(booking) = inst.cut
@@ -738,6 +755,9 @@ impl Engine {
         let day_coll = self.pop_alone();
         self.absorb(&day_coll);
         inst.day_coll = day_coll;
+        if self.trace_marking() {
+            self.trace_part(&inst.id, TracePart::Day);
+        }
         let v = match read? {
             Err(h) => {
                 inst.day = Some(Dated::Hole(h.clone()));

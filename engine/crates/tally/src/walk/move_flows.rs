@@ -18,7 +18,7 @@ use super::reads::refuse;
 use super::state::Progress;
 use crate::base::{Refusal, Run};
 use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
-use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, GUARDED, UNSET_AXIS};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, GUARDED, TraceKeep, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
@@ -44,11 +44,13 @@ impl Engine {
             Ok(k) => k,
         };
         let last = span_last(m, sp)?;
+        self.trace_marks_forget();
         let insts = if mv.decision {
             std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
         } else {
             self.move_instances(m, mv, ctx.cut)?
         };
+        self.trace_at_key(m, mv, (&want, sp), ctx)?;
         let mut acc = Counted::default();
         let counted = self.count_move(
             m,
@@ -116,6 +118,40 @@ impl Engine {
                 ),
             )),
         }
+    }
+
+    /// What a traced read of move `mv`'s flows at keys `want` over span `sp` prints of its
+    /// instances' reads, the one read set (L §8.2 One read set; E §10; P20, P22): each one's
+    /// at its key and in its span, or whose day is a hole, whole; one's at its key outside
+    /// the span, its day's; none at another key ([`Engine::trace_keep`]).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn trace_at_key(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (want, sp): (&[KeyVal], &Span),
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        if !self.tracing() || ctx.at.is_some() {
+            return Ok(());
+        }
+        let insts = self.move_instances(m, mv, ctx.cut)?;
+        let mut keep = Vec::with_capacity(insts.len());
+        for i in insts.iter() {
+            let part = if !i.keys.starts_with(want) {
+                TraceKeep::Nothing
+            } else if matches!(&i.day, Some(Dated::Day(d)) if !sp.contains(*d)) {
+                TraceKeep::Day
+            } else {
+                TraceKeep::Whole
+            };
+            keep.push((i.id.clone(), part));
+        }
+        self.trace_keep((&mv.id, ctx.cut), &keep);
+        Ok(())
     }
 
     /// A move's movements and adjustments counted into `acc`, in refcore's order: each

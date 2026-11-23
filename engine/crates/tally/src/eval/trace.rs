@@ -22,6 +22,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+mod parts;
+pub(crate) use parts::{Keep, Part};
+
 use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
 use super::state::{Ctx, Engine, Env, invariant};
@@ -212,6 +215,12 @@ pub(crate) struct Trace {
     /// Each decision run a read counted and traced, by its walk and instance: once per
     /// explain, as the walk runs it once (E §10).
     runs: BTreeSet<(usize, String)>,
+    /// The marks of the plan pass traced now, where one is (P20).
+    marks: Option<parts::Marks>,
+    /// The marks of the last plan pass traced, by its move and cut, for the read that asked.
+    fresh: Option<(String, Day, parts::Marks)>,
+    /// The parts of plan passes a read set aside, for a read that counts their instances.
+    stash: parts::Stash,
 }
 
 /// What a trace knows of a def cell a read reaches.
@@ -424,6 +433,9 @@ impl Engine {
             stop: None,
             days: BTreeSet::new(),
             runs: BTreeSet::new(),
+            marks: None,
+            fresh: None,
+            stash: BTreeMap::new(),
         });
     }
 
