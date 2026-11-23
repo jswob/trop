@@ -1,0 +1,47 @@
+model f2
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input sp_end: month
+input lim: money PLN
+
+move pk[j in js]: transfers
+  on w2[j]
+  leg cash from konto to world amount amt2[j]
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fp1: money PLN = flows(pk[j1], sp .. sp_end)
+def fk1: money PLN = flows(dk[j1], sp .. sp_end)
+def fk2: money PLN = flows(dk[j2], sp .. sp_end)
+
+ask e_fp1: explain fp1
+ask e_fk1: explain fk1
+ask e_fk2: explain fk2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-05-05 "s"
+  w2[j2] = 2026-05-06 "s"
+  sp = 2026-04 "s"
+  sp_end = 2026-05 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
