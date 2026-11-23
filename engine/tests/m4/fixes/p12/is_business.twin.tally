@@ -14,12 +14,14 @@ input cal_ok: calendar
 input d_h: date
 input d_n: date
 input d_ok: date
+input d_v: date
 
 ask h_d: is_business(d_h, cal_ok)
 ask h_cal: is_business(d_ok, cal_h)
 ask h_d__h_cal: is_business(d_h, cal_h)
 ask h_d__n_cal: is_business(d_h, cal_n)
 ask h_cal__n_d: is_business(d_n, cal_h)
+ask h_cal__v_d: is_business(d_v, cal_h)
 
 version v
   cite s
@@ -31,3 +33,4 @@ version v
   d_h = 2026-03-06 "s"
   d_n = none "s"
   d_ok = 2026-03-06 "s"
+  d_v = never "s"

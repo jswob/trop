@@ -11,9 +11,11 @@ unit PLN: currency minor 0.01
 input a_h: date
 input a_n: date
 input a_ok: date
+input a_v: date
 input b_h: date
 input b_n: date
 input b_ok: date
+input b_v: date
 input dc_h: daycount
 input dc_n: daycount
 input dc_ok: daycount
@@ -23,11 +25,15 @@ ask h_b: dcf(a_ok, b_h, dc_ok)
 ask h_dc: dcf(a_ok, b_ok, dc_h)
 ask h_a__h_b: dcf(a_h, b_h, dc_ok)
 ask h_a__n_b: dcf(a_h, b_n, dc_ok)
+ask h_a__v_b: dcf(a_h, b_v, dc_ok)
 ask h_a__n_dc: dcf(a_h, b_ok, dc_n)
 ask h_b__n_a: dcf(a_n, b_h, dc_ok)
+ask h_b__v_a: dcf(a_v, b_h, dc_ok)
 ask h_b__n_dc: dcf(a_ok, b_h, dc_n)
 ask h_dc__n_a: dcf(a_n, b_ok, dc_h)
+ask h_dc__v_a: dcf(a_v, b_ok, dc_h)
 ask h_dc__n_b: dcf(a_ok, b_n, dc_h)
+ask h_dc__v_b: dcf(a_ok, b_v, dc_h)
 
 version v
   cite s
@@ -36,9 +42,11 @@ version v
   a_h = ?"which a?" "s"
   a_n = none "s"
   a_ok = 2026-01-01 "s"
+  a_v = never "s"
   b_h = ?"which b?" "s"
   b_n = none "s"
   b_ok = 2027-01-01 "s"
+  b_v = never "s"
   dc_h = ?"which dc?" "s"
   dc_n = none "s"
   dc_ok = act365 "s"

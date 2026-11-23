@@ -1,0 +1,22 @@
+model r2
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ds = day 2026-01-01..2026-01-31
+input d1: key ds
+input d2: key ds
+input t1: key days
+ask f1: d1 - d2
+ask f2: check d1 == d2
+ask f3: d1 + 1
+ask f4: t1 - t1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d1 = 2026-01-03 "s"
+  d2 = 2026-01-01 "s"
+  t1 = 2026-02-01 "s"

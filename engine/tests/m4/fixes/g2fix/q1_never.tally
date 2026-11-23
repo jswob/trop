@@ -1,0 +1,36 @@
+model q1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+input p_h: money PLN
+input p_ok: money PLN
+input r_ok: rate
+input d_nv: date
+input d_ok: date
+input d_h: date
+input n_h: int
+input cal: calendar
+ask n1: accrue(p_h, r_ok, d_nv, d_ok, act365, simple)
+ask n2: accrue(p_ok, r_ok, d_nv, d_ok, act365, simple)
+ask n3: dcf(d_h, d_nv, act365)
+ask n4: dcf(d_ok, d_nv, act365)
+ask n5: add_business(d_nv, n_h, cal)
+ask n6: add_business(d_nv, 1, cal)
+ask n7: is_business(d_nv, cal)
+ask n8: accrue(p_ok, r_ok, d_h, d_nv, act365, simple)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p_h = ?"which p?" "s"
+  p_ok = 100.00 PLN "s"
+  r_ok = 10 %/year "s"
+  d_nv = never "s"
+  d_ok = 2026-06-01 "s"
+  d_h = ?"which d?" "s"
+  n_h = ?"which n?" "s"
+  cal = calendar(weekends [sat, sun], yearly [01-01]) "s"
