@@ -18,16 +18,18 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 10] = [
+    const GROUPS: [&str; 12] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
         "fixes-g3",
+        "fixes-g3fix",
         "fixes-p12",
         "spec-g1",
         "spec-g2",
         "spec-g2fix",
         "spec-g3",
+        "spec-g3fix",
         "spec-p12",
     ];
 
@@ -120,6 +122,19 @@ mod tests {
         group_holds(VECTORS, "fixes-g3");
     }
 
+    /// G3's fix review (`tmp/m4/review-g3fix.md`) under pick P20, the read set of a decision's
+    /// `flows` or `count`, refcore's bytes: a `count` lists a false-`when` member's reads (F2:
+    /// `c6_count_false_when`, `c5_dec_false`, a plan's in `c7_count_plan_false`); a refused
+    /// order lists each tested instance's `when` and amount (F1: `RUN-ORDER` in
+    /// `o1_order_inputs`, `c1_false_when`, `RUN-TIE` in `t1_tie`, `t2_tie_inputs`); a plan whose
+    /// `when` is false, through `explain flows`, answers (`c2_plan_false`, `c3`, `c4`); held for
+    /// #255, the `inputs-of` lists that leave those reads out and the explains that list
+    /// another move's runs.
+    #[test]
+    fn m4_fixes_g3fix() {
+        group_holds(VECTORS, "fixes-g3fix");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -186,5 +201,16 @@ mod tests {
     #[test]
     fn m4_fixes_spec_g3() {
         group_holds(SPEC, "spec-g3");
+    }
+
+    /// P20's answers (#255): `explain` and `inputs-of` of a decision's `flows` or `count` list
+    /// one set, each due instance at the cell's key and in its span with every `when` it
+    /// tested and amount it read, a refused order's tested instances, nothing at another key
+    /// or of another move (`c1_false_when`, `c5_dec_false`, `c6_count_false_when`,
+    /// `c7_count_plan_false`, `o1_order_inputs`, `t1_tie`, `t2_tie_inputs`). Written by hand
+    /// from refcore's and G3's fix's lines; `f2_keyed`'s and `f7_axpin`'s are in `spec-g3`.
+    #[test]
+    fn m4_fixes_spec_g3fix() {
+        group_holds(SPEC, "spec-g3fix");
     }
 }
