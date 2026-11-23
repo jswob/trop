@@ -18,7 +18,7 @@
 //! tuple alone.
 
 use super::arith::{Op, arith};
-use super::bindings::{Values, bind_domain};
+use super::bindings::{Values, bind_domain, none_here};
 use super::expr::hole_of;
 use super::extremes::{bare_key, min_max};
 use super::partial;
@@ -254,7 +254,7 @@ impl Engine {
                 continue;
             }
             if t == Value::None {
-                return Err(refuse(Run::None, format!("a term of {word} is none here")));
+                return Err(none_term(m, agg.term.as_ref(), &member.env, word));
             }
             if let Value::Window(w) = &t
                 && !matches!(
@@ -359,7 +359,7 @@ impl Engine {
         for member in members {
             let t = self.ev(m, term, &member.env, ctx)?;
             if t == Value::None {
-                return Err(refuse(Run::None, format!("a term of {word} is none here")));
+                return Err(none_term(m, Some(term), &member.env, word));
             }
             if let Some(unknown) = &member.unknown {
                 holes.push(unknown.clone());
@@ -723,6 +723,16 @@ pub(super) fn window_term_hole(w: &Window, word: &str) -> Hole {
     let window = w.question_text();
     let text = format!("date within {window} not precise enough for a term of {word}");
     Hole::asked(&text, w.figure()).carrying(&w.carry)
+}
+
+/// The refusal of a term of aggregate `word` that is `none`: its term as written, each
+/// variable by its value, `rate[k2] is none here: an aggregate`; a bare key, never `none`,
+/// keeps refcore's line. L §8.4 `RUN-NONE`'s row, §5.11 (pick P3).
+fn none_term(m: &Reality, term: Option<&Expr>, env: &Env, word: &str) -> Stop {
+    match term {
+        Some(e) => none_here(m, e, env, "an aggregate"),
+        None => refuse(Run::None, format!("a term of {word} is none here")),
+    }
 }
 
 /// Whether a term is zero: an unknown member's 0 adds nothing to a sum (L §5.11).
