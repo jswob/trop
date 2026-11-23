@@ -835,10 +835,12 @@ fn moves_a_year(v: &Value) -> bool {
 
 /// The index `e` is a key of by its declaration, so two such keys differ by its steps: a
 /// variable bound over the index, an input or def typed `key ix`, read whole or at its keys
-/// (refcore's static `key ix` type, its `_keydiff`; P15). L §4.2 Differences.
+/// (refcore's static `key ix` type, its `_keydiff`; P15), through brackets and an `as if`,
+/// which has its expression's type, so `m2 - m1 as if {m1 = 2026-04}` differs as `with`
+/// does (P16, P19). L §4.2 Differences, §5.11.
 pub(super) fn key_index(m: &Reality, e: &Expr, env: &Env) -> Option<String> {
     let mut e = e;
-    while let Expr::Paren(inner) = e {
+    while let Expr::Paren(inner) | Expr::AsIf(inner, _) = e {
         e = inner;
     }
     let mut name = None;

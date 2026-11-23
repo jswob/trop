@@ -294,6 +294,8 @@ impl Engine {
                 }
             };
             if let Moving::Plan(i) = &x {
+                // a decision's run a binding takes prints what it read, explained (E §10)
+                self.trace_counted(m, i, ctx)?;
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
                 }
@@ -679,7 +681,9 @@ impl Engine {
         }
         let (walk, running) = match ctx.at {
             Some(WalkAt { walk, .. }) => (walk, true),
-            None => (self.main_walk(m, ctx.cut)?, false),
+            // a traced read prints what the run read where it was counted, not the walk
+            // (E §10)
+            None => (self.decided_walk(m, ctx.cut, &[mv])?, false),
         };
         match self.chain_run(walk, id)? {
             Some(run) => Ok(Some(Moving::Plan(run.inst.clone()))),

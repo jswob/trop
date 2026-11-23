@@ -140,8 +140,9 @@ impl Engine {
                 let in_span = matches!(&i.day, Some(Dated::Day(d)) if sp.contains(*d));
                 if in_span {
                     // read to be left out: every entry its reads gave, `held:` lines too
-                    // (refcore's `flows_move`; P35, P48 on #241)
+                    // (refcore's `flows_move`; P35, P48 on #241), explained too (E §10)
                     acc.met.merge(&i.coll);
+                    self.trace_counted(m, i, ctx)?;
                 } else if i
                     .day
                     .as_ref()
@@ -203,6 +204,8 @@ impl Engine {
                 continue;
             }
             acc.met.merge(&i.coll);
+            // a decision's run counted prints what it read, explained (E §10, L §8.2)
+            self.trace_counted(m, i, ctx)?;
             // a refused result lists what it read like a value (L §8.2 One read set; 208.2)
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));

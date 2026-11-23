@@ -7007,3 +7007,40 @@ G2's fix review (`tmp/m4/review-g2fix.md`) and picks P14 to P16, on 46aad57b; no
 - **Usage:** this session, its three turns, about 1.29 % of the week by `engine/tools/usage`.
 - **Open STOP-REPORTs:** none new.
 - **Checks:** `check commit: green, 24 steps (191s)`, exit 0, on this tree but for this entry.
+
+## 2026-11-23 M4 G3 `walked`, the review's fixes: B1 to B5, P19 (issue #252)
+
+G3's review (`tmp/m4/review-g3.md`, probes `tmp/m4/review/g3/`) found 5 blocking defects, all in `explain` of a decision's `flows` or `count`; pick P18 gives all five back, with non-blocking 1, and P19 adds the coordinator's `as if` probe. On 86bb57b8 (G2's last fix, T's C4d). One commit (this one). T's C4e (vectors for these) merges after this turn, so the review's probes stand in for them.
+
+**B1. Only the runs the read counts** (L §8.2 One read set, §5.18; E §10).
+- `trace_runs` re-read every run of the move once the walk was read, other keys and outside the span too. Now the run is re-read where a read counts it, `walk/body.rs` `trace_counted`: in `count_move` (a counted run, and one in the span read to be left out, whose reads the register already takes) and in `span_members` (a member the binding takes), once per explain for each instance (`eval/trace.rs`, a set of runs beside the set of moves whose days were traced). The days of the move's instances still print once per move (`trace_decided`, as the plan pass lists them); an instance outside the span keeps its day row (L §8.2: "a day outside the span").
+- So `f4_min` `e_fl` lists `v:sp`, `v:w` and no run; `f2_keyed` `e_fk1` lists j1's run only; `f3_span` `e_cn` the April run only. A decision whose `when` is false is no member of a binding (`decided_members`), so a `count` lists none of its reads, as `inputs-of` doesn't (`tmp/m4/g3/p5.tally` `i_c`: no `dd[j2]`), where `flows` lists them (`i_all`). Refcore lists every run (its walk traced whole): T holds its bytes for #255.
+
+**B2. A hole running read prints its question** (L §5.18 Output, §8.1). `trace_running` printed the value as a register entry shows it (`eval/read.rs` `shown`: a hole as `?`); it now prints it as a line does (`Value::text`): `running read bal(konto) = ?"date within window(…) not precise enough for the day of dh" (wh), …`, as refcore. M3's walk-bound explain shares the line, so it gets the question too (no stored vector holds one).
+
+**B3. Under a `with` axis pin.** Outside the pins the axis has no option, so the main walk stops `UNSET_AXIS`, which `outside_pins` fans out over. `decided_walk`'s `?` returned before the walk note went back, so `traced` stopped "a cause the walk computes" first. The note now goes back on a stopped walk too: `f7_axpin` `e_fl` is `70.00 PLN` with its pins and both options, `f7f` `e_fl` `1`.
+
+**B4. A decision refused before it runs prints no body** (E §4.2 step 3). `Run` has a new field `ran`: false for a cycle's member refused `RUN-ORDER`/`RUN-TIE` (`refused_run`, recorded at a point it never ran at) and for one refused before its point (its key's `where`); `trace_counted` re-reads only a run that ran. `f12_order` `e_fa`, `e_fb`: no body for either.
+- **Left open, for the review and T:** a refusal of the order rests on what every instance due read to be ordered (`walk/order.rs`, `cycle_order`'s `rests`, L §8.2), here db's `when wb < w`. Refcore lists `v:wb` under both (its walk traced whole); the engine lists it under neither. Before this fix `e_fb` printed it by re-reading db's body (byte-equal by that accident), so `e_fb` is one of the same → different lines below. Tracing the ordering's reads (each member's `when` at the act's point, `cycle_member`) is its own small change; not made in this turn.
+
+**B5, non-blocking 1. A binding's field read of a decision member** (`count(t in transfers over sp .. sp where t.cash.amount > amt2)`, `sum(t.cash.amount for t in transfers …)`). `instance_by_id` (`book/members.rs`) read the main walk directly; it now reads it through `decided_walk`, so the note goes back and the member's run prints where the binding took it. `f13c` `e_cw: 1`, `f13_bind` `e_sm: 130.00 PLN`, both with their traces.
+
+**P19. `as if` reads a pin's key literal as `with` does** (P16, P15; L §4.2 Differences). `m2 - m1 as if {m1 = 2026-04}` parses as `m2 - (m1 as if {…})`; `key_index` (`eval/expr.rs`, G2's P15 test of "two keys of one index") looked through brackets only, so the `as if` operand wasn't a key of `ms` and the two differed by periods (6). It now looks through an `as if`, which has its expression's type: 2, as `with` gives (`tmp/m4/g3/by3b.tally`: `(m2 - m1) as if`, `dd as if`, `(m2 as if {…}) - m1`, `m1 + (m2 - m1 as if {…})` all agree with `with`). Refcore gives 6 (#255).
+
+**The sweep** (`tmp/m4/g3/fixsweep.sh`, G3's script): the paper probes, every `tmp/m4/review/*/` folder (g1, g1fix, g2, g2fix, g3) and my probes in `tmp/m4/g3/`, ask by ask, each text alone, on refcore_fast, the engine before this fix (86bb57b8's quick binary, built from `git archive` in `/tmp/g3f-before`) and after.
+- **817 asks: 597 same → same, 7 different → same, 202 different → different, 11 same → different.**
+- Paper probes and review folders g1, g1fix, g2, g2fix (608): every line byte-identical before and after.
+- **Same → different, 11, each explained:**
+  - B1, refcore's every-run list (held for #255): `review/g3/f3_span` `e_cn`, `e_fk`, `e_fk1`; `f4_min` `e_fl`; `f10_more` `e_cn` (two runs whose `when` is false, no members of the binding); my `p3` `e_c`, `p4` `e_c` (the same).
+  - P19, refcore's 6 (held for #255): my `by3` `d3`, `by3b` `d3` and `d8`.
+  - B4's open item above: `review/g3/f12_order` `e_fb` (`v:wb`).
+- Different → different with changed bytes, 27, all in G3's forms (`review/g3/` f1, f2, f5, f6, f7, f7f, f10, f11, f12 `e_fa`; my p3, p4): the bodies of uncounted runs gone (B1), the hole's question (B2), an answer for `not implemented` (B3), the RUN-ORDER body gone (B4). Every value line among them equals refcore's but `f10_more` `e_fpin` (refcore `REFCORE-NOT-YET`).
+
+- **Size** (`git diff --shortstat 86bb57b8 -- engine/crates`): 6 files, +132 −84.
+- **Files:** `walk/body.rs`, `walk/move_flows.rs`, `walk/order.rs`, `book/members.rs` (kernel); `eval/trace.rs`, `eval/expr.rs`.
+- **Forms changed, and what they meet (for the fix review):** the counted run's re-read meets `flows` (keys, span, a false `when` in the span, a refused run), bindings (`count`, `sum`, a `where` on a member's field), a cycle's refused members, a stopped walk under an unset axis, `with` pins' traces; `key_index` meets brackets, `as if` around either operand, an `as if` around the difference.
+- **Exceptions:** +0.
+- **Mutants:** none proved this turn (T's C4e vectors aren't merged yet).
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.4 % of the week this turn (1.05 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (266s)`, exit 0, on this tree but for this line; `milestone-report: M4: 31/31`.

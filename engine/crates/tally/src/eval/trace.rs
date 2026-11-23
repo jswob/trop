@@ -206,9 +206,12 @@ pub(crate) struct Trace {
     pub(crate) walked: bool,
     /// The first stop a helper met, the trace's end's.
     stop: Option<Stop>,
-    /// Each decision move whose runs a read traced, by its walk: a run's reads are traced
-    /// once per explain, as the walk runs it once (E §10).
-    decided: BTreeSet<(usize, String)>,
+    /// Each decision move whose instances' days a read traced, by its walk: once per
+    /// explain, as the plan pass lists them once (E §10).
+    days: BTreeSet<(usize, String)>,
+    /// Each decision run a read counted and traced, by its walk and instance: once per
+    /// explain, as the walk runs it once (E §10).
+    runs: BTreeSet<(usize, String)>,
 }
 
 /// What a trace knows of a def cell a read reaches.
@@ -419,7 +422,8 @@ impl Engine {
             saved,
             walked: false,
             stop: None,
-            decided: BTreeSet::new(),
+            days: BTreeSet::new(),
+            runs: BTreeSet::new(),
         });
     }
 
@@ -483,12 +487,19 @@ impl Engine {
         Ok(self.trace_walked())
     }
 
-    /// Whether a read now is traced and hasn't yet traced the runs of decision move
-    /// `move_id` in walk `walk`; noted as traced from now on, so each run's reads print once
-    /// per explain, where first counted (E §10).
-    pub(crate) fn trace_first_runs(&mut self, walk: usize, move_id: &str) -> bool {
+    /// Whether a read now is traced and hasn't yet traced the days of decision move
+    /// `move_id`'s instances in walk `walk`; noted as traced from now on (E §10).
+    pub(crate) fn trace_first_days(&mut self, walk: usize, move_id: &str) -> bool {
         self.traced()
-            .is_some_and(|trace| trace.decided.insert((walk, move_id.to_owned())))
+            .is_some_and(|trace| trace.days.insert((walk, move_id.to_owned())))
+    }
+
+    /// Whether a read now is traced and hasn't yet traced decision run `inst` of walk
+    /// `walk`; noted as traced from now on, so a run's reads print once per explain, where
+    /// a read first counts it (E §10).
+    pub(crate) fn trace_first_run(&mut self, walk: usize, inst: &str) -> bool {
+        self.traced()
+            .is_some_and(|trace| trace.runs.insert((walk, inst.to_owned())))
     }
 
     /// Whether the trace has noted a read of the walk, false with none: what a balance read
@@ -631,7 +642,8 @@ impl Engine {
 
     /// Adds a running read of `place`, `value`, under the open node: a walk-bound def's cell
     /// read again at its walk point prints "its running reads as balances up to that point"
-    /// of `day` (E §10; refcore's `e_bal`, its `now` form).
+    /// of `day`, a hole with its question, as a line prints it (E §10, L §5.18 Output, §8.1;
+    /// refcore's `e_bal`, its `now` form, `fmt_value`).
     ///
     /// # Errors
     ///
@@ -648,7 +660,7 @@ impl Engine {
         }
         let label = format!(
             "running read bal({place}) = {}, the balance up to this point of {}",
-            super::read::shown(m, value)?,
+            value.text(m).map_err(super::state::num_stop)?,
             day.text()
         );
         self.trace_leaf(label);

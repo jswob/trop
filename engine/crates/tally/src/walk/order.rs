@@ -43,6 +43,10 @@ pub struct Run {
     pub read: BTreeSet<String>,
     /// The places its legs name.
     pub changed: BTreeSet<String>,
+    /// Whether its body was read at its point: not for one refused before its point (its
+    /// key's `where`), nor for a cycle's member refused before it runs (`RUN-ORDER`,
+    /// `RUN-TIE`), which had no point to read it at (E §4.2 step 3; E §10).
+    pub ran: bool,
 }
 
 /// Where a running read stands: the walk and the point (refcore's `ctx.walk`, `ctx.wp`).
@@ -424,6 +428,7 @@ impl Engine {
             live: BTreeSet::new(),
             read: BTreeSet::new(),
             changed: BTreeSet::new(),
+            ran: false,
         });
         Ok(())
     }
@@ -633,12 +638,14 @@ impl Engine {
             return Err(invariant("a run's reads taken"));
         };
         let linked = self.obs_links_for(m, &inst.id, cut)?;
+        let ran = inst.err.is_none();
         let mut run = Run {
             inst,
             point: key,
             live,
             read,
             changed: BTreeSet::new(),
+            ran,
         };
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
