@@ -7327,3 +7327,133 @@ P21 rules the STOP-REPORT above, and P22 extends P20 to every `flows` and `count
 - **Open STOP-REPORTs:** none; the one above is ruled by P21.
 - **Usage:** about 0.2 % of the week this turn (1.85 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check commit: green, 24 steps (246s)` on d511c489; `milestone-report: M4: 39/40`.
+
+## 2026-11-23 M4 G6c `narrow`: fence F7, a past cut reads the instances it names (issue #252)
+
+The perf plan's group G6c (`tmp/m4/perf-plan.md` §1 cause 2, §3, §4, §5), U1, on 73e75856. Fence F7 (`walk/narrow.rs`, R-85 recorded by the rules step). Scratch in `tmp/m4/g6c/` (untracked).
+
+### Step 0: the plan pass's stops, before any code
+
+*Checked in the code* (`walk/plan.rs` `move_instances`, `make_instances_held`, `refused_tuple`, `eval_inst`, `inst_parts`, `refused_legs`, `check_booked`; `walk/tuples.rs` `move_tuples`; `book/observe.rs` `obs_links_for`; `book/adjust.rs` `answer_hole_bookings`). Every `?` and what it does with a stop:
+
+| Site | Stop | Reaches |
+| --- | --- | --- |
+| `move_tuples(…)?` (law date, members, `where`, a waiting `where`) | any stop the tuples meet | **the list**, before any instance is evaluated |
+| `refused_tuple`: a tuple refused with later keys unbound | its refusal | **the list**, at that tuple's place |
+| `eval_inst` → `inst_parts`: a `Stop::Refused` whose code isn't `Code::Load(_)` (every `RUN-*`, `RUN-CYCLE` and `ENGINE-INVARIANT` among them) | | **the instance's `err`**; its places then read (`refused_legs`) |
+| `eval_inst`: a `Code::Load(_)` refusal met at run (`LOAD-PRICE`, `LOAD-READS`, `LOAD-LABEL`, `LOAD-OVERLAP`; `LOAD-SCENARIO` is an ask's) | | **the list** (R-66) |
+| `eval_inst`: `NotBuilt`, `Deep` | | **the list** |
+| `refused_legs` → `leg_ends` → `read_or_refused`: a load code or `ENGINE-INVARIANT` reading a refused instance's places | | **the list** |
+| `check_booked` (E §9 item 5) | `ENGINE-INVARIANT` | **the list** |
+| status loop: `status` → `obs_links_for` (the links to that instance judged), `links_applied` (`observations`, per cut) | `RUN-CYCLE` of a link that reads its own observations; a load refusal | **the list** |
+| `answer_hole_bookings` (an instance dated before the cut whose booking is a hole) | a stop other than a refusal | **the list** |
+
+Not a stop, but order-dependent: a `RUN-CYCLE` met through the list at that cut (`plan_active`) keeps every open cell at its own law date with the cycle's refusal (`narrow_open_to_days`), so which instance's body meets the list first decides what is kept.
+
+**Each propagated kind, for an instance the narrow read skips:**
+- *The tuples' stops:* the narrow read makes the move's tuples itself, the same call in the same frame (`holding`, `reads_apart`), so it meets them in the same order. Same by construction.
+- *A tuple refused with later keys unbound:* visible in the tuples. **Declined:** the narrow read takes the whole list for that move at that cut.
+- *A cycle through the move's own plan, and the link cycle:* **ruled out by the item graph** for a move whose cone can't reach its own plan: from its `Move` and `MoveOn` nodes (`m.graph`) no path back to either, none to the balances (`Rel::Bal`, `Rel::Flows` of a place: every move books there), none through a binding over observed rows or `observed` (`Rel::Bind`, `Rel::Named`, `Rel::Observed`: a link names any move), no running read or projection (`marks`). Any other move: **declined**, read whole.
+- *`LOAD-PRICE`, `LOAD-READS`:* met only by `value(…)` and `bal(x)` with no day, both balance reads: **ruled out** by the same cone rule.
+- *`LOAD-LABEL`, `LOAD-OVERLAP` at run:* L §4.6 step 4's ties. *Judged, not proved:* load refuses at load every pair of rows or rule versions that can tie (`load/overlap.rs`, `load/defs.rs`), so on a loaded reality the run-time branch is that check's guard; no stored vector meets it at run.
+- *`Deep`:* never an answer; the outermost read replays once the cell is computed (R-16), and nothing is kept from the stopped list. Transparent.
+- *`ENGINE-INVARIANT` (`check_booked`, a refused instance's places):* a broken promise, never an answer on a correct engine. Ruled out by the invariant itself.
+- *`NotBuilt` in a skipped instance:* neither ruled out nor declinable without evaluating it. Where the whole list stops `not implemented` on an instance the read skips, the narrow read answers. *Judged:* neither is then refcore's bytes from the whole list's side; T's suite shows whether any vector holds one.
+- *The status loop:* `obs_links_for` for a skipped instance judges its links; for a qualifying move its `when` and bindings read no observation, so no link cycle; a load refusal as above. Its side effects (the links kept, `obs_errs`, the observations' registers, and **the link reads absorbed by the list's first reader**) are kept: the narrow read judges, once per (move, cut), the links of every instance some observation at that cut names, absorbed by the first reader, as the list's status loop does; later narrow reads take their instance's status without absorbing; a whole list built after a narrow read at that cut absorbs none, as it would have been the cache's hit.
+- *`answer_hole_bookings`:* a named instance that is a hole booking before the cut is **declined** (read whole). A skipped instance dated before the cut that is one: the whole list measures the move's adjustments then; the narrow read leaves the measure to the read that needs it, cached per (move, cut, list). *Judged:* the measure reads the whole list itself, so it gives the same answers whoever reads first.
+- *Declined too, by the plan:* a traced read (`explain`, `inputs-of`), a decision, a read at the ask's cut K or later (the walk builds the whole list there), a move whose whole list at that cut is already kept, `Plans::Whole`. For `flows`, also a move of an uncertain kind (whether an instance outside the span is counted turns on its body there).
+
+**For `flows` at a past cut,** the instances it skips are those at its keys whose day, read at the cut, is a day outside the span. What `count_move` takes of such an instance is the same whatever its body gives: `uncounted_reads`' "the day that put it outside" (`day_coll.outside()`), for status none, refused, modelled, past or plan alike. So the narrow read reads each such instance's day (law date and `on`, as `inst_parts` does) and hands `count_move` the instance with its day and day's reads only, in the list's order. Always taken whole: a day that is a hole or a window, a day refused, a refused tuple, a hole tuple, an instance in a `same` class at that cut.
+
+**Moves of the stage runs that qualify** (*judged* from b1's law; the code's own answer is in the measures below): the eight plans b1's observations name (`wage`, `vat_pay`, `ryczalt_pay`, `rent_pay`, `marek_back`, `health_pay`, `costs_pay`, `client_pay`; `invest` is a decision, read whole), and `health_pay`, `zus_social_pay` under `ryczalt_adv`'s `flows`. Their cones read inputs, calendars, defs over them and other moves' `flows`, none of which reaches back. So no STOP-REPORT at step 0.
+
+### What moved
+
+One commit before this entry: 6c0ed597 (the fence). No printed byte moved: T's vectors, the whole pin oracle and the fences' suites in `check commit`; b1's seven curve runs, `c1_r2`, `d11_full` and P8-14 byte-identical to G6b's.
+- `walk/narrow.rs` (new, fence F7): `Plans` (`Narrow` in `How::FENCES` and `How::new`, `Whole` the twin), `instance_at` (`o.fulfils`, from `book/members.rs` `fulfils_of`) and `flows_instances` (from `walk/move_flows.rs` `flows_move`), the per-(move, cut) cache `Narrowed` (the tuples; each instance and each day once read), kept in the timeline's `Prefixes` so it parks and unparks with `plans`.
+- `walk/plan.rs`: the list's loop body is `tuple_instance` now, the one step both forms take; `move_instances`' status loop absorbs no link reads where narrow reads already judged that cut (`links_judged`), as the twin's cached list absorbs none.
+- `How.plans`, the engine's `plan_reads` and `with_plans` (`eval/state.rs`, `ask/answer.rs`); `explaining()` (`eval/trace.rs`), so a narrow read declines for the whole of a traced ask, inside a plan pass too.
+- Inline tests `walk::narrow::tests::`: a link read and a `flows` read at past cuts give the twin's lines (refused, hole, hole-day and window instances; fee days on a span's edges); the cone rule on five moves (a plan reading another plan's instance narrows; one binding observed rows, and two moves reading each other's `flows`, don't). A plan reading a balance can't be written (`LOAD-READS`), so the rule's balance branch guards a decision only, and decisions are declined first.
+
+### Measures (plan §4; one heavy run at a time, niced; my `memcap.py` at 8 GB, pid 60326, stopped at the end)
+
+The curve (b1 cut short, G5's copies, quick binary `engine/target/g6cquick/tally`; `tmp/m4/g6c/curve.sh`, G6b's script; load about 4 to 5, G6b's 9 to 14, so compare instructions):
+
+| Horizon | Ask | G6b (381a324a) | After (G6c) | Instructions |
+| --- | --- | --- | --- | --- |
+| 2026 | `k1` | 1.81 s, 203 MB, 21.2 G | 1.79 s, 175 MB, 18.07 G | −14.8 % |
+| 2027 | `k1` | 3.28 s, 443 MB, 46.4 G | 2.55 s, 335 MB, 35.02 G | −24.5 % |
+| 2028 | `k1` | 5.46 s, 675 MB, 74.6 G | 3.97 s, 499 MB, 54.02 G | −27.6 % |
+| 2029 | `konto_balance` | 7.82 s, 937 MB, 107.8 G | 5.77 s, 674 MB, 77.65 G | −28.0 % |
+| 2030 | `konto_balance` | 10.46 s, 1 212 MB, 146.7 G | 7.77 s, 866 MB, 105.36 G | −28.2 % |
+| `v1` 2028 | `k1` | 3.03 s, 431 MB, 41.8 G | 1.56 s, 246 MB, 20.72 G | −50.4 % |
+| `v1` 2030 | `k1` | 5.53 s, 744 MB, 77.3 G | 2.60 s, 377 MB, 34.95 G | −54.8 % |
+
+- From 2028 to 2030 the instructions grow 1.95× and the footprint 1.74× for 1.67× the horizon: not near linear.
+- *Fit (judged, not run),* a + b·n + c·n² by least squares over the five full points: instructions 5.9 + 10.5 n + 1.87 n² G, about 2.5 T at 34 years (about 185 s on the quick binary, 145 s on release at 0.79×); footprint 32 + 139 n + 5.5 n² MB, about 11 GB at 34 years (4.8 GB on its linear part alone).
+
+The runs (release binary, `perf row`, `tmp/m4/g6c/rows18.txt`; load 4 to 6):
+
+| Run | G6b | After (G6c) |
+| --- | --- | --- |
+| `c1_r2` | 8.80 s, 360 MB, 125.3 G | **7.29 s, 289 MB, 104.0 G**, sha `9defd731bf0f` (the plan: 4–7 s) |
+| `b1`, `c1`, `b2`, `c2`, `b6a`, `c6a`, `b7`, `c7` | stopped | each stopped at the tool's 90 s, under 8 GB |
+| `b3`, `c3`, `b4a`, `c4a`, `b4b`, `c4b`, `b5`, `b6b`, `c6b` | stopped | each stopped by memcap past 8 GB after 80 to 88 s, 8.2 to 8.6 GB, 1.34 to 1.43 T instructions by then |
+| P8-L2 `d11_full` | 616 ms cold, 36.2 MB, 4.43 G | 721 ms cold, 35.4 MB, 4.43 G, digest T's |
+| P8-14 (`perf row`) | 614.8 ms, 115.3 MB, 9.23 G | 608.7 ms, 111.3 MB, 8.86 G |
+
+- `perf counts F7-c1r2`: **`def_misses 206577`**, `days_stepped 6918`, `walks_shared 4290` (for the rules step: × 1.2 is 247 892).
+- `perf counts P8-14`: `def_misses 23675` (G6b 25 450; budget 30 400), `days_stepped 960`, `walks_shared 582`.
+- Not measured: the counted build on `k1` at 2026 to 2028 (the plan's ev, instances and def-miss line).
+
+**The profile** (samply, quick binary, b1 at 2030, 7 873 samples; `tmp/m4/g6c/prof_2030.*`, callers by `tmp/m4/g6c/callers.py`):
+- Inclusive: `fulfils_of` 3.8 % (G6b 32.7 %), `flows_move` 23.9 % (16.8 %), `move_instances` 54.2 % (67.3 %), `walk_members`/`next_tuple` 41 % (59.5 %), `obs_links_for` 22.9 %, `plan_list` 33.1 %, `Collected::merge` 2.0 %.
+- The innermost `move_instances`' callers, the whole lists still built: F5's `tree_at` 20.9 %; `adjust_move` ← `settled_move` 20.6 % (a `flows` read's adjustments at its cut); the main walk's `plan_list` 8.6 % (at K, as planned); `fulfils_of` 2.6 % (declined: `invest`, a decision).
+- `obs_links_for` ← `obs_target` ← `span_members` 19.7 %: a binding over observed rows judges each row's link at each cut, and `link_tuple` makes the named move's tuples to the horizon for each.
+- So which moves narrow, as the code decides: *judged from the profile*, the link reads of the eight plans narrow (`fulfils_of` 32.7 % → 3.8 %, its whole lists left `invest`'s); not instrumented one by one.
+
+**Against the plan's G6c line:** P8-14's def misses fell, not rose (met); `c1_r2` 7.29 s (the plan 4–7 s, about met); `v1` at 2030 −55 % (the plan −60 to −75 %); full at 2030 −28 % (the plan −50 to −65 %); growth not near linear; every stage run still stopped (the plan: slowest 8–20 s, 0.8–1.6 GB). **Stop point 2 is met:** the STOP-REPORT below.
+
+**For the lead:** `tools/trace.py`'s `P8_ID` (`P8-(?:\d+[a-z]?|M\d+)`) doesn't read `P8-L<n>`, so a `PERF:` line naming only P8-L10 fails R-130's check; F7's names P8-14 too, which it guards.
+
+**What T's two suites need** (`m4_narrow`, `narrow_oracle`):
+- The switch: `run_with_how(files, &request, How { plans: Plans::Whole, ..How::FENCES })` against `How::FENCES`; `tally::walk::Plans` is public as `Forks` is. `How::new(memo, lows, forks)` keeps its three arguments and takes `Narrow`, so `fork_oracle.rs` is unchanged.
+- `narrow_oracle`: F7's realities `n1_fulfils`, `n2_flows`, `n3_window` under both forms, and `c1_r2` and P8-14's check.
+- Corners step 0 judged and no stored vector holds, worth a vector each: an observation naming an instance whose day is `never`, read at a past cut (the first reader's link reads); an instance dated before the cut that is a hole booking, skipped by a narrow read (when the measure is taken); a `flows` at a past cut of a move in a `same` class (taken whole); an uncertain kind's `flows` at a past cut (declined); a `NotBuilt` met only in an instance a narrow read skips, if T knows a construct that meets one (the one difference step 0 leaves: Narrow answers where Whole prints `not implemented`).
+
+- **Size** (`git diff --shortstat 73e75856 -- engine/crates`): 9 files, +1 033 −53, of which 323 lines are the inline tests and their realities, against the plan's 0.9 k (0.6–1.2).
+- **Files:** `walk/narrow.rs` (new, F7), `walk/plan.rs`, `walk/tuples.rs` (`Tuple` derives `Clone`, `PartialEq`, `Eq`), `walk/move_flows.rs`, `book/members.rs` (kernel); `eval/state.rs`, `eval/trace.rs`, `ask/answer.rs`, `lib.rs`.
+- **Exceptions:** +0. The exceptions step's three report-only hits (a long builder chain, a generic `Narrow<T>`, a closure in a closure) restructured away.
+- **Mutants:** none proved.
+- **Open STOP-REPORTs:** the one below.
+- **Next:** the lead's ruling on it; G6d `constant` waits on it.
+- **Usage:** about 0.75 % of the week by `engine/tools/usage` before this entry.
+- **Checks:** `check commit: green, 24 steps (88s)` and `check fences: green` on this tree but for this entry's last lines; `milestone-report: M4: 39/40 green`.
+
+## STOP-REPORT 2026-11-23: after F7 the stage runs still project past 25 s and 3 GB at 2059 (stop point 2)
+
+- **Kind:** other (the perf plan's stop point 2: a budget G6d's constant can't close)
+- **Where:**
+  - `book/settle.rs` `settled_move` → `book/adjust.rs` `adjust_move` → `walk/plan.rs` `plan_list`: a `flows` read's adjustments at a past cut measure the move's whole list there, to the horizon (20.6 % at 2030).
+  - `book/observe.rs` `judge_links` → `walk/tuples.rs` `link_tuple` → `move_tuples`: each observed row's link, judged at each cut, makes the named move's tuples to the horizon (19.7 %, under `span_members`).
+  - `walk/lows.rs` `tree_at` → `move_instances`: F5's tree at a projection's own cut ("as known on t") builds every move's whole list there (20.9 %).
+  - The runs: `engine/tests/m4/load/runs.tsv`, rows `P8-L10`; the plan: `tmp/m4/perf-plan.md` §4 stop point 2.
+- **Rule or gate:** PERFORMANCE §8.3 P8-L10 (≤ 10 s, ≤ 4 GB each run); §3.2 (cut classes); R-130 (fences).
+- **What happens:**
+  - With F7 in, the curve's instructions at 2030 fall 28 % and `v1`'s 55 %, but they still grow 1.95× from 2028 to 2030.
+  - Fitted on 2026 to 2030, b1 at 34 years is about 2.5 T instructions, about 145 s on release, and about 11 GB (4.8 GB on the linear part).
+  - Every one of the 17 stage runs stops: eight at the tool's 90 s, nine past 8 GB after 80 to 88 s.
+  - `c1_r2` answers in 7.29 s and 289 MB on release, under its 10 s and 4 GB.
+  - G6d's constant was sized at about 2×; this is about 6× from 25 s.
+- **What I tried:** F7 built and committed (6c0ed597, `check commit` green); the curve, the 18 runs, the counts and a profile at 2030 with its callers (the entry above). Not tried: any of the three sites above, each outside F7's two reads and each a whole structure at a past cut, the pattern F7 removed from `o.fulfils` and `flows`.
+- **What I ask:** the coordinator takes it to the user. Three ways, with my estimate (judged, not run):
+  - **(1) F7 widened, one more group:** each site with its own step 0.
+    - (i) a link judged at a cut takes the move's tuples there once, as F7 keeps them (about 0.1 k; the corner: a link's tuples are made under its reader, the list's under the move);
+    - (ii) a `flows` read's adjustments at a past cut measured over the instances at its keys dated before the cut (about 0.3 to 0.5 k; E §5 steps 2 to 6, a hole booking's answer measured over the list, settlements);
+    - (iii) F5's tree at a past cut from the instances its window holds, a list up to the window's last day as a walk up to a day takes it, with the hole-day ones (about 0.2 k, in F5's fence).
+    - About 0.6 to 1.0 k lines, 1.5 to 2.5 % of the week with its review loop. Unmeasured: what remains after them. The `where` bindings over a whole index per key (`count(m in month where year_of(m) == y …)`) and a `flows` at K scanning every instance per read grow as n² by their form, and `walk_members` is 41 % at 2030 (overlapping the above).
+  - **(2) Cut classes** (P §3.2's layer, in F2): one structure per class of cuts between two `known` dates collapses all three sites and F7's cache. Larger, since every site that reads `ctx.cut` narrows a class. The plan left it for P8-10 at M5b.
+  - **(3) G5's (b): P8-L10 judged at M4 on `c1_r2` alone**, which now passes (7.29 s, 289 MB on release, load about 5). The 17 stage runs go to a later milestone with this curve and the three sites.
+  - Not indicated by the profile: the union-tree fence for registers (`Collected::merge` 2.0 % at 2030).
+  - My recommendation: (3) for M4's gate, and (1) as its own group after the gate, or before it if the limit allows; (1) is needed by any later plan for the stage runs.
+- **State:** the last commit is this entry's, on `check commit`; nothing uncommitted; my scratch is in `tmp/m4/g6c/`.
