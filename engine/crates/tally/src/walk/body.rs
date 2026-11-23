@@ -214,7 +214,7 @@ impl Engine {
     /// # Errors
     ///
     /// As [`Engine::trace_run`].
-    fn trace_ran(&mut self, m: &Reality, id: usize, run: &Ran) -> Result<(), Stop> {
+    pub(crate) fn trace_ran(&mut self, m: &Reality, id: usize, run: &Ran) -> Result<(), Stop> {
         let Some(mv) = m.moves.get(&run.inst.move_id) else {
             return Err(invariant("a run's move load didn't build"));
         };

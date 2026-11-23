@@ -692,6 +692,18 @@ fn node_lines(
             ));
             // its balance form, rendered from the walk it read when it was read
             head.extend(node.lines.iter().map(|l| format!("{ind}    {l}")));
+            // a refused projection's: what the refused balance rests on (P31)
+            if !node.children.is_empty() {
+                let beside = depth
+                    .checked_add(2)
+                    .ok_or_else(|| invariant("a derivation's depth"))?;
+                let line = next_line(lines)?;
+                below.extend(
+                    node.children
+                        .iter()
+                        .map(|c| Step::Cause(at, *c, beside, line)),
+                );
+            }
         }
         TraceKind::BandRow => head.push(format!("{ind}[{no}] band row {}", node.label)),
         TraceKind::Def(law) => {

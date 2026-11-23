@@ -730,7 +730,7 @@ pub(super) fn window_term_hole(w: &Window, word: &str) -> Hole {
 /// keeps refcore's line. L §8.4 `RUN-NONE`'s row, §5.11 (pick P3).
 fn none_term(m: &Reality, term: Option<&Expr>, env: &Env, word: &str) -> Stop {
     match term {
-        Some(e) => none_here(m, e, env, "an aggregate"),
+        Some(e) => none_here(m, e, env, "aggregate"),
         None => refuse(Run::None, format!("a term of {word} is none here")),
     }
 }

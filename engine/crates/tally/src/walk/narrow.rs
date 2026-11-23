@@ -340,7 +340,8 @@ impl Engine {
 
     /// Move `mv`'s binding tuples at cut `cut` made once and kept: under the move, their reads
     /// the plan's, with no plan guard, since a link judged while the move's list is made takes
-    /// them too (each caller checks the guard where its twin does). E §4.1 step 1, §3.2.
+    /// them too (a narrow read checks the guard as its twin's list does; an existence read
+    /// takes none, P30). E §4.1 step 1, §3.2.
     ///
     /// # Errors
     ///

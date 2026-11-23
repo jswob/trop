@@ -100,10 +100,15 @@ impl Engine {
             return self.bal_modelled(m, (&place, &unit), key, ctx.cut);
         }
         if b.proj.from.is_some() {
-            return match outside {
-                Some(hole) => Ok(hole),
-                None => self.projection(m, b, (&place, &unit), d, (env, ctx)),
-            };
+            if let Some(hole) = outside {
+                return Ok(hole);
+            }
+            let walked = self.trace_walked();
+            let got = self.projection(m, b, (&place, &unit), d, (env, ctx));
+            if self.tracing() && ctx.at.is_none() {
+                self.trace_refused_proj(m, walked, (&place, &unit), (d, b, env), (&got, ctx))?;
+            }
+            return got;
         }
         let key = if b.start { At::start(d) } else { At::end(d) };
         let walked = self.trace_walked();
@@ -157,6 +162,78 @@ impl Engine {
         };
         self.trace_balance(m, walked, read, (item, walk));
         Ok(())
+    }
+
+    /// A written projection `bal(x, d) from t` the walk refused, read by a traced read at the
+    /// ask's cut: a node for the refusal, `bal(x, d) from t`, holding what the refused balance
+    /// rests on, each run of the main walk whose legs name x, read again where it ran, through
+    /// the first one refused there, the refusal's (L §8.2 One read set; E §10; P31). Another
+    /// result leaves the trace as the projection left it.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met reading the start or a run again.
+    fn trace_refused_proj(
+        &mut self,
+        m: &Reality,
+        walked: crate::eval::Walked,
+        (place, unit): (&str, &str),
+        (day, b, env): (Day, &Bal, &Env),
+        (got, ctx): (&Result<Value, Stop>, Ctx),
+    ) -> Result<(), Stop> {
+        let Err(Stop::Refused(r)) = got else {
+            return Ok(());
+        };
+        let (Some(from), Some(id)) = (&b.proj.from, self.main_walks.get(&ctx.cut).copied()) else {
+            return Ok(());
+        };
+        if matches!(r.code(), Code::Load(_)) {
+            return Ok(());
+        }
+        // the start as the read took it, read apart: its rows printed where the read read them
+        let mark = self.reads_apart();
+        let start = self.ev(m, from, env, ctx);
+        self.reads_back(mark);
+        let start = match start {
+            Ok(Value::Day(t)) => t.text(),
+            Ok(_) | Err(Stop::Refused(_)) => String::new(),
+            Err(stop) => return Err(stop),
+        };
+        self.trace_walked_back(walked);
+        let read = crate::eval::TracedBalance {
+            place: place.to_owned(),
+            unit: unit.to_owned(),
+            day,
+            start: b.start,
+            uncertain: b.proj.uncertain,
+            cut: ctx.cut,
+            timeline: self.timeline_key(),
+        };
+        let node = self.trace_refused_balance(read, &start, r);
+        let mut runs = Vec::new();
+        for run in &self.walk(id)?.runs {
+            if run.changed.contains(place) {
+                runs.push(run.clone());
+                let refused = run
+                    .inst
+                    .legs
+                    .iter()
+                    .any(|lg| matches!(lg.amount, Amount::Refused(_)));
+                if refused || run.inst.err.is_some() {
+                    break;
+                }
+            }
+        }
+        let mut read_again = Ok(());
+        for run in &runs {
+            read_again = self.trace_ran(m, id, run);
+            if read_again.is_err() {
+                break;
+            }
+        }
+        self.trace_closed(node);
+        self.trace_walked_back(walked);
+        read_again
     }
 
     /// A read's place: a place, or the hole it is (refcore's `place_arg`). L §5.10.

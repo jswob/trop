@@ -8,8 +8,8 @@
 //! marks taken while the pass computes the instances; a part set aside is kept by instance
 //! and cut, and only a read that counts that instance takes it back, where it reads, so each
 //! instance's reads print once per explain; a cell traced in a part set aside is met again as
-//! a dropped one (`trace_drop`'s rule), never traced twice; a pass whose instances a later
-//! version answered keeps every part where it printed.
+//! a dropped one (`trace_drop`'s rule), never traced twice; a hole booking's answer, listed
+//! where its instance's reads end, is that instance's part.
 
 use std::collections::BTreeMap;
 
@@ -74,8 +74,7 @@ impl Engine {
     }
 
     /// Forgets the marks of the last pass traced: a read about to ask for a move's
-    /// instances keeps only a pass it asked for itself; a pass a later version answered
-    /// keeps its reads where they printed.
+    /// instances keeps only a pass it asked for itself.
     pub(crate) fn trace_marks_forget(&mut self) {
         if let Some(trace) = self.trace.as_mut() {
             trace.fresh = None;
@@ -85,6 +84,25 @@ impl Engine {
     /// Whether a plan pass traced now takes marks.
     pub(crate) fn trace_marking(&self) -> bool {
         self.tracing() && self.trace.as_ref().is_some_and(|t| t.marks.is_some())
+    }
+
+    /// Moves the marks of the last pass traced past the blocks `done` put in (each a hole
+    /// booking's answer, listed where its instance's reads end, [`Engine::trace_move_to`]):
+    /// a mark at or past a block's place under its node by the block's size, so the answer
+    /// is its instance's part (E §10, §5 step 1).
+    pub(crate) fn trace_marks_moved(&mut self, done: &[(Snap, usize)]) {
+        let Some((_, _, marks)) = self.trace.as_mut().and_then(|t| t.fresh.as_mut()) else {
+            return;
+        };
+        for (_, _, snap) in marks.iter_mut() {
+            let mut by = 0usize;
+            for (at, count) in done {
+                if at.parent == snap.parent && at.children <= snap.children {
+                    by = by.checked_add(*count).unwrap_or(by);
+                }
+            }
+            snap.children = snap.children.checked_add(by).unwrap_or(snap.children);
+        }
     }
 
     /// Marks where instance `id`'s reads stand now, `part`, in the pass traced now.
