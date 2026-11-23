@@ -17,7 +17,7 @@ use super::tuples::Law;
 use crate::base::{Code, Load, Run};
 use crate::eval::{Collected, Ctx, Engine, Walked};
 use crate::hole::Hole;
-use crate::model::{MoveInfo, Node, NodeKind, Reality, Value};
+use crate::model::{MoveInfo, Node, NodeKind, Reality, Span, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 use std::collections::BTreeMap;
@@ -138,6 +138,30 @@ impl Engine {
             }
         }
         Ok(())
+    }
+
+    /// What a read over span `sp` that counts the movements at its key (a `flows`, a binding
+    /// over a kind) takes of due instance `i` there that it doesn't count, the one read set
+    /// (L §8.2 One read set; E §3.2; P20): in the span, read to be left out (its `when`
+    /// false), every read that decided so, a run's printed where traced
+    /// ([`Engine::trace_counted`]); outside it, the day that put it there, never its `when`
+    /// or amount.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::trace_counted`].
+    pub(crate) fn uncounted_reads(
+        &mut self,
+        m: &Reality,
+        i: &Inst,
+        sp: &Span,
+        ctx: Ctx,
+    ) -> Result<Collected, Stop> {
+        if !matches!(&i.day, Some(Dated::Day(d)) if sp.contains(*d)) {
+            return Ok(i.day_coll.outside());
+        }
+        self.trace_counted(m, i, ctx)?;
+        Ok(i.coll.clone())
     }
 
     /// Instance `inst` of a decision, counted by a traced read at the ask's cut (a `flows`,

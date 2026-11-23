@@ -137,22 +137,11 @@ impl Engine {
             // a movement the span doesn't count: what decided it is in the read set (L §8.2
             // One read set; P35 on #241)
             if i.status == Status::None {
-                let in_span = matches!(&i.day, Some(Dated::Day(d)) if sp.contains(*d));
-                if in_span {
-                    // read to be left out: every entry its reads gave, `held:` lines too
-                    // (refcore's `flows_move`; P35, P48 on #241), explained too (E §10)
-                    acc.met.merge(&i.coll);
-                    self.trace_counted(m, i, ctx)?;
-                } else if i
-                    .day
-                    .as_ref()
-                    .and_then(Dated::day)
-                    .is_none_or(|d| d <= last)
-                {
-                    // a read of day t reads its prefix through t: one dated after the span's
-                    // last day was never met (E §4.2; S4, P43 on #241)
-                    acc.met.merge(&i.coll.deciding());
-                }
+                // read to be left out: every entry its reads gave, `held:` lines too
+                // (refcore's `flows_move`; P35, P48 on #241), or the day that put it outside
+                // the span (P20)
+                let reads = self.uncounted_reads(m, i, sp, ctx)?;
+                acc.met.merge(&reads);
                 continue;
             }
             if i.status == Status::Uncertain {
@@ -174,7 +163,8 @@ impl Engine {
                 }
                 Some(Dated::Day(d)) if sp.contains(*d) => Some(*d),
                 Some(Dated::Day(_)) => {
-                    acc.met.merge(&i.day_coll.deciding());
+                    let reads = self.uncounted_reads(m, i, sp, ctx)?;
+                    acc.met.merge(&reads);
                     continue;
                 }
                 None => {

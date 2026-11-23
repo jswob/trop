@@ -437,6 +437,16 @@ impl Collected {
         out
     }
 
+    /// What a movement's day that puts it outside a read's span gives that read: what decides
+    /// it ([`Collected::deciding`]) and the rows the day read, which decided that it doesn't
+    /// count, never its `when` or amount (L §8.2 One read set; P35 on #241; P20).
+    #[must_use]
+    pub(crate) fn outside(&self) -> Collected {
+        let mut out = self.deciding();
+        out.rows.clone_from(&self.rows);
+        out
+    }
+
     /// Records row `sid` of `version` with its `locator` as read (E §10 `inputs-of`).
     pub(crate) fn note_row(&mut self, sid: &str, version: &str, locator: Option<&String>) {
         self.rows.insert(
