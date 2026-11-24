@@ -1,0 +1,39 @@
+# tally 2.3.1 R4, N250.7, Q1.8 (L §2.4 Values: a window of one day prints as the day, a tuple as its keys in
+# brackets): q_w, q_e's answer and its row 2026-03-05; argmin over two indexes [a, a]. Before:
+# window(2026-03-05, 2026-03-05) and (a, a).
+=== win1.tally
+model win1
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input w: date
+input h[k in ks]: money PLN
+input j[k in ks]: money PLN
+
+ask q_w: w
+ask q_e: explain w
+ask q_t: argmin(h[k] + j[i] for k in ks, i in ks)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-03-05, 2026-03-05) "s"
+  h[a] = 1.00 PLN "s"
+  h[b] = 2.00 PLN "s"
+  j[a] = 0.00 PLN "s"
+  j[b] = 1.00 PLN "s"
+=== expect
+q_e: 2026-03-05
+  [1] row v:w = 2026-03-05
+      version v, source s, "probe", locator "s", governs always, known 2026-01-01
+  cut 2026-06-30
+q_t: [a, a]
+  cut 2026-06-30
+q_w: 2026-03-05
+  cut 2026-06-30

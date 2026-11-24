@@ -1756,10 +1756,14 @@ class Checker:
                 self.flex_to(f, T.pct())
 
     def flex_to(self, node, target):
-        """Give a bare figure (through brackets and a minus) the type it takes (L §7.1)."""
+        """Give a bare figure (through brackets, a minus and an if's branches) the type it takes (L §7.1; an if of
+        bare figures is one, tally 2.3.1 R4, P36: `if c then x else if d then 0 else 0` prints `0.00 PLN`)."""
         while node.k in ('paren', 'neg'):
             node = node.e
-        if node.k == 'num' and not node.unit:
+        if node.k == 'if':
+            self.flex_to(node.a, target)
+            self.flex_to(node.b, target)
+        elif node.k == 'num' and not node.unit:
             node._flexto = target
 
     def fx_check(self, xu, ru, loc, op):
