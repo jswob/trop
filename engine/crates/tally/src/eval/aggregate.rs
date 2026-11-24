@@ -343,7 +343,11 @@ impl Engine {
         self.trace_winner(m, (snap, result), &gives, ctx)
     }
 
-    /// `any(c for …)`, `all(c for …)` under Kleene logic (refcore's `agg_anyall`). L §5.11.
+    /// `any(c for …)`, `all(c for …)` under Kleene logic (refcore's `agg_anyall`): a term
+    /// that decides (`true` for `any`, `false` for `all`) decides whatever the other terms
+    /// are, refused ones included, so the answer is the same in every binding order; where
+    /// none decides, the first refused term in binding order refuses it, else a hole term
+    /// makes it a hole (tally 2.3.1, #253's option B). L §5.11, §8, §2.5.
     fn any_all(
         &mut self,
         m: &Reality,
@@ -355,10 +359,21 @@ impl Engine {
         let word = func.word();
         let decides = func == AggFn::Any;
         let mut holes: Vec<Hole> = Vec::new();
+        let mut refused: Option<Stop> = None;
         for member in members {
-            let t = self.ev(m, term, &member.env, ctx)?;
+            let t = match self.ev(m, term, &member.env, ctx) {
+                Ok(t) => t,
+                Err(Stop::Refused(r))
+                    if !matches!(r.code(), Code::Load(_) | Code::EngineInvariant) =>
+                {
+                    refused.get_or_insert(Stop::Refused(r));
+                    continue;
+                }
+                Err(stop) => return Err(stop),
+            };
             if t == Value::None {
-                return Err(none_term(m, Some(term), &member.env, word));
+                refused.get_or_insert_with(|| none_term(m, Some(term), &member.env, word));
+                continue;
             }
             if let Some(unknown) = &member.unknown {
                 holes.push(unknown.clone());
@@ -377,6 +392,9 @@ impl Engine {
             if holds == decides {
                 return Ok(Value::Bool(decides));
             }
+        }
+        if let Some(stop) = refused {
+            return Err(stop);
         }
         if !holes.is_empty() {
             let operands: Vec<Option<&Hole>> = holes.iter().map(Some).collect();
@@ -833,7 +851,69 @@ fn joined(a: Option<Hole>, b: Option<Hole>) -> Option<Hole> {
 #[cfg(test)]
 mod tests {
     use super::joined;
+    use crate::api::{Asks, Files, Given, Request, run};
     use crate::hole::Hole;
+
+    /// `any` and `all` over three keys whose first term is refused (a division by zero),
+    /// whose second decides, and the same with no deciding term.
+    const ANY_ALL: &str = r#"model any_all
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+index ks = [c, a, b]
+
+input t[k in ks]: int
+
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_none: any(r[k] for k in ks where k != a)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 1 "s"
+  t[b] = 5 "s"
+  t[c] = 0 "s"
+"#;
+
+    #[test]
+    fn a_deciding_term_decides_any_and_all_past_a_refused_one() {
+        // L §5.11, §8 (tally 2.3.1, #253's option B): r[c] is refused, r[a] true, r[b]
+        // false; `any` is true and `all` false whatever the binding order, and with no
+        // deciding term the refusal stands
+        let given = vec![Given {
+            path: "any_all.tally".to_owned(),
+            bytes: Some(ANY_ALL.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("q_"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "q_all: false",
+                "q_any: true",
+                "q_none: refused: RUN-DIV division by zero"
+            ],
+            "the deciding term decides; a refusal alone refuses"
+        );
+    }
 
     #[test]
     fn unknown_members_join_their_questions() {
