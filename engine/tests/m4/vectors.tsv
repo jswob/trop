@@ -1002,3 +1002,87 @@ fixes/gate8/k_stop2/l2	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fi
 fixes/gate8/k_stop2/f	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	f		-
 fixes/gate8/k_stop2/l2__f	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	l2 f		-
 fixes/gate8/k_stop2/f__l2	fixes-p40		engine/tests/m4/fixes/gate8	engine/tests/m4/fixes/gate8/k_stop2.tally	f l2		-
+fixes/p40/c1_stop/f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	f		-
+fixes/p40/c1_stop/x	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	x		-
+fixes/p40/c1_stop/d	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	d		-
+fixes/p40/c1_stop/e	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	e		-
+fixes/p40/c1_stop/f2	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	f2		-
+fixes/p40/c1_stop/d2	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	d2		-
+fixes/p40/c1_stop/fd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	fd		-
+fixes/p40/c1_stop/df	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	df		-
+fixes/p40/c1_stop/xf	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	xf		-
+fixes/p40/c1_stop/f__x__d__e__f2__d2__fd__df__xf	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	f x d e f2 d2 fd df xf		-
+fixes/p40/c1_stop/xf__df__fd__d2__f2__e__d__x__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	xf df fd d2 f2 e d x f		-
+fixes/p40/c1_stop/d__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	d f		-
+fixes/p40/c1_stop/x__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	x f		-
+fixes/p40/c1_stop/e__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	e f		-
+fixes/p40/c1_stop/f__e	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	f e		-
+fixes/p40/c1_stop/f2__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	f2 f		-
+fixes/p40/c1_stop/d2__d	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	d2 d		-
+fixes/p40/c1_stop/fd__xf	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c1_stop.tally	fd xf		-
+fixes/p40/c2_link/qa	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qa		-
+fixes/p40/c2_link/qz	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qz		-
+fixes/p40/c2_link/zq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	zq		-
+fixes/p40/c2_link/qzq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qzq		-
+fixes/p40/c2_link/qo	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qo		-
+fixes/p40/c2_link/qn	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qn		-
+fixes/p40/c2_link/nq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	nq		-
+fixes/p40/c2_link/qd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qd		-
+fixes/p40/c2_link/dq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	dq		-
+fixes/p40/c2_link/qdd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qdd		-
+fixes/p40/c2_link/ez	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	ez		-
+fixes/p40/c2_link/en	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	en		-
+fixes/p40/c2_link/ed	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	ed		-
+fixes/p40/c2_link/qa__qz__zq__qzq__qo__qn__nq__qd__dq__qdd__ez__en__ed	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	qa qz zq qzq qo qn nq qd dq qdd ez en ed		-
+fixes/p40/c2_link/ed__en__ez__qdd__dq__qd__nq__qn__qo__qzq__zq__qz__qa	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c2_link.tally	ed en ez qdd dq qd nq qn qo qzq zq qz qa		-
+fixes/p40/c3_dec/ed	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c3_dec.tally	ed		-
+fixes/p40/c3_dec/qd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c3_dec.tally	qd		-
+fixes/p40/c3_dec/ed__qd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c3_dec.tally	ed qd		-
+fixes/p40/c3_dec/qd__ed	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c3_dec.tally	qd ed		-
+fixes/p40/c4_when/en	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	en		-
+fixes/p40/c4_when/epo	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	epo		-
+fixes/p40/c4_when/ed	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	ed		-
+fixes/p40/c4_when/ez	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	ez		-
+fixes/p40/c4_when/ept	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	ept		-
+fixes/p40/c4_when/epf	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	epf		-
+fixes/p40/c4_when/qd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	qd		-
+fixes/p40/c4_when/qn	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	qn		-
+fixes/p40/c4_when/qz	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	qz		-
+fixes/p40/c4_when/qo	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	qo		-
+fixes/p40/c4_when/emx	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	emx		-
+fixes/p40/c4_when/exm	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	exm		-
+fixes/p40/c4_when/edw	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	edw		-
+fixes/p40/c4_when/qdw	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	qdw		-
+fixes/p40/c4_when/en__epo__ed__ez__ept__epf__qd__qn	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	en epo ed ez ept epf qd qn		-
+fixes/p40/c4_when/qn__qd__epf__ept__ez__ed__epo__en	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c4_when.tally	qn qd epf ept ez ed epo en		-
+fixes/p40/c5_wref/ew	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	ew		-
+fixes/p40/c5_wref/qw	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qw		-
+fixes/p40/c5_wref/qa	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qa		-
+fixes/p40/c5_wref/qz	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qz		-
+fixes/p40/c5_wref/zq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	zq		-
+fixes/p40/c5_wref/qzq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qzq		-
+fixes/p40/c5_wref/qo	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qo		-
+fixes/p40/c5_wref/qn	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qn		-
+fixes/p40/c5_wref/nq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	nq		-
+fixes/p40/c5_wref/qd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qd		-
+fixes/p40/c5_wref/dq	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	dq		-
+fixes/p40/c5_wref/qdd	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	qdd		-
+fixes/p40/c5_wref/ez	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	ez		-
+fixes/p40/c5_wref/en	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	en		-
+fixes/p40/c5_wref/ed	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/c5_wref.tally	ed		-
+fixes/p40/p40a/f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	f		-
+fixes/p40/p40a/l4	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	l4		-
+fixes/p40/p40a/c4	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	c4		-
+fixes/p40/p40a/f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	f3		-
+fixes/p40/p40a/f3__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	f3 f		-
+fixes/p40/p40a/f__f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	f f3		-
+fixes/p40/p40a/f__l4__c4__f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	f l4 c4 f3		-
+fixes/p40/p40a/f3__c4__l4__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40a.tally	f3 c4 l4 f		-
+fixes/p40/p40b/f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f		-
+fixes/p40/p40b/l4	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	l4		-
+fixes/p40/p40b/c4	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	c4		-
+fixes/p40/p40b/f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f3		-
+fixes/p40/p40b/f3__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f3 f		-
+fixes/p40/p40b/f__f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f f3		-
+fixes/p40/p40b/f__l4__c4__f3	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f l4 c4 f3		-
+fixes/p40/p40b/f3__c4__l4__f	fixes-p40fix		engine/tests/m4/fixes/p40	engine/tests/m4/fixes/p40/p40b.tally	f3 c4 l4 f		-

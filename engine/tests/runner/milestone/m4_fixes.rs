@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 37] = [
+    const GROUPS: [&str; 39] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -40,6 +40,7 @@ mod tests {
         "fixes-p30",
         "fixes-p32",
         "fixes-p40",
+        "fixes-p40fix",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -56,6 +57,7 @@ mod tests {
         "spec-p31",
         "spec-p32",
         "spec-p40",
+        "spec-p40fix",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -300,13 +302,27 @@ mod tests {
 
     /// P40's two cases, refcore's bytes: B1, an existence read takes only what decides that
     /// the instance exists, so no other instance's link's `assumed:` line (`k_link` `qz`, after
-    /// `qa` and before it; refcore's bytes are the answer, held for #252 until P40's fix; `qa`
-    /// alone gates); B2, a list that stops gives that stop to every read of it (`k_stop3`,
-    /// `k_stop2`, each ask alone and in both orders), where both engines print
-    /// `ENGINE-INVARIANT`: held for #255, the text's lines are `spec-p40`'s.
+    /// `qa` and before it, and `qa` alone; refcore's bytes are the answer, green since P40's fix,
+    /// 8f6f4338); B2, a list that stops gives that stop to every read of it (`k_stop3`,
+    /// `k_stop2`, each ask alone and in both orders), where refcore prints `ENGINE-INVARIANT`:
+    /// held for #255, the text's lines are `spec-p40`'s.
     #[test]
     fn m4_fixes_p40() {
         group_holds(VECTORS, "fixes-p40");
+    }
+
+    /// P40's fix and P42's (8f6f4338, b9969e50), the builder's crossings and the coordinator's
+    /// probes (`m4/fixes/p40/`), refcore's bytes: a list that stops read nine ways, alone and in
+    /// orders (`c1_stop`); existence reads beside a link whose `when` reads an `assumed` row,
+    /// open, closed, of a refused tuple and of a decision's instance, and their `explain`, alone
+    /// and in both full orders (`c2_link`, `c3_dec`, `c4_when` with pins and a decision's running
+    /// `when`, `c5_wref` with a refused `when`); P40's probes (`p40a` a stopping list, `p40b` a
+    /// whole one; `e4` left out). Where refcore prints its B2 fault after another ask, its list
+    /// guard, P22's whole-list reads or an answer load refuses (P43, `c4_when` `qo`), held for
+    /// #255 with the text's lines in `spec-p40fix`; `c4_when` `efo` isn't stored (#256).
+    #[test]
+    fn m4_fixes_p40fix() {
+        group_holds(VECTORS, "fixes-p40fix");
     }
 
     /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
@@ -490,9 +506,19 @@ mod tests {
 
     /// P40's B2 answers (#255): a list that stops gives `RUN-DIV division by zero` to its
     /// `flows` and to every existence read of it, in either ask order (`k_stop3`, `k_stop2`);
-    /// written by hand. Those red on the engine until P40's fix are held for #252.
+    /// written by hand, green since P40's fix (8f6f4338).
     #[test]
     fn m4_fixes_spec_p40() {
         group_holds(SPEC, "spec-p40");
+    }
+
+    /// The text's lines for P40's crossings (#255), written from build/m4's run at b9969e50:
+    /// `RUN-DIV` for every read of a stopping list in every order and `p40b`'s 270.00 PLN, each
+    /// ask's block checked equal to that ask run alone (P40); `c4_when` `qo` refused at load
+    /// (P43, `LOAD-READS`); `c5_wref` `ew`, `ed`, an existence read's `explain` without the
+    /// other instances' reads (P22, P30).
+    #[test]
+    fn m4_fixes_spec_p40fix() {
+        group_holds(SPEC, "spec-p40fix");
     }
 }
