@@ -419,6 +419,10 @@ pub struct Engine {
     pub(super) reads: Vec<Open>,
     /// The cells being computed.
     pub(crate) active: BTreeSet<CellId>,
+    /// The cell the last `RUN-CYCLE` met returned to: still being computed where the refusal
+    /// reaches a read that began after it, so the cycle runs through that read (tally 2.3.1
+    /// R6, P32).
+    pub(crate) cycle_at: Option<CellId>,
     /// The collectors, the innermost last; never empty.
     pub(super) stack: Vec<Collected>,
     /// The def cells open now.
@@ -654,6 +658,7 @@ impl Engine {
             frames: Vec::new(),
             reads: Vec::new(),
             active: BTreeSet::new(),
+            cycle_at: None,
             stack: vec![Collected::default()],
             depth: 0,
             work: Vec::new(),

@@ -328,6 +328,7 @@ impl Engine {
                 // attempt is given up (refcore's `outer_hit`)
                 return Ok(Err(Err(Stop::NotBuilt(super::GUARDED))));
             }
+            self.cycle_at = Some(id.clone());
             return Ok(Err(Err(refuse(
                 Run::Cycle,
                 format!(
