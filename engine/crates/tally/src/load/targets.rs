@@ -16,11 +16,46 @@ use super::moves::own_day_reads;
 use super::reads::{is_move_type, is_place_type};
 use super::types::{is_date, refused, uerr};
 use crate::base::{Code, Load};
-use crate::model::{KindSpec, MoveInfo, NameKind, Node, NodeKind, Reality, Rel, Target, Ty};
+use crate::model::{
+    ExistenceReads, KindSpec, Mark, MoveInfo, NameKind, Node, NodeKind, Reality, Rel, Target, Ty,
+};
 use crate::syntax::{Expr, Key, Leg, Lit, Order, Postfix, Sign, Stop};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 impl Checker {
+    /// Sets item `item`'s marks and reads apart, so what one part of it reads is seen alone:
+    /// a move's existence, its keys' `where`s and its `when` (E §3.1 step 7; tally 2.3.1
+    /// rulings 19 D).
+    fn reads_apart(&mut self, item: &Node) -> Apart {
+        Apart {
+            marks: self.graph.marks.remove(item),
+            edges: self.graph.edges.remove(item),
+        }
+    }
+
+    /// Puts item `item`'s marks and reads set apart back, those made since after them, as
+    /// they would have stood; returns those made since: the marks and the items read (E §3.1
+    /// step 7; tally 2.3.1 rulings 19 D).
+    fn reads_back(&mut self, item: &Node, apart: Apart) -> ExistenceReads {
+        let marks = self.graph.marks.remove(item).unwrap_or_else(Vec::new);
+        let edges = self.graph.edges.remove(item).unwrap_or_else(BTreeMap::new);
+        if let Some(held) = apart.marks {
+            self.graph.marks.insert(item.clone(), held);
+        }
+        if let Some(held) = apart.edges {
+            self.graph.edges.insert(item.clone(), held);
+        }
+        for (mark, target) in &marks {
+            self.graph.mark(item, *mark, target.clone());
+        }
+        for (target, rels) in &edges {
+            for rel in rels {
+                self.graph.edge(item, target.clone(), rel.clone());
+            }
+        }
+        (marks, edges.into_keys().collect())
+    }
+
     /// A move: its binds, its day (read by its own day node), `at`, `for`, `when`, its legs
     /// and attributes against its kind's, `fulfils`, `ties by`, what it declares it reads,
     /// and its written order (refcore's `m_check_move`, `m_move_changes`). L §5.14, §5.14.1,
@@ -39,10 +74,14 @@ impl Checker {
             file,
             decl.line,
         );
+        // what the existence reads, its keys' `where`s and its `when`, each part seen alone
+        // (tally 2.3.1 rulings 19 D)
+        let keys_apart = self.reads_apart(&scope.item);
         let mut keys = Vec::with_capacity(mv.binds.len());
         for bind in &mv.binds {
             keys.push(self.move_key(m, &mut scope, &bind.node)?);
         }
+        let mut existence = self.reads_back(&scope.item, keys_apart);
         self.key_reads.insert(mv.id.clone(), keys);
         scope.keyvars = mv.binds.iter().map(|bind| bind.var.clone()).collect();
         let day = scope.for_item(Node::new(NodeKind::MoveOn, &mv.id));
@@ -65,8 +104,13 @@ impl Checker {
         }
         if let Some(when) = &decl.when {
             let what = format!("when of move {}", mv.id);
+            let when_apart = self.reads_apart(&scope.item);
             self.when(m, &scope.on_line(lines.when), &scope, when, &what)?;
+            let (marks, reads) = self.reads_back(&scope.item, when_apart);
+            existence.0.extend(marks);
+            existence.1.extend(reads);
         }
+        self.graph.existence.insert(mv.id.clone(), existence);
         leg_names(m, mv).map_err(|s| scope.place(s))?;
         let legs = m.kind_legs(&mv.kind);
         let mut changes = Vec::new();
@@ -451,4 +495,13 @@ fn push_once(targets: &mut Vec<Target>, target: Target) {
     if !targets.contains(&target) {
         targets.push(target);
     }
+}
+
+/// An item's marks and reads set apart while one part of it is checked (tally 2.3.1
+/// rulings 19 D).
+struct Apart {
+    /// Its marks before.
+    marks: Option<Vec<(Mark, Target)>>,
+    /// Its reads before, with their relations.
+    edges: Option<BTreeMap<Node, Vec<Rel>>>,
 }

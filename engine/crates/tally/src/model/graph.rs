@@ -251,6 +251,10 @@ impl Target {
     }
 }
 
+/// What a move's existence reads: its own running reads and projections, and the items it
+/// reads (E §3.1 step 7; tally 2.3.1 rulings 19 D).
+pub type ExistenceReads = (Vec<(Mark, Target)>, BTreeSet<Node>);
+
 /// The item graph and what load decides from it (refcore's `Checker` graph and the
 /// reality's `from_decisions`, `walk_bound`, `after`, `order_groups`, `written_order`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -300,6 +304,16 @@ pub struct Graph {
     /// The items holding a binding over each event kind, by the kind bound: `readers-of` an
     /// event kind's first layer (E §10, ruling P63, #132).
     pub bound_kinds: BTreeMap<String, BTreeSet<Node>>,
+    /// What each move's existence reads, its keys' `where`s and its `when`: its own running
+    /// reads and projections, and the items it reads (L §5.14 An instance's existence is a
+    /// cell; E §3.1 step 7; tally 2.3.1 rulings 19 D).
+    pub existence: BTreeMap<String, ExistenceReads>,
+    /// The rows of an observed input each item reads by their id, `bank[r2]`, by the input
+    /// (L §5.19; tally 2.3.1 rulings 19 D: step 7's mark is row-precise).
+    pub named_rows: BTreeMap<Node, BTreeMap<String, BTreeSet<String>>>,
+    /// The decisions whose existence reads a running read or a projection: their links are
+    /// judged at their walk point (E §3.1 step 7, §4.2 step 3; tally 2.3.1 C-9, rulings 19 D).
+    pub marked: BTreeSet<String>,
 }
 
 impl Graph {

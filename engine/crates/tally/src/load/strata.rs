@@ -29,7 +29,7 @@ use crate::model::{
     Domain, Fulfils, GapRole, Graph, Mark, MoveInfo, Node, NodeKind, Reality, Rel, Shift, Target,
     Ty,
 };
-use crate::syntax::{AskBody, Expr, Field, Lit, Order, Section, Stop, Value as Written};
+use crate::syntax::{AskBody, Field, Lit, Order, Section, Stop, Value as Written};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// An invariant of the graph's own searches broken: a cycle or a layer that must exist.
@@ -81,6 +81,7 @@ impl Loader {
         let unread_items = unread(&self.m, &walked.graph);
         self.m.warnings.extend(unread_items);
         let decided = from_decisions(&self.m, &walked.graph);
+        walked.graph.marked = marked_decisions(&self.m, &walked.graph);
         running_reads(&self.m, &walked.graph, &decided, &files)?;
         let mut graph = core::mem::take(&mut walked.graph);
         graph.from_decisions = decided;
@@ -699,13 +700,36 @@ fn move_reads(m: &Reality, graph: &Graph, id: &str, mv: &MoveInfo) -> Option<Str
 }
 
 /// The first decision, by id, whose existence plan `id` reaches through a row's link: the
-/// plan, its day and the defs they read reach an observed input, and a row of it in some
-/// version fulfils an instance of a decision whose `when` reads running state. A row's
-/// record rests on its link, and that decision's link is judged at its walk point, so the
-/// plan reaches a running read (E §3.1 step 7, a decision's existence a mark; L §5.19 Links;
-/// tally 2.3.1 C-9, rulings 15, 16 Q4; G2's review B6).
+/// plan, its day and the defs they read read rows of an observed input, by their id or
+/// bound, over every version's rows, and one of those rows names an instance of a marked
+/// decision in its `fulfils`. A row's record rests on its link, and that decision's link is
+/// judged at its walk point, so the plan reaches a running read (E §3.1 step 7, a decision's
+/// existence a mark; L §5.19 Links; tally 2.3.1 C-9, rulings 16 Q4, rulings 19 D).
 fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
-    let mut inputs = BTreeSet::new();
+    let rows = rows_read(graph, id);
+    let mut named = BTreeSet::new();
+    for (input, which) in &rows {
+        let Some(info) = m.inputs.get(input).filter(|info| info.observed) else {
+            continue;
+        };
+        for row in &info.observations {
+            let read = which.as_ref().is_none_or(|by_id| by_id.contains(&row.key));
+            if let (true, Some(Fulfils::Instance(d, _))) = (read, &row.fulfils) {
+                named.insert(d.as_str());
+            }
+        }
+    }
+    named
+        .into_iter()
+        .find(|d| graph.marked.contains(*d))
+        .map(str::to_owned)
+}
+
+/// The rows of each observed input plan `id`, its day and the defs they read read: those an
+/// item names by their id, `bank[r2]`, where it reads the input no other way, else every
+/// row (`None`) (E §3.1 step 7; tally 2.3.1 rulings 19 D: the mark is row-precise).
+fn rows_read(graph: &Graph, id: &str) -> BTreeMap<String, Option<BTreeSet<String>>> {
+    let mut rows: BTreeMap<String, Option<BTreeSet<String>>> = BTreeMap::new();
     let mut seen = BTreeSet::new();
     let mut stack = vec![
         Node::new(NodeKind::Move, id),
@@ -715,61 +739,64 @@ fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
         if !seen.insert(next.clone()) {
             continue;
         }
-        for target in graph.reads(&next).into_iter().flat_map(BTreeMap::keys) {
-            if target.kind == NodeKind::Input {
-                inputs.insert(target.id.clone());
-            } else if carries_marks(target) {
-                stack.push(target.clone());
+        for (target, rels) in graph.reads(&next).into_iter().flatten() {
+            if target.kind != NodeKind::Input {
+                if carries_marks(target) {
+                    stack.push(target.clone());
+                }
+                continue;
+            }
+            let by_id = graph
+                .named_rows
+                .get(&next)
+                .and_then(|by_input| by_input.get(&target.id))
+                .filter(|_| rels.iter().all(|rel| *rel == Rel::Any));
+            let held = rows
+                .entry(target.id.clone())
+                .or_insert_with(|| Some(BTreeSet::new()));
+            match (held.as_mut(), by_id) {
+                (Some(old), Some(new)) => old.extend(new.iter().cloned()),
+                (Some(_), None) => *held = None,
+                (None, _) => {}
             }
         }
     }
-    let mut named = BTreeSet::new();
-    for input in &inputs {
-        let Some(info) = m.inputs.get(input).filter(|info| info.observed) else {
-            continue;
-        };
-        for row in &info.observations {
-            if let Some(Fulfils::Instance(d, _)) = &row.fulfils {
-                named.insert(d.as_str());
-            }
-        }
-    }
-    for d in named {
-        let Some(mv) = m.moves.get(d).filter(|mv| mv.decision) else {
-            continue;
-        };
-        if let Some(when) = &mv.decl.when
-            && reads_running(m, graph, when)
-        {
-            return Some(d.to_owned());
-        }
-    }
-    None
+    rows
 }
 
-/// Whether expression `e`, a decision's `when`, reads running state: a `bal(x)` with no day,
-/// or a def that reaches one (E §3.1 step 7; L §5.14.1 Running reads).
-fn reads_running(m: &Reality, graph: &Graph, e: &Expr) -> bool {
-    let mut work = vec![e];
-    while let Some(x) = work.pop() {
-        if let Expr::Bal(b) = x
-            && b.args.is_empty()
-            && !b.modelled
-            && b.proj.from.is_none()
+/// The decisions whose existence, their keys' `where`s and their `when`, reads a running
+/// read or a projection by E §3.1 step 7's whole list, itself or through the defs it reads:
+/// a balance at any day, `flows` of a place or a decision, a projection, a decision's legs,
+/// day or attributes; one with no such read is not marked (tally 2.3.1 rulings 19 D).
+fn marked_decisions(m: &Reality, graph: &Graph) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for (id, mv) in m.moves.entries() {
+        let Some((marks, reads)) = graph.existence.get(id).filter(|_| mv.decision) else {
+            continue;
+        };
+        let reached = reads
+            .iter()
+            .filter(|node| carries_marks(node))
+            .flat_map(|node| reached_marks(graph, node));
+        if marks
+            .iter()
+            .cloned()
+            .chain(reached)
+            .any(|(mark, _)| running_mark(mark))
         {
-            return true;
+            out.insert(id.clone());
         }
-        if let Expr::Name(n) = x
-            && m.defs.get(n).is_some()
-            && reached_marks(graph, &Node::new(NodeKind::Def, n))
-                .iter()
-                .any(|(mark, _)| *mark == Mark::BalNow)
-        {
-            return true;
-        }
-        work.extend(super::texts::children(x));
     }
-    false
+    out
+}
+
+/// Whether a mark is one of E §3.1 step 7's running reads: every one but a leg's amount read
+/// of a party or batch.
+fn running_mark(mark: Mark) -> bool {
+    match mark {
+        Mark::BalNow | Mark::Bal | Mark::Proj | Mark::Flows | Mark::Legs => true,
+        Mark::LegOf => false,
+    }
 }
 
 /// Whether a node is a def or a band.

@@ -390,6 +390,14 @@ impl Engine {
             &tuple.domain_hole,
             &tuple.refused,
         ) {
+            // a decision whose existence load marks, its `when` reading a running read at any
+            // day or a projection, is judged at its walk point: taken as existing until then
+            // (E §3.1 step 7, §4.2 step 3; tally 2.3.1 C-9, rulings 19 D)
+            if mv.decision && m.graph.marked.contains(&mv.id) && self.plans_making == 0 {
+                let id = crate::book::inst_id(&mv.id, keys);
+                self.links_at_point.insert((cut, id));
+                return Ok(LinkVerdict::Stands(tuple.env));
+            }
             match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
                 Ok(false) => return Ok(LinkVerdict::Missing),
                 Ok(true) => {}

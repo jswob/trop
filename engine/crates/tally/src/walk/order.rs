@@ -1677,6 +1677,49 @@ version feb
     }
 
     #[test]
+    fn step_7s_mark_is_any_running_read_of_the_existence_and_row_precise() {
+        // E §3.1 step 7 l.127 (tally 2.3.1 rulings 19 D; G2's fix review G3, G4): `topup`'s
+        // `when` reads a dated balance, a running read, so a plan bound over the rows that
+        // can name it is refused at load; a plan that reads only a row with no `fulfils`, by
+        // its id, loads
+        let dated = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace(
+                "when bal(konto) < lim",
+                "when bal(konto, start_of(m)) < lim",
+            )
+            .replace("input d5: int", "input d5: int\n\ninput fm: month")
+            .replace("  d5 = 5 \"s\"", "  d5 = 5 \"s\"\n  fm = 2026-02 \"s\"");
+        let first = |plan: &str| {
+            let given = vec![Given {
+                path: "dec_s7d.tally".to_owned(),
+                bytes: Some(dated.replace("ask loose:", plan).into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["q".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            answer.lines().first().cloned().expect("a line")
+        };
+        let bound = first(
+            "def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  rule seen \
+             beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) \
+             when covered(konto, m)\n\nmove pay[m in month]: transfers\n  on day_of(m, d5)\n  \
+             leg cash from konto to shop amount lo[fm]\n\nask q: amt\n\nask loose:",
+        );
+        assert!(
+            bound.starts_with(
+                "refused: LOAD-READS pay reaches a running read or projection of topup without \
+                 reads topup (dec_s7d.tally:"
+            ),
+            "{bound}"
+        );
+        let named = first(
+            "move pay[m in month]: transfers\n  on day_of(m, d5)\n  leg cash from konto to shop \
+             amount bank[r2].cash.amount\n\nask q: amt\n\nask loose:",
+        );
+        assert_eq!(named, "q: 400.00 PLN", "{named}");
+    }
+
+    #[test]
     fn a_row_before_its_decisions_point_whose_link_is_refused_refuses_from_its_day() {
         // L §8.4 l.2356, §5.19 Links (tally 2.3.1 C-9; G2's review B1, rulings 16 Q2): the row
         // is dated 02-03, the decision's point 02-05; at 500.00 PLN the point refuses the link,

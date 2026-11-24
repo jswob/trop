@@ -30,6 +30,7 @@ use crate::model::{
 };
 use crate::syntax::{Expr, Key, Lit, Postfix, SiteKey, Stop};
 use crate::time::PeriodKind;
+use std::collections::{BTreeMap, BTreeSet};
 
 impl Checker {
     /// A read of an input or a def at keys (refcore's `read`). L §2.5, §4.6; E §3.1 step 5.
@@ -71,16 +72,23 @@ impl Checker {
             ));
         }
         if observed {
-            let by_id = match keys {
-                [Key::Expr(key)] => is_keylit_node(m, scope, key),
-                _ => false,
+            let row = match keys {
+                [Key::Expr(key)] if is_keylit_node(m, scope, key) => text(key),
+                _ => {
+                    return Err(refused(
+                        Load::Key,
+                        format!("an observation is read by its id: {id}[<id>]"),
+                    ));
+                }
             };
-            if !by_id {
-                return Err(refused(
-                    Load::Key,
-                    format!("an observation is read by its id: {id}[<id>]"),
-                ));
-            }
+            // the row read by its id, for step 7's row-precise mark (tally 2.3.1 rulings 19 D)
+            self.graph
+                .named_rows
+                .entry(scope.item.clone())
+                .or_insert_with(BTreeMap::new)
+                .entry(id.to_owned())
+                .or_insert_with(BTreeSet::new)
+                .insert(row);
             self.edge(&scope.item, Node::new(NodeKind::Input, id), Rel::Any);
             return Ok(Ty::Key("events".to_owned()));
         }

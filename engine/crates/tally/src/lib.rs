@@ -119,7 +119,7 @@ pub mod model {
         MoveInfo, ObsLeg, Observation, PlaceInfo, PlaceReadings, Row, RuleVer, Table as BandTable,
         TimePos,
     };
-    pub use graph::{Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
+    pub use graph::{ExistenceReads, Graph, Mark, Node, NodeKind, ReadRole, Rel, Shift, Target};
     pub use ids::{
         AxisId, BandId, DefId, FillId, IndexId, InputId, KindId, MoveId, Name, Names, PlaceId,
         SourceId, ThingId, VersionId,
