@@ -569,6 +569,7 @@ impl Engine {
                     holes.push(hole);
                     continue;
                 }
+                Step::Refused(stop) => return Err(stop),
                 Step::Done => break,
             };
             let Some(hole) = member.unknown else {
