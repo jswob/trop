@@ -711,9 +711,11 @@ impl Engine {
             let row = match self.end_book_at(m, id, o, place)? {
                 EndBook::Skip => continue,
                 // a movement of two days is of planned sides only, never a row's
-                EndBook::Written | EndBook::Wait(_) | EndBook::Open(_) | EndBook::Close(_) => {
-                    o.clone()
-                }
+                EndBook::Written
+                | EndBook::Wait(_)
+                | EndBook::Open(_)
+                | EndBook::Between
+                | EndBook::Close(_) => o.clone(),
                 // the walk books the movement there once, as the hole: listed once with it
                 EndBook::Hole(hole) => {
                     let lead = group.first().map_or(o.id.as_str(), String::as_str);
@@ -779,7 +781,7 @@ impl Engine {
                 match book {
                     EndBook::Hole(h) | EndBook::Open(h) => holes.push(h),
                     EndBook::Skip => skip = true,
-                    EndBook::Wait(_) | EndBook::Written | EndBook::Close(_) => {}
+                    EndBook::Wait(_) | EndBook::Written | EndBook::Between | EndBook::Close(_) => {}
                 }
             }
         }

@@ -37,10 +37,13 @@ pub(crate) enum EndBook {
     /// The group's disagreement there, a hole movement (`HOLE-SAME`), or a side's hole day
     /// where the amounts agree (S1, P43 on #241).
     Hole(Hole),
-    /// Planned sides that agree on the amount and differ on the day, at the first of their
-    /// days: not booked here, the place that `HOLE-SAME` hole until the last (tally 2.3.1 R1,
+    /// Instances that agree on the amount and differ on the day, at the first of their days:
+    /// not booked here, the place that `HOLE-SAME` hole until the last (tally 2.3.1 R1,
     /// N245.21).
     Open(Hole),
+    /// The same on a day between the first and the last: not booked, its register met there,
+    /// so the result lists every side (tally 2.3.1, rulings 14 on G1's review N1).
+    Between,
     /// The same at the last of their days: booked as written, ending that hole.
     Close(Hole),
 }
@@ -131,6 +134,9 @@ impl Engine {
                 EndBook::Skip => {}
                 EndBook::Open(h) => {
                     self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Open(h))?;
+                }
+                EndBook::Between => {
+                    self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Mark)?;
                 }
                 EndBook::Close(h) => {
                     self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Close(h))?;
@@ -464,7 +470,7 @@ impl Engine {
         Ok(match (two_days, mine, opens) {
             (true, true, _) => EndBook::Close(hole),
             (true, false, true) => EndBook::Open(hole),
-            (true, false, false) => EndBook::Skip,
+            (true, false, false) => EndBook::Between,
             (false, _, _) => EndBook::Hole(hole),
         })
     }
@@ -679,6 +685,83 @@ ask f_one: flows(wallet, 2026-03-01 .. 2026-03-06)
                 format!("f_one: {hole}")
             ],
             "known outside the two days, the hole between"
+        );
+    }
+
+    /// Three plans of one amount on three days, stated `same` in two lines.
+    const THREE_DAYS: &str = r#"model three_days
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input d1: date
+
+input d2: date
+
+input d3: date
+
+input a: money PLN
+
+move p1: transfers
+  on d1
+  leg cash from world to wallet amount a
+
+move p2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+move p3: transfers
+  on d3
+  leg cash from world to wallet amount a
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-02-03 "s"
+  d2 = 2026-02-05 "s"
+  d3 = 2026-02-07 "s"
+  a = 25.00 PLN "s"
+  same p1 = p2
+  same p2 = p3
+
+ask b_after: bal(wallet, 2026-02-28)
+"#;
+
+    #[test]
+    fn a_three_sided_two_day_result_lists_every_side() {
+        // tally 2.3.1, rulings 14 on G1's review N1: the middle side books nothing, but the
+        // result lists it beside the first and the last (L §6.1, §8.2)
+        let given = vec![Given {
+            path: "three_days.tally".to_owned(),
+            bytes: Some(THREE_DAYS.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let lines: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(String::as_str)
+            .filter(|line| !line.starts_with("  cut"))
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "b_after: 25.00 PLN",
+                "  unfulfilled: p1",
+                "  unfulfilled: p2",
+                "  unfulfilled: p3"
+            ],
+            "every side the lines name"
         );
     }
 
