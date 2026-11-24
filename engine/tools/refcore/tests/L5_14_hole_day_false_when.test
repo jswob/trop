@@ -1,0 +1,42 @@
+# tally 2.3.1 R6 (L §5.14 l.1361): a hole day with a false `when` and no `where`: the hole (b, f, n), the `when`
+# read at a hole booking cut. Unchanged: a guard of the order.
+=== hdfalse.tally
+model hdfalse
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+input amt: money PLN
+input hd: date
+input ok: bool
+
+move pw: transfers
+  on hd
+  when ok
+  leg cash from konto to other amount amt
+
+ask b: bal(konto, 2026-06-30)
+ask f: flows(pw, 2026)
+ask n: count(m in transfers over 2026)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[other] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  hd = ?"which day?" "s"
+  ok = false "s"
+=== expect
+b: ?"which day?" (hd)
+  cut 2026-04-20
+f: ?"which day?" (hd)
+  cut 2026-04-20
+n: ?"which day?" (hd)
+  cut 2026-04-20

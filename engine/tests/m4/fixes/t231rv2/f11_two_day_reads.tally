@@ -1,0 +1,74 @@
+model f11
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place wb: accounts PLN lives 2025-01-01..
+place wc: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+
+move a1: transfers
+  on d1
+  leg cash from world to wa amount a
+move a2: transfers
+  on d2
+  leg cash from world to wa amount a
+move b1: transfers
+  on d1
+  leg cash from world to wb amount a
+move b2: transfers
+  on d2
+  leg cash from world to wb amount a
+move c1: transfers
+  on d1
+  leg cash from world to wc amount a
+move c2: transfers
+  on d2
+  leg cash from world to wc amount a
+
+ask a6: bal(wa, 2026-03-06)
+ask a8: bal(wa, 2026-03-08)
+ask ea: explain bal(wa, 2026-03-08)
+ask b6: bal(wb, 2026-03-06)
+ask b8: bal(wb, 2026-03-08)
+ask eb: explain bal(wb, 2026-03-08)
+ask c6: bal(wc, 2026-03-06)
+ask c8: bal(wc, 2026-03-08)
+ask ec: explain bal(wc, 2026-03-08)
+ask fc: flows(wc, 2026-03)
+ask ka: bal(wa, 2026-03-08) as known 2026-03-06
+ask pa: bal(wa, 2026-03-08) with d2 = 2026-03-05
+ask pb: explain bal(wb, 2026-03-08) with d2 = 2026-03-06
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wb] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wc] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+  same a1 = a2
+  same b1 = b2
+  same c1 = c2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-03-07
+  pad wa from world
+  pad wb from world
+  pad wc from world
+  stated[wa] = 40.00 PLN at 2026-03-05 end "s"
+  stated[wb] = 70.00 PLN at 2026-03-07 end "s"
+  stated[wc] = 10.00 PLN at 2026-03-04 end "s"
+  stated[wc] = 300.00 PLN at 2026-03-09 end "s"

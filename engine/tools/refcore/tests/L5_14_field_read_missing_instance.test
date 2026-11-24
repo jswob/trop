@@ -1,0 +1,68 @@
+# tally 2.3.1 R6, gate review 8 (L §5.14, §8.4 RUN-NONE): a field read of an instance that doesn't exist,
+# `.day` included, is RUN-NONE `spend[2026-02] doesn't exist: a field read of it`, asked alone (d2, a2) or in a
+# value (dd); `== none` and `o.fulfils == spend[k]` stay equalities (isn, n_eq). Before: d2 2026-02-20, dd 9,
+# a2 RUN-RECORD.
+=== x_none.tally
+model x
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d20: int
+input skip_m: month
+
+move spend[m in month]: transfers
+  on day_of(m, d20)
+  when m != skip_m
+  leg cash from konto to shop amount amt
+
+ask d2: spend[2026-02].day
+ask a2: spend[2026-02].cash.amount
+ask d3: spend[2026-03].day
+ask isn: spend[2026-02] == none
+ask n_un: count(o in bank over 2026-04 where o.fulfils == none)
+ask n_eq: count(o in bank over 2026-04 where o.fulfils == spend[2026-02])
+ask n_eq3: count(o in bank over 2026-04 where o.fulfils == spend[2026-03])
+ask dd: days_between(spend[2026-02].day, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d20 = 20 "s"
+  skip_m = 2026-02 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers konto
+  bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 26.00 PLN) "loose"
+  bank[r2] = (on: 2026-04-06, kind: transfers, leg cash from konto to shop amount 10.00 PLN, fulfils: spend[2026-03]) "march"
+=== expect
+a2: refused: RUN-NONE spend[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
+d2: refused: RUN-NONE spend[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
+d3: 2026-03-20
+  cut 2026-04-20
+dd: refused: RUN-NONE spend[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
+isn: false
+  cut 2026-04-20
+n_eq: 0
+  cut 2026-04-20
+n_eq3: 1
+  cut 2026-04-20
+n_un: 1
+  cut 2026-04-20

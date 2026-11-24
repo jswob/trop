@@ -1,0 +1,62 @@
+# tally 2.3.1 R1 (the plain form, the critic's C-3): a check on a hole operand isn't made and the result is
+# computed without it, so `z / h` with z = 0 and h a hole is the hole. Unchanged: a guard of the clause.
+=== chk.tally
+model chk
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input h: int
+input z: int
+input t[k in ks]: int
+input flag[k in ks]: bool
+input dh: date
+
+ask q_div: z / h
+ask q_mul: z * h
+ask q_any: any(flag[k] for k in ks)
+ask q_all: all(flag[k] for k in ks)
+ask q_or: flag[a] or flag[c]
+ask q_or2: flag[c] or flag[a]
+ask q_and: flag[b] and flag[c]
+ask q_and2: flag[c] and flag[b]
+ask q_first: first(k in ks where flag[k])
+ask q_cnt: count(k in ks where flag[k])
+ask q_ab: add_days(dh, z / z)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  h = ?"what is h?" "s"
+  z = 0 "s"
+  flag[a] = true "s"
+  flag[b] = false "s"
+  dh = ?"which day?" "s"
+=== expect
+q_ab: refused: RUN-DIV division by zero
+  cut 2026-06-30
+q_all: false
+  cut 2026-06-30
+q_and: false
+  cut 2026-06-30
+q_and2: false
+  cut 2026-06-30
+q_any: true
+  cut 2026-06-30
+q_cnt: ?"flag at c: no value" (flag[c])
+  cut 2026-06-30
+q_div: ?"what is h?" (h)
+  cut 2026-06-30
+q_first: a
+  cut 2026-06-30
+q_mul: ?"what is h?" (h)
+  cut 2026-06-30
+q_or: true
+  cut 2026-06-30
+q_or2: true
+  cut 2026-06-30

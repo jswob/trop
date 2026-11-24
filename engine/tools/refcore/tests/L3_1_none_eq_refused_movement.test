@@ -1,0 +1,80 @@
+# tally 2.3.1 rulings 16 Q3 (R1): `m[k] == none` of a refused movement is refused (x5 RUN-DIV). Before: false.
+=== r6a.tally
+model r6a
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+index kinds = [a, b]
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input d25: int
+input okw[m in month]: bool
+input fm: month
+input mm: month
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+def fl: money PLN = flows(spend, mm)
+ask f2: flows(spend, fm)
+ask f5: fl
+ask f6: flows(spend, 2026-06)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-06)
+ask s5: sum(t.cash.amount for t in transfers over mm)
+ask e5: spend[mm, a].day
+ask x5: spend[mm, a] == none
+ask o5: count(o in bank over mm where o.fulfils == spend[mm, a])
+ask ob2: observed(spend[fm, a]).cash.amount
+ask ef5: explain fl
+ask if5: inputs-of fl
+ask k3: bal(konto, 2026-03-31) as known 2026-04-01
+ask k5: fl as known 2026-06-01
+ask kn: count(t in transfers over 2026-01 .. 2026-03) as known 2026-04-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  mm = 2026-05 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dz[2026-06] = 1 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  okw[2026-05] = true "s"
+  okw[2026-06] = true assumed "june guess" "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-25, kind: transfers, leg cash from konto to shop amount 10.00 PLN, fulfils: spend[2026-02, a]) "feb a"
+  bank[r2] = (on: 2026-02-25, kind: transfers, leg cash from konto to shop amount 10.00 PLN, fulfils: spend[2026-02, b]) "feb b"
+=== expect x5
+x5: refused: RUN-DIV division by zero
+  cut 2026-06-20

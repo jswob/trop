@@ -1,0 +1,47 @@
+model s3b
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+input a3: money PLN
+
+move x1: transfers
+  on d1
+  at d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  at d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  at d3
+  leg cash from world to wa amount a3
+
+ask b: bal(wa, 2026-06-30)
+ask bu: bal(wa, 2026-06-30) in dn
+ask bu3: bal(wa, 2026-03-31) in dn
+ask du: diff(bal(wa, 2026-06-30)) in dn against s3b
+ask eu: explain bal(wa, 2026-06-30) in dn
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-05-09 "s"
+  a = 100.00 PLN "s"
+  a3 = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3

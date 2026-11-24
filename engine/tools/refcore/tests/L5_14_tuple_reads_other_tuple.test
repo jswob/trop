@@ -1,0 +1,48 @@
+# tally 2.3.1 R6 (C-13.10): one cell per tuple, so a tuple that reads another tuple of its own move is no
+# cycle: b 900.00, f3 10.00, g3 10.00. Before: all three RUN-CYCLE `pay reads its own instances`.
+=== selfread.tally
+model selfread
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input amt: money PLN
+input d5: int
+input first_m: month
+input zero: money PLN
+
+move pay[m in month]: transfers
+  on day_of(m, d5)
+  when m == first_m or flows(pay[m - 1], m - 1) > zero
+  leg cash from konto to shop amount amt
+
+move pay2[m in month where m == first_m or flows(pay2[m - 1], m - 1) > zero]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount amt
+
+ask f3: flows(pay, 2026-03)
+ask g3: flows(pay2, 2026-03)
+ask b: bal(konto, 2026-05-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d5 = 5 "s"
+  first_m = 2026-01 "s"
+  zero = 0.00 PLN "s"
+=== expect
+b: 900.00 PLN
+  cut 2026-01-01
+f3: 10.00 PLN
+  cut 2026-01-01
+g3: 10.00 PLN
+  cut 2026-01-01

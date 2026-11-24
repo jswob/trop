@@ -1,0 +1,125 @@
+# tally 2.3.1 rulings 16 Q5 (E §4.2 step 3): chk, a decision on 2026-02-03, reads `o.fulfils` of a row linked to
+# topup[2026-02], whose point is 02-05: RUN-ORDER `decisions chk and topup read each other on 2026-02-03` (fc).
+# Before: fc 30.00 PLN.
+=== dlc3_500k.tally
+model dl
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+input d3: int
+input d10: int
+input fm: month
+input de: date
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+move chk[m in month]: transfers
+  reads konto
+  on day_of(m, d3)
+  leg cash from save to shop amount sum(o.cash.amount for o in bank over m where o.fulfils == none) + 0 * bal(konto)
+
+def fl: money PLN = flows(topup, fm)
+def bl: money PLN = bal(konto, de)
+ask f: fl
+ask fc: flows(chk, fm)
+ask ef: explain fl
+ask iof: inputs-of fl
+ask b: bl
+ask eb: explain bl
+ask ob: observed(topup[fm]).cash.amount
+ask dy: topup[fm].day
+ask ful: count(o in bank over fm where o.fulfils == topup[fm])
+ask loose: sum(o.cash.amount for o in bank over fm where o.fulfils == none)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+  d3 = 3 "s"
+  d10 = 10 "s"
+  fm = 2026-02 "s"
+  de = 2026-03-31 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-01-15
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+=== expect
+b: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+dy: refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
+eb: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  [1] bl = refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+      rule base: won
+        [2] row v:de = 2026-03-31
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] bal(konto, 2026-03-31) = refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+ef: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  [1] fl = refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+      rule base: won
+        [2] row v:fm = 2026-02
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [3] row v:d3 = 3
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [4] row v:d5 = 5
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [5] running read bal(konto) = 100.00 PLN, the balance up to this point of 2026-01-03
+        [6] running read bal(konto) = 100.00 PLN, the balance up to this point of 2026-01-05
+        [7] row v:lim = 500.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [8] row v:amt = 400.00 PLN
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+        [9] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-02-05
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+f: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+fc: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-03
+  unfulfilled: chk[2026-02]
+  cut 2026-04-20
+ful: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+iof:
+  v:amt (source s "probe", locator "s")
+  v:d5 (source s "probe", locator "s")
+  v:fm (source s "probe", locator "s")
+  v:lim (source s "probe", locator "s")
+  v:opening[konto] (source s "probe", locator "s")
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+loose: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+ob: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20

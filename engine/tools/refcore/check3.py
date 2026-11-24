@@ -213,6 +213,9 @@ def m_resolve_move_kind(self, info):
 
 def m_mark(self, sc, what, target, node=None):
     self.marks.setdefault(sc.item, set()).add((what, target))
+    if getattr(sc, 'in_when', False) and sc.item and sc.item[0] == 'move':
+        # a move's `when` reads running state: its existence does (E §3.1 step 7; tally 2.3.1 R6, rulings 16 Q4)
+        self.__dict__.setdefault('when_running', set()).add(sc.item[1])
     if node is not None and what in ('balnow',):
         self.balnow_items.setdefault(sc.item, getattr(node, 'loc', None))
 
@@ -248,6 +251,9 @@ def m_movement_field(self, n, t, sc):
         return T.DATE
     if name == 'fulfils':
         n._r = ('mvfield', 'fulfils', name)
+        # a row's link to a decision reads that decision's existence, a running read (E §3.1 step 7; tally 2.3.1 R6,
+        # C-9): marked in check_moves_graph, where the rows are known
+        self.__dict__.setdefault('fulfils_items', set()).add(sc.item)
         return T.key('events')
     # L §5.7 A kind test narrows (tally 2.1, R-17): "There v's legs and attributes of K are readable"
     obj = n.obj
@@ -1421,6 +1427,45 @@ def m_check_moves_graph(self):
     m = self.m
     E = self.edges
     memo = {}
+    # step 7's existence mark, row-precise (E §3.1 step 7; tally 2.3.1 R6, C-9, rulings 15 and 16 Q4): an item that
+    # reads `.fulfils` of the rows of an input it binds reaches the existence of each decision a row of that input,
+    # in any version, fulfils, where that existence reads running state (its `when`, directly or through defs); a
+    # decision's own reads are judged as before
+    def runs_running(start):
+        seen, stack = set(), [start]
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            if any(w != 'exist' for w, _t in self.marks.get(x, ())):
+                return True
+            stack.extend(t for t in E.get(x, {}) if t[0] in ('def', 'fill', 'moveon'))
+        return False
+
+    when_running = getattr(self, 'when_running', set())
+    when_edges = getattr(self, 'when_edges', {})
+
+    def exist_running(qid):
+        return qid in when_running or any(t[0] in ('def', 'fill') and runs_running(t)
+                                          for t in when_edges.get(qid, ()))
+
+    named = {}
+    for inf in m.inputs.values():
+        for o in getattr(inf, 'obs', ()) if getattr(inf, 'observed', False) else ():
+            f = o.fulfils
+            if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves and m.moves[f[1]].decision:
+                named.setdefault(inf.id, set()).add(f[1])
+    running = {q: exist_running(q) for qs in named.values() for q in qs}
+    for qid, mi in m.moves.items():
+        # its link waits for its walk point (moves.m_link_tuple; C-9)
+        mi.exist_running = mi.decision and (running[qid] if qid in running else exist_running(qid))
+    for item in getattr(self, 'fulfils_items', ()):
+        bound = [t[1] for t, rels in E.get(item, {}).items() if t[0] == 'input' and 'bind' in rels]
+        for iid in bound:
+            for qid in named.get(iid, ()):
+                if running[qid]:
+                    self.marks.setdefault(item, set()).add(('exist', ('move', qid)))
 
     def reached(item):
         if item in memo:
@@ -1470,6 +1515,7 @@ def m_check_moves_graph(self):
                 raise LoadError('LOAD-READS', '%s reaches a running read or projection of %s without reads %s' % (
                     qid, _tname(tgt), _tname(tgt)), loc)
             continue
+        rs = set(x for x in rs if x[0] != 'exist')
         on_rs = reached(('moveon', qid))
         if on_rs:
             w, tgt = sorted(on_rs, key=repr)[0]
@@ -1522,7 +1568,8 @@ def m_check_moves_graph(self):
     # walk-bound defs: "A def that reaches a mark and that a decision reaches is walk-bound: its cells carry the walk
     # point (§3.2); in an ask, or a def no movement reaches, a plain bal(x, d) is the balance on day d at the ask's
     # cut" (E §3.1 step 7, round 18 C3-8; L §5.14.1). A plan that reaches a mark is LOAD-READS (above).
-    m.walk_bound = set(d for d in m.defs if reached(('def', d)) and ('def', d) in from_decisions)
+    m.walk_bound = set(d for d in m.defs if any(x[0] != 'exist' for x in reached(('def', d))) and
+                       ('def', d) in from_decisions)
     m.walk_bound_fills = set(f for f in m.fills if reached(('fill', f)) and ('fill', f) in from_decisions)
     # the movements a projection leaves out: those that depend on its holder (E §3.1 step 7, L §5.14.1)
     inv = {}

@@ -1,0 +1,35 @@
+model anyall_first
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input t[k in ks]: int
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_or: r[a] or r[c]
+ask q_or2: r[c] or r[a]
+ask q_and: r[b] and r[c]
+ask q_and2: r[c] and r[b]
+ask q_if: if r[a] then ten else ten / t[c]
+ask q_first: first(k in ks where r[k])
+ask q_cnt: count(k in ks where r[k])
+ask q_wany: any(true for k in ks where r[k])
+ask q_wall: all(false for k in ks where r[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 0 "s"
+  t[b] = 5 "s"
+  t[c] = 1 "s"

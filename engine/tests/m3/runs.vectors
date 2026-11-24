@@ -5357,7 +5357,7 @@ a3: refused: RUN-RECORD observation bank[o1] fulfils pay[2026-03], which doesn't
   pinned: flag = 0
   cut 2026-06-30
 ,14:t221-gd/216-o0,7:t221-gd,3:run,31:engine/tests/m3/fixes/t221/o216,12:run o0.tally,37:o0.tally	m3/fixes/t221/o216/o0.tally
-,1:0,837:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
+,1:0,1160:f [work = *]: refused: RUN-ORDER decisions a and b read each other on 2026-03-06
   unfulfilled: in1
   law date 2026-06-01, cut 2026-06-10
 i1 [work = yes]:
@@ -5372,8 +5372,19 @@ i1 [work = no]:
   v:fx (source s "s", locator "s")
   reading: work = no
   law date 2026-06-01, cut 2026-06-10
-i2 [work = *]:
+i2 [work = yes]:
+  v:amt[yes] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
   v:mo (source s "s", locator "s")
+  reading: work = yes
+  unfulfilled: in1
+  law date 2026-06-01, cut 2026-06-10
+i2 [work = no]:
+  v:amt[no] (source s "s", locator "s")
+  v:d1 (source s "s", locator "s")
+  v:mo (source s "s", locator "s")
+  reading: work = no
+  unfulfilled: in1
   law date 2026-06-01, cut 2026-06-10
 r1: b, by_helper, by_inline, i1, i2
 r2: by_helper, by_inline, i2
@@ -6763,7 +6774,7 @@ r_p05: residuals konto 2026-04 .. 2026-05
   pinned: w = 2026-04-05
   cut 2026-06-10
 ,21:t23-g1/same-end-equal,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/same,17:run se_w_eq.tally,46:se_w_eq.tally	m3/fixes/t23/same/se_w_eq.tally
-,1:0,1209:b_feb: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of i1" (di)
+,1:0,1001:b_feb: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of i1" (di)
   unknown day: di
   cut 2026-06-10
 b_in: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the day of i1" (di)
@@ -6776,12 +6787,12 @@ b_mar_k: ?"date within window(2026-03-03, 2026-03-09) not precise enough for the
   unknown day: di
   unfulfilled: i2
   cut 2026-04-15
-b_mar_p03: ?"i1 and i2 are one, but leg cash differs on 2026-03-03, 2026-03-07: 100.00 PLN (i1) and 100.00 PLN (i2)" (i1, i2)
+b_mar_p03: 100.00 PLN
   pinned: di = 2026-03-03
   unfulfilled: i1
   unfulfilled: i2
   cut 2026-06-10
-b_mar_p09: ?"i1 and i2 are one, but leg cash differs on 2026-03-07, 2026-03-09: 100.00 PLN (i1) and 100.00 PLN (i2)" (i1, i2)
+b_mar_p09: 100.00 PLN
   pinned: di = 2026-03-09
   unfulfilled: i1
   unfulfilled: i2
@@ -6924,7 +6935,7 @@ fee_flows: 0.00 PLN
   unfulfilled: pay
   cut 2026-06-10
 ,20:t23-g1/surv-hole-dec,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run hole_dec.tally,48:hole_dec.tally	m3/fixes/t23/surv/hole_dec.tally
-,1:0,1065:b_other: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w) ?"other has no opening or stated reading" (other)
+,1:0,1428:b_other: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w) ?"other has no opening or stated reading" (other)
   unknown day: w
   cut 2026-06-10
 b_third: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w) ?"third has no opening or stated reading" (third)
@@ -6939,13 +6950,14 @@ direct_to: ?"date within window(2026-03-02, 2026-03-06) not precise enough for t
 dr_amt: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
   unknown day: w
   cut 2026-06-10
-from_world: 1
+from_world: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w) ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
+  unknown day: w
   unfulfilled: dr
   cut 2026-06-10
-to_other: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
+to_other: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w) ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
   unknown day: w
   cut 2026-06-10
-to_third: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w)
+to_third: ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dn" (w) ?"date within window(2026-03-02, 2026-03-06) not precise enough for the day of dw" (w)
   unknown day: w
   cut 2026-06-10
 ,20:t23-g1/surv-c4-steps,6:t23-g1,3:run,30:engine/tests/m3/fixes/t23/surv,18:run c4_steps.tally,48:c4_steps.tally	m3/fixes/t23/surv/c4_steps.tally

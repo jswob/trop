@@ -105334,7 +105334,8 @@ version st
 ask after: bal(konto, 2026-01-31), bal(konto, 2026-03-10), bal(konto, 2026-03-31)
 ask md: bal(konto, 2026-03-31) modelled, bal(k9, 2026-03-31) modelled
 ask c_day: count(t in transfers over 2026-02), count(t in transfers over 2026-03-11 .. 2026-03-31)
-,,1:0,95:c_day: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+,,1:0,123:c_day: (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+  unfulfilled: k9m[2026-02]
   cut 2026-10-20
 ,22:r11/ledger_refused_day,9:fixes-r11,40:run m.tally --ask r_jan r_feb r_may r_k9,1839:7:m.tally,1823:model hh
   tally 2
@@ -109648,7 +109649,7 @@ ask t2_s8: bal(pot, 2026-04-30) with wa = 2026-04-09, wb = 2026-04-10
 ask t2_s9: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-07
 
 ask t2_s10: bal(pot, 2026-04-30) with wa = 2026-04-10, wb = 2026-04-11
-,,1:0,2132:e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for the day of empty" (wd)
+,,1:0,2177:e1: ?"date within window(2026-03-05, 2026-03-10) not precise enough for the day of empty" (wd)
   unknown day: wd
   cut 2026-01-01
 e2_s1: 100.00 PLN
@@ -109657,7 +109658,8 @@ e2_s1: 100.00 PLN
 e2_s2: refused: RUN-LIFESPAN empty.cash moves into or out of tmp outside its lifespan
   pinned: wd = 2026-03-08
   cut 2026-01-01
-e3: refused: RUN-LIFESPAN tmp ends on 2026-03-07 holding 100.00 PLN
+e3: ?"date within window(2026-03-05, 2026-03-10) not precise enough for the day of empty" (wd)
+  unknown day: wd
   cut 2026-01-01
 e4_s1: 0.00 PLN
   pinned: wd = 2026-03-05
@@ -110924,20 +110926,19 @@ version rd
   known 2026-04-03
   anchor konto
   stated[konto] = 70.00 PLN at 2026-03-10 end "saldo"
-,,1:0,794:q_konto: 70.00 PLN
+,,1:0,872:q_konto: 70.00 PLN
   anchor: konto 2026-03-10 end, stated 70.00 PLN, difference refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
   cut 2026-06-30
 q_last: 70.00 PLN
   held: stated[konto] = 70.00 PLN (rd), read for 2026-03-31
   cut 2026-06-30
 q_led: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
-q_obs: refused: RUN-NONE observed(sw[2026-03]) is none here: a field read of it
+q_obs: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
   cut 2026-06-30
-q_sw: 0.00 PLN
+q_sw: refused: RUN-RECORD observation bank[o1] fulfils sw[2026-03], which doesn't exist or doesn't touch its places
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-02-01
   held: stated[konto] = 100.00 PLN (rd0), read for 2026-03-01
-  held: stated[konto] = 70.00 PLN (rd), read for 2026-04-01
   cut 2026-06-30
 ,16:fixes/g4/nb3_atT,13:fixes-records,17:run nb3_atT.tally,1375:13:nb3_atT.tally,1352:model nb3
   tally 2

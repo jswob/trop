@@ -1,0 +1,48 @@
+model b2_prefix
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-03-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-03
+index kinds = [a]
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input d25: int
+input fm: month
+input jm: month
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask dy: spend[fm, a].day
+ask am: spend[fm, a].cash.amount
+ask f: flows(spend, fm)
+ask x5: spend[fm, a] == none
+ask x6: spend[fm, a] != none
+ask x7: if spend[fm, a] == none then amt else amt * 0
+ask x9: count(k in kinds where spend[fm, k] == none)
+ask xj: spend[jm, a] == none
+ask xjd: spend[jm, a].day
+ask k5: spend[fm, a] == none as known 2026-01-01
+ask xa: any(spend[m, a] == none for m in month)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  fm = 2026-02 "s"
+  jm = 2026-01 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 0 "s"
+  dz[2026-03] = 1 "s"

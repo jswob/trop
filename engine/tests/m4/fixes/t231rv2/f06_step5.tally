@@ -1,0 +1,64 @@
+model f06
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+axis rd
+  yes "it applies"
+  no "it does not"
+input ch: bool
+input cx[r in rd]: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a beats u = va
+  rule b beats a = vb
+  rule u = vt when ch
+def d2: money PLN at reader
+  rule a = va
+  rule b = vb
+  rule u beats a, b = vt when cx[rd]
+def d3: money PLN at reader
+  rule a = va
+  rule b = vb
+def d4: money PLN at reader
+  rule a = va
+  rule b = vb
+  rule u beats a, b = vt
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+ask q3: d3 law 2026-03-01
+ask q3e: d3 law 2026-01-15
+ask q4: d4 law 2026-03-01
+ask q4e: d4 law 2026-01-15
+ask q4p: d4 with ch = false law 2026-03-01
+ask e3: explain d3 law 2026-03-01
+ask e4: explain d4 law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask i3: inputs-of d3 law 2026-03-01
+ask i2: inputs-of d2 law 2026-03-01
+ask k3: d3 law 2026-03-01 as known 2026-01-15
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  cx[yes] = true "s"
+  cx[no] = ?"cx no?" "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+
+version w
+  cite s
+  governs 2026-02..
+  known 2026-02-01
+  replace rule d3.u = vt when ch
+  replace rule d4.u = vt when ch

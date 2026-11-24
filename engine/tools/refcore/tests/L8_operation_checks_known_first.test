@@ -1,0 +1,134 @@
+# tally 2.3.1 R1 (L §8 What an operation decides, #255 item 1, P12 to P16): a built-in makes each check on one
+# argument once that argument is known, whatever the others are, the earlier argument's first; on a hole it
+# isn't made. So a known argument's refusal beats a hole beside it (r1, r3, a1, a2, b1 to b5, d1, f1, f2), and
+# two refusals print the first argument's (r2: the step before the mode's none; a3: the rate before the code).
+# S9: `never` in arithmetic is refused whatever the others are (a2, b2, d1, d2: `never in <the built-in>`).
+# S16 (L §3.3 `nominal m`, m a positive int): `nominal 0` is RUN-DOMAIN where it is read (a4, f3), in the engine's
+# words since W2b (rulings 14 N6: `nominal 0: m is a positive int`).
+# Before: r1, r3, a1, a2, b1 to b4, d1 and f1 were the hole; r2 the mode's none; a3, f2's order; d2 RUN-DOMAIN
+# `never is not a date`; a4, f3 a Python ZeroDivisionError (REFCORE-NOT-YET).
+=== builtins.tally
+model builtins
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input x_h: num PLN
+input x_ok: num PLN
+input st_z: money PLN
+input st_ok: money PLN
+input md_n: rounding
+input md_ok: rounding
+input p_ok: money PLN
+input p_h: money PLN
+input r_ok: rate
+input r_m: rate
+input r_h: rate
+input a_h: date
+input a_ok: date
+input a_v: date
+input b_ok: date
+input dc_ok: daycount
+input c_ok: compounding
+input c_n: compounding
+input c_z: compounding
+input c_h: compounding
+input n_h: int
+input n_n: int
+input n_z: int
+input mo_h: month
+input e_n: int
+input e_ok: int
+input roll_ok: roll
+input roll_n: roll
+input cal: calendar
+
+ask r1: round(x_h, st_z, md_ok)
+ask r2: round(x_ok, st_z, md_n)
+ask r3: round(x_h, st_ok, md_n)
+ask a1: accrue(p_ok, r_m, a_h, b_ok, dc_ok, c_ok)
+ask a2: accrue(p_h, r_ok, a_v, b_ok, dc_ok, c_ok)
+ask a3: accrue(p_ok, r_m, a_ok, b_ok, dc_ok, c_n)
+ask a4: accrue(p_h, r_ok, a_ok, b_ok, dc_ok, c_z)
+ask d1: dcf(a_h, a_v, dc_ok)
+ask d2: dcf(a_v, b_ok, dc_ok)
+ask f1: periodic(r_h, year, c_n)
+ask f2: periodic(r_m, day, c_n)
+ask f3: periodic(r_ok, year, c_z)
+ask b1: add_business(a_h, n_z, cal)
+ask b2: add_business(a_v, n_h, cal)
+ask b3: last_business(mo_h, n_n, cal)
+ask b4: schedule(mo_h, e_n, roll_ok, cal)
+ask b5: schedule(mo_h, e_ok, roll_n, cal)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x_h = ?"which x?" "s"
+  x_ok = 12.345 PLN "s"
+  st_z = 0.00 PLN "s"
+  st_ok = 0.05 PLN "s"
+  md_n = none "s"
+  md_ok = half-up "s"
+  p_ok = 100.00 PLN "s"
+  p_h = ?"which p?" "s"
+  r_ok = 10 %/year "s"
+  r_m = 1 %/month "s"
+  r_h = ?"which rate?" "s"
+  a_h = ?"which day?" "s"
+  a_ok = 2026-01-01 "s"
+  a_v = never "s"
+  b_ok = 2027-01-01 "s"
+  dc_ok = act365 "s"
+  c_ok = simple "s"
+  c_n = none "s"
+  c_z = nominal 0 "s"
+  c_h = ?"which compounding?" "s"
+  n_h = ?"how many?" "s"
+  n_n = none "s"
+  n_z = 0 "s"
+  mo_h = ?"which month?" "s"
+  e_n = none "s"
+  e_ok = 15 "s"
+  roll_ok = following "s"
+  roll_n = none "s"
+  cal = calendar(weekends [sat, sun], yearly [01-01]) "s"
+=== expect
+a1: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
+  cut 2026-06-30
+a2: refused: RUN-NONE never in accrue
+  cut 2026-06-30
+a3: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
+  cut 2026-06-30
+a4: refused: RUN-DOMAIN nominal 0: m is a positive int
+  cut 2026-06-30
+b1: refused: RUN-ZERO add_business(?"which day?" (a_h), 0, cal)
+  cut 2026-06-30
+b2: refused: RUN-NONE never in add_business
+  cut 2026-06-30
+b3: refused: RUN-NONE a value is none here: an integer argument
+  cut 2026-06-30
+b4: refused: RUN-NONE a value is none here: an integer argument
+  cut 2026-06-30
+b5: refused: RUN-NONE a value is none here: schedule
+  cut 2026-06-30
+d1: refused: RUN-NONE never in dcf
+  cut 2026-06-30
+d2: refused: RUN-NONE never in dcf
+  cut 2026-06-30
+f1: refused: RUN-NONE a value is none here: periodic
+  cut 2026-06-30
+f2: refused: RUN-DOMAIN periodic: a month rate over a day: a day's share of a longer period is a day count (dcf), never a default (L §3.3)
+  cut 2026-06-30
+f3: refused: RUN-DOMAIN nominal 0: m is a positive int
+  cut 2026-06-30
+r1: refused: RUN-DOMAIN round with a step 0.00 PLN that is not positive
+  cut 2026-06-30
+r2: refused: RUN-DOMAIN round with a step 0.00 PLN that is not positive
+  cut 2026-06-30
+r3: refused: RUN-NONE a value is none here: round
+  cut 2026-06-30

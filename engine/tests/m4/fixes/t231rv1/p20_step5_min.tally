@@ -1,0 +1,24 @@
+model p20
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+source s "probe"
+input ch: bool
+input v: int
+def d1: int
+  rule a = v
+  rule base = v
+  rule top beats a, base = v when ch
+def d2: int
+  rule a = v
+  rule base = v
+  rule mid beats base = v when ch
+ask e1: explain d1
+ask q2: d2
+version x
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  v = 1 "s"

@@ -1,0 +1,62 @@
+model b1w
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+axis rd
+  r1 "high"
+  r2 "low"
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+input fm: month
+input lim2: money PLN
+
+def lm: money PLN
+  rule hi = lim when rd == r1
+  rule lo = lim2 when rd == r2
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lm
+  leg cash from save to konto amount amt
+
+ask f: flows(topup, fm) with rd = r1
+ask b04: bal(konto, 2026-02-04) with rd = r1
+ask b: bal(konto, 2026-03-31) with rd = r1
+ask fp: flows(topup, fm) with rd = r1, lim = 500.00 PLN
+ask b04p: bal(konto, 2026-02-04) with rd = r1, lim = 500.00 PLN
+ask bp: bal(konto, 2026-03-31) with rd = r1, lim = 500.00 PLN
+ask fa: flows(topup, fm) with rd = r2
+ask b04a: bal(konto, 2026-02-04) with rd = r2
+ask ba: bal(konto, 2026-03-31) with rd = r2
+ask oba: observed(topup[fm]).cash.amount with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 1 000.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+  fm = 2026-02 "s"
+  lim2 = 500.00 PLN "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-03, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"

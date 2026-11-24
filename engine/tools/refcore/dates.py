@@ -275,7 +275,8 @@ def age_months(b, d):
     n = (d.year - b.year) * 12 + (d.month - b.month)
     while n > 0 and add_months(b, n) > d:
         n -= 1
-    while add_months(b, n + 1) <= d:
+    while month_add(b.year, b.month, n + 1)[0] <= 9999 and add_months(b, n + 1) <= d:
+        # a month past the calendar's last is later than every d (L §2.1), so it never counts (tally 2.3.1 S23)
         n += 1
     return n
 

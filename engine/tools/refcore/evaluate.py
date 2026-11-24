@@ -1603,7 +1603,10 @@ class Engine:
                 # a walk started inside this cell's evaluation needs it (mreads.m_guarded_walk): from here on, what
                 # the attempt caches is taken back if it is abandoned
                 self.outer_hit()
-            raise refuse('RUN-CYCLE', '%s reads itself through a computed key' % self.origin(info, keys))
+            e = refuse('RUN-CYCLE', '%s reads itself through a computed key' % self.origin(info, keys))
+            # the cell the cycle closes at: an existence cell it runs through names its move (moves.m_link_tuple)
+            e.cycle_key = ck
+            raise e
         self.active.add(ck)
         tn = None
         if self.tracing:
@@ -1884,9 +1887,6 @@ class Engine:
         for l in applicable:
             if l not in cands:
                 state[l] = 'beaten by %s' % ', '.join(sorted(o for o in applicable if l in live[o].node.beats))
-        if len(cands) >= 2:
-            raise refuse('RUN-CONFLICT', 'rules %s and %s both win for %s on %s' % (
-                cands[0], cands[1], org, d if d is not None else 'no law date'))
         relevant = []
         for u, h in unknown.items():
             beats_cand = any(c in live[u].node.beats for c in cands)
@@ -1895,12 +1895,17 @@ class Engine:
             # left"
             if beats_cand or not beaten_by_cand or not cands:
                 relevant.append(h)
+        if len(cands) >= 2 and not relevant:
+            # the conflict is a check on the winners, made once no rule of unknown applicability could change them
+            # (L §5.11 step 5, §8 what an operation decides; tally 2.3.1 R1, N256.3)
+            raise refuse('RUN-CONFLICT', 'rules %s and %s both win for %s on %s' % (
+                cands[0], cands[1], org, d if d is not None else 'no law date'))
         if tn is not None:
             tn.rule_states = dict(state)
             tn.rule_vers = live
         if relevant:
-            if tn is not None and cands:
-                tn.rule_states[cands[0]] = 'candidate'
+            for c in (cands if tn is not None else ()):
+                tn.rule_states[c] = 'candidate'
             return merge(*relevant)
         if not cands:
             raise refuse('RUN-NO-RULE', 'no rule applies to %s on %s' % (org, d if d is not None else 'no law date'))
@@ -2403,6 +2408,13 @@ class Engine:
     def e_cmp(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
         b = self.ev(n.r, env, ctx)
+        if n.op in ('==', '!=') and (a is NONE) != (b is NONE):
+            # `m[k] == none` of a refused movement is refused (L §3.1, §8.4; tally 2.3.1 R1, rulings 16 Q3)
+            x = b if a is NONE else a
+            src = getattr(x, 'src', None) if isinstance(x, Mv) else None
+            if src is not None and getattr(src, 'err', None) is not None and \
+                    getattr(src, 'exists', True) is not False:
+                raise src.err
         if n.op not in ('==', '!=') and (a is NONE or b is NONE):
             # an ordering names the read that gave none (L §8.4's row; P48, N2)
             raise refuse('RUN-NONE', '%s is none here: an ordering' % env_txt(n.l if a is NONE else n.r, env))
@@ -2466,6 +2478,9 @@ class Engine:
             return (a > b) - (a < b)
         if isinstance(a, datetime.date) and isinstance(b, datetime.date):
             return (a > b) - (a < b)
+        if (a is NEVER or isinstance(a, datetime.date)) and (b is NEVER or isinstance(b, datetime.date)):
+            # never is later than every date, in `min`, `max`, `argmin` and `argmax` too (L §3.1; tally 2.3.1 S9)
+            return (a is NEVER) - (b is NEVER)
         if isinstance(a, Period) and isinstance(b, Period):
             if a == b:
                 return 0
@@ -2542,8 +2557,11 @@ class Engine:
             disjoint = self.cmp3(ahi, blo, None) < 0 or self.cmp3(bhi, alo, None) < 0
             if disjoint:
                 return op == '!='
-        w = a if isinstance(a, Iv) else b
-        return imprecise_hole(w, _ntxt(n) if n else 'a comparison')
+        use = _ntxt(n) if n else 'a comparison'
+        if isinstance(a, Iv) and isinstance(b, Iv):
+            # a hole carries the questions of every operand it evaluated: both days (L §4.4, §8.1; tally 2.3.1 Q1.15)
+            return merge(imprecise_hole(a, use), imprecise_hole(b, use))
+        return imprecise_hole(a if isinstance(a, Iv) else b, use)
 
     def e_in(self, n, env, ctx):
         x = self.ev(n.l, env, ctx)
@@ -3166,7 +3184,8 @@ class Engine:
             raise self.imprecise(v, 'a span end')
         raise refuse('LOAD-UNIT', 'a span end is %s' % fmt(v))
 
-    def members(self, binds, env, ctx, i=0, status=None, possible=False, regs=None, reverse=False, defer=None):
+    def members(self, binds, env, ctx, i=0, status=None, possible=False, regs=None, reverse=False, defer=None,
+                refused=False):
         """Yield (env, status) over the binding tuples in binding order; status is True, or a
         Hole when a where is a hole (an unknown member). With possible, a binding whose day or span is a hole
         yields every member it could hold, each an unknown member carrying that hole (a fill side, L §5.12). With
@@ -3174,7 +3193,9 @@ class Engine:
         for, one line per tuple, L §8.2). The tuples are yielded lazily, each where read when its tuple is reached
         (tally 2.1.7 R1: a value reads only what its definition reads); with reverse, from the last tuple (each
         binding's members from its last); with defer (a list), the wheres aren't read: each tuple carries the list of
-        its wheres, (env, status, [Coll], [where]), for a reader that orders the tuples first (where_status)."""
+        its wheres, (env, status, [Coll], [where]), for a reader that orders the tuples first (where_status). With
+        refused, a member whose where or existence is refused is yielded with the status ('refused', the refusal),
+        for `any` and `all`, which a deciding term decides whatever the others are (L §5.11; tally 2.3.1 R1)."""
         if i == len(binds):
             if defer is not None:
                 yield env, (status if status is not None else True), regs, defer
@@ -3199,10 +3220,13 @@ class Engine:
                 return
             res = [(v, res) for v in cands]
         for v, s0 in (list(res)[::-1] if reverse else res):
-            if isinstance(s0, TallyError):
-                raise s0
             e2 = dict(env)
             e2[b.var] = v
+            if isinstance(s0, TallyError):
+                if refused and isinstance(s0, Refusal):
+                    yield e2, ('refused', s0)
+                    continue
+                raise s0
             st = status
             if isinstance(s0, Hole):
                 st = s0 if st is None or st is True else merge(st, s0)
@@ -3210,11 +3234,17 @@ class Engine:
             if b.where is not None and defer is not None:
                 d2 = defer + [b.where]
             elif b.where is not None:
-                w = self.ev(b.where, e2, ctx)
+                try:
+                    w = self.ev(b.where, e2, ctx)
+                    if w is NONE:
+                        raise refuse('RUN-NONE', 'a where is none here')
+                except Refusal as e:
+                    if not refused:
+                        raise
+                    yield e2, ('refused', e)
+                    continue
                 if w is False:
                     continue
-                if w is NONE:
-                    raise refuse('RUN-NONE', 'a where is none here')
                 if isinstance(w, Hole):
                     st = w if st is None or st is True else merge(st, w)
             r2 = regs
@@ -3225,7 +3255,7 @@ class Engine:
                         r2 = regs + [mc]
                     else:
                         self.cur.merge(mc)
-            for x in self.members(binds, e2, ctx, i + 1, st, possible, r2, reverse, d2):
+            for x in self.members(binds, e2, ctx, i + 1, st, possible, r2, reverse, d2, refused):
                 yield x
 
     def safe_order_key(self, t, kind, K):
@@ -3274,10 +3304,37 @@ class Engine:
         fn = n.fn
         if fn in ('first', 'last'):
             return self.agg_first(n, env, ctx)
-        mem = list(self.members(n.binds, env, ctx))
+        mem = list(self.members(n.binds, env, ctx, refused=fn in ('any', 'all', 'sum')))
+        if fn in ('any', 'all'):
+            # each tuple one member, its status the first of its domain, `where` and term not plainly known: a domain
+            # hole is a hole member, and a deciding member still decides (rulings 17 A; G1's fix review N6)
+            return self.agg_anyall(n, mem, ctx)
         for e2, st in mem:
             if isinstance(st, tuple) and st[0] == 'domainhole':
                 return st[1]
+        if fn == 'sum':
+            # a member whose term is known 0 adds 0 whatever its `where`; otherwise a refused member refuses the sum
+            # (rulings 17 A; G1's fix review: f02 sr, sr0)
+            kept = []
+            for e2, st in mem:
+                if isinstance(st, tuple) and st[0] == 'refused':
+                    # its term read apart: its reads are the sum's only where it decides the member (known 0)
+                    c0 = self.push()
+                    saved_tr = (self.trace_stack, self.tracing)
+                    self.trace_stack, self.tracing = [], False
+                    try:
+                        t0 = self.ev(n.term, e2, ctx)
+                    except Refusal:
+                        t0 = None
+                    finally:
+                        self.stack.pop()
+                        self.trace_stack, self.tracing = saved_tr
+                    if t0 is not None and _known_zero(t0):
+                        self.cur.merge(c0)
+                        continue
+                    raise st[1]
+                kept.append((e2, st))
+            mem = kept
         if fn == 'count' and n.term is None:
             holes = [st for e2, st in mem if isinstance(st, Hole)]
             if holes:
@@ -3682,12 +3739,26 @@ class Engine:
         return None
 
     def agg_anyall(self, n, mem, ctx):
+        """`any` is true where a term is true and `all` false where one is false, whatever the others are, refused ones
+        included (L §5.11, #253's option B: no binding order decides it, L §2.5); else the first refusal in binding
+        order, else the hole (L §8, what an operation decides)."""
         fn = n.fn
         holes = []
+        first = None
         for e2, st in mem:
-            t = self.ev(n.term, e2, ctx)
-            if t is NONE:
-                raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
+            if isinstance(st, tuple) and st[0] == 'refused':
+                first = first or st[1]
+                continue
+            if isinstance(st, tuple) and st[0] == 'domainhole':
+                holes.append(st[1])
+                continue
+            try:
+                t = self.ev(n.term, e2, ctx)
+                if t is NONE:
+                    raise refuse('RUN-NONE', 'a term of %s is none here' % fn)
+            except Refusal as e:
+                first = first or e
+                continue
             if isinstance(st, Hole):
                 holes.append(st)
                 if isinstance(t, Hole):
@@ -3700,6 +3771,8 @@ class Engine:
                 return True
             if fn == 'all' and t is False:
                 return False
+        if first is not None:
+            raise first
         if holes:
             return merge(*holes)
         return fn == 'all'
@@ -3803,6 +3876,95 @@ class Engine:
                         self.no_none(v, strict)
             return merge(*hs)
         return None
+
+    def known_first(self, vals, checks):
+        """L §8, what an operation decides (tally 2.3.1, R1): a built-in makes each check on one argument once that
+        argument is known, in argument order, whatever the others are; on a hole, or a window off §4.4's list, it
+        isn't made. Then a hole argument makes the result that hole. checks[i] is argument i's check, or None."""
+        for v, chk in zip(vals, checks):
+            v = one_day(v)
+            if chk is not None and not isinstance(v, (Hole, Iv)):
+                chk(v)
+        return self.hole_args(vals)
+
+    def ck_none(self, what):
+        return lambda v: self.no_none(v, what)
+
+    def ck_day(self, what):
+        """A date argument of arithmetic: `none` and `never` are refused (L §3.1; tally 2.3.1 S9)."""
+        def f(v):
+            self.no_none(v, what)
+            if v is NEVER:
+                raise refuse('RUN-NONE', 'never in %s' % what)
+        return f
+
+    def ck_int(self, least=None, what=None, zero=None):
+        """An int argument: `none` refused; below `least`, RUN-DOMAIN; 0, the `zero` refusal (L §4.2, §8.4)."""
+        def f(v):
+            k = self.int_of(v)
+            if zero is not None and k == 0:
+                raise zero()
+            if least is not None and isinstance(k, int) and k < least:
+                raise refuse('RUN-DOMAIN', '%s with n = %d below %d' % (what, k, least))
+        return f
+
+    def ck_rate(self, what, period=None):
+        """A rate argument (L §3.3): a rate, of a period; over the day, only a day rate; accrue's, yearly."""
+        def f(r):
+            self.no_none(r, what)
+            if not isinstance(r, Num) or not r.rate:
+                raise refuse('LOAD-UNIT', '%s: %s is not a rate' % (what, fmt(r)))
+            per = U.period_of(r.u)
+            if what == 'accrue':
+                if per != 'year':
+                    raise refuse('LOAD-UNIT', 'accrue takes a yearly rate, not %s (L §3.3)' % fmt(r))
+                return
+            if per is None:
+                raise refuse('LOAD-UNIT', '%s: %s states no period' % (what, fmt(r)))
+            if (period == 'day' or per == 'day') and period != per:
+                # "LOAD-UNIT where load sees the rate's period, RUN-DOMAIN otherwise" (L §3.3, round 6)
+                raise refuse('RUN-DOMAIN', '%s: a %s rate over a %s: a day\'s share of a longer period is a day count '
+                             '(dcf), never a default (L §3.3)' % (what, per, period))
+        return f
+
+    def ck_compounding(self, what):
+        """A compounding code (L §3.3): `nominal m` needs m a positive int (tally 2.3.1 S16); accrue's row states
+        simple, effective and nominal m."""
+        def f(c):
+            self.no_none(c, what)
+            if not isinstance(c, Code) or c.kind != 'compounding':
+                raise refuse('LOAD-UNIT', '%s: %s is not a compounding code' % (what, fmt(c)))
+            if c.word == 'nominal' and c.n < 1:
+                raise refuse('RUN-DOMAIN', 'nominal %d: m is a positive int' % c.n)
+            if what == 'accrue' and c.word == 'discount':
+                raise refuse('RUN-DOMAIN', 'accrue under %s: its row states simple, effective and nominal m' % c.word)
+        return f
+
+    def ck_daycount(self, what):
+        def f(dc):
+            if what != 'dcf':
+                self.no_none(dc, what)
+            if not isinstance(dc, Code) or dc.kind != 'daycount':
+                raise refuse('LOAD-UNIT', 'dcf: %s is not a daycount code' % fmt(dc))
+        return f
+
+    def ck_period(self, what):
+        return lambda v: self.period_arg(v, what)
+
+    def builtin_checks(self, name, vals):
+        """Each argument's check, for the built-ins whose checks read one argument (L §8, what an operation decides)."""
+        if name == 'accrue':
+            return [self.ck_none(name), self.ck_rate(name), self.ck_day(name), self.ck_day(name),
+                    self.ck_daycount(name), self.ck_compounding(name)]
+        if name == 'periodic':
+            return [self.ck_rate(name, vals[1]), None, self.ck_compounding(name)]
+        if name == 'factor':
+            def n_ck(k):
+                self.no_none(k, name)
+                if not isinstance(k, Num) or k.u:
+                    raise refuse('LOAD-UNIT', 'factor: n is %s' % fmt(k))
+            return [self.ck_rate(name, vals[2]), n_ck, None, self.ck_compounding(name)]
+        return [self.ck_none(name)] * len(vals)
 
     def as_date_or_iv(self, v, what):
         if isinstance(v, (datetime.date, Iv)):
@@ -4127,12 +4289,19 @@ class Engine:
             mode = Code('rounding', self.axis_option(mn._r[1], ctx))
         else:
             mode = self.ev(mn, env, ctx)
-        h = self.hole_args([x, u, mode])
+        def step_ck(u):
+            self.no_none(u, 'round')
+            if isinstance(u, Num) and u.q <= 0:
+                # "a step or a count that isn't positive" is refused (L §8.4 What isn't defined is refused)
+                raise refuse('RUN-DOMAIN', 'round with a step %s that is not positive' % fmt(u))
+
+        def mode_ck(mode):
+            self.no_none(mode, 'round')
+            if not isinstance(mode, Code) or mode.kind != 'rounding':
+                raise refuse('LOAD-UNIT', 'round: the mode is %s' % fmt(mode))
+        h = self.known_first([x, u, mode], [self.ck_none('round'), step_ck, mode_ck])
         if h:
             return h
-        self.no_none(x, 'round')
-        self.no_none(u, 'round')
-        self.no_none(mode, 'round')
         x = self.off_list('round', x)
         return self.round_one(n, x, u, mode)
 
@@ -4257,7 +4426,10 @@ class Engine:
     def c_add_business(self, n, env, ctx):
         d = self.ev(n.args[0], env, ctx)
         k = self.ev(n.args[1], env, ctx)
-        h = self.hole_args([d, k])
+
+        def zero():
+            return refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (fmt(d), _ntxt(n.args[2])))
+        h = self.known_first([d, k], [self.ck_day('add_business'), self.ck_int(zero=zero)])
         if h:
             return h
         d = one_day(d)
@@ -4317,7 +4489,7 @@ class Engine:
         """the n-th last business day of period p (L §4.2)"""
         p = self.ev(n.args[0], env, ctx)
         k = self.ev(n.args[1], env, ctx)
-        h = self.hole_args([p, k])
+        h = self.known_first([p, k], [self.ck_period(n.name), self.ck_int(1, n.name)])
         if h:
             return h
         p = self.period_arg(p, n.name)
@@ -4346,7 +4518,12 @@ class Engine:
         p = self.ev(n.args[0], env, ctx)
         e = self.ev(n.args[1], env, ctx)
         roll = self.ev(n.args[2], env, ctx)
-        h = self.hole_args([p, e, roll])
+
+        def roll_ck(r):
+            self.no_none(r, 'schedule')
+            if not isinstance(r, Code) or r.word not in ('unadjusted', 'following', 'preceding', 'modified_following'):
+                raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % fmt(r))
+        h = self.known_first([p, e, roll], [self.ck_period('schedule'), self.ck_int(), roll_ck])
         if h:
             return h
         p = self.period_arg(p, 'schedule')
@@ -4437,6 +4614,14 @@ class Engine:
         tn.value = Hole([(val[1], self.origin(info, keys))]) if isinstance(val, tuple) and val[0] == 'hole' else val
         self.trace_stack[-1].children.append(('node', tn))
 
+
+
+def _known_zero(v):
+    """A sum term known to be 0 (rulings 17 A)."""
+    q = getattr(v, 'q', None)
+    if q is None:
+        q = getattr(v, 'v', None)
+    return not isinstance(v, (Hole, bool)) and q is not None and q == 0
 
 
 def range_is_literal(d):

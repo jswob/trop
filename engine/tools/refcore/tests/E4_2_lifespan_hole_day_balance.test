@@ -1,0 +1,51 @@
+# tally 2.3.1 R1, #248 face (b): the same for a `?` day (s_end the hole; s_p60, pinned after the end, refused).
+# Before: s_end RUN-LIFESPAN.
+=== life_day.tally
+model life
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+place world: outside lives 1900-01-01..
+input out_amt: money PLN
+input out_day: date
+
+move empty: transfers
+  on out_day
+  leg cash from spare to konto amount out_amt
+
+ask s_may: bal(spare, 2026-05-31)
+ask s_end: bal(spare, 2026-06-30)
+ask k_end: bal(konto, 2026-06-30)
+ask k_jul: bal(konto, 2026-07-31)
+ask s_p100: bal(spare, 2026-06-30) with out_day = 2026-06-30
+ask s_p60: bal(spare, 2026-06-30) with out_day = 2026-07-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  out_amt = 100.00 PLN "s"
+  out_day = ?"which day was it moved?" "s"
+=== expect
+k_end: ?"which day was it moved?" (out_day)
+  cut 2026-06-30
+k_jul: ?"which day was it moved?" (out_day)
+  cut 2026-06-30
+s_end: ?"which day was it moved?" (out_day)
+  cut 2026-06-30
+s_may: ?"which day was it moved?" (out_day)
+  cut 2026-06-30
+s_p100: 0.00 PLN
+  pinned: out_day = 2026-06-30
+  cut 2026-06-30
+s_p60: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 100.00 PLN
+  pinned: out_day = 2026-07-01
+  cut 2026-06-30

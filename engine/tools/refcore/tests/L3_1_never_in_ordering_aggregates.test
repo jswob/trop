@@ -1,0 +1,50 @@
+# tally 2.3.1 S9 (L §3.1 `never`: ordering against it is allowed, `min`, `max`, `argmin` and `argmax`
+# included; arithmetic is refused): min(never, d) is d (m1), max never (m2), and so over a binding (m3 to m6);
+# add_days refuses it (m8). Before: m1 to m6 RUN-DOMAIN `never and <d> compared`.
+=== never.tally
+model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+=== expect
+m1: 2026-05-01
+  cut 2026-06-30
+m2: never
+  cut 2026-06-30
+m3: 2026-03-01
+  cut 2026-06-30
+m4: never
+  cut 2026-06-30
+m5: a
+  cut 2026-06-30
+m6: b
+  cut 2026-06-30
+m7: true
+  cut 2026-06-30
+m8: refused: RUN-NONE never in add_days
+  cut 2026-06-30

@@ -1,0 +1,9 @@
+scenario mv1 over s2
+  tally 2
+  from 2026-03-06
+
+version w1
+  cite s
+  governs 2026-03-06..
+  known 2026-03-06
+  replace d1 = 2026-05-07 "what if"

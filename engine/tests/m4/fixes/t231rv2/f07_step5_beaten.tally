@@ -1,0 +1,23 @@
+model f07
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+source s "probe"
+input ch: bool
+input v: int
+def d1: int
+  rule a beats u = v
+  rule b beats a = v
+  rule c = v
+  rule u = v when ch
+ask q1: d1
+ask t1: d1 with ch = true
+ask f1: d1 with ch = false
+ask e1: explain d1
+version x
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  v = 1 "s"
