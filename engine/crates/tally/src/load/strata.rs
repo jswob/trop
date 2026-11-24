@@ -734,19 +734,17 @@ fn reached_link(m: &Reality, graph: &Graph, id: &str) -> Option<String> {
             }
         }
     }
-    named
-        .into_iter()
-        .find(|d| {
-            m.moves.get(d).is_some_and(|mv| {
-                mv.decision
-                    && mv
-                        .decl
-                        .when
-                        .as_ref()
-                        .is_some_and(|w| reads_running(m, graph, w))
-            })
-        })
-        .map(str::to_owned)
+    for d in named {
+        let Some(mv) = m.moves.get(d).filter(|mv| mv.decision) else {
+            continue;
+        };
+        if let Some(when) = &mv.decl.when
+            && reads_running(m, graph, when)
+        {
+            return Some(d.to_owned());
+        }
+    }
+    None
 }
 
 /// Whether expression `e`, a decision's `when`, reads running state: a `bal(x)` with no day,
