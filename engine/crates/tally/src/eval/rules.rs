@@ -508,7 +508,8 @@ impl Engine {
             .filter(|l| !beaten_by_any(def, &applicable, *l))
             .collect();
         let law_text = ctx.law.map_or_else(|| "no law date".to_owned(), Day::text);
-        if let [first, second, ..] = cands.as_slice() {
+        let relevant = changes_outcome(def, (&applicable, &cands), &unknown);
+        if let ([first, second, ..], None) = (cands.as_slice(), &relevant) {
             self.narrow_to_day(ctx.law);
             return Err(refuse(
                 Run::Conflict,
@@ -520,15 +521,7 @@ impl Engine {
             ));
         }
         self.trace_candidates(def, node, &applicable, &cands);
-        let mut relevant: Vec<Option<&Hole>> = Vec::new();
-        for (at, hole) in &unknown {
-            let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
-            let beaten_by_cand = cands.iter().any(|c| beats(def, *c, *at));
-            if beats_cand || !beaten_by_cand || cands.is_empty() {
-                relevant.push(Some(hole));
-            }
-        }
-        if let Some(hole) = spread(&relevant) {
+        if let Some(hole) = relevant {
             if let Some(first) = cands.first() {
                 self.trace_state(node, label_of(def, *first), RuleState::Candidate);
             }
@@ -817,6 +810,35 @@ fn beats(def: &DefInfo, a: InForce, b: InForce) -> bool {
     version.rule.beats.iter().any(|x| x == target)
 }
 
+/// The hole of the rules among `unknown`, each a rule of unknown applicability with its
+/// `when`'s hole, that could change the outcome of the choice whose applicable rules are
+/// `applicable` and candidates `cands`: one that would beat a candidate, be a candidate beside
+/// the winner, or be the only rule left; beside two or more candidates, one whose applying
+/// would leave fewer than two, so that the conflict depends on it (refcore's `eval_rules`);
+/// none where no such rule is. L §5.11 steps 5 and 6.
+fn changes_outcome(
+    def: &DefInfo,
+    (applicable, cands): (&[InForce], &[InForce]),
+    unknown: &[(InForce, Hole)],
+) -> Option<Hole> {
+    let mut relevant = Vec::new();
+    for (at, hole) in unknown {
+        let changes = if let [_, _, ..] = cands {
+            let kept = cands.iter().filter(|c| !beats(def, *at, **c)).count();
+            let joins = usize::from(!beaten_by_any(def, applicable, *at));
+            kept.checked_add(joins).is_some_and(|left| left < 2)
+        } else {
+            let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
+            let beaten_by_cand = cands.iter().any(|c| beats(def, *c, *at));
+            beats_cand || !beaten_by_cand || cands.is_empty()
+        };
+        if changes {
+            relevant.push(Some(hole));
+        }
+    }
+    spread(&relevant)
+}
+
 /// Whether a rule other than `x` among `rules` beats `x`.
 fn beaten_by_any(def: &DefInfo, rules: &[InForce], x: InForce) -> bool {
     rules.iter().any(|o| *o != x && beats(def, *o, x))
@@ -999,4 +1021,82 @@ fn bad_law_date(m: &Reality, def: &DefInfo, v: &Value) -> Result<Stop, Stop> {
             v.text(m).map_err(num_stop)?
         ),
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// Two applicable rules no applicable rule beats, and a rule whose `when` is a hole that
+    /// would beat both (`d1`) or only one (`d2`).
+    const UNKNOWN_BEATS: &str = r#"model unknown_beats
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+input ch: bool
+
+input ct: bool
+
+input va: money PLN
+
+input vb: money PLN
+
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule top beats a, base = vt when ch
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+"#;
+
+    #[test]
+    fn an_unknown_rule_that_would_end_a_conflict_makes_the_def_its_hole() {
+        // L §5.11 step 5 (tally 2.3.1, N256.3): `top` applying would leave it the one
+        // candidate, so d1 is its hole; `mid` applying leaves a and mid in conflict, so d2
+        // is refused either way
+        let given = vec![Given {
+            path: "unknown_beats.tally".to_owned(),
+            bytes: Some(UNKNOWN_BEATS.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with('q'))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "q1: ?\"does it apply?\" (ch)",
+                "q2: refused: RUN-CONFLICT rules a and base both win for d2 on 2026-03-01"
+            ],
+            "the hole where the unknown rule decides the conflict"
+        );
+    }
 }
