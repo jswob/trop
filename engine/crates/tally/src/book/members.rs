@@ -729,10 +729,14 @@ impl Engine {
     /// `amount`, `day`), an attribute; an adjustment's `adjusts` and `change` (refcore's
     /// `mv_field`). L §5.14, §5.14.3, §5.19, §8.4.
     ///
+    /// A field read of a move's instance that doesn't exist, `.day` included, is refused
+    /// (L §5.14 An instance's existence is a cell; tally 2.3.1 R6, C-2).
+    ///
     /// # Errors
     ///
-    /// `RUN-RECORD` for a movement the cut doesn't see; the movement's refusal; a refused
-    /// leg; `LOAD-FIELD` for a field it lacks.
+    /// `RUN-NONE` for a move's instance that doesn't exist; `RUN-RECORD` for another movement
+    /// the cut doesn't see; the movement's refusal; a refused leg; `LOAD-FIELD` for a field it
+    /// lacks.
     pub(crate) fn mv_field(
         &mut self,
         m: &Reality,
@@ -741,6 +745,17 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let Some(src) = self.mv_record(m, v, ctx)? else {
+            let instance = match &v.src {
+                MvSrc::Inst(..) => true,
+                MvSrc::Missing => {
+                    let id = v.id.split_once('[').map_or(v.id.as_str(), |(n, _)| n);
+                    m.moves.get(id).is_some()
+                }
+                MvSrc::Obs | MvSrc::Adj { .. } | MvSrc::Kind(_) | MvSrc::Pad => false,
+            };
+            if instance {
+                return Err(not_there(&v.id));
+            }
             return Err(Stop::Refused(Refusal::new(
                 Code::Run(Run::Record),
                 format!("{} doesn't exist", v.id),
@@ -748,6 +763,14 @@ impl Engine {
         };
         let kind = src.kind(m)?;
         let is_leg = m.kind_legs(&kind).iter().any(|(n, _, _)| n == name);
+        // a leg's read of it is `leg_field`'s, which a later version may make exist
+        if !is_leg
+            && let Moving::Plan(i) = &src
+            && (i.exists == Exists::No || i.status == Status::None)
+            && !self.made_to_exist(m, i, ctx)?
+        {
+            return Err(not_there(src.id()));
+        }
         match (&src, name) {
             // an adjustment's identity, its `day` and `adjusts`, carries none of its holes and
             // never its refusal, so a binding's `where` reading `a.adjusts` or `a.day` decides;
@@ -1148,10 +1171,7 @@ impl Engine {
             if let Some(made) = self.made_to_exist_leg(m, i, name, ctx)? {
                 return Ok(made);
             }
-            return Err(Stop::Refused(Refusal::new(
-                Code::Run(Run::None),
-                format!("{} doesn't exist: a field read of it", src.id()),
-            )));
+            return Err(not_there(src.id()));
         }
         if let Some(h) = body_hole(src) {
             return Ok(Value::Hole(h));
@@ -1190,6 +1210,25 @@ impl Engine {
             Ok(_) | Err(Stop::Refused(_)) => Ok(()),
             Err(stop) => Err(stop),
         }
+    }
+
+    /// Whether a later version made plan instance `i`, which didn't exist at its booking cut,
+    /// exist: one of the cut's adjustments of it, of any leg, whose step made it exist
+    /// (refcore's `made_to_exist_leg`). E §5 steps 1 and 3, L §5.14.3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::adjust_move`].
+    fn made_to_exist(&mut self, m: &Reality, i: &Inst, ctx: Ctx) -> Result<bool, Stop> {
+        let mv = m
+            .moves
+            .get(&i.move_id)
+            .ok_or_else(|| invariant("an instance of a move load didn't build"))?;
+        if mv.decision {
+            return Ok(false);
+        }
+        let adjustments = self.adjust_move(m, mv, ctx.cut)?;
+        Ok(adjustments.iter().any(|a| a.inst_id == i.id && a.made))
     }
 
     /// Leg `name` of plan instance `i`, which didn't exist at its booking cut, as a later
@@ -1616,6 +1655,15 @@ fn in_order(movements: Vec<Moving>) -> Result<Vec<Moving>, Stop> {
     }
     keyed.sort_by(|a, b| a.0.cmp(&b.0));
     Ok(keyed.into_iter().map(|(_, mv)| mv).collect())
+}
+
+/// The refusal of a field read of move instance `id`, which doesn't exist (L §5.14 An
+/// instance's existence is a cell, §8.4 `RUN-NONE`; tally 2.3.1 R6, C-2).
+fn not_there(id: &str) -> Stop {
+    Stop::Refused(Refusal::new(
+        Code::Run(Run::None),
+        format!("{id} doesn't exist: a field read of it"),
+    ))
 }
 
 #[cfg(test)]
@@ -2085,6 +2133,80 @@ ask q1: pay[k1].cash
                     "  cut 2026-04-20"
                 ],
                 "{day}: booked after it"
+            );
+        }
+    }
+
+    /// A monthly spend skipped in February by its `when`, and in March by a `none` day: DAY
+    /// is February's.
+    const GONE: &str = r#"model gone
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input dd[m in month]: date
+
+input skip_m: month
+
+input amt: money PLN
+
+move spend[m in month]: transfers
+  on dd[m]
+  when m != skip_m
+  leg cash from konto to shop amount amt
+
+ask d2: spend[2026-02].day
+
+ask a2: spend[2026-02].cash.amount
+
+ask d3: spend[2026-03].day
+
+ask d4: spend[2026-04].day
+
+ask isn: spend[2026-02] == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  skip_m = 2026-02 "s"
+  amt = 10.00 PLN "s"
+  dd[2026-01] = 2026-01-20 "s"
+  dd[2026-02] = DAY "s"
+  dd[2026-03] = none "s"
+  dd[2026-04] = 2026-04-20 "s"
+  dd[2026-05] = 2026-05-20 "s"
+"#;
+
+    #[test]
+    fn a_field_read_of_an_instance_that_doesnt_exist_is_refused_its_day_too() {
+        // L §5.14 An instance's existence is a cell (tally 2.3.1 R6, C-2): a false `when` and
+        // a `none` day leave no instance; any field read of it is RUN-NONE, and the missing
+        // instance equals nothing
+        let gone =
+            |id: &str| format!("refused: RUN-NONE spend[{id}] doesn't exist: a field read of it");
+        for (ask, want) in [
+            ("d2", format!("d2: {}", gone("2026-02"))),
+            ("a2", format!("a2: {}", gone("2026-02"))),
+            ("d3", format!("d3: {}", gone("2026-03"))),
+            ("d4", "d4: 2026-04-20".to_owned()),
+            ("isn", "isn: false".to_owned()),
+        ] {
+            assert_eq!(
+                lines_of(GONE, "2026-02-20", ask),
+                [want, "  cut 2026-04-20".to_owned()],
+                "{ask}"
             );
         }
     }
