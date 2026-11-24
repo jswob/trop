@@ -319,7 +319,7 @@ impl Engine {
         for x in read.into_iter().flatten() {
             match self.existence_read(m, x, &tuple.env, ctx)? {
                 Existence::Ends => return Ok(()),
-                Existence::Read => {}
+                Existence::Read | Existence::Hole => {}
                 Existence::Refused(r) => {
                     bad.get_or_insert(r);
                 }
@@ -441,27 +441,33 @@ impl Engine {
             Err(stop) => return Err(stop),
         };
         let lctx = tctx.at_law(law);
-        match self.existence_read(m, &mv.decl.on, &tuple.env, lctx)? {
+        let hole_day = match self.existence_read(m, &mv.decl.on, &tuple.env, lctx)? {
             Existence::Ends => return Ok(LinkVerdict::Missing),
-            Existence::Read => {}
+            Existence::Read => false,
+            Existence::Hole => true,
             Existence::Refused(r) => {
                 bad.get_or_insert(r);
+                false
             }
-        }
-        let Some(when) = &mv.decl.when else {
-            return Ok(link_verdict(bad, tuple.env));
         };
-        // a decision whose existence load marks, its `when` reading a running read at any day
-        // or a projection, is judged at its walk point: taken as existing until then (E §3.1
-        // step 7, §4.2 step 3; tally 2.3.1 C-9, rulings 19 D)
-        if mv.decision && m.graph.marked.contains(&mv.id) && self.plans_making == 0 {
+        // a decision's existence is judged at its walk point, whatever its `when` reads, and
+        // with no `when`: taken as existing until then (E §4.2 step 3; tally 2.3.1 C-9,
+        // statement E, pick P17)
+        if mv.decision && self.plans_making == 0 {
             let id = crate::book::inst_id(&mv.id, keys);
             self.links_at_point.insert((cut, id));
             return Ok(link_verdict(bad, tuple.env));
         }
+        let Some(when) = &mv.decl.when else {
+            return Ok(link_verdict(bad, tuple.env));
+        };
         match self.existence_read(m, when, &tuple.env, lctx) {
+            // a day that is a hole is every span whatever the `when` says, its booking cut a
+            // hole with it: a false `when` doesn't end a cell an earlier read refused (L §5.14
+            // l.1361; tally 2.3.1 statement E, G2's rest review B1)
+            Ok(Existence::Ends) if hole_day && bad.is_some() => Ok(link_verdict(bad, tuple.env)),
             Ok(Existence::Ends) => Ok(LinkVerdict::Missing),
-            Ok(Existence::Read) => Ok(link_verdict(bad, tuple.env)),
+            Ok(Existence::Read | Existence::Hole) => Ok(link_verdict(bad, tuple.env)),
             Ok(Existence::Refused(r)) => Ok(LinkVerdict::Refused(bad.unwrap_or(r))),
             // a decision's `when` that reads running state is read at its walk point, where its
             // link is judged (`book_run`): taken as existing until then; but a plan whose
@@ -496,6 +502,7 @@ impl Engine {
     ) -> Result<Existence, Stop> {
         match self.ev(m, x, env, ctx) {
             Ok(Value::None | Value::Never | Value::Bool(false)) => Ok(Existence::Ends),
+            Ok(Value::Hole(_) | Value::Window(_)) => Ok(Existence::Hole),
             Ok(_) => Ok(Existence::Read),
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {
                 Ok(Existence::Refused(r))
@@ -755,6 +762,9 @@ enum Existence {
     Ends,
     /// Any other value: the read goes on.
     Read,
+    /// A hole or a window: a day that is a hole makes the booking cut a hole with it, so no
+    /// later read ends the cell (L §5.14 l.1361).
+    Hole,
     /// A run-time refusal: the instance's, unless a later read ends it.
     Refused(Refusal),
 }

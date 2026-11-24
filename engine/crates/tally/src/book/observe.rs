@@ -282,8 +282,13 @@ impl Engine {
     ) -> Result<Vec<String>, Stop> {
         let key = (cut, tid.to_owned());
         // a link judged at a decision's walk point, read inside a plan's list: a plan reaching
-        // a running read, whichever read judged it first (E §3.1 step 7; tally 2.3.1 C-9)
-        if self.plans_making > 0 && self.links_at_point.contains(&key) {
+        // a running read, whichever read judged it first, where load marks the decision's
+        // existence as reading one (E §3.1 step 7; tally 2.3.1 C-9, statement E)
+        let marked = tid.split_once('[').map_or(tid, |(name, _)| name);
+        if self.plans_making > 0
+            && self.links_at_point.contains(&key)
+            && m.graph.marked.contains(marked)
+        {
             return Err(Stop::Refused(Refusal::new(
                 Code::Load(crate::base::Load::Reads),
                 format!("the link to {tid} reads a running read outside a decision"),
