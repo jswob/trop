@@ -232,7 +232,8 @@ impl Checker {
     }
 
     /// A period literal compared with a key of a period index of its granularity is that
-    /// index's key (refcore's `compare`, its literal arm). L §2.5, §7.1.
+    /// index's key, bracketed or as both arms of an `if`, each arm its key or `LOAD-KEY`
+    /// (refcore's `compare`, its literal arm; G3's review B4). L §2.5 Keys, §7.1.
     fn period_literal(
         &mut self,
         m: &Reality,
@@ -247,30 +248,38 @@ impl Checker {
         let Some(index) = m.indexes.get(ix) else {
             return Ok(false);
         };
-        let Some(lit) = &side.lit else {
+        let Some(lits) = &side.arms else {
             return Ok(false);
         };
-        let gran = match lit {
-            Lit::Num(_) if matches!(t, Ty::Year4) => PeriodKind::Year,
-            Lit::Month(..) if matches!(t, Ty::Period(_)) => PeriodKind::Month,
-            Lit::Quarter(..) if matches!(t, Ty::Period(_)) => PeriodKind::Quarter,
-            Lit::Num(_)
-            | Lit::Month(..)
-            | Lit::Quarter(..)
-            | Lit::Day(_)
-            | Lit::MonthDay(..)
-            | Lit::Key(_)
-            | Lit::Cur(_)
-            | Lit::Bool(_)
-            | Lit::Inf { .. }
-            | Lit::Nominal(_)
-            | Lit::Name(_) => return Ok(false),
-        };
+        let mut shared: Option<PeriodKind> = None;
+        for lit in lits {
+            let gran = match lit {
+                Lit::Num(_) if matches!(t, Ty::Year4) => PeriodKind::Year,
+                Lit::Month(..) if matches!(t, Ty::Period(_)) => PeriodKind::Month,
+                Lit::Quarter(..) if matches!(t, Ty::Period(_)) => PeriodKind::Quarter,
+                Lit::Num(_)
+                | Lit::Month(..)
+                | Lit::Quarter(..)
+                | Lit::Day(_)
+                | Lit::MonthDay(..)
+                | Lit::Key(_)
+                | Lit::Cur(_)
+                | Lit::Bool(_)
+                | Lit::Inf { .. }
+                | Lit::Nominal(_)
+                | Lit::Name(_) => return Ok(false),
+            };
+            if shared.is_some_and(|before| before != gran) {
+                // arms of two granularities are no one period's key
+                return Ok(false);
+            }
+            shared = Some(gran);
+        }
         let periodic = matches!(
             index.period,
             Some(PeriodKind::Year | PeriodKind::Quarter | PeriodKind::Month)
         );
-        if !periodic || index.period != Some(gran) {
+        if !periodic || shared.is_none() || index.period != shared {
             return Ok(false);
         }
         if let Some(entry) = side.year4 {
@@ -282,7 +291,9 @@ impl Checker {
                 y.keyed = true;
             }
         }
-        super::keyed::resolve_lit(m, scope, &lit_expr(lit), &Domain::Index(ix.clone()))?;
+        for lit in lits {
+            super::keyed::resolve_lit(m, scope, &lit_expr(lit), &Domain::Index(ix.clone()))?;
+        }
         Ok(true)
     }
 
@@ -636,5 +647,76 @@ version ver
             ),
             "a tuple of other key types"
         );
+    }
+
+    /// Keys of a quarter grid of months and of a year grid by 3, and a read over the first.
+    const PERIODS: &str = r#"model periods
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030 by 3
+input qk: key qs
+input yk: key ys
+input b: bool
+input vv[q in qs]: int
+
+ask n1: check qk == (if b then 2026-10 else 2026-07)
+ask n2: check yk == (2029)
+ask n3: vv[if b then 2026-07 else 2026-10]
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  qk = 2026-04 "s"
+  yk = 2026 "s"
+  b = true "s"
+  vv[2026-07] = 3 "s"
+  vv[2026-10] = 4 "s"
+"#;
+
+    #[test]
+    fn a_period_literal_reaches_through_brackets_and_an_ifs_arms() {
+        // L §2.5 Keys (G3's review B4): each is the grid's key, so `check` differs by keys
+        assert_eq!(
+            heads(PERIODS),
+            [
+                "n1: differs: qk = 2026-04, (if b then 2026-10 else 2026-07) = 2026-10, \
+                 difference -2",
+                "n2: differs: yk = 2026, (2029) = 2029, difference -1",
+                "n3: 3",
+            ],
+            "the steps of each grid"
+        );
+    }
+
+    #[test]
+    fn an_off_grid_arm_or_bracketed_year_is_no_key() {
+        // L §2.5 Keys (G3's review B4, note 7): an arm off the grid is a literal of no key
+        for (ask, refusal) in [
+            (
+                "ask n3: vv[if b then 2026-08 else 2026-10]",
+                "refused: LOAD-KEY 2026-08 is not a key of qs (tuple.tally:17)",
+            ),
+            (
+                "ask n3: check qk == (if b then 2026-10 else 2026-08)",
+                "refused: LOAD-KEY 2026-08 is not a key of qs (tuple.tally:17)",
+            ),
+            (
+                "ask n3: check yk == (2028)",
+                "refused: LOAD-KEY 2028 is not a key of ys (tuple.tally:17)",
+            ),
+        ] {
+            let text = PERIODS.replace("ask n3: vv[if b then 2026-07 else 2026-10]", ask);
+            assert_eq!(
+                heads(&text).first().map(String::as_str),
+                Some(refusal),
+                "{ask}"
+            );
+        }
     }
 }

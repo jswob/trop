@@ -354,6 +354,9 @@ impl Checker {
                 ));
             }
         }
+        if matches!(kn, Expr::If(..)) {
+            arm_keys(m, scope, kn, domain)?;
+        }
         if let Domain::Index(ix) = domain
             && let Some(pk) = m.indexes.get(ix).and_then(|index| index.period)
         {
@@ -380,16 +383,7 @@ impl Checker {
         if is_keylit_node(m, scope, kn) || range_number {
             match domain {
                 Domain::Index(_) | Domain::Kind(_) | Domain::Axis(_) => {
-                    let dated = matches!(
-                        kn,
-                        Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
-                    );
-                    let year = matches!(kn, Expr::Lit(Lit::Num(n)) if n.four)
-                        && matches!(domain, Domain::Index(ix) if m.indexes.get(ix).is_some_and(|i| i.period.is_some()));
-                    if dated || year {
-                        lit_rule(scope, Figure::Date, "", None)?;
-                    }
-                    return resolve_lit(m, scope, kn, domain).map(Some);
+                    return literal_key(m, scope, kn, domain).map(Some);
                 }
                 Domain::List(_) => return resolve_lit(m, scope, kn, domain).map(Some),
                 Domain::Range => range_lit = true,
@@ -800,6 +794,59 @@ pub(super) fn resolve_lit(
     };
     let (file, line) = scope.file_line();
     resolve_key(m, &key, domain, &file, line)
+}
+
+/// A key literal at a position of an index, a kind or an axis: a day, month or quarter, or a
+/// four-digit figure at a period index, under the date figure's literal rule; then its key
+/// there (refcore's `key_pos`, its literal arm). L §2.1, §2.5.
+fn literal_key(m: &Reality, scope: &Scope, kn: &Expr, domain: &Domain) -> Result<KeyVal, Stop> {
+    let dated = matches!(
+        kn,
+        Expr::Lit(Lit::Day(_) | Lit::Month(..) | Lit::Quarter(..))
+    );
+    let year = matches!(kn, Expr::Lit(Lit::Num(n)) if n.four)
+        && matches!(domain, Domain::Index(ix) if m.indexes.get(ix).is_some_and(|i| i.period.is_some()));
+    if dated || year {
+        lit_rule(scope, Figure::Date, "", None)?;
+    }
+    resolve_lit(m, scope, kn, domain)
+}
+
+/// The key literals an `if` at a key position reaches through brackets and into both its
+/// branches, which stand where the whole stands, each resolved as a bare one there, in the
+/// text's order: off the index's keys, `LOAD-KEY` (refcore's `key_pos`, its `reach_leaves`
+/// loop). A literal of another granularity at a time index, or a four-digit figure at one
+/// not of years, reads the key whose period holds it, as the bare one does, and is left to
+/// the whole. L §2.5 Keys, §4.6.
+fn arm_keys(m: &Reality, scope: &Scope, kn: &Expr, domain: &Domain) -> Result<(), Stop> {
+    let period = match domain {
+        Domain::Index(ix) => m.indexes.get(ix).and_then(|index| index.period),
+        Domain::Kind(_) | Domain::Axis(_) => None,
+        Domain::List(_) | Domain::Range => return Ok(()),
+    };
+    let mut work = vec![kn];
+    while let Some(node) = work.pop() {
+        if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.extend([no, yes]);
+            continue;
+        }
+        if let Expr::Paren(inner) = node {
+            work.push(inner);
+            continue;
+        }
+        if let Some(pk) = period {
+            let other = granularity(node).is_some_and(|g| g != pk);
+            let year = matches!(node, Expr::Lit(Lit::Num(n)) if n.four) && pk != PeriodKind::Year;
+            if other || year {
+                continue;
+            }
+        }
+        if is_keylit_node(m, scope, node) {
+            literal_key(m, scope, node, domain)?;
+        }
+    }
+    Ok(())
 }
 
 /// How a key stands at its key position: as a key there, or as a period read at a key of a
