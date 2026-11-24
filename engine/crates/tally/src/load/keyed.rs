@@ -32,6 +32,32 @@ use crate::syntax::{AggFn, Expr, Key, Lit, Postfix, SiteKey, Stop};
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
 
+/// Whether expression `e`, through brackets and an `if`'s arms, which stand where the whole
+/// stands, may be the tuple an `argmin`, `argmax`, `first` or `last` over several bindings
+/// returns (L §2.5 Keys, §5.11's aggregate paragraph; G3's review B2).
+fn returns_tuple(e: &Expr) -> bool {
+    let mut work = vec![e];
+    while let Some(node) = work.pop() {
+        if let Expr::Agg(agg) = node
+            && matches!(
+                agg.func,
+                AggFn::Argmin | AggFn::Argmax | AggFn::First | AggFn::Last
+            )
+            && agg.binds.len() > 1
+        {
+            return true;
+        }
+        if let Expr::Paren(inner) = node {
+            work.push(inner);
+        }
+        if let Expr::If(parts, _) = node {
+            let [_, yes, no] = parts.as_ref();
+            work.extend([yes, no]);
+        }
+    }
+    false
+}
+
 impl Checker {
     /// A read of an input or a def at keys (refcore's `read`). L §2.5, §4.6; E §3.1 step 5.
     pub(super) fn read(
@@ -142,9 +168,9 @@ impl Checker {
     }
 
     /// Whether a read's one key is the tuple `argmin`, `argmax`, `first` or `last` returns over
-    /// as many bindings as the read has positions: it stands in them, each of its keys checked
-    /// against its position (refcore's `read`, its `tupitem`; tally 2.3.1 S6, Q1.12). L §5.11's
-    /// aggregate paragraph, §2.5.
+    /// as many bindings as the read has positions, bracketed or an `if`'s arms included: it
+    /// stands in them, each of its keys checked against its position (refcore's `read`, its
+    /// `tupitem`; tally 2.3.1 S6, Q1.12, G3's review B2). L §5.11's aggregate paragraph, §2.5.
     fn tuple_keys(
         &mut self,
         m: &Reality,
@@ -153,19 +179,18 @@ impl Checker {
         binds: &[BindInfo],
         depth: u32,
     ) -> Result<bool, Stop> {
-        let [Key::Expr(one @ Expr::Agg(agg))] = keys else {
+        let [Key::Expr(one)] = keys else {
             return Ok(false);
         };
-        let returns_keys = matches!(
-            agg.func,
-            AggFn::Argmin | AggFn::Argmax | AggFn::First | AggFn::Last
-        );
-        if !returns_keys || binds.len() < 2 || agg.binds.len() != binds.len() {
+        if binds.len() < 2 || !returns_tuple(one) {
             return Ok(false);
         }
         let Ty::Tuple(items) = self.expr(m, scope, one, None, depth)? else {
             return Ok(false);
         };
+        if items.len() != binds.len() {
+            return Ok(false);
+        }
         for (item, bind) in items.iter().zip(binds) {
             self.key_conv(m, scope, item, &bind.domain, one)?;
         }

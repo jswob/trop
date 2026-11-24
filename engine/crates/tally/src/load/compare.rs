@@ -600,6 +600,28 @@ version ver
     }
 
     #[test]
+    fn a_bracketed_tuple_or_an_ifs_tuples_key_the_read() {
+        // L §2.5 Keys (G3's review B2): brackets and an `if`'s arms stand where the whole does
+        let t4 = "ask t4: v[argmin(v[k, j] for k in ks, j in js)]";
+        let bracketed = TUPLE.replace(t4, "ask t4: v[(argmin(v[k, j] for k in ks, j in js))]");
+        assert_eq!(
+            heads(&bracketed).get(3).map(String::as_str),
+            Some("t4: 3.00 PLN"),
+            "bracketed"
+        );
+        let arms = TUPLE.replace(
+            t4,
+            "ask t4: v[if true then argmin(v[k, j] for k in ks, j in js) else \
+             argmax(v[k, j] for k in ks, j in js)]",
+        );
+        assert_eq!(
+            heads(&arms).get(3).map(String::as_str),
+            Some("t4: 3.00 PLN"),
+            "an if's arms"
+        );
+    }
+
+    #[test]
     fn a_tuple_of_other_indexes_is_still_refused() {
         // only keys of the same indexes, in their order: (key ks, key js) against (js, ks)
         let text = TUPLE.replace(
