@@ -1886,6 +1886,29 @@ version jan
     }
 
     #[test]
+    fn a_binding_over_the_kind_carries_no_link_read_of_an_instance_outside_its_span() {
+        // L §8.2 l.2252 (tally 2.3.1 R2, item 6; G2's review B4): January's modelled instance
+        // and its row lie outside March's span, so March's sum over the kind lists none of
+        // January's link reads, as March's flows lists none
+        let text = FIRST
+            .replace("OK", "true assumed \"jan is a guess\" \"ok jan\"")
+            .replace(
+                "ask c:",
+                "ask sm: sum(t.cash.amount for t in transfers over 2026-03)\n\nask c:",
+            );
+        let files = [("first.tally", text.as_str())];
+        assert_eq!(
+            answer(&files, "sm"),
+            [
+                "sm: 100.00 PLN",
+                "  unfulfilled: rent[2026-03]",
+                "  cut 2026-05-20"
+            ],
+            "March's sum doesn't rest on January's link"
+        );
+    }
+
+    #[test]
     fn a_link_to_a_refused_instance_is_refused_with_it_observed_too() {
         // L §5.19 Links, §8.4 (tally 2.3.1 R2, rulings 16 Q1, G2's review B5): January's
         // `when` is refused, so its instance is refused, and the row that fulfils it with it:

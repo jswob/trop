@@ -217,7 +217,7 @@ impl Engine {
         h: Hole,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
-        let mut movements = self.movements_of(m, dom, ctx)?;
+        let mut movements = self.movements_of(m, dom, None, ctx)?;
         for x in &movements {
             // one left out by its `when` is no candidate: the pins its day took are read
             // (L §8.2; tally 2.1.8 §4, #161)
@@ -272,7 +272,7 @@ impl Engine {
         binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
-        for x in self.movements_of(m, dom, ctx)? {
+        for x in self.movements_of(m, dom, Some(sp), ctx)? {
             if let Moving::Plan(i) = &x
                 && left_out(m, i)
             {
@@ -465,10 +465,16 @@ impl Engine {
     /// one only `with uncertain`), observations and adjustments; a settlement's candidates
     /// see only the adjustments being settled (refcore's `movements_of`). L §5.19 Bindings,
     /// E §5 step 5.
+    ///
+    /// A modelled-past instance's pins and assumptions are the binding's reads only where its
+    /// day rests in the binding's span `sp`, none given for a span that is a hole (L §8.2
+    /// l.2252, "a movement dated outside the span adds nothing"; tally 2.3.1 R2, item 6; G2's
+    /// review B4).
     fn movements_of(
         &mut self,
         m: &Reality,
         (dom, id): (MvDom, &str),
+        sp: Option<&Span>,
         ctx: Ctx,
     ) -> Result<Vec<Moving>, Stop> {
         let cut = ctx.cut;
@@ -505,9 +511,12 @@ impl Engine {
                 continue;
             }
             for i in self.move_instances(m, mv, cut)?.iter() {
+                let outside =
+                    sp.is_some_and(|s| matches!(&i.day, Some(Dated::Day(d)) if !s.contains(*d)));
                 match i.status {
                     // the modelled past: the pins its day took are the binding's reads too
-                    // (L §8.2 One read set; tally 2.1.8 §4, #161)
+                    // (L §8.2 One read set; tally 2.1.8 §4, #161), where it rests in the span
+                    Status::Modelled if outside => {}
                     Status::Modelled => pins.merge(&i.coll.deciding()),
                     Status::Uncertain if !ctx.unc => {}
                     // an uncertain one unfulfilled is left out whatever its day (tally 2.3.1
