@@ -150,7 +150,9 @@ impl Loader {
             // a cycle of written orders is LOAD-ORDER, a move before itself its smallest
             // (L §5.14.2 Cycles; tally 2.3.1 S11, N245.8)
             let message = format!("{}: written orders form a cycle", cycle.join(" before "));
-            let first = cycle.first().map_or("", String::as_str);
+            let first = cycle
+                .first()
+                .ok_or_else(|| broken("a cycle of written orders with no move"))?;
             return Err(self.at_move(first, Load::Order, message));
         }
         self.composed_orders(&mut after, &mut written)?;
@@ -318,7 +320,7 @@ fn written_cycle(written: &BTreeSet<(String, String)>) -> Option<Vec<String>> {
     for (later, earlier) in written {
         before
             .entry(earlier.as_str())
-            .or_default()
+            .or_insert_with(Vec::new)
             .push(later.as_str());
     }
     // a move on the walk's path is `false`, one whose walk is done `true`
