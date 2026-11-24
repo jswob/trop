@@ -63,6 +63,7 @@ version v
 === expect fa fb fy
 fa: ?"x1, x2 and x3 are one, but leg cash differs on 2026-03-05, 2026-03-07, 2026-03-09: 100.00 PLN (x1), 100.00 PLN (x2) and 100.00 PLN (x3)" (x1, x2, x3)
   unfulfilled: x2
+  unfulfilled: x3
   cut 2026-06-10
 fb: 100.00 PLN
   unfulfilled: x1

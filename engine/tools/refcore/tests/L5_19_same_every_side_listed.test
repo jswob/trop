@@ -1,0 +1,80 @@
+# tally 2.3.1 rulings 17 B, last sentence (G1's review): a `same` group's register lists every side its line
+# names: under flows over a span holding the last day (fa: x2 and x3), and under a binding over it, which
+# meets it once (ny, sy: y1 and y2). Before: fa x2 alone, ny and sy y1 alone.
+=== p10_same_three.tally
+model p10
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place wb: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+move y1: transfers
+  on d3
+  leg cash from wb to world amount a
+move y2: transfers
+  on d1
+  leg cash from wb to world amount a
+
+ask a6: bal(wa, 2026-03-06)
+ask a8: bal(wa, 2026-03-08)
+ask a9: bal(wa, 2026-03-09)
+ask fa: flows(wa, 2026-03-06 .. 2026-03-09)
+ask fb: flows(wa, 2026-03-05 .. 2026-03-09)
+ask b4: bal(wb, 2026-03-04)
+ask b6: bal(wb, 2026-03-06)
+ask b9: bal(wb, 2026-03-09)
+ask fy: flows(wb, 2026-03)
+ask ny: count(t in transfers over 2026-03 where t.cash.from == wb)
+ask sy: sum(t.cash.amount for t in transfers over 2026-03 where t.cash.from == wb)
+ask ex: explain bal(wb, 2026-03-09)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wb] = 500.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+  same y1 = y2
+=== expect fa fb ny sy
+fa: ?"x1, x2 and x3 are one, but leg cash differs on 2026-03-05, 2026-03-07, 2026-03-09: 100.00 PLN (x1), 100.00 PLN (x2) and 100.00 PLN (x3)" (x1, x2, x3)
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
+fb: 100.00 PLN
+  unfulfilled: x1
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
+ny: 1
+  unfulfilled: y1
+  unfulfilled: y2
+  cut 2026-06-10
+sy: 100.00 PLN
+  unfulfilled: y1
+  unfulfilled: y2
+  cut 2026-06-10

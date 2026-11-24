@@ -1,0 +1,31 @@
+# tally 2.3.1 R3 (G2 fix F2, p5_b3): a pin is refused as its row would be, so `with mk = 2026-08` on a key of
+# a month range `by 3` is LOAD-KEY, as the row `mk = 2026-08` is (p6_row_mk). Before: b3 2026-08.
+=== p5_b3.tally
+model p5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ks = [k1, k2, k3]
+index ys = year 2020..2030
+index ms = month 2026-01..2026-12 by 3
+index ns = int 1..5
+input a: key ks
+input yk: key ys
+input mk: key ms
+input nk: key ns
+input y: year
+ask b3: mk with mk = 2026-08
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"
+  yk = 2021 "s"
+  mk = 2026-04 "s"
+  nk = 2 "s"
+  y = 2022 "s"
+=== expect
+refused: LOAD-KEY 2026-08 is not a key of ms (p5_b3.tally:17)

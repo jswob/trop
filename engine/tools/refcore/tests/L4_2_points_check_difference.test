@@ -1,0 +1,84 @@
+# tally 2.3.1 R5 (L §4.2 Keys and periods are points; §5.18 prints e - f where it is defined; Q2.8, Q2.13,
+# N255.2): two months, two quarters (c1, c2) differ by their periods; a key and a period value, or keys of
+# two indexes, meet as period values (c3, c4, c5); an open index's keys are no points (c6, c7: no
+# difference); two keys of a list differ by their steps (c8); dates and none, none (c9, c10). Before: c1 to c5
+# printed no difference, c6 and c7 -1.
+=== points.tally
+model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"
+=== expect
+c1: differs: m1 = 2026-03, m2 = 2026-07, difference -4
+  cut 2026-10-25
+c10: differs: kn = k3, none = none
+  cut 2026-10-25
+c2: differs: q1 = 2026-Q1, q2 = 2026-Q3, difference -2
+  cut 2026-10-25
+c3: differs: y1 = 2024, yk = 2021, difference 3
+  cut 2026-10-25
+c4: differs: mk = 2026-02, m2 = 2026-07, difference -5
+  cut 2026-10-25
+c5: differs: qk = 2026-04, m1 = 2026-03, difference 1
+  cut 2026-10-25
+c6: differs: a = r1, b = r2
+  cut 2026-10-25
+c7: differs: a = r1, r2 = r2
+  cut 2026-10-25
+c8: differs: kn = k3, k1 = k1, difference 2
+  cut 2026-10-25
+c9: differs: d1 = 2026-01-05, d2 = 2026-01-09
+  cut 2026-10-25

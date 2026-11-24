@@ -45,4 +45,5 @@ ask f: flows(wallet, 2026-03)
 === expect amt
 amt: ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10

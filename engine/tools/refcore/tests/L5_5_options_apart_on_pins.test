@@ -1,0 +1,44 @@
+# tally 2.3.1 S8, Q2.7 (L §5.5, §8.2: options give the line's result together only where the result and its
+# register are one): q1 is 5 under both options, but only ma's line pins k, so they print apart. Before:
+# q1 [mode = *] with ma's `pinned: k = 5`.
+=== axis_pins.tally
+model axis_pins
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+axis mode
+  ma "a"
+  mb "b"
+input k: int
+input j: int
+
+def d: int = if mode == ma then (k as if {k = j}) else k
+
+ask q1: d
+ask q2: d with j = 7
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  k = 5 "s"
+  j = 5 "s"
+=== expect
+q1 [mode = ma]: 5
+  pinned: k = 5
+  reading: mode = ma
+  cut 2026-10-18
+q1 [mode = mb]: 5
+  reading: mode = mb
+  cut 2026-10-18
+q2 [mode = ma]: 7
+  pinned: j = 7
+  pinned: k = 7
+  reading: mode = ma
+  cut 2026-10-18
+q2 [mode = mb]: 5
+  reading: mode = mb
+  cut 2026-10-18

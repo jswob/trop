@@ -1,0 +1,82 @@
+# tally 2.3.1 R3 (L §5.11 A pin is a row; Q2.12, Q2.14, Q2.15, N256.6): a pin whose value is a literal is a
+# row of its target, read as that row would be: a four-digit figure at a year key is that year (y1, y2, y3),
+# a bare figure on `num %/year` is 5 %/year (g1, g2: 0.05 1/year, as a row `g = 5` gives), `50 %` on a plain
+# num is 0.5 (r1, r2), a bare figure at a per-unit price takes its key's unit (f1). Before: y1 to y3 LOAD-KEY
+# (the pin of yk is year4) for the whole text; g1, g2 5 1/year; r1 50 %; f1 PLN/$u.
+=== pinrow.tally
+model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"
+=== expect
+f1: 4.5 PLN/EUR
+  pinned: fx[EUR] = 4.5 PLN/EUR
+  cut 2026-10-25
+g1: 0.05 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+g2: 0.1 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+g3: 0.05 1/year
+  pinned: g = 0.05 1/year
+  cut 2026-10-25
+p1: 5 %
+  pinned: pct = 5 %
+  cut 2026-10-25
+r1: 0.5
+  pinned: ratio = 0.5
+  cut 2026-10-25
+r2: 1
+  pinned: ratio = 0.5
+  cut 2026-10-25
+x1: -12.50 PLN
+  pinned: x = -12.50 PLN
+  cut 2026-10-25
+y1: 2025
+  pinned: yk = 2024
+  cut 2026-10-25
+y2: differs: yk = 2024, 2020 = 2020, difference 4
+  pinned: yk = 2024
+  cut 2026-10-25
+y3: 2021
+  pinned: yk = 2021
+  cut 2026-10-25
