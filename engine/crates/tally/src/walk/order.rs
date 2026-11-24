@@ -779,6 +779,9 @@ impl Engine {
             run.inst.status = Status::None;
             let inst = run.inst.clone();
             walk.record(run);
+            if main {
+                self.unlink_run(id, &inst, cut)?;
+            }
             self.book_own_obs(m, id, &inst, key)?;
             return Ok(ix);
         }
@@ -842,6 +845,25 @@ impl Engine {
         }
         self.book_own_obs(m, id, &inst, key)?;
         Ok(ix)
+    }
+
+    /// The links to decision run `inst` of main walk `id`, judged at its point, where its
+    /// `when` says it doesn't exist: each observation that fulfils it refused, in the walk too,
+    /// so its legs book refused at that point (E §4.2 step 3; L §5.19 Links; tally 2.3.1 R6,
+    /// C-9).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn unlink_run(&mut self, id: usize, inst: &Inst, cut: Day) -> Result<(), Stop> {
+        let refused = self.unlink_at_point(&inst.id, &inst.obs, cut);
+        let walk = self.walk_mut(id)?;
+        for (obs, err) in refused {
+            for wo in walk.obs.iter_mut().filter(|wo| wo.obs.id == obs) {
+                wo.err = Some(err.clone());
+            }
+        }
+        Ok(())
     }
 
     /// Puts walk `id`'s running reads back as decision run `run` read them at its point, its
@@ -1383,5 +1405,114 @@ version openings
             ],
             "box and bin refused from 20 February, konto standing"
         );
+    }
+
+    /// "Pay when the balance drops" (L §5.14.1), a February bank row fulfilling its instance
+    /// on its own day: the critic's `dec_link.tally`, its limit written in for `LIM`.
+    const DEC_LINK: &str = r#"model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place save: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input lim: money PLN
+
+input amt: money PLN
+
+input d5: int
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+
+ask b: bal(konto, 2026-03-31)
+
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = LIM "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+"#;
+
+    /// The value lines of `asks` run in that order on `DEC_LINK` with limit `lim`.
+    fn dec_link(lim: &str, asks: &[&str]) -> Vec<String> {
+        let given = vec![Given {
+            path: "dec_link.tally".to_owned(),
+            bytes: Some(DEC_LINK.replace("LIM", lim).into_bytes()),
+        }];
+        let asks = asks.iter().map(|a| (*a).to_owned()).collect();
+        let answer = run(Files::new(given), &Request::new(Asks::Named(asks))).expect("an answer");
+        answer
+            .lines()
+            .iter()
+            .filter(|line| !line.starts_with(' ') && !line.starts_with("warning"))
+            .cloned()
+            .collect()
+    }
+
+    #[test]
+    fn a_link_to_a_decision_is_judged_at_its_walk_point_whatever_reads_it_first() {
+        // L §5.14 An instance's existence is a cell, §5.19 Links; E §4.2 step 3 (tally 2.3.1
+        // R6, C-9): the `when` reads the running balance, so the link is judged at the
+        // instance's point, never refused at load; with the limit at 600.00 PLN it runs and
+        // the row stands for it, at 500.00 PLN it doesn't, and the row is refused
+        for order in [
+            ["loose", "b", "f"],
+            ["b", "f", "loose"],
+            ["f", "loose", "b"],
+        ] {
+            let mut on = dec_link("600.00 PLN", &order);
+            on.sort();
+            assert_eq!(
+                on,
+                ["b: 870.00 PLN", "f: 400.00 PLN", "loose: 30.00 PLN"],
+                "{order:?}"
+            );
+            let refused = "refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], \
+                           which doesn't exist or doesn't touch its places";
+            let mut off = dec_link("500.00 PLN", &order);
+            off.sort();
+            assert_eq!(
+                off,
+                [
+                    format!("b: {refused}"),
+                    format!("f: {refused}"),
+                    format!("loose: {refused}")
+                ],
+                "{order:?}"
+            );
+        }
     }
 }

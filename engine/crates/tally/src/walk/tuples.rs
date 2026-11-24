@@ -24,7 +24,7 @@
 use super::instance::{Dated, Exists, Inst, join};
 use super::narrow::KeptTuple;
 use super::plan::{day_dated, invariant, refuse};
-use crate::base::{Code, Refusal, Run};
+use crate::base::{Code, Load, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Kept, Member, reads_var};
 use crate::hole::Hole;
 use crate::model::{Domain, KeyVal, MoveInfo, MvRef, Node, NodeKind, Reality, Value};
@@ -350,8 +350,8 @@ impl Engine {
     /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
     /// when no tuple has those keys or its `when` is false; a `when` that is a hole or refused,
     /// or a refused `where`, is taken as existing, its link judged where its instance is
-    /// (refcore's `link_tuple`).
-    /// L §5.19 Links, E §4.1 step 2.
+    /// (refcore's `link_tuple`); a decision's whose `when` reads running state is judged at
+    /// its walk point. L §5.19 Links, E §4.1 step 2, §4.2 step 3 (tally 2.3.1 R6, C-9).
     ///
     /// # Errors
     ///
@@ -384,6 +384,18 @@ impl Engine {
             match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
                 Ok(false) => return Ok(None),
                 Ok(true) => {}
+                // a decision's `when` that reads running state is read at its walk point, where
+                // its link is judged (`book_run`): taken as existing until then; but a plan
+                // whose instances are being made reaches a running read through it, refused
+                // (E §4.2 step 3, §3.1 step 7; tally 2.3.1 R6, C-9, P43's `c4_when`)
+                Err(Stop::Refused(r))
+                    if mv.decision
+                        && r.code() == Code::Load(Load::Reads)
+                        && self.plans_making == 0 =>
+                {
+                    let id = crate::book::inst_id(&mv.id, keys);
+                    self.links_at_point.insert((cut, id));
+                }
                 // a cycle is never taken as existing: the link would stand unjudged
                 Err(Stop::Refused(r))
                     if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}

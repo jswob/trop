@@ -462,7 +462,9 @@ impl Engine {
         let tctx = self.timeline_ctx(None, cut);
         // what it books stays with the instance it keeps, never a list's still being made
         let booked = self.booked_open.len();
+        self.making_open(mv)?;
         let made = self.tuple_instance(m, mv, (tuple, cut, None), tctx, None);
+        self.making_close(mv)?;
         self.booked_kept(booked);
         self.reads_back(mark);
         self.holder = outer;
@@ -470,10 +472,13 @@ impl Engine {
         let mut made = made?;
         if let Some(inst) = &mut made {
             inst.order = inst_order(m, mv, inst);
-            // what judging its links meets is its own, as the list's status loop keeps it
+            // what judging its links meets is its own, as the list's status loop keeps it,
+            // inside the plan's making as there
+            self.making_open(mv)?;
             self.push();
             let status = self.status(m, mv, inst, cut);
             let met = self.pop_alone();
+            self.making_close(mv)?;
             inst.coll.merge(&met);
             inst.status = status?;
         }

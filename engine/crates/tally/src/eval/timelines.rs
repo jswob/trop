@@ -60,6 +60,8 @@ pub(crate) struct Timeline {
     plans: BTreeMap<(String, Day), Rc<Vec<Inst>>>,
     /// The moves whose instances are being computed.
     plan_active: BTreeSet<(String, Day)>,
+    /// How many plan lists are being made.
+    plans_making: usize,
     /// Each plan move's measure per cut and list.
     adjustments: BTreeMap<(String, Day, Option<Day>), Measured>,
     /// The moves whose adjustments are being computed.
@@ -78,6 +80,8 @@ pub(crate) struct Timeline {
     links: BTreeMap<(Day, String), Linked>,
     /// The links being judged.
     link_active: BTreeSet<(Day, String)>,
+    /// The decision instances whose links are judged at their walk point, per cut.
+    links_at_point: BTreeSet<(Day, String)>,
     /// The refusals of observations' records per cut.
     obs_errs: BTreeMap<(Day, String), Refusal>,
     /// The refusal each instance's realised movement rests on, per cut.
@@ -444,6 +448,7 @@ impl Engine {
             walking: core::mem::take(&mut self.walking),
             plans: core::mem::take(&mut self.plans),
             plan_active: core::mem::take(&mut self.plan_active),
+            plans_making: core::mem::take(&mut self.plans_making),
             adjustments: core::mem::take(&mut self.adjustments),
             adjust_active: core::mem::take(&mut self.adjust_active),
             proj_walks: core::mem::take(&mut self.proj_walks),
@@ -453,6 +458,7 @@ impl Engine {
             covered: core::mem::take(&mut self.covered),
             links: core::mem::take(&mut self.links),
             link_active: core::mem::take(&mut self.link_active),
+            links_at_point: core::mem::take(&mut self.links_at_point),
             obs_errs: core::mem::take(&mut self.obs_errs),
             bad_links: core::mem::take(&mut self.bad_links),
             s1_links: core::mem::take(&mut self.s1_links),
@@ -476,6 +482,7 @@ impl Engine {
         self.walking = t.walking;
         self.plans = t.plans;
         self.plan_active = t.plan_active;
+        self.plans_making = t.plans_making;
         self.adjustments = t.adjustments;
         self.adjust_active = t.adjust_active;
         self.proj_walks = t.proj_walks;
@@ -485,6 +492,7 @@ impl Engine {
         self.covered = t.covered;
         self.links = t.links;
         self.link_active = t.link_active;
+        self.links_at_point = t.links_at_point;
         self.obs_errs = t.obs_errs;
         self.bad_links = t.bad_links;
         self.s1_links = t.s1_links;

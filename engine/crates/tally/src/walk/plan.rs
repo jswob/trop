@@ -81,7 +81,9 @@ impl Engine {
             return Ok(hit);
         }
         let mark = self.booked_open.len();
+        self.making_open(mv)?;
         let made = self.make_list(m, mv, cut);
+        self.making_close(mv)?;
         if self.plans.contains_key(&key) {
             self.booked_kept(mark);
         } else {
@@ -279,7 +281,9 @@ impl Engine {
         }
         // what it books stays with it, or is taken back, as a whole list's (P40)
         let mark = self.booked_open.len();
+        self.making_open(mv)?;
         let made = self.make_prefix(m, mv, cut, upto);
+        self.making_close(mv)?;
         if self.prefixes.plans.contains_key(&key) {
             self.booked_kept(mark);
         } else {
@@ -710,6 +714,38 @@ impl Engine {
             old.cut.text(),
             cut.text()
         )))
+    }
+
+    /// Opens the making of a list of move `mv`, counted where it is a plan: a decision's link
+    /// judged inside one is a plan reaching a running read (E §3.1 step 7; tally 2.3.1 R6,
+    /// C-9, P43).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` past the counter.
+    pub(super) fn making_open(&mut self, mv: &MoveInfo) -> Result<(), Stop> {
+        if !mv.decision {
+            self.plans_making = self
+                .plans_making
+                .checked_add(1)
+                .ok_or_else(|| invariant("the plan lists being made"))?;
+        }
+        Ok(())
+    }
+
+    /// Closes what [`Engine::making_open`] opened. E §3.1 step 7.
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a close with none open.
+    pub(super) fn making_close(&mut self, mv: &MoveInfo) -> Result<(), Stop> {
+        if !mv.decision {
+            self.plans_making = self
+                .plans_making
+                .checked_sub(1)
+                .ok_or_else(|| invariant("the plan lists being made"))?;
+        }
+        Ok(())
     }
 
     /// The amounts a list or an instance booked first since `mark`, once it is kept: they stay

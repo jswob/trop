@@ -488,6 +488,12 @@ pub struct Engine {
     pub(crate) links: BTreeMap<(Day, String), Linked>,
     /// The links being judged (`RUN-CYCLE`).
     pub(crate) link_active: BTreeSet<(Day, String)>,
+    /// The decision instances whose links are judged at their walk point, per cut: their
+    /// `when` is a running read (L §5.19 Links; E §4.2 step 3; tally 2.3.1 R6, C-9).
+    pub(crate) links_at_point: BTreeSet<(Day, String)>,
+    /// How many plan lists are being made, any phase: a decision's link judged inside one
+    /// is a plan reaching a running read (E §3.1 step 7; tally 2.3.1 C-9, P43).
+    pub(crate) plans_making: usize,
     /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
     pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
     /// The refusal an instance's realised movement rests on, per cut, by instance: a record
@@ -671,6 +677,8 @@ impl Engine {
             covered: BTreeMap::new(),
             links: BTreeMap::new(),
             link_active: BTreeSet::new(),
+            links_at_point: BTreeSet::new(),
+            plans_making: 0,
             obs_errs: BTreeMap::new(),
             bad_links: BTreeMap::new(),
             s1_links: BTreeMap::new(),

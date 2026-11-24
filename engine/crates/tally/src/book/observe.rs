@@ -281,6 +281,14 @@ impl Engine {
         cut: Day,
     ) -> Result<Vec<String>, Stop> {
         let key = (cut, tid.to_owned());
+        // a link judged at a decision's walk point, read inside a plan's list: a plan reaching
+        // a running read, whichever read judged it first (E §3.1 step 7; tally 2.3.1 C-9)
+        if self.plans_making > 0 && self.links_at_point.contains(&key) {
+            return Err(Stop::Refused(Refusal::new(
+                Code::Load(crate::base::Load::Reads),
+                format!("the link to {tid} reads a running read outside a decision"),
+            )));
+        }
         if let Some(hit) = self.links.get(&key) {
             let (obs, coll) = (hit.obs.clone(), hit.coll.clone());
             self.absorb(&coll);
@@ -588,11 +596,46 @@ impl Engine {
     /// load: the observation's verdict waits until it can be judged (refcore's
     /// `ObsMv._judge_link`). L §5.19 Links.
     fn judged(&mut self, m: &Reality, tid: &str, cut: Day) -> Result<Option<Vec<String>>, Stop> {
-        match self.obs_links_for(m, tid, cut) {
-            Ok(good) => Ok(Some(good)),
-            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(None),
-            Err(stop) => Err(stop),
+        let good = match self.obs_links_for(m, tid, cut) {
+            Ok(good) => good,
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => return Ok(None),
+            Err(stop) => return Err(stop),
+        };
+        // a decision's link judged at its walk point: a read from outside the walk is a
+        // running read, so it takes the main walk's verdict (E §4.2 step 3, §3.1 step 7;
+        // tally 2.3.1 R6, C-9); none is walked from inside a plan, which load refuses
+        let key = (cut, tid.to_owned());
+        if self.links_at_point.contains(&key)
+            && !self.main_walks.contains_key(&cut)
+            && self.plans_making == 0
+            && self.plan_active.is_empty()
+        {
+            self.main_walk(m, cut)?;
+            return Ok(self.links.get(&key).map(|hit| hit.obs.clone()));
         }
+        Ok(Some(good))
+    }
+
+    /// The links to decision instance `tid` under cut `cut`, judged at its walk point, where
+    /// its `when` says it doesn't exist: each observation that fulfils it refused (`RUN-RECORD`),
+    /// for the walk and every later reader (L §5.19 Links, §5.14 An instance's existence is a
+    /// cell; E §4.2 step 3; tally 2.3.1 R6, C-9). Returns the refusal by observation.
+    pub(crate) fn unlink_at_point(&mut self, tid: &str, obs: &[String], cut: Day) -> Vec<Refused> {
+        let mut out = Vec::with_capacity(obs.len());
+        if !self.links_at_point.contains(&(cut, tid.to_owned())) {
+            return out;
+        }
+        if let Some(hit) = self.links.get_mut(&(cut, tid.to_owned())) {
+            hit.obs.clear();
+        }
+        for id in obs {
+            let err = record(format!(
+                "observation {id} fulfils {tid}, which doesn't exist or doesn't touch its places"
+            ));
+            self.obs_errs.insert((cut, id.clone()), err.clone());
+            out.push((id.clone(), err));
+        }
+        out
     }
 
     /// The day of the decision instance observation `o` fulfils, its link standing; `None`
