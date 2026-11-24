@@ -19,7 +19,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
-use super::context::Layer;
+use super::context::{Layer, LayerData};
+use super::register::Collected;
 use super::state::{Ctx, Engine, invariant};
 use crate::base::{Refusal, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
@@ -114,6 +115,36 @@ pub(crate) struct Timeline {
 /// The legs a walk refused, by (move, leg).
 pub(crate) type LegRefusals = BTreeMap<(String, String), Refusal>;
 
+/// A row dated before its decision's point whose link the point refused, on one timeline:
+/// its world and its walk's pins by what they hold, so an answer of the ask made again
+/// finds it whatever its layers' numbers; the refusal and the read set that refused it
+/// (L §8.4 l.2356; tally 2.3.1 rulings 19 C).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct EarlyRow {
+    /// The timeline's world (L §6.4).
+    world: World,
+    /// What the timeline's pins hold (E §3.3).
+    pins: LayerData,
+    /// The cut whose walk refused it.
+    cut: Day,
+    /// The row.
+    row: String,
+    /// The refusal of its link.
+    err: Refusal,
+    /// The read set that refused it, which every reader of the row carries.
+    coll: Collected,
+}
+
+impl EarlyRow {
+    /// Whether `other` is the same row on the same timeline.
+    pub(crate) fn same_row(&self, other: &EarlyRow) -> bool {
+        self.world == other.world
+            && self.cut == other.cut
+            && self.row == other.row
+            && self.pins.same(&other.pins)
+    }
+}
+
 /// Every combination of positions in lists of `counts` options, the first list slowest
 /// (refcore's `combos`); `None` past `cap` combinations, counted as they are made, so a
 /// product past it is never built. L §5.5.
@@ -207,17 +238,68 @@ impl Engine {
         self.timelines.now.world
     }
 
-    /// Whether the timeline in force is the ask's own, no pin or world of a `with` (L §5.11,
-    /// §6.4).
-    #[must_use]
-    pub(crate) fn on_base(&self) -> bool {
-        self.timelines.now == TimelineKey::BASE
-    }
-
     /// The key of the timeline in force: its world and pins (E §3.3).
     #[must_use]
     pub(crate) fn timeline_key(&self) -> TimelineKey {
         self.timelines.now
+    }
+
+    /// The refusal of row `row` under cut `cut` and the read set that refused it, where an
+    /// earlier answer of the ask found the row dated before its decision's point and its link
+    /// refused there, on the timeline in force: the row refuses every place from its own day
+    /// on every timeline, the ask's, a pin's, an axis option's and a scenario's (L §8.4
+    /// l.2356; tally 2.3.1 rulings 16 Q2, rulings 19 C).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a timeline whose layer was freed.
+    pub(crate) fn early_row(
+        &self,
+        cut: Day,
+        row: &str,
+    ) -> Result<Option<(Refusal, Collected)>, Stop> {
+        if self.early_seed.is_empty() {
+            return Ok(None);
+        }
+        let pins = self.layer_data(self.timelines.now.pins)?;
+        Ok(self
+            .early_seed
+            .iter()
+            .find(|e| {
+                e.world == self.timelines.now.world
+                    && e.cut == cut
+                    && e.row == row
+                    && e.pins.same(pins)
+            })
+            .map(|e| (e.err.clone(), e.coll.clone())))
+    }
+
+    /// Notes row `row` under cut `cut`, dated before its decision's point, its link refused
+    /// there by `err` on the read set `coll`, on the timeline in force, for the ask's next
+    /// answer (L §8.4 l.2356; tally 2.3.1 rulings 19 C).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a timeline whose layer was freed.
+    pub(crate) fn note_early_row(
+        &mut self,
+        cut: Day,
+        row: &str,
+        err: &Refusal,
+        coll: &Collected,
+    ) -> Result<(), Stop> {
+        let found = EarlyRow {
+            world: self.timelines.now.world,
+            pins: self.layer_data(self.timelines.now.pins)?.clone(),
+            cut,
+            row: row.to_owned(),
+            err: err.clone(),
+            coll: coll.clone(),
+        };
+        if !self.early_found.iter().any(|e| e.same_row(&found)) {
+            self.early_found.push(found);
+        }
+        Ok(())
     }
 
     /// Enters the timeline of context `inside` for a scope: its world and the pins of its

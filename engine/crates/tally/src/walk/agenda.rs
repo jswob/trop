@@ -261,17 +261,15 @@ impl Engine {
             Vec::new()
         };
         // a row dated before its decision's point whose link the point refuses is refused from
-        // its own day, as an earlier answer of the ask found it (L §8.4; tally 2.3.1 C-9,
-        // rulings 16 Q2)
-        let base = self.on_base();
+        // its own day on every timeline, as an earlier answer of the ask found it there, and
+        // every reader of the row carries the read set that refused it (L §8.4; tally 2.3.1
+        // C-9, rulings 16 Q2, rulings 19 C)
         for wo in &mut observed {
-            let early = self
-                .early_seed
-                .get(&(cut, wo.obs.id.clone()))
-                .filter(|_| base)
-                .cloned();
-            wo.err = match early {
-                Some(err) => Some(err),
+            wo.err = match self.early_row(cut, &wo.obs.id)? {
+                Some((err, coll)) => {
+                    wo.obs.coll.merge(&coll);
+                    Some(err)
+                }
                 None => self.obs_err(m, &wo.obs, cut)?,
             };
         }

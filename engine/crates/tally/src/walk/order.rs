@@ -438,6 +438,7 @@ impl Engine {
         // what the refusal rests on is what a read of the run lists (L §8.2; P20)
         inst.coll.merge_rows(met);
         let tid = inst.id.clone();
+        let read = inst.coll.clone();
         walk.record(Run {
             inst,
             point: key,
@@ -448,7 +449,12 @@ impl Engine {
             tested,
         });
         // a link to it rests on its refused existence (tally 2.3.1 R2, C-9)
-        self.unlink_run(id, &tid, (Some(&err), key.day))
+        let un = Unlinked {
+            why: Some(&err),
+            point: key.day,
+            read: &read,
+        };
+        self.unlink_run(id, &tid, &un)
     }
 
     /// Instances of one move that read the places another of them changes, with no `ties by`:
@@ -814,14 +820,25 @@ impl Engine {
             for lg in &known {
                 walk.leg_bad(m, (&mv_id, lg, &read), &err, key)?;
             }
-            self.unlink_run(id, &mv_id, (Some(&err), key.day))?;
+            let un = Unlinked {
+                why: Some(&err),
+                point: key.day,
+                read: &read,
+            };
+            self.unlink_run(id, &mv_id, &un)?;
             return Ok(ix);
         }
         if run.inst.exists == Exists::No {
             run.inst.status = Status::None;
             let inst = run.inst.clone();
             walk.record(run);
-            self.unlink_run(id, &inst.id, (None, key.day))?;
+            // what decided it doesn't exist is the link's already, from its point
+            let un = Unlinked {
+                why: None,
+                point: key.day,
+                read: &Collected::default(),
+            };
+            self.unlink_run(id, &inst.id, &un)?;
             self.book_own_obs(m, id, &inst, key)?;
             return Ok(ix);
         }
@@ -888,23 +905,19 @@ impl Engine {
     }
 
     /// The links to decision instance `tid` of walk `id`, judged at its point, where its
-    /// existence isn't true (its `when` false, or `why`, its run refused): each observation
-    /// that fulfils it refused, in the walk too, so its legs book refused at that point; none
-    /// in a projection's walk, whose links are the main walk's (E §4.2 step 3; L §5.19 Links,
-    /// §8.4; tally 2.3.1 R6, R2, C-9). A row dated before the point, booked on its own day
-    /// before the verdict, is noted for the ask's next answer, which refuses it from that day
-    /// (L §8.4 l.2356, "a leg whose place can't be read refuses every place from its day";
-    /// G2's review B1, rulings 16 Q2).
+    /// existence isn't true (its `when` false, or `un.why`, its run refused): each
+    /// observation that fulfils it refused, in the walk too, so its legs book refused at that
+    /// point, carrying `un.read`, the reads that refused it, as the link's cell does; none in
+    /// a projection's walk, whose links are the main walk's (E §4.2 step 3; L §5.19 Links,
+    /// §8.2 l.2252, §8.4; tally 2.3.1 R6, R2, C-9). A row dated before the point, booked on
+    /// its own day before the verdict, is noted on the timeline in force for the ask's next
+    /// answer, which refuses it from that day there (L §8.4 l.2356, "a leg whose place can't
+    /// be read refuses every place from its day"; rulings 16 Q2, rulings 19 C).
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn unlink_run(
-        &mut self,
-        id: usize,
-        tid: &str,
-        (why, point): (Option<&Refusal>, Day),
-    ) -> Result<(), Stop> {
+    fn unlink_run(&mut self, id: usize, tid: &str, un: &Unlinked<'_>) -> Result<(), Stop> {
         let (cut, main) = {
             let walk = self.walk(id)?;
             (walk.cut, walk.proj.is_none())
@@ -912,19 +925,21 @@ impl Engine {
         if !main {
             return Ok(());
         }
-        let refused = self.unlink_at_point(tid, cut, why);
-        let base = self.on_base();
+        self.link_reads_at_point(id, tid, un.read)?;
+        let refused = self.unlink_at_point(tid, cut, un.why);
         let walk = self.walk_mut(id)?;
         let mut early = Vec::new();
         for (obs, err) in refused {
             for wo in walk.obs.iter_mut().filter(|wo| wo.obs.id == obs) {
-                if base && wo.obs.day < point {
-                    early.push(((cut, obs.clone()), err.clone()));
+                if wo.obs.day < un.point {
+                    early.push((obs.clone(), err.clone(), wo.obs.coll.clone()));
                 }
                 wo.err = Some(err.clone());
             }
         }
-        self.early_found.extend(early);
+        for (row, err, coll) in early {
+            self.note_early_row(cut, &row, &err, &coll)?;
+        }
         Ok(())
     }
 
@@ -1076,6 +1091,18 @@ pub enum Tested {
     Whens(At, Vec<(String, String)>),
     /// A tie of one move's runs, `RUN-TIE`: each tied run, by its instance, as it ran.
     Runs(Vec<String>),
+}
+
+/// A decision instance's links refused at its point: why, its run's refusal (none where its
+/// `when` says it doesn't exist), the point's day, and the reads that refused them, which
+/// every reader of a refused row carries (L §8.2 l.2252, §8.4; tally 2.3.1 rulings 19 C).
+struct Unlinked<'a> {
+    /// The run's refusal, or none for `RUN-RECORD`.
+    why: Option<&'a Refusal>,
+    /// The point's day.
+    point: Day,
+    /// The reads that refused the links.
+    read: &'a Collected,
 }
 
 /// What orders one instance of a cycle (refcore's `run_group`, its `info`). L §5.14.2.
@@ -1676,6 +1703,54 @@ version feb
                 "{ask}"
             );
         }
+    }
+
+    #[test]
+    fn an_early_row_whose_link_is_refused_refuses_on_every_timeline_with_what_refused_it() {
+        // L §8.4 l.2356, §8.2 l.2252 (tally 2.3.1 rulings 19 C; G2's fix review G1, G5): the
+        // row is dated 02-03, the decision's point 02-05; at 1 000.00 PLN the link stands, under
+        // a pin of 500.00 PLN the point refuses it, so the row refuses konto from 02-03 there;
+        // at an assumed 500.00 PLN a reader of the link lists the assumption that refused it
+        let early = DEC_LINK
+            .replace(
+                "on: 2026-02-05, kind: transfers, leg cash from save",
+                "on: 2026-02-03, kind: transfers, leg cash from save",
+            )
+            .replace(
+                "ask b:",
+                "ask bp: bal(konto, 2026-03-31) with lim = 500.00 PLN\n\nask ob: \
+                 observed(topup[2026-02]).cash.amount\n\nask b:",
+            );
+        let lines = |lim: &str, ask: &str| {
+            let text = early.replace("lim = LIM \"s\"", &format!("lim = {lim} \"s\""));
+            let given = vec![Given {
+                path: "dec_early_c.tally".to_owned(),
+                bytes: Some(text.into_bytes()),
+            }];
+            let asks = Asks::Named(vec![ask.to_owned()]);
+            run(Files::new(given), &Request::new(asks))
+                .expect("an answer")
+                .lines()
+                .to_vec()
+        };
+        let refused = "refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which \
+                       doesn't exist or doesn't touch its places";
+        let pinned = lines("1 000.00 PLN", "bp");
+        assert_eq!(
+            pinned.first().cloned(),
+            Some(format!("bp: {refused}")),
+            "{pinned:?}"
+        );
+        let read = lines("500.00 PLN assumed \"lim guess\"", "ob");
+        assert_eq!(
+            read.first().cloned(),
+            Some(format!("ob: {refused}")),
+            "{read:?}"
+        );
+        assert!(
+            read.iter().any(|l| l == "  assumed: lim guess (lim)"),
+            "{read:?}"
+        );
     }
 
     #[test]

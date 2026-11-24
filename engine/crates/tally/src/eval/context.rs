@@ -154,7 +154,7 @@ impl LayerData {
     }
 
     /// Whether the two layers hold the same pins and axis options, as sets.
-    fn same(&self, other: &LayerData) -> bool {
+    pub(super) fn same(&self, other: &LayerData) -> bool {
         self.pins.len() == other.pins.len()
             && self.wording.len() == other.wording.len()
             && self.axes.len() == other.axes.len()
