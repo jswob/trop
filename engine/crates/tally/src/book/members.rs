@@ -404,6 +404,7 @@ impl Engine {
                         coll.note(self.entry_id(entry("uncertain", &i.id))?);
                     }
                     coll.merge(&i.coll);
+                    self.group_sides(m, i, ctx.cut, &mut coll)?;
                 }
                 Moving::Obs(o) => coll.merge(&o.coll),
                 Moving::Adj(a) => coll.merge(&a.coll),
@@ -426,6 +427,43 @@ impl Engine {
             });
         }
         Ok(res)
+    }
+
+    /// The register entries the other sides of `i`'s `same` group bring beside it: a binding
+    /// binds the group once, by `i`, and lists every side its lines name, each `unfulfilled`
+    /// and `uncertain` as its own (rulings 17 statement B). L §6.1, §8.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals reading the group or a side's instances meets.
+    fn group_sides(
+        &mut self,
+        m: &Reality,
+        i: &Inst,
+        cut: Day,
+        coll: &mut Collected,
+    ) -> Result<(), Stop> {
+        let groups = self.same_groups(m, cut)?;
+        let Some(group) = groups.get(&i.id) else {
+            return Ok(());
+        };
+        for x in group.iter().filter(|x| **x != i.id) {
+            let name = x.split_once('[').map_or(x.as_str(), |(n, _)| n);
+            let Some(mv) = m.moves.get(name) else {
+                continue;
+            };
+            let insts = self.plan_list(m, mv, cut)?;
+            let Some(side) = insts.iter().find(|s| s.id == *x) else {
+                continue;
+            };
+            if unfulfilled(m, side, cut) {
+                coll.note(self.entry_id(entry("unfulfilled", &side.id))?);
+            }
+            if side.status == Status::Uncertain {
+                coll.note(self.entry_id(entry("uncertain", &side.id))?);
+            }
+        }
+        Ok(())
     }
 
     /// The members a binding over an event kind leaves out so that a planned instance and the

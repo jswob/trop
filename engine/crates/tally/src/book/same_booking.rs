@@ -37,13 +37,11 @@ pub(crate) enum EndBook {
     /// The group's disagreement there, a hole movement (`HOLE-SAME`), or a side's hole day
     /// where the amounts agree (S1, P43 on #241).
     Hole(Hole),
-    /// Instances that agree on the amount and differ on the day, at the first of their days:
-    /// not booked here, the place that `HOLE-SAME` hole until the last (tally 2.3.1 R1,
-    /// N245.21).
+    /// One movement of sides on several days, at a day before the last of them, whatever
+    /// each side's kind: not booked here, the place that group's `HOLE-SAME` hole, its first
+    /// side's, until the last; its register met here, so the result lists every side (tally
+    /// 2.3.1 R1, N245.21; rulings 14, 17 statement B).
     Open(Hole),
-    /// The same on a day between the first and the last: not booked, its register met there,
-    /// so the result lists every side (tally 2.3.1, rulings 14 on G1's review N1).
-    Between,
     /// The same at the last of their days: booked as written, ending that hole.
     Close(Hole),
 }
@@ -134,9 +132,6 @@ impl Engine {
                 EndBook::Skip => {}
                 EndBook::Open(h) => {
                     self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Open(h))?;
-                }
-                EndBook::Between => {
-                    self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Mark)?;
                 }
                 EndBook::Close(h) => {
                     self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Close(h))?;
@@ -242,7 +237,10 @@ impl Engine {
                     format!("same {left} = {right}: {x} doesn't exist"),
                 )));
             };
-            if matches!(found, Member::Decision(_, None)) && !decides {
+            // a decision not yet run waits for its point: a plan's side always, a decision's
+            // where its day is another (rulings 17 statement B: whatever each side's kind)
+            let later = found.day().is_some() && found.day() != mover.day();
+            if matches!(found, Member::Decision(_, None)) && (!decides || later) {
                 waiting.push(found);
             } else {
                 others.push(found);
@@ -257,12 +255,28 @@ impl Engine {
             let Some(p) = end.place() else {
                 continue;
             };
-            *slot = match self.same_wait_for(m, id, (mover, lg), p, &waiting)? {
+            *slot = match self.same_wait_for(m, id, (mover, lg), (p, group), &waiting)? {
                 Some(wait) => wait,
                 None => self.same_end(m, id, (mover, lg, side), p, &others)?,
             };
         }
         Ok(out)
+    }
+
+    /// The `HOLE-SAME` hole a side of group `group` opened at place `p` in unit `unit`, its
+    /// movement's first day booked: the hole each later side books, so that its last day
+    /// ends it (rulings 17 statement B; L §6.1). E §4.2.
+    fn group_open(
+        &self,
+        id: usize,
+        (p, unit): (&str, &str),
+        group: &[String],
+    ) -> Result<Option<Hole>, Stop> {
+        let ents = self.walk(id)?.entries(p, unit);
+        Ok(ents.iter().rev().find_map(|e| match (&e.change, &e.mv) {
+            (Change::Open(h), Some(mv)) if group.contains(mv) => Some(h.clone()),
+            _ => None,
+        }))
     }
 
     /// A member of a `same` group by id: a decision as this walk ran it, else a plan's or a
@@ -290,16 +304,18 @@ impl Engine {
         Ok(rows.iter().find(|o| o.id == x).cloned().map(Member::Obs))
     }
 
-    /// An end at place `p` of a movement stated `same` as a decision not yet run: waiting for
-    /// the decision's point where it books `p` that day, the `HOLE-SAME` hole where their days
-    /// differ, none where no waiting decision books `p` (refcore's `same_wait_for`). L §6.1
-    /// (a decision's amount is known only at its point), §5.14.2.
+    /// An end at place `p` of a movement stated `same` in group `group` as a decision not yet
+    /// run: waiting for the decision's point where it books `p` that day; where their days
+    /// differ, the group's `HOLE-SAME` hole opened here, the decision's point to end it, the
+    /// one a side before opened if one did (rulings 17 statement B); none where no waiting
+    /// decision books `p` (refcore's `same_wait_for`). L §6.1 (a decision's amount is known
+    /// only at its point), §5.14.2.
     fn same_wait_for(
         &mut self,
         m: &Reality,
         id: usize,
         (mover, lg): (&Member, &LegVal),
-        p: &str,
+        (p, group): (&str, &[String]),
         waiting: &[Member],
     ) -> Result<Option<EndBook>, Stop> {
         for dec in waiting {
@@ -326,7 +342,12 @@ impl Engine {
                 inst.id
             );
             let figure = format!("{}, {}", mover.id(), inst.id);
-            return Ok(Some(EndBook::Hole(Hole::asked(&text, &figure))));
+            let unit = lg.unit.as_deref().unwrap_or(ALL);
+            let hole = match self.group_open(id, (p, unit), group)? {
+                Some(opened) => opened,
+                None => Hole::asked(&text, &figure),
+            };
+            return Ok(Some(EndBook::Open(hole)));
         }
         Ok(None)
     }
@@ -417,16 +438,12 @@ impl Engine {
             ),
             DayCmp::Hole(_) => (false, false),
         };
-        // the first and the last member in the day's order, the latest booking it
-        let mut first: Option<(Option<At>, &str)> = None;
+        // the last member in the day's order, the latest booking it
         let mut latest: Option<(Option<At>, &str)> = None;
         for (x, g, _) in touch.iter().filter(|_| agree || two_days) {
             let key = self.book_key(id, x, g)?;
             if latest.as_ref().is_none_or(|(best, _)| key > *best) {
                 latest = Some((key, x.id()));
-            }
-            if first.as_ref().is_none_or(|(best, _)| key < *best) {
-                first = Some((key, x.id()));
             }
         }
         let mine = latest.is_some_and(|(_, x)| x == mover.id());
@@ -437,7 +454,6 @@ impl Engine {
                 EndBook::Skip
             });
         }
-        let opens = first.is_some_and(|(_, x)| x == mover.id());
         // the members in the order of their ids, every one named (tally 2.1.8 S6, P50)
         let mut ordered = touch;
         ordered.sort_by_cached_key(|(x, _, _)| m.id_order(x.id()));
@@ -462,11 +478,17 @@ impl Engine {
             and_list(&parts)
         );
         let hole = Hole::asked(&text, &ids.join(", "));
-        Ok(match (two_days, mine, opens) {
-            (true, true, _) => EndBook::Close(hole),
-            (true, false, true) => EndBook::Open(hole),
-            (true, false, false) => EndBook::Between,
-            (false, _, _) => EndBook::Hole(hole),
+        if !two_days {
+            return Ok(EndBook::Hole(hole));
+        }
+        // one movement: each side before the last books the hole its first side opened, the
+        // last ends it (rulings 17 statement B)
+        let unit = lg.unit.as_deref().unwrap_or(ALL);
+        let opened = self.group_open(id, (p, unit), &ids)?.unwrap_or(hole);
+        Ok(if mine {
+            EndBook::Close(opened)
+        } else {
+            EndBook::Open(opened)
         })
     }
 
@@ -757,6 +779,89 @@ ask b_after: bal(wallet, 2026-02-28)
                 "  unfulfilled: p3"
             ],
             "every side the lines name"
+        );
+    }
+
+    /// Two decisions of one amount on two days, stated `same`, each reading another place.
+    const BOTH_DECIDE: &str = r#"model both_decide
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+place wallet: accounts PLN lives 2025-01-01..
+
+place spare: accounts PLN lives 2025-01-01..
+
+place world: outside lives 1900-01-01..
+
+input a: money PLN
+
+input d1: date
+
+input d2: date
+
+move early: transfers
+  reads spare
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(spare)
+
+move late: transfers
+  reads spare
+  on d2
+  leg cash from world to wallet amount a + 0 * bal(spare)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[spare] = 5.00 PLN at 2026-01-01 start "s"
+  a = 70.00 PLN "s"
+  d1 = 2026-04-03 "s"
+  d2 = 2026-04-08 "s"
+  same early = late
+
+ask b_between: bal(wallet, 2026-04-05)
+
+ask b_after: bal(wallet, 2026-04-30)
+
+ask n_one: count(t in transfers over 2026-04)
+"#;
+
+    #[test]
+    fn two_decisions_of_two_days_are_one_movement() {
+        // tally 2.3.1, rulings 17 statement B: whatever each side's kind, the group is one
+        // movement, the hole between its days, booked from the last on; a binding over it
+        // binds it once and lists every side (L §6.1, §8.2)
+        let given = vec![Given {
+            path: "both_decide.tally".to_owned(),
+            bytes: Some(BOTH_DECIDE.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let lines: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(String::as_str)
+            .filter(|line| !line.starts_with("  cut"))
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "b_after: 70.00 PLN",
+                "  unfulfilled: early",
+                "  unfulfilled: late",
+                "b_between: ?\"early and late are one, but the leg at wallet differs on 2026-04-03: 70.00 PLN (early) and its day 2026-04-08 (late)\" (early, late)",
+                "  unfulfilled: early",
+                "n_one: 1",
+                "  unfulfilled: early",
+                "  unfulfilled: late"
+            ],
+            "known after both days, the hole between, every side listed"
         );
     }
 

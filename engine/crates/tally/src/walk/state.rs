@@ -1240,16 +1240,13 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
     Ok(st)
 }
 
-/// Whether hole `h` is among the holes `open`, a [`Change::Open`]'s, and takes the first such
-/// out: its [`Change::Close`] ends it (L §6.1; tally 2.3.1 R1, N245.21).
+/// Whether hole `h` is among the holes `open`, each a [`Change::Open`]'s, and takes every one
+/// out: one movement's [`Change::Close`] ends the hole each side before its last opened (L
+/// §6.1; tally 2.3.1 R1, N245.21, rulings 17 statement B).
 pub(super) fn ended(open: &mut Vec<Hole>, h: &Hole) -> bool {
-    let mut found = false;
-    open.retain(|one| {
-        let this = !found && one == h;
-        found = found || this;
-        !this
-    });
-    found
+    let before = open.len();
+    open.retain(|one| one != h);
+    open.len() < before
 }
 
 /// How a movement that doesn't count joins a read of its place (L §8.2 One read set, E §4.2):

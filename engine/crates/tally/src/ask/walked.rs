@@ -397,16 +397,12 @@ fn entry_rows(
     Ok(rows)
 }
 
-/// Whether hole `h` of unit `u` is among the open holes `open`, taken out once if it is (the
-/// walk's `ended`; L §6.1).
+/// Whether hole `h` of unit `u` is among the open holes `open`, each copy taken out if it is
+/// (the walk's `ended`; L §6.1, rulings 17 statement B).
 fn closes(open: &mut Vec<(String, Hole)>, (u, h): (&str, &Hole)) -> bool {
-    let mut found = false;
-    open.retain(|(un, x)| {
-        let this = !found && un == u && x == h;
-        found = found || this;
-        !this
-    });
-    found
+    let before = open.len();
+    open.retain(|(un, x)| !(un == u && x == h));
+    open.len() < before
 }
 
 /// Where a balance with no reading before it starts: zero from its lifespan's start, when
