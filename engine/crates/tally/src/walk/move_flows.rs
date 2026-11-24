@@ -179,6 +179,13 @@ impl Engine {
                 // the span (P20)
                 let reads = self.uncounted_reads(m, i, sp, ctx)?;
                 acc.met.merge(&reads);
+                // in the span an observation would stand for it: the read rests on that link,
+                // and a refused one refuses it (L §5.19 Links, §8.4; tally 2.3.1 R2, C-13.6)
+                if matches!(&i.day, Some(Dated::Day(d)) if sp.contains(*d))
+                    && let Some(err) = self.refused_link(m, &i.id, ctx.cut)?
+                {
+                    return Err(Stop::Refused(err));
+                }
                 continue;
             }
             if i.status == Status::Uncertain {

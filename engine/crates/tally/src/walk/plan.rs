@@ -22,7 +22,7 @@ use super::instance::{
 };
 use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
+use crate::eval::{Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
     money_num, num_money,
@@ -31,18 +31,6 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Expr, Stop};
 use crate::time::{Day, PeriodKind};
 use std::rc::Rc;
-
-/// Who reads a move's list: a reader of its instances (their flows, amounts and statuses,
-/// the walk), which takes what judging their links meets the first time the list is read; or
-/// an existence read (`o.fulfils`), which takes only the reads that decide that an instance
-/// exists, none of the links' (L §5.19 Links, §8.2; P30, P40).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Reader {
-    /// A reader of the instances.
-    Instances,
-    /// An existence read.
-    Existence,
-}
 
 impl Engine {
     /// A move's instances at cut `cut`, each dated at the cut and evaluated at its booking
@@ -60,14 +48,13 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Rc<Vec<Inst>>, Stop> {
-        self.list_read(m, mv, cut, Reader::Instances)
+        self.list_read(m, mv, cut)
     }
 
     /// A move's instances at cut `cut` for an existence read (`o.fulfils`): the list
-    /// [`Engine::move_instances`] makes, but what judging its links meets is left to the list's
-    /// next reader of its instances, since an existence read takes only the reads that decide
-    /// that an instance exists (refcore's `find_inst`, which reads no status). L §5.19 Links,
-    /// §8.2; E §4.1 step 3, §3.2 (P30, P40).
+    /// [`Engine::move_instances`] makes, whose links' reads are each instance's own, so an
+    /// existence read takes none of them (refcore's `find_inst`, which reads no status).
+    /// L §5.19 Links, §8.2 One read set; E §4.1 step 3, §3.2 (P30; tally 2.3.1 R2, item 6).
     ///
     /// # Errors
     ///
@@ -78,35 +65,23 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Rc<Vec<Inst>>, Stop> {
-        self.list_read(m, mv, cut, Reader::Existence)
+        self.list_read(m, mv, cut)
     }
 
-    /// A move's list at cut `cut` as `reader` reads it: the kept list, a reader of its
-    /// instances taking what judging its links met where an existence read made it; else the
-    /// list made, what it booked kept with it or, where it stops, taken back, so every later
-    /// read of it meets the same stop whatever was read before. E §4.1, §9 item 5 (P40).
+    /// A move's list at cut `cut`: the kept list; else the list made, what it booked kept with
+    /// it or, where it stops, taken back, so every later read of it meets the same stop
+    /// whatever was read before. E §4.1, §9 item 5 (P40).
     ///
     /// # Errors
     ///
     /// As [`Engine::move_instances`].
-    fn list_read(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-        reader: Reader,
-    ) -> Result<Rc<Vec<Inst>>, Stop> {
+    fn list_read(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Rc<Vec<Inst>>, Stop> {
         let key = (mv.id.clone(), cut);
         if let Some(hit) = self.plans.get(&key).map(Rc::clone) {
-            if reader == Reader::Instances
-                && let Some(met) = self.links_unread.remove(&key)
-            {
-                self.absorb(&met);
-            }
             return Ok(hit);
         }
         let mark = self.booked_open.len();
-        let made = self.make_list(m, mv, cut, reader);
+        let made = self.make_list(m, mv, cut);
         if self.plans.contains_key(&key) {
             self.booked_kept(mark);
         } else {
@@ -116,19 +91,14 @@ impl Engine {
     }
 
     /// The list [`Engine::list_read`] makes: the instances, kept, then their statuses, what
-    /// judging their links meets the reader's, or the list's next reader's for an existence
-    /// read; then the hole bookings a later version answers. E §4.1, §5 steps 0–1.
+    /// judging an instance's links meets that instance's own reads, which a reader that counts
+    /// it takes and no other (L §8.2 One read set; E §3.2; tally 2.3.1 R2, item 6); then the
+    /// hole bookings a later version answers. E §4.1, §5 steps 0–1.
     ///
     /// # Errors
     ///
     /// As [`Engine::move_instances`].
-    fn make_list(
-        &mut self,
-        m: &Reality,
-        mv: &MoveInfo,
-        cut: Day,
-        reader: Reader,
-    ) -> Result<Rc<Vec<Inst>>, Stop> {
+    fn make_list(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Rc<Vec<Inst>>, Stop> {
         let key = (mv.id.clone(), cut);
         if self.plan_active.contains(&key) {
             self.narrow_open_to_days();
@@ -148,16 +118,12 @@ impl Engine {
         let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
-        // the links a narrow read judged at this cut went to its first reader (fence F7)
-        let judged = self.links_judged(&mv.id, cut);
         let mut due = false;
         for inst in &mut out {
             self.push();
             let status = self.status(m, mv, inst, cut);
             let met = self.pop_alone();
-            if !judged {
-                self.links_met(&key, &met, reader);
-            }
+            inst.coll.merge(&met);
             inst.status = status?;
             due = due || crate::book::hole_booked_before(inst, cut);
         }
@@ -355,7 +321,12 @@ impl Engine {
             .insert(key.clone(), Rc::new(out.clone()));
         let mut due = false;
         for inst in &mut out {
-            inst.status = self.status(m, mv, inst, cut)?;
+            // what judging its links meets is the instance's own, as in the whole list
+            self.push();
+            let status = self.status(m, mv, inst, cut);
+            let met = self.pop_alone();
+            inst.coll.merge(&met);
+            inst.status = status?;
             due = due || crate::book::hole_booked_before(inst, cut);
         }
         let shared = Rc::new(out);
@@ -756,27 +727,6 @@ impl Engine {
             && let Some(key) = self.booked_open.pop()
         {
             self.booked.remove(&key);
-        }
-    }
-
-    /// What judging one instance's links met, `met`, given to the reader of list `key`: a
-    /// reader of the instances takes it; an existence read leaves it to the list's next one
-    /// (L §5.19 Links, §8.2; E §4.1 step 3; P30, P40).
-    fn links_met(&mut self, key: &(String, Day), met: &Collected, reader: Reader) {
-        match reader {
-            Reader::Instances => self.absorb(met),
-            Reader::Existence => self.links_left(key, met),
-        }
-    }
-
-    /// What judging one instance's links met, `met`, kept for list `key`'s next reader of its
-    /// instances, with what the list's other instances' links met (L §5.19 Links, §8.2; P40).
-    fn links_left(&mut self, key: &(String, Day), met: &Collected) {
-        match self.links_unread.get_mut(key) {
-            Some(kept) => kept.merge(met),
-            None => {
-                self.links_unread.insert(key.clone(), met.clone());
-            }
         }
     }
 
@@ -1777,6 +1727,125 @@ ask day_pin: pay_at.day with wl = 2026-02-10
                 "  cut 2026-04-20"
             ],
             "a pin of wl books it"
+        );
+    }
+
+    /// Monthly rent whose January `when` is an assumed row OK, a January bank row fulfilling
+    /// it: the planner's `first.tally`.
+    const FIRST: &str = r#"model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place pot: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+input bank: observed
+
+input rent_amt: money PLN
+
+input ok[m in month]: bool
+
+input d5: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask a: flows(rent, 2026-01)
+
+ask b: flows(rent, 2026-03)
+
+ask c: bal(pot, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = OK
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+"#;
+
+    #[test]
+    fn a_links_reads_go_only_to_the_reads_that_rest_on_it() {
+        // L §8.2 One read set, §5.19 Links (tally 2.3.1 R2, item 6): January's link reads its
+        // assumed `when`; March's flows doesn't count January, so it never reads that link,
+        // whichever read made rent's list first
+        let text = FIRST.replace("OK", "true assumed \"jan is a guess\" \"ok jan\"");
+        let files = [("first.tally", text.as_str())];
+        let assumed = "  assumed: jan is a guess (ok[2026-01])";
+        assert_eq!(
+            answer(&files, "a"),
+            ["a: 100.00 PLN", assumed, "  cut 2026-05-20"],
+            "January rests on its link"
+        );
+        assert_eq!(
+            answer(&files, "b"),
+            [
+                "b: 100.00 PLN",
+                "  unfulfilled: rent[2026-03]",
+                "  cut 2026-05-20"
+            ],
+            "March doesn't"
+        );
+        assert_eq!(
+            answer(&files, "c"),
+            [
+                "c: 8 700.00 PLN",
+                assumed,
+                "  unfulfilled: rent[2026-02]",
+                "  unfulfilled: rent[2026-03]",
+                "  cut 2026-05-20"
+            ],
+            "the balance books January's row"
+        );
+    }
+
+    #[test]
+    fn a_flows_that_rests_on_a_refused_link_is_refused() {
+        // L §5.19 Links, §8.4 (tally 2.3.1 R2, C-13.6): January's `when` is false, so its row
+        // fulfils nothing; January's flows would count that row for the instance
+        let text = FIRST.replace("OK", "false \"no jan\"");
+        let files = [("first.tally", text.as_str())];
+        let refused = "refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which \
+                       doesn't exist or doesn't touch its places";
+        assert_eq!(
+            answer(&files, "a"),
+            [format!("a: {refused}"), "  cut 2026-05-20".to_owned()],
+            "January rests on the refused link"
+        );
+        assert_eq!(
+            answer(&files, "b"),
+            [
+                "b: 100.00 PLN",
+                "  unfulfilled: rent[2026-03]",
+                "  cut 2026-05-20"
+            ],
+            "March doesn't"
         );
     }
 }

@@ -20,7 +20,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
 
 use super::context::Layer;
-use super::register::Collected;
 use super::state::{Ctx, Engine, invariant};
 use crate::base::{Refusal, Warn};
 use crate::book::{Adjustment, Coverage, Linked, Measured, Obs};
@@ -97,8 +96,6 @@ pub(crate) struct Timeline {
     booked: Bookings,
     /// The keys the lists being made booked first.
     booked_open: Vec<(String, Day, Option<Day>)>,
-    /// The link reads each list made for an existence read keeps for its next reader.
-    links_unread: BTreeMap<(String, Day), Collected>,
     /// Each main walk's signature once it is done.
     signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// Each walk-bound def's cells a decision read at its point of a main walk.
@@ -465,7 +462,6 @@ impl Engine {
             adjust_all_active: core::mem::take(&mut self.adjust_all_active),
             booked: core::mem::take(&mut self.booked),
             booked_open: core::mem::take(&mut self.booked_open),
-            links_unread: core::mem::take(&mut self.links_unread),
             signatures: core::mem::take(&mut self.signatures),
             walk_cells: core::mem::take(&mut self.walk_cells),
             prefixes: core::mem::take(&mut self.prefixes),
@@ -498,7 +494,6 @@ impl Engine {
         self.adjust_all_active = t.adjust_all_active;
         self.booked = t.booked;
         self.booked_open = t.booked_open;
-        self.links_unread = t.links_unread;
         self.signatures = t.signatures;
         self.walk_cells = t.walk_cells;
         self.prefixes = t.prefixes;

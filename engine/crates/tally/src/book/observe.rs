@@ -535,6 +535,34 @@ impl Engine {
         Ok(self.obs_errs.get(&(cut, o.id.clone())).cloned())
     }
 
+    /// The refusal of the first observation, in their order, whose link to instance `tid`
+    /// under cut `cut` is refused, the links to it judged first; none where none is. A read
+    /// that an observation would stand for `tid` in rests on that link, so it is refused with
+    /// it (L §5.19 Links, §8.4, §8.2 One read set; tally 2.3.1 R2, C-13.6).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::obs_links_for`].
+    pub(crate) fn refused_link(
+        &mut self,
+        m: &Reality,
+        tid: &str,
+        cut: Day,
+    ) -> Result<Option<Refusal>, Stop> {
+        if self.judged(m, tid, cut)?.is_none() {
+            return Ok(None);
+        }
+        let mut naming = Vec::new();
+        for o in self.observations(m, cut)? {
+            if o.target_id().as_deref() == Some(tid) {
+                naming.push(o.id.clone());
+            }
+        }
+        Ok(naming
+            .into_iter()
+            .find_map(|id| self.obs_errs.get(&(cut, id)).cloned()))
+    }
+
     /// The instance observation `o` stands in for under cut `cut`, by id, its link judged
     /// first (refcore's `ObsMv.target`). L §5.19.
     ///

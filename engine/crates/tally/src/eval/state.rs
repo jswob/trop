@@ -514,11 +514,6 @@ pub struct Engine {
     /// booked: a list that stops takes back its own, so nothing booked from a list that stopped
     /// stays in the walk (E §9 item 5, §4.1; P40).
     pub(crate) booked_open: Vec<(String, Day, Option<Day>)>,
-    /// What judging each list's links met (their register entries) where an existence read
-    /// made the list: an existence read takes none of it, so the list's next other reader
-    /// takes it, once, as the reader that makes a list takes it (L §5.19 Links, §8.2; E §3.2,
-    /// §4.1 step 3; P30, P40).
-    pub(crate) links_unread: BTreeMap<(String, Day), Collected>,
     /// Each main walk's signature once it is done, by its place in `walks` (E §9 item 4).
     pub(crate) signatures: BTreeMap<usize, crate::invariant::Signature>,
     /// Each walk-bound def's cells a decision read at its point of a main walk (E §10).
@@ -686,7 +681,6 @@ impl Engine {
             adjust_all_active: BTreeSet::new(),
             booked: BTreeMap::new(),
             booked_open: Vec::new(),
-            links_unread: BTreeMap::new(),
             signatures: BTreeMap::new(),
             walk_cells: WalkCells::new(),
             keep_walk_cells: false,
