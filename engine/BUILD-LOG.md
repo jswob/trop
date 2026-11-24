@@ -8925,3 +8925,116 @@ The one function E asks for, the instance's existence cell read by every reader 
   - N7.
 - **Usage:** about 3.86 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.22 % this turn.
 - **Checks:** `check quick: green`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 99 ids above.
+
+## 2026-11-24 tally 2.3.1 G3 and G4: pins and keys, then the singletons (issue #259)
+
+The builder's turn on groups 3 (R3, R5) and 4 (the singletons' meanings), against the pin 624cae3b (text and refcore). The engine changed only where it differed from a ruled row. Probes and scripts are in `tmp/spec-2.3.1/g3/`:
+- refcore at the pin, copied to `ref/`;
+- its 22 new tests split into `t/`;
+- `cmp.sh` (the engine against a test's expected bytes, warnings aside);
+- `pair.sh` (both interpreters on a text).
+
+The writer's notes for W3 and W4 aren't in this worktree's `inputs/writer-notes.md`, which holds W1 only. I went by the commits' messages (44ed9a00 to 624cae3b), the landed text and refcore's new tests.
+
+**Commits** (none pushed):
+- 00624126 `fix(pins): a line's law date and cut are one pin each; a pin is a row` (R3: N245.4, N245.9, N256.6)
+- 21a22901 `fix(check): keys and periods are points; a check prints their step` (R5: Q2.8, N250.10, N255.2)
+- 93b52aec `fix(load): a returned tuple compares and stands in key positions` (S6)
+- ccbd4344 `fix(ask): axis options with other pinned sets print apart` (S8)
+- b4335b87 `fix(load): a cycle of written orders is LOAD-ORDER` (S11)
+- bec373a6 `fix(eval): a mean of rates keeps their unit` (S17)
+- e5468493 `fix(load): a written-order cycle's search keeps no silent default` (S11's `or_default` and `map_or("")`, two report-only R-27 hits the lock doesn't hold; no answer moves)
+
+**Each row, the engine's line beside the plan's:**
+- **N245.4** (R3): `cost with law 2026-02-01 law 2026-09-01` → `refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date overlap at no keys (…:15)`, the `with` pins first, then the clause. Two `with law` pins and `with known` beside `as known` (`of the cut`) behave the same way. The plan says LOAD-OVERLAP; refcore's bytes match.
+- **N245.9** (R3): `(cost as if {known 2026-09-01}) + cost law 2026-03-01` → `refused: REQ-CLOCK known 2026-09-01 is after the model's on 2026-06-30`, the run's one result. This was `RUN-DOMAIN` on its line. The plan says REQ-CLOCK; refcore matches.
+- **N256.6** (R3): `ratio with ratio = 50 %` on a plain num → `0.5`, `pinned: ratio = 0.5` (was 50 %). The plan says 0.5; refcore matches.
+- **Q2.6, Q2.29** (R3, judged): no code. Refcore at the pin has no bytes for the ruled forms. See the two STOP-REPORTs below.
+- **Q2.8, N250.10** (R5): `check month_of(d1) == month_of(d0)` → `…, difference 1` (no difference before; the "not implemented" stop was already gone). Two quarters, two years, a year and a `year by 3` key, a key and a month: each prints its difference in period values, as refcore does.
+- **N255.2** (R5): a period literal's position reaches through brackets (L §2.5 Keys):
+  - `check qk == (2026-10)` beside a key of a `month … by 3` index is that index's key, `difference -2` (refcore's), not −6;
+  - `(2026-08)` off its grid is `LOAD-KEY 2026-08 is not a key of qs`, as the bare literal is, on both.
+  - Still different: an `if` arm holding the literal (`(if true then 2026-10 else 2026-07)`) is −6 on the engine, −2 on refcore. L l.355 reaches into `if` arms too; not built, a corner left for the review.
+- **S1, S7:** no code. Both interpreters print the same bytes on refcore's guards (`L5_11_beaten_rule_defeats_nothing`, `L3_1_none_equals_only_none`), `critic/none_eq` (18 lines), `critic/x_none` (16) and `review/g1fix/f07`, `f08`.
+- **S4:** no code. `beats__ver`, `beats__ver3` are `LOAD-CYCLE a beats cycle in x: a -> b -> a` on both; `beats__ver2` (13 lines), `a04_beats_versions` (57) and refcore's `L5_11_beats_cycle_across_versions` match too.
+- **S6:** t1 false, t2 true, t3 true; `v[argmin(…)]` 3.00 PLN; `v[first(…)]` 5.00 PLN (was LOAD-UNIT for the whole text). A tuple of other key types stays LOAD-UNIT.
+- **S8:** `q1 [mode = ma]: 5` with `pinned: k = 5`, and `q1 [mode = mb]: 5` (was `[mode = *]`).
+- **S11:** `refused: LOAD-ORDER save before spend before top before save: written orders form a cycle (order_cycle.tally:16)` (was RUN-ORDER at run).
+- **S17:** `mean(r[k] for k in ks)` over rates → `0.04 1/year` (was `RUN-DOMAIN 0.12 /year / 3: rate arithmetic outside L §3.3`).
+- **S25:** no code. `explain lo[2026-02]` and `inputs-of lo[2026-02]` on step 7b's form print `refused: LOAD-READS pay reaches a running read or projection of topup without reads topup` on both (`p/s25/`). G2's mark at load gave it.
+
+**The critic's probes:**
+- `critic/keys`: the same 101 lines on both.
+- `critic/lawpin` (the critic's text): `LOAD-PARSE … got with` on both, because `with` comes after `law` there. The writer's rewrite (refcore's `L5_11_line_law_pins_kept`, which holds `lawpin3`'s t1 to t5) matches: q1 10.00 PLN at law date 2026-02-01, t1 and t3 30.00 PLN, t4 20.00 PLN.
+- Refcore's 20 new interpreter tests (the two CLI tests aside) all print the engine's bytes now.
+
+**Found, outside this turn's rows:** `explain twoc` on `p4_holeone`'s text (two `as if`s, each pinning `b[k2]` to one hole) prints the second inner `dbl[k2]` again on the engine, `(dbl[k2]: see [7])` on refcore. Base refcore does the same, so the pin didn't move it. It's Q2.2's memo (two pins, two entries) under `explain`; for the review (`p/q26.tally` e3).
+
+**What `check commit` shows red** (two runs: after G3, after G4). 106 ids:
+- G2's 99, every one still red.
+- 7 new, each inside its change's class:
+  - **R5** (21a22901), 4: a check of two plain months, quarters or years gains its difference (the plan expected 3 to 6): `fixes/g2/b11_yearmin/a2` (`difference -1`), `items/months/m_differ` (1), `items/months/q_differ` (11), `items/months/y_differ` (−2). Refcore at the pin prints these differences.
+  - **S8** (ccbd4344), 3: the engine's `spec/g1` stores merged `[mode = *]` options whose `pinned:` lines differ: `spec/g1/p3_memo/q_ax`, `spec/g1/p5_axhole/q_ax`, `spec/g1/p5_axhole/q_axc`. Refcore at the pin prints the engine's split lines on all three.
+  - R3, S6, S11 and S17 moved none.
+- None outside a class.
+- The red tests are T's vector targets alone (31 of 1578; the new one, `m4_fixes_spec_g1`, is S8's three). The 11 unit tests below pass.
+- The steps after the tests didn't run.
+
+**Size** (`git diff --shortstat 6e33dc7a HEAD -- engine/crates`): 13 files, +672 −22.
+
+| Group | Plan | Built (code + tests) | Note |
+|---|---|---|---|
+| R3 | 0.15 to 0.2 k | +230 −5 (code about 112, tests 118) | over by the tests |
+| R5 | 0.07 to 0.12 k | +106 −5 (code 15, tests 91) | within |
+| Singletons | 0.2 to 0.35 k | +338 −14 (with the exceptions fix) | at the top |
+
+- **Kernel files touched:** none. Every change is in `load/`, `eval/`, `ask/`:
+  - `ask/answer.rs`, `ask/axes.rs`, `ask/check.rs`
+  - `eval/expr.rs`, `eval/keys.rs`, `eval/pins.rs`, `eval/queries.rs`
+  - `load/check.rs`, `load/compare.rs`, `load/keyed.rs`, `load/pins.rs`, `load/strata.rs`, `load/types.rs`
+- **Unit tests** (11):
+  - `eval/pins.rs` 4: law and cut pins overlap; a law and a cut pin stand; REQ-CLOCK in the line; a figure with its unit is the row;
+  - `ask/check.rs` 2: points' steps; a bracketed literal off the grid;
+  - `load/compare.rs` 2: a tuple compares and keys; another tuple is refused;
+  - `ask/axes.rs` 1, `load/strata.rs` 1 (`written_cycle`), `eval/queries.rs` 1.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0 (`exceptions --check`: 6, report-only hits 8, no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `line_pins`'s `[first, second, ..]`;
+  - `unit_figure`'s `n.unit.is_some()` and `written_typed`'s `n.unit() == *unit`;
+  - `difference`'s `late.kind() != PeriodKind::Day`;
+  - `operand`'s bracketed period literal;
+  - `tuple_keys`'s `binds.len() < 2`;
+  - `compare_rest`'s tuple `eq`;
+  - `pinned_texts`'s `entry.word == "pinned"`;
+  - `written_cycle`'s `Some(true) => {}`;
+  - `mean`'s rate arm.
+- **Open STOP-REPORTs:** two, below (Q2.6, Q2.29).
+- **Usage:** about 0.76 % of the week by `engine/tools/usage tmp/spec-2.3.1/g3-ids.txt` before this entry.
+- **Time:** about 40 minutes, 20:47 to 21:27. About 20 minutes of it were checks: the release binary three times (about 7 minutes), `check quick` four times (5), `check commit` three times (5), clippy steps (2).
+- **Checks:** `check quick: green, 11 steps`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 106 ids above.
+
+## STOP-REPORT 2026-11-24: Q2.6, a per-tuple `as if` pin in `explain` "with its value": refcore at the pin prints it as written
+
+- **Kind:** other: a ruled row with no oracle bytes.
+- **Where:** plan §4's row Q2.6 ("with its value (E §10 l.454 'the pins with their values'), written form beside it | both (judged)"); E §10 l.454; refcore at 624cae3b (`ask.py`'s explain, unchanged by a96b98fc).
+- **Rule or gate:** R3; DONE gate 10 (refcore is the oracle, byte for byte).
+- **What happens:** `explain two[k1]` on `p4_holeone`'s text (`tmp/spec-2.3.1/g3/p/q26.tally`; `two[k] = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})`): both interpreters print `[5] pin b[k] = c[k] for k in ks` and `[14] pin b[k] = c[k] + x for k in ks`, the written form with no value. A pin that isn't per tuple prints its value on both (`pin b[k2] = ?"which c?" (c[k2])`).
+- **What I tried:** nothing in code. The ruled form ("with its value, written form beside it") has no bytes: neither its order nor its words (`pin b[k] = c[k] for k in ks: b[k1] = 1.00 PLN`, or a value line under it) appear in refcore or the landed text. Any form the engine printed now would differ from refcore and turn T's stores red.
+- **What I ask:** the writer's bytes for the form (refcore's explain of a per-tuple pin), or the row withdrawn to "as written". The engine follows at the next pin.
+- **State:** e5468493 green on `check quick`; nothing uncommitted. The engine prints what refcore prints.
+
+## STOP-REPORT 2026-11-24: Q2.29, a `with` axis pin shares a timeline with the same option outside the pins: refcore's bytes are neither the engine's nor E §3.2's `see [n]`
+
+- **Kind:** the spec and refcore disagree.
+- **Where:** plan §4's row Q2.29 ("shares it: the pinned axis reaches its option's cell | both (judged; no store)"); L §5.11 A pin is a row ("a pinned axis reaches the cell its option's fan-out reaches"); E §3.2 (a cell met again is `see [n]`); refcore at 624cae3b.
+- **Rule or gate:** R3; DONE gate 10.
+- **What happens:** `explain fl with rd = r2` on `inputs/m4/review/g3/f7_axpin.tally` (e_fl). Its block `[15] outside the pins [rd = r2]`:
+  - the engine prints `[16] fl = 70.00 PLN` with all its reads: `(v:sp: see [5])`, `(v:w: see [6])`, a new `[17] running read bal(konto) …`, `(v:amt: see [8])`, a new `[18] ra = 70.00 PLN …`;
+  - refcore at the pin, and before it, prints `[16] fl = 70.00 PLN` / `rule base: won` / `(v:sp: see [5])` and nothing more of the walk's reads;
+  - the cell shared with `[4]` (inside the pins, rd = r2) would read `(fl: see [4])` by E §3.2.
+  - `f7f_count_axpin` is the same form; there refcore's rd = r1 cell is `REFCORE-NOT-YET axis rd read outside the axes the ask reaches`.
+  - `f7b_axpin_plan` and `f7c_axpin_wb` print the same bytes on both.
+- **What I tried:** nothing in code. Refcore's bytes share the walk's reads but not the cell, a form the text doesn't state. The engine's bytes share neither. E §3.2's form shares the cell.
+- **What I ask:** which of the three is the ruled one, with refcore mended to it at the writer's turn. The engine follows then. No store holds the form (the plan's "no store").
+- **State:** e5468493 green on `check quick`; nothing uncommitted. The engine is unchanged for Q2.29.
