@@ -248,7 +248,9 @@ the row index (fence F3) is opened when a budget row asks.
   `timelines.rs`: one timeline per cut, world and pin set the moves reach, parked and swapped
   at a scope's edge with the projection walks it keeps. `srows.rs`: a scenario's expression
   row at run, the base's items it names read in the base.
-  `solve.rs`: `solve`'s exact bisection on its grid, each step a pin layer freed after it.
+  `solve.rs`: `solve`'s exact bisection on its grid, each step a pin layer freed after it;
+  since the gate's fix its centre a + u/2 is exact, a money e there may hold part of a minor
+  unit, and only the answer is on the grid (L §5.18 step 3; pick P36).
 - *Reads and keys.* `read.rs`: an input read, the row the read rule takes and its value with
   its register entries, `last` and `since`. `keys.rs`: a read's keys, each made a key of its
   position's index, kind, axis, list or range, and checked against what the cut and the
@@ -282,8 +284,10 @@ the row index (fence F3) is opened when a budget row asks.
   period's n-th last; a shift that may pass the calendar's edge reads it once per law-date
   class of its rows, not day by day, where no hole is on the way; a calendar read at a day
   the line doesn't know waits, so its hole stands: P13), `prorata.rs` (`prorata`'s reading;
-  each share from `num/split.rs`), `ty.rs` (a sample value of a type, for the zero of an
-  empty sum),
+  each share from `num/split.rs`), `ty.rs` (a sample of a read's class, made without
+  reading, for a `partial` line's coefficient and `unit(x)`'s operand; an empty sum's 0 and
+  a bare figure in an `if`'s branch take the type load's checker gave them instead, since
+  the gate's fix: pick P36),
   `partial.rs` (a `partial` ask line: when its value is a hole, the known part and each
   named hole's coefficient, carried through sums, differences, products and quotients by
   known numbers, `sum` and a balance; any other operation makes it a plain hole naming
@@ -302,7 +306,8 @@ unknown days it carries; the one per-operator rule. Holes are built only here (R
 **Numbers** (`num/`, K, L §7). `rational.rs`: `Num`, a reduced fraction, small or big, 16
 bytes. `small.rs`: the small tier (fence F4). `big.rs`: the big tier, the one file that
 names the big-integer crate. `gcd.rs`: Euclid, big by small, Lehmer (fence F4). `money.rs`:
-whole minor units. `round.rs`: the seven modes. `text.rs`: literals read and values printed.
+whole minor units, but at `solve`'s centre, the one place an amount holds a fraction of one
+(a `Part`, P36). `round.rs`: the seven modes. `text.rs`: literals read and values printed.
 `split.rs`: a total split by weights to a step, `prorata`'s three rests; the
 largest-remainder split is written here once, for every later split that takes it (R-114).
 
@@ -820,8 +825,9 @@ refuses later, with another code or not at all (issues #72, #73, #75, and at M1 
   item, and a member's ask when the member is itself a joint model (M5c, pick P21); a power
   that isn't an integer in `accrue`, `periodic`, `factor` (`to u`, M6); an `explain` whose
   cause the walk computes and that has no node of its own yet (`ask/explain.rs`'s
-  `trace.walked`; the reviews met a def that reads a projection, and a `flows` read through
-  a past cut's adjustment or settlement). Not built and not printed: the result's `hash` and
+  `trace.walked`; the reviews met a def that reads a projection; a `flows` read through a
+  past cut's adjustment or its settling movement is explained since the gate's fixes X3
+  and P37). Not built and not printed: the result's `hash` and
   `version` (E §1), which nothing prints until VER-1 (pick P11, #224). Not built in M4 by
   its picks: `held:` lines merged into runs (P2, for the spec round). The 17 stage runs of
   P8-L10 (the seven changes' walks to 2059) still pass their budget (fitted at about 125 s
