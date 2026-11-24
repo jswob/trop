@@ -225,74 +225,83 @@ impl Engine {
         }
     }
 
-    /// Under a traced read, what a link's verdict that the instance it names exists rests on,
-    /// read where a binding judges the link and in the order judging it reads them: move
-    /// `mv`'s binding tuples at cut `cut`, then its `when` at the tuple at `keys`, a plan's or
-    /// a decision's, at its law date; traced and kept nowhere (refcore's `link_tuple`; L §5.19
-    /// Links, §8.2 One read set; E §10; P31, P42).
+    /// Under a traced read, what decides that move `mv`'s instance at keys `keys` exists at
+    /// cut `cut`, read again in binding order, traced and kept nowhere: its tuple's `where`s,
+    /// each at the tuple, up to one that drops or refuses it, then, for a plain tuple, the
+    /// move's `when` at its law date, a plan's or a decision's. An existence read and a
+    /// binding that judges a link take these and no other tuple's reads (refcore's
+    /// `move_tuples` and `link_tuple`, for the named tuple; L §5.19 Links, §5.14 Keys, §8.2
+    /// One read set; E §10; P30, P42, P43).
     ///
     /// # Errors
     ///
     /// A load refusal met at run; as [`Engine::move_tuples`].
-    pub(crate) fn trace_link_when(
+    pub(crate) fn trace_existence(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<(), Stop> {
-        let Some(when) = &mv.decl.when else {
-            return Ok(());
-        };
         if !self.tracing() {
             return Ok(());
         }
         let before = self.trace_walked();
+        let tuples = self.plan_tuples(m, mv, cut);
+        self.trace_walked_back(before);
+        // the tuple at the keys, or the refused one a `where` ended before them
+        let Some(tuple) = tuples?
+            .into_iter()
+            .find(|t| t.keys == keys || (t.refused.is_some() && keys.starts_with(&t.keys)))
+        else {
+            return Ok(());
+        };
         let tctx = self.timeline_ctx(None, cut);
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.push();
         self.trace_plan_open();
-        let read = match self.move_tuples(m, mv, tctx) {
-            Ok(tuples) => Ok(self.tuple_when(m, mv, (when, keys), &tuples, tctx)),
-            Err(stop) => Err(stop),
-        };
+        let read = self.existence_reads(m, mv, &tuple, tctx);
         let closed = self.trace_plan_close();
         self.pop_alone();
         self.holder = outer;
         self.trace_walked_back(before);
         closed?;
-        match read? {
+        match read {
             Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
-            Ok(_) | Err(Stop::Refused(_)) => Ok(()),
+            Ok(()) | Err(Stop::Refused(_)) => Ok(()),
             Err(stop) => Err(stop),
         }
     }
 
-    /// Move `mv`'s `when` at its plain tuple at `keys` among `tuples`, at its law date; none
-    /// where no plain tuple is there or its law date is a hole (refcore's `link_tuple`, its
-    /// `when`). L §5.19 Links, §4.3.
+    /// The reads [`Engine::trace_existence`] traces for tuple `tuple` of move `mv`: each bound
+    /// key's `where` at the tuple's law date, in binding order, up to one that drops it or is
+    /// refused, then the move's `when` where the tuple is plain (refcore's `move_tuples`, for
+    /// one tuple, and `link_tuple`, its `when`). L §5.14 Keys, §4.3, §5.19 Links.
     ///
     /// # Errors
     ///
-    /// As [`Engine::move_law`] and the `when`'s evaluation.
-    fn tuple_when(
+    /// A `where`'s or the `when`'s refusal; as [`Engine::move_law`].
+    fn existence_reads(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
-        (when, keys): (&crate::syntax::Expr, &[KeyVal]),
-        tuples: &[Tuple],
+        tuple: &Tuple,
         tctx: Ctx,
-    ) -> Result<Value, Stop> {
-        let Some(tuple) = tuples
-            .iter()
-            .find(|t| t.keys == keys && t.refused.is_none() && t.domain_hole.is_none())
-        else {
-            return Ok(Value::None);
+    ) -> Result<(), Stop> {
+        let law = match self.move_law(m, mv, &tuple.env, tctx)? {
+            Law::Hole(_) => return Ok(()),
+            law @ (Law::Day(_) | Law::None) => law.day(),
         };
-        match self.move_law(m, mv, &tuple.env, tctx)? {
-            Law::Hole(_) => Ok(Value::None),
-            law @ (Law::Day(_) | Law::None) => self.ev(m, when, &tuple.env, tctx.at_law(law.day())),
+        let ctx = tctx.at_law(law);
+        for bind in mv.binds.iter().take(tuple.keys.len()) {
+            if matches!(self.where_keeps(m, &bind.node, &tuple.env, ctx)?, Kept::Out) {
+                return Ok(());
+            }
         }
+        if let (Some(when), None, None) = (&mv.decl.when, &tuple.refused, &tuple.domain_hole) {
+            self.ev(m, when, &tuple.env, ctx)?;
+        }
+        Ok(())
     }
 
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
@@ -400,11 +409,12 @@ impl Engine {
     /// list; a refused tuple's, whose `when` decides whether the list holds it, from the list
     /// or, with the list in progress, as the list makes it; and where the move's tuples stop
     /// its list, the list's stop (refcore's `find_inst`). A traced read reads as an untraced
-    /// one: its explanation lists the rows the answer rests on, none of the list's bodies (E
-    /// §10). What reading them meets is the plan's, no reader's, and a list it makes leaves
-    /// what judging the list's links meets to the list's next reader of its instances
-    /// ([`Engine::existence_list`]). L §5.19 Links, §5.11, E §4.1 steps 1–2, §3.2 (P22, P30,
-    /// P40).
+    /// one: its explanation lists the rows the answer rests on, those that decide that the
+    /// instance exists first, its tuple's `where`s and its `when` ([`Engine::trace_existence`]),
+    /// then its day, none of the list's bodies (E §10). What reading them meets is the plan's,
+    /// no reader's, and a list it makes leaves what judging the list's links meets to the
+    /// list's next reader of its instances ([`Engine::existence_list`]). L §5.19 Links, §5.11,
+    /// E §4.1 steps 1–2, §3.2 (P22, P30, P40, P43).
     ///
     /// # Errors
     ///
@@ -417,6 +427,7 @@ impl Engine {
         keys: &[KeyVal],
         cut: Day,
     ) -> Result<Option<MvRef>, Stop> {
+        self.trace_existence(m, mv, keys, cut)?;
         let open = !self.plan_active.contains(&(mv.id.clone(), cut));
         // a decision's instances are its runs' (E §4.1)
         if !mv.decision {
