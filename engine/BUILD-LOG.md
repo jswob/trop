@@ -8239,3 +8239,63 @@ Pick P42 rules `ed` (`tmp/sortwork/fix/c2_link.tally`, `explain dl[2026-02]`, a 
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 0.18 % of the week this turn (1.11 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check quick: green, 11 steps (69s)`; `check commit: green, 24 steps (137s)`.
+
+## 2026-11-24 M4 gate, an existence read's `where` rows in explain: P43 (issue #252)
+
+The coordinator's probe `p40b` e4 (`tmp/sortwork/fix/p40b.tally`, `explain loose[2026-04]`): row r0404 names `spend[2026-01, a]`, a plan whose `where` is `ten / dz[m] > 0`. The explanation listed the day's row `d25` and not the `where`'s rows. By P30 and P42 (P43) those rows decide that the instance exists, so they print, before the day. Refcore's other rows (the whole list's `dz` and `loose` cells) are #255's held form (P22), not the answer. On `build/m4` from b9969e50.
+
+**One statement for every existence read under a trace** (L §5.19 Links, §5.14 Keys, §8.2; E §10). What decides that the named instance exists prints, in binding order:
+- its tuple's `where`s, each at the tuple, up to one that drops or refuses it;
+- then, for a plain tuple, the move's `when`, a plan's or a decision's;
+- then its day, where the read is `o.fulfils`.
+
+No other tuple's rows print.
+- **`walk/tuples.rs` `trace_existence`** (with its step `existence_reads`) replaces P42's `trace_link_when` and `tuple_when`:
+  - It finds the tuple untraced (`plan_tuples`), as before P42: the plain tuple at the keys, or the refused one a `where` ended before them.
+  - It reads again, traced: each bound key's `where` (`where_keeps`) at the tuple's law date, then the `when`.
+  - The law date is the one at the whole tuple. That is the date each `where` was read at: a `where` that reads a law-dated fact waits for it, and one that doesn't is read at a date its `at` takes from earlier keys only.
+- **Called** from the binding that judges a link (`book/members.rs` `span_members`, for every move now, not only one with a `when`) and at the start of `linked_instance`.
+- **P42's traced `move_tuples` is undone.** It printed every tuple's `where` rows, as refcore's `link_tuple` reads them, and P43 counts those among refcore's held rows.
+
+**e4:**
+- Before: `[2] row v:d25`, `[3] row apr:bank[r0406]`.
+- After: `[2] ten`, `[3] dz[2026-01]`, `[4] d25`, `[5] r0406`. The same alone, after f and before it.
+
+**Crossings** (`tmp/sortwork/fix/README.md`; the earlier outputs kept in `out_p42/`):
+- **Refcore's bytes still:**
+  - `p40a` (all five asks);
+  - `c1_stop` e and `d e`;
+  - `c2_link` ed and both full orders;
+  - `c3_dec`;
+  - `c4_when` ed, ept, epf, qd, qn, qz and the mixed orders of ed with qd, dq and qdd;
+  - `c5_wref` qw.
+- **New text, `c6_own`:** `efs` is `spend`'s own instance read while its list is made. It gives `loose[2026-04]` the same causes as e4. Refcore refuses it with `RUN-CYCLE` (P30's form, #255).
+- **Now differ by order alone:**
+  - Which: `c2_link` ez and en, `c4_when` en, epo and ez, and the orders that hold them.
+  - Checked: the same lines once the row numbers are dropped and the lines sorted.
+  - The order: the engine prints the named tuple's own `where` row (`dz[2026-03]`; for `own[2026-04]`, `dz[2026-04]` and `ok2[2026-04]`) before the other tuples' rows. Those come later, from the list a refused tuple's open read makes.
+  - Refcore's `link_tuple` reads every tuple first. It is the source P43 holds for #255. If T stored any of these with refcore's bytes after P42, they turn red.
+- **Unchanged differences:** `c1_stop` `f e` and `e f` (refcore's B2), `c5_wref` ew (P22's rows).
+
+**Survivor sites for T** (the vectors are the engine's bytes, held for #255 where refcore's order or rows differ):
+- **The tuple search** (rows 70 and 71's code moved again, now `trace_existence`'s `find`):
+  - `==` → `!=`: `p40b` e4 (`dz[2026-02]` for `dz[2026-01]`).
+  - `||` → `&&`: e4 (the `where` rows vanish).
+  - The inner `&&` → `||`: `c4_when` en (`own[2026-03]`, the refused tuple, is taken for `own[2026-04]`, so `ok2[2026-04]` moves).
+- **The `Load` guard** (rows 72 and 73) is in `trace_existence`'s last `match`.
+  - Row 73 (`→ true`) is reached by `c5_wref` ew, and now also by `c2_link` ez, whose refused `where` (`dz[2026-03] = 0`) would stop the explanation.
+  - Row 72 has no text.
+- **`existence_reads`:**
+  - The `when` arm is reached by `c2_link` ed (a decision's) and `c4_when` en (a plan's).
+  - The `Kept::Out` return: I expect it to be equivalent, since the tuple found passed every `where` it reads.
+  - The `Law::Hole` arm has no probe.
+- **`linked_instance`'s call** prints only where the binding's own call doesn't run: a binding at a walk point (`ctx.at`) or a row read by its id. I have no probe for either; row 60's input meets `RUN-RECORD` first.
+- **Gone:** `trace_link_when`'s early return for a move with no `when`, and `tuple_when`.
+
+- **Size** (`git diff --shortstat -- engine/crates`): 2 files, +51 −39.
+- **Files:** `walk/tuples.rs`, `book/members.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved, none built this time.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.11 % of the week this turn (1.22 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green, 11 steps (95s)`; `check commit: green, 24 steps (177s)`.
