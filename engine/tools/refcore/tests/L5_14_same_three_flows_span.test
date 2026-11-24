@@ -1,6 +1,6 @@
 # tally 2.3.1 rulings 17 B (G1's review, N9): three sides (03-05, 03-07, 03-09): fb, over 05 to 09, known;
 # fa, from 06, the hole; fy, a two-sided group whose days both fall in March, known (-100.00 at wb). Before: fb
-# and fy the hole.
+# and fy the hole. fb lists x1, x2 and x3 (N1, re-stored at W2c).
 === p10_same_three.tally
 model p10
   tally 2
@@ -65,8 +65,11 @@ fa: ?"x1, x2 and x3 are one, but leg cash differs on 2026-03-05, 2026-03-07, 202
   unfulfilled: x2
   cut 2026-06-10
 fb: 100.00 PLN
+  unfulfilled: x1
+  unfulfilled: x2
   unfulfilled: x3
   cut 2026-06-10
 fy: -100.00 PLN
   unfulfilled: y1
+  unfulfilled: y2
   cut 2026-06-10

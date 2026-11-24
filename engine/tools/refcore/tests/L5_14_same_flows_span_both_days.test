@@ -1,6 +1,7 @@
 # tally 2.3.1 rulings 17 B (L l.1359; G1's review, N9): a `same` group is one movement whose day is a hole
 # bounded by its sides' days (03-05, 03-07): flows over a span holding both is known (f_b 100.00), over one
-# holding the last alone the hole (f_a), over one after both 0 (f_n). Before: f_a 100.00, f_b the hole.
+# holding the last alone the hole (f_a), over one after both 0 (f_n); over one between the days the hole (f_6,
+# W2c). Each lists both sides (N1). Before: f_a 100.00, f_b the hole, f_6 0.00.
 === p09_same_two.tally
 model p09
   tally 2
@@ -74,13 +75,16 @@ version rd
   pad w2 from world
   stated[w2] = 100.00 PLN at 2026-03-06 end "s"
   stated[w2] = 250.00 PLN at 2026-04-15 end "s"
-=== expect f_a f_b f_n f_x f_y
+=== expect f_a f_b f_n f_6 f_x f_y
 f_a: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
   cut 2026-06-10
 f_b: 100.00 PLN
+  unfulfilled: in1
   unfulfilled: in2
   cut 2026-06-10
 f_n: 0.00 PLN
+  cut 2026-06-10
+f_6: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
   cut 2026-06-10
 f_x: ?"j1 and j2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (j1) and 100.00 PLN (j2)" (j1, j2)
   pad: w2 2026-03-06 end, pads:rd:w2@2026-03-06 end of ?"j1 and j2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (j1) and 100.00 PLN (j2)" (j1, j2)

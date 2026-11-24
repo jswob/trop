@@ -122,15 +122,22 @@ def m_hole_day_changed(self, src, name, rec, ctx):
     P12, N1). Read while those adjustments are measured (a move that reads the field), the field is the booking's."""
     if ('hadjs', self.wkey(ctx)) + self.upto_tag() in self.inst_active:
         return rec
-    amt = ends = False
+    amt = False
+    ends = set()
     for a in self.hole_inst_adjustments(src, ctx):
         if a.leg.name == name:
             amt = amt or isinstance(a.delta, Hole) or a.delta.q != 0
-            ends = ends or getattr(a, 'moved', False)
+            if getattr(a, 'moved', False):
+                # only the end the version moves (E l.247 "a leg's field it changes"; G1's review, p13 k2_from)
+                fr, to = getattr(a, 'froms', None), getattr(a, 'tos', None)
+                if fr is None or fr[0] != fr[1]:
+                    ends.add('from')
+                if to is None or to[0] != to[1]:
+                    ends.add('to')
     if not (amt or ends):
         return rec
     h = src.day
-    return Rec([(k, h if (k == 'amount' and amt) or (k in ('from', 'to') and ends) else v) for k, v in rec.fields])
+    return Rec([(k, h if (k == 'amount' and amt) or k in ends else v) for k, v in rec.fields])
 
 
 def m_mv_by_id(self, mid, ctx):
@@ -1871,6 +1878,14 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
         before = set(e.qs for e in lg.ents if e.key <= lo and e.kind == 'hole' and e.qs)
         opened = set(e.qs for e in in_sp if e.kind == 'hole' and e.qs) - before
         closing = set(e.qs for e in in_sp if e.kind == 'unsame' and e.qs in opened)
+        # a group opened before the span and closed after it may fall in it: the hole (p09 f_6)
+        uns = {}
+        for e in lg.ents:
+            if e.kind == 'unsame' and e.qs:
+                uns.setdefault(e.qs, []).append(e.key)
+        for q in sorted(before, key=str):
+            if q in uns and all(k > limit for k in uns[q]):
+                holes.append(_reask(Hole(q), 'flows of %s' % place))
         prev_unsame = None
         for e in lg.ents:
             if prev_unsame is not None and e.kind == 'delta' and e.key == prev_unsame.key:
@@ -1879,6 +1894,11 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
                 continue
             prev_unsame = None
             if lo < e.key <= limit and e.kind == 'hole' and e.qs in closing:
+                # the group's first side, counted known at its last: its register is still the read's (N1)
+                for r in e.reg:
+                    self.reg(r)
+                if e.coll is not None:
+                    self.cur.merge(e.coll)
                 continue
             if lo < e.key <= limit and e.kind == 'unsame' and e.qs and e.qs not in opened:
                 holes.append(_reask(Hole(e.qs), 'flows of %s' % place))
