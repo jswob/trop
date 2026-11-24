@@ -356,9 +356,9 @@ impl Engine {
 
     /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
     /// when no tuple has those keys or its `when` is false; a `when` that is a hole is taken
-    /// as existing, its link judged where its instance is (refcore's `link_tuple`), and so is
-    /// a refused `where`'s; a refused `when` refuses the link with its instance, a plan's and
-    /// a decision's (tally 2.3.1 R2, rulings 16 Q1); a decision's whose `when` reads running
+    /// as existing, its link judged where its instance is (refcore's `link_tuple`); a refused
+    /// `where` or `when` refuses the link with its instance, a plan's and a decision's (tally
+    /// 2.3.1 R2, rulings 16 Q1, rulings 18); a decision's whose `when` reads running
     /// state is judged at its walk point. L §5.19 Links, E §4.1 step 2, §4.2 step 3 (tally
     /// 2.3.1 R6, C-9).
     ///
@@ -383,6 +383,13 @@ impl Engine {
         };
         if tuple.exists == Exists::No {
             return Ok(LinkVerdict::Missing);
+        }
+        // a link to an instance its `where` refuses is refused with it, a plan's and a
+        // decision's, on the reads that refused it (tally 2.3.1 R2, rulings 16 Q1 whole,
+        // rulings 18, rulings 19 C)
+        if let Some(err) = &tuple.refused {
+            self.absorb(&tuple.coll);
+            return Ok(LinkVerdict::Refused(err.clone()));
         }
         if let (Some(when), Exists::Yes, None, None) = (
             &mv.decl.when,
