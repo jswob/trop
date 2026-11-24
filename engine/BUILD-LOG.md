@@ -8680,3 +8680,47 @@ The builder's turn on G2's fix review (`tmp/spec-2.3.1/inputs/review-g2fix.md`, 
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 2.62 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.73 % this turn (1.89 % at its start).
 - **Checks:** `check quick: green, 11 steps (53s)`; `check commit: red at tests, stopped after 10 of 24 steps (118s)`, red only on the 102 ids above.
+
+## 2026-11-24 tally 2.3.1 G1's last fix, statement B into flows and the nominal words (issue #259)
+
+The builder's turn on the lead's probes of G1's last fix (`tmp/spec-2.3.1/inputs/lead-probes/g1last-verdict.md`, pick P13), on top of G2's 604f5fe1. Each commit was swept over every probe of both reviews (`g1fix/sweep2.sh`; the worktree's `tmp/` was rebuilt, so the baseline `g1fix/d-base` is a fresh release build at 604f5fe1, then `d1`, `d2`). Every moved line is below; nothing else moved. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 2fc9d570 `fix(eval): nominal 0's refusal in rulings 14's words`
+- 31202ab5 `fix(walk): flows strictly between a same group's days is its hole`
+
+**Each item, its probe and the engine's line now:**
+- **L2** (statement B, `walk/flows.rs` `one_end_inside`): `g1/p09_same_two` f_6 (`flows(wallet, 2026-03-06 .. 2026-03-06)`, strictly between 03-05 and 03-07) is `?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)` (`0.00 PLN` before), refcore W2c's line.
+  - The span is tested against the group's range, from its first side's Open to the Close that ends it:
+    - a span that holds every day counts the movement;
+    - one that misses the range adds nothing;
+    - any other is the hole, one strictly between the days included.
+  - A pair whose last side ended no hole keeps the old test, the hole where its first day is in the span.
+  - f_a, f_b, f_n, the other spans and `f10`'s… stay as they were.
+- **The words** (`eval/rates.rs`): `p08_nominal` a0, p0 and `p19_factor_nominal` pr are `refused: RUN-DOMAIN nominal 0: m is a positive int` (the `(L §3.3)` suffix gone).
+- **L1** (`g1fix/f10_two_day_parts.tally`, every ask `tally run: not implemented`, exit 69): **not built, STOP-REPORT below.**
+  - This is not the `same` group's walk. Every ask of a reality whose kind keeps parts stops `NotBuilt("parts at run")` (`ask/answer.rs` `answer_lent`, `keeps_parts`): the parts walk is M5b's (`engine/spec/BUILD-ORDER.md` l.44, l.257).
+  - The same text without its `same` line (`g1fix/f10_no_same.tally`) stops the same way.
+
+**What `check commit` shows red** (one run, after the last commit): 102 ids, the same count as G2's last entry's 102. Each id the two changes can reach is among them, with nothing new: `spec/g1/a9_nominal/q_0` (now `… m is a positive int`), the six `spec/p12/* h_*__z_c`, B's bindings (`t23-g1/same-end-differ` …), A's `r11/expr_stays`. No `flows` vector moved: no stored answer reads a span strictly between a group's days.
+
+- **Size** (`git diff --shortstat 604f5fe1 -- engine/crates`): 3 files, +22 −11 (the unit test `a_same_movement_of_two_days_is_known_after_both` gains `f_between`).
+- **Kernel files touched:** `eval/rates.rs`, `walk/flows.rs`, `book/same_booking.rs` (its test). No fence module.
+- **Exceptions:** +0.
+- **Mutants:** none proved. New site for T: `one_end_inside`'s `e.at <= limit && lo < c.at`.
+- **Usage:** about 0.13 % of the week this turn, 2.04 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
+- **Checks:** `check quick: green, 11 steps (52s)`; `check commit: red at tests, stopped after 10 of 24 steps (106s)`, red only on the 102 ids above.
+
+## STOP-REPORT 2026-11-24: f10's parts walk over a same group is M5b's, not built in this round
+
+- **Kind:** other (a finding asks for a milestone's form the build order places later)
+- **Where:** the text `tmp/spec-2.3.1/inputs/review/g1fix/f10_two_day_parts.tally` (kind `savings`: `owned by arrive`, `step`, `takes`). The finding: the lead's verdict L1. The code: `ask/answer.rs` `answer_lent` (`if self.parts { return Err(Stop::NotBuilt("parts at run")) }`) and `keeps_parts`.
+- **Rule or gate:** `engine/spec/BUILD-ORDER.md` M5b ("Parts and labels": owned and batched kinds, arrivals, takes, relabels, R-115, hole parts; l.44, l.257 to l.261); L §5.7, §3.6.
+- **What happens:**
+  - `engine/target/release/tally run …/f10_two_day_parts.tally` gives `tally run: not implemented`, exit 69, for every ask, b4 (a plain balance before either day) included.
+  - `tmp/spec-2.3.1/g1fix/f10_no_same.tally`, the same text without `same x1 = x2`, gives the same. No part of the engine walks parts yet.
+  - The text is valid, and refcore answers it, b4 to k8, but p8 is `REFCORE-NOT-YET`.
+- **What I tried:** read the stop back to its cause. Statement B's two-day booking is built for every walk that books a place's balance. The parts walk that would carry it into a place's parts (the arrival rule, the takes fill, R-115's check after every arrival) is a whole milestone (80 tests), with new kernel files.
+- **What I did not do:** build parts, or special-case f10.
+- **What I ask:** the lead rules L1 as M5b's, a not-built stop where the round requires none. Statement B's parts side then lands with M5b's walk, and f10 goes to M5b's checks (`b6` the HOLE-SAME hole, `b8` 100.00 PLN, `p6` per party). Or the lead names the narrower form wanted.
+- **State:** the last green commit is 31202ab5 on `check quick`. This entry is committed after it, and nothing is uncommitted.
