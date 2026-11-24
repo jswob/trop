@@ -686,7 +686,17 @@ impl Engine {
         run.inst.coll.merge(&met);
         run.inst.obs = linked;
         run.inst.err = None;
+        // refused only by its own row, which an earlier answer refused from its day because
+        // this point found the instance none: none still (R6; the lead's P15)
+        let own_none = match &body {
+            Err(Stop::Refused(r)) => self.none_by_own_row(cut, &run.inst.id, r)?,
+            Ok(_) | Err(_) => false,
+        };
         match body {
+            Err(Stop::Refused(_)) if own_none => {
+                run.inst.exists = Exists::No;
+                self.link_reads_at_point(id, &run.inst.id, &met)?;
+            }
             Ok(b) => {
                 run.inst.exists = b.exists;
                 run.inst.legs = b.legs;
@@ -938,7 +948,7 @@ impl Engine {
             }
         }
         for (row, err, coll) in early {
-            self.note_early_row(cut, &row, &err, &coll)?;
+            self.note_early_row(cut, &row, &err, &coll, un.why.is_none().then_some(tid))?;
         }
         Ok(())
     }
@@ -1790,7 +1800,7 @@ version feb
             .replace(
                 "ask b:",
                 "ask bp: bal(konto, 2026-03-31) with lim = 500.00 PLN\n\nask ob: \
-                 observed(topup[2026-02]).cash.amount\n\nask b:",
+                 observed(topup[2026-02]).cash.amount\n\nask dy: topup[2026-02].day\n\nask b:",
             );
         let lines = |lim: &str, ask: &str| {
             let text = early.replace("lim = LIM \"s\"", &format!("lim = {lim} \"s\""));
@@ -1821,6 +1831,13 @@ version feb
         assert!(
             read.iter().any(|l| l == "  assumed: lim guess (lim)"),
             "{read:?}"
+        );
+        // the instance is none at its point whatever its own row's refusal (the lead's P15)
+        let day = lines("500.00 PLN", "dy");
+        assert_eq!(
+            day.first().map(String::as_str),
+            Some("dy: refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it"),
+            "{day:?}"
         );
     }
 

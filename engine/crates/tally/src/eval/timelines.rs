@@ -133,6 +133,9 @@ pub(crate) struct EarlyRow {
     err: Refusal,
     /// The read set that refused it, which every reader of the row carries.
     coll: Collected,
+    /// The decision instance its point found none, whose link it is; none where the run's
+    /// own refusal refused it.
+    none_of: Option<String>,
 }
 
 impl EarlyRow {
@@ -274,9 +277,34 @@ impl Engine {
             .map(|e| (e.err.clone(), e.coll.clone())))
     }
 
+    /// Whether refusal `r`, met by decision instance `tid`'s run under cut `cut`, is the one
+    /// an earlier answer of the ask gave a row of its own because its point found it none,
+    /// on the timeline in force: the row refuses from its day only because the instance
+    /// doesn't exist, so the instance is none still, and a field read of it `RUN-NONE` (R6;
+    /// tally 2.3.1 rulings 16 Q2, the lead's P15).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a timeline whose layer was freed.
+    pub(crate) fn none_by_own_row(&self, cut: Day, tid: &str, r: &Refusal) -> Result<bool, Stop> {
+        if self.early_seed.is_empty() {
+            return Ok(false);
+        }
+        let pins = self.layer_data(self.timelines.now.pins)?;
+        let world = self.timelines.now.world;
+        Ok(self.early_seed.iter().any(|e| {
+            e.world == world
+                && e.cut == cut
+                && e.none_of.as_deref() == Some(tid)
+                && e.err == *r
+                && e.pins.same(pins)
+        }))
+    }
+
     /// Notes row `row` under cut `cut`, dated before its decision's point, its link refused
     /// there by `err` on the read set `coll`, on the timeline in force, for the ask's next
-    /// answer (L §8.4 l.2356; tally 2.3.1 rulings 19 C).
+    /// answer; `none_of`, the instance, where its point found it none (L §8.4 l.2356; tally
+    /// 2.3.1 rulings 19 C, the lead's P15).
     ///
     /// # Errors
     ///
@@ -287,6 +315,7 @@ impl Engine {
         row: &str,
         err: &Refusal,
         coll: &Collected,
+        none_of: Option<&str>,
     ) -> Result<(), Stop> {
         let found = EarlyRow {
             world: self.timelines.now.world,
@@ -295,6 +324,7 @@ impl Engine {
             row: row.to_owned(),
             err: err.clone(),
             coll: coll.clone(),
+            none_of: none_of.map(str::to_owned),
         };
         if !self.early_found.iter().any(|e| e.same_row(&found)) {
             self.early_found.push(found);
