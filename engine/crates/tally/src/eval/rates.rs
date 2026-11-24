@@ -235,7 +235,7 @@ fn nominal_positive(how: Compounding) -> Result<Compounding, Stop> {
     {
         return Err(refuse(
             Run::Domain,
-            format!("nominal {times}: m is a positive int (L §3.3)"),
+            format!("nominal {times}: m is a positive int"),
         ));
     }
     Ok(how)
@@ -466,7 +466,7 @@ version v
             .filter(|line| line.starts_with("q_"))
             .map(String::as_str)
             .collect();
-        let refused = "refused: RUN-DOMAIN nominal 0: m is a positive int (L §3.3)";
+        let refused = "refused: RUN-DOMAIN nominal 0: m is a positive int";
         assert_eq!(
             values,
             [
