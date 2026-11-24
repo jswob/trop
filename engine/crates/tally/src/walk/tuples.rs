@@ -249,11 +249,7 @@ impl Engine {
         let before = self.trace_walked();
         let tuples = self.plan_tuples(m, mv, cut);
         self.trace_walked_back(before);
-        // the tuple at the keys, or the refused one a `where` ended before them
-        let Some(tuple) = tuples?
-            .into_iter()
-            .find(|t| t.keys == keys || (t.refused.is_some() && keys.starts_with(&t.keys)))
-        else {
+        let Some(tuple) = tuple_at(tuples?, keys) else {
             return Ok(());
         };
         let tctx = self.timeline_ctx(None, cut);
@@ -370,11 +366,8 @@ impl Engine {
         let tctx = self.timeline_ctx(None, cut);
         // the move's tuples at the cut, kept once for every link and read there (fence F7)
         let found = match self.kept_tuple(m, mv, keys, cut)? {
-            KeptTuple::Kept(found, _) => found.map(|t| *t),
-            KeptTuple::Own => self
-                .move_tuples(m, mv, tctx)?
-                .into_iter()
-                .find(|t| t.keys == keys),
+            KeptTuple::Kept(found) => found.map(|t| *t),
+            KeptTuple::Own => tuple_at(self.move_tuples(m, mv, tctx)?, keys),
         };
         let Some(tuple) = found else {
             return Ok(None);
@@ -406,19 +399,20 @@ impl Engine {
     /// list holds none (no tuple at the keys, or a day `never` or `none`). An existence read
     /// takes no guard on the move's list: what it evaluates are ordinary reads, a cycle only
     /// where one returns to a cell still being evaluated (P30). A decision's is taken from its
-    /// list; a refused tuple's, whose `when` decides whether the list holds it, from the list
-    /// or, with the list in progress, as the list makes it; and where the move's tuples stop
-    /// its list, the list's stop (refcore's `find_inst`). A traced read reads as an untraced
+    /// list; a refused tuple's, whose day and `when` decide whether the list holds it, from the
+    /// list or, with the list in progress, as the list makes it, a tuple refused before the
+    /// keys standing for itself alone, never for the list (refcore's `find_inst`; tally 2.3.1
+    /// R6). A traced read reads as an untraced
     /// one: its explanation lists the rows the answer rests on, those that decide that the
     /// instance exists first, its tuple's `where`s and its `when` ([`Engine::trace_existence`]),
     /// then its day, none of the list's bodies (E §10). What reading them meets is the plan's,
     /// no reader's, and a list it makes leaves what judging the list's links meets to the
     /// list's next reader of its instances ([`Engine::existence_list`]). L §5.19 Links, §5.11,
-    /// E §4.1 steps 1–2, §3.2 (P22, P30, P40, P43).
+    /// §5.14 An instance's existence is a cell, E §4.1 steps 1–2, §3.2 (P22, P30, P43; R6).
     ///
     /// # Errors
     ///
-    /// A load refusal met at run; the stop of the move's tuples; as
+    /// A load refusal met at run; the refusals the binding tuples meet; as
     /// [`Engine::move_instances`] for those taken from the list.
     pub(crate) fn linked_instance(
         &mut self,
@@ -432,30 +426,23 @@ impl Engine {
         // a decision's instances are its runs' (E §4.1)
         if !mv.decision {
             // the move's tuples at the cut, kept once for every link and read there (fence F7)
-            let (found, stops) = match self.kept_tuple(m, mv, keys, cut)? {
-                KeptTuple::Kept(found, stops) => (found.map(|t| *t), stops),
-                KeptTuple::Own => {
-                    let tuples = self.plan_tuples(m, mv, cut)?;
-                    let stops = tuples
-                        .iter()
-                        .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len());
-                    (tuples.into_iter().find(|t| t.keys == keys), stops)
-                }
+            let found = match self.kept_tuple(m, mv, keys, cut)? {
+                KeptTuple::Kept(found) => found.map(|t| *t),
+                KeptTuple::Own => tuple_at(self.plan_tuples(m, mv, cut)?, keys),
             };
-            match (stops, found) {
-                (false, None) => return Ok(None),
-                (false, Some(tuple)) if tuple.refused.is_none() => {
+            match found {
+                None => return Ok(None),
+                Some(tuple) if tuple.refused.is_none() => {
                     return self.linked_day(m, mv, tuple, cut);
                 }
-                (false, Some(tuple)) if !open => return self.linked_refused(m, mv, tuple, cut),
-                (true, _) if !open => return Err(self.tuples_stop(m, mv, cut)?),
-                _ => {}
+                Some(tuple) if !open => return self.linked_refused(m, mv, tuple, cut),
+                Some(_) => {}
             }
         }
         let insts = self.existence_list(m, mv, cut)?;
         Ok(insts
             .iter()
-            .find(|i| i.keys == keys)
+            .find(|i| i.keys == keys || (i.err.is_some() && keys.starts_with(&i.keys)))
             .map(crate::book::inst_ref))
     }
 
@@ -484,22 +471,6 @@ impl Engine {
         self.reads_back(mark);
         self.holder = outer;
         Ok(made?.as_ref().map(crate::book::inst_ref))
-    }
-
-    /// The stop of move `mv`'s list at cut `cut` read while it is made: the refusal of its
-    /// first tuple refused with its later keys unbound, as the list meets it (refcore's
-    /// `insts_of_tuples` raises). L §5.14 Keys, §8.4, E §4.1 step 1 (P30).
-    ///
-    /// # Errors
-    ///
-    /// The refusals the binding tuples meet; `ENGINE-INVARIANT` where no tuple stops the list.
-    fn tuples_stop(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Stop, Stop> {
-        for tuple in self.plan_tuples(m, mv, cut)? {
-            if let (Some(err), true) = (tuple.refused, tuple.keys.len() < mv.binds.len()) {
-                return Ok(Stop::Refused(err));
-            }
-        }
-        Err(invariant("a stopped list with no refused tuple"))
     }
 
     /// The instance of a link's plain or hole tuple as the list holds it, its day read at cut
@@ -660,6 +631,15 @@ impl Law {
             Law::None | Law::Hole(_) => None,
         }
     }
+}
+
+/// The tuple a link names at keys `keys`: the one with those keys, or the refused one a
+/// `where` ended before them, which stands for its keys' instances alone (L §5.14 Keys, An
+/// instance's existence is a cell; tally 2.3.1 R6).
+pub(super) fn tuple_at(tuples: Vec<Tuple>, keys: &[KeyVal]) -> Option<Tuple> {
+    tuples
+        .into_iter()
+        .find(|t| t.keys == keys || (t.refused.is_some() && keys.starts_with(&t.keys)))
 }
 
 /// A tuple extended by one binding's member: its variable bound, its key made a key of the

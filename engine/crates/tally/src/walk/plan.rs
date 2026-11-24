@@ -544,15 +544,16 @@ impl Engine {
         Ok(Some(inst))
     }
 
-    /// The instance of a tuple whose last key's `where` is refused: a refused instance, its
-    /// day and legs read as any instance's, none where its `when` is false or its keys weren't
-    /// there; a tuple whose later keys are unbound has no day or places to read, so the move's
-    /// instances are refused, every place from the run's start (refcore's `insts_of_tuples`,
-    /// its refused tuples). L §5.14 Keys, §8.4 (tally 2.1.6); E §4.1 step 2.
+    /// The instance of a tuple whose key's `where` is refused: a refused instance, its day and
+    /// legs read as any instance's, none where its `when` is false or its keys weren't there;
+    /// a tuple whose later keys are unbound stands for itself alone
+    /// ([`Engine::stopped_tuple`]), never for the move's list (refcore's `insts_of_tuples`,
+    /// its refused tuples). L §5.14 Keys, An instance's existence is a cell, §8.4 (tally
+    /// 2.1.6, 2.3.1 R6); E §4.1 step 2.
     ///
     /// # Errors
     ///
-    /// The refusal, for a tuple whose later keys are unbound; a load refusal met at run.
+    /// A load refusal met at run.
     pub(super) fn refused_tuple(
         &mut self,
         m: &Reality,
@@ -562,7 +563,7 @@ impl Engine {
         tctx: Ctx,
     ) -> Result<Option<Inst>, Stop> {
         if tuple.keys.len() < mv.binds.len() {
-            return Err(Stop::Refused(err));
+            return self.stopped_tuple(m, mv, (tuple, upto), err, tctx);
         }
         let seed = Seed {
             env: tuple.env,
@@ -580,6 +581,129 @@ impl Engine {
         inst.err = Some(err);
         inst.coll.merge(&tuple.coll);
         Ok(Some(inst))
+    }
+
+    /// The instance of a tuple refused before its later keys are bound: a refused movement
+    /// standing for itself alone, its existence read on in its order, its day, then its
+    /// `when`, each left unread where it reads a key the refusal left unbound: none where the
+    /// day is `never` or `none` or the `when` false; a hole day reaches every span, a day
+    /// refused or unread every place from the run's start; its legs' places read where they
+    /// need no such key, else every place from its day (L §5.14 An instance's existence is a
+    /// cell, §8.4; tally 2.3.1 R6, P40's list stop overturned). E §4.1 step 2.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn stopped_tuple(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (tuple, upto): (Tuple, Option<Day>),
+        err: Refusal,
+        tctx: Ctx,
+    ) -> Result<Option<Inst>, Stop> {
+        let mut inst = Inst::new(mv, tuple.keys, tuple.env);
+        inst.err = Some(err);
+        self.push();
+        let made = self.stopped_parts(m, mv, &mut inst, (tctx, upto));
+        let met = self.pop_alone();
+        inst.coll.merge(&met);
+        inst.coll.merge(&tuple.coll);
+        Ok(made?.then_some(inst))
+    }
+
+    /// The parts [`Engine::stopped_tuple`] reads into refused instance `inst`; false where it
+    /// doesn't exist. L §5.14, §8.4; E §5 steps 0–1.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn stopped_parts(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &mut Inst,
+        (tctx, upto): (Ctx, Option<Day>),
+    ) -> Result<bool, Stop> {
+        let bound = inst.keys.len();
+        if !reads_unbound(mv, bound, &mv.decl.on) {
+            self.push();
+            let read = self.law_and_day(m, mv, inst, tctx);
+            let day_coll = self.pop_alone();
+            self.absorb(&day_coll);
+            inst.day_coll = day_coll;
+            let day = match read {
+                Ok(Ok(Value::Never | Value::None)) => return Ok(false),
+                Ok(Ok(v)) => day_dated(m, v, &inst.id).map(Some),
+                Ok(Err(h)) => Ok(Some(Dated::Hole(h))),
+                Err(stop) => Err(stop),
+            };
+            match day {
+                Ok(day) => inst.day = day,
+                // a refused day as a hole one: the where's refusal is the instance's (R1)
+                Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => {}
+                Err(stop) => return Err(stop),
+            }
+        }
+        let day = match inst.day {
+            // a hole day has no booking cut to read the rest at, as `eval_inst`'s
+            Some(Dated::Hole(_)) => return Ok(true),
+            Some(Dated::Day(d)) => Some(d),
+            None => None,
+        };
+        if mv.decision {
+            return Ok(true);
+        }
+        if let Some(d) = day {
+            if upto.is_some_and(|u| d > u) {
+                // a walk up to a day books nothing after it (refcore's `eval_inst`, `upto`)
+                return Ok(false);
+            }
+            let cut = d.min(tctx.cut);
+            inst.cut = Some(cut);
+            if !keys_seen(m, mv, &inst.keys, (cut, self.timeline_world()))
+                || !self.stopped_when(m, mv, inst, cut)?
+            {
+                return Ok(false);
+            }
+        }
+        let places = mv
+            .decl
+            .legs
+            .iter()
+            .all(|lg| !reads_unbound(mv, bound, &lg.from) && !reads_unbound(mv, bound, &lg.to));
+        if places {
+            self.refused_legs(m, mv, inst, (tctx, None))?;
+        }
+        Ok(true)
+    }
+
+    /// Whether refused instance `inst`, dated, may exist by its move's `when` at booking cut
+    /// `cut`: false only for a `when` that is false; one that reads a key left unbound isn't
+    /// read. L §5.14 An instance's existence is a cell (tally 2.3.1 R6, P42).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn stopped_when(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        inst: &Inst,
+        cut: Day,
+    ) -> Result<bool, Stop> {
+        let Some(when) = &mv.decl.when else {
+            return Ok(true);
+        };
+        if reads_unbound(mv, inst.keys.len(), when) {
+            return Ok(true);
+        }
+        let ctx = self.timeline_ctx(inst.law.day(), cut);
+        match self.ev(m, when, &inst.env, ctx) {
+            Ok(w) => Ok(w != Value::Bool(false)),
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => Ok(true),
+            Err(stop) => Err(stop),
+        }
     }
 
     /// A booked plan amount never changes: an instance's A₀, its existence and legs as read at
@@ -929,6 +1053,15 @@ impl Engine {
     }
 }
 
+/// Whether `e` reads a key of move `mv` past its first `bound` bindings, which a tuple refused
+/// before them leaves unbound (the walk's `move_law`, by the same `reads_var`). L §5.14 Keys.
+fn reads_unbound(mv: &MoveInfo, bound: usize, e: &Expr) -> bool {
+    mv.binds
+        .iter()
+        .skip(bound)
+        .any(|b| crate::eval::reads_var(e, &b.var))
+}
+
 /// Whether the keys of an instance were there at cut `cut` in world `world`: an index's key
 /// added by a later version or one the world doesn't see, or a thing entered after it, makes
 /// the instance one that didn't exist then (refcore's `keys_seen`). E §5 steps 1–3; L §6.4.
@@ -1177,10 +1310,11 @@ version facts
 "#;
 
     #[test]
-    fn a_refused_where_before_a_later_binding_refuses_every_place_from_the_start() {
-        // L §5.14 Keys, §8.4 (tally 2.1.6): topup[2026-02]'s where is refused before its tier
-        // is bound, so it has no day or places to read and the move's instances are refused,
-        // every place from the run's start, as refcore's insts_of_tuples raises
+    fn a_refused_where_before_a_later_binding_is_one_refused_movement_on_its_day() {
+        // L §5.14 An instance's existence is a cell, §8.4 (tally 2.3.1 R6, P40's list stop
+        // overturned): topup[2026-02]'s where is refused before its tier is bound; its day
+        // and its leg's places need no tier, so it is one refused movement on 2026-02-20 at
+        // box, and the other instances stand
         let given = vec![Given {
             path: "later_key.tally".to_owned(),
             bytes: Some(LATER_KEY.as_bytes().to_vec()),
@@ -1190,12 +1324,42 @@ version facts
         assert_eq!(
             answer.lines(),
             [
-                "q_bal (d = 2026-01-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "q_bal (d = 2026-01-20): (100.00 PLN, 6.00 PLN)",
+                "  unfulfilled: topup[2026-01, 1]",
+                "  unfulfilled: topup[2026-01, 2]",
                 "  cut 2026-02-15",
-                "q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)",
+                "q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)",
+                "  unfulfilled: topup[2026-01, 1]",
+                "  unfulfilled: topup[2026-01, 2]",
                 "  cut 2026-02-15"
             ],
-            "every place refused from the start"
+            "box refused from February's day, konto untouched"
+        );
+    }
+
+    #[test]
+    fn a_refused_tuple_whose_day_needs_a_later_key_refuses_its_places_from_the_start() {
+        // L §5.14, §8.4 (tally 2.3.1 R6): the day reads the tier the refusal left unbound, so
+        // it can't be read, a refused day as a hole one: box is refused from the run's start;
+        // its leg's places are still read, so konto stands
+        let text = LATER_KEY.replace("on day_of(m, dec_dom)", "on day_of(m, dec_dom + t)");
+        let given = vec![Given {
+            path: "later_key.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let request = Request::new(Asks::Named(vec!["q_bal".to_owned()]));
+        let answer = run(Files::new(given), &request).expect("an answer");
+        assert_eq!(
+            answer.lines(),
+            [
+                "q_bal (d = 2026-01-20): (100.00 PLN, refused: RUN-DIV division by zero)",
+                "  cut 2026-02-15",
+                "q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)",
+                "  unfulfilled: topup[2026-01, 1]",
+                "  unfulfilled: topup[2026-01, 2]",
+                "  cut 2026-02-15"
+            ],
+            "box refused from the start"
         );
     }
 

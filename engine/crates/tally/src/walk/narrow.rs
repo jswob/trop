@@ -66,8 +66,8 @@ pub(crate) struct Narrowed {
     made: BTreeMap<usize, Option<Inst>>,
     /// Each tuple's day once read.
     days: BTreeMap<usize, Probe>,
-    /// Whether a tuple is refused with its later keys unbound, which stops the list: every
-    /// read of the move at the cut is then read whole.
+    /// Whether a tuple is refused with its later keys unbound, which stands for itself alone
+    /// (tally 2.3.1 R6): every read of the move at the cut is then read whole.
     whole: bool,
     /// Whether the links of every instance an observation at the cut names are judged, their
     /// reads absorbed by the first reader.
@@ -91,8 +91,8 @@ pub(crate) enum Narrows {
 pub(super) enum KeptTuple {
     /// None kept: `Plans::Whole`, or a decision; the reader makes its own.
     Own,
-    /// The tuple at the keys, or none, and whether a tuple stops the move's list.
-    Kept(Option<Box<Tuple>>, bool),
+    /// The tuple at the keys, or the refused one a `where` ended before them, or none.
+    Kept(Option<Box<Tuple>>),
 }
 
 /// What reading a tuple's day at the cut gave, before its body (L §5.14, E §4.1 step 2).
@@ -274,8 +274,8 @@ impl Engine {
 
     /// Whether the narrow reads of move `mv` at cut `cut` may go on: its binding tuples made,
     /// once, as the list makes them, with the move's plan at that cut in progress; false where
-    /// one is refused with its later keys unbound, which stops the list (refcore's
-    /// `insts_of_tuples` raises); and the links of every instance an observation at the cut
+    /// one is refused with its later keys unbound, whose instance the list makes as it stands
+    /// (tally 2.3.1 R6); and the links of every instance an observation at the cut
     /// names judged, once, their reads absorbed by this reader, as the list's status loop
     /// absorbs them into the list's first reader. E §4.1 steps 1–3, L §5.19 Links.
     ///
@@ -300,10 +300,10 @@ impl Engine {
     }
 
     /// The tuple of plan move `mv` at keys `keys` under cut `cut`, as `move_tuples` gives it
-    /// there, from the move's tuples at that cut made once and kept, with whether one of them
-    /// is refused with its later keys unbound, which stops the move's list; a decision's, and
+    /// there, from the move's tuples at that cut made once and kept: the one at the keys, or
+    /// the refused one a `where` ended before them (`tuples.rs` `tuple_at`); a decision's, and
     /// any under `Plans::Whole`, its reader makes (the twin: `link_tuple`'s and
-    /// `linked_instance`'s own). E §4.1 step 1, L §5.19 Links; P8-L10.
+    /// `linked_instance`'s own). E §4.1 step 1, L §5.19 Links, §5.14 (tally 2.3.1 R6); P8-L10.
     ///
     /// # Errors
     ///
@@ -335,7 +335,14 @@ impl Engine {
                 break;
             }
         }
-        Ok(KeptTuple::Kept(found, entry.whole))
+        if found.is_none() && entry.whole {
+            found = entry
+                .tuples
+                .iter()
+                .find(|t| t.refused.is_some() && keys.starts_with(&t.keys))
+                .map(|t| Box::new(t.clone()));
+        }
+        Ok(KeptTuple::Kept(found))
     }
 
     /// Move `mv`'s binding tuples at cut `cut` made once and kept: under the move, their reads

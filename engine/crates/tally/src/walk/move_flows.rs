@@ -194,6 +194,15 @@ impl Engine {
                 continue;
             }
             let day = match &i.day {
+                // a refused movement on a hole day reaches every span refused: a refusal
+                // outranks a hole (L §8.4, §8 What an operation decides; tally 2.3.1 R6)
+                Some(Dated::Hole(_)) if i.err.is_some() => {
+                    acc.met.merge(&i.coll);
+                    return Err(i
+                        .err
+                        .clone()
+                        .map_or_else(|| invariant("a refused instance"), Stop::Refused));
+                }
                 Some(Dated::Hole(h)) => {
                     acc.holes.push(h.clone());
                     continue;
