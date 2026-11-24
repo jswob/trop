@@ -320,6 +320,8 @@ impl Engine {
                     if let Moving::Plan(i) = &x
                         && let Some(e) = &i.err
                     {
+                        // a refused result lists the members it took before (N5)
+                        self.members_before(m, &out, ctx.cut)?;
                         return Err(Stop::Refused(e.clone()));
                     }
                     continue;
@@ -341,6 +343,7 @@ impl Engine {
                 // 208.2; P21)
                 match (&i.err, reading) {
                     (Some(e), Reading::Stops) => {
+                        self.members_before(m, &out, ctx.cut)?;
                         self.absorb(&i.coll);
                         return Err(Stop::Refused(e.clone()));
                     }
@@ -388,28 +391,7 @@ impl Engine {
         out.retain(|(x, _)| !drop.contains(x.id()) || refused_of(&refusals, x.id()).is_some());
         let mut res = Vec::with_capacity(out.len());
         for (x, unknown) in out {
-            let mut coll = Collected::default();
-            match &x {
-                Moving::Plan(i) => {
-                    if unfulfilled(m, i, ctx.cut) {
-                        coll.note(self.entry_id(entry("unfulfilled", &i.id))?);
-                    }
-                    if i.status == Status::Uncertain {
-                        coll.note(self.entry_id(entry("uncertain", &i.id))?);
-                    }
-                    // what decided whether it counts, its existence and day; its amounts only
-                    // where a field read sums them (L §8.2 l.2252; tally 2.3.1 Q1.10, pick P16)
-                    coll.merge(i.exist_coll.as_ref().unwrap_or(&i.coll));
-                    self.group_sides(m, i, ctx.cut, &mut coll)?;
-                }
-                Moving::Obs(o) => coll.merge(&o.coll),
-                Moving::Adj(a) => coll.merge(&a.coll),
-                // a binding that counts a pad lists it (L §8.2, the `pad:` row; N3 on #241)
-                Moving::Pad(p, _) => {
-                    coll.merge(&p.coll);
-                    coll.merge(&p.reg);
-                }
-            }
+            let coll = self.member_reads(m, &x, ctx.cut)?;
             let day = x
                 .day()
                 .ok_or_else(|| invariant("a member of a binding with no day"))?;
@@ -423,6 +405,58 @@ impl Engine {
             });
         }
         Ok(res)
+    }
+
+    /// What member `x` of a binding brings to its reader under cut `cut`: its `unfulfilled`
+    /// and `uncertain` entries and what decided whether it counts, its existence and day, its
+    /// amounts only where a field read sums them; an observation's, an adjustment's and a pad's
+    /// reads (L §8.2 One read set l.2252; tally 2.3.1 Q1.10, pick P16; rulings 17 statement B).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::group_sides`].
+    fn member_reads(&mut self, m: &Reality, x: &Moving, cut: Day) -> Result<Collected, Stop> {
+        let mut coll = Collected::default();
+        match x {
+            Moving::Plan(i) => {
+                if unfulfilled(m, i, cut) {
+                    coll.note(self.entry_id(entry("unfulfilled", &i.id))?);
+                }
+                if i.status == Status::Uncertain {
+                    coll.note(self.entry_id(entry("uncertain", &i.id))?);
+                }
+                coll.merge(i.exist_coll.as_ref().unwrap_or(&i.coll));
+                self.group_sides(m, i, cut, &mut coll)?;
+            }
+            Moving::Obs(o) => coll.merge(&o.coll),
+            Moving::Adj(a) => coll.merge(&a.coll),
+            // a binding that counts a pad lists it (L §8.2, the `pad:` row; N3 on #241)
+            Moving::Pad(p, _) => {
+                coll.merge(&p.coll);
+                coll.merge(&p.reg);
+            }
+        }
+        Ok(coll)
+    }
+
+    /// The members `out` a binding took before an instance whose evaluation refuses it, their
+    /// reads taken by the reader: a refused result lists what it read like a value, the
+    /// members before the refused one included (L §8.2 One read set; tally 2.3.1 N5, P21).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::member_reads`].
+    fn members_before(
+        &mut self,
+        m: &Reality,
+        out: &[(Moving, Option<Hole>)],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        for (x, _) in out {
+            let coll = self.member_reads(m, x, cut)?;
+            self.absorb(&coll);
+        }
+        Ok(())
     }
 
     /// The register entries the other sides of `i`'s `same` group bring beside it: a binding
