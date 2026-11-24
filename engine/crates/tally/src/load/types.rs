@@ -414,6 +414,10 @@ impl Checker {
         let mut lit = None;
         if let Expr::Lit(written) = e {
             lit = Some(written.clone());
+        } else if let Expr::Lit(period @ (Lit::Month(..) | Lit::Quarter(..))) = e.unbracketed() {
+            // a period literal's position reaches through brackets: `(2026-07)` beside a key
+            // is that index's key, as `2026-07` is (L §2.5 Keys; tally 2.3.1 R5, N255.2)
+            lit = Some(period.clone());
         }
         Ok(Operand {
             ty,
