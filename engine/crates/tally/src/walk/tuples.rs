@@ -225,10 +225,11 @@ impl Engine {
         }
     }
 
-    /// Under a traced read, plan move `mv`'s `when` at its tuple at `keys`, read again at cut
-    /// `cut` and its law date, traced and kept nowhere: what a link's verdict that the instance
-    /// it names exists rests on, read where a binding judges the link (refcore's `link_tuple`;
-    /// L §5.19 Links, §8.2 One read set; E §10; P31).
+    /// Under a traced read, what a link's verdict that the instance it names exists rests on,
+    /// read where a binding judges the link and in the order judging it reads them: move
+    /// `mv`'s binding tuples at cut `cut`, then its `when` at the tuple at `keys`, a plan's or
+    /// a decision's, at its law date; traced and kept nowhere (refcore's `link_tuple`; L §5.19
+    /// Links, §8.2 One read set; E §10; P31, P42).
     ///
     /// # Errors
     ///
@@ -243,25 +244,16 @@ impl Engine {
         let Some(when) = &mv.decl.when else {
             return Ok(());
         };
-        if mv.decision || !self.tracing() {
+        if !self.tracing() {
             return Ok(());
         }
         let before = self.trace_walked();
-        let tuples = self.plan_tuples(m, mv, cut);
-        self.trace_walked_back(before);
-        let Some(tuple) = tuples?
-            .into_iter()
-            .find(|t| t.keys == keys && t.refused.is_none() && t.domain_hole.is_none())
-        else {
-            return Ok(());
-        };
         let tctx = self.timeline_ctx(None, cut);
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.push();
         self.trace_plan_open();
-        let read = match self.move_law(m, mv, &tuple.env, tctx) {
-            Ok(Law::Hole(_)) => Ok(Value::None),
-            Ok(law) => self.ev(m, when, &tuple.env, tctx.at_law(law.day())),
+        let read = match self.move_tuples(m, mv, tctx) {
+            Ok(tuples) => Ok(self.tuple_when(m, mv, (when, keys), &tuples, tctx)),
             Err(stop) => Err(stop),
         };
         let closed = self.trace_plan_close();
@@ -269,10 +261,37 @@ impl Engine {
         self.holder = outer;
         self.trace_walked_back(before);
         closed?;
-        match read {
+        match read? {
             Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
             Ok(_) | Err(Stop::Refused(_)) => Ok(()),
             Err(stop) => Err(stop),
+        }
+    }
+
+    /// Move `mv`'s `when` at its plain tuple at `keys` among `tuples`, at its law date; none
+    /// where no plain tuple is there or its law date is a hole (refcore's `link_tuple`, its
+    /// `when`). L §5.19 Links, §4.3.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_law`] and the `when`'s evaluation.
+    fn tuple_when(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (when, keys): (&crate::syntax::Expr, &[KeyVal]),
+        tuples: &[Tuple],
+        tctx: Ctx,
+    ) -> Result<Value, Stop> {
+        let Some(tuple) = tuples
+            .iter()
+            .find(|t| t.keys == keys && t.refused.is_none() && t.domain_hole.is_none())
+        else {
+            return Ok(Value::None);
+        };
+        match self.move_law(m, mv, &tuple.env, tctx)? {
+            Law::Hole(_) => Ok(Value::None),
+            law @ (Law::Day(_) | Law::None) => self.ev(m, when, &tuple.env, tctx.at_law(law.day())),
         }
     }
 
@@ -382,8 +401,10 @@ impl Engine {
     /// or, with the list in progress, as the list makes it; and where the move's tuples stop
     /// its list, the list's stop (refcore's `find_inst`). A traced read reads as an untraced
     /// one: its explanation lists the rows the answer rests on, none of the list's bodies (E
-    /// §10). What reading them meets is the plan's, no reader's. L §5.19 Links, §5.11, E §4.1
-    /// steps 1–2, §3.2 (P22, P30).
+    /// §10). What reading them meets is the plan's, no reader's, and a list it makes leaves
+    /// what judging the list's links meets to the list's next reader of its instances
+    /// ([`Engine::existence_list`]). L §5.19 Links, §5.11, E §4.1 steps 1–2, §3.2 (P22, P30,
+    /// P40).
     ///
     /// # Errors
     ///
@@ -420,7 +441,7 @@ impl Engine {
                 _ => {}
             }
         }
-        let insts = self.move_instances(m, mv, cut)?;
+        let insts = self.existence_list(m, mv, cut)?;
         Ok(insts
             .iter()
             .find(|i| i.keys == keys)

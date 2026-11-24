@@ -8137,3 +8137,105 @@ Results:
 - **Open STOP-REPORTs:** none new.
 - **Usage:** about 0.43 % of the week this turn (1.38 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check quick: green, 11 steps (88s)` on b7161501's tree; `check commit: green, 24 steps (332s)` on statement 2's.
+
+## 2026-11-24 M4 gate's survivor sort, B1 and B2: P40 (issue #252)
+
+Pick P40 rules the sort's two B rows with one statement, which this commit builds. On `build/m4` from 1ca29535. **A read of a move's list at a cut (its flows, an existence read of any of its instances, an instance's own amount) gives one answer whatever was asked before. A list that stops gives that stop to every one of them, and nothing booked from a list that stopped stays in the walk. An existence read takes only the reads that decide that the instance exists (P30), never the other instances' links' reads.**
+
+Scratch: `tmp/sortwork/fix/` (untracked: the texts, `cross.sh`, `mut.sh`, `out/`, `README.md`).
+
+**B2: a list that stops takes back what it booked** (E §9 item 5, §4.1).
+- **The fault.** A list that stops (here a refused tuple whose later keys are unbound) left in `booked` the A₀ of the instances it had made before the stop. The next read made the list again, and the asks share `booked`. Under another read's cells in progress an instance's amount was refused `RUN-CYCLE` one time and `RUN-DIV` the other. So `check_booked` broke invariant 5 on a valid text, and which ask got the break turned on the ask order.
+- **The fix.** A new state field, `booked_open`, holds the keys the lists being made booked first. Each list marks where its own begin:
+  - `walk/plan.rs` `list_read`, the whole list;
+  - `plan_list`, a list up to a day;
+  - `walk/narrow.rs` `narrow_inst`, one instance.
+- **Where the list ends,** a list kept keeps them (`booked_kept`), and a list not kept (its making stopped, or `answer_hole_bookings` gave it up) takes them back (`booked_back`).
+- **Nesting.** A list made inside another settles its own first, so the outer one only ever takes back its own.
+- **Timelines.** The field parks with its timeline, as `booked` does.
+
+**B1: an existence read leaves the list's links to its next reader** (L §5.19 Links, §8.2; E §4.1 step 3).
+- **The fault.** `linked_instance` made the move's list where its tuple path ends: a refused tuple read open, a decision, a stopping list read open. The list's status loop then gave every instance's link reads to the existence read, including an `assumed:` line no link of its own reads.
+- **The fix.**
+  - `move_instances` is now `list_read(…, Reader::Instances)`.
+  - `existence_list` is `list_read(…, Reader::Existence)`, and `linked_instance` takes it.
+  - For an existence read, `links_met` keeps the status loop's register entries in `links_unread`, keyed by (move, cut). It parks with its timeline.
+  - The list's next reader of its instances takes them, once, when it finds the list kept. That reader is the one that would have made the list, as refcore's statuses are read when first asked for (`find_inst` reads none).
+  - A narrow read's judged links (`links_judged`) are still given to nobody.
+
+**Probes** (`tmp/sortwork/fix/README.md` has the tables):
+- **B2.** `k_stop3` f l4 and l4 f, and `k_stop2` l2 f and f l2, were ENGINE-INVARIANT on one ask or both. Now every ask is `RUN-DIV`, in either order. Refcore keeps its invariant break: its fault, for #255.
+- **B1.** `k_link` qz gives refcore's bytes alone and in both orders with qa. qa keeps its `assumed:` line.
+- **`c1_stop` (a list that stops).** Read nine ways: flows; an existence read in the ask; a def through `o.fulfils`; `explain`; two more cuts by `as known`; and three mixes in one ask, both orders. Each ask was run alone and in nine orders. Every answer is `RUN-DIV`. Refcore gives the same bytes but where its B2 fault fires.
+- **`c2_link` and `c3_dec` (existence reads beside a link with an `assumed` row).** Covered: an open read of a refused tuple; an open read of a list whose instance's amount reads back into it; a closed read, the list in progress; a decision; each beside a reader of the instances in one ask, in both orders; and `explain` of each. Each ask was run alone and all of them in both orders.
+  - All are refcore's bytes but `ed`.
+  - With `linked_instance` built back on `move_instances`, `qz`, `qn`, `qd` and `ed` carried the wrong `assumed:` line: B1 in three more forms.
+- **`ed`, which differs and was not changed.** `explain` of a def whose existence read names a decision's instance lacks refcore's row for the instance's `when` (`v:ok[2026-02]`). The register takes that row: `c3_dec` `qd` prints refcore's `assumed:` line for it. So the explanation's row list alone lacks it, before this fix and after. It is left for the coordinator's ruling.
+- **Not run:** a sweep of the earlier review folders against 1ca29535's binary. `check commit`'s gating vectors stand for it.
+
+**The sort's rows this moves.** Hand-built mutants, run against refcore's kept bytes (`out/mut.*`):
+- **Row 67 (B),** `linked_instance` `guard !open → true`: now K.
+  - 418:41 is caught by `c2_link` `ez`: the explanation loses the list's rows.
+  - 419:30 is caught by `c1_stop` `e`: the explanation loses the list's bodies.
+- **Rows 59 (`delete !`) and 66, their open site 419:30:** row 59's is the same mutant for an open read, so it is caught by `c1_stop` `e`. Row 66's `→ false` there wasn't checked.
+- **Row 24** (`links_judged → false`, undecided) sits on the changed path. A list made after a narrow read now keeps its links' reads for the next reader, so the mutant gives them again to that reader, not to the existence read. Not checked.
+- **New sites for T,** each with the input that tells it apart:
+  - `list_read`'s `reader == Reader::Instances`: `c2_link` zq. The reader of the instances that finds the list an existence read made would lose the `assumed:` line.
+  - `links_met`'s two arms: `k_link` qz and qa.
+  - `booked_back` → `()`, and `list_read`'s `contains_key` guard: `k_stop3` with its second ask.
+  - `booked_kept` → `()` only weakens the invariant's check, so I expect it to be equivalent.
+
+- **Size** (`git diff --shortstat -- engine/crates`): 5 files, +177 −8.
+- **Files:** `walk/plan.rs`, `walk/tuples.rs`, `walk/narrow.rs` (fence F7, one booking mark), `eval/state.rs`, `eval/timelines.rs`.
+- **Exceptions:** +0. Two things clippy and the scan refuse were rewritten instead. `Vec::split_off` is a disallowed method, so the take-back pops to the mark. `or_default` is a silent default, so `links_left` inserts the first entry explicitly.
+- **Mutants:** none proved by `mutants-local`. The hand-built ones are above.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.28 % of the week this turn (0.91 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green, 11 steps (118s)`; `check fences: green, 1 step (56s)`; `check commit: green, 24 steps (214s)`.
+
+## 2026-11-24 M4 gate, `ed`: a link's `when` under a traced binding, P42 (issue #252)
+
+Pick P42 rules `ed` (`tmp/sortwork/fix/c2_link.tally`, `explain dl[2026-02]`, a def whose binding over observed rows holds one naming the decision instance `dd[2026-02]`) by P40's statement. An existence read takes the reads that decide that the instance exists, its `when` among them, and `explain` prints the register's rows (L §8.2). The engine's explanation lacked the `when`'s row, though its register held it (`c3_dec` qd's `assumed:` line). On `build/m4` from f30ad579. Scratch: `tmp/sortwork/fix/` (README, `trace_ok.py`, `c4_when.tally`, `c5_wref.tally`).
+
+**Where refcore reads it.** A wrapper around refcore's `trace_row` (`trace_ok.py`) shows the path: the binding (`span_members`) → `o.target` → `_judge_link` → `obs_links_for` → `link_tuple`. That reads the named move's binding tuples, then its `when`, for any move, a decision too.
+
+**The change** (`walk/tuples.rs` `trace_link_when`, P31's print of that read; L §5.19 Links, §8.2; E §10):
+- **Decisions are no longer left out.** The engine's judging (`link_tuple` → `when_at_cut`) already read a decision's `when`. Only the trace skipped it.
+- **The tuples are read inside the traced read set, before the `when`** (new step `tuple_when`). Their rows now print first, in the order the judging reads them, as refcore's `link_tuple` does.
+- **The second point by D12.** It is the same form, and `c4_when` `en` (a plain plan tuple, `own[2026-04]`) differed by exactly that order: the engine printed `ok2[2026-04]` before `ten` and `dz[…]`.
+
+**`ed`:**
+- Before: `[2] row v:d5 = 5`, with no `when` row.
+- After: `[2] row v:ok[2026-02] = true`, `[3] row v:d5 = 5`, refcore's bytes. This holds alone, with qd in both orders, after dq and before qdd.
+
+**Crossings** (`tmp/sortwork/fix/README.md`):
+- **Refcore's bytes:**
+  - `c4_when`: `en`, `epo` (a pinned `when` false), `ed`, `ez`, `ept` and `epf` (`ok[2026-02]` pinned true and false), qd, qn and qz. Each alone, and two orders of eight of them.
+  - `c2_link`: ez, en and ed, alone and in orders, and both full orders.
+  - `c3_dec`: ed and qd.
+  - `c1_stop`: e.
+- **The differences left, none of this form:**
+  - `c4_when` `efo`: `tally run: not implemented`, the explanation of a list holding a back-pay hole booking. The same before the change.
+  - `c4_when` qo: the engine refuses it at load (`LOAD-READS bal(konto) with no day outside a decision`) and refcore answers. It came with the decision `dr`, whose `when` reads `bal(konto)` and which no row of `bank2` names. It is load, so this change can't reach it, and it is for a ruling.
+  - `c5_wref` ew: refcore adds the other instances' rows from `find_inst`'s whole list. That is P22's held form, for #255. The rows that decide `wz[2026-02]` exists, its refused `when`'s among them, match.
+  - `c1_stop` `f e` and `e f`: refcore's B2 fault (#255).
+
+**The sort's rows this moves** (hand-built mutants against refcore's kept bytes, `out/mut.*`):
+- **Row 71** (`==` → `!=`, the tuple search, now in `tuple_when`) is now K: caught by `c4_when` en, ed and epo, and `c2_link` ed.
+- **Row 70** (`&&` → `||`, both sites) is now K: caught by `c4_when` en and ed, and `c2_link` ed and ez.
+- **Row 74's site** (the decision guard's `||`) is gone.
+- **Rows 72 and 73** (the `Load` guard) moved to `trace_link_when`'s last `match`.
+  - Row 73 (`→ true`) is reached by `c5_wref` ew, by reading: the refused `when` would stop the explanation. Refcore's bytes for that ask wait on #255 (P22's rows).
+  - Row 72 still has no text: a load refusal at run in a link's `when`.
+- **New sites for T:**
+  - `tuple_when` → `Ok(Value::None)`: `c2_link` ed.
+  - `trace_link_when`'s `delete !` on `self.tracing()`: `c2_link` ed, whose explanation loses the rows.
+  - `tuple_when`'s `Law::Hole` arm: needs a move whose `at` is a hole at the named keys. No probe.
+
+- **Size** (`git diff --shortstat -- engine/crates`): 1 file, +36 −17.
+- **Files:** `walk/tuples.rs`.
+- **Exceptions:** +0.
+- **Mutants:** none proved by `mutants-local`. The hand-built ones are above.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.18 % of the week this turn (1.11 % for the session) by `engine/tools/usage` before this entry.
+- **Checks:** `check quick: green, 11 steps (69s)`; `check commit: green, 24 steps (137s)`.
