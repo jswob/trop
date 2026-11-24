@@ -37,12 +37,14 @@ version sm
   same pay[aa] = pay[zz]
 === expect
 l (x = pay[zz]): 500.00 PLN
+  unfulfilled: pay[aa]
   unfulfilled: pay[zz]
   cut 2026-04-10
 l (x = pay[mm]): 500.00 PLN
   unfulfilled: pay[mm]
   cut 2026-04-10
 n: 2
+  unfulfilled: pay[aa]
   unfulfilled: pay[mm]
   unfulfilled: pay[zz]
   cut 2026-04-10

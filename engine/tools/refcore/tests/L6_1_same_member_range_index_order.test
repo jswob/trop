@@ -61,6 +61,7 @@ l (x = pay[8]): 500.00 PLN
   unfulfilled: pay[8]
   cut 2026-04-10
 l (x = pay[9]): 500.00 PLN
+  unfulfilled: pay[10]
   unfulfilled: pay[9]
   cut 2026-04-10
 l (x = pay[11]): 500.00 PLN
@@ -70,6 +71,7 @@ l (x = pay[12]): 500.00 PLN
   unfulfilled: pay[12]
   cut 2026-04-10
 n: 11
+  unfulfilled: pay[10]
   unfulfilled: pay[11]
   unfulfilled: pay[12]
   unfulfilled: pay[1]

@@ -869,6 +869,23 @@ def once_by_same(m, out, ctx, owner=None):
     return [x for x in out if getattr(x, 'id', None) not in drop]
 
 
+def m_same_sides_reg(self, x, ctx):
+    """The other sides of instance x's `same` group, each unfulfilled one registered: one movement, its register every
+    side its line names (rulings 17 B)."""
+    g = same_groups(self.m, ctx).get(x.id)
+    if not g:
+        return
+    K = ctx.cut
+    by_id = dict((i.id, i) for i in self.plan_insts(ctx))
+    for y in g:
+        i = by_id.get(y)
+        if y == x.id or i is None or getattr(i, 'obs', None):
+            continue
+        if (not i.decision and i.status == 'past') or (
+                i.decision and day_lo(i.day) is not None and day_lo(i.day) < K):
+            self.reg(('unfulfilled', y))
+
+
 def m_same_kind_hole(self, x, kind, ctx):
     """L §6.1: "One movement has one base kind (P-2), so rows that state different kinds disagree: a binding over
     either kind that meets the movement is a HOLE-SAME hole naming both rows" (OQ-2).  A movement of a same group
@@ -1065,6 +1082,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             elif isinstance(x, Inst) and x.decision and day_lo(x.day) is not None and day_lo(x.day) < K and \
                     not getattr(x, 'obs', None):
                 self.reg(('unfulfilled', x.id))
+            if isinstance(x, Inst):
+                # a `same` group binds once, by its first side (once_by_same); its register lists every side its
+                # line names, each unfulfilled one (rulings 17 B; p10 ny, p09 cnt)
+                self.same_sides_reg(x, ctx)
             if isinstance(x, Inst) and getattr(x, 'status', None) == 'uncertain':
                 self.reg(('uncertain', x.id))
             if x.coll is not None:
@@ -1911,8 +1932,13 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
         prev_unsame = None
         for e in lg.ents:
             if prev_unsame is not None and e.kind == 'delta' and e.key == prev_unsame.key:
-                # the leg the late `unsame` books: its group may have fallen before the span, so the hole stands
+                # the leg the late `unsame` books: its group may have fallen before the span, so the hole stands; the
+                # side is still the read's, listed (rulings 17 B: every side its line names, p10 fa)
                 prev_unsame = None
+                for r in e.reg:
+                    self.reg(r)
+                if e.coll is not None:
+                    self.cur.merge(e.coll)
                 continue
             prev_unsame = None
             if lo < e.key <= limit and e.kind == 'hole' and e.qs in closing:

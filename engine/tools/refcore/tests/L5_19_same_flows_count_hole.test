@@ -76,14 +76,17 @@ f2d: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-0
   cut 2026-06-10
 c: 1
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 c5: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   pinned: d2 = 2026-03-09
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 c9: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-09 (in2)" (in1, in2)
   pinned: d2 = 2026-03-09
   unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 ck: (flows(in1, 2026-03)) = ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2), (flows(in2, 2026-03)) = ?"in1 and in2 are one, but the amount of cash differs on 2026-03-05: 100.00 PLN (in1) and 120.00 PLN (in2)" (in1, in2)
   unfulfilled: in1

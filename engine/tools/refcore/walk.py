@@ -1223,8 +1223,12 @@ class Walk:
                     ln = pairs.get(x, (None, (x, mv.id)))[1]
                     raise refuse('RUN-RECORD', 'same %s = %s: %s doesn\'t exist' % (shown(ln[0]), shown(ln[1]),
                                                                                   shown(x)))
-                if getattr(o, 'decision', False) and not getattr(o, 'ran', False) and \
-                        not getattr(mv, 'decision', False):
+                if getattr(o, 'decision', False) and not getattr(o, 'ran', False) and (
+                        not getattr(mv, 'decision', False) or (
+                            isinstance(lg.day, datetime.date) and day_lo(o.day) is not None and
+                            day_lo(o.day) > lg.day)):
+                    # a decision side waits for a later one too: their two days bound it, the hole from the first
+                    # (B5 for decision sides, rulings 14 and 17 B; f12 b6)
                     waiting.append(o)
                     continue
                 others.append(o)
@@ -1309,7 +1313,9 @@ class Walk:
                         if lg.day == last:
                             lasts = [t for t in touch if t[1].day == last]
                             first = min(lasts, key=lambda t: _ido(self.m, t[0].id))
-                            out.append(('unsame', self.same_hole(touch, lg, p)) if first[0] is mv else 'skip')
+                            # a hole a side opened waiting for this decision is the one its point ends (same_wait_for)
+                            sh = getattr(self, 'same_open', {}).get((mv.id, p.name)) or self.same_hole(touch, lg, p)
+                            out.append(('unsame', sh) if first[0] is mv else 'skip')
                             continue
                         out.append(self.same_hole(touch, lg, p))
                         continue
@@ -1393,7 +1399,12 @@ class Walk:
                 shown(n1), shown(n2), shown(p.name), lg.day,
                 fmt(lg.amount) if not isinstance(lg.amount, TallyError) else 'refused', shown(mv.id), dday,
                 shown(dec.id))
-            return Hole([(q, '%s, %s' % (shown(mv.id), shown(dec.id)))])
+            h = Hole([(q, '%s, %s' % (shown(mv.id), shown(dec.id)))])
+            if isinstance(lg.day, datetime.date) and dday > lg.day:
+                # the hole from this side's day, which the decision's point closes where their amounts agree
+                # (rulings 17 B: booked from the latest on; f12 b8, c8)
+                self.__dict__.setdefault('same_open', {})[(dec.id, p.name)] = h
+            return h
         return None
 
     def same_release(self, run, key):
