@@ -242,22 +242,46 @@ fixes/gate8/x1r/l24__l4	m4_fixes	#255	M4 survivor sort (P30): refcore refuses th
 fixes/gate8/x1r/l4__l24	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/l4__l24
 fixes/gate8/x1r/l24__f	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/l24__f
 fixes/gate8/x1r/f__l24	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/f__l24
-fixes/gate8/k_link/qz	m4_fixes	#252	M4 P40 B1: refcore's bytes are the answer (an existence read takes only what decides that the instance exists, so no `assumed:` line); the engine adds the link's read until P40's fix; delete this row when it lands
-fixes/gate8/k_link/qa__qz	m4_fixes	#252	M4 P40 B1: refcore's bytes are the answer (an existence read takes only what decides that the instance exists, so no `assumed:` line); the engine adds the link's read until P40's fix; delete this row when it lands
-fixes/gate8/k_link/qz__qa	m4_fixes	#252	M4 P40 B1: refcore's bytes are the answer (an existence read takes only what decides that the instance exists, so no `assumed:` line); the engine adds the link's read until P40's fix; delete this row when it lands
 fixes/gate8/k_stop3/f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/f
 spec/p40/k_stop3/f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop3/l4	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/l4
 spec/p40/k_stop3/l4	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop3/f__l4	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/f__l4
-spec/p40/k_stop3/f__l4	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop3/l4__f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/l4__f
-spec/p40/k_stop3/l4__f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop2/l2	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/l2
-spec/p40/k_stop2/l2	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop2/f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/f
-spec/p40/k_stop2/f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop2/l2__f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/l2__f
-spec/p40/k_stop2/l2__f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
 fixes/gate8/k_stop2/f__l2	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/f__l2
-spec/p40/k_stop2/f__l2	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/p40/c1_stop/f__x__d__e__f2__d2__fd__df__xf	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/c1_stop/f__x__d__e__f2__d2__fd__df__xf
+fixes/p40/c1_stop/xf__df__fd__d2__f2__e__d__x__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/c1_stop/xf__df__fd__d2__f2__e__d__x__f
+fixes/p40/c1_stop/d__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/c1_stop/d__f
+fixes/p40/c1_stop/e__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/c1_stop/e__f
+fixes/p40/c1_stop/f__e	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/c1_stop/f__e
+fixes/p40/c4_when/qo	m4_fixes	#255	M4 P40's fix, its crossings: refcore answers where load refuses (P43); spec/p40fix/c4_when/qo
+fixes/p40/c5_wref/ew	m4_fixes	#255	M4 P40's fix, its crossings: refcore lists the other instances' reads (P22); spec/p40fix/c5_wref/ew
+fixes/p40/c5_wref/ed	m4_fixes	#255	M4 P40's fix, its crossings: refcore lists the other instances' reads (P22); spec/p40fix/c5_wref/ed
+fixes/p40/p40a/f__l4__c4__f3	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/p40a/f__l4__c4__f3
+fixes/p40/p40a/f3__c4__l4__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore prints its B2 ENGINE-INVARIANT after another ask; spec/p40fix/p40a/f3__c4__l4__f
+fixes/p40/p40b/f	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f
+fixes/p40/p40b/f3__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f3__f
+fixes/p40/p40b/f__f3	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f__f3
+fixes/p40/p40b/f__l4__c4__f3	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f__l4__c4__f3
+fixes/p40/p40b/f3__c4__l4__f	m4_fixes	#255	M4 P40's fix, its crossings: refcore refuses with its list guard (RUN-CYCLE) or its B2 ENGINE-INVARIANT; spec/p40fix/p40b/f3__c4__l4__f
+fixes/p40/c2_link/ez	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/ez
+fixes/p40/c2_link/en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/en
+fixes/p40/c2_link/qa__qz__zq__qzq__qo__qn__nq__qd__dq__qdd__ez__en__ed	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/qa__qz__zq__qzq__qo__qn__nq__qd__dq__qdd__ez__en__ed
+fixes/p40/c2_link/ed__en__ez__qdd__dq__qd__nq__qn__qo__qzq__zq__qz__qa	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c2_link/ed__en__ez__qdd__dq__qd__nq__qn__qo__qzq__zq__qz__qa
+fixes/p40/c4_when/en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/en
+fixes/p40/c4_when/epo	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/epo
+fixes/p40/c4_when/ez	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/ez
+fixes/p40/c4_when/en__epo__ed__ez__ept__epf__qd__qn	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/en__epo__ed__ez__ept__epf__qd__qn
+fixes/p40/c4_when/qn__qd__epf__ept__ez__ed__epo__en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c4_when/qn__qd__epf__ept__ez__ed__epo__en
+fixes/p40/c5_wref/ez	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c5_wref/ez
+fixes/p40/c5_wref/en	m4_fixes	#255	M4 P43/P44: refcore lists an existence read's tuple rows before the named instance's `where` row; spec/p43/c5_wref/en
+fixes/p40/p40b/e4	m4_fixes	#255	M4 P43: refcore's explain adds the whole list's rows (and after f its list guard, B2); spec/p43/p40b/e4
+fixes/p40/p40b/f__e4	m4_fixes	#255	M4 P43: refcore's explain adds the whole list's rows (and after f its list guard, B2); spec/p43/p40b/f__e4
+fixes/p40/p40b/e4__f	m4_fixes	#255	M4 P43: refcore's explain adds the whole list's rows (and after f its list guard, B2); spec/p43/p40b/e4__f
+fixes/p40/c6_own/efs	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/efs
+fixes/p40/c6_own/qfs	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/qfs
+fixes/p40/c6_own/f	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/f
+fixes/p40/c6_own/e4	m4_fixes	#255	M4 P30/P43: refcore refuses RUN-CYCLE (its list guard) or adds the whole list's rows; spec/p43/c6_own/e4

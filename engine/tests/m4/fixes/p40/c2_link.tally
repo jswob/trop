@@ -1,0 +1,139 @@
+model c2_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input ok[m in month]: bool
+input ten: int
+input dz[m in month]: int
+input guess: money PLN
+
+move rent[m in month where ten / dz[m] > 0]: transfers
+  on day_of(m, d5)
+  when ok[m]
+  leg cash from pot to landlord amount amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount flows(rent, m)
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move zed[m in month]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount loose[m]
+
+
+input bank2: observed
+input ok2[m in month]: bool
+
+move own[m in month where ten / dz[m] > 0]: transfers
+  on day_of(m, d5)
+  when ok2[m]
+  leg cash from pot to landlord amount amt + ln[m]
+
+def ln[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank2 over m where o.fulfils == none) when covered(konto, m)
+
+move dd[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when ok[m]
+  leg cash from konto to landlord amount amt + 0 * bal(konto)
+
+input bank3: observed
+
+def dl[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank3 over m where o.fulfils == none) when covered(konto, m)
+
+ask qa: flows(top, 2026-02 .. 2026-02)
+
+ask qz: flows(zed, 2026-02 .. 2026-02)
+
+ask zq: flows(zed, 2026-02 .. 2026-02) + flows(top, 2026-02 .. 2026-02)
+
+ask qzq: flows(top, 2026-02 .. 2026-02) + flows(zed, 2026-02 .. 2026-02)
+
+ask qo: flows(own, 2026-02 .. 2026-02)
+
+ask qn: ln[2026-02]
+
+ask nq: ln[2026-02] + flows(own, 2026-02 .. 2026-02)
+
+ask qd: dl[2026-02]
+
+ask dq: dl[2026-02] + flows(dd, 2026-01 .. 2026-02)
+
+ask qdd: flows(dd, 2026-01 .. 2026-02) + dl[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 1.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "refused: a division by zero"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+  ok[2026-01] = true assumed "jan is a guess"
+  ok[2026-02] = true "s"
+  ok[2026-03] = true "s"
+  ok[2026-04] = true "s"
+  ok[2026-05] = true "s"
+  ok2[2026-01] = true assumed "own jan is a guess"
+  ok2[2026-02] = true "s"
+  ok2[2026-03] = true "s"
+  ok2[2026-04] = true "s"
+  ok2[2026-05] = true "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank2[o1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 11.00 PLN, fulfils: own[2026-01]) "names own jan"
+  bank3[d1] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 10.00 PLN, fulfils: dd[2026-01]) "names dd jan"
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[b2] = (on: 2026-02-07, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-03]) "names the refused one"
+
+version febk
+  cite s
+  governs 2026-02
+  known 2026-02-12
+  covers konto
+  bank2[o2] = (on: 2026-02-08, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: own[2026-03]) "names own's refused one"
+  bank3[d2] = (on: 2026-02-08, kind: transfers, leg cash from konto to landlord amount 10.00 PLN, fulfils: dd[2026-02]) "names dd feb"
+
+ask ez: explain loose[2026-02]
+
+ask en: explain ln[2026-02]
+
+ask ed: explain dl[2026-02]
