@@ -385,13 +385,7 @@ impl Engine {
             out.push((x, st));
         }
         let drop = self.counted_once(m, &out, &fulfilled, ctx.cut)?;
-        let refused_of = |id: &str| {
-            refusals
-                .iter()
-                .find(|(r, _)| r == id)
-                .map(|(_, e)| e.clone())
-        };
-        out.retain(|(x, _)| !drop.contains(x.id()) || refused_of(x.id()).is_some());
+        out.retain(|(x, _)| !drop.contains(x.id()) || refused_of(&refusals, x.id()).is_some());
         let mut res = Vec::with_capacity(out.len());
         for (x, unknown) in out {
             let mut coll = Collected::default();
@@ -423,7 +417,7 @@ impl Engine {
                 coll,
                 day,
                 id: x.id().to_owned(),
-                refused: refused_of(x.id()),
+                refused: refused_of(&refusals, x.id()),
             });
         }
         Ok(res)
@@ -1676,6 +1670,15 @@ fn unfulfilled(m: &Reality, i: &Inst, cut: Day) -> bool {
         return i.day.as_ref().and_then(Dated::day).is_some_and(|d| d < cut);
     }
     i.status == Status::Past
+}
+
+/// The refusal the existence of the movement `id` met among `refusals`, a binding's refused
+/// members (tally 2.3.1, rulings 17 statement A; L §5.19, §8).
+fn refused_of(refusals: &[(String, Refusal)], id: &str) -> Option<Refusal> {
+    refusals
+        .iter()
+        .find(|(r, _)| r == id)
+        .map(|(_, e)| e.clone())
 }
 
 /// A register entry with no figure (L §8.2).
