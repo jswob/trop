@@ -385,7 +385,6 @@ fn mv_sample(kind: &str) -> Value {
         id: String::new(),
         day: None,
         src: MvSrc::Kind(kind.to_owned()),
-        member: false,
     }))
 }
 

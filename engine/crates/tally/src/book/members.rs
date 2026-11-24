@@ -24,10 +24,11 @@ use crate::eval::{Collected, Ctx, Engine, Entry, Env};
 use crate::hole::{Hole, spread};
 use crate::model::{Fulfils, KeyVal, MoveInfo, MvRef, MvSrc, Reality, Span, Value};
 use crate::num::Num;
-use crate::syntax::{Bind, Stop};
+use crate::syntax::{Bind, Certainty, Stop};
 use crate::time::Day;
 use crate::walk::{
-    Amount, At, Dated, End, Exists, Inst, Law, LegVal, Status, Term, WalkAt, invariant, qty_value,
+    Amount, At, Dated, End, Exists, Inst, Law, LegVal, Status, Term, WalkAt, invariant,
+    kind_certainty, qty_value,
 };
 
 /// What a binding over movements ranges over (refcore's `_dom`, `event` or `obs`).
@@ -122,7 +123,6 @@ impl Moving {
                 id: o.id.clone(),
                 day: Some(o.day),
                 src: MvSrc::Obs,
-                member: false,
             },
             Moving::Adj(a) => MvRef {
                 id: a.id.clone(),
@@ -134,13 +134,11 @@ impl Moving {
                     leg: a.leg.name.clone(),
                     vids: a.vids.clone(),
                 },
-                member: false,
             },
             Moving::Pad(p, at) => MvRef {
                 id: p.id.clone(),
                 day: Some(at.day),
                 src: MvSrc::Pad,
-                member: false,
             },
         }))
     }
@@ -388,15 +386,8 @@ impl Engine {
             let day = x
                 .day()
                 .ok_or_else(|| invariant("a member of a binding with no day"))?;
-            // a decision whose day is a hole has its legs read as the plan has them, on the
-            // member alone (B1; ruling 14; refcore's `hole_day_dec_body`)
-            let mut value = x.value();
-            if let (Value::Mv(r), Moving::Plan(i)) = (&mut value, &x) {
-                r.member = unread_hole(m, i).is_some()
-                    && m.moves.get(&i.move_id).is_some_and(|mv| mv.decision);
-            }
             res.push(MvMember {
-                value,
+                value: x.value(),
                 unknown,
                 coll,
                 day,
@@ -519,6 +510,9 @@ impl Engine {
                     // (L §8.2 One read set; tally 2.1.8 §4, #161)
                     Status::Modelled => pins.merge(&i.coll.deciding()),
                     Status::Uncertain if !ctx.unc => {}
+                    // an uncertain one unfulfilled is left out whatever its day (tally 2.3.1
+                    // R1, N250.1)
+                    Status::Hole if !ctx.unc && uncertain_on_hole_day(m, mv, i) => {}
                     // one that doesn't exist the binding read to leave out, which
                     // `span_members` lists (L §8.2 One read set; P20)
                     Status::None
@@ -601,7 +595,7 @@ impl Engine {
         for mv in decided {
             for inst in self.move_instances(m, mv, ctx.cut)?.iter() {
                 let Some(run) = self.chain_run(walk, &inst.id)? else {
-                    out.extend(hole_day_member(inst));
+                    out.extend(hole_day_member(m, (mv, inst), ctx));
                     continue;
                 };
                 if limit.is_some_and(|point| run.point >= point) {
@@ -627,35 +621,6 @@ impl Engine {
             }
         }
         Ok(out)
-    }
-
-    /// Field `name` of instance `i`, whose day is the hole `h`, that the plan pass didn't read
-    /// (`unread_hole`): a leg of a decision's instance that a binding met, `v` being its
-    /// member's value, is a record, its places read as the plan has them at cut `cut` and its
-    /// amount and day that hole, so a `where` on its places is decided; any other field, and
-    /// any field of the movement read by its name, is that hole (L §5.14, §5.19 Bindings; the
-    /// review of G1's fix, BF1, P10; ruling 14; refcore's `hole_day_dec_body`, `_body_hole`).
-    ///
-    /// # Errors
-    ///
-    /// A load refusal met reading its places.
-    fn unread_field(
-        &mut self,
-        m: &Reality,
-        (v, i): (&MvRef, &Inst),
-        (name, is_leg): (&str, bool),
-        (h, cut): (Hole, Day),
-    ) -> Result<Value, Stop> {
-        let Some(mv) = m.moves.get(&i.move_id).filter(|_| is_leg && v.member) else {
-            return Ok(Value::Hole(h));
-        };
-        let Some(legs) = self.hole_day_legs(m, mv, i, cut)? else {
-            return Ok(Value::Hole(h));
-        };
-        Ok(match legs.iter().find(|lg| lg.name == name) {
-            Some(lg) => same_leg_record(lg, &h),
-            None => Value::Hole(h),
-        })
     }
 
     /// The record behind a movement value at the reader's cut: an instance, an observation or
@@ -818,23 +783,27 @@ impl Engine {
             Moving::Adj(_) | Moving::Pad(..) => {}
         }
         // a field the plan pass didn't read, of an instance whose day is a hole (a decision,
-        // which never runs without a day; one under a hole `at`), is that hole, but a
-        // decision's leg a binding met (L §5.14; the review of G1's fix, BF1, P10; ruling 14)
+        // which never runs without a day; one under a hole `at`), is that hole, read by its
+        // name or through a binding alike (L §5.14; E §4.2 step 3, "a read of its legs is that
+        // hole"; tally 2.3.1 R1, N250.8, C-13.9)
         if name != "day"
             && let Moving::Plan(i) = &src
             && let Some(h) = unread_hole(m, i)
         {
-            return self.unread_field(m, (v, i), (name, is_leg), (h, ctx.cut));
+            return Ok(Value::Hole(h));
         }
         // a leg a later version changes, of an instance whose day is a hole, is read as that
-        // hole: its amount and day, and its places too where the version moves them, since
-        // its booking cut is a hole with its day (L §5.14; pick P12, by C-4's measure, P10)
+        // hole where the version changes it, since its booking cut is a hole with its day: its
+        // day, its amount where a version changes it, its places where one moves them, the
+        // whole leg where one does both (L §5.14; pick P12, by C-4's measure, P10; tally 2.3.1
+        // R1, N250.21)
         if is_leg
             && let Moving::Plan(i) = &src
-            && let Some((h, moved)) = self.changed_leg(m, i, name, ctx.cut)?
+            && let Some((h, changes)) = self.changed_leg(m, i, name, ctx.cut)?
         {
             return Ok(match i.legs.iter().find(|lg| lg.name == name) {
-                Some(lg) if !moved => same_leg_record(lg, &h),
+                Some(lg) if !changes.moved() => same_leg_record(lg, &h),
+                Some(lg) if !changes.amount => moved_leg_record(m, lg, &h, changes)?,
                 Some(_) | None => Value::Hole(h),
             });
         }
@@ -866,10 +835,10 @@ impl Engine {
     }
 
     /// The hole of leg `leg` of instance `inst`, whose day is a hole, where a later version
-    /// known by cut `cut` changes it, and whether it moves the leg's places: C-4's measure
-    /// made an adjustment of it whose existence is that hole (`Engine::unsure_of`); none for
-    /// an instance with a day, or a leg no version changes (L §5.14, E §5 steps 1 and 2; pick
-    /// P12).
+    /// known by cut `cut` changes it, and what the versions change: C-4's measure made an
+    /// adjustment of it whose existence is that hole (`Engine::unsure_of`), which moves the
+    /// leg's places or whose δ is no known 0; none for an instance with a day, or a leg no
+    /// version changes (L §5.14, E §5 steps 1 to 3; pick P12; tally 2.3.1 N250.21).
     ///
     /// # Errors
     ///
@@ -880,7 +849,7 @@ impl Engine {
         inst: &Inst,
         leg: &str,
         cut: Day,
-    ) -> Result<Option<(Hole, bool)>, Stop> {
+    ) -> Result<Option<(Hole, Changes)>, Stop> {
         let Some(Dated::Hole(h)) = &inst.day else {
             return Ok(None);
         };
@@ -889,7 +858,7 @@ impl Engine {
             .get(&inst.move_id)
             .ok_or_else(|| invariant("a movement of a move load didn't build"))?;
         let mut changed = false;
-        let mut moved = false;
+        let mut changes = Changes::default();
         // the measure is no cause the walk's forms print: the read gives the day's hole, which
         // prints as a hole (E §10; P26)
         let before = self.trace_walked();
@@ -898,10 +867,24 @@ impl Engine {
         for a in unsure? {
             if a.inst_id == inst.id && a.leg.name == leg {
                 changed = true;
-                moved = moved || !a.new_ends.is_empty();
+                // the ends as [from, to], before the step and after it; ends given with none
+                // before them move both (E §5 step 2)
+                match (a.before_ends.as_slice(), a.new_ends.as_slice()) {
+                    (_, []) => {}
+                    ([from0, to0], [from1, to1]) => {
+                        changes.from = changes.from || from0 != from1;
+                        changes.to = changes.to || to0 != to1;
+                    }
+                    _ => {
+                        changes.from = true;
+                        changes.to = true;
+                    }
+                }
+                let same_amount = matches!(&a.delta, Amount::Qty(d) if d.is_zero());
+                changes.amount = changes.amount || !same_amount;
             }
         }
-        Ok(changed.then(|| (h.clone(), moved)))
+        Ok(changed.then(|| (h.clone(), changes)))
     }
 
     /// A movement of a `same` group whose members state kinds not all inside the binding's
@@ -1286,7 +1269,6 @@ fn attr_field(m: &Reality, src: &Moving, name: &str) -> Result<Value, Stop> {
                 id: a.inst_id.clone(),
                 day: a.inst_day,
                 src: MvSrc::Inst(a.move_id.clone(), a.inst_keys.clone()),
-                member: false,
             }))),
             "change" => Some(amount_value(m, &a.delta, a.leg.unit.as_deref())?),
             _ => None,
@@ -1412,6 +1394,50 @@ fn same_leg_record(lg: &LegVal, same: &Hole) -> Value {
     ])
 }
 
+/// What the later versions change of a leg of an instance whose day is a hole: its `from`,
+/// its `to`, its amount (E §5 steps 2 and 3; tally 2.3.1 N250.21).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct Changes {
+    /// A version moves the leg's `from`.
+    from: bool,
+    /// A version moves the leg's `to`.
+    to: bool,
+    /// A version changes the leg's amount, or its δ isn't known to be 0.
+    amount: bool,
+}
+
+impl Changes {
+    /// Whether a version moves one of the leg's places (E §5 step 2).
+    fn moved(self) -> bool {
+        self.from || self.to
+    }
+}
+
+/// A leg of an instance whose day is the hole `h`, whose places later versions move as
+/// `changes` says and whose amount none changes, as a record: a place a version moves, and
+/// its `day`, that hole; its other place and its `amount` its own, fields that need no unknown
+/// (L §5.14; tally 2.3.1 R1, N250.21).
+///
+/// # Errors
+///
+/// The leg's amount refused.
+fn moved_leg_record(m: &Reality, lg: &LegVal, h: &Hole, changes: Changes) -> Result<Value, Stop> {
+    let end = |e: &End, moved: bool| match e {
+        _ if moved => Value::Hole(h.clone()),
+        End::Place(p) => Value::Key(KeyVal::Thing(p.clone())),
+        End::Hole(own) => Value::Hole(own.clone()),
+    };
+    Ok(Value::Record(vec![
+        ("from".to_owned(), end(&lg.from, changes.from)),
+        ("to".to_owned(), end(&lg.to, changes.to)),
+        (
+            "amount".to_owned(),
+            amount_value(m, &lg.amount, lg.unit.as_deref())?,
+        ),
+        ("day".to_owned(), Value::Hole(h.clone())),
+    ]))
+}
+
 /// An amount as a value: a quantity of its unit, or its hole. L §5.14.
 fn amount_value(m: &Reality, a: &Amount, unit: Option<&str>) -> Result<Value, Stop> {
     match a {
@@ -1430,7 +1456,6 @@ pub(crate) fn inst_ref(i: &Inst) -> MvRef {
         id: i.id.clone(),
         day: i.day.as_ref().and_then(Dated::day),
         src: MvSrc::Inst(i.move_id.clone(), i.keys.clone()),
-        member: false,
     }
 }
 
@@ -1557,15 +1582,29 @@ fn left_out(m: &Reality, i: &Inst) -> bool {
     i.status == Status::None || (run && i.exists == Exists::No)
 }
 
-/// A decision's instance `inst` that no walk ran: one that may exist and whose day is a hole
-/// runs on no day of the walk, so it is a member with that hole, never left out; else none
-/// (L §5.14: a movement whose day is a hole makes every binding over a span it might fall in
-/// a hole; tally 2.3 review of G1, B1).
-fn hole_day_member(inst: &Inst) -> Option<Moving> {
+/// A decision's instance `inst` of move `mv` that no walk ran: one that may exist and whose
+/// day is a hole runs on no day of the walk, so it is a member with that hole, never left
+/// out, but one of an uncertain kind that nothing fulfils, which a binding counts only `with
+/// uncertain` (the read `ctx`'s), whatever its day; else none (L §5.14: a movement whose day
+/// is a hole makes every binding over a span it might fall in a hole; §5.14 Certainty; tally
+/// 2.3 review of G1, B1; tally 2.3.1 R1, N250.1).
+fn hole_day_member(m: &Reality, (mv, inst): (&MoveInfo, &Inst), ctx: Ctx) -> Option<Moving> {
+    if !ctx.unc && inst.obs.is_empty() && uncertain_on_hole_day(m, mv, inst) {
+        return None;
+    }
     match inst.day {
         Some(Dated::Hole(_)) if inst.exists != Exists::No => Some(Moving::Plan(inst.clone())),
         Some(Dated::Hole(_) | Dated::Day(_)) | None => None,
     }
+}
+
+/// Whether instance `i` of move `mv` is of an uncertain kind and its day a hole: unfulfilled
+/// (a plan's status `Hole` is one no observation the cut applies fulfils), a binding without
+/// `with uncertain` leaves it out whatever its day (L §5.14 Certainty, §5.19 Bindings; tally
+/// 2.3.1 R1, N250.1).
+fn uncertain_on_hole_day(m: &Reality, mv: &MoveInfo, i: &Inst) -> bool {
+    matches!(i.day, Some(Dated::Hole(_)))
+        && kind_certainty(m, &mv.kind) == Some(Certainty::Uncertain)
 }
 
 /// Movements in movement order: by day, a hole day after every day, then by their typed order,
@@ -1737,6 +1776,119 @@ ask b: bal(sv2, 2026-06-30)
 ask f_p: flows(top, 2026-05) with dd = 2026-05-04
 "#;
 
+    /// An uncertain kind's decision and plan on day `dm`, written in for `DAY` (#250 row 1,
+    /// the review of G1's fix, N-a's `b1e`).
+    const MAYBE: &str = r#"model maybe
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+kind maybes: event uncertain
+  leg cash: PLN
+
+place sv2: accounts PLN lives 2026-01-01..
+
+place sv4: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input pay: money PLN
+
+input dm: date
+
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+
+move mp: maybes
+  on dm
+  leg cash from sv4 to world amount pay
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "its cap"
+  dm = DAY "its day"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "own"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "own"
+
+ask n: count(t in maybes over 2026-05)
+
+ask s: sum(t.cash.amount for t in maybes over 2026-05)
+
+ask nu: count(t in maybes over 2026-05) with uncertain
+"#;
+
+    /// Pays on day `w`, written in for `DAY`, whose second a version known inside the run
+    /// moves to another place, its amount left (T's `t23-g1/surv-changed-amt`, #250).
+    const MOVED: &str = r#"model moved
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source fixture "invented values"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2026-01-01..
+
+place other: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input amt[k in ks]: money PLN
+
+input dest[k in ks]: key accounts
+
+input w: date
+
+input d_at: date
+
+move pay[k in ks]: transfers
+  on w
+  at d_at
+  leg cash from world to dest[k] amount amt[k]
+
+version v
+  cite fixture
+  governs always
+  known 2026-01-01
+  d_at = 2026-03-01 "its law date"
+  w = DAY "its day"
+  amt[k1] = 100.00 PLN "its amount"
+  amt[k2] = 100.00 PLN "its amount"
+  dest[k1] = konto "its place"
+  dest[k2] = konto "its place"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "own"
+  opening[other] = 0.00 PLN at 2026-03-01 start "own"
+
+version a1
+  cite fixture
+  governs 2026..
+  known 2026-03-20
+  replace amt[k1] = 150.00 PLN "raised"
+
+version a2
+  cite fixture
+  governs 2026..
+  known 2026-03-22
+  replace dest[k2] = other "moved"
+
+ask q2: pay[k2].cash
+
+ask q1: pay[k1].cash
+"#;
+
     /// The lines of ask `ask` over [`SWEEP`] with its day `day`.
     fn lines(day: &str, ask: &str) -> Vec<String> {
         lines_of(SWEEP, day, ask)
@@ -1787,18 +1939,13 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
     }
 
     #[test]
-    fn a_where_on_a_hole_day_decisions_places_is_decided() {
-        // ruling 14 (P10): a binding reads a hole-day decision's places as the plan has them,
-        // so a member the `where` fails is counted on no day; one it takes is the day's hole;
-        // read by its name, the place is that hole (B1's body; refcore's `hole_day_dec_body`)
+    fn a_hole_day_decisions_places_are_its_hole_through_a_binding_too() {
+        // E §4.2 step 3, "a read of its legs is that hole" (tally 2.3.1 R1, N250.8, C-13.9):
+        // a hole-day decision's place is the day's hole by its name and through a binding
+        // alike, so a `where` on it makes the member unknown, whether it would fail or take it
         let window = "?\"date within window(2026-05-04, 2026-05-06) not precise enough for the day of sweep\" (dd)";
         let day = "window(2026-05-04, 2026-05-06)";
-        assert_eq!(
-            lines_of(SWEEP, day, "w_to"),
-            ["w_to: 0", "  cut 2026-04-20"],
-            "the where fails"
-        );
-        for ask in ["w_from", "d_to"] {
+        for ask in ["w_to", "w_from", "d_to"] {
             assert_eq!(
                 lines_of(SWEEP, day, ask),
                 [
@@ -1809,6 +1956,57 @@ ask f_p: flows(top, 2026-05) with dd = 2026-05-04
                 "{ask}: the window's hole"
             );
         }
+    }
+
+    #[test]
+    fn an_uncertain_movement_on_a_hole_day_is_left_out_without_with_uncertain() {
+        // L §5.14 Certainty (tally 2.3.1 R1, N250.1): a binding counts an unfulfilled movement
+        // of an uncertain kind only `with uncertain`, whatever its day, a decision's and a
+        // plan's alike
+        let day = "window(2026-05-04, 2026-05-06)";
+        assert_eq!(
+            lines_of(MAYBE, day, "n"),
+            ["n: 0", "  cut 2026-04-20"],
+            "none counted"
+        );
+        assert_eq!(
+            lines_of(MAYBE, day, "s"),
+            ["s: 0.00 PLN", "  cut 2026-04-20"],
+            "none summed"
+        );
+        let nu = lines_of(MAYBE, day, "nu");
+        assert!(
+            nu.first()
+                .is_some_and(|line| line.starts_with("nu: ?\"date within window")),
+            "with uncertain, the day's hole: {nu:?}"
+        );
+    }
+
+    #[test]
+    fn a_hole_day_plans_leg_a_version_moves_keeps_its_amount() {
+        // L §5.14 (tally 2.3.1 R1, N250.21): a version that moves k2's place and leaves its
+        // amount makes the place it moves and the day the hole, its from and amount values;
+        // one that changes k1's amount leaves its places
+        let window = "?\"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay[k2]\" (w)";
+        assert_eq!(
+            lines_of(MOVED, "window(2026-03-05, 2026-03-25)", "q2"),
+            [
+                format!("q2: (from: world, to: {window}, amount: 100.00 PLN, day: {window})"),
+                "  unknown day: w".to_owned(),
+                "  cut 2026-06-10".to_owned()
+            ],
+            "the moved place's hole"
+        );
+        let k1 = "?\"date within window(2026-03-05, 2026-03-25) not precise enough for the day of pay[k1]\" (w)";
+        assert_eq!(
+            lines_of(MOVED, "window(2026-03-05, 2026-03-25)", "q1"),
+            [
+                format!("q1: (from: world, to: konto, amount: {k1}, day: {k1})"),
+                "  unknown day: w".to_owned(),
+                "  cut 2026-06-10".to_owned()
+            ],
+            "the changed amount's hole"
+        );
     }
 
     #[test]

@@ -244,10 +244,6 @@ pub struct MvRef {
     pub day: Option<Day>,
     /// What it is.
     pub src: MvSrc,
-    /// Whether it is a binding's member of a decision whose day is a hole, whose legs the
-    /// binding read as the plan has them (refcore's `hole_day_dec_body`, on the member's own
-    /// record). L §5.19 Bindings.
-    pub member: bool,
 }
 
 /// What a movement value is, found again at the reader's cut (refcore's `Mv.src`). L §5.14.
