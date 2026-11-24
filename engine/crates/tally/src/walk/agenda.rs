@@ -260,8 +260,20 @@ impl Engine {
         } else {
             Vec::new()
         };
+        // a row dated before its decision's point whose link the point refuses is refused from
+        // its own day, as an earlier answer of the ask found it (L §8.4; tally 2.3.1 C-9,
+        // rulings 16 Q2)
+        let base = self.on_base();
         for wo in &mut observed {
-            wo.err = self.obs_err(m, &wo.obs, cut)?;
+            let early = self
+                .early_seed
+                .get(&(cut, wo.obs.id.clone()))
+                .filter(|_| base)
+                .cloned();
+            wo.err = match early {
+                Some(err) => Some(err),
+                None => self.obs_err(m, &wo.obs, cut)?,
+            };
         }
         // the walk and the run's register entries, apart, so a scheduled act notes its own
         let entries = &mut self.entries;

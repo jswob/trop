@@ -207,6 +207,13 @@ impl Engine {
         self.timelines.now.world
     }
 
+    /// Whether the timeline in force is the ask's own, no pin or world of a `with` (L §5.11,
+    /// §6.4).
+    #[must_use]
+    pub(crate) fn on_base(&self) -> bool {
+        self.timelines.now == TimelineKey::BASE
+    }
+
     /// The key of the timeline in force: its world and pins (E §3.3).
     #[must_use]
     pub(crate) fn timeline_key(&self) -> TimelineKey {

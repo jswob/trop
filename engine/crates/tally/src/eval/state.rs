@@ -496,6 +496,12 @@ pub struct Engine {
     pub(crate) plans_making: usize,
     /// The refusals of observations' records, per cut, by observation (L §5.19 Links).
     pub(crate) obs_errs: BTreeMap<(Day, String), Refusal>,
+    /// The rows dated before their decision's point whose link an earlier answer of this ask
+    /// found refused there, per cut, by observation, each refused from its own day in every
+    /// walk of the ask's own timeline (L §8.4; tally 2.3.1 C-9, rulings 16 Q2).
+    pub(crate) early_seed: BTreeMap<(Day, String), Refusal>,
+    /// The rows of [`Engine::early_seed`]'s kind this engine found, for the ask's next answer.
+    pub(crate) early_found: BTreeMap<(Day, String), Refusal>,
     /// The refusal an instance's realised movement rests on, per cut, by instance: a record
     /// its link refused (refcore's `badlinks`; L §5.19, §8.4).
     pub(crate) bad_links: BTreeMap<(Day, String), Refusal>,
@@ -680,6 +686,8 @@ impl Engine {
             links_at_point: BTreeSet::new(),
             plans_making: 0,
             obs_errs: BTreeMap::new(),
+            early_seed: BTreeMap::new(),
+            early_found: BTreeMap::new(),
             bad_links: BTreeMap::new(),
             s1_links: BTreeMap::new(),
             s1_judged: BTreeSet::new(),

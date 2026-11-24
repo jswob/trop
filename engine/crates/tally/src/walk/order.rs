@@ -448,7 +448,7 @@ impl Engine {
             tested,
         });
         // a link to it rests on its refused existence (tally 2.3.1 R2, C-9)
-        self.unlink_run(id, &tid, Some(&err))
+        self.unlink_run(id, &tid, (Some(&err), key.day))
     }
 
     /// Instances of one move that read the places another of them changes, with no `ties by`:
@@ -776,14 +776,14 @@ impl Engine {
             for lg in &known {
                 walk.leg_bad(m, (&mv_id, lg, &read), &err, key)?;
             }
-            self.unlink_run(id, &mv_id, Some(&err))?;
+            self.unlink_run(id, &mv_id, (Some(&err), key.day))?;
             return Ok(ix);
         }
         if run.inst.exists == Exists::No {
             run.inst.status = Status::None;
             let inst = run.inst.clone();
             walk.record(run);
-            self.unlink_run(id, &inst.id, None)?;
+            self.unlink_run(id, &inst.id, (None, key.day))?;
             self.book_own_obs(m, id, &inst, key)?;
             return Ok(ix);
         }
@@ -853,12 +853,20 @@ impl Engine {
     /// existence isn't true (its `when` false, or `why`, its run refused): each observation
     /// that fulfils it refused, in the walk too, so its legs book refused at that point; none
     /// in a projection's walk, whose links are the main walk's (E §4.2 step 3; L §5.19 Links,
-    /// §8.4; tally 2.3.1 R6, R2, C-9).
+    /// §8.4; tally 2.3.1 R6, R2, C-9). A row dated before the point, booked on its own day
+    /// before the verdict, is noted for the ask's next answer, which refuses it from that day
+    /// (L §8.4 l.2356, "a leg whose place can't be read refuses every place from its day";
+    /// G2's review B1, rulings 16 Q2).
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn unlink_run(&mut self, id: usize, tid: &str, why: Option<&Refusal>) -> Result<(), Stop> {
+    fn unlink_run(
+        &mut self,
+        id: usize,
+        tid: &str,
+        (why, point): (Option<&Refusal>, Day),
+    ) -> Result<(), Stop> {
         let (cut, main) = {
             let walk = self.walk(id)?;
             (walk.cut, walk.proj.is_none())
@@ -867,12 +875,18 @@ impl Engine {
             return Ok(());
         }
         let refused = self.unlink_at_point(tid, cut, why);
+        let base = self.on_base();
         let walk = self.walk_mut(id)?;
+        let mut early = Vec::new();
         for (obs, err) in refused {
             for wo in walk.obs.iter_mut().filter(|wo| wo.obs.id == obs) {
+                if base && wo.obs.day < point {
+                    early.push(((cut, obs.clone()), err.clone()));
+                }
                 wo.err = Some(err.clone());
             }
         }
+        self.early_found.extend(early);
         Ok(())
     }
 
@@ -1522,6 +1536,35 @@ version feb
                     format!("loose: {refused}")
                 ],
                 "{order:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_row_before_its_decisions_point_whose_link_is_refused_refuses_from_its_day() {
+        // L §8.4 l.2356, §5.19 Links (tally 2.3.1 C-9; G2's review B1, rulings 16 Q2): the row
+        // is dated 02-03, the decision's point 02-05; at 500.00 PLN the point refuses the link,
+        // so the row refuses konto from 02-03, a balance read between them included
+        let text = DEC_LINK
+            .replace(
+                "on: 2026-02-05, kind: transfers, leg cash from save",
+                "on: 2026-02-03, kind: transfers, leg cash from save",
+            )
+            .replace("ask b:", "ask b4: bal(konto, 2026-02-04)\n\nask b:")
+            .replace("LIM", "500.00 PLN");
+        let refused = "refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which \
+                       doesn't exist or doesn't touch its places";
+        for ask in ["b4", "b"] {
+            let given = vec![Given {
+                path: "dec_early.tally".to_owned(),
+                bytes: Some(text.clone().into_bytes()),
+            }];
+            let asks = Asks::Named(vec![ask.to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            assert_eq!(
+                answer.lines().first().cloned(),
+                Some(format!("{ask}: {refused}")),
+                "{ask}"
             );
         }
     }

@@ -75,6 +75,11 @@ struct Seen {
     /// The run's register entries while this world's ask is answered, lent to each of its
     /// engines in turn (E §1; `eval/register.rs`).
     entries: Entries,
+    /// The rows dated before their decision's point whose link the point refused, by cut and
+    /// row, each refused from its own day in the ask's next answer (L §8.4; tally 2.3.1 C-9).
+    early: BTreeMap<(Day, String), Refusal>,
+    /// The rows of `early`'s kind the ask's engines found while it was answered.
+    early_found: BTreeMap<(Day, String), Refusal>,
     /// The fault planted in the run while it waits for its day (INTERFACE §4).
     #[cfg(feature = "fault-injection")]
     plant: Option<crate::walk::Fault>,
@@ -518,6 +523,8 @@ impl World {
                 plans: how.plans,
                 side: None,
                 entries: Entries::default(),
+                early: BTreeMap::new(),
+                early_found: BTreeMap::new(),
                 #[cfg(feature = "fault-injection")]
                 plant: how.fault,
                 #[cfg(feature = "counters")]
@@ -554,7 +561,25 @@ impl World {
         if let Some(form) = unbuilt_at_run(m, ask) {
             return Err(Stop::NotBuilt(form));
         }
-        answer_one(m, ask, days, &mut self.seen)
+        // a row dated before its decision's point is booked on its own day before the point
+        // judges its link; where the point refuses it, the row refuses every place from its
+        // day, so the ask is answered again with it refused from the start, what the earlier
+        // answer gathered put back; each round adds a row, so the rounds end (L §8.4 l.2356;
+        // tally 2.3.1 C-9; G2's review B1, rulings 16 Q2)
+        loop {
+            let before = (self.seen.warnings.clone(), self.seen.booked.clone());
+            let lines = answer_one(m, ask, days, &mut self.seen);
+            let found = core::mem::take(&mut self.seen.early_found);
+            let new: Vec<_> = found
+                .into_iter()
+                .filter(|(row, _)| !self.seen.early.contains_key(row))
+                .collect();
+            if new.is_empty() {
+                return lines;
+            }
+            self.seen.early.extend(new);
+            (self.seen.warnings, self.seen.booked) = before;
+        }
     }
 }
 
@@ -716,6 +741,7 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
     }
     seen.booked = engine.take_booked();
     seen.entries = engine.take_entries();
+    seen.early_found.append(&mut engine.early_found);
     #[cfg(feature = "fault-injection")]
     seen.plant.clone_from(&engine.plant);
     #[cfg(feature = "counters")]
@@ -1116,6 +1142,7 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
     engine.plan_reads = seen.plans;
     engine.booked = core::mem::take(&mut seen.booked);
     engine.entries = core::mem::take(&mut seen.entries);
+    engine.early_seed.clone_from(&seen.early);
     #[cfg(feature = "fault-injection")]
     engine.plant.clone_from(&seen.plant);
     engine
