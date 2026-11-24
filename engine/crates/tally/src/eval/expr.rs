@@ -540,10 +540,12 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let left = self.ev(m, lhs, env, ctx)?;
         let right = self.ev(m, rhs, env, ctx)?;
-        // a refused movement compared, with `none` too, is its refusal (L §8.4, §3.1 l.390;
-        // tally 2.3.1 R1, R6, rulings 16 Q3)
-        for side in [&left, &right] {
+        // a plan's refused instance written `m[k]` and compared, with `none` too, is its
+        // refusal (L §8.4, §3.1 l.390; tally 2.3.1 R1, R6, rulings 16 Q3); its list was just
+        // read for that side
+        for (side, operand) in [(&left, lhs), (&right, rhs)] {
             if let Value::Mv(v) = side
+                && names_movement(m, operand, env)
                 && let Some(err) = self.refused_movement(m, v, ctx)?
             {
                 return Err(Stop::Refused(err));
@@ -1132,6 +1134,22 @@ fn resolve_word(m: &Reality, word: &str, other: &Value) -> Result<Value, Stop> {
         return Ok(Value::Code(Code::Word(word.to_owned())));
     }
     Ok(Value::Word(word.to_owned()))
+}
+
+/// Whether `e` names a move's movement as written, `m` or `m[k]`, under `env` (L §2.5,
+/// §5.14).
+fn names_movement(m: &Reality, e: &Expr, env: &Env) -> bool {
+    let base = if let Expr::Post(base, post) = e
+        && matches!(post.as_slice(), [Postfix::Keys(_)])
+    {
+        base.as_ref()
+    } else {
+        e
+    };
+    if let Expr::Name(n) = base {
+        return env.get(n).is_none() && m.names.kind(n) == Some(NameKind::Move);
+    }
+    false
 }
 
 /// The comparison `a op b` of two values, keys resolved, as `written` under `env` (refcore's
