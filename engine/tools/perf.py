@@ -53,6 +53,11 @@ A row whose `blocks` is "report" (P8-2 until the long runs' remedy, issue #256) 
 figures beside its budget, marked `report`, and never fails on them: no tag waits on it. A
 wrong answer fails it as any row.
 
+`perf counts` reads the engine's exit code first: 69 ("not implemented", a later milestone's
+check) prints `not built` for the row and fails nothing; any other code but 0 fails, since a
+run that didn't answer counts nothing; then the counters' line against the budgets, and the
+run's seconds beside the 90 s it may take.
+
 `perf growth` times the budget table's [growth] text (`short`, `long`: two `run:` recipes of
 one text whose horizon its header sets) as a row is timed, reads each header's `start` and
 `end`, and prints a Markdown table of the two and the ratios of the span, the time and the
@@ -106,6 +111,7 @@ OUT = os.path.join(ENGINE, "target", "perf")
 CEILING_KB = 8 * 1024 * 1024  # D4-7: 8 GB on any run
 TIMEOUT_S = 90.0  # the user's hard budget for one run
 COUNT_KEYS = ("def_misses", "days_stepped", "walks_shared")  # walks shared: fence F6's (PERFORMANCE §2.5)
+NOT_BUILT = 69  # tally-cli's EXIT_NOT_IMPLEMENTED: a run past the part of the engine built so far
 SPAN = re.compile(r"^\s+(start|end) (\d{4}-\d{2}-\d{2})\s*$")  # a model header's `start` and `end` lines
 
 
@@ -723,6 +729,12 @@ def cmd_time(selected, opts):
     return 1 if failed else 0
 
 
+def first_line(output):
+    """A run's first line that isn't empty, shortened: what a run that didn't answer said."""
+    lines = [x.strip() for x in output.decode("utf-8", "replace").split("\n") if x.strip()]
+    return lines[0][:200] if lines else "no output"
+
+
 def stats_of(output):
     """The counters' line, `stats: key=value ...`, from a run's output."""
     for line in output.decode("utf-8", "replace").split("\n"):
@@ -734,8 +746,9 @@ def stats_of(output):
 def load_counts(r, binary, only):
     """A load row's counts: each run's `stats:` line, a line each, and the row's against its
     count budgets (each run's own); whether it failed."""
-    over, shown = [], []
+    over, shown, unbuilt = [], [], []
     for name, argv, cwd, _ in load_runs(r, only):
+        began = time.perf_counter()
         try:
             done = subprocess.run([binary, *argv, "--stats"], cwd=cwd, capture_output=True, timeout=TIMEOUT_S,
                                   check=False)
@@ -743,20 +756,34 @@ def load_counts(r, binary, only):
             print(f"  {r['id']} {name}: killed at {TIMEOUT_S:.0f} s, no counts")
             over.append(f"{name} killed at {TIMEOUT_S:.0f} s")
             continue
+        if done.returncode == NOT_BUILT:
+            print(f"  {r['id']} {name}: not built (exit {NOT_BUILT}, \"not implemented\"), nothing counted")
+            unbuilt.append(name)
+            continue
+        if done.returncode != 0:
+            print(f"  {r['id']} {name}: exit {done.returncode}, not an answer, nothing counted")
+            over.append(f"{name} exit {done.returncode}: a run that didn't answer counts nothing")
+            continue
         stats = stats_of(done.stdout + done.stderr)
         if stats is None:
             print(f"  {r['id']} {name}: no `stats:` line (exit {done.returncode})")
             over.append(f"{name}: no `stats:` line (D4-8)")
             continue
         print(f"  {r['id']} {name}: " + ", ".join(f"{k} {stats.get(k, 0)}" for k in COUNT_KEYS)
-              + f" (exit {done.returncode})")
+              + f" (exit {done.returncode}; {time.perf_counter() - began:.1f} s of perf's {TIMEOUT_S:.0f} s a run)")
         shown.append(name)
         over += [f"{name} {k} {stats.get(k, 0):,} > {v:,}".replace(",", " ")
                  for k, v in r.get("counts", {}).items() if stats.get(k, 0) > v]
     if over:
         print(f"COUNT {r['id']} " + "; ".join(over))
         return True
-    print(f"ok {r['id']} counts(1w): {len(shown)} runs (budget: {budget_text(r)}, each run)")
+    if unbuilt and not shown:
+        runs = f"{len(unbuilt)} run stops" if len(unbuilt) == 1 else f"{len(unbuilt)} runs stop"
+        print(f"not built {r['id']}: {runs} \"not implemented\" (exit {NOT_BUILT}), nothing counted "
+              f"(budget: {budget_text(r)}, each run)")
+        return False
+    later = f"; {len(unbuilt)} not built: {' '.join(unbuilt)}" if unbuilt else ""
+    print(f"ok {r['id']} counts(1w): {len(shown)} runs{later} (budget: {budget_text(r)}, each run)")
     return False
 
 
@@ -774,7 +801,18 @@ def cmd_counts(selected, opts):
             print(f"{r['id']}: {r['recipe']}{timed_only}")
             continue
         argv, cwd = plan
+        began = time.perf_counter()
         done = subprocess.run([binary, *argv, "--stats"], cwd=cwd, capture_output=True, timeout=TIMEOUT_S, check=False)
+        took = f"{time.perf_counter() - began:.1f} s of perf's {TIMEOUT_S:.0f} s"
+        if done.returncode == NOT_BUILT:
+            print(f"not built {r['id']}: the engine stops \"not implemented\" (exit {NOT_BUILT}), nothing counted "
+                  f"(budget: {budget_text(r)})")
+            continue
+        if done.returncode != 0:
+            print(f"COUNT {r['id']}: exit {done.returncode}, not an answer: a run that didn't answer counts nothing "
+                  f"({first_line(done.stdout + done.stderr)})")
+            failed = True
+            continue
         stats = stats_of(done.stdout + done.stderr)
         if stats is None:
             print(f"COUNT {r['id']}: no `stats:` line (exit {done.returncode}): the counters build prints one (D4-8)")
@@ -784,10 +822,10 @@ def cmd_counts(selected, opts):
                 for k, v in r.get("counts", {}).items() if stats.get(k, 0) > v]
         shown = ", ".join(f"{k} {stats.get(k, 0)}" for k in COUNT_KEYS)
         if over:
-            print(f"COUNT {r['id']} " + "; ".join(over) + f" (exit {done.returncode})")
+            print(f"COUNT {r['id']} " + "; ".join(over))
             failed = failed or set_at_s()
         else:
-            print(f"ok {r['id']} counts(1w): {shown} (exit {done.returncode}; budget: {budget_text(r)})")
+            print(f"ok {r['id']} counts(1w): {shown} ({took}; budget: {budget_text(r)})")
     return 1 if failed else 0
 
 

@@ -177,3 +177,47 @@ expect: growth short:
 expect: exited 1: no figure
 --- run
 tools/perf growth --runs 1 --warmups 0 --bin /usr/bin/false
+
+# Pick P33 of M4 (2026-11-23), under the same words: `perf counts` reads the exit code first.
+# 69 ("not implemented", a later milestone's check) is `not built`, for a check row and a load
+# row, and the job stays green; an answer (0) is judged against the budget; any other code
+# fails, whatever its counters' line says.
+case: count-not-built-passes
+tool: run
+exit: any
+expect: not built P8-15: the engine stops "not implemented" (exit 69), nothing counted
+expect: F7-c1r2 c1_r2: not built (exit 69
+expect: not built F7-c1r2: 1 run stops "not implemented"
+expect: perf counts passed
+--- write zz-69.sh
+#!/bin/sh
+echo "not implemented: a later milestone's form"
+echo "stats: def_misses=0 days_stepped=0 walks_shared=0"
+exit 69
+--- run
+chmod +x zz-69.sh
+tools/perf counts P8-15 F7-c1r2 --bin "$PWD/zz-69.sh" && echo "perf counts passed"
+
+case: count-answer-is-judged
+tool: run
+exit: any
+expect: ok P8-15 counts(1w): def_misses 70, days_stepped 12, walks_shared 0
+expect: perf counts passed
+--- write zz-0.sh
+#!/bin/sh
+echo "stats: def_misses=70 days_stepped=12 walks_shared=0"
+--- run
+chmod +x zz-0.sh
+tools/perf counts P8-15 --bin "$PWD/zz-0.sh" && echo "perf counts passed"
+
+case: count-other-exit-fails
+tool: run
+expect: COUNT P8-15: exit 1, not an answer: a run that didn't answer counts nothing (refused: planted)
+--- write zz-1.sh
+#!/bin/sh
+echo "refused: planted"
+echo "stats: def_misses=0 days_stepped=0 walks_shared=0"
+exit 1
+--- run
+chmod +x zz-1.sh
+tools/perf counts P8-15 --bin "$PWD/zz-1.sh"
