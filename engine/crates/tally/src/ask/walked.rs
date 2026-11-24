@@ -488,6 +488,8 @@ fn reset_value(m: &Reality, e: &Ent, unit: &str) -> Result<String, Stop> {
         Change::Delta(_)
         | Change::Hole(_)
         | Change::Perm(_)
+        | Change::Open(_)
+        | Change::Close(_)
         | Change::Bad(_)
         | Change::PermBad(_)
         | Change::Mark => Err(invariant("a reading that is no reset")),
@@ -506,7 +508,9 @@ fn entry_text(
 ) -> Result<Option<String>, Stop> {
     let pad = engine.entries.any_word(&e.reg, "pad")?;
     let mut head = e.mv.clone().unwrap_or_else(|| "the walk".to_owned());
-    if let (Change::Delta(_) | Change::Hole(_), Some(leg), false) = (&e.change, &e.leg, pad) {
+    if let (Change::Delta(_) | Change::Hole(_) | Change::Open(_), Some(leg), false) =
+        (&e.change, &e.leg, pad)
+    {
         head = format!("{head}.{leg}");
     }
     let status = match e.mv.as_deref() {
@@ -526,7 +530,9 @@ fn entry_text(
             };
             format!("{head}: {sign}{}", quantity_text(m, f, unit)?)
         }
-        Change::Hole(h) | Change::Perm(h) => format!("{head}: hole: {}", h.text()),
+        Change::Hole(h) | Change::Perm(h) | Change::Open(h) => {
+            format!("{head}: hole: {}", h.text())
+        }
         Change::Bad(r) | Change::PermBad(r) => format!("{head}: refused: {}", r.text()),
         Change::Reset { .. } => {
             let sid = e
@@ -538,7 +544,8 @@ fn entry_text(
             let word = reading_word(e, &engine.entries)?;
             format!("{word} {sid} = {}", reset_value(m, e, unit)?)
         }
-        Change::Mark => return Ok(None),
+        // the last day of a movement of two days books it as written, beside this
+        Change::Mark | Change::Close(_) => return Ok(None),
     };
     Ok(Some(text))
 }

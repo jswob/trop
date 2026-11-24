@@ -381,7 +381,7 @@ impl Sums {
                     self.meet(e);
                     return Err(Stop::Refused(r.clone()));
                 }
-                Change::Perm(h) | Change::Hole(h) => {
+                Change::Perm(h) | Change::Hole(h) | Change::Open(h) => {
                     self.holes.push(h.clone());
                     if let Some(c) = &e.coll {
                         self.met.merge(c);
@@ -391,6 +391,7 @@ impl Sums {
                 | Change::PermBad(_)
                 | Change::Reset { .. }
                 | Change::Delta(_)
+                | Change::Close(_)
                 | Change::Mark => {}
             }
         }
@@ -427,12 +428,15 @@ impl Sums {
                         self.meet(e);
                         return Err(Stop::Refused(r.clone()));
                     }
+                    // a movement of two days, by its ends below
                     Change::Perm(_)
                     | Change::PermBad(_)
                     | Change::Bad(_)
                     | Change::Reset { .. }
                     | Change::Delta(_)
                     | Change::Hole(_)
+                    | Change::Open(_)
+                    | Change::Close(_)
                     | Change::Mark => {}
                 }
                 continue;
@@ -470,11 +474,15 @@ impl Sums {
                     Some(Amount::Refused(_)) | None => {}
                 },
                 // a mark in the span (an open instance, one that doesn't exist): what a balance
-                // lists of it, `flows` lists (S5, P43 on #241; L §8.2 One read set)
-                Change::Mark => self.meet(e),
+                // lists of it, `flows` lists (S5, P43 on #241; L §8.2 One read set); a
+                // movement of two days, by its ends below, its last day booking it as written
+                Change::Mark | Change::Open(_) => self.meet(e),
+                Change::Close(_) => {}
             }
         }
         self.holes.extend(open);
+        self.holes
+            .extend(one_end_inside(walk.entries(place, unit), (lo, limit)));
         Ok(())
     }
 
@@ -547,6 +555,28 @@ impl Sums {
         }
         Ok(())
     }
+}
+
+/// The holes of the movements of two days in log `ents`, each a [`Change::Open`] and its
+/// [`Change::Close`], of which one day alone is in the span after `lo` up to `limit`: such a
+/// movement may fall in the span or out of it; one with both its days in the span counts as
+/// its last day books it, one with neither not at all (L §6.1, §5.14 `on d`: `same`'s two days
+/// are its bounds; tally 2.3.1 R1, N245.21).
+fn one_end_inside(ents: &[Ent], (lo, limit): (At, At)) -> Vec<Hole> {
+    let inside = |at: At| lo < at && at <= limit;
+    let mut out = Vec::new();
+    for e in ents {
+        let Change::Open(h) = &e.change else {
+            continue;
+        };
+        let closed = ents
+            .iter()
+            .find(|c| c.at > e.at && matches!(&c.change, Change::Close(x) if x == h));
+        if inside(e.at) != closed.is_some_and(|c| inside(c.at)) {
+            out.push(h.clone());
+        }
+    }
+    out
 }
 
 /// A place's flows in its one unit: `RUN-DOMAIN` for movements in two, or none whose unit is

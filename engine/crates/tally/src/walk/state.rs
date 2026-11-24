@@ -73,6 +73,15 @@ pub enum Change {
     Hole(Hole),
     /// A hole no reading answers: a hole day, `HOLE-CHANGED` (E §4.2, E §5 step 5).
     Perm(Hole),
+    /// An end of a movement whose planned statements, stated `same`, agree on its amount and
+    /// differ on its day, at the first of their days: not booked here, the balance that hole
+    /// from here to [`Change::Close`] or the next reading, since `same`'s two days are its
+    /// bounds (L §6.1, §5.14 `on d`; tally 2.3.1 R1, N245.21).
+    Open(Hole),
+    /// The same end at the last of their days, booked there as written: it ends the hole the
+    /// [`Change::Open`] it names opened; where a reading came between, which may hold the
+    /// movement, the balance is that hole from here to the next reading (L §6.1).
+    Close(Hole),
     /// A refusal that holds from here to the place's next reading: a dated refused movement's,
     /// or the sign rule's (E §4.2 step 5; L §8, tally 2.1.8).
     Bad(Refusal),
@@ -90,6 +99,9 @@ pub struct St {
     pub val: Option<Num>,
     /// The questions of the hole movements since the last reset.
     pub hole: Option<Hole>,
+    /// The holes a [`Change::Open`] opened since the last reset that its [`Change::Close`]
+    /// hasn't ended.
+    pub pending: Vec<Hole>,
     /// The questions no reading answers.
     pub perm: Option<Hole>,
     /// The refusal that holds from a refused leg on, to the place's next reading.
@@ -106,6 +118,7 @@ impl St {
     #[must_use]
     pub fn questions(&self, missing: Option<&Hole>) -> Option<Hole> {
         let mut all = vec![self.hole.as_ref(), self.perm.as_ref()];
+        all.extend(self.pending.iter().map(Some));
         all.push(missing);
         spread(&all)
     }
@@ -115,6 +128,7 @@ impl St {
         St {
             val,
             hole: None,
+            pending: Vec::new(),
             perm: None,
             bad: None,
             perm_bad: None,
@@ -126,7 +140,11 @@ impl St {
     /// "Each warning is tested only where the balance is known").
     #[must_use]
     pub fn known(&self) -> Option<&Num> {
-        if self.hole.is_some() || self.perm.is_some() || self.bad.is_some() {
+        if self.hole.is_some()
+            || !self.pending.is_empty()
+            || self.perm.is_some()
+            || self.bad.is_some()
+        {
             return None;
         }
         self.val.as_ref()
@@ -1137,7 +1155,9 @@ fn next_entry(n: usize) -> Result<usize, Stop> {
 /// whole walk folded in, its own refusal first (refcore's `pstate`, raw). E §4.2.
 fn fold(mut st: St, any: St, all: St) -> St {
     for other in [any, all] {
-        st.hole = spread(&[st.hole.as_ref(), other.hole.as_ref()]);
+        let mut holes = vec![st.hole.as_ref(), other.hole.as_ref()];
+        holes.extend(other.pending.iter().map(Some));
+        st.hole = spread(&holes);
         st.perm = spread(&[st.perm.as_ref(), other.perm.as_ref()]);
         if st.bad.is_none() {
             st.bad = other.bad;
@@ -1184,8 +1204,16 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
         Change::Reset { val, qs } => {
             st.val = Some(val.clone());
             st.hole.clone_from(qs);
+            st.pending.clear();
             st.bad.clone_from(&st.perm_bad);
             st.rst = Some(at);
+        }
+        Change::Open(h) => st.pending.push(h.clone()),
+        Change::Close(h) => {
+            if !ended(&mut st.pending, h) {
+                // a reading came between, which may hold the movement or not
+                st.hole = spread(&[st.hole.as_ref(), Some(h)]);
+            }
         }
         Change::Delta(q) => {
             if let Some(v) = &st.val {
@@ -1210,6 +1238,18 @@ fn apply(prev: &St, change: &Change, at: usize) -> Result<St, Stop> {
         Change::Mark => {}
     }
     Ok(st)
+}
+
+/// Whether hole `h` is among the holes `open`, a [`Change::Open`]'s, and takes the first such
+/// out: its [`Change::Close`] ends it (L §6.1; tally 2.3.1 R1, N245.21).
+pub(super) fn ended(open: &mut Vec<Hole>, h: &Hole) -> bool {
+    let mut found = false;
+    open.retain(|one| {
+        let this = !found && one == h;
+        found = found || this;
+        !this
+    });
+    found
 }
 
 /// How a movement that doesn't count joins a read of its place (L §8.2 One read set, E §4.2):
