@@ -137,3 +137,43 @@ echo "stats: def_misses=300000 days_stepped=1 walks_shared=0"
 --- run
 chmod +x zz-stats.sh
 tools/perf counts F7-c1r2 --bin "$PWD/zz-stats.sh"
+
+# The process step after M4 (2026-11-24; the user's "Sounds resonable", 2026-11-23): P8-2's 1x
+# twin is a `run:` row, R7 to 2056, and it reports (`blocks = "report"`): a miss prints beside
+# its budget, marked `report`, and the command passes, since no tag waits on it until the long
+# runs' remedy. The planted budget is one any run misses.
+case: report-row-prints-and-passes
+tool: run
+exit: any
+expect: report P8-2 wall(1w): median
+expect: reported, no tag waits on it
+expect: perf row passed
+--- replace tools/perf-budgets.toml
+r7/joint.tally records/ --ask pin_2056"
+wall_s = 1.0
+--- with
+r7/joint.tally records/ --ask pin_2056"
+wall_s = 0.0000001
+--- run
+tools/perf row P8-2 --runs 1 --warmups 0 --bin /usr/bin/true && echo "perf row passed"
+
+# The growth with the horizon (the same words): `perf growth` times [growth]'s two horizons of
+# one text, reads each header's start and end, and prints the table and the ratios; it judges
+# nothing, so the command passes. R7's to2028 and to2050 span 1 643 and 9 587 days.
+case: growth-prints-both-horizons
+tool: run
+exit: any
+expect: | short: `r7/to2028.tally` | 2024-01-01 .. 2028-06-30 | 1643 |
+expect: | long: `r7/to2050.tally` | 2024-01-01 .. 2050-03-31 | 9587 |
+expect: growth: the span x5.84; time x
+expect: perf growth passed
+--- run
+tools/perf growth --runs 1 --warmups 0 --bin /usr/bin/true && echo "perf growth passed"
+
+# A run that gives no figure (a refusal, a kill) leaves no ratio: the command fails.
+case: growth-run-without-figure
+tool: run
+expect: growth short:
+expect: exited 1: no figure
+--- run
+tools/perf growth --runs 1 --warmups 0 --bin /usr/bin/false
