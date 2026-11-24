@@ -8454,3 +8454,56 @@ The builder's turn on group 2 of the ruled plan (`tmp/spec-2.3.1/inputs/plan.md`
   - The plan's three lines are corrected at the round, with `step7b`'s form as the case step 7 keeps.
   - Or the lead names the narrower rule wanted.
 - **State:** the last green commit is 6eb19ff1 on `check quick`; this entry is committed with it. Nothing is uncommitted; my scratch is in `tmp/spec-2.3.1/g2/`.
+
+## 2026-11-24 tally 2.3.1 G1's review fixes: B1 to B6, N1, N7 (issue #259)
+
+The builder's turn on G1's review (`tmp/spec-2.3.1/inputs/review-g1.md`, 6 blocking, 7 non-blocking; rulings 14, pick P7), on top of G2's 8d76e92e. Each fix is its own commit, and before each one this worktree's release engine ran every probe under `tmp/spec-2.3.1/inputs/review/g1/` (and a03) against the run before it (`tmp/spec-2.3.1/g1fix/sweep.sh`; the base and each step's outputs are in `g1fix/base`, `b1` … `n7`). Every line that moved is listed below; nothing else moved. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- bddf26ae `fix(eval): a refused where is a refused term of any and all`
+- 62c0f1d7 `fix(eval): step 5's unknown rule beside many candidates is the hole`
+- 64eb3043 `fix(eval): explain lists every candidate of a step-5 hole`
+- c6af9f3e `fix(walk): a two-day same pair's ends are holes to the scenario check`
+- e167953e `fix(book): same's two days bound a decision side too`
+- 6fe72a27 `fix(ask): a two-day pair's last day after a reading explains as its hole`
+- 474e6110 `fix(book): a three-sided two-day same lists its middle side`
+- bcdf0493 `refactor(book): same_mask's hole end goes through same_entry`
+
+**Each finding, its probe and the engine's line now** (before in brackets; the review's refcore line where it records one):
+
+| Finding | Probe | Engine now |
+|---|---|---|
+| B1 (L l.1194) | `p21_where_min` aw; `p02_where_refused` aw, lw | `aw: true`; `aw: true`, `lw: false` (all `RUN-DIV`); refcore `true`, `false`. `cw` (`count`) and `fw` (`first`) stay `RUN-DIV` |
+| B2 (L l.1140) | a03 q2; `p20_step5_min` q2; `p04_step5` q2, q8, q10, e2 | each `?"does it apply?" (ch)` (`RUN-CONFLICT`); refcore a03 q2 the hole. `p04` q9 (the unknown rule beaten by a candidate, beating none) stays `RUN-CONFLICT rules a and b` |
+| B3 (L l.1616) | `p20` e1, a03 e1; `p04` e2, e11 | `rule a: candidate`, **`rule base: candidate`**, `rule top: unknown` (no `base` line); p04 e2 gains `rule base`, e11 `rule b` |
+| B4 (E §9 inv. 3) | `p16/r.tally` + `p16/up.tally` bs, bs3, d | `bs: 100.00 PLN`, `bs3` the HOLE-SAME hole, d's changed line `100.00 PLN against …` (`ENGINE-INVARIANT` all three); refcore `100.00 PLN` and the hole |
+| B5 (L l.1359, rulings 14) | `p18_same_dec` b31, b8, b31k, f, ex | `100.00 PLN` each, ex's 2026-03-07 row `in2.cash (past): +100.00 PLN` (the hole); b6, between the days, stays the hole |
+| B6 (L l.1616) | `p09_same_two` ex2 | 2026-03-07 row `j2.cash (past): hole: ?"j1 and j2 are one, but leg cash differs on …" (j1, j2)` (`+100.00 PLN`); refcore's row |
+| N1 (rulings 14) | `p10_same_three` a8, a9, fa, fb | each gains `unfulfilled: x2` (x1 and x3 only); a6, before x2's day, lists x1 alone as before |
+| N7 (R-127) | all | no line moves |
+| N6 | `p08_nominal` | no change: the words stay `nominal 0: m is a positive int (L §3.3)` (rulings 14) |
+
+**How each is built:**
+- **B1** (`eval/aggregate.rs`): a `where` refused at run makes the walk's step `Step::Refused`, not a stop of the walk. `any`/`all` read their members through `walk_terms`, which keeps such a tuple in its place as that refusal, so `any_all` treats it as it does a refused term. Every other reader stops on it as before: `walk_members` and `first_in_order` (`eval/extremes.rs`) return it at once. A domain hole beside a refused `where` stays refused, and a domain refused later in the walk gives the first refusal in binding order, as before. The load and invariant codes still stop (`a_terms_refusal`).
+- **B2** (`eval/rules.rs` `changes_outcome`): the one test of l.1140 for any number of candidates. A rule is relevant if it would beat a candidate, no candidate beats it, or there is no candidate. G1's "fewer than two left" branch is gone.
+- **B3**: the trace marks every candidate of a step-5 hole, in the def's canonical order.
+- **B4** (`invariant.rs` `day_odds`): `Change::Open` and `Change::Close` are flagged like `Hole`, since a two-day pair's ends are its HOLE-SAME hole.
+- **B5** (`book/same_booking.rs` `same_end`): the two-day bound takes any instance side, a plan's or a decision's. A side that is an observed row still books as written (N4's ground, left). With the decision on the *later* day (`g1fix/p18_rev.tally`) it reads the wallet the pair has left a hole, so its amount is a hole and the pair stays the hole, on both builds. Nothing to build there.
+- **B6** (`ask/walked.rs` `entry_rows`, `closes`): explain replays the pairs' open holes by unit (a reading clears them), as the walk's state does. A close that ends none prints as the hole it books, and the leg written beside it, the same movement, leg, unit and point, isn't printed as an amount.
+- **N1** (`book/same_booking.rs` `EndBook::Between`): a side of a two-day group that is neither the first day nor the last books a `Change::Mark` at its end, which changes no balance but meets its register, as the first's and the last's are met. `book/same.rs`'s observation arms take it (rows never reach it).
+- **N7**: same_mask's `EndBook::Hole` arm adds its worth and books through `same_entry`.
+
+**Not built, for the lead:**
+- **N5** (rulings 14: a movement whose `when` is refused is a refused term under `any`/`all`). It isn't in this turn's list, and it isn't B1's path. A refused instance refuses the whole movement domain in `book/members.rs`'s `movement_members` (three sites: the day, the existence and `i.err`), before any term is read. The shape would be a refused member carried in `Values::Moves` to `Step::Refused`, about 0.1 k, touching `count`, `sum` and `flows` over movements only to keep their refusal. `p03c` am, am2, lm, lm2 are still `RUN-DIV`.
+- N2, N3 and N4 are left (#260).
+
+**What `check commit` shows red** (one run, after the last fix): 26 of 1 558 tests, the same 26 tests G2's entry names, and 81 ids: G1's 15 and G2's 66 (R6 34, item 3 6, item 6 21, C-9 5), each in its list. **No new id**, none outside a class. The review's fixes move no stored answer: their forms (a refused `where` under `any`/`all`, a step-5 hole beside two candidates, a two-day pair under a scenario, with a decision side, a reading between or three sides) aren't in T's stores.
+
+- **Size** (`git diff --shortstat 8d76e92e -- engine/crates`): 7 files, +552 −75; about +320 of it my unit tests (seven: `a_deciding_term_decides_any_and_all_past_a_refused_one` widened, `an_unknown_rule_that_could_change_a_conflict_makes_the_def_its_hole`, `explaining_a_step_5_hole_lists_every_candidate`, `a_scenario_that_makes_a_same_pair_two_days_answers`, `a_decision_side_of_two_days_is_bounded_too`, `a_two_day_pairs_last_day_after_a_reading_explains_as_its_hole`, `a_three_sided_two_day_result_lists_every_side`), the code about +230 −75.
+- **Kernel files touched:** `eval/aggregate.rs`, `eval/extremes.rs`, `eval/rules.rs`, `invariant.rs`, `book/same_booking.rs`, `book/same.rs`, `ask/walked.rs`. No fence module.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged).
+- **Mutants:** none proved. Sites new for T: `next_tuple`'s `a_terms_refusal` guard; `walk_terms`'s `(Some(_), Some(stop))` arm; `changes_outcome`'s three-way `||`; the invariant's `Open | Close` flag; `same_end`'s `!any(Obs)`; `entry_rows`'s `held.contains` and `closes`'s `!found`; `EndBook::Between`'s mark.
+- **Open STOP-REPORTs:** none new (G2's c4_when stays the lead's).
+- **Usage:** about 0.25 % of the week this turn, 1.25 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
+- **Time:** about 45 minutes, about 30 of them checks (`check quick` 13 runs, the release binary 9, `check commit` 1).
+- **Checks:** `check quick: green, 11 steps (51s)` (before N7's commit); `check commit: red at tests, stopped after 10 of 24 steps (115s)`, red only on the 81 ids above.
