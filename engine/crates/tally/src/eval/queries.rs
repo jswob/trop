@@ -18,7 +18,7 @@ use super::expr::hole_of;
 use super::state::{Ctx, Engine, Env, not_typed, num_stop, refuse};
 use crate::base::Run;
 use crate::hole::Hole;
-use crate::model::{Number, Reality, Value};
+use crate::model::{Class, Number, Reality, Value};
 use crate::num::Num;
 use crate::syntax::{Expr, Query, QueryFn, Stop};
 use core::cmp::Ordering;
@@ -192,8 +192,9 @@ fn level_in_range(m: &Reality, read: &Value, q: &Num) -> Result<(), Stop> {
     Ok(())
 }
 
-/// `mean(t for b)`: the terms added as `sum` adds them, divided by their count, exactly.
-/// L §5.11.
+/// `mean(t for b)`: the terms added as `sum` adds them, divided by their count, exactly; a
+/// mean of rates is a `num` of their unit, a rate being a `num` with a period (refcore's
+/// `e_query`, its `Num(acc.q / n, acc.u)`; tally 2.3.1 S17, N256.5). L §5.11, §3.3.
 fn mean(m: &Reality, terms: Vec<Value>) -> Result<Value, Stop> {
     let count = i64::try_from(terms.len()).map_err(|_| too_many())?;
     let mut it = terms.into_iter();
@@ -203,6 +204,13 @@ fn mean(m: &Reality, terms: Vec<Value>) -> Result<Value, Stop> {
     let mut acc = first;
     for t in it {
         acc = arith(m, Op::Add, &acc, &t)?;
+    }
+    if let Value::Number(Number {
+        q,
+        class: Class::Rate(unit),
+    }) = acc
+    {
+        acc = Value::Number(Number::plain(q, unit));
     }
     arith(m, Op::Div, &acc, &Value::int(count))
 }
@@ -235,4 +243,32 @@ fn word(func: QueryFn) -> &'static str {
 /// A count of terms past the integers.
 fn too_many() -> Stop {
     super::state::invariant("a count of a query's terms past the integers")
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    #[test]
+    fn a_mean_of_rates_keeps_their_unit() {
+        // L §5.11 (tally 2.3.1 S17): a rate is a num with a period
+        let text = "model m\n  tally 2\n  on 2026-10-18\n  start 2026-01-01\n  end 2026-12-31\n\n\
+                    source s \"s\"\nindex ks = [k1, k2, k3]\ninput r[k in ks]: rate\n\n\
+                    ask m1: mean(r[k] for k in ks)\n\nversion ver\n  cite s\n  governs always\n  \
+                    known 2026-01-01\n  r[k1] = 2 %/year \"s\"\n  r[k2] = 4 %/year \"s\"\n  \
+                    r[k3] = 6 %/year \"s\"\n";
+        let given = vec![Given {
+            path: "m.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let lines = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        assert_eq!(
+            lines.first().map(String::as_str),
+            Some("m1: 0.04 1/year"),
+            "the mean in the rates' unit"
+        );
+    }
 }
