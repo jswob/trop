@@ -2030,6 +2030,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
     holes = list(pre_holes)
     u = None
     seen_units = set()
+    counted = set()
     for i in insts:
         if keys and tuple(vkey(k) for k in i.keys[:len(keys)]) != tuple(keys):
             continue
@@ -2098,6 +2099,7 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             continue
         if fk is not None and not isinstance(i.forp, Hole) and (i.forp is None or vkey(i.forp) != vkey(fk)):
             continue
+        counted.add(id(i))
         e1 = self.s1_refusal(i.id, ctx)
         if e1 is not None:
             # an instance a class of rows stated same fulfils with another: what reads it is refused (S1, P42)
@@ -2184,6 +2186,14 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             total = a.q if total is None else total + a.q
             u = unit_of_value(a)
             seen_units.add(u)
+    if mi.decision and self.trace_stack:
+        # the runs of the walk this flows doesn't count are out of its read set: their traced reads go (L §8.2 One
+        # read set: "nothing a list or a walk read for another reader"; tally 2.3.1 R2, P18)
+        for i in insts:
+            tsp = getattr(i, 'tspan', None)
+            if tsp is not None and tsp[0] is not None and id(i) not in counted:
+                drop = set(tsp[1])
+                tsp[0].children = [c for c in tsp[0].children if id(c) not in drop]
     # settlements dated in the span, and HOLE-CHANGED (E §5 steps 5-6): only this move's adjustments are measured
     # unless it has some, whose settlements need the whole pass (E §4.1)
     own = self.adjust_move(mi, ctx, one=insts[0] if insts and keys and len(keys) == len(mi.binds) else None) \

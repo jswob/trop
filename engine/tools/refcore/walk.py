@@ -2166,6 +2166,10 @@ class Walk:
         # with the ends each booked (an end another version's row books, as a row stated same, isn't its own; L §5.19)
         self.less_obs = self.own_obs(inst.id, t)
         eng.stack.append(run.coll)
+        # its reads are traced where the walk is built; their span is kept, so a decision's flows lists only the runs
+        # it counts (L §8.2 One read set; tally 2.3.1 R2, P18)
+        tpar = eng.trace_stack[-1] if eng.trace_stack else None
+        t0 = len(tpar.children) if tpar is not None else 0
         try:
             try:
                 if inst.err is not None:
@@ -2182,6 +2186,8 @@ class Walk:
                     # (L §8.4), so the refusal reaches the places its legs give
                     run.legs = eng.refused_places(mi, inst.env, run, ctx)
         finally:
+            # the trace children this run added, so a flows that doesn't count it can drop them (mreads.flows_move)
+            run.tspan = (tpar, [id(c) for c in tpar.children[t0:]]) if tpar is not None else None
             eng.stack.pop()
             self.wp, self.reads, self.less_obs, self.live = old
         # what this decision books at its point from here is one group for the sign rule (L §5.10 point 2)
