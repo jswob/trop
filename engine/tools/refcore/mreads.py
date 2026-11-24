@@ -391,10 +391,49 @@ def m_mv_field(self, n, env, ctx):
             if not mi.decision:
                 # the link reads that instance's existence alone, never the move's list or its amounts (L §5.14
                 # existence, §5.19; tally 2.3.1 R6: P22, P30)
-                env = self.link_tuple(mi, list(f[2]), ctx)
+                env = self.link_tuple(mi, list(f[2]), ctx, traced=True)
                 if env is None:
                     return NONE
+                if getattr(env, 'err', None) is not None and not isinstance(env, dict):
+                    # a link to a refused instance is refused with it (rulings 16 Q1)
+                    raise env.err
                 return Mv('%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1])
+            env = self.link_tuple(mi, list(f[2]), ctx, traced=True)
+            if env is None:
+                return NONE
+            if getattr(env, 'err', None) is not None and not isinstance(env, dict):
+                raise env.err
+            iid = '%s[%s]' % (f[1], ', '.join(key_text(k) for k in f[2])) if f[2] else f[1]
+            if iid in self.run_cache.get(('deflinks', self.wkey(self.tctx(ctx))), ()):
+                # a decision's link its running `when` leaves to its walk point is read there (C-9): before that point
+                # another decision can't read it (RUN-ORDER, rulings 16 Q5); after it, the run decides
+                w = ctx.walk
+                inner = w is not None and ctx.wp is not None
+                if not inner:
+                    w = self.main_walk(ctx)
+                run, ww = None, w
+                while ww is not None and run is None:
+                    run = ww.decs.get(iid)
+                    ww = ww.base
+                ob, ww = None, w
+                while ww is not None and ob is None:
+                    ob = getattr(ww, 'order_bad', {}).get(iid)
+                    ww = ww.base
+                if ob is None and run is not None and getattr(run, 'err', None) is not None:
+                    ob = run.err
+                if ob is not None:
+                    # the instance the walk's order refused: its link is refused with it (rulings 15, 16 Q1)
+                    raise ob
+                if run is None and inner:
+                    a, b = sorted([getattr(w, 'cur_dec', None) or '?', mi.id])
+                    raise refuse('RUN-ORDER', 'decisions %s and %s read each other on %s' % (a, b, kday(ctx.wp)))
+                if run is not None and getattr(run, 'exist_coll', None) is not None:
+                    self.cur.merge(run.exist_coll)
+                bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(iid)
+                if bad is not None:
+                    raise bad
+                if run is not None and (run.exists is False or getattr(run, 'status', None) == 'none'):
+                    return NONE
             t = self.find_inst(mi, list(f[2]), ctx)
             return t.mv() if t is not None else NONE
         return f
@@ -659,11 +698,20 @@ def m_movements_of(self, dom, ctx, owner=None):
         return out
     sub = m.kinds[dom[1]].subtree(m)
     pins = set()
+    stc = []
+    self.run_cache[('mvstat',) + key] = stc
     for mi in self.plan_moves():
         if mi.kind not in sub:
             continue
         for i in self.move_instances(mi, ctx):
-            st = self.status(i, ctx)
+            # judging its status reads its link: those reads are a reader's only where the instance's day can fall in
+            # its span (movement_members; L §8.2, tally 2.3.1 R2 item 6, G2's review finding 4)
+            c_st = self.push()
+            try:
+                st = self.status(i, ctx)
+            finally:
+                self.stack.pop()
+            stc.append((i, c_st))
             if st in ('none', 'modelled'):
                 # the binding read its day to leave it out, so the pins that day took are the binding's reads too
                 # (R7; item 9 of the follow-up: a count that finds none lists its pin)
@@ -918,7 +966,12 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 t, b._dom[1], (sp.end - ONE_DAY) if sp.end is not None else 'the end'))
     out = []
     fulfilled = set()
-    for x in self.movements_of(b._dom, ctx, owner):
+    xs = self.movements_of(b._dom, ctx, owner)
+    for i, c_st in self.run_cache.get(('mvstat', 'mvs', b._dom, self.wkey(ctx), ctx.unc,
+                                         id(ctx.walk) if ctx.walk is not None else None, ctx.wp, owner), ()):
+        if not (isinstance(i.day, datetime.date) and not sp.contains(i.day)):
+            self.cur.merge(c_st)
+    for x in xs:
         e1 = self.s1_refusal(getattr(x, 'id', None), ctx)
         if e1 is not None and (sp.contains(x.day) if isinstance(x.day, datetime.date) else True):
             # a binding over movements rests on each it takes (L §5.19 S1, P42): a count or a sum is refused
@@ -1984,6 +2037,8 @@ def m_flows_move(self, n, sp, fk, env, ctx):
                 # R6, C-13.6)
                 bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(i.id)
                 if bad is not None:
+                    if getattr(i, 'exist_coll', None) is not None:
+                        self.cur.merge(i.exist_coll)
                     raise bad
             if st == 'none' and isinstance(i.day, datetime.date) and sp.contains(i.day) and \
                     getattr(i, 'coll', None) is not None and self.cur is not None:
@@ -2025,6 +2080,9 @@ def m_flows_move(self, n, sp, fk, env, ctx):
             # an instance a class of rows stated same fulfils with another: what reads it is refused (S1, P42)
             raise e1
         if st == 'modelled':
+            if mi.decision and getattr(i, 'exist_coll', None) is not None:
+                # what decided the decision exists at its point rests under its link (G2's review finding 3)
+                self.cur.merge(i.exist_coll)
             # on a day a statement covers, the observations that fulfil the instance stand in for it (L §5.14.3)
             obs = getattr(i, 'obs', None) or self.obs_links_for(i.id, ctx)
             bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(i.id)
@@ -2478,8 +2536,11 @@ def m_c_observed(self, n, env, ctx):
     obs = self.obs_links_for(v.id, ctx)
     if mi.decision and v.id in self.run_cache.get(('deflinks', self.wkey(self.tctx(ctx))), ()):
         # a decision's link its running `when` leaves to its walk point is judged there (L §5.19, E §4.2 step 3;
-        # tally 2.3.1 R6, C-9)
-        self.main_walk(ctx)
+        # tally 2.3.1 R6, C-9), what decided its existence with it (G2's review finding 3)
+        w = self.main_walk(ctx)
+        run = w.decs.get(v.id) if w is not None else None
+        if run is not None and getattr(run, 'exist_coll', None) is not None:
+            self.cur.merge(run.exist_coll)
     bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(v.id)
     if bad is not None:
         raise bad

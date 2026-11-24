@@ -3,7 +3,8 @@
 # isn't made. So a known argument's refusal beats a hole beside it (r1, r3, a1, a2, b1 to b5, d1, f1, f2), and
 # two refusals print the first argument's (r2: the step before the mode's none; a3: the rate before the code).
 # S9: `never` in arithmetic is refused whatever the others are (a2, b2, d1, d2: `never in <the built-in>`).
-# S16 (L §3.3 `nominal m`, m a positive int): `nominal 0` is RUN-DOMAIN where it is read (a4, f3).
+# S16 (L §3.3 `nominal m`, m a positive int): `nominal 0` is RUN-DOMAIN where it is read (a4, f3), in the engine's
+# words since W2b (rulings 14 N6: `nominal 0: m is a positive int`).
 # Before: r1, r3, a1, a2, b1 to b4, d1 and f1 were the hole; r2 the mode's none; a3, f2's order; d2 RUN-DOMAIN
 # `never is not a date`; a4, f3 a Python ZeroDivisionError (REFCORE-NOT-YET).
 === builtins.tally
@@ -103,7 +104,7 @@ a2: refused: RUN-NONE never in accrue
   cut 2026-06-30
 a3: refused: RUN-DOMAIN accrue takes a yearly rate, not 0.01 /month (L §3.3)
   cut 2026-06-30
-a4: refused: RUN-DOMAIN accrue under nominal 0: m is a positive int (L §3.3)
+a4: refused: RUN-DOMAIN nominal 0: m is a positive int
   cut 2026-06-30
 b1: refused: RUN-ZERO add_business(?"which day?" (a_h), 0, cal)
   cut 2026-06-30
@@ -123,7 +124,7 @@ f1: refused: RUN-NONE a value is none here: periodic
   cut 2026-06-30
 f2: refused: RUN-DOMAIN periodic: a month rate over a day: a day's share of a longer period is a day count (dcf), never a default (L §3.3)
   cut 2026-06-30
-f3: refused: RUN-DOMAIN periodic under nominal 0: m is a positive int (L §3.3)
+f3: refused: RUN-DOMAIN nominal 0: m is a positive int
   cut 2026-06-30
 r1: refused: RUN-DOMAIN round with a step 0.00 PLN that is not positive
   cut 2026-06-30

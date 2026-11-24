@@ -2408,6 +2408,13 @@ class Engine:
     def e_cmp(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
         b = self.ev(n.r, env, ctx)
+        if n.op in ('==', '!=') and (a is NONE) != (b is NONE):
+            # `m[k] == none` of a refused movement is refused (L §3.1, §8.4; tally 2.3.1 R1, rulings 16 Q3)
+            x = b if a is NONE else a
+            src = getattr(x, 'src', None) if isinstance(x, Mv) else None
+            if src is not None and getattr(src, 'err', None) is not None and \
+                    getattr(src, 'exists', True) is not False:
+                raise src.err
         if n.op not in ('==', '!=') and (a is NONE or b is NONE):
             # an ordering names the read that gave none (L §8.4's row; P48, N2)
             raise refuse('RUN-NONE', '%s is none here: an ordering' % env_txt(n.l if a is NONE else n.r, env))
@@ -3898,7 +3905,7 @@ class Engine:
             if not isinstance(c, Code) or c.kind != 'compounding':
                 raise refuse('LOAD-UNIT', '%s: %s is not a compounding code' % (what, fmt(c)))
             if c.word == 'nominal' and c.n < 1:
-                raise refuse('RUN-DOMAIN', '%s under nominal %d: m is a positive int (L §3.3)' % (what, c.n))
+                raise refuse('RUN-DOMAIN', 'nominal %d: m is a positive int' % c.n)
             if what == 'accrue' and c.word == 'discount':
                 raise refuse('RUN-DOMAIN', 'accrue under %s: its row states simple, effective and nominal m' % c.word)
         return f
