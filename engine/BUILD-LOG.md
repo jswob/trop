@@ -8299,3 +8299,72 @@ No other tuple's rows print.
 - **Open STOP-REPORTs:** none.
 - **Usage:** about 0.11 % of the week this turn (1.22 % for the session) by `engine/tools/usage` before this entry.
 - **Checks:** `check quick: green, 11 steps (95s)`; `check commit: green, 24 steps (177s)`.
+
+## 2026-11-24 tally 2.3.1 G1, what an operation decides: R1, S9, S16, S23 (issue #259)
+
+The builder's turn on group 1 of the ruled plan (`tmp/spec-2.3.1/inputs/plan.md` §2, §8.1, §12, §16; the lead's rulings win). On `build/2.3.1` from 25a5a63d, before the pin: each row goes by the plan's text and the rulings, and T's stores still hold today's bytes, so the ids each change moves are red until T's turn, by design. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 773cc356 `fix(eval): any and all decide past a refused term`
+- c9d77e79 `fix(eval): an unknown rule that would end a conflict is its hole`
+- 3c25cb10 `fix(eval): an undecided comparison of two windows names both days`
+- d8ac8022 `fix(book): a hole-day movement in a binding, as its day leaves it`
+- e63a5620 `fix(walk): a lifespan's end on a hole balance is the balance's hole`
+- 60ea011e `fix(eval): never is the latest date in min, max, argmin and argmax`
+- a070b183 `fix(eval): a nominal code below 1 is refused where it is read`
+- e8bc5406 `fix(book): two planned same days bound the movement's hole`
+
+**Each row, its probe and the engine's line** (probes run by `tmp/spec-2.3.1/g1/both.sh`, this worktree's release engine beside refcore of tally 2.3; my probe texts are in `tmp/spec-2.3.1/g1/`):
+
+| Row | Plan's answer | Probe | Engine now (before) |
+|---|---|---|---|
+| Q1.6 `any`/`all`, option B | refused member first: `true`, `false` | `g1/anyall_first` (critic's `anyall`, `ks = [c, a, b]`) | `q_any: true`, `q_all: false` (`RUN-DIV` both) |
+| N256.3 | the hole, not `RUN-CONFLICT` | `inputs/m4/gate-review-probes/agent/a03_conflict_hole` q1, e1 | `?"does it apply?" (ch)` (`RUN-CONFLICT`); q2 stays refused |
+| Q1.15 = N250.6 | names both days | `inputs/spec-2.3/review/g2/pin/t_touch` r10 | the hole of w and of v, `unknown day: v`, `unknown day: w` (w alone) |
+| N245.21 | known after both days | `engine/tests/m3/fixes/t221/rv2/h2` blc, fl; `g1/two_days` | `blc: 128.00 PLN`, `fl: 128.00 PLN`, `blm` the hole (all three the hole before) |
+| N250.1 | 0 | `inputs/spec-2.3/review/g1fix/b1/b1e` nmb, nmp, smb; nmbu | `0`, `0`, `0.00 PLN` (holes); `nmbu` stays the hole |
+| N250.2 | `false` | `b1/b1a` al; `g1/n250_2` al | no change: see below |
+| N250.8 | the hole both ways | `inputs/critic/holeday` d_to, d_amt, d_cnt; p_to, p_amt | the hole; `other`, `100.00 PLN` (as before: by name it was the hole already; the binding path is what moved, `t23-g1/surv-hole-dec`) |
+| N250.21 | `100.00 PLN` | `engine/tests/m3/fixes/t23/surv/changed_amt` k2_amt | `100.00 PLN`, refcore's bytes (the hole) |
+| #248 face (b) | the balance's hole | `inputs/critic/life_amt` s_end, k_jul; `life_day` s_end; `spec-2.3/review/g1/j/j3q` q | `?"how much was moved out?" (out_amt)`; `?"which day was it moved?" (out_day)`; `?"which law date?" (win_day)` (`RUN-LIFESPAN … holding` before); `life_day` s_p60, `j3q` q_p15 stay refused |
+| S9 (N256.4) | `min(never, d)` is d | `g1/s9` m1 to m4, a1 to a4 | `2026-05-01`, `never`, `2026-03-01`, `never`, `a`, `b` (`RUN-DOMAIN … and never compared`) |
+| S16 (N255.1) | `RUN-DOMAIN` | `engine/tests/m4/fixes/g1/a9_nominal` q_0 | `refused: RUN-DOMAIN nominal 0: m is a positive int (L §3.3)` (`RUN-DIV`); q_n stays `103.812890625` |
+| S23 (N250.11) | 0 | `engine/tests/m4/items/age/age.tally` a_last; `spec-2.3/review/g2/pin/e_last` r26 | `0` before and after: the engine already gives it; refcore's `RUN-LIMIT` is refcore's |
+
+**How each is built** (L, E as ruled; where the plan leaves a reading open I took the one its row names, written here):
+- **`any`/`all`** (`eval/aggregate.rs` `any_all`): a refused or `none` term is kept, the first in binding order, and the terms are read on; a deciding term returns at once; no decider: the first refusal, then the hole. A refused **`where`** still refuses the aggregate, as refcore's `members` does before `agg_anyall`: the ruling names terms. `or` and `and` keep left to right.
+- **N256.3** (`eval/rules.rs` `changes_outcome`): beside two or more candidates, a rule of unknown applicability changes the outcome when its applying alone would leave fewer than two candidates (it beats all but at most one, itself counted where no applicable rule beats it). So a03's d1 (`top beats a, base`) is the hole, and d2 (`mid beats base` alone: `a` and `mid` conflict either way) stays `RUN-CONFLICT`. Several unknown rules are each judged alone.
+- **Two windows** (`eval/windows.rs` `window_compare`): the hole goes through `imprecise_all` over both sides, the form the other two-window readers use.
+- **N245.21** (`book/same_booking.rs`, `walk/state.rs`, `walk/flows.rs`): where every side is a plan, the amounts agree and the days differ, the first side's end books `Change::Open(h)` (not booked; the place is the HOLE-SAME hole h, kept in `St.pending`) and the last side's `Change::Close(h)` beside its own booking as written, which ends h. A reading between them leaves `pending` empty, so the Close books h as a hole to the next reading. `flows` over a span: a pair with one day alone in the span is h, with both it counts as booked, with neither nothing (`one_end_inside`). Explain prints the first day's ends as `hole:` rows and the last day's as the amount. Observed rows (the warning's rule) and decisions (waited for at their point) are untouched.
+- **N250.1** (`book/members.rs` `movements_of`, `hole_day_member`): an instance of an uncertain kind whose day is a hole and that nothing fulfils is no member of a binding without `with uncertain`, a decision's and a plan's alike.
+- **N250.8** (`book/members.rs` `mv_field`): a hole-day decision's leg is its hole through a binding too. `unread_field`, `walk/plan.rs` `hole_day_legs` and the `MvRef.member` flag that served them go (the flag was also part of a movement's equality).
+- **N250.21** (`book/members.rs` `changed_leg`, `moved_leg_record`): per field. A hole-day plan's leg that a later version only moves is a record whose moved end and day are the hole, its other end and its amount its own; one whose amount a version changes (δ not a known 0) is as before (`same_leg_record`); one a version both moves and changes is the whole hole, as before.
+- **#248 (b)** (`walk/day.rs` close): `RUN-LIFESPAN` is tested only on `st.known()`, as `WARN-NEGATIVE` beside it.
+- **S9** (`eval/extremes.rs` `extreme_order`): `never` is later than every day in `min`, `max`, `argmin`, `argmax` only; `queries.rs`'s sort (`quantile`) and arithmetic are untouched.
+- **S16** (`eval/rates.rs` `nominal_positive`): any `nominal m` with m < 1. The message is mine: the plan gives none; the pin's refcore may word it otherwise.
+
+**Rows that needed no engine change, and what I found:**
+- **N250.2:** a known-false term beside a hole-day member is already `false` on both (`g1/n250_2`: `al: false`, `an: true`). b1a's `al` stays the hole: its "false" term is `plain`'s amount, `min(bal(sav), small)`, a decision that reads `sav` after the hole-day `sweep`, so it is a hole too and R1 keeps it. The plan's row and the review's N-b read b1a's term as known; it isn't.
+- **S23:** the engine gives 0 already (`a_last`, `r26`); the held row is refcore's.
+- **For the lead, outside the class:** a plain balance of a place an unfulfilled uncertain hole-day movement touches is still the hole without `with uncertain` (`g1/b1e_bal` bb2, bb4), where L §5.14 Certainty leaves it out. R1's row names the binding only, so I left balances.
+- `j3q` qe9, now explaining the hole balance, prints `no movement` (the `shut` instance of hole law date isn't listed): explain's existing form, not this group's.
+
+**What `check commit` shows red, by change** (T's stores at 25a5a63d's bytes; all in the classes R1, S9 and S16 name; **none outside a class**):
+- `any`/`all`: `paper/agg__refusal_first/t1`, `paper/agg__refusal_first/t2` (to `true`, `false`).
+- N256.3: none.
+- Two windows: `fixes/g2/q1_s4`, `fixes/gate8/m2_g3_h`, `paper/kleene_agg_argm__hole/a` (each gains the second day's question).
+- Hole-day bindings: `t23-g1/surv-hole-dec` (N250.8: `from_world` from 1 to the hole). N250.1 moves none stored. N250.21's held `t23-g1/surv-changed-amt` now prints refcore's bytes.
+- #248 (b): `d77/lifespan_end` (e3, plan §12's d77a `e3`).
+- S9: `fixes/g13/rf_w_model_with_rf_w_n14` (`min(lifespan(konto).to, d1)` to 2026-01-01).
+- S16: `spec/g1/a9_nominal/q_0`, `spec/p12/accrue/h_a__z_c`, `h_b__z_c`, `h_dc__z_c`, `h_p__z_c`, `h_r__z_c`, `spec/p12/periodic/h_r__z_c`.
+- N245.21: none (the stored runs of `h2` ask `fl1` and `cnt`, which don't move).
+- The tests red: `m1_fixes_g13_reads_ranges_and_sites`, `m1_fixes_g2_windows_and_powers`, `m1_fixes_gate8_survivors`, `m2_fixes_tally_218_d`, `m3_fixes_t23_g1`, `m4_constructs_paper`, `m4_fixes_spec_g1`, `m4_fixes_spec_p12` (8 of 1 547). The steps after the tests step didn't run.
+
+- **Size** (`git diff --shortstat 25a5a63d -- engine/crates`): 19 files, +1 023 −192; code +391 −192, my unit tests +632 (eight tests, each a whole small text run through `api::run`). The plan: R1 0.4 to 0.7 k changed lines with tests, the singletons' share small; this is about 1.2 k with tests, 0.58 k without: over, by the tests' texts and N245.21's walk entries (+~150).
+- **Kernel files touched:** `eval/aggregate.rs`, `eval/rules.rs`, `eval/windows.rs`, `eval/extremes.rs`, `eval/rates.rs`, `eval/expr.rs`, `eval/ty.rs`, `book/members.rs`, `book/same_booking.rs`, `book/same.rs`, `book/observe.rs`, `walk/day.rs`, `walk/state.rs` (a fence module: `check fences` green), `walk/flows.rs`, `walk/modelled.rs`, `walk/plan.rs`, `ask/walked.rs`, `load/observed.rs`, `model/value.rs`.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged).
+- **Mutants:** none proved. Sites new for T: `changes_outcome`'s `left < 2`; `any_all`'s kept refusal; `ended`'s first-match; `one_end_inside`'s `!=`; `Changes::from`/`to`; `nominal_positive`'s `< 1`; `extreme_order`'s two `Day` arms.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 0.96 % of the week this turn by `engine/tools/usage` before this entry.
+- **Time:** about 64 minutes, about 34 of them checks (`check quick` 20 runs, `check commit` 6, the release binary 4, `check fences` 1).
+- **Checks:** `check quick: green, 11 steps (45s)`; `check fences: green, 1 step (69s)`; `check commit: red at tests, stopped after 10 of 24 steps (158s)`, red only on the ids above.
