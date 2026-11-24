@@ -1,0 +1,29 @@
+# tally 2.3.1 S23 (L §4.2 age_months: the largest n with add_months(b, n) <= d): in the calendar's last month,
+# 0, since a month past 9999-12 is later than every d. Before: RUN-LIMIT a day passes 9999-12-31 (#250).
+=== age_last.tally
+model age_last
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input b: date
+input d: date
+input b2: date
+
+ask a_last: age_months(b, d)
+ask a_prev: age_months(b2, d)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b = 9999-12-01 "s"
+  d = 9999-12-27 "s"
+  b2 = 9999-10-31 "s"
+=== expect
+a_last: 0
+  cut 2026-06-30
+a_prev: 1
+  cut 2026-06-30

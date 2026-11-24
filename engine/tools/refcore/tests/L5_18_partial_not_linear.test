@@ -1,7 +1,8 @@
 # tally 2.1.8 R15 (#169-i), L §5.18: a hole met any other way than by adding, scaling by a known number or passing
 # on makes the plain hole naming every hole: -(min(x, 0)) + 1 (q1), a sum whose where is a hole (q2), a balance with a
 # movement whose day is a hole (q3), a period's difference (q4), low (q5), a sum of movements each rounded in a def
-# (q6; tally 2.2, 2.2-7: was a converted flows), a share (q7), a rounding (q8). A where known whatever the hole (q9) and the plain balance (q10) stay linear.
+# (q6; tally 2.2, 2.2-7: was a converted flows; tally 2.3.1 N250.8: the hole-day decision topup's place is its day's
+# hole through a binding too, so its where is a hole and q6 names dd), a share (q7), a rounding (q8). A where known whatever the hole (q9) and the plain balance (q10) stay linear.
 # tally 2.2 (2.2-9): `low` and `next` are cut; the text is respelled as the `min` and the `first` they meant (L §5.14.1).
 === m.tally
 model t
@@ -86,7 +87,7 @@ q4: ?"which month" (pm)
   cut 2026-01-01
 q5: ?"how much" (amt)
   cut 2026-01-01
-q6: ?"how much" (amt)
+q6: ?"how much" (amt) ?"top-up day" (dd)
   cut 2026-01-01
 q7: ?"is b" (c[b])
   cut 2026-01-01

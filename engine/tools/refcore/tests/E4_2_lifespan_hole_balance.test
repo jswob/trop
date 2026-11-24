@@ -1,0 +1,58 @@
+# tally 2.3.1 R1, #248 face (b) (L §8: on an operand that is a hole the check isn't made; E §4.2 step 5): a
+# lifespan's end with a hole balance is the balance's hole (s_end, the `?` amount); a known balance is still
+# refused (s_p60) or 0 (s_p100). Before: s_end RUN-LIFESPAN holding the known part.
+=== life_amt.tally
+model life
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+place world: outside lives 1900-01-01..
+input out_amt: money PLN
+input out_day: date
+
+move empty: transfers
+  on out_day
+  leg cash from spare to konto amount out_amt
+
+ask s_may: bal(spare, 2026-05-31)
+ask s_end: bal(spare, 2026-06-30)
+ask k_end: bal(konto, 2026-06-30)
+ask k_jul: bal(konto, 2026-07-31)
+ask s_p100: bal(spare, 2026-06-30) with out_amt = 100.00 PLN
+ask s_p60: bal(spare, 2026-06-30) with out_amt = 60.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  out_amt = ?"how much was moved out?" "s"
+  out_day = 2026-03-10 "s"
+=== expect
+k_end: ?"how much was moved out?" (out_amt)
+  unfulfilled: empty
+  cut 2026-06-30
+k_jul: ?"how much was moved out?" (out_amt)
+  unfulfilled: empty
+  cut 2026-06-30
+s_end: ?"how much was moved out?" (out_amt)
+  unfulfilled: empty
+  cut 2026-06-30
+s_may: ?"how much was moved out?" (out_amt)
+  unfulfilled: empty
+  cut 2026-06-30
+s_p100: 0.00 PLN
+  pinned: out_amt = 100.00 PLN
+  unfulfilled: empty
+  cut 2026-06-30
+s_p60: refused: RUN-LIFESPAN spare ends on 2026-06-30 holding 40.00 PLN
+  pinned: out_amt = 60.00 PLN
+  unfulfilled: empty
+  cut 2026-06-30

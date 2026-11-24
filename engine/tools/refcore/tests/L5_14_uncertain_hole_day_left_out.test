@@ -1,0 +1,68 @@
+# tally 2.3.1 R1, N250.1 (L §5.14 Certainty): a binding without `with uncertain` leaves an unfulfilled movement of
+# an uncertain kind out whatever its day, a hole day too, a decision's (nmb, smb) and a plain move's (nmp, smp):
+# 0, as every pinned day gives; with uncertain, the hole (nmbu, nmpu). Before: nmb, nmp, smb, smp the hole.
+=== b1e.tally
+model b1e
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind maybes: event uncertain
+  leg cash: PLN
+kind mplain: event uncertain
+  leg cash: PLN
+place sv2: accounts PLN lives 2026-01-01..
+place sv4: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dm: date
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+move mp: mplain
+  on dm
+  leg cash from sv4 to world amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dm = window(2026-05-04, 2026-05-06) "c"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "c"
+ask nmb: count(t in maybes over 2026-05)
+ask nmb_p4: count(t in maybes over 2026-05) with dm = 2026-05-04
+ask nmb_p6: count(t in maybes over 2026-05) with dm = 2026-05-06
+ask smb: sum(t.cash.amount for t in maybes over 2026-05)
+ask nmp: count(t in mplain over 2026-05)
+ask nmp_p4: count(t in mplain over 2026-05) with dm = 2026-05-04
+ask nmp_p6: count(t in mplain over 2026-05) with dm = 2026-05-06
+ask smp: sum(t.cash.amount for t in mplain over 2026-05)
+ask nmbu: count(t in maybes over 2026-05) with uncertain
+ask nmpu: count(t in mplain over 2026-05) with uncertain
+=== expect
+nmb: 0
+  cut 2026-04-20
+nmb_p4: 0
+  cut 2026-04-20
+nmb_p6: 0
+  cut 2026-04-20
+nmbu: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of mb" (dm)
+  unknown day: dm
+  cut 2026-04-20
+nmp: 0
+  cut 2026-04-20
+nmp_p4: 0
+  cut 2026-04-20
+nmp_p6: 0
+  cut 2026-04-20
+nmpu: ?"date within window(2026-05-04, 2026-05-06) not precise enough for the day of mp" (dm)
+  unknown day: dm
+  cut 2026-04-20
+smb: 0.00 PLN
+  cut 2026-04-20
+smp: 0.00 PLN
+  cut 2026-04-20

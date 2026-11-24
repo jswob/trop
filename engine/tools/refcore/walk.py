@@ -190,6 +190,9 @@ def apply(st, e, idx):
         return St(st.val, st.hole | e.qs, st.perm, imp, st.bad, st.rst, st.pbad)
     if k == 'perm':
         return St(st.val, st.hole, st.perm | e.qs, st.imp, st.bad, st.rst, st.pbad)
+    if k == 'unsame':
+        # the last of `same`'s two days ends the hole the first booked (tally 2.3.1 N245.21)
+        return St(st.val, st.hole - e.qs, st.perm, st.imp, st.bad, st.rst, st.pbad)
     if k == 'unperm':
         # a hole movement that can no longer fall after a reading: its place-wide hole becomes each unit's, which the
         # next reading ends (dec_win_end)
@@ -1258,27 +1261,24 @@ class Walk:
                                                  g.day.window_text(), _sh(o.id))]), g.day))
                         out.append(merge(*qs) if len(qs) > 1 else qs[0])
                         continue
+                    if all(isinstance(g.day, datetime.date) for o, g, sj in touch):
+                        # equal amounts on two known days: `same`'s two days are its bounds, a reader by its ends (L
+                        # §4.4, §5.14 l.1361; tally 2.3.1 R1, N245.21): the hole from the first day, the amount on the
+                        # last, booked once, by the first in id order among those on the last day
+                        last = max(g.day for o, g, sj in touch)
+                        if lg.day == last:
+                            lasts = [t for t in touch if t[1].day == last]
+                            first = min(lasts, key=lambda t: _ido(self.m, t[0].id))
+                            out.append(('unsame', self.same_hole(touch, lg, p)) if first[0] is mv else 'skip')
+                            continue
+                        out.append(self.same_hole(touch, lg, p))
+                        continue
                 if agree:
                     # L §6.1 (round 14): "it is booked once, at the point in the day's order of the latest of them"
                     latest = max(touch, key=lambda t: same_book_key(t[0], t[1]))
                     out.append(None if latest[0] is mv else 'skip')
                     continue
-                # "where they give that place different amounts or days, it is a hole movement there (HOLE-SAME)
-                # that may fall on either day": each member's end there is that hole
-                # L §8.1 HOLE-SAME: "<p> and <q> are one, but <x> differs on <d>: <a> (<row>) and <b> (<row>)", the
-                # members in the order of their ids, each of a larger class named (tally 2.1.8 S6, #177)
-                from .moves import and_list
-                from .moves import id_order
-                touch.sort(key=lambda t: id_order(self.m, t[0].id))
-                names = and_list(shown(t[0].id) for t in touch)
-                days = sorted(set(g.day for o, g, sj in touch if isinstance(g.day, datetime.date)))
-                parts = and_list('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
-                                              shown(o.id)) for o, g, sj in touch)
-                what = ('leg %s' % lg.name) if all(g.name == lg.name for o, g, sj in touch) else \
-                    ('the leg at %s' % shown(p.name))
-                q = '%s are one, but %s differs on %s: %s' % (
-                    names, what, ', '.join(str(d) for d in days), parts)
-                out.append(Hole([(q, ', '.join(shown(t[0].id) for t in touch))]))
+                out.append(self.same_hole(touch, lg, p))
             return tuple(out)
         if J is None:
             return (None, None)
@@ -1312,6 +1312,25 @@ class Walk:
             q = '%s crosses to %s with no link' % (shown(mv.id), ', '.join(y or m.header.id for y in ys))
             out.append(Hole([(q, shown(mv.id))]))
         return tuple(out)
+
+    def same_hole(self, touch, lg, p):
+        """"where they give that place different amounts or days, it is a hole movement there (HOLE-SAME) that may fall
+        on either day": each member's end there is that hole. L §8.1 HOLE-SAME: "<p> and <q> are one, but <x> differs
+        on <d>: <a> (<row>) and <b> (<row>)", the members in the order of their ids, each of a larger class named
+        (tally 2.1.8 S6, #177)."""
+        from .joint import shown
+        from .moves import and_list
+        from .moves import id_order
+        touch = sorted(touch, key=lambda t: id_order(self.m, t[0].id))
+        names = and_list(shown(t[0].id) for t in touch)
+        days = sorted(set(g.day for o, g, sj in touch if isinstance(g.day, datetime.date)))
+        parts = and_list('%s (%s)' % (fmt(g.amount) if not isinstance(g.amount, TallyError) else 'refused',
+                                      shown(o.id)) for o, g, sj in touch)
+        what = ('leg %s' % lg.name) if all(g.name == lg.name for o, g, sj in touch) else \
+            ('the leg at %s' % shown(p.name))
+        q = '%s are one, but %s differs on %s: %s' % (
+            names, what, ', '.join(str(d) for d in days), parts)
+        return Hole([(q, ', '.join(shown(t[0].id) for t in touch))])
 
     def same_wait_for(self, mv, lg, p, waiting):
         """An end at place p of a movement stated same as a decision instance not yet run (L §6.1: "a place two of them
@@ -1409,6 +1428,18 @@ class Walk:
                         # a window side counted by another ends its window here, booking nothing (P43 S1, F9)
                         u0 = lg.unit or self.m.place_unit(self.m.things[p.name]) or '*'
                         self.add(p.name, u0, Ent(key, 'hole', qs=EMPTY, wid='%s.%s' % (mv.id, lg.name)))
+                elif isinstance(c, tuple) and c[0] == 'unsame':
+                    if ends[si] and isinstance(p, Thing):
+                        u0 = lg.unit or '*'
+                        if c[1].qs <= self.pstate(p.name, u0, key).hole:
+                            # the last of `same`'s two days: the hole of the first ends, and the leg books as written
+                            self.add(p.name, u0, Ent(key, 'unsame', qs=frozenset(c[1].qs)))
+                        else:
+                            # a reading between the two days: the movement may fall on either side of it
+                            self.inv2_add(u0, None)
+                            self.add(p.name, u0, Ent(key, 'hole', qs=frozenset(c[1].qs), mv=mv, coll=coll,
+                                                     flow=c[1], reg=reg, note=lg.name))
+                            ends[si] = False
                 elif isinstance(c, tuple) and c[0] == 'wait':
                     if ends[si]:
                         self.__dict__.setdefault('same_waiting', {}).setdefault(c[1].id, []).append(
@@ -2210,6 +2241,12 @@ class Walk:
                     continue
                 st = self.pstate(place, u, key, raw=True)
                 if st.val is not None and st.val.q != 0 and not st.bad:
+                    if (st.hole or st.perm) and not isinstance(nxt, Hole):
+                        # the check isn't made on a hole balance: the balance's own hole stands (L §8, what an
+                        # operation decides; tally 2.3.1 R1, #248 face (b))
+                        qs = frozenset(st.hole) | frozenset(st.perm)
+                        self.add(place, u, Ent(key, 'hole', qs=qs, flow=Hole(qs)))
+                        continue
                     if isinstance(nxt, Hole):
                         self.add(place, u, Ent(key, 'hole', qs=frozenset(nxt.qs), flow=nxt))
                     else:

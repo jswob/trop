@@ -661,6 +661,10 @@ def m_movements_of(self, dom, ctx, owner=None):
                 continue
             if st == 'uncertain' and not ctx.unc:
                 continue
+            if st == 'hole' and not ctx.unc and self.kind_certainty(i.kind) == 'uncertain':
+                # a binding counts an unfulfilled movement of an uncertain kind only with `with uncertain`, whatever
+                # its day (L §5.14 Certainty; tally 2.3.1 R1, N250.1)
+                continue
             out.append(i)
     self.run_cache[('mvpins',) + key] = pins
     for e in sorted(pins, key=str):
@@ -703,6 +707,9 @@ def m_movements_of(self, dom, ctx, owner=None):
                     ww = getattr(ww, 'base', None)
                 if r is not None and limit is not None and (r.point is None or r.point >= limit):
                     continue
+                if r is None and isinstance(i.day, Hole) and not ctx.unc and self.kind_certainty(i.kind) == 'uncertain':
+                    # an unfulfilled decision of an uncertain kind, whatever its day (L §5.14 Certainty; N250.1)
+                    continue
                 if r is None and isinstance(i.day, Hole) and i.exists is not False and not getattr(i, 'err', None):
                     # a decision whose day is a hole is never walked, and is a member with its hole: "a movement whose
                     # day is a hole makes every flows and binding over a span it might fall in a hole" (L §5.14;
@@ -727,8 +734,8 @@ def m_movements_of(self, dom, ctx, owner=None):
 
 def m_hole_day_dec_body(self, mi, i, ctx):
     """A hole-day decision's legs, read once outside the walk (B1): the walk never runs it, and a binding's `where`
-    reads its places. Its places are read as a refused instance's are (moves.refused_places); its amounts are its
-    day's hole, since a decision's amount is read in the walk at its day."""
+    reads its places. Its places and amounts are its day's hole, by name and through a binding alike: a decision's
+    legs are read in the walk at its day (E §4.2 step 3; tally 2.3.1 R1, N250.8, C-13.9)."""
     if getattr(i, '_hd_body', False):
         return
     i._hd_body = True
@@ -743,6 +750,7 @@ def m_hole_day_dec_body(self, mi, i, ctx):
     for lg in legs:
         lg.amount = i.day
         lg.unit = self.leg_unit_static(decl[lg.name], lg.frm, lg.to)
+        lg.frm = lg.to = i.day
     i.legs = legs
 
 
