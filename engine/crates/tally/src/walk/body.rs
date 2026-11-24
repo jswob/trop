@@ -38,6 +38,9 @@ pub(super) struct Body {
     /// What reading each leg met, by the leg's name: a read of one leg of a movement stated
     /// `same` holds the other side's reads of that leg only (S3, P43 on #241).
     pub(super) leg_reads: BTreeMap<String, Collected>,
+    /// What reading its `when` met: a decision's at its walk point is what decided its
+    /// existence there, its link's read set (L §5.14 l.1362, §8.2 l.2252; tally 2.3.1 C-9).
+    pub(super) decided: Collected,
 }
 
 impl Engine {
@@ -341,8 +344,14 @@ impl Engine {
         if mv.decl.fulfils.is_some() {
             crate::book::settlement_move(m, mv)?;
         }
+        let mut decided = Collected::default();
         if let Some(when) = &mv.decl.when {
-            let w = self.ev(m, when, &inst.env, ctx)?;
+            // read under its own register too, so a decision's link takes what decided it
+            self.push();
+            let read = self.ev(m, when, &inst.env, ctx);
+            decided = self.pop_alone();
+            self.absorb(&decided);
+            let w = read?;
             if w == Value::None {
                 return Err(refuse(
                     Run::None,
@@ -358,6 +367,7 @@ impl Engine {
                         for_period: None,
                         fulfils: None,
                         leg_reads: BTreeMap::new(),
+                        decided,
                     });
                 };
                 ex = join(ex, h);
@@ -407,6 +417,7 @@ impl Engine {
             for_period,
             fulfils,
             leg_reads,
+            decided,
         })
     }
 }

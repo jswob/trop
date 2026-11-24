@@ -688,6 +688,7 @@ impl Engine {
                 run.inst.attrs = b.attrs;
                 run.inst.for_period = b.for_period;
                 run.inst.fulfils = b.fulfils;
+                self.link_reads_at_point(id, &run.inst.id, &b.decided)?;
             }
             Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_)) => run.inst.err = Some(r),
             Err(stop) => return Err(stop),
@@ -703,6 +704,43 @@ impl Engine {
         // the ends stated same as this decision that waited for its point (L §6.1)
         self.same_release(m, id, ix)?;
         Ok(ix)
+    }
+
+    /// What decided decision instance `tid`'s existence at its point of walk `id`, its `when`'s
+    /// reads, `decided`, taken into its link's read set where the link is judged there: the
+    /// link's cell, each row that fulfils it and the walk's copy of each, so every reader of
+    /// the link lists them, in any order of the `when`'s operands (L §5.14 l.1362, §8.2 l.2252
+    /// One read set; tally 2.3.1 C-9, R2; G2's review B3).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    fn link_reads_at_point(
+        &mut self,
+        id: usize,
+        tid: &str,
+        decided: &Collected,
+    ) -> Result<(), Stop> {
+        let cut = self.walk(id)?.cut;
+        let key = (cut, tid.to_owned());
+        if !self.links_at_point.contains(&key) {
+            return Ok(());
+        }
+        if let Some(hit) = self.links.get_mut(&key) {
+            hit.coll.merge(decided);
+        }
+        let names = |o: &Obs| o.target_id().as_deref() == Some(tid);
+        for o in self.observed.get_mut(&cut).into_iter().flatten() {
+            if names(o) {
+                o.coll.merge(decided);
+            }
+        }
+        for wo in &mut self.walk_mut(id)?.obs {
+            if names(&wo.obs) {
+                wo.obs.coll.merge(decided);
+            }
+        }
+        Ok(())
     }
 
     /// The legs of decision instance `inst`, refused before its point, with their places read
@@ -1536,6 +1574,46 @@ version feb
                     format!("loose: {refused}")
                 ],
                 "{order:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn what_decided_a_decisions_existence_at_its_point_is_its_links_read_set() {
+        // L §5.14 l.1362, §8.2 One read set (tally 2.3.1 C-9, R2; G2's review B3): the `when`
+        // reads `ok[2026-02]`, assumed, at the point; February's flows rests on the row's link,
+        // so it lists that assumption whichever operand of the `and` comes first
+        for when in ["bal(konto) < lim and ok[m]", "ok[m] and bal(konto) < lim"] {
+            let text = DEC_LINK
+                .replace("LIM", "600.00 PLN")
+                .replace("when bal(konto) < lim", &format!("when {when}"))
+                .replace(
+                    "input d5: int",
+                    "input d5: int\n\ninput ok[m in month]: bool",
+                )
+                .replace(
+                    "  d5 = 5 \"s\"",
+                    "  d5 = 5 \"s\"\n  ok[2026-01] = true \"s\"\n  ok[2026-02] = true assumed \
+                     \"feb guess\" \"s\"\n  ok[2026-03] = true \"s\"\n  ok[2026-04] = true \
+                     \"s\"\n  ok[2026-05] = true \"s\"",
+                );
+            let given = vec![Given {
+                path: "dec_read.tally".to_owned(),
+                bytes: Some(text.into_bytes()),
+            }];
+            let asks = Asks::Named(vec!["f".to_owned()]);
+            let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            let lines = answer.lines();
+            assert_eq!(
+                lines.first().map(String::as_str),
+                Some("f: 400.00 PLN"),
+                "{when}"
+            );
+            assert!(
+                lines
+                    .iter()
+                    .any(|l| l == "  assumed: feb guess (ok[2026-02])"),
+                "{when}: {lines:?}"
             );
         }
     }
