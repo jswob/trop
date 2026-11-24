@@ -8556,3 +8556,67 @@ The builder's second turn on group 2: G2's review (`tmp/spec-2.3.1/inputs/review
 - **Usage:** about 0.82 % of the week this turn (1.07 % to 1.89 %) by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry.
 - **Time:** about 65 minutes, about 40 of them checks (`check quick` about 28 runs, `check commit` 5, the sweeps about 1).
 - **Checks:** `check quick: green, 11 steps (59s)`; `check commit: red at tests, stopped after 10 of 24 steps (107s)`, red only on the 87 ids above.
+
+## 2026-11-24 tally 2.3.1 G1's last fix: statements A and B (issue #259)
+
+The builder's turn on G1's fix review (`tmp/spec-2.3.1/inputs/review-g1fix.md`, 3 blocking, 9 notes), by rulings 17 (pick P10): one statement for each mended form, each built in one place, on top of G2's 31d1aa26. Before each commit this worktree's release engine ran every probe of both reviews (`inputs/review/g1/`, `inputs/review/g1fix/` with s2 to s5's scenario pairs, a03, my `p18_rev`) against the run before (`tmp/spec-2.3.1/g1fix/sweep2.sh`; outputs `g1fix/c0` at the start, `c1` after A, `c2`/`c3` within B). Every moved line is below; nothing else moved. **Waiting for T and the pin.**
+
+**Commits** (none pushed):
+- 34aef13b `fix(eval): every tuple of any, all and sum is one member` (statement A)
+- 1f90d356 `fix(book): a same group is one movement whatever its sides' kinds` (statement B)
+- ffae6aaa `refactor(book): a binding's refused member found by a function` (the exceptions step's nested-closure report on A's closure)
+
+**Each finding and note, its probe and the engine's line now** (before in brackets):
+
+| Finding | Probe | Engine now |
+|---|---|---|
+| G3 (A) | `g1fix/f04_domhole_min` wr, tr | `wr: true` (`RUN-DIV`), `tr: true` (the hole of dh3) |
+| N6 (A) | `f03_domain_hole` ah, aq, aw; lq, lw | `true`, `true`, `true` (the hole, the hole, `RUN-DIV`); `false`, `false` (the hole, `RUN-DIV`); ar, arr stay `true` |
+| N5 of the first review (A) | `g1/p03c_anyall_when` am, lm2; `g1/p03_anyall_moves` am, lm2 | `am: true`, `lm2: false`, each with `unfulfilled: mb` (`RUN-DIV`); am2 and lm (no member decides) stay `RUN-DIV`, now listing what they read (`unfulfilled: mb`); `cm` (`count`) stays `RUN-DIV` with no line |
+| N1's `sum` (A) | `f02_sum_zero` sr, sr0; `f01_where_aggs` sw, s0 | `sr: 7`, `sr0: 0`, `sw: 7`, `s0: 0` (`RUN-DIV`); sh 7, sh0 0 as before |
+| G1 (B) | `f12_dec_sides_min` b6, b8, c6, c8 | `b6` the hole `?"in1 and in2 are one, but the leg at wallet differs on 2026-03-05: 100.00 PLN (in1) and its day 2026-03-07 (in2)" (in1, in2)` (100.00 PLN), `b8: 100.00 PLN` (the hole); `c6` that hole for j1, j2 (as before), `c8: 100.00 PLN` (two holes) |
+| G1 (B) | `s5/r.tally` + `s5/up.tally` | `b31`, `cu31`, `eb31`, `ec31` `100.00 PLN` (holes); `b6`, `b8` (between 03-05 and 05-07) the hole (100.00 PLN); `ex`, `eb31`, `ec31`'s rows: the first day `hole:`, the last day `+100.00 PLN` |
+| G2 (B) | `s3/r.tally` + `s3/up.tally` bu, bu3, du, eu | no `before from: x2 on 2026-03-07 removed by up` line (one each before); values as before; `s3/rb` + `dn` unchanged |
+| N2 (B) | `f09_three_explain` e8, e9; `f13_three_shared_day` e8, e9; s3 eu | each gains the middle side's row, `x2.cash (past): hole: ?"x1, x2 and x3 are one, …"` (none) |
+| N7 (B) | `f13` c9, n3, s3; `g1/p10_same_three` ny, sy; `p10b_same_agree` ny, sy; `g1/p09_same_two` cnt; `f09`'s binding | values as before (`c9: 1`, `ny: 1` …), each now lists every side: `unfulfilled: x1`, `x2`, `x3` (x1 alone); `y1`, `y2` (y1 alone); `in1`, `in2` |
+| N4 (note) | `ask/walked.rs` `closes` | one `retain`, no captured state |
+| N5 (note) | `walk_terms`' `Err` arm | gone: a load refusal or a broken invariant passes on where it is met |
+
+**How each is built:**
+- **A** (`eval/aggregate.rs`, `book/members.rs`, `eval/bindings.rs`, `eval/extremes.rs`). The walk carries a `Reading`: `Each` for `any`, `all` and `sum`, `Stops` for every other reader, whose bytes therefore don't move. Under `Each` a tuple is read as its domain, its `where`, its term:
+  - a refused inner domain, a refused `where` (with its scope where it is the last binding's) and a movement whose existence is refused become `Step::Refused`;
+  - an inner domain hole becomes `Step::Hole`;
+  - `walk_terms` keeps each as a `Tuple` in binding order.
+  `span_members` keeps an instance whose evaluation is refused as a member (`MvMember.refused`) under `Each` and refuses at it as before under `Stops`, with the same early return. A refused instance with no day still refuses the domain under both, since it can't be placed in or out of the span. `any_all`: a deciding member decides; else the first refused tuple refuses; else a hole. A member whose `where` is a hole is a hole member whatever its term. `terms_aggregate` takes tuples; for `sum`:
+  - a refused tuple whose term is known 0 in its scope adds 0 (`adds_zero`); else it refuses at once, first in binding order;
+  - an inner domain hole and a hole-`where` member whose term is refused are hole members (`member_term`).
+  `count`, `first`, `min` and `max` are untouched (`p03c` cm, `f01` cw and fw).
+- **B** (`book/same_booking.rs`, `walk/state.rs` fence, `ask/walked.rs`, `book/members.rs`, `book/same.rs`):
+  - A decision not yet run on another day is waited for whatever the mover's kind (`same_ends`). Where the days differ, `same_wait_for` opens the group's hole (`EndBook::Open`), where it used to book a lasting hole.
+  - In `same_end`, every side but the last opens the hole the group's first side opened (`group_open`, found in the place's log by the group's ids), and the last closes with it. So a hole opened before a decision's amount was known is still the one its point ends. `EndBook::Between` (the first fix's N1 `Mark`) goes: the middle side opens the same hole, so its row prints in explain (N2) and stays in a scenario's walk (G2, since `Before` drops only `Mark`).
+  - `ended` (`walk/state.rs`) takes every copy of the hole (`check fences: green, 1 step (55s)`), and `closes` in explain does the same.
+  - A binding over a group binds it once and notes each other side's `unfulfilled`/`uncertain` beside the kept one (`group_sides`, N7).
+  - The decision-later twin `g1fix/p18_rev` (the decision reads the pair's own wallet) stays the hole: its amount reads the open hole, so the sides don't agree at its point.
+
+**For the lead:**
+- **A one-day agreeing group's balance register** still lists only its latest side (`p10b` a6: `unfulfilled: x3`), since its other sides book nothing (`Skip`). Statement B's "its register … list every side" reads as covering it too; I left it, as no probe of either review names it. Build it the same way: the skipped sides open nothing but carry their register on a no-change entry the scenario check keeps.
+- `f13` pe's pinned-day form and N8's day pins are untouched.
+
+**What `check commit` shows red** (one run, after the last commit): 30 of 1 567 tests, 102 ids, against G2's 87 (my last 81 and its six `c5_wref`). **15 new, each in a statement:**
+- **A (1):** `r11/expr_stays` (`e_sum: sum(0 for k in ks where v[k] / zero > 1)` is `0`, refcore `RUN-DIV`).
+- **B (14):** each a binding over a `same` group now listing every side:
+  - `fixes/gate8/m2_d512_plans_same` (`pay2[2026-03]`);
+  - `fixes/rv/g4f_f1_member_list`, `g4f_f1_member_range_9`, `g4f_f1_member_range_10` (`pay[aa]` beside `pay[zz]`, `pay[10]` beside `pay[9]`);
+  - `t221-g2/` 219-1-same-planned, p42-leg-to, p42-span-days, rv2-n4-count-same, rv2-n6-two-legs, rv2-q3-per-fact (`in2`);
+  - `t221-g3/` mut-same-chain-line, mut-same-mover-right, rv3-n4-release-line (`dec`);
+  - `t23-g1/same-end-differ` (`j2`).
+None of the 87 turned green or left the list. None is outside a statement.
+
+- **Size** (`git diff --shortstat 31d1aa26 -- engine/crates`): 9 files, +550 −188, about +210 of it unit tests (`every_tuple_is_one_member_of_any_and_all`, `two_decisions_of_two_days_are_one_movement`, `q_where_sum` turned to 6).
+- **Kernel files touched:** `eval/aggregate.rs`, `eval/bindings.rs`, `eval/extremes.rs`, `book/members.rs`, `book/same_booking.rs`, `book/same.rs`, `walk/state.rs` (fence), `ask/walked.rs`, `lib.rs`.
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged; the nested-closure report fixed by ffae6aaa).
+- **Mutants:** none proved. Sites new for T: `next_tuple`'s `exists` arm and `then_some(inner)`; the inner domain's `Reading::Each` guard; `adds_zero`'s `is_zero`; `member_term`'s `unknown.is_some()`; `span_members`' `Reading::Stops` arm and `retain`'s `|| refused_of`; `same_ends`' `later`; `group_open`'s `rev().find_map`; `ended`'s `<`; `group_sides`' two notes.
+- **Open STOP-REPORTs:** none new.
+- **Usage:** about 0.44 % of the week this turn, 1.80 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
+- **Time:** about 40 minutes, about 20 of them checks (`check quick` 8, the release binary 4, `check fences` 1, `check commit` 2).
+- **Checks:** `check quick: green, 11 steps (79s)`; `check fences: green, 1 step (55s)`; `check commit: red at tests, stopped after 10 of 24 steps (144s)`, red only on the 102 ids above.
