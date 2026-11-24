@@ -8696,7 +8696,7 @@ The builder's turn on the lead's probes of G1's last fix (`tmp/spec-2.3.1/inputs
     - one that misses the range adds nothing;
     - any other is the hole, one strictly between the days included.
   - A pair whose last side ended no hole keeps the old test, the hole where its first day is in the span.
-  - f_a, f_b, f_n, the other spans and `f10`'s… stay as they were.
+  - p09's other spans (f_n, f_a, f_b, f_x, f_y) and every other probe's `flows` stay as they were.
 - **The words** (`eval/rates.rs`): `p08_nominal` a0, p0 and `p19_factor_nominal` pr are `refused: RUN-DOMAIN nominal 0: m is a positive int` (the `(L §3.3)` suffix gone).
 - **L1** (`g1fix/f10_two_day_parts.tally`, every ask `tally run: not implemented`, exit 69): **not built, STOP-REPORT below.**
   - This is not the `same` group's walk. Every ask of a reality whose kind keeps parts stops `NotBuilt("parts at run")` (`ask/answer.rs` `answer_lent`, `keeps_parts`): the parts walk is M5b's (`engine/spec/BUILD-ORDER.md` l.44, l.257).
