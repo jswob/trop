@@ -114,15 +114,31 @@ pub(crate) fn min_max(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value,
     stretch((lo, hi), &from)
 }
 
+/// The order of two values an extreme compares: `never` later than every date and equal to
+/// itself, so `min(never, d)` is d (L §3.1 "Ordering against it is allowed, `min`, `max`,
+/// `argmin` and `argmax` included"; tally 2.3.1 S9, N256.4); any other pair by [`compare`].
+///
+/// # Errors
+///
+/// [`compare`]'s.
+fn extreme_order(m: &Reality, a: &Value, b: &Value) -> Result<Ordering, Stop> {
+    match (a, b) {
+        (Value::Never, Value::Never) => Ok(Ordering::Equal),
+        (Value::Never, Value::Day(_)) => Ok(Ordering::Greater),
+        (Value::Day(_), Value::Never) => Ok(Ordering::Less),
+        _ => compare(m, a, b, Test::Order),
+    }
+}
+
 /// The least (`End::Low`) or greatest of values none of which is a window, the first of
-/// equals (refcore's `extreme`). L §5.11.
+/// equals (refcore's `extreme`). L §5.11, §3.1.
 fn extreme_of(m: &Reality, vals: Vec<Value>, pick: End) -> Result<Value, Stop> {
     let mut best: Option<Value> = None;
     for v in vals {
         best = Some(match best {
             None => v,
             Some(held) => {
-                let order = compare(m, &v, &held, Test::Order)?;
+                let order = extreme_order(m, &v, &held)?;
                 let better = match pick {
                     End::Low => order == Ordering::Less,
                     End::High => order == Ordering::Greater,
@@ -729,7 +745,7 @@ fn extreme_keys(
             best.push(at);
             continue;
         };
-        let order = compare(m, t, held, Test::Order)?;
+        let order = extreme_order(m, t, held)?;
         if order == wanted {
             best = vec![at];
         } else if order == Ordering::Equal {
@@ -779,4 +795,80 @@ fn tie_group(
         }
     }
     Ok(Some(group))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// Days and `never` under `min`, `max`, `argmin` and `argmax` (`never` beside a date,
+    /// N256.4).
+    const NEVER: &str = r#"model latest
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+index ks = [a, b, c]
+
+input nv: date
+
+input d: date
+
+input dl[k in ks]: date
+
+ask q_min: min(nv, d)
+
+ask q_max: max(d, nv)
+
+ask q_lo: min(dl[k] for k in ks)
+
+ask q_hi: max(dl[k] for k in ks)
+
+ask q_arg_lo: argmin(dl[k] for k in ks)
+
+ask q_arg_hi: argmax(dl[k] for k in ks)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  nv = never "s"
+  d = 2026-05-01 "s"
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  dl[c] = 2026-04-01 "s"
+"#;
+
+    #[test]
+    fn never_is_later_than_every_date_in_an_extreme() {
+        // L §3.1 (tally 2.3.1 S9, N256.4): ordering against never is allowed, min, max,
+        // argmin and argmax included, so min(never, d) is d
+        let given = vec![Given {
+            path: "latest.tally".to_owned(),
+            bytes: Some(NEVER.as_bytes().to_vec()),
+        }];
+        let request = Request::new(Asks::Every);
+        let answer = run(Files::new(given), &request).expect("an answer");
+        let values: Vec<&str> = answer
+            .lines()
+            .iter()
+            .filter(|line| line.starts_with("q_"))
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            values,
+            [
+                "q_arg_hi: b",
+                "q_arg_lo: a",
+                "q_hi: never",
+                "q_lo: 2026-03-01",
+                "q_max: never",
+                "q_min: 2026-05-01"
+            ],
+            "never orders after every date"
+        );
+    }
 }
