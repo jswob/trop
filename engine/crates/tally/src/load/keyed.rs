@@ -28,7 +28,7 @@ use crate::eval::year_form;
 use crate::model::{
     BindInfo, Domain, KeyVal, KindSpec, NameKind, Node, NodeKind, PeriodWord, Reality, Rel, Ty,
 };
-use crate::syntax::{Expr, Key, Lit, Postfix, SiteKey, Stop};
+use crate::syntax::{AggFn, Expr, Key, Lit, Postfix, SiteKey, Stop};
 use crate::time::PeriodKind;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -61,7 +61,8 @@ impl Checker {
         } else {
             NodeKind::Def
         };
-        if keys.len() != binds.len() && !observed {
+        let tupled = self.tuple_keys(m, scope, keys, binds, depth)?;
+        if keys.len() != binds.len() && !observed && !tupled {
             return Err(refused(
                 Load::Key,
                 format!(
@@ -92,7 +93,10 @@ impl Checker {
             return Ok(Ty::Key("events".to_owned()));
         }
         let mut env = Vec::new();
-        for (key, bind) in keys.iter().zip(binds) {
+        if tupled {
+            env.extend(binds.iter().map(|b| (b.var.clone(), "$?".to_owned())));
+        }
+        for (key, bind) in keys.iter().zip(binds).filter(|_| !tupled) {
             let Key::Expr(kn) = key else {
                 return Err(refused(
                     Load::Parse,
@@ -135,6 +139,37 @@ impl Checker {
         }
         self.note_read(scope, &target);
         Ok(ty)
+    }
+
+    /// Whether a read's one key is the tuple `argmin`, `argmax`, `first` or `last` returns over
+    /// as many bindings as the read has positions: it stands in them, each of its keys checked
+    /// against its position (refcore's `read`, its `tupitem`; tally 2.3.1 S6, Q1.12). L §5.11's
+    /// aggregate paragraph, §2.5.
+    fn tuple_keys(
+        &mut self,
+        m: &Reality,
+        scope: &Scope,
+        keys: &[Key],
+        binds: &[BindInfo],
+        depth: u32,
+    ) -> Result<bool, Stop> {
+        let [Key::Expr(one @ Expr::Agg(agg))] = keys else {
+            return Ok(false);
+        };
+        let returns_keys = matches!(
+            agg.func,
+            AggFn::Argmin | AggFn::Argmax | AggFn::First | AggFn::Last
+        );
+        if !returns_keys || binds.len() < 2 || agg.binds.len() != binds.len() {
+            return Ok(false);
+        }
+        let Ty::Tuple(items) = self.expr(m, scope, one, None, depth)? else {
+            return Ok(false);
+        };
+        for (item, bind) in items.iter().zip(binds) {
+            self.key_conv(m, scope, item, &bind.domain, one)?;
+        }
+        Ok(true)
     }
 
     /// A place read by its id, or a keyed place at keys (refcore's `m_place_value`).

@@ -1205,6 +1205,11 @@ pub(super) fn compare_values(
     if let (Value::Mv(x), Value::Mv(y), true) = (a, b, eq) {
         return Ok(holds(x.id == y.id));
     }
+    if let (Value::Tuple(x), Value::Tuple(y), true) = (a, b, eq) {
+        // a returned tuple is its keys: equal where every key is (L §5.11's aggregate
+        // paragraph; tally 2.3.1 S6)
+        return Ok(holds(x == y));
+    }
     let test = if eq { Test::Equality } else { Test::Order };
     let order = compare(m, a, b, test)?;
     Ok(Value::Bool(match op {

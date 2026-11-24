@@ -368,6 +368,17 @@ fn compare_rest(m: &Reality, op: CmpOp, lt: &Ty, rt: &Ty) -> Result<(), Stop> {
     if is_date(m, lt) && is_date(m, rt) {
         return Ok(());
     }
+    if let (Ty::Tuple(a), Ty::Tuple(b)) = (lt, rt)
+        && eq
+        && a.len() == b.len()
+        && a.iter()
+            .zip(b)
+            .all(|pair| matches!(pair, (Ty::Key(x), Ty::Key(y)) if x == y))
+    {
+        // the tuple argmin, argmax, first or last returns is its keys: it compares with ==
+        // and != key by key (L §5.11's aggregate paragraph; tally 2.3.1 S6, Q1.11)
+        return Ok(());
+    }
     let pa = if lk == "period" || lk == "key" {
         period_kind(m, lt)
     } else {
@@ -508,4 +519,87 @@ fn compare_plain(op: CmpOp, lt: &Ty, rt: &Ty) -> Result<(), Stop> {
         ));
     }
     Err(uerr(format!("{} and {} compared", lt.show(), rt.show())))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::api::{Asks, Files, Given, Request, run};
+
+    /// The tuple `argmin` and `first` return (the writer's `tuple.tally`, tally 2.3.1 S6).
+    const TUPLE: &str = r#"model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+"#;
+
+    /// Every ask's first line.
+    fn heads(text: &str) -> Vec<String> {
+        let given = vec![Given {
+            path: "tuple.tally".to_owned(),
+            bytes: Some(text.as_bytes().to_vec()),
+        }];
+        let lines = run(Files::new(given), &Request::new(Asks::Every))
+            .expect("an answer")
+            .lines()
+            .to_vec();
+        lines.into_iter().filter(|l| !l.starts_with(' ')).collect()
+    }
+
+    #[test]
+    fn a_returned_tuple_compares_and_stands_in_key_positions() {
+        // L §5.11's aggregate paragraph: compared with == and != key by key, and the keys
+        // of a read of the same indexes
+        assert_eq!(
+            heads(TUPLE),
+            [
+                "t1: false",
+                "t2: true",
+                "t3: true",
+                "t4: 3.00 PLN",
+                "t5: 5.00 PLN"
+            ],
+            "each tuple as its keys"
+        );
+    }
+
+    #[test]
+    fn a_tuple_of_other_indexes_is_still_refused() {
+        // only keys of the same indexes, in their order: (key ks, key js) against (js, ks)
+        let text = TUPLE.replace(
+            "== argmax(v[k, j] for k in ks, j in js)",
+            "== argmax(v[k, j] for j in js, k in ks)",
+        );
+        let first = heads(&text).into_iter().next();
+        assert_eq!(
+            first.as_deref(),
+            Some(
+                "refused: LOAD-UNIT (key ks, key js) and (key js, key ks) compared (tuple.tally:13)"
+            ),
+            "a tuple of other key types"
+        );
+    }
 }
