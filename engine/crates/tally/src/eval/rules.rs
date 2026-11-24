@@ -508,7 +508,7 @@ impl Engine {
             .filter(|l| !beaten_by_any(def, &applicable, *l))
             .collect();
         let law_text = ctx.law.map_or_else(|| "no law date".to_owned(), Day::text);
-        let relevant = changes_outcome(def, (&applicable, &cands), &unknown);
+        let relevant = changes_outcome(def, &cands, &unknown);
         if let ([first, second, ..], None) = (cands.as_slice(), &relevant) {
             self.narrow_to_day(ctx.law);
             return Err(refuse(
@@ -811,28 +811,15 @@ fn beats(def: &DefInfo, a: InForce, b: InForce) -> bool {
 }
 
 /// The hole of the rules among `unknown`, each a rule of unknown applicability with its
-/// `when`'s hole, that could change the outcome of the choice whose applicable rules are
-/// `applicable` and candidates `cands`: one that would beat a candidate, be a candidate beside
-/// the winner, or be the only rule left; beside two or more candidates, one whose applying
-/// would leave fewer than two, so that the conflict depends on it (refcore's `eval_rules`);
-/// none where no such rule is. L §5.11 steps 5 and 6.
-fn changes_outcome(
-    def: &DefInfo,
-    (applicable, cands): (&[InForce], &[InForce]),
-    unknown: &[(InForce, Hole)],
-) -> Option<Hole> {
+/// `when`'s hole, that could change the outcome of the choice whose candidates are `cands`,
+/// one or many: one that would beat a candidate, be a candidate beside the winner, or be the
+/// only rule left (refcore's `eval_rules`); none where no such rule is. L §5.11 steps 5 and 6.
+fn changes_outcome(def: &DefInfo, cands: &[InForce], unknown: &[(InForce, Hole)]) -> Option<Hole> {
     let mut relevant = Vec::new();
     for (at, hole) in unknown {
-        let changes = if let [_, _, ..] = cands {
-            let kept = cands.iter().filter(|c| !beats(def, *at, **c)).count();
-            let joins = usize::from(!beaten_by_any(def, applicable, *at));
-            kept.checked_add(joins).is_some_and(|left| left < 2)
-        } else {
-            let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
-            let beaten_by_cand = cands.iter().any(|c| beats(def, *c, *at));
-            beats_cand || !beaten_by_cand || cands.is_empty()
-        };
-        if changes {
+        let beats_cand = cands.iter().any(|c| beats(def, *at, *c));
+        let beaten_by_cand = cands.iter().any(|c| beats(def, *c, *at));
+        if beats_cand || !beaten_by_cand || cands.is_empty() {
             relevant.push(Some(hole));
         }
     }
@@ -1028,7 +1015,7 @@ mod tests {
     use crate::api::{Asks, Files, Given, Request, run};
 
     /// Two applicable rules no applicable rule beats, and a rule whose `when` is a hole that
-    /// would beat both (`d1`) or only one (`d2`).
+    /// would beat both (`d1`), only one (`d2`), or none and is beaten by one (`d9`).
     const UNKNOWN_BEATS: &str = r#"model unknown_beats
   tally 2
   on 2026-10-25
@@ -1059,8 +1046,15 @@ def d2: money PLN at reader
   rule base = vb
   rule mid beats base = vt when ch
 
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+
 ask q1: d1 law 2026-03-01
 ask q2: d2 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask e1: explain d1 law 2026-03-01
 
 version v
   cite s
@@ -1074,10 +1068,10 @@ version v
 "#;
 
     #[test]
-    fn an_unknown_rule_that_would_end_a_conflict_makes_the_def_its_hole() {
-        // L §5.11 step 5 (tally 2.3.1, N256.3): `top` applying would leave it the one
-        // candidate, so d1 is its hole; `mid` applying leaves a and mid in conflict, so d2
-        // is refused either way
+    fn an_unknown_rule_that_could_change_a_conflict_makes_the_def_its_hole() {
+        // L §5.11 step 5 (tally 2.3.1, N256.3, l.1140): `top` and `mid` would each beat a
+        // candidate, so d1 and d2 are their hole; `c`, beaten by the candidate `a` and
+        // beating none, changes nothing, so d9 is refused
         let given = vec![Given {
             path: "unknown_beats.tally".to_owned(),
             bytes: Some(UNKNOWN_BEATS.as_bytes().to_vec()),
@@ -1094,9 +1088,10 @@ version v
             values,
             [
                 "q1: ?\"does it apply?\" (ch)",
-                "q2: refused: RUN-CONFLICT rules a and base both win for d2 on 2026-03-01"
+                "q2: ?\"does it apply?\" (ch)",
+                "q9: refused: RUN-CONFLICT rules a and b both win for d9 on 2026-03-01"
             ],
-            "the hole where the unknown rule decides the conflict"
+            "the hole where the unknown rule could change the outcome"
         );
     }
 }
