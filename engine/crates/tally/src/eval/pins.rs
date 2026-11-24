@@ -816,6 +816,25 @@ version v2
     }
 
     #[test]
+    fn two_pins_of_one_cell_in_an_as_if_overlap() {
+        // L §5.11 "two pins of one cell" (G3's review N6, the lead's ruling): as the line's
+        for (ask, refusal) in [
+            (
+                "ask a10: cost as if {law 2026-02-01, law 2026-09-01}",
+                "refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date \
+                 overlap at no keys (lawpin.tally:15)",
+            ),
+            (
+                "ask a11: cost as if {known 2026-02-01, known 2026-03-01} law 2026-09-01",
+                "refused: LOAD-OVERLAP pins known 2026-02-01 and known 2026-03-01 of the cut \
+                 overlap at no keys (lawpin.tally:15)",
+            ),
+        ] {
+            assert_eq!(ran(ask).first().map(String::as_str), Some(refusal), "{ask}");
+        }
+    }
+
+    #[test]
     fn a_law_pin_and_a_cut_pin_on_one_line_stand() {
         // one pin of each cell, and an `as if {law D}` inside an expression is that as if's
         let lines = ran("ask t2: cost as if {law 2026-02-01} law 2026-09-01 as known 2026-05-01");

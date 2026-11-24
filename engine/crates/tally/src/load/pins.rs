@@ -688,9 +688,23 @@ pub(super) fn pin_ties(m: &Reality, scope: &Scope, pins: &[Pin]) -> Result<(), S
 ///
 /// That `LOAD-OVERLAP`, unplaced.
 pub(super) fn line_pins(ask: &Ask) -> Result<(), Stop> {
+    same_cell(&ask.pins, (ask.law.as_ref(), ask.known.as_ref()))
+}
+
+/// Pins `pins` of one line or one `as if`, with the line's clauses `law` and `known`: two
+/// `law D`, or two `known D`, are two pins of one cell, `LOAD-OVERLAP`, as [`line_pins`] says
+/// (L §5.11 "two pins of one cell"; G3's review N6, the lead's ruling: as W3's line rule).
+/// L §4.6, §8.3.
+///
+/// # Errors
+///
+/// That `LOAD-OVERLAP`, unplaced.
+pub(super) fn same_cell(
+    pins: &[Pin],
+    (law_clause, known_clause): (Option<&Expr>, Option<&Expr>),
+) -> Result<(), Stop> {
     for law in [true, false] {
-        let mut same: Vec<String> = ask
-            .pins
+        let mut same: Vec<String> = pins
             .iter()
             .filter_map(|pin| match &pin.form {
                 PinForm::Law(e) if law => Some(format!("law {}", text(e))),
@@ -703,9 +717,9 @@ pub(super) fn line_pins(ask: &Ask) -> Result<(), Stop> {
             })
             .collect();
         let (clause, word, cell) = if law {
-            (&ask.law, "law", "the law date")
+            (law_clause, "law", "the law date")
         } else {
-            (&ask.known, "as known", "the cut")
+            (known_clause, "as known", "the cut")
         };
         same.extend(clause.iter().map(|e| format!("{word} {}", text(e))));
         if let [first, second, ..] = same.as_slice() {

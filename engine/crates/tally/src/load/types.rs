@@ -530,6 +530,8 @@ impl Checker {
             }
         }
         super::pins::pin_ties(m, scope, pins)?;
+        // two pins of the law date, or of the cut, in one `as if` (G3's review N6)
+        super::pins::same_cell(pins, (None, None))?;
         self.expr(m, &under, inner, expect, depth)
     }
 
