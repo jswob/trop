@@ -237,3 +237,27 @@ fixes/gatelead/x3_settled/e5	m4_fixes	#255	M4 P37: refcore's explain leaves out 
 fixes/gate/p_g5x/q8	m4_fixes	#255	M4 gate review X3 / P31: refcore's explain lists swap's whole list at each booking cut; spec/gate/gate/p_g5x/q8
 fixes/gate/p_g5x/xx7	m4_fixes	#255	M4 gate review X3 / P31: refcore's explain lists swap's whole list at each booking cut; spec/gate/gate/p_g5x/xx7
 fixes/gate/p_g5x/xx8	m4_fixes	#255	M4 gate review X3 / P31: refcore's explain lists swap's whole list at each booking cut; spec/gate/gate/p_g5x/xx8
+fixes/gate8/x1r/l24	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/l24
+fixes/gate8/x1r/l24__l4	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/l24__l4
+fixes/gate8/x1r/l4__l24	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/l4__l24
+fixes/gate8/x1r/l24__f	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/l24__f
+fixes/gate8/x1r/f__l24	m4_fixes	#255	M4 survivor sort (P30): refcore refuses the 2026-04 line with its list guard (RUN-CYCLE spend reads its own instances); spec/gate8/x1r/f__l24
+fixes/gate8/k_link/qz	m4_fixes	#252	M4 P40 B1: refcore's bytes are the answer (an existence read takes only what decides that the instance exists, so no `assumed:` line); the engine adds the link's read until P40's fix; delete this row when it lands
+fixes/gate8/k_link/qa__qz	m4_fixes	#252	M4 P40 B1: refcore's bytes are the answer (an existence read takes only what decides that the instance exists, so no `assumed:` line); the engine adds the link's read until P40's fix; delete this row when it lands
+fixes/gate8/k_link/qz__qa	m4_fixes	#252	M4 P40 B1: refcore's bytes are the answer (an existence read takes only what decides that the instance exists, so no `assumed:` line); the engine adds the link's read until P40's fix; delete this row when it lands
+fixes/gate8/k_stop3/f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/f
+spec/p40/k_stop3/f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop3/l4	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/l4
+spec/p40/k_stop3/l4	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop3/f__l4	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/f__l4
+spec/p40/k_stop3/f__l4	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop3/l4__f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop3/l4__f
+spec/p40/k_stop3/l4__f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop2/l2	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/l2
+spec/p40/k_stop2/l2	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop2/f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/f
+spec/p40/k_stop2/f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop2/l2__f	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/l2__f
+spec/p40/k_stop2/l2__f	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands
+fixes/gate8/k_stop2/f__l2	m4_fixes	#255	M4 P40 B2: refcore (and the engine) print ENGINE-INVARIANT, ask-order dependent; P40's answer is RUN-DIV for both asks in either order: spec/p40/k_stop2/f__l2
+spec/p40/k_stop2/f__l2	m4_fixes	#252	M4 P40 B2: the text's answer, red on the engine until P40's fix (ENGINE-INVARIANT); delete this row when it lands

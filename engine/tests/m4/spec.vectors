@@ -20241,4 +20241,904 @@ ask a_last: age_months(b_last, d_last)
 ask a_prev: age_months(b_prev, b_last)
 ,,1:0,27:a_last: 0
   cut 2026-01-01
+,18:spec/gate8/x1r/l24,10:spec-gate8,23:run x1r.tally --ask l24,1757:9:x1r.tally,1739:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input dz: int
+
+move spend[m in month where spend_dom / dz > 0]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  dz = 0 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,91:l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): 30.00 PLN
+  cut 2026-04-20
+,22:spec/gate8/x1r/l24__l4,10:spec-gate8,26:run x1r.tally --ask l24 l4,1757:9:x1r.tally,1739:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input dz: int
+
+move spend[m in month where spend_dom / dz > 0]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  dz = 0 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,122:l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): 30.00 PLN
+  cut 2026-04-20
+l4: 30.00 PLN
+  cut 2026-04-20
+,22:spec/gate8/x1r/l4__l24,10:spec-gate8,26:run x1r.tally --ask l4 l24,1757:9:x1r.tally,1739:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input dz: int
+
+move spend[m in month where spend_dom / dz > 0]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  dz = 0 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,122:l4: 30.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): 30.00 PLN
+  cut 2026-04-20
+,21:spec/gate8/x1r/l24__f,10:spec-gate8,25:run x1r.tally --ask l24 f,1757:9:x1r.tally,1739:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input dz: int
+
+move spend[m in month where spend_dom / dz > 0]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  dz = 0 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,145:l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): 30.00 PLN
+  cut 2026-04-20
+f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+,21:spec/gate8/x1r/f__l24,10:spec-gate8,25:run x1r.tally --ask f l24,1757:9:x1r.tally,1739:model x1h
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe: o.fulfils naming the reading move's own instance, read at the ask's cut"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-05
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input dz: int
+
+move spend[m in month where spend_dom / dz > 0]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l24: loose[m] for m in [2026-02, 2026-04]
+
+ask l4: loose[2026-04]
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  dz = 0 "s"
+  opening[konto] = 5000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01]) "names an earlier instance"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,145:f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+l24 (m = 2026-02): 0.00 PLN
+  cut 2026-04-20
+l24 (m = 2026-04): 30.00 PLN
+  cut 2026-04-20
+,18:spec/p40/k_stop3/f,8:spec-p40,25:run k_stop3.tally --ask f,1581:13:k_stop3.tally,1558:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "refused: a division by zero"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,253:f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,19:spec/p40/k_stop3/l4,8:spec-p40,26:run k_stop3.tally --ask l4,1581:13:k_stop3.tally,1558:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "refused: a division by zero"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,254:l4: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,22:spec/p40/k_stop3/f__l4,8:spec-p40,28:run k_stop3.tally --ask f l4,1581:13:k_stop3.tally,1558:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "refused: a division by zero"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,308:f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+l4: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,22:spec/p40/k_stop3/l4__f,8:spec-p40,28:run k_stop3.tally --ask l4 f,1581:13:k_stop3.tally,1558:model k_stop3
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+input d25: int
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask f: flows(spend, 2026-04 .. 2026-04)
+
+ask l4: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "refused: a division by zero"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-10
+  covers card
+  bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,308:l4: refused: RUN-DIV division by zero
+  cut 2026-04-20
+f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d20 is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,19:spec/p40/k_stop2/l2,8:spec-p40,26:run k_stop2.tally --ask l2,1551:13:k_stop2.tally,1528:model k_stop2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l2: loose[2026-02]
+
+ask f: flows(spend, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "refused: a division by zero"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,204:l2: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,18:spec/p40/k_stop2/f,8:spec-p40,25:run k_stop2.tally --ask f,1551:13:k_stop2.tally,1528:model k_stop2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l2: loose[2026-02]
+
+ask f: flows(spend, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "refused: a division by zero"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,203:f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,22:spec/p40/k_stop2/l2__f,8:spec-p40,28:run k_stop2.tally --ask l2 f,1551:13:k_stop2.tally,1528:model k_stop2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l2: loose[2026-02]
+
+ask f: flows(spend, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "refused: a division by zero"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,258:l2: refused: RUN-DIV division by zero
+  cut 2026-04-20
+f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,22:spec/p40/k_stop2/f__l2,8:spec-p40,28:run k_stop2.tally --ask f l2,1551:13:k_stop2.tally,1528:model k_stop2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l2: loose[2026-02]
+
+ask f: flows(spend, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "refused: a division by zero"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,258:f: refused: RUN-DIV division by zero
+  cut 2026-04-20
+l2: refused: RUN-DIV division by zero
+  cut 2026-04-20
+warning: WARN-UNREAD input amt is read by nothing
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
 ,

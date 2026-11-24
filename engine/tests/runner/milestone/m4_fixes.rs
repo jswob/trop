@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 33] = [
+    const GROUPS: [&str; 37] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -29,6 +29,7 @@ mod tests {
         "fixes-g6c",
         "fixes-g6cfix",
         "fixes-gate",
+        "fixes-gate8",
         "fixes-gatefix",
         "fixes-gatelead",
         "fixes-narrow",
@@ -38,6 +39,7 @@ mod tests {
         "fixes-p23",
         "fixes-p30",
         "fixes-p32",
+        "fixes-p40",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -45,6 +47,7 @@ mod tests {
         "spec-g3",
         "spec-g3fix",
         "spec-gate",
+        "spec-gate8",
         "spec-p12",
         "spec-p21",
         "spec-p22",
@@ -52,6 +55,7 @@ mod tests {
         "spec-p30",
         "spec-p31",
         "spec-p32",
+        "spec-p40",
     ];
 
     /// Runs every vector of `group` in `store` on the engine and holds it to the stored run.
@@ -280,6 +284,31 @@ mod tests {
         group_holds(VECTORS, "fixes-gatelead");
     }
 
+    /// Gate 8's survivor sort (`tmp/m4/gate8/survivor-sort.md`, its K rows; `m4/fixes/gate8/`),
+    /// refcore's bytes, each an ask that tells a narrow read's code from a surviving mutant:
+    /// a list that stops at a refused `where` (`k_stop`), a link's `assumed` `when` absorbed by
+    /// the move's first reader (`k_pin`), a hole domain (`k_hole`, and `k_r35` with a version
+    /// known before the cut), an uncertain kind (`k_unc`), a refused day (`k_day`, and
+    /// `k_dayref` through an existence read), B1's shape at the link's own day (`k_b1`), a
+    /// refused tuple's instance named by `o.fulfils` read by its id or in a binding (`k_r60`,
+    /// `k_r65`), and `x1r`, every spend tuple refused, whose `l24` refcore refuses with its
+    /// list guard (held for #255; the text's lines are `spec-gate8`'s).
+    #[test]
+    fn m4_fixes_gate8() {
+        group_holds(VECTORS, "fixes-gate8");
+    }
+
+    /// P40's two cases, refcore's bytes: B1, an existence read takes only what decides that
+    /// the instance exists, so no other instance's link's `assumed:` line (`k_link` `qz`, after
+    /// `qa` and before it; refcore's bytes are the answer, held for #252 until P40's fix; `qa`
+    /// alone gates); B2, a list that stops gives that stop to every read of it (`k_stop3`,
+    /// `k_stop2`, each ask alone and in both orders), where both engines print
+    /// `ENGINE-INVARIANT`: held for #255, the text's lines are `spec-p40`'s.
+    #[test]
+    fn m4_fixes_p40() {
+        group_holds(VECTORS, "fixes-p40");
+    }
+
     /// Picks P23 and P24, G4 `backlog`'s: refcore's bytes for `explain` under an axis `*`
     /// (`fixes/g3/f5_cross` `e_pr`, `RUN-DIV`, held for #255 since P31: the text's lines are
     /// `spec-p31`'s) and under a hole axis (`fixes/g3fix/h2_plan_hole_axis` `e_cw`, `e_sm`), and
@@ -449,5 +478,21 @@ mod tests {
     #[test]
     fn m4_fixes_spec_gate() {
         group_holds(SPEC, "spec-gate");
+    }
+
+    /// The survivor sort's answers (#255, P30): `x1r`'s `loose[2026-04]`, whose `o.fulfils`
+    /// names a refused tuple's instance in progress, is 30.00 PLN in every order, from
+    /// refcore's run of a twin reading the rows by their place.
+    #[test]
+    fn m4_fixes_spec_gate8() {
+        group_holds(SPEC, "spec-gate8");
+    }
+
+    /// P40's B2 answers (#255): a list that stops gives `RUN-DIV division by zero` to its
+    /// `flows` and to every existence read of it, in either ask order (`k_stop3`, `k_stop2`);
+    /// written by hand. Those red on the engine until P40's fix are held for #252.
+    #[test]
+    fn m4_fixes_spec_p40() {
+        group_holds(SPEC, "spec-p40");
     }
 }
