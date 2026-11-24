@@ -356,11 +356,11 @@ impl Engine {
 
     /// The binding tuple of `mv` at `keys` under cut `cut`, its `when` read at the cut: none
     /// when no tuple has those keys or its `when` is false; a `when` that is a hole is taken
-    /// as existing, its link judged where its instance is (refcore's `link_tuple`); a refused
-    /// `when`, or a tuple refused before its later keys whose day and `when` leave a refused
-    /// instance, refuses the link with it, a plan's and a decision's (tally 2.3.1 R6, R2,
-    /// rulings 16 Q1); a decision's whose `when` reads running state is judged at its walk
-    /// point. L §5.19 Links, E §4.1 step 2, §4.2 step 3 (tally 2.3.1 R6, C-9).
+    /// as existing, its link judged where its instance is (refcore's `link_tuple`), and so is
+    /// a refused `where`'s; a refused `when` refuses the link with its instance, a plan's and
+    /// a decision's (tally 2.3.1 R2, rulings 16 Q1); a decision's whose `when` reads running
+    /// state is judged at its walk point. L §5.19 Links, E §4.1 step 2, §4.2 step 3 (tally
+    /// 2.3.1 R6, C-9).
     ///
     /// # Errors
     ///
@@ -384,17 +384,12 @@ impl Engine {
         if tuple.exists == Exists::No {
             return Ok(LinkVerdict::Missing);
         }
-        if let Some(err) = tuple.refused.clone() {
-            // its day and `when` decide whether the refused instance is there (R6's order)
-            let made = self.refused_tuple(m, mv, (tuple, None), err, tctx)?;
-            return Ok(match made {
-                None => LinkVerdict::Missing,
-                Some(Inst { err: Some(why), .. }) => LinkVerdict::Refused(why),
-                Some(_) => return Err(invariant("a refused tuple's instance with no refusal")),
-            });
-        }
-        if let (Some(when), Exists::Yes, None) = (&mv.decl.when, &tuple.exists, &tuple.domain_hole)
-        {
+        if let (Some(when), Exists::Yes, None, None) = (
+            &mv.decl.when,
+            &tuple.exists,
+            &tuple.domain_hole,
+            &tuple.refused,
+        ) {
             match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
                 Ok(false) => return Ok(LinkVerdict::Missing),
                 Ok(true) => {}
@@ -415,12 +410,57 @@ impl Engine {
                 Err(Stop::Refused(r))
                     if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) =>
                 {
-                    return Ok(LinkVerdict::Refused(r));
+                    return self.refused_when_link(m, mv, (&tuple, when), r, cut);
                 }
                 Err(stop) => return Err(stop),
             }
         }
         Ok(LinkVerdict::Stands(tuple.env))
+    }
+
+    /// The verdict on a link whose tuple's `when` is refused at cut `cut` with `r`: an instance
+    /// dated before the cut was booked at its day's cut, so its `when` read there decides it,
+    /// true, false or refused; else, or where its day can't be read, the link is refused with
+    /// the instance (L §5.19 Links, E §5 step 1, the booking cut; tally 2.3.1 R2, rulings 16
+    /// Q1; gate 8's C13, `linkdiv2`).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal or a cycle met reading the `when` at the day.
+    fn refused_when_link(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (tuple, when): (&Tuple, &crate::syntax::Expr),
+        r: Refusal,
+        cut: Day,
+    ) -> Result<LinkVerdict, Stop> {
+        let mut inst = Inst::new(mv, tuple.keys.clone(), tuple.env.clone());
+        let tctx = self.timeline_ctx(None, cut);
+        self.push();
+        let read = self.law_and_day(m, mv, &mut inst, tctx);
+        self.pop_alone();
+        let day = match read {
+            Ok(Ok(v)) => match day_dated(m, v, &inst.id) {
+                Ok(dated) => dated.day(),
+                Err(Stop::Refused(_)) => None,
+                Err(stop) => return Err(stop),
+            },
+            Ok(Err(_)) | Err(Stop::Refused(_)) => None,
+            Err(stop) => return Err(stop),
+        };
+        let Some(day) = day.filter(|d| *d < cut) else {
+            return Ok(LinkVerdict::Refused(r));
+        };
+        let booked = self.timeline_ctx(None, day);
+        match self.when_at_cut(m, mv, when, &tuple.env, booked) {
+            Ok(true) => Ok(LinkVerdict::Stands(tuple.env.clone())),
+            Ok(false) => Ok(LinkVerdict::Missing),
+            Err(Stop::Refused(e)) if !matches!(e.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {
+                Ok(LinkVerdict::Refused(e))
+            }
+            Err(stop) => Err(stop),
+        }
     }
 
     /// What `o.fulfils` names at keys `keys` of move `mv` under cut `cut`: the instance the
