@@ -9038,3 +9038,80 @@ The writer's notes for W3 and W4 aren't in this worktree's `inputs/writer-notes.
 - **What I tried:** nothing in code. Refcore's bytes share the walk's reads but not the cell, a form the text doesn't state. The engine's bytes share neither. E §3.2's form shares the cell.
 - **What I ask:** which of the three is the ruled one, with refcore mended to it at the writer's turn. The engine follows then. No store holds the form (the plan's "no store").
 - **State:** e5468493 green on `check quick`; nothing uncommitted. The engine is unchanged for Q2.29.
+
+## 2026-11-24 tally 2.3.1 G3, the review's fixes (issue #259)
+
+The builder's turn on G3's review (`tmp/spec-2.3.1/inputs/review-g3.md`): B1 to B4 with note 7, then notes 1, 6 and 9, under the lead's rulings (pick P22). The range is 5d91db6a..f7b516b4. Before each commit I swept the review's probes (`min/`, `p/`; `tmp/spec-2.3.1/g3/sweep.sh`, one folder per step in `g3/fix/`) against refcore at the pin and against the step before. Every line that moved is explained by its finding below. G2's uncommitted `book/observe.rs` was left as it was: never staged, and checked unchanged after each `cargo fmt`.
+
+**Commits** (none pushed):
+- 99eb3e02 `fix(eval): a returned tuple that is a hole keys its read as that hole` (B1)
+- 83197d17 `fix(load): a bracketed tuple or an if's tuples key the read` (B2)
+- 7d95a597 `fix(eval): a mean of rates is a rate of their period` (B3)
+- c2482128 `fix(load): a period literal's key position reaches an if's arms` (B4, note 7)
+- 9606c207 `fix(load): a literal pin of the wrong type is refused as its row` (N1)
+- 03d5e509 `fix(load): two law or known pins in one as if are LOAD-OVERLAP` (N6)
+- f7b516b4 `fix(load): a written-order cycle's walk breaks as ENGINE-INVARIANT` (N9)
+
+**Each finding, its probe's line now:**
+- **B1** `min/b1_tuple_hole`: `t1: ?"which u?" (u[k1, j2])`, refcore's bytes (was exit 69). `p/tup_t1`, `tupw_w5`, `tupw_w6` and `tupz_z1` moved to refcore's bytes with it.
+- **B2** `min/b2_tuple_paren`: `t1: 3`, refcore's (was LOAD-UNIT). An `if`'s tuple arms key the read too. `p/tup_t3` and `t8` moved to refcore's bytes.
+- **B3** `min/b3_mean_rate`: `a1: 0.05 /year`, and `+ r[k1]` and its `check` answer (were RUN-DOMAIN). The rate class is kept and printed as the engine prints a rate.
+  - Refcore prints `1/year` for a mean of rates, and its `periodic` refuses one. 12 probe texts differ only by that: `b3_mean_rate` a2, `mn_a1`, `a3`, `a7`, `a13`, `a15`, `a17`, `mn2_c4`, `c6`; and `mn_a9`, `mn2_c5`, where refcore prints `/None` (note 5).
+  - Refcore mends to it (P22), as does its `L5_11_returned_tuple_compares` m1, `0.04 1/year` on refcore and `0.04 /year` here. `mn_a8`, `mn2_c3` and `c7` now match refcore.
+- **B4 with note 7** `min/b4_period_reach`: n1 `difference -2`, n2 `difference -1`, refcore's (were −6 and −3). `b4b_off_grid` is `LOAD-KEY 2026-08 is not a key of qs`, `b4c_year_off_grid` is `LOAD-KEY 2028 is not a key of ys`, and `p/r5o_o1`, `o2` and `r5k_k4` are `LOAD-KEY 2026-08 …`, all refcore's (were answers).
+  - In a comparison, a literal reaches through brackets and both `if` arms when every leaf is a literal of one granularity. This covers years too.
+  - At a key position, an `if`'s key literals are resolved as bare ones (refcore's `reach_leaves`).
+  - At run, a month or quarter `if` arm takes the key's grid.
+  - Also moved to refcore's bytes: `r5o_o4`, `o5`, `r5e_e7`, `r5g_g1`–`g4`, `g6`, `r5n_n1`–`n3`, `n8`. 18 texts moved, all to refcore.
+- **N1** `p/r3p_p7`: `LOAD-UNIT 5 1/year and num have different units`, refcore's (was `the pin of ratio is num 1/year, not num`). Also moved to refcore's bytes: `p8`, `p20`, `r3m_m1`–`m5`, `m7`; `m6` was already equal.
+  - A pin whose value is one literal (a figure, signed or in brackets; a date, a month or a quarter) that the type can't take is refused in the row reader's words. That is `eval::convert`, load's own row check. Only the words of a refusal change; no acceptance moves.
+- **N6** `p/r3c_c34`: `refused: LOAD-OVERLAP pins law 2026-02-01 and law 2026-09-01 of the law date overlap at no keys (p/r3c_c34.tally:22)`, by the lead's ruling, as W3's line rule. `r3_a10` (two `law`) and `r3_a11` (two `known`, `of the cut`) are the same. Refcore still answers these 3 and mends to it. `c33`'s value pins were already LOAD-OVERLAP on both.
+- **N9** `written_cycle`: each earlier move's list is built by grouping the ordered pairs, with no `or_insert_with(Vec::new)`. The two `?` are ENGINE-INVARIANT. No probe moved.
+- **Still different** (23 texts, against 51 at the base):
+  - B3's print, 12;
+  - N6's ruling, 3;
+  - note 2, `r3p_p16`; note 3, `r3f_f6` and `r3p_p21`; note 4, `mn_a4`; note 5, `mn_a12`;
+  - note 9's `(file:line)`, `r5e_e18` and `r5g_g5` (not in this turn's list);
+  - the #261 row, `q26`;
+  - `tup_t10`, where refcore names its internal `tupitem` in a LOAD-KEY. This is unchanged since the base and refcore's fault.
+
+**What `check commit` shows red:** 111 ids, the last list's 106 (every one still red) and 5 new ones. All 5 are in N1's class: T's stores hold the earlier refcore's `the pin of X is T, not U`, and the engine now prints the row's words.
+- `m4/fixes/g2/b4_date` a1: `2026 and date have different units (a value of the wrong type)`. The lead's ruling: T re-stores it.
+- `m4/fixes/g2/b13_ratety`: `2026 and month have different units (a value of the wrong type)`.
+- `m1/fixes/g13/r_s_model_with_r_s_k15`: `5 and date have different units (a value of the wrong type)`.
+- `r_s_model_with_r_s_k18`: `a value of the wrong type: a date for int`.
+- `r_s_model_with_r_s_k21`: `5 and text have different units (a value of the wrong type)`.
+- Refcore at the pin prints the engine's bytes on `b4_date` and `b13_ratety`. The guard refuses refcore on T's files (R-80), so I didn't run the `r_s_k*` three. Their messages are the forms refcore prints on `p/r3m_m7` and `m3`. T re-stores these four with `b4_date`.
+- None gone; none outside a class. The red tests are T's vector targets alone (32 of 1584). The 7 new unit tests pass, and the steps after the tests didn't run.
+
+**Size** (`git diff --shortstat 5d91db6a HEAD -- engine/crates`): 9 files, +479 −88.
+
+| Commit | Lines (in, out) |
+|---|---|
+| B1 | +17 −2 |
+| B2 | +56 −9 |
+| B3 | +18 −6 |
+| B4 | +204 −40 (tests 71) |
+| N1 | +109 −11 (tests 22) |
+| N6 | +39 −4 (tests 20) |
+| N9 | +36 −16 |
+
+- **Kernel files touched:** none. The changes are in `eval/keys.rs`, `eval/queries.rs`, `eval/years.rs`, `eval/pins.rs`, `load/compare.rs`, `load/keyed.rs`, `load/types.rs`, `load/pins.rs` and `load/strata.rs`.
+- **Unit tests** (7 new):
+  - `load/compare.rs` 4: a tuple hole; a bracketed or `if` tuple; a period literal through brackets and `if` arms; an off-grid arm or bracketed year;
+  - `eval/pins.rs` 2: a literal pin refused as its row; two pins of one cell in an `as if`;
+  - `eval/queries.rs`: its mean test now expects `/year` and `+ r[k1]`;
+  - `load/strata.rs`: its test takes the `Result`.
+- **Fences:** no edit to a fence or its twin.
+- **Exceptions:** +0. `exceptions --check`: 6; report-only hits 8, the same as before (strata's hit was the `or_default` fixed in e5468493, and N9 adds none).
+- **Mutants:** none proved. Sites for T:
+  - `arm_keys`'s two skips (another granularity; a year at a non-year index);
+  - `period_literal`'s `shared` granularity test;
+  - `row_refusal`'s `keyed` and `negative` arms;
+  - `same_cell` from `as_if`;
+  - `written_cycle`'s grouping.
+- **STOP-REPORTs:** none new. Q2.6 and Q2.29 (above) stay open.
+- **For refcore's mend** (the writer's turn, P22):
+  - a mean of rates prints in the rates' unit (`/year`), and `periodic` takes it;
+  - two `law` or two `known` pins in one `as if` are LOAD-OVERLAP (N6).
+- **check quick:** green, 11 steps.
