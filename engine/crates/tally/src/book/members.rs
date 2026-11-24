@@ -663,6 +663,28 @@ impl Engine {
         }
     }
 
+    /// The refusal of movement `v` where it is a move's refused instance at the reader's cut,
+    /// a decision's as its walk ran it; none for any other (L §5.14 An instance's existence is
+    /// a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`]; `RUN-ORDER` for a decision read before it has run.
+    pub(crate) fn refused_movement(
+        &mut self,
+        m: &Reality,
+        v: &MvRef,
+        ctx: Ctx,
+    ) -> Result<Option<Refusal>, Stop> {
+        if !matches!(v.src, MvSrc::Inst(..)) {
+            return Ok(None);
+        }
+        Ok(match self.mv_record(m, v, ctx)? {
+            Some(Moving::Plan(i)) => i.err,
+            Some(Moving::Obs(_) | Moving::Adj(_) | Moving::Pad(..)) | None => None,
+        })
+    }
+
     /// The pads a binding over pads ranges over: inside a decision, those its walk and the
     /// walks it continues booked before its point; else the main walk's of the read's
     /// timeline (refcore's `movements_of`, its pads). L §5.14.1 Running reads, E §6.1.
@@ -2248,6 +2270,8 @@ ask dy: spend[fm, a].day
 
 ask am: spend[fm, a].cash.amount
 
+ask x5: spend[fm, a] == none
+
 version v
   cite s
   governs always
@@ -2265,8 +2289,9 @@ version v
     fn a_field_read_at_the_full_keys_of_a_tuple_refused_before_them_is_its_refusal() {
         // L §5.14 An instance's existence is a cell (l.1362; tally 2.3.1 R6, G2's review B2):
         // the tuple refused before its later key stands for every instance its keys begin, so
-        // a field read at the full keys is its refusal, not a missing instance
-        for ask in ["dy", "am"] {
+        // a field read at the full keys is its refusal, not a missing instance, and so is its
+        // comparison with none (rulings 16 Q3)
+        for ask in ["dy", "am", "x5"] {
             assert_eq!(
                 lines_of(PREFIX, "", ask),
                 [

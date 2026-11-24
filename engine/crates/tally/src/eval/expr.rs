@@ -540,6 +540,15 @@ impl Engine {
     ) -> Result<Value, Stop> {
         let left = self.ev(m, lhs, env, ctx)?;
         let right = self.ev(m, rhs, env, ctx)?;
+        // a refused movement compared, with `none` too, is its refusal (L §8.4, §3.1 l.390;
+        // tally 2.3.1 R1, R6, rulings 16 Q3)
+        for side in [&left, &right] {
+            if let Value::Mv(v) = side
+                && let Some(err) = self.refused_movement(m, v, ctx)?
+            {
+                return Err(Stop::Refused(err));
+            }
+        }
         let left = year_beside(lhs, left, &right);
         let right = year_beside(rhs, right, &left);
         let (left, right) = resolve_pair(m, left, right)?;
