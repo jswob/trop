@@ -2192,9 +2192,11 @@ class Engine:
         return Num(acc, ures)
 
     # -- operators ------------------------------------------------------------------------
-    def no_none(self, v, what):
+    def no_none(self, v, what, node=None, env=None):
+        """none is refused where it is used (L §3.1), by the read that gave it, or the expression as written (L §8.4's
+        `RUN-NONE` row; tally 2.3.1 R4, Q2.37: `if`, `and`, `or` and `not` are a condition)."""
         if v is NONE:
-            raise refuse('RUN-NONE', 'a value is none here: %s' % what)
+            raise refuse('RUN-NONE', '%s is none here: %s' % ('a value' if node is None else env_txt(node, env), what))
 
     def e_bin(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
@@ -2359,7 +2361,7 @@ class Engine:
         v = self.ev(n.e, env, ctx)
         if isinstance(v, Hole):
             return Hole(v.qs)
-        self.no_none(v, 'not')
+        self.no_none(v, 'a condition', n.e, env)
         return not v
 
     def e_and(self, n, env, ctx):
@@ -2371,11 +2373,11 @@ class Engine:
                 if self.ev(t, env, ctx) is False:
                     return False
         a = self.ev(n.l, env, ctx)
-        self.no_none(a, 'and')
+        self.no_none(a, 'a condition', n.l, env)
         if a is False:
             return False
         b = self.ev(n.r, env, ctx)
-        self.no_none(b, 'and')
+        self.no_none(b, 'a condition', n.r, env)
         if b is False:
             return False
         if isinstance(a, Hole) or isinstance(b, Hole):
@@ -2384,11 +2386,11 @@ class Engine:
 
     def e_or(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
-        self.no_none(a, 'or')
+        self.no_none(a, 'a condition', n.l, env)
         if a is True:
             return True
         b = self.ev(n.r, env, ctx)
-        self.no_none(b, 'or')
+        self.no_none(b, 'a condition', n.r, env)
         if b is True:
             return True
         if isinstance(a, Hole) or isinstance(b, Hole):
@@ -2401,7 +2403,7 @@ class Engine:
             return self.ev(n.a, env, ctx)
         if c is False:
             return self.ev(n.b, env, ctx)
-        self.no_none(c, 'if')
+        self.no_none(c, 'a condition', n.c, env)
         # a hole condition: both branches are evaluated, and the if is a hole unless they are equal
         # (L §5.11 Logic, §8.1).  Equal is equal as values: a bare 0 branch takes the type of the whole
         # (L §3.2 Inline figures), so 0 and a num 0 are equal.
@@ -2577,7 +2579,7 @@ class Engine:
         x = self.ev(n.l, env, ctx)
         if isinstance(x, Hole):
             return Hole(x.qs)
-        self.no_none(x, 'a membership test')
+        self.no_none(x, 'a membership test', n.l, env)
         r = n.r
         if getattr(r, '_r', None) and r._r[0] == 'kind':
             kind = r._r[1]
@@ -3892,14 +3894,22 @@ class Engine:
             return merge(*hs)
         return None
 
-    def known_first(self, vals, checks):
+    def known_first(self, vals, checks, n=None, env=None):
         """L §8, what an operation decides (tally 2.3.1, R1): a built-in makes each check on one argument once that
         argument is known, in argument order, whatever the others are; on a hole, or a window off §4.4's list, it
-        isn't made. Then a hole argument makes the result that hole. checks[i] is argument i's check, or None."""
-        for v, chk in zip(vals, checks):
+        isn't made. Then a hole argument makes the result that hole. checks[i] is argument i's check, or None. Given
+        the call n, an argument that is none is refused by its read and the built-in's name (L §8.4's `RUN-NONE` row,
+        `rate[k2] is none here: accrue`; tally 2.3.1 R4, N256.8, Q1.13)."""
+        for i, (v, chk) in enumerate(zip(vals, checks)):
             v = one_day(v)
-            if chk is not None and not isinstance(v, (Hole, Iv)):
+            if chk is None or isinstance(v, (Hole, Iv)):
+                continue
+            try:
                 chk(v)
+            except TallyError as e:
+                if n is None or v is not NONE or e.code != 'RUN-NONE' or i >= len(n.args):
+                    raise
+                raise refuse('RUN-NONE', '%s is none here: %s' % (env_txt(n.args[i], env), n.name)) from None
         return self.hole_args(vals)
 
     def ck_none(self, what):
@@ -4314,7 +4324,7 @@ class Engine:
             self.no_none(mode, 'round')
             if not isinstance(mode, Code) or mode.kind != 'rounding':
                 raise refuse('LOAD-UNIT', 'round: the mode is %s' % fmt(mode))
-        h = self.known_first([x, u, mode], [self.ck_none('round'), step_ck, mode_ck])
+        h = self.known_first([x, u, mode], [self.ck_none('round'), step_ck, mode_ck], n, env)
         if h:
             return h
         x = self.off_list('round', x)
@@ -4444,7 +4454,7 @@ class Engine:
 
         def zero():
             return refuse('RUN-ZERO', 'add_business(%s, 0, %s)' % (fmt(d), _ntxt(n.args[2])))
-        h = self.known_first([d, k], [self.ck_day('add_business'), self.ck_int(zero=zero)])
+        h = self.known_first([d, k], [self.ck_day('add_business'), self.ck_int(zero=zero)], n, env)
         if h:
             return h
         d = one_day(d)
@@ -4504,7 +4514,7 @@ class Engine:
         """the n-th last business day of period p (L §4.2)"""
         p = self.ev(n.args[0], env, ctx)
         k = self.ev(n.args[1], env, ctx)
-        h = self.known_first([p, k], [self.ck_period(n.name), self.ck_int(1, n.name)])
+        h = self.known_first([p, k], [self.ck_period(n.name), self.ck_int(1, n.name)], n, env)
         if h:
             return h
         p = self.period_arg(p, n.name)
@@ -4538,7 +4548,7 @@ class Engine:
             self.no_none(r, 'schedule')
             if not isinstance(r, Code) or r.word not in ('unadjusted', 'following', 'preceding', 'modified_following'):
                 raise refuse('LOAD-UNIT', 'schedule: %s is not a roll' % fmt(r))
-        h = self.known_first([p, e, roll], [self.ck_period('schedule'), self.ck_int(), roll_ck])
+        h = self.known_first([p, e, roll], [self.ck_period('schedule'), self.ck_int(), roll_ck], n, env)
         if h:
             return h
         p = self.period_arg(p, 'schedule')
@@ -4805,7 +4815,7 @@ def thing_owners(m, t):
     return owners
 
 
-SEP_CHAR = '\u00b7'
+SEP_CHAR = '\ue0b7'  # joint.SEP
 
 
 def member_owns(m, b, t):

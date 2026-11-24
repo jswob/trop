@@ -68,6 +68,51 @@ def merge_pin_days(pins):
     return rest
 
 
+_HELD = re.compile(r'^(held: .*), read for (\S+)$')
+
+
+def _held_point(s):
+    """A `read for` day or period as (kind, ordinal), consecutive ones ordinals apart by 1; None for another form."""
+    m = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', s)
+    if m:
+        return ('day', datetime.date.fromisoformat(s).toordinal())
+    m = re.match(r'^(\d{4})-(\d{2})$', s)
+    if m:
+        return ('month', int(m.group(1)) * 12 + int(m.group(2)))
+    m = re.match(r'^(\d{4})-Q([1-4])$', s)
+    if m:
+        return ('quarter', int(m.group(1)) * 4 + int(m.group(2)))
+    m = re.match(r'^(\d{4})$', s)
+    if m:
+        return ('year', int(s))
+    return None
+
+
+def merge_held(lines):
+    """L §8.2 `held:` (tally 2.3.1 R4, #245, #253 item 5): "It prints once per row and keys read, the periods it was
+    read for merged into maximal runs": the lines of one row at one keys (alike up to `, read for`) are one, their
+    days or periods in order, consecutive ones a run `a .. b`. Keys are never merged."""
+    groups = {}
+    rest = set()
+    for t in lines:
+        mt = _HELD.match(t)
+        pt = _held_point(mt.group(2)) if mt is not None else None
+        if pt is None:
+            rest.add(t)
+            continue
+        groups.setdefault(mt.group(1), {})[pt] = mt.group(2)
+    for head, pts in groups.items():
+        runs = []
+        for pt in sorted(pts):
+            if runs and runs[-1][1][0] == pt[0] and runs[-1][1][1] + 1 == pt[1]:
+                runs[-1][1] = pt
+            else:
+                runs.append([pt, pt])
+        rest.add('%s, read for %s' % (head, ', '.join(
+            pts[a] if a == b else '%s .. %s' % (pts[a], pts[b]) for a, b in runs)))
+    return rest
+
+
 def is_load(err):
     return isinstance(err, TallyError) and err.code.startswith('LOAD-')
 
@@ -1166,7 +1211,10 @@ class Asker:
                 diff = ', difference refused: %s %s' % (err.code, err.msg)
         else:
             diff = self.point_diff(eng, l, r, lv, rv)
-        return CheckOut('differs: %s = %s, %s = %s%s' % (lt, fmt(lv), rt, fmt(rv), diff), 'differs')
+        # each side in its type: a declared item in its declared type, an expression in its value's unit (L §2.4
+        # Values; tally 2.3.1 R4, N256.7)
+        return CheckOut('differs: %s = %s, %s = %s%s' % (lt, fmt_typed(lv, getattr(l, '_t', None)), rt,
+                                                         fmt_typed(rv, getattr(r, '_t', None)), diff), 'differs')
 
     def point_diff(self, eng, l, r, lv, rv):
         """L §5.18: "and, where e - f is defined (§3.2, §4.2), the difference e − f". Keys and periods are points
@@ -1367,7 +1415,7 @@ class Asker:
             out.extend(sorted(ent.get(kind, ())))
         for place, (d0, mids) in sorted(ent.get('_labels', {}).items()):
             out.append('WARN-LABELS labels dropped at %s from %s: %s' % (place, d0, ', '.join(sorted(mids))))
-        out.extend(sorted(ent.get('held', ())))
+        out.extend(sorted(merge_held(ent.get('held', ()))))
         if laws is not None:
             # a check whose sides are read at different law dates lists each (L §8.2, §5.18)
             out.append('law date %s (left), %s (right), cut %s' % (laws[0] or 'none', laws[1] or 'none', ctx.cut))

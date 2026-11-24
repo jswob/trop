@@ -25,7 +25,10 @@ from .errors import TallyError, LoadError, NotYet, Unspecified
 from .lexer import split_lines, Tok
 from .model import PRELUDE_PLACE, BUILTIN_IDS
 
-SEP = '·'
+# a member's item by the joint model's name, a·x, held inside refcore with a character no text holds (a private use
+# code point; identifiers are ASCII, so names sort as with `·`) and printed `a.x`: a `·` written in a member's text
+# prints as written (L §2.4, §8.1; tally 2.3.1 R4, Q2.34, #238's gate review 5)
+SEP = ''
 
 SECTION_CATS = ('source', 'version', 'kind', 'axis', 'index', 'place', 'input', 'band', 'def', 'fill', 'move')
 

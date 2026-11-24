@@ -40,13 +40,9 @@ ask r6: mean(bal(konto, 2026-03-31) from 2026-01-01) with sample spend[*] = 900.
 === expect
 r5: 7 300.00 PLN
   pinned sample: spend[*] = 900.00 PLN
-  held: spend_dom = 15 (v), read for 2026-02-01
-  held: spend_dom = 15 (v), read for 2026-03-01
-  held: spend_dom = 15 (v), read for 2026-04-01
+  held: spend_dom = 15 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 r6: 7 300 PLN (standard error 0; 2 paths; horizon 2026-04-01)
   pinned sample: spend[*] = 900.00 PLN
-  held: spend_dom = 15 (v), read for 2026-02-01
-  held: spend_dom = 15 (v), read for 2026-03-01
-  held: spend_dom = 15 (v), read for 2026-04-01
+  held: spend_dom = 15 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01

@@ -45,34 +45,18 @@ ask r2: bal(konto, 2026-03-31) from 2026-01-01 law 2026-01-01 random at quantile
 ask r3: bal(konto, 2026-03-31) from 2026-02-01 random at mean with sample spend[2026-01] = 900.00 PLN
 === expect
 r1: 7 000.00 PLN
-  held: spend_dom = 15 (v), read for 2026-02-01
-  held: spend_dom = 15 (v), read for 2026-03-01
-  held: spend_dom = 15 (v), read for 2026-04-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-03-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-04-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-02-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-03-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-04-01
+  held: spend_dom = 15 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_sd = 100.00 PLN (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   cut 2026-01-01
 r2: 7 000.00 PLN
-  held: spend_dom = 15 (v), read for 2026-02-01
-  held: spend_dom = 15 (v), read for 2026-03-01
-  held: spend_dom = 15 (v), read for 2026-04-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-03-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-04-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-02-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-03-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-04-01
+  held: spend_dom = 15 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_sd = 100.00 PLN (v), read for 2026-02-01, 2026-03-01, 2026-04-01
   law date 2026-01-01, cut 2026-01-01
 r3: 7 100.00 PLN
   pinned sample: spend[2026-01] = 900.00 PLN
-  held: spend_dom = 15 (v), read for 2026-02-01
-  held: spend_dom = 15 (v), read for 2026-03-01
-  held: spend_dom = 15 (v), read for 2026-04-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-03-01
-  held: spend_mu = 1 000.00 PLN (v), read for 2026-04-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-03-01
-  held: spend_sd = 100.00 PLN (v), read for 2026-04-01
+  held: spend_dom = 15 (v), read for 2026-02-01, 2026-03-01, 2026-04-01
+  held: spend_mu = 1 000.00 PLN (v), read for 2026-03-01, 2026-04-01
+  held: spend_sd = 100.00 PLN (v), read for 2026-03-01, 2026-04-01
   cut 2026-01-01

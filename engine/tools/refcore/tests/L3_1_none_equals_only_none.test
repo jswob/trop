@@ -41,7 +41,7 @@ q_eq (k = b): false
   cut 2026-06-30
 q_eq (k = c): false
   cut 2026-06-30
-q_in: refused: RUN-NONE a value is none here: a membership test
+q_in: refused: RUN-NONE status[c] is none here: a membership test
   cut 2026-06-30
 q_ne (k = a): false
   cut 2026-06-30

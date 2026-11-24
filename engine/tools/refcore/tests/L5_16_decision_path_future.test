@@ -40,8 +40,7 @@ p1: refused: RUN-FUTURE ...
   pinned sample: spend[2026-01] = 1 000.00 PLN
   pinned sample: spend[2026-02] = 1 000.00 PLN
   pinned sample: spend[2026-03] = 1 000.00 PLN
-  held: dom = 5 (v), read for 2026-02-01
-  held: dom = 5 (v), read for 2026-03-01
+  held: dom = 5 (v), read for 2026-02-01, 2026-03-01
   held: spend_mu = 1 000.00 PLN (v), read for 2026-02-01
   held: spend_sd = 100.00 PLN (v), read for 2026-02-01
   cut 2026-01-01

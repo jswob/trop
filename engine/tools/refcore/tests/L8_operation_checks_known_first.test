@@ -110,17 +110,17 @@ b1: refused: RUN-ZERO add_business(?"which day?" (a_h), 0, cal)
   cut 2026-06-30
 b2: refused: RUN-NONE never in add_business
   cut 2026-06-30
-b3: refused: RUN-NONE a value is none here: an integer argument
+b3: refused: RUN-NONE n_n is none here: last_business
   cut 2026-06-30
-b4: refused: RUN-NONE a value is none here: an integer argument
+b4: refused: RUN-NONE e_n is none here: schedule
   cut 2026-06-30
-b5: refused: RUN-NONE a value is none here: schedule
+b5: refused: RUN-NONE roll_n is none here: schedule
   cut 2026-06-30
 d1: refused: RUN-NONE never in dcf
   cut 2026-06-30
 d2: refused: RUN-NONE never in dcf
   cut 2026-06-30
-f1: refused: RUN-NONE a value is none here: periodic
+f1: refused: RUN-NONE c_n is none here: periodic
   cut 2026-06-30
 f2: refused: RUN-DOMAIN periodic: a month rate over a day: a day's share of a longer period is a day count (dcf), never a default (L §3.3)
   cut 2026-06-30
@@ -130,5 +130,5 @@ r1: refused: RUN-DOMAIN round with a step 0.00 PLN that is not positive
   cut 2026-06-30
 r2: refused: RUN-DOMAIN round with a step 0.00 PLN that is not positive
   cut 2026-06-30
-r3: refused: RUN-NONE a value is none here: round
+r3: refused: RUN-NONE md_n is none here: round
   cut 2026-06-30

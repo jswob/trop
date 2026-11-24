@@ -1,0 +1,60 @@
+# tally 2.3.1 R4, Q2.37, N256.8, Q1.13 (L §8.4's RUN-NONE row: `<x>[k] is none here: <the built-in's name;
+# arithmetic, ordering, a condition, a membership test, …>`): if, and, or and not are a condition, a membership
+# test is one, a built-in names itself, and each names the read that gave none. Before: `a value is none here:
+# if` (and, or, not, accrue, a membership test).
+=== nonewords.tally
+model none_words
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b]
+input ok[k in ks]: bool
+input st[k in ks]: key ks
+input r[k in ks]: rate
+input p: money PLN
+input d0: date
+input d1: date
+input dc: daycount
+input cm: compounding
+
+ask c_if: if ok[b] then d0 else d1
+ask c_and: ok[a] and ok[b]
+ask c_or: ok[b] or ok[a]
+ask c_not: not ok[b]
+ask c_in: count(k in ks where st[k] in [a])
+ask c_acc: accrue(p, r[k], d0, d1, dc, cm) for k in ks
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ok[a] = true "s"
+  ok[b] = none "s"
+  st[a] = a "s"
+  st[b] = none "s"
+  r[a] = 5 %/year "s"
+  r[b] = none "s"
+  p = 100.00 PLN "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  dc = act365 "s"
+  cm = effective "s"
+=== expect
+c_acc (k = a): 5 PLN
+  cut 2026-06-30
+c_acc (k = b): refused: RUN-NONE r[b] is none here: accrue
+  cut 2026-06-30
+c_and: refused: RUN-NONE ok[b] is none here: a condition
+  cut 2026-06-30
+c_if: refused: RUN-NONE ok[b] is none here: a condition
+  cut 2026-06-30
+c_in: refused: RUN-NONE st[b] is none here: a membership test
+  cut 2026-06-30
+c_not: refused: RUN-NONE ok[b] is none here: a condition
+  cut 2026-06-30
+c_or: refused: RUN-NONE ok[b] is none here: a condition
+  cut 2026-06-30

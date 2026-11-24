@@ -81,7 +81,5 @@ version c24_v
 === expect q3
 q3: 100.00 PLN
   world: c24
-  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-20
-  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-21
-  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-22
+  held: cal = calendar(weekends [sat, sun], added [2026-06-24]) (c24_v), read for 2026-06-20 .. 2026-06-22
   cut 2026-01-10
