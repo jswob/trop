@@ -27,6 +27,7 @@ use super::state::{Ctx, Engine, Env, invariant, not_typed, num_stop, refuse};
 use super::trace::Snap;
 use super::windows::End;
 use crate::base::{Code, Refusal, Run};
+use crate::book::Reading;
 use crate::hole::{Hole, spread};
 use crate::model::{Class, Number, Reality, Ty, Value, Window, currency_id};
 use crate::num::{Money, Num};
@@ -81,9 +82,11 @@ fn moves_frame(
 ) -> Frame {
     let mut values = Vec::with_capacity(moves.len());
     let mut colls = Vec::with_capacity(moves.len());
+    let mut refused = Vec::with_capacity(moves.len());
     for mv in moves {
         values.push((mv.value, mv.unknown));
         colls.push(mv.coll);
+        refused.push(mv.refused);
     }
     Frame {
         level,
@@ -93,6 +96,7 @@ fn moves_frame(
         values,
         next: 0,
         colls,
+        refused,
     }
 }
 
@@ -113,6 +117,9 @@ struct Frame {
     next: usize,
     /// What each value brings to a reader that keeps it: a movement's register.
     colls: Vec<Collected>,
+    /// What each value's existence refused at run: a movement's, read as a refused member
+    /// (`Reading::Each`).
+    refused: Vec<Option<Refusal>>,
 }
 
 /// The end a reader takes a binding's values from: the first, or the last, as `last` reads
@@ -132,6 +139,7 @@ impl Frame {
         if way == Way::Back {
             self.values.reverse();
             self.colls.reverse();
+            self.refused.reverse();
         }
         self
     }
@@ -145,6 +153,8 @@ pub(super) struct Walk {
     frames: Vec<Frame>,
     /// The end each binding's values are taken from.
     way: Way,
+    /// How its reader takes a tuple refused at run.
+    reading: Reading,
 }
 
 /// What a walk's next step meets.
@@ -154,11 +164,27 @@ pub(super) enum Step {
     Member(Member),
     /// An inner binding's domain that is a hole.
     Hole(Hole),
-    /// A tuple whose `where` is refused at run, with that refusal: `any` and `all` read it as
-    /// a refused term, every other reader stops on it (L §5.11, tally 2.3.1).
-    Refused(Stop),
+    /// A tuple refused at run, by its `where`, or under `Reading::Each` by its domain or a
+    /// movement's existence, with that refusal, and its scope where the last binding's `where`
+    /// refused it: `any`, `all` and `sum` read it as a refused member, every other reader
+    /// stops on it (L §5.11; tally 2.3.1, rulings 17 statement A).
+    Refused(Stop, Option<Env>),
     /// No tuple is left.
     Done,
+}
+
+/// One binding tuple of `any`, `all` or `sum`, read as its domain, then its `where`, then its
+/// term, by the first of those that isn't plainly known (tally 2.3.1, rulings 17 statement A).
+/// L §5.11, §8.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum Tuple {
+    /// Its domain and `where` keep it (its `where` may be a hole): its term decides.
+    Member(Member),
+    /// An inner binding's domain that is a hole: a hole member.
+    Hole(Hole),
+    /// Refused at run, with its scope where its last `where` refused it, so that a `sum` can
+    /// read its term.
+    Refused(Stop, Option<Env>),
 }
 
 /// A binding's value bound, its `where` not yet read: its scope, its own unknown-member hole
@@ -194,23 +220,37 @@ impl Engine {
                 {
                     return Ok(v);
                 }
-                walk_of(frame_of(days, env), Way::Forward)
+                walk_of(frame_of(days, env), (Way::Forward, Reading::Stops))
             }
             _ if matches!(agg.func, AggFn::First | AggFn::Last) => {
                 return self.first_last(m, agg, env, ctx);
             }
-            _ => self.tuple_walk(m, &agg.binds, env, ctx, Way::Forward)?,
+            _ => {
+                let reading = match agg.func {
+                    AggFn::Any | AggFn::All | AggFn::Sum => Reading::Each,
+                    AggFn::Count
+                    | AggFn::Min
+                    | AggFn::Max
+                    | AggFn::Argmin
+                    | AggFn::Argmax
+                    | AggFn::First
+                    | AggFn::Last => Reading::Stops,
+                };
+                self.tuple_walk(m, &agg.binds, env, ctx, (Way::Forward, reading))?
+            }
         };
-        if let AggFn::Any | AggFn::All = agg.func {
-            let term = agg
-                .term
-                .as_ref()
-                .ok_or_else(|| invariant("any or all with no term"))?;
-            let members = match self.walk_terms(m, &agg.binds, walk, ctx)? {
+        if let AggFn::Any | AggFn::All | AggFn::Sum = agg.func {
+            let tuples = match self.walk_terms(m, &agg.binds, walk, ctx)? {
                 Err(hole) => return Ok(Value::Hole(hole)),
-                Ok(members) => members,
+                Ok(tuples) => tuples,
             };
-            return self.any_all(m, agg.func, term, &members, ctx);
+            if agg.func == AggFn::Sum {
+                return self.terms_aggregate(m, agg, &tuples, ctx);
+            }
+            let Some(term) = &agg.term else {
+                return Err(invariant("any or all with no term"));
+            };
+            return self.any_all(m, agg.func, term, &tuples, ctx);
         }
         let members = match self.walk_members(m, &agg.binds, walk, ctx, Brings::ToReader)? {
             Err(hole) => return Ok(Value::Hole(hole)),
@@ -219,16 +259,20 @@ impl Engine {
         if let (AggFn::Count, None) = (agg.func, &agg.term) {
             return count_members(&members);
         }
-        self.terms_aggregate(m, agg, &members, ctx)
+        let tuples: Vec<Tuple> = members.into_iter().map(Tuple::Member).collect();
+        self.terms_aggregate(m, agg, &tuples, ctx)
     }
 
     /// `count`, `sum`, `min`, `max`, `argmin`, `argmax` over their terms (refcore's
-    /// `e_agg`). L §5.11.
+    /// `e_agg`). A `sum`'s tuples by statement A: one whose term is known 0 adds 0 whatever
+    /// its `where`; else the first refused in binding order refuses it, else a hole one makes
+    /// it a hole (tally 2.3.1, rulings 17); every other aggregate's tuples are its members.
+    /// L §5.11, §8.
     fn terms_aggregate(
         &mut self,
         m: &Reality,
         agg: &Agg,
-        members: &[Member],
+        tuples: &[Tuple],
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let word = agg.func.word();
@@ -236,13 +280,29 @@ impl Engine {
             (AggFn::Min | AggFn::Max | AggFn::Argmin | AggFn::Argmax, Some(_)) => self.trace_snap(),
             _ => None,
         };
-        let mut terms: Vec<(&Env, Value)> = Vec::with_capacity(members.len());
+        let mut terms: Vec<(&Env, Value)> = Vec::with_capacity(tuples.len());
         let mut holes: Vec<Hole> = Vec::new();
         let mut unknown_member = false;
-        for member in members {
-            let t = match &agg.term {
-                None => bare_key(agg, &member.env)?,
-                Some(term) => self.ev(m, term, &member.env, ctx)?,
+        for tuple in tuples {
+            let member = match tuple {
+                Tuple::Member(member) => member,
+                Tuple::Hole(h) => {
+                    unknown_member = true;
+                    holes.push(h.clone());
+                    continue;
+                }
+                Tuple::Refused(stop, env) => {
+                    if self.adds_zero(m, agg, env.as_ref(), ctx)? {
+                        continue;
+                    }
+                    return Err(stop.clone());
+                }
+            };
+            let Some(t) = self.member_term(m, agg, member, ctx)? else {
+                // its `where` is a hole before its term is refused: a hole member
+                unknown_member = true;
+                holes.extend(member.unknown.clone());
+                continue;
             };
             if let Some(unknown) = &member.unknown {
                 if agg.func == AggFn::Sum && is_zero(&t) {
@@ -323,6 +383,49 @@ impl Engine {
         Ok(extreme)
     }
 
+    /// Whether a `sum` tuple refused at run adds 0: its scope `env` is known, its term there is
+    /// known and 0 (tally 2.3.1, rulings 17 statement A: "a `sum` member whose term is known 0
+    /// adds 0 whatever its `where`"). L §5.11, §8.
+    fn adds_zero(
+        &mut self,
+        m: &Reality,
+        agg: &Agg,
+        env: Option<&Env>,
+        ctx: Ctx,
+    ) -> Result<bool, Stop> {
+        let (AggFn::Sum, Some(term), Some(env)) = (agg.func, &agg.term, env) else {
+            return Ok(false);
+        };
+        match self.ev(m, term, env, ctx) {
+            Ok(t) => Ok(is_zero(&t)),
+            Err(Stop::Refused(r)) if a_terms_refusal(&r) => Ok(false),
+            Err(stop) => Err(stop),
+        }
+    }
+
+    /// Member `member`'s term of aggregate `agg` (its bare key where it has none); none for a
+    /// `sum` member whose `where` is a hole and whose term is refused: a hole member, its
+    /// `where` read first (tally 2.3.1, rulings 17 statement A). L §5.11, §8.
+    fn member_term(
+        &mut self,
+        m: &Reality,
+        agg: &Agg,
+        member: &Member,
+        ctx: Ctx,
+    ) -> Result<Option<Value>, Stop> {
+        let Some(term) = &agg.term else {
+            return bare_key(agg, &member.env).map(Some);
+        };
+        match self.ev(m, term, &member.env, ctx) {
+            Err(Stop::Refused(r))
+                if agg.func == AggFn::Sum && member.unknown.is_some() && a_terms_refusal(&r) =>
+            {
+                Ok(None)
+            }
+            read => read.map(Some),
+        }
+    }
+
     /// Explains the `min`, `max`, `argmin` or `argmax` of `terms` whose result is `result` by
     /// its first winning term in binding order, where `snap` holds the trace before its terms
     /// were read (refcore's `e_agg`, its `trace_winner` calls). L §5.18, E §10.
@@ -350,49 +453,58 @@ impl Engine {
         self.trace_winner(m, (snap, result), &gives, ctx)
     }
 
-    /// `any(c for …)`, `all(c for …)` under Kleene logic (refcore's `agg_anyall`): a term
-    /// that decides (`true` for `any`, `false` for `all`) decides whatever the other terms
-    /// are, refused ones included, a tuple whose `where` is refused among them, so the answer
-    /// is the same in every binding order; where none decides, the first refused term in
-    /// binding order refuses it, else a hole term makes it a hole (tally 2.3.1, #253's option
-    /// B). L §5.11, §8, §2.5.
+    /// `any(c for …)`, `all(c for …)` under Kleene logic (refcore's `agg_anyall`) over its
+    /// tuples by statement A: a member that decides (`true` for `any`, `false` for `all`)
+    /// decides whatever the others are, refused and hole ones included, so the answer is the
+    /// same in every binding order; where none decides, the first refused tuple in binding
+    /// order refuses it, else a hole one makes it a hole (tally 2.3.1, #253's option B;
+    /// rulings 17). L §5.11, §8, §2.5.
     fn any_all(
         &mut self,
         m: &Reality,
         func: AggFn,
         term: &Expr,
-        members: &[Result<Member, Stop>],
+        tuples: &[Tuple],
         ctx: Ctx,
     ) -> Result<Value, Stop> {
         let word = func.word();
         let decides = func == AggFn::Any;
         let mut holes: Vec<Hole> = Vec::new();
         let mut refused: Option<Stop> = None;
-        for member in members {
-            let member = match member {
-                Ok(member) => member,
-                Err(stop) => {
+        for tuple in tuples {
+            let member = match tuple {
+                Tuple::Member(member) => member,
+                Tuple::Hole(h) => {
+                    holes.push(h.clone());
+                    continue;
+                }
+                Tuple::Refused(stop, _) => {
                     refused.get_or_insert_with(|| stop.clone());
                     continue;
                 }
             };
-            let t = match self.ev(m, term, &member.env, ctx) {
+            let read = match self.ev(m, term, &member.env, ctx) {
+                Err(Stop::Refused(r)) if a_terms_refusal(&r) => Err(Stop::Refused(r)),
+                Err(stop) => return Err(stop),
+                Ok(t) => Ok(t),
+            };
+            if let Some(unknown) = &member.unknown {
+                // its `where` is a hole, read before its term: a hole member
+                holes.push(unknown.clone());
+                if let Ok(Value::Hole(h)) = read {
+                    holes.push(h);
+                }
+                continue;
+            }
+            let t = match read {
                 Ok(t) => t,
-                Err(Stop::Refused(r)) if a_terms_refusal(&r) => {
-                    refused.get_or_insert(Stop::Refused(r));
+                Err(stop) => {
+                    refused.get_or_insert(stop);
                     continue;
                 }
-                Err(stop) => return Err(stop),
             };
             if t == Value::None {
                 refused.get_or_insert_with(|| none_term(m, Some(term), &member.env, word));
-                continue;
-            }
-            if let Some(unknown) = &member.unknown {
-                holes.push(unknown.clone());
-                if let Value::Hole(h) = t {
-                    holes.push(h);
-                }
                 continue;
             }
             if let Value::Hole(h) = t {
@@ -428,7 +540,7 @@ impl Engine {
         ctx: Ctx,
         brings: Brings,
     ) -> Result<Result<Vec<Member>, Hole>, Stop> {
-        let walk = self.tuple_walk(m, binds, env, ctx, Way::Forward)?;
+        let walk = self.tuple_walk(m, binds, env, ctx, (Way::Forward, Reading::Stops))?;
         self.walk_members(m, binds, walk, ctx, brings)
     }
 
@@ -454,66 +566,56 @@ impl Engine {
                 Step::Hole(h) => {
                     domain_hole.get_or_insert(h);
                 }
-                Step::Refused(stop) => return Err(stop),
+                Step::Refused(stop, _) => return Err(stop),
                 Step::Done => break,
             }
         }
         Ok(domain_hole.map_or(Ok(out), Err))
     }
 
-    /// The members of `any` or `all` from the walk `walk` over the tuples of `binds`, a tuple
-    /// whose `where` is refused kept in its place as that refusal; or the hole of their first
-    /// domain, which a refused `where` outranks; a domain refused stops them, the first
-    /// refusal in binding order kept (refcore's `members`). L §5.11, §8.
+    /// The tuples of `any`, `all` or `sum` from the walk `walk` over the tuples of `binds`, by
+    /// statement A: each in its place, a member, an inner domain's hole or a refusal at run;
+    /// or the hole of their first domain, where no tuple is known (refcore's `members`). A
+    /// load refusal or a broken invariant stops them where it is met. L §5.11, §8.
     fn walk_terms(
         &mut self,
         m: &Reality,
         binds: &[Bind],
         walk: Result<Walk, Hole>,
         ctx: Ctx,
-    ) -> Result<Result<Vec<Result<Member, Stop>>, Hole>, Stop> {
+    ) -> Result<Result<Vec<Tuple>, Hole>, Stop> {
         let mut walk = match walk {
             Err(hole) => return Ok(Err(hole)),
             Ok(walk) => walk,
         };
-        let mut out: Vec<Result<Member, Stop>> = Vec::new();
-        let mut domain_hole: Option<Hole> = None;
+        let mut out: Vec<Tuple> = Vec::new();
         loop {
-            let step = match self.next_tuple(m, binds, &mut walk, ctx, Brings::ToReader) {
-                Ok(step) => step,
-                Err(stop) => return Err(first_refused(&out).unwrap_or(stop)),
-            };
-            match step {
-                Step::Member(member) => out.push(Ok(member)),
-                Step::Refused(stop) => out.push(Err(stop)),
-                Step::Hole(h) => {
-                    domain_hole.get_or_insert(h);
-                }
+            match self.next_tuple(m, binds, &mut walk, ctx, Brings::ToReader)? {
+                Step::Member(member) => out.push(Tuple::Member(member)),
+                Step::Refused(stop, env) => out.push(Tuple::Refused(stop, env)),
+                Step::Hole(h) => out.push(Tuple::Hole(h)),
                 Step::Done => break,
             }
         }
-        match (domain_hole, first_refused(&out)) {
-            (Some(_), Some(stop)) => Err(stop),
-            (Some(hole), None) => Ok(Err(hole)),
-            (None, _) => Ok(Ok(out)),
-        }
+        Ok(Ok(out))
     }
 
     /// The walk over the binding tuples, depth first, each binding's values from the end
-    /// `way` says (the last, `last`'s); the hole of a first domain that is one (refcore's
-    /// `members`). L §5.11.
+    /// `way` says (the last, `last`'s), a tuple refused at run taken as `reading` says; the
+    /// hole of a first domain that is one (refcore's `members`). L §5.11.
     pub(super) fn tuple_walk(
         &mut self,
         m: &Reality,
         binds: &[Bind],
         env: &Env,
         ctx: Ctx,
-        way: Way,
+        (way, reading): (Way, Reading),
     ) -> Result<Result<Walk, Hole>, Stop> {
         let Some(first) = binds.first() else {
             return Err(invariant("an aggregate with no binding"));
         };
-        Ok(walk_of(self.first_frame(m, first, env, ctx)?, way))
+        let frame = frame_of(self.bind_values(m, first, env, (ctx, reading))?, env);
+        Ok(walk_of(frame, (way, reading)))
     }
 
     /// The frame of the first binding's values in scope `env`, or the hole of a domain that
@@ -525,12 +627,15 @@ impl Engine {
         env: &Env,
         ctx: Ctx,
     ) -> Result<Result<Frame, Hole>, Stop> {
-        Ok(frame_of(self.bind_values(m, bind, env, ctx)?, env))
+        Ok(frame_of(
+            self.bind_values(m, bind, env, (ctx, Reading::Stops))?,
+            env,
+        ))
     }
 
     /// The walk's next tuple whose `where`s keep it, each `where` read when its binding is
-    /// reached; or the hole of an inner domain that is one; or the end (refcore's `members`,
-    /// one step). L §5.11, §5.19 Bindings, §8.2.
+    /// reached; or the hole of an inner domain that is one; or a tuple refused at run; or the
+    /// end (refcore's `members`, one step). L §5.11, §5.19 Bindings, §8.2.
     pub(super) fn next_tuple(
         &mut self,
         m: &Reality,
@@ -539,36 +644,46 @@ impl Engine {
         ctx: Ctx,
         brings: Brings,
     ) -> Result<Step, Stop> {
+        let reading = walk.reading;
         while let Some(frame) = walk.frames.last_mut() {
             let Some((value, own)) = frame.values.get(frame.next).cloned() else {
                 walk.frames.pop();
                 continue;
             };
             let brought = frame.colls.get(frame.next).cloned();
+            let exists = frame.refused.get(frame.next).cloned().flatten();
             frame.next = frame
                 .next
                 .checked_add(1)
                 .ok_or_else(|| invariant("a binding's position"))?;
+            if let Some(r) = exists {
+                // a movement whose existence is refused: its domain's read (statement A)
+                return Ok(Step::Refused(Stop::Refused(r), None));
+            }
             let (level, scope, so_far) = (frame.level, frame.env.clone(), frame.unknown.clone());
             let mut path = frame.brought.clone();
             let bind = binds
                 .get(level)
                 .ok_or_else(|| invariant("a binding past the list"))?;
-            let taken = match self.take_value(m, bind, &scope, value, joined(so_far, own), ctx) {
-                Err(Stop::Refused(r)) if a_terms_refusal(&r) => {
-                    return Ok(Step::Refused(Stop::Refused(r)));
-                }
-                taken => taken?,
-            };
-            let Some((inner, unknown)) = taken else {
-                continue;
-            };
-            if let Some(c) = &brought {
-                self.bring(brings, &mut path, c);
-            }
             let next = level
                 .checked_add(1)
                 .ok_or_else(|| invariant("a binding's position"))?;
+            let written = self.bind_text(&bind.text);
+            let inner = scope.with_bind((&bind.var, &written), value, bind_domain(m, bind));
+            let kept = match self.where_keeps(m, bind, &inner, ctx) {
+                Err(Stop::Refused(r)) if a_terms_refusal(&r) => {
+                    let last = binds.get(next).is_none().then_some(inner);
+                    return Ok(Step::Refused(Stop::Refused(r), last));
+                }
+                kept => kept?,
+            };
+            let Kept::In(hole) = kept else {
+                continue;
+            };
+            let unknown = joined(joined(so_far, own), hole);
+            if let Some(c) = &brought {
+                self.bring(brings, &mut path, c);
+            }
             let Some(bind_next) = binds.get(next) else {
                 return Ok(Step::Member(Member {
                     env: inner,
@@ -576,7 +691,13 @@ impl Engine {
                     brought: path,
                 }));
             };
-            let deeper = match self.bind_values(m, bind_next, &inner, ctx)? {
+            let values = match self.bind_values(m, bind_next, &inner, (ctx, reading)) {
+                Err(Stop::Refused(r)) if reading == Reading::Each && a_terms_refusal(&r) => {
+                    return Ok(Step::Refused(Stop::Refused(r), None));
+                }
+                values => values?,
+            };
+            let deeper = match values {
                 Values::Unknown(h) => return Ok(Step::Hole(h)),
                 Values::Known(values) => Frame {
                     level: next,
@@ -586,6 +707,7 @@ impl Engine {
                     values,
                     next: 0,
                     colls: Vec::new(),
+                    refused: Vec::new(),
                 },
                 Values::Moves(moves) => moves_frame(next, (inner, unknown, path), moves),
             };
@@ -664,7 +786,7 @@ impl Engine {
         ctx: Ctx,
     ) -> Result<Decided, Stop> {
         self.push();
-        let values = self.bind_values(m, bind, env, ctx);
+        let values = self.bind_values(m, bind, env, (ctx, Reading::Stops));
         let domain = self.pop_alone();
         let (values, brings) = match values? {
             Values::Unknown(h) => return Ok(Err((h, domain))),
@@ -699,25 +821,6 @@ impl Engine {
             out.push((member, read, refused));
         }
         Ok(Ok(out))
-    }
-
-    /// A value of binding `bind` bound, its `where` tested: none when the `where` is false
-    /// (refcore's `members`, one value). L §5.11.
-    fn take_value(
-        &mut self,
-        m: &Reality,
-        bind: &Bind,
-        scope: &Env,
-        value: Value,
-        unknown: Option<Hole>,
-        ctx: Ctx,
-    ) -> Result<Option<(Env, Option<Hole>)>, Stop> {
-        let written = self.bind_text(&bind.text);
-        let inner = scope.with_bind((&bind.var, &written), value, bind_domain(m, bind));
-        Ok(match self.where_keeps(m, bind, &inner, ctx)? {
-            Kept::Out => None,
-            Kept::In(h) => Some((inner, joined(unknown, h))),
-        })
     }
 
     /// Whether binding `bind`'s `where` keeps the member bound in `inner`, and the hole it is
@@ -763,31 +866,27 @@ fn frame_of(values: Values, env: &Env) -> Result<Frame, Hole> {
             values,
             next: 0,
             colls: Vec::new(),
+            refused: Vec::new(),
         },
         Values::Moves(moves) => moves_frame(0, (env.clone(), None, Collected::default()), moves),
     })
 }
 
 /// The walk over the binding tuples from the first binding's frame `first`, its values taken
-/// from the end `way` says; or the hole of a first domain that is one (refcore's `members`).
-/// L §5.11.
-fn walk_of(first: Result<Frame, Hole>, way: Way) -> Result<Walk, Hole> {
+/// from the end `way` says, a tuple refused at run taken as `reading` says; or the hole of a
+/// first domain that is one (refcore's `members`). L §5.11.
+fn walk_of(first: Result<Frame, Hole>, (way, reading): (Way, Reading)) -> Result<Walk, Hole> {
     first.map(|frame| Walk {
         frames: vec![frame.taken(way)],
         way,
+        reading,
     })
 }
 
-/// Whether refusal `r` of a term or a `where` is one `any` and `all` read past: every run
-/// refusal; a load refusal and a broken invariant stop the read (L §8, §5.11).
+/// Whether refusal `r` of a tuple's domain, `where` or term is one a member is read as: every
+/// run refusal; a load refusal and a broken invariant stop the read (L §8, §5.11).
 fn a_terms_refusal(r: &Refusal) -> bool {
     !matches!(r.code(), Code::Load(_) | Code::EngineInvariant)
-}
-
-/// The first refused tuple among `any`'s or `all`'s members `members`, in binding order
-/// (L §5.11, §8).
-fn first_refused(members: &[Result<Member, Stop>]) -> Option<Stop> {
-    members.iter().find_map(|mm| mm.as_ref().err().cloned())
 }
 
 /// `count(k in ks)`: the tuples, unless one is an unknown member (L §5.11).
@@ -963,8 +1062,8 @@ version v
     fn a_deciding_term_decides_any_and_all_past_a_refused_one() {
         // L §5.11, §8 (tally 2.3.1, #253's option B): r[c] is refused, r[a] true, r[b]
         // false; `any` is true and `all` false whatever the binding order, and with no
-        // deciding term the refusal stands; a refused `where` is such a term, and `sum`
-        // still stops on it
+        // deciding term the refusal stands; a refused `where` is such a term, and a `sum`
+        // member whose term is known 0 adds 0 past it (rulings 17 statement A)
         let given = vec![Given {
             path: "any_all.tally".to_owned(),
             bytes: Some(ANY_ALL.as_bytes().to_vec()),
@@ -986,9 +1085,99 @@ version v
                 "q_where_all: false",
                 "q_where_any: true",
                 "q_where_none: refused: RUN-DIV division by zero",
-                "q_where_sum: refused: RUN-DIV division by zero"
+                "q_where_sum: 6"
             ],
             "the deciding term decides; a refusal alone refuses"
+        );
+    }
+
+    /// Tuples refused by a `where`, an inner domain that is a hole, and a movement whose
+    /// `when` is refused, each beside a member that decides.
+    const STATEMENT_A: &str = r#"model statement_a
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index ns = 1..3
+
+place konto: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input x[n in ns]: int
+
+input dh[n in ns]: date
+
+input z: int
+
+input amt: money PLN
+
+input small: money PLN
+
+input d2: date
+
+move paid: transfers
+  on d2
+  leg cash from world to konto amount amt
+
+move maybe: transfers
+  on d2
+  when x[3] / z > 0
+  leg cash from world to konto amount amt
+
+ask q_dom: any(x[n] > 0 for n in ns where x[3] / x[n] > 0, p in accounts on dh[n])
+ask q_dom_all: all(x[n] < 0 for n in ns where x[3] / x[n] > 0, p in accounts on dh[n])
+ask q_moves: any(t.cash.amount > small for t in transfers over 2026-03)
+ask q_count: count(t in transfers over 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  x[1] = 0 "s"
+  x[2] = 5 "s"
+  x[3] = 5 "s"
+  dh[1] = 2026-02-01 "s"
+  dh[2] = 2026-02-01 "s"
+  dh[3] = ?"dh3?" "s"
+  z = 0 "s"
+  amt = 30.00 PLN "s"
+  small = 10.00 PLN "s"
+  d2 = 2026-03-02 "s"
+"#;
+
+    #[test]
+    fn every_tuple_is_one_member_of_any_and_all() {
+        // tally 2.3.1, rulings 17 statement A: n=1's `where` is refused, n=3's inner domain
+        // is a hole, `maybe`'s existence is refused; the member that decides decides past
+        // each, and `count` past a refused key still refuses (L §5.11, §8)
+        let given = vec![Given {
+            path: "statement_a.tally".to_owned(),
+            bytes: Some(STATEMENT_A.as_bytes().to_vec()),
+        }];
+        let answer = run(Files::new(given), &Request::new(Asks::Every)).expect("an answer");
+        let lines: Vec<&str> = answer
+            .lines()
+            .iter()
+            .map(String::as_str)
+            .filter(|line| !line.starts_with("  cut"))
+            .collect();
+        assert_eq!(
+            lines,
+            [
+                "q_count: refused: RUN-DIV division by zero",
+                "q_dom: true",
+                "q_dom_all: false",
+                "q_moves: true",
+                "  unfulfilled: paid"
+            ],
+            "the deciding member decides"
         );
     }
 

@@ -67,6 +67,19 @@ pub(crate) struct MvMember {
     pub day: Dated,
     /// Its stable id (L §2.5).
     pub id: String,
+    /// The refusal its existence met at run, read as a refused member (`Reading::Each`).
+    pub refused: Option<Refusal>,
+}
+
+/// How a reader takes a binding tuple refused at run, by its domain, its `where` or a
+/// movement's existence: it stops on it, or reads it as one refused member, as `any`, `all`
+/// and `sum` do (tally 2.3.1, rulings 17 statement A). L §5.11, §8.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Reading {
+    /// The first such refusal refuses the reader where it is met.
+    Stops,
+    /// Each tuple is one member, a refused one among them.
+    Each,
 }
 
 impl Moving {
@@ -169,12 +182,13 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals the day, the span or a member meets; `NotBuilt` past what S builds.
+    /// The refusals the day, the span or a member meets, a member's only where `reading` stops
+    /// on it; `NotBuilt` past what S builds.
     pub(crate) fn movement_members(
         &mut self,
         m: &Reality,
         bind: &Bind,
-        dom: (MvDom, &str),
+        (dom, reading): ((MvDom, &str), Reading),
         env: &Env,
         ctx: Ctx,
     ) -> Result<Result<Vec<MvMember>, Hole>, Stop> {
@@ -203,7 +217,7 @@ impl Engine {
                 ));
             }
         };
-        self.span_members(m, dom, &span, ctx).map(Ok)
+        self.span_members(m, (dom, reading), &span, ctx).map(Ok)
     }
 
     /// A binding whose day or span is a hole: no member when no movement of the kind the cut
@@ -261,16 +275,19 @@ impl Engine {
 
     /// The movements of the domain dated in span `sp`, an instance and the observations that
     /// fulfil it counted once, each with what it brings to a reader (refcore's
-    /// `span_members`). L §5.19 Bindings, §5.14, §8.2.
+    /// `span_members`); an instance whose evaluation is refused refuses them, or, where
+    /// `reading` reads each, is one refused member (tally 2.3.1, rulings 17 statement A).
+    /// L §5.19 Bindings, §5.14, §8.2.
     pub(crate) fn span_members(
         &mut self,
         m: &Reality,
-        dom: (MvDom, &str),
+        (dom, reading): ((MvDom, &str), Reading),
         sp: &Span,
         ctx: Ctx,
     ) -> Result<Vec<MvMember>, Stop> {
         binds_future(m, dom, sp, ctx)?;
         let mut out: Vec<(Moving, Option<Hole>)> = Vec::new();
+        let mut refusals: Vec<(String, Refusal)> = Vec::new();
         let mut fulfilled: BTreeSet<String> = BTreeSet::new();
         for x in self.movements_of(m, dom, Some(sp), ctx)? {
             if let Moving::Plan(i) = &x
@@ -320,11 +337,18 @@ impl Engine {
                 if let Exists::Unknown(h) = &i.exists {
                     st = spread(&[st.as_ref(), Some(h)]);
                 }
-                if let Some(e) = &i.err {
-                    // a refused result lists what it read like a value (L §8.2 One read set;
-                    // 208.2; P21)
-                    self.absorb(&i.coll);
-                    return Err(Stop::Refused(e.clone()));
+                // a refused result lists what it read like a value (L §8.2 One read set;
+                // 208.2; P21)
+                match (&i.err, reading) {
+                    (Some(e), Reading::Stops) => {
+                        self.absorb(&i.coll);
+                        return Err(Stop::Refused(e.clone()));
+                    }
+                    (Some(e), Reading::Each) => {
+                        self.absorb(&i.coll);
+                        refusals.push((i.id.clone(), e.clone()));
+                    }
+                    (None, _) => {}
                 }
             }
             // an adjustment of a hole-day instance is a member only where that day falls before
@@ -361,7 +385,13 @@ impl Engine {
             out.push((x, st));
         }
         let drop = self.counted_once(m, &out, &fulfilled, ctx.cut)?;
-        out.retain(|(x, _)| !drop.contains(x.id()));
+        let refused_of = |id: &str| {
+            refusals
+                .iter()
+                .find(|(r, _)| r == id)
+                .map(|(_, e)| e.clone())
+        };
+        out.retain(|(x, _)| !drop.contains(x.id()) || refused_of(x.id()).is_some());
         let mut res = Vec::with_capacity(out.len());
         for (x, unknown) in out {
             let mut coll = Collected::default();
@@ -392,6 +422,7 @@ impl Engine {
                 coll,
                 day,
                 id: x.id().to_owned(),
+                refused: refused_of(x.id()),
             });
         }
         Ok(res)

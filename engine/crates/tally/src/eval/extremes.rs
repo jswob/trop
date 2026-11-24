@@ -29,6 +29,7 @@ use super::windows::{
     End, Takes, as_window, decided_order, imprecise, listed, one_day, stretch, window_end,
 };
 use crate::base::Run;
+use crate::book::Reading;
 use crate::hole::{Hole, spread};
 use crate::model::{IndexForm, KindSpec, Reality, Value};
 use crate::syntax::{Agg, AggFn, Bind, Domain as Over, Expr, Stop};
@@ -557,7 +558,7 @@ impl Engine {
         way: Way,
         ctx: Ctx,
     ) -> Result<Met, Stop> {
-        let mut walk = match self.tuple_walk(m, &agg.binds, env, ctx, way)? {
+        let mut walk = match self.tuple_walk(m, &agg.binds, env, ctx, (way, Reading::Stops))? {
             Err(hole) => return Ok(Met::Holes(vec![hole])),
             Ok(walk) => walk,
         };
@@ -569,7 +570,7 @@ impl Engine {
                     holes.push(hole);
                     continue;
                 }
-                Step::Refused(stop) => return Err(stop),
+                Step::Refused(stop, _) => return Err(stop),
                 Step::Done => break,
             };
             let Some(hole) = member.unknown else {
