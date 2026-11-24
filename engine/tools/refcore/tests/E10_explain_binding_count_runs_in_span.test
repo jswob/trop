@@ -1,0 +1,66 @@
+# tally 2.3.1 R2, P18 (explain's second mechanism): `explain` of a count over a kind lists the decision runs
+# its span holds: dk[j2], dated outside April, adds no running read and no amt2[j2] (spec/g3/f3_span/e_cn,
+# the engine's bytes). Before: j2's run listed.
+=== f3_span.tally
+model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+=== expect e_cn
+e_cn: 1
+  [1] cn = 1
+      rule base: won
+        [2] row v:sp = 2026-04
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [3] row v:w2[j1] = 2026-04-05
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [4] row v:w2[j2] = 2026-06-06
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [5] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-04-05
+        [6] row v:lim = 450.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+        [7] row v:amt2[j1] = 10.00 PLN
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  unfulfilled: dk[j1]
+  cut 2026-06-20

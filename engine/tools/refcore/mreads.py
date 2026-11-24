@@ -991,6 +991,12 @@ def m_span_members(self, dom, sp, ctx, owner=None):
                 if getattr(x, 'day_coll', None) is not None:
                     # the reads that put its day outside the span (L §8.2; tally 2.2.1 P35, N1)
                     self.day_reads(x.day_coll)
+                tsp = getattr(x, 'tspan', None)
+                if tsp is not None and tsp[0] is not None and self.trace_stack:
+                    # a decision run outside the binding's span is out of its read set: its traced reads go (L
+                    # §8.2; tally 2.3.1 R2, P18, explain's second mechanism)
+                    drop = set(tsp[1])
+                    tsp[0].children = [c for c in tsp[0].children if id(c) not in drop]
                 continue
         else:
             continue
