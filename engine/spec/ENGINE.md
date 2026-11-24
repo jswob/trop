@@ -368,7 +368,7 @@ An ask with `paths N seed S` runs N paths (N ≤ 100 000, `REQ-PATHS`).
    - the day walk runs if any balance or decision depends on a sample;
    - the ask's per-path terms are evaluated.
 
-   **Law per path** is just this: law defs in the random cone are cells of the path's layer (R-20).
+   **Law per path** is just this: law defs in the random cone are cells of the path's layer (E-R-20).
 3. **Keep the terms, drop the path.** Each path's ask terms are kept (N values per term), with the `where` of each query; its timeline is dropped. A path is recomputed alone on demand, because it is a pure function of its seed and number (`path p`, N-1406).
 4. **Statistics.** `share`, `mean` and `quantile`, the standard errors of `share`, `mean` and `quantile`, the count of paths a `where` leaves, and the horizon, are computed over the kept terms as LANGUAGE §5.16 says. There is no verdict (D-11).
 5. **Workers.** Paths are split into contiguous blocks, one per worker, and merged in path order. The number of workers changes nothing (LANGUAGE §7.5).
@@ -377,7 +377,7 @@ An ask with `paths N seed S` runs N paths (N ≤ 100 000, `REQ-PATHS`).
 
 **Scenarios and `as if` share paths.** Addresses don't name the world or the pins, so a scenario and its base see the same uniforms on every path, and their difference has low variance (common random numbers, N-1302).
 
-**Lifetimes** (CHG-08) need nothing special:
+**Lifetimes** (E-CHG-08) need nothing special:
 - an age at death is a random fact per person, `input death_age[p in persons]: dist year`;
 - `alive[p, m]` is a def that compares it with the person's age;
 - the instances that end at death have `when alive[p, m]`.
@@ -406,9 +406,9 @@ ask crps_sep: crps(bal(wallet, 2026-09-30) as if {known 2026-03-31}, bal(wallet,
 - the CRPS of samples, path values included, is exact, and that of normal forecasts closed-form;
 - interval scores, weighted interval scores and skill scores are expressions;
 - coverage is judged against exact binomial ranges, through `binomial`'s exact `cdf` and `quantile`;
-- actual-to-expected ratios are counts and amounts with their ranges (CHG-10).
+- actual-to-expected ratios are counts and amounts with their ranges (E-CHG-10).
 
-**Oracle tests** for path statistics (CHG-13) are `check` asks:
+**Oracle tests** for path statistics (E-CHG-13) are `check` asks:
 - the statistic is an ask term, written inline in the `check`: n/N for a `share`, the value for a `mean` or a `quantile`;
 - its standard error, the oracle and the tolerance (4·SE plus the step bias plus the oracle's own error) are each a def or a row, with the standard error taken at the oracle. The **step bias** is a figure, stated by the model, on how far the scheme's time step moves the statistic's mean from the oracle;
 - a parameter's sample pinned for the test is listed in the register (`pinned sample:`), so a forecast can't carry it unseen.
@@ -432,7 +432,7 @@ These hold by construction. The engine checks them anyway, cheaply, on every run
 5. **A booked plan amount never changes.** Each plan instance's A₀ is the same under every K class that books it at the same cut, and its amount at cut K is A₀ plus its adjustments (§5). A decision's amount isn't fixed that way: it reads the walk of its cut K, so observations and readings that a later cut sees can change what it reads and books (§4.2, §6.1), and so, where it reads parts, can a later version that changes whose past money was (LANGUAGE §5.14.3, the one exception), while the law, facts and projections it reads stay those of its day (§5, §4.3); a reading never changes a decision dated on or before its instant.
 6. **Things hold nothing outside their lifespans.** Every position of a place is zero before its lifespan starts and after it ends (LANGUAGE §5.7).
 
-The test suite adds **determinism**: every case is run twice, with 1 and with 6 workers, and the results must be the same (R-16, N-1401).
+The test suite adds **determinism**: every case is run twice, with 1 and with 6 workers, and the results must be the same (E-R-16, N-1401).
 
 ---
 

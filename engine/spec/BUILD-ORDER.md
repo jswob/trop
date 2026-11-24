@@ -40,6 +40,7 @@ The scan behind rules 3 and 4 looks for six things in a check's text files, stri
 | M2 | Replay against reality | observations, booking, the residual ledger, the clocks; then forks | 26 | 7 | 1, 2, 3, 4, 6, 8 | P8-14 kept |
 | M3 | The operations | E §1's run function; `check` (`OPERATIONS.md` §2.3) | 0 | — | 10 (`check`), 12 | P8-1; P8-7 waits with the gate |
 | M4 | Law breadth | `beats`, `given`, Kleene logic, rounding modes, FX, calendars | 77 | 34 | 1, 3 | P8-L2, P8-L10 |
+| M4p | The performance run | interned keys, the read memo, names as slots, a projection's window walk; F7 at every past cut | 0 | — | — | P8-L10 reported; the 17 stage runs of stages.tsv |
 | M5a | Allocation, holdings, many parties | `fill`, lots, holdings, ownership by shares, groups | 166 | 23 | 1, 8 (the fill) | P8-11; P8-L4, P8-L6, P8-L16 |
 | M5b | Parts and labels | owned and batched kinds, arrivals, takes, relabels, R-115, hole parts | 80 | — | 5, 6 | P8-10; P8-L9, P8-L15, P8-L17 |
 | M5c | Joint members as contexts | D1-7's two steps: a member's own context, then pruning | 40 | — | 6 | P8-12, P8-13, P8-15; P8-L8, P8-L18 |
@@ -48,7 +49,7 @@ The scan behind rules 3 and 4 looks for six things in a check's text files, stri
 | M8 | The evaluation layer | rolling origins, own-forecast scores, the fitting loop | 0 | — | 4 | P8-8 |
 | M9 | Performance (step F) | every P8 row at size; seams on a measured miss; PGO | 84 | — | 12 | all, at size |
 
-Counts: S=4 M0=10 M1=90 M2=26 M3=0 M4=77 M5a=166 M5b=80 M5c=40 M6=36 M7=21 M8=0 M9=84
+Counts: S=4 M0=10 M1=90 M2=26 M3=0 M4=77 M4p=0 M5a=166 M5b=80 M5c=40 M6=36 M7=21 M8=0 M9=84
 
 **The arithmetic.** The cases: 3 + 7 + 34 + 23 + 12 = 79, as in 1.0.1, since no 2.1 model text uses parts or a joint model (M5a's 23 is 1.0.1's M5; M6's 12 counts LH-15 and LH-16 through their light twins). The checks:
 
@@ -222,6 +223,25 @@ The constructs that tax and benefit law needs beyond X's: exceptions, branches, 
 - Probes (8): `U:cur/*`; LAW-02, -07, -10, -11, -12.
 
 **Budgets touched:** P8-L2 (D-11's pair, its constructs complete here) and P8-L10 (X's long-horizon walk cells, change 1's and change 5's walk runs), each at full size at M4's exit.
+
+---
+
+## M4p. The performance run
+
+One step between M4 and M5a, no new meaning: what M4's 17 stage runs and M5a's P8-11 need (the performance study after M4 and the user's "yes", 2026-11-24).
+
+**Builds**, each its own group, in this order:
+1. Keys, defs, read-set and register entries as interned ids (`PERFORMANCE.md` §3.1).
+2. An input read kept per (input, keys, cut) with its class (§3.4; the fence F3).
+3. Names as slots (§1.2 item 2).
+4. A projection's walk over its window.
+5. Narrow reads (F7) at every past cut: a read names the instances it reads (LANGUAGE §5.14, an instance's existence; §8.2, one read set), and the link bound of M4's narrow path (a move's list giving its observations' link reads to its first reader) comes out.
+
+**Green:** the 17 stage runs of `engine/tests/m4/load/stages.tsv` (P8-L10's `b1` to `c7`), each inside 4 GB, each run's time reported against 10 s; every check green at M4 stays green, its bytes unchanged.
+
+**Budgets touched:** none changes its number. P8-L10's 10 s is reported here and judged at M9, as every P8 row at size; M4 judged it on `c1_r2` alone (U2).
+
+**Not here:** a pin on a record field (`LANGUAGE.md` §5.11, gate review X2, P34): **M5a**, whose holdings and record rows meet it first.
 
 ---
 
