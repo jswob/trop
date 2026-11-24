@@ -617,23 +617,34 @@ impl Engine {
     }
 
     /// The links to decision instance `tid` under cut `cut`, judged at its walk point, where
-    /// its `when` says it doesn't exist: each observation that fulfils it refused (`RUN-RECORD`),
-    /// for the walk and every later reader (L §5.19 Links, §5.14 An instance's existence is a
-    /// cell; E §4.2 step 3; tally 2.3.1 R6, C-9). Returns the refusal by observation.
-    pub(crate) fn unlink_at_point(&mut self, tid: &str, obs: &[String], cut: Day) -> Vec<Refused> {
+    /// its existence isn't true: each observation that fulfils it refused, for the walk and
+    /// every later reader, by `why`, the run's refusal where its existence is refused, or
+    /// `RUN-RECORD` where its `when` says it doesn't exist (`why` none) (L §5.19 Links, §5.14
+    /// An instance's existence is a cell, §8.4; E §4.2 step 3; tally 2.3.1 R6, R2, C-9).
+    /// Returns the refusal by observation.
+    pub(crate) fn unlink_at_point(
+        &mut self,
+        tid: &str,
+        cut: Day,
+        why: Option<&Refusal>,
+    ) -> Vec<Refused> {
+        let key = (cut, tid.to_owned());
+        if !self.links_at_point.contains(&key) {
+            return Vec::new();
+        }
+        let obs = self
+            .links
+            .get_mut(&key)
+            .map_or_else(Vec::new, |hit| core::mem::take(&mut hit.obs));
         let mut out = Vec::with_capacity(obs.len());
-        if !self.links_at_point.contains(&(cut, tid.to_owned())) {
-            return out;
-        }
-        if let Some(hit) = self.links.get_mut(&(cut, tid.to_owned())) {
-            hit.obs.clear();
-        }
         for id in obs {
-            let err = record(format!(
-                "observation {id} fulfils {tid}, which doesn't exist or doesn't touch its places"
-            ));
+            let err = why.cloned().unwrap_or_else(|| {
+                record(format!(
+                    "observation {id} fulfils {tid}, which doesn't exist or doesn't touch its places"
+                ))
+            });
             self.obs_errs.insert((cut, id.clone()), err.clone());
-            out.push((id.clone(), err));
+            out.push((id, err));
         }
         out
     }

@@ -263,6 +263,13 @@ impl Engine {
         self.trace_walked_back(before);
         closed?;
         match read {
+            // a decision's `when` that reads running state is read at its walk point, as
+            // `link_tuple` leaves it (tally 2.3.1 R6, C-9)
+            Err(Stop::Refused(r))
+                if mv.decision && r.code() == Code::Load(Load::Reads) && self.plans_making == 0 =>
+            {
+                Ok(())
+            }
             Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
             Ok(()) | Err(Stop::Refused(_)) => Ok(()),
             Err(stop) => Err(stop),

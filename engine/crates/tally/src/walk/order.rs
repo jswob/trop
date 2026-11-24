@@ -401,8 +401,9 @@ impl Engine {
 
     /// A cycle's instance refused before it runs, `RUN-ORDER` or `RUN-TIE`: the places its
     /// legs give refused from its point, every place where none is known, and its run kept
-    /// with no legs, so every read of it is refused too (refcore's `run_group`, its bad, and
-    /// `refused_run`). L §5.14.2, §8.4; E §4.2 step 5.
+    /// with no legs, so every read of it is refused too, and every link to it (refcore's
+    /// `run_group`, its bad, and `refused_run`). L §5.14.2, §8.4; E §4.2 step 5; tally 2.3.1
+    /// R2, C-9.
     fn refused_run(
         &mut self,
         m: &Reality,
@@ -432,10 +433,11 @@ impl Engine {
         }
         inst.legs = Vec::new();
         inst.attrs = Vec::new();
-        inst.err = Some(err);
+        inst.err = Some(err.clone());
         inst.status = Status::Refused;
         // what the refusal rests on is what a read of the run lists (L §8.2; P20)
         inst.coll.merge_rows(met);
+        let tid = inst.id.clone();
         walk.record(Run {
             inst,
             point: key,
@@ -445,7 +447,8 @@ impl Engine {
             ran: false,
             tested,
         });
-        Ok(())
+        // a link to it rests on its refused existence (tally 2.3.1 R2, C-9)
+        self.unlink_run(id, &tid, Some(&err))
     }
 
     /// Instances of one move that read the places another of them changes, with no `ties by`:
@@ -773,15 +776,14 @@ impl Engine {
             for lg in &known {
                 walk.leg_bad(m, (&mv_id, lg, &read), &err, key)?;
             }
+            self.unlink_run(id, &mv_id, Some(&err))?;
             return Ok(ix);
         }
         if run.inst.exists == Exists::No {
             run.inst.status = Status::None;
             let inst = run.inst.clone();
             walk.record(run);
-            if main {
-                self.unlink_run(id, &inst, cut)?;
-            }
+            self.unlink_run(id, &inst.id, None)?;
             self.book_own_obs(m, id, &inst, key)?;
             return Ok(ix);
         }
@@ -847,16 +849,24 @@ impl Engine {
         Ok(ix)
     }
 
-    /// The links to decision run `inst` of main walk `id`, judged at its point, where its
-    /// `when` says it doesn't exist: each observation that fulfils it refused, in the walk too,
-    /// so its legs book refused at that point (E §4.2 step 3; L §5.19 Links; tally 2.3.1 R6,
-    /// C-9).
+    /// The links to decision instance `tid` of walk `id`, judged at its point, where its
+    /// existence isn't true (its `when` false, or `why`, its run refused): each observation
+    /// that fulfils it refused, in the walk too, so its legs book refused at that point; none
+    /// in a projection's walk, whose links are the main walk's (E §4.2 step 3; L §5.19 Links,
+    /// §8.4; tally 2.3.1 R6, R2, C-9).
     ///
     /// # Errors
     ///
     /// `ENGINE-INVARIANT` for a walk the engine lacks.
-    fn unlink_run(&mut self, id: usize, inst: &Inst, cut: Day) -> Result<(), Stop> {
-        let refused = self.unlink_at_point(&inst.id, &inst.obs, cut);
+    fn unlink_run(&mut self, id: usize, tid: &str, why: Option<&Refusal>) -> Result<(), Stop> {
+        let (cut, main) = {
+            let walk = self.walk(id)?;
+            (walk.cut, walk.proj.is_none())
+        };
+        if !main {
+            return Ok(());
+        }
+        let refused = self.unlink_at_point(tid, cut, why);
         let walk = self.walk_mut(id)?;
         for (obs, err) in refused {
             for wo in walk.obs.iter_mut().filter(|wo| wo.obs.id == obs) {
@@ -1514,5 +1524,35 @@ version feb
                 "{order:?}"
             );
         }
+    }
+
+    #[test]
+    fn a_link_to_a_decision_whose_run_is_refused_is_refused_with_it() {
+        // L §5.19 Links, §8.4, §5.14.2; E §4.2 step 3 (tally 2.3.1 R2, C-9): `spend` and
+        // `topup` read each other on each 5th with no order, so `topup[2026-02]`'s existence
+        // is refused at its point, and the row that names it, read for its `fulfils`, is
+        // refused with it, its explanation too
+        let spend = "move spend[m in month]: transfers\n  reads konto\n  on day_of(m, d5)\n  \
+                     leg cash from konto to shop amount 1.00 PLN + 0 * bal(konto)\n\n\
+                     def lo[m in month]: money PLN at start_of(m)\n  rule guessed = 0.00 PLN\n  \
+                     rule seen beats guessed = sum(o.cash.amount for o in bank over m \
+                     where o.fulfils == none) when covered(konto, m)\n\n\
+                     ask el: explain lo[2026-02]\n\nask loose:";
+        let text = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace("ask loose:", spend);
+        let given = vec![Given {
+            path: "dec_order.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let asks = vec!["loose".to_owned(), "el".to_owned()];
+        let answer = run(Files::new(given), &Request::new(Asks::Named(asks))).expect("an answer");
+        let order = "refused: RUN-ORDER decisions spend and topup read each other on 2026-02-05";
+        let lines = answer.lines();
+        assert_eq!(lines.first(), Some(&format!("loose: {order}")), "{lines:?}");
+        assert!(
+            lines.iter().any(|l| *l == format!("el: {order}")),
+            "{lines:?}"
+        );
     }
 }
