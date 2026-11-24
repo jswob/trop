@@ -1,0 +1,53 @@
+model t1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+place konto: accounts PLN lives 2026-01-01..
+place kp[k in ks]: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+
+band scale(x: money PLN): num %
+
+input no: bool
+input el[k in ks]: bool
+input r: rate
+input x: money PLN
+input nn: num
+input ni: int
+input d0: date
+input d1: date
+input xh: money PLN
+
+move pay: transfers
+  on d0
+  leg cash from world to konto amount x
+
+def br: num PLN = if no then accrue(x, r, d0, d1, act365, simple) else 0
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  no = false "s"
+  el = false "s"
+  r = 5 %/year "s"
+  x = 7300 PLN "s"
+  nn = 3 "s"
+  ni = 2 "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2026-03-11 "s"
+  xh = ? "which xh?"
+  scale: [0, 100) = 10 "s"
+  scale: [100, inf) = 20 "s"
+  opening[konto] = 5 PLN at 2026-01-01 start "s"
+  opening[kp[k1]] = 5 PLN at 2026-01-01 start "s"
+  opening[kp[k2]] = 5 PLN at 2026-01-01 start "s"
+ask e5: if no then accrue(ni, r, d0, d1, act365, simple) else 0

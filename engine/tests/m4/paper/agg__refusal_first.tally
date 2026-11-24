@@ -1,0 +1,50 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ks = [k1, k2, k3]
+input a: num
+input z: num
+input h: num
+input xs[k in ks]: num
+input w: date
+input cutoff: date
+def bad: num = a / z
+def l1: bool = a < z and bad > a
+def l2: bool = bad > a and a < z
+def l3: bool = h > a and bad > a
+def l4: bool = w < cutoff or bad > a
+def g1: bool = any(xs[k] / (if k == k1 then z else a) > z for k in ks)
+def g2: bool = all(xs[k] / (if k == k1 then z else a) < z for k in ks)
+def g3: num = min(xs[k] / (if k == k2 then z else a) for k in ks)
+def g4: key ks = argmax(xs[k] / (if k == k3 then z else a) for k in ks) ties by pos(k)
+def g5: int = count(k in ks where xs[k] / (if k == k3 then z else h) > z)
+def g6: num = if h > a then bad else bad
+def g7: num = max(h, bad)
+ask s1: l1
+ask s2: l2
+ask s3: l3
+ask s4: l4
+ask t1: g1
+ask t2: g2
+ask t3: g3
+ask t4: g4
+ask t5: g5
+ask t6: g6
+ask t7: g7
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 1 "s"
+  z = 0 "s"
+  h = ?"which?" "s"
+  xs = 1 "s"
+  w = window(2026-05-20, 2026-06-10) "s"
+  cutoff = 2026-06-01 "s"

@@ -1,0 +1,48 @@
+model a6
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index js = [j1, j2]
+
+input p0: money PLN
+input r: rate
+input d0: date
+input d1: date
+input lo: rate
+input hi: rate
+input st: rate
+input tg: money PLN
+input pi: int
+input rj[j in js]: rate
+
+def need: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, effective) >= tg)
+def need2: rate = min(t for t in lo .. hi step st where accrue(p0, t, d0, d1, act365, nominal 12) >= tg)
+def ip: num = accrue(pi, r, d0, d1, act365, simple)
+def bigj: num PLN = max(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+def argj: key js = argmax(accrue(p0, rj[j], d0, d1, act365, effective) for j in js)
+
+ask q_need: need, need2
+ask q_ip: ip
+ask q_big: bigj, argj
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  r = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2027-01-01 "s"
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 105 PLN "s"
+  pi = 7 "s"
+  rj[j1] = 4 %/year "s"
+  rj[j2] = 6 %/year "s"

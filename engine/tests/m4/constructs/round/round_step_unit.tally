@@ -1,0 +1,23 @@
+model round_step_unit
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input x: num PLN
+input half_grosz: num PLN
+
+def paid: money PLN = round(x, half_grosz, half-up)
+
+ask a: paid
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x = 12.257 PLN "s"
+  half_grosz = 0.005 PLN "s"

@@ -105,5 +105,5 @@ impl Walk {
 /// read isn't (refcore's `add`, a `bad` entry's `mv.coll`); none where it took none. L §8.2
 /// One read set (208.2, N2 and P35 on #241).
 pub(super) fn refusal_read(read: &Collected) -> Option<Collected> {
-    (!read.entries.is_empty()).then(|| read.clone())
+    read.has_entries().then(|| read.clone())
 }

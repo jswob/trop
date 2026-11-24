@@ -106,7 +106,7 @@ impl Engine {
                 // an anchored place with no leg of the group at it: refused from here, with
                 // its reading's message (L §8.4; tally 2.1.2)
                 let mut ent = Ent::new(at, Change::Bad(err));
-                ent.coll = (!tested.entries.is_empty()).then_some(tested);
+                ent.coll = tested.has_entries().then_some(tested);
                 self.walk_mut(id)?.add(m, &place, &unit, ent)?;
                 continue;
             }
@@ -123,7 +123,7 @@ impl Engine {
                 if let Some(own) = walk.booked_pins(ends(leg), &unit, (mv, &leg.name)) {
                     read.merge(&own);
                 }
-                let pins = (!read.entries.is_empty()).then_some(read);
+                let pins = read.has_entries().then_some(read);
                 for p in ends(leg) {
                     walk.take_back(m, p, &unit, (mv, leg), taken)?;
                 }

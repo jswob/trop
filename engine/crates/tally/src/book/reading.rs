@@ -18,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use crate::base::{Code, Load, Refusal};
-use crate::eval::{Collected, Engine, Entry, Rows};
+use crate::eval::{Collected, Engine, Entries, Entry, Rows};
 use crate::hole::{Hole, spread};
 use crate::model::{BalanceRow, GapRole, PlaceReadings, Reality, World};
 use crate::num::Num;
@@ -75,7 +75,7 @@ type Kept = (Day, BalanceRow);
 pub(crate) fn readings(
     m: &Reality,
     (cut, world): (Day, World),
-    rows: Rows,
+    (rows, entries): (Rows, &mut Entries),
 ) -> Result<Vec<Seen>, Stop> {
     // a reading row is keyed by its place, instant and input; its unit is its place's (L §4.6,
     // §5.10)
@@ -104,7 +104,7 @@ pub(crate) fn readings(
             continue;
         };
         let row = &balance.row;
-        let mut reading = reading_of(m, (input, place, &instant), of_place, row)?;
+        let mut reading = reading_of(m, (input, place, &instant), (of_place, row), entries)?;
         // the row as `inputs-of` lists it, kept by an engine answering one (E §10)
         if rows == Rows::Kept
             && let Some(r) = &mut reading
@@ -196,9 +196,13 @@ pub fn reading_rank(walked: &[Seen], seen: &Seen) -> Result<u32, Stop> {
 /// # Errors
 ///
 /// As [`readings`].
-pub(crate) fn first_readings(m: &Reality, by: (Day, World)) -> Result<BTreeMap<String, Day>, Stop> {
+pub(crate) fn first_readings(
+    m: &Reality,
+    by: (Day, World),
+    entries: &mut Entries,
+) -> Result<BTreeMap<String, Day>, Stop> {
     let mut out: BTreeMap<String, Day> = BTreeMap::new();
-    for seen in readings(m, by, Rows::Unkept)? {
+    for seen in readings(m, by, (Rows::Unkept, entries))? {
         let first = out.entry(seen.place).or_insert(seen.day);
         *first = (*first).min(seen.day);
     }
@@ -220,8 +224,8 @@ pub(crate) fn instant_text(day: Day, edge: Edge) -> String {
 fn reading_of(
     m: &Reality,
     (input, place, instant): (&str, &str, &str),
-    of_place: &PlaceReadings,
-    row: &crate::model::Row,
+    (of_place, row): (&PlaceReadings, &crate::model::Row),
+    entries: &mut Entries,
 ) -> Result<Option<Reading>, Stop> {
     if row.value == crate::syntax::Value::None {
         return Ok(None);
@@ -233,13 +237,13 @@ fn reading_of(
         Ok(v) => Ok(crate::walk::quantity(m, &v)?.0),
     };
     let mut coll = Collected::default();
-    coll.versions.insert(row.version.clone());
+    coll.note_version(&row.version);
     if let Some(reason) = &row.assumed {
-        coll.entries.insert(Entry {
+        coll.note(entries.intern(Entry {
             word: "assumed",
             text: reason.clone(),
             figure: String::new(),
-        });
+        })?);
     }
     Ok(Some(Reading {
         input: input.to_owned(),
@@ -343,14 +347,14 @@ impl Engine {
                 // instance doesn't count stays read past it, as past a pad (N5 on #241)
                 let mut kept = r.coll.clone();
                 self.walk(id)?
-                    .open_kept(m, (&r.place, &r.unit), at, &mut kept);
+                    .open_kept(m, (&r.place, &r.unit), at, (&mut kept, &self.entries))?;
                 let mut ent = Ent::new(at, Change::Reset { val, qs });
                 ent.coll = Some(kept);
-                ent.reg = vec![Entry {
+                ent.reg = vec![self.entry_id(Entry {
                     word: "anchor",
                     text,
                     figure: String::new(),
-                }];
+                })?];
                 let anchored = self.walk_mut(id)?;
                 anchored.add(m, &r.place, &r.unit, ent)?;
                 anchored.sign_anchor(m, at, r)
@@ -364,12 +368,12 @@ impl Engine {
                     pad.id,
                     gap_text(m, &gap, &r.unit)?
                 );
-                let reg = vec![Entry {
+                let reg = vec![self.entry_id(Entry {
                     word: "pad",
                     text,
                     figure: String::new(),
-                }];
-                pad.reg.entries.extend(reg.iter().cloned());
+                })?];
+                pad.reg.note_all(&reg);
                 // a member of a binding over pads from its point (L §5.14.1)
                 self.walk_mut(id)?.pads.push((pad.clone(), at));
                 let ends = Ends {
@@ -378,7 +382,10 @@ impl Engine {
                     whole: true,
                 };
                 self.book_leg_ends(m, id, (&pad.id, &pad.leg), at, (&reg, &pad.coll), ends)?;
-                let padded = self.walk_mut(id)?;
+                let padded = self
+                    .walks
+                    .get_mut(id)
+                    .ok_or_else(|| invariant("a walk the engine lacks"))?;
                 let key = (pad.id.clone(), pad.leg.name.clone());
                 let refused = padded.bad_legs.contains_key(&key);
                 if let (Amount::Qty(g), false) = (&gap, refused) {
@@ -404,7 +411,7 @@ impl Engine {
                     .ok_or_else(|| invariant("a reading's point"))?;
                 // what decided an open instance doesn't count stays read past the reset (220.2)
                 let mut kept = r.coll.clone();
-                padded.open_kept(m, (&r.place, &r.unit), at, &mut kept);
+                padded.open_kept(m, (&r.place, &r.unit), at, (&mut kept, &self.entries))?;
                 let mut ent = Ent::new(at.with_sub(sub), Change::Reset { val, qs });
                 ent.coll = Some(kept);
                 ent.reg = reg;
@@ -439,7 +446,7 @@ impl Engine {
         let walk = self.walk(id)?;
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= at.day {
-                out.entries.insert(entry.clone());
+                out.note(*entry);
             }
         }
         Ok(out)

@@ -1,0 +1,52 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input c_top: bool
+input c_exc: bool
+input w: date
+input cutoff: date
+input v_top: money PLN
+input v_exc: money PLN
+input v_base: money PLN
+input c_q: bool
+
+def amt: money PLN at reader
+  rule top beats exc = v_top when c_top
+  rule exc beats base = v_exc when c_exc
+  rule base = v_base
+
+def amt2: money PLN at reader
+  rule exc beats base = v_exc when w < cutoff
+  rule base = v_base
+
+def amt3: money PLN at reader
+  rule top beats exc, base = v_top 
+  rule exc beats base = v_exc when w < cutoff
+  rule base = v_base
+
+ask a_true: amt law 2026-01-01
+ask a_false: amt with c_exc = false law 2026-01-01
+ask a_hole: amt with c_exc = c_q law 2026-01-01
+ask b_win: amt2 law 2026-01-01
+ask b_pin: amt2 with w = 2026-03-01 law 2026-01-01
+ask c_skip: amt3 law 2026-01-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  c_top = true "s"
+  v_top = 30 PLN "s"
+  v_exc = 20 PLN "s"
+  v_base = 10 PLN "s"
+  c_exc = true "s"
+  c_q = ?"is the exception met?" "s"
+  cutoff = 2026-06-01 "s"
+  w = window(2026-05-20, 2026-06-10) "s"

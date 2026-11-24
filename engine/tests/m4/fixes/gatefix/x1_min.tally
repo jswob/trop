@@ -1,0 +1,22 @@
+model x1m
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit EUR: currency minor 0.01
+
+input e: money EUR
+input want: num EUR
+
+def held: money EUR = e
+
+ask q: solve held == want for e in [0 EUR, 1 EUR] to 0.01 EUR
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  e = 1 EUR "s"
+  want = 0.333 "s"

@@ -1,0 +1,73 @@
+model round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis amode
+  down "reading 1"
+  up "reading 2"
+  floor "reading 3"
+  ceil "reading 4"
+  half-up "reading 5"
+  half-down "reading 6"
+  half-even "reading 7"
+
+input tp: num PLN
+input tn: num PLN
+input np: num PLN
+input nn: num PLN
+input odd: num PLN
+input r5: num PLN
+input r375: num PLN
+input pct: num
+input eur: num EUR
+input months_n: int
+input per_year: int
+input premium: money PLN
+input stp10: money PLN
+input stp05: money PLN
+
+def ra: money PLN = round(tp, stp10, amode)
+def ran: money PLN = round(tn, stp10, amode)
+def years_due: money PLN = premium * round(months_n / per_year, 1, up)
+
+ask m_down: round(tp, stp10, down), round(tn, stp10, down), round(np, stp10, down), round(nn, stp10, down)
+ask m_up: round(tp, stp10, up), round(tn, stp10, up), round(np, stp10, up), round(nn, stp10, up)
+ask m_floor: round(tp, stp10, floor), round(tn, stp10, floor), round(np, stp10, floor), round(nn, stp10, floor)
+ask m_ceil: round(tp, stp10, ceil), round(tn, stp10, ceil), round(np, stp10, ceil), round(nn, stp10, ceil)
+ask m_half_up: round(tp, stp10, half-up), round(tn, stp10, half-up), round(np, stp10, half-up), round(nn, stp10, half-up)
+ask m_half_down: round(tp, stp10, half-down), round(tn, stp10, half-down), round(np, stp10, half-down), round(nn, stp10, half-down)
+ask m_half_even: round(tp, stp10, half-even), round(tn, stp10, half-even), round(odd, stp10, half-even), round(nn, stp10, half-even)
+ask s_05: round(r5, stp05, half-up), round(r375, stp05, half-up), round(r375, stp05, half-down), round(r375, stp05, half-even)
+ask s_pct: round(pct, 1 %, half-up), round(pct, 1 %, down)
+ask s_minor: round(eur, minor(EUR), half-up), round(eur, minor(EUR), half-down)
+ask s_int: years_due
+ask ax: ra
+ask ax_neg: ran
+ask ax_pin: ra with amode = half-down
+ask ax_both: ra, ran
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  tp = 12.25 PLN "s"
+  tn = -12.25 PLN "s"
+  np = 12.27 PLN "s"
+  nn = -12.23 PLN "s"
+  odd = 12.35 PLN "s"
+  r5 = 12.37 PLN "s"
+  r375 = 12.375 PLN "s"
+  pct = 0.1256 "s"
+  eur = 10.005 EUR "s"
+  months_n = 14 "s"
+  per_year = 12 "s"
+  premium = 300 PLN "s"
+  stp10 = 0.10 PLN "s"
+  stp05 = 0.05 PLN "s"

@@ -1,0 +1,26 @@
+model b2_rates
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input rm: rate
+input rn: rate
+input ch: compounding
+input nh: int
+
+ask q_per_day: periodic(rm, day, ch)
+ask q_fac_day: factor(rm, nh, day, simple)
+ask q_per_none: periodic(rn, year, ch)
+ask q_fac_none: factor(rn, nh, year, simple)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rm = 1 %/month "s"
+  rn = none "s"
+  ch = ?"which compounding?" "s"
+  nh = ?"how many periods?" "s"

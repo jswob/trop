@@ -62,6 +62,7 @@ fn order_key(m: &Reality, value: &Value) -> Result<BandEnd, Stop> {
         | Value::Code(_)
         | Value::Record(_)
         | Value::List(_)
+        | Value::Tuple(_)
         | Value::Calendar(_)
         | Value::None
         | Value::Never

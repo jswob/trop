@@ -1,0 +1,17 @@
+scenario guide over p
+  tally 2
+  from 2026-06-01
+
+version g1
+  cite s
+  governs 2026-06-01..
+  known 2026-05-01
+  given tax[p1] = 9 PLN "the scenario's guide"
+
+version g2
+  cite s
+  governs 2026-01-01..
+  known 2026-05-01
+  given tax[p2] = 8 PLN "a given before from"
+
+ask d: diff(tax[p] for p in ps) in guide against p law 2026-07-01

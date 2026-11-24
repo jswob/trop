@@ -62,7 +62,7 @@ fn keeps_linear(e: &Expr) -> bool {
         | Expr::Prod(..)
         | Expr::Neg(_)
         | Expr::Bal(_)
-        | Expr::If(_)
+        | Expr::If(..)
         | Expr::Last(_)
         | Expr::AsIf(..) => true,
         Expr::Agg(agg) => matches!(agg.func, AggFn::Sum | AggFn::First | AggFn::Last),
@@ -117,6 +117,7 @@ fn reads_a_number(m: &Reality, e: &Expr, env: &Env, ctx: Ctx) -> bool {
             | Value::Code(_)
             | Value::Record(_)
             | Value::List(_)
+            | Value::Tuple(_)
             | Value::Calendar(_)
             | Value::None
             | Value::Never
@@ -145,6 +146,7 @@ fn lin_of(v: &Value) -> Option<Linear> {
         | Value::Code(_)
         | Value::Record(_)
         | Value::List(_)
+        | Value::Tuple(_)
         | Value::Calendar(_)
         | Value::None
         | Value::Never

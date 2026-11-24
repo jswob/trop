@@ -1,0 +1,71 @@
+model k_r60
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input ok[m in month]: bool
+input ten: int
+input dz[m in month]: int
+input guess: money PLN
+
+move rent[m in month where dz[m] > 0]: transfers
+  on day_of(m, d5)
+  when ok[m]
+  leg cash from pot to landlord amount amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount flows(rent, m)
+
+ask q9: bank[b9].fulfils
+
+ask q9n: bank[b9].fulfils == none
+
+ask qa: flows(top, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 1.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "no tuple: the where is false"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+  ok[2026-01] = true assumed "jan is a guess"
+  ok[2026-02] = true "s"
+  ok[2026-03] = true "s"
+  ok[2026-04] = true "s"
+  ok[2026-05] = true "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[b9] = (on: 2026-02-07, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-03]) "names one with no tuple"

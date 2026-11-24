@@ -22,7 +22,7 @@ use crate::model::{
     Class, DefInfo, KeyVal, Node, NodeKind, Number, Reality, RuleVer, Shown, Ty, Unit, Value,
     Window, pattern_text,
 };
-use crate::read::{Clocks, Test, candidates, choose, origin, rule_in_force, worded};
+use crate::read::{Clocks, Test, candidates, choose, held, origin, rule_in_force, worded};
 use crate::syntax::{LawDate, RuleValue, Stop};
 use crate::time::Day;
 
@@ -144,7 +144,7 @@ impl Engine {
         } else {
             Ctx { at: None, ..ctx }
         };
-        self.index_assumed(m, &def.binds);
+        self.index_assumed(m, &def.binds)?;
         // a pin wins over the def's rules and givens (L §5.11); the def's cell keeps only the
         // pins its def reaches (E §3.2)
         if let Some(pinned) = self.pin_of(&def.id, keys, ctx)? {
@@ -477,7 +477,7 @@ impl Engine {
             self.trace_close(group);
             let met = self.pop_alone();
             self.absorb(&met);
-            if met.missing {
+            if met.missing_held() {
                 missing_true.push(at);
             }
             let tested = w?;
@@ -633,13 +633,13 @@ impl Engine {
                     "assumed",
                     reason.clone(),
                     format!("{}.{}", def.id, rule.label),
-                );
+                )?;
             }
         }
         if missing_held.contains(&win)
             && let Some(v) = &rule.v
         {
-            self.note("missing", v.clone(), String::new());
+            self.note("missing", v.clone(), String::new())?;
         }
         Ok(())
     }
@@ -683,6 +683,18 @@ impl Engine {
         if m.scenarios.of(&row.version).is_some() {
             self.note_listed(&row.version, &def.id);
         }
+        // an assumed row, or a row of an assumed version, lists its reason as an input's row
+        // does (L §8.2, §5.3; pick P24)
+        if let Some(reason) = &row.assumed {
+            self.note("assumed", reason.clone(), figure.clone())?;
+        }
+        let version = m
+            .versions
+            .get(&row.version)
+            .ok_or_else(|| invariant("a given names a version load didn't build"))?;
+        if let Some(reason) = &version.assumed {
+            self.note("assumed", reason.clone(), figure.clone())?;
+        }
         self.read(Read::Row {
             version: row.version.clone(),
             sid: row.sid.clone(),
@@ -704,7 +716,23 @@ impl Engine {
             "given",
             format!("{}{keys_text} = {shown} ({})", def.id, row.version),
             String::new(),
-        );
+        )?;
+        // a row with a start and no end, read for a law date after the ask's cut, is held
+        // there, as an input's row is (L §8.2 `held`; P28)
+        if let Some(day) = ctx.law
+            && held(m, row, ctx.law, clocks)?
+        {
+            self.narrow_to_day(ctx.law);
+            self.note(
+                "held",
+                format!(
+                    "{figure} = {shown} ({}), read for {}",
+                    row.version,
+                    day.text()
+                ),
+                String::new(),
+            )?;
+        }
         if traced.is_some() {
             self.trace_value(traced, &Ok(value.clone()));
             let line = format!("given {}{keys_text} (version {})", def.id, row.version);

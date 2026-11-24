@@ -10,9 +10,10 @@
 pub const HELD: &str = include_str!("../../held.tsv");
 
 /// The targets a row may name: the gating ones, M1's vector stores (issue #108), whose
-/// targets gate from M1's marker, M2's (issue #167), whose targets gate from M2's, and M3's
-/// (issue #226), whose targets gate from M3's.
-pub const TARGETS: [&str; 22] = [
+/// targets gate from M1's marker, M2's (issue #167), whose targets gate from M2's, M3's
+/// (issue #226), whose targets gate from M3's, and M4's (issue #252), whose targets gate from
+/// M4's.
+pub const TARGETS: [&str; 26] = [
     "s_kernel",
     "m0_codes",
     "m0_format",
@@ -35,6 +36,10 @@ pub const TARGETS: [&str; 22] = [
     "m3_changes",
     "m3_run",
     "m3_fixes",
+    "m4_checks",
+    "m4_constructs",
+    "m4_items",
+    "m4_fixes",
 ];
 
 /// One held vector.
@@ -94,6 +99,7 @@ mod tests {
     use crate::m1::VECTORS as M1_VECTORS;
     use crate::m2::VECTORS as M2_VECTORS;
     use crate::m3::{CHECK, RUNS, SPEC, check_vectors};
+    use crate::m4::{SPEC as M4_SPEC, VECTORS as M4_VECTORS};
     use std::collections::BTreeSet;
 
     /// Every row reads, names its id once, and names a vector its target's store holds, so a
@@ -172,6 +178,13 @@ mod tests {
             .chain(check_vectors(SPEC).expect("m3 spec"))
             .map(|v| v.id)
             .collect();
+        // M4's spec answers are held too where a later wording changes them (P26), as M3's are
+        let m4: BTreeSet<String> = vectors(M4_VECTORS)
+            .expect("m4")
+            .into_iter()
+            .chain(vectors(M4_SPEC).expect("m4 spec"))
+            .map(|v| v.id)
+            .collect();
         for h in &rs {
             let store = match h.target.as_str() {
                 "s_kernel" => &kernel,
@@ -186,6 +199,7 @@ mod tests {
                 "m2_codes" => &m2_codes,
                 "m3_check" => &m3_check,
                 "m3_changes" | "m3_run" | "m3_fixes" => &m3_runs,
+                "m4_checks" | "m4_constructs" | "m4_items" | "m4_fixes" => &m4,
                 _ => &cases,
             };
             assert!(

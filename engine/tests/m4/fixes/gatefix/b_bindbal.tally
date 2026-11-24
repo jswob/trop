@@ -1,0 +1,23 @@
+model bb
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+place kasa: accounts PLN lives 2026-01-01..
+
+input no: bool
+input d0: date
+
+ask q1: sum(bal(p, d0) for p in accounts on d0 where no)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  no = false "s"
+  d0 = 2026-03-01 "s"

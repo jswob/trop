@@ -1,0 +1,47 @@
+model h1
+  tally 2
+  on 2026-06-10
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+axis rd
+  r1 "one"
+  r2 "two"
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input amt_b: money PLN
+input w: date
+input wh: date
+input sp: month
+
+def ra: money PLN
+  rule one = amt when rd == r1
+  rule two = amt_b when rd == r2
+move dh: transfers
+  on wh
+  leg cash from world to konto amount ra
+
+def fl: money PLN = flows(dh, sp .. sp)
+def cw: int = count(t in transfers over sp .. sp where t.cash.amount > amt)
+def sm: money PLN = sum(t.cash.amount for t in transfers over sp .. sp)
+
+ask e_fl: explain fl with rd = r2
+ask e_cw: explain cw with rd = r1
+ask e_sm: explain sm
+ask e_flk: explain fl with rd = r2, wh = 2026-04-01
+ask v_all: fl, cw, sm with rd = r2
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  amt_b = 70.00 PLN "s"
+  w = 2026-04-30 "s"
+  wh = window(2026-04-29, 2026-05-02) "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"

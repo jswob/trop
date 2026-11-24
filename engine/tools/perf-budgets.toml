@@ -19,6 +19,10 @@
 #     "test:<target> <name>…"  T's runner tests that hold the row's law (P8-9); they pass or
 #                    fail, never timed: check's `gating` step runs them from their
 #                    milestone's marker (R-77), and perf only names them
+#     "load:<row> [<run>…]"  the runs of T's run list engine/tests/m4/load/runs.tsv whose row
+#                    is <row> (or the named ones), each once, cold, a budget each: the row is
+#                    judged by its slowest run's wall and largest peak, each output by the
+#                    list's sha256 where it holds one (P8-L2, P8-L10; pick P5 (a) on #252)
 #     "waits: ..."   nothing runs it yet; the text says what it waits for
 #   wall_s, footprint_mb, workers: the Mac's budget (absent: the row sets none)
 #   less: a micro row's criterion bench id whose median is subtracted from its own (P8-M4:
@@ -298,6 +302,24 @@ recipe = "check:I:X:replay_september@b_r1"
 counts = { days_stepped = 1152 }
 blocks = "pr"
 
+# Fence F7, the narrow reads (walk/narrow.rs, M4's group G6c; P8-L10; the user's U1 and pick
+# P17 on #252, 2026-11-23): a read of `o.fulfils` or of a move's `flows` over a span at a past
+# booking cut evaluates the instance or the span it names, not the move's whole list; its twin
+# is the whole list (Plans::Whole, refcore's find_inst). Its benchmark is P8-L10 through
+# tools/perf (R-91). This count row is c1_r2 at 1 worker, so a change that brings the whole list
+# back at every past cut fails a PR. Fixed 2026-11-23 (issue #252, after G6c's widening and
+# its last fix, 8683e4f6): the builder's final `perf counts F7-c1r2`, 188 841 def misses
+# (confirmed by the rules step on that tree; days stepped 6 918, walks shared 4 290, reported),
+# x 1.2 as S set P8-14's, so 226 609. CI's counts step lists the row; the counted run takes
+# about 39 s on the reference Mac, inside perf's 90 s per run.
+[[row]]
+id = "F7-c1r2"
+group = "C"
+what = "the narrow reads' counts on P8-L10's c1_r2 run (its six asks), 1 worker"
+recipe = "load:P8-L10 c1_r2"
+counts = { def_misses = 226609 }
+blocks = "pr"
+
 # 8.3 Group L: the load rows at full size; a Monte Carlo row's wall is its deterministic part
 [[row]]
 id = "P8-L1"
@@ -312,7 +334,7 @@ blocks = "tag"
 id = "P8-L2"
 group = "L"
 what = "household D, D-11's zero-volatility pair to the dry year"
-recipe = "waits: T's load runner (load.tsv L:2)"
+recipe = "load:P8-L2"
 wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"
@@ -371,11 +393,17 @@ wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"
 
+# P8-L10 at M4 (the user's U2, 2026-11-23, issue #252: "Try the 3 fixes, then decide", and
+# after G6c's widening the stage runs still missed): M4's gate times `c1_r2`, the one P8-L10 run
+# in engine/tests/m4/load/runs.tsv, against the budget below. The 17 stage runs (b1 .. c7) moved
+# to engine/tests/m4/load/stages.tsv for a later milestone, with their curve and profile on the
+# follow-up issue; the `load:` recipe doesn't read that file. `v5_r2` stays not run (pick P5).
+# No budget number changes.
 [[row]]
 id = "P8-L10"
 group = "L"
 what = "the amendments household's long-horizon walk cells, c1_r2, v5_r2"
-recipe = "waits: T's load runner (load.tsv L:10)"
+recipe = "load:P8-L10"
 wall_s = 10.0
 footprint_mb = 4096
 blocks = "tag"

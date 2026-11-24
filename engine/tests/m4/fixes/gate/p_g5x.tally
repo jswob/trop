@@ -1,0 +1,145 @@
+model g5
+  tally 2
+  on 2026-06-20
+  start 2026-01-01
+  end 2026-08-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+
+axis rmode
+  half-up "A"
+  down "B"
+
+kind exchanges: event certain
+  leg eur: EUR
+  leg pln: PLN
+
+index month = month 2026-01..2026-08
+index cs = [pl, ae]
+
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place konto_eur: accounts EUR lives 2026-01-01..
+place kantor_eur: outside lives 1900-01-01..
+place kantor_pln: outside lives 1900-01-01..
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+input amt[m in month]: money EUR
+input fx[m in month]: num PLN/EUR
+input dom: int
+input cal[c in cs]: calendar
+input home[m in month]: key cs
+input share: num
+input top_dom: int
+input n1: int
+
+def pln_of[m in month]: money PLN = round(amt[m] * fx[m], minor(PLN), rmode)
+
+move swap[m in month]: exchanges
+  on schedule(m, dom, modified_following, cal[home[m]])
+  at start_of(m)
+  leg eur from konto_eur to kantor_eur amount amt[m]
+  leg pln from kantor_pln to konto amount pln_of[m]
+
+move top[m in month]: transfers
+  on add_business(day_of(m, top_dom), n1, cal[home[m]])
+  at start_of(m)
+  leg cash from pot to shop amount round(flows(swap.pln, m) * share, minor(PLN), rmode)
+
+move zed[m in month]: transfers
+  on last_business(m, n1, cal[pl])
+  at start_of(m)
+  leg cash from pot to shop amount flows(top, m .. m) + flows(swap.pln, m - n1 .. m - n1)
+
+def zf[m in month]: money PLN = flows(zed, m)
+def ef[m in month]: money EUR = flows(swap.eur, m)
+
+ask q1: flows(top, m) for m in month
+ask q2: zf[m] for m in [2026-02, 2026-03, 2026-04, 2026-05, 2026-06]
+ask q3: bal(pot, 2026-06-19), bal(konto, 2026-06-19), bal(konto_eur, 2026-06-19)
+ask q4: swap[m].day, top[m].day, zed[m].day for m in [2026-01, 2026-02, 2026-03, 2026-05]
+ask q5: bal(pot, 2026-06-19) with rmode = down
+ask q6: bal(pot, 2026-06-19) as known 2026-03-10
+ask q7: zf[2026-03], (zf[2026-03] as if {known 2026-03-10}), (zf[2026-03] as if {home[2026-03] = ae})
+ask q8: explain zf[2026-03]
+ask q9: inputs-of zf[2026-03]
+ask q10: count(t in exchanges over 2026-01-01 .. 2026-06-30), sum(t.pln.amount for t in exchanges over 2026-01-01 .. 2026-06-30)
+ask q11: ef[m] for m in [2026-01, 2026-02, 2026-03]
+ask q12: explain swap[2026-02]
+ask q13: bal(pot, 2026-08-31), bal(konto, 2026-08-31)
+
+ask xx0: explain top[2026-04]
+ask ii0: inputs-of top[2026-04]
+ask xx1: explain zed[2026-05]
+ask ii1: inputs-of zed[2026-05]
+ask xx2: explain zed[2026-02]
+ask ii2: inputs-of zed[2026-02]
+ask xx3: explain ef[2026-01]
+ask ii3: inputs-of ef[2026-01]
+ask xx4: explain pln_of[2026-04]
+ask ii4: inputs-of pln_of[2026-04]
+ask xx5: explain swap[2026-04]
+ask ii5: inputs-of swap[2026-04]
+ask xx6: explain top[2026-05]
+ask ii6: inputs-of top[2026-05]
+ask xx7: explain zf[2026-06]
+ask ii7: inputs-of zf[2026-06]
+ask xx8: explain zf[2026-02]
+ask ii8: inputs-of zf[2026-02]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dom = 29 "s"
+  top_dom = 27 "s"
+  n1 = 1 "s"
+  share = 0.1 "s"
+  amt = 100.05 EUR "s"
+  home = pl "s"
+  opening[konto] = 1000 PLN at 2026-01-01 start "s"
+  opening[pot] = 10000 PLN at 2026-01-01 start "s"
+  opening[konto_eur] = 5000 EUR at 2026-01-01 start "s"
+
+version c1
+  cite s
+  governs 2026
+  known 2026-01-01
+  cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01])
+  cal[ae] = calendar(weekends [fri, sat], yearly [12-02])
+
+version c2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace cal[pl] = calendar(weekends [sat, sun], yearly [01-01, 05-01], added [2026-01-29, 2026-03-30, 2026-05-29])
+
+version r1
+  cite s
+  governs 2026
+  known 2026-01-01
+  fx[2026-01] = 4.30 "s"
+  fx[2026-02] = 4.3333 "s"
+  fx[2026-03] = 4.35 "s"
+  fx[2026-04] = 4.50 "s"
+  fx[2026-05] = 4.55 "s"
+  fx[2026-06] = 4.60 "s"
+  fx[2026-07] = 4.65 "s"
+  fx[2026-08] = 4.70 "s"
+
+version r2
+  cite s
+  governs 2026
+  known 2026-03-15
+  replace fx[2026-02] = 4.9999 "corrected later"
+  replace fx[2026-04] = 4.0101 "corrected before its month"
+
+version st
+  cite s
+  governs 2026-04
+  known 2026-05-02
+  covers konto
+  bank[r1] = (on: 2026-04-28, kind: exchanges, leg eur from konto_eur to kantor_eur amount 100.05 EUR, leg pln from kantor_pln to konto amount 401.00 PLN, fulfils: swap[2026-04]) "april's exchange"

@@ -1,0 +1,50 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input w: date
+input w2: date
+input cutoff: date
+input x: money PLN
+input xs[i in ks]: money PLN
+input ds[i in ks]: date
+input q: bool
+index ks = [k1, k2, k3]
+
+def k_and: bool = w < cutoff and x > x
+def k_or: bool = w < cutoff or x == x
+def k_and_hole: bool = w < cutoff and x == x
+def k_or_hole: bool = x > x or w < cutoff
+def k_if: money PLN = if w < cutoff then x else x
+def k_self: bool = w == w and w2 >= w2
+def k_two: bool = w <= w2
+def all_f: bool = all(ds[i] < cutoff for i in ks)
+def any_t: bool = any(ds[i] < cutoff for i in ks)
+def cnt: int = count(i in ks where ds[i] < cutoff)
+def sm: money PLN = sum(xs[i] for i in ks where ds[i] < cutoff)
+def am: key ks = argmin(ds[i] for i in ks) ties by pos(i)
+def mn: date = min(ds[i] for i in ks)
+
+ask a: k_and, k_or, k_and_hole, k_or_hole, k_if, k_self, k_two
+ask b: all_f, any_t, cnt, sm
+ask c: am, mn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w = window(2026-05-20, 2026-06-10) "s"
+  w2 = window(2026-06-05, 2026-06-20) "s"
+  cutoff = 2026-06-01 "s"
+  x = 5 PLN "s"
+  xs = 1 PLN "s"
+  ds[k1] = 2026-03-01 "s"
+  ds[k2] = window(2026-05-20, 2026-06-10) "s"
+  ds[k3] = 2026-07-01 "s"
+  q = true "s"

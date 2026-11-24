@@ -23,7 +23,7 @@ use super::instance::{
 use super::legs::leg_unit_static;
 use super::tuples::Tuple;
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Ctx, Engine, Env, Snap, one_day, thing_seen};
+use crate::eval::{Collected, Ctx, Engine, Env, Snap, TracePart, one_day, thing_seen};
 use crate::model::{
     Domain, KeyVal, MoveInfo, Node, NodeKind, Number, Reality, Value, World, currency_id,
     money_num, num_money,
@@ -32,6 +32,18 @@ use crate::num::Num;
 use crate::syntax::{Certainty, Expr, Stop};
 use crate::time::{Day, PeriodKind};
 use std::rc::Rc;
+
+/// Who reads a move's list: a reader of its instances (their flows, amounts and statuses,
+/// the walk), which takes what judging their links meets the first time the list is read; or
+/// an existence read (`o.fulfils`), which takes only the reads that decide that an instance
+/// exists, none of the links' (L §5.19 Links, §8.2; P30, P40).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Reader {
+    /// A reader of the instances.
+    Instances,
+    /// An existence read.
+    Existence,
+}
 
 impl Engine {
     /// A move's instances at cut `cut`, each dated at the cut and evaluated at its booking
@@ -49,10 +61,76 @@ impl Engine {
         mv: &MoveInfo,
         cut: Day,
     ) -> Result<Rc<Vec<Inst>>, Stop> {
+        self.list_read(m, mv, cut, Reader::Instances)
+    }
+
+    /// A move's instances at cut `cut` for an existence read (`o.fulfils`): the list
+    /// [`Engine::move_instances`] makes, but what judging its links meets is left to the list's
+    /// next reader of its instances, since an existence read takes only the reads that decide
+    /// that an instance exists (refcore's `find_inst`, which reads no status). L §5.19 Links,
+    /// §8.2; E §4.1 step 3, §3.2 (P30, P40).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    pub(crate) fn existence_list(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
+        self.list_read(m, mv, cut, Reader::Existence)
+    }
+
+    /// A move's list at cut `cut` as `reader` reads it: the kept list, a reader of its
+    /// instances taking what judging its links met where an existence read made it; else the
+    /// list made, what it booked kept with it or, where it stops, taken back, so every later
+    /// read of it meets the same stop whatever was read before. E §4.1, §9 item 5 (P40).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn list_read(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+        reader: Reader,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
         let key = (mv.id.clone(), cut);
-        if let Some(hit) = self.plans.get(&key) {
-            return Ok(Rc::clone(hit));
+        if let Some(hit) = self.plans.get(&key).map(Rc::clone) {
+            if reader == Reader::Instances
+                && let Some(met) = self.links_unread.remove(&key)
+            {
+                self.absorb(&met);
+            }
+            return Ok(hit);
         }
+        let mark = self.booked_open.len();
+        let made = self.make_list(m, mv, cut, reader);
+        if self.plans.contains_key(&key) {
+            self.booked_kept(mark);
+        } else {
+            self.booked_back(mark);
+        }
+        made
+    }
+
+    /// The list [`Engine::list_read`] makes: the instances, kept, then their statuses, what
+    /// judging their links meets the reader's, or the list's next reader's for an existence
+    /// read; then the hole bookings a later version answers. E §4.1, §5 steps 0–1.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn make_list(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+        reader: Reader,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
+        let key = (mv.id.clone(), cut);
         if self.plan_active.contains(&key) {
             self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
@@ -71,9 +149,17 @@ impl Engine {
         let (mut out, back) = made?;
         // refcore computes a status when it is first read, after the instances are kept
         self.plans.insert(key.clone(), Rc::new(out.clone()));
+        // the links a narrow read judged at this cut went to its first reader (fence F7)
+        let judged = self.links_judged(&mv.id, cut);
         let mut due = false;
         for inst in &mut out {
-            inst.status = self.status(m, mv, inst, cut)?;
+            self.push();
+            let status = self.status(m, mv, inst, cut);
+            let met = self.pop_alone();
+            if !judged {
+                self.links_met(&key, &met, reader);
+            }
+            inst.status = status?;
             due = due || crate::book::hole_booked_before(inst, cut);
         }
         if let Some(back) = &back {
@@ -140,6 +226,8 @@ impl Engine {
                 self.trace_move_to(since, *mark, &mut done);
             }
         }
+        // each answer is its instance's part of the pass (P20)
+        self.trace_marks_moved(&done);
         let closed = self.trace_plan_close();
         self.holder = outer;
         made?;
@@ -174,10 +262,33 @@ impl Engine {
     ) -> Result<(Vec<Inst>, Option<crate::eval::Walked>), Stop> {
         let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
         self.trace_plan_open();
+        let parts = self.trace_marks_open();
         let made = self.make_instances_held(m, mv, (cut, None), Some(marks));
+        self.trace_marks_close((&mv.id, cut), parts);
         let back = self.trace_plan_close();
         self.holder = outer;
         Ok((made?, Some(back?)))
+    }
+
+    /// A decision's instances computed again while a read that counts its runs is traced,
+    /// kept nowhere: the rows and cells its bindings and days read print under the read, as
+    /// a plan's do where a read computes its instances first; its `when` and legs are its
+    /// runs' (`trace_runs`). E §10, §4.1; L §5.18 Explanation order.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::make_instances`].
+    pub(crate) fn trace_days(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<(), Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.trace_plan_open();
+        let parts = self.trace_marks_open();
+        let made = self.make_instances_held(m, mv, (cut, None), None);
+        self.trace_marks_close((&mv.id, cut), parts);
+        let closed = self.trace_plan_close();
+        self.holder = outer;
+        made?;
+        closed?;
+        Ok(())
     }
 
     /// A move's instances for the walk being planned: all of them, or, for a walk up to a
@@ -197,11 +308,37 @@ impl Engine {
         let Some(upto) = self.list_upto(mv, cut) else {
             return self.move_instances(m, mv, cut);
         };
-        let active = (mv.id.clone(), cut);
         let key = (mv.id.clone(), cut, upto);
         if let Some(hit) = self.prefixes.plans.get(&key) {
             return Ok(Rc::clone(hit));
         }
+        // what it books stays with it, or is taken back, as a whole list's (P40)
+        let mark = self.booked_open.len();
+        let made = self.make_prefix(m, mv, cut, upto);
+        if self.prefixes.plans.contains_key(&key) {
+            self.booked_kept(mark);
+        } else {
+            self.booked_back(mark);
+        }
+        made
+    }
+
+    /// The list [`Engine::plan_list`] makes for a walk up to day `upto`: its instances dated
+    /// on or before it, kept, then their statuses and the hole bookings a later version
+    /// answers (refcore's `plan_list`). E §4.1, §3.2, §5 step 1.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn make_prefix(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        cut: Day,
+        upto: Day,
+    ) -> Result<Rc<Vec<Inst>>, Stop> {
+        let active = (mv.id.clone(), cut);
+        let key = (mv.id.clone(), cut, upto);
         if self.plan_active.contains(&active) {
             self.narrow_open_to_days();
             return Err(Stop::Refused(Refusal::new(
@@ -337,44 +474,75 @@ impl Engine {
         let tctx = self.timeline_ctx(None, cut);
         let mut out = Vec::new();
         for tuple in self.move_tuples(m, mv, tctx)? {
-            if let Some(err) = tuple.refused.clone() {
-                out.extend(self.refused_tuple(m, mv, (tuple, upto), err, tctx)?);
-                continue;
-            }
-            if let Some(hole) = tuple.domain_hole {
-                let mut inst = Inst::new(mv, tuple.keys, tuple.env);
-                inst.day = Some(Dated::Hole(hole.clone()));
-                inst.exists = Exists::Unknown(hole);
-                inst.coll = tuple.coll;
-                out.push(inst);
-                continue;
-            }
-            let seed = Seed {
-                env: tuple.env,
-                keys: tuple.keys,
-                exists: tuple.exists,
-                at_cut: None,
-                upto,
-            };
-            if let Some(mut inst) = self.eval_inst(m, mv, &seed, tctx)? {
-                if !mv.decision
-                    && inst.err.is_none()
-                    && let Some(booking) = inst.cut
-                {
-                    self.check_booked(&inst, (booking, cut), upto)?;
-                }
-                inst.coll.merge(&tuple.coll);
-                if let (Some(marks), Some(mark)) = (marks.as_deref_mut(), self.trace_snap()) {
-                    marks.push((inst.id.clone(), mark));
-                }
-                out.push(inst);
-            }
+            let made = self.tuple_instance(m, mv, (tuple, cut, upto), tctx, marks.as_deref_mut());
+            out.extend(made?);
         }
         for inst in &mut out {
             inst.order = inst_order(m, mv, inst);
         }
         out.sort_by(|a, b| a.order.cmp(&b.order));
         Ok(out)
+    }
+
+    /// The instance of one binding tuple of a list at cut `cut`, as the plan pass makes it: a
+    /// refused tuple's refused instance, a hole tuple's hole instance, else its day at the cut
+    /// and its body at its booking cut, its booked amount checked; none where its day is
+    /// `never` or `none` (refcore's `insts_of_tuples`, its loop). E §4.1 steps 1–2, §5 step 1.
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::refused_tuple`] and [`Engine::eval_inst`]; `ENGINE-INVARIANT` for a booked
+    /// amount that changed.
+    pub(super) fn tuple_instance(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (tuple, cut, upto): (Tuple, Day, Option<Day>),
+        tctx: Ctx,
+        marks: Option<&mut Vec<(String, Snap)>>,
+    ) -> Result<Option<Inst>, Stop> {
+        if let Some(err) = tuple.refused.clone() {
+            return self.refused_tuple(m, mv, (tuple, upto), err, tctx);
+        }
+        if let Some(hole) = tuple.domain_hole {
+            let mut inst = Inst::new(mv, tuple.keys, tuple.env);
+            inst.day = Some(Dated::Hole(hole.clone()));
+            inst.exists = Exists::Unknown(hole);
+            inst.coll = tuple.coll;
+            return Ok(Some(inst));
+        }
+        let seed = Seed {
+            env: tuple.env,
+            keys: tuple.keys,
+            exists: tuple.exists,
+            at_cut: None,
+            upto,
+        };
+        // where its reads begin and end, while a read traces the pass (P20)
+        let id = self
+            .trace_marking()
+            .then(|| crate::book::inst_id(&mv.id, &seed.keys));
+        if let Some(id) = &id {
+            self.trace_part(id, TracePart::Begin);
+        }
+        let made = self.eval_inst(m, mv, &seed, tctx)?;
+        if let Some(id) = &id {
+            self.trace_part(id, TracePart::End);
+        }
+        let Some(mut inst) = made else {
+            return Ok(None);
+        };
+        if !mv.decision
+            && inst.err.is_none()
+            && let Some(booking) = inst.cut
+        {
+            self.check_booked(&inst, (booking, cut), upto)?;
+        }
+        inst.coll.merge(&tuple.coll);
+        if let (Some(marks), Some(mark)) = (marks, self.trace_snap()) {
+            marks.push((inst.id.clone(), mark));
+        }
+        Ok(Some(inst))
     }
 
     /// The instance of a tuple whose last key's `where` is refused: a refused instance, its
@@ -386,7 +554,7 @@ impl Engine {
     /// # Errors
     ///
     /// The refusal, for a tuple whose later keys are unbound; a load refusal met at run.
-    fn refused_tuple(
+    pub(super) fn refused_tuple(
         &mut self,
         m: &Reality,
         mv: &MoveInfo,
@@ -433,6 +601,7 @@ impl Engine {
                 legs,
                 cut,
             };
+            self.booked_open.push(key.clone());
             self.booked.insert(key, first);
             return Ok(());
         };
@@ -447,6 +616,45 @@ impl Engine {
             old.cut.text(),
             cut.text()
         )))
+    }
+
+    /// The amounts a list or an instance booked first since `mark`, once it is kept: they stay
+    /// booked with it. E §9 item 5 (P40).
+    pub(super) fn booked_kept(&mut self, mark: usize) {
+        self.booked_open.truncate(mark);
+    }
+
+    /// The amounts a list booked first since `mark`, once it stopped: taken back, so nothing
+    /// booked from a list that stopped stays in the walk, and a later read of the list, in
+    /// this ask or a later one, makes it from the same bookings and meets the same stop
+    /// whatever was read before. E §9 item 5, §4.1 (P40).
+    fn booked_back(&mut self, mark: usize) {
+        while self.booked_open.len() > mark
+            && let Some(key) = self.booked_open.pop()
+        {
+            self.booked.remove(&key);
+        }
+    }
+
+    /// What judging one instance's links met, `met`, given to the reader of list `key`: a
+    /// reader of the instances takes it; an existence read leaves it to the list's next one
+    /// (L §5.19 Links, §8.2; E §4.1 step 3; P30, P40).
+    fn links_met(&mut self, key: &(String, Day), met: &Collected, reader: Reader) {
+        match reader {
+            Reader::Instances => self.absorb(met),
+            Reader::Existence => self.links_left(key, met),
+        }
+    }
+
+    /// What judging one instance's links met, `met`, kept for list `key`'s next reader of its
+    /// instances, with what the list's other instances' links met (L §5.19 Links, §8.2; P40).
+    fn links_left(&mut self, key: &(String, Day), met: &Collected) {
+        match self.links_unread.get_mut(key) {
+            Some(kept) => kept.merge(met),
+            None => {
+                self.links_unread.insert(key.clone(), met.clone());
+            }
+        }
     }
 
     /// One instance: its day at the cut K, then, for a plan, its body at its booking cut
@@ -719,6 +927,9 @@ impl Engine {
         let day_coll = self.pop_alone();
         self.absorb(&day_coll);
         inst.day_coll = day_coll;
+        if self.trace_marking() {
+            self.trace_part(&inst.id, TracePart::Day);
+        }
         let v = match read? {
             Err(h) => {
                 inst.day = Some(Dated::Hole(h.clone()));
@@ -730,35 +941,7 @@ impl Engine {
         if matches!(v, Value::Never | Value::None) {
             return Ok(false);
         }
-        // a window written in its own `on`, which no cell holds, is named by its movement
-        // (L §8.2 `unknown day:`, "where no cell does, its movement"; R21 on #241)
-        let v = crate::eval::held_by(v, (format!("move {}", inst.id), &inst.id));
-        let day = match v {
-            Value::Hole(h) => Dated::Hole(h),
-            // a window: a hole day, `HOLE-IMPRECISE` for the day of the instance, as any
-            // movement's whose day is a hole from there (L §4.4, §5.14; tally 2.3 S6)
-            Value::Window(_) => match one_day(m, &v, &format!("the day of {}", inst.id))? {
-                Ok(d) => Dated::Day(d),
-                Err(h) => Dated::Hole(h),
-            },
-            Value::Number(_)
-            | Value::Money(_)
-            | Value::Bool(_)
-            | Value::Day(_)
-            | Value::Period(_)
-            | Value::MonthDay(..)
-            | Value::Key(_)
-            | Value::Text(_)
-            | Value::Code(_)
-            | Value::Record(_)
-            | Value::List(_)
-            | Value::Calendar(_)
-            | Value::None
-            | Value::Never
-            | Value::Word(_)
-            | Value::Mv(_)
-            | Value::OutKey { .. } => Dated::Day(date_of(&v)?),
-        };
+        let day = day_dated(m, v, &inst.id)?;
         inst.day = Some(day.clone());
         inst.exists = seed.exists.clone();
         if mv.decision {
@@ -903,6 +1086,46 @@ pub fn qty_value(m: &Reality, q: &Num, unit: &str) -> Result<Value, Stop> {
     }
     let u = crate::model::Unit::make(vec![(unit.to_owned(), 1)]).map_err(num_err)?;
     Ok(Value::Number(Number::plain(q.clone(), u)))
+}
+
+/// The day of instance `id` that its `on` gives as `v`, neither `never` nor `none`: a day, a
+/// hole, or a window's day, a hole where it is imprecise (refcore's `eval_inst`, its day).
+/// L §4.4, §5.14, E §4.1 step 2.
+///
+/// # Errors
+///
+/// A load refusal met at run, for a value that isn't a day.
+pub(super) fn day_dated(m: &Reality, v: Value, id: &str) -> Result<Dated, Stop> {
+    // a window written in its own `on`, which no cell holds, is named by its movement
+    // (L §8.2 `unknown day:`, "where no cell does, its movement"; R21 on #241)
+    let v = crate::eval::held_by(v, (format!("move {id}"), id));
+    Ok(match v {
+        Value::Hole(h) => Dated::Hole(h),
+        // a window: a hole day, `HOLE-IMPRECISE` for the day of the instance, as any
+        // movement's whose day is a hole from there (L §4.4, §5.14; tally 2.3 S6)
+        Value::Window(_) => match one_day(m, &v, &format!("the day of {id}"))? {
+            Ok(d) => Dated::Day(d),
+            Err(h) => Dated::Hole(h),
+        },
+        Value::Number(_)
+        | Value::Money(_)
+        | Value::Bool(_)
+        | Value::Day(_)
+        | Value::Period(_)
+        | Value::MonthDay(..)
+        | Value::Key(_)
+        | Value::Text(_)
+        | Value::Code(_)
+        | Value::Record(_)
+        | Value::List(_)
+        | Value::Tuple(_)
+        | Value::Calendar(_)
+        | Value::None
+        | Value::Never
+        | Value::Word(_)
+        | Value::Mv(_)
+        | Value::OutKey { .. } => Dated::Day(date_of(&v)?),
+    })
 }
 
 /// The day a value names: a day, or a day period's (refcore's `date_of`); a value that isn't

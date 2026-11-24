@@ -1,0 +1,25 @@
+model x1g
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+input gross: money PLN
+input rt: num %
+input want: num PLN
+
+def tax: money PLN = round(gross * rt, minor(PLN), half-up)
+def net: money PLN = gross - tax
+
+ask q: solve net == want for gross in [0 PLN, 10000 PLN] to 0.01 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  gross = 1 PLN "s"
+  rt = 19 "s"
+  want = 1000.005 "s"

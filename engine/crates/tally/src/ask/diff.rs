@@ -26,7 +26,7 @@ use super::answer::{item_text, tuple_key};
 use super::axes::{Axes, result_lines};
 use super::check::Printed;
 use super::register::{name_unknown_days, register_lines};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Item, world_named};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, Item, world_named};
 use crate::model::{Reality, Value};
 use crate::syntax::{Ask, Diff, Expr, Stop};
 use crate::walk::invariant;
@@ -222,6 +222,7 @@ pub(super) fn cells_lines(
     m: &Reality,
     (diff, head): (&Diff, &str),
     cells: &Cells,
+    entries: &mut Entries,
 ) -> Result<Vec<String>, Stop> {
     let mut results = Vec::with_capacity(cells.each.len());
     for (at, cell) in cells.each.iter().enumerate() {
@@ -231,7 +232,7 @@ pub(super) fn cells_lines(
         let combos = axes.combinations()?;
         // the ask's pins are in each cell's register already
         let pins = Collected::default();
-        return result_lines((axes, &combos), head, &results, (cells.ctx, &pins));
+        return result_lines((axes, &combos), head, &results, (cells.ctx, &pins, entries));
     }
     let [(_, only)] = results.as_slice() else {
         return Err(invariant(
@@ -240,8 +241,8 @@ pub(super) fn cells_lines(
     };
     let mut out = only.lines(head);
     let mut met = only.met.clone();
-    name_unknown_days(&mut met, &only.unknown);
-    let register = register_lines(&met, cells.ctx)?;
+    name_unknown_days((&mut met, entries), &only.unknown)?;
+    let register = register_lines((&met, entries), cells.ctx)?;
     out.extend(register.into_iter().map(|l| format!("  {l}")));
     Ok(out)
 }
@@ -336,11 +337,11 @@ fn side(
     engine: &mut Engine,
     (env, ctx, met): (&Env, Ctx, &mut Collected),
 ) -> Result<Side, Stop> {
-    met.entries.insert(Entry {
+    met.note(engine.entry_id(Entry {
         word: "world",
         text: world.to_owned(),
         figure: String::new(),
-    });
+    })?);
     let inside = ctx.in_world(world_named(m, world)?);
     engine.enter_timeline(m, inside)?;
     let lines = side_lines(m, diff, engine, (env, inside, met));

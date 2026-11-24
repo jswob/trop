@@ -1,0 +1,50 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input a: num
+input z: num
+input h: bool
+input stp0: money PLN
+input stpn: money PLN
+input base: num PLN
+input va: money PLN
+input vb: money PLN
+def x1: money PLN at reader
+  rule top beats low = va
+  rule low = vb when a / z > a
+def x2: money PLN at reader
+  rule top = va when h
+  rule low = vb when a / z > a
+def x3: money PLN at reader
+  rule top beats low = round(base / z, stp0, half-up)
+  rule low = vb
+def x4: money PLN at reader
+  rule hi beats lo = va when h
+  rule lo = round(base / z, minor(PLN), half-up)
+def r0: money PLN = round(base, stp0, half-up)
+def rn: money PLN = round(base, stpn, half-up)
+ask a1: x1 law 2026-01-01
+ask a2: x2 law 2026-01-01
+ask a3: x3 law 2026-01-01
+ask a4: x4 law 2026-01-01
+ask b: r0
+ask c: rn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 1 "s"
+  z = 0 "s"
+  h = ?"applies?" "s"
+  stp0 = 0 PLN "s"
+  stpn = -0.05 PLN "s"
+  base = 12.25 PLN "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"

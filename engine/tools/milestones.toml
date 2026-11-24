@@ -20,12 +20,15 @@
 # words and the M2 brief): it joins in build/m2's commit before its gate, all its tests green;
 # the gate's fixes may follow it on the branch. M3 likewise (issue #226, 2026-11-19, under those
 # words and the M3 brief): it joins in build/m3's commit before its gate, all 36 tests green;
-# the gate's fixes may follow it on the branch.
+# the gate's fixes may follow it on the branch. M4 likewise (issue #252, 2026-11-23, under those
+# words and the M4 brief): it joins in the rules step's last commit before its gate, 47 of its 49
+# tests green there; the two red (m4_fixes_p23, m4_fixes_traced) are G3's last turn's, green or
+# held before the gate.
 
 # BUILD-ORDER's milestones, in build order (as engine/tests/map/placement.py's ORDER)
 milestones = ["S", "M0", "M1", "M2", "M3", "M4", "M5a", "M5b", "M5c", "M6", "M7", "M8", "M9"]
 # the milestones whose tests gate
-gating = ["S", "M0", "M1", "M2", "M3"]
+gating = ["S", "M0", "M1", "M2", "M3", "M4"]
 # the gating targets a mutation run leaves out, from its build as well as its run (R-84,
 # R-88; the user, 2026-11-06, "Yes, approve it, add it to the 2.1.6 brief"): M0's load
 # tests exercise load, not the kernel, and took about 55 % of each shard's time; of run
@@ -35,8 +38,10 @@ mutants_leave_out = ["m0_load"]
 # The fences' equivalence tests (R-130), catchers of a local mutation batch only, with
 # `mutants-local --fences` (R-88; pick P55, issue #108, 2026-11-09): once a fence answers T's
 # reads, only its equivalence test reaches its plain twin. Not the mutants shards' or their
-# baseline's: gate 8 counts T's tests only (R-84). Each entry names a package and a test
-# target (every test in it) or a module of its lib (the tests under it).
+# baseline's: gate 8 counts T's tests only (R-84), and a runner target listed here (F7's
+# m4_narrow, which runs by default) is left out of the runner's defaults in gate 8's
+# selection (`tools/milestones args`; M4's gate, issue #252). Each entry names a package and
+# a test target (every test in it) or a module of its lib (the tests under it).
 fence_catchers = [
   # F5 (walk/lows.rs): the tree against the projection's walk on T's corpora, byte for byte
   { package = "tally-cli", test = "walk_oracle" },
@@ -44,6 +49,12 @@ fence_catchers = [
   # F6 (walk/fork.rs): the walk read again from its kept checkpoint against the fresh walk
   { package = "tally-cli", test = "fork_oracle" },
   { package = "tally", lib = "walk::fork::tests::" },
+  # F7 (walk/narrow.rs, M4's G6c; P8-L10): the narrow read against the whole list
+  # (Plans::Narrow against Plans::Whole), T's m4_narrow on every `run` store and corpus, F7's
+  # realities, c1_r2 and P8-14 under both (pick P27 on #252: its one equivalence suite, no
+  # CLI narrow_oracle), and the module's own tests
+  { package = "tally-runner", test = "m4_narrow" },
+  { package = "tally", lib = "walk::narrow::tests::" },
 ]
 # The test targets that run by default which `check quick` leaves out and `check commit`
 # runs (R-82; the user's "I agree to chagnes 1,2 and 3", 2026-11-16, on the process study
@@ -54,7 +65,11 @@ quick_leaves_out = [
   { package = "tally-cli", test = "walk_oracle" },     # F5, the CLI's
   { package = "tally-cli", test = "fork_oracle" },     # F6, the CLI's
   { package = "tally-runner", test = "m2_forks" },     # F6 on every store and corpus, T's
+  { package = "tally-runner", test = "m4_narrow" },    # F7 on every store and corpus, T's (P27)
 ]
+# An entry here or in `fence_catchers` may say what it `waits` for (`waits = "…"`): a suite
+# named before its group writes it, left out until cargo metadata lists the target (here: and
+# runs it by default), then taken with no rules step between (M4's rules step, pick P17).
 # The gating targets' tests `check quick` runs too, each by a nextest filter that keeps every
 # other target's tests, while `check commit` runs the whole target as before (R-82; tally
 # 2.3's pick P12 on #247, 2026-11-22, under the user's standing rule of 2026-11-04): the pin

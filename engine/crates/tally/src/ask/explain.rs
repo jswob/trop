@@ -265,8 +265,8 @@ pub(super) fn inputs_line(
 /// The rows `met` read, one line each in their stable ids' order: `<sid> (source <s>
 /// "<title>"[, locator "<l>"])` (refcore's `row_line`). L §5.18, §3.7.
 fn row_lines(m: &Reality, met: &Collected) -> Result<Vec<String>, Stop> {
-    let mut out = Vec::with_capacity(met.rows.len());
-    for (sid, seen) in &met.rows {
+    let mut out = Vec::new();
+    for (sid, seen) in met.rows().into_iter().flatten() {
         let cite = &m
             .versions
             .get(&seen.version)
@@ -692,6 +692,18 @@ fn node_lines(
             ));
             // its balance form, rendered from the walk it read when it was read
             head.extend(node.lines.iter().map(|l| format!("{ind}    {l}")));
+            // a refused projection's: what the refused balance rests on (P31)
+            if !node.children.is_empty() {
+                let beside = depth
+                    .checked_add(2)
+                    .ok_or_else(|| invariant("a derivation's depth"))?;
+                let line = next_line(lines)?;
+                below.extend(
+                    node.children
+                        .iter()
+                        .map(|c| Step::Cause(at, *c, beside, line)),
+                );
+            }
         }
         TraceKind::BandRow => head.push(format!("{ind}[{no}] band row {}", node.label)),
         TraceKind::Def(law) => {

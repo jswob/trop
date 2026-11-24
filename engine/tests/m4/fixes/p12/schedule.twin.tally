@@ -1,0 +1,57 @@
+model p12_schedule
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input cal_h: calendar
+input cal_n: calendar
+input cal_ok: calendar
+input e_h: int
+input e_n: int
+input e_ok: int
+input mo_h: month
+input mo_n: month
+input mo_ok: month
+input roll_h: roll
+input roll_n: roll
+input roll_ok: roll
+
+ask h_mo: schedule(mo_h, e_ok, roll_ok, cal_ok)
+ask h_e: schedule(mo_ok, e_h, roll_ok, cal_ok)
+ask h_roll: schedule(mo_ok, e_ok, roll_h, cal_ok)
+ask h_cal: schedule(mo_ok, e_ok, roll_ok, cal_h)
+ask h_mo__h_e: schedule(mo_h, e_h, roll_ok, cal_ok)
+ask h_mo__n_e: schedule(mo_h, e_n, roll_ok, cal_ok)
+ask h_mo__n_roll: schedule(mo_h, e_ok, roll_n, cal_ok)
+ask h_mo__n_cal: schedule(mo_h, e_ok, roll_ok, cal_n)
+ask h_e__n_mo: schedule(mo_n, e_h, roll_ok, cal_ok)
+ask h_e__n_roll: schedule(mo_ok, e_h, roll_n, cal_ok)
+ask h_e__n_cal: schedule(mo_ok, e_h, roll_ok, cal_n)
+ask h_roll__n_mo: schedule(mo_n, e_ok, roll_h, cal_ok)
+ask h_roll__n_e: schedule(mo_ok, e_n, roll_h, cal_ok)
+ask h_roll__n_cal: schedule(mo_ok, e_ok, roll_h, cal_n)
+ask h_cal__n_mo: schedule(mo_n, e_ok, roll_ok, cal_h)
+ask h_cal__n_e: schedule(mo_ok, e_n, roll_ok, cal_h)
+ask h_cal__n_roll: schedule(mo_ok, e_ok, roll_n, cal_h)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cal_h = calendar(weekends [sat, sun], yearly [01-01]) "s"
+  cal_n = none "s"
+  cal_ok = calendar(weekends [sat, sun], yearly [01-01]) "s"
+  e_h = 15 "s"
+  e_n = none "s"
+  e_ok = 15 "s"
+  mo_h = 2026-03 "s"
+  mo_n = none "s"
+  mo_ok = 2026-03 "s"
+  roll_h = following "s"
+  roll_n = none "s"
+  roll_ok = following "s"

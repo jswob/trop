@@ -1,0 +1,23 @@
+model b1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+input a: key ks
+def da: key ks = a
+def dd: int = a - k1
+ask x1: a - k1 with a = k2
+ask x2: a - k1
+ask x3: dd with a = k2
+ask x4: check da == k1 with a = k2
+ask x5: check a == k1 with a = k3 - 1
+ask x6: check (a as if {a = k2}) == k1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"

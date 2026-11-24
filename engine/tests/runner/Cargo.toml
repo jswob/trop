@@ -239,3 +239,38 @@ test = false
 name = "m3_oracle"
 path = "milestone/m3_oracle.rs"
 test = false
+
+# M4: BUILD-ORDER § M4's 77 checks, refcore's whole output for each (m4/vectors.refcore;
+# MILESTONE-M4.md row 1), one test per builder group; `test = false` until M4 gates.
+[[test]]
+name = "m4_checks"
+path = "milestone/m4_checks.rs"
+test = false
+
+# M4: the corners of M4's constructs, invented texts in m4/constructs/ (m4/vectors.refcore;
+# MILESTONE-M4.md row 2), one test per construct; `test = false` until M4 gates.
+[[test]]
+name = "m4_constructs"
+path = "milestone/m4_constructs.rs"
+test = false
+
+# M4: the in-scope backlog (#238, #245, #250), invented texts in m4/items/ (m4/vectors.refcore;
+# MILESTONE-M4.md row 3), one test per builder group; `test = false` until M4 gates.
+[[test]]
+name = "m4_items"
+path = "milestone/m4_items.rs"
+test = false
+
+# M4: the group reviews' findings, m4/fixes/<group>/ (refcore's bytes, m4/vectors.refcore) and the
+# spec's answers (m4/spec.vectors; MILESTONE-M4.md row 5); `test = false` until M4 gates.
+[[test]]
+name = "m4_fixes"
+path = "milestone/m4_fixes.rs"
+test = false
+
+# M4: fence F7 on every store and corpus, Plans::Narrow against Plans::Whole through the CLI's
+# re-export of the library (picks P17, U1; MILESTONE-M4.md row 6): a fence's equivalence test
+# (R-130), run by default since G6c built the switch (6c0ed597); `check quick` leaves it out.
+[[test]]
+name = "m4_narrow"
+path = "milestone/m4_narrow.rs"

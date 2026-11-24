@@ -103,6 +103,10 @@ pub enum Value {
     Record(Vec<(String, Value)>),
     /// A list.
     List(Vec<Value>),
+    /// The keys an `argmin` or `argmax` over several bindings returns, one per binding in
+    /// written order, `(k1, 1)`: printed, never compared or keyed, as load's types refuse
+    /// (L §5.11 "the key or the tuple").
+    Tuple(Vec<Value>),
     /// A business calendar, with the input it was read from.
     Calendar(Box<Calendar>),
     /// `none`: not applicable.
@@ -175,7 +179,7 @@ impl Value {
             match v {
                 Value::Hole(h) => crate::hole::carry_union(into, &h.carried()),
                 Value::Record(fields) => todo.extend(fields.iter().rev().map(|(_, x)| x)),
-                Value::List(items) => todo.extend(items.iter().rev()),
+                Value::List(items) | Value::Tuple(items) => todo.extend(items.iter().rev()),
                 Value::Window(_)
                 | Value::Number(_)
                 | Value::Money(_)
@@ -333,6 +337,13 @@ impl Value {
                 }
                 Ok(format!("[{}]", out.join(", ")))
             }
+            Value::Tuple(items) => {
+                let mut out = Vec::with_capacity(items.len());
+                for item in items {
+                    out.push(item.text(m)?);
+                }
+                Ok(format!("({})", out.join(", ")))
+            }
             Value::Calendar(cal) => Ok(cal.text()),
             Value::None => Ok("none".to_owned()),
             Value::Never => Ok("never".to_owned()),
@@ -449,6 +460,18 @@ pub fn money_num(m: &Reality, money: &Money) -> Result<Num, NumError> {
 pub fn num_money(m: &Reality, q: &Num, cur: Currency) -> Result<Money, NumError> {
     let (_, minor) = currency(m, cur)?;
     q.to_money_in(minor, cur)
+}
+
+/// `q` units of currency `cur` as money, exactly: whole minor units as [`num_money`] gives
+/// them, else money holding a fraction of one, which only `solve`'s centre makes (L §5.18
+/// step 3; pick P36).
+///
+/// # Errors
+///
+/// As [`currency`]; a number error.
+pub fn num_money_part(m: &Reality, q: &Num, cur: Currency) -> Result<Money, NumError> {
+    let (_, minor) = currency(m, cur)?;
+    q.to_money_part(minor, cur)
 }
 
 /// The unit of a currency, `PLN` to the first power (L §3.2).

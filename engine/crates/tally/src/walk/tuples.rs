@@ -7,7 +7,9 @@
 //! there, in binding order: #235's P30, P31); L §5.19 Links (the tuple of a move at its keys under a
 //! cut, its `when` read at the cut, and the places its legs give).
 //! Twin: engine/tools/refcore/moves.py (`move_tuples` with its `go`, `move_law`,
-//! `link_tuple`, `link_places`); refcore guards a waiting `where` (#235).
+//! `link_tuple`, `link_places`); refcore guards a waiting `where` (#235). `linked_instance`
+//! (`o.fulfils`, read in `book/members.rs` `fulfils_of`) departs from refcore's `find_inst` on
+//! purpose: the instance by its tuple and its day, with no list and no guard on it (P22, P30).
 //! Invariants: tuples come in binding order, depth first; what deciding a tuple read goes with
 //! its instance, never to the reader of the move's instances; a link whose `when` is a hole or
 //! refused is taken as existing and judged where its instance is; a key's `where` waits only
@@ -19,18 +21,20 @@
 //! 15); a tuple
 //! with every key bound never leaves with it unread.
 
-use super::instance::{Exists, join};
-use super::plan::{invariant, refuse};
+use super::instance::{Dated, Exists, Inst, join};
+use super::narrow::KeptTuple;
+use super::plan::{day_dated, invariant, refuse};
 use crate::base::{Code, Refusal, Run};
 use crate::eval::{Collected, Ctx, Engine, Env, Kept, Member, reads_var};
 use crate::hole::Hole;
-use crate::model::{Domain, KeyVal, MoveInfo, Reality, Value};
+use crate::model::{Domain, KeyVal, MoveInfo, MvRef, Node, NodeKind, Reality, Value};
 use crate::syntax::Stop;
 use crate::time::Day;
 
 /// A binding tuple of a move: its scope, keys, and the hole of a `where` that is one, or of a
 /// domain or law date that is one, and what deciding it read (refcore's `move_tuples`
 /// statuses and colls).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Tuple {
     /// The scope.
     pub(super) env: Env,
@@ -221,6 +225,85 @@ impl Engine {
         }
     }
 
+    /// Under a traced read, what decides that move `mv`'s instance at keys `keys` exists at
+    /// cut `cut`, read again in binding order, traced and kept nowhere: its tuple's `where`s,
+    /// each at the tuple, up to one that drops or refuses it, then, for a plain tuple, the
+    /// move's `when` at its law date, a plan's or a decision's. An existence read and a
+    /// binding that judges a link take these and no other tuple's reads (refcore's
+    /// `move_tuples` and `link_tuple`, for the named tuple; L §5.19 Links, §5.14 Keys, §8.2
+    /// One read set; E §10; P30, P42, P43).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run; as [`Engine::move_tuples`].
+    pub(crate) fn trace_existence(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        keys: &[KeyVal],
+        cut: Day,
+    ) -> Result<(), Stop> {
+        if !self.tracing() {
+            return Ok(());
+        }
+        let before = self.trace_walked();
+        let tuples = self.plan_tuples(m, mv, cut);
+        self.trace_walked_back(before);
+        // the tuple at the keys, or the refused one a `where` ended before them
+        let Some(tuple) = tuples?
+            .into_iter()
+            .find(|t| t.keys == keys || (t.refused.is_some() && keys.starts_with(&t.keys)))
+        else {
+            return Ok(());
+        };
+        let tctx = self.timeline_ctx(None, cut);
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        self.push();
+        self.trace_plan_open();
+        let read = self.existence_reads(m, mv, &tuple, tctx);
+        let closed = self.trace_plan_close();
+        self.pop_alone();
+        self.holder = outer;
+        self.trace_walked_back(before);
+        closed?;
+        match read {
+            Err(Stop::Refused(r)) if matches!(r.code(), Code::Load(_)) => Err(Stop::Refused(r)),
+            Ok(()) | Err(Stop::Refused(_)) => Ok(()),
+            Err(stop) => Err(stop),
+        }
+    }
+
+    /// The reads [`Engine::trace_existence`] traces for tuple `tuple` of move `mv`: each bound
+    /// key's `where` at the tuple's law date, in binding order, up to one that drops it or is
+    /// refused, then the move's `when` where the tuple is plain (refcore's `move_tuples`, for
+    /// one tuple, and `link_tuple`, its `when`). L §5.14 Keys, §4.3, §5.19 Links.
+    ///
+    /// # Errors
+    ///
+    /// A `where`'s or the `when`'s refusal; as [`Engine::move_law`].
+    fn existence_reads(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        tuple: &Tuple,
+        tctx: Ctx,
+    ) -> Result<(), Stop> {
+        let law = match self.move_law(m, mv, &tuple.env, tctx)? {
+            Law::Hole(_) => return Ok(()),
+            law @ (Law::Day(_) | Law::None) => law.day(),
+        };
+        let ctx = tctx.at_law(law);
+        for bind in mv.binds.iter().take(tuple.keys.len()) {
+            if matches!(self.where_keeps(m, &bind.node, &tuple.env, ctx)?, Kept::Out) {
+                return Ok(());
+            }
+        }
+        if let (Some(when), None, None) = (&mv.decl.when, &tuple.refused, &tuple.domain_hole) {
+            self.ev(m, when, &tuple.env, ctx)?;
+        }
+        Ok(())
+    }
+
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
     /// not yet bound, by the same walk load marks the keys by (`reads_var`; refcore's
     /// `move_law` counts any variable, an aggregate's own too). L §4.3, §5.14.
@@ -285,31 +368,217 @@ impl Engine {
         cut: Day,
     ) -> Result<Option<Env>, Stop> {
         let tctx = self.timeline_ctx(None, cut);
-        for tuple in self.move_tuples(m, mv, tctx)? {
-            if tuple.keys != keys {
-                continue;
-            }
-            if tuple.exists == Exists::No {
-                return Ok(None);
-            }
-            if let (Some(when), Exists::Yes, None, None) = (
-                &mv.decl.when,
-                &tuple.exists,
-                &tuple.domain_hole,
-                &tuple.refused,
-            ) {
-                match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
-                    Ok(false) => return Ok(None),
-                    Ok(true) => {}
-                    // a cycle is never taken as existing: the link would stand unjudged
-                    Err(Stop::Refused(r))
-                        if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
-                    Err(stop) => return Err(stop),
-                }
-            }
-            return Ok(Some(tuple.env));
+        // the move's tuples at the cut, kept once for every link and read there (fence F7)
+        let found = match self.kept_tuple(m, mv, keys, cut)? {
+            KeptTuple::Kept(found, _) => found.map(|t| *t),
+            KeptTuple::Own => self
+                .move_tuples(m, mv, tctx)?
+                .into_iter()
+                .find(|t| t.keys == keys),
+        };
+        let Some(tuple) = found else {
+            return Ok(None);
+        };
+        if tuple.exists == Exists::No {
+            return Ok(None);
         }
-        Ok(None)
+        if let (Some(when), Exists::Yes, None, None) = (
+            &mv.decl.when,
+            &tuple.exists,
+            &tuple.domain_hole,
+            &tuple.refused,
+        ) {
+            match self.when_at_cut(m, mv, when, &tuple.env, tctx) {
+                Ok(false) => return Ok(None),
+                Ok(true) => {}
+                // a cycle is never taken as existing: the link would stand unjudged
+                Err(Stop::Refused(r))
+                    if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {}
+                Err(stop) => return Err(stop),
+            }
+        }
+        Ok(Some(tuple.env))
+    }
+
+    /// What `o.fulfils` names at keys `keys` of move `mv` under cut `cut`: the instance the
+    /// move's list holds there, by its tuple and its day at the cut alone, never its body,
+    /// since a link reads only the instance's existence, never its amounts; none where the
+    /// list holds none (no tuple at the keys, or a day `never` or `none`). An existence read
+    /// takes no guard on the move's list: what it evaluates are ordinary reads, a cycle only
+    /// where one returns to a cell still being evaluated (P30). A decision's is taken from its
+    /// list; a refused tuple's, whose `when` decides whether the list holds it, from the list
+    /// or, with the list in progress, as the list makes it; and where the move's tuples stop
+    /// its list, the list's stop (refcore's `find_inst`). A traced read reads as an untraced
+    /// one: its explanation lists the rows the answer rests on, those that decide that the
+    /// instance exists first, its tuple's `where`s and its `when` ([`Engine::trace_existence`]),
+    /// then its day, none of the list's bodies (E §10). What reading them meets is the plan's,
+    /// no reader's, and a list it makes leaves what judging the list's links meets to the
+    /// list's next reader of its instances ([`Engine::existence_list`]). L §5.19 Links, §5.11,
+    /// E §4.1 steps 1–2, §3.2 (P22, P30, P40, P43).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run; the stop of the move's tuples; as
+    /// [`Engine::move_instances`] for those taken from the list.
+    pub(crate) fn linked_instance(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        keys: &[KeyVal],
+        cut: Day,
+    ) -> Result<Option<MvRef>, Stop> {
+        self.trace_existence(m, mv, keys, cut)?;
+        let open = !self.plan_active.contains(&(mv.id.clone(), cut));
+        // a decision's instances are its runs' (E §4.1)
+        if !mv.decision {
+            // the move's tuples at the cut, kept once for every link and read there (fence F7)
+            let (found, stops) = match self.kept_tuple(m, mv, keys, cut)? {
+                KeptTuple::Kept(found, stops) => (found.map(|t| *t), stops),
+                KeptTuple::Own => {
+                    let tuples = self.plan_tuples(m, mv, cut)?;
+                    let stops = tuples
+                        .iter()
+                        .any(|t| t.refused.is_some() && t.keys.len() < mv.binds.len());
+                    (tuples.into_iter().find(|t| t.keys == keys), stops)
+                }
+            };
+            match (stops, found) {
+                (false, None) => return Ok(None),
+                (false, Some(tuple)) if tuple.refused.is_none() => {
+                    return self.linked_day(m, mv, tuple, cut);
+                }
+                (false, Some(tuple)) if !open => return self.linked_refused(m, mv, tuple, cut),
+                (true, _) if !open => return Err(self.tuples_stop(m, mv, cut)?),
+                _ => {}
+            }
+        }
+        let insts = self.existence_list(m, mv, cut)?;
+        Ok(insts
+            .iter()
+            .find(|i| i.keys == keys)
+            .map(crate::book::inst_ref))
+    }
+
+    /// The instance of refused tuple `tuple` of move `mv` at cut `cut`, read while the move's
+    /// list there is made: as the list makes it, its day, `when` and keys deciding whether it
+    /// exists, with no guard on the list (refcore's `insts_of_tuples`, its refused tuples).
+    /// L §5.19 Links, §5.14 Keys, E §4.1 step 2 (P30).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run.
+    fn linked_refused(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        tuple: Tuple,
+        cut: Day,
+    ) -> Result<Option<MvRef>, Stop> {
+        let Some(err) = tuple.refused.clone() else {
+            return Err(invariant("a refused link tuple with no refusal"));
+        };
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let mark = self.reads_apart();
+        let tctx = self.timeline_ctx(None, cut);
+        let made = self.refused_tuple(m, mv, (tuple, None), err, tctx);
+        self.reads_back(mark);
+        self.holder = outer;
+        Ok(made?.as_ref().map(crate::book::inst_ref))
+    }
+
+    /// The stop of move `mv`'s list at cut `cut` read while it is made: the refusal of its
+    /// first tuple refused with its later keys unbound, as the list meets it (refcore's
+    /// `insts_of_tuples` raises). L §5.14 Keys, §8.4, E §4.1 step 1 (P30).
+    ///
+    /// # Errors
+    ///
+    /// The refusals the binding tuples meet; `ENGINE-INVARIANT` where no tuple stops the list.
+    fn tuples_stop(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Stop, Stop> {
+        for tuple in self.plan_tuples(m, mv, cut)? {
+            if let (Some(err), true) = (tuple.refused, tuple.keys.len() < mv.binds.len()) {
+                return Ok(Stop::Refused(err));
+            }
+        }
+        Err(invariant("a stopped list with no refused tuple"))
+    }
+
+    /// The instance of a link's plain or hole tuple as the list holds it, its day read at cut
+    /// `cut` as the list reads it, with no guard on the move's list (P30), and nothing of its
+    /// body; none where the day is `never` or `none` (refcore's `eval_inst`, its day). A run-time
+    /// refusal reading the day is the instance's own: the list holds it refused, with no day;
+    /// but a cycle, which is refused at the cell it returns to. E §4.1 step 2, L §5.19 Links,
+    /// §5.11 (P32).
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met at run; `RUN-CYCLE` where reading the day returns to a cell still
+    /// being evaluated.
+    fn linked_day(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        tuple: Tuple,
+        cut: Day,
+    ) -> Result<Option<MvRef>, Stop> {
+        let mut inst = Inst::new(mv, tuple.keys, tuple.env);
+        if let Some(hole) = tuple.domain_hole {
+            inst.day = Some(Dated::Hole(hole));
+            return Ok(Some(crate::book::inst_ref(&inst)));
+        }
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        // the day an existence read takes is an ordinary read: a traced read prints its rows,
+        // in a read set of its own, as the plan pass's (L §5.19, §8.2; E §10; P30, P31)
+        let traced = self.tracing();
+        let mark = if traced {
+            self.trace_plan_open();
+            None
+        } else {
+            Some(self.reads_apart())
+        };
+        let tctx = self.timeline_ctx(None, cut);
+        self.push();
+        let read = self.law_and_day(m, mv, &mut inst, tctx);
+        self.pop_alone();
+        let closed = match mark {
+            Some(mark) => {
+                self.reads_back(mark);
+                Ok(())
+            }
+            None => self.trace_plan_close().map(|_| ()),
+        };
+        self.holder = outer;
+        closed?;
+        let dated = match read {
+            Ok(Ok(Value::Never | Value::None)) => return Ok(None),
+            Ok(Ok(v)) => day_dated(m, v, &inst.id),
+            Ok(Err(h)) => Ok(Dated::Hole(h)),
+            Err(stop) => Err(stop),
+        };
+        match dated {
+            Ok(day) => inst.day = Some(day),
+            // a cycle is never the instance's own: the chain is refused at the cell it returns
+            // to (L §5.11; P32)
+            Err(Stop::Refused(r)) if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) => {
+            }
+            Err(stop) => return Err(stop),
+        }
+        Ok(Some(crate::book::inst_ref(&inst)))
+    }
+
+    /// Move `mv`'s binding tuples at cut `cut`, what making them reads the plan's, as its list
+    /// makes them, with no guard on the list: an existence read's (P30). E §4.1 step 1, §3.2.
+    ///
+    /// # Errors
+    ///
+    /// The refusals the binding tuples meet.
+    fn plan_tuples(&mut self, m: &Reality, mv: &MoveInfo, cut: Day) -> Result<Vec<Tuple>, Stop> {
+        let outer = self.holding(Node::new(NodeKind::Move, &mv.id));
+        let mark = self.reads_apart();
+        let tctx = self.timeline_ctx(None, cut);
+        let made = self.move_tuples(m, mv, tctx);
+        self.reads_back(mark);
+        self.holder = outer;
+        made
     }
 
     /// Whether a link's instance may exist by its `when` at the ask's cut: false only for a

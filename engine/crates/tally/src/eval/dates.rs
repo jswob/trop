@@ -239,29 +239,67 @@ impl Engine {
             .args(m, call, env, ctx)?
             .try_into()
             .map_err(|_| arity())?;
+        // refusals outrank holes (L §8; pick P12): each argument in written order, a known
+        // one's own check run (`none` among them), a hole or a window's waiting
+        for day in [&a, &b] {
+            let day = single(day);
+            if day.as_hole().is_none() && !matches!(*day, Value::Window(_)) {
+                dcf_day(m, &day)?;
+            }
+        }
+        if dc.as_hole().is_none() {
+            daycount_of(m, &dc)?;
+        }
         if let Some(h) = crate::hole::spread(&[a.as_hole(), b.as_hole(), dc.as_hole()]) {
             return Ok(Value::Hole(h));
         }
         if let Some(hole) = unlisted(&[&a, &b], "dcf") {
             return Ok(Value::Hole(hole));
         }
-        let (from, to) = (dcf_day(m, &single(&a))?, dcf_day(m, &single(&b))?);
-        let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = &dc {
-            w.clone()
-        } else {
-            dc.text(m).map_err(num_stop)?
-        };
-        if word != "act365" {
-            return Err(refuse_load(
-                Load::Unit,
-                format!("dcf: {word} is not a daycount code"),
-            ));
-        }
-        let days = from
-            .days_to(to)
-            .ok_or_else(|| invariant("a day count past the integers"))?;
-        year_fraction(days)
+        let q = year_fraction_of(m, (&single(&a), &single(&b)), &dc)?;
+        Ok(Value::Number(Number::plain(q, Unit::one())))
     }
+}
+
+/// The year fraction from date a to date b under day count `dc`, exact: `act365` gives the
+/// days from a, counted, to b, not, over 365, and b before a the negative of dcf(b, a)
+/// (refcore's `m_dcf_q`). L §3.3.
+///
+/// # Errors
+///
+/// `LOAD-UNIT` for a value that is no date or no daycount code; `RUN-NONE` for `none`.
+pub(super) fn year_fraction_of(
+    m: &Reality,
+    (a, b): (&Value, &Value),
+    dc: &Value,
+) -> Result<Num, Stop> {
+    let (from, to) = (dcf_day(m, a)?, dcf_day(m, b)?);
+    daycount_of(m, dc)?;
+    let days = from
+        .days_to(to)
+        .ok_or_else(|| invariant("a day count past the integers"))?;
+    Num::int(days).checked_div(&Num::int(365)).map_err(num_stop)
+}
+
+/// A day count code `dc`: `act365`, the one L §3.3 states; anything else is `LOAD-UNIT dcf:
+/// <dc> is not a daycount code` (refcore's `m_dcf_q`). L §3.3.
+///
+/// # Errors
+///
+/// `LOAD-UNIT` for any other value.
+pub(super) fn daycount_of(m: &Reality, dc: &Value) -> Result<(), Stop> {
+    let word = if let Value::Code(Code::Word(w)) | Value::Word(w) = dc {
+        w.clone()
+    } else {
+        dc.text(m).map_err(num_stop)?
+    };
+    if word != "act365" {
+        return Err(refuse_load(
+            Load::Unit,
+            format!("dcf: {word} is not a daycount code"),
+        ));
+    }
+    Ok(())
 }
 
 /// A call with the wrong number of arguments: load refuses it, so here it is an invariant.
@@ -511,14 +549,6 @@ fn date_or_window(v: Value, what: &str) -> Result<Value, Stop> {
     Err(not_typed())
 }
 
-/// `days`/365 as a number, `act365`'s year fraction (refcore's `dcf_q`). L §3.3.
-fn year_fraction(days: i64) -> Result<Value, Stop> {
-    let q = Num::int(days)
-        .checked_div(&Num::int(365))
-        .map_err(num_stop)?;
-    Ok(Value::Number(Number::plain(q, Unit::one())))
-}
-
 /// The day a date of `dcf` is: a day, a day period's day (refcore's `m_as_day`). L §3.3.
 fn dcf_day(m: &Reality, v: &Value) -> Result<Day, Stop> {
     if let Value::Period(p) = v
@@ -531,6 +561,10 @@ fn dcf_day(m: &Reality, v: &Value) -> Result<Day, Stop> {
     }
     if *v == Value::None {
         return Err(refuse(Run::None, "a value is none here: dcf".to_owned()));
+    }
+    if *v == Value::Never {
+        // `never` in arithmetic is `RUN-NONE` (L §3.1; P16)
+        return Err(refuse(Run::None, "never in dcf".to_owned()));
     }
     let shown = v.text(m).map_err(num_stop)?;
     Err(refuse_load(

@@ -1,0 +1,165 @@
+model n3
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented for fence F7 and G6a's lists: a projection's window and its edges"
+
+unit PLN: currency minor 0.01
+
+place konto: accounts PLN lives 2026-01-01..
+
+place hw: accounts PLN lives 2026-01-01..
+
+place hc: accounts PLN lives 2026-01-01..
+
+place hx: accounts PLN lives 2026-01-01..
+
+place pot: accounts PLN lives 2026-01-01..
+
+place world: outside lives 1900-01-01..
+
+input lo_day: date
+
+input hi_day: date
+
+input pre_day: date
+
+input post_day: date
+
+input in_day: date
+
+input cross_day: date
+
+input out_day: date
+
+input lost_day: date
+
+input past_day: date
+
+input amt: money PLN
+
+input amt2: money PLN
+
+input amt4: money PLN
+
+input amt8: money PLN
+
+input amt16: money PLN
+
+input amt32: money PLN
+
+input amt64: money PLN
+
+input amt128: money PLN
+
+move edge_lo: transfers
+  on lo_day
+  leg cash from konto to world amount amt
+
+move edge_hi: transfers
+  on hi_day
+  leg cash from konto to world amount amt2
+
+move pre: transfers
+  on pre_day
+  leg cash from konto to world amount amt4
+
+move post: transfers
+  on post_day
+  leg cash from konto to world amount amt8
+
+move early: transfers
+  on past_day
+  leg cash from world to konto amount amt128
+
+move hw_lo: transfers
+  on lo_day
+  leg cash from hw to world amount amt
+
+move w_in: transfers
+  on in_day
+  leg cash from hw to world amount amt16
+
+move hc_hi: transfers
+  on hi_day
+  leg cash from hc to world amount amt2
+
+move w_cross: transfers
+  on cross_day
+  leg cash from hc to world amount amt32
+
+move hx_hi: transfers
+  on hi_day
+  leg cash from hx to world amount amt2
+
+move w_out: transfers
+  on out_day
+  leg cash from hx to world amount amt64
+
+move lost: transfers
+  on lost_day
+  leg cash from pot to world amount amt
+
+ask p_full: bal(konto, 2026-04-30) from 2026-04-01
+
+ask p_inner: bal(konto, 2026-04-29) from 2026-04-02
+
+ask p_lo: bal(konto, 2026-04-01) from 2026-04-01
+
+ask p_hi: bal(konto, 2026-04-30) from 2026-04-30
+
+ask p_before: bal(konto, 2026-03-31) from 2026-03-15
+
+ask p_after: bal(konto, 2026-06-30) from 2026-05-02
+
+ask p_past: bal(konto, 2026-02-28) from 2026-02-01
+
+ask p_min: min(bal(konto, d) from 2026-04-01 for d in 2026-04-01 .. 2026-05-02 step 1 day)
+
+ask p_days: bal(konto, d) from 2026-03-31 for d in [2026-03-31, 2026-04-01, 2026-04-29, 2026-04-30, 2026-05-01]
+
+ask w_full: bal(hw, 2026-04-30) from 2026-04-01
+
+ask w_before: bal(hw, 2026-03-31) from 2026-03-15
+
+ask w_after: bal(hw, 2026-05-31) from 2026-04-21
+
+ask c_full: bal(hc, 2026-04-30) from 2026-04-01
+
+ask c_after: bal(hc, 2026-05-31) from 2026-05-06
+
+ask x_full: bal(hx, 2026-04-30) from 2026-04-01
+
+ask x_after: bal(hx, 2026-06-30) from 2026-05-21
+
+ask l_pot: bal(pot, 2026-04-30) from 2026-04-01
+
+ask both: bal(konto, 2026-04-30) from 2026-04-01 + bal(hx, 2026-04-30) from 2026-04-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 1.00 PLN "s"
+  amt2 = 2.00 PLN "s"
+  amt4 = 4.00 PLN "s"
+  amt8 = 8.00 PLN "s"
+  amt16 = 16.00 PLN "s"
+  amt32 = 32.00 PLN "s"
+  amt64 = 64.00 PLN "s"
+  amt128 = 128.00 PLN "s"
+  lo_day = 2026-04-01 "the window's first day"
+  hi_day = 2026-04-30 "the window's last day"
+  pre_day = 2026-03-31 "the day before the window"
+  post_day = 2026-05-01 "the day after the window"
+  in_day = window(2026-04-10, 2026-04-20) "a hole day inside the window"
+  cross_day = window(2026-04-25, 2026-05-05) "a hole day across the window's last day"
+  out_day = window(2026-05-10, 2026-05-20) "a hole day after the window"
+  past_day = 2026-02-10 "before the cut"
+  opening[konto] = 1000.00 PLN at 2026-01-01 start "s"
+  opening[hw] = 300.00 PLN at 2026-01-01 start "s"
+  opening[hc] = 300.00 PLN at 2026-01-01 start "s"
+  opening[hx] = 300.00 PLN at 2026-01-01 start "s"
+  opening[pot] = 500.00 PLN at 2026-01-01 start "s"

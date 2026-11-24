@@ -1,0 +1,34 @@
+model p7
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+input lo: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def nest[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k] + x}) as if {x = c[k]}
+def nestc: money PLN = (dbl[k1] as if {b[k1] = c[k1] + x}) as if {x = c[k1]}
+
+ask q_e1: explain nest[k1] with x = lo
+ask q_e2: explain nestc with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 2 PLN "s"
+  c[k2] = 3 PLN "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"

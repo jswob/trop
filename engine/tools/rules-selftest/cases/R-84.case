@@ -121,13 +121,18 @@ tools/milestones args --mutants
 # P55 (issue #108, 2026-11-09): the fences' equivalence tests are the builder's, so they are a
 # local batch's catchers only (`mutants-local --fences`): the mutants baseline and shards take
 # `tools/milestones args`, which names none of them, and gate 8 counts T's tests (R-84).
+# Since M4's gate (issue #252): a catcher in T's runner that runs by default, F7's m4_narrow,
+# is left out of the runner's defaults too (its c1_r2 test passed the baseline's 120 s); F6's
+# m2_forks, no catcher, stays in as at M2 and M3.
 
 case: fence-catchers-stay-out-of-ci
 tool: run
 exit: any
 expect: R-84: CI's mutation targets name no fence catcher
+expect: R-84: m2_forks kept
 --- run
-a="$(tools/milestones args) $(tools/milestones args --mutants)"; case "$a" in *walk_oracle*|*tally-cli*|*walk::lows*) echo "R-84 broken: $a" ;; *) echo "R-84: CI's mutation targets name no fence catcher" ;; esac
+a="$(tools/milestones args) $(tools/milestones args --mutants)"; case "$a" in *walk_oracle*|*tally-cli*|*walk::lows*|*m4_narrow*) echo "R-84 broken: $a" ;; *) echo "R-84: CI's mutation targets name no fence catcher" ;; esac
+case "$a" in *m2_forks*) echo "R-84: m2_forks kept" ;; *) echo "R-84 broken: m2_forks dropped" ;; esac
 
 # Since 2026-11-11 (issue #108, R2): a gating target with `required-features` (M1's
 # m1_invariant: fault-injection) is selected with the runner's features it requires, or

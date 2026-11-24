@@ -20,9 +20,10 @@ use super::trace::Kind as TraceKind;
 use crate::base::Code;
 use crate::hole::{Hole, spread};
 use crate::model::{
-    BindInfo, Class, KeyVal, NameKind, Number, Reality, Ty, Unit, Value, currency_id, money_num,
-    num_money,
+    BindInfo, Class, Domain, KeyVal, NameKind, Number, PeriodWord, Reality, Shown, Ty, Unit, Value,
+    currency_id, money_num, num_money,
 };
+use crate::num::Num;
 use crate::syntax::{Expr, Key, Lit, PRef, Pin, PinForm, Stop};
 use crate::time::Day;
 
@@ -239,7 +240,7 @@ impl Engine {
                 PinForm::Scenario(id) => {
                     // `x as if {scenario s}` is x in s (L §6.4 Asking; refcore's `apply_pins_`)
                     inside.world = world_named(m, id)?;
-                    self.note("world", id.clone(), String::new());
+                    self.note("world", id.clone(), String::new())?;
                 }
                 PinForm::Law(e) | PinForm::Known(e) | PinForm::Wording(e, _) => {
                     let Some(day) = self.date_pin(m, pin, e, env, ctx, &mut holes)? else {
@@ -265,7 +266,7 @@ impl Engine {
                         let option = axis_pinned(value)?;
                         let text = format!("{} = {option}", target.id);
                         data.axes.insert(target.id.clone(), option);
-                        self.note("pinned", text, String::new());
+                        self.note("pinned", text, String::new())?;
                         continue;
                     }
                     let set = (target, value, pin.text.as_str());
@@ -345,7 +346,7 @@ impl Engine {
         } else {
             head
         };
-        self.note("pinned", text, String::new());
+        self.note("pinned", text, String::new())?;
         Ok(Some(day))
     }
 
@@ -358,9 +359,7 @@ impl Engine {
     ///
     /// # Errors
     ///
-    /// The refusals its keys and value meet; `NotBuilt` for a pin per binding tuple whose
-    /// value or one key names two bindings, or reads through a form whose names aren't
-    /// walked (an aggregate, a walk's read), whose bindings' order refcore's walk gives.
+    /// The refusals its keys and value meet.
     fn value_pin(
         &mut self,
         m: &Reality,
@@ -370,17 +369,17 @@ impl Engine {
         (how, holes): (Pinning, &mut Vec<Hole>),
     ) -> Result<Option<Pinned>, Stop> {
         let id = target.id.as_str();
-        let (binds, declared) = match m.names.kind(id) {
+        let (binds, declared, mut factor) = match m.names.kind(id) {
             Some(NameKind::Input) => {
                 let input = m
                     .inputs
                     .get(id)
                     .ok_or_else(|| invariant("a pinned input"))?;
-                (&input.binds, input.ty.clone())
+                (&input.binds, input.ty.clone(), input.unit_factor.clone())
             }
             Some(NameKind::Def) => {
                 let def = m.defs.get(id).ok_or_else(|| invariant("a pinned def"))?;
-                (&def.binds, Some(def.ty.clone()))
+                (&def.binds, Some(def.ty.clone()), def.unit_factor.clone())
             }
             _ => return Err(invariant("a pin load didn't check")),
         };
@@ -399,9 +398,7 @@ impl Engine {
                         parts.push(e);
                     }
                 }
-                let named = env.binds_named(&parts).ok_or(Stop::NotBuilt(
-                "a pin per binding tuple naming two bindings in one part, or through an aggregate",
-            ))?;
+                let named = env.binds_named(&parts);
                 (!named.is_empty()).then(|| format!("{pin} for {}", named.join(", ")))
             } else {
                 None
@@ -461,11 +458,14 @@ impl Engine {
         let mut ty = declared;
         for field in &target.fields {
             ty = ty.and_then(|t| t.field(field).cloned());
+            // a field's type keeps its `%` as `num %` only (L §3.2)
+            factor = percent_factor(ty.as_ref())?;
         }
         self.push();
         let v = self.ev(m, written, env, ctx);
         let met = self.pop_alone();
-        let value = at_pin_keys(pin_typed(m, v?, ty.as_ref())?, binds, &keys)?;
+        let value = pin_typed(m, written, v?, (ty.as_ref(), &factor))?;
+        let value = at_pin_keys(value, binds, &keys)?;
         if !plain_literal(m, written) {
             self.absorb(&met);
         }
@@ -483,8 +483,8 @@ impl Engine {
         if how == Pinning::Ask {
             // an ask's `with` pin of a cell is listed where a read of the line took it (L
             // §8.2 One read set; tally 2.1.8 §4, #161)
-            self.note("pinned", text.clone(), String::new());
-            self.note("pin cell", text.clone(), String::new());
+            self.note("pinned", text.clone(), String::new())?;
+            self.note("pin cell", text.clone(), String::new())?;
         }
         Ok(Some(Pinned {
             solve: false,
@@ -572,6 +572,76 @@ fn plain_literal(m: &Reality, e: &Expr) -> bool {
     matches!(e, Expr::Lit(_) | Expr::Neg(_) | Expr::Str(_))
 }
 
+/// A literal pin's value `v` in its target's declared type `ty`, whose unit brings `factor`;
+/// none where `written` is no literal the type takes (refcore's `pin_literal`, `typed`, and
+/// its checker's `_keyat`, `as_year`). L §3.2 Inline figures, §2.1, §2.5.
+/// - A bare figure (through brackets and a minus) on money or an int is that money or int;
+///   on a `num` it is the figure times the `%` its unit holds: `5` on `num %` is 5 %, on
+///   `num %/year` 0.05 1/year, as a row's figure is.
+/// - A four-digit figure on a `year` is that year.
+/// - A key literal (a name, a four-digit year, a period) on a `key` is the key of that index,
+///   kind or axis.
+fn written_typed(
+    m: &Reality,
+    written: &Expr,
+    v: &Value,
+    (ty, factor): (&Ty, &Num),
+) -> Result<Option<Value>, Stop> {
+    let Value::Number(n) = v else {
+        return pinned_key(m, written, v, ty);
+    };
+    if !super::band::bare_figure(written) {
+        return Ok(None);
+    }
+    if let Ty::Num(unit, shown) = ty {
+        return Ok(Some(Value::Number(Number {
+            q: n.q.checked_mul(factor).map_err(num_stop)?,
+            class: Class::Num(unit.clone(), *shown),
+        })));
+    }
+    if matches!(ty, Ty::Money(_) | Ty::Int) {
+        return super::expr::typed(m, &n.q, ty);
+    }
+    if matches!(ty, Ty::Period(PeriodWord::Year)) {
+        return Ok(super::years::as_year(Some(written), v).map(Value::Period));
+    }
+    pinned_key(m, written, v, ty)
+}
+
+/// A key literal `written` pinned on a `key` target `ty`, a bare key `v` read as a word or a
+/// literal: the key of its index, kind or axis that the literal names (refcore's `assign`,
+/// its `keylit` arm, and a four-digit year as a key of a year index, L §2.1, §2.5); none for
+/// any other written value or type.
+fn pinned_key(m: &Reality, written: &Expr, v: &Value, ty: &Ty) -> Result<Option<Value>, Stop> {
+    let Ty::Key(id) = ty else {
+        return Ok(None);
+    };
+    let lit = if let Value::Word(word) = v {
+        Lit::Name(word.clone())
+    } else if let Expr::Lit(lit) = written.unbracketed() {
+        lit.clone()
+    } else {
+        return Ok(None);
+    };
+    let domain = if m.axes.contains(id) {
+        Domain::Axis(id.clone())
+    } else if m.kinds.get(id).is_some() {
+        Domain::Kind(id.clone())
+    } else {
+        Domain::Index(id.clone())
+    };
+    let key = super::keys::literal_key(m, &lit, &domain)?;
+    Ok(key.map(|k| Value::of_key(&k)))
+}
+
+/// The factor a `num %` type's `%` brings, 1/100; 1 for any other type. L §3.2.
+fn percent_factor(ty: Option<&Ty>) -> Result<Num, Stop> {
+    if matches!(ty, Some(Ty::Num(_, Shown::Percent))) {
+        return Num::ratio(1, 100).map_err(num_stop);
+    }
+    Ok(Num::int(1))
+}
+
 /// A pin's value at the keys it names, every key named: a per-unit price's figure is in CUR
 /// per the key's unit, as a def cell's is (L §3.2 Per-unit prices of a unit kind). A pin with
 /// a `*` keeps the type's `$u`.
@@ -587,10 +657,21 @@ fn at_pin_keys(v: Value, binds: &[BindInfo], keys: &[Option<KeyVal>]) -> Result<
     Ok(v)
 }
 
-/// A pin's value in its target's type: a number pinned on money is money where it is whole
-/// minor units, an int, a bare figure or money pinned on a `num` takes its unit (refcore's
-/// `coerce_to`). L §3.2 Inline figures, §5.11.
-fn pin_typed(m: &Reality, v: Value, ty: Option<&Ty>) -> Result<Value, Stop> {
+/// A pin's value in its target's type: a literal `written` takes the target's declared type
+/// (`written_typed`); a number pinned on money is money where it is whole minor units, an
+/// int or money pinned on a `num` takes its unit (refcore's `coerce_to`). L §3.2 Inline
+/// figures, §5.11.
+fn pin_typed(
+    m: &Reality,
+    written: &Expr,
+    v: Value,
+    (ty, factor): (Option<&Ty>, &Num),
+) -> Result<Value, Stop> {
+    if let Some(ty) = ty
+        && let Some(typed) = written_typed(m, written, &v, (ty, factor))?
+    {
+        return Ok(typed);
+    }
     match (ty, v) {
         (Some(Ty::Money(cur)), Value::Number(n)) => {
             let minor = m
@@ -609,6 +690,17 @@ fn pin_typed(m: &Reality, v: Value, ty: Option<&Ty>) -> Result<Value, Stop> {
             Ok(Value::Number(Number {
                 q: n.q,
                 class: Class::Num(unit.clone(), *shown),
+            }))
+        }
+        // a figure with a period's unit pinned on a rate is that rate, as a row's figure is
+        // (`10 %/year` is 0.1 /year; L §3.3, pick P16)
+        (Some(Ty::Rate), Value::Number(n))
+            if matches!(n.class, Class::Num(..)) && n.unit().period_of().is_some() =>
+        {
+            let unit = n.unit();
+            Ok(Value::Number(Number {
+                q: n.q,
+                class: Class::Rate(unit),
             }))
         }
         (Some(Ty::Num(..)), Value::Money(money)) => {

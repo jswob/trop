@@ -20,7 +20,7 @@ use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::state::{ALL, GapAt, St, Walk};
 use crate::base::{Code, Load, Refusal, Run};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, Rows};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, Rows};
 use crate::hole::{Hole, Linear, spread};
 use crate::model::{KeyVal, Reality, Value};
 use crate::num::Num;
@@ -100,10 +100,15 @@ impl Engine {
             return self.bal_modelled(m, (&place, &unit), key, ctx.cut);
         }
         if b.proj.from.is_some() {
-            return match outside {
-                Some(hole) => Ok(hole),
-                None => self.projection(m, b, (&place, &unit), d, (env, ctx)),
-            };
+            if let Some(hole) = outside {
+                return Ok(hole);
+            }
+            let walked = self.trace_walked();
+            let got = self.projection(m, b, (&place, &unit), d, (env, ctx));
+            if self.tracing() && ctx.at.is_none() {
+                self.trace_refused_proj(m, walked, (&place, &unit), (d, b, env), (&got, ctx))?;
+            }
+            return got;
         }
         let key = if b.start { At::start(d) } else { At::end(d) };
         let walked = self.trace_walked();
@@ -159,6 +164,78 @@ impl Engine {
         Ok(())
     }
 
+    /// A written projection `bal(x, d) from t` the walk refused, read by a traced read at the
+    /// ask's cut: a node for the refusal, `bal(x, d) from t`, holding what the refused balance
+    /// rests on, each run of the main walk whose legs name x, read again where it ran, through
+    /// the first one refused there, the refusal's (L §8.2 One read set; E §10; P31). Another
+    /// result leaves the trace as the projection left it.
+    ///
+    /// # Errors
+    ///
+    /// A load refusal met reading the start or a run again.
+    fn trace_refused_proj(
+        &mut self,
+        m: &Reality,
+        walked: crate::eval::Walked,
+        (place, unit): (&str, &str),
+        (day, b, env): (Day, &Bal, &Env),
+        (got, ctx): (&Result<Value, Stop>, Ctx),
+    ) -> Result<(), Stop> {
+        let Err(Stop::Refused(r)) = got else {
+            return Ok(());
+        };
+        let (Some(from), Some(id)) = (&b.proj.from, self.main_walks.get(&ctx.cut).copied()) else {
+            return Ok(());
+        };
+        if matches!(r.code(), Code::Load(_)) {
+            return Ok(());
+        }
+        // the start as the read took it, read apart: its rows printed where the read read them
+        let mark = self.reads_apart();
+        let start = self.ev(m, from, env, ctx);
+        self.reads_back(mark);
+        let start = match start {
+            Ok(Value::Day(t)) => t.text(),
+            Ok(_) | Err(Stop::Refused(_)) => String::new(),
+            Err(stop) => return Err(stop),
+        };
+        self.trace_walked_back(walked);
+        let read = crate::eval::TracedBalance {
+            place: place.to_owned(),
+            unit: unit.to_owned(),
+            day,
+            start: b.start,
+            uncertain: b.proj.uncertain,
+            cut: ctx.cut,
+            timeline: self.timeline_key(),
+        };
+        let node = self.trace_refused_balance(read, &start, r);
+        let mut runs = Vec::new();
+        for run in &self.walk(id)?.runs {
+            if run.changed.contains(place) {
+                runs.push(run.clone());
+                let refused = run
+                    .inst
+                    .legs
+                    .iter()
+                    .any(|lg| matches!(lg.amount, Amount::Refused(_)));
+                if refused || run.inst.err.is_some() {
+                    break;
+                }
+            }
+        }
+        let mut read_again = Ok(());
+        for run in &runs {
+            read_again = self.trace_ran(m, id, run);
+            if read_again.is_err() {
+                break;
+            }
+        }
+        self.trace_closed(node);
+        self.trace_walked_back(walked);
+        read_again
+    }
+
     /// A read's place: a place, or the hole it is (refcore's `place_arg`). L §5.10.
     pub(crate) fn place_arg(
         &mut self,
@@ -204,6 +281,7 @@ impl Engine {
                 | Value::Code(_)
                 | Value::Record(_)
                 | Value::List(_)
+                | Value::Tuple(_)
                 | Value::Calendar(_)
                 | Value::None
                 | Value::Never
@@ -456,7 +534,7 @@ impl Engine {
         let mut met = Collected::default();
         for (day, entry) in walk.adj_regs.get(place).into_iter().flatten() {
             if *day <= at.day {
-                met.entries.insert(entry.clone());
+                met.note(*entry);
             }
         }
         // a movement the balance doesn't count: what decided it is in its read set (L §8.2
@@ -500,17 +578,21 @@ impl Engine {
         (place, unit): (&str, &str),
         met: &mut Collected,
     ) -> Result<Option<(usize, At)>, Stop> {
-        let walk = self.walk(id)?;
+        // the walk and the run's register entries, apart: each `left out:` entry is noted
+        let walk = self
+            .walks
+            .get(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))?;
         for mid in walk.left_out_at.get(place).into_iter().flatten() {
             let (n, first) = walk
                 .left_out
                 .get(mid)
                 .ok_or_else(|| invariant("a move left out with no count"))?;
-            met.entries.insert(Entry {
+            met.note(self.entries.intern(Entry {
                 word: "left out",
                 text: format!("{mid}, {n} instances, first {}", first.text()),
                 figure: String::new(),
-            });
+            })?);
         }
         let (st, last) = walk.state(m, place, unit, at);
         let reset_seen = last.is_some() && st.rst.is_some();
@@ -570,14 +652,18 @@ impl Engine {
         read: &Value,
         (window, ctx): (Window, Ctx),
     ) -> Result<Value, Stop> {
-        let walk = self.walk(id)?;
+        // the walk and the run's register entries, apart: each `uncertain:` entry is noted
+        let walk = self
+            .walks
+            .get(id)
+            .ok_or_else(|| invariant("a walk the engine lacks"))?;
         let mut acc = Uncertain {
             add: Num::zero(),
             holes: Vec::new(),
             legs: Vec::new(),
             met: Collected::default(),
         };
-        let added = acc.movements(&walk.uncertain, place, window);
+        let added = acc.movements(&walk.uncertain, (place, window), &mut self.entries);
         // refcore registers as it adds: a refusal keeps the `uncertain:` entries before it
         self.absorb(&acc.met);
         added?;
@@ -794,7 +880,7 @@ impl Engine {
     /// As [`crate::book::readings`].
     fn stated_on(&mut self, m: &Reality, place: &str, day: Day, cut: Day) -> Result<bool, Stop> {
         let world = self.timeline_world();
-        let seen = crate::book::readings(m, (cut, world), Rows::Unkept)?;
+        let seen = crate::book::readings(m, (cut, world), (Rows::Unkept, &mut self.entries))?;
         Ok(seen
             .iter()
             .any(|s| s.input == "stated" && s.place == place && s.day == day))
@@ -825,7 +911,12 @@ impl Uncertain {
     /// The legs at `place` of the uncertain movements dated inside `window`, each added; a
     /// refusal stops the sum, what it met before kept here (refcore's `with_uncertain`, its
     /// loop). L §5.14, §8.2.
-    fn movements(&mut self, movements: &[Inst], place: &str, window: Window) -> Result<(), Stop> {
+    fn movements(
+        &mut self,
+        movements: &[Inst],
+        (place, window): (&str, Window),
+        entries: &mut Entries,
+    ) -> Result<(), Stop> {
         for movement in movements {
             for leg in &movement.legs {
                 let dated = leg
@@ -833,7 +924,7 @@ impl Uncertain {
                     .day()
                     .or_else(|| movement.day.as_ref().and_then(Dated::day));
                 if counted(dated, window) {
-                    self.leg(place, movement, leg)?;
+                    self.leg((place, movement, leg), entries)?;
                 }
             }
         }
@@ -844,19 +935,18 @@ impl Uncertain {
     /// signed by its direction (refcore's `with_uncertain`, a leg). L §5.14.
     fn leg(
         &mut self,
-        place: &str,
-        movement: &Inst,
-        leg: &super::instance::LegVal,
+        (place, movement, leg): (&str, &Inst, &super::instance::LegVal),
+        entries: &mut Entries,
     ) -> Result<(), Stop> {
         for (end, sign) in [(&leg.from, -1_i64), (&leg.to, 1_i64)] {
             if end.place() != Some(place) {
                 continue;
             }
-            self.met.entries.insert(Entry {
+            self.met.note(entries.intern(Entry {
                 word: "uncertain",
                 text: movement.id.clone(),
                 figure: String::new(),
-            });
+            })?);
             self.met.merge(&movement.coll);
             let q = match &leg.amount {
                 Amount::Hole(h) => {

@@ -18,7 +18,7 @@ use super::reads::refuse;
 use super::state::Progress;
 use crate::base::{Refusal, Run};
 use crate::book::{Fact, Obs, inst_side, once_obs, same_differ};
-use crate::eval::{Collected, Ctx, Engine, Entry, Env, GUARDED, UNSET_AXIS};
+use crate::eval::{Collected, Ctx, Engine, Entries, Entry, Env, GUARDED, TraceKeep, UNSET_AXIS};
 use crate::hole::{Hole, spread};
 use crate::model::{KeyVal, MoveInfo, Reality, Span, Value};
 use crate::num::Num;
@@ -44,11 +44,14 @@ impl Engine {
             Ok(k) => k,
         };
         let last = span_last(m, sp)?;
+        self.trace_marks_forget();
         let insts = if mv.decision {
             std::rc::Rc::new(self.decision_runs(m, mv, last, ctx)?)
         } else {
-            self.move_instances(m, mv, ctx.cut)?
+            // the instances at its keys, read narrowly at a past cut (fence F7)
+            self.flows_instances(m, mv, (&want, sp), ctx.cut)?
         };
+        self.trace_at_key(m, mv, (&want, sp), ctx)?;
         let mut acc = Counted::default();
         let counted = self.count_move(
             m,
@@ -118,6 +121,40 @@ impl Engine {
         }
     }
 
+    /// What a traced read of move `mv`'s flows at keys `want` over span `sp` prints of its
+    /// instances' reads, the one read set (L §8.2 One read set; E §10; P20, P22): each one's
+    /// at its key and in its span, or whose day is a hole, whole; one's at its key outside
+    /// the span, its day's; none at another key ([`Engine::trace_keep`]).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::move_instances`].
+    fn trace_at_key(
+        &mut self,
+        m: &Reality,
+        mv: &MoveInfo,
+        (want, sp): (&[KeyVal], &Span),
+        ctx: Ctx,
+    ) -> Result<(), Stop> {
+        if !self.tracing() || ctx.at.is_some() {
+            return Ok(());
+        }
+        let insts = self.move_instances(m, mv, ctx.cut)?;
+        let mut keep = Vec::with_capacity(insts.len());
+        for i in insts.iter() {
+            let part = if !i.keys.starts_with(want) {
+                TraceKeep::Nothing
+            } else if matches!(&i.day, Some(Dated::Day(d)) if !sp.contains(*d)) {
+                TraceKeep::Day
+            } else {
+                TraceKeep::Whole
+            };
+            keep.push((i.id.clone(), part));
+        }
+        self.trace_keep((&mv.id, ctx.cut), &keep);
+        Ok(())
+    }
+
     /// A move's movements and adjustments counted into `acc`, in refcore's order: each
     /// instance's register and `unfulfilled:` before its legs, so a refusal that stops the
     /// count leaves in `acc` what it met before (refcore's `flows_move`, its loop, which
@@ -137,21 +174,11 @@ impl Engine {
             // a movement the span doesn't count: what decided it is in the read set (L §8.2
             // One read set; P35 on #241)
             if i.status == Status::None {
-                let in_span = matches!(&i.day, Some(Dated::Day(d)) if sp.contains(*d));
-                if in_span {
-                    // read to be left out: every entry its reads gave, `held:` lines too
-                    // (refcore's `flows_move`; P35, P48 on #241)
-                    acc.met.merge(&i.coll);
-                } else if i
-                    .day
-                    .as_ref()
-                    .and_then(Dated::day)
-                    .is_none_or(|d| d <= last)
-                {
-                    // a read of day t reads its prefix through t: one dated after the span's
-                    // last day was never met (E §4.2; S4, P43 on #241)
-                    acc.met.merge(&i.coll.deciding());
-                }
+                // read to be left out: every entry its reads gave, `held:` lines too
+                // (refcore's `flows_move`; P35, P48 on #241), or the day that put it outside
+                // the span (P20)
+                let reads = self.uncounted_reads(m, i, sp, ctx)?;
+                acc.met.merge(&reads);
                 continue;
             }
             if i.status == Status::Uncertain {
@@ -173,7 +200,8 @@ impl Engine {
                 }
                 Some(Dated::Day(d)) if sp.contains(*d) => Some(*d),
                 Some(Dated::Day(_)) => {
-                    acc.met.merge(&i.day_coll.deciding());
+                    let reads = self.uncounted_reads(m, i, sp, ctx)?;
+                    acc.met.merge(&reads);
                     continue;
                 }
                 None => {
@@ -184,7 +212,7 @@ impl Engine {
                 }
             };
             if let Some(k) = fk
-                && !for_period_of(i, k, acc)
+                && !for_period_of(i, k, (acc, &mut self.entries))?
             {
                 continue;
             }
@@ -203,6 +231,8 @@ impl Engine {
                 continue;
             }
             acc.met.merge(&i.coll);
+            // a decision's run counted prints what it read, explained (E §10, L §8.2)
+            self.trace_counted(m, i, ctx)?;
             // a refused result lists what it read like a value (L §8.2 One read set; 208.2)
             if let Some(err) = &i.err {
                 return Err(Stop::Refused(err.clone()));
@@ -212,11 +242,11 @@ impl Engine {
                 continue;
             }
             if i.status == Status::Past {
-                acc.met.entries.insert(Entry {
+                acc.met.note(self.entry_id(Entry {
                     word: "unfulfilled",
                     text: i.id.clone(),
                     figure: String::new(),
-                });
+                })?);
             }
             // flows of a movement stated same reads it from both sides: where they disagree it
             // is HOLE-SAME, never one side's figure (L §6.1; N4, P36 on #241); the day only for
@@ -238,6 +268,10 @@ impl Engine {
                     }
                     Amount::Qty(q) => q,
                 };
+                // the walk is a cause an explanation prints in its own form only where it
+                // refused the leg; else the leg is its instance's, traced as the instance was
+                // (E §10; tally 2.1.8 P50)
+                let back = self.trace_walked();
                 let out = if q.is_zero() {
                     None
                 } else {
@@ -246,15 +280,23 @@ impl Engine {
                 if let Some(err) = out {
                     return Err(Stop::Refused(err));
                 }
+                self.trace_walked_back(back);
                 acc.add(q, lg.unit.as_ref())?;
             }
         }
         if !mv.decision {
+            let before = self.trace_walked();
+            let mut settling = Vec::new();
             for adj in self.settled_move(m, mv, ctx.cut)? {
                 if leg.is_none_or(|l| l == adj.leg.name) && adj.inst_keys.starts_with(want) {
-                    count_adjustment(m, &adj, sp, last, acc)?;
+                    count_adjustment(m, &adj, (sp, last), (acc, &mut self.entries))?;
+                    settling.extend(settling_in(&adj, sp));
                 }
             }
+            // the adjustments are measured apart, a structure no walk form prints: a traced
+            // read holds their holes and the rows settling them in its span (E §10; P20, P37)
+            self.trace_walked_back(before);
+            self.trace_settling(m, &settling, ctx.cut)?;
         }
         Ok(())
     }
@@ -277,11 +319,11 @@ impl Engine {
             return Err(Stop::Refused(bad.clone()));
         }
         if obs.is_empty() {
-            acc.met.entries.insert(Entry {
+            acc.met.note(self.entry_id(Entry {
                 word: "open",
                 text: i.id.clone(),
                 figure: String::new(),
-            });
+            })?);
             // what the balance lists of it: its reads, as its mark carries them (S5, P43 on
             // #241; L §8.2 One read set)
             acc.met.merge(&i.coll);
@@ -366,7 +408,8 @@ impl Engine {
                 }
                 (at.walk, (last == t).then_some(at.point))
             }
-            None => (self.main_walk(m, ctx.cut)?, None),
+            // a traced read prints what the runs read, not the walk (E §10)
+            None => (self.decided_walk(m, ctx.cut, &[mv])?, None),
         };
         let mut out = Vec::new();
         for i in self.move_instances(m, mv, ctx.cut)?.iter() {
@@ -479,22 +522,30 @@ impl Engine {
 /// Whether instance `i` is for period `k` under `flows(…, for k)`: its period equal to `k`;
 /// a period that is a hole is that hole in
 /// `acc`, the instance unfulfilled where it is past (L §8.1, §8.2; P64). L §5.14.3.
-fn for_period_of(i: &Inst, k: &Value, acc: &mut Counted) -> bool {
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` past 2^31 register entries in one run.
+fn for_period_of(
+    i: &Inst,
+    k: &Value,
+    (acc, entries): (&mut Counted, &mut Entries),
+) -> Result<bool, Stop> {
     let Some(period) = &i.for_period else {
-        return false;
+        return Ok(false);
     };
     if let Value::Hole(h) = period {
         if i.status == Status::Past {
-            acc.met.entries.insert(Entry {
+            acc.met.note(entries.intern(Entry {
                 word: "unfulfilled",
                 text: i.id.clone(),
                 figure: String::new(),
-            });
+            })?);
         }
         acc.holes.push(h.clone());
-        return false;
+        return Ok(false);
     }
-    period == k
+    Ok(period == k)
 }
 
 /// What a move's flows gather: the total, the units its legs are in, the holes, the
@@ -543,9 +594,8 @@ impl Counted {
 fn count_adjustment(
     m: &Reality,
     adj: &crate::book::Adjustment,
-    sp: &Span,
-    last: Day,
-    acc: &mut Counted,
+    (sp, last): (&Span, Day),
+    (acc, entries): (&mut Counted, &mut Entries),
 ) -> Result<(), Stop> {
     if let Amount::Refused(err) = &adj.delta {
         // tally 2.1.2: settled or not, as an unsettled one is the HOLE-CHANGED hole
@@ -563,11 +613,11 @@ fn count_adjustment(
     if last >= adj.day
         && let Some(text) = adj.remainder_text(m)?
     {
-        acc.met.entries.insert(Entry {
+        acc.met.note(entries.intern(Entry {
             word: "adjustment",
             text,
             figure: String::new(),
-        });
+        })?);
     }
     for s in &adj.settled {
         if s.sign == 0 || !s.day.is_some_and(|d| sp.contains(d)) {
@@ -589,6 +639,20 @@ fn count_adjustment(
         }
     }
     Ok(())
+}
+
+/// The movements settling adjustment `adj` dated in span `sp`, waivers too: what a read of
+/// the span counts of its settlement (L §5.14.3; E §10, P37).
+fn settling_in(adj: &crate::book::Adjustment, sp: &Span) -> Vec<String> {
+    let mut out = Vec::new();
+    for s in &adj.settled {
+        if let Some(day) = s.day
+            && sp.contains(day)
+        {
+            out.push(s.by.clone());
+        }
+    }
+    out
 }
 
 /// A running total with `q` added. L §5.14.3.

@@ -230,18 +230,6 @@ impl Engine {
         #[cfg(feature = "counters")]
         self.counts.add(crate::Unit::WalkShared);
     }
-
-    /// The day a new projection's walk read through day `through` is planned through: with
-    /// forks on, `horizon`'s month end, so that a projection read day by day plans once a
-    /// month and its walk is continued; the twin plans each read's walk through its own day
-    /// (refcore's `proj_walk` plans through E: spec question Q-3 of #231) (P §2.4, §2.5, §3.5;
-    /// picks P54, P73). E §4.1, §4.3.
-    pub(crate) fn planned_through(&self, m: &Reality, through: Day) -> Day {
-        match self.forks {
-            Forks::On => horizon(m, through),
-            Forks::Off => through,
-        }
-    }
 }
 
 /// The day a projection's walk read through `through` is planned through with forks on: on
@@ -249,7 +237,7 @@ impl Engine {
 /// stays within a month of its window (P §3.5, pick P54). Planned further, a walk walks no
 /// further than a read asks and books the same through it: past the window only instances
 /// the walk never reaches change (E §4.1, §4.3; pick P73).
-fn horizon(m: &Reality, through: Day) -> Day {
+pub(super) fn horizon(m: &Reality, through: Day) -> Day {
     match Period::month_of(through).and_then(|month| month.end().previous()) {
         Some(last) => last.min(m.end).max(through),
         None => through,
@@ -346,7 +334,7 @@ fn same_act((one, act): (&Walk, &Act), (other, like): (&Walk, &Act)) -> bool {
 
 /// Whether two movements are one: plan instances by their bodies (E §4.1).
 fn same_mv((one, mv): (&Walk, Mv), (other, mv2): (&Walk, Mv)) -> bool {
-    one.insts.get(mv.0).is_some() && one.insts.get(mv.0) == other.insts.get(mv2.0)
+    one.inst(mv).is_some() && one.inst(mv) == other.inst(mv2)
 }
 
 /// Whether two leg acts of one movement carry the same hole or refusal. E §4.2.

@@ -1,0 +1,22 @@
+model h1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input x: money PLN
+def g: money PLN = x at reader
+
+ask q_late: g law 2026-11-30
+ask q_x: x law 2026-11-30
+
+version v
+  cite s
+  governs 2026..
+  known 2026-01-01
+  x = 1 PLN "s"
+  given g = 9 PLN "s"

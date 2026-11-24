@@ -1,0 +1,36 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input ca: bool
+input cb: bool
+input va: money PLN
+input vb: money PLN
+input vb2: money PLN
+def x: money PLN at reader
+  rule a beats b = va when ca
+  rule b = vb when cb
+ask l26: x law 2026-03-01
+ask l27: x law 2027-03-01
+ask e27: explain x law 2027-03-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ca = true "s"
+  cb = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vb2 = 3 PLN "s"
+version v27
+  cite s
+  governs 2027..
+  known 2026-06-01
+  replace rule x.b beats a = vb2 when cb
+  replace rule x.a = va when ca

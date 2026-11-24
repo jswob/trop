@@ -1,0 +1,45 @@
+model accrue
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index dd = day 2026-06-29..2026-07-02
+
+input p0: money PLN
+input r: rate
+input rh: rate
+input d0: date
+input d1: date
+input d2: date
+input d3: date
+
+def rt[d in dd]: rate = r at d
+def day_int[d in dd]: num PLN = accrue(p0, rt[d], d, d + 1, act365, simple)
+
+ask c_day: accrue(p0, r, d0, d1, act365, simple) law 2026-03-01
+ask c_month: accrue(p0, r, d0, d2, act365, simple) law 2026-03-01
+ask c_year_eff: accrue(p0, r, d0, d3, act365, effective) law 2026-03-01
+ask c_nominal: accrue(p0, r, d0, d1, act365, nominal 365) law 2026-03-01
+ask c_back: accrue(p0, r, d1, d0, act365, simple) law 2026-03-01
+ask c_hole: accrue(p0, rh, d0, d1, act365, simple) law 2026-03-01
+ask c_dcf: dcf(d0, d2, act365), dcf(d2, d0, act365)
+ask c_change: day_int[d] for d in dd
+ask c_sum: sum(day_int[d] for d in dd)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 36500 PLN "s"
+  rh = ?"which rate is agreed?" "s"
+  d0 = 2026-03-01 "s"
+  d1 = 2026-03-02 "s"
+  d2 = 2026-04-01 "s"
+  d3 = 2027-03-01 "s"
+  r = 5 %/year governs 2026-01-01..2026-06-30 "s"
+  r = 7.3 %/year governs 2026-07-01..2026-12-31 "s"

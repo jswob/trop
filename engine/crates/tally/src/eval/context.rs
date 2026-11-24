@@ -402,10 +402,10 @@ impl Engine {
             .collect();
         let (value, text, solve) = (pin.value.clone(), pin.text.clone(), pin.solve);
         for other in passed {
-            self.note("pin met", other, String::new());
+            self.note("pin met", other, String::new())?;
         }
         if !solve {
-            self.note("pinned", text, String::new());
+            self.note("pinned", text, String::new())?;
         }
         Ok(Some(value))
     }

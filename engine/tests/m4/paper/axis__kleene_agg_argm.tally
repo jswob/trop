@@ -1,0 +1,36 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis rd
+  r1 "reading one"
+  r2 "reading two"
+index ks = [k1, k2]
+input xs[k in ks]: money PLN
+input ys[k in ks]: money PLN
+input c: bool
+def t[k in ks]: money PLN
+  rule one = xs[k] when rd == r1
+  rule two = ys[k] when rd == r2
+def am: key ks = argmin(t[k] for k in ks) ties by pos(k)
+def sm: money PLN = sum(t[k] for k in ks)
+def lg: bool = c or rd == r2
+def lg2: bool = rd == r2 and c
+ask a: am, sm
+ask b: lg, lg2
+ask chk: check am == k1
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  xs[k1] = 1 PLN "s"
+  xs[k2] = 2 PLN "s"
+  ys[k1] = 3 PLN "s"
+  ys[k2] = 2 PLN "s"
+  c = true "s"

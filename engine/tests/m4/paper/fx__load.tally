@@ -1,0 +1,24 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+place eur_acc: accounts EUR lives 2026-01-01..
+input fx[d in days]: num PLN/EUR
+input e: money EUR
+input w: date
+input d2: date
+def wrong: num PLN = e / fx[d2]
+ask a: wrong
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  e = 10 EUR "s"
+  fx = 4.30 "s"
+  d2 = 2026-03-02 "s"

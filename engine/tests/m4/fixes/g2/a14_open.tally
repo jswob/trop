@@ -1,0 +1,23 @@
+model a14
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index rows: open
+input amt[r in rows]: money PLN
+input a: key rows
+input b: key rows
+ask c1: check a == b
+ask c2: check a == r2
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 PLN "s"
+  amt[r2] = 2 PLN "s"
+  a = r1 "s"
+  b = r2 "s"

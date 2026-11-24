@@ -1,0 +1,28 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+input base: num PLN
+input stp: money PLN
+input stp_h: money PLN
+input fx: num PLN/EUR
+input e: money EUR
+def r_ok: money PLN = round(base, stp, half-up)
+def r_hole: money PLN = round(base, stp_h, half-up)
+def conv: money PLN = round(e * fx, minor(PLN), half-even)
+ask a: r_ok, r_hole, conv
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 12.37 PLN "s"
+  stp = 0.05 PLN "s"
+  stp_h = ?"which step?" "s"
+  fx = ?"which rate?" "s"
+  e = 100 EUR "s"

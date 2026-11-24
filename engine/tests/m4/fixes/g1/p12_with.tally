@@ -1,0 +1,36 @@
+model p12
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k] + x
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+
+ask q_w1: dbl[k] for k in ks, j in js with x = c[k, j]
+ask q_w2: tot[k, j] for k in ks, j in js with x = c[k, j] - b[k]
+ask q_w3: (dbl[k] as if {x = c[k, j]}) for k in ks, j in js with b[k] = c[k, j]
+ask q_w4: explain tot[k1, j2] with x = c[k1, j1]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = 4 PLN "s"
+  x = 5 PLN "s"

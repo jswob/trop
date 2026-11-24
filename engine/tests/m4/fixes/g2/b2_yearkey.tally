@@ -1,0 +1,21 @@
+model b2_yearkey
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ys = year 2020..2030
+
+input y1: key ys
+
+ask c3: check y1 == 2020 with y1 = 2024
+ask c5: y1 + 1 with y1 = 2024
+ask c6: check y1 == 2020 with y1 = (2024)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y1 = 2021 "s"

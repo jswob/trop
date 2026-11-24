@@ -11,8 +11,8 @@
 use super::lex::{Kind, Mark, Paren, Read, Role};
 use super::parse::{P, Stop, is_keyword};
 use super::tree::{
-    AddOp, Call, CmpOp, Expr, Field, FieldValue, In, Key, Leg, Lit, MulOp, Number, OfQ, Postfix,
-    RowKey, Step, Type,
+    AddOp, Call, CmpOp, Expr, Field, FieldValue, In, Key, Leg, Lit, LoadType, MulOp, Number, OfQ,
+    Postfix, RowKey, Step, Type,
 };
 use crate::base::Load;
 use crate::num::Num;
@@ -163,7 +163,7 @@ impl P<'_> {
         self.expect("else")?;
         let other = self.expr(ends)?;
         self.close()?;
-        Ok(Expr::If(Box::new([cond, then, other])))
+        Ok(Expr::If(Box::new([cond, then, other]), LoadType::default()))
     }
 
     /// `a or b or …`.

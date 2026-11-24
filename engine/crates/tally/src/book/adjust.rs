@@ -379,7 +379,8 @@ impl Engine {
         // a settlement's hole booking is answered like any instance's; steps 2–3 leave the
         // rest of it unmeasured (E §5 steps 1–2; tally 2.1.8 §4, item 28)
         let settles = super::settle::settlement_move(m, mv)?;
-        for inst in self.plan_list(m, mv, cut)?.iter() {
+        // at a past cut only the instances this measure takes (fence F7)
+        for inst in self.measured_list(m, mv, cut)?.iter() {
             if !matches!(inst.status, Status::Past | Status::Hole | Status::None) {
                 continue;
             }
@@ -1128,7 +1129,10 @@ pub(crate) fn known_dates(m: &Reality) -> Vec<(Day, BTreeSet<String>)> {
 /// The versions a step names: those of its versions the instance read, else all of them, in
 /// text order (refcore's `step_versions`). E §5 step 4.
 fn step_versions(coll: &Collected, vids: &BTreeSet<String>) -> Vec<String> {
-    let hit: Vec<String> = vids.intersection(&coll.versions).cloned().collect();
+    let Some(read) = coll.versions() else {
+        return vids.iter().cloned().collect();
+    };
+    let hit: Vec<String> = vids.intersection(read).cloned().collect();
     if hit.is_empty() {
         return vids.iter().cloned().collect();
     }

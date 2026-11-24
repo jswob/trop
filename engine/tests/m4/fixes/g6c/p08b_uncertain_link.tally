@@ -1,0 +1,111 @@
+model p
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+
+unit PLN: currency minor 0.01
+
+index month = month 2026-01..2026-06
+
+place konto: accounts PLN lives 2026-01-01..
+
+place card: accounts PLN lives 2026-01-01..
+
+place landlord: outside lives 1900-01-01..
+
+place shop: outside lives 1900-01-01..
+
+input bank: observed
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_amt[m in month]: money PLN
+
+input rent_day[m in month]: date
+
+input base: money PLN
+
+input guess: money PLN
+
+input spend_dom: int
+
+input skip_m: month
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+move spend[m in month]: transfers
+  on day_of(m, spend_dom)
+  at start_of(m)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+ask k: bal(konto, 2026-05-19)
+
+ask f: flows(spend, m) for m in [2026-01, 2026-02, 2026-03, 2026-04, 2026-05]
+
+ask l: loose[m] for m in [2026-01, 2026-02, 2026-03, 2026-04]
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  at start_of(m)
+  when m != skip_m
+  leg cash from konto to landlord amount rent_amt[m]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 300.00 PLN "s"
+  guess = 100.00 PLN "s"
+  spend_dom = 25 "s"
+  skip_m = 2026-04 "s"
+  rent_amt[2026-01] = 800.00 PLN "s"
+  rent_amt[2026-02] = 800.00 PLN "s"
+  rent_amt[2026-03] = 800.00 PLN "s"
+  rent_amt[2026-04] = 800.00 PLN "s"
+  rent_amt[2026-05] = 800.00 PLN "s"
+  rent_amt[2026-06] = 800.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-03] = window(2026-03-03, 2026-03-08) "a window"
+  rent_day[2026-04] = 2026-04-06 "s"
+  rent_day[2026-05] = 2026-05-05 "s"
+  rent_day[2026-06] = 2026-06-05 "s"
+  opening[konto] = 9000.00 PLN at 2026-01-01 start "s"
+  opening[card] = 1000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers card
+  bank[a1] = (on: 2026-01-02, kind: transfers, leg cash from card to shop amount 40.00 PLN) "loose"
+  bank[a2] = (on: 2026-01-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-01]) "names jan"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-21
+  covers card
+  bank[b1] = (on: 2026-02-03, kind: transfers, leg cash from card to shop amount 50.00 PLN) "loose"
+  bank[b2] = (on: 2026-02-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-02]) "names feb"
+
+version mar
+  cite s
+  governs 2026-03
+  known 2026-03-21
+  covers card
+  bank[c1] = (on: 2026-03-04, kind: transfers, leg cash from card to shop amount 60.00 PLN) "loose"
+  bank[c2] = (on: 2026-03-05, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-03]) "names mar"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-21
+  covers card
+  bank[d1] = (on: 2026-04-06, kind: transfers, leg cash from konto to landlord amount 800.00 PLN, fulfils: rent[2026-04]) "names apr"
+  bank[d2] = (on: 2026-04-10, kind: transfers, leg cash from card to shop amount 70.00 PLN) "loose"

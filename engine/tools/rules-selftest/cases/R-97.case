@@ -73,3 +73,67 @@ w, how = perf.criterion_wall(r, 'zz-crit')
 o, _ = perf.criterion_wall(r, 'zz-crit-over')
 print(f'R-97 less: {perf.seconds(w)} ({how}); {perf.seconds(o)}; ' + ('judged' if 'wall_s' in r else 'information, no wall_s') + ('; instructions set' if 'instructions' in r else '; no limit'))
 "
+
+# Pick P5 (a) (issue #252, 2026-11-22): a load row (`load:`, P8-L2 and P8-L10) runs T's run
+# list, engine/tests/m4/load/runs.tsv, each run once and cold, a line each, and judges the row
+# by its slowest run's wall and its largest peak; an output is checked where the list holds a
+# sha256 (P8-L2's), reported where it holds `-` (P8-L10's). /usr/bin/true prints nothing, so
+# P8-L2's one run is wrong, and P8-L10's named runs are reported, unjudged.
+
+case: load-judges-each-run
+tool: run
+exit: any
+expect: P8-L2 d11_full: wall
+expect: BUDGET P8-L2 WRONG output: d11_full
+--- run
+tools/perf row P8-L2 --bin /usr/bin/true
+
+# Planted runs of P8-L10 beside T's (since U2, 2026-11-23, T's list holds c1_r2 alone), so
+# the case doesn't hang on how many runs the list holds.
+case: load-runs-by-name
+tool: run
+exit: any
+expect: P8-L10 zz_a: wall
+expect: sha256 e3b0c44298fc reported (runs.tsv holds -)
+expect: 2 of 3 runs (--runs), each once, cold; 2 unjudged (sha256 -)
+--- append tests/m4/load/runs.tsv
+P8-L10	zz_a	engine	a.tally	zz	-
+P8-L10	zz_b	engine	b.tally	zz	-
+--- run
+tools/perf row P8-L10 --runs c1_r2,zz_a --bin /usr/bin/true
+
+case: load-run-name-unknown
+tool: run
+exit: any
+expect: --runs: zz_none is no run of P8-L10
+--- run
+tools/perf row P8-L10 --runs zz_none --bin /usr/bin/true
+
+# A run the watchdog stops (memcap.py's kill at 8 GB, a signal) misses whatever its wall: the
+# planted binary stops itself with SIGTERM, as memcap does.
+case: load-run-killed-misses
+tool: run
+exit: any
+expect: P8-L10 c1_r2: wall
+expect: killed by signal 15 (memcap at 8 GB)
+expect: killed at 8 GB or 90 s (D4-7): c1_r2
+--- write zz-term.sh
+#!/bin/sh
+kill -TERM $$
+--- run
+chmod +x zz-term.sh
+tools/perf row P8-L10 --runs c1_r2 --bin "$PWD/zz-term.sh"
+
+# F7's count row (issue #252, 2026-11-23): F7-c1r2 runs P8-L10's c1_r2 on the counted build and
+# holds its def misses to 1.2 x G6c's final count (226 609), so a change that brings the move's
+# whole list back at every past cut fails a PR. The planted binary prints a counters' line over it.
+case: load-count-over-budget
+tool: run
+exit: any
+expect: COUNT F7-c1r2 c1_r2 def_misses 300 000 > 226 609
+--- write zz-stats.sh
+#!/bin/sh
+echo "stats: def_misses=300000 days_stepped=1 walks_shared=0"
+--- run
+chmod +x zz-stats.sh
+tools/perf counts F7-c1r2 --bin "$PWD/zz-stats.sh"

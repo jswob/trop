@@ -1,0 +1,42 @@
+model p5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def ax[k in ks]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k] + x} when mode == high
+def axn: money PLN at reader
+  rule base = dbl[k2] as if {b[k2] = c[k2]}
+  rule hi beats base = dbl[k2] as if {b[k2] = c[k2] + x} when mode == high
+def hi_only[k in ks]: money PLN = dbl[k] as if {b[k] = c[k] + x}
+
+ask q_ax: ax[k] for k in ks law 2026-03-01
+ask q_hi: hi_only[k] for k in ks
+ask q_axn: axn law 2026-03-01
+ask q_axc: ax[k2] law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"

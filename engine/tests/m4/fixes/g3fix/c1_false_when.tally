@@ -1,0 +1,53 @@
+model c1
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt: money PLN
+input w: date
+input lim: money PLN
+input pl: money PLN
+input sp: month
+
+move dt: transfers
+  on w
+  reads konto
+  when bal(konto) > lim
+  leg cash from world to konto amount amt
+move df: transfers
+  on w
+  reads konto
+  when bal(konto) < lim
+  leg cash from world to konto amount amt
+move pf: transfers
+  on w
+  when pl < lim
+  leg cash from world to konto amount amt
+
+def cn: int = count(m in transfers over sp .. sp)
+def ff: money PLN = flows(df, sp .. sp)
+def fp: money PLN = flows(pf, sp .. sp)
+
+ask e_cn: explain cn
+ask i_cn: inputs-of cn
+ask e_ff: explain ff
+ask i_ff: inputs-of ff
+ask e_fp: explain fp
+ask i_fp: inputs-of fp
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt = 100.00 PLN "s"
+  w = 2026-04-30 "s"
+  lim = 450.00 PLN "s"
+  pl = 900.00 PLN "s"
+  sp = 2026-04 "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"

@@ -1,0 +1,58 @@
+model p12_add_business
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input cal_h: calendar
+input cal_n: calendar
+input cal_n2: calendar
+input cal_ok: calendar
+input d_h: date
+input d_n: date
+input d_ok: date
+input d_v: date
+input n_h: int
+input n_n: int
+input n_ok: int
+input n_z: int
+input n_z2: int
+
+ask h_d: add_business(d_h, n_ok, cal_ok)
+ask h_n: add_business(d_ok, n_h, cal_ok)
+ask h_cal: add_business(d_ok, n_ok, cal_h)
+ask h_d__h_n: add_business(d_h, n_h, cal_ok)
+ask h_d__n_n: add_business(d_h, n_n, cal_ok)
+ask h_d__z_n: add_business(d_h, n_z, cal_ok)
+ask h_d__n_cal: add_business(d_h, n_ok, cal_n)
+ask h_n__n_d: add_business(d_n, n_h, cal_ok)
+ask h_n__v_d: add_business(d_v, n_h, cal_ok)
+ask h_n__n_cal: add_business(d_ok, n_h, cal_n)
+ask h_cal__n_d: add_business(d_n, n_ok, cal_h)
+ask h_cal__v_d: add_business(d_v, n_ok, cal_h)
+ask h_cal__n_n: add_business(d_ok, n_n, cal_h)
+ask h_cal__z_n: add_business(d_ok, n_z, cal_h)
+ask n_d__z_n: add_business(d_n, n_z2, cal_ok)
+ask z_n__n_cal: add_business(d_ok, n_z, cal_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  cal_h = ?"which cal?" "s"
+  cal_n = none "s"
+  cal_n2 = none "s"
+  cal_ok = calendar(weekends [sat, sun], yearly [01-01]) "s"
+  d_h = ?"which d?" "s"
+  d_n = none "s"
+  d_ok = 2026-03-06 "s"
+  d_v = never "s"
+  n_h = ?"which n?" "s"
+  n_n = none "s"
+  n_ok = 2 "s"
+  n_z = 0 "s"
+  n_z2 = 0 "s"

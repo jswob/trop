@@ -20,7 +20,10 @@
 //! value the ask's other reads see; a helper keeps the first stop it meets for the trace's
 //! end, so the evaluator's recursive frames hold no more than a node's place (R-16).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+
+mod parts;
+pub(crate) use parts::{Keep, Part};
 
 use super::memo::{CellId, CellKey, Cells, Open};
 use super::stack::Item;
@@ -206,6 +209,18 @@ pub(crate) struct Trace {
     pub(crate) walked: bool,
     /// The first stop a helper met, the trace's end's.
     stop: Option<Stop>,
+    /// Each decision move whose instances' days a read traced, by its walk: once per
+    /// explain, as the plan pass lists them once (E §10).
+    days: BTreeSet<(usize, String)>,
+    /// Each decision run a read counted and traced, by its walk and instance: once per
+    /// explain, as the walk runs it once (E §10).
+    runs: BTreeSet<(usize, String)>,
+    /// The marks of the plan pass traced now, where one is (P20).
+    marks: Option<parts::Marks>,
+    /// The marks of the last plan pass traced, by its move and cut, for the read that asked.
+    fresh: Option<(String, Day, parts::Marks)>,
+    /// The parts of plan passes a read set aside, for a read that counts their instances.
+    stash: parts::Stash,
 }
 
 /// What a trace knows of a def cell a read reaches.
@@ -378,6 +393,12 @@ impl Trace {
 }
 
 impl Engine {
+    /// Whether the ask is traced or lists its inputs, an `explain` or an `inputs-of`, whatever
+    /// is evaluating now (E §10).
+    pub(crate) fn explaining(&self) -> bool {
+        self.trace.is_some() || self.keep_rows == super::Rows::Kept
+    }
+
     /// Whether a read now is traced: an `explain` is being traced and no shared structure is
     /// evaluating (E §3.2, §10).
     pub(crate) fn tracing(&self) -> bool {
@@ -416,6 +437,11 @@ impl Engine {
             saved,
             walked: false,
             stop: None,
+            days: BTreeSet::new(),
+            runs: BTreeSet::new(),
+            marks: None,
+            fresh: None,
+            stash: BTreeMap::new(),
         });
     }
 
@@ -479,6 +505,21 @@ impl Engine {
         Ok(self.trace_walked())
     }
 
+    /// Whether a read now is traced and hasn't yet traced the days of decision move
+    /// `move_id`'s instances in walk `walk`; noted as traced from now on (E §10).
+    pub(crate) fn trace_first_days(&mut self, walk: usize, move_id: &str) -> bool {
+        self.traced()
+            .is_some_and(|trace| trace.days.insert((walk, move_id.to_owned())))
+    }
+
+    /// Whether a read now is traced and hasn't yet traced decision run `inst` of walk
+    /// `walk`; noted as traced from now on, so a run's reads print once per explain, where
+    /// a read first counts it (E §10).
+    pub(crate) fn trace_first_run(&mut self, walk: usize, inst: &str) -> bool {
+        self.traced()
+            .is_some_and(|trace| trace.runs.insert((walk, inst.to_owned())))
+    }
+
     /// Whether the trace has noted a read of the walk, false with none: what a balance read
     /// gives back once its own read of the walk is its node (E §10).
     pub(crate) fn trace_walked(&self) -> Walked {
@@ -530,6 +571,29 @@ impl Engine {
         node.value = Some(got);
         node.lines = lines;
         trace.added(node);
+    }
+
+    /// Opens the node of a written projection `read` from day `start` the walk refused, `r`,
+    /// under the open node, for what the refused balance rests on to print under it; returns
+    /// it, for [`Engine::trace_closed`] (L §8.2; E §10; P31).
+    pub(crate) fn trace_refused_balance(
+        &mut self,
+        read: Balance,
+        start: &str,
+        r: &crate::base::Refusal,
+    ) -> Option<usize> {
+        let trace = self.traced()?;
+        let label = format!("bal({}, {}) from {start}", read.place, read.day.text());
+        let mut node = Node::new(Kind::Balance(read), label);
+        node.value = Some(Item::Refused(r.clone()));
+        let at = trace.added(node)?;
+        trace.open.push(at);
+        Some(at)
+    }
+
+    /// Closes the node at `at`, opened last by a read outside this module.
+    pub(crate) fn trace_closed(&mut self, at: Option<usize>) {
+        self.trace_close(at);
     }
 
     /// Whether a read now is traced and the trace has met def cell `key` at law date `law`,
@@ -619,7 +683,8 @@ impl Engine {
 
     /// Adds a running read of `place`, `value`, under the open node: a walk-bound def's cell
     /// read again at its walk point prints "its running reads as balances up to that point"
-    /// of `day` (E §10; refcore's `e_bal`, its `now` form).
+    /// of `day`, a hole with its question, as a line prints it (E §10, L §5.18 Output, §8.1;
+    /// refcore's `e_bal`, its `now` form, `fmt_value`).
     ///
     /// # Errors
     ///
@@ -636,7 +701,7 @@ impl Engine {
         }
         let label = format!(
             "running read bal({place}) = {}, the balance up to this point of {}",
-            super::read::shown(m, value)?,
+            value.text(m).map_err(super::state::num_stop)?,
             day.text()
         );
         self.trace_leaf(label);

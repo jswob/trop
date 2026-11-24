@@ -16,7 +16,7 @@ use std::collections::BTreeSet;
 use super::observe::Obs;
 use super::same::{DayCmp, and_list, compare_days, shown};
 use crate::base::{Code, Refusal, Run};
-use crate::eval::{Collected, Engine, Entry, num_stop};
+use crate::eval::{Collected, Engine, EntryId, num_stop};
 use crate::hole::Hole;
 use crate::model::{Reality, Value};
 use crate::syntax::Stop;
@@ -77,7 +77,7 @@ impl Member {
 }
 
 /// An end waiting for a decision's point: the movement, its leg, the side, what it carries.
-pub(crate) type Waiting = (String, LegVal, usize, Vec<Entry>, Collected);
+pub(crate) type Waiting = (String, LegVal, usize, Vec<EntryId>, Collected);
 
 /// A leg's amount as a `HOLE-SAME` question prints it: the amount, `refused`, or the hole.
 /// L §8.1.
@@ -107,7 +107,7 @@ impl Engine {
         id: usize,
         (mover, lg): (&Member, &LegVal),
         at: At,
-        (reg, coll): (&[Entry], &Collected),
+        (reg, coll): (&[EntryId], &Collected),
         mut mask: Ends,
     ) -> Result<Ends, Stop> {
         let books = self.same_ends(m, id, (mover, lg))?;

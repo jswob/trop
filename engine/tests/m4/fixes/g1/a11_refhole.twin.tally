@@ -1,0 +1,38 @@
+model a11
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input p0: money PLN
+input ph: money PLN
+input rm: rate
+input rh: rate
+input d0: date
+input d1: date
+input dh: date
+input z: money PLN
+
+ask q_round: round(ph, z, half-even)
+ask q_disc: accrue(p0, rh, d0, d1, act365, discount)
+ask q_month: accrue(p0, rm, d0, dh, act365, simple)
+ask q_monthp: accrue(ph, rm, d0, d1, act365, simple)
+ask q_per: periodic(rm, day, simple), periodic(rh, day, simple)
+ask q_div: ph / (z / 1 PLN)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  p0 = 1000 PLN "s"
+  ph = 5 PLN "s"
+  rm = 1 %/month "s"
+  rh = 10 %/year "s"
+  d0 = 2026-01-01 "s"
+  d1 = 2026-07-01 "s"
+  dh = 2026-07-01 "s"
+  z = 0 PLN "s"

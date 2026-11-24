@@ -54,7 +54,7 @@ use super::plan::{invariant, qty_value};
 use super::point::At;
 use super::readings::place_sign;
 use super::state::St;
-use crate::eval::{Collected, Engine, Entry, num_stop};
+use crate::eval::{Collected, Engine, Entries, Entry, EntryId, num_stop};
 use crate::model::{MoveInfo, Reality, Value, World};
 use crate::num::Num;
 use crate::syntax::{Sign, Stop};
@@ -123,7 +123,7 @@ struct Tree {
     runs: BTreeSet<Day>,
     /// x's `left out:` entries: each move whose instances outside the run touch x, with its
     /// count and first day (L §8.2).
-    left_out: Vec<Entry>,
+    left_out: Vec<EntryId>,
     /// The days of each left-out move's instances (L §8.2 `left out:`, E §4.3 step 3).
     counted: BTreeMap<String, Vec<Day>>,
 }
@@ -194,9 +194,7 @@ impl Tree {
                 met.merge(coll);
             }
         }
-        for entry in &self.left_out {
-            met.entries.insert(entry.clone());
-        }
+        met.note_all(&self.left_out);
         met
     }
 }
@@ -658,7 +656,7 @@ impl Engine {
         // a `min` over the days first through last reads each day's projection (E §4.3)
         let lines = left_out_lines(&tree.counted, (t, (first, last)))?;
         for line in lines {
-            self.note("left out", line, String::new());
+            self.note("left out", line, String::new())?;
         }
         self.chain_register(m, (base, point), (place, unit), &mut met)?;
         self.absorb(&met);
@@ -737,7 +735,7 @@ impl Engine {
         // none (a projection's plan pass schedules no reading, E §4.3 counts movements only);
         // the tree needs no anchor, only that read's refusals, which come first, as the walk's
         // do, so its value goes unused
-        crate::book::first_readings(m, (cut, world))?;
+        crate::book::first_readings(m, (cut, world), &mut self.entries)?;
         let mut got = Gathered {
             tree: Tree::new(cut),
             legs: Vec::new(),
@@ -760,7 +758,7 @@ impl Engine {
                 }
             }
         }
-        got.finish(m, place, (cut, world))
+        got.finish(m, place, (cut, world), &mut self.entries)
     }
 }
 
@@ -922,6 +920,7 @@ impl Gathered {
         m: &Reality,
         place: &str,
         seen: (Day, World),
+        entries: &mut Entries,
     ) -> Result<(Tree, Vec<Num>), Stop> {
         let mut tree = self.tree;
         // the cap counts a value's reduced fraction, money's too, never its minor units
@@ -941,11 +940,11 @@ impl Gathered {
         }
         for (mid, (n, first)) in &self.outside {
             if self.touching.contains(mid) {
-                tree.left_out.push(Entry {
+                tree.left_out.push(entries.intern(Entry {
                     word: "left out",
                     text: format!("{mid}, {n} instances, first {}", first.text()),
                     figure: String::new(),
-                });
+                })?);
             }
         }
         for days in tree.counted.values_mut() {

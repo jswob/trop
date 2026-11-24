@@ -1,0 +1,24 @@
+model b15
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input b: key ks
+input m1: key ms
+ask c1: check a == k2 with a = k2
+ask c2: check a == b with a = k3
+ask c3: check a == b with a = k3, b = k1
+ask c4: check m1 == 2026-01 with m1 = 2026-05
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = k1 "s"
+  b = k1 "s"
+  m1 = 2026-02 "s"

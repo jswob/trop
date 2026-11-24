@@ -1,0 +1,25 @@
+model a7
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input lo: rate
+input hi: rate
+input st: rate
+input tg: num
+
+def needp: rate = min(t for t in lo .. hi step st where periodic(t, year, effective) >= tg)
+
+ask q_p: needp
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  lo = 0 %/year "s"
+  hi = 20 %/year "s"
+  st = 1 %/year "s"
+  tg = 0.105 "s"

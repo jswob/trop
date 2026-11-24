@@ -1,0 +1,45 @@
+model logic
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input bt: bool
+input bf: bool
+input bh: bool
+input x1: money PLN
+input x2: money PLN
+input z0: num
+
+def bnone: bool
+  rule base = none
+
+ask and_t: bt and bt, bt and bf, bt and bh
+ask and_f: bf and bt, bf and bf, bf and bh
+ask and_h: bh and bt, bh and bf, bh and bh
+ask or_t: bt or bt, bt or bf, bt or bh
+ask or_f: bf or bt, bf or bf, bf or bh
+ask or_h: bh or bt, bh or bf, bh or bh
+ask not_3: not bt, not bf, not bh
+ask if_h: if bh then x1 else x1, if bh then x1 else x2
+ask if_skip: if bt then x1 else x1 / z0, if bf then x1 / z0 else x2
+ask stop: bf and x1 / z0 > x2, bt or x1 / z0 > x2
+ask stop_not: bh and x1 / z0 > x2, bh or x1 / z0 > x2
+ask none_and: bt and bnone
+ask none_or: bf or bnone
+ask none_test: bnone == none or bnone
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  bt = true "s"
+  bf = false "s"
+  bh = ?"does the rule apply?" "s"
+  x1 = 10 PLN "s"
+  x2 = 20 PLN "s"
+  z0 = 0 "s"

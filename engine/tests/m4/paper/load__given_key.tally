@@ -1,0 +1,21 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ps = [p1, p2]
+input va: money PLN
+def x[p in ps]: money PLN
+  rule b = va
+ask q: x[p1]
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  va = 1 PLN "s"
+  given x[p9] = 3 PLN "s"

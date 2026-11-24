@@ -1,0 +1,59 @@
+model agg
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2, k3]
+
+input fth[k in ks]: bool
+input thf[k in ks]: bool
+input tht[k in ks]: bool
+input fhf[k in ks]: bool
+input xs[k in ks]: money PLN
+input x0[k in ks]: money PLN
+input xh[k in ks]: money PLN
+input never_: bool
+
+ask any_3: any(fth[k] for k in ks), any(fhf[k] for k in ks), any(thf[k] for k in ks)
+ask all_3: all(thf[k] for k in ks), all(tht[k] for k in ks), all(fth[k] for k in ks)
+ask count_h: count(k in ks where fth[k]), count(k in ks where thf[k]), count(k in ks)
+ask sum_h: sum(xs[k] for k in ks where fhf[k]), sum(x0[k] for k in ks where fhf[k]), sum(xh[k] for k in ks)
+ask minmax_h: min(xh[k] for k in ks), max(xs[k] for k in ks where fhf[k]), max(xs[k] for k in ks)
+ask first_last: first(k in ks where fth[k]), first(k in ks where thf[k]), last(k in ks where thf[k]), last(k in ks where fth[k])
+ask empty_: sum(xs[k] for k in ks where never_), count(k in ks where never_), any(fth[k] for k in ks where never_), all(fth[k] for k in ks where never_)
+ask empty_min: min(xs[k] for k in ks where never_)
+ask empty_first: first(k in ks where never_)
+ask mean_share: mean(xs[k] for k in ks), share(tht[k] for k in ks where tht[k] != false or k == k2), mean(xh[k] for k in ks)
+ask share_h: share(fth[k] for k in ks)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  fth[k1] = false "s"
+  fth[k2] = true "s"
+  fth[k3] = ?"is k3 in?" "s"
+  thf[k1] = true "s"
+  thf[k2] = ?"is k2 in?" "s"
+  thf[k3] = false "s"
+  tht[k1] = true "s"
+  tht[k2] = ?"is k2 in?" "s"
+  tht[k3] = true "s"
+  fhf[k1] = false "s"
+  fhf[k2] = ?"is k2 in?" "s"
+  fhf[k3] = false "s"
+  xs[k1] = 5 PLN "s"
+  xs[k2] = 3 PLN "s"
+  xs[k3] = 4 PLN "s"
+  x0[k1] = 5 PLN "s"
+  x0[k2] = 0 PLN "s"
+  x0[k3] = 4 PLN "s"
+  xh[k1] = 5 PLN "s"
+  xh[k2] = ?"how much at k2?" "s"
+  xh[k3] = 4 PLN "s"
+  never_ = false "s"

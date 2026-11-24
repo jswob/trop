@@ -191,10 +191,15 @@ pub(crate) fn periods_of(
     Ok(periods.is_integer().then_some(periods))
 }
 
-/// The int number of periods from `b` to `a`, two periods of one kind (refcore's `pdiff`,
-/// `key_diff`). L §4.2 Differences.
+/// The int number of periods from `b` to `a`, two periods of one kind: years, months,
+/// quarters or days, whatever an index's `by` (a key of a range `by n` stands for its n
+/// periods), for two periods not typed as keys of one index, two indexes' keys among them
+/// (refcore's `pdiff`; keys of one index differ by its steps, [`keys_differ`]). L §4.2
+/// Differences ("the difference of their positions, for an integer or period index of the
+/// integers or periods"), §4.1.
 fn period_diff(a: Period, b: Period) -> Result<Value, Stop> {
     let diff = match (a.kind(), b.kind()) {
+        (PeriodKind::Day, PeriodKind::Day) => b.start().days_to(a.start()),
         (PeriodKind::Year, PeriodKind::Year) => {
             i64::from(a.start().year()).checked_sub(i64::from(b.start().year()))
         }
@@ -209,6 +214,28 @@ fn period_diff(a: Period, b: Period) -> Result<Value, Stop> {
     };
     diff.map(Value::int)
         .ok_or_else(|| refuse(Run::Domain, "the difference of two periods".to_owned()))
+}
+
+/// `a - b` for two keys of one index, by its steps: a plain day index's days, a period
+/// index's steps of its `by`, so `b + (a - b)` is `a`; two periods off its grid are refused
+/// (refcore's `key_diff`; P15). None for other keys, which `arith` subtracts. L §4.2
+/// Differences, §5.6.
+pub(crate) fn keys_differ(m: &Reality, a: &Value, b: &Value) -> Result<Option<Value>, Stop> {
+    if let (Value::Day(late), Value::Day(early)) = (a, b) {
+        let days = early
+            .days_to(*late)
+            .ok_or_else(|| refuse(Run::Domain, "the difference of two days".to_owned()))?;
+        return Ok(Some(Value::int(days)));
+    }
+    let (Value::Period(late), Value::Period(early)) = (a, b) else {
+        return Ok(None);
+    };
+    if let Some(steps) = early.steps_to(*late) {
+        return Ok(Some(Value::int(steps)));
+    }
+    let shown = |v: &Value| v.text(m).map_err(num_stop);
+    let message = format!("the difference of periods {} and {}", shown(a)?, shown(b)?);
+    Err(refuse(Run::Domain, message))
 }
 
 /// The months from year 0 to a period's first month: year × 12 + month.
@@ -281,7 +308,7 @@ mod tests {
     use crate::eval::past_days;
     use crate::model::Value;
     use crate::num::Num;
-    use crate::time::{Period, PeriodKind, Step};
+    use crate::time::{Day, Period, PeriodKind, Step};
 
     #[test]
     fn a_duration_counts_the_periods_of_its_keys_by_n() {
@@ -353,5 +380,25 @@ mod tests {
         let b = Period::month(2025, 11).expect("November");
         assert_eq!(period_diff(a, b), Ok(Value::int(4)), "four months");
         assert_eq!(Op::Sub.text(), "-", "minus");
+    }
+
+    #[test]
+    fn periods_by_3_typed_as_no_one_index_differ_by_months() {
+        let quarter = |month: u8| {
+            let start = Day::from_ymd(2026, month, 1).expect("a day");
+            let end = start.end_months(3).expect("its end");
+            Period::new(PeriodKind::Month, start, end, Step::Months(3)).expect("a key")
+        };
+        let (april, october) = (quarter(4), quarter(10));
+        assert_eq!(
+            period_diff(april, october),
+            Ok(Value::int(-6)),
+            "six months back"
+        );
+        assert_eq!(
+            period_diff(october, april),
+            Ok(Value::int(6)),
+            "six months on"
+        );
     }
 }

@@ -1,0 +1,25 @@
+model a5
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+input a: key ks
+input m1: key ms
+input c: bool
+def dn: key ks = if c then k2 else none
+ask c1: check a == k1
+ask c2: check dn == k1
+ask c3: check m1 == 2026-01
+ask c4: check k1 == dn
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = none "s"
+  m1 = none "s"
+  c = false "s"

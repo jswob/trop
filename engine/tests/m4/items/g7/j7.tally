@@ -1,0 +1,7 @@
+model fam7
+  tally 2
+  on 2026-03-01
+  start 2026-01-01
+  end 2026-12-31
+  use a = "m" sha256 "6b4ea0f979d26c1d48593466a38196902994865c5884ab3d0ee4338af75d2f35"
+  note "T's joint model for #238's gate review 7 (invented): a member with a refused scenario and asks refused alone"

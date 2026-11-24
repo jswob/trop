@@ -1,0 +1,44 @@
+model k_unc
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place landlord: outside lives 1900-01-01..
+
+kind maybe: event uncertain
+  leg cash: PLN
+
+input rent_day[m in month]: date
+
+move rent[m in month]: maybe
+  on rent_day[m]
+  leg cash from pot to landlord amount amt
+
+move top[m in month]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount flows(rent, m)
+
+ask q: flows(top, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  rent_day[2026-01] = 2026-01-05 "s"
+  rent_day[2026-02] = 2026-02-05 "s"
+  rent_day[2026-03] = 2026-03-05 assumed "march's day is a guess"
+  rent_day[2026-04] = 2026-04-05 "s"
+  rent_day[2026-05] = 2026-05-05 "s"

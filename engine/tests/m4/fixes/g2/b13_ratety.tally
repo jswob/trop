@@ -1,0 +1,17 @@
+model b13
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input r: rate
+input mo: month
+ask a1: mo with mo = 2026
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  r = 5 %/year "s"
+  mo = 2026-01 "s"

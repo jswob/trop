@@ -1,0 +1,56 @@
+model p3
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+axis mode
+  low "reading A"
+  high "reading B"
+index ks = [k1, k2]
+index js = [j1, j2]
+
+input b[k in ks]: money PLN
+input c[k in ks, j in js]: money PLN
+input x: money PLN
+input lo: money PLN
+input hi: money PLN
+input stp: money PLN
+input tg[k in ks]: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def tot[k in ks, j in js]: money PLN = dbl[k] as if {b[k] = c[k, j]}
+def two[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j]}) - (dbl[k] as if {b[k] = c[k, j] + x})
+def nest[k in ks, j in js]: money PLN = (dbl[k] as if {b[k] = c[k, j] + x}) as if {x = c[k, j]}
+def inv[k in ks, j in js]: money PLN = min(t for t in lo .. hi step stp where dbl[k] as if {b[k] = t + c[k, j]} >= tg[k])
+def ax[k in ks, j in js]: money PLN at reader
+  rule base = dbl[k] as if {b[k] = c[k, j]}
+  rule hi beats base = dbl[k] as if {b[k] = c[k, j] + x} when mode == high
+
+ask q_mix: tot[k, j], dbl[k], two[k, j] for k in ks, j in js
+ask q_with: tot[k, j] for k in ks, j in js with x = lo
+ask q_nest: nest[k, j] for k in ks, j in js
+ask q_inv: inv[k, j] for k in ks, j in js
+ask q_ax: ax[k, j] for k in ks, j in js law 2026-03-01
+ask q_expl: explain tot[k2, j1]
+ask q_explw: explain nest[k1, j2] with x = lo
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1, j1] = 1 PLN "s"
+  c[k1, j2] = 2 PLN "s"
+  c[k2, j1] = 3 PLN "s"
+  c[k2, j2] = ?"which c?" "s"
+  x = 5 PLN "s"
+  lo = 0 PLN "s"
+  hi = 100 PLN "s"
+  stp = 10 PLN "s"
+  tg = 50 PLN "s"

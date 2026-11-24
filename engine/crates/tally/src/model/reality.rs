@@ -187,6 +187,10 @@ pub struct Reality {
     /// `LOAD-KEY ambiguous key <k>` as it is evaluated (refcore's `e_name`, its `keylit` arm;
     /// pick P39). L §2.5, §8.3.
     pub asks_unresolved: BTreeMap<String, Place>,
+    /// The `check` asks whose two sides are, as load types them, keys of one index: their
+    /// difference is the int of positions or periods between them (refcore's `_check`, its sides'
+    /// `_t`). L §5.18, §4.2.
+    pub keyed_checks: BTreeSet<String>,
     /// Each key list's binding site (file, line, token) with the index its key positions
     /// fixed: its keys are that index's (refcore's `b._var.fixed`). L §2.5.
     pub list_keys: BTreeMap<(String, u32, usize), String>,

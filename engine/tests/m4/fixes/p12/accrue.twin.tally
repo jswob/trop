@@ -1,0 +1,155 @@
+model p12_accrue
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input a_h: date
+input a_n: date
+input a_n2: date
+input a_ok: date
+input a_v: date
+input b_h: date
+input b_n: date
+input b_n2: date
+input b_ok: date
+input b_v: date
+input c_h: compounding
+input c_k: compounding
+input c_k2: compounding
+input c_n: compounding
+input c_n2: compounding
+input c_ok: compounding
+input c_z: compounding
+input c_z2: compounding
+input dc_h: daycount
+input dc_n: daycount
+input dc_n2: daycount
+input dc_ok: daycount
+input p_h: money PLN
+input p_n: money PLN
+input p_ok: money PLN
+input r_h: rate
+input r_m: rate
+input r_m2: rate
+input r_n: rate
+input r_ok: rate
+
+ask h_p: accrue(p_h, r_ok, a_ok, b_ok, dc_ok, c_ok)
+ask h_r: accrue(p_ok, r_h, a_ok, b_ok, dc_ok, c_ok)
+ask h_a: accrue(p_ok, r_ok, a_h, b_ok, dc_ok, c_ok)
+ask h_b: accrue(p_ok, r_ok, a_ok, b_h, dc_ok, c_ok)
+ask h_dc: accrue(p_ok, r_ok, a_ok, b_ok, dc_h, c_ok)
+ask h_c: accrue(p_ok, r_ok, a_ok, b_ok, dc_ok, c_h)
+ask h_p__h_r: accrue(p_h, r_h, a_ok, b_ok, dc_ok, c_ok)
+ask h_p__n_r: accrue(p_h, r_n, a_ok, b_ok, dc_ok, c_ok)
+ask h_p__m_r: accrue(p_h, r_m, a_ok, b_ok, dc_ok, c_ok)
+ask h_p__n_a: accrue(p_h, r_ok, a_n, b_ok, dc_ok, c_ok)
+ask h_p__v_a: accrue(p_h, r_ok, a_v, b_ok, dc_ok, c_ok)
+ask h_p__n_b: accrue(p_h, r_ok, a_ok, b_n, dc_ok, c_ok)
+ask h_p__v_b: accrue(p_h, r_ok, a_ok, b_v, dc_ok, c_ok)
+ask h_p__n_dc: accrue(p_h, r_ok, a_ok, b_ok, dc_n, c_ok)
+ask h_p__n_c: accrue(p_h, r_ok, a_ok, b_ok, dc_ok, c_n)
+ask h_p__k_c: accrue(p_h, r_ok, a_ok, b_ok, dc_ok, c_k)
+ask h_p__z_c: accrue(p_h, r_ok, a_ok, b_ok, dc_ok, c_z)
+ask h_r__n_p: accrue(p_n, r_h, a_ok, b_ok, dc_ok, c_ok)
+ask h_r__n_a: accrue(p_ok, r_h, a_n, b_ok, dc_ok, c_ok)
+ask h_r__v_a: accrue(p_ok, r_h, a_v, b_ok, dc_ok, c_ok)
+ask h_r__n_b: accrue(p_ok, r_h, a_ok, b_n, dc_ok, c_ok)
+ask h_r__v_b: accrue(p_ok, r_h, a_ok, b_v, dc_ok, c_ok)
+ask h_r__n_dc: accrue(p_ok, r_h, a_ok, b_ok, dc_n, c_ok)
+ask h_r__n_c: accrue(p_ok, r_h, a_ok, b_ok, dc_ok, c_n)
+ask h_r__k_c: accrue(p_ok, r_h, a_ok, b_ok, dc_ok, c_k)
+ask h_r__z_c: accrue(p_ok, r_h, a_ok, b_ok, dc_ok, c_z)
+ask h_a__n_p: accrue(p_n, r_ok, a_h, b_ok, dc_ok, c_ok)
+ask h_a__n_r: accrue(p_ok, r_n, a_h, b_ok, dc_ok, c_ok)
+ask h_a__m_r: accrue(p_ok, r_m, a_h, b_ok, dc_ok, c_ok)
+ask h_a__n_b: accrue(p_ok, r_ok, a_h, b_n, dc_ok, c_ok)
+ask h_a__v_b: accrue(p_ok, r_ok, a_h, b_v, dc_ok, c_ok)
+ask h_a__n_dc: accrue(p_ok, r_ok, a_h, b_ok, dc_n, c_ok)
+ask h_a__n_c: accrue(p_ok, r_ok, a_h, b_ok, dc_ok, c_n)
+ask h_a__k_c: accrue(p_ok, r_ok, a_h, b_ok, dc_ok, c_k)
+ask h_a__z_c: accrue(p_ok, r_ok, a_h, b_ok, dc_ok, c_z)
+ask h_b__n_p: accrue(p_n, r_ok, a_ok, b_h, dc_ok, c_ok)
+ask h_b__n_r: accrue(p_ok, r_n, a_ok, b_h, dc_ok, c_ok)
+ask h_b__m_r: accrue(p_ok, r_m, a_ok, b_h, dc_ok, c_ok)
+ask h_b__n_a: accrue(p_ok, r_ok, a_n, b_h, dc_ok, c_ok)
+ask h_b__v_a: accrue(p_ok, r_ok, a_v, b_h, dc_ok, c_ok)
+ask h_b__n_dc: accrue(p_ok, r_ok, a_ok, b_h, dc_n, c_ok)
+ask h_b__n_c: accrue(p_ok, r_ok, a_ok, b_h, dc_ok, c_n)
+ask h_b__k_c: accrue(p_ok, r_ok, a_ok, b_h, dc_ok, c_k)
+ask h_b__z_c: accrue(p_ok, r_ok, a_ok, b_h, dc_ok, c_z)
+ask h_dc__n_p: accrue(p_n, r_ok, a_ok, b_ok, dc_h, c_ok)
+ask h_dc__n_r: accrue(p_ok, r_n, a_ok, b_ok, dc_h, c_ok)
+ask h_dc__m_r: accrue(p_ok, r_m, a_ok, b_ok, dc_h, c_ok)
+ask h_dc__n_a: accrue(p_ok, r_ok, a_n, b_ok, dc_h, c_ok)
+ask h_dc__v_a: accrue(p_ok, r_ok, a_v, b_ok, dc_h, c_ok)
+ask h_dc__n_b: accrue(p_ok, r_ok, a_ok, b_n, dc_h, c_ok)
+ask h_dc__v_b: accrue(p_ok, r_ok, a_ok, b_v, dc_h, c_ok)
+ask h_dc__n_c: accrue(p_ok, r_ok, a_ok, b_ok, dc_h, c_n)
+ask h_dc__k_c: accrue(p_ok, r_ok, a_ok, b_ok, dc_h, c_k)
+ask h_dc__z_c: accrue(p_ok, r_ok, a_ok, b_ok, dc_h, c_z)
+ask h_c__n_p: accrue(p_n, r_ok, a_ok, b_ok, dc_ok, c_h)
+ask h_c__n_r: accrue(p_ok, r_n, a_ok, b_ok, dc_ok, c_h)
+ask h_c__m_r: accrue(p_ok, r_m, a_ok, b_ok, dc_ok, c_h)
+ask h_c__n_a: accrue(p_ok, r_ok, a_n, b_ok, dc_ok, c_h)
+ask h_c__v_a: accrue(p_ok, r_ok, a_v, b_ok, dc_ok, c_h)
+ask h_c__n_b: accrue(p_ok, r_ok, a_ok, b_n, dc_ok, c_h)
+ask h_c__v_b: accrue(p_ok, r_ok, a_ok, b_v, dc_ok, c_h)
+ask h_c__n_dc: accrue(p_ok, r_ok, a_ok, b_ok, dc_n, c_h)
+ask n_p__m_r: accrue(p_n, r_m2, a_ok, b_ok, dc_ok, c_ok)
+ask n_p__k_c: accrue(p_n, r_ok, a_ok, b_ok, dc_ok, c_k2)
+ask n_p__z_c: accrue(p_n, r_ok, a_ok, b_ok, dc_ok, c_z2)
+ask m_r__n_a: accrue(p_ok, r_m, a_n2, b_ok, dc_ok, c_ok)
+ask m_r__n_b: accrue(p_ok, r_m, a_ok, b_n2, dc_ok, c_ok)
+ask m_r__n_dc: accrue(p_ok, r_m, a_ok, b_ok, dc_n2, c_ok)
+ask n_r__k_c: accrue(p_ok, r_n, a_ok, b_ok, dc_ok, c_k2)
+ask n_r__z_c: accrue(p_ok, r_n, a_ok, b_ok, dc_ok, c_z2)
+ask m_r__n_c: accrue(p_ok, r_m, a_ok, b_ok, dc_ok, c_n2)
+ask m_r__k_c: accrue(p_ok, r_m, a_ok, b_ok, dc_ok, c_k2)
+ask m_r__z_c: accrue(p_ok, r_m, a_ok, b_ok, dc_ok, c_z2)
+ask n_a__k_c: accrue(p_ok, r_ok, a_n, b_ok, dc_ok, c_k2)
+ask n_a__z_c: accrue(p_ok, r_ok, a_n, b_ok, dc_ok, c_z2)
+ask n_b__k_c: accrue(p_ok, r_ok, a_ok, b_n, dc_ok, c_k2)
+ask n_b__z_c: accrue(p_ok, r_ok, a_ok, b_n, dc_ok, c_z2)
+ask n_dc__k_c: accrue(p_ok, r_ok, a_ok, b_ok, dc_n, c_k2)
+ask n_dc__z_c: accrue(p_ok, r_ok, a_ok, b_ok, dc_n, c_z2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a_h = 2026-01-01 "s"
+  a_n = none "s"
+  a_n2 = 2026-01-01 "s"
+  a_ok = 2026-01-01 "s"
+  a_v = never "s"
+  b_h = 2027-01-01 "s"
+  b_n = none "s"
+  b_n2 = 2027-01-01 "s"
+  b_ok = 2027-01-01 "s"
+  b_v = never "s"
+  c_h = simple "s"
+  c_k = discount "s"
+  c_k2 = simple "s"
+  c_n = none "s"
+  c_n2 = simple "s"
+  c_ok = simple "s"
+  c_z = nominal 0 "s"
+  c_z2 = simple "s"
+  dc_h = act365 "s"
+  dc_n = none "s"
+  dc_n2 = act365 "s"
+  dc_ok = act365 "s"
+  p_h = 100.00 PLN "s"
+  p_n = none "s"
+  p_ok = 100.00 PLN "s"
+  r_h = 10 %/year "s"
+  r_m = 1 %/month "s"
+  r_m2 = 10 %/year "s"
+  r_n = none "s"
+  r_ok = 10 %/year "s"

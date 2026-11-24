@@ -1,0 +1,38 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+axis rmode
+  half-up "reading A"
+  half-even "reading B"
+  down "reading C"
+input base: num PLN
+input stp: money PLN
+input amt[p in ps]: money PLN
+index ps = [p1, p2]
+def r1: money PLN = round(base, stp, rmode)
+def r2: money PLN at reader
+  rule plain = round(base, stp, half-up)
+  rule none_ beats plain = base2 when rmode == down
+input base2: money PLN
+def tax[p in ps]: money PLN at reader
+  rule base = amt[p]
+ask a: r1
+ask b: r1 with rmode = half-even
+ask c: r2 law 2026-03-01
+ask e: explain r1 with rmode = half-even
+ask t: tax[p] for p in ps law 2026-03-01
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  base = 12.25 PLN "s"
+  base2 = 12 PLN "s"
+  stp = 0.10 PLN "s"
+  amt = 100 PLN "s"

@@ -1,0 +1,30 @@
+model r1
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index ms = month 2026-01..2026-12 by 3
+index ws = day 2026-01-05..2026-12-28 by 7
+index ds = day 2026-01-01..2026-01-31
+input a: key ms
+input b: key ms
+input w1: key ws
+input w2: key ws
+input dd: key ds
+input q: quarter
+ask e1: a - b, a + 1, b + (a - b), (b + (a - b)) == a
+ask e2: w1 - w2, w2 + (w1 - w2)
+ask e3: dd - dd
+ask e5: check w1 == w2
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  a = 2026-07 "s"
+  b = 2026-01 "s"
+  w1 = 2026-01-19 "s"
+  w2 = 2026-01-05 "s"
+  dd = 2026-01-03 "s"
+  q = 2026-Q1 "s"

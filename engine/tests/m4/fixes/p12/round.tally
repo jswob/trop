@@ -1,0 +1,62 @@
+model p12_round
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+input mode_h: rounding
+input mode_n: rounding
+input mode_n2: rounding
+input mode_ok: rounding
+input step_g: money PLN
+input step_g2: money PLN
+input step_h: money PLN
+input step_n: money PLN
+input step_ok: money PLN
+input step_z: money PLN
+input step_z2: money PLN
+input x_h: num PLN
+input x_n: num PLN
+input x_ok: num PLN
+
+ask h_x: round(x_h, step_ok, mode_ok)
+ask h_step: round(x_ok, step_h, mode_ok)
+ask h_mode: round(x_ok, step_ok, mode_h)
+ask h_x__h_step: round(x_h, step_h, mode_ok)
+ask h_x__n_step: round(x_h, step_n, mode_ok)
+ask h_x__z_step: round(x_h, step_z, mode_ok)
+ask h_x__g_step: round(x_h, step_g, mode_ok)
+ask h_x__n_mode: round(x_h, step_ok, mode_n)
+ask h_step__n_x: round(x_n, step_h, mode_ok)
+ask h_step__n_mode: round(x_ok, step_h, mode_n)
+ask h_mode__n_x: round(x_n, step_ok, mode_h)
+ask h_mode__n_step: round(x_ok, step_n, mode_h)
+ask h_mode__z_step: round(x_ok, step_z, mode_h)
+ask h_mode__g_step: round(x_ok, step_g, mode_h)
+ask n_x__z_step: round(x_n, step_z2, mode_ok)
+ask n_x__g_step: round(x_n, step_g2, mode_ok)
+ask z_step__n_mode: round(x_ok, step_z, mode_n2)
+ask g_step__n_mode: round(x_ok, step_g, mode_n2)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  mode_h = ?"which mode?" "s"
+  mode_n = none "s"
+  mode_n2 = none "s"
+  mode_ok = half-up "s"
+  step_g = -0.05 PLN "s"
+  step_g2 = -0.05 PLN "s"
+  step_h = ?"which step?" "s"
+  step_n = none "s"
+  step_ok = 0.05 PLN "s"
+  step_z = 0.00 PLN "s"
+  step_z2 = 0.00 PLN "s"
+  x_h = ?"which x?" "s"
+  x_n = none "s"
+  x_ok = 12.345 PLN "s"

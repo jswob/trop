@@ -20,7 +20,7 @@
 //! it, never a guessed line; a joint model's member's ask, `a.q`, is answered by the member
 //! alone at its place in the run's order (`members.rs`).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::axes::{Axes, fanned_lines};
 use super::check::{Printed, check_line, hole_days};
@@ -32,8 +32,8 @@ use super::residuals::residual_result;
 use super::worlds::refused_line;
 use crate::base::{Code, Load, Place, Reach, Refusal, Req, Run, Warn};
 use crate::eval::{
-    Collected, Ctx, Engine, Entry, Env, How, Item, Member, Memo, after_on, names_in, num_stop,
-    one_day, past_days, world_named,
+    Collected, Ctx, Engine, Entries, Entry, Env, How, Item, Member, Memo, after_on, names_in,
+    num_stop, one_day, past_days, world_named,
 };
 use crate::model::{Reality, Value};
 use crate::syntax::{
@@ -68,8 +68,13 @@ struct Seen {
     lows: Lows,
     /// Whether each ask's engine continues a projection's walk read again (P §2.5).
     forks: Forks,
+    /// Whether each ask's engine narrows a past booking cut's reads (F7, P8-L10).
+    plans: crate::walk::Plans,
     /// The side of a diff across two stacks the next ask answers, its cells once answered.
     side: Option<Side>,
+    /// The run's register entries while this world's ask is answered, lent to each of its
+    /// engines in turn (E §1; `eval/register.rs`).
+    entries: Entries,
     /// The fault planted in the run while it waits for its day (INTERFACE §4).
     #[cfg(feature = "fault-injection")]
     plant: Option<crate::walk::Fault>,
@@ -150,8 +155,7 @@ pub(crate) enum Turn {
 /// `REQ-ASK` for the first ask the run names that the reality lacks, before any is answered
 /// (E §11); a load refusal met at run; `NotBuilt` for a construct not built yet.
 pub fn answer(m: &Reality, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
-    let turns = members::resolve(m, reality_turns(m, asks)?, (days, how))?;
-    req_clocks(&[m], &turns)?;
+    let turns = members::resolve(&[m], reality_turns(m, asks)?, (days, how))?;
     answer_turns(&[m], &turns, m.warnings.clone(), days, how)
 }
 
@@ -188,47 +192,6 @@ pub(super) fn reality_turns(m: &Reality, asks: &Asks) -> Result<Vec<Turn>, Stop>
         }
     };
     Ok(turns)
-}
-
-/// `REQ-CLOCK` before any ask is answered, in the run's order: the first ask whose literal cut
-/// is after its model's `on` refuses the request (E §11), whether it is an ask of the run's
-/// realities (`realities`, the base's first), a side of a diff on two stacks, a member's ask
-/// answered in the member's world, or one whose member alone refused the request.
-///
-/// # Errors
-///
-/// `REQ-CLOCK`, or the member alone's request refusal, as the run's one result.
-pub(super) fn req_clocks(realities: &[&Reality], turns: &[Turn]) -> Result<(), Stop> {
-    let base = realities.first().ok_or_else(no_turn)?;
-    for turn in turns {
-        match turn {
-            Turn::Ask(world, at) => req_clock_at(realities, *world, *at)?,
-            Turn::Cross(sides) => {
-                for (world, at, _) in sides {
-                    req_clock_at(realities, *world, *at)?;
-                }
-            }
-            Turn::OfMember(aliases, at) => {
-                let m = &base.member_alone(aliases).ok_or_else(no_turn)?.reality;
-                req_clock(m, m.asks.get(*at).ok_or_else(no_turn)?)?;
-            }
-            Turn::Stopped(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
-                return Err(Stop::Refused(refusal.clone()));
-            }
-            Turn::Line(_)
-            | Turn::Scenario(_)
-            | Turn::Lifted(..)
-            | Turn::Member(_)
-            | Turn::Stopped(_) => {}
-        }
-    }
-    Ok(())
-}
-
-/// `REQ-CLOCK` for the ask at `at` of the reality at `world` among `realities`. E §11.
-fn req_clock_at(realities: &[&Reality], world: usize, at: usize) -> Result<(), Stop> {
-    let m = realities.get(world).ok_or_else(no_turn)?;
-    req_clock(m, m.asks.get(at).ok_or_else(no_turn)?)
 }
 
 /// `REQ-ASK no ask <q>`: the request names an ask that doesn't exist. E §11 (tally 2.1.3).
@@ -278,6 +241,8 @@ pub(super) fn answer_turns_apart(
     // (refcore's one `Asker` per world); each member's, by its aliases, likewise
     let mut worlds: Vec<World> = realities.iter().map(|m| World::of(m, how)).collect();
     let mut member_worlds: BTreeMap<&[String], World> = BTreeMap::new();
+    // the run's register entries, each kept once, lent to every ask's engine (E §1)
+    let mut entries = Entries::default();
     for turn in turns {
         match turn {
             Turn::Scenario(line) => level.push(line.clone()),
@@ -296,7 +261,7 @@ pub(super) fn answer_turns_apart(
                     gathered.seen.plant = None;
                 }
                 // a load refusal met at run refuses the run, as in the base's world
-                let lines = gathered.answer(m, *at, days)?;
+                let lines = gathered.answer(m, (*at, days), &mut entries)?;
                 out.extend(members::prefixed(aliases, lines));
             }
             Turn::Member(_) => return Err(invariant("a member's ask the run didn't resolve")),
@@ -304,7 +269,7 @@ pub(super) fn answer_turns_apart(
             Turn::Ask(world, at) => {
                 let m = realities.get(*world).ok_or_else(no_turn)?;
                 let gathered = worlds.get_mut(*world).ok_or_else(no_turn)?;
-                match gathered.answer(m, *at, days) {
+                match gathered.answer(m, (*at, days), &mut entries) {
                     // a load refusal met at run refuses the run in the base's world, the ask
                     // alone in a scenario's (refcore's `run_worlds`, `LoadAtRun`)
                     Err(Stop::Refused(r)) if *world > 0 && matches!(r.code(), Code::Load(_)) => {
@@ -314,7 +279,14 @@ pub(super) fn answer_turns_apart(
                     lines => out.extend(lines?),
                 }
             }
-            Turn::Cross(sides) => out.extend(cross_lines(realities, &mut worlds, sides, days)?),
+            Turn::Cross(sides) => {
+                out.extend(cross_lines(
+                    realities,
+                    &mut worlds,
+                    (sides, days),
+                    &mut entries,
+                )?);
+            }
             Turn::Line(line) => out.push(line.clone()),
         }
         // the fault is planted once per run, whichever world's walk met its day
@@ -389,8 +361,8 @@ fn warn_once(into: &mut Vec<(Warn, String)>, more: &[(Warn, String)]) {
 fn cross_lines(
     realities: &[&Reality],
     worlds: &mut [World],
-    sides: &[(usize, usize, String); 2],
-    days: Days,
+    (sides, days): (&[(usize, usize, String); 2], Days),
+    entries: &mut Entries,
 ) -> Result<Vec<String>, Stop> {
     let [(place, at, _), _] = sides;
     let m = realities.get(*place).ok_or_else(no_turn)?;
@@ -398,8 +370,8 @@ fn cross_lines(
     let AskBody::Diff(diff) = &ask.body else {
         return Err(no_turn());
     };
-    match side_cells(realities, worlds, (sides, days))? {
-        Ok(got) => crossed_tuples(m, (ask, diff), &got),
+    match side_cells(realities, worlds, (sides, days), entries)? {
+        Ok(got) => crossed_tuples(m, (ask, diff), &got, entries),
         Err(lines) => Ok(lines),
     }
 }
@@ -414,6 +386,7 @@ fn side_cells(
     realities: &[&Reality],
     worlds: &mut [World],
     (sides, days): (&[(usize, usize, String); 2], Days),
+    entries: &mut Entries,
 ) -> Result<Result<Vec<SideCells>, Vec<String>>, Stop> {
     let mut got = Vec::with_capacity(sides.len());
     for (place, at, world) in sides {
@@ -424,7 +397,7 @@ fn side_cells(
             cells: None,
             part: String::new(),
         });
-        let lines = gathered.answer(m, *at, days);
+        let lines = gathered.answer(m, (*at, days), entries);
         let side = gathered.seen.side.take();
         let lines = lines?;
         let Some(Side {
@@ -449,6 +422,7 @@ fn crossed_tuples(
     m: &Reality,
     (ask, diff): (&Ask, &Diff),
     got: &[SideCells],
+    entries: &mut Entries,
 ) -> Result<Vec<String>, Stop> {
     let [ours, theirs] = got else {
         return Err(no_turn());
@@ -466,7 +440,9 @@ fn crossed_tuples(
         match (left, right) {
             (Err(hole), _) | (_, Err(hole)) => out.push(format!("{head}: {hole}")),
             (Ok(l), Ok(r)) => {
-                match crossed(m, (l, r)).and_then(|cells| cells_lines(m, (diff, &head), &cells)) {
+                let lines = crossed(m, (l, r))
+                    .and_then(|cells| cells_lines(m, (diff, &head), &cells, entries));
+                match lines {
                     Ok(lines) => out.extend(lines),
                     // a run-time refusal, past S7's runs say, prints as the tuple's line (L §8.4)
                     Err(Stop::Refused(refusal)) if !matches!(refusal.code(), Code::Load(_)) => {
@@ -539,7 +515,9 @@ impl World {
                 memo: how.memo,
                 lows: how.lows,
                 forks: how.forks,
+                plans: how.plans,
                 side: None,
+                entries: Entries::default(),
                 #[cfg(feature = "fault-injection")]
                 plant: how.fault,
                 #[cfg(feature = "counters")]
@@ -549,9 +527,23 @@ impl World {
         }
     }
 
-    /// The lines of the ask at `at` of the world's reality `m`: refused alone, or answered
-    /// (refcore's `Asker.answer`). L §5.18, §6.4.
-    fn answer(&mut self, m: &Reality, at: usize, days: Days) -> Result<Vec<String>, Stop> {
+    /// The lines of the ask at `at` of the world's reality `m`, its engines adding to the
+    /// run's register entries `entries` (E §1): refused alone, or answered (refcore's
+    /// `Asker.answer`). L §5.18, §6.4.
+    fn answer(
+        &mut self,
+        m: &Reality,
+        (at, days): (usize, Days),
+        entries: &mut Entries,
+    ) -> Result<Vec<String>, Stop> {
+        self.seen.entries = core::mem::take(entries);
+        let lines = self.answer_lent(m, at, days);
+        *entries = core::mem::take(&mut self.seen.entries);
+        lines
+    }
+
+    /// [`World::answer`], the run's register entries lent to the world's `seen`.
+    fn answer_lent(&mut self, m: &Reality, at: usize, days: Days) -> Result<Vec<String>, Stop> {
         let ask = m.asks.get(at).ok_or_else(no_turn)?;
         if let Some(refusal) = m.asks_alone.get(&ask.id) {
             return Ok(vec![refused_line(&ask.id, refusal)]);
@@ -596,7 +588,7 @@ fn unbuilt_at_run(m: &Reality, ask: &Ask) -> Option<&'static str> {
 }
 
 /// A turn whose ask the reality doesn't hold: the turns are built from its asks.
-fn no_turn() -> Stop {
+pub(super) fn no_turn() -> Stop {
     Stop::Refused(Refusal::new(
         Code::EngineInvariant,
         "a turn names an ask the reality doesn't hold".to_owned(),
@@ -682,7 +674,7 @@ fn ask_lines(
 /// refcore's `req_clock`). A computed cut is refused at its value (`after_on`). Only an ask
 /// load left standing is judged: one load refused alone prints its own line (E §11 "in an ask
 /// load left standing"; OPERATIONS §2.1; G4's review B1).
-fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
+pub(super) fn req_clock(m: &Reality, ask: &Ask) -> Result<(), Stop> {
     if m.asks_alone.contains_key(&ask.id) {
         return Ok(());
     }
@@ -723,6 +715,7 @@ fn gather(seen: &mut Seen, engine: &mut Engine) {
         }
     }
     seen.booked = engine.take_booked();
+    seen.entries = engine.take_entries();
     #[cfg(feature = "fault-injection")]
     seen.plant.clone_from(&engine.plant);
     #[cfg(feature = "counters")]
@@ -756,11 +749,11 @@ fn ask_body(
     // reality's own hides the layers over it (L §5.18, §6.4)
     let world = match &ask.world {
         Some(id) => {
-            pinned.entries.insert(Entry {
+            pinned.note(engine.entry_id(Entry {
                 word: "world",
                 text: id.clone(),
                 figure: String::new(),
-            });
+            })?);
             world_named(m, id)?
         }
         None => m.scenarios.model_world(),
@@ -791,12 +784,14 @@ fn ask_body(
         engine.ask_cut = inside.cut;
         engine.unpinned = Some(ctx);
         engine.pins_read.keeping = true;
-        engine.pins_read.ask = pinned
-            .entries
-            .iter()
-            .filter(|e| e.word == "pinned")
-            .map(|e| e.text.clone())
-            .collect();
+        let mut asked = BTreeSet::new();
+        for id in pinned.ids() {
+            let entry = engine.entries.entry(*id)?;
+            if entry.word == "pinned" {
+                asked.insert(entry.text.clone());
+            }
+        }
+        engine.pins_read.ask = asked;
         engine.open_layer(m, inside)?;
         inside
     };
@@ -885,11 +880,13 @@ fn tuple_lines(
             continue;
         }
         line.met.merge(&tuple.brought);
-        line.met.merge(&ask_pins_listed(pinned, &line.met));
-        name_unknown_days(&mut line.met, &line.unknown);
+        line.met
+            .merge(&ask_pins_listed((pinned, &line.met), &engine.entries)?);
+        name_unknown_days((&mut line.met, &mut engine.entries), &line.unknown)?;
+        let printed = (&line.met, &engine.entries);
         let register = match line.laws {
-            Some(laws) => check_register_lines(&line.met, ctx, laws)?,
-            None => register_lines(&line.met, ctx)?,
+            Some(laws) => check_register_lines(printed, ctx, laws)?,
+            None => register_lines(printed, ctx)?,
         };
         out.extend(register.into_iter().map(|l| format!("  {l}")));
     }
@@ -901,14 +898,23 @@ fn tuple_lines(
 /// `pin cell`) that no read of the line took isn't listed; a pin of an axis or a clock stays
 /// listed (L §8.2 One read set; tally 2.1.7 R7, P45; tally 2.1.8 §4, #161; refcore's
 /// `print_line`, `pin_value`).
-pub(super) fn ask_pins_listed(pinned: &Collected, line: &Collected) -> Collected {
-    let mut kept = pinned.clone();
-    kept.entries.retain(|e| {
-        e.word != "pinned"
-            || !pinned.entries.contains(&pin_entry("pin cell", &e.text))
-            || line.entries.contains(e)
-    });
-    kept
+///
+/// # Errors
+///
+/// `ENGINE-INVARIANT` for an entry the run's table `entries` lacks.
+pub(super) fn ask_pins_listed(
+    (pinned, line): (&Collected, &Collected),
+    entries: &Entries,
+) -> Result<Collected, Stop> {
+    let mut unread = Vec::new();
+    for id in pinned.ids() {
+        let e = entries.entry(*id)?;
+        let of_cell = entries.find(&pin_entry("pin cell", &e.text));
+        if e.word == "pinned" && of_cell.is_some_and(|c| pinned.holds(c)) && !line.holds(*id) {
+            unread.push(*id);
+        }
+    }
+    Ok(pinned.without(&unread))
 }
 
 /// The register entry `word` of pin `text`, as a read set notes it (L §8.2).
@@ -952,7 +958,7 @@ pub(super) fn form_line(
                 unknown,
             })
         }
-        AskBody::Check(left, right) => check_line(m, engine, (left, right), env, ctx),
+        AskBody::Check(left, right) => check_line(m, engine, (left, right), &ask.id, env, ctx),
         AskBody::Solve(solve) => {
             let (item, met) = engine.solve_line(m, solve, env, ctx)?;
             Ok(Printed {
@@ -1107,7 +1113,9 @@ fn ask_engine(cut: Day, (ask, env): (&Ask, &Env), days: Days, seen: &mut Seen) -
         .with_how((seen.memo, seen.lows, seen.forks))
         .for_ask(ask)
         .in_tuple(env);
+    engine.plan_reads = seen.plans;
     engine.booked = core::mem::take(&mut seen.booked);
+    engine.entries = core::mem::take(&mut seen.entries);
     #[cfg(feature = "fault-injection")]
     engine.plant.clone_from(&seen.plant);
     engine
@@ -1280,7 +1288,7 @@ fn extra_parts(x: &Expr) -> Vec<&Expr> {
         | Expr::Never
         | Expr::Cut
         | Expr::List(_)
-        | Expr::If(_)
+        | Expr::If(..)
         | Expr::Or(_)
         | Expr::And(_)
         | Expr::Not(_)

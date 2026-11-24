@@ -1,0 +1,24 @@
+model p
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+kind people
+input dd: date
+input inc[p in people]: money PLN
+def am: key people = argmin(inc[p] for p in people on dd)
+ask a: am
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  people + [ann] lives 2026-01-01..
+  people + [bob] lives 2026-01-01..
+  inc[ann] = 1 PLN "s"
+  dd = 2026-06-01 "s"
+  inc[bob] = 2 PLN "s"

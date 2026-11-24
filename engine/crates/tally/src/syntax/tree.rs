@@ -6,8 +6,10 @@
 //!
 //! A node's line is the line it was read from; an expression's place is its line's.
 
+use crate::model::Ty;
 use crate::num::Num;
 use crate::time::Day;
+use std::cell::RefCell;
 
 /// One term of a unit: a currency, a declared unit, a period word or `%`, with its power.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -207,6 +209,37 @@ impl Expr {
     }
 }
 
+/// The type load's checker gave a node, kept for the run (L §7.1, §3.2; pick P36): an empty
+/// aggregate's zero is 0 in its load type, a bare figure beside an `if`'s other branch takes
+/// the `if`'s. Set while load checks the node (the last check's type stands, as `Tok`'s mark
+/// does), read at run; never part of the node's identity, so two nodes alike are equal
+/// whatever their checks gave.
+#[derive(Debug, Clone, Default)]
+pub struct LoadType(RefCell<Option<Ty>>);
+
+impl PartialEq for LoadType {
+    fn eq(&self, _: &LoadType) -> bool {
+        true
+    }
+}
+
+impl Eq for LoadType {}
+
+impl LoadType {
+    /// Keeps `ty` as the node's type; a slot borrowed elsewhere keeps its type.
+    pub fn set(&self, ty: &Ty) {
+        if let Ok(mut slot) = self.0.try_borrow_mut() {
+            *slot = Some(ty.clone());
+        }
+    }
+
+    /// The type load gave the node; none where load never checked it.
+    #[must_use]
+    pub fn get(&self) -> Option<Ty> {
+        self.0.try_borrow().ok().and_then(|slot| slot.clone())
+    }
+}
+
 /// An expression (L §2.3 `expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
@@ -222,8 +255,8 @@ pub enum Expr {
     Never,
     /// `cut`, the ask's cut.
     Cut,
-    /// `if c then a else b`.
-    If(Box<[Expr; 3]>),
+    /// `if c then a else b`, with the type load gave it.
+    If(Box<[Expr; 3]>, LoadType),
     /// `a or b or …`, two terms or more.
     Or(Vec<Expr>),
     /// `a and b and …`, two terms or more.
@@ -536,6 +569,8 @@ pub struct Agg {
     pub binds: Vec<Bind>,
     /// Its `ties by` terms.
     pub ties: Option<Vec<Expr>>,
+    /// The type load gave it (L §5.11's table: a sum's is its term's).
+    pub ty: LoadType,
 }
 
 /// A balance read, `bal(x[, d])` with its clauses.

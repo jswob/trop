@@ -1,0 +1,59 @@
+model k_stop2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+index kinds = [a]
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input base: money PLN
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d20)
+  leg cash from konto to shop amount max(0, base - loose[m])
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l2: loose[2026-02]
+
+ask f: flows(spend, 2026-02 .. 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  base = 300.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 0 "refused: a division by zero"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-02-10
+  covers card
+  bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
+  bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"

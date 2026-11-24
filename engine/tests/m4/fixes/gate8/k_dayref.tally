@@ -1,0 +1,54 @@
+model k_dayref
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+input bank: observed
+input ten: int
+input dz[m in month]: int
+
+move spend[m in month]: transfers
+  on day_of(m, ten / dz[m])
+  leg cash from konto to shop amount amt
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 0 "refused: a division by zero"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names the one whose day is refused"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"

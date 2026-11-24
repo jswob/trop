@@ -59,6 +59,29 @@ out=$(tools/trace 2>&1); code=$?; printf '%s\n' "$out"
 case "$out" in *"line's P8-M2 isn't"*) echo "WRONG: P8-M2 refused" ;; *) echo "P8-M2 is a row" ;; esac
 exit $code
 
+# M4's rules step (issue #252): a load row of PERFORMANCE §8.3 (`P8-L10`, fence F7's) is a row
+# too; `P8-L99` isn't. Before, the pattern read no `P8-L<n>`, so F7's line passed on P8-14 alone.
+case: fence-names-a-load-row
+tool: run
+expect: the PERF: line's P8-L99 isn't a row of PERFORMANCE §8 (R-130)
+expect: P8-L10 is a row
+--- module
+//! A planted fence that names a load row PERFORMANCE §8.3 has and one it doesn't: the first
+//! passes, the second is an error.
+//! Spec: L §4.6.
+//! Twin: engine/tools/refcore/evaluate.py.
+//! Invariants: the same rows, in the same order, as the plain read.
+//! PERF: P8-L10 and P8-L99 (long walks); plain twin: lib.rs.
+
+/// Planted (L §4.6).
+pub fn planted() -> u8 {
+    1
+}
+--- run
+out=$(tools/trace 2>&1); code=$?; printf '%s\n' "$out"
+case "$out" in *"line's P8-L10 isn't"*) echo "WRONG: P8-L10 refused" ;; *) echo "P8-L10 is a row" ;; esac
+exit $code
+
 case: fence-names-no-twin
 tool: run
 expect: the PERF: line names no plain twin that exists (`plain twin: <file>`) (R-130)

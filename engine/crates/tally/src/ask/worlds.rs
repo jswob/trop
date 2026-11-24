@@ -2,13 +2,15 @@
 //! Spec: L §6.4 (asking a scenario: `in s`, `diff … in s against b`, a `{scenario s}` pin; two
 //! scenarios over one base each declare their own asks), §5.18, §8 (a scenario's refusal
 //! refuses only that scenario and those over it), §8.5 (an item is unread only where every
-//! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3); OPERATIONS §2.3
-//! (`check`).
+//! world that declares it leaves it unread); E §11 (`REQ-ASK`, tally 2.1.3; `REQ-CLOCK`);
+//! OPERATIONS §2.3 (`check`).
 //! Twin: engine/tools/refcore/cli.py (`run_worlds`, from its `REQ-ASK` check on, its
 //! `unread_everywhere` and `asif_worlds`; `check_worlds`) and ask.py (`Asker.load_check`).
-//! Invariants: every id the run names is checked before any ask is answered; refused
-//! scenarios print first, by their files' full paths, in `run` as in `check` (R20); `check`'s
-//! asks refused alone go by id, then file, then line; the asks go by id, then by the full path
+//! Invariants: every id the run names is checked before any ask is answered, then every turn's
+//! literal cut against `on` in the run's order (`REQ-CLOCK`), a member's ask as it resolves, so
+//! no member runs alone after a turn that refuses the request; refused scenarios print first,
+//! by their files' full paths, in `run` as in `check` (R20); `check`'s asks refused alone go
+//! by id, then file, then line; the asks go by id, then by the full path
 //! of the file that states each, then its line, the world breaking no tie (P49); an ask
 //! that names scenarios is answered on the reality of the deepest, whose stack holds the
 //! others, each world under it seen with the layers over it hidden; the base's diff whose two
@@ -17,11 +19,11 @@
 //! (`LOAD-FORKS`, `load/worlds.rs`); any other ask whose worlds are on two stacks stops the run
 //! `NotBuilt` (refcore's cross evaluation).
 
-use super::answer::{Answered, Turn, answer_turns, no_ask, req_clocks};
+use super::answer::{Answered, Turn, answer_turns, no_ask, no_turn, reality_turns, req_clock};
 use super::members;
 use super::register::warning_lines;
 use crate::Asks;
-use crate::base::{Refusal, Warn};
+use crate::base::{Code, Refusal, Warn};
 use crate::eval::How;
 use crate::load::{Loaded, Worlds};
 use crate::model::Reality;
@@ -40,20 +42,124 @@ use std::collections::{BTreeMap, BTreeSet};
 /// first ask whose literal cut is after `on` (E §11); `NotBuilt` for an ask evaluated in two
 /// worlds, a load refusal met at run, and a construct not built yet.
 pub fn answer_worlds(w: &Worlds, asks: &Asks, days: Days, how: How) -> Result<Answered, Stop> {
-    let mut turns: Vec<Turn> = refused_in_order(w)?
+    let Parts {
+        refused,
+        turns: asked,
+        warnings,
+    } = Parts::worlds(w, asks)?;
+    let mut turns: Vec<Turn> = refused
         .into_iter()
-        .map(|(id, r)| Turn::Scenario(scenario_line(id, r)))
+        .map(|(id, r)| Turn::Scenario(scenario_line(&id, &r)))
         .collect();
-    turns.extend(members::resolve(&w.base, ask_turns(w, asks)?, (days, how))?);
-    let realities = realities(w);
-    req_clocks(&realities, &turns)?;
-    answer_turns(&realities, &turns, merged_warnings(w), days, how)
+    let realities = world_realities(w);
+    turns.extend(members::resolve(&realities, asked, (days, how))?);
+    answer_turns(&realities, &turns, warnings, days, how)
 }
 
-/// The worlds' realities as a run's turns count them: the base's first, then each loaded
-/// scenario's by id.
-pub(super) fn realities(w: &Worlds) -> Vec<&Reality> {
+/// What a run answers its asks from, beside its realities, before any is answered (refcore's
+/// `run_worlds` up to its first ask, `Asker.run`'s): its refused scenarios, in `check`'s
+/// order; its turns; its warnings, load's. L §6.4, §8, §8.5; E §11 (`REQ-ASK`).
+pub(super) struct Parts {
+    /// Each refused scenario's id and refusal, by its file's full path (R20).
+    pub(super) refused: Vec<(String, Refusal)>,
+    /// The asks' turns, in the run's order.
+    pub(super) turns: Vec<Turn>,
+    /// Load's warnings, an item unread only where every world leaves it unread.
+    pub(super) warnings: Vec<(Warn, String)>,
+}
+
+impl Parts {
+    /// The parts of a loaded reality, one world or several.
+    ///
+    /// # Errors
+    ///
+    /// `REQ-ASK` for the first id the run names that no world's ask has (E §11).
+    pub(super) fn of(loaded: &Loaded, asks: &Asks) -> Result<Parts, Stop> {
+        match loaded {
+            Loaded::One(m) => Ok(Parts {
+                refused: Vec::new(),
+                turns: reality_turns(m, asks)?,
+                warnings: m.warnings.clone(),
+            }),
+            Loaded::Worlds(w) => Parts::worlds(w, asks),
+        }
+    }
+
+    /// The parts of a reality with scenarios.
+    ///
+    /// # Errors
+    ///
+    /// `REQ-ASK` for the first id the run names that no world's ask has (E §11).
+    fn worlds(w: &Worlds, asks: &Asks) -> Result<Parts, Stop> {
+        Ok(Parts {
+            refused: refused_in_order(w)?
+                .into_iter()
+                .map(|(id, r)| (id.clone(), r.clone()))
+                .collect(),
+            turns: ask_turns(w, asks)?,
+            warnings: merged_warnings(w),
+        })
+    }
+}
+
+/// A loaded reality's realities as a run's turns count them: the base's first, then each
+/// loaded scenario's by id (refcore's `run_worlds`, its worlds). L §6.4.
+pub(super) fn realities(loaded: &Loaded) -> Vec<&Reality> {
+    match loaded {
+        Loaded::One(m) => vec![m],
+        Loaded::Worlds(w) => world_realities(w),
+    }
+}
+
+/// [`realities`] of a reality with scenarios. L §6.4.
+fn world_realities(w: &Worlds) -> Vec<&Reality> {
     core::iter::once(&w.base).chain(w.loaded.values()).collect()
+}
+
+/// `REQ-CLOCK` before any ask is answered, in the run's order: the first ask whose literal cut
+/// is after its model's `on` refuses the request (E §11), whether it is an ask of the run's
+/// realities (`realities`, the base's first), a side of a diff on two stacks, a member's ask
+/// answered in the member's world, or one whose member alone refused the request.
+///
+/// # Errors
+///
+/// `REQ-CLOCK`, or the member alone's request refusal, as the run's one result.
+pub(super) fn req_clocks(realities: &[&Reality], turns: &[Turn]) -> Result<(), Stop> {
+    turns
+        .iter()
+        .try_for_each(|turn| req_clock_turn(realities, turn))
+}
+
+/// [`req_clocks`] of one turn: each side of a diff on two stacks in order. E §11.
+pub(super) fn req_clock_turn(realities: &[&Reality], turn: &Turn) -> Result<(), Stop> {
+    match turn {
+        Turn::Ask(world, at) => req_clock_at(realities, None, (*world, *at)),
+        Turn::Cross([(w0, a0, _), (w1, a1, _)]) => req_clock_at(realities, None, (*w0, *a0))
+            .and_then(|()| req_clock_at(realities, None, (*w1, *a1))),
+        Turn::OfMember(aliases, at) => req_clock_at(realities, Some(aliases), (0, *at)),
+        Turn::Stopped(Stop::Refused(refusal)) if matches!(refusal.code(), Code::Req(_)) => {
+            Err(Stop::Refused(refusal.clone()))
+        }
+        Turn::Line(_)
+        | Turn::Scenario(_)
+        | Turn::Lifted(..)
+        | Turn::Member(_)
+        | Turn::Stopped(_) => Ok(()),
+    }
+}
+
+/// `REQ-CLOCK` for the ask at `at` of the reality at `world` among `realities`, or of the
+/// member alone these aliases name from the base down. E §11.
+fn req_clock_at(
+    realities: &[&Reality],
+    member: Option<&[String]>,
+    (world, at): (usize, usize),
+) -> Result<(), Stop> {
+    let mut m: &Reality = realities.get(world).ok_or_else(no_turn)?;
+    if let Some(aliases) = member {
+        m = &m.member_alone(aliases).ok_or_else(no_turn)?.reality;
+    }
+    req_clock(m, m.asks.get(at).ok_or_else(no_turn)?)
 }
 
 /// The turns of a run of a reality with scenarios, after its refused scenarios' lines: each
@@ -64,7 +170,7 @@ pub(super) fn realities(w: &Worlds) -> Vec<&Reality> {
 /// # Errors
 ///
 /// `REQ-ASK` for the first id the run names that no world's ask has (E §11).
-pub(super) fn ask_turns(w: &Worlds, asks: &Asks) -> Result<Vec<Turn>, Stop> {
+fn ask_turns(w: &Worlds, asks: &Asks) -> Result<Vec<Turn>, Stop> {
     if let Asks::Named(ids) = asks
         && let Some(id) = ids.iter().find(|id| !knows(w, id))
     {
@@ -288,7 +394,7 @@ pub fn report_lines(loaded: &Loaded) -> Result<Vec<String>, Stop> {
 /// # Errors
 ///
 /// `ENGINE-INVARIANT` for a refused scenario with no file.
-pub(super) fn refused_in_order(w: &Worlds) -> Result<Vec<(&String, &Refusal)>, Stop> {
+fn refused_in_order(w: &Worlds) -> Result<Vec<(&String, &Refusal)>, Stop> {
     let mut refused = Vec::with_capacity(w.refused.len());
     for (id, refusal) in &w.refused {
         let file = w
@@ -432,7 +538,7 @@ fn worlds_named(w: &Worlds, ask: &Ask, own: &str, model: &str) -> BTreeSet<Strin
 /// The worlds' warnings, the base's first, then each loaded scenario's by id, each once; an
 /// unread item kept only where every world that declares it leaves it unread (refcore's
 /// `run_worlds`, `unread_everywhere`). L §8.5.
-pub(super) fn merged_warnings(w: &Worlds) -> Vec<(Warn, String)> {
+fn merged_warnings(w: &Worlds) -> Vec<(Warn, String)> {
     let worlds: Vec<&Reality> = core::iter::once(&w.base).chain(w.loaded.values()).collect();
     let mut merged: Vec<(Warn, String)> = Vec::new();
     for reality in &worlds {
@@ -471,4 +577,58 @@ fn warns_unread(m: &Reality, message: &str) -> bool {
     m.warnings
         .iter()
         .any(|(code, text)| *code == Warn::Unread && text == message)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::check_lines;
+    use crate::eval::How;
+    use crate::load::{load_run, split_files};
+    use crate::{Pin, Source};
+    use std::collections::BTreeMap;
+
+    const BASE: &str = "model plain\n  tally 2\n  on 2026-03-01\n  start 2026-01-01\n  end 2027-12-31\n\nsource card \"a card\"\n\nunit PLN: currency minor 0.01\n\ninput amt: money PLN\n\ndef doubled: money PLN = amt + amt at reader\n\nask q: doubled law 2026-03-01\n\nversion card_2026\n  cite card\n  governs always\n  known 2026-01-01\n  amt = 100.00 PLN \"the card\"\n";
+
+    const ALONE: &str = "part alone\n  tally 2\n\nask q_zz: doubled in nowhere_b law 2026-03-01\n\nask q_aa: doubled in nowhere_a law 2026-03-01\n";
+
+    const ZULU: &str = "scenario zulu over plain\n  tally 2\n  from 2027-01-01\n\nversion zulu_rows\n  cite card\n  governs 2027..\n  known 2026-02-01\n  nothing_here = 1 \"no file declares it\"\n";
+
+    fn checked(files: &[(&str, &str)]) -> Vec<String> {
+        let sources = files
+            .iter()
+            .map(|(path, text)| Source {
+                path: (*path).to_owned(),
+                text: (*text).to_owned(),
+            })
+            .collect();
+        let split = split_files(sources).expect("the files split");
+        let loaded = load_run(&split, &BTreeMap::new(), Pin::Canonical, How::FENCES)
+            .expect("the base loads");
+        check_lines(&loaded).expect("check's lines")
+    }
+
+    #[test]
+    fn a_clean_base_is_ok() {
+        assert_eq!(checked(&[("m.tally", BASE)]), ["ok"], "nothing refused");
+    }
+
+    #[test]
+    fn refused_scenarios_then_asks_refused_alone_by_id() {
+        let lines = checked(&[
+            ("m.tally", BASE),
+            ("alone.tally", ALONE),
+            ("s_zulu.tally", ZULU),
+        ]);
+        assert_eq!(
+            lines,
+            [
+                "scenario zulu: refused: LOAD-NAME unknown id nothing_here (s_zulu.tally:9)",
+                "q_aa: refused: LOAD-SCENARIO ask q_aa names nowhere_a, neither the model nor a \
+                 loaded scenario (alone.tally:6)",
+                "q_zz: refused: LOAD-SCENARIO ask q_zz names nowhere_b, neither the model nor a \
+                 loaded scenario (alone.tally:4)",
+            ],
+            "the scenario first, then each ask by id, not by line; no `ok`"
+        );
+    }
 }
