@@ -735,9 +735,10 @@ impl Engine {
         }
     }
 
-    /// The refusal of movement `v` where it is a plan's refused instance at the reader's cut;
-    /// none for any other, a decision's included, whose refusal is its run's (L §5.14 An
-    /// instance's existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3).
+    /// The refusal of movement `v` where it is a refused instance at the reader's cut, a
+    /// plan's or a decision's (its run's refusal); none for any other (L §5.14 An instance's
+    /// existence is a cell, §8.4; tally 2.3.1 R6, rulings 16 Q3 whole, rulings 18). A row's
+    /// `o.fulfils` naming one is refused with its link (rulings 16 Q1).
     ///
     /// # Errors
     ///
@@ -751,7 +752,7 @@ impl Engine {
         let MvSrc::Inst(move_id, _) = &v.src else {
             return Ok(None);
         };
-        if m.moves.get(move_id).is_none_or(|mv| mv.decision) {
+        if m.moves.get(move_id).is_none() {
             return Ok(None);
         }
         Ok(match self.mv_record(m, v, ctx)? {
