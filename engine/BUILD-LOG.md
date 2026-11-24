@@ -8724,3 +8724,84 @@ The builder's turn on the lead's probes of G1's last fix (`tmp/spec-2.3.1/inputs
 - **What I did not do:** build parts, or special-case f10.
 - **What I ask:** the lead rules L1 as M5b's, a not-built stop where the round requires none. Statement B's parts side then lands with M5b's walk, and f10 goes to M5b's checks (`b6` the HOLE-SAME hole, `b8` 100.00 PLN, `p6` per party). Or the lead names the narrower form wanted.
 - **State:** the last green commit is 31202ab5 on `check quick`. This entry is committed after it, and nothing is uncommitted.
+
+## 2026-11-24 tally 2.3.1 G2, the group's rest on the third pin (issue #259)
+
+The builder's turn on the lead's verdict (`tmp/spec-2.3.1/inputs/last-fixes-verdict.md`), on top of G1's 5e5e55a5. The oracle is refcore at the third pin (spec/2.3.1 486df3fe, refcore ecf49579, extracted to `tmp/spec-2.3.1/g2/pin3/`). Before each commit, every probe of both reviews was swept (`g2/sweep.sh`, `g2/sweep2.sh`; labels `cbase`, `p15`, `q1`, `q3`, `q5`) in three orders: each ask alone, forward, reversed. The lines below are the only ones that moved. Items 1 to 3 are built. Of item 4, nothing is built: Q1.10 is a STOP-REPORT (below), and the other rows are handed off.
+
+**Commits** (none pushed):
+- e6faa8c0 `fix(walk): a decision none at its point stays none past its own early row` (P15)
+- 22da8a5f `fix(walk): a link to an instance its `where` refuses is refused with it` (Q1 whole)
+- 03fe0f26 `fix(book): `m[k] == none` of a decision's refused instance is refused` (Q3 whole)
+- 6b0770d3 `fix(book): `o.fulfils` before a later decision's point is RUN-ORDER` (Q5)
+
+**Each item, its probe and the engine's line now:**
+- **Item 1, rulings 16's Q1 and Q3 whole** (`walk/tuples.rs` `link_tuple`: a tuple's refused `where` or `when` refuses the link; `book/members.rs` `refused_movement`: the decision exclusion is gone).
+  - `g2fix/b5_plan` k1 and o1 are `RUN-DIV`, and `x/c4_when` qo, nq, qn, ez, en, efo and epo are `RUN-DIV`. Both are refcore's lines.
+  - `x/lf_whenref` is refcore's bytes.
+  - Stored p22, p30, p32, p40b and p43 meet no `ENGINE-INVARIANT` and no new `RUN-CYCLE`, so there was no link-code defect to mend.
+  - Q3 whole moved no probe line. Nothing in the probes reads `m[k] == none` of a refused decision outside what Q1 already refuses.
+- **Item 2, P15** (`eval/timelines.rs` `EarlyRow.none_of`, `none_by_own_row`; `walk/order.rs` `run_one_body`). A decision none at its point stays none, whatever the refusal its own early row met in an earlier answer.
+  - `b1_early_alim` dy, `b1_early_assumed` dy and `x/dl500early` dy are `refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it`, refcore's line, with the assumption's read kept (`assumed: lim guess`).
+- **Item 3, Q5** (`walk/order.rs` `link_awaited`; `book/members.rs` `fulfils_awaited`, called in `mv_field` before the row's record verdict).
+  - `x/dlc3_600k` fc (`30.00 PLN` before) and `x/dlc3_500k` fc (`RUN-RECORD observation bank[r1] …` before) are `refused: RUN-ORDER decisions chk and topup read each other on 2026-02-03`, refcore's line, the same in all three orders.
+  - Left: under the refusal the engine still lists `unfulfilled: topup[2026-01]`, which refcore leaves out. That is a read-set line of a refused walk, outside Q5's form.
+- **Item 4, plan §3's rows, against refcore at the pin:** nothing built.
+  - **N5** (`g1/p03c_anyall_when`): am is `true` on both, so the value is done. Left: under cm (`count`, refused `RUN-DIV` by mw's `when`), refcore lists `unfulfilled: mb`, a member before the refused one, and the engine doesn't. The cause is `book/members.rs` `span_members`: `Reading::Stops` returns before the second loop notes the earlier members' entries.
+  - **selfread** (`critic/selfread.tally`): b, f3 and g3 are still `RUN-CYCLE pay reads its own instances`; refcore gives 900.00 PLN, 10.00 PLN and 10.00 PLN. The fix is a read of the move's own earlier tuple while its list is made (`walk/plan.rs` `make_list`, `make_prefix`, and the tuple loop under them): tuples made in key order, each existence before the next. It is bigger than this turn's budget.
+  - **Q1.10:** a STOP-REPORT, below.
+  - **Q2.24, Q2.38, Q2.39, N250.3, N250.9:** not reached.
+
+**What `check commit` shows red** (one run, after the last commit): 31 of 1 571 tests, 122 ids. All of the 102 on my last list are among them, and none turned green. 20 are new, all in item 1's class (Q1 whole):
+- 11 give refcore's bytes at the pin, for T's re-store:
+  - `fixes/gate8/k_link/qz`, `fixes/gate8/k_r65/l`, `fixes/gate8/x1r/l4`;
+  - `fixes/p40/c2_link/qn`, `c4_when/qn`, `c5_wref/qn`;
+  - `spec/gate8/x1r/l24`, `l24__l4`, `l4__l24`, `l24__f`, `f__l24`.
+- 9 are `spec/p43` explain rows (`c2_link` en, ez; `c4_when` en, ez, epo and its two orders; `c5_wref` en, ez):
+  - The value line is the refused `RUN-DIV`, as on refcore.
+  - The engine's derivation also lists the refused `where`'s rows (`row v:ten`, `row v:dz[2026-03] = 0`), as P43 stores them: an existence read lists the `where` rows it rests on, in the engine's order (P44). Refcore at the pin leaves them out.
+  - For T's re-store, or the lead's word if refcore's form is meant.
+- No other id is new. The steps after the tests didn't run, so doc, build, deny and the fuzz build are unconfirmed.
+
+- **Size** (`git diff --shortstat 5e5e55a5 HEAD -- engine/crates`): 4 files, +155 −11. About 70 of it is unit tests: `a_decision_reading_the_fulfils_of_a_row_linked_to_a_later_one_is_run_order` (new), and dy in `an_early_row_whose_link_is_refused_refuses_on_every_timeline_with_what_refused_it`.
+- **Fences:** no edit to `walk/narrow.rs` or its twin.
+- **Exceptions:** +0 (`exceptions --check`: no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `none_by_own_row`'s `none_of` and `cut` tests;
+  - the `own_none` arm in `run_one_body`;
+  - `link_tuple`'s `tuple.refused` guard;
+  - `refused_movement`'s guard;
+  - `link_awaited`'s `chain_run` and `n.id != mid`;
+  - `mv_field`'s `name == "fulfils"`.
+- **Open STOP-REPORTs:** Q1.10 (below).
+- **Hand-off:**
+  - **selfread:** tuple-level reads of the move's own list, as above.
+  - **N5's cm line:** a refused count lists the members before the refused one.
+  - **Q2.24, Q2.38, Q2.39, N250.3, N250.9:** not begun. Each is a read-set form (plan §3 l.102 to l.114).
+  - **Q5's `unfulfilled: topup[2026-01]`** under the refused fc.
+- **Usage:** about 3.17 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.55 % this turn.
+- **Checks:** `check quick: green, 11 steps (40s)`; `check commit: red at tests, stopped after 10 of 24 steps (93s)`, red only on the 122 ids above.
+
+## STOP-REPORT 2026-11-24: Q1.10, a count's read set: refcore at the pin lists neither the runs' existence nor their days, where L §8.2 says it holds them
+
+- **Kind:** the spec and the oracle disagree.
+- **Where:** `engine/tests/m4/fixes/g3fix/t2_tie_inputs.tally` i_cn (copied as `tmp/spec-2.3.1/g2/q110/dec.tally`), and its plan twin `tmp/spec-2.3.1/g2/q110/plan.tally` (no `reads konto`, amount `amt2[j] + amt2[j]`). The code: `book/members.rs` `span_members`, whose second loop merges each member's whole `i.coll`, its legs' reads included.
+- **Rule or gate:** L §8.2 One read set at 486df3fe, l.2252: a read over movements holds, for each movement, "what decided whether it counts and how much: its existence (§5.14) up to a day outside the span, the amounts it sums and the link …". Plan §3 Q1.10: "a count sums no amount: it holds each run's existence and day only".
+- **What happens** (`inputs-of cn`, `cn = count(m in transfers over sp .. sp)`):
+
+  | text | engine | refcore at the pin | the spec's words would give |
+  |---|---|---|---|
+  | dec | amt2[j1], amt2[j2], lim, opening[konto], sp, w, wl | sp | sp, w (the day), wl (the `when`) |
+  | plan | amt2[j1], amt2[j2], sp, w, wl, the two `unfulfilled` | the same as the engine | sp, w, wl, the two `unfulfilled` |
+
+  - In dec, refcore drops the existence and the day with the amount.
+  - In plan, refcore keeps the amounts.
+  - Neither matches "existence and day only".
+- **What I tried:** traced the member's read set. A run's legs' reads are kept apart in `Inst.leg_reads`, and also merged into `i.coll` (`walk/body.rs` l.466). So the spec's form is a member's read set without them, with the field reads (`mv_field`) adding them back for a `sum`. That change reaches every count over a plan's or a decision's movements, so it can't be checked against refcore at the pin.
+- **What I did not do:** build either form, or special-case a count.
+- **What I ask:** the lead rules which is meant:
+  - (a) the spec's words, existence and day, for plans and decisions alike; refcore is fixed to it;
+  - (b) refcore's dec form, nothing of a run;
+  - (c) decisions only.
+  The builder then takes Q1.10 with the class's stored rows (`f3_span` e_cn and i_cn, g3fix's count rows) moving on both.
+- **State:** the last green commit is 6b0770d3 on `check quick`. This entry is committed after it, and nothing else is uncommitted.
