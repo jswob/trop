@@ -8805,3 +8805,66 @@ The builder's turn on the lead's verdict (`tmp/spec-2.3.1/inputs/last-fixes-verd
   - (c) decisions only.
   The builder then takes Q1.10 with the class's stored rows (`f3_span` e_cn and i_cn, g3fix's count rows) moving on both.
 - **State:** the last green commit is 6b0770d3 on `check quick`. This entry is committed after it, and nothing else is uncommitted.
+
+## 2026-11-24 tally 2.3.1 G2, the group's rest, second turn (issue #259)
+
+The builder's turn after the lead's ruling of Q1.10 (option (a), pick P16) and the merge of T's two re-runs (5137020f). The oracle is refcore at the third pin (`tmp/spec-2.3.1/g2/pin3/`). Before each commit, every probe of both reviews was swept in three orders (labels `rl`, `q110`, `n5`, `ex`, `cy` over `q5`). Every moved line is below.
+
+**Commits** (none pushed):
+- 6b1d4935 `fix(walk): a link reads its instance's existence in order, its day too`
+- 886dbd36 `fix(book): a binding's member holds its existence and day, no amount` (Q1.10 (a))
+- ddf46822 `fix(book): a refused binding lists the members it took before` (N5's cm)
+- 50a589c2 `fix(walk): an existence read's explanation prints its day before `when``
+- 6c60569f `fix(walk): a cycle through a link's existence is its move's own`
+
+**Item 1, the merged reds.** The first `check commit` on 5137020f was red at 90 ids. 69 were on T's `Logged-Red:` lines; the other 21 were red on my last list, all in the classes below. 23 turned green:
+- **The link's existence in R6's order** (6b1d4935; `walk/tuples.rs` `link_tuple`, as refcore's `m_link_tuple`): the keys' `where`s, the law date, the day, then the `when`. A false or `none` read ends it, whatever came before; otherwise the first refusal refuses the link. The booking-cut reading of a refused `when` (`refused_when_link`) is gone, as the pin has it. A modelled instance whose rows' link is refused refuses `flows` (`move_flows.rs`, refcore's `badlinks`).
+  - Green: `fixes/gate8/k_dayref/l` (a refused day, `RUN-DIV`), `fixes/t231g2/k_refw/l` (a refused `where`, then a false `when`: `RUN-RECORD`), `fixes/gate8/linkdiv2`, `fixes/g6c/p06_holebook_io` i1 and i2, `fixes/narrow/n1_fulfils` i_feb and i_may, `fixes/p32/d_pin/fa`.
+- **N5's form** (ddf46822): `r11/count_refused_day`, `r2/reach_count`.
+- **The existence explanation's order**, the day before the `when` (50a589c2; `existence_reads`): `fixes/p40/c2_link/ed`, `c3_dec/ed`, `ed__qd`, `qd__ed`, `c4_when/ed`, `ept`.
+- **A cycle through a link's existence**, `RUN-CYCLE spend reads its own instances` (6c60569f): `fixes/p32/e_selfcycle` f, f__l24, f__l4, l24, l24__f, l4, l4__f. The cell a cycle returns to is noted where it is met (`cycle_at`). A cell still active when the refusal reaches the existence read was being computed before that read began, as refcore's `outer` test has it.
+
+**The reds left, by cause** (the last `check commit`: 80 ids, 47 on T's lines):
+- **Waiting on the writer, explain's scope and rows** (18):
+  - `fixes/p40/c2_link` en, ez and its two orders; `c4_when` en, ez, epo, epf, edw, emx, exm and its two orders; `c5_wref` ed, en, ew, ez; `c6_own/efs`.
+  - Under a link refused by its `where`, the engine lists the reads that refused it (P21) and refcore lists none.
+  - Refcore lists every tuple's `where` rows (`dz[2026-01..04]`) where the engine lists the one tuple's (R6's one-tuple rows), and in ew the reverse.
+- **R2's read-set mechanisms, not diagnosed this turn** (14):
+  - `fixes/g11` r_agent_o1, o2, r_p_b_ib, ibl, ik, v_inputs_of_balance and `later/inputs_of_balance`: a balance's `inputs-of`, refcore `card_2026:late`/`d`/`d2` where the engine gives `opening[konto]`/`d0`/`go`.
+  - `fixes/g12/r_p_rid`, `fixes/g3/f3_span/i_fk1`, `fixes/gate8/m2_g7_p2`, `m2_gate_b9n`, `m2_gate_p5` (refcore's `unfulfilled: groc[2026-04]`).
+  - The two `I:X:replay_september` checks (`unfulfilled: health_pay[2026-07]`).
+- **selfread** (3): item 3, not built (below).
+- **f10** (6): M5b's parts walk, G1's STOP-REPORT.
+- **G1's** `m2_d512_both_cover_day` (statement B); `b3_whenref_az` ful and loose (G1's cause on T's line); `b3_whenref_az/ef` (`assumed: zz guess` extra, not diagnosed).
+- **Unruled:** `q2_reset/f` (an anchor after a refused early row).
+- **Not on T's lines** (33):
+  - 21 red before the merge: the "every side listed" class (`t221-g2/*`, `t221-g3/*`, `t23-g1/same-end-differ`, `fixes/rv/g4f_*`, `m2_d512_plans_same`, `t231rv1` p09 cnt and p10 ny, sy), and item 6's held `fixes/g12/pm*_observe_observe`.
+  - 12 Q1.10's (below), turned red for T's re-store.
+  - 1 more: `spec/p31/g6c/p06_holebook_io/e1`, the explanation's new order (50a589c2). Refcore at the pin gives the engine's bytes now; the stored row holds the old order.
+
+**Item 2, Q1.10 (a)** (886dbd36). A binding's member holds what decided whether it counts and its day: `Inst.exist_coll`, its reads before its legs (`Body.exist`, taken in `inst_body`), with its keys' `where`s. A field read of a leg or an attribute takes the whole set, as before.
+- Probe: `tmp/spec-2.3.1/g2/q110/plan.tally` i_cn is `v:sp`, `v:w`, `v:wl`, `unfulfilled: dk[j1]`, `unfulfilled: dk[j2]` (the amounts gone).
+- Of the reviews' probes only `g2fix/b4_first` im3 moves (`rent_amt` leaves).
+- New red for T's re-store, each a binding that sums no amount: `fixes/g3/f3_span/i_cn`, `fixes/t231rv2/b4_first/im3`, `fixes/g10/p_d7` (q2's `last … ties by s.day` loses the `unfulfilled:` lines its leg's `bal(konto)` brought), `fixes/g11/r_agent_mv1`, `r_agent_mv2_i_n`, `r_p_b_inn`, `fixes/g5/p6_unc`, `fixes/gate8/m2_g2_f18`, `_m2`, `_m3`, `m2_g6_kbs2`, `r7/t_f18`.
+- **Left:** a decision run's traced read still prints its whole body under a count. `q110/dec.tally` i_cn keeps `amt2[j1]`, `amt2[j2]`, `lim`, `opening[konto]`: `trace_counted` reads the run again with its legs (`trace_run`). The split is a member's trace of the run's `when` and day only, with the legs traced where a field read takes them.
+
+**Item 3, the hand-off's rows:**
+- **N5's cm** (ddf46822, `member_reads`, `members_before`): `g1/p03c_anyall_when` cm is `refused: RUN-DIV division by zero` / `unfulfilled: mb`, refcore's lines.
+  - The first review's r6_window, r6a, r6b_onekey, r6c_twokey_leg, w1_day_2k, w3_hole_2k and w5_whenhole_2k gain refcore's `unfulfilled:` lines; each is nearer refcore at the pin (`vsref.sh`: 39→23, 21→15, 15→12, 21→15, 29→21, 39→23, 29→21).
+- **selfread:** not built; b, f3 and g3 are still `RUN-CYCLE … reads its own instances`. Refcore's mechanism is `m_tuple_inst`: a plan's `flows` with every key given reads that one tuple's instance as its own cell, made from `move_tuples(only=keys)` and guarded by that tuple alone. The engine needs the same in `move_flows` and a keys-only `move_tuples`. g3's `where` form reads it while the move's tuples are made, and b needs both forms.
+- **Q5's `unfulfilled: topup[2026-01]`** under the refused fc: not built. The probable cause, unverified: the engine reads `+ 0 * bal(konto)` after the refused left operand, as R1's strict evaluation reads both operands, and `bal(konto)` brings the line. Refcore stops at the left one.
+- **Q2.24, Q2.38, Q2.39, N250.3, N250.9:** not reached.
+
+- **Size** (`git diff --shortstat 8726cc21 HEAD -- engine/crates`): 9 files, +261 −124.
+- **Fences:** no edit to `walk/narrow.rs` or its twin.
+- **Exceptions:** +0 (`exceptions --check`: no FAIL).
+- **Mutants:** none proved. Sites for T:
+  - `link_tuple_read`'s `Existence::Ends` and `bad.unwrap_or`;
+  - `through_existence`'s `active.contains`;
+  - `count_move`'s refused-link test;
+  - `member_reads`' `exist_coll` fallback;
+  - `members_before`;
+  - `existence_reads`' order.
+- **Open STOP-REPORTs:** none new. Q1.10's is ruled (P16).
+- **Usage:** about 3.61 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.42 % this turn.
+- **Checks:** `check quick: green, 11 steps (70s)`; `check commit: red at tests, stopped after 10 of 24 steps`, red only on the 80 ids above.
