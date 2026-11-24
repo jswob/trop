@@ -146,6 +146,13 @@ impl Loader {
                 self.written_order(a, *order, other, &mut after, &mut written)?;
             }
         }
+        if let Some(cycle) = written_cycle(&written) {
+            // a cycle of written orders is LOAD-ORDER, a move before itself its smallest
+            // (L §5.14.2 Cycles; tally 2.3.1 S11, N245.8)
+            let message = format!("{}: written orders form a cycle", cycle.join(" before "));
+            let first = cycle.first().map_or("", String::as_str);
+            return Err(self.at_move(first, Load::Order, message));
+        }
         self.composed_orders(&mut after, &mut written)?;
         let groups = match order_cycles(&self.m.graph, &after, &decisions) {
             Ok(groups) => merge(groups),
@@ -299,6 +306,59 @@ impl Loader {
             None => Stop::Refused(Refusal::new(Code::Load(code), message)),
         }
     }
+}
+
+/// The first cycle the written orders `(later, earlier)` form, as refcore's `m_strata` walks
+/// them: from each earlier move by name, through the moves it is written before, by name; the
+/// cycle's moves in order from the one met again, that one again at its end. L §5.14.2 Cycles
+/// (tally 2.3.1 S11).
+fn written_cycle(written: &BTreeSet<(String, String)>) -> Option<Vec<String>> {
+    let mut before: BTreeMap<&str, Vec<&str>> = BTreeMap::new();
+    // the set's order is by the later move, so each earlier one's list comes sorted
+    for (later, earlier) in written {
+        before
+            .entry(earlier.as_str())
+            .or_default()
+            .push(later.as_str());
+    }
+    // a move on the walk's path is `false`, one whose walk is done `true`
+    let mut done: BTreeMap<&str, bool> = BTreeMap::new();
+    for start in before.keys() {
+        if done.contains_key(start) {
+            continue;
+        }
+        done.insert(start, false);
+        let mut path: Vec<(&str, usize)> = vec![(start, 0)];
+        while let Some(&(node, next)) = path.last() {
+            let later = before.get(node).and_then(|ls| ls.get(next)).copied();
+            if let Some(top) = path.last_mut() {
+                top.1 = next.checked_add(1)?;
+            }
+            let Some(later) = later else {
+                done.insert(node, true);
+                path.pop();
+                continue;
+            };
+            match done.get(later) {
+                Some(false) => {
+                    let from = path.iter().position(|(n, _)| *n == later)?;
+                    let mut cycle: Vec<String> = path
+                        .iter()
+                        .skip(from)
+                        .map(|(n, _)| (*n).to_owned())
+                        .collect();
+                    cycle.push(later.to_owned());
+                    return Some(cycle);
+                }
+                Some(true) => {}
+                None => {
+                    done.insert(later, false);
+                    path.push((later, 0));
+                }
+            }
+        }
+    }
+    None
 }
 
 /// The written orders composed: a pair `(later, earlier)` with `later` after `x` and `x`
@@ -1292,7 +1352,7 @@ fn level_of(
 
 #[cfg(test)]
 mod tests {
-    use super::{first_cycle, merge};
+    use super::{first_cycle, merge, written_cycle};
     use crate::model::{Node, NodeKind};
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -1318,6 +1378,38 @@ mod tests {
         assert_eq!(cycle, ["b", "c", "b"], "a is on the path, not in the cycle");
         graph.remove(&def("c"));
         assert!(first_cycle(&graph).is_none(), "no cycle left");
+    }
+
+    /// Written orders as (later, earlier) pairs.
+    fn orders(pairs: &[(&str, &str)]) -> BTreeSet<(String, String)> {
+        pairs
+            .iter()
+            .map(|(later, earlier)| ((*later).to_owned(), (*earlier).to_owned()))
+            .collect()
+    }
+
+    #[test]
+    fn written_orders_that_compose_into_a_cycle_are_found() {
+        // L §5.14.2 (tally 2.3.1 S11): save before spend, spend before top, top before save
+        let three = orders(&[("spend", "save"), ("top", "spend"), ("save", "top")]);
+        assert_eq!(
+            written_cycle(&three),
+            Some(vec![
+                "save".to_owned(),
+                "spend".to_owned(),
+                "top".to_owned(),
+                "save".to_owned()
+            ]),
+            "from the first earlier move by name, along `before`"
+        );
+        let chain = orders(&[("spend", "save"), ("top", "spend"), ("top", "save")]);
+        assert_eq!(written_cycle(&chain), None, "composed orders with no cycle");
+        let both = orders(&[("a", "b"), ("b", "a"), ("c", "a")]);
+        assert_eq!(
+            written_cycle(&both),
+            Some(vec!["a".to_owned(), "b".to_owned(), "a".to_owned()]),
+            "an order written both ways"
+        );
     }
 
     #[test]
