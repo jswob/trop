@@ -16713,9 +16713,13 @@ version facts
   wdiv[2026-03] = 2 "answered"
   opening[konto] = 100 at 2026-01-01 start
   opening[box] = 0 at 2026-01-01 start
-,,1:0,224:q_bal (d = 2026-01-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+,,1:0,285:q_bal (d = 2026-01-20): (100.00 PLN, 6.00 PLN)
+  unfulfilled: topup[2026-01, 1]
+  unfulfilled: topup[2026-01, 2]
   cut 2026-02-15
-q_bal (d = 2026-03-20): (refused: RUN-DIV division by zero, refused: RUN-DIV division by zero)
+q_bal (d = 2026-03-20): (100.00 PLN, refused: RUN-DIV division by zero)
+  unfulfilled: topup[2026-01, 1]
+  unfulfilled: topup[2026-01, 2]
   cut 2026-02-15
 ,13:g6/scen_early,2:g6,60:run g6/scen_early_base.tally g6/scen_early.tally --ask q_top,1144:24:g6/scen_early_base.tally,871:model g6_scen_early
   tally 2

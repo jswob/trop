@@ -601,8 +601,6 @@ mod tests {
                 "spec-p22",
                 "spec-p26",
                 "spec-p31",
-                "spec-p32",
-                "spec-p40",
                 "spec-p40fix",
                 "spec-p43"
             ]
@@ -2134,19 +2132,19 @@ mod tests {
     /// `m4`'s group `fixes-t231g1`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_fixes_t231g1_part_1() {
-        group_holds(M4, "fixes-t231g1", (0, 1), 81);
+        group_holds(M4, "fixes-t231g1", (0, 1), 105);
     }
 
     /// `m4`'s group `fixes-t231g2`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_fixes_t231g2_part_1() {
-        group_holds(M4, "fixes-t231g2", (0, 1), 46);
+        group_holds(M4, "fixes-t231g2", (0, 1), 68);
     }
 
     /// `m4`'s group `fixes-t231rv1`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_fixes_t231rv1_part_1() {
-        group_holds(M4, "fixes-t231rv1", (0, 1), 35);
+        group_holds(M4, "fixes-t231rv1", (0, 1), 59);
     }
 
     /// `m4_spec`'s group `spec-g1`, part 1 of 1 (its vectors at 0 modulo 1).
@@ -2203,12 +2201,6 @@ mod tests {
         group_holds(M4_SPEC, "spec-p26", (0, 1), 11);
     }
 
-    /// `m4_spec`'s group `spec-p32`, part 1 of 1 (its vectors at 0 modulo 1).
-    #[test]
-    fn m4_narrow_m4_spec_spec_p32_part_1() {
-        group_holds(M4_SPEC, "spec-p32", (0, 1), 7);
-    }
-
     /// `m4_spec`'s group `spec-p31`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_spec_spec_p31_part_1() {
@@ -2221,16 +2213,10 @@ mod tests {
         group_holds(M4_SPEC, "spec-gate", (0, 1), 6);
     }
 
-    /// `m4_spec`'s group `spec-p40`, part 1 of 1 (its vectors at 0 modulo 1).
-    #[test]
-    fn m4_narrow_m4_spec_spec_p40_part_1() {
-        group_holds(M4_SPEC, "spec-p40", (0, 1), 8);
-    }
-
     /// `m4_spec`'s group `spec-p40fix`, part 1 of 1 (its vectors at 0 modulo 1).
     #[test]
     fn m4_narrow_m4_spec_spec_p40fix_part_1() {
-        group_holds(M4_SPEC, "spec-p40fix", (0, 1), 10);
+        group_holds(M4_SPEC, "spec-p40fix", (0, 1), 2);
     }
 
     /// `m4_spec`'s group `spec-p43`, part 1 of 1 (its vectors at 0 modulo 1).

@@ -32557,8 +32557,9 @@ ask p1: pow(zero, mone)
 ask p2: pow(zero, 0)
 ask p3: pow(zero, two)
 ask p4: pow(two, mone)
-,,1:0,148:s4: (true, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for sk[a] == sk[b]" (wk[a]))
+,,1:0,176:s4: (true, true, ?"date within window(2026-06-01, 2026-06-05) not precise enough for sk[a] == sk[b]" (wk[a], wk[b]))
   unknown day: wk[a]
+  unknown day: wk[b]
   cut 2026-10-01
 ,14:fixes/g2/q1_b1,8:fixes-g2,21:run q1.tally --ask b1,968:8:q1.tally,952:model probes
   tally 2
@@ -161706,7 +161707,7 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,129:q4: (refused: RUN-NONE top[2026-01] doesn't exist: a field read of it, 2026-02-20)
+,,1:0,183:q4: (refused: RUN-NONE top[2026-01] doesn't exist: a field read of it, refused: RUN-NONE top[2026-02] doesn't exist: a field read of it)
   unfulfilled: rent[2026-01]
   cut 2026-10-01
 ,19:fixes/g12/r_p_mr_e1,9:fixes-g12,25:run r_p_mr.tally --ask e1,1677:12:r_p_mr.tally,1655:model mr
@@ -162898,7 +162899,7 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,129:q4: (refused: RUN-NONE top[2026-01] doesn't exist: a field read of it, 2026-02-20)
+,,1:0,183:q4: (refused: RUN-NONE top[2026-01] doesn't exist: a field read of it, refused: RUN-NONE top[2026-02] doesn't exist: a field read of it)
   unfulfilled: rent[2026-01]
   cut 2026-10-01
 ,20:fixes/g12/r_p_mr2_e1,9:fixes-g12,26:run r_p_mr2.tally --ask e1,1914:13:r_p_mr2.tally,1891:model mr
@@ -163916,7 +163917,7 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,32:x1: 2026-02-20
+,,1:0,86:x1: refused: RUN-NONE top[2026-02] doesn't exist: a field read of it
   cut 2026-10-01
 ,20:fixes/g12/r_p_mr2_x2,9:fixes-g12,26:run r_p_mr2.tally --ask x2,1914:13:r_p_mr2.tally,1891:model mr
   tally 2
@@ -164131,7 +164132,7 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,32:x3: 2026-01-20
+,,1:0,86:x3: refused: RUN-NONE top[2026-01] doesn't exist: a field read of it
   cut 2026-10-01
 ,20:fixes/g12/r_p_mr2_x4,9:fixes-g12,26:run r_p_mr2.tally --ask x4,1914:13:r_p_mr2.tally,1891:model mr
   tally 2
@@ -165065,7 +165066,7 @@ version card_2026
   rent_dom = 5 "the card"
   top_dom = 20 "the card"
   opening[konto] = 500.00 PLN at 2026-01-01 start "the card"
-,,1:0,129:q4: (refused: RUN-NONE top[2026-01] doesn't exist: a field read of it, 2026-02-20)
+,,1:0,183:q4: (refused: RUN-NONE top[2026-01] doesn't exist: a field read of it, refused: RUN-NONE top[2026-02] doesn't exist: a field read of it)
   unfulfilled: rent[2026-01]
   cut 2026-10-01
 ,20:fixes/g12/r_p_mr3_e1,9:fixes-g12,26:run r_p_mr3.tally --ask e1,1996:13:r_p_mr3.tally,1973:model mr
@@ -177150,9 +177151,9 @@ version card_2026
   tally 2
 
 ask n14: min(lifespan(konto).to, d1)
-,,1:0,520:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
+,,1:0,481:base: (window(2026-03-03, 2026-03-20), window(2026-12-20, 2027-01-10), 5, 2026-01-01)
   cut 2026-03-01
-n14: refused: RUN-DOMAIN 2026-01-01 and never compared
+n14: 2026-01-01
   cut 2026-03-01
 warning: WARN-UNREAD input d2 is read by nothing
 warning: WARN-UNREAD input kh is read by nothing
@@ -200193,17 +200194,17 @@ version v
   q[2027-05] = 50.00 PLN "c"
   q[2027-06] = 60.00 PLN "c"
   opening[acct] = 0 PLN at 2027-01-01 start "c"
-,,1:0,809:x1: refused: RUN-NONE pay[2027-02] doesn't exist: a field read of it
+,,1:0,917:x1: refused: RUN-NONE pay[2027-02] doesn't exist: a field read of it
   cut 2027-03-15
 x2: (30.00 PLN, 2027-03-01)
   cut 2027-03-15
-x3: 2027-02-01
+x3: refused: RUN-NONE pay[2027-02] doesn't exist: a field read of it
   cut 2027-03-15
 x4: refused: RUN-NONE dec[2027-02] doesn't exist: a field read of it
   unfulfilled: pay[2027-01]
   unfulfilled: two2[2027-01]
   cut 2027-03-15
-x5: (refused: RUN-NONE dec[2027-06] doesn't exist: a field read of it, 2027-06-03)
+x5: (refused: RUN-NONE dec[2027-06] doesn't exist: a field read of it, refused: RUN-NONE dec[2027-06] doesn't exist: a field read of it)
   unfulfilled: pay[2027-01]
   unfulfilled: pay[2027-03]
   unfulfilled: two2[2027-01]
@@ -204209,8 +204210,9 @@ version v
   known 2026-01-01
   a = window(2026-01-01, 2026-01-02) "c"
   b = window(2026-01-01, 2026-01-02) "c"
-,,1:0,116:q: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a)
+,,1:0,136:q: ?"date within window(2026-01-01, 2026-01-02) not precise enough for a < b" (a, b)
   unknown day: a
+  unknown day: b
   cut 2026-03-01
 ,19:fixes/gate8/m2_g3_j,11:fixes-gate8,11:run j.tally,594:7:j.tally,579:model pj
   tally 2
@@ -214888,13 +214890,14 @@ version st2
   covers konto
   bank[b1] = (on: 2026-03-12, kind: transfers, leg cash from konto to world amount 100.00 PLN) "b1"
   same bank[b1] = bank[a1]
-,,1:0,1479:b_k: ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1])
+,,1:0,1410:b_k: 900.00 PLN
   cut 2026-04-10
 f_k: ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1])
   cut 2026-04-10
 l_k: residuals konto 2026-03
   2026-03 unexplained: model 0.00 PLN, observed ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1]), difference ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1])
     unexplained bank[a1], bank[b1] on 2026-03-10: observed ?"bank[a1] and bank[b1] are one, but leg cash differs on 2026-03-10, 2026-03-12: 100.00 PLN (bank[a1]) and 100.00 PLN (bank[b1])" (bank[a1], bank[b1])
+    unexplained bank[a1], bank[b1] on 2026-03-12: observed -100.00 PLN
   cut 2026-04-10
 t_day: ?"bank[a1] and bank[b1] are one, but the day of cash differs on 2026-03-10: 2026-03-10 (bank[a1]) and 2026-03-12 (bank[b1])" (bank[a1], bank[b1])
   cut 2026-04-10

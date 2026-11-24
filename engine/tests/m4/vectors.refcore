@@ -192570,7 +192570,7 @@ version v
   xs = 1 "s"
   w = window(2026-05-20, 2026-06-10) "s"
   cutoff = 2026-06-01 "s"
-,,1:0,55:t1: refused: RUN-DIV division by zero
+,,1:0,26:t1: true
   cut 2026-10-25
 ,27:paper/agg__refusal_first/t2,16:constructs-paper,37:run agg__refusal_first.tally --ask t2,1198:24:agg__refusal_first.tally,1164:model p
   tally 2
@@ -192622,7 +192622,7 @@ version v
   xs = 1 "s"
   w = window(2026-05-20, 2026-06-10) "s"
   cutoff = 2026-06-01 "s"
-,,1:0,55:t2: refused: RUN-DIV division by zero
+,,1:0,27:t2: false
   cut 2026-10-25
 ,27:paper/agg__refusal_first/t3,16:constructs-paper,37:run agg__refusal_first.tally --ask t3,1198:24:agg__refusal_first.tally,1164:model p
   tally 2
@@ -197152,8 +197152,9 @@ version v
   ds[k2] = window(2026-05-20, 2026-06-10) "s"
   ds[k3] = 2026-07-01 "s"
   q = true "s"
-,,1:0,367:a: (false, true, ?"date within window(2026-05-20, 2026-06-10) not precise enough for w < cutoff" (w), ?"date within window(2026-05-20, 2026-06-10) not precise enough for w < cutoff" (w), 5.00 PLN, true, ?"date within window(2026-05-20, 2026-06-10) not precise enough for w <= w2" (w))
+,,1:0,467:a: (false, true, ?"date within window(2026-05-20, 2026-06-10) not precise enough for w < cutoff" (w), ?"date within window(2026-05-20, 2026-06-10) not precise enough for w < cutoff" (w), 5.00 PLN, true, ?"date within window(2026-05-20, 2026-06-10) not precise enough for w <= w2" (w) ?"date within window(2026-06-05, 2026-06-20) not precise enough for w <= w2" (w2))
   unknown day: w
+  unknown day: w2
   cut 2026-10-25
 warning: WARN-UNREAD input q is read by nothing
 ,29:paper/kleene_agg_argm__hole/b,16:constructs-paper,39:run kleene_agg_argm__hole.tally --ask b,1356:27:kleene_agg_argm__hole.tally,1319:model p
@@ -207259,7 +207260,7 @@ version v
   r_m2 = 1 %/month "s"
   r_n = none "s"
   r_ok = 10 %/year "s"
-,,1:0,45:h_p__z_c: ?"which p?" (p_h)
+,,1:0,101:h_p__z_c: refused: RUN-DOMAIN accrue under nominal 0: m is a positive int (L §3.3)
   cut 2026-10-25
 ,25:fixes/p12/accrue/h_r__n_p,9:fixes-p12,31:run accrue.tally --ask h_r__n_p,5858:12:accrue.tally,5836:model p12_accrue
   tally 2
@@ -208672,7 +208673,7 @@ version v
   r_m2 = 1 %/month "s"
   r_n = none "s"
   r_ok = 10 %/year "s"
-,,1:0,45:h_r__z_c: ?"which r?" (r_h)
+,,1:0,101:h_r__z_c: refused: RUN-DOMAIN accrue under nominal 0: m is a positive int (L §3.3)
   cut 2026-10-25
 ,25:fixes/p12/accrue/h_a__n_p,9:fixes-p12,31:run accrue.tally --ask h_a__n_p,5858:12:accrue.tally,5836:model p12_accrue
   tally 2
@@ -210085,7 +210086,7 @@ version v
   r_m2 = 1 %/month "s"
   r_n = none "s"
   r_ok = 10 %/year "s"
-,,1:0,45:h_a__z_c: ?"which a?" (a_h)
+,,1:0,101:h_a__z_c: refused: RUN-DOMAIN accrue under nominal 0: m is a positive int (L §3.3)
   cut 2026-10-25
 ,25:fixes/p12/accrue/h_b__n_p,9:fixes-p12,31:run accrue.tally --ask h_b__n_p,5858:12:accrue.tally,5836:model p12_accrue
   tally 2
@@ -211498,7 +211499,7 @@ version v
   r_m2 = 1 %/month "s"
   r_n = none "s"
   r_ok = 10 %/year "s"
-,,1:0,45:h_b__z_c: ?"which b?" (b_h)
+,,1:0,101:h_b__z_c: refused: RUN-DOMAIN accrue under nominal 0: m is a positive int (L §3.3)
   cut 2026-10-25
 ,26:fixes/p12/accrue/h_dc__n_p,9:fixes-p12,32:run accrue.tally --ask h_dc__n_p,5858:12:accrue.tally,5836:model p12_accrue
   tally 2
@@ -213068,7 +213069,7 @@ version v
   r_m2 = 1 %/month "s"
   r_n = none "s"
   r_ok = 10 %/year "s"
-,,1:0,48:h_dc__z_c: ?"which dc?" (dc_h)
+,,1:0,102:h_dc__z_c: refused: RUN-DOMAIN accrue under nominal 0: m is a positive int (L §3.3)
   cut 2026-10-25
 ,25:fixes/p12/accrue/h_c__n_p,9:fixes-p12,31:run accrue.tally --ask h_c__n_p,5858:12:accrue.tally,5836:model p12_accrue
   tally 2
@@ -217263,7 +217264,7 @@ version v
   r_m = 1 %/month "s"
   r_n = none "s"
   r_ok = 10 %/year "s"
-,,1:0,45:h_r__z_c: ?"which r?" (r_h)
+,,1:0,103:h_r__z_c: refused: RUN-DOMAIN periodic under nominal 0: m is a positive int (L §3.3)
   cut 2026-10-25
 ,27:fixes/p12/periodic/h_c__n_r,9:fixes-p12,33:run periodic.tally --ask h_c__n_r,1212:14:periodic.tally,1188:model p12_periodic
   tally 2
@@ -218474,7 +218475,7 @@ version v
   x_h = ?"which x?" "s"
   x_n = none "s"
   x_ok = 12.345 PLN "s"
-,,1:0,48:h_x__n_step: ?"which x?" (x_h)
+,,1:0,76:h_x__n_step: refused: RUN-NONE a value is none here: round
   cut 2026-10-25
 ,27:fixes/p12/round/h_x__z_step,9:fixes-p12,33:run round.tally --ask h_x__z_step,1684:11:round.tally,1663:model p12_round
   tally 2
@@ -218730,7 +218731,7 @@ version v
   x_h = ?"which x?" "s"
   x_n = none "s"
   x_ok = 12.345 PLN "s"
-,,1:0,54:h_step__n_x: ?"which step?" (step_h)
+,,1:0,76:h_step__n_x: refused: RUN-NONE a value is none here: round
   cut 2026-10-25
 ,30:fixes/p12/round/h_step__n_mode,9:fixes-p12,36:run round.tally --ask h_step__n_mode,1684:11:round.tally,1663:model p12_round
   tally 2
@@ -218858,7 +218859,7 @@ version v
   x_h = ?"which x?" "s"
   x_n = none "s"
   x_ok = 12.345 PLN "s"
-,,1:0,54:h_mode__n_x: ?"which mode?" (mode_h)
+,,1:0,76:h_mode__n_x: refused: RUN-NONE a value is none here: round
   cut 2026-10-25
 ,30:fixes/p12/round/h_mode__n_step,9:fixes-p12,36:run round.tally --ask h_mode__n_step,1684:11:round.tally,1663:model p12_round
   tally 2
@@ -218922,7 +218923,7 @@ version v
   x_h = ?"which x?" "s"
   x_n = none "s"
   x_ok = 12.345 PLN "s"
-,,1:0,57:h_mode__n_step: ?"which mode?" (mode_h)
+,,1:0,79:h_mode__n_step: refused: RUN-NONE a value is none here: round
   cut 2026-10-25
 ,30:fixes/p12/round/h_mode__z_step,9:fixes-p12,36:run round.tally --ask h_mode__z_step,1684:11:round.tally,1663:model p12_round
   tally 2
@@ -229189,10 +229190,11 @@ version may
   covers card
   bank[r0506] = (on: 2026-05-06, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-05]) "names the instance whose day is a window"
   bank[r0511] = (on: 2026-05-11, kind: transfers, leg cash from card to shop amount 80.00 PLN) "loose"
-,,1:0,575:i_feb:
+,,1:0,683:i_feb:
   bank[r0203] (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "loose")
   bank[r0205] (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "names the refused instance")
   v:base (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
+  v:rent_day[2026-02] (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
   v:sp_feb (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
   v:spend_dom (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
   unfulfilled: spend[2026-02]
@@ -229326,10 +229328,11 @@ version may
   covers card
   bank[r0506] = (on: 2026-05-06, kind: transfers, leg cash from konto to landlord amount 900.00 PLN, fulfils: rent[2026-05]) "names the instance whose day is a window"
   bank[r0511] = (on: 2026-05-11, kind: transfers, leg cash from card to shop amount 80.00 PLN) "loose"
-,,1:0,589:i_may:
+,,1:0,716:i_may:
   bank[r0506] (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "names the instance whose day is a window")
   bank[r0511] (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "loose")
   v:base (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
+  v:rent_day[2026-05] (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "a hole day: a window")
   v:sp_may (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
   v:spend_dom (source s "invented for fence F7: o.fulfils read at a past booking cut", locator "s")
   unfulfilled: spend[2026-05]
@@ -236675,10 +236678,11 @@ version ans
   governs always
   known 2026-02-15
   rent_amt[2026-02] = 810.00 PLN "the answer"
-,,1:0,380:i1:
+,,1:0,451:i1:
   bank[c1] (source s "invented values", locator "loose")
   bank[c2] (source s "invented values", locator "names mar")
   v:base (source s "invented values", locator "s")
+  v:rent_day[2026-03] (source s "invented values", locator "a window")
   v:skip_m (source s "invented values", locator "s")
   v:sp_m (source s "invented values", locator "s")
   v:spend_dom (source s "invented values", locator "s")
@@ -236807,9 +236811,10 @@ version ans
   governs always
   known 2026-02-15
   rent_amt[2026-02] = 810.00 PLN "the answer"
-,,1:0,192:i2:
+,,1:0,263:i2:
   bank[c1] (source s "invented values", locator "loose")
   bank[c2] (source s "invented values", locator "names mar")
+  v:rent_day[2026-03] (source s "invented values", locator "a window")
   v:skip_m (source s "invented values", locator "s")
   cut 2026-05-20
 ,28:fixes/g6c/p06_holebook_io/e1,12:fixes-traced,34:run p06_holebook_io.tally --ask e1,3233:21:p06_holebook_io.tally,3202:model p
@@ -242108,7 +242113,7 @@ version apr
   covers card
   bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
-,,1:0,30:l4: 0.00 PLN
+,,1:0,70:l4: refused: RUN-CYCLE spend reads its own instances
   cut 2026-04-20
 ,23:fixes/p32/e_selfcycle/f,9:fixes-p32,29:run e_selfcycle.tally --ask f,1790:17:e_selfcycle.tally,1763:model x1h
   tally 2
@@ -242311,7 +242316,7 @@ version apr
   covers card
   bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
-,,1:0,99:l4: 0.00 PLN
+,,1:0,139:l4: refused: RUN-CYCLE spend reads its own instances
   cut 2026-04-20
 f: refused: RUN-CYCLE spend reads its own instances
   cut 2026-04-20
@@ -242380,9 +242385,9 @@ version apr
   covers card
   bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN, fulfils: spend[2026-04]) "names its own reader"
-,,1:0,99:f: refused: RUN-CYCLE spend reads its own instances
+,,1:0,139:f: refused: RUN-CYCLE spend reads its own instances
   cut 2026-04-20
-l4: 0.00 PLN
+l4: refused: RUN-CYCLE spend reads its own instances
   cut 2026-04-20
 ,28:fixes/p32/e_selfcycle/l24__f,9:fixes-p32,33:run e_selfcycle.tally --ask l24 f,1790:17:e_selfcycle.tally,1763:model x1h
   tally 2
@@ -243085,7 +243090,8 @@ version apr
   covers card
   bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names an earlier instance, read at K"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,31:fa: 30.00 PLN
+,,1:0,55:fa: 30.00 PLN
+  pinned: spend_dom = 3
   cut 2026-04-20
 ,27:fixes/gate/c02_ratepin/base,10:fixes-gate,32:run c02_ratepin.tally --ask base,993:17:c02_ratepin.tally,967:model c02
   tally 2
@@ -250027,9 +250033,11 @@ version v
   ten = 10 "s"
   dz[a] = 0 "s"
   dz[b] = 1 "s"
-,,1:0,82:q: refused: RUN-DIV division by zero
+,,1:0,148:q: 10.00 PLN
+  unfulfilled: fee[b, 2026-02]
   unfulfilled: top[2026-02]
   cut 2026-04-20
+warning: WARN-NEGATIVE konto is below zero from 2026-01-20
 ,19:fixes/gate8/k_pin/q,11:fixes-gate8,23:run k_pin.tally --ask q,1156:11:k_pin.tally,1135:model k_pin
   tally 2
   on 2026-04-20
@@ -250079,8 +250087,7 @@ version jan
   known 2026-01-21
   covers pot
   bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-01]) "names jan"
-,,1:0,243:q: 10.00 PLN
-  assumed: jan is a guess (ok[2026-01])
+,,1:0,203:q: 10.00 PLN
   unfulfilled: rent[2026-02]
   unfulfilled: top[2026-02]
   cut 2026-04-20
@@ -251244,8 +251251,7 @@ version feb
   known 2026-02-10
   covers card
   bank[b2] = (on: 2026-02-07, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-03]) "names the refused one"
-,,1:0,244:qa: 10.00 PLN
-  assumed: jan is a guess (ok[2026-01])
+,,1:0,204:qa: 10.00 PLN
   unfulfilled: rent[2026-02]
   unfulfilled: top[2026-02]
   cut 2026-04-20
@@ -251408,8 +251414,7 @@ version feb
   known 2026-02-10
   covers card
   bank[b2] = (on: 2026-02-07, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-03]) "names the refused one"
-,,1:0,302:qa: 10.00 PLN
-  assumed: jan is a guess (ok[2026-01])
+,,1:0,262:qa: 10.00 PLN
   unfulfilled: rent[2026-02]
   unfulfilled: top[2026-02]
   cut 2026-04-20
@@ -251495,11 +251500,10 @@ version feb
   known 2026-02-10
   covers card
   bank[b2] = (on: 2026-02-07, kind: transfers, leg cash from pot to landlord amount 10.00 PLN, fulfils: rent[2026-03]) "names the refused one"
-,,1:0,302:qz: 0.00 PLN
+,,1:0,262:qz: 0.00 PLN
   unfulfilled: zed[2026-02]
   cut 2026-04-20
 qa: 10.00 PLN
-  assumed: jan is a guess (ok[2026-01])
   unfulfilled: rent[2026-02]
   unfulfilled: top[2026-02]
   cut 2026-04-20
@@ -251566,8 +251570,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,253:f: refused: RUN-DIV division by zero
+,,1:0,347:f: 270.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -251633,8 +251639,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:l4: refused: RUN-DIV division by zero
+,,1:0,347:l4: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -251700,10 +251708,12 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,440:f: refused: RUN-DIV division by zero
+,,1:0,378:f: 270.00 PLN
   cut 2026-04-20
-l4: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+l4: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -251769,10 +251779,12 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,440:l4: refused: RUN-DIV division by zero
+,,1:0,378:l4: 30.00 PLN
   cut 2026-04-20
-f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+f: 270.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -251836,8 +251848,10 @@ version feb
   covers card
   bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,336:l2: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02, a] booked at 2026-02-20 differs between the cuts 2026-02-20 and 2026-04-20 (E §9 invariant 5)
+,,1:0,297:l2: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-02-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-04
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
@@ -251900,8 +251914,11 @@ version feb
   covers card
   bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,335:f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02, a] booked at 2026-02-20 differs between the cuts 2026-02-20 and 2026-04-20 (E §9 invariant 5)
+,,1:0,330:f: 270.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-02-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-04
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
@@ -251964,10 +251981,13 @@ version feb
   covers card
   bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,522:l2: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02, a] booked at 2026-02-20 differs between the cuts 2026-02-20 and 2026-04-20 (E §9 invariant 5)
+,,1:0,361:l2: 30.00 PLN
   cut 2026-04-20
-f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02, a] booked at 2026-02-20 differs between the cuts 2026-02-20 and 2026-04-20 (E §9 invariant 5)
+f: 270.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-02-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-04
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
@@ -252030,10 +252050,13 @@ version feb
   covers card
   bank[r0204] = (on: 2026-02-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0206] = (on: 2026-02-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,522:f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02, a] booked at 2026-02-20 differs between the cuts 2026-02-20 and 2026-04-20 (E §9 invariant 5)
+,,1:0,361:f: 270.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-l2: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-02, a] booked at 2026-02-20 differs between the cuts 2026-02-20 and 2026-04-20 (E §9 invariant 5)
+l2: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-02-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-04
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
@@ -252112,8 +252135,11 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,253:f: refused: RUN-DIV division by zero
+,,1:0,380:f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252193,8 +252219,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,253:x: refused: RUN-DIV division by zero
+,,1:0,346:x: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252274,8 +252302,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,253:d: refused: RUN-DIV division by zero
+,,1:0,346:d: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252355,40 +252385,15 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,1973:e: refused: RUN-DIV division by zero
-  [1] loose[2026-04] = refused: RUN-DIV division by zero, law date 2026-04-01
+,,1:0,642:e: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
       rule guessed: beaten by seen
       rule seen: won
-        [2] row v:ten = 10
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] row v:dz[2026-01] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] row v:dz[2026-02] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:dz[2026-03] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-04] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] row v:dz[2026-05] = 0
-            version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [8] row v:d25 = 25
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [9] row v:base = 300.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
-            rule guessed: won
-              [11] row v:guess = 100.00 PLN
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-            rule seen: not applicable
-        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
-        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
+        [2] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252468,8 +252473,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:f2: refused: RUN-DIV division by zero
+,,1:0,323:f2: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-03-15
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252549,8 +252556,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:d2: refused: RUN-DIV division by zero
+,,1:0,347:d2: 30.00 PLN
   cut 2026-04-15
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252630,8 +252639,11 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:fd: refused: RUN-DIV division by zero
+,,1:0,381:fd: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252711,8 +252723,11 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:df: refused: RUN-DIV division by zero
+,,1:0,381:df: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252792,8 +252807,11 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:xf: refused: RUN-DIV division by zero
+,,1:0,381:xf: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -252873,56 +252891,37 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,2938:f: refused: RUN-DIV division by zero
+,,1:0,1116:f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-x: refused: RUN-DIV division by zero
+x: 30.00 PLN
   cut 2026-04-20
-d: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+d: 30.00 PLN
   cut 2026-04-20
-e: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
-  [1] loose[2026-04] = refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5), law date 2026-04-01
+e: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
       rule guessed: beaten by seen
       rule seen: won
-        [2] row v:ten = 10
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] row v:dz[2026-01] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] row v:dz[2026-02] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:dz[2026-03] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-04] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] row v:dz[2026-05] = 0
-            version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [8] row v:d25 = 25
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [9] row v:base = 300.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
-            rule guessed: won
-              [11] row v:guess = 100.00 PLN
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-            rule seen: not applicable
-        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
-        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
+        [2] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
   cut 2026-04-20
-f2: refused: RUN-DIV division by zero
+f2: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-03-15
-d2: refused: RUN-DIV division by zero
+d2: 30.00 PLN
   cut 2026-04-15
-fd: refused: RUN-DIV division by zero
+fd: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-df: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+df: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-xf: refused: RUN-DIV division by zero
+xf: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253002,56 +253001,37 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,2938:xf: refused: RUN-DIV division by zero
+,,1:0,1116:xf: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-df: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+df: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-fd: refused: RUN-DIV division by zero
+fd: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-d2: refused: RUN-DIV division by zero
+d2: 30.00 PLN
   cut 2026-04-15
-f2: refused: RUN-DIV division by zero
+f2: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-03-15
-e: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
-  [1] loose[2026-04] = refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5), law date 2026-04-01
+e: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
       rule guessed: beaten by seen
       rule seen: won
-        [2] row v:ten = 10
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] row v:dz[2026-01] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] row v:dz[2026-02] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:dz[2026-03] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-04] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] row v:dz[2026-05] = 0
-            version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [8] row v:d25 = 25
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [9] row v:base = 300.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
-            rule guessed: won
-              [11] row v:guess = 100.00 PLN
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-            rule seen: not applicable
-        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
-        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
+        [2] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
   cut 2026-04-20
-d: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+d: 30.00 PLN
   cut 2026-04-20
-x: refused: RUN-DIV division by zero
+x: 30.00 PLN
   cut 2026-04-20
-f: refused: RUN-DIV division by zero
+f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253131,10 +253111,13 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,439:d: refused: RUN-DIV division by zero
+,,1:0,410:d: 30.00 PLN
   cut 2026-04-20
-f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253214,10 +253197,13 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,307:x: refused: RUN-DIV division by zero
+,,1:0,410:x: 30.00 PLN
   cut 2026-04-20
-f: refused: RUN-DIV division by zero
+f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253297,42 +253283,18 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,2159:e: refused: RUN-DIV division by zero
-  [1] loose[2026-04] = refused: RUN-DIV division by zero, law date 2026-04-01
+,,1:0,706:e: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
       rule guessed: beaten by seen
       rule seen: won
-        [2] row v:ten = 10
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] row v:dz[2026-01] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] row v:dz[2026-02] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:dz[2026-03] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-04] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] row v:dz[2026-05] = 0
-            version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [8] row v:d25 = 25
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [9] row v:base = 300.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
-            rule guessed: won
-              [11] row v:guess = 100.00 PLN
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-            rule seen: not applicable
-        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
-        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
+        [2] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
   cut 2026-04-20
-f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253412,42 +253374,18 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,2291:f: refused: RUN-DIV division by zero
+,,1:0,706:f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-e: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
-  [1] loose[2026-04] = refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5), law date 2026-04-01
+e: 30.00 PLN
+  [1] loose[2026-04] = 30.00 PLN, law date 2026-04-01
       rule guessed: beaten by seen
       rule seen: won
-        [2] row v:ten = 10
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [3] row v:dz[2026-01] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [4] row v:dz[2026-02] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [5] row v:dz[2026-03] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [6] row v:dz[2026-04] = 1
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [7] row v:dz[2026-05] = 0
-            version v, source s, "probe", locator "refused: a division by zero", governs always, known 2026-01-01
-        [8] row v:d25 = 25
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [9] row v:base = 300.00 PLN
-            version v, source s, "probe", locator "s", governs always, known 2026-01-01
-        [10] loose[2026-01] = 100.00 PLN, law date 2026-01-01
-            rule guessed: won
-              [11] row v:guess = 100.00 PLN
-                  version v, source s, "probe", locator "s", governs always, known 2026-01-01
-            rule seen: not applicable
-        [12] loose[2026-02] = 100.00 PLN, law date 2026-02-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
-        [13] loose[2026-03] = 100.00 PLN, law date 2026-03-01
-            rule guessed: won
-              (v:guess: see [11])
-            rule seen: not applicable
+        [2] row apr:bank[r0406] = (from: card, to: shop, amount: 30.00 PLN, day: 2026-04-06)
+            version apr, source s, "probe", locator "loose", on 2026-04-06, known 2026-04-10
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253527,10 +253465,15 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,308:f2: refused: RUN-DIV division by zero
+,,1:0,504:f2: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-03-15
-f: refused: RUN-DIV division by zero
+f: 200.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253610,10 +253553,12 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,308:d2: refused: RUN-DIV division by zero
+,,1:0,377:d2: 30.00 PLN
   cut 2026-04-15
-d: refused: RUN-DIV division by zero
+d: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -253693,10 +253638,14 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,309:fd: refused: RUN-DIV division by zero
+,,1:0,446:fd: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
-xf: refused: RUN-DIV division by zero
+xf: 230.00 PLN
+  unfulfilled: spend[2026-02, a]
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -258785,10 +258734,7 @@ ask ez: explain loose[2026-02]
 ask en: explain ln[2026-02]
 
 ask ed: explain dl[2026-02]
-,,1:0,208:qo: ?"own[2026-02] on 2026-02-05 changed after it was paid (version febk); is back pay due, and when?" (own[2026-02])
-  assumed: own jan is a guess (ok2[2026-01])
-  unfulfilled: own[2026-02]
-  cut 2026-04-20
+,,1:1,103:refused: LOAD-READS own reaches a running read or projection of dd without reads dd (c4_when.tally:45)
 ,21:fixes/p40/c4_when/emx,12:fixes-p40fix,27:run c4_when.tally --ask emx,5113:13:c4_when.tally,5090:model c4_when
   tally 2
   on 2026-04-20
@@ -262883,8 +262829,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,253:f: refused: RUN-DIV division by zero
+,,1:0,347:f: 270.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -262956,8 +262904,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:l4: refused: RUN-DIV division by zero
+,,1:0,347:l4: 30.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -263029,8 +262979,10 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,291:c4: loose[2026-04] = refused: RUN-DIV division by zero, guess = 100.00 PLN
+,,1:0,416:c4: differs: loose[2026-04] = 30.00 PLN, guess = 100.00 PLN, difference -70.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -263102,8 +263054,9 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,254:f3: refused: RUN-DIV division by zero
+,,1:0,290:f3: 200.00 PLN
   cut 2026-03-01
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -263175,10 +263128,13 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,308:f3: refused: RUN-DIV division by zero
+,,1:0,438:f3: 200.00 PLN
   cut 2026-03-01
-f: refused: RUN-DIV division by zero
+f: 270.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -263250,10 +263206,13 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,308:f: refused: RUN-DIV division by zero
+,,1:0,438:f: 270.00 PLN
   cut 2026-04-20
-f3: refused: RUN-DIV division by zero
+f3: 200.00 PLN
   cut 2026-03-01
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -263325,14 +263284,17 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,719:f: refused: RUN-DIV division by zero
+,,1:0,569:f: 270.00 PLN
   cut 2026-04-20
-l4: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+l4: 30.00 PLN
   cut 2026-04-20
-c4: loose[2026-04] = refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5), guess = 100.00 PLN
+c4: differs: loose[2026-04] = 30.00 PLN, guess = 100.00 PLN, difference -70.00 PLN
   cut 2026-04-20
-f3: refused: RUN-DIV division by zero
+f3: 200.00 PLN
   cut 2026-03-01
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -263404,14 +263366,17 @@ version apr
   covers card
   bank[r0404] = (on: 2026-04-04, kind: transfers, leg cash from konto to shop amount 250.00 PLN, fulfils: spend[2026-01, a]) "names jan"
   bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
-,,1:0,587:f3: refused: RUN-DIV division by zero
+,,1:0,569:f3: 200.00 PLN
   cut 2026-03-01
-c4: loose[2026-04] = refused: RUN-DIV division by zero, guess = 100.00 PLN
+c4: differs: loose[2026-04] = 30.00 PLN, guess = 100.00 PLN, difference -70.00 PLN
   cut 2026-04-20
-l4: refused: RUN-DIV division by zero
+l4: 30.00 PLN
   cut 2026-04-20
-f: refused: ENGINE-INVARIANT a booked plan amount changed: spend[2026-04, a] booked at 2026-04-20 differs between the cuts 2026-04-20 and 2026-04-20 (E §9 invariant 5)
+f: 270.00 PLN
   cut 2026-04-20
+warning: WARN-NEGATIVE card is below zero from 2026-04-06
+warning: WARN-NEGATIVE konto is below zero from 2026-01-25
+warning: WARN-NEGATIVE konto is below zero from 2026-02-25
 warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
@@ -265016,6 +264981,80 @@ warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
+,31:fixes/t231g1/anyall_first/q_any,12:fixes-t231g1,34:run anyall_first.tally --ask q_any,758:18:anyall_first.tally,731:model anyall_first
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input t[k in ks]: int
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_or: r[a] or r[c]
+ask q_or2: r[c] or r[a]
+ask q_and: r[b] and r[c]
+ask q_and2: r[c] and r[b]
+ask q_if: if r[a] then ten else ten / t[c]
+ask q_first: first(k in ks where r[k])
+ask q_cnt: count(k in ks where r[k])
+ask q_wany: any(true for k in ks where r[k])
+ask q_wall: all(false for k in ks where r[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 0 "s"
+  t[b] = 5 "s"
+  t[c] = 1 "s"
+,,1:0,29:q_any: true
+  cut 2026-06-30
+,31:fixes/t231g1/anyall_first/q_all,12:fixes-t231g1,34:run anyall_first.tally --ask q_all,758:18:anyall_first.tally,731:model anyall_first
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input t[k in ks]: int
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_or: r[a] or r[c]
+ask q_or2: r[c] or r[a]
+ask q_and: r[b] and r[c]
+ask q_and2: r[c] and r[b]
+ask q_if: if r[a] then ten else ten / t[c]
+ask q_first: first(k in ks where r[k])
+ask q_cnt: count(k in ks where r[k])
+ask q_wany: any(true for k in ks where r[k])
+ask q_wall: all(false for k in ks where r[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 0 "s"
+  t[b] = 5 "s"
+  t[c] = 1 "s"
+,,1:0,30:q_all: false
+  cut 2026-06-30
 ,30:fixes/t231g1/anyall_first/q_or,12:fixes-t231g1,33:run anyall_first.tally --ask q_or,758:18:anyall_first.tally,731:model anyall_first
   tally 2
   on 2026-06-30
@@ -265275,6 +265314,136 @@ version v
   t[c] = 1 "s"
 ,,1:0,58:q_cnt: refused: RUN-DIV division by zero
   cut 2026-06-30
+,32:fixes/t231g1/anyall_first/q_wany,12:fixes-t231g1,35:run anyall_first.tally --ask q_wany,758:18:anyall_first.tally,731:model anyall_first
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input t[k in ks]: int
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_or: r[a] or r[c]
+ask q_or2: r[c] or r[a]
+ask q_and: r[b] and r[c]
+ask q_and2: r[c] and r[b]
+ask q_if: if r[a] then ten else ten / t[c]
+ask q_first: first(k in ks where r[k])
+ask q_cnt: count(k in ks where r[k])
+ask q_wany: any(true for k in ks where r[k])
+ask q_wall: all(false for k in ks where r[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 0 "s"
+  t[b] = 5 "s"
+  t[c] = 1 "s"
+,,1:0,30:q_wany: true
+  cut 2026-06-30
+,32:fixes/t231g1/anyall_first/q_wall,12:fixes-t231g1,35:run anyall_first.tally --ask q_wall,758:18:anyall_first.tally,731:model anyall_first
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index ks = [a, b, c]
+input t[k in ks]: int
+input ten: int
+
+def r[k in ks]: bool
+  rule one = ten / t[k] > t[b]
+
+ask q_any: any(r[k] for k in ks)
+ask q_all: all(r[k] for k in ks)
+ask q_or: r[a] or r[c]
+ask q_or2: r[c] or r[a]
+ask q_and: r[b] and r[c]
+ask q_and2: r[c] and r[b]
+ask q_if: if r[a] then ten else ten / t[c]
+ask q_first: first(k in ks where r[k])
+ask q_cnt: count(k in ks where r[k])
+ask q_wany: any(true for k in ks where r[k])
+ask q_wall: all(false for k in ks where r[k])
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  t[a] = 0 "s"
+  t[b] = 5 "s"
+  t[c] = 1 "s"
+,,1:0,31:q_wall: false
+  cut 2026-06-30
+,20:fixes/t231g1/win2/c1,12:fixes-t231g1,23:run win2.tally --ask c1,395:10:win2.tally,376:model win2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input w1: date
+input w2: date
+input d: date
+
+ask c1: w1 < w2
+ask c2: w1 == w2
+ask c3: w1 < d
+ask c4: d < w2
+ask c5: w1 < w1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w1 = window(2026-05-01, 2026-05-10) "s"
+  w2 = window(2026-05-05, 2026-05-20) "s"
+  d = 2026-05-07 "s"
+,,1:0,221:c1: ?"date within window(2026-05-01, 2026-05-10) not precise enough for w1 < w2" (w1) ?"date within window(2026-05-05, 2026-05-20) not precise enough for w1 < w2" (w2)
+  unknown day: w1
+  unknown day: w2
+  cut 2026-04-20
+,20:fixes/t231g1/win2/c2,12:fixes-t231g1,23:run win2.tally --ask c2,395:10:win2.tally,376:model win2
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+input w1: date
+input w2: date
+input d: date
+
+ask c1: w1 < w2
+ask c2: w1 == w2
+ask c3: w1 < d
+ask c4: d < w2
+ask c5: w1 < w1
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  w1 = window(2026-05-01, 2026-05-10) "s"
+  w2 = window(2026-05-05, 2026-05-20) "s"
+  d = 2026-05-07 "s"
+,,1:0,223:c2: ?"date within window(2026-05-01, 2026-05-10) not precise enough for w1 == w2" (w1) ?"date within window(2026-05-05, 2026-05-20) not precise enough for w1 == w2" (w2)
+  unknown day: w1
+  unknown day: w2
+  cut 2026-04-20
 ,20:fixes/t231g1/win2/c3,12:fixes-t231g1,23:run win2.tally --ask c3,395:10:win2.tally,376:model win2
   tally 2
   on 2026-04-20
@@ -265355,6 +265524,160 @@ version v
   d = 2026-05-07 "s"
 ,,1:0,27:c5: false
   cut 2026-04-20
+,33:fixes/t231g1/a03_conflict_hole/q1,12:fixes-t231g1,36:run a03_conflict_hole.tally --ask q1,1455:23:a03_conflict_hole.tally,1422:model a03
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+input ch: bool
+input ct: bool
+input cf: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule top beats a, base = vt when ch
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+
+def d3: money PLN at reader
+  rule a = va when ch
+  rule b = vb when ch
+  rule base = vt when cf
+
+def d4: money PLN at reader
+  rule a beats base = va when ch
+  rule b beats base = vb when ch
+  rule base = vt
+
+def d5: money PLN at reader
+  rule lone = va when ch
+
+def d6: money PLN at reader
+  rule a beats b = va when ch
+  rule b = vb when ct
+  rule c = vt when cf
+
+def d7: money PLN at reader
+  rule a v late = va
+  rule base = vb when cf
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+ask q3: d3 law 2026-03-01
+ask q4: d4 law 2026-03-01
+ask q5: d5 law 2026-03-01
+ask q6: d6 law 2026-03-01
+ask q7: d7 law 2026-03-01
+ask q7k: d7 law 2026-03-01 as known 2026-02-01
+ask q7l: d7 law 2027-03-01
+ask e1: explain d1 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  cf = false "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+
+version late
+  cite s
+  governs 2026
+  known 2026-03-01
+  replace cf = false "s"
+,,1:0,65:q1: ?"does it apply?" (ch)
+  law date 2026-03-01, cut 2026-10-25
+,33:fixes/t231g1/a03_conflict_hole/q2,12:fixes-t231g1,36:run a03_conflict_hole.tally --ask q2,1455:23:a03_conflict_hole.tally,1422:model a03
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+input ch: bool
+input ct: bool
+input cf: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule top beats a, base = vt when ch
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+
+def d3: money PLN at reader
+  rule a = va when ch
+  rule b = vb when ch
+  rule base = vt when cf
+
+def d4: money PLN at reader
+  rule a beats base = va when ch
+  rule b beats base = vb when ch
+  rule base = vt
+
+def d5: money PLN at reader
+  rule lone = va when ch
+
+def d6: money PLN at reader
+  rule a beats b = va when ch
+  rule b = vb when ct
+  rule c = vt when cf
+
+def d7: money PLN at reader
+  rule a v late = va
+  rule base = vb when cf
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+ask q3: d3 law 2026-03-01
+ask q4: d4 law 2026-03-01
+ask q5: d5 law 2026-03-01
+ask q6: d6 law 2026-03-01
+ask q7: d7 law 2026-03-01
+ask q7k: d7 law 2026-03-01 as known 2026-02-01
+ask q7l: d7 law 2027-03-01
+ask e1: explain d1 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  cf = false "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+
+version late
+  cite s
+  governs 2026
+  known 2026-03-01
+  replace cf = false "s"
+,,1:0,65:q2: ?"does it apply?" (ch)
+  law date 2026-03-01, cut 2026-10-25
 ,33:fixes/t231g1/a03_conflict_hole/q3,12:fixes-t231g1,36:run a03_conflict_hole.tally --ask q3,1455:23:a03_conflict_hole.tally,1422:model a03
   tally 2
   on 2026-10-25
@@ -265894,6 +266217,91 @@ version late
   replace cf = false "s"
 ,,1:0,100:q7l: refused: RUN-NO-RULE no rule applies to d7 on 2027-03-01
   law date 2027-03-01, cut 2026-10-25
+,33:fixes/t231g1/a03_conflict_hole/e1,12:fixes-t231g1,36:run a03_conflict_hole.tally --ask e1,1455:23:a03_conflict_hole.tally,1422:model a03
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "invented"
+unit PLN: currency minor 0.01
+
+input ch: bool
+input ct: bool
+input cf: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d1: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule top beats a, base = vt when ch
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+
+def d3: money PLN at reader
+  rule a = va when ch
+  rule b = vb when ch
+  rule base = vt when cf
+
+def d4: money PLN at reader
+  rule a beats base = va when ch
+  rule b beats base = vb when ch
+  rule base = vt
+
+def d5: money PLN at reader
+  rule lone = va when ch
+
+def d6: money PLN at reader
+  rule a beats b = va when ch
+  rule b = vb when ct
+  rule c = vt when cf
+
+def d7: money PLN at reader
+  rule a v late = va
+  rule base = vb when cf
+
+ask q1: d1 law 2026-03-01
+ask q2: d2 law 2026-03-01
+ask q3: d3 law 2026-03-01
+ask q4: d4 law 2026-03-01
+ask q5: d5 law 2026-03-01
+ask q6: d6 law 2026-03-01
+ask q7: d7 law 2026-03-01
+ask q7k: d7 law 2026-03-01 as known 2026-02-01
+ask q7l: d7 law 2027-03-01
+ask e1: explain d1 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  cf = false "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+
+version late
+  cite s
+  governs 2026
+  known 2026-03-01
+  replace cf = false "s"
+,,1:0,451:e1: ?"does it apply?" (ch)
+  [1] d1 = ?"does it apply?" (ch), law date 2026-03-01
+      rule a: candidate
+        [2] row v:ct = true
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+      rule base: candidate
+      rule top: unknown
+        [3] row v:ch = ?"does it apply?" (ch)
+            version v, source s, "invented", locator "s", governs always, known 2026-01-01
+  law date 2026-03-01, cut 2026-10-25
 ,22:fixes/t231g1/same2/b01,12:fixes-t231g1,25:run same2.tally --ask b01,858:11:same2.tally,838:model same2
   tally 2
   on 2026-01-01
@@ -265965,6 +266373,42 @@ version v
   d2 = 2026-03-10 "s"
   same in1 = in2
 ,,1:0,143:b07: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-10: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
+  cut 2026-01-01
+,22:fixes/t231g1/same2/b31,12:fixes-t231g1,25:run same2.tally --ask b31,858:11:same2.tally,838:model same2
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-12-31
+source s "s"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input a1: money PLN
+input d1: date
+input d2: date
+move in1: transfers
+  on d1
+  leg cash from world to konto amount a1
+move in2: transfers
+  on d2
+  leg cash from world to konto amount a1
+ask b01: bal(konto, 2026-03-01)
+ask b07: bal(konto, 2026-03-07)
+ask b31: bal(konto, 2026-03-31)
+ask f1: flows(in1, 2026-03)
+ask c0: count(m in transfers over 2026-03)
+ask c4: count(m in transfers over 2026-04)
+ask dy: m.day for m in transfers over 2026-03
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 500.00 PLN at 2026-01-01 start "s"
+  a1 = 100.00 PLN "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-10 "s"
+  same in1 = in2
+,,1:0,33:b31: 600.00 PLN
   cut 2026-01-01
 ,21:fixes/t231g1/same2/f1,12:fixes-t231g1,24:run same2.tally --ask f1,858:11:same2.tally,838:model same2
   tally 2
@@ -266251,6 +266695,96 @@ ask b_konto: count(m in transfers over 2026 where m.cash.to == konto)
 ,,1:0,92:d_to: ?"which day?" (hd)
   cut 2026-04-20
 warning: WARN-UNREAD input lim is read by nothing
+,30:fixes/t231g1/holeday_b/b_konto,12:fixes-t231g1,33:run holeday_b.tally --ask b_konto,1131:15:holeday_b.tally,1106:model holeday
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place other: accounts PLN lives 2026-01-01..
+input amt: money PLN
+input lim: money PLN
+input hd: date
+
+move pw: transfers
+  reads konto
+  on hd
+  leg cash from konto to other amount amt + 0 * bal(konto)
+
+move px: transfers
+  reads konto
+  on hd
+  leg cash from konto to save amount min(amt, bal(konto))
+
+move plan: transfers
+  on hd
+  leg cash from save to other amount amt
+
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[save] = 1 000.00 PLN at 2026-01-01 start "s"
+  opening[other] = 0.00 PLN at 2026-01-01 start "s"
+  amt = 100.00 PLN "s"
+  lim = 50.00 PLN "s"
+  hd = ?"which day?" "s"
+ask b_save: count(m in transfers over 2026 where m.cash.to == save)
+ask b_other: count(m in transfers over 2026 where m.cash.to == other)
+ask d_to: pw.cash.to
+ask b_konto: count(m in transfers over 2026 where m.cash.to == konto)
+,,1:0,95:b_konto: ?"which day?" (hd)
+  cut 2026-04-20
+warning: WARN-UNREAD input lim is read by nothing
+,20:fixes/t231g1/b1e/nmb,12:fixes-t231g1,23:run b1e.tally --ask nmb,1352:9:b1e.tally,1334:model b1e
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind maybes: event uncertain
+  leg cash: PLN
+kind mplain: event uncertain
+  leg cash: PLN
+place sv2: accounts PLN lives 2026-01-01..
+place sv4: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dm: date
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+move mp: mplain
+  on dm
+  leg cash from sv4 to world amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dm = window(2026-05-04, 2026-05-06) "c"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "c"
+ask nmb: count(t in maybes over 2026-05)
+ask nmb_p4: count(t in maybes over 2026-05) with dm = 2026-05-04
+ask nmb_p6: count(t in maybes over 2026-05) with dm = 2026-05-06
+ask smb: sum(t.cash.amount for t in maybes over 2026-05)
+ask nmp: count(t in mplain over 2026-05)
+ask nmp_p4: count(t in mplain over 2026-05) with dm = 2026-05-04
+ask nmp_p6: count(t in mplain over 2026-05) with dm = 2026-05-06
+ask smp: sum(t.cash.amount for t in mplain over 2026-05)
+ask nmbu: count(t in maybes over 2026-05) with uncertain
+ask nmpu: count(t in mplain over 2026-05) with uncertain
+,,1:0,24:nmb: 0
+  cut 2026-04-20
 ,23:fixes/t231g1/b1e/nmb_p4,12:fixes-t231g1,26:run b1e.tally --ask nmb_p4,1352:9:b1e.tally,1334:model b1e
   tally 2
   on 2026-04-20
@@ -266337,6 +266871,92 @@ ask nmbu: count(t in maybes over 2026-05) with uncertain
 ask nmpu: count(t in mplain over 2026-05) with uncertain
 ,,1:0,27:nmb_p6: 0
   cut 2026-04-20
+,20:fixes/t231g1/b1e/smb,12:fixes-t231g1,23:run b1e.tally --ask smb,1352:9:b1e.tally,1334:model b1e
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind maybes: event uncertain
+  leg cash: PLN
+kind mplain: event uncertain
+  leg cash: PLN
+place sv2: accounts PLN lives 2026-01-01..
+place sv4: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dm: date
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+move mp: mplain
+  on dm
+  leg cash from sv4 to world amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dm = window(2026-05-04, 2026-05-06) "c"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "c"
+ask nmb: count(t in maybes over 2026-05)
+ask nmb_p4: count(t in maybes over 2026-05) with dm = 2026-05-04
+ask nmb_p6: count(t in maybes over 2026-05) with dm = 2026-05-06
+ask smb: sum(t.cash.amount for t in maybes over 2026-05)
+ask nmp: count(t in mplain over 2026-05)
+ask nmp_p4: count(t in mplain over 2026-05) with dm = 2026-05-04
+ask nmp_p6: count(t in mplain over 2026-05) with dm = 2026-05-06
+ask smp: sum(t.cash.amount for t in mplain over 2026-05)
+ask nmbu: count(t in maybes over 2026-05) with uncertain
+ask nmpu: count(t in mplain over 2026-05) with uncertain
+,,1:0,31:smb: 0.00 PLN
+  cut 2026-04-20
+,20:fixes/t231g1/b1e/nmp,12:fixes-t231g1,23:run b1e.tally --ask nmp,1352:9:b1e.tally,1334:model b1e
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind maybes: event uncertain
+  leg cash: PLN
+kind mplain: event uncertain
+  leg cash: PLN
+place sv2: accounts PLN lives 2026-01-01..
+place sv4: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dm: date
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+move mp: mplain
+  on dm
+  leg cash from sv4 to world amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dm = window(2026-05-04, 2026-05-06) "c"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "c"
+ask nmb: count(t in maybes over 2026-05)
+ask nmb_p4: count(t in maybes over 2026-05) with dm = 2026-05-04
+ask nmb_p6: count(t in maybes over 2026-05) with dm = 2026-05-06
+ask smb: sum(t.cash.amount for t in maybes over 2026-05)
+ask nmp: count(t in mplain over 2026-05)
+ask nmp_p4: count(t in mplain over 2026-05) with dm = 2026-05-04
+ask nmp_p6: count(t in mplain over 2026-05) with dm = 2026-05-06
+ask smp: sum(t.cash.amount for t in mplain over 2026-05)
+ask nmbu: count(t in maybes over 2026-05) with uncertain
+ask nmpu: count(t in mplain over 2026-05) with uncertain
+,,1:0,24:nmp: 0
+  cut 2026-04-20
 ,23:fixes/t231g1/b1e/nmp_p4,12:fixes-t231g1,26:run b1e.tally --ask nmp_p4,1352:9:b1e.tally,1334:model b1e
   tally 2
   on 2026-04-20
@@ -266422,6 +267042,49 @@ ask smp: sum(t.cash.amount for t in mplain over 2026-05)
 ask nmbu: count(t in maybes over 2026-05) with uncertain
 ask nmpu: count(t in mplain over 2026-05) with uncertain
 ,,1:0,27:nmp_p6: 0
+  cut 2026-04-20
+,20:fixes/t231g1/b1e/smp,12:fixes-t231g1,23:run b1e.tally --ask smp,1352:9:b1e.tally,1334:model b1e
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-12-31
+source card "invented"
+unit PLN: currency minor 0.01
+kind maybes: event uncertain
+  leg cash: PLN
+kind mplain: event uncertain
+  leg cash: PLN
+place sv2: accounts PLN lives 2026-01-01..
+place sv4: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input pay: money PLN
+input dm: date
+move mb: maybes
+  on dm
+  reads sv2
+  leg cash from sv2 to world amount min(bal(sv2), pay)
+move mp: mplain
+  on dm
+  leg cash from sv4 to world amount pay
+version v_card
+  cite card
+  governs always
+  known 2026-01-01
+  pay = 100.00 PLN "c"
+  dm = window(2026-05-04, 2026-05-06) "c"
+  opening[sv2] = 500.00 PLN at 2026-01-01 start "c"
+  opening[sv4] = 500.00 PLN at 2026-01-01 start "c"
+ask nmb: count(t in maybes over 2026-05)
+ask nmb_p4: count(t in maybes over 2026-05) with dm = 2026-05-04
+ask nmb_p6: count(t in maybes over 2026-05) with dm = 2026-05-06
+ask smb: sum(t.cash.amount for t in maybes over 2026-05)
+ask nmp: count(t in mplain over 2026-05)
+ask nmp_p4: count(t in mplain over 2026-05) with dm = 2026-05-04
+ask nmp_p6: count(t in mplain over 2026-05) with dm = 2026-05-06
+ask smp: sum(t.cash.amount for t in mplain over 2026-05)
+ask nmbu: count(t in maybes over 2026-05) with uncertain
+ask nmpu: count(t in mplain over 2026-05) with uncertain
+,,1:0,31:smp: 0.00 PLN
   cut 2026-04-20
 ,21:fixes/t231g1/b1e/nmbu,12:fixes-t231g1,24:run b1e.tally --ask nmbu,1352:9:b1e.tally,1334:model b1e
   tally 2
@@ -266545,6 +267208,43 @@ version v
   out_amt = ?"how much was moved out?" "s"
   out_day = 2026-03-10 "s"
 ,,1:0,134:s_may: ?"how much was moved out?" (out_amt)
+  unfulfilled: empty
+  cut 2026-06-30
+warning: WARN-UNREAD place world is read by nothing
+,27:fixes/t231g1/life_amt/s_end,12:fixes-t231g1,30:run life_amt.tally --ask s_end,900:14:life_amt.tally,877:model life
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+place world: outside lives 1900-01-01..
+input out_amt: money PLN
+input out_day: date
+
+move empty: transfers
+  on out_day
+  leg cash from spare to konto amount out_amt
+
+ask s_may: bal(spare, 2026-05-31)
+ask s_end: bal(spare, 2026-06-30)
+ask k_end: bal(konto, 2026-06-30)
+ask k_jul: bal(konto, 2026-07-31)
+ask s_p100: bal(spare, 2026-06-30) with out_amt = 100.00 PLN
+ask s_p60: bal(spare, 2026-06-30) with out_amt = 60.00 PLN
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  out_amt = ?"how much was moved out?" "s"
+  out_day = 2026-03-10 "s"
+,,1:0,134:s_end: ?"how much was moved out?" (out_amt)
   unfulfilled: empty
   cut 2026-06-30
 warning: WARN-UNREAD place world is read by nothing
@@ -266734,6 +267434,42 @@ version v
 ,,1:0,113:s_may: ?"which day was it moved?" (out_day)
   cut 2026-06-30
 warning: WARN-UNREAD place world is read by nothing
+,27:fixes/t231g1/life_day/s_end,12:fixes-t231g1,30:run life_day.tally --ask s_end,901:14:life_day.tally,878:model life
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place konto: accounts PLN lives 2026-01-01..
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+place world: outside lives 1900-01-01..
+input out_amt: money PLN
+input out_day: date
+
+move empty: transfers
+  on out_day
+  leg cash from spare to konto amount out_amt
+
+ask s_may: bal(spare, 2026-05-31)
+ask s_end: bal(spare, 2026-06-30)
+ask k_end: bal(konto, 2026-06-30)
+ask k_jul: bal(konto, 2026-07-31)
+ask s_p100: bal(spare, 2026-06-30) with out_day = 2026-06-30
+ask s_p60: bal(spare, 2026-06-30) with out_day = 2026-07-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[spare] = 100.00 PLN at 2026-01-01 start "s"
+  opening[konto] = 0.00 PLN at 2026-01-01 start "s"
+  out_amt = 100.00 PLN "s"
+  out_day = ?"which day was it moved?" "s"
+,,1:0,113:s_end: ?"which day was it moved?" (out_day)
+  cut 2026-06-30
+warning: WARN-UNREAD place world is read by nothing
 ,27:fixes/t231g1/life_day/k_end,12:fixes-t231g1,30:run life_day.tally --ask k_end,901:14:life_day.tally,878:model life
   tally 2
   on 2026-06-30
@@ -266880,6 +267616,112 @@ version v
   pinned: out_day = 2026-07-01
   cut 2026-06-30
 warning: WARN-UNREAD place world is read by nothing
+,18:fixes/t231g1/j3q/q,12:fixes-t231g1,21:run j3q.tally --ask q,2186:9:j3q.tally,2168:model m
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source plan "p"
+
+unit PLN: currency minor 0.01
+
+kind rents: event certain
+  leg cash: PLN
+
+place konto: accounts PLN lives 2026-01-01..
+
+place spare: accounts PLN lives 2026-01-01..2026-06-30
+
+place landlord: outside lives 1900-01-01..
+
+input rent_amt: money PLN
+
+input back_amt: money PLN
+
+input act_day: date
+
+input back_day: date
+
+input zero: int
+
+input one_amt: money PLN
+
+input gap_day: date
+
+input d_open: date
+
+input win_day: date
+
+move rent[m in months]: rents
+  on start_of(m)
+  at start_of(m)
+  leg cash from konto to landlord amount rent_amt
+
+move shut[p in accounts on d_open where act_day < back_day]: transfers
+  on d_open
+  at win_day
+  leg cash from p to landlord amount back_amt
+
+version v
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  rent_amt = 900.00 PLN
+  back_amt = 100.00 PLN
+
+version v2
+  cite plan
+  governs 2026..
+  known 2026-03-15
+  replace rent_amt = 950.00 PLN "raise"
+
+version day
+  cite plan
+  governs 2026..
+  known 2026-01-01
+  act_day = 2026-04-05
+  back_day = 2026-04-20
+
+version day2
+  cite plan
+  governs 2026-03-15..
+  known 2026-01-02
+  replace act_day = 2026-04-25
+
+version fixed
+  cite plan
+  governs always
+  known 2026-01-01
+  zero = 0
+  one_amt = 1.00 PLN
+  d_open = 2026-01-01
+  win_day = ?"which law date?"
+  opening[spare] = 100.00 PLN at 2026-01-01 start "w"
+
+ask q: bal(spare, 2026-06-30) law cut
+ask q2: bal(konto, 2026-05-31) law cut
+
+ask qe9: explain bal(spare, 2026-06-30) law cut
+ask qj: bal(spare, d) for d in [2026-01-01, 2026-03-09, 2026-03-21] law cut
+
+ask qw: win_day
+ask qa1: act_day < back_day law 2026-03-10
+ask qa2: act_day < back_day law 2026-03-15
+ask qk: bal(konto, 2026-01-31) law cut
+ask q_p10: bal(spare, 2026-06-30) with win_day = 2026-03-10 law cut
+ask q_p14: bal(spare, 2026-06-30) with win_day = 2026-03-14 law cut
+ask q_p15: bal(spare, 2026-06-30) with win_day = 2026-03-15 law cut
+ask q_p20: bal(spare, 2026-06-30) with win_day = 2026-03-20 law cut
+ask sd: shut[spare].day law cut
+ask n_t: count(t in transfers over 2026-01) law cut
+ask q_may: bal(spare, 2026-05-31) law cut
+ask q_jul: bal(konto, 2026-07-31) law cut
+,,1:0,229:q: ?"which law date?" (win_day)
+  law date 2026-06-30, cut 2026-06-30
+warning: WARN-UNREAD input gap_day is read by nothing
+warning: WARN-UNREAD input one_amt is read by nothing
+warning: WARN-UNREAD input zero is read by nothing
 ,22:fixes/t231g1/j3q/q_p10,12:fixes-t231g1,25:run j3q.tally --ask q_p10,2186:9:j3q.tally,2168:model m
   tally 2
   on 2026-06-30
@@ -267841,6 +268683,192 @@ version v
   out = 80.00 PLN "s"
 ,,1:0,112:p3: refused: RUN-PLACE owed is -30.00 PLN after the day's observations and plans of 2026-04-02
   cut 2026-01-01
+,21:fixes/t231g1/never/m1,12:fixes-t231g1,24:run never.tally --ask m1,528:11:never.tally,508:model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+,,1:0,32:m1: 2026-05-01
+  cut 2026-06-30
+,21:fixes/t231g1/never/m2,12:fixes-t231g1,24:run never.tally --ask m2,528:11:never.tally,508:model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+,,1:0,27:m2: never
+  cut 2026-06-30
+,21:fixes/t231g1/never/m3,12:fixes-t231g1,24:run never.tally --ask m3,528:11:never.tally,508:model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+,,1:0,32:m3: 2026-03-01
+  cut 2026-06-30
+,21:fixes/t231g1/never/m4,12:fixes-t231g1,24:run never.tally --ask m4,528:11:never.tally,508:model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+,,1:0,27:m4: never
+  cut 2026-06-30
+,21:fixes/t231g1/never/m5,12:fixes-t231g1,24:run never.tally --ask m5,528:11:never.tally,508:model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+,,1:0,23:m5: a
+  cut 2026-06-30
+,21:fixes/t231g1/never/m6,12:fixes-t231g1,24:run never.tally --ask m6,528:11:never.tally,508:model nev
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ks = [a, b]
+input dl[k in ks]: date
+input d: date
+input nv: date
+
+ask m1: min(nv, d)
+ask m2: max(nv, d)
+ask m3: min(dl[k] for k in ks)
+ask m4: max(dl[k] for k in ks)
+ask m5: argmin(dl[k] for k in ks)
+ask m6: argmax(dl[k] for k in ks)
+ask m7: d < nv
+ask m8: add_days(nv, 1)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  dl[a] = 2026-03-01 "s"
+  dl[b] = never "s"
+  d = 2026-05-01 "s"
+  nv = never "s"
+,,1:0,23:m6: b
+  cut 2026-06-30
 ,21:fixes/t231g1/never/m7,12:fixes-t231g1,24:run never.tally --ask m7,528:11:never.tally,508:model nev
   tally 2
   on 2026-06-30
@@ -268614,6 +269642,222 @@ version v
 ,,1:0,85:p_amt: 100.00 PLN
   cut 2026-04-20
 warning: WARN-UNREAD input lim is read by nothing
+,29:fixes/t231g2/exist_mark/loose,12:fixes-t231g2,32:run exist_mark.tally --ask loose,1489:16:exist_mark.tally,1463:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+def ln[m in month]: money PLN
+  rule guessed = amt
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(konto, m)
+
+move rest[m in month]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount ln[m]
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask g: flows(rest, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:1,113:refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (exist_mark.tally:22)
+,25:fixes/t231g2/exist_mark/g,12:fixes-t231g2,28:run exist_mark.tally --ask g,1489:16:exist_mark.tally,1463:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+def ln[m in month]: money PLN
+  rule guessed = amt
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(konto, m)
+
+move rest[m in month]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount ln[m]
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask g: flows(rest, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:1,113:refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (exist_mark.tally:22)
+,25:fixes/t231g2/exist_mark/b,12:fixes-t231g2,28:run exist_mark.tally --ask b,1489:16:exist_mark.tally,1463:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+def ln[m in month]: money PLN
+  rule guessed = amt
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(konto, m)
+
+move rest[m in month]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount ln[m]
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask g: flows(rest, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:1,113:refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (exist_mark.tally:22)
+,25:fixes/t231g2/exist_mark/f,12:fixes-t231g2,28:run exist_mark.tally --ask f,1489:16:exist_mark.tally,1463:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+def ln[m in month]: money PLN
+  rule guessed = amt
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(konto, m)
+
+move rest[m in month]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount ln[m]
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask g: flows(rest, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:1,113:refused: LOAD-READS rest reaches a running read or projection of topup without reads topup (exist_mark.tally:22)
 ,24:fixes/t231g2/w4_false/f2,12:fixes-t231g2,27:run w4_false.tally --ask f2,1304:14:w4_false.tally,1280:model w
   tally 2
   on 2026-01-01
@@ -268937,6 +270181,60 @@ version v
   dd[2026-05] = 2026-05-25 "s"
   okw[2026-05] = false "s"
 ,,1:0,22:n: 4
+  cut 2026-01-01
+,24:fixes/t231g2/w4_false/e5,12:fixes-t231g2,27:run w4_false.tally --ask e5,1304:14:w4_false.tally,1280:model w
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input dd[m in month]: date
+input okw[m in month]: bool
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on dd[m]
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask f2: flows(spend, 2026-02)
+ask f5: flows(spend, 2026-05)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-05)
+ask e5: spend[2026-05].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dd[2026-01] = 2026-01-25 "s"
+  dd[2026-02] = 2026-02-25 "s"
+  dd[2026-03] = 2026-03-25 "s"
+  dd[2026-04] = 2026-04-25 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  dd[2026-05] = 2026-05-25 "s"
+  okw[2026-05] = false "s"
+,,1:0,88:e5: refused: RUN-NONE spend[2026-05] doesn't exist: a field read of it
   cut 2026-01-01
 ,27:fixes/t231g2/w5_whenhole/f2,12:fixes-t231g2,30:run w5_whenhole.tally --ask f2,1315:17:w5_whenhole.tally,1288:model w
   tally 2
@@ -269640,6 +270938,168 @@ version v
   okw[2026-05] = true "s"
 ,,1:0,22:n: 4
   cut 2026-01-01
+,23:fixes/t231g2/w2_none/e5,12:fixes-t231g2,26:run w2_none.tally --ask e5,1296:13:w2_none.tally,1273:model w
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input dd[m in month]: date
+input okw[m in month]: bool
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on dd[m]
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask f2: flows(spend, 2026-02)
+ask f5: flows(spend, 2026-05)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-05)
+ask e5: spend[2026-05].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dd[2026-01] = 2026-01-25 "s"
+  dd[2026-02] = 2026-02-25 "s"
+  dd[2026-03] = 2026-03-25 "s"
+  dd[2026-04] = 2026-04-25 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  dd[2026-05] = none "s"
+  okw[2026-05] = true "s"
+,,1:0,88:e5: refused: RUN-NONE spend[2026-05] doesn't exist: a field read of it
+  cut 2026-01-01
+,23:fixes/t231g2/w3_hole/f2,12:fixes-t231g2,26:run w3_hole.tally --ask f2,1312:13:w3_hole.tally,1289:model w
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input dd[m in month]: date
+input okw[m in month]: bool
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on dd[m]
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask f2: flows(spend, 2026-02)
+ask f5: flows(spend, 2026-05)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-05)
+ask e5: spend[2026-05].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dd[2026-01] = 2026-01-25 "s"
+  dd[2026-02] = 2026-02-25 "s"
+  dd[2026-03] = 2026-03-25 "s"
+  dd[2026-04] = 2026-04-25 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  dd[2026-05] = ?"which day in may?" "s"
+  okw[2026-05] = true "s"
+,,1:0,55:f2: refused: RUN-DIV division by zero
+  cut 2026-01-01
+,23:fixes/t231g2/w3_hole/f5,12:fixes-t231g2,26:run w3_hole.tally --ask f5,1312:13:w3_hole.tally,1289:model w
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input dd[m in month]: date
+input okw[m in month]: bool
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on dd[m]
+  when okw[m]
+  leg cash from konto to shop amount amt
+
+ask f2: flows(spend, 2026-02)
+ask f5: flows(spend, 2026-05)
+ask b3: bal(konto, 2026-03-31)
+ask b5: bal(konto, 2026-05-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+ask n: count(t in transfers over 2026-01 .. 2026-05)
+ask e5: spend[2026-05].day
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+  dd[2026-01] = 2026-01-25 "s"
+  dd[2026-02] = 2026-02-25 "s"
+  dd[2026-03] = 2026-03-25 "s"
+  dd[2026-04] = 2026-04-25 "s"
+  okw[2026-01] = true "s"
+  okw[2026-02] = true "s"
+  okw[2026-03] = true "s"
+  okw[2026-04] = true "s"
+  dd[2026-05] = ?"which day in may?" "s"
+  okw[2026-05] = true "s"
+,,1:0,55:f5: refused: RUN-DIV division by zero
+  cut 2026-01-01
 ,23:fixes/t231g2/w3_hole/b3,12:fixes-t231g2,26:run w3_hole.tally --ask b3,1312:13:w3_hole.tally,1289:model w
   tally 2
   on 2026-01-01
@@ -270288,6 +271748,54 @@ version v
   okw[2026-05] = true "s"
 ,,1:0,55:e5: refused: RUN-DIV division by zero
   cut 2026-01-01
+,22:fixes/t231g2/x_none/d2,12:fixes-t231g2,25:run x_none.tally --ask d2,1314:12:x_none.tally,1292:model x
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d20: int
+input skip_m: month
+
+move spend[m in month]: transfers
+  on day_of(m, d20)
+  when m != skip_m
+  leg cash from konto to shop amount amt
+
+ask d2: spend[2026-02].day
+ask a2: spend[2026-02].cash.amount
+ask d3: spend[2026-03].day
+ask isn: spend[2026-02] == none
+ask n_un: count(o in bank over 2026-04 where o.fulfils == none)
+ask n_eq: count(o in bank over 2026-04 where o.fulfils == spend[2026-02])
+ask n_eq3: count(o in bank over 2026-04 where o.fulfils == spend[2026-03])
+ask dd: days_between(spend[2026-02].day, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d20 = 20 "s"
+  skip_m = 2026-02 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers konto
+  bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 26.00 PLN) "loose"
+  bank[r2] = (on: 2026-04-06, kind: transfers, leg cash from konto to shop amount 10.00 PLN, fulfils: spend[2026-03]) "march"
+,,1:0,88:d2: refused: RUN-NONE spend[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
 ,22:fixes/t231g2/x_none/a2,12:fixes-t231g2,25:run x_none.tally --ask a2,1314:12:x_none.tally,1292:model x
   tally 2
   on 2026-04-20
@@ -270576,6 +272084,54 @@ version apr
   bank[r2] = (on: 2026-04-06, kind: transfers, leg cash from konto to shop amount 10.00 PLN, fulfils: spend[2026-03]) "march"
 ,,1:0,26:n_eq3: 1
   cut 2026-04-20
+,22:fixes/t231g2/x_none/dd,12:fixes-t231g2,25:run x_none.tally --ask dd,1314:12:x_none.tally,1292:model x
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input amt: money PLN
+input d20: int
+input skip_m: month
+
+move spend[m in month]: transfers
+  on day_of(m, d20)
+  when m != skip_m
+  leg cash from konto to shop amount amt
+
+ask d2: spend[2026-02].day
+ask a2: spend[2026-02].cash.amount
+ask d3: spend[2026-03].day
+ask isn: spend[2026-02] == none
+ask n_un: count(o in bank over 2026-04 where o.fulfils == none)
+ask n_eq: count(o in bank over 2026-04 where o.fulfils == spend[2026-02])
+ask n_eq3: count(o in bank over 2026-04 where o.fulfils == spend[2026-03])
+ask dd: days_between(spend[2026-02].day, 2026-03-01)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d20 = 20 "s"
+  skip_m = 2026-02 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers konto
+  bank[r1] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 26.00 PLN) "loose"
+  bank[r2] = (on: 2026-04-06, kind: transfers, leg cash from konto to shop amount 10.00 PLN, fulfils: spend[2026-03]) "march"
+,,1:0,88:dd: refused: RUN-NONE spend[2026-02] doesn't exist: a field read of it
+  cut 2026-04-20
 ,22:fixes/t231g2/hdfalse/b,12:fixes-t231g2,25:run hdfalse.tally --ask b,689:13:hdfalse.tally,667:model hdfalse
   tally 2
   on 2026-04-20
@@ -270678,6 +272234,126 @@ version v
   ok = false "s"
 ,,1:0,39:n: ?"which day?" (hd)
   cut 2026-04-20
+,21:fixes/t231g2/where2/f,12:fixes-t231g2,24:run where2.tally --ask f,877:12:where2.tally,856:model where1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input d25: int
+index kinds = [a]
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask f: flows(spend, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+,,1:0,30:f: 10.00 PLN
+  cut 2026-01-01
+,21:fixes/t231g2/where2/b,12:fixes-t231g2,24:run where2.tally --ask b,877:12:where2.tally,856:model where1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input d25: int
+index kinds = [a]
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask f: flows(spend, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+,,1:0,31:b: 970.00 PLN
+  cut 2026-01-01
+,21:fixes/t231g2/where2/c,12:fixes-t231g2,24:run where2.tally --ask c,877:12:where2.tally,856:model where1
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input dz[m in month]: int
+input ten: int
+input amt: money PLN
+input d25: int
+index kinds = [a]
+
+move spend[m in month where ten / dz[m] > 0, k in kinds]: transfers
+  on day_of(m, d25)
+  leg cash from konto to shop amount amt
+
+ask f: flows(spend, 2026-02)
+ask b: bal(konto, 2026-03-31)
+ask c: count(t in transfers over 2026-01 .. 2026-03)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  ten = 10 "s"
+  amt = 10.00 PLN "s"
+  d25 = 25 "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 1 "s"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 0 "s"
+,,1:0,22:c: 3
+  cut 2026-01-01
 ,28:fixes/t231g2/k_stop3_nodiv/f,12:fixes-t231g2,31:run k_stop3_nodiv.tally --ask f,1561:19:k_stop3_nodiv.tally,1532:model k_stop3
   tally 2
   on 2026-04-20
@@ -270816,6 +272492,313 @@ warning: WARN-UNREAD input amt is read by nothing
 warning: WARN-UNREAD input d20 is read by nothing
 warning: WARN-UNREAD input d5 is read by nothing
 warning: WARN-UNREAD place pot is read by nothing
+,24:fixes/t231g2/selfread/f3,12:fixes-t231g2,27:run selfread.tally --ask f3,925:14:selfread.tally,902:model selfread
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input amt: money PLN
+input d5: int
+input first_m: month
+input zero: money PLN
+
+move pay[m in month]: transfers
+  on day_of(m, d5)
+  when m == first_m or flows(pay[m - 1], m - 1) > zero
+  leg cash from konto to shop amount amt
+
+move pay2[m in month where m == first_m or flows(pay2[m - 1], m - 1) > zero]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount amt
+
+ask f3: flows(pay, 2026-03)
+ask g3: flows(pay2, 2026-03)
+ask b: bal(konto, 2026-05-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d5 = 5 "s"
+  first_m = 2026-01 "s"
+  zero = 0.00 PLN "s"
+,,1:0,31:f3: 10.00 PLN
+  cut 2026-01-01
+,24:fixes/t231g2/selfread/g3,12:fixes-t231g2,27:run selfread.tally --ask g3,925:14:selfread.tally,902:model selfread
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input amt: money PLN
+input d5: int
+input first_m: month
+input zero: money PLN
+
+move pay[m in month]: transfers
+  on day_of(m, d5)
+  when m == first_m or flows(pay[m - 1], m - 1) > zero
+  leg cash from konto to shop amount amt
+
+move pay2[m in month where m == first_m or flows(pay2[m - 1], m - 1) > zero]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount amt
+
+ask f3: flows(pay, 2026-03)
+ask g3: flows(pay2, 2026-03)
+ask b: bal(konto, 2026-05-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d5 = 5 "s"
+  first_m = 2026-01 "s"
+  zero = 0.00 PLN "s"
+,,1:0,31:g3: 10.00 PLN
+  cut 2026-01-01
+,23:fixes/t231g2/selfread/b,12:fixes-t231g2,26:run selfread.tally --ask b,925:14:selfread.tally,902:model selfread
+  tally 2
+  on 2026-01-01
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input amt: money PLN
+input d5: int
+input first_m: month
+input zero: money PLN
+
+move pay[m in month]: transfers
+  on day_of(m, d5)
+  when m == first_m or flows(pay[m - 1], m - 1) > zero
+  leg cash from konto to shop amount amt
+
+move pay2[m in month where m == first_m or flows(pay2[m - 1], m - 1) > zero]: transfers
+  on day_of(m, d5)
+  leg cash from konto to shop amount amt
+
+ask f3: flows(pay, 2026-03)
+ask g3: flows(pay2, 2026-03)
+ask b: bal(konto, 2026-05-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 1 000.00 PLN at 2026-01-01 start "s"
+  amt = 10.00 PLN "s"
+  d5 = 5 "s"
+  first_m = 2026-01 "s"
+  zero = 0.00 PLN "s"
+,,1:0,31:b: 900.00 PLN
+  cut 2026-01-01
+,27:fixes/t231g2/dec_link/loose,12:fixes-t231g2,30:run dec_link.tally --ask loose,1196:14:dec_link.tally,1172:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:0,34:loose: 30.00 PLN
+  cut 2026-04-20
+,23:fixes/t231g2/dec_link/b,12:fixes-t231g2,26:run dec_link.tally --ask b,1196:14:dec_link.tally,1172:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:0,163:b: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+,23:fixes/t231g2/dec_link/f,12:fixes-t231g2,26:run dec_link.tally --ask f,1196:14:dec_link.tally,1172:model dec_link
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+ask loose: sum(o.cash.amount for o in bank over 2026-02 where o.fulfils == none)
+ask b: bal(konto, 2026-03-31)
+ask f: flows(topup, 2026-02)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+
+version feb
+  cite s
+  governs 2026-02
+  known 2026-03-01
+  covers konto
+  bank[r1] = (on: 2026-02-05, kind: transfers, leg cash from save to konto amount 400.00 PLN, fulfils: topup[2026-02]) "the top-up"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+,,1:0,133:f: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  cut 2026-04-20
+,22:fixes/t231g2/l_false/a,12:fixes-t231g2,25:run l_false.tally --ask a,1117:13:l_false.tally,1094:model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input ok[m in month]: bool
+input d5: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask a: flows(rent, 2026-01)
+ask b: flows(rent, 2026-03)
+ask c: bal(pot, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = false "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,132:a: refused: RUN-RECORD observation bank[a1] fulfils rent[2026-01], which doesn't exist or doesn't touch its places
+  cut 2026-05-20
 ,22:fixes/t231g2/l_false/b,12:fixes-t231g2,25:run l_false.tally --ask b,1117:13:l_false.tally,1094:model first
   tally 2
   on 2026-05-20
@@ -270964,6 +272947,55 @@ version jan
 ,,1:0,71:a: 100.00 PLN
   assumed: jan is a guess (ok[2026-01])
   cut 2026-05-20
+,20:fixes/t231g2/first/b,12:fixes-t231g2,23:run first.tally --ask b,1139:11:first.tally,1118:model first
+  tally 2
+  on 2026-05-20
+  start 2026-01-01
+  end 2026-06-30
+
+source s "invented values"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-06
+place pot: accounts PLN lives 2026-01-01..
+place landlord: outside lives 1900-01-01..
+input bank: observed
+input rent_amt: money PLN
+input ok[m in month]: bool
+input d5: int
+
+move rent[m in month]: transfers
+  on day_of(m, d5)
+  at start_of(m)
+  when ok[m]
+  leg cash from pot to landlord amount rent_amt
+
+ask a: flows(rent, 2026-01)
+ask b: flows(rent, 2026-03)
+ask c: bal(pot, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  rent_amt = 100.00 PLN "s"
+  d5 = 5 "s"
+  ok[2026-01] = true assumed "jan is a guess" "ok jan"
+  ok[2026-02] = true "ok feb"
+  ok[2026-03] = true "ok mar"
+  ok[2026-04] = true "ok apr"
+  ok[2026-05] = true "ok may"
+  ok[2026-06] = true "ok jun"
+  opening[pot] = 9000.00 PLN at 2026-01-01 start "s"
+
+version jan
+  cite s
+  governs 2026-01
+  known 2026-01-21
+  covers pot
+  bank[a1] = (on: 2026-01-05, kind: transfers, leg cash from pot to landlord amount 100.00 PLN, fulfils: rent[2026-01]) "names jan"
+,,1:0,60:b: 100.00 PLN
+  unfulfilled: rent[2026-03]
+  cut 2026-05-20
 ,20:fixes/t231g2/first/c,12:fixes-t231g2,23:run first.tally --ask c,1139:11:first.tally,1118:model first
   tally 2
   on 2026-05-20
@@ -271015,6 +273047,140 @@ version jan
   unfulfilled: rent[2026-02]
   unfulfilled: rent[2026-03]
   cut 2026-05-20
+,21:fixes/t231g2/k_refw/l,12:fixes-t231g2,24:run k_refw.tally --ask l,1482:12:k_refw.tally,1460:model k_refw
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place pot: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input d5: int
+input d20: int
+input amt: money PLN
+place card: accounts PLN lives 2026-01-01..
+input bank: observed
+input ten: int
+input dz[m in month]: int
+input skip_m: month
+
+move spend[m in month where ten / dz[m] > 0]: transfers
+  on day_of(m, d20)
+  when m != skip_m
+  leg cash from konto to shop amount amt
+
+input guess: money PLN
+
+def loose[m in month]: money PLN at start_of(m)
+  rule guessed = guess
+  rule seen beats guessed = sum(o.cash.amount for o in bank over m where o.fulfils == none) when covered(card, m)
+
+ask l: loose[2026-04]
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  d5 = 5 "s"
+  d20 = 20 "s"
+  amt = 10.00 PLN "s"
+  ten = 10 "s"
+  guess = 100.00 PLN "s"
+  dz[2026-01] = 1 "s"
+  dz[2026-02] = 0 "refused: a division by zero"
+  dz[2026-03] = 1 "s"
+  dz[2026-04] = 1 "s"
+  dz[2026-05] = 1 "s"
+  skip_m = 2026-02 "s"
+
+version apr
+  cite s
+  governs 2026-04
+  known 2026-04-15
+  covers card
+  bank[r0405] = (on: 2026-04-05, kind: transfers, leg cash from konto to shop amount 260.00 PLN, fulfils: spend[2026-02]) "names the refused one"
+  bank[r0406] = (on: 2026-04-06, kind: transfers, leg cash from card to shop amount 30.00 PLN) "loose"
+,,1:0,235:l: refused: RUN-RECORD observation bank[r0405] fulfils spend[2026-02], which doesn't exist or doesn't touch its places
+  cut 2026-04-20
+warning: WARN-UNREAD input d5 is read by nothing
+warning: WARN-UNREAD place pot is read by nothing
+,30:fixes/t231rv1/p21_where_min/aw,13:fixes-t231rv1,32:run p21_where_min.tally --ask aw,296:19:p21_where_min.tally,268:model p21
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+source s "probe"
+index ns = 1..2
+input x[n in ns]: int
+ask aw: any(x[n] > 0 for n in ns where x[2] / x[n] > 0)
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  x[1] = 0 "s"
+  x[2] = 5 "s"
+,,1:0,26:aw: true
+  cut 2026-06-30
+,34:fixes/t231rv1/p02_where_refused/aw,13:fixes-t231rv1,36:run p02_where_refused.tally --ask aw,531:23:p02_where_refused.tally,499:model p02
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ns = 1..3
+input x[n in ns]: int
+input ten: int
+input two: int
+
+ask aw: any(x[n] > two for n in ns where ten / x[n] > 0)
+ask lw: all(x[n] < two for n in ns where ten / x[n] > 0)
+ask cw: count(n in ns where ten / x[n] > 0)
+ask fw: first(n in ns where ten / x[n] > 0)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  two = 2 "s"
+  x[1] = 0 "ref"
+  x[2] = 1 "small"
+  x[3] = 5 "big"
+,,1:0,26:aw: true
+  cut 2026-06-30
+,34:fixes/t231rv1/p02_where_refused/lw,13:fixes-t231rv1,36:run p02_where_refused.tally --ask lw,531:23:p02_where_refused.tally,499:model p02
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+index ns = 1..3
+input x[n in ns]: int
+input ten: int
+input two: int
+
+ask aw: any(x[n] > two for n in ns where ten / x[n] > 0)
+ask lw: all(x[n] < two for n in ns where ten / x[n] > 0)
+ask cw: count(n in ns where ten / x[n] > 0)
+ask fw: first(n in ns where ten / x[n] > 0)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ten = 10 "s"
+  two = 2 "s"
+  x[1] = 0 "ref"
+  x[2] = 1 "small"
+  x[3] = 5 "big"
+,,1:0,27:lw: false
+  cut 2026-06-30
 ,34:fixes/t231rv1/p02_where_refused/cw,13:fixes-t231rv1,36:run p02_where_refused.tally --ask cw,531:23:p02_where_refused.tally,499:model p02
   tally 2
   on 2026-06-30
@@ -271071,6 +273237,123 @@ version v
   x[3] = 5 "big"
 ,,1:0,55:fw: refused: RUN-DIV division by zero
   cut 2026-06-30
+,30:fixes/t231rv1/p20_step5_min/e1,13:fixes-t231rv1,32:run p20_step5_min.tally --ask e1,424:19:p20_step5_min.tally,396:model p20
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+source s "probe"
+input ch: bool
+input v: int
+def d1: int
+  rule a = v
+  rule base = v
+  rule top beats a, base = v when ch
+def d2: int
+  rule a = v
+  rule base = v
+  rule mid beats base = v when ch
+ask e1: explain d1
+ask q2: d2
+version x
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  v = 1 "s"
+,,1:0,287:e1: ?"does it apply?" (ch)
+  [1] d1 = ?"does it apply?" (ch)
+      rule a: candidate
+      rule base: candidate
+      rule top: unknown
+        [2] row x:ch = ?"does it apply?" (ch)
+            version x, source s, "probe", locator "s", governs always, known 2026-01-01
+  cut 2026-10-25
+,30:fixes/t231rv1/p20_step5_min/q2,13:fixes-t231rv1,32:run p20_step5_min.tally --ask q2,424:19:p20_step5_min.tally,396:model p20
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+source s "probe"
+input ch: bool
+input v: int
+def d1: int
+  rule a = v
+  rule base = v
+  rule top beats a, base = v when ch
+def d2: int
+  rule a = v
+  rule base = v
+  rule mid beats base = v when ch
+ask e1: explain d1
+ask q2: d2
+version x
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  v = 1 "s"
+,,1:0,44:q2: ?"does it apply?" (ch)
+  cut 2026-10-25
+,26:fixes/t231rv1/p04_step5/q2,13:fixes-t231rv1,28:run p04_step5.tally --ask q2,1244:15:p04_step5.tally,1219:model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+,,1:0,65:q2: ?"does it apply?" (ch)
+  law date 2026-03-01, cut 2026-10-25
 ,27:fixes/t231rv1/p04_step5/q2t,13:fixes-t231rv1,29:run p04_step5.tally --ask q2t,1244:15:p04_step5.tally,1219:model p04
   tally 2
   on 2026-10-25
@@ -271191,6 +273474,65 @@ version v
 ,,1:0,133:q2f: refused: RUN-CONFLICT rules a and base both win for d2 on 2026-03-01
   pinned: ch = false
   law date 2026-03-01, cut 2026-10-25
+,26:fixes/t231rv1/p04_step5/q8,13:fixes-t231rv1,28:run p04_step5.tally --ask q8,1244:15:p04_step5.tally,1219:model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+,,1:0,65:q8: ?"does it apply?" (ch)
+  law date 2026-03-01, cut 2026-10-25
 ,26:fixes/t231rv1/p04_step5/q9,13:fixes-t231rv1,28:run p04_step5.tally --ask q9,1244:15:p04_step5.tally,1219:model p04
   tally 2
   on 2026-10-25
@@ -271249,6 +273591,124 @@ version v
   vb = 2 PLN "s"
   vt = 3 PLN "s"
 ,,1:0,108:q9: refused: RUN-CONFLICT rules a and b both win for d9 on 2026-03-01
+  law date 2026-03-01, cut 2026-10-25
+,27:fixes/t231rv1/p04_step5/q10,13:fixes-t231rv1,29:run p04_step5.tally --ask q10,1244:15:p04_step5.tally,1219:model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+,,1:0,66:q10: ?"does it apply?" (ch)
+  law date 2026-03-01, cut 2026-10-25
+,27:fixes/t231rv1/p04_step5/q11,13:fixes-t231rv1,29:run p04_step5.tally --ask q11,1244:15:p04_step5.tally,1219:model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+,,1:0,66:q11: ?"does it apply?" (ch)
   law date 2026-03-01, cut 2026-10-25
 ,28:fixes/t231rv1/p04_step5/q11t,13:fixes-t231rv1,30:run p04_step5.tally --ask q11t,1244:15:p04_step5.tally,1219:model p04
   tally 2
@@ -271309,6 +273769,142 @@ version v
   vt = 3 PLN "s"
 ,,1:0,131:q11t: refused: RUN-CONFLICT rules w and a both win for d11 on 2026-03-01
   pinned: ch = true
+  law date 2026-03-01, cut 2026-10-25
+,26:fixes/t231rv1/p04_step5/e2,13:fixes-t231rv1,28:run p04_step5.tally --ask e2,1244:15:p04_step5.tally,1219:model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+,,1:0,445:e2: ?"does it apply?" (ch)
+  [1] d2 = ?"does it apply?" (ch), law date 2026-03-01
+      rule a: candidate
+        [2] row v:ct = true
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+      rule base: candidate
+      rule mid: unknown
+        [3] row v:ch = ?"does it apply?" (ch)
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+  law date 2026-03-01, cut 2026-10-25
+,27:fixes/t231rv1/p04_step5/e11,13:fixes-t231rv1,29:run p04_step5.tally --ask e11,1244:15:p04_step5.tally,1219:model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"
+,,1:0,488:e11: ?"does it apply?" (ch)
+  [1] d11 = ?"does it apply?" (ch), law date 2026-03-01
+      rule a: candidate
+        [2] row v:ct = true
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+      rule b: candidate
+      rule u: unknown
+        [3] row v:ch = ?"does it apply?" (ch)
+            version v, source s, "probe", locator "s", governs always, known 2026-01-01
+      rule w: unknown
+        (v:ch: see [3])
   law date 2026-03-01, cut 2026-10-25
 ,29:fixes/t231rv1/p18_same_dec/b4,13:fixes-t231rv1,31:run p18_same_dec.tally --ask b4,921:18:p18_same_dec.tally,894:model p17
   tally 2
@@ -271397,6 +273993,96 @@ version v
 ,,1:0,161:b6: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
   unfulfilled: in1
   cut 2026-06-10
+,29:fixes/t231rv1/p18_same_dec/b8,13:fixes-t231rv1,31:run p18_same_dec.tally --ask b8,921:18:p18_same_dec.tally,894:model p17
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input bank: observed
+
+move in1: transfers
+  reads wallet
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(wallet)
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask b31: bal(wallet, 2026-03-31)
+ask f: flows(wallet, 2026-03)
+ask b31k: bal(wallet, 2026-03-31) as known 2026-03-31
+ask ex: explain bal(wallet, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+  same in1 = in2
+
+,,1:0,70:b8: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,30:fixes/t231rv1/p18_same_dec/b31,13:fixes-t231rv1,32:run p18_same_dec.tally --ask b31,921:18:p18_same_dec.tally,894:model p17
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input bank: observed
+
+move in1: transfers
+  reads wallet
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(wallet)
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask b31: bal(wallet, 2026-03-31)
+ask f: flows(wallet, 2026-03)
+ask b31k: bal(wallet, 2026-03-31) as known 2026-03-31
+ask ex: explain bal(wallet, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+  same in1 = in2
+
+,,1:0,71:b31: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
 ,28:fixes/t231rv1/p18_same_dec/f,13:fixes-t231rv1,30:run p18_same_dec.tally --ask f,921:18:p18_same_dec.tally,894:model p17
   tally 2
   on 2026-06-10
@@ -271439,6 +274125,102 @@ version v
   same in1 = in2
 
 ,,1:0,179:f: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,31:fixes/t231rv1/p18_same_dec/b31k,13:fixes-t231rv1,33:run p18_same_dec.tally --ask b31k,921:18:p18_same_dec.tally,894:model p17
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input bank: observed
+
+move in1: transfers
+  reads wallet
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(wallet)
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask b31: bal(wallet, 2026-03-31)
+ask f: flows(wallet, 2026-03)
+ask b31k: bal(wallet, 2026-03-31) as known 2026-03-31
+ask ex: explain bal(wallet, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+  same in1 = in2
+
+,,1:0,72:b31k: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-03-31
+,29:fixes/t231rv1/p18_same_dec/ex,13:fixes-t231rv1,31:run p18_same_dec.tally --ask ex,921:18:p18_same_dec.tally,894:model p17
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+input bank: observed
+
+move in1: transfers
+  reads wallet
+  on d1
+  leg cash from world to wallet amount a + 0 * bal(wallet)
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b6: bal(wallet, 2026-03-06)
+ask b8: bal(wallet, 2026-03-08)
+ask b31: bal(wallet, 2026-03-31)
+ask f: flows(wallet, 2026-03)
+ask b31k: bal(wallet, 2026-03-31) as known 2026-03-31
+ask ex: explain bal(wallet, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+  same in1 = in2
+
+,,1:0,428:ex: 100.00 PLN
+  balance of wallet (PLN) at the end of 2026-03-31
+  from: opening v:opening[wallet] = 0.00 PLN, 2026-01-01 start (version v, source s, locator "s")
+  2026-03-05:
+    in1.cash (past): hole: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
+  2026-03-07:
+    in2.cash (past): +100.00 PLN
   unfulfilled: in1
   unfulfilled: in2
   cut 2026-06-10
@@ -271665,6 +274447,158 @@ version rd
   stated[w2] = 250.00 PLN at 2026-04-15 end "s"
 ,,1:0,161:b6: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
   unfulfilled: in1
+  cut 2026-06-10
+,29:fixes/t231rv1/p09_same_two/b7,13:fixes-t231rv1,31:run p09_same_two.tally --ask b7,1839:18:p09_same_two.tally,1811:model p09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  on d2
+  leg cash from world to w2 amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b5: bal(wallet, 2026-03-05)
+ask b6: bal(wallet, 2026-03-06)
+ask b7: bal(wallet, 2026-03-07)
+ask b31: bal(wallet, 2026-03-31)
+ask c6: bal(w2, 2026-03-06)
+ask c7: bal(w2, 2026-03-07)
+ask c31: bal(w2, 2026-03-31)
+ask c4: bal(w2, 2026-04-30)
+ask f_n: flows(wallet, 2026-03-08 .. 2026-03-31)
+ask f_a: flows(wallet, 2026-03-06 .. 2026-03-31)
+ask f_b: flows(wallet, 2026-03-05 .. 2026-03-07)
+ask f_6: flows(wallet, 2026-03-06 .. 2026-03-06)
+ask f_x: flows(w2, 2026-03)
+ask f_y: flows(w2, 2026-03-01 .. 2026-03-06)
+ask k_b: bal(wallet, 2026-03-31) as known 2026-04-01
+ask cnt: count(t in transfers over 2026-03-06 .. 2026-03-31 where t.cash.to == wallet)
+ask ex: explain bal(wallet, 2026-03-31)
+ask ex2: explain bal(w2, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+  same j1 = j2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-01-01
+  pad w2 from world
+  stated[w2] = 100.00 PLN at 2026-03-06 end "s"
+  stated[w2] = 250.00 PLN at 2026-04-15 end "s"
+,,1:0,70:b7: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,30:fixes/t231rv1/p09_same_two/b31,13:fixes-t231rv1,32:run p09_same_two.tally --ask b31,1839:18:p09_same_two.tally,1811:model p09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  on d2
+  leg cash from world to w2 amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b5: bal(wallet, 2026-03-05)
+ask b6: bal(wallet, 2026-03-06)
+ask b7: bal(wallet, 2026-03-07)
+ask b31: bal(wallet, 2026-03-31)
+ask c6: bal(w2, 2026-03-06)
+ask c7: bal(w2, 2026-03-07)
+ask c31: bal(w2, 2026-03-31)
+ask c4: bal(w2, 2026-04-30)
+ask f_n: flows(wallet, 2026-03-08 .. 2026-03-31)
+ask f_a: flows(wallet, 2026-03-06 .. 2026-03-31)
+ask f_b: flows(wallet, 2026-03-05 .. 2026-03-07)
+ask f_6: flows(wallet, 2026-03-06 .. 2026-03-06)
+ask f_x: flows(w2, 2026-03)
+ask f_y: flows(w2, 2026-03-01 .. 2026-03-06)
+ask k_b: bal(wallet, 2026-03-31) as known 2026-04-01
+ask cnt: count(t in transfers over 2026-03-06 .. 2026-03-31 where t.cash.to == wallet)
+ask ex: explain bal(wallet, 2026-03-31)
+ask ex2: explain bal(w2, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+  same j1 = j2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-01-01
+  pad w2 from world
+  stated[w2] = 100.00 PLN at 2026-03-06 end "s"
+  stated[w2] = 250.00 PLN at 2026-04-15 end "s"
+,,1:0,71:b31: 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 ,29:fixes/t231rv1/p09_same_two/c6,13:fixes-t231rv1,31:run p09_same_two.tally --ask c6,1839:18:p09_same_two.tally,1811:model p09
   tally 2
@@ -272420,6 +275354,88 @@ version rd
 ,,1:0,157:cnt: ?"in1 and in2 are one, but the day of cash differs on 2026-03-05: 2026-03-05 (in1) and 2026-03-07 (in2)" (in1, in2)
   unfulfilled: in1
   cut 2026-06-10
+,29:fixes/t231rv1/p09_same_two/ex,13:fixes-t231rv1,31:run p09_same_two.tally --ask ex,1839:18:p09_same_two.tally,1811:model p09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  on d2
+  leg cash from world to w2 amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b5: bal(wallet, 2026-03-05)
+ask b6: bal(wallet, 2026-03-06)
+ask b7: bal(wallet, 2026-03-07)
+ask b31: bal(wallet, 2026-03-31)
+ask c6: bal(w2, 2026-03-06)
+ask c7: bal(w2, 2026-03-07)
+ask c31: bal(w2, 2026-03-31)
+ask c4: bal(w2, 2026-04-30)
+ask f_n: flows(wallet, 2026-03-08 .. 2026-03-31)
+ask f_a: flows(wallet, 2026-03-06 .. 2026-03-31)
+ask f_b: flows(wallet, 2026-03-05 .. 2026-03-07)
+ask f_6: flows(wallet, 2026-03-06 .. 2026-03-06)
+ask f_x: flows(w2, 2026-03)
+ask f_y: flows(w2, 2026-03-01 .. 2026-03-06)
+ask k_b: bal(wallet, 2026-03-31) as known 2026-04-01
+ask cnt: count(t in transfers over 2026-03-06 .. 2026-03-31 where t.cash.to == wallet)
+ask ex: explain bal(wallet, 2026-03-31)
+ask ex2: explain bal(w2, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+  same j1 = j2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-01-01
+  pad w2 from world
+  stated[w2] = 100.00 PLN at 2026-03-06 end "s"
+  stated[w2] = 250.00 PLN at 2026-04-15 end "s"
+,,1:0,428:ex: 100.00 PLN
+  balance of wallet (PLN) at the end of 2026-03-31
+  from: opening v:opening[wallet] = 0.00 PLN, 2026-01-01 start (version v, source s, locator "s")
+  2026-03-05:
+    in1.cash (past): hole: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
+  2026-03-07:
+    in2.cash (past): +100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
 ,30:fixes/t231rv1/p09_same_two/ex2,13:fixes-t231rv1,32:run p09_same_two.tally --ask ex2,1839:18:p09_same_two.tally,1811:model p09
   tally 2
   on 2026-06-10
@@ -272623,6 +275639,69 @@ version v
   unfulfilled: x1
   unfulfilled: x2
   cut 2026-06-10
+,31:fixes/t231rv1/p10_same_three/a9,13:fixes-t231rv1,33:run p10_same_three.tally --ask a9,1417:20:p10_same_three.tally,1387:model p10
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place wb: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+move y1: transfers
+  on d3
+  leg cash from wb to world amount a
+move y2: transfers
+  on d1
+  leg cash from wb to world amount a
+
+ask a6: bal(wa, 2026-03-06)
+ask a8: bal(wa, 2026-03-08)
+ask a9: bal(wa, 2026-03-09)
+ask fa: flows(wa, 2026-03-06 .. 2026-03-09)
+ask fb: flows(wa, 2026-03-05 .. 2026-03-09)
+ask b4: bal(wb, 2026-03-04)
+ask b6: bal(wb, 2026-03-06)
+ask b9: bal(wb, 2026-03-09)
+ask fy: flows(wb, 2026-03)
+ask ny: count(t in transfers over 2026-03 where t.cash.from == wb)
+ask sy: sum(t.cash.amount for t in transfers over 2026-03 where t.cash.from == wb)
+ask ex: explain bal(wb, 2026-03-09)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wb] = 500.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+  same y1 = y2
+,,1:0,86:a9: 100.00 PLN
+  unfulfilled: x1
+  unfulfilled: x2
+  unfulfilled: x3
+  cut 2026-06-10
 ,31:fixes/t231rv1/p10_same_three/fa,13:fixes-t231rv1,33:run p10_same_three.tally --ask fa,1417:20:p10_same_three.tally,1387:model p10
   tally 2
   on 2026-06-10
@@ -272806,6 +275885,68 @@ version v
 ,,1:0,154:b6: ?"y1 and y2 are one, but leg cash differs on 2026-03-05, 2026-03-09: 100.00 PLN (y1) and 100.00 PLN (y2)" (y1, y2)
   unfulfilled: y2
   cut 2026-06-10
+,31:fixes/t231rv1/p10_same_three/b9,13:fixes-t231rv1,33:run p10_same_three.tally --ask b9,1417:20:p10_same_three.tally,1387:model p10
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place wb: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+move y1: transfers
+  on d3
+  leg cash from wb to world amount a
+move y2: transfers
+  on d1
+  leg cash from wb to world amount a
+
+ask a6: bal(wa, 2026-03-06)
+ask a8: bal(wa, 2026-03-08)
+ask a9: bal(wa, 2026-03-09)
+ask fa: flows(wa, 2026-03-06 .. 2026-03-09)
+ask fb: flows(wa, 2026-03-05 .. 2026-03-09)
+ask b4: bal(wb, 2026-03-04)
+ask b6: bal(wb, 2026-03-06)
+ask b9: bal(wb, 2026-03-09)
+ask fy: flows(wb, 2026-03)
+ask ny: count(t in transfers over 2026-03 where t.cash.from == wb)
+ask sy: sum(t.cash.amount for t in transfers over 2026-03 where t.cash.from == wb)
+ask ex: explain bal(wb, 2026-03-09)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wb] = 500.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+  same y1 = y2
+,,1:0,68:b9: 400.00 PLN
+  unfulfilled: y1
+  unfulfilled: y2
+  cut 2026-06-10
 ,31:fixes/t231rv1/p10_same_three/ny,13:fixes-t231rv1,33:run p10_same_three.tally --ask ny,1417:20:p10_same_three.tally,1387:model p10
   tally 2
   on 2026-06-10
@@ -272928,6 +276069,74 @@ version v
 ,,1:0,50:sy: 100.00 PLN
   unfulfilled: y1
   cut 2026-06-10
+,31:fixes/t231rv1/p10_same_three/ex,13:fixes-t231rv1,33:run p10_same_three.tally --ask ex,1417:20:p10_same_three.tally,1387:model p10
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wa: accounts PLN lives 2025-01-01..
+place wb: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input d3: date
+input a: money PLN
+
+move x1: transfers
+  on d1
+  leg cash from world to wa amount a
+move x2: transfers
+  on d2
+  leg cash from world to wa amount a
+move x3: transfers
+  on d3
+  leg cash from world to wa amount a
+move y1: transfers
+  on d3
+  leg cash from wb to world amount a
+move y2: transfers
+  on d1
+  leg cash from wb to world amount a
+
+ask a6: bal(wa, 2026-03-06)
+ask a8: bal(wa, 2026-03-08)
+ask a9: bal(wa, 2026-03-09)
+ask fa: flows(wa, 2026-03-06 .. 2026-03-09)
+ask fb: flows(wa, 2026-03-05 .. 2026-03-09)
+ask b4: bal(wb, 2026-03-04)
+ask b6: bal(wb, 2026-03-06)
+ask b9: bal(wb, 2026-03-09)
+ask fy: flows(wb, 2026-03)
+ask ny: count(t in transfers over 2026-03 where t.cash.from == wb)
+ask sy: sum(t.cash.amount for t in transfers over 2026-03 where t.cash.from == wb)
+ask ex: explain bal(wb, 2026-03-09)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wa] = 0.00 PLN at 2026-01-01 start "s"
+  opening[wb] = 500.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  d3 = 2026-03-09 "s"
+  a = 100.00 PLN "s"
+  same x1 = x2
+  same x2 = x3
+  same y1 = y2
+,,1:0,412:ex: 400.00 PLN
+  balance of wb (PLN) at the end of 2026-03-09
+  from: opening v:opening[wb] = 500.00 PLN, 2026-01-01 start (version v, source s, locator "s")
+  2026-03-05:
+    y2.cash (past): hole: ?"y1 and y2 are one, but leg cash differs on 2026-03-05, 2026-03-09: 100.00 PLN (y1) and 100.00 PLN (y2)" (y1, y2)
+  2026-03-09:
+    y1.cash (past): -100.00 PLN
+  unfulfilled: y1
+  unfulfilled: y2
+  cut 2026-06-10
 ,19:fixes/t231rv1/p16/b,13:fixes-t231rv1,28:run r.tally up.tally --ask b,1201:7:r.tally,1025:model p16
   tally 2
   on 2026-06-10
@@ -272981,6 +276190,63 @@ version w
   known 2026-04-01
   replace a2 = 100.00 PLN "what if"
 ,,1:0,179:b: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-05-07: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,20:fixes/t231rv1/p16/bs,13:fixes-t231rv1,29:run r.tally up.tally --ask bs,1201:7:r.tally,1025:model p16
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a1: money PLN
+input a2: money PLN
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d2
+  at d2
+  leg cash from world to wallet amount a2
+
+ask b: bal(wallet, 2026-06-30)
+ask bs: bal(wallet, 2026-06-30) in up
+ask bs3: bal(wallet, 2026-03-31) in up
+ask pa: bal(wallet, 2026-06-30) with a2 = 100.00 PLN
+ask pa3: bal(wallet, 2026-03-31) with a2 = 100.00 PLN
+ask ph3: bal(wallet, 2026-03-31) with a2 = 120.00 PLN
+ask pd: bal(wallet, 2026-06-30) with d2 = 2026-03-05
+ask d: diff(bal(wallet, 2026-06-30)) in up against p16
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+,8:up.tally,144:scenario up over p16
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,82:bs: 100.00 PLN
+  world: up
   unfulfilled: in1
   unfulfilled: in2
   cut 2026-06-10
@@ -273039,6 +276305,63 @@ version w
 ,,1:0,174:bs3: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-05-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
   world: up
   unfulfilled: in1
+  cut 2026-06-10
+,20:fixes/t231rv1/p16/pa,13:fixes-t231rv1,29:run r.tally up.tally --ask pa,1201:7:r.tally,1025:model p16
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a1: money PLN
+input a2: money PLN
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d2
+  at d2
+  leg cash from world to wallet amount a2
+
+ask b: bal(wallet, 2026-06-30)
+ask bs: bal(wallet, 2026-06-30) in up
+ask bs3: bal(wallet, 2026-03-31) in up
+ask pa: bal(wallet, 2026-06-30) with a2 = 100.00 PLN
+ask pa3: bal(wallet, 2026-03-31) with a2 = 100.00 PLN
+ask ph3: bal(wallet, 2026-03-31) with a2 = 120.00 PLN
+ask pd: bal(wallet, 2026-06-30) with d2 = 2026-03-05
+ask d: diff(bal(wallet, 2026-06-30)) in up against p16
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+,8:up.tally,144:scenario up over p16
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,96:pa: 100.00 PLN
+  pinned: a2 = 100.00 PLN
+  unfulfilled: in1
+  unfulfilled: in2
   cut 2026-06-10
 ,21:fixes/t231rv1/p16/pa3,13:fixes-t231rv1,30:run r.tally up.tally --ask pa3,1201:7:r.tally,1025:model p16
   tally 2
@@ -273204,6 +276527,65 @@ version w
   replace a2 = 100.00 PLN "what if"
 ,,1:0,194:pd: ?"in1 and in2 are one, but leg cash differs on 2026-03-05: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
   pinned: d2 = 2026-03-05
+  unfulfilled: in1
+  unfulfilled: in2
+  cut 2026-06-10
+,19:fixes/t231rv1/p16/d,13:fixes-t231rv1,28:run r.tally up.tally --ask d,1201:7:r.tally,1025:model p16
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a1: money PLN
+input a2: money PLN
+
+move in1: transfers
+  on d1
+  at d1
+  leg cash from world to wallet amount a1
+move in2: transfers
+  on d2
+  at d2
+  leg cash from world to wallet amount a2
+
+ask b: bal(wallet, 2026-06-30)
+ask bs: bal(wallet, 2026-06-30) in up
+ask bs3: bal(wallet, 2026-03-31) in up
+ask pa: bal(wallet, 2026-06-30) with a2 = 100.00 PLN
+ask pa3: bal(wallet, 2026-03-31) with a2 = 100.00 PLN
+ask ph3: bal(wallet, 2026-03-31) with a2 = 120.00 PLN
+ask pd: bal(wallet, 2026-06-30) with d2 = 2026-03-05
+ask d: diff(bal(wallet, 2026-06-30)) in up against p16
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-05-07 "s"
+  a1 = 100.00 PLN "s"
+  a2 = 130.00 PLN "s"
+  same in1 = in2
+,8:up.tally,144:scenario up over p16
+  tally 2
+  from 2026-04-01
+
+version w
+  cite s
+  governs 2026-04..
+  known 2026-04-01
+  replace a2 = 100.00 PLN "what if"
+,,1:0,325:d: diff in up against p16: 1 changed, 0 added, 0 removed, 0 unchanged
+  changed bal(wallet, 2026-06-30): 100.00 PLN against ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-05-07: 100.00 PLN (in1) and 130.00 PLN (in2)" (in1, in2)
+  world: p16
+  world: up
   unfulfilled: in1
   unfulfilled: in2
   cut 2026-06-10

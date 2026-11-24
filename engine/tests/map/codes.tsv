@@ -273,10 +273,10 @@ LOAD-MISSING	L §8.3	M0	missing() outside the when of a cited rule	1	M0	codes/m0
 LOAD-MISSING	L §8.3	M0	missing(<r>): <r> is not a read of an input	1	M0	codes/m0/basic/missing-read
 LOAD-ORIENT	L §8.3	M0	*	1	M0	codes/m0/basic/orient
 LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/basic/orient
-RUN-NONE	L §8.4	S	*	32	S	kernel/g12/members
-RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate, comparison with a value, a place, a quantity, a field read of it, the level of quantile>	5	M1	codes/m1/rules/none
+RUN-NONE	L §8.4	S	*	33	S	kernel/g12/members
+RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate, comparison with a value, a place, a quantity, a field read of it, the level of quantile>	4	M1	codes/m1/rules/none
 RUN-NONE	L §8.4	S	never in <a use>	17	S	kernel/g12/members
-RUN-NONE	L §8.4	S	<m>[k] doesn't exist: a field read of it	8	M1	m1/fixes/g12/r_p_mr2_q4
+RUN-NONE	L §8.4	S	<m>[k] doesn't exist: a field read of it	10	M1	m1/fixes/g12/r_p_mr2_q4
 RUN-NONE	L §8.4	S	?	2	M1	m1/fixes/g3/f2_where_none_ties_a
 RUN-NOT-INT	L §8.4	S	*	2	S	kernel/g14/past_64_counts
 RUN-NOT-INT	L §8.4	S	<value> is not an integer	2	S	kernel/g14/past_64_counts
@@ -314,7 +314,7 @@ RUN-LIMIT	L §8.4	S	a day comes before 0001-01-01	6	S	kernel/g14/days
 RUN-LIMIT	L §8.4	S	<a> .. <b> holds more than 1 000 000 keys	9	S	kernel/g14/day_range_end
 RUN-DIV	L §8.4	S	*	99	S	kernel/g1/text
 RUN-DIV	L §8.4	S	division by zero	99	S	kernel/g1/text
-RUN-DOMAIN	L §8.4	S	*	54	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	*	53	S	kernel/g1/rate_duration
 RUN-DOMAIN	L §8.4	S	ln, sqrt or pow outside its domain	0	-	-
 RUN-DOMAIN	L §8.4	S	<operation> with a step <s> that is not positive	1	S	kernel/g1/step
 RUN-DOMAIN	L §8.4	S	a stepped range whose step <s> is not positive	5	M1	m1/fixes/g13/r_p_dz
@@ -324,7 +324,7 @@ RUN-DOMAIN	L §8.4	S	<code> is not a <family> code	0	-	-
 RUN-DOMAIN	L §8.4	S	of <q> at <x>, which keeps no labels of its sort	0	-	-
 RUN-DOMAIN	L §8.4	S	calendar <c> has no business day	3	S	kernel/g14/calendar
 RUN-DOMAIN	L §8.4	S	known <d> is after the model's on <on>	1	M1	m1/r5/e11_cut_computed_after_on
-RUN-DOMAIN	L §8.4	S	?	40	S	kernel/g1/rate_duration
+RUN-DOMAIN	L §8.4	S	?	39	S	kernel/g1/rate_duration
 RUN-UNDECIDED	L §8.4	M6	*	0	-	-
 RUN-UNDECIDED	L §8.4	M6	<function> to <u> not decided within the precision cap	0	-	-
 RUN-PARAM	L §8.4	M6	*	1	M6	I:M:CH-03

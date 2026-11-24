@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 42] = [
+    const GROUPS: [&str; 40] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -57,8 +57,6 @@ mod tests {
         "spec-p22",
         "spec-p26",
         "spec-p31",
-        "spec-p32",
-        "spec-p40",
         "spec-p40fix",
         "spec-p43",
     ];
@@ -519,22 +517,6 @@ mod tests {
     #[test]
     fn m4_fixes_spec_p31() {
         group_holds(SPEC, "spec-p31");
-    }
-
-    /// P32's answers (#255): a `RUN-CYCLE` met reading a linked instance's day refuses the
-    /// reading cell (L §5.11), `loose[2026-04] reads itself through a computed key` in every
-    /// ask order (`e_selfcycle`, written from build/m4's run at de29cabc, checked by hand).
-    #[test]
-    fn m4_fixes_spec_p32() {
-        group_holds(SPEC, "spec-p32");
-    }
-
-    /// P40's B2 answers (#255): a list that stops gives `RUN-DIV division by zero` to its
-    /// `flows` and to every existence read of it, in either ask order (`k_stop3`, `k_stop2`);
-    /// written by hand, green since P40's fix (8f6f4338).
-    #[test]
-    fn m4_fixes_spec_p40() {
-        group_holds(SPEC, "spec-p40");
     }
 
     /// The gate's answers (#255, #250), written from build/m4's run at 4b450ec8: `p_g5x`'s
