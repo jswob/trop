@@ -243,6 +243,11 @@ impl Engine {
                 return Err(Stop::Refused(e));
             }
             if i.status == Status::Modelled {
+                // its realised movement rests on the links of the rows that fulfil it: a refused
+                // one refuses it (L §5.19 Links, §8.4; tally 2.3.1 R2, C-13.6, rulings 16 Q1)
+                if let Some(err) = self.refused_link(m, &i.id, ctx.cut)? {
+                    return Err(Stop::Refused(err));
+                }
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
                 // what decided its existence at its point, explained (tally 2.3.1 R2, G2)
                 self.trace_link_decided(m, &i.id, ctx)?;
