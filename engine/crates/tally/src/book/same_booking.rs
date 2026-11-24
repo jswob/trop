@@ -158,18 +158,12 @@ impl Engine {
                         .push(waiting);
                 }
                 EndBook::Hole(h) => {
-                    let Some(p) = end.place() else {
+                    if end.place().is_none() {
                         continue;
-                    };
-                    let mut ent = Ent::new(at, Change::Hole(h));
-                    ent.mv = Some(mover.id().to_owned());
-                    ent.leg = Some(lg.name.clone());
-                    ent.reg = reg.to_vec();
-                    ent.coll = Some(coll.clone());
+                    }
                     let unit = lg.unit.clone().unwrap_or_else(|| ALL.to_owned());
-                    let walk = self.walk_mut(id)?;
-                    walk.worth_add(&unit, None)?;
-                    walk.add(m, p, &unit, ent)?;
+                    self.walk_mut(id)?.worth_add(&unit, None)?;
+                    self.same_entry(m, id, (mover, lg, end), (at, reg, coll), Change::Hole(h))?;
                 }
             }
             *on = false;
@@ -177,8 +171,9 @@ impl Engine {
         Ok(mask)
     }
 
-    /// An entry `change` of `mover`'s leg `lg` at its end `end`, a movement of two days' first
-    /// day or last (tally 2.3.1 R1, N245.21). L §6.1, E §4.2.
+    /// An entry `change` of `mover`'s leg `lg` at its end `end`: the group's `HOLE-SAME` hole,
+    /// or a movement of two days' first day, a day between, or its last (tally 2.3.1 R1,
+    /// N245.21). L §6.1, E §4.2.
     ///
     /// # Errors
     ///
