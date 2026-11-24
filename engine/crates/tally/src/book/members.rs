@@ -897,6 +897,13 @@ impl Engine {
                 }
             }
             Moving::Obs(o) => {
+                // its link not judged yet, its `fulfils` is read before its record's verdict
+                // (tally 2.3.1 rulings 16 Q5)
+                if name == "fulfils"
+                    && let Some(e) = self.fulfils_awaited(o, ctx)?
+                {
+                    return Err(Stop::Refused(e));
+                }
                 if let Some(e) = self.obs_err(m, o, ctx.cut)? {
                     return Err(Stop::Refused(e));
                 }
@@ -1187,6 +1194,23 @@ impl Engine {
             return Ok(None);
         }
         self.same_hole(m, row, &Fact::Day, cut)
+    }
+
+    /// The refusal of a read of observation `o`'s `fulfils` inside a decision before the point
+    /// where the link of the instance it names is judged: `RUN-ORDER`, the reader and that
+    /// decision reading each other ([`Engine::link_awaited`]); none outside a decision, or
+    /// where the link is judged already (L §5.19 Links, §5.14.2 Cycles; tally 2.3.1 rulings
+    /// 16 Q5).
+    ///
+    /// # Errors
+    ///
+    /// As [`Engine::link_awaited`].
+    fn fulfils_awaited(&self, o: &Obs, ctx: Ctx) -> Result<Option<Refusal>, Stop> {
+        let (Some(at), Some(Fulfils::Instance(mid, keys))) = (ctx.at, &o.fulfils) else {
+            return Ok(None);
+        };
+        let tid = super::observe::inst_id(mid, keys);
+        self.link_awaited(mid, &tid, at, ctx.cut)
     }
 
     /// What a movement's `fulfils` names at the cut: the instance or the adjustment, or none

@@ -26,7 +26,7 @@ use crate::base::{Code, Refusal, Run as RunCode};
 use crate::book::Obs;
 use crate::eval::{Collected, Ctx, Engine, Entry};
 use crate::hole::spread;
-use crate::model::{KeyVal, MoveInfo, Reality, Target, Value};
+use crate::model::{KeyVal, MoveInfo, NodeKind, Reality, Target, Value};
 use crate::syntax::{Certainty, Stop};
 use crate::time::Day;
 
@@ -720,6 +720,33 @@ impl Engine {
         // the ends stated same as this decision that waited for its point (L §6.1)
         self.same_release(m, id, ix)?;
         Ok(ix)
+    }
+
+    /// `RUN-ORDER` for a decision run at point `at` that reads `o.fulfils` of a row linked to
+    /// decision instance `tid` of move `mid`, whose link is judged at its own point and which
+    /// hasn't run yet: the link's verdict waits on a decision after the reader, so the two
+    /// read each other (L §5.14.2 Cycles, §5.19 Links; tally 2.3.1 C-9, rulings 16 Q5).
+    ///
+    /// # Errors
+    ///
+    /// `ENGINE-INVARIANT` for a walk the engine lacks.
+    pub(crate) fn link_awaited(
+        &self,
+        mid: &str,
+        tid: &str,
+        at: WalkAt,
+        cut: Day,
+    ) -> Result<Option<Refusal>, Stop> {
+        if !self.links_at_point.contains(&(cut, tid.to_owned()))
+            || self.chain_run(at.walk, tid)?.is_some()
+        {
+            return Ok(None);
+        }
+        let reader = self
+            .holder
+            .as_ref()
+            .filter(|n| n.kind == NodeKind::Move && n.id != mid);
+        Ok(reader.map(|n| mutual(&n.id, mid, at.point.day)))
     }
 
     /// What decided decision instance `tid`'s existence at its point of walk `id`, its `when`'s
@@ -1839,6 +1866,44 @@ version feb
             Some("dy: refused: RUN-NONE topup[2026-02] doesn't exist: a field read of it"),
             "{day:?}"
         );
+    }
+
+    #[test]
+    fn a_decision_reading_the_fulfils_of_a_row_linked_to_a_later_one_is_run_order() {
+        // L §5.19 Links, §5.14.2 Cycles (tally 2.3.1 rulings 16 Q5): chk on 02-03 reads
+        // `o.fulfils` of the row linked to topup[2026-02], whose link is judged at its point on
+        // 02-05: RUN-ORDER, whether the link stands there (600.00 PLN) or not (500.00 PLN); the
+        // rows are known on 01-15, before chk's point
+        let text = DEC_LINK
+            .replace("input d5: int\n", "input d5: int\n\ninput d3: int\n")
+            .replace("  d5 = 5 \"s\"\n", "  d5 = 5 \"s\"\n  d3 = 3 \"s\"\n")
+            .replace("  known 2026-03-01\n", "  known 2026-01-15\n")
+            .replace(
+                "ask loose:",
+                "move chk[m in month]: transfers\n  reads konto\n  on day_of(m, d3)\n  leg cash \
+                 from save to shop amount sum(o.cash.amount for o in bank over m where \
+                 o.fulfils == none) + 0 * bal(konto)\n\nask fc: flows(chk, 2026-02)\n\nask \
+                 loose:",
+            );
+        for lim in ["500.00 PLN", "600.00 PLN"] {
+            let given = vec![Given {
+                path: "dec_order_q5.tally".to_owned(),
+                bytes: Some(
+                    text.replace("lim = LIM \"s\"", &format!("lim = {lim} \"s\""))
+                        .into_bytes(),
+                ),
+            }];
+            let asks = Asks::Named(vec!["fc".to_owned()]);
+            let out = run(Files::new(given), &Request::new(asks)).expect("an answer");
+            assert_eq!(
+                out.lines().first().map(String::as_str),
+                Some(
+                    "fc: refused: RUN-ORDER decisions chk and topup read each other on 2026-02-03"
+                ),
+                "{lim}: {:?}",
+                out.lines()
+            );
+        }
     }
 
     #[test]
