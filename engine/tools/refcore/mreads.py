@@ -718,6 +718,9 @@ def m_movements_of(self, dom, ctx, owner=None):
                 st = self.status(i, ctx)
             finally:
                 self.stack.pop()
+            if st == 'none':
+                # read to be left out: its `when`'s rows are the binding's where its day is in the span (as above)
+                c_st.rows.update(_rows_only(getattr(i, 'coll', None)).rows)
             stc.append((i, c_st))
             if st in ('none', 'modelled'):
                 # the binding read its day to leave it out, so the pins that day took are the binding's reads too
@@ -784,6 +787,12 @@ def m_movements_of(self, dom, ctx, owner=None):
                     self.hole_day_dec_body(m.moves[q], i, ctx)
                     out.append(i)
                     continue
+                if r is not None and (r.exists is False or getattr(r, 'status', None) == 'none'):
+                    # read to be left out: its reads' rows are the binding's where its day is in the span (the third
+                    # mechanism; movement_members merges stc's by day)
+                    rc = _rows_only(getattr(r, 'coll', None))
+                    rc.rows.update(_rows_only(getattr(r, 'exist_coll', None)).rows)
+                    stc.append((r, rc))
                 if r is None or r.exists is False or getattr(r, 'status', None) in ('modelled', 'none'):
                     continue
                 if getattr(r, 'status', None) == 'uncertain' and not ctx.unc:
@@ -1150,12 +1159,25 @@ def m_read_state(self, w, place, unit, key):
 LATER_KINDS = ('pinned', 'assumed')
 
 
+def _rows_only(c):
+    """A collector holding c's rows alone (no register line), for inputs-of's read set."""
+    from .evaluate import Coll
+    out = Coll()
+    if c is not None:
+        out.rows.update(c.rows)
+    return out
+
+
 def m_day_reads(self, dc):
     """What the reads that put a movement's day outside a read list there: the pins and the assumed rows N1 names
     (a law date's held: rows are the statement's too, but 60 stored records would move: W8's hand-off)."""
     for r in (dc.reg if dc is not None else ()):
         if r[0] in LATER_KINDS:
             self.reg(r)
+    if dc is not None and self.cur is not None:
+        # the rows those reads read are the read set's, which inputs-of lists (L §8.2 One read set: "the reads that
+        # decided a movement doesn't count"; tally 2.3.1 R2, explain's third mechanism); the register as above
+        self.cur.rows.update(dc.rows)
 
 
 def m_later_reads(self, w, place, outside):
