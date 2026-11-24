@@ -1774,8 +1774,8 @@ def m_link_tuple(self, mi, keys, ctx, traced=False):
     """The binding tuple of move mi at these keys, at the ask's cut, or None where the instance doesn't exist: its
     existence cell (L §5.14, §5.19; tally 2.3.1 R6), read from this tuple's keys' `where`s, then its day, then its
     `when`, never its amounts or another tuple's: a false one or a `none` day ends the read (no instance), whatever
-    came before it; a refused one refuses a decision's link with it (_RefusedLink; a plan's stands, the writer's
-    STOP-REPORT 2), a hole one doesn't, and the instance is taken as existing, its link judged where its instance
+    came before it; a refused one refuses the link with it, plan or decision (_RefusedLink; rulings 16 Q1, 18),
+    a hole one doesn't, and the instance is taken as existing, its link judged where its instance
     is. A day or `when` that reads this existence again is a cycle (RUN-CYCLE)."""
     tctx = self.tctx(ctx)
     kk = tuple(vkey(k) for k in keys)
@@ -1797,11 +1797,10 @@ def m_link_tuple(self, mi, keys, ctx, traced=False):
                 return None
             if isinstance(st, tuple) and st[0] == 'domainhole':
                 return env
-            # a refused existence refuses the link with it (rulings 16 Q1), a decision's here; a plan's link stands, as
-            # rulings 15 and P44's stored answers have it (the writer's STOP-REPORT 2, W2b); a false or `none` read
-            # after it still ends the read (R6's order)
+            # a refused existence refuses the link with it, plan or decision, a refused `where` included (rulings 16
+            # Q1, 18); a false or `none` read after it still ends the read (R6's order)
             bad = st[1] if _refd(st) else None
-            only_dec = not mi.decision
+            only_dec = False
             try:
                 law = self.move_law(mi, env, tctx)
             except TallyError as e:

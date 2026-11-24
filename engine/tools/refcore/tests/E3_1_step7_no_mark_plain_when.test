@@ -1,7 +1,9 @@
 # tally 2.3.1 rulings 15 (P8): no plan of c4_when reaches a running-read decision's existence through a row
 # (dd's `when` reads ok only; dr's rows are read by asks), so it loads: emx, exm, edw, qdw RUN-ORDER `decisions
-# dd and dr read each other on 2026-02-05` (dr's link judged at its point, refused with it), qo the back-pay
-# hole. Before (W2): the whole text LOAD-READS `own reaches … dd`.
+# dd and dr read each other on 2026-02-05` (dr's link judged at its point, refused with it). qo is RUN-DIV:
+# bank2[o2] fulfils own[2026-03], whose `where` is refused, so its link is refused with it and ln's sum over
+# `o.fulfils == none` with it (rulings 16 Q1 whole, 18, over 15's back-pay hole; re-stored at W2c). Before
+# (W2): the whole text LOAD-READS `own reaches … dd`.
 === c4_when.tally
 model c4_when
   tally 2
@@ -182,7 +184,7 @@ ask en: explain ln[2026-02]
 
 ask ed: explain dl[2026-02]
 === expect qo emx exm edw qdw
-qo: ?"own[2026-02] on 2026-02-05 changed after it was paid (version febk); is back pay due, and when?" (own[2026-02])
+qo: refused: RUN-DIV division by zero
   unfulfilled: own[2026-02]
   cut 2026-04-20
 emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
@@ -256,13 +258,9 @@ emx: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
             rule guessed: won
               (v:guess: see [14])
             rule seen: not applicable
-        [29] loose[2026-02] = 0.00 PLN, law date 2026-02-01
+        [29] loose[2026-02] = refused: RUN-DIV division by zero, law date 2026-02-01
             rule guessed: beaten by seen
             rule seen: won
-              (v:ten: see [5])
-              (v:dz[2026-03]: see [8])
-              (v:d5: see [3])
-              (v:ok[2026-03]: see [24])
         [30] loose[2026-03] = 1.00 PLN, law date 2026-03-01
             rule guessed: won
               (v:guess: see [14])
@@ -345,13 +343,9 @@ exm: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
             rule guessed: won
               (v:guess: see [12])
             rule seen: not applicable
-        [28] loose[2026-02] = 0.00 PLN, law date 2026-02-01
+        [28] loose[2026-02] = refused: RUN-DIV division by zero, law date 2026-02-01
             rule guessed: beaten by seen
             rule seen: won
-              (v:ten: see [2])
-              (v:dz[2026-03]: see [5])
-              (v:d5: see [8])
-              (v:ok[2026-03]: see [23])
         [29] loose[2026-03] = 1.00 PLN, law date 2026-03-01
             rule guessed: won
               (v:guess: see [12])
@@ -435,13 +429,9 @@ edw: refused: RUN-ORDER decisions dd and dr read each other on 2026-02-05
             rule guessed: won
               (v:guess: see [12])
             rule seen: not applicable
-        [28] loose[2026-02] = 0.00 PLN, law date 2026-02-01
+        [28] loose[2026-02] = refused: RUN-DIV division by zero, law date 2026-02-01
             rule guessed: beaten by seen
             rule seen: won
-              (v:ten: see [3])
-              (v:dz[2026-03]: see [6])
-              (v:d5: see [2])
-              (v:ok[2026-03]: see [23])
         [29] loose[2026-03] = 1.00 PLN, law date 2026-03-01
             rule guessed: won
               (v:guess: see [12])
