@@ -1,0 +1,56 @@
+# tally 2.3.1 S6, Q1.11, Q1.12 (L §5.11's aggregate paragraph: the tuple argmin, argmax, first or last returns
+# compares with == and != key by key and stands in a key position of the same indexes): t1 false, t2, t3 true;
+# v[argmin(…)] 3.00 PLN, v[first(…)] 5.00 PLN. S17: mean of rates keeps their unit (m1). Before: LOAD-UNIT
+# `(key ks, key js) and (key ks, key js) compared` for the whole text.
+=== tuple.tally
+model tuple
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+index ks = [k1, k2, k3]
+index js = [j1, j2]
+input v[k in ks, j in js]: money PLN
+input r[k in ks]: rate
+input best_k: key ks
+input best_j: key js
+
+
+ask t1: argmin(v[k, j] for k in ks, j in js) == argmax(v[k, j] for k in ks, j in js)
+ask t2: argmin(v[k, j] for k in ks, j in js) != argmax(v[k, j] for k in ks, j in js)
+ask t3: argmin(v[k, j] for k in ks, j in js) == argmin(v[k, j] for k in ks, j in js)
+ask t4: v[argmin(v[k, j] for k in ks, j in js)]
+ask t5: v[first(k in ks, j in js where v[k, j] > v[k2, j1])]
+ask m1: mean(r[k] for k in ks)
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  v[k1, j1] = 5.00 PLN "s"
+  v[k1, j2] = 7.00 PLN "s"
+  v[k2, j1] = 3.00 PLN "s"
+  v[k2, j2] = 9.00 PLN "s"
+  v[k3, j1] = 4.00 PLN "s"
+  v[k3, j2] = 6.00 PLN "s"
+  r[k1] = 2 %/year "s"
+  r[k2] = 4 %/year "s"
+  r[k3] = 6 %/year "s"
+  best_k = k2 "s"
+  best_j = j1 "s"
+=== expect
+m1: 0.04 1/year
+  cut 2026-10-18
+t1: false
+  cut 2026-10-18
+t2: true
+  cut 2026-10-18
+t3: true
+  cut 2026-10-18
+t4: 3.00 PLN
+  cut 2026-10-18
+t5: 5.00 PLN
+  cut 2026-10-18

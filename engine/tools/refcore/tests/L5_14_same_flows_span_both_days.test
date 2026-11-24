@@ -77,6 +77,7 @@ version rd
   stated[w2] = 250.00 PLN at 2026-04-15 end "s"
 === expect f_a f_b f_n f_6 f_x f_y
 f_a: ?"in1 and in2 are one, but leg cash differs on 2026-03-05, 2026-03-07: 100.00 PLN (in1) and 100.00 PLN (in2)" (in1, in2)
+  unfulfilled: in2
   cut 2026-06-10
 f_b: 100.00 PLN
   unfulfilled: in1

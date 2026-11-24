@@ -129,7 +129,9 @@ class PinVal:
     def key(self):
         if self.kind == 'conflict':
             return (self.kind, self.item, self.keys, self.fields, self.value, self.layer)
-        return (self.kind, self.item, self.keys, self.fields, vkey(self.value), self.layer)
+        # two pins are two entries, as two rows are, even where one hole is both values (L §5.11 A pin is a row,
+        # tally 2.3.1 R3, Q2.2): each is memoised and listed as its own
+        return (self.kind, self.item, self.keys, self.fields, vkey(self.value), self.layer, self.text)
 
     def __hash__(self):
         return hash(self.key())
@@ -255,6 +257,11 @@ class Engine:
 
     def e_paren(self, n, env, ctx):
         return self.ev(n.e, env, ctx)
+
+    def e_tupitem(self, n, env, ctx):
+        """One key of the tuple argmin, argmax, first or last returns, at its position (L §5.11; tally 2.3.1 S6)."""
+        v = self.ev(n.e, env, ctx)
+        return v.items[n.i] if isinstance(v, Tup) else v
 
     def e_num(self, n, env, ctx):
         t = n._t
@@ -2454,6 +2461,9 @@ class Engine:
             # things and keys compare by == and != whatever their order (L §5.7, §5.6); a movement is a thing of its
             # kind (L §1, §5.14: "A movement ... is a thing of its kind"), one by its stable id (L §2.5) (MC-X-F9)
             return (a.key() == b.key()) == (op == '==')
+        if eq and isinstance(a, Tup) and isinstance(b, Tup):
+            # a returned tuple is its keys: equal where every key is (L §5.11's aggregate paragraph; tally 2.3.1 S6)
+            return (a.key() == b.key()) == (op == '==')
         c = self.cmp3(a, b, n)
         return {'==': c == 0, '!=': c != 0, '<': c < 0, '<=': c <= 0, '>': c > 0, '>=': c >= 0}[op]
 
@@ -2832,7 +2842,8 @@ class Engine:
                 c = Coll()
                 self.stack.append(c)
                 try:
-                    v = self.ev(p.value, env, ctx)
+                    # a literal pin is a row of its target, read at load (L §5.11 A pin is a row, check.pin_row)
+                    v = p._rowval if getattr(p, '_rowval', None) is not None else self.ev(p.value, env, ctx)
                 finally:
                     self.stack.pop()
                 v = coerce_to(v, p.ty)
@@ -3138,7 +3149,11 @@ class Engine:
             raise too_many()
         n = 0
         while cur <= stop:
-            out.append(range_key(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1)))
+            v = range_key(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1))
+            if getattr(a, 'rate', False):
+                # a rate is a num with a period: a range over rates holds rates (L §3.3; tally 2.3.1 S21, Q2.4)
+                v = Num(v.q, v.u, isint=v.isint, rate=True)
+            out.append(v)
             cur += step
             n += 1
             if n > 1000000:

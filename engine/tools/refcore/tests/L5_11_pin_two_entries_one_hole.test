@@ -1,0 +1,57 @@
+# tally 2.3.1 R3, Q2.2: two per-tuple pins of one target are two entries, as two rows are, even where one hole
+# is both values: at k2 both `pinned:` lines print (q_one, q_for). Before: one line, the memo of the first
+# pin's cell reused for the second.
+=== p4_holeone.tally
+model p4
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+
+index ks = [k1, k2]
+
+input b[k in ks]: money PLN
+input c[k in ks]: money PLN
+input x: money PLN
+
+def dbl[k in ks]: money PLN = b[k] + b[k]
+def two[k in ks]: money PLN = (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x})
+def twoc: money PLN = (dbl[k2] as if {b[k2] = c[k2]}) - (dbl[k2] as if {b[k2] = c[k2] + x})
+
+ask q_one: two[k] for k in ks
+ask q_for: (dbl[k] as if {b[k] = c[k]}) - (dbl[k] as if {b[k] = c[k] + x}) for k in ks
+ask q_c: twoc
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  b[k1] = 100 PLN "s"
+  b[k2] = 200 PLN "s"
+  c[k1] = 1 PLN "s"
+  c[k2] = ?"which c?" "s"
+  x = 5 PLN "s"
+=== expect q_one q_for q_c
+q_one (k = k1): -10.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_one (k = k2): ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_for (k = k1): -10.00 PLN
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_for (k = k2): ?"which c?" (c[k2])
+  pinned: b[k] = c[k] + x for k in ks
+  pinned: b[k] = c[k] for k in ks
+  cut 2026-10-25
+q_c: ?"which c?" (c[k2])
+  pinned: b[k2] = ?"which c?" (c[k2])
+  cut 2026-10-25

@@ -1,0 +1,105 @@
+# tally 2.3.1 rulings 16 Q2's second half (C-9): bank[r1] and bank[r3] (2026-02-02, 03) fulfil topup[2026-02],
+# which doesn't exist at its point (02-05), so their links are refused, from their own day; sweep[2026-02],
+# walked on 02-04 between, reads konto with them refused, so its `when` and its flows are refused (fc); a
+# reading after the refused rows states the balance (statement C: b04, b06 1 040.00 PLN, the anchor's
+# difference refused). Known 02-04, before the point, the rows stand (k4fc 50.00 PLN). Before: fc 0.00 PLN,
+# the anchor's difference 190.00 PLN.
+=== q2_reset.tally
+model q2d
+  tally 2
+  on 2026-04-20
+  start 2026-01-01
+  end 2026-05-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index month = month 2026-01..2026-05
+place konto: accounts PLN lives 2026-01-01..
+place save: accounts PLN lives 2026-01-01..
+place shop: outside lives 1900-01-01..
+input bank: observed
+input lim: money PLN
+input amt: money PLN
+input d5: int
+input fm: month
+input d4: int
+input hi: money PLN
+
+move sweep[m in month]: transfers
+  reads konto
+  on day_of(m, d4)
+  when bal(konto) > hi
+  leg cash from konto to save amount hi
+
+move topup[m in month]: transfers
+  reads konto
+  on day_of(m, d5)
+  when bal(konto) < lim
+  leg cash from save to konto amount amt
+
+
+ask fc: flows(sweep, fm)
+ask fc1: flows(sweep, 2026-01)
+ask f: flows(topup, fm)
+ask b01: bal(konto, 2026-02-01)
+ask b04: bal(konto, 2026-02-04)
+ask b06: bal(konto, 2026-02-06)
+ask l04: last(stated[konto], 2026-02-04)
+ask k4fc: flows(sweep, fm) as known 2026-02-04
+ask k4b: bal(konto, 2026-02-04) as known 2026-02-04
+def fs: money PLN = flows(sweep, fm)
+ask efc: explain fs
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[save] = 5 000.00 PLN at 2026-01-01 start "s"
+  lim = 500.00 PLN "s"
+  amt = 400.00 PLN "s"
+  d5 = 5 "s"
+  fm = 2026-02 "s"
+  d4 = 4 "s"
+  hi = 50.00 PLN "s"
+
+version fa
+  cite s
+  governs 2026-02-01..2026-02-04
+  known 2026-02-04
+  covers konto
+  bank[r1] = (on: 2026-02-02, kind: transfers, leg cash from save to konto amount 200.00 PLN, fulfils: topup[2026-02]) "half one"
+  bank[r3] = (on: 2026-02-03, kind: transfers, leg cash from save to konto amount 200.00 PLN, fulfils: topup[2026-02]) "half two"
+
+version fb
+  cite s
+  governs 2026-02-05..2026-02-28
+  known 2026-03-01
+  covers konto
+  bank[r4] = (on: 2026-02-07, kind: transfers, leg cash from save to konto amount 100.00 PLN, fulfils: topup[2026-02]) "late part"
+  bank[r2] = (on: 2026-02-10, kind: transfers, leg cash from konto to shop amount 30.00 PLN) "loose"
+
+version rd
+  cite s
+  governs 2026-02-04..2026-02-04
+  known 2026-02-05
+  anchor konto
+  stated[konto] = 1 040.00 PLN at 2026-02-04 end "saldo"
+=== expect fc f b04 b06 k4fc
+fc: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: sweep[2026-01]
+  unfulfilled: topup[2026-01]
+  cut 2026-04-20
+f: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  cut 2026-04-20
+b04: 1 040.00 PLN
+  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  cut 2026-04-20
+b06: 1 040.00 PLN
+  anchor: konto 2026-02-04 end, stated 1 040.00 PLN, difference refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  cut 2026-04-20
+k4fc: 50.00 PLN
+  unfulfilled: sweep[2026-01]
+  unfulfilled: topup[2026-01]
+  cut 2026-02-04

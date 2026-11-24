@@ -1,0 +1,57 @@
+model points
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+index rows: open
+index ks = [k1, k2, k3]
+index ms = month 2026-01..2026-12
+index qs = month 2026-01..2026-12 by 3
+index ys = year 2020..2030
+input amt[r in rows]: int
+input a: key rows
+input b: key rows
+input m1: month
+input m2: month
+input q1: quarter
+input q2: quarter
+input y1: year
+input mk: key ms
+input qk: key qs
+input yk: key ys
+input kn: key ks
+input d1: date
+input d2: date
+
+ask c1: check m1 == m2
+ask c2: check q1 == q2
+ask c3: check y1 == yk
+ask c4: check mk == m2
+ask c5: check qk == m1
+ask c6: check a == b
+ask c7: check a == r2
+ask c8: check kn == k1
+ask c9: check d1 == d2
+ask c10: check kn == none
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt[r1] = 1 "s"
+  amt[r2] = 2 "s"
+  a = r1 "s"
+  b = r2 "s"
+  m1 = 2026-03 "s"
+  m2 = 2026-07 "s"
+  q1 = 2026-Q1 "s"
+  q2 = 2026-Q3 "s"
+  y1 = 2024 "s"
+  mk = 2026-02 "s"
+  qk = 2026-04 "s"
+  yk = 2021 "s"
+  kn = k3 "s"
+  d1 = 2026-01-05 "s"
+  d2 = 2026-01-09 "s"

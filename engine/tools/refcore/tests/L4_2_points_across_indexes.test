@@ -1,0 +1,150 @@
+# tally 2.3.1 R5 (the critic's keys.tally, C-6): `b + (a - b)` is a within one index (a5) and where b is a
+# period value; a key of a range `by 3` steps by its index (a1, c4), an integer range `by 10` is an int (b1,
+# b4); a check of a year and a `by 3` key, or a month and a `by 3` key, prints their difference as period
+# values (c1 -2, c2 -2). Before: c1, c2 printed none.
+=== keys.tally
+model keys
+  tally 2
+  on 2026-06-30
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+index tri = year 2026..2035 by 3
+index yrs = year 2026..2035
+index tens = 10..50 by 10
+index qs = month 2026-01..2026-12 by 3
+input y: year
+input mm: month
+input t[k in tri]: int
+input w[k in tens]: int
+
+ask a1: k + 1 for k in tri
+ask a2: y - k for k in tri
+ask a3: k + (y - k) for k in tri
+ask a4: k - j for k in tri, j in yrs where j == y
+ask a5: j + (k - j) for k in tri, j in yrs where j == y
+ask b1: k + 1 for k in tens
+ask b2: w[k + 1] for k in tens
+ask b3: w[k + 10] for k in tens where k < 50
+ask b4: k - j for k in tens, j in tens where j == 10
+ask c1: check y == k for k in tri where k == 2029
+ask c2: check mm == q for q in qs where q == 2026-04
+ask c3: q - mm for q in qs
+ask c4: q + 1 for q in qs
+ask c5: check q == q + 1 for q in qs where q == 2026-04
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  y = 2027 "s"
+  mm = 2026-02 "s"
+  t[2026] = 1 "s"
+  w[10] = 1 "s"
+  w[20] = 2 "s"
+  w[30] = 3 "s"
+  w[40] = 4 "s"
+  w[50] = 5 "s"
+=== expect
+a1 (k = 2026): 2029
+  cut 2026-06-30
+a1 (k = 2029): 2032
+  cut 2026-06-30
+a1 (k = 2032): 2035
+  cut 2026-06-30
+a1 (k = 2035): 2038
+  cut 2026-06-30
+a2 (k = 2026): 1
+  cut 2026-06-30
+a2 (k = 2029): -2
+  cut 2026-06-30
+a2 (k = 2032): -5
+  cut 2026-06-30
+a2 (k = 2035): -8
+  cut 2026-06-30
+a3 (k = 2026): 2029
+  cut 2026-06-30
+a3 (k = 2029): 2023
+  cut 2026-06-30
+a3 (k = 2032): 2017
+  cut 2026-06-30
+a3 (k = 2035): 2011
+  cut 2026-06-30
+a4 (k = 2026, j = 2027): -1
+  cut 2026-06-30
+a4 (k = 2029, j = 2027): 2
+  cut 2026-06-30
+a4 (k = 2032, j = 2027): 5
+  cut 2026-06-30
+a4 (k = 2035, j = 2027): 8
+  cut 2026-06-30
+a5 (k = 2026, j = 2027): 2026
+  cut 2026-06-30
+a5 (k = 2029, j = 2027): 2029
+  cut 2026-06-30
+a5 (k = 2032, j = 2027): 2032
+  cut 2026-06-30
+a5 (k = 2035, j = 2027): 2035
+  cut 2026-06-30
+b1 (k = 10): 11
+  cut 2026-06-30
+b1 (k = 20): 21
+  cut 2026-06-30
+b1 (k = 30): 31
+  cut 2026-06-30
+b1 (k = 40): 41
+  cut 2026-06-30
+b1 (k = 50): 51
+  cut 2026-06-30
+b2 (k = 10): refused: RUN-KEY 11 is outside tens
+  cut 2026-06-30
+b2 (k = 20): refused: RUN-KEY 21 is outside tens
+  cut 2026-06-30
+b2 (k = 30): refused: RUN-KEY 31 is outside tens
+  cut 2026-06-30
+b2 (k = 40): refused: RUN-KEY 41 is outside tens
+  cut 2026-06-30
+b2 (k = 50): refused: RUN-KEY 51 is outside tens
+  cut 2026-06-30
+b3 (k = 10): 2
+  cut 2026-06-30
+b3 (k = 20): 3
+  cut 2026-06-30
+b3 (k = 30): 4
+  cut 2026-06-30
+b3 (k = 40): 5
+  cut 2026-06-30
+b4 (k = 10, j = 10): 0
+  cut 2026-06-30
+b4 (k = 20, j = 10): 10
+  cut 2026-06-30
+b4 (k = 30, j = 10): 20
+  cut 2026-06-30
+b4 (k = 40, j = 10): 30
+  cut 2026-06-30
+b4 (k = 50, j = 10): 40
+  cut 2026-06-30
+c1 (k = 2029): differs: y = 2027, k = 2029, difference -2
+  cut 2026-06-30
+c2 (q = 2026-04): differs: mm = 2026-02, q = 2026-04, difference -2
+  cut 2026-06-30
+c3 (q = 2026-01): -1
+  cut 2026-06-30
+c3 (q = 2026-04): 2
+  cut 2026-06-30
+c3 (q = 2026-07): 5
+  cut 2026-06-30
+c3 (q = 2026-10): 8
+  cut 2026-06-30
+c4 (q = 2026-01): 2026-04
+  cut 2026-06-30
+c4 (q = 2026-04): 2026-07
+  cut 2026-06-30
+c4 (q = 2026-07): 2026-10
+  cut 2026-06-30
+c4 (q = 2026-10): 2027-01
+  cut 2026-06-30
+c5 (q = 2026-04): differs: q = 2026-04, q + 1 = 2026-07, difference -1
+  cut 2026-06-30

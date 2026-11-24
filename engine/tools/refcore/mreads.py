@@ -378,7 +378,12 @@ def m_mv_field(self, n, env, ctx):
             sh = (self.same_rows_hole(src, name, ctx, 'amount'), self.same_rows_hole(src, name, ctx, 'day'))
     if what == 'day':
         if isinstance(src, Inst) and (src.exists is False or getattr(src, 'status', None) == 'none'):
-            # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8)
+            # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8); an instance a later version made
+            # exist exists as known now, its day its own, as its legs read (made_to_exist_leg; E §5 step 1; one
+            # instance, one answer: g2/i3_later d2 beside x2 false)
+            if any(self.made_to_exist_leg(src, a.leg.name, ctx) is not None for a in self.adjust_move(src.move, ctx)
+                   if a.inst.id == src.id):
+                return src.day
             raise refuse('RUN-NONE', '%s doesn\'t exist: a field read of it' % v.id)
         return src.day
     if what == 'fulfils':
@@ -869,6 +874,23 @@ def once_by_same(m, out, ctx, owner=None):
     return [x for x in out if getattr(x, 'id', None) not in drop]
 
 
+def m_same_sides_reg(self, x, ctx):
+    """The other sides of instance x's `same` group, each unfulfilled one registered: one movement, its register every
+    side its line names (rulings 17 B)."""
+    g = same_groups(self.m, ctx).get(x.id)
+    if not g:
+        return
+    K = ctx.cut
+    by_id = dict((i.id, i) for i in self.plan_insts(ctx))
+    for y in g:
+        i = by_id.get(y)
+        if y == x.id or i is None or getattr(i, 'obs', None):
+            continue
+        if (not i.decision and i.status == 'past') or (
+                i.decision and day_lo(i.day) is not None and day_lo(i.day) < K):
+            self.reg(('unfulfilled', y))
+
+
 def m_same_kind_hole(self, x, kind, ctx):
     """L §6.1: "One movement has one base kind (P-2), so rows that state different kinds disagree: a binding over
     either kind that meets the movement is a HOLE-SAME hole naming both rows" (OQ-2).  A movement of a same group
@@ -1065,6 +1087,10 @@ def m_span_members(self, dom, sp, ctx, owner=None):
             elif isinstance(x, Inst) and x.decision and day_lo(x.day) is not None and day_lo(x.day) < K and \
                     not getattr(x, 'obs', None):
                 self.reg(('unfulfilled', x.id))
+            if isinstance(x, Inst):
+                # a `same` group binds once, by its first side (once_by_same); its register lists every side its
+                # line names, each unfulfilled one (rulings 17 B; p10 ny, p09 cnt)
+                self.same_sides_reg(x, ctx)
             if isinstance(x, Inst) and getattr(x, 'status', None) == 'uncertain':
                 self.reg(('uncertain', x.id))
             if x.coll is not None:
@@ -1911,8 +1937,13 @@ def m_flows_place_walk(self, w, limit, place, units, lo, sp, last, env, ctx, fk,
         prev_unsame = None
         for e in lg.ents:
             if prev_unsame is not None and e.kind == 'delta' and e.key == prev_unsame.key:
-                # the leg the late `unsame` books: its group may have fallen before the span, so the hole stands
+                # the leg the late `unsame` books: its group may have fallen before the span, so the hole stands; the
+                # side is still the read's, listed (rulings 17 B: every side its line names, p10 fa)
                 prev_unsame = None
+                for r in e.reg:
+                    self.reg(r)
+                if e.coll is not None:
+                    self.cur.merge(e.coll)
                 continue
             prev_unsame = None
             if lo < e.key <= limit and e.kind == 'hole' and e.qs in closing:
@@ -2622,6 +2653,13 @@ def m_c_observed(self, n, env, ctx):
         run = w.decs.get(v.id) if w is not None else None
         if run is not None and getattr(run, 'exist_coll', None) is not None:
             self.cur.merge(run.exist_coll)
+    if mi.decision and mi.decl.when is not None and ctx.walk is None:
+        # an instance whose existence is refused (its `when` in a RUN-ORDER cycle at its point, Walk.refused_run) is
+        # refused with every read of it, `observed` too (R6, B5; x/dl_chk5 ob); a decision with no `when` exists
+        # whatever its run, and `observed` reads its rows
+        run = self.mv_record(v, ctx)
+        if getattr(run, 'status', None) == 'refused' and getattr(run, 'err', None) is not None:
+            raise run.err
     bad = self.run_cache.get(('badlinks', self.wkey(ctx)), {}).get(v.id)
     if bad is not None:
         raise bad

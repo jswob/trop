@@ -1,0 +1,51 @@
+# tally 2.3.1 S1, #253 item 1, option A (L §5.11 step 3: a rule already beaten by an applicable rule is out and
+# defeats nothing; step 6, D-12's example): top beats mid, mid beats base; an applicable top leaves base
+# unbeaten beside it, RUN-CONFLICT (q1, e1), and so does a mid that doesn't apply (q3). Unchanged: a guard.
+=== beats_chain.tally
+model beats_chain
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+input top_on: bool
+input mid_on: bool
+input two: int
+input three: int
+
+def d: int
+  rule base = 1
+  rule mid beats base = two when mid_on
+  rule top beats mid = three when top_on
+
+ask q1: d
+ask q2: d with top_on = false
+ask q3: d with mid_on = false
+ask q4: d with top_on = false, mid_on = false
+ask e1: explain d
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  top_on = true "s"
+  mid_on = true "s"
+  two = 2 "s"
+  three = 3 "s"
+=== expect
+e1: refused: RUN-CONFLICT rules top and base both win for d on no law date
+  [1] d = refused: RUN-CONFLICT rules top and base both win for d on no law date
+  cut 2026-12-31
+q1: refused: RUN-CONFLICT rules top and base both win for d on no law date
+  cut 2026-12-31
+q2: 2
+  pinned: top_on = false
+  cut 2026-12-31
+q3: refused: RUN-CONFLICT rules top and base both win for d on no law date
+  cut 2026-12-31
+q4: 1
+  pinned: mid_on = false
+  pinned: top_on = false
+  cut 2026-12-31

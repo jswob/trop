@@ -1,0 +1,42 @@
+model pinrow
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+unit EUR: currency minor 0.01
+index ys = year 2020..2030
+input yk: key ys
+input g: num %/year
+input ratio: num
+input pct: num %
+input fx[u in currencies]: num PLN/u
+input x: money PLN
+
+def gg: num %/year = g + g
+
+ask y1: yk + 1 with yk = 2024
+ask y2: check yk == 2020 with yk = (2024)
+ask y3: yk as if {yk = 2021}
+ask g1: g with g = 5
+ask g2: gg with g = 5
+ask g3: g with g = 5 %/year
+ask r1: ratio with ratio = 50 %
+ask r2: ratio + ratio with ratio = 50 %
+ask p1: pct with pct = 5
+ask f1: fx[EUR] with fx[EUR] = 4.5
+ask x1: x with x = -(12.5)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  yk = 2021 "s"
+  g = 2 %/year "s"
+  ratio = 1 "s"
+  pct = 1 % "s"
+  fx[EUR] = 4.3 "s"
+  x = 1 PLN "s"

@@ -616,6 +616,16 @@ class Checker:
             if p.kind == 'law':
                 has_law_pin = True
         self.pin_ties(a.pins, sc)
+        # a line's `law D` and `as known D`, as a clause or a with pin, are its pins of the law date and the cut: two
+        # of one on a line are two pins of one cell (L §5.11 A pin is a row, §4.6 step 4; tally 2.3.1 R3, N245.4)
+        for kind, clause, word, cell in (('law', a.law, 'law', 'the law date'), ('known', a.known, 'as known',
+                                                                                    'the cut')):
+            # in the line's order: its with pins, then its clause
+            same = ['%s %s' % (kind, _txt(p.value)) for p in a.pins if p.kind == kind] + (
+                ['%s %s' % (word, _txt(clause))] if clause is not None else [])
+            if len(same) > 1:
+                raise LoadError('LOAD-OVERLAP', 'pins %s and %s of %s overlap at no keys' % (same[0], same[1], cell),
+                                a.loc)
         if a.law is not None:
             t = self.tc(a.law, sc)
             if not self.is_date(t):
@@ -777,7 +787,13 @@ class Checker:
                     if getattr(vb, 'k', None) == 'bind' and getattr(vb, '_src', None) is not None and \
                             vb not in used:
                         used.append(vb)
+        # in the text's order of the bindings, never the walk's (L §2.5; tally 2.3.1 S22, Q2.10)
+        order = [getattr(sv, 'node', None) for sv in sc.vars.values()]
+        used.sort(key=lambda vb: order.index(vb) if vb in order else len(order))
         p._pertuple = used
+        if self.pin_row(p, info, ty, sc):
+            self.edge(sc, (kind, info.id), 'pin')
+            return
         if self.pin_literal(p.value, ty, sc):
             self.edge(sc, (kind, info.id), 'pin')
             return
@@ -788,6 +804,47 @@ class Checker:
             self.tc(p.value, sc, expect=ty)
         self.assign(ty, p.value, p.loc, 'the pin of %s' % info.id, pin=True)
         self.edge(sc, (kind, info.id), 'pin')
+
+    def pin_row(self, p, info, ty, sc):
+        """A pin is a row of its target in its layer (L §5.11, tally 2.3.1 R3): a pin whose value is one literal (a
+        figure, signed or in ( ), a date, a month or a quarter) is read and refused as that row would be, by the
+        loader's row reader: a bare figure takes the target's type and unit (`with g = 5` on `num %/year` is
+        5 %/year), a four-digit figure at a year key that year, and a value the row would refuse is refused at load
+        (LOAD-KEY, LOAD-UNIT, LOAD-PRECISION). The value is kept on the pin (p._rowval) and pinned as a value."""
+        from .loader import convert_value
+        if ty is None or ty.k in ('dist', 'record'):
+            return False
+        node, sign, chain = p.value, 1, []
+        while node.k in ('paren', 'neg'):
+            chain.append(node)
+            if node.k == 'neg':
+                sign = -sign
+            node = node.e
+        if node.k not in ('num', 'date', 'month', 'quarter') or (sign < 0 and node.k != 'num'):
+            return False
+        if node.k == 'num':
+            if node.get('frac'):
+                raise LoadError('LOAD-PARSE', 'cannot parse: a fraction is allowed only in rows', node.loc)
+            self.lit_rule(sc, node, 'num', node.v * sign)
+            lit = Node('num', loc=node.loc, **{a: b for a, b in node.__dict__.items() if a not in ('k', 'loc')})
+            lit.v = node.v * sign
+            lit.text = ('-' if sign < 0 else '') + node.text
+        else:
+            lit = node
+        pattern = None
+        keys = p.target.keys or []
+        if keys and all(c is not None and c[0] == 'lit' for c in p.keyconv):
+            pattern = [('k', c[1]) for c in p.keyconv]
+        factor = getattr(info, 'unit_factor', Fraction(1)) if not p.fields else Fraction(1)
+        v = convert_value(self.m, lit, ty, p.loc, factor, info.id, binds=info.binds, pattern=pattern)
+        if pattern is not None and getattr(v, 'u', None) and any(b.startswith('$') for b, e in v.u):
+            # each key's unit, as a row at those keys has it (L §3.2 Per-unit prices)
+            env = {b.var: key_text(c[1]) for b, c in zip(info.binds, pattern)}
+            v = type(v)(v.q, U.subst(v.u, env))
+        p._rowval = v
+        for n in chain + [node]:
+            n._t = ty
+        return True
 
     def pin_literal(self, node, ty, sc):
         """A bare literal in a pin takes its target's declared type and unit (L §3.2 Inline figures: `with
@@ -855,6 +912,11 @@ class Checker:
 
     def t_paren(self, n, sc, expect):
         return self.tc(n.e, sc, expect)
+
+    def t_tupitem(self, n, sc, expect):
+        # one key of a returned tuple standing in a key position (check.read; tally 2.3.1 S6)
+        t = n.e._t if n.e._t is not None else self.tc(n.e, sc)
+        return t.items[n.i]
 
     def t_num(self, n, sc, expect):
         if n.unit:
@@ -1328,6 +1390,13 @@ class Checker:
     def read(self, n, kind, info, keys, sc):
         """A read of an input or def at keys (or a fill's output, writer 2)."""
         binds = info.binds
+        if len(keys) == 1 and len(binds) > 1 and keys is getattr(n, 'keys', None):
+            # the tuple argmin, argmax, first or last returns stands in a key position of the same indexes, its keys
+            # one per position (L §5.11's aggregate paragraph; tally 2.3.1 S6, Q1.12)
+            t0 = self.tc(keys[0], sc)
+            if t0.k == 'tuple' and len(t0.items) == len(binds):
+                src = keys[0]
+                keys[:] = [Node('tupitem', loc=src.loc, e=src, i=i) for i in range(len(binds))]
         if len(keys) != len(binds) and not (kind == 'input' and info.observed):
             raise LoadError('LOAD-KEY', 'wrong number of keys for %s: %d, not %d' % (info.id, len(keys), len(binds)),
                             n.loc)
@@ -2153,6 +2222,11 @@ class Checker:
         if lk == 'keylit' or rk == 'keylit':
             raise LoadError('LOAD-KEY', 'ambiguous key %s: nothing names its index' % (
                 lt.n if lk == 'keylit' else rt.n), loc)
+        if lk == 'tuple' and rk == 'tuple' and eq and len(lt.items) == len(rt.items) and all(
+                a.k == 'key' and b.k == 'key' and a.ix == b.ix for a, b in zip(lt.items, rt.items)):
+            # the tuple argmin, argmax, first or last returns is its keys: it compares with == and != key by key
+            # (L §5.11's aggregate paragraph; tally 2.3.1 S6, Q1.11)
+            return
         if lk == 'record' or rk == 'record':
             # L §3.1 (round 12): "Two records are never compared: ==, != and orders on them are refused (§8.4), and
             # their fields are compared instead; a test against none stays"

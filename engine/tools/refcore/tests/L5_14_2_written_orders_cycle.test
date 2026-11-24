@@ -1,0 +1,50 @@
+# tally 2.3.1 S11, N245.8 (L §5.14.2: a cycle of written orders is LOAD-ORDER, a move before itself its
+# smallest): save before spend, spend before top, top before save. Before: RUN-ORDER on 2026-01-15, the
+# orders standing as written.
+=== order_cycle.tally
+model order_cycle
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+unit PLN: currency minor 0.01
+input day: date
+input fee: money PLN
+place konto: accounts PLN lives 2025-01-01..
+place savings: accounts PLN lives 2025-01-01..
+place kasa: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+
+move save: transfers
+  on day
+  reads konto
+  before spend
+  leg cash from konto to savings amount min(bal(konto), fee)
+
+move spend: transfers
+  on day
+  reads kasa
+  before top
+  leg cash from kasa to world amount min(bal(kasa), fee)
+
+move top: transfers
+  on day
+  reads savings
+  before save
+  leg cash from savings to kasa amount min(bal(savings), fee)
+
+ask a: bal(kasa, 2026-01-15)
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  day = 2026-01-15 "s"
+  fee = 5.00 PLN "s"
+  opening[konto] = 100.00 PLN at 2026-01-01 start "s"
+  opening[savings] = 0.00 PLN at 2026-01-01 start "s"
+  opening[kasa] = 10.00 PLN at 2026-01-01 start "s"
+=== expect
+refused: LOAD-ORDER save before spend before top before save: written orders form a cycle (order_cycle.tally:16)

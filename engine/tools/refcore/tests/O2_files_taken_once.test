@@ -1,0 +1,44 @@
+# tally 2.3.1 S12, N245.13, N245.14 (OPERATIONS §2 For all three: files are taken once, in full-path order): z.tally
+# named twice, and as ./z.tally, is one file, run once. Before: LOAD-HEADER 2 files have a model header.
+=== options disk paths=z.tally,./z.tally,z.tally
+=== z.tally
+model axis_pins
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+axis mode
+  ma "a"
+  mb "b"
+input k: int
+input j: int
+
+def d: int = if mode == ma then (k as if {k = j}) else k
+
+ask q1: d
+ask q2: d with j = 7
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  k = 5 "s"
+  j = 5 "s"
+=== expect
+q1 [mode = ma]: 5
+  pinned: k = 5
+  reading: mode = ma
+  cut 2026-10-18
+q1 [mode = mb]: 5
+  reading: mode = mb
+  cut 2026-10-18
+q2 [mode = ma]: 7
+  pinned: j = 7
+  pinned: k = 7
+  reading: mode = ma
+  cut 2026-10-18
+q2 [mode = mb]: 5
+  reading: mode = mb
+  cut 2026-10-18

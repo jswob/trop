@@ -1,0 +1,25 @@
+model beats_ver
+  tally 2
+  on 2026-12-31
+  start 2026-01-01
+  end 2026-12-31
+
+source s "invented"
+
+def d: int at reader
+  rule a = 1
+  rule b beats a = 2
+
+ask q1: d law 2026-03-01
+ask q2: d law 2026-09-01
+
+version v
+  cite s
+  governs 2026-01-01..2026-06-30
+  known 2026-01-01
+
+version v2
+  cite s
+  governs 2026-07-01..
+  known 2026-01-01
+  replace rule d.a beats b = 3

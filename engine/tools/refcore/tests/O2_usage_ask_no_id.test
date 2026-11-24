@@ -1,0 +1,31 @@
+# tally 2.3.1 S12, N245.11 (OPERATIONS §2 For all three: a missing operand is a usage error, exit 2): `--ask`
+# with no id after it. Before: every ask answered, exit 0.
+=== options disk args=--ask exit=2
+=== z.tally
+model axis_pins
+  tally 2
+  on 2026-10-18
+  start 2026-01-01
+  end 2026-12-31
+
+source s "s"
+axis mode
+  ma "a"
+  mb "b"
+input k: int
+input j: int
+
+def d: int = if mode == ma then (k as if {k = j}) else k
+
+ask q1: d
+ask q2: d with j = 7
+
+version ver
+  cite s
+  governs always
+  known 2026-01-01
+  k = 5 "s"
+  j = 5 "s"
+=== expect
+python -m refcore run ...
+...
