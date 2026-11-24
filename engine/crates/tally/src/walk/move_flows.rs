@@ -244,6 +244,8 @@ impl Engine {
             }
             if i.status == Status::Modelled {
                 self.count_standing_in(m, i, leg, ctx.cut, acc)?;
+                // what decided its existence at its point, explained (tally 2.3.1 R2, G2)
+                self.trace_link_decided(m, &i.id, ctx)?;
                 continue;
             }
             acc.met.merge(&i.coll);

@@ -634,12 +634,17 @@ impl Engine {
     /// observations lack one of its legs.
     pub(crate) fn observed_of(&mut self, m: &Reality, v: &MvRef, ctx: Ctx) -> Result<Value, Stop> {
         let cut = ctx.cut;
-        let links = self.obs_links_for(m, &v.id, cut)?;
+        // its links judged, a refusal of judging them its own
+        self.obs_links_for(m, &v.id, cut)?;
         if let Some(bad) = self.bad_links.get(&(cut, v.id.clone())) {
             return Err(Stop::Refused(bad.clone()));
         }
-        // a decision's links as its walk point judged them
-        let links = self.judged(m, &v.id, cut)?.unwrap_or(links);
+        // a decision's links as its walk point judged them: judged above, so kept (the fix
+        // review's note 5); what decided its existence there, explained (tally 2.3.1 R2, G2)
+        let Some(links) = self.judged(m, &v.id, cut)? else {
+            return Err(invariant("a link judged and not kept"));
+        };
+        self.trace_link_decided(m, &v.id, ctx)?;
         if links.is_empty() {
             if let Some(err) = self.refused_link(m, &v.id, cut)? {
                 return Err(Stop::Refused(err));

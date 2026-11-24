@@ -1606,6 +1606,34 @@ version feb
     }
 
     #[test]
+    fn explain_of_a_reader_of_a_decisions_link_lists_what_decided_its_existence() {
+        // L §8.2 l.2252 One read set, E §10 (tally 2.3.1 R2, rulings 18; G2's fix review G2):
+        // February's flows are its row's, linked at its point, so the explanation lists the
+        // `when`'s reads there, as the register does
+        let text = DEC_LINK
+            .replace("LIM", "600.00 PLN")
+            .replace(
+                "ask b:",
+                "def fl: money PLN = flows(topup, fm)\n\nask ef: explain fl\n\nask b:",
+            )
+            .replace("input d5: int", "input d5: int\n\ninput fm: month")
+            .replace("  d5 = 5 \"s\"", "  d5 = 5 \"s\"\n  fm = 2026-02 \"s\"");
+        let given = vec![Given {
+            path: "dec_explain.tally".to_owned(),
+            bytes: Some(text.into_bytes()),
+        }];
+        let asks = Asks::Named(vec!["ef".to_owned()]);
+        let answer = run(Files::new(given), &Request::new(asks)).expect("an answer");
+        let lines = answer.lines();
+        for read in [
+            "running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-02-05",
+            "row v:lim = 600.00 PLN",
+        ] {
+            assert!(lines.iter().any(|l| l.ends_with(read)), "{read}: {lines:?}");
+        }
+    }
+
+    #[test]
     fn what_decided_a_decisions_existence_at_its_point_is_its_links_read_set() {
         // L §5.14 l.1362, §8.2 One read set (tally 2.3.1 C-9, R2; G2's review B3): the `when`
         // reads `ok[2026-02]`, assumed, at the point; February's flows rests on the row's link,
