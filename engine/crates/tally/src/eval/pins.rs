@@ -853,4 +853,25 @@ version v2
             "the declared type's figure"
         );
     }
+
+    #[test]
+    fn a_literal_pin_of_the_wrong_type_is_refused_as_its_row() {
+        // L §5.11 A pin is a row (G3's review N1): the row reader's words, not the pin's
+        for (ask, refusal) in [
+            (
+                "ask m2: ratio with ratio = 5.00 PLN",
+                "refused: LOAD-UNIT 5.00 PLN and num have different units (lawpin.tally:15)",
+            ),
+            (
+                "ask m4: ratio with ratio = (5 %/year)",
+                "refused: LOAD-UNIT 5 1/year and num have different units (lawpin.tally:15)",
+            ),
+            (
+                "ask m3: ratio with ratio = 2026-01-01",
+                "refused: LOAD-UNIT a value of the wrong type: a date for num (lawpin.tally:15)",
+            ),
+        ] {
+            assert_eq!(ran(ask).first().map(String::as_str), Some(refusal), "{ask}");
+        }
+    }
 }
