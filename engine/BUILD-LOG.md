@@ -8620,3 +8620,63 @@ None of the 87 turned green or left the list. None is outside a statement.
 - **Usage:** about 0.44 % of the week this turn, 1.80 % in all, by `engine/tools/usage tmp/spec-2.3.1/g1-ids.txt` before this entry.
 - **Time:** about 40 minutes, about 20 of them checks (`check quick` 8, the release binary 4, `check fences` 1, `check commit` 2).
 - **Checks:** `check quick: green, 11 steps (79s)`; `check fences: green, 1 step (55s)`; `check commit: red at tests, stopped after 10 of 24 steps (144s)`, red only on the 102 ids above.
+
+- 2026-11-24T17:15:21Z CONFIG-CHANGE BLOCKED: source skills /Users/jswob/.claude-personal/skills/synced/eea50a48-ef05-45fd-a077-2f30fee77fdd_b08d67ee-f5da-4e8a-8360-24723a436a14/import-memory/SKILL.md (R-81)
+
+## 2026-11-24 tally 2.3.1 G2's last fix: statements C and D, and G2 (issue #259)
+
+The builder's turn on G2's fix review (`tmp/spec-2.3.1/inputs/review-g2fix.md`, 5 blocking), by rulings 19 (pick P12), on top of G1's 878d49fb. Statement C was committed before the 17:42 worktree loss. Statement D's edits were lost and are redone here from the same design. Before each commit this worktree's quick engine ran every probe of both reviews (`inputs/review/g2/` with x/, w2k/, base/ and g1's p03c, and `inputs/review/g2fix/` with the b1_scen and b6_scen pairs and `check` of every text and household X) in both.sh's form against the run before. The scripts are `tmp/spec-2.3.1/g2/sweep.sh`, `sweep2.sh` and `orders.sh`; the outputs are `cbase` at C, `d1` after D and `g2x` after G2. Every moved line is below; nothing else moved, and no probe changes with ask order. **There is no third review: the lead checks these lines against refcore.**
+
+**Commits** (none pushed):
+- 3f703e44 `fix(walk): a refused link refuses its row on every timeline, its reads` (statement C)
+- 8d90120e `fix(load): step 7 marks any running read of an existence, row-precise` (statement D)
+- 21a7bb88 `fix(walk): explain of a decision's link lists what decided its existence` (G2, note 5)
+- 2a7a9e3a `refactor(walk): the link's refusal owned, no nested closure or chain` (the exceptions step's lifetime, nested-closure and long-chain reports on C and D; note 7's `(why, point)`)
+
+**Each finding and note, its probe and the engine's line now** (before in brackets):
+
+| Finding | Probe | Engine now |
+|---|---|---|
+| G1 (C) | `g2fix/b1_pin_min` bp | `refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], …` / `pinned: lim = 500.00 PLN` / `unfulfilled: topup[2026-01]` (900.00 PLN) |
+| G1 (C) | `b1_with` b04p, bp, b04a, ba | each `refused: RUN-RECORD …`, e.g. ba with `pinned: rd = r2` (900.00, 870.00, 900.00, 870.00 PLN) |
+| G1 (C) | `b1_scen_base` + `b1_scen_sc` fs, bs, b4s | `RUN-RECORD …` (as before) |
+| G5 (C) | `b1_early_alim` ob and every reader | `refused: RUN-RECORD …` / `assumed: lim guess (lim)` / `unfulfilled: topup[2026-01]` (no register line); iof also lists `bank[r1]`; `b1_early_assumed` the same |
+| G5 (C) | `b3_whenref_az` ob, ful, dy, loose | `ob: refused: RUN-DIV division by zero` / `assumed: zz guess (zz)` (no `assumed:`) |
+| C's read set | `q2_rows` ob, loose; `q2_reset` fc, efc | gain `unfulfilled: topup[2026-01]`; fc, efc gain `anchor: konto 2026-02-04 end, stated 1 040.00 PLN, …` |
+| note 2 (C, "a reading after it states the balance") | `q2_reset` b04, b06 | `1 040.00 PLN` each, the anchor's line `difference refused: RUN-RECORD …` (as before) |
+| G2 | `b3_da_runwhen2_ex` ef | lists `[4] running read bal(konto) = 500.00 PLN, the balance up to this point of 2026-02-05`, `[5] row v:lim = 600.00 PLN`, `[6] row v:ok[2026-02] = true` (only fm, d5) |
+| G2 | `b3_pins`, `b3_pins_sw` ef; first review's `x/dl600`, `dl600early`, `dl600late`, `dl_chk3`, `dl_chk10`, `dlc3_600`, `dlc3_600k`, `dlc10_600`, `dlk600`, `dl_limhole` ef | each explanation gains the `when`'s running read and `lim` (`lm` in b3_pins) at the point; no value, register or check line moves |
+| G3 (D) | `check b6_dated`, `check b6_flows`, every ask | `refused: LOAD-READS pay reaches a running read or projection of topup without reads topup (b6_dated.tally:31)`, exit 1 (`ok`; fp `RUN-CYCLE`) |
+| G4 (D) | `b6_row` | `check`: `ok`, `WARN-UNREAD input fm` (LOAD-READS); fp `30.00 PLN` / `unfulfilled: pay[2026-04]`; q `400.00 PLN`; loose, b, f `refused: RUN-NONE bank[r2] is none here: a field read of it` (b with `unfulfilled: pay[2026-03]`) |
+| note 6 (D) | `b5_cycle` | q `400.00 PLN`, ob `400.00 PLN`, n `1`, loose `30.00 PLN`, b `870.00 PLN` (the no-link twin's), f `400.00 PLN`, each with `unfulfilled: topup[2026-01]` but q; the same alone, forward and reversed (`tally run: not implemented`, exit 69) |
+| spec Q2 (D) | `check b6_scen_base b6_scen_sc` | `scenario sc: refused: LOAD-READS pay reaches … (b6_scen_base.tally:31)`, exit 1 (as before) |
+| D, unmarked | `check b6_plainwhen`, `b6_nolink` | `ok` (as before) |
+| household X (D) | `check` of `engine/tests/integration/amendments/real11/c1`, `real11/c6`, `cut11/mc` | `ok`, exit 0; mc with its `WARN-UNREAD input oracle_*` lines (as before) |
+| note 1 | `x/dl500early` dy | `refused: RUN-RECORD …` (as before; for the lead) |
+| note 4 | `b4_first` | untouched (the change doesn't reach it) |
+| note 5 | `book/same.rs` `observed_of` | the `unwrap_or` fallback is gone: the links were judged just before, so a verdict not kept is `ENGINE-INVARIANT` (no probe moves) |
+| note 7 | `unlink_run`'s `(why, point)` | now `&Unlinked`, which owns its refusal, day and read set. `refused_when_link`'s `(tuple, when)` is untouched |
+
+**How each is built:**
+- **C** (`eval/timelines.rs`, `walk/order.rs`, `walk/agenda.rs`, `ask/answer.rs`). An early row is an `EarlyRow`: the timeline's world and what its pins hold (`LayerData::same`, never a layer's number), the cut, the row, the refusal and the read set that refused it. `unlink_run` first takes the reads that refused the link into the link's cell and its rows (`link_reads_at_point`): the refused run's own read set, or, for a `when` false, the `when`'s reads already there. It then notes each row dated before the point on the timeline in force (`note_early_row`). `plan_walk` refuses a noted row from its day on its own timeline and merges the read set into the row (`early_row`), so every reader carries it. The answer loop is unchanged but keyed so.
+- **D** (`load/targets.rs`, `load/keyed.rs`, `load/strata.rs`, `model/graph.rs`, `walk/tuples.rs`).
+  - `check_move` sets the move's marks and reads apart while its keys' `where`s and its `when` are checked, and puts them back as they would have stood (`reads_apart`, `reads_back`). What it set apart is `graph.existence`.
+  - `marked_decisions` marks a decision whose existence holds a running read of E l.127's list (every `Mark` but `LegOf`), itself or through the defs it reads.
+  - A read `bank[r2]` records its row (`graph.named_rows`). `rows_read` keeps those rows for an item that reads the input no other way, else every row. `reached_link` refuses a plan only where one of those rows, in any version, names a marked decision's instance.
+  - At run, a marked decision's link is judged at its walk point (`link_tuple`), as a `bal(x)` `when`'s already was. That is note 6's form.
+  - `reads_running` goes.
+- **G2** (`walk/body.rs` `trace_link_decided`, called from `flows` of a modelled decision instance and from `observed_of`). Where a link is judged at its point and a traced read at the ask's cut reads it, the `when` is read again at the point as it ran, traced and kept nowhere, once per explain, as `trace_run` reads a body.
+
+**For the lead:**
+- `b6_row` loose, b and f read `bank[r2]` at cuts where version feb isn't known, so `RUN-NONE bank[r2] is none here`; only fp's refcore line is in the review. Check those three against refcore.
+- An early row's read set includes the row itself (C: the balance that refused the decision rests on it), so `b1_early_alim` iof lists `bank[r1]` where its point-day twin doesn't.
+
+**What `check commit` shows red** (one run, after the last commit): 30 of 1 570 tests, 102 ids, the same set as G1's last entry's 102 (its 15 and my 87). Every id it names is present, and no first differing line is one of this turn's forms (no `LOAD-READS` but c4_when's ruled class, no explain `running read`). **None new, none gone.** The steps after the tests step didn't run, so doc, build, deny, the fuzz build and the rest are unconfirmed.
+
+- **Size** (`git diff --shortstat 878d49fb HEAD -- engine/crates`): 15 files, +537 −126, of it about +150 unit tests: `an_early_row_whose_link_is_refused_refuses_on_every_timeline_with_what_refused_it`, `step_7s_mark_is_any_running_read_of_the_existence_and_row_precise` and `explain_of_a_reader_of_a_decisions_link_lists_what_decided_its_existence`, each a small text through `api::run`.
+- **Fences:** no edit to `walk/narrow.rs` or its twin, so `check fences` wasn't run; the fences' suites pass in the last `check commit` (none of its red tests is one).
+- **Exceptions:** +0 (`EXCEPTIONS.lock` unchanged; three report-only hits, fixed by 2a7a9e3a).
+- **Mutants:** none proved. Sites for T: `early_row`'s `same` and `cut`; `unlink_run`'s `wo.obs.day < un.point`; `reads_back`'s order; `running_mark`'s `LegOf`; `rows_read`'s `only_by_id` and `(Some(_), None)`; `link_tuple`'s `marked` guard; `trace_link_decided`'s `judged_there`.
+- **Open STOP-REPORTs:** none.
+- **Usage:** about 2.62 % of the week by `engine/tools/usage tmp/spec-2.3.1/g2-ids.txt` before this entry, about 0.73 % this turn (1.89 % at its start).
+- **Checks:** `check quick: green, 11 steps (53s)`; `check commit: red at tests, stopped after 10 of 24 steps (118s)`, red only on the 102 ids above.
