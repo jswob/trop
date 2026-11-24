@@ -276,14 +276,16 @@ impl Engine {
         }
     }
 
-    /// The reads [`Engine::trace_existence`] traces for tuple `tuple` of move `mv`: each bound
-    /// key's `where` at the tuple's law date, in binding order, up to one that drops it or is
-    /// refused, then the move's `when` where the tuple is plain (refcore's `move_tuples`, for
-    /// one tuple, and `link_tuple`, its `when`). L §5.14 Keys, §4.3, §5.19 Links.
+    /// The reads [`Engine::trace_existence`] traces for tuple `tuple` of move `mv`, in the
+    /// existence cell's order: each bound key's `where` at the tuple's law date, in binding
+    /// order, up to one that drops it or is refused, then its day, then the move's `when`; a
+    /// false or `none` read ends them, a refused one doesn't (refcore's `move_tuples`, for one
+    /// tuple, and `link_tuple`). L §5.14 Keys, An instance's existence is a cell, §4.3, §5.19
+    /// Links (tally 2.3.1 R6).
     ///
     /// # Errors
     ///
-    /// A `where`'s or the `when`'s refusal; as [`Engine::move_law`].
+    /// The first refusal met; as [`Engine::move_law`].
     fn existence_reads(
         &mut self,
         m: &Reality,
@@ -296,15 +298,34 @@ impl Engine {
             law @ (Law::Day(_) | Law::None) => law.day(),
         };
         let ctx = tctx.at_law(law);
+        let mut bad = None;
         for bind in mv.binds.iter().take(tuple.keys.len()) {
-            if matches!(self.where_keeps(m, &bind.node, &tuple.env, ctx)?, Kept::Out) {
-                return Ok(());
+            match self.where_keeps(m, &bind.node, &tuple.env, ctx) {
+                Ok(Kept::Out) => return Ok(()),
+                Ok(_) => {}
+                Err(Stop::Refused(r))
+                    if !matches!(r.code(), Code::Load(_) | Code::Run(Run::Cycle)) =>
+                {
+                    bad = Some(r);
+                    break;
+                }
+                Err(stop) => return Err(stop),
             }
         }
-        if let (Some(when), None, None) = (&mv.decl.when, &tuple.refused, &tuple.domain_hole) {
-            self.ev(m, when, &tuple.env, ctx)?;
+        if tuple.domain_hole.is_some() {
+            return bad.map_or(Ok(()), |r| Err(Stop::Refused(r)));
         }
-        Ok(())
+        let read = [Some(&mv.decl.on), mv.decl.when.as_ref()];
+        for x in read.into_iter().flatten() {
+            match self.existence_read(m, x, &tuple.env, ctx)? {
+                Existence::Ends => return Ok(()),
+                Existence::Read => {}
+                Existence::Refused(r) => {
+                    bad.get_or_insert(r);
+                }
+            }
+        }
+        bad.map_or(Ok(()), |r| Err(Stop::Refused(r)))
     }
 
     /// A move's law date by its `at`, with the keys bound so far: none while it reads a key
