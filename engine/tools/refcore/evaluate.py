@@ -129,7 +129,9 @@ class PinVal:
     def key(self):
         if self.kind == 'conflict':
             return (self.kind, self.item, self.keys, self.fields, self.value, self.layer)
-        return (self.kind, self.item, self.keys, self.fields, vkey(self.value), self.layer)
+        # two pins are two entries, as two rows are, even where one hole is both values (L §5.11 A pin is a row,
+        # tally 2.3.1 R3, Q2.2): each is memoised and listed as its own
+        return (self.kind, self.item, self.keys, self.fields, vkey(self.value), self.layer, self.text)
 
     def __hash__(self):
         return hash(self.key())
@@ -2832,7 +2834,8 @@ class Engine:
                 c = Coll()
                 self.stack.append(c)
                 try:
-                    v = self.ev(p.value, env, ctx)
+                    # a literal pin is a row of its target, read at load (L §5.11 A pin is a row, check.pin_row)
+                    v = p._rowval if getattr(p, '_rowval', None) is not None else self.ev(p.value, env, ctx)
                 finally:
                     self.stack.pop()
                 v = coerce_to(v, p.ty)
@@ -3138,7 +3141,11 @@ class Engine:
             raise too_many()
         n = 0
         while cur <= stop:
-            out.append(range_key(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1)))
+            v = range_key(Num(cur, a.u, money=a.money, isint=a.isint and step.denominator == 1))
+            if getattr(a, 'rate', False):
+                # a rate is a num with a period: a range over rates holds rates (L §3.3; tally 2.3.1 S21, Q2.4)
+                v = Num(v.q, v.u, isint=v.isint, rate=True)
+            out.append(v)
             cur += step
             n += 1
             if n > 1000000:

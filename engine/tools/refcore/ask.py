@@ -88,6 +88,14 @@ def req_clock(m, a):
             n = n.e
         return n if n is not None and n.k == 'date' else None
     lits = []
+    # a literal cut after on is REQ-CLOCK in every form, an `as if {known D}` in the line's body too (L §5.11 A pin
+    # is a row, E §11; tally 2.3.1 R3, N245.9), the body's first, in the line's order
+    from .node import walk
+    for x in walk(a):
+        if getattr(x, 'k', None) == 'asif':
+            for p in x.pins or ():
+                if getattr(p, 'kind', None) == 'known' and lit(p.value) is not None:
+                    lits.append(('known', lit(p.value)))
     if a.known is not None and lit(a.known) is not None:
         lits.append(('as known', lit(a.known)))
     for p in a.pins:
@@ -1154,20 +1162,35 @@ class Asker:
                     raise LoadAtRun(err)
                 diff = ', difference refused: %s %s' % (err.code, err.msg)
         else:
-            # L §5.18 (round 12): "and, where e - f is defined (§3.2, §4.2), the difference e − f": of two keys of one
-            # ordered index an int (L §4.2); of anything else (dates, periods off an index, text, codes) none
-            ltt, rtt = getattr(l, '_t', None), getattr(r, '_t', None)
-            if ltt is not None and rtt is not None and ltt.k == 'key' and rtt.k == 'key' and ltt.ix == rtt.ix \
-                    and ltt.ix in eng.m.indexes:
-                fake = type('N', (), {})()
-                fake.l = l
-                try:
-                    diff = ', difference %s' % fmt(eng.key_diff(fake, lv, rv))
-                except TallyError as err:
-                    if is_load(err):
-                        raise LoadAtRun(err)
-                    diff = ', difference refused: %s %s' % (err.code, err.msg)
+            diff = self.point_diff(eng, l, r, lv, rv)
         return CheckOut('differs: %s = %s, %s = %s%s' % (lt, fmt(lv), rt, fmt(rv), diff), 'differs')
+
+    def point_diff(self, eng, l, r, lv, rv):
+        """L §5.18: "and, where e - f is defined (§3.2, §4.2), the difference e − f". Keys and periods are points
+        (L §4.2, tally 2.3.1 R5): two keys of one ordered index differ by its steps, two period values of one type,
+        keys of two indexes or a key and a period value as period values (Q2.8, N255.2). none, never, things, an open
+        index's keys (Q2.13), dates and anything else have none (`days_between` is a dates' difference)."""
+        from .values import NEVER
+        from .dates import Period
+        if any(v is NONE or v is NEVER for v in (lv, rv)):
+            return ''
+        ltt, rtt = getattr(l, '_t', None), getattr(r, '_t', None)
+
+        def ix_of(t):
+            return eng.m.indexes.get(t.ix) if t is not None and t.k == 'key' else None
+        li, ri = ix_of(ltt), ix_of(rtt)
+        fake = type('N', (), {})()
+        fake.l, fake.op, fake._datearith = l, '-', 'pdiff'
+        try:
+            if li is not None and li is ri and li.form != 'open':
+                return ', difference %s' % fmt(eng.key_diff(fake, lv, rv))
+            if isinstance(lv, Period) and isinstance(rv, Period) and lv.kind == rv.kind and lv.kind != 'day':
+                return ', difference %s' % fmt(eng.date_arith(fake, lv, rv))
+        except TallyError as err:
+            if is_load(err):
+                raise LoadAtRun(err)
+            return ', difference refused: %s %s' % (err.code, err.msg)
+        return ''
 
     # -- axes (L §5.5) --------------------------------------------------------------------------
     def group(self, a, axes, combos, results):
