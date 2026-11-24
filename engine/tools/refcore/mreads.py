@@ -378,7 +378,12 @@ def m_mv_field(self, n, env, ctx):
             sh = (self.same_rows_hole(src, name, ctx, 'amount'), self.same_rows_hole(src, name, ctx, 'day'))
     if what == 'day':
         if isinstance(src, Inst) and (src.exists is False or getattr(src, 'status', None) == 'none'):
-            # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8)
+            # `.day` included (L §5.14 existence; tally 2.3.1 R6, gate review 8); an instance a later version made
+            # exist exists as known now, its day its own, as its legs read (made_to_exist_leg; E §5 step 1; one
+            # instance, one answer: g2/i3_later d2 beside x2 false)
+            if any(self.made_to_exist_leg(src, a.leg.name, ctx) is not None for a in self.adjust_move(src.move, ctx)
+                   if a.inst.id == src.id):
+                return src.day
             raise refuse('RUN-NONE', '%s doesn\'t exist: a field read of it' % v.id)
         return src.day
     if what == 'fulfils':
