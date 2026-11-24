@@ -72,9 +72,10 @@ COLUMNS = KV.COLUMNS + ['for']
 # `explain` of a decision's `flows` or `count`, `RUN-NONE` in L §8.4's form, `age_months` at 9999-12, a joint run
 # that leaves a member's `·` as written; G1's review B1, a per-tuple pin through a walk's read; G2's review B1 and
 # B4, a pin's bare key or four-digit figure read as its target's key or period; P12, a built-in's known
-# refusal before its holes, F1 a hole compounding code), and M7's hold
+# refusal before its holes, F1 a hole compounding code), and M7's hold; tally 2.3.1's (#259): `decides` (group 1, R1
+# with S9, S16, S23: G1's build), `existence` (group 2, R6 and R2: G2's build), `g1fix` (G1's review's fixes)
 FOR = {'-', 'pins', 'accrue', 'keydiff', 'ratepin', 'tuple', 'monthcheck', 'explain', 'runnone', 'agemonths',
-       'middot', 'pinwalk', 'keypin', 'oneref', 'narrow', 'backlog', 'M7'}
+       'middot', 'pinwalk', 'keypin', 'oneref', 'narrow', 'backlog', 'M7', 'decides', 'existence', 'g1fix'}
 
 
 def rows():

@@ -276,7 +276,8 @@ LOAD-ORIENT	L §8.3	M0	ask <q> reaches crps or pdf without orient	1	M0	codes/m0/
 RUN-NONE	L §8.4	S	*	32	S	kernel/g12/members
 RUN-NONE	L §8.4	S	<x>[k] is none here: <arithmetic, ordering, aggregate, comparison with a value, a place, a quantity, a field read of it, the level of quantile>	5	M1	codes/m1/rules/none
 RUN-NONE	L §8.4	S	never in <a use>	17	S	kernel/g12/members
-RUN-NONE	L §8.4	S	?	10	M1	m1/fixes/g12/r_p_mr2_q4
+RUN-NONE	L §8.4	S	<m>[k] doesn't exist: a field read of it	8	M1	m1/fixes/g12/r_p_mr2_q4
+RUN-NONE	L §8.4	S	?	2	M1	m1/fixes/g3/f2_where_none_ties_a
 RUN-NOT-INT	L §8.4	S	*	2	S	kernel/g14/past_64_counts
 RUN-NOT-INT	L §8.4	S	<value> is not an integer	2	S	kernel/g14/past_64_counts
 RUN-KEY	L §8.4	S	*	31	S	kernel/g14/keys_past_64
@@ -287,9 +288,9 @@ RUN-KEY	L §8.4	S	draw <n> of <x> passes the last slot of <index>	0	-	-
 RUN-KEY	L §8.4	S	<k> is not a value of <a> .. <b>[ step <s>]	13	M1	m1/b1/l2_5_range_days_end_of_time
 RUN-CYCLE	L §8.4	M5b	*	8	S	kernel/g7/running
 RUN-CYCLE	L §8.4	M5b	<x>[k] reads itself through <path>	4	S	kernel/g7/running
+RUN-CYCLE	L §8.4	M5b	<m> reads its own instances	4	M1	m1/fixes/g12/r_agent_mv_mv_a6
 RUN-CYCLE	L §8.4	M5b	bal(<y>, <d> start) of <q> has no one point: its start pad takes with the day's first batch	0	-	-
 RUN-CYCLE	L §8.4	M5b	the takes of <movements> at <places> read each other in one batch	0	-	-
-RUN-CYCLE	L §8.4	M5b	?	4	M1	m1/fixes/g12/r_agent_mv_mv_a6
 RUN-CONFLICT	L §8.4	M1	*	6	M1	codes/m1/rules/conflict
 RUN-CONFLICT	L §8.4	M1	rules <a> and <b> both win for <x>[k] on <d>	5	M1	codes/m1/rules/conflict
 RUN-CONFLICT	L §8.4	M1	pins <a> and <b> both hold for <x>[k]	1	M1	m1/r4/l4_6_cascade_pins

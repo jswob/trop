@@ -1,0 +1,72 @@
+model p09
+  tally 2
+  on 2026-06-10
+  start 2026-01-01
+  end 2026-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+place wallet: accounts PLN lives 2025-01-01..
+place w2: accounts PLN lives 2025-01-01..
+place world: outside lives 1900-01-01..
+input d1: date
+input d2: date
+input a: money PLN
+
+move in1: transfers
+  on d1
+  leg cash from world to wallet amount a
+move in2: transfers
+  on d2
+  leg cash from world to wallet amount a
+move j1: transfers
+  on d1
+  leg cash from world to w2 amount a
+move j2: transfers
+  on d2
+  leg cash from world to w2 amount a
+
+ask b4: bal(wallet, 2026-03-04)
+ask b5: bal(wallet, 2026-03-05)
+ask b6: bal(wallet, 2026-03-06)
+ask b7: bal(wallet, 2026-03-07)
+ask b31: bal(wallet, 2026-03-31)
+ask c6: bal(w2, 2026-03-06)
+ask c7: bal(w2, 2026-03-07)
+ask c31: bal(w2, 2026-03-31)
+ask c4: bal(w2, 2026-04-30)
+ask f_n: flows(wallet, 2026-03-08 .. 2026-03-31)
+ask f_a: flows(wallet, 2026-03-06 .. 2026-03-31)
+ask f_b: flows(wallet, 2026-03-05 .. 2026-03-07)
+ask f_6: flows(wallet, 2026-03-06 .. 2026-03-06)
+ask f_x: flows(w2, 2026-03)
+ask f_y: flows(w2, 2026-03-01 .. 2026-03-06)
+ask k_b: bal(wallet, 2026-03-31) as known 2026-04-01
+ask cnt: count(t in transfers over 2026-03-06 .. 2026-03-31 where t.cash.to == wallet)
+ask ex: explain bal(wallet, 2026-03-31)
+ask ex2: explain bal(w2, 2026-03-31)
+
+version v
+  cite s
+  governs always
+  known 2025-12-01
+  opening[wallet] = 0.00 PLN at 2026-01-01 start "s"
+  opening[w2] = 0.00 PLN at 2026-01-01 start "s"
+  d1 = 2026-03-05 "s"
+  d2 = 2026-03-07 "s"
+  a = 100.00 PLN "s"
+
+version later
+  cite s
+  governs always
+  known 2026-05-01
+  same in1 = in2
+  same j1 = j2
+
+version rd
+  cite s
+  governs 2026
+  known 2026-01-01
+  pad w2 from world
+  stated[w2] = 100.00 PLN at 2026-03-06 end "s"
+  stated[w2] = 250.00 PLN at 2026-04-15 end "s"

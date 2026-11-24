@@ -1,0 +1,57 @@
+model p04
+  tally 2
+  on 2026-10-25
+  start 2026-01-01
+  end 2027-12-31
+
+source s "probe"
+unit PLN: currency minor 0.01
+input ch: bool
+input ct: bool
+input va: money PLN
+input vb: money PLN
+input vt: money PLN
+
+def d2: money PLN at reader
+  rule a = va when ct
+  rule base = vb
+  rule mid beats base = vt when ch
+def d8: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d9: money PLN at reader
+  rule a beats c = va when ct
+  rule b = vb
+  rule c = vt when ch
+def d10: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule c = vt
+  rule u beats a, b = vt when ch
+def d11: money PLN at reader
+  rule a = va when ct
+  rule b = vb
+  rule u beats a, b = vt when ch
+  rule w beats u = vt when ch
+
+ask q2: d2 law 2026-03-01
+ask q2t: d2 with ch = true law 2026-03-01
+ask q2f: d2 with ch = false law 2026-03-01
+ask q8: d8 law 2026-03-01
+ask q9: d9 law 2026-03-01
+ask q10: d10 law 2026-03-01
+ask q11: d11 law 2026-03-01
+ask q11t: d11 with ch = true law 2026-03-01
+ask e2: explain d2 law 2026-03-01
+ask e11: explain d11 law 2026-03-01
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  ch = ?"does it apply?" "s"
+  ct = true "s"
+  va = 1 PLN "s"
+  vb = 2 PLN "s"
+  vt = 3 PLN "s"

@@ -18,7 +18,7 @@ mod tests {
 
     /// The groups this target tests, one `#[test]` each: refcore's (`fixes-…`) and the
     /// spec's (`spec-…`).
-    const GROUPS: [&str; 41] = [
+    const GROUPS: [&str; 42] = [
         "fixes-g1",
         "fixes-g2",
         "fixes-g2fix",
@@ -42,6 +42,9 @@ mod tests {
         "fixes-p40",
         "fixes-p40fix",
         "fixes-p43",
+        "fixes-t231g1",
+        "fixes-t231g2",
+        "fixes-t231rv1",
         "fixes-traced",
         "spec-g1",
         "spec-g2",
@@ -49,12 +52,10 @@ mod tests {
         "spec-g3",
         "spec-g3fix",
         "spec-gate",
-        "spec-gate8",
         "spec-p12",
         "spec-p21",
         "spec-p22",
         "spec-p26",
-        "spec-p30",
         "spec-p31",
         "spec-p32",
         "spec-p40",
@@ -359,6 +360,48 @@ mod tests {
         group_holds(VECTORS, "fixes-traced");
     }
 
+    /// tally 2.3.1's group 1 (#259; the plan's §2, §8.1, §12, §16 row 1), refcore's bytes at
+    /// the first pin's texts (`m4/fixes/t231g1/`, the writer's W1 tests and the critic's
+    /// probes): what an operation decides (R1) — `any` and `all` by a deciding term in every
+    /// order (`anyall_first`, `anyall`), a check not made on a hole (`chk`, `hd_sign_q`), a
+    /// window comparison naming both days (`win2`), step 5's hole beside two candidates
+    /// (`a03_conflict_hole`), `same`'s two days as bounds (`same2`), a hole-day decision's legs
+    /// the hole by every path (`holeday`, `holeday_b`), an uncertain hole-day movement left out
+    /// (`b1e`), a lifespan's end against a hole balance printing the balance's hole (#248 face
+    /// (b): `life_amt`, `life_day`, `j3q`); `never` the latest date in ordering (S9, `never`);
+    /// `age_months` in the calendar's last month (S23, `age_last`).
+    #[test]
+    fn m4_fixes_t231g1() {
+        group_holds(VECTORS, "fixes-t231g1");
+    }
+
+    /// tally 2.3.1's group 2 (#259; the plan's §3, §7, §10, §16 row 2), refcore's bytes at
+    /// the second pin's texts (`m4/fixes/t231g2/`): an instance's existence is one cell (R6) —
+    /// a refused `where` stands for its tuple alone (`where2`, `k_stop3_nodiv`), the order of
+    /// its reads (`w1_day` to `w5_whenhole`, `hdfalse`), a field read of a missing instance
+    /// `RUN-NONE` (`x_none`), a tuple reading another tuple of its move (`selfread`), a
+    /// decision's link judged at its walk point (`dec_link`, `exist_mark`), a row fulfilling an
+    /// instance that doesn't exist (`k_refw`, `RUN-RECORD`); a link's reads only for the readers
+    /// that rest on it, a refused link refusing them (item 6: `first`, `l_false`).
+    #[test]
+    fn m4_fixes_t231g2() {
+        group_holds(VECTORS, "fixes-t231g2");
+    }
+
+    /// tally 2.3.1 G1's review (`tmp/spec-2.3.1/inputs/review-g1.md`), refcore's bytes where
+    /// the rulings give refcore's line (`m4/fixes/t231rv1/`): B1, a refused `where` under
+    /// `any`/`all` (`p21_where_min`, `p02_where_refused`); B2 and B3, step 5's hole and its
+    /// `explain` beside two candidates (`p20_step5_min`, `p04_step5`); B4, a scenario turning
+    /// a `same` pair into equal amounts on two days (`p16`); B5, a decision side of a two-day
+    /// `same` (`p18_same_dec`); B6, `explain` of the last day where a reading comes between
+    /// (`p09_same_two`); N1, every side of a three-sided `same` (`p10_same_three`). Left out,
+    /// for the writer: `p09` `f_a`, `f_b`, `p10` `fb`, `fy` (refcore's `flows` over the two
+    /// days) and N5's `p03c` (refcore still refuses where a member decides).
+    #[test]
+    fn m4_fixes_t231rv1() {
+        group_holds(VECTORS, "fixes-t231rv1");
+    }
+
     /// P12, the one statement for built-ins (`tmp/m4/auto-picks.md`; G1's fix review F1,
     /// `tmp/m4/review-g1fix.md`): refcore's bytes for each cell of `m4/fixes/p12/`'s
     /// `accrue`, `periodic`, `factor`, `round`, `dcf`, `add_business`, `last_business`,
@@ -467,18 +510,6 @@ mod tests {
         group_holds(SPEC, "spec-p26");
     }
 
-    /// P30's answers (#255, the widening's fix review G1): an existence read of an instance
-    /// evaluates only its `where`, its `when` and its day, takes no guard on the move's plan list
-    /// or bodies, and is `RUN-CYCLE` only where one of those returns to a cell being evaluated;
-    /// its answer never depends on ask order (L §5.19, §5.11, §8.2). So `flows(spend, 2026-04)`
-    /// is 270.00 PLN and `loose[2026-04]` 30.00 PLN in every order (`x1h_order_min`,
-    /// `x1g_order`, `x1d_selfk_min`, alone and in both orders), from refcore's run of twins
-    /// reading the same rows by their place.
-    #[test]
-    fn m4_fixes_spec_p30() {
-        group_holds(SPEC, "spec-p30");
-    }
-
     /// P31's answers (#255; P20, P22, P30): `explain` lists one read set (L §8.2), a refused
     /// projection a balance node for its refusal with the main walk's runs that name its place
     /// through the refused one (`fixes/g3/f5_cross` `e_pr`), a binding the `when` it reads
@@ -492,12 +523,18 @@ mod tests {
 
     /// P32's answers (#255): a `RUN-CYCLE` met reading a linked instance's day refuses the
     /// reading cell (L §5.11), `loose[2026-04] reads itself through a computed key` in every
-    /// ask order (`e_selfcycle`, written from build/m4's run at de29cabc, checked by hand); and
-    /// by P30 a `when` that returns to no cell being evaluated is read, 30.00 PLN and 270.00 PLN
-    /// (`b_whencycle` `l24`, `f`, from refcore's run of a twin reading the rows by their place).
+    /// ask order (`e_selfcycle`, written from build/m4's run at de29cabc, checked by hand).
     #[test]
     fn m4_fixes_spec_p32() {
         group_holds(SPEC, "spec-p32");
+    }
+
+    /// P40's B2 answers (#255): a list that stops gives `RUN-DIV division by zero` to its
+    /// `flows` and to every existence read of it, in either ask order (`k_stop3`, `k_stop2`);
+    /// written by hand, green since P40's fix (8f6f4338).
+    #[test]
+    fn m4_fixes_spec_p40() {
+        group_holds(SPEC, "spec-p40");
     }
 
     /// The gate's answers (#255, #250), written from build/m4's run at 4b450ec8: `p_g5x`'s
@@ -508,22 +545,6 @@ mod tests {
     #[test]
     fn m4_fixes_spec_gate() {
         group_holds(SPEC, "spec-gate");
-    }
-
-    /// The survivor sort's answers (#255, P30): `x1r`'s `loose[2026-04]`, whose `o.fulfils`
-    /// names a refused tuple's instance in progress, is 30.00 PLN in every order, from
-    /// refcore's run of a twin reading the rows by their place.
-    #[test]
-    fn m4_fixes_spec_gate8() {
-        group_holds(SPEC, "spec-gate8");
-    }
-
-    /// P40's B2 answers (#255): a list that stops gives `RUN-DIV division by zero` to its
-    /// `flows` and to every existence read of it, in either ask order (`k_stop3`, `k_stop2`);
-    /// written by hand, green since P40's fix (8f6f4338).
-    #[test]
-    fn m4_fixes_spec_p40() {
-        group_holds(SPEC, "spec-p40");
     }
 
     /// The text's lines for P40's crossings (#255), written from build/m4's run at b9969e50:
