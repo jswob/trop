@@ -2408,6 +2408,13 @@ class Engine:
     def e_cmp(self, n, env, ctx):
         a = self.ev(n.l, env, ctx)
         b = self.ev(n.r, env, ctx)
+        if n.op in ('==', '!=') and (a is NONE) != (b is NONE):
+            # `m[k] == none` of a refused movement is refused (L §3.1, §8.4; tally 2.3.1 R1, rulings 16 Q3)
+            x = b if a is NONE else a
+            src = getattr(x, 'src', None) if isinstance(x, Mv) else None
+            if src is not None and getattr(src, 'err', None) is not None and \
+                    getattr(src, 'exists', True) is not False:
+                raise src.err
         if n.op not in ('==', '!=') and (a is NONE or b is NONE):
             # an ordering names the read that gave none (L §8.4's row; P48, N2)
             raise refuse('RUN-NONE', '%s is none here: an ordering' % env_txt(n.l if a is NONE else n.r, env))
@@ -3297,10 +3304,37 @@ class Engine:
         fn = n.fn
         if fn in ('first', 'last'):
             return self.agg_first(n, env, ctx)
-        mem = list(self.members(n.binds, env, ctx, refused=fn in ('any', 'all')))
+        mem = list(self.members(n.binds, env, ctx, refused=fn in ('any', 'all', 'sum')))
+        if fn in ('any', 'all'):
+            # each tuple one member, its status the first of its domain, `where` and term not plainly known: a domain
+            # hole is a hole member, and a deciding member still decides (rulings 17 A; G1's fix review N6)
+            return self.agg_anyall(n, mem, ctx)
         for e2, st in mem:
             if isinstance(st, tuple) and st[0] == 'domainhole':
                 return st[1]
+        if fn == 'sum':
+            # a member whose term is known 0 adds 0 whatever its `where`; otherwise a refused member refuses the sum
+            # (rulings 17 A; G1's fix review: f02 sr, sr0)
+            kept = []
+            for e2, st in mem:
+                if isinstance(st, tuple) and st[0] == 'refused':
+                    # its term read apart: its reads are the sum's only where it decides the member (known 0)
+                    c0 = self.push()
+                    saved_tr = (self.trace_stack, self.tracing)
+                    self.trace_stack, self.tracing = [], False
+                    try:
+                        t0 = self.ev(n.term, e2, ctx)
+                    except Refusal:
+                        t0 = None
+                    finally:
+                        self.stack.pop()
+                        self.trace_stack, self.tracing = saved_tr
+                    if t0 is not None and _known_zero(t0):
+                        self.cur.merge(c0)
+                        continue
+                    raise st[1]
+                kept.append((e2, st))
+            mem = kept
         if fn == 'count' and n.term is None:
             holes = [st for e2, st in mem if isinstance(st, Hole)]
             if holes:
@@ -3715,6 +3749,9 @@ class Engine:
             if isinstance(st, tuple) and st[0] == 'refused':
                 first = first or st[1]
                 continue
+            if isinstance(st, tuple) and st[0] == 'domainhole':
+                holes.append(st[1])
+                continue
             try:
                 t = self.ev(n.term, e2, ctx)
                 if t is NONE:
@@ -3898,7 +3935,7 @@ class Engine:
             if not isinstance(c, Code) or c.kind != 'compounding':
                 raise refuse('LOAD-UNIT', '%s: %s is not a compounding code' % (what, fmt(c)))
             if c.word == 'nominal' and c.n < 1:
-                raise refuse('RUN-DOMAIN', '%s under nominal %d: m is a positive int (L §3.3)' % (what, c.n))
+                raise refuse('RUN-DOMAIN', 'nominal %d: m is a positive int' % c.n)
             if what == 'accrue' and c.word == 'discount':
                 raise refuse('RUN-DOMAIN', 'accrue under %s: its row states simple, effective and nominal m' % c.word)
         return f
@@ -4577,6 +4614,14 @@ class Engine:
         tn.value = Hole([(val[1], self.origin(info, keys))]) if isinstance(val, tuple) and val[0] == 'hole' else val
         self.trace_stack[-1].children.append(('node', tn))
 
+
+
+def _known_zero(v):
+    """A sum term known to be 0 (rulings 17 A)."""
+    q = getattr(v, 'q', None)
+    if q is None:
+        q = getattr(v, 'v', None)
+    return not isinstance(v, (Hole, bool)) and q is not None and q == 0
 
 
 def range_is_literal(d):

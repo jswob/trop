@@ -1087,6 +1087,46 @@ class Walk:
             place, err, i = obj
             self.add(place, '*', Ent(key, 'bad', err=err, mv=i))
 
+    def refuse_links(self, run, err, key, t):
+        """The links of the rows that fulfil a decision instance its point finds missing (err None: RUN-RECORD) or
+        refused (err, its refusal): each row refused, from its own day (L §5.19, §8.4 l.2356; tally 2.3.1 C-9, rulings
+        16 Q1, Q2)."""
+        eng = self.eng
+        for o in run.obs:
+            e = err or refuse('RUN-RECORD', 'observation %s fulfils %s, which doesn\'t exist or doesn\'t touch its '
+                                            'places' % (o.id, run.id))
+            if o.err is None:
+                o.err = e
+            eng.run_cache.setdefault(('badlinks', eng.wkey(self.tctx)), {}).setdefault(run.id, e)
+            for lg in o.legs:
+                if not isinstance(lg.day, datetime.date) or lg.day == t:
+                    self.leg_bad(o, lg, e, key)
+                elif lg.day < t:
+                    # booked on its own day before the point: refused from that day (G2's review finding 1)
+                    self.bad_from(o, lg, e)
+                # one dated after the point is booked on its own day, refused (o.err)
+        run.obs = []
+
+    def bad_from(self, o, lg, err):
+        """An observed leg already booked on its day, whose link a later walk point refuses: its places refused from
+        its own entry on (L §8.4 l.2356 "refuses every place from its day"; tally 2.3.1 C-9, G2's review finding 1).
+        The entries after it are re-applied; a decision walked between its day and the point read it as booked."""
+        for p in (lg.frm, lg.to):
+            if not isinstance(p, Thing):
+                continue
+            u = lg.unit or (self.m.place_unit(self.m.things[p.name]) if p.name in self.m.things else None)
+            log = self.log(p.name, u or '*')
+            pos = next((i + 1 for i, x in enumerate(log.ents) if x.mv is o), None)
+            if pos is None:
+                pos = bisect.bisect_left(log.keys, (lg.day.toordinal(),))
+            k = log.keys[pos - 1] if pos and log.keys[pos - 1][0] == lg.day.toordinal() else \
+                (lg.day.toordinal(), 0, 0, '', 0)
+            log.ents.insert(pos, Ent(k, 'bad', err=err, mv=o))
+            log.keys.insert(pos, k)
+            for i in range(pos, len(log.ents)):
+                prev = log.ents[i - 1].st if i else self.default(p.name, u or '*')
+                log.ents[i].st = apply(prev, log.ents[i], i)
+
     def leg_bad(self, mv, lg, err, key, kind='bad'):
         """A refused leg refuses its places from key; a leg whose amount is refused has no unit of its own, so it is
         kept at its place's unit, where the place's next reading ends it (tally 2.1.8 R11), or at every unit of a
@@ -2029,6 +2069,8 @@ class Walk:
             left.discard(ready[0])
         seq = 0
         for x in sorted(bad, key=rank):
+            # an instance the order refuses: a link to it is refused with it (moves' fulfils read; rulings 15, 16 Q1)
+            self.__dict__.setdefault('order_bad', {})[info[x][0].id] = bad[x]
             k = key[:3] + (dec_text(g[0], '%06d' % seq, info[x][0].move.id), 0)
             seq += 1
             ch = info[x][1]
@@ -2114,6 +2156,7 @@ class Walk:
         run.coll = _coll()
         run.coll.merge(inst.coll)
         self.decs[inst.id] = run
+        self.cur_dec = mi.id
         ctx = self.tctx.but(cut=min(t, self.K), walk=self, wp=key)
         old = self.wp, self.reads, getattr(self, 'less_obs', None), self.live
         self.wp = key
@@ -2123,6 +2166,10 @@ class Walk:
         # with the ends each booked (an end another version's row books, as a row stated same, isn't its own; L §5.19)
         self.less_obs = self.own_obs(inst.id, t)
         eng.stack.append(run.coll)
+        # its reads are traced where the walk is built; their span is kept, so a decision's flows lists only the runs
+        # it counts (L §8.2 One read set; tally 2.3.1 R2, P18)
+        tpar = eng.trace_stack[-1] if eng.trace_stack else None
+        t0 = len(tpar.children) if tpar is not None else 0
         try:
             try:
                 if inst.err is not None:
@@ -2139,11 +2186,16 @@ class Walk:
                     # (L §8.4), so the refusal reaches the places its legs give
                     run.legs = eng.refused_places(mi, inst.env, run, ctx)
         finally:
+            # the trace children this run added, so a flows that doesn't count it can drop them (mreads.flows_move)
+            run.tspan = (tpar, [id(c) for c in tpar.children[t0:]]) if tpar is not None else None
             eng.stack.pop()
             self.wp, self.reads, self.less_obs, self.live = old
         # what this decision books at its point from here is one group for the sign rule (L §5.10 point 2)
         self.grp_legs = {}
         run.obs = eng.obs_links_for(inst.id, self.tctx)
+        if run.err is not None and run.obs:
+            # a refused run refuses its rows' links with its own refusal (rulings 15, 16 Q1)
+            self.refuse_links(run, run.err, key, t)
         if run.err is not None:
             known = [lg for lg in run.legs if isinstance(lg.frm, Thing) or isinstance(lg.to, Thing)]
             if known:
@@ -2159,15 +2211,7 @@ class Walk:
             if run.obs:
                 # a row fulfils a decision instance its walk point finds missing: the link is refused there, and so
                 # is what rests on it (L §5.19, §8.4; tally 2.3.1 R6, C-9)
-                for o in run.obs:
-                    e = refuse('RUN-RECORD', 'observation %s fulfils %s, which doesn\'t exist or doesn\'t touch its '
-                                             'places' % (o.id, run.id))
-                    if o.err is None:
-                        o.err = e
-                    eng.run_cache.setdefault(('badlinks', eng.wkey(self.tctx)), {}).setdefault(run.id, e)
-                    for lg in o.legs:
-                        self.leg_bad(o, lg, e, key)
-                run.obs = []
+                self.refuse_links(run, None, key, t)
                 self.same_release(run, key)
                 return run
             self.book_own_obs(run, key)

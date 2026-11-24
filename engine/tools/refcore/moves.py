@@ -1072,7 +1072,16 @@ def m_inst_body(self, mi, env, inst, c1, exists0=True):
     """(exists, legs, attrs, for, fulfils) of an instance at the context's cut."""
     ex = exists0
     if mi.decl.when is not None:
-        w = self.ev(mi.decl.when, env, c1)
+        # a decision's `when` read at its point: those reads decided its existence, the set its link stands for (L
+        # §8.2 l.2252; tally 2.3.1 C-9, G2's review finding 3)
+        cw = self.push()
+        try:
+            w = self.ev(mi.decl.when, env, c1)
+        finally:
+            self.stack.pop()
+            self.cur.merge(cw)
+            if mi.decision:
+                inst.exist_coll = cw
         if w is NONE:
             raise refuse('RUN-NONE', 'the when of %s is none here' % inst.id)
         if w is False and isinstance(inst.day, Hole):
@@ -1302,6 +1311,11 @@ def m_obs_links_for(self, tid, ctx):
             _, mid, kv = o.fulfils
             mi = m.moves[mid]
             found = self.link_tuple(mi, list(kv), ctx)
+            if isinstance(found, _RefusedLink):
+                # the instance is refused, and its link with it (rulings 16 Q1); what rests on it is refused
+                o.err = found.err
+                self.run_cache.setdefault(('badlinks', wk), {}).setdefault(tid, o.err)
+                continue
             bad = found is None
             places = set()
             if not bad:
@@ -1727,6 +1741,14 @@ def m_unjoined_refused(self, tid, res, ctx):
     return [o for o in res if id(o) not in bad]
 
 
+class _RefusedLink:
+    """link_tuple's answer for an instance whose existence is refused: the link is refused with it (L §5.19, §8.4;
+    tally 2.3.1 rulings 16 Q1)."""
+
+    def __init__(self, err):
+        self.err = err
+
+
 class _LinkTarget:
     """The instance a confirmed link names: its id at once; the instance itself (its for, its kind) only when a reader
     asks for more, so the link alone reads no amount."""
@@ -1748,12 +1770,13 @@ class _LinkTarget:
         return getattr(self._inst, name)
 
 
-def m_link_tuple(self, mi, keys, ctx):
+def m_link_tuple(self, mi, keys, ctx, traced=False):
     """The binding tuple of move mi at these keys, at the ask's cut, or None where the instance doesn't exist: its
     existence cell (L §5.14, §5.19; tally 2.3.1 R6), read from this tuple's keys' `where`s, then its day, then its
     `when`, never its amounts or another tuple's: a false one or a `none` day ends the read (no instance), whatever
-    came before it; a refused or hole one doesn't, and the instance is taken as existing, its link judged where its
-    instance is. A day or `when` that reads this existence again is a cycle (RUN-CYCLE)."""
+    came before it; a refused one refuses the link with it, plan or decision (_RefusedLink; rulings 16 Q1, 18),
+    a hole one doesn't, and the instance is taken as existing, its link judged where its instance
+    is. A day or `when` that reads this existence again is a cycle (RUN-CYCLE)."""
     tctx = self.tctx(ctx)
     kk = tuple(vkey(k) for k in keys)
     key = ('lexist', mi.id, self.wkey(tctx), kk)
@@ -1761,9 +1784,11 @@ def m_link_tuple(self, mi, keys, ctx):
         raise refuse('RUN-CYCLE', '%s reads its own instances' % mi.id)
     self.inst_active.add(key)
     outer = set(self.active)
-    # the cell's reads are its own, never traced under the reader that first asked (E §10; tally 2.3.1 R2, item 6)
+    # the cell's reads are its own, never traced under the reader that first asked (E §10; tally 2.3.1 R2, item 6);
+    # a reader that reads the link itself (traced: `o.fulfils`) rests on it, so they are its reads (L §8.2 l.2252)
     saved_tr = (self.trace_stack, self.tracing)
-    self.trace_stack, self.tracing = [], False
+    if not traced:
+        self.trace_stack, self.tracing = [], False
     try:
         for env, ks, st, c in self.move_tuples(mi, tctx, only=kk):
             if tuple(vkey(k) for k in ks) != kk:
@@ -1772,17 +1797,27 @@ def m_link_tuple(self, mi, keys, ctx):
                 return None
             if isinstance(st, tuple) and st[0] == 'domainhole':
                 return env
+            # a refused existence refuses the link with it, plan or decision, a refused `where` included (rulings 16
+            # Q1, 18); a false or `none` read after it still ends the read (R6's order)
+            bad = st[1] if _refd(st) else None
+            only_dec = False
             try:
                 law = self.move_law(mi, env, tctx)
             except TallyError as e:
                 if load_now(e) or e.code == 'RUN-CYCLE':
                     raise
-                return env
+                return env if only_dec else _RefusedLink(bad or e)
             if isinstance(law, Hole):
-                return env
+                return _RefusedLink(bad) if bad is not None and not only_dec else env
             lctx = tctx.but(law=law)
             for x in (mi.decl.on, mi.decl.when):
                 if x is None:
+                    continue
+                if x is mi.decl.when and getattr(mi, 'exist_running', False):
+                    # a decision's `when` that reads running state is read at its walk point, where its link is
+                    # judged, in an ask too (L §5.19, E §4.2 step 3; C-9, rulings 15)
+                    self.run_cache.setdefault(('deflinks', self.wkey(tctx)), set()).add(
+                        '%s[%s]' % (mi.id, ', '.join(key_text(k) for k in keys)) if keys else mi.id)
                     continue
                 try:
                     v = self.ev(x, env, lctx)
@@ -1795,10 +1830,12 @@ def m_link_tuple(self, mi, keys, ctx):
                         return env
                     if load_now(e) or e.code == 'RUN-CYCLE':
                         raise
+                    if bad is None:
+                        bad = e
                     continue
                 if v is NONE or v is NEVER or v is False:
                     return None
-            return env
+            return _RefusedLink(bad) if bad is not None and not only_dec else env
         return None
     except TallyError as e:
         if e.code == 'RUN-CYCLE' and getattr(e, 'cycle_key', None) in outer:

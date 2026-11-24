@@ -2,7 +2,9 @@
 # running balance is judged at the instance's walk point, so the reality loads. topup[2026-01] books 400.00 PLN
 # (konto 500.00), so on 2026-02-05 `bal(konto) < lim` is false: topup[2026-02] doesn't exist and bank[r1]'s link
 # is refused (b, f); loose answers. Before: the whole reality LOAD-READS (`bal(konto) with no day outside a
-# decision`).
+# decision`). Re-stored at W2b (G2's review, its note on dec_link_on; rulings 16 Q1): loose reads bank[r1]'s
+# `o.fulfils`, which rests on the refused link, so it is refused too; f lists what the point's `when` read (the
+# January top-up, finding 3). Before: loose 30.00 PLN, f no register line.
 === dec_link.tally
 model dec_link
   tally 2
@@ -53,6 +55,8 @@ b: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn'
   unfulfilled: topup[2026-01]
   cut 2026-04-20
 f: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
   cut 2026-04-20
-loose: 30.00 PLN
+loose: refused: RUN-RECORD observation bank[r1] fulfils topup[2026-02], which doesn't exist or doesn't touch its places
+  unfulfilled: topup[2026-01]
   cut 2026-04-20

@@ -213,6 +213,9 @@ def m_resolve_move_kind(self, info):
 
 def m_mark(self, sc, what, target, node=None):
     self.marks.setdefault(sc.item, set()).add((what, target))
+    if getattr(sc, 'in_when', False) and sc.item and sc.item[0] == 'move':
+        # a move's `when` reads running state: its existence does (E §3.1 step 7; tally 2.3.1 R6, rulings 16 Q4)
+        self.__dict__.setdefault('when_running', set()).add(sc.item[1])
     if node is not None and what in ('balnow',):
         self.balnow_items.setdefault(sc.item, getattr(node, 'loc', None))
 
@@ -1424,19 +1427,45 @@ def m_check_moves_graph(self):
     m = self.m
     E = self.edges
     memo = {}
-    # step 7's existence mark: the decisions a row fulfils (E §3.1 step 7; tally 2.3.1 R6, C-9);
-    # a plan that reads a row's fulfils reaches them, a decision's reads are judged as before
-    named = set()
+    # step 7's existence mark, row-precise (E §3.1 step 7; tally 2.3.1 R6, C-9, rulings 15 and 16 Q4): an item that
+    # reads `.fulfils` of the rows of an input it binds reaches the existence of each decision a row of that input,
+    # in any version, fulfils, where that existence reads running state (its `when`, directly or through defs); a
+    # decision's own reads are judged as before
+    def runs_running(start):
+        seen, stack = set(), [start]
+        while stack:
+            x = stack.pop()
+            if x in seen:
+                continue
+            seen.add(x)
+            if any(w != 'exist' for w, _t in self.marks.get(x, ())):
+                return True
+            stack.extend(t for t in E.get(x, {}) if t[0] in ('def', 'fill', 'moveon'))
+        return False
+
+    when_running = getattr(self, 'when_running', set())
+    when_edges = getattr(self, 'when_edges', {})
+
+    def exist_running(qid):
+        return qid in when_running or any(t[0] in ('def', 'fill') and runs_running(t)
+                                          for t in when_edges.get(qid, ()))
+
+    named = {}
     for inf in m.inputs.values():
         for o in getattr(inf, 'obs', ()) if getattr(inf, 'observed', False) else ():
             f = o.fulfils
-            if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves:
-                mi = m.moves[f[1]]
-                if mi.decision:
-                    named.add(f[1])
+            if isinstance(f, tuple) and f and f[0] != 'adj' and f[1] in m.moves and m.moves[f[1]].decision:
+                named.setdefault(inf.id, set()).add(f[1])
+    running = {q: exist_running(q) for qs in named.values() for q in qs}
+    for qid, mi in m.moves.items():
+        # its link waits for its walk point (moves.m_link_tuple; C-9)
+        mi.exist_running = mi.decision and (running[qid] if qid in running else exist_running(qid))
     for item in getattr(self, 'fulfils_items', ()):
-        for qid in named:
-            self.marks.setdefault(item, set()).add(('exist', ('move', qid)))
+        bound = [t[1] for t, rels in E.get(item, {}).items() if t[0] == 'input' and 'bind' in rels]
+        for iid in bound:
+            for qid in named.get(iid, ()):
+                if running[qid]:
+                    self.marks.setdefault(item, set()).add(('exist', ('move', qid)))
 
     def reached(item):
         if item in memo:

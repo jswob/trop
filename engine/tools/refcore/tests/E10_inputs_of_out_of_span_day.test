@@ -1,0 +1,68 @@
+# tally 2.3.1 R2, P18 (explain's third mechanism, L §8.2 "the reads that decided a movement doesn't count"):
+# inputs-of lists w2[j2], the day that put dk[j2] outside April, under flows and count (spec/g3/f3_span/i_fk,
+# i_cn, the engine's bytes). Before: w2[j2] missing.
+=== f3_span.tally
+model f3
+  tally 2
+  on 2026-06-20
+  start 2026-03-01
+  end 2026-06-30
+
+source s "invented"
+
+unit PLN: currency minor 0.01
+index js = [j1, j2]
+place konto: accounts PLN lives 2026-01-01..
+place world: outside lives 1900-01-01..
+input amt2[j in js]: money PLN
+input w2[j in js]: date
+input sp: month
+input lim: money PLN
+
+move dk[j in js]: transfers
+  on w2[j]
+  reads konto
+  when bal(konto) > lim
+  leg cash from konto to world amount amt2[j]
+
+def fk: money PLN = flows(dk, sp .. sp)
+def fk1: money PLN = flows(dk[j1], sp .. sp)
+def cn: int = count(m in transfers over sp .. sp)
+
+ask e_fk: explain fk
+ask e_fk1: explain fk1
+ask e_cn: explain cn
+ask i_fk: inputs-of fk
+ask i_fk1: inputs-of fk1
+ask i_cn: inputs-of cn
+
+version v
+  cite s
+  governs always
+  known 2026-01-01
+  amt2[j1] = 10.00 PLN "s"
+  amt2[j2] = 20.00 PLN "s"
+  w2[j1] = 2026-04-05 "s"
+  w2[j2] = 2026-06-06 "s"
+  sp = 2026-04 "s"
+  lim = 450.00 PLN "s"
+  opening[konto] = 500.00 PLN at 2026-03-01 start "s"
+=== expect i_fk i_cn
+i_fk:
+  v:amt2[j1] (source s "invented", locator "s")
+  v:lim (source s "invented", locator "s")
+  v:opening[konto] (source s "invented", locator "s")
+  v:sp (source s "invented", locator "s")
+  v:w2[j1] (source s "invented", locator "s")
+  v:w2[j2] (source s "invented", locator "s")
+  unfulfilled: dk[j1]
+  cut 2026-06-20
+i_cn:
+  v:amt2[j1] (source s "invented", locator "s")
+  v:lim (source s "invented", locator "s")
+  v:opening[konto] (source s "invented", locator "s")
+  v:sp (source s "invented", locator "s")
+  v:w2[j1] (source s "invented", locator "s")
+  v:w2[j2] (source s "invented", locator "s")
+  unfulfilled: dk[j1]
+  cut 2026-06-20
